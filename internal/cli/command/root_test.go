@@ -18,6 +18,7 @@ func TestRootHelpIncludesCoreCommands(t *testing.T) {
 		BuildInfo: buildinfo.Info{Version: "dev"},
 		Stdout:    stdout,
 		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
 	})
 	cmd.SetArgs([]string{"--help"})
 
@@ -26,7 +27,7 @@ func TestRootHelpIncludesCoreCommands(t *testing.T) {
 	}
 
 	output := stdout.String()
-	for _, expected := range []string{"login", "status", "image"} {
+	for _, expected := range []string{"login", "logout", "status", "image"} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected %q in help output: %s", expected, output)
 		}
@@ -50,6 +51,7 @@ func TestStatusCommandCallsServer(t *testing.T) {
 		Endpoint:  server.URL,
 		Stdout:    stdout,
 		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
 	})
 	cmd.SetArgs([]string{"status"})
 
@@ -79,6 +81,7 @@ func TestImageModelsCommandCallsServer(t *testing.T) {
 		Endpoint:  server.URL,
 		Stdout:    stdout,
 		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
 	})
 	cmd.SetArgs([]string{"image", "models"})
 

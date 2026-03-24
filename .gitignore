@@ -27,3 +27,8 @@ next-env.d.ts
 .env.local
 .env.preview
 .env.production
+
+# Go binaries
+anycap-server
+anycap
+anycap-mock

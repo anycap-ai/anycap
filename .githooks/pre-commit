@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "pre-commit: running checks..."
+
+# 1. gofmt -- reject unformatted code
+UNFORMATTED=$(gofmt -l . 2>&1 | grep -v vendor/ || true)
+if [ -n "$UNFORMATTED" ]; then
+  echo "FAIL: the following files are not gofmt'd:"
+  echo "$UNFORMATTED"
+  echo ""
+  echo "Run: gofmt -w ."
+  exit 1
+fi
+
+# 2. go vet -- catch common mistakes
+if ! go vet ./... 2>&1; then
+  echo "FAIL: go vet found issues"
+  exit 1
+fi
+
+# 3. go test (short mode, skip long-running tests)
+if ! go test -short ./... 2>&1; then
+  echo "FAIL: tests failed"
+  exit 1
+fi
+
+echo "pre-commit: all checks passed"

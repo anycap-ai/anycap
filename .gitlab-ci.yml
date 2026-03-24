@@ -1,0 +1,69 @@
+stages:
+  - test
+  - release
+
+variables:
+  GOVERSION: "1.24"
+
+# ---------------------------------------------------------------------------
+# Test
+# ---------------------------------------------------------------------------
+test:
+  stage: test
+  image: golang:${GOVERSION}
+  script:
+    - go vet ./...
+    - go test ./...
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ /^release\//
+
+# ---------------------------------------------------------------------------
+# Release: GitLab
+#
+# Trigger: push branch  release/cli-v<semver>
+# Example: release/cli-v0.1.0, release/cli-v1.2.3-rc.1
+# ---------------------------------------------------------------------------
+release:gitlab:
+  stage: release
+  image:
+    name: goreleaser/goreleaser:v2
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: 0
+    GITLAB_TOKEN: $CI_JOB_TOKEN
+  script:
+    - |
+      git config --global --add safe.directory "$CI_PROJECT_DIR"
+      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
+      echo "Releasing ${TAG} ..."
+      git tag "${TAG}"
+      goreleaser release --clean
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
+
+# ---------------------------------------------------------------------------
+# Release: GitHub (manual, requires GITHUB_TOKEN in CI/CD variables)
+# ---------------------------------------------------------------------------
+release:github:
+  stage: release
+  image: alpine:3.20
+  needs:
+    - job: release:gitlab
+      artifacts: true
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - |
+      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
+      export RELEASE_TAG="${TAG}"
+      sh scripts/release/github-release.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
+      when: manual
+      allow_failure: true

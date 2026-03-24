@@ -18,6 +18,7 @@ type Options struct {
 	Endpoint  string
 	Stdout    io.Writer
 	Stderr    io.Writer
+	Stdin     io.Reader
 }
 
 func NewRootCmd(opts Options) *cobra.Command {
@@ -26,6 +27,9 @@ func NewRootCmd(opts Options) *cobra.Command {
 	}
 	if opts.Stderr == nil {
 		opts.Stderr = os.Stderr
+	}
+	if opts.Stdin == nil {
+		opts.Stdin = os.Stdin
 	}
 
 	endpointFlag := opts.Endpoint
@@ -43,11 +47,17 @@ func NewRootCmd(opts Options) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&endpointFlag, "endpoint", opts.Endpoint, "AnyCap server endpoint")
 
 	clientFactory := func() *httpclient.Client {
-		return httpclient.New(cliconfig.ResolveEndpoint(endpointFlag))
+		apiKey := cliconfig.LoadCredential()
+		return httpclient.New(
+			cliconfig.ResolveEndpoint(endpointFlag),
+			httpclient.WithAPIKey(apiKey),
+			httpclient.WithVersion(opts.BuildInfo.Version),
+		)
 	}
 
 	rootCmd.AddCommand(
-		meta.NewLoginCmd(clientFactory, opts.Stdout),
+		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
+		meta.NewLogoutCmd(opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
 		cap.NewImageCmd(clientFactory, opts.Stdout),
 	)

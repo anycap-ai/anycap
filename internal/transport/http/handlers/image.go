@@ -22,50 +22,25 @@ func NewImageHandler(service *imageapp.Service) *ImageHandler {
 func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
 	models, err := h.service.ListModels(c)
 	if err != nil {
-		ctx.JSON(consts.StatusInternalServerError, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "LIST_MODELS_FAILED",
-				"message": err.Error(),
-			},
-		})
+		writeError(ctx, consts.StatusInternalServerError, "list_models_failed", err.Error())
 		return
 	}
 
-	ctx.JSON(consts.StatusOK, map[string]any{
-		"status": "success",
-		"data":   models,
-	})
+	writeSuccess(ctx, models)
 }
 
 func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
 	var req model.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(consts.StatusBadRequest, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "INVALID_PARAM",
-				"message": "invalid json request body",
-			},
-		})
+		writeError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
 	result, err := h.service.Generate(c, req)
 	if err != nil {
-		ctx.JSON(consts.StatusBadRequest, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "INVALID_PARAM",
-				"message": err.Error(),
-			},
-		})
+		writeError(ctx, consts.StatusBadRequest, "invalid_param", err.Error())
 		return
 	}
 
-	ctx.JSON(consts.StatusOK, map[string]any{
-		"id":     result.ID,
-		"status": "success",
-		"data":   result,
-	})
+	writeSuccessWithID(ctx, result.ID, result)
 }

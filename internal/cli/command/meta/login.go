@@ -1,25 +1,77 @@
 package meta
 
 import (
+	"bufio"
+	"fmt"
 	"io"
+	"strings"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/auth"
+	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
-	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 
 	"github.com/spf13/cobra"
 )
 
-func NewLoginCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	return &cobra.Command{
+func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdout io.Writer, stderr io.Writer) *cobra.Command {
+	var headless bool
+	var withToken bool
+
+	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Start login flow",
+		Short: "Authenticate with AnyCap",
+		Long:  "Start an authentication flow. By default, auto-detects the best method (browser or device code).",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			payload, err := clientFactory().PostJSON(cmd.Context(), "/v1/login/init", map[string]any{})
+			// --with-token: read from stdin
+			if withToken {
+				scanner := bufio.NewScanner(stdin)
+				if !scanner.Scan() {
+					return fmt.Errorf("failed to read token from stdin")
+				}
+				token := strings.TrimSpace(scanner.Text())
+				if token == "" {
+					return fmt.Errorf("empty token")
+				}
+				if err := cliconfig.SaveCredential(token); err != nil {
+					return fmt.Errorf("failed to save credential: %w", err)
+				}
+				fmt.Fprintln(stderr, "API Key saved.")
+				return nil
+			}
+
+			client := clientFactory()
+
+			var apiKey, email string
+			var err error
+
+			if headless {
+				// Forced device code flow
+				apiKey, email, err = auth.DeviceFlow(cmd.Context(), client, stderr)
+			} else {
+				// Auto-detect: try localhost, fallback to device code
+				apiKey, email, err = auth.AutoFlow(cmd.Context(), client, stderr)
+			}
 			if err != nil {
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			if err := cliconfig.SaveCredential(apiKey); err != nil {
+				// Print key to stderr so user can save manually
+				fmt.Fprintf(stderr, "Failed to save credential: %v\nYour API key: %s\n", err, apiKey)
+				return err
+			}
+
+			if email != "" {
+				fmt.Fprintf(stderr, "Logged in as %s\n", email)
+			}
+			fmt.Fprintln(stderr, "API Key saved.")
+			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(&headless, "headless", false, "Use device code flow (for headless/SSH environments)")
+	cmd.Flags().BoolVar(&withToken, "with-token", false, "Read token from stdin (for CI/CD)")
+	cmd.MarkFlagsMutuallyExclusive("headless", "with-token")
+
+	return cmd
 }

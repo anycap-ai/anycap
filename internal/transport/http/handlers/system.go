@@ -6,8 +6,6 @@ import (
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/common/utils"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type SystemHandler struct {
@@ -19,29 +17,18 @@ func NewSystemHandler(service *systemapp.Service) *SystemHandler {
 }
 
 func (h *SystemHandler) Ping(_ context.Context, ctx *app.RequestContext) {
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data": utils.H{
-			"message": "pong",
-		},
-	})
+	writeSuccess(ctx, map[string]string{"message": "pong"})
 }
 
 func (h *SystemHandler) Healthz(_ context.Context, ctx *app.RequestContext) {
 	status := h.service.Status()
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data": utils.H{
-			"name":   status.Name,
-			"env":    status.Env,
-			"status": status.Status,
-		},
+	writeSuccess(ctx, map[string]string{
+		"name":   status.Name,
+		"env":    status.Env,
+		"status": status.Status,
 	})
 }
 
 func (h *SystemHandler) Status(_ context.Context, ctx *app.RequestContext) {
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data":   h.service.Status(),
-	})
+	writeSuccess(ctx, h.service.Status())
 }

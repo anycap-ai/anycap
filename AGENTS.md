@@ -44,7 +44,6 @@ pkg/
 
 configs/
   cli/               # CLI config examples
-  server/            # Server env var examples
 
 deploy/docker/       # Dockerfiles for server and CLI
 
@@ -106,3 +105,29 @@ scripts/dev/run-cli.sh status
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
 - **Skill files:** one file per capability under `skills/capabilities/`.
+
+## CLI Design and Implementation
+
+### Design Docs
+
+CLI spec documents live in `docs/cli/spec/`. These are **high-level design only** -- flow diagrams (mermaid), API contracts, design decisions, and rationale. No implementation code in spec files. Code lives in `internal/cli/`.
+
+| Spec | Path | Covers |
+|------|------|--------|
+| Framework | `docs/cli/spec/framework.md` | Config resolution, HTTP client, output formatting, error handling, help grouping, command patterns |
+| OAuth | `docs/cli/spec/oauth.md` | Login flows (localhost callback, device code polling), credential storage, security |
+
+### Key Architectural Decisions
+
+- **CLI only talks to Server.** CLI never directly accesses Auth0, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
+- **Auth0 is the auth provider.** Server wraps Auth0 flows. CLI calls Server login APIs which internally interact with Auth0.
+- **Config + Credential separation.** `~/.anycap/config.json` for preferences (0644), `~/.anycap/credentials` for API key (0600).
+- **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, dev scripts inject `http://127.0.0.1:8080`.
+- **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.
+- **Release via goreleaser.** CLI binary and skill files will be hosted on GitHub. Use goreleaser for cross-platform builds and GitHub Releases.
+
+### Testing
+
+- Test commands through `NewRootCmd` with `httptest.NewServer` to mock the AnyCap server.
+- Inject `Stdout` and `Stderr` as `bytes.Buffer` for assertion.
+- Prefer function-style tests (no test classes).
