@@ -94,10 +94,10 @@ flowchart TB
     end
 
     M --> P[Provider API]
-    P --> M
-    M --> K
-    K --> H
-    I --> A
+    P -.-> M
+    M -.-> K
+    K -.-> H
+    I -.-> A
 ```
 
 核心流程：
@@ -115,45 +115,15 @@ capability + operation + model_id
 
 ## 4. 分层设计
 
-### 4.1 Public Contract Layer
+各层详细设计见后续章节：
 
-职责：
-
-- 接收 HTTP / CLI 请求
-- 暴露统一接口
-- 定义统一输入输出结构
-
-### 4.2 Catalog Layer
-
-职责：
-
-- 维护 `model_id`
-- 维护模型支持的 `operation`
-- 维护 schema 引用
-- 维护 route binding
-
-### 4.3 Resolver Layer
-
-职责：
-
-- 根据 `capability + operation + model_id` 解析最终 route
-- 根据上下文过滤 route，如 region / env / tier
-- 支持 direct / scheduler 双路由
-
-### 4.4 Executor Layer
-
-职责：
-
-- 将 AnyCap 公共请求翻译为 NexusHub `SubmitAtomicProcessRequest`
-- 调用 `/v1/submit_atomic_process`
-- 接收 NexusHub 响应
-
-### 4.5 Result Normalizer Layer
-
-职责：
-
-- 将 NexusHub `SubmitAtomicProcessResponse` 统一转换为 AnyCap 响应
-- 屏蔽 `resp_payload` 字符串细节
+| 层 | 对应章节 |
+|---|---|
+| Public Contract | Section 5（领域模型）、Section 6（接口与 Discovery） |
+| Catalog | Section 5.2（ModelSpec）、Section 12（映射设计） |
+| Resolver | Section 13（Resolver 设计） |
+| Executor | Section 11（NexusHub 包装结构） |
+| Result Normalizer | Section 14（输出标准化） |
 
 ---
 
@@ -216,29 +186,39 @@ type RouteBinding struct {
 
 ```go
 type InvokeResult struct {
-    ID      string                 `json:"id"`
-    Status  string                 `json:"status"`
-    ModelID string                 `json:"model"`
-    Outputs []OutputArtifact       `json:"outputs,omitempty"`
-    Usage   map[string]any         `json:"usage,omitempty"`
-    Cost    float64                `json:"cost,omitempty"`
-    Error   *InvokeError           `json:"error,omitempty"`
-    Trace   map[string]interface{} `json:"trace,omitempty"`
+    ID      string           `json:"id"`
+    Status  string           `json:"status"` // succeed / failed / processing / canceled / timeout
+    ModelID string           `json:"model"`
+    Outputs []OutputArtifact `json:"outputs,omitempty"`
+    Usage   map[string]any   `json:"usage,omitempty"`
+    Cost    float64          `json:"cost,omitempty"`
+    Error   *InvokeError     `json:"error,omitempty"`
+    Trace   map[string]any   `json:"trace,omitempty"`
 }
 
 type OutputArtifact struct {
-    Type     string                 `json:"type"`
-    URL      string                 `json:"url,omitempty"`
-    MIMEType string                 `json:"mime_type,omitempty"`
-    Meta     map[string]interface{} `json:"meta,omitempty"`
+    Type     string         `json:"type"`
+    URL      string         `json:"url,omitempty"`
+    MIMEType string         `json:"mime_type,omitempty"`
+    Meta     map[string]any `json:"meta,omitempty"`
 }
 
 type InvokeError struct {
-    Code    string                 `json:"code"`
-    Message string                 `json:"message"`
-    Detail  map[string]interface{} `json:"detail,omitempty"`
+    Code    string         `json:"code"`
+    Message string         `json:"message"`
+    Detail  map[string]any `json:"detail,omitempty"`
 }
 ```
+
+状态值与 NexusHub 保持一致（`internal/constant/nexushub.go`）：
+
+| AnyCap Status | NexusHub State | 说明 |
+|---|---|---|
+| `succeed` | `succeed` | 处理成功 |
+| `failed` | `failed` | 处理失败 |
+| `processing` | `processing` / `queueing` / `init` / `created` | 统一归为处理中 |
+| `canceled` | `canceled` | 已取消 |
+| `timeout` | `timeout` | 已超时 |
 
 ---
 
@@ -251,6 +231,28 @@ type InvokeError struct {
 - `GET /v1/audio/models`
 - `GET /v1/{capability}/models/{model}/schema?operation={operation}`
 - `GET /v1/audio/voices?model={model}`
+
+`models` 接口响应示例：
+
+```json
+{
+  "capability": "image",
+  "models": [
+    {
+      "model": "nano-banana-2",
+      "display_name": "Nano Banana 2",
+      "status": "active",
+      "operations": ["generate", "edit"]
+    },
+    {
+      "model": "topaz-upscale",
+      "display_name": "Topaz Upscale",
+      "status": "active",
+      "operations": ["upscale"]
+    }
+  ]
+}
+```
 
 ### 6.2 Discovery Contract 边界
 
@@ -348,7 +350,7 @@ model_id + operation
 
 - `POST /v1/caps/{capability}/{operation}`
 
-对外可以保留资源风格；内部统一收敛到 `InvokeRequest`。
+Section 6.4 的资源风格路由（如 `/v1/image/generate`）是对外公共契约，保持稳定。此统一入口是可选的内部收敛点，接受相同的 `InvokeRequest` 请求体，用于简化内部 handler 路由逻辑。两者可以共存，资源风格路由内部转发至此统一入口即可。
 
 ### 6.6 契约稳定性
 
@@ -363,25 +365,11 @@ model_id + operation
 
 ### 7.1 公共请求字段
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---:|---|
-| `model` | string | 是 | AnyCap 公共 `model_id` |
-| `input` | object | 是 | 能力输入 |
-| `options` | object | 否 | 通用或模型特有参数 |
-| `metadata` | object | 否 | 跟踪字段，如 `request_id` |
+详见 Section 5.1 `InvokeRequest` 定义。其中 `model`、`input` 为必填，`options`、`metadata` 为可选。
 
 ### 7.2 公共响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | string | AnyCap 调用 ID |
-| `status` | string | `success` / `failed` / `processing` |
-| `model` | string | 回显 `model_id` |
-| `outputs` | array | 统一输出资源 |
-| `usage` | object | 统一用量 |
-| `cost` | number | 成本 |
-| `error` | object | 标准错误对象 |
-| `trace` | object | 调试信息 |
+详见 Section 5.4 `InvokeResult` 定义。状态值为 `succeed / failed / processing / canceled / timeout`，与 NexusHub 保持一致。
 
 ---
 
@@ -622,7 +610,7 @@ POST /v1/audio/speak
 | `options.speed` | `req_payload.audio_option.speed` |
 | `options.sample_rate` | `req_payload.audio_option.sample_rate` |
 | route binding | `req_payload.gen_type=audio` |
-| route binding | `req_payload.audio_option.*` |
+| route binding | `audio_option.type` 当前无强制要求，可为空（详见附录 A.5） |
 
 ### 10.3 音色发现
 
@@ -708,7 +696,7 @@ AnyCap executor 统一包装为：
 | `operation` | `extra.operation` |
 | `route_binding.ability_key` | `ability_key` |
 | `route_binding.gen_type` | `req_payload.gen_type` |
-| `route_binding.algo_type` | `image_option.type` / `video_option.type` |
+| `route_binding.algo_type` | `req_payload.{modality}_option.type`（直接赋值，如 `image_option.type=txt_2_img`） |
 | `metadata.request_id` | `extra.request_id` |
 | authenticated user id | `user_info.uid` |
 
@@ -789,11 +777,7 @@ operations:
         enabled: true
 ```
 
-结论：
-
-- `model_id` 是公共模型标识
-- `ability_key` 是底层路由键
-- `scheduler ability key` 是 route 的一种，不是公共模型名
+核心原则同 Section 2.3 / 2.5：`model_id` 与 `ability_key` 解耦，scheduler 只是一种 route type。
 
 ---
 
@@ -830,12 +814,14 @@ type RouteResolver interface {
 
 ## 14. 输出标准化
 
-AnyCap 不直接透传 NexusHub `resp_payload` 字符串，而统一转换为：
+AnyCap 不直接透传 NexusHub `resp_payload` 字符串，而由 Result Normalizer 统一转换为 `InvokeResult`（详见 Section 5.4）。
+
+响应示例：
 
 ```json
 {
   "id": "cap_img_xxx",
-  "status": "success",
+  "status": "succeed",
   "model": "nano-banana-2",
   "outputs": [
     {
@@ -854,27 +840,15 @@ AnyCap 不直接透传 NexusHub `resp_payload` 字符串，而统一转换为：
 }
 ```
 
-推荐状态：
-
-- `success`
-- `failed`
-- `processing`
+Result Normalizer 需将 NexusHub 的多种中间状态（`init`、`created`、`queueing`）统一映射为 `processing`，终态（`succeed`、`failed`、`canceled`、`timeout`）直接透传。
 
 ---
 
 ## 15. 错误模型
 
-推荐统一错误结构：
+错误结构详见 Section 5.4 `InvokeError` 定义。
 
-```go
-type InvokeError struct {
-    Code    string                 `json:"code"`
-    Message string                 `json:"message"`
-    Detail  map[string]interface{} `json:"detail,omitempty"`
-}
-```
-
-错误码建议：
+建议错误码：
 
 - `invalid_request`
 - `schema_validation_failed`
@@ -950,22 +924,11 @@ handler 只处理公共请求。
 
 ## 18. 结论
 
-AnyCap 多模态 Cap 应采用以下模式：
+AnyCap 多模态 Cap 的核心模式：
 
-- 对外：`capability + operation + model_id`
-- 对内：`route binding -> ability_key -> nexushub atomic`
-- `ability_key` 不进入公共契约
-- `scheduler ability key` 只作为 route 类型存在
-- 图片、视频、音频共用一套 catalog / resolver / executor / normalizer
-
-一句话总结：
-
-```text
-Public Model ID
-    -> Route Binding
-    -> NexusHub Ability Key
-    -> Atomic Execution
-```
+- 对外暴露 `capability + operation + model_id`，对内通过 `route binding` 解析为 `ability_key` 执行
+- 图片、视频、音频共用同一套 catalog / resolver / executor / normalizer
+- 各层映射边界与设计原则详见 Section 2 和附录 B
 
 ---
 
@@ -1201,12 +1164,6 @@ CLI / HTTP Request
 | 命名风格 | 产品语义 | 基础设施语义 |
 | 例子 | `nano-banana-2` | `tengda_nano_banana_2` |
 
-结论：
-
-- `model_id` 是公共模型名
-- `ability_key` 是底层执行键
-- 两者不能混用
-
 #### 2. `route_type` vs `provider`
 
 | 项 | `route_type` | `provider` |
@@ -1215,11 +1172,6 @@ CLI / HTTP Request
 | 例子 | `direct` / `scheduler` | `tengda` / `google` / `cloudsway` |
 | 是否固定 | 由 route binding 决定 | 由 atomic node 或 runtime 决定 |
 
-结论：
-
-- `route_type = 路由机制`
-- `provider = 执行方`
-
 #### 3. `operation` vs `algo_type`
 
 | 项 | `operation` | `algo_type` |
@@ -1227,12 +1179,6 @@ CLI / HTTP Request
 | 所在层 | Public API | NexusHub Atomic Payload |
 | 语义 | 产品动作 | 底层执行类型 |
 | 例子 | `edit` | `img_edit` |
-
-结论：
-
-- `operation` 是 AnyCap 公共动作
-- `algo_type` 是 NexusHub 底层执行语义
-- 两者通常有关联，但不是同一个抽象
 
 ### B.4 责任边界
 
@@ -1291,32 +1237,10 @@ CLI / HTTP Request
 
 ### B.6 推荐记忆方式
 
-建议团队统一用下面这套口径：
-
 ```text
-capability / operation / model_id
-    是公共语义
-
-route_type / ability_key / gen_type / algo_type
-    是执行语义
-
-provider
-    是运行时执行方
+公共语义：capability / operation / model_id
+执行语义：route_type / ability_key / gen_type / algo_type
+运行时：  provider
 ```
 
-### B.7 设计结论
-
-当前最重要的不是把所有模型都整理成 enum，而是把以下映射边界定稳：
-
-1. `model_id` 不是 `ability_key`
-2. `route_type` 不是 `provider`
-3. `operation` 不是 `algo_type`
-4. `RouteBinding` 是 AnyCap 内部最关键的桥接层
-
-一句话总结：
-
-```text
-公共模型语义
-    -> RouteBinding
-    -> 底层执行语义
-```
+三组不可混淆的对应关系见 B.3，映射责任见 B.4。
