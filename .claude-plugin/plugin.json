@@ -1,0 +1,11 @@
+{
+  "name": "anycap",
+  "version": "0.1.0",
+  "description": "AnyCap skills for Claude Code -- access AI capabilities including image generation, video generation, music, TTS, ASR, search, and web crawling via AnyCap CLI.",
+  "author": {
+    "name": "AnyCap AI",
+    "url": "https://github.com/anycap-ai"
+  },
+  "repository": "https://github.com/anycap-ai/anycap",
+  "license": "Apache-2.0"
+}
