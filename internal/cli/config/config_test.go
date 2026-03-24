@@ -2,100 +2,85 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
-
-	"github.com/zalando/go-keyring"
 )
 
-func TestMain(m *testing.M) {
-	keyring.MockInit()
-	os.Exit(m.Run())
-}
-
-func TestSaveAndLoadCredential_Keyring(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
-
-	if err := SaveCredential("sk-test-123"); err != nil {
-		t.Fatalf("SaveCredential: %v", err)
-	}
-
-	got := LoadCredential()
-	if got != "sk-test-123" {
-		t.Fatalf("expected sk-test-123, got %q", got)
-	}
-
-	// Fallback file should NOT exist (keyring succeeded)
-	path, _ := credentialFilePath()
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Fatal("expected no fallback file when keyring is available")
+func TestResolveEndpoint_FlagWins(t *testing.T) {
+	got := ResolveEndpoint("http://flag:1234")
+	if got != "http://flag:1234" {
+		t.Fatalf("expected flag value, got %q", got)
 	}
 }
 
-func TestDeleteCredential(t *testing.T) {
+func TestResolveEndpoint_EnvOverridesDefault(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	t.Setenv("ANYCAP_API_ENDPOINT", "http://env:5678")
 
-	_ = SaveCredential("sk-to-delete")
-
-	if err := DeleteCredential(); err != nil {
-		t.Fatalf("DeleteCredential: %v", err)
-	}
-
-	if got := LoadCredential(); got != "" {
-		t.Fatalf("expected empty after delete, got %q", got)
+	got := ResolveEndpoint("")
+	if got != "http://env:5678" {
+		t.Fatalf("expected env value, got %q", got)
 	}
 }
 
-func TestLoadCredential_EnvOverridesKeyring(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+func TestResolveEndpoint_ConfigFileOverridesDefault(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_API_ENDPOINT", "")
 
-	_ = SaveCredential("sk-from-keyring")
-	t.Setenv("ANYCAP_API_KEY", "sk-from-env")
+	dir := filepath.Join(tmpHome, ".anycap")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"endpoint":"http://config:9999"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
 
-	got := LoadCredential()
-	if got != "sk-from-env" {
-		t.Fatalf("expected sk-from-env, got %q", got)
+	got := ResolveEndpoint("")
+	if got != "http://config:9999" {
+		t.Fatalf("expected config file value, got %q", got)
 	}
 }
 
-func TestLoadCredential_AutoMigrateFileToKeyring(t *testing.T) {
+func TestResolveEndpoint_Default(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	t.Setenv("ANYCAP_API_ENDPOINT", "")
 
-	// Ensure clean keyring state.
-	_ = keyring.Delete(keyringService, keyringAccount)
-
-	// Simulate a pre-existing fallback file (from before keychain support).
-	if err := saveToFile("sk-legacy-key"); err != nil {
-		t.Fatalf("saveToFile: %v", err)
-	}
-
-	// LoadCredential should find it in the file, migrate to keyring, and delete the file.
-	got := LoadCredential()
-	if got != "sk-legacy-key" {
-		t.Fatalf("expected sk-legacy-key, got %q", got)
-	}
-
-	// Fallback file should be gone after migration.
-	path, _ := credentialFilePath()
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Fatal("expected fallback file to be deleted after auto-migration")
-	}
-
-	// Second load should still work (from keyring now).
-	got = LoadCredential()
-	if got != "sk-legacy-key" {
-		t.Fatalf("expected sk-legacy-key from keyring, got %q", got)
+	got := ResolveEndpoint("")
+	if got != DefaultEndpoint {
+		t.Fatalf("expected default %q, got %q", DefaultEndpoint, got)
 	}
 }
 
-func TestDeleteCredential_NothingStored(t *testing.T) {
+func TestLoad_NonExistentFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
 
-	// Deleting when nothing is stored should not error.
-	if err := DeleteCredential(); err != nil {
-		t.Fatalf("DeleteCredential on empty: %v", err)
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.Endpoint != "" {
+		t.Fatalf("expected empty endpoint, got %q", cfg.Endpoint)
+	}
+}
+
+func TestLoad_ValidConfigFile(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	dir := filepath.Join(tmpHome, ".anycap")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"endpoint":"http://custom:8080"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.Endpoint != "http://custom:8080" {
+		t.Fatalf("expected http://custom:8080, got %q", cfg.Endpoint)
 	}
 }

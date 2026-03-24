@@ -39,7 +39,7 @@ type deviceCodeEntry struct {
 	Email    string
 }
 
-// New creates a mock server with all auth endpoints registered.
+// New creates a mock server with all auth and capabilities endpoints registered.
 func New() *Server {
 	s := &Server{
 		mux:         http.NewServeMux(),
@@ -53,6 +53,12 @@ func New() *Server {
 	s.mux.HandleFunc("POST /v1/auth/device-poll", s.handleDevicePoll)
 	s.mux.HandleFunc("GET /mock/authorize", s.handleMockAuthorize)
 	s.mux.HandleFunc("GET /v1/status", s.handleStatus)
+
+	// Capabilities
+	s.mux.HandleFunc("POST /v1/capabilities/presign", s.handlePresign)
+	s.mux.HandleFunc("PUT /mock/upload/", s.handleMockUpload)
+	s.mux.HandleFunc("POST /v1/capabilities/image/understand", s.handleImageUnderstand)
+	s.mux.HandleFunc("POST /v1/capabilities/video/read", s.handleVideoRead)
 
 	return s
 }
@@ -219,6 +225,112 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"env":     "dev",
 		"version": "mock",
 		"status":  "ok",
+	})
+}
+
+// --- Capabilities: Presign ---
+
+func (s *Server) handlePresign(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Filename    string `json:"filename"`
+		ContentType string `json:"content_type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+	if req.Filename == "" || req.ContentType == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "filename and content_type required")
+		return
+	}
+
+	key := randomHex(16)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	host := r.Host
+
+	writeSuccess(w, map[string]any{
+		"upload_url": fmt.Sprintf("%s://%s/mock/upload/%s", scheme, host, key),
+		"object_url": fmt.Sprintf("%s://%s/mock/objects/%s/%s", scheme, host, key, req.Filename),
+		"expires_in": 3600,
+	})
+}
+
+// --- Capabilities: Mock Upload (simulates S3 presigned PUT) ---
+
+func (s *Server) handleMockUpload(w http.ResponseWriter, r *http.Request) {
+	// Accept any PUT, discard the body
+	defer r.Body.Close()
+	w.WriteHeader(http.StatusOK)
+}
+
+// --- Capabilities: Image Understand ---
+
+func (s *Server) handleImageUnderstand(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		URL         string `json:"url"`
+		Instruction string `json:"instruction"`
+		Model       string `json:"model"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+	if req.URL == "" {
+		writeError(w, http.StatusUnprocessableEntity, "MISSING_INPUT", "url is required")
+		return
+	}
+
+	content := "This is a mock image analysis result."
+	if req.Instruction != "" {
+		content = fmt.Sprintf("Mock analysis for instruction: %s", req.Instruction)
+	}
+
+	writeSuccess(w, map[string]any{
+		"content": content,
+		"model":   "mock-vision-model",
+		"usage": map[string]int{
+			"input_tokens":  1200,
+			"output_tokens": 50,
+			"total_tokens":  1250,
+		},
+		"duration_ms": 100,
+	})
+}
+
+// --- Capabilities: Video Read ---
+
+func (s *Server) handleVideoRead(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		URL         string `json:"url"`
+		Instruction string `json:"instruction"`
+		Model       string `json:"model"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+	if req.URL == "" {
+		writeError(w, http.StatusUnprocessableEntity, "MISSING_INPUT", "url is required")
+		return
+	}
+
+	content := "This is a mock video analysis result."
+	if req.Instruction != "" {
+		content = fmt.Sprintf("Mock video analysis for instruction: %s", req.Instruction)
+	}
+
+	writeSuccess(w, map[string]any{
+		"content": content,
+		"model":   "mock-vision-model",
+		"usage": map[string]int{
+			"input_tokens":  5000,
+			"output_tokens": 200,
+			"total_tokens":  5200,
+		},
+		"duration_ms": 500,
 	})
 }
 

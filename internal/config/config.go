@@ -11,7 +11,7 @@ import (
 const (
 	defaultAppName  = "anycap-server"
 	defaultAppEnv   = "local"
-	defaultHTTPAddr = ":8080"
+	defaultHTTPAddr = ":18080"
 
 	defaultAgentPlatformTimeout = 120 * time.Second
 	defaultPresignExpiry        = 3600 // seconds

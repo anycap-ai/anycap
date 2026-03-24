@@ -87,9 +87,9 @@ go run ./cmd/anycap-server
 scripts/dev/run-server.sh
 
 # Use the CLI
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 status
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate --prompt "paper crane"
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate --prompt "paper crane"
 # or
 scripts/dev/run-cli.sh status
 ```
@@ -106,6 +106,29 @@ scripts/dev/run-cli.sh status
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
 - **Skill files:** one file per capability under `skills/capabilities/`.
 
+## CI/CD
+
+Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go workflow.
+
+| Branch pattern | Action |
+|---|---|
+| `main` / MR to main | lint + test |
+| `release/cli-v<semver>` | goreleaser cross-compile, GitLab release, manual GitHub release |
+| `build/server` | Docker build server image only |
+| `deploy/server-dev` | Docker build + deploy to kntech-dev |
+| `deploy/server-prod` | Docker build + deploy to infra-prod |
+
+**CLI Release flow:**
+1. Push branch `release/cli-v0.1.0` (version extracted from branch name).
+2. CI tags the commit, runs goreleaser, publishes to GitLab Releases.
+3. GitHub release is a manual job (requires `GITHUB_TOKEN` in CI/CD variables).
+
+**Server deploy flow:**
+1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
+2. Merge to `deploy/server-prod` to deploy to production.
+
+**Web (landing/dashboard):** deployed via Cloudflare Pages, not part of GitLab CI. See `web/Makefile`.
+
 ## CLI Design and Implementation
 
 ### Design Docs
@@ -116,6 +139,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 |------|------|--------|
 | Framework | `docs/cli/spec/framework.md` | Config resolution, HTTP client, output formatting, error handling, help grouping, command patterns |
 | OAuth | `docs/cli/spec/oauth.md` | Login flows (localhost callback, device code polling), credential storage, security |
+| Capabilities | `docs/cli/spec/capabilities.md` | Image understand, video read, file upload flow, API contracts |
 
 ### Key Architectural Decisions
 

@@ -59,7 +59,8 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
 		meta.NewLogoutCmd(opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
-		cap.NewImageCmd(clientFactory, opts.Stdout),
+		cap.NewImageCmd(clientFactory, opts.Stdout, opts.Stderr),
+		cap.NewVideoCmd(clientFactory, opts.Stdout, opts.Stderr),
 	)
 
 	return rootCmd

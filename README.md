@@ -103,7 +103,7 @@ go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
 生成图片：
 
 ```bash
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate --prompt "paper crane"
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate --prompt "paper crane"
 ```
 
 也可以直接使用脚本：

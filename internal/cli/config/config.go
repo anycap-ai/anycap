@@ -4,14 +4,23 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/zalando/go-keyring"
+	"github.com/joho/godotenv"
 )
 
-const DefaultEndpoint = "http://127.0.0.1:8080"
+func init() {
+	// Best-effort load of .env file; allows CLI to pick up
+	// ANYCAP_API_ENDPOINT and other env vars during local development.
+	_ = godotenv.Load()
+}
 
-// Config holds user preferences loaded from config file.
+// DefaultEndpoint is the server endpoint used when no flag, env var, or config
+// file overrides it. Release builds inject the production URL via ldflags:
+//
+//	-ldflags "-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
+var DefaultEndpoint = "http://127.0.0.1:18080"
+
+// Config holds user preferences loaded from ~/.anycap/config.json.
 type Config struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
@@ -29,7 +38,7 @@ func configDir() (string, error) {
 	return dir, nil
 }
 
-// Load reads ~/.anycap/config.json. Returns zero Config if file doesn't exist.
+// Load reads ~/.anycap/config.json. Returns zero Config if the file doesn't exist.
 func Load() (Config, error) {
 	dir, err := configDir()
 	if err != nil {
@@ -51,7 +60,9 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
-// ResolveEndpoint returns the endpoint with precedence: flag > env > config file > default.
+// ResolveEndpoint returns the endpoint with precedence:
+//
+//	flag > ANYCAP_API_ENDPOINT env > config file > DefaultEndpoint
 func ResolveEndpoint(flagValue string) string {
 	if flagValue != "" {
 		return flagValue
@@ -64,109 +75,4 @@ func ResolveEndpoint(flagValue string) string {
 		return cfg.Endpoint
 	}
 	return DefaultEndpoint
-}
-
-const (
-	keyringService = "anycap"
-	keyringAccount = "api-key"
-)
-
-// credentialFilePath returns the path to the fallback credentials file.
-func credentialFilePath() (string, error) {
-	dir, err := configDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "credentials"), nil
-}
-
-// loadFromFile reads the API key from the fallback file.
-func loadFromFile() string {
-	path, err := credentialFilePath()
-	if err != nil {
-		return ""
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(data))
-}
-
-// saveToFile writes the API key to the fallback file with 0600 permissions.
-func saveToFile(apiKey string) error {
-	path, err := credentialFilePath()
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, []byte(apiKey+"\n"), 0600)
-}
-
-// deleteFile removes the fallback credentials file. Returns nil if the file doesn't exist.
-func deleteFile() error {
-	path, err := credentialFilePath()
-	if err != nil {
-		return err
-	}
-	err = os.Remove(path)
-	if os.IsNotExist(err) {
-		return nil
-	}
-	return err
-}
-
-// LoadCredential returns the API key with precedence: env var > OS keychain > fallback file.
-// If found in the fallback file and the keychain is available, it auto-migrates to the keychain
-// and deletes the fallback file.
-func LoadCredential() string {
-	// 1. Environment variable always wins.
-	if v := os.Getenv("ANYCAP_API_KEY"); v != "" {
-		return v
-	}
-
-	// 2. Try OS keychain.
-	if secret, err := keyring.Get(keyringService, keyringAccount); err == nil && secret != "" {
-		return secret
-	}
-
-	// 3. Fallback file.
-	key := loadFromFile()
-	if key == "" {
-		return ""
-	}
-
-	// Auto-migrate: if keychain is available, move the credential there and delete the file.
-	if err := keyring.Set(keyringService, keyringAccount, key); err == nil {
-		_ = deleteFile()
-	}
-
-	return key
-}
-
-// SaveCredential stores the API key. It tries the OS keychain first; on success it removes
-// any existing fallback file. If the keychain is unavailable, it falls back to writing a
-// plain-text file with 0600 permissions.
-func SaveCredential(apiKey string) error {
-	if err := keyring.Set(keyringService, keyringAccount, apiKey); err == nil {
-		// Keychain succeeded -- clean up fallback file if it exists.
-		_ = deleteFile()
-		return nil
-	}
-	// Keychain unavailable -- fall back to file.
-	return saveToFile(apiKey)
-}
-
-// DeleteCredential removes the API key from both the OS keychain and the fallback file.
-func DeleteCredential() error {
-	keyringErr := keyring.Delete(keyringService, keyringAccount)
-	if keyringErr == keyring.ErrNotFound {
-		keyringErr = nil
-	}
-	fileErr := deleteFile()
-
-	// Return keyring error only if file delete also failed (both backends broken).
-	if fileErr != nil {
-		return fileErr
-	}
-	return keyringErr
 }

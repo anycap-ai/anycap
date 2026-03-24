@@ -256,7 +256,7 @@ S3_FORCE_PATH_STYLE=true
 # Core
 ANYCAP_APP_NAME=anycap-server
 ANYCAP_APP_ENV=local
-ANYCAP_HTTP_ADDR=:8080
+ANYCAP_HTTP_ADDR=:18080
 
 # Agent Platform (upstream capabilities provider)
 AGENT_PLATFORM_BASE_URL=https://agent-platform.dev.knoffice.tech

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Smoke test for AnyCap Server.
-# Usage: ANYCAP_API_ENDPOINT=http://127.0.0.1:8080 ./smoke_test.sh
+# Usage: ANYCAP_API_ENDPOINT=http://127.0.0.1:18080 ./smoke_test.sh
 #
 # Tests verify that the server responds with correctly shaped JSON envelopes.
 # Upstream-dependent endpoints (image/understand, video/read) may return 502
 # when the real provider is unavailable -- that is still a valid server response.
 set -euo pipefail
 
-ENDPOINT="${ANYCAP_API_ENDPOINT:-http://127.0.0.1:8080}"
+ENDPOINT="${ANYCAP_API_ENDPOINT:-http://127.0.0.1:18080}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
 PASS=0
 FAIL=0

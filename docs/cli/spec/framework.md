@@ -15,20 +15,22 @@ What exists today (`internal/cli/`):
 
 | Component | Path | Status |
 |-----------|------|--------|
-| Root command | `command/root.go` | Basic, no help grouping |
-| Config | `config/config.go` | Only endpoint resolution (flag > env > default), hardcoded `http://127.0.0.1:8080` |
-| HTTP client | `httpclient/client.go` | No auth header, 10s timeout (too short for cap calls), no User-Agent |
+| Root command | `command/root.go` | Working, no help grouping yet |
+| Config | `config/config.go` | Endpoint resolution (flag > env > config file > default), `DefaultEndpoint` injectable via ldflags |
+| Credentials | `config/credential.go` | Safe-first: env var > OS keychain > fallback file (0600), auto-migration from file to keychain |
+| HTTP client | `httpclient/client.go` | Auth header (`Bearer`), `User-Agent`, 120s timeout |
 | Output | `output/json.go` | Raw JSON passthrough via `WriteJSON()`, no TTY detection |
-| Image command | `command/cap/image.go` | generate + models, working |
-| Login command | `command/meta/login.go` | Calls `/v1/login/init` (to be migrated to `/v1/auth/login`), no credential storage |
+| Image command | `command/cap/image.go` | generate + models + understand, working |
+| Video command | `command/cap/video.go` | read, working |
+| Upload helper | `command/cap/upload.go` | Shared presign + upload for --file flag |
+| Login command | `command/meta/login.go` | Auto-detect (localhost callback / device code), `--headless`, `--with-token` |
+| Logout command | `command/meta/logout.go` | Removes credentials from keychain + fallback file |
 | Status command | `command/meta/status.go` | Calls `/v1/status`, working |
+| Auth flows | `auth/` | `AutoFlow`, `LocalhostFlow`, `DeviceFlow`, `HasBrowser()`, platform browser opening |
+| Mock server | `testutil/mockserver/` | All auth endpoints, device code auto-approve, standalone binary (`cmd/anycap-mock`) |
 
 What is missing:
 
-- Config file loading (`~/.anycap/config.json`)
-- Credential storage (`~/.anycap/credentials`)
-- Auth header injection in HTTP client
-- User-Agent header (`anycap-cli/<version>`)
 - TTY detection and output mode switching (JSON vs pretty)
 - Help text grouping (Capabilities / Infrastructure / Management)
 - Structured error handling with exit codes
@@ -77,9 +79,13 @@ CLI flag  >  Environment variable  >  Config file  >  Default
 
 ### 3.4 Default Endpoint Strategy
 
-The current code uses `http://127.0.0.1:8080` as default (for local development). In release builds, the default should be `https://api.anycap.ai`.
+`DefaultEndpoint` is a package-level `var` in `internal/cli/config/config.go`, defaulting to `http://127.0.0.1:18080` for local development. Release builds inject `https://api.anycap.ai` via ldflags in `scripts/release/build.sh`:
 
-Approach: inject via `ldflags` at build time, same pattern as `buildinfo`. `scripts/dev/run-cli.sh` passes the dev endpoint; `scripts/release/build.sh` uses the production default. This keeps production safe-by-default while development stays convenient.
+```
+-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai
+```
+
+This keeps production safe-by-default while development stays convenient. `scripts/dev/run-cli.sh` passes the dev endpoint via `--endpoint` flag.
 
 ## 4. HTTP Client
 
@@ -277,6 +283,15 @@ Phase 1 (framework foundation):
 7. Update `login` to store credentials after successful auth
 
 Phase 2 (follow-up):
+1. Cache layer for models list
+2. `--pretty` human-readable formatting
+3. Remaining cap commands (video, music, tts, asr, search, crawl)
+4. Infra commands (drive, browser, sandbox)
+5. skill and feedback commands
+6. `run` dynamic extension command
+config set-key` commands
+
+Phase 3 (capabilities):
 1. Cache layer for models list
 2. `--pretty` human-readable formatting
 3. Remaining cap commands (video, music, tts, asr, search, crawl)

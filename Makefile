@@ -10,9 +10,19 @@ LDFLAGS  := -s -w \
 
 BINARIES := anycap anycap-server anycap-mock
 
-.PHONY: all build install install-bin clean test lint setup-hooks tools $(BINARIES)
+.PHONY: all build install install-bin clean test lint setup-hooks tools dev $(BINARIES)
 
-all: build
+all:
+	@echo "Usage: make <target>"
+	@echo ""
+	@echo "Targets:"
+	@echo "  build        Build all binaries ($(BINARIES))"
+	@echo "  dev          Start dev server (go run)"
+	@echo "  test         Run tests"
+	@echo "  lint         Run linter"
+	@echo "  install      Setup hooks and install tools"
+	@echo "  install-bin  go install CLI and server"
+	@echo "  clean        Remove built binaries"
 
 build: $(BINARIES)
 
@@ -40,6 +50,9 @@ setup-hooks:
 tools:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+dev:
+	go run -ldflags '$(LDFLAGS)' ./cmd/anycap-server
 
 clean:
 	rm -f $(BINARIES)
