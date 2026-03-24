@@ -76,7 +76,7 @@ CLI 核心行为：读取 `config.json`（endpoint）+ `credentials`（API Key�
 | 路由 | 将能力请求路由到 NexusHub |
 | 日志 | 记录每次调用（供 Dashboard 展示） |
 | 反馈 | 收集 like/dislike 和 capability request |
-| 动态数据 | models 列表、model schema、skill best practice |
+| 动态数据 | models 列表、operation schema / request hints / capabilities、skill best practice（网关契约见 `docs/gateway/cap-multimodal-design.md`） |
 
 ### 2.3 Landing Page & Dashboard
 

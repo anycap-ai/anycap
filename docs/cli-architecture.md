@@ -572,15 +572,16 @@ CLI --help（动态，运行时获取）
   → 始终反映当前版本的真实能力
 
 Models --schema（动态，运行时获取）
-  → 告诉 Agent："这个模型支持哪些专属参数"
-  → 模型参数内省层
+  → 告诉 Agent："这个模型这个 operation 该怎么组请求"
+  → 返回 `schema + request_hints + capabilities`
+  → 具体 contract 以 `docs/gateway/cap-multimodal-design.md` 为准
 
 Skill show（动态，运行时获取）
   → 告诉 Agent："最佳实践是什么，什么场景用什么模型和参数"
   → 经验知识层
 ```
 
-**Skill File 负责"发现"，CLI Help 负责"使用"，Models Schema 负责"精确调参"，Skill Show 负责"用好"。**
+**Skill File 负责"发现"，CLI Help 负责"使用"，Models Schema 负责"精确构建请求"，Skill Show 负责"用好"。**
 
 ## 静态编译 vs 动态下发
 
@@ -630,7 +631,7 @@ CLI 命令结构采用**编译固定**为主，辅以通用执行入口处理新
 
 运行时从后端获取（高频变化部分）
 ├── anycap <cap> models           → 可用模型列表
-├── anycap <cap> models --schema  → 模型专属参数
+├── anycap <cap> models --schema  → 请求构建 contract（schema + hints + capabilities）
 ├── anycap skill show             → 最佳实践
 └── anycap run <capability> ...   → 新能力的命令定义
 ```

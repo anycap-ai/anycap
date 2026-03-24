@@ -184,10 +184,17 @@ type ModelSpec struct {
 }
 
 type OperationSpec struct {
-    SchemaRef string
-    Routes    []RouteBinding
+    SchemaRef    string
+    RequestHints map[string]any
+    Routes       []RouteBinding
 }
 ```
+
+说明：
+
+- `SchemaRef` 指向字段级 schema，是 discovery contract 的主体。
+- `RequestHints` 是可选的薄提示层，只服务端上/CLI 构建请求，不承担底层路由职责。
+- `RequestHints` 只建议放少量信息，如 `input_mode`、`defaults`、`examples`；未知字段必须允许客户端忽略。
 
 ### 5.3 路由绑定模型
 
@@ -235,7 +242,7 @@ type InvokeError struct {
 
 ---
 
-## 6. 对外接口设计
+## 6. 对外接口与 Discovery Contract
 
 ### 6.1 发现类接口
 
@@ -245,7 +252,90 @@ type InvokeError struct {
 - `GET /v1/{capability}/models/{model}/schema?operation={operation}`
 - `GET /v1/audio/voices?model={model}`
 
-### 6.2 执行类接口
+### 6.2 Discovery Contract 边界
+
+本方案不把 discovery 做成一套大协议，只保留 3 层信息：
+
+| 层 | 作用 | 数据来源建议 |
+|---|---|---|
+| `schema` | 描述字段结构、类型、必填和校验 | `operation_schemas` |
+| `request_hints` | 帮助端上/CLI 更顺地构建请求 | `extra_info` 或 handler 聚合 |
+| `capabilities` | 描述枚举约束和能力开关 | `capabilities` |
+
+边界约束：
+
+- `schema` 负责“字段长什么样”。
+- `request_hints` 负责“请求怎么更顺地组出来”。
+- `capabilities` 负责“这个模型能不能、有哪些可选值”。
+- `ability_key`、`gen_type`、`algo_type` 仍然是内部执行细节，不进入公共 discovery contract。
+- `tool_definition` 只在 LLM / tool 场景复用，不纳入当前多模态 discovery 核心。
+
+推荐的 schema 接口返回形态：
+
+```json
+{
+  "capability": "image",
+  "model": "nano-banana-2",
+  "operation": "generate",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "input": {
+        "type": "object"
+      },
+      "options": {
+        "type": "object"
+      }
+    }
+  },
+  "request_hints": {
+    "input_mode": "text",
+    "defaults": {
+      "options.ratio": "1:1"
+    },
+    "examples": [
+      {
+        "input": {
+          "prompt": "a red sports car on a mountain road"
+        },
+        "options": {
+          "ratio": "1:1"
+        }
+      }
+    ]
+  },
+  "capabilities": {
+    "supported_aspect_ratios": ["1:1", "16:9"]
+  }
+}
+```
+
+其中：
+
+- `schema` 是稳定主体，适合做校验和自动补全。
+- `request_hints` 是薄提示层，适合做默认值、示例、输入模式提示。
+- `capabilities` 是约束补充，适合做下拉、开关和可选值过滤。
+
+### 6.3 端上 / CLI 构建请求流程
+
+推荐的构建流程：
+
+1. 先调用 `models` 接口，拿到某个 `model_id` 支持哪些 `operation`。
+2. 再调用 `schema` 接口，拿到该 `operation` 的 `schema + request_hints + capabilities`。
+3. CLI / 端上根据 `schema` 生成参数骨架，根据 `request_hints` 补默认值和示例，根据 `capabilities` 渲染可选项。
+4. 最终统一提交为 `InvokeRequest`，不要在端上感知 `ability_key`。
+
+一句话：
+
+```text
+model_id + operation
+    -> schema
+    -> request_hints
+    -> capabilities
+    -> InvokeRequest
+```
+
+### 6.4 执行类接口
 
 - `POST /v1/image/generate`
 - `POST /v1/image/edit`
@@ -254,11 +344,18 @@ type InvokeError struct {
 - `POST /v1/video/from-image`
 - `POST /v1/audio/speak`
 
-### 6.3 内部统一入口（可选）
+### 6.5 内部统一入口（可选）
 
 - `POST /v1/caps/{capability}/{operation}`
 
 对外可以保留资源风格；内部统一收敛到 `InvokeRequest`。
+
+### 6.6 契约稳定性
+
+- `capability`、`operation`、`model`、`schema` 是稳定 discovery contract 的主体。
+- `request_hints` 只允许做增量扩展，客户端必须忽略未知字段。
+- `capabilities` 可以按能力增加字段，但不应改变既有字段语义。
+- 路由、`ability_key`、`gen_type`、`algo_type` 继续留在内部层，不向端上泄露。
 
 ---
 
@@ -615,6 +712,24 @@ AnyCap executor 统一包装为：
 | `metadata.request_id` | `extra.request_id` |
 | authenticated user id | `user_info.uid` |
 
+### 11.1 Discovery 数据来源建议
+
+AnyCap 不需要要求 NexusHub 立刻新增复杂协议。优先复用 atomic node 已有元数据：
+
+| NexusHub 原子节点数据 | AnyCap Discovery 用途 |
+|---|---|
+| `operation_schemas` | 作为 `schema` 主体 |
+| `capabilities` | 作为能力约束和可选值来源 |
+| `extra_info.request_hints` | 作为可选的构建提示来源 |
+
+建议顺序：
+
+1. 先直接消费 `operation_schemas + capabilities`。
+2. 只有当端上/CLI 还缺少关键构建提示时，再补 `extra_info.request_hints`。
+3. 如果某些提示可稳定从已有字段推导，优先由 handler 聚合成只读返回，不先改库表。
+
+这意味着第一阶段可以只做“薄聚合”，而不是重新定义一套新的底层协议。
+
 ---
 
 ## 12. model_id 与 ability_key 的映射设计
@@ -817,6 +932,19 @@ type InvokeError struct {
 
 handler 只处理公共请求。
 底层 `req_payload` 只允许在 executor 中拼装。
+
+### 17.4 与 NexusHub 对接的最小触点
+
+如果后续要把这套 discovery contract 真正落到接口，建议只动很薄的一层：
+
+- `internal/model/bda/atomic_node.go`：在响应层聚合 `operation_schemas`、`capabilities`、`extra_info.request_hints`。
+- `internal/api/handlers/platform/atomic_node.go`：按读取场景返回只读 discovery 视图，必要时做轻量推导。
+
+第一阶段不建议做：
+
+- 新增存储表或新 JSONB 列
+- 改 adapter / executor 主流程
+- 在服务端引入一整套 schema DSL
 
 ---
 
