@@ -34,7 +34,7 @@ git clone https://github.com/anycap-ai/anycap.git ~/.claude/plugins/anycap
 
 ## Plugin Structure
 
-```
+```text
 anycap/
 ├── .claude-plugin/
 │   └── plugin.json        # Plugin manifest
