@@ -1,0 +1,16 @@
+# AnyCap Image Capability
+
+Use this skill when the agent needs image generation through AnyCap.
+
+## Discovery
+
+- List models: `anycap image models`
+
+## Generate
+
+- `anycap image generate --prompt "cyberpunk city" --model flux-dev`
+
+## Notes
+
+- AnyCap returns JSON-first responses.
+- The current repository skeleton routes image requests through the AnyCap Server stub.

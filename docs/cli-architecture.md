@@ -89,6 +89,7 @@ Run 'anycap skill show' for best practices and usage guide.
 ```
 
 **设计要点**：
+
 - 三个分组，让 Agent 快速定位需要的命令
 - 每条描述不超过一行，节省 token
 - 底部引导 Agent 进入下一层发现
@@ -120,6 +121,7 @@ Run 'anycap image <command> --help' for full parameter details.
 ```
 
 **设计要点**：
+
 - 列出所有子命令（动词）
 - `--model` 不硬编码模型列表，引导 Agent 通过 `models` 子命令动态查询
 - 提供常用 flag 和示例
@@ -164,6 +166,7 @@ EXIT CODES
 ```
 
 **设计要点**：
+
 - 明确区分 REQUIRED 和 COMMON OPTIONS
 - 通用参数跨模型生效，AnyCap 负责翻译给底层模型
 - 模型特有参数通过 `anycap image models --name <model> --schema` 动态发现
@@ -407,14 +410,16 @@ $ anycap image generate --prompt "sunset" --model nano-banana-2 --aspect-ratio 1
 > 注：以下为示例模型，具体支持列表以 `anycap <capability> models` 运行时返回为准。
 > 模型默认参数待定。
 
-| 能力 | 模型示例 | 说明 |
-|------|---------|------|
-| **llm** | claude-opus-4-6, claude-sonnet-4-6, gpt-5.4, gemini-3.1-pro, grok-4 | 前沿语言模型 |
-| **image** | gpt-image-1.5, nano-banana-2, midjourney-v7, seedream-5.0, ideogram-2.0, flux-1.1-pro, sd-3.5 | 图片生成 |
-| **video** | veo-3.1, sora-2, runway-gen-4.5, kling-2.6, wan-2.2 | 视频生成 |
-| **music** | suno-v4, wondera-1, udio-2, elevenlabs-music-1 | 音乐生成 |
-| **tts** | elevenlabs-v3, cartesia-sonic-3, openai-tts-1, fish-speech-1.5 | 文本转语音 |
-| **asr** | elevenlabs-scribe-v2, qwen3-asr, assemblyai-universal-2, whisper-v3-turbo | 语音转文本 |
+
+| 能力        | 模型示例                                                                                          | 说明     |
+| --------- | --------------------------------------------------------------------------------------------- | ------ |
+| **llm**   | claude-opus-4-6, claude-sonnet-4-6, gpt-5.4, gemini-3.1-pro, grok-4                           | 前沿语言模型 |
+| **image** | gpt-image-1.5, nano-banana-2, midjourney-v7, seedream-5.0, ideogram-2.0, flux-1.1-pro, sd-3.5 | 图片生成   |
+| **video** | veo-3.1, sora-2, runway-gen-4.5, kling-2.6, wan-2.2                                           | 视频生成   |
+| **music** | suno-v4, wondera-1, udio-2, elevenlabs-music-1                                                | 音乐生成   |
+| **tts**   | elevenlabs-v3, cartesia-sonic-3, openai-tts-1, fish-speech-1.5                                | 文本转语音  |
+| **asr**   | elevenlabs-scribe-v2, qwen3-asr, assemblyai-universal-2, whisper-v3-turbo                     | 语音转文本  |
+
 
 ## 输出设计
 
@@ -469,24 +474,26 @@ anycap image generate --prompt "..." --pretty     # 强制人类可读
 }
 ```
 
-**`hint` 字段**：告诉 Agent 下一步该执行什么命令。Agent 可以直接读取并执行，实现自动恢复。
+`**hint` 字段**：告诉 Agent 下一步该执行什么命令。Agent 可以直接读取并执行，实现自动恢复。
 
 ### Exit Code 规范
 
-| Code | 含义 | Agent 行为 |
-|------|------|-----------|
-| 0 | 成功 | 继续 |
-| 1 | 未认证 | 执行 `anycap login` |
-| 2 | 参数错误 | 读取 error.message 修正参数 |
-| 3 | 资源不可用（模型下线等） | 换模型重试 |
-| 4 | 超出配额/限流 | 等待或通知用户 |
-| 5 | 服务端错误 | 重试或通知用户 |
+
+| Code | 含义           | Agent 行为              |
+| ---- | ------------ | --------------------- |
+| 0    | 成功           | 继续                    |
+| 1    | 未认证          | 执行 `anycap login`     |
+| 2    | 参数错误         | 读取 error.message 修正参数 |
+| 3    | 资源不可用（模型下线等） | 换模型重试                 |
+| 4    | 超出配额/限流      | 等待或通知用户               |
+| 5    | 服务端错误        | 重试或通知用户               |
+
 
 ## 认证流程
 
 ### Endpoint 与 Auth 抽象
 
-**设计决策**：CLI 不硬编码 API 地址和认证方式。所有 HTTP 请求通过统一的 `endpoint` + `auth token` 发出，CLI 不关心对端是 AnyCap API 还是企业内网 Proxy。
+**设计决策**：CLI 不硬编码 API 地址和认证方式。所有 HTTP 请求通过统一的 `endpoint` + `API Key` 发出，CLI 不关心对端是 AnyCap API 还是企业内网 Proxy。CLI 只与 Server 通信，不直接访问 Auth0 或任何其他 Infra 服务。
 
 ```go
 // CLI 内部的请求发送逻辑
@@ -499,25 +506,29 @@ func (c *Client) do(req *http.Request) (*http.Response, error) {
 
 这样设计是为了支持未来的企业 Proxy 部署模式（见下方「企业 Proxy 模式」章节），同时对个人用户零影响。
 
-### 个人用户认证（默认模式）
+### 认证流程
+
+CLI 的所有认证操作都通过 Server API 完成。Server 内部对接 Auth0，CLI 不直接访问 Auth0。
 
 ```
 anycap login 的内部逻辑：
 
-1. 检查 ~/.anycap/credentials 是否已有有效 token
+1. 检查 ~/.anycap/credentials 是否已有有效 API Key
    └── 有 → "Already logged in as user@example.com"，exit 0
 
-2. 检测环境
-   ├── 能启动 localhost server + 打开浏览器
-   │   └── Localhost Callback Flow（最低摩擦）
-   └── 不能（SSH/容器/无桌面）
-       └── Device Flow（显示链接 + 验证码，需用户确认）
+2. CLI 调用 Server POST /v1/login/init
+   └── Server 返回认证链接
 
-3. 认证成功 → token 保存到 ~/.anycap/credentials
-4. 所有后续命令自动读取 credentials，无需重复认证
+3. 用户在浏览器完成认证（Auth0）
+
+4. CLI 调用 Server POST /v1/login/callback
+   └── Server 验证 → 生成 API Key → 返回给 CLI
+
+5. API Key 保存到 ~/.anycap/credentials
+6. 所有后续命令自动携带 API Key，Server 从 PG 验证
 
 快捷方式：
-  anycap config set-key sk-xxx   ← 跳过整个登录流程
+  anycap config set-key sk-xxx   ← 跳过整个登录流程（API Key 可在 Dashboard 生成）
 ```
 
 ## 渐进式发现机制
@@ -561,15 +572,16 @@ CLI --help（动态，运行时获取）
   → 始终反映当前版本的真实能力
 
 Models --schema（动态，运行时获取）
-  → 告诉 Agent："这个模型支持哪些专属参数"
-  → 模型参数内省层
+  → 告诉 Agent："这个模型这个 operation 该怎么组请求"
+  → 返回 `schema + request_hints + capabilities`
+  → 具体 contract 以 `docs/gateway/cap-multimodal-design.md` 为准
 
 Skill show（动态，运行时获取）
   → 告诉 Agent："最佳实践是什么，什么场景用什么模型和参数"
   → 经验知识层
 ```
 
-**Skill File 负责"发现"，CLI Help 负责"使用"，Models Schema 负责"精确调参"，Skill Show 负责"用好"。**
+**Skill File 负责"发现"，CLI Help 负责"使用"，Models Schema 负责"精确构建请求"，Skill Show 负责"用好"。**
 
 ## 静态编译 vs 动态下发
 
@@ -581,24 +593,28 @@ CLI 命令结构采用**编译固定**为主，辅以通用执行入口处理新
 
 全部动态下发（CLI 从后端获取命令树 manifest）虽然灵活，但有严重的稳定性风险：
 
-| 风险 | 说明 |
-|------|------|
+
+| 风险                | 说明                                              |
+| ----------------- | ----------------------------------------------- |
 | **Agent 调用被静默破坏** | 后端改了命令名/参数名，正在运行的 Agent 代码会突然失效，且 Agent 拥有者无法感知 |
-| **离线不可用** | 首次运行必须联网获取 manifest；无缓存时 CLI 完全不可用 |
-| **无法锁定版本** | Agent 无法声明"我依赖 AnyCap CLI v1.2 的行为"，后端变了全量生效 |
-| **启动开销** | 每次执行都需要解析 manifest 构建命令树 |
-| **Tab 补全受损** | 动态命令无法在安装时生成 shell 补全脚本 |
-| **调试困难** | 问题可能出在 CLI、manifest、或后端三方之一 |
-| **安全攻击面** | manifest 是远程控制的命令定义，被篡改可注入恶意 endpoint |
+| **离线不可用**         | 首次运行必须联网获取 manifest；无缓存时 CLI 完全不可用              |
+| **无法锁定版本**        | Agent 无法声明"我依赖 AnyCap CLI v1.2 的行为"，后端变了全量生效    |
+| **启动开销**          | 每次执行都需要解析 manifest 构建命令树                        |
+| **Tab 补全受损**      | 动态命令无法在安装时生成 shell 补全脚本                         |
+| **调试困难**          | 问题可能出在 CLI、manifest、或后端三方之一                     |
+| **安全攻击面**         | manifest 是远程控制的命令定义，被篡改可注入恶意 endpoint           |
+
 
 而真正需要"动态"的部分，**已有设计已经覆盖**：
 
-| 变化频率 | 内容 | 是否需要动态 | 现有方案 |
-|---------|------|------------|---------|
-| 每周 | 新模型上线 | 需要 | `anycap image models`（已动态） |
-| 每月 | 模型参数变化 | 需要 | `models --schema`（已动态） |
-| 每季度 | 新能力上线（如 `3d`） | 需要 | `anycap run`（新增逃逸口） |
-| 很少 | 命令结构变化 | 不需要 | 发新 CLI 版本 |
+
+| 变化频率 | 内容            | 是否需要动态 | 现有方案                       |
+| ---- | ------------- | ------ | -------------------------- |
+| 每周   | 新模型上线         | 需要     | `anycap image models`（已动态） |
+| 每月   | 模型参数变化        | 需要     | `models --schema`（已动态）     |
+| 每季度  | 新能力上线（如 `3d`） | 需要     | `anycap run`（新增逃逸口）        |
+| 很少   | 命令结构变化        | 不需要    | 发新 CLI 版本                  |
+
 
 ### 架构分层
 
@@ -615,7 +631,7 @@ CLI 命令结构采用**编译固定**为主，辅以通用执行入口处理新
 
 运行时从后端获取（高频变化部分）
 ├── anycap <cap> models           → 可用模型列表
-├── anycap <cap> models --schema  → 模型专属参数
+├── anycap <cap> models --schema  → 请求构建 contract（schema + hints + capabilities）
 ├── anycap skill show             → 最佳实践
 └── anycap run <capability> ...   → 新能力的命令定义
 ```
@@ -661,13 +677,15 @@ $ anycap run 3d --help
 
 ### 一等公民命令 vs `run` 的区别
 
-| | 一等公民（编译固定） | `anycap run`（动态） |
-|---|---|---|
-| 离线 help | 可用 | 需要网络 |
-| Tab 补全 | 支持 | 不支持 |
-| 参数校验 | CLI 本地 + 后端双重校验 | 仅后端校验 |
-| 稳定性 | CLI 版本即契约 | 后端可随时变更 |
-| 适用场景 | 成熟、稳定的能力 | 新上线、预览阶段的能力 |
+
+|         | 一等公民（编译固定）      | `anycap run`（动态） |
+| ------- | --------------- | ---------------- |
+| 离线 help | 可用              | 需要网络             |
+| Tab 补全  | 支持              | 不支持              |
+| 参数校验    | CLI 本地 + 后端双重校验 | 仅后端校验            |
+| 稳定性     | CLI 版本即契约       | 后端可随时变更          |
+| 适用场景    | 成熟、稳定的能力        | 新上线、预览阶段的能力      |
+
 
 **能力的生命周期**：`anycap run`（预览）→ 验证稳定 → 编译进下一版 CLI（一等公民）。
 
@@ -677,13 +695,15 @@ CLI 使用 Go 语言开发，基于 Cobra 框架。
 
 选择理由：
 
-| 因素 | 说明 |
-|------|------|
-| **开发速度** | 创业阶段迭代速度优先，Go 比 Rust 快 |
+
+| 因素         | 说明                                               |
+| ---------- | ------------------------------------------------ |
+| **开发速度**   | 创业阶段迭代速度优先，Go 比 Rust 快                           |
 | **CLI 生态** | gh、kubectl、docker、terraform 均为 Go 编写，Cobra 是业界标准 |
-| **单二进制** | `go build` 直接输出单文件，无运行时依赖 |
-| **交叉编译** | `GOOS=linux GOARCH=amd64` 一行出全平台产物 |
-| **性能足够** | CLI 非计算密集型，Go 的启动速度（~10ms）满足需求 |
+| **单二进制**   | `go build` 直接输出单文件，无运行时依赖                        |
+| **交叉编译**   | `GOOS=linux GOARCH=amd64` 一行出全平台产物               |
+| **性能足够**   | CLI 非计算密集型，Go 的启动速度（~10ms）满足需求                   |
+
 
 ### 本地文件结构
 
@@ -758,13 +778,15 @@ AnyCap 的 API Key 存储在本地 `~/.anycap/credentials` 中。AI Agent 具有
 
 ### 设计要点
 
-| 要点 | 说明 |
-|------|------|
-| Agent 机器上无 AnyCap Key | Key 仅存在于 Proxy Server，Agent 无法读取和泄露 |
-| 内网鉴权与 AnyCap 鉴权解耦 | Proxy 使用企业自有的 token 体系（SSO、内网 token 等），与 AnyCap API Key 无关 |
-| CLI 零改动 | 仅需修改 `config.json` 中的 `endpoint` 和 `auth.token`，CLI 代码无需区分两种模式 |
-| Proxy 本身很薄 | 核心逻辑为 auth 转换 + 请求转发，由 AnyCap 提供开源参考实现 |
-| 内网部署 | Proxy 运行在企业内网，网络层天然安全 |
+
+| 要点                    | 说明                                                             |
+| --------------------- | -------------------------------------------------------------- |
+| Agent 机器上无 AnyCap Key | Key 仅存在于 Proxy Server，Agent 无法读取和泄露                            |
+| 内网鉴权与 AnyCap 鉴权解耦     | Proxy 使用企业自有的 token 体系（SSO、内网 token 等），与 AnyCap API Key 无关     |
+| CLI 零改动               | 仅需修改 `config.json` 中的 `endpoint` 和 `auth.token`，CLI 代码无需区分两种模式 |
+| Proxy 本身很薄            | 核心逻辑为 auth 转换 + 请求转发，由 AnyCap 提供开源参考实现                         |
+| 内网部署                  | Proxy 运行在企业内网，网络层天然安全                                          |
+
 
 ### 优先级
 
@@ -780,10 +802,13 @@ Proxy Server 的开发和发布优先级不高，放在后续阶段。但 **CLI 
 
 ## 潜在问题与应对
 
-| 问题 | 风险 | 应对 |
-|------|------|------|
-| 命令太多导致顶层 help 过长 | Agent 首次发现时 token 开销大 | 顶层 help 严格控制在 30 行以内；详情推到第二层 |
-| Cap 和 Infra 混在顶层 | Agent 可能混淆"调用能力"和"使用资源"的不同交互模式 | help 分组展示；infra 命令返回的 JSON 包含 session/资源 ID，暗示有状态管理 |
-| 新能力上线后 Skill File 过时 | GitHub 上的 skill 和实际 CLI 能力不一致 | `anycap skill show` 始终从服务端拉取最新信息；Skill File 只做入口引导，不列举具体能力 |
-| `--json` 自动检测误判 | 某些终端模拟器被误判为 non-TTY | 提供 `--json` 和 `--pretty` 强制覆盖 |
-| Infra 资源需要生命周期管理 | Agent 创建了 browser/sandbox 但忘记关闭 | 资源设默认 TTL（如 browser 30 分钟自动关闭）；`anycap status` 显示活跃资源 |
+
+| 问题                   | 风险                              | 应对                                                         |
+| -------------------- | ------------------------------- | ---------------------------------------------------------- |
+| 命令太多导致顶层 help 过长     | Agent 首次发现时 token 开销大           | 顶层 help 严格控制在 30 行以内；详情推到第二层                               |
+| Cap 和 Infra 混在顶层     | Agent 可能混淆"调用能力"和"使用资源"的不同交互模式  | help 分组展示；infra 命令返回的 JSON 包含 session/资源 ID，暗示有状态管理        |
+| 新能力上线后 Skill File 过时 | GitHub 上的 skill 和实际 CLI 能力不一致   | `anycap skill show` 始终从服务端拉取最新信息；Skill File 只做入口引导，不列举具体能力 |
+| `--json` 自动检测误判      | 某些终端模拟器被误判为 non-TTY             | 提供 `--json` 和 `--pretty` 强制覆盖                              |
+| Infra 资源需要生命周期管理     | Agent 创建了 browser/sandbox 但忘记关闭 | 资源设默认 TTL（如 browser 30 分钟自动关闭）；`anycap status` 显示活跃资源      |
+
+

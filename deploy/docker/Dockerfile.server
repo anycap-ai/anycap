@@ -1,0 +1,12 @@
+FROM golang:1.24 AS builder
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/anycap-server ./cmd/anycap-server
+
+FROM gcr.io/distroless/base-debian12
+COPY --from=builder /out/anycap-server /usr/local/bin/anycap-server
+ENTRYPOINT ["/usr/local/bin/anycap-server"]
