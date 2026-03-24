@@ -1,0 +1,19 @@
+# AnyCap Skill Index
+
+AnyCap is a capability runtime for AI agents.
+
+## Install
+
+1. Build or install the CLI.
+2. Configure the server endpoint if needed.
+3. Run `anycap login` once.
+
+## Core Commands
+
+- `anycap status`
+- `anycap image models`
+- `anycap image generate --prompt "..."`
+
+## Capability Skills
+
+- `skills/capabilities/anycap-image.skill`

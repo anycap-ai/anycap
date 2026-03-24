@@ -2,7 +2,10 @@ module gitlab.knoffice.tech/engineering/anycap
 
 go 1.24.0
 
-require github.com/cloudwego/hertz v0.10.3
+require (
+	github.com/cloudwego/hertz v0.10.3
+	github.com/spf13/cobra v1.8.1
+)
 
 require (
 	github.com/bytedance/gopkg v0.1.1 // indirect
@@ -13,8 +16,10 @@ require (
 	github.com/cloudwego/netpoll v0.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
