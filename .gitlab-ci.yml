@@ -129,7 +129,7 @@ release:gitlab:
   tags:
     - docker
   image:
-    name: goreleaser/goreleaser:v2
+    name: goreleaser/goreleaser:latest
     entrypoint: [""]
   variables:
     GIT_DEPTH: 0
