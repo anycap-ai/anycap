@@ -27,7 +27,7 @@ builds:
 
 archives:
   - id: anycap
-    builds:
+    ids:
       - anycap
     formats:
       - tar.gz
