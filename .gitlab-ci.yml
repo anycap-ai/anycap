@@ -71,6 +71,8 @@ workflow:
 
 lint:
   stage: lint
+  tags:
+    - docker
   script:
     - go vet ./...
   rules:
@@ -86,6 +88,8 @@ lint:
 
 test:
   stage: test
+  tags:
+    - docker
   script:
     - go test ./...
   rules:
@@ -122,6 +126,8 @@ deploy:dev:
 
 release:gitlab:
   stage: build
+  tags:
+    - docker
   image:
     name: goreleaser/goreleaser:v2
     entrypoint: [""]
@@ -148,6 +154,8 @@ release:gitlab:
 
 release:github:
   stage: deploy
+  tags:
+    - docker
   image: alpine:3.20
   needs:
     - job: release:gitlab
@@ -161,5 +169,3 @@ release:github:
       sh scripts/release/github-release.sh
   rules:
     - if: '$RELEASE_CLI == "true"'
-      when: manual
-      allow_failure: true

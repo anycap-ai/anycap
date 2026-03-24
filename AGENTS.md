@@ -121,7 +121,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 **CLI Release flow:**
 1. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 2. CI tags the commit, runs goreleaser, publishes to GitLab Releases.
-3. GitHub release is a manual job (requires `GITHUB_TOKEN` in CI/CD variables).
+3. GitHub release runs automatically after GitLab release (requires `GITHUB_TOKEN` in CI/CD variables).
 
 **Server deploy flow:**
 1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
