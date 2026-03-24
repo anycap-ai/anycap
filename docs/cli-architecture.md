@@ -486,7 +486,7 @@ anycap image generate --prompt "..." --pretty     # 强制人类可读
 
 ### Endpoint 与 Auth 抽象
 
-**设计决策**：CLI 不硬编码 API 地址和认证方式。所有 HTTP 请求通过统一的 `endpoint` + `auth token` 发出，CLI 不关心对端是 AnyCap API 还是企业内网 Proxy。
+**设计决策**：CLI 不硬编码 API 地址和认证方式。所有 HTTP 请求通过统一的 `endpoint` + `API Key` 发出，CLI 不关心对端是 AnyCap API 还是企业内网 Proxy。CLI 只与 Server 通信，不直接访问 Auth0 或任何其他 Infra 服务。
 
 ```go
 // CLI 内部的请求发送逻辑
@@ -499,25 +499,29 @@ func (c *Client) do(req *http.Request) (*http.Response, error) {
 
 这样设计是为了支持未来的企业 Proxy 部署模式（见下方「企业 Proxy 模式」章节），同时对个人用户零影响。
 
-### 个人用户认证（默认模式）
+### 认证流程
+
+CLI 的所有认证操作都通过 Server API 完成。Server 内部对接 Auth0，CLI 不直接访问 Auth0。
 
 ```
 anycap login 的内部逻辑：
 
-1. 检查 ~/.anycap/credentials 是否已有有效 token
+1. 检查 ~/.anycap/credentials 是否已有有效 API Key
    └── 有 → "Already logged in as user@example.com"，exit 0
 
-2. 检测环境
-   ├── 能启动 localhost server + 打开浏览器
-   │   └── Localhost Callback Flow（最低摩擦）
-   └── 不能（SSH/容器/无桌面）
-       └── Device Flow（显示链接 + 验证码，需用户确认）
+2. CLI 调用 Server POST /v1/login/init
+   └── Server 返回认证链接
 
-3. 认证成功 → token 保存到 ~/.anycap/credentials
-4. 所有后续命令自动读取 credentials，无需重复认证
+3. 用户在浏览器完成认证（Auth0）
+
+4. CLI 调用 Server POST /v1/login/callback
+   └── Server 验证 → 生成 API Key → 返回给 CLI
+
+5. API Key 保存到 ~/.anycap/credentials
+6. 所有后续命令自动携带 API Key，Server 从 PG 验证
 
 快捷方式：
-  anycap config set-key sk-xxx   ← 跳过整个登录流程
+  anycap config set-key sk-xxx   ← 跳过整个登录流程（API Key 可在 Dashboard 生成）
 ```
 
 ## 渐进式发现机制
