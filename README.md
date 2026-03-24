@@ -23,9 +23,14 @@ AnyCap 是一个面向 AI Agent 的 capability runtime。这个仓库当前以 `
 │   │   ├── login/          # 登录链路相关用例，例如 login init
 │   │   └── system/         # 系统状态和健康相关用例
 │   ├── cli/                # CLI 的私有实现目录
-│   │   ├── command/        # Cobra 命令树和各命令装配位置
+│   │   ├── command/        # Cobra 命令树与命令分区装配位置
+│   │   │   ├── cap/        # Cap 能力命令，例如 image、video、music
+│   │   │   ├── infra/      # Infra 资源命令，例如 drive、browser、sandbox
+│   │   │   ├── meta/       # 管理命令，例如 login、status、config、skill
+│   │   │   └── extension/  # 动态扩展命令，例如 run
 │   │   ├── config/         # CLI 配置解析与默认值处理
-│   │   └── httpclient/     # CLI 调用 AnyCap Server 的 HTTP 客户端封装
+│   │   ├── httpclient/     # CLI 调用 AnyCap Server 的 HTTP 客户端封装
+│   │   └── output/         # CLI 输出封装，例如 JSON-first stdout
 │   ├── config/             # Server 配置加载逻辑
 │   ├── domain/             # 领域层，放核心模型和接口定义
 │   │   ├── model/          # 领域模型定义，例如 ServiceStatus、ImageModel
@@ -71,6 +76,7 @@ AnyCap 是一个面向 AI Agent 的 capability runtime。这个仓库当前以 `
 ## CLI 与 Skill 的关系
 
 - CLI 是 Agent 的运行时入口，当前最小命令集包括 `login`、`status`、`image models`、`image generate`。
+- CLI 目录现在按 `docs/cli-architecture.md` 的思路开始分区：`cap` 放能力命令，`meta` 放管理命令，`infra` 和 `extension` 先保留清晰占位，后续命令可以沿着这条线继续扩展。
 - Skill files 是 Agent 的发现入口，用来告诉 Agent 如何安装、认证和调用能力。
 - 当前仓库里的最小骨架已经能让 CLI 通过 HTTP 调用本地 AnyCap Server stub，形成一条从 skill 到 CLI 到 server 的最小闭环。
 
