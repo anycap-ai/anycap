@@ -35,9 +35,18 @@ func NewClient(cfg config.AgentPlatformConfig) *Client {
 
 // upstreamResponse is the JSON shape returned by agent-platform capabilities endpoints.
 type upstreamResponse struct {
-	Content    string `json:"content"`
-	Model      string `json:"model"`
-	DurationMs int64  `json:"duration_ms"`
+	Content    string        `json:"content"`
+	Model      string        `json:"model"`
+	Usage      upstreamUsage `json:"usage"`
+	DurationMs int64         `json:"duration_ms"`
+}
+
+type upstreamUsage struct {
+	InputTokens      int `json:"input_tokens"`
+	OutputTokens     int `json:"output_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+	CacheReadTokens  int `json:"cache_read_tokens"`
+	CacheWriteTokens int `json:"cache_write_tokens"`
 }
 
 // upstreamError is the JSON error shape returned by agent-platform.
@@ -145,8 +154,15 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	}
 
 	return model.UnderstandResult{
-		Content:    result.Content,
-		Model:      result.Model,
+		Content: result.Content,
+		Model:   result.Model,
+		Usage: model.Usage{
+			InputTokens:      result.Usage.InputTokens,
+			OutputTokens:     result.Usage.OutputTokens,
+			TotalTokens:      result.Usage.TotalTokens,
+			CacheReadTokens:  result.Usage.CacheReadTokens,
+			CacheWriteTokens: result.Usage.CacheWriteTokens,
+		},
 		DurationMs: durationMs,
 	}, nil
 }

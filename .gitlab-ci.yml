@@ -1,32 +1,127 @@
+# ---------------------------------------------------------------------------
+# Pipeline configuration for AnyCap
+#
+# Branch strategy:
+#   main / MR              -> lint + test
+#   release/cli-v*         -> goreleaser release (GitLab + GitHub)
+#   build/server           -> docker build server only
+#   deploy/server-dev      -> docker build + deploy (kntech-dev)
+#   deploy/server-prod     -> docker build + deploy (infra-prod)
+# ---------------------------------------------------------------------------
+
+include:
+  - project: "engineering/ci"
+    ref: "main"
+    file: "workflows/go-1.24/.gitlab-ci.yml"
+
 stages:
+  - lint
   - test
-  - release
+  - build
+  - deploy
 
 variables:
   GOVERSION: "1.24"
+  CI_IMAGE: "kntech-registry-vpc.ap-southeast-1.cr.aliyuncs.com/kntech-dev/ci/ci:go-1.24"
+  # Docker build config
+  APP_server_DOCKERFILE: "deploy/docker/Dockerfile.server"
+  APP_server_DOCKER_REPO: "kntech-registry-vpc.ap-southeast-1.cr.aliyuncs.com/kntech-dev/anycap-server"
+
+image: golang:${GOVERSION}
+
+default:
+  before_script: []
+  cache: []
+  interruptible: true
+
+workflow:
+  rules:
+    # MR pipelines: lint + test
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    # Main branch: lint + test
+    - if: $CI_COMMIT_BRANCH == "main"
+    # CLI release branches: goreleaser
+    - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
+      variables:
+        RELEASE_CLI: "true"
+    # Build server image only (no deploy)
+    - if: $CI_COMMIT_BRANCH == "build/server"
+      variables:
+        APPS: "server"
+    # Deploy server to dev
+    - if: $CI_COMMIT_BRANCH == "deploy/server-dev"
+      variables:
+        APPS: "server"
+        DEPLOY_ENABLED: "true"
+        DEPLOY_ENV: "dev"
+        APP_server_SAE_APP_NAME: "anycap-server"
+        APP_server_SAE_APP_NAMESPACE: "kntech-dev"
+    # Deploy server to prod
+    - if: $CI_COMMIT_BRANCH == "deploy/server-prod"
+      variables:
+        APPS: "server"
+        DEPLOY_ENABLED: "true"
+        DEPLOY_ENV: "prod"
+        APP_server_SAE_APP_NAME: "anycap-server"
+        APP_server_SAE_APP_NAMESPACE: "infra-prod"
 
 # ---------------------------------------------------------------------------
-# Test
+# Lint (skip on release, build, deploy branches)
 # ---------------------------------------------------------------------------
-test:
-  stage: test
-  image: golang:${GOVERSION}
+
+lint:
+  stage: lint
   script:
     - go vet ./...
-    - go test ./...
   rules:
-    - if: $CI_MERGE_REQUEST_IID
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_BRANCH =~ /^release\//
+    - if: $RELEASE_CLI
+      when: never
+    - if: $APPS
+      when: never
+    - when: on_success
 
 # ---------------------------------------------------------------------------
-# Release: GitLab
+# Test (skip on release, build, deploy branches)
+# ---------------------------------------------------------------------------
+
+test:
+  stage: test
+  script:
+    - go test ./...
+  rules:
+    - if: $RELEASE_CLI
+      when: never
+    - if: $APPS
+      when: never
+    - when: on_success
+
+# ---------------------------------------------------------------------------
+# Build: Docker image (from engineering/ci include)
+# Runs on build/* and deploy/* branches (when APPS is set)
+# ---------------------------------------------------------------------------
+
+build:image:
+  image: $CI_IMAGE
+  rules:
+    - if: $APPS
+
+# ---------------------------------------------------------------------------
+# Deploy: SAE (from engineering/ci include)
+# Only on deploy branches (DEPLOY_ENABLED=true)
+# ---------------------------------------------------------------------------
+
+deploy:dev:
+  image: $CI_IMAGE
+
+# ---------------------------------------------------------------------------
+# Release: GitLab (goreleaser)
 #
-# Trigger: push branch  release/cli-v<semver>
+# Trigger: push branch release/cli-v<semver>
 # Example: release/cli-v0.1.0, release/cli-v1.2.3-rc.1
 # ---------------------------------------------------------------------------
+
 release:gitlab:
-  stage: release
+  stage: build
   image:
     name: goreleaser/goreleaser:v2
     entrypoint: [""]
@@ -45,13 +140,14 @@ release:gitlab:
       - dist/
     expire_in: 1 day
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
+    - if: '$RELEASE_CLI == "true"'
 
 # ---------------------------------------------------------------------------
 # Release: GitHub (manual, requires GITHUB_TOKEN in CI/CD variables)
 # ---------------------------------------------------------------------------
+
 release:github:
-  stage: release
+  stage: deploy
   image: alpine:3.20
   needs:
     - job: release:gitlab
@@ -64,6 +160,6 @@ release:github:
       export RELEASE_TAG="${TAG}"
       sh scripts/release/github-release.sh
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
+    - if: '$RELEASE_CLI == "true"'
       when: manual
       allow_failure: true

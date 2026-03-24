@@ -108,6 +108,13 @@ Response:
 {
   "content": "The image shows the Eiffel Tower at sunset...",
   "model": "gemini-3-flash",
+  "usage": {
+    "input_tokens": 270,
+    "output_tokens": 85,
+    "total_tokens": 355,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+  },
   "duration_ms": 2340
 }
 ```
@@ -137,6 +144,13 @@ Response:
 {
   "content": "The video shows a person walking through a park...",
   "model": "gemini-3-flash",
+  "usage": {
+    "input_tokens": 1200,
+    "output_tokens": 150,
+    "total_tokens": 1350,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+  },
   "duration_ms": 8120
 }
 ```
@@ -145,7 +159,7 @@ Video read only accepts URL input. For local videos, use presign + upload first.
 
 ## 4. CLI Abstraction
 
-The CLI wraps the multi-step flow into single commands:
+The CLI wraps the multi-step flow into single commands. CLI design and implementation is documented in a separate skill at `skills/anycap-cli/`.
 
 ```mermaid
 flowchart TD
@@ -229,7 +243,7 @@ S3_FORCE_PATH_STYLE=true
 
 | Layer | Component | Path |
 |---|---|---|
-| Domain Model | `PresignRequest`, `PresignResult`, `ImageUnderstandRequest`, `VideoReadRequest`, `UnderstandResult` | `internal/domain/model/capabilities.go` |
+| Domain Model | `PresignRequest`, `PresignResult`, `ImageUnderstandRequest`, `VideoReadRequest`, `UnderstandResult`, `Usage` | `internal/domain/model/capabilities.go` |
 | Domain Port | `CapabilitiesProvider`, `ObjectStorage` | `internal/domain/port/capabilities.go` |
 | Infrastructure | `agentplatform.Client` (upstream understand/read) | `internal/infrastructure/agentplatform/` |
 | Infrastructure | `s3store.Client` (presigned URL generation) | `internal/infrastructure/s3store/` |

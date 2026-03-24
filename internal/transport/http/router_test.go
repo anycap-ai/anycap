@@ -246,6 +246,17 @@ func TestRouter_ImageUnderstand_URL(t *testing.T) {
 	if data["model"] != "stub" {
 		t.Errorf("expected model=stub, got %v", data["model"])
 	}
+
+	usage, ok := data["usage"].(map[string]any)
+	if !ok {
+		t.Fatal("expected usage object in response")
+	}
+	if usage["input_tokens"] == nil {
+		t.Error("expected input_tokens in usage")
+	}
+	if usage["total_tokens"] == nil {
+		t.Error("expected total_tokens in usage")
+	}
 }
 
 func TestRouter_ImageUnderstand_Base64(t *testing.T) {
@@ -347,6 +358,17 @@ func TestRouter_VideoRead_Success(t *testing.T) {
 	}
 	if data["model"] != "stub" {
 		t.Errorf("expected model=stub, got %v", data["model"])
+	}
+
+	usage, ok := data["usage"].(map[string]any)
+	if !ok {
+		t.Fatal("expected usage object in video read response")
+	}
+	if usage["input_tokens"] == nil {
+		t.Error("expected input_tokens in usage")
+	}
+	if usage["total_tokens"] == nil {
+		t.Error("expected total_tokens in usage")
 	}
 }
 

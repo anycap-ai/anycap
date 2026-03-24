@@ -50,10 +50,20 @@ func (r VideoReadRequest) Validate() error {
 	return nil
 }
 
+// Usage holds token usage information from the upstream LLM call.
+type Usage struct {
+	InputTokens      int `json:"input_tokens"`
+	OutputTokens     int `json:"output_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+	CacheReadTokens  int `json:"cache_read_tokens"`
+	CacheWriteTokens int `json:"cache_write_tokens"`
+}
+
 // UnderstandResult is the response from image understand or video read.
 type UnderstandResult struct {
 	Content    string `json:"content"`
 	Model      string `json:"model"`
+	Usage      Usage  `json:"usage"`
 	DurationMs int64  `json:"duration_ms"`
 }
 

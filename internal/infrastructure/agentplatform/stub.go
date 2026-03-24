@@ -26,8 +26,13 @@ func (c *StubClient) ImageUnderstand(_ context.Context, req model.ImageUnderstan
 	}
 
 	return model.UnderstandResult{
-		Content:    fmt.Sprintf("[stub] Analyzed image from %s. Instruction: %q. This is a placeholder response for local development.", source, instruction),
-		Model:      "stub",
+		Content: fmt.Sprintf("[stub] Analyzed image from %s. Instruction: %q. This is a placeholder response for local development.", source, instruction),
+		Model:   "stub",
+		Usage: model.Usage{
+			InputTokens:  10,
+			OutputTokens: 20,
+			TotalTokens:  30,
+		},
 		DurationMs: 1,
 	}, nil
 }
@@ -39,8 +44,13 @@ func (c *StubClient) VideoRead(_ context.Context, req model.VideoReadRequest) (m
 	}
 
 	return model.UnderstandResult{
-		Content:    fmt.Sprintf("[stub] Analyzed video from %s. Instruction: %q. This is a placeholder response for local development.", req.URL, instruction),
-		Model:      "stub",
+		Content: fmt.Sprintf("[stub] Analyzed video from %s. Instruction: %q. This is a placeholder response for local development.", req.URL, instruction),
+		Model:   "stub",
+		Usage: model.Usage{
+			InputTokens:  50,
+			OutputTokens: 30,
+			TotalTokens:  80,
+		},
 		DurationMs: 1,
 	}, nil
 }
