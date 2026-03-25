@@ -7,7 +7,7 @@
 
 # Go
 dist/
-bin/
+/bin/
 .gocache/
 .gomodcache/
 
@@ -34,3 +34,6 @@ next-env.d.ts
 /anycap-server
 /anycap
 /anycap-mock
+
+# Public repo
+/anycap-github

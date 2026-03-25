@@ -41,16 +41,16 @@ Analyze one or more images using vision models.
 Single image:
 
 ```bash
-anycap image understand --url https://example.com/photo.jpg
-anycap image understand --file ./screenshot.png
-anycap image understand --url https://example.com/photo.jpg --instruction "What text is in this image?"
+anycap actions image-understand --url https://example.com/photo.jpg
+anycap actions image-understand --file ./screenshot.png
+anycap actions image-understand --url https://example.com/photo.jpg --instruction "What text is in this image?"
 ```
 
 Multiple images (up to 10):
 
 ```bash
-anycap image understand --url https://example.com/p1.jpg --url https://example.com/p2.jpg --instruction "Compare these images"
-anycap image understand --url https://example.com/photo.jpg --file ./local.png --instruction "Describe each image"
+anycap actions image-understand --url https://example.com/p1.jpg --url https://example.com/p2.jpg --instruction "Compare these images"
+anycap actions image-understand --url https://example.com/photo.jpg --file ./local.png --instruction "Describe each image"
 ```
 
 Options:
@@ -66,9 +66,9 @@ At least one `--url` or `--file` is required. Maximum 10 images per request.
 Analyze a video:
 
 ```bash
-anycap video read --url https://example.com/clip.mp4
-anycap video read --file ./recording.mp4
-anycap video read --url https://example.com/clip.mp4 --instruction "Summarize the key events"
+anycap actions video-read --url https://example.com/clip.mp4
+anycap actions video-read --file ./recording.mp4
+anycap actions video-read --url https://example.com/clip.mp4 --instruction "Summarize the key events"
 ```
 
 Options:

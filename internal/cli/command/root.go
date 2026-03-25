@@ -75,11 +75,17 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewConfigCmd(opts.Stdout, opts.Stderr),
 		meta.NewFeedbackCmd(clientFactory, opts.Stdout),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
+		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
 	)
 
 	// Feature-gated meta commands.
 	if feature.Enabled(feature.Login) {
 		rootCmd.AddCommand(meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr))
+	}
+
+	// Action commands (AI analysis: image-understand, video-read, etc.).
+	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {
+		rootCmd.AddCommand(actionsCmd)
 	}
 
 	// Capability commands (gated by feature flags; skip parent if no subcommands).
