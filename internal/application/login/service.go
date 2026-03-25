@@ -158,7 +158,6 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if s.sessions == nil {
 		return model.LoginCallbackResult{}, model.ErrInternal
 	}
-	if s.apiKeys == nil {
 	if s.users == nil {
 		return model.LoginCallbackResult{}, model.ErrInternal
 	}
