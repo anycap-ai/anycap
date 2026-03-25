@@ -24,7 +24,7 @@ type uploadResult struct {
 //  1. POST /v1/capabilities/presign -> {upload_url, object_url}
 //  2. PUT upload_url (direct to storage, raw file content)
 //  3. Return object_url for use in subsequent API calls
-func uploadFile(ctx context.Context, client *httpclient.Client, filePath string, stderr io.Writer) (*uploadResult, error) {
+func uploadFile(ctx context.Context, client *httpclient.Client, filePath string) (*uploadResult, error) {
 	filename := filepath.Base(filePath)
 	contentType := detectContentType(filePath)
 
@@ -58,8 +58,6 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat file: %w", err)
 	}
-
-	fmt.Fprintf(stderr, "Uploading %s (%d bytes)...\n", filename, stat.Size())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, presign.Data.UploadURL, f)
 	if err != nil {

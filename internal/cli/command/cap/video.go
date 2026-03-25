@@ -1,9 +1,7 @@
 package cap
 
 import (
-	"fmt"
 	"io"
-	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -11,20 +9,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer, stderr io.Writer) *cobra.Command {
+func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	videoCmd := &cobra.Command{
 		Use:   "video",
 		Short: "Analyze and process videos",
 	}
 
 	videoCmd.AddCommand(
-		newVideoReadCmd(clientFactory, stdout, stderr),
+		newVideoReadCmd(clientFactory, stdout),
 	)
 
 	return videoCmd
 }
 
-func newVideoReadCmd(clientFactory func() *httpclient.Client, stdout io.Writer, stderr io.Writer) *cobra.Command {
+func newVideoReadCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var urlFlag string
 	var fileFlag string
 	var instruction string
@@ -44,12 +42,11 @@ Examples:
 			targetURL := urlFlag
 
 			if fileFlag != "" {
-				result, err := uploadFile(cmd.Context(), client, fileFlag, stderr)
+				result, err := uploadFile(cmd.Context(), client, fileFlag)
 				if err != nil {
 					return err
 				}
 				targetURL = result.ObjectURL
-				fmt.Fprintf(stderr, "Analyzing %s...\n", filepath.Base(fileFlag))
 			}
 
 			body := map[string]any{"url": targetURL}
@@ -65,7 +62,7 @@ Examples:
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			return output.WriteContent(stdout, payload)
 		},
 	}
 

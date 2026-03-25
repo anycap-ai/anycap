@@ -26,7 +26,17 @@ AUTH="Authorization: token ${GITHUB_TOKEN}"
 # ── Create release (or get existing) ───────────────────────────────────────
 echo "Creating GitHub release for ${TAG} ..."
 
-RELEASE_BODY=$(printf '{"tag_name":"%s","name":"%s","body":"Released from GitLab CI","draft":false,"prerelease":false}' "$TAG" "$TAG")
+# Use goreleaser changelog if available, otherwise fallback
+if [ -f dist/CHANGELOG.md ]; then
+  BODY=$(cat dist/CHANGELOG.md)
+else
+  BODY="Release ${TAG}"
+fi
+
+RELEASE_BODY=$(jq -n \
+  --arg tag "$TAG" \
+  --arg body "$BODY" \
+  '{tag_name: $tag, name: $tag, body: $body, draft: false, prerelease: false}')
 
 HTTP_CODE=$(curl -s -o /tmp/release_resp.json -w "%{http_code}" \
   -X POST "${API}/releases" \

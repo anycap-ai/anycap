@@ -36,8 +36,9 @@ func TestImageUnderstandWithURL(t *testing.T) {
 	if !strings.Contains(output, "mock image analysis") {
 		t.Fatalf("expected mock analysis in output, got: %s", output)
 	}
-	if !strings.Contains(output, "mock-vision-model") {
-		t.Fatalf("expected model in output, got: %s", output)
+	// CLI should not expose internal fields like model name
+	if strings.Contains(output, "mock-vision-model") {
+		t.Fatalf("model name should not be in CLI output, got: %s", output)
 	}
 }
 
@@ -94,19 +95,19 @@ func TestImageUnderstandWithFile(t *testing.T) {
 		t.Fatalf("image understand --file failed: %v\nstderr: %s", err, stderr.String())
 	}
 
-	// Verify upload progress was logged to stderr
+	// Verify no intermediate progress messages leaked to stderr
 	stderrOut := stderr.String()
-	if !strings.Contains(stderrOut, "Uploading test-photo.png") {
-		t.Fatalf("expected upload progress in stderr, got: %s", stderrOut)
-	}
-	if !strings.Contains(stderrOut, "Analyzing test-photo.png") {
-		t.Fatalf("expected analysis progress in stderr, got: %s", stderrOut)
+	if stderrOut != "" {
+		t.Fatalf("expected no stderr output, got: %s", stderrOut)
 	}
 
-	// Verify JSON result on stdout
+	// Verify clean JSON result on stdout (content only, no model/usage)
 	output := stdout.String()
 	if !strings.Contains(output, "mock image analysis") {
 		t.Fatalf("expected mock analysis in output, got: %s", output)
+	}
+	if strings.Contains(output, "mock-vision-model") {
+		t.Fatalf("model name should not be in CLI output, got: %s", output)
 	}
 }
 
@@ -151,8 +152,9 @@ func TestVideoReadWithURL(t *testing.T) {
 	if !strings.Contains(output, "mock video analysis") {
 		t.Fatalf("expected mock video analysis in output, got: %s", output)
 	}
-	if !strings.Contains(output, "mock-vision-model") {
-		t.Fatalf("expected model in output, got: %s", output)
+	// CLI should not expose internal fields like model name
+	if strings.Contains(output, "mock-vision-model") {
+		t.Fatalf("model name should not be in CLI output, got: %s", output)
 	}
 }
 
@@ -209,16 +211,19 @@ func TestVideoReadWithFile(t *testing.T) {
 		t.Fatalf("video read --file failed: %v\nstderr: %s", err, stderr.String())
 	}
 
-	// Verify upload progress
+	// Verify no intermediate progress messages leaked to stderr
 	stderrOut := stderr.String()
-	if !strings.Contains(stderrOut, "Uploading test-clip.mp4") {
-		t.Fatalf("expected upload progress in stderr, got: %s", stderrOut)
+	if stderrOut != "" {
+		t.Fatalf("expected no stderr output, got: %s", stderrOut)
 	}
 
-	// Verify JSON result
+	// Verify clean JSON result (content only)
 	output := stdout.String()
 	if !strings.Contains(output, "mock video analysis") {
 		t.Fatalf("expected mock video analysis in output, got: %s", output)
+	}
+	if strings.Contains(output, "mock-vision-model") {
+		t.Fatalf("model name should not be in CLI output, got: %s", output)
 	}
 }
 

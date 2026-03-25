@@ -22,7 +22,17 @@ var DefaultEndpoint = "http://127.0.0.1:18080"
 
 // Config holds user preferences loaded from ~/.anycap/config.json.
 type Config struct {
-	Endpoint string `json:"endpoint,omitempty"`
+	Endpoint   string `json:"endpoint,omitempty"`
+	AutoUpdate *bool  `json:"auto_update,omitempty"`
+}
+
+// IsAutoUpdateEnabled returns whether auto-update is enabled.
+// Defaults to true when the field is not set.
+func (c Config) IsAutoUpdateEnabled() bool {
+	if c.AutoUpdate == nil {
+		return true
+	}
+	return *c.AutoUpdate
 }
 
 // configDir returns ~/.anycap, creating it if needed.

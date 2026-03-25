@@ -2,9 +2,7 @@ package cap
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -12,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer, stderr io.Writer) *cobra.Command {
+func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	imageCmd := &cobra.Command{
 		Use:   "image",
 		Short: "Generate, edit, and understand images",
@@ -21,7 +19,7 @@ func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer, stde
 	imageCmd.AddCommand(
 		newImageModelsCmd(clientFactory, stdout),
 		newImageGenerateCmd(clientFactory, stdout),
-		newImageUnderstandCmd(clientFactory, stdout, stderr),
+		newImageUnderstandCmd(clientFactory, stdout),
 	)
 
 	return imageCmd
@@ -69,7 +67,7 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	return cmd
 }
 
-func newImageUnderstandCmd(clientFactory func() *httpclient.Client, stdout io.Writer, stderr io.Writer) *cobra.Command {
+func newImageUnderstandCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var urlFlag string
 	var fileFlag string
 	var instruction string
@@ -89,12 +87,11 @@ Examples:
 			targetURL := urlFlag
 
 			if fileFlag != "" {
-				result, err := uploadFile(cmd.Context(), client, fileFlag, stderr)
+				result, err := uploadFile(cmd.Context(), client, fileFlag)
 				if err != nil {
 					return err
 				}
 				targetURL = result.ObjectURL
-				fmt.Fprintf(stderr, "Analyzing %s...\n", filepath.Base(fileFlag))
 			}
 
 			body := map[string]any{"url": targetURL}
@@ -110,7 +107,7 @@ Examples:
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			return output.WriteContent(stdout, payload)
 		},
 	}
 
