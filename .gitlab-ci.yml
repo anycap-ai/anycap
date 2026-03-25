@@ -152,35 +152,7 @@ build:cli:
     - if: '$RELEASE_CLI == "true"'
 
 # ---------------------------------------------------------------------------
-# Release: GitHub (requires GITHUB_TOKEN in CI/CD variables)
-# ---------------------------------------------------------------------------
-
-release:github:
-  stage: deploy
-  tags:
-    - docker
-  image: alpine:3.20
-  needs:
-    - job: build:cli
-      artifacts: true
-  before_script:
-    - apk add --no-cache curl jq openssl
-  script:
-    - |
-      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
-      export RELEASE_TAG="${TAG}"
-      sh scripts/release/github-release.sh
-  rules:
-    - if: '$RELEASE_CLI == "true"'
-
-# ---------------------------------------------------------------------------
-# Publish: npm packages -- handled by GitHub Actions (publish-npm.yml)
-# using OIDC trusted publishing. No NPM_TOKEN needed.
-# See: anycap-github/.github/workflows/publish-npm.yml
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# Sync: Skills to GitHub repo (runs alongside release)
+# Sync: Skills + install.sh to GitHub repo (runs BEFORE release)
 # ---------------------------------------------------------------------------
 
 sync:skills:
@@ -197,5 +169,28 @@ sync:skills:
       TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
       export RELEASE_TAG="${TAG}"
       sh scripts/release/sync-skills.sh
+  rules:
+    - if: '$RELEASE_CLI == "true"'
+
+# ---------------------------------------------------------------------------
+# Release: GitHub (runs AFTER sync so install.sh is available)
+# ---------------------------------------------------------------------------
+
+release:github:
+  stage: deploy
+  tags:
+    - docker
+  image: alpine:3.20
+  needs:
+    - job: build:cli
+      artifacts: true
+    - job: sync:skills
+  before_script:
+    - apk add --no-cache curl jq openssl
+  script:
+    - |
+      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
+      export RELEASE_TAG="${TAG}"
+      sh scripts/release/github-release.sh
   rules:
     - if: '$RELEASE_CLI == "true"'

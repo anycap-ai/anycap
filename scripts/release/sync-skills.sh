@@ -40,6 +40,11 @@ cp -r .skills/anycap-cli/* "${CLONE_DIR}/skills/anycap-cli/"
 
 cp .skills/LICENSE "${CLONE_DIR}/skills/LICENSE" 2>/dev/null || true
 
+# -- Copy install script ----------------------------------------------------
+echo "Syncing install.sh ..."
+mkdir -p "${CLONE_DIR}/scripts"
+cp web/public/install.sh "${CLONE_DIR}/scripts/install.sh"
+
 # -- Update version in SKILL.md ---------------------------------------------
 SKILL_FILE="${CLONE_DIR}/skills/anycap-cli/SKILL.md"
 if [ -f "$SKILL_FILE" ]; then
