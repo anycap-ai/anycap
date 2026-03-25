@@ -3,6 +3,7 @@ module gitlab.knoffice.tech/engineering/anycap
 go 1.24.0
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.41.4
 	github.com/aws/aws-sdk-go-v2/config v1.32.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.12
