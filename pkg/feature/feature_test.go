@@ -13,8 +13,8 @@ func TestDefaults(t *testing.T) {
 		feature string
 		want    bool
 	}{
-		{"image.generate defaults off", ImageGenerate, false},
-		{"image.models defaults off", ImageModels, false},
+		{"image.generate defaults on", ImageGenerate, true},
+		{"image.models defaults on", ImageModels, true},
 		{"image.understand defaults on", ImageUnderstand, true},
 		{"video.read defaults on", VideoRead, true},
 		{"login defaults on", Login, true},
@@ -34,18 +34,18 @@ func TestRuntimeOverride(t *testing.T) {
 	Reset()
 	defer Reset()
 
-	if Enabled(ImageGenerate) {
-		t.Fatal("ImageGenerate should be off by default")
-	}
-
-	Set(ImageGenerate, true)
 	if !Enabled(ImageGenerate) {
-		t.Fatal("ImageGenerate should be on after Set")
+		t.Fatal("ImageGenerate should be on by default")
 	}
 
 	Set(ImageGenerate, false)
 	if Enabled(ImageGenerate) {
 		t.Fatal("ImageGenerate should be off after Set(false)")
+	}
+
+	Set(ImageGenerate, true)
+	if !Enabled(ImageGenerate) {
+		t.Fatal("ImageGenerate should be on after Set(true)")
 	}
 }
 

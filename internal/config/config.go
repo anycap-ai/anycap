@@ -15,7 +15,7 @@ import (
 const (
 	defaultAppName              = "anycap-server"
 	defaultAppEnv               = "local"
-	defaultHTTPAddr             = ":18080"
+	defaultHTTPAddr             = ":8080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
@@ -59,8 +59,20 @@ type Config struct {
 	NexusHubPlatformToken   string
 	NexusHubCoreBaseURL     string
 	NexusHubCoreToken       string
+	Credit                  CreditConfig
 	AgentPlatform           AgentPlatformConfig
 	S3                      S3Config
+	Lark                    LarkConfig
+}
+
+type CreditConfig struct {
+	BaseURL  string
+	BizToken string
+	Timeout  time.Duration
+}
+
+func (c CreditConfig) Enabled() bool {
+	return c.BaseURL != "" && c.BizToken != ""
 }
 
 type AgentPlatformConfig struct {
@@ -88,6 +100,16 @@ type S3Config struct {
 
 func (c S3Config) Enabled() bool {
 	return c.Endpoint != "" && c.AccessKeyID != "" && c.SecretAccessKey != "" && c.Bucket != ""
+}
+
+type LarkConfig struct {
+	MsgAPI        string
+	WebhookURL    string
+	WebhookSecret string
+}
+
+func (c LarkConfig) Enabled() bool {
+	return c.MsgAPI != "" && c.WebhookURL != "" && c.WebhookSecret != ""
 }
 
 func Load() Config {
@@ -134,8 +156,14 @@ func LoadFromEnv() (Config, error) {
 		NexusHubPlatformToken:   getEnv("NEXUSHUB_PLATFORM_TOKEN", ""),
 		NexusHubCoreBaseURL:     getEnv("NEXUSHUB_CORE_BASE_URL", ""),
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
+		Credit:                  loadCreditConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
 		S3:                      loadS3Config(),
+		Lark: LarkConfig{
+			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
+			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),
+			WebhookSecret: os.Getenv("ANYCAP_LARK_WEBHOOK_SECRET"),
+		},
 	}
 
 	if cfg.requiresExternalInfra() {
@@ -154,6 +182,21 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func loadCreditConfig() CreditConfig {
+	timeout := 10 * time.Second
+	if s := os.Getenv("ANYCAP_CREDIT_TIMEOUT_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			timeout = time.Duration(n) * time.Second
+		}
+	}
+
+	return CreditConfig{
+		BaseURL:  getEnv("ANYCAP_CREDIT_BASE_URL", ""),
+		BizToken: getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
+		Timeout:  timeout,
+	}
 }
 
 func loadAgentPlatformConfig() AgentPlatformConfig {

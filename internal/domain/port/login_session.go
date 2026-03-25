@@ -14,4 +14,3 @@ type LoginSessionRepo interface {
 	MarkAuthorized(ctx context.Context, sessionID, auth0Subject string, authorizedAt time.Time) error
 	MarkCompleted(ctx context.Context, sessionID, apiKeyID string, completedAt time.Time) error
 }
-

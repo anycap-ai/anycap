@@ -22,6 +22,24 @@ func TestParseTokenResponse_APIKey(t *testing.T) {
 	}
 }
 
+func TestParseTokenResponse_APIKeyMVPShape(t *testing.T) {
+	body := []byte(`{"data":{"api_key":"ak-test-123","api_key_id":"key-123","user":{"email":"dev@anycap.ai","name":"Dev"}}}`)
+
+	cred, email, err := parseTokenResponse(body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cred.Token() != "ak-test-123" {
+		t.Errorf("expected token ak-test-123, got %q", cred.Token())
+	}
+	if cred.IsOAuth() {
+		t.Error("expected API key credential, got OAuth")
+	}
+	if email != "dev@anycap.ai" {
+		t.Errorf("expected email dev@anycap.ai, got %q", email)
+	}
+}
+
 func TestParseTokenResponse_OAuth(t *testing.T) {
 	body := []byte(`{"data":{"credential_type":"oauth","access_token":"eyJ-test","refresh_token":"rt-test","expires_in":3600,"user":{"email":"user@anycap.ai"}}}`)
 
@@ -77,7 +95,7 @@ func TestParseTokenResponse_EmptyAccessToken(t *testing.T) {
 
 	_, _, err := parseTokenResponse(body)
 	if err == nil {
-		t.Fatal("expected error for empty access_token")
+		t.Fatal("expected error for empty api key token")
 	}
 }
 

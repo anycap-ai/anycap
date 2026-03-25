@@ -14,6 +14,25 @@ func TestParseVersionFromContent(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "quoted version string",
+			content: `---
+name: anycap-cli
+metadata:
+  version: "0.2.0"
+---
+# Content`,
+			want: "0.2.0",
+		},
+		{
+			name: "dev version",
+			content: `---
+name: anycap-cli
+metadata:
+  version: "dev"
+---`,
+			want: "dev",
+		},
+		{
 			name: "valid yaacli front matter",
 			content: `---
 name: anycap-cli
@@ -90,7 +109,9 @@ func TestCompareVersions(t *testing.T) {
 		{"1.0.0", "1.0.1", -1},
 		{"v1.0.0", "1.0.0", 0},
 		{"0.0.1", "0.0.1", 0},
-		{"dev", "0.1.0", -1},
+		{"dev", "0.1.0", 0},
+		{"0.1.0", "dev", 0},
+		{"dev", "dev", 0},
 	}
 
 	for _, tt := range tests {
@@ -158,12 +179,32 @@ func TestResolveSkillPath(t *testing.T) {
 }
 
 func TestEmbeddedSkill(t *testing.T) {
-	if EmbeddedSkill == "" {
+	data, err := embeddedSkills.ReadFile("embedded/anycap-cli/SKILL.md")
+	if err != nil {
+		t.Fatalf("embedded SKILL.md not found: %v", err)
+	}
+	if len(data) == 0 {
 		t.Fatal("embedded skill content is empty")
 	}
 
-	if _, err := ParseVersionFromContent(EmbeddedSkill); err != nil {
+	if _, err := ParseVersionFromContent(string(data)); err != nil {
 		t.Fatalf("embedded content has no parseable version: %v", err)
+	}
+}
+
+func TestEmbeddedSkillReferences(t *testing.T) {
+	refs := []string{
+		"embedded/anycap-cli/references/generation.md",
+		"embedded/anycap-cli/references/actions.md",
+	}
+	for _, ref := range refs {
+		data, err := embeddedSkills.ReadFile(ref)
+		if err != nil {
+			t.Fatalf("embedded %s not found: %v", ref, err)
+		}
+		if len(data) == 0 {
+			t.Fatalf("embedded %s is empty", ref)
+		}
 	}
 }
 

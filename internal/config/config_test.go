@@ -26,7 +26,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.AppName != "anycap-server" {
 		t.Fatalf("expected default app name, got %q", cfg.AppName)
 	}
-	if cfg.HTTPAddr != ":18080" {
+	if cfg.HTTPAddr != ":8080" {
 		t.Fatalf("expected default addr, got %q", cfg.HTTPAddr)
 	}
 	if cfg.RuntimeMode != "stub" {
@@ -37,6 +37,9 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.LoginAPIKeyTTL != 7*24*time.Hour {
 		t.Fatalf("expected default login api key ttl 7d, got %v", cfg.LoginAPIKeyTTL)
+	}
+	if cfg.Credit.Timeout != 10*time.Second {
+		t.Fatalf("expected default credit timeout 10s, got %v", cfg.Credit.Timeout)
 	}
 }
 

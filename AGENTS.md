@@ -58,8 +58,10 @@ scripts/
 npm/
   anycap/            # npm main package template (@anycap/cli)
 
-.skills/
-  anycap-cli/         # Unified CLI skill file for all capabilities
+skills/
+  anycap-cli/         # CLI skill for agent consumption
+    SKILL.md          # Main skill entry point
+    references/       # Detailed capability docs (loaded on demand)
 
 test/
   integration/       # Integration and smoke tests
@@ -84,17 +86,21 @@ web/
 ## Local Development
 
 ```bash
-# Start server
-go run ./cmd/anycap-server
-# or
-scripts/dev/run-server.sh
+# Start local Postgres + Redis
+make infra-up
+
+# Start server (connects to local infra)
+make dev
 
 # Use the CLI
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate --prompt "paper crane"
-# or
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 status
 scripts/dev/run-cli.sh status
+
+# Stop infra (keep data)
+make infra-down
+
+# Reset infra (destroy volumes and restart fresh)
+make infra-reset
 ```
 
 ## Coding Conventions
@@ -107,7 +113,7 @@ scripts/dev/run-cli.sh status
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
-- **Skill files:** unified CLI skill in `.skills/anycap-cli/SKILL.md`.
+- **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/).
 
 ## CI/CD
 
@@ -179,7 +185,7 @@ Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-d
 
 ### Skills
 
-The CLI skill file lives in `.skills/anycap-cli/SKILL.md`. It documents all CLI commands and capabilities in a single file for agent consumption. This is distributed via the GitHub repo and served from the latest `main` branch.
+The CLI skill lives in `skills/anycap-cli/`. `SKILL.md` is the main entry point; detailed capability docs are in `references/` and loaded on demand. Distributed via the GitHub repo from the latest `main` branch.
 
 ## CLI Design and Implementation
 
@@ -191,7 +197,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 |------|------|--------|
 | Framework | `docs/cli/spec/framework.md` | Config resolution, HTTP client, output formatting, error handling, help grouping, command patterns |
 | OAuth | `docs/cli/spec/oauth.md` | Login flows (localhost callback, device code polling), credential storage, security |
-| Capabilities | `docs/cli/spec/capabilities.md` | Image understand, video read, file upload flow, API contracts |
+| Capabilities | `docs/cli/spec/capabilities.md` | Image generation, model discovery, schema fetch, API contracts |
 
 ### Key Architectural Decisions
 

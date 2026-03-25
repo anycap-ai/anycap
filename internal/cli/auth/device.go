@@ -72,6 +72,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		var poll struct {
 			Data struct {
 				Status string `json:"status"`
+				APIKey string `json:"api_key"`
+				User   *struct {
+					Email string `json:"email"`
+					Name  string `json:"name"`
+				} `json:"user"`
 			} `json:"data"`
 		}
 		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {

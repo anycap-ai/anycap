@@ -39,7 +39,7 @@ func TestAPIKeyRepo_Insert(t *testing.T) {
 
 	err := repo.Insert(context.Background(), model.APIKey{
 		ID:        "key-1",
-		UserID:    "user-1",
+		UserID:    "2000000001",
 		Name:      "cli",
 		KeyPrefix: "ak_test",
 		KeyHash:   "hash",
@@ -55,13 +55,16 @@ func TestAPIKeyRepo_Insert(t *testing.T) {
 	if len(db.args) != 8 {
 		t.Fatalf("expected 8 args, got %d", len(db.args))
 	}
+	if got, ok := db.args[1].(int64); !ok || got != 2000000001 {
+		t.Fatalf("expected bigint user_id arg 2000000001, got %#v", db.args[1])
+	}
 }
 
 func TestAPIKeyRepo_FindByPrefix(t *testing.T) {
 	now := time.Date(2026, 3, 24, 12, 0, 0, 0, time.UTC)
 	db := &fakeAPIKeyDB{row: scanRow{scan: func(dest ...any) error {
 		*(dest[0].(*string)) = "key-1"
-		*(dest[1].(*string)) = "user-1"
+		*(dest[1].(*int64)) = 2000000001
 		*(dest[2].(*string)) = "cli"
 		*(dest[3].(*string)) = "ak_test"
 		*(dest[4].(*string)) = "hash"
@@ -77,7 +80,7 @@ func TestAPIKeyRepo_FindByPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByPrefix() error = %v", err)
 	}
-	if key.ID != "key-1" || key.UserID != "user-1" {
+	if key.ID != "key-1" || key.UserID != "2000000001" {
 		t.Fatalf("unexpected key: %+v", key)
 	}
 }

@@ -51,8 +51,8 @@ AnyCap 是一个面向 AI Agent 的 capability runtime。这个仓库当前以 `
 ├── scripts/                # 开发和发布辅助脚本目录
 │   ├── dev/                # 本地开发脚本，例如启动 server、执行 CLI
 │   └── release/            # 发布构建脚本
-├── .skills/                # AnyCap CLI skill files (agent-facing documentation)
-│   └── anycap-cli/         # Unified CLI skill for all capabilities
+├── skills/                 # AnyCap CLI skill files (agent-facing documentation)
+│   └── anycap-cli/         # CLI skill entry point + references
 ├── test/                   # 仓库级测试和辅助验证目录
 │   └── integration/        # 集成和 smoke 测试脚本位置
 └── web/                    # 面向人类用户的 Web 产品目录

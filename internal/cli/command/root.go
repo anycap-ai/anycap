@@ -36,6 +36,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 	}
 
 	endpointFlag := opts.Endpoint
+	var verbose bool
 
 	rootCmd := &cobra.Command{
 		Use:           "anycap",
@@ -48,6 +49,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 	rootCmd.SetOut(opts.Stdout)
 	rootCmd.SetErr(opts.Stderr)
 	rootCmd.PersistentFlags().StringVar(&endpointFlag, "endpoint", opts.Endpoint, "AnyCap server endpoint")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose output")
 
 	clientFactory := func() *httpclient.Client {
 		cred := cliconfig.LoadCredential()
@@ -76,6 +78,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewFeedbackCmd(clientFactory, opts.Stdout),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
 		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
+		meta.NewDownloadCmd(opts.Stdout),
 	)
 
 	// Action commands (AI analysis: image-understand, video-read, etc.).
@@ -91,7 +94,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		rootCmd.AddCommand(videoCmd)
 	}
 
-	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr)
+	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr, &verbose)
 
 	return rootCmd
 }
@@ -107,28 +110,47 @@ var skipAutoUpdateCmds = map[string]bool{
 // autoUpdatePreRun returns a PersistentPreRunE that performs a throttled
 // auto-update check. It fails silently on any error to avoid blocking
 // normal command execution.
-func autoUpdatePreRun(currentVersion string, stderr io.Writer) func(*cobra.Command, []string) error {
+func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		// Skip for dev builds.
-		if currentVersion == "dev" || currentVersion == "" {
+		v := verbose != nil && *verbose
+		logf := func(format string, a ...any) {
+			if v {
+				fmt.Fprintf(stderr, "[update] "+format+"\n", a...)
+			}
+		}
+
+		// Skip for dev/local builds.
+		if selfupdate.IsDevVersion(currentVersion) {
+			logf("skip: non-release build (version=%q)", currentVersion)
+			return nil
+		}
+
+		// Skip for npm-installed binaries.
+		if selfupdate.IsNPMInstall() {
+			logf("skip: npm-installed binary (use 'npm update @anycap/cli' instead)")
 			return nil
 		}
 
 		// Skip for commands that should not trigger auto-update.
 		if skipAutoUpdateCmds[cmd.Name()] {
+			logf("skip: command %q excluded from auto-update", cmd.Name())
 			return nil
 		}
 
 		// Skip if disabled via config or environment.
 		if os.Getenv("ANYCAP_NO_UPDATE") != "" {
+			logf("skip: ANYCAP_NO_UPDATE is set")
 			return nil
 		}
 		cfg, _ := cliconfig.Load()
 		if !cfg.IsAutoUpdateEnabled() {
+			logf("skip: auto_update disabled in config")
 			return nil
 		}
 
 		updater := selfupdate.NewUpdater()
+		updater.Verbose = v
+		updater.Logger = stderr
 
 		// Throttle: only check once per 24h.
 		if !updater.ShouldCheck() {
@@ -138,11 +160,14 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer) func(*cobra.Comma
 		// Check for update (short timeout, fail silently).
 		rel, err := updater.CheckLatest(context.Background())
 		if err != nil {
+			logf("check failed: %v", err)
 			return nil // network error, skip silently
 		}
 		updater.RecordCheck()
 
+		logf("current=%s latest=%s", currentVersion, rel.Version)
 		if rel.Version == currentVersion {
+			logf("already up to date")
 			return nil
 		}
 

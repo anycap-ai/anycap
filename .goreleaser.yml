@@ -8,6 +8,8 @@ builds:
     main: ./cmd/anycap
     env:
       - CGO_ENABLED=0
+    hooks:
+      pre: sh -c "rm -rf internal/cli/skill/embedded/anycap-cli && mkdir -p internal/cli/skill/embedded/anycap-cli/references && cp skills/anycap-cli/SKILL.md internal/cli/skill/embedded/anycap-cli/ && cp skills/anycap-cli/references/*.md internal/cli/skill/embedded/anycap-cli/references/"
     goos:
       - linux
       - darwin

@@ -19,7 +19,25 @@ func NewUpdateCmd(stdout, stderr io.Writer) *cobra.Command {
 		Short: "Update anycap to the latest version",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			current := buildinfo.Version
+			verbose, _ := cmd.Flags().GetBool("verbose")
+
+			// Block updates for npm-installed binaries.
+			if selfupdate.IsNPMInstall() {
+				fmt.Fprintf(stderr, "This binary was installed via npm.\n")
+				fmt.Fprintf(stderr, "Run 'npm update -g @anycap/cli' to update.\n")
+				return nil
+			}
+
+			// Block updates for dev/local builds.
+			if selfupdate.IsDevVersion(current) {
+				fmt.Fprintf(stderr, "This is a local dev build (version=%q). Self-update is not available.\n", current)
+				fmt.Fprintf(stderr, "Build a release binary or install via 'npm install -g @anycap/cli'.\n")
+				return nil
+			}
+
 			updater := selfupdate.NewUpdater()
+			updater.Verbose = verbose
+			updater.Logger = stderr
 
 			fmt.Fprintf(stderr, "Current version: %s\n", current)
 			fmt.Fprintf(stderr, "Checking for updates...\n")
@@ -56,13 +74,10 @@ func NewUpdateCmd(stdout, stderr io.Writer) *cobra.Command {
 }
 
 // isNewer returns true if the remote version should replace the current one.
-// "dev" builds are always considered outdated.
+// Non-release builds are never considered "newer" (blocked earlier in RunE).
 func isNewer(remote, current string) bool {
-	if current == "dev" || current == "" {
-		return true
+	if selfupdate.IsDevVersion(current) {
+		return false
 	}
-	// Simple lexicographic comparison works for well-formed semver
-	// without pre-release suffixes, which matches our release convention.
-	// Both values are expected without "v" prefix at this point.
 	return remote != current
 }

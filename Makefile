@@ -10,7 +10,7 @@ LDFLAGS  := -s -w \
 
 BINARIES := anycap anycap-server anycap-mock
 
-.PHONY: all build install install-bin clean test lint setup-hooks tools dev $(BINARIES)
+.PHONY: all build install install-bin clean test lint setup-hooks tools dev infra-up infra-down infra-reset sync-skills $(BINARIES)
 
 all:
 	@echo "Usage: make <target>"
@@ -23,8 +23,12 @@ all:
 	@echo "  install      Setup hooks and install tools"
 	@echo "  install-bin  go install CLI and server"
 	@echo "  clean        Remove built binaries"
+	@echo "  infra-up     Start local Postgres + Redis (docker compose)"
+	@echo "  infra-down   Stop local infra"
+	@echo "  infra-reset  Destroy local infra volumes and restart"
+	@echo "  sync-skills  Sync skills/ to embedded for go:embed"
 
-build: $(BINARIES)
+build: sync-skills $(BINARIES)
 
 $(BINARIES):
 	go build -ldflags '$(LDFLAGS)' -o ./$@ ./cmd/$@
@@ -36,7 +40,7 @@ install-bin:
 	go install -ldflags '$(LDFLAGS)' ./cmd/anycap
 	go install -ldflags '$(LDFLAGS)' ./cmd/anycap-server
 
-test:
+test: sync-skills
 	go test ./...
 
 lint:
@@ -56,3 +60,30 @@ dev:
 
 clean:
 	rm -f $(BINARIES)
+
+# ---------- Skills Embedding ----------
+
+EMBEDDED_SKILLS := internal/cli/skill/embedded/anycap-cli
+
+sync-skills:
+	@rm -rf $(EMBEDDED_SKILLS)
+	@mkdir -p $(EMBEDDED_SKILLS)/references
+	@cp skills/anycap-cli/SKILL.md $(EMBEDDED_SKILLS)/
+	@cp skills/anycap-cli/references/*.md $(EMBEDDED_SKILLS)/references/
+	@echo "skills synced to $(EMBEDDED_SKILLS)"
+
+# ---------- Local Infrastructure ----------
+
+infra-up:
+	docker compose up -d
+	@echo "waiting for postgres..."
+	@until docker compose exec -T postgres pg_isready -U anycap >/dev/null 2>&1; do sleep 1; done
+	@echo "postgres ready  -> localhost:15432 (user=anycap pass=anycap db=anycap)"
+	@echo "redis ready     -> localhost:16379 (no password)"
+
+infra-down:
+	docker compose down
+
+infra-reset:
+	docker compose down -v
+	$(MAKE) infra-up

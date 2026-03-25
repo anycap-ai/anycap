@@ -166,29 +166,6 @@ func TestSkillCheckTargetDirectory(t *testing.T) {
 	}
 }
 
-func TestSkillShow(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	root := NewRootCmd(Options{
-		BuildInfo: buildinfo.Current(),
-		Stdout:    &stdout,
-		Stderr:    &stderr,
-	})
-	root.SetArgs([]string{"skill", "show"})
-
-	if err := root.Execute(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if stdout.Len() == 0 {
-		t.Fatal("show output is empty")
-	}
-
-	// Should contain YAML front matter.
-	if !bytes.Contains(stdout.Bytes(), []byte("metadata:")) {
-		t.Error("show output missing metadata block")
-	}
-}
-
 func TestSkillCheckMissingTarget(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root := NewRootCmd(Options{

@@ -368,43 +368,60 @@ sequenceDiagram
 - `https://anycap.ai/device` is a web page where user enters the code.
 - After entering code, user is redirected to the server's auth page for authentication.
 - After auth, the page shows "Device authorized, you can return to the terminal."
-- Server marks the device_code as authorized and returns OAuth tokens on next poll.
+- Server marks the login session as authorized and returns an AnyCap API key on next poll.
 
 ## 7. Server API Contracts
 
-All login endpoints that return credentials use a **unified token response** format.
-The server decides whether to issue an API key or OAuth tokens based on its own
-configuration. CLI handles both transparently.
-
-### 7.0 Unified Token Response
-
 Login completion endpoints (`/v1/auth/callback`, `/v1/auth/device-poll`) return
-credentials in a unified format. The `credential_type` field determines how the
-CLI stores and uses the credential.
+the current MVP API key shape.
+
+### 7.0 MVP Login Completion Response
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `credential_type` | string | yes | `"api_key"` or `"oauth"` |
-| `access_token` | string | yes | Bearer token for API calls |
-| `refresh_token` | string | oauth only | Long-lived refresh token (empty/absent for api_key) |
-| `expires_in` | int | oauth only | Access token TTL in seconds (0/absent for api_key) |
+| `api_key` | string | yes | AnyCap API key to persist locally |
+| `api_key_id` | string | yes | Server-side key identifier |
+| `user.id` | string | no | AnyCap local user id |
 | `user.email` | string | no | User's email |
 | `user.name` | string | no | User's display name |
 
-**API key response** (server issues a static key, no refresh needed):
+**Current MVP response:**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "api_key": "ak-abc123...",
+    "api_key_id": "key-123",
+    "user": {"id": "2000000001", "email": "dev@anycap.ai", "name": "Dev User"}
+  }
+}
+```
+
+**Backward compatibility note:** CLI still contains a compatibility parser for
+older token-oriented responses:
+- `credential_type=api_key` + `access_token`
+- `credential_type=oauth` + `access_token` + `refresh_token`
+
+That compatibility exists to avoid breaking older mocks/tests, but it is not
+the authoritative MVP server contract.
+
+### 7.0.1 Legacy Compatibility Shapes
+
+**Legacy API key response**:
 
 ```json
 {
   "status": "success",
   "data": {
     "credential_type": "api_key",
-    "access_token": "sk-abc123...",
+    "access_token": "sk-legacy-123",
     "user": {"email": "dev@anycap.ai", "name": "Dev User"}
   }
 }
 ```
 
-**OAuth response** (server issues short-lived token with refresh):
+**Legacy OAuth response**:
 
 ```json
 {
@@ -419,15 +436,17 @@ CLI stores and uses the credential.
 }
 ```
 
-**CLI behavior by credential_type:**
+**CLI behavior by response shape:**
 
-| credential_type | Stored as | Auto-refresh | Token expiry |
-|-----------------|-----------|-------------|-------------|
-| `api_key` | `APIKeyCredential` | No | Never (client-side) |
-| `oauth` | `OAuthCredential` | Yes (via `/v1/auth/refresh`) | `expires_in` seconds |
+| Shape | Stored as | Auto-refresh | Notes |
+|-------|-----------|-------------|-------|
+| `api_key` | `APIKeyCredential` | No | Authoritative MVP response |
+| `credential_type=api_key` + `access_token` | `APIKeyCredential` | No | Legacy compatibility only |
+| `credential_type=oauth` + `refresh_token` | `OAuthCredential` | Yes (via `/v1/auth/refresh`) | Compatibility path retained in CLI |
 
-**Backward compatibility:** If `credential_type` is absent, CLI infers the type:
-presence of `refresh_token` implies `oauth`, otherwise `api_key`.
+**Inference rules in CLI parser:** If `api_key` exists, use it. Otherwise,
+presence of `refresh_token` implies `oauth`; if not, `access_token` is treated
+as an API key.
 
 ### 7.1 Localhost Flow
 
@@ -437,16 +456,19 @@ presence of `refresh_token` implies `oauth`, otherwise `api_key`.
 |-----------|-------|------|-------------|
 | Request | `method` | string | `"localhost"` |
 | Request | `redirect_port` | int | CLI's local server port |
-| Response | `auth_url` | string | Server-generated authorize URL (with PKCE, state, scopes) |
+| Response | `login_session_id` | string | Server-generated login session id |
+| Response | `authorize_url` | string | Server-generated authorize URL |
 | Response | `state` | string | State value for CLI to verify in callback |
 
 **POST /v1/auth/callback**
 
 | Direction | Field | Type | Description |
 |-----------|-------|------|-------------|
+| Request | `login_session_id` | string | Login session id from init response |
 | Request | `code` | string | Authorization code from server auth flow |
 | Request | `state` | string | State value to verify |
-| Response | | | Unified token response (see 7.0) |
+| Request | `redirect_uri` | string | CLI localhost callback URI |
+| Response | | | MVP login completion response (see 7.0) |
 
 ### 7.2 Device Code Flow
 
@@ -455,7 +477,7 @@ presence of `refresh_token` implies `oauth`, otherwise `api_key`.
 | Direction | Field | Type | Description |
 |-----------|-------|------|-------------|
 | Request | (empty body) | | |
-| Response | `device_code` | string | Server-generated device code (internal) |
+| Response | `login_session_id` | string | Server-generated login session id |
 | Response | `user_code` | string | User-facing code (`ABCD-1234`) |
 | Response | `verification_uri` | string | URL to enter the code (`https://anycap.ai/device`) |
 | Response | `interval` | int | Polling interval in seconds |
@@ -465,9 +487,9 @@ presence of `refresh_token` implies `oauth`, otherwise `api_key`.
 
 | Direction | Field | Type | Description |
 |-----------|-------|------|-------------|
-| Request | `device_code` | string | Device code from init response |
+| Request | `login_session_id` | string | Login session id from init response |
 | Response | `status` | string | `"pending"`, `"complete"`, `"expired"`, or `"slow_down"` |
-| Response | | | When status=`complete`: unified token response fields (see 7.0) |
+| Response | | | When status=`complete`: MVP login completion response (see 7.0) |
 
 ### 7.3 Token Refresh
 
@@ -631,14 +653,15 @@ Implementation: `internal/cli/testutil/mockserver/server.go`, `cmd/anycap-mock/m
 
 ## 13. Implementation Status
 
-### Done (Phase 1+2+3)
+### Done (Current State)
 
 - [x] Structured credential model: `Credential` type with `oauth` and `api_key` variants
 - [x] Credential storage (JSON): `LoadCredential()`, `SaveCredential()`, `DeleteCredential()` with OS keychain + file fallback + auto-migration
-- [x] OAuth login flows return `access_token` + `refresh_token` + `expires_in`
+- [x] MVP login flows return `api_key` + `api_key_id` + `user`
+- [x] CLI compatibility parser still accepts older token-shaped responses
 - [x] HTTP client auto-refresh: pre-flight expiry check + 401 retry with `POST /v1/auth/refresh`
-- [x] `anycap login` -- localhost callback flow (returns OAuth credential)
-- [x] `anycap login --headless` -- device code polling flow (returns OAuth credential)
+- [x] `anycap login` -- localhost callback flow (stores API key from server)
+- [x] `anycap login --headless` -- device code polling flow (stores API key from server)
 - [x] `anycap login --with-token` -- stdin API key input for CI/CD
 - [x] AutoFlow with `HasBrowser()` + `CanBindLocalPort()` detection
 - [x] `anycap logout` -- best-effort server revoke + local credential deletion
@@ -647,10 +670,9 @@ Implementation: `internal/cli/testutil/mockserver/server.go`, `cmd/anycap-mock/m
 - [x] 401 auto-recovery: OAuth auto-refresh + re-login hint for API key
 - [x] "Already logged in" check before OAuth flows
 - [x] Platform-specific browser opening (macOS/Linux/Windows)
-- [x] Mock auth server with OAuth token responses + `/v1/auth/refresh` endpoint
+- [x] Mock auth server with API key login responses + OAuth refresh compatibility endpoint
 - [x] End-to-end test coverage (device code, with-token, logout, auto-refresh, 401 retry)
 
 ### Pending
 
-- [ ] Auth provider integration on server side
-- [ ] Server-side `/v1/auth/*` endpoints (currently only mock server implements them)
+- [ ] Remove CLI OAuth compatibility path once all mocks/tests and server integrations no longer depend on it

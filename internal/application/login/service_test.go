@@ -29,6 +29,10 @@ type fakeLoginAPIKeyService struct {
 	createdResult model.CreatedAPIKey
 }
 
+type fakeUserProvisioner struct {
+	users map[string]model.User
+}
+
 func (f *fakeLoginAPIKeyService) AuthenticateAPIKey(_ context.Context, _ string) (model.Principal, error) {
 	return model.Principal{}, nil
 }
@@ -53,6 +57,19 @@ func (f *fakeLoginAPIKeyService) CreateAPIKeyWithTTL(_ context.Context, userID, 
 
 func (f *fakeLoginAPIKeyService) RevokeAPIKey(_ context.Context, _ string) error {
 	return nil
+}
+
+func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, error) {
+	if user, ok := f.users[provider+":"+authUser.UserID]; ok {
+		return user, nil
+	}
+	return model.User{
+		ID:        authUser.UserID,
+		Email:     authUser.Email,
+		Name:      authUser.Name,
+		AvatarURL: authUser.Picture,
+		Status:    model.UserStatusActive,
+	}, nil
 }
 
 func (f *fakeAuthClient) BuildLoginURL(_ context.Context, _, redirectURI string) (string, error) {
@@ -131,6 +148,7 @@ func TestService_InitLocalhost(t *testing.T) {
 	}
 	service := NewService(
 		authClient,
+		&fakeUserProvisioner{},
 		apikey.NewMemoryService(),
 		repo,
 		"https://anycap.local/device",
@@ -181,12 +199,17 @@ func TestService_CallbackCreatesAPIKey(t *testing.T) {
 	}
 	apiKeys := &fakeLoginAPIKeyService{
 		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-123", UserID: "user-123"},
+			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
 			RawKey: "ak-created",
 		},
 	}
 	service := NewService(
 		authClient,
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:user-123": {ID: "2000000001", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
+			},
+		},
 		apiKeys,
 		repo,
 		"https://anycap.local/device",
@@ -204,14 +227,23 @@ func TestService_CallbackCreatesAPIKey(t *testing.T) {
 	if result.APIKey == "" {
 		t.Fatal("expected api key")
 	}
-	if result.User == nil || result.User.ID != "user-123" {
-		t.Fatalf("expected user-123, got %#v", result.User)
+	if result.CredentialType != loginCredentialTypeAPIKey {
+		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
+	}
+	if result.AccessToken != "ak-created" {
+		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
+	}
+	if result.User == nil || result.User.ID != "2000000001" {
+		t.Fatalf("expected local user id 2000000001, got %#v", result.User)
 	}
 	if authClient.redirectURI != "http://127.0.0.1:14565/callback" {
 		t.Fatalf("expected redirect uri to be used for exchange, got %q", authClient.redirectURI)
 	}
 	if len(apiKeys.created) != 1 {
 		t.Fatalf("expected one api key create call, got %d", len(apiKeys.created))
+	}
+	if apiKeys.created[0].UserID != "2000000001" {
+		t.Fatalf("expected api key created for local user id, got %q", apiKeys.created[0].UserID)
 	}
 	if apiKeys.created[0].TTL != 7*24*time.Hour {
 		t.Fatalf("expected 7d ttl, got %v", apiKeys.created[0].TTL)
@@ -234,6 +266,7 @@ func TestService_InitDeviceAndPollPending(t *testing.T) {
 				"device-code-1": {Status: model.LoginSessionStatusPending},
 			},
 		},
+		&fakeUserProvisioner{},
 		apikey.NewMemoryService(),
 		repo,
 		"https://anycap.local/device",
@@ -277,7 +310,7 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 	}
 	apiKeys := &fakeLoginAPIKeyService{
 		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-456", UserID: "auth0|user-1"},
+			APIKey: model.APIKey{ID: "key-456", UserID: "2000000002"},
 			RawKey: "ak-device",
 		},
 	}
@@ -292,6 +325,11 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 						Name:   "Demo User",
 					},
 				},
+			},
+		},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:auth0|user-1": {ID: "2000000002", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
 			},
 		},
 		apiKeys,
@@ -314,11 +352,20 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 	if result.APIKey == "" {
 		t.Fatal("expected api key")
 	}
-	if result.User == nil || result.User.ID != "auth0|user-1" {
-		t.Fatalf("expected auth0|user-1, got %#v", result.User)
+	if result.CredentialType != loginCredentialTypeAPIKey {
+		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
+	}
+	if result.AccessToken != "ak-device" {
+		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
+	}
+	if result.User == nil || result.User.ID != "2000000002" {
+		t.Fatalf("expected local user id 2000000002, got %#v", result.User)
 	}
 	if len(apiKeys.created) != 1 {
 		t.Fatalf("expected one api key create call, got %d", len(apiKeys.created))
+	}
+	if apiKeys.created[0].UserID != "2000000002" {
+		t.Fatalf("expected api key created for local user id, got %q", apiKeys.created[0].UserID)
 	}
 	if apiKeys.created[0].TTL != 7*24*time.Hour {
 		t.Fatalf("expected 7d ttl, got %v", apiKeys.created[0].TTL)

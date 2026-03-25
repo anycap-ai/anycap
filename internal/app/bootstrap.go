@@ -10,6 +10,7 @@ import (
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
+	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
@@ -21,10 +22,12 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
@@ -64,6 +67,7 @@ type serverDependencies struct {
 	imageService        *imageapp.Service
 	catalogService      *catalogapp.Service
 	capabilitiesService *capapp.Service
+	feedbackService     *feedbackapp.Service
 	apiKeyService       port.APIKeyService
 	rateLimiter         port.RateLimiter
 	protectedRPM        int
@@ -98,6 +102,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
 	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(buildModelRouteRepo()))
+	feedbackHandler := handlers.NewFeedbackHandler(deps.feedbackService)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr: deps.config.HTTPAddr,
@@ -121,6 +126,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
+				feedbackHandler.RegisterRoutes(protected)
 			}),
 		},
 	})
@@ -134,21 +140,24 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
 	authClient := buildAuthClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
+	creditClient := buildCreditClient(cfg)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
 		apiKeys := apikey.NewMemoryService()
 		callLogs := apikey.NewMemoryCallLogRepo()
 		loginSessions := apikey.NewMemoryLoginSessionRepo()
+		users := userstore.NewMemoryProvisioner()
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, credit.NewStubClient(nil), callLogs),
+			loginService:        loginapp.NewService(authClient, users, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
+			feedbackService:     feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			protectedRPM:        cfg.RateLimitRPM,
@@ -165,6 +174,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
 		loginSessionRepo := apikey.NewLoginSessionRepo(db)
 		callLogs := apikey.NewCallLogDBRepo(db)
+		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
@@ -172,10 +182,11 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, credit.NewStubClient(nil), callLogs),
+			loginService:        loginapp.NewService(authClient, users, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
+			feedbackService:     feedbackapp.NewService(apikey.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			protectedRPM:        cfg.RateLimitRPM,
@@ -207,6 +218,24 @@ func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {
 	}
 	log.Println("capabilities: using stub provider (set AGENT_PLATFORM_* env vars for real provider)")
 	return agentplatform.NewStubClient()
+}
+
+func buildFeedbackNotifier(cfg config.Config) port.FeedbackNotifier {
+	if cfg.Lark.Enabled() {
+		log.Printf("feedback: using lark webhook notifier via %s", cfg.Lark.MsgAPI)
+		return lark.NewWebhookNotifier(cfg.Lark.MsgAPI, cfg.Lark.WebhookURL, cfg.Lark.WebhookSecret)
+	}
+	log.Println("feedback: using stub notifier (set ANYCAP_LARK_WEBHOOK_URL and ANYCAP_LARK_WEBHOOK_SECRET for Lark notifications)")
+	return lark.NewStubNotifier()
+}
+
+func buildCreditClient(cfg config.Config) port.CreditClient {
+	if cfg.Credit.Enabled() {
+		log.Printf("credit: using credit service at %s", cfg.Credit.BaseURL)
+		return credit.NewHTTPClient(cfg.Credit, nil)
+	}
+	log.Println("credit: using stub (set ANYCAP_CREDIT_* env vars for real credit)")
+	return credit.NewStubClient(nil)
 }
 
 func buildObjectStorage(cfg config.Config) port.ObjectStorage {

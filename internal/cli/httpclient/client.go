@@ -30,9 +30,13 @@ type APIError struct {
 	StatusCode int
 	Code       string
 	Message    string
+	RequestID  string
 }
 
 func (e *APIError) Error() string {
+	if e.RequestID != "" {
+		return fmt.Sprintf("%s (request_id: %s)", e.Message, e.RequestID)
+	}
 	return e.Message
 }
 
@@ -165,13 +169,15 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 			return nil, &APIError{
 				StatusCode: httpResp.StatusCode,
 				Code:       env.Error.Code,
-				Message:    fmt.Sprintf("%s (request_id: %s)", env.Error.Message, requestID),
+				Message:    env.Error.Message,
+				RequestID:  requestID,
 			}
 		}
 		return nil, &APIError{
 			StatusCode: httpResp.StatusCode,
 			Code:       fmt.Sprintf("http_%d", httpResp.StatusCode),
-			Message:    fmt.Sprintf("%s (request_id: %s)", strings.TrimSpace(string(data)), requestID),
+			Message:    strings.TrimSpace(string(data)),
+			RequestID:  requestID,
 		}
 	}
 

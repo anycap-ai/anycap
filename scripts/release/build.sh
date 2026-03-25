@@ -6,6 +6,9 @@ DIST_DIR="${ROOT_DIR}/dist"
 
 mkdir -p "${DIST_DIR}"
 
+# Sync embedded skills before build.
+make -C "${ROOT_DIR}" sync-skills
+
 CLI_PKG="gitlab.knoffice.tech/engineering/anycap"
 CLI_LDFLAGS="-X ${CLI_PKG}/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
 

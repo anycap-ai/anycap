@@ -69,6 +69,11 @@ func New() *Server {
 	s.mux.HandleFunc("POST /v1/capabilities/image/understand", s.handleImageUnderstand)
 	s.mux.HandleFunc("POST /v1/capabilities/video/read", s.handleVideoRead)
 
+	// Image generation
+	s.mux.HandleFunc("GET /v1/image/models", s.handleImageModels)
+	s.mux.HandleFunc("GET /v1/image/models/{model}/schema", s.handleImageModelSchema)
+	s.mux.HandleFunc("POST /v1/image/generate", s.handleImageGenerate)
+
 	return s
 }
 
@@ -433,6 +438,94 @@ func (s *Server) handleVideoRead(w http.ResponseWriter, r *http.Request) {
 			"total_tokens":  5200,
 		},
 		"duration_ms": 500,
+	})
+}
+
+// --- Image Generation Capabilities ---
+
+func (s *Server) handleImageModels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"status":     "success",
+		"capability": "image",
+		"models": []map[string]any{
+			{
+				"model":        "mock-model-1",
+				"capability":   "image",
+				"display_name": "Mock Model 1",
+				"status":       "active",
+				"operations":   []string{"generate", "edit"},
+			},
+			{
+				"model":        "mock-model-2",
+				"capability":   "image",
+				"display_name": "Mock Model 2",
+				"status":       "active",
+				"operations":   []string{"generate"},
+			},
+		},
+	})
+}
+
+func (s *Server) handleImageModelSchema(w http.ResponseWriter, r *http.Request) {
+	model := r.PathValue("model")
+	operation := r.URL.Query().Get("operation")
+	if operation == "" {
+		operation = "generate"
+	}
+
+	writeSuccess(w, map[string]any{
+		"capability": "image",
+		"model":      model,
+		"operation":  operation,
+		"schema": map[string]any{
+			"model_params": map[string]any{
+				"prompt":       map[string]any{"type": "string", "required": true},
+				"aspect_ratio": map[string]any{"type": "string", "enum": []string{"1:1", "16:9", "9:16"}},
+				"resolution":   map[string]any{"type": "string", "enum": []string{"1k", "2k", "4k"}},
+			},
+		},
+	})
+}
+
+func (s *Server) handleImageGenerate(w http.ResponseWriter, r *http.Request) {
+	var req map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	prompt, _ := req["prompt"].(string)
+	model, _ := req["model"].(string)
+
+	if prompt == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "prompt is required")
+		return
+	}
+	if model == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "model is required")
+		return
+	}
+
+	reqID := "img_req_" + randomHex(8)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"id":     "req_" + randomHex(8),
+		"status": "success",
+		"data": map[string]any{
+			"id":     reqID,
+			"status": "success",
+			"model":  model,
+			"outputs": []map[string]any{
+				{
+					"type":      "image",
+					"url":       "https://mock.anycap.ai/images/" + reqID + ".png",
+					"mime_type": "image/png",
+				},
+			},
+			"usage":       map[string]int{"credits": 1},
+			"credit_cost": 1,
+		},
 	})
 }
 
