@@ -26,16 +26,18 @@ psql -h 127.0.0.1 -p 15432 -U anycap -d anycap
 ```
 
 ```sql
--- Generate the SHA-256 hash of the API key using Go (not shell tools, which may add encoding differences).
+-- user_id must be numeric (bigint). Use a value like 2000000001.
+-- key_prefix is the first 12 characters of the raw API key.
+-- Generate the SHA-256 hash of the API key using Go (not shell tools).
 -- For key "ak_deadbeef1234567890abcdef":
-INSERT INTO api_keys (id, user_id, name, key_hash, status, created_at, updated_at)
+INSERT INTO api_keys (id, user_id, name, key_prefix, key_hash, status, created_at)
 VALUES (
-  gen_random_uuid(),
-  'user_test',
+  'key_test_001',
+  2000000001,
   'dev-test-key',
+  'ak_deadbeef1',
   'c34fb5c53dcaddf5b0a3bfe6e83bdd5aa60996667da551b7f09b5baa76a7b5dd',
   'active',
-  NOW(),
   NOW()
 );
 ```
@@ -60,19 +62,19 @@ func main() {
 
 ```bash
 # Public endpoints (no auth needed)
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models nano-banana-2
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models nano-banana-2 schema
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models nano-banana-2
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models nano-banana-2 schema
 
 # Authenticated endpoints (needs API key)
 ANYCAP_API_KEY=ak_deadbeef1234567890abcdef \
-  go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate \
+  go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate \
     --prompt "a paper crane on a wooden table" \
     --model nano-banana-2
 
 # With extra params
 ANYCAP_API_KEY=ak_deadbeef1234567890abcdef \
-  go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate \
+  go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate \
     --prompt "a landscape" \
     --model nano-banana-2 \
     --param aspect_ratio=16:9 \
