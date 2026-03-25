@@ -16,11 +16,15 @@ func NewAPIKeyRepo(db DBTX) *APIKeyRepo {
 }
 
 func (r *APIKeyRepo) Insert(ctx context.Context, key model.APIKey) error {
-	_, err := r.db.ExecContext(ctx, `
+	numericUserID, err := parseUserID(key.UserID)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.ExecContext(ctx, `
 		INSERT INTO api_keys (
 			id, user_id, name, key_prefix, key_hash, status, expires_at, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`, key.ID, key.UserID, key.Name, key.KeyPrefix, key.KeyHash, key.Status, key.ExpiresAt, key.CreatedAt)
+	`, key.ID, numericUserID, key.Name, key.KeyPrefix, key.KeyHash, key.Status, key.ExpiresAt, key.CreatedAt)
 	return err
 }
 
@@ -32,9 +36,10 @@ func (r *APIKeyRepo) FindByPrefix(ctx context.Context, prefix string) (model.API
 	`, prefix)
 
 	var key model.APIKey
+	var numericUserID int64
 	err := row.Scan(
 		&key.ID,
-		&key.UserID,
+		&numericUserID,
 		&key.Name,
 		&key.KeyPrefix,
 		&key.KeyHash,
@@ -46,6 +51,7 @@ func (r *APIKeyRepo) FindByPrefix(ctx context.Context, prefix string) (model.API
 	if err != nil {
 		return model.APIKey{}, err
 	}
+	key.UserID = formatUserID(numericUserID)
 
 	return key, nil
 }

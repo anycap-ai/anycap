@@ -28,7 +28,7 @@ func TestCallLogDBRepo_Insert(t *testing.T) {
 
 	err := repo.Insert(context.Background(), model.CallLog{
 		RequestID:  "req-1",
-		UserID:     "user-1",
+		UserID:     "2000000001",
 		APIKeyID:   "key-1",
 		Capability: "image.generate",
 		Model:      "flux-dev",
@@ -44,5 +44,8 @@ func TestCallLogDBRepo_Insert(t *testing.T) {
 	}
 	if len(db.args) != 9 {
 		t.Fatalf("expected 9 args, got %d", len(db.args))
+	}
+	if got, ok := db.args[1].(int64); !ok || got != 2000000001 {
+		t.Fatalf("expected bigint user_id arg 2000000001, got %#v", db.args[1])
 	}
 }
