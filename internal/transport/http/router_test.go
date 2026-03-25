@@ -22,6 +22,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -97,6 +98,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}, apiKeys))
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
 		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
+		userstore.NewMemoryProvisioner(),
 		apiKeys,
 		loginSessions,
 		"https://anycap.local/device",

@@ -73,3 +73,23 @@ func TestLoadFromEnv_ReadsLoginAPIKeyTTL(t *testing.T) {
 		t.Fatalf("expected login api key ttl 72h, got %v", cfg.LoginAPIKeyTTL)
 	}
 }
+
+func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
+	t.Setenv("ANYCAP_CREDIT_BASE_URL", "https://credit.example.com")
+	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
+	t.Setenv("ANYCAP_CREDIT_TIMEOUT_SECONDS", "15")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.Credit.BaseURL != "https://credit.example.com" {
+		t.Fatalf("expected credit base url, got %q", cfg.Credit.BaseURL)
+	}
+	if cfg.Credit.BizToken != "biz-token-123" {
+		t.Fatalf("expected credit biz token, got %q", cfg.Credit.BizToken)
+	}
+	if cfg.Credit.Timeout != 15*time.Second {
+		t.Fatalf("expected credit timeout 15s, got %v", cfg.Credit.Timeout)
+	}
+}

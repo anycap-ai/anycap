@@ -24,6 +24,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
@@ -131,13 +132,15 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		apiKeys := apikey.NewMemoryService()
 		callLogs := apikey.NewMemoryCallLogRepo()
 		loginSessions := apikey.NewMemoryLoginSessionRepo()
+		users := userstore.NewMemoryProvisioner()
+		creditClient := buildCreditClient(cfg)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
+			loginService:        loginapp.NewService(authClient, users, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			imageService:        imageapp.NewService(nexushub.NewStubClient(), creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
 			apiKeyService:       apiKeys,
@@ -156,15 +159,17 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
 		loginSessionRepo := apikey.NewLoginSessionRepo(db)
 		callLogs := apikey.NewCallLogDBRepo(db)
+		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
+		creditClient := buildCreditClient(cfg)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
+			loginService:        loginapp.NewService(authClient, users, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			imageService:        imageapp.NewService(nexushub.NewStubClient(), creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
 			apiKeyService:       apiKeyService,
@@ -198,6 +203,15 @@ func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {
 	}
 	log.Println("capabilities: using stub provider (set AGENT_PLATFORM_* env vars for real provider)")
 	return agentplatform.NewStubClient()
+}
+
+func buildCreditClient(cfg config.Config) port.CreditClient {
+	if cfg.Credit.Enabled() {
+		log.Printf("credit: using credit service at %s", cfg.Credit.BaseURL)
+		return credit.NewHTTPClient(cfg.Credit, nil)
+	}
+	log.Println("credit: using stub (set ANYCAP_CREDIT_* env vars for real credit)")
+	return credit.NewStubClient(nil)
 }
 
 func buildObjectStorage(cfg config.Config) port.ObjectStorage {

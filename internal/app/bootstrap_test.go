@@ -122,3 +122,23 @@ func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 		t.Fatalf("expected real auth0 authorize url, got %q", result.AuthorizeURL)
 	}
 }
+
+func TestBuildServerDependencies_CreditEnabledUsesRealClient(t *testing.T) {
+	deps, err := buildServerDependencies(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+		Credit: config.CreditConfig{
+			BaseURL:  "https://credit.example.com",
+			BizToken: "biz-token-123",
+		},
+	}, buildinfo.Info{Version: "dev"})
+	if err != nil {
+		t.Fatalf("buildServerDependencies() error = %v", err)
+	}
+	if deps.imageService == nil {
+		t.Fatal("expected image service to be initialized")
+	}
+}

@@ -53,8 +53,19 @@ type Config struct {
 	Auth0RedirectURL  string
 	NexusHubBaseURL   string
 	NexusHubToken     string
+	Credit            CreditConfig
 	AgentPlatform     AgentPlatformConfig
 	S3                S3Config
+}
+
+type CreditConfig struct {
+	BaseURL  string
+	BizToken string
+	Timeout  time.Duration
+}
+
+func (c CreditConfig) Enabled() bool {
+	return c.BaseURL != "" && c.BizToken != ""
 }
 
 type AgentPlatformConfig struct {
@@ -124,6 +135,7 @@ func LoadFromEnv() (Config, error) {
 		Auth0RedirectURL:  os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
 		NexusHubBaseURL:   getEnv("NEXUSHUB_BASE_URL", ""),
 		NexusHubToken:     getEnv("NEXUSHUB_TOKEN", ""),
+		Credit:            loadCreditConfig(),
 		AgentPlatform:     loadAgentPlatformConfig(),
 		S3:                loadS3Config(),
 	}
@@ -144,6 +156,21 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func loadCreditConfig() CreditConfig {
+	timeout := 10 * time.Second
+	if s := os.Getenv("ANYCAP_CREDIT_TIMEOUT_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			timeout = time.Duration(n) * time.Second
+		}
+	}
+
+	return CreditConfig{
+		BaseURL:  getEnv("ANYCAP_CREDIT_BASE_URL", ""),
+		BizToken: getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
+		Timeout:  timeout,
+	}
 }
 
 func loadAgentPlatformConfig() AgentPlatformConfig {

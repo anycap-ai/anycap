@@ -32,6 +32,9 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.LoginAPIKeyTTL != 7*24*time.Hour {
 		t.Fatalf("expected default login api key ttl 7d, got %v", cfg.LoginAPIKeyTTL)
 	}
+	if cfg.Credit.Timeout != 10*time.Second {
+		t.Fatalf("expected default credit timeout 10s, got %v", cfg.Credit.Timeout)
+	}
 }
 
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {

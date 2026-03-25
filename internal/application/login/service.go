@@ -11,6 +11,7 @@ import (
 
 type Service struct {
 	authClient            port.Auth0Client
+	users                 port.UserProvisioner
 	apiKeys               port.APIKeyService
 	sessions              port.LoginSessionRepo
 	deviceVerificationURL string
@@ -23,6 +24,7 @@ type Service struct {
 
 func NewService(
 	authClient port.Auth0Client,
+	users port.UserProvisioner,
 	apiKeys port.APIKeyService,
 	sessions port.LoginSessionRepo,
 	deviceVerificationURL string,
@@ -56,6 +58,7 @@ func NewService(
 
 	return &Service{
 		authClient:            authClient,
+		users:                 users,
 		apiKeys:               apiKeys,
 		sessions:              sessions,
 		deviceVerificationURL: deviceVerificationURL,
@@ -156,6 +159,10 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 		return model.LoginCallbackResult{}, model.ErrInternal
 	}
 	if s.apiKeys == nil {
+	if s.users == nil {
+		return model.LoginCallbackResult{}, model.ErrInternal
+	}
+	if s.apiKeys == nil {
 		return model.LoginCallbackResult{}, model.ErrInternal
 	}
 
@@ -180,8 +187,12 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
 		return model.LoginCallbackResult{}, err
 	}
+	localUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
 
-	created, err := s.createLoginAPIKey(ctx, user.UserID)
+	created, err := s.createLoginAPIKey(ctx, localUser.ID)
 	if err != nil {
 		return model.LoginCallbackResult{}, err
 	}
@@ -193,9 +204,9 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 		APIKeyID: created.APIKey.ID,
 		APIKey:   created.RawKey,
 		User: &model.LoginUser{
-			ID:    user.UserID,
-			Email: user.Email,
-			Name:  user.Name,
+			ID:    localUser.ID,
+			Email: localUser.Email,
+			Name:  localUser.Name,
 		},
 	}, nil
 }
@@ -205,6 +216,9 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 		return model.LoginPollResult{}, model.ErrInvalidParam
 	}
 	if s.sessions == nil {
+		return model.LoginPollResult{}, model.ErrInternal
+	}
+	if s.users == nil {
 		return model.LoginPollResult{}, model.ErrInternal
 	}
 
@@ -236,7 +250,11 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 			if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
 				return model.LoginPollResult{}, err
 			}
-			created, err := s.createLoginAPIKey(ctx, user.UserID)
+			localUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
+			if err != nil {
+				return model.LoginPollResult{}, err
+			}
+			created, err := s.createLoginAPIKey(ctx, localUser.ID)
 			if err != nil {
 				return model.LoginPollResult{}, err
 			}
@@ -248,9 +266,9 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 				APIKeyID: created.APIKey.ID,
 				APIKey:   created.RawKey,
 				User: &model.LoginUser{
-					ID:    user.UserID,
-					Email: user.Email,
-					Name:  user.Name,
+					ID:    localUser.ID,
+					Email: localUser.Email,
+					Name:  localUser.Name,
 				},
 			}, nil
 		default:
