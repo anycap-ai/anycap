@@ -54,11 +54,14 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 }
 
 // WriteError writes a structured JSON error to the writer.
-// When hint is non-empty, it is included to guide agents on recovery.
-func WriteError(w io.Writer, code, message, hint string) error {
+// When hint or requestID are non-empty, they are included in the output.
+func WriteError(w io.Writer, code, message, hint, requestID string) error {
 	obj := map[string]string{"error": code, "message": message}
 	if hint != "" {
 		obj["hint"] = hint
+	}
+	if requestID != "" {
+		obj["request_id"] = requestID
 	}
 	data, _ := json.Marshal(obj)
 	_, err := fmt.Fprintln(w, string(data))

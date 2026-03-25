@@ -10,6 +10,7 @@ import (
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
+	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
@@ -19,6 +20,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -121,6 +123,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}}}}}))
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
+	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
@@ -151,6 +154,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
+				feedbackHandler.RegisterRoutes(protected)
 			}),
 		},
 	})
@@ -297,5 +301,58 @@ func TestRouter_Healthz(t *testing.T) {
 	}
 	if resp.Header().Get("X-Request-Id") == "" {
 		t.Fatal("expected X-Request-Id header")
+	}
+}
+
+func TestRouter_FeedbackRequiresAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	body := []byte(`{"type":"bug","message":"something broke","metadata":{"cli_version":"0.1.0","os":"darwin/arm64"}}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/feedback", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_FeedbackSuccess(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	body := []byte(`{"type":"bug","message":"image generate returned 500","metadata":{"cli_version":"0.1.0","os":"darwin/arm64"}}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/feedback",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if env["status"] != "success" {
+		t.Fatalf("expected success, got %v", env["status"])
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	if data["id"] == nil || data["id"] == "" {
+		t.Fatalf("expected feedback id, got %#v", data)
+	}
+}
+
+func TestRouter_FeedbackInvalidType(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	body := []byte(`{"type":"invalid","message":"test","metadata":{}}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/feedback",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }

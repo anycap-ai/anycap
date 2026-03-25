@@ -2,7 +2,7 @@ package skill
 
 import (
 	"bufio"
-	_ "embed"
+	"embed"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,8 +12,9 @@ import (
 	"strings"
 )
 
-//go:embed embedded/yaacli/anycap-cli/SKILL.md
-var EmbeddedSkill string
+//go:embed embedded/anycap-cli/*
+//go:embed embedded/anycap-cli/references/*
+var embeddedSkills embed.FS
 
 // SkillsRepo is the public GitHub repository for AnyCap skill files.
 const SkillsRepo = "https://github.com/anycap-ai/anycap-skills.git"
@@ -57,6 +58,7 @@ func ParseVersionFromContent(content string) (string, error) {
 		if inMetadata && strings.HasPrefix(trimmed, "version:") {
 			v := strings.TrimPrefix(trimmed, "version:")
 			v = strings.TrimSpace(v)
+			v = strings.Trim(v, `"'`)
 			return v, nil
 		}
 
@@ -71,8 +73,13 @@ func ParseVersionFromContent(content string) (string, error) {
 
 // CompareVersions compares two semver version strings (without "v" prefix).
 // Returns -1 if a < b, 0 if a == b, 1 if a > b.
+// Non-semver values like "dev" are treated as equal to any version (returns 0).
 func CompareVersions(a, b string) int {
 	if a == b {
+		return 0
+	}
+	// Treat non-semver values (e.g., "dev") as always up-to-date.
+	if !isSemver(a) || !isSemver(b) {
 		return 0
 	}
 	ap := parseSemver(a)
@@ -86,6 +93,15 @@ func CompareVersions(a, b string) int {
 		}
 	}
 	return 0
+}
+
+// isSemver checks if a version string looks like semver (starts with a digit).
+func isSemver(v string) bool {
+	v = strings.TrimPrefix(v, "v")
+	if len(v) == 0 {
+		return false
+	}
+	return v[0] >= '0' && v[0] <= '9'
 }
 
 func parseSemver(v string) [3]int {
@@ -139,7 +155,31 @@ func installEmbedded(target string) error {
 	if err := os.MkdirAll(target, 0755); err != nil {
 		return fmt.Errorf("create directory %s: %w", target, err)
 	}
-	return os.WriteFile(filepath.Join(target, "SKILL.md"), []byte(EmbeddedSkill), 0644)
+
+	return fs.WalkDir(embeddedSkills, "embedded/anycap-cli", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, err := filepath.Rel("embedded/anycap-cli", path)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return nil
+		}
+
+		dst := filepath.Join(target, rel)
+		if d.IsDir() {
+			return os.MkdirAll(dst, 0755)
+		}
+
+		data, err := embeddedSkills.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(dst, data, 0644)
+	})
 }
 
 func copyRepoFiles(repoDir, target string) error {

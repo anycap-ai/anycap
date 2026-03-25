@@ -56,6 +56,7 @@ type Config struct {
 	Credit            CreditConfig
 	AgentPlatform     AgentPlatformConfig
 	S3                S3Config
+	Lark              LarkConfig
 }
 
 type CreditConfig struct {
@@ -93,6 +94,16 @@ type S3Config struct {
 
 func (c S3Config) Enabled() bool {
 	return c.Endpoint != "" && c.AccessKeyID != "" && c.SecretAccessKey != "" && c.Bucket != ""
+}
+
+type LarkConfig struct {
+	MsgAPI        string
+	WebhookURL    string
+	WebhookSecret string
+}
+
+func (c LarkConfig) Enabled() bool {
+	return c.MsgAPI != "" && c.WebhookURL != "" && c.WebhookSecret != ""
 }
 
 func Load() Config {
@@ -138,6 +149,11 @@ func LoadFromEnv() (Config, error) {
 		Credit:            loadCreditConfig(),
 		AgentPlatform:     loadAgentPlatformConfig(),
 		S3:                loadS3Config(),
+		Lark: LarkConfig{
+			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
+			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),
+			WebhookSecret: os.Getenv("ANYCAP_LARK_WEBHOOK_SECRET"),
+		},
 	}
 
 	if cfg.requiresExternalInfra() {

@@ -25,7 +25,6 @@ func NewSkillCmd(stdout, stderr io.Writer) *cobra.Command {
 		newSkillCheckCmd(stdout),
 		newSkillInstallCmd(stdout, stderr),
 		newSkillUpdateCmd(stdout, stderr),
-		newSkillShowCmd(stdout),
 	)
 
 	return cmd
@@ -169,17 +168,6 @@ func newSkillUpdateCmd(stdout, stderr io.Writer) *cobra.Command {
 	_ = cmd.MarkFlagRequired("target")
 
 	return cmd
-}
-
-func newSkillShowCmd(stdout io.Writer) *cobra.Command {
-	return &cobra.Command{
-		Use:   "show",
-		Short: "Print embedded skill content",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := fmt.Fprint(stdout, skill.EmbeddedSkill)
-			return err
-		},
-	}
 }
 
 func writeCheckResult(w io.Writer, result map[string]any) error {

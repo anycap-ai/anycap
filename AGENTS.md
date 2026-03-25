@@ -58,8 +58,10 @@ scripts/
 npm/
   anycap/            # npm main package template (@anycap/cli)
 
-.skills/
-  anycap-cli/         # Unified CLI skill file for all capabilities
+skills/
+  anycap-cli/         # CLI skill for agent consumption
+    SKILL.md          # Main skill entry point
+    references/       # Detailed capability docs (loaded on demand)
 
 test/
   integration/       # Integration and smoke tests
@@ -111,7 +113,7 @@ make infra-reset
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
-- **Skill files:** unified CLI skill in `.skills/anycap-cli/SKILL.md`.
+- **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/).
 
 ## CI/CD
 
@@ -183,7 +185,7 @@ Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-d
 
 ### Skills
 
-The CLI skill file lives in `.skills/anycap-cli/SKILL.md`. It documents all CLI commands and capabilities in a single file for agent consumption. This is distributed via the GitHub repo and served from the latest `main` branch.
+The CLI skill lives in `skills/anycap-cli/`. `SKILL.md` is the main entry point; detailed capability docs are in `references/` and loaded on demand. Distributed via the GitHub repo from the latest `main` branch.
 
 ## CLI Design and Implementation
 

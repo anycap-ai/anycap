@@ -323,19 +323,19 @@ Skills and CLI release together:
 
 ```mermaid
 flowchart LR
-    A[Bump CLI version] --> B[Update .skills/ in main repo]
+    A[Bump CLI version] --> B[Update skills/ in main repo]
     B --> C[CLI release via goreleaser]
-    C --> D[Sync .skills/ to anycap-skills repo]
+    C --> D[Sync skills/ to anycap-skills repo]
     D --> E[Tag anycap-skills with same version]
     E --> F[Publish npm @anycap/skills]
 ```
 
 Steps:
 
-1. Update skill content in the main repo `.skills/` directory during development.
+1. Update skill content in the main repo `skills/` directory during development.
 2. On CLI release branch (`release/cli-v0.3.0`):
    - goreleaser builds CLI binaries with embedded skills.
-   - CI pushes `.skills/` content to `anycap-ai/anycap-skills` repo.
+   - CI pushes `skills/` content to `anycap-ai/anycap-skills` repo.
    - CI tags the skills repo with the same version.
    - CI publishes `@anycap/skills` to npm.
 3. `version.json` in the skills repo is auto-updated by CI.

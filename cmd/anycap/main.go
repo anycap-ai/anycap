@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -19,39 +20,39 @@ func main() {
 	})
 
 	if err := cmd.Execute(); err != nil {
-		code, message, hint := classifyError(err)
-		_ = output.WriteError(os.Stdout, code, message, hint)
+		code, message, hint, requestID := classifyError(err)
+		_ = output.WriteError(os.Stdout, code, message, hint, requestID)
 		os.Exit(1)
 	}
 }
 
-// classifyError maps an error to a machine-readable code, message, and
-// an optional hint that tells the agent how to recover.
-func classifyError(err error) (code, message, hint string) {
+// classifyError maps an error to a machine-readable code, message, hint,
+// and optional request_id for JSON output.
+func classifyError(err error) (code, message, hint, requestID string) {
 	// Server API error (parsed from JSON envelope)
 	var apiErr *httpclient.APIError
 	if errors.As(err, &apiErr) {
-		return apiErr.Code, apiErr.Message, hintForAPIError(apiErr)
+		return apiErr.Code, apiErr.Message, hintForAPIError(apiErr), apiErr.RequestID
 	}
 
 	// Authentication error (401)
 	var authErr *httpclient.AuthError
 	if errors.As(err, &authErr) {
-		return "auth_required", authErr.Error(), "run 'anycap login' to authenticate"
+		return "auth_required", authErr.Error(), "run 'anycap login' to authenticate", ""
 	}
 
 	// Network / connection errors
 	var urlErr *url.Error
 	var netErr *net.OpError
 	if errors.As(err, &urlErr) || errors.As(err, &netErr) {
-		return "connection_error", err.Error(), "check that the server is running, or set --endpoint"
+		return "connection_error", err.Error(), "check that the server is running, or set --endpoint", ""
 	}
 
 	// Cobra / CLI validation errors
 	msg := err.Error()
 
 	if strings.Contains(msg, "unknown command") {
-		return "unknown_command", msg, "run 'anycap --help' for available commands"
+		return "unknown_command", msg, "run 'anycap --help' for available commands", ""
 	}
 	if strings.Contains(msg, "required flag") ||
 		strings.Contains(msg, "flags in the group") ||
@@ -59,11 +60,11 @@ func classifyError(err error) (code, message, hint string) {
 		strings.Contains(msg, "subcommand required") ||
 		strings.Contains(msg, "is required") ||
 		strings.Contains(msg, "too many") {
-		return "invalid_args", msg, ""
+		return "invalid_args", msg, "", ""
 	}
 
-	// Default
-	return "error", msg, ""
+	// Default: suggest feedback for unexpected errors
+	return "error", msg, "if this is unexpected, report with: anycap feedback --type bug -m '<describe the issue>'", ""
 }
 
 // hintForAPIError returns a recovery hint for well-known server error codes.
@@ -75,7 +76,17 @@ func hintForAPIError(e *httpclient.APIError) string {
 		return "rate limited, retry after a short delay"
 	case e.Code == "credit_insufficient":
 		return "top up credits at https://anycap.ai/dashboard/billing"
+	case e.StatusCode >= 500:
+		return feedbackHint(e.RequestID)
 	default:
 		return ""
 	}
+}
+
+// feedbackHint builds a hint suggesting the agent report the error via feedback.
+func feedbackHint(requestID string) string {
+	if requestID != "" {
+		return fmt.Sprintf("server error; report with: anycap feedback --type bug -m '<describe>' --request-id '%s'", requestID)
+	}
+	return "server error; report with: anycap feedback --type bug -m '<describe>'"
 }
