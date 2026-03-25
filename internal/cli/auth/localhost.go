@@ -32,7 +32,7 @@ type callbackResult struct {
 
 // LocalhostFlow runs the localhost callback auth flow.
 // It binds a local port, calls the server to get an auth URL, opens the browser,
-// waits for the callback, and exchanges the code for OAuth tokens.
+// waits for the callback, and exchanges the code for an API key.
 func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
 	// Step 1: Bind a random local port
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -53,8 +53,9 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 
 	var initResp struct {
 		Data struct {
-			AuthURL string `json:"auth_url"`
-			State   string `json:"state"`
+			LoginSessionID string `json:"login_session_id"`
+			AuthorizeURL   string `json:"authorize_url"`
+			State          string `json:"state"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(resp, &initResp); err != nil {
@@ -85,8 +86,8 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 
 	// Step 4: Open browser
 	fmt.Fprintln(stderr, "Opening browser to authenticate...")
-	if err := OpenBrowser(initResp.Data.AuthURL); err != nil {
-		fmt.Fprintf(stderr, "Could not open browser. Visit this URL manually:\n  %s\n", initResp.Data.AuthURL)
+	if err := OpenBrowser(initResp.Data.AuthorizeURL); err != nil {
+		fmt.Fprintf(stderr, "Could not open browser. Visit this URL manually:\n  %s\n", initResp.Data.AuthorizeURL)
 	}
 	fmt.Fprintln(stderr, "Waiting for authentication...")
 
@@ -108,33 +109,32 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 		return nil, "", fmt.Errorf("state mismatch: possible CSRF attack")
 	}
 
-	// Step 6: Exchange code for OAuth tokens
+	// Step 6: Exchange code for API key
 	callbackResp, err := client.PostJSON(ctx, "/v1/auth/callback", map[string]any{
-		"code":  result.Code,
-		"state": result.State,
+		"login_session_id": initResp.Data.LoginSessionID,
+		"code":             result.Code,
+		"state":            result.State,
+		"redirect_uri":     fmt.Sprintf("http://127.0.0.1:%d/callback", port),
 	})
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to exchange code: %w", err)
 	}
 
-	var tokenResp struct {
+	var callbackResult struct {
 		Data struct {
-			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"refresh_token"`
-			ExpiresIn    int    `json:"expires_in"`
+			APIKey string `json:"api_key"`
 			User         struct {
 				Email string `json:"email"`
 				Name  string `json:"name"`
 			} `json:"user"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(callbackResp, &tokenResp); err != nil {
+	if err := json.Unmarshal(callbackResp, &callbackResult); err != nil {
 		return nil, "", fmt.Errorf("failed to parse callback response: %w", err)
 	}
 
-	expiresAt := time.Now().Add(time.Duration(tokenResp.Data.ExpiresIn) * time.Second)
-	oauthCred := cliconfig.NewOAuthCredential(tokenResp.Data.AccessToken, tokenResp.Data.RefreshToken, expiresAt)
-	return oauthCred, tokenResp.Data.User.Email, nil
+	apiKeyCred := cliconfig.NewAPIKeyCredential(callbackResult.Data.APIKey)
+	return apiKeyCred, callbackResult.Data.User.Email, nil
 }
 
 // CanBindLocalPort tests whether we can bind a local TCP port.

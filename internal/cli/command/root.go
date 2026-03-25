@@ -68,7 +68,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 
 	rootCmd.AddCommand(
 		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
-		meta.NewLogoutCmd(opts.Stderr),
+		meta.NewLogoutCmd(clientFactory, opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
 		meta.NewCredentialCmd(opts.Stdout, opts.Stderr),
 		meta.NewConfigCmd(opts.Stdout, opts.Stderr),

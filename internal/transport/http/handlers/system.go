@@ -4,6 +4,7 @@ import (
 	"context"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
@@ -30,6 +31,7 @@ func (h *SystemHandler) RegisterRoutes(group *route.RouterGroup) {
 
 func (h *SystemHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/status", h.Status)
+	group.POST("/auth/logout", h.Logout)
 }
 
 func (h *SystemHandler) Ping(_ context.Context, ctx *app.RequestContext) {
@@ -44,4 +46,21 @@ func (h *SystemHandler) Healthz(_ context.Context, ctx *app.RequestContext) {
 func (h *SystemHandler) Status(_ context.Context, ctx *app.RequestContext) {
 	principal, _ := middleware.GetPrincipal(ctx)
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), h.service.Status(principal)))
+}
+
+func (h *SystemHandler) Logout(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	if err := h.service.Logout(c, principal); err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]string{"message": "logged out"}))
 }

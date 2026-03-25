@@ -48,22 +48,19 @@ func TestLoginDeviceCodeFlow(t *testing.T) {
 		t.Fatalf("login --headless failed: %v\nstderr: %s", err, stderr.String())
 	}
 
-	// Verify credential was saved as OAuth type
+	// Verify credential was saved as API Key type
 	cred := cliconfig.LoadCredential()
 	if cred == nil {
 		t.Fatal("expected credential, got nil")
 	}
-	if cred.Type != cliconfig.CredentialTypeOAuth {
-		t.Fatalf("expected OAuth credential, got %s", cred.Type)
+	if cred.Type != cliconfig.CredentialTypeAPIKey {
+		t.Fatalf("expected API key credential, got %s", cred.Type)
 	}
-	if !strings.HasPrefix(cred.Token(), "mock-at-") {
-		t.Fatalf("expected mock-at-... access token, got %q", cred.Token())
+	if !strings.HasPrefix(cred.Token(), "mock-ak-") {
+		t.Fatalf("expected mock-ak-... api key, got %q", cred.Token())
 	}
-	if !strings.HasPrefix(cred.RefreshToken, "mock-rt-") {
-		t.Fatalf("expected mock-rt-... refresh token, got %q", cred.RefreshToken)
-	}
-	if cred.ExpiresAt == nil {
-		t.Fatal("expected ExpiresAt to be set")
+	if cred.RefreshToken != "" {
+		t.Fatalf("expected empty refresh token for api key, got %q", cred.RefreshToken)
 	}
 
 	// Verify output mentions success
@@ -109,6 +106,10 @@ func TestLoginWithToken(t *testing.T) {
 }
 
 func TestLogout(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
 
@@ -124,6 +125,7 @@ func TestLogout(t *testing.T) {
 
 	cmd := NewRootCmd(Options{
 		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
 		Stdout:    stdout,
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
@@ -136,6 +138,9 @@ func TestLogout(t *testing.T) {
 
 	if got := cliconfig.LoadCredential(); got != nil {
 		t.Fatalf("expected nil credential after logout, got %+v", got)
+	}
+	if ms.LogoutCalls() != 1 {
+		t.Fatalf("expected one server logout call, got %d", ms.LogoutCalls())
 	}
 
 	if !strings.Contains(stderr.String(), "Logged out") {
@@ -443,26 +448,8 @@ func TestAutoRefreshOnExpiredToken(t *testing.T) {
 	t.Setenv("HOME", tmpHome)
 	_ = cliconfig.DeleteCredential() // clear shared mock keyring
 
-	// Step 1: Login to get OAuth credential
-	stderr := &bytes.Buffer{}
-	cmd := NewRootCmd(Options{
-		BuildInfo: buildinfo.Info{Version: "test"},
-		Endpoint:  ts.URL,
-		Stdout:    &bytes.Buffer{},
-		Stderr:    stderr,
-		Stdin:     strings.NewReader(""),
-	})
-	cmd.SetArgs([]string{"login", "--headless"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Fatalf("login failed: %v\nstderr: %s", err, stderr.String())
-	}
-
-	// Step 2: Manually expire the token
-	cred := cliconfig.LoadCredential()
-	if cred == nil {
-		t.Fatal("expected credential after login")
-	}
+	refreshToken := ms.SeedRefreshToken("dev@anycap.ai")
+	cred := cliconfig.NewOAuthCredential("mock-at-old", refreshToken, time.Now().Add(time.Hour))
 	expired := time.Now().Add(-time.Minute)
 	cred.ExpiresAt = &expired
 	if err := cliconfig.SaveCredential(cred); err != nil {
@@ -471,7 +458,7 @@ func TestAutoRefreshOnExpiredToken(t *testing.T) {
 
 	oldToken := cred.Token()
 
-	// Step 3: Run status -- should auto-refresh and succeed
+	// Run status -- should auto-refresh and succeed
 	stdout := &bytes.Buffer{}
 	cmd2 := NewRootCmd(Options{
 		BuildInfo: buildinfo.Info{Version: "test"},
@@ -490,7 +477,7 @@ func TestAutoRefreshOnExpiredToken(t *testing.T) {
 		t.Fatalf("expected mock server status, got: %s", stdout.String())
 	}
 
-	// Step 4: Verify credential was refreshed
+	// Verify credential was refreshed
 	refreshed := cliconfig.LoadCredential()
 	if refreshed == nil {
 		t.Fatal("expected refreshed credential")

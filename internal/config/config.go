@@ -18,6 +18,7 @@ const (
 	defaultHTTPAddr             = ":18080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
+	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
 	defaultAgentPlatformTimeout = 120 * time.Second
 	defaultPresignExpiry        = 600  // seconds (10 minutes)
 	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
@@ -43,6 +44,7 @@ type Config struct {
 	RedisPassword     string
 	RedisDB           int
 	RateLimitRPM      int
+	LoginAPIKeyTTL    time.Duration
 	Auth0Enabled      bool
 	Auth0Issuer       string
 	Auth0Audience     string
@@ -113,6 +115,7 @@ func LoadFromEnv() (Config, error) {
 		RedisPassword:     os.Getenv("ANYCAP_REDIS_PASSWORD"),
 		RedisDB:           getEnvInt("ANYCAP_REDIS_DB", 0),
 		RateLimitRPM:      getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
+		LoginAPIKeyTTL:    getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
 		Auth0Enabled:      getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:       os.Getenv("ANYCAP_AUTH0_ISSUER"),
 		Auth0Audience:     os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
@@ -237,6 +240,18 @@ func getEnvBool(key string, fallback bool) bool {
 		return fallback
 	}
 	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func getEnvDuration(key string, fallback time.Duration) time.Duration {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
 	if err != nil {
 		return fallback
 	}

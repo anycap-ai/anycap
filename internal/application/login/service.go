@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -9,56 +10,253 @@ import (
 )
 
 type Service struct {
-	authClient     port.Auth0Client
-	apiKeys        port.APIKeyService
-	stateGenerator func() string
+	authClient            port.Auth0Client
+	apiKeys               port.APIKeyService
+	sessions              port.LoginSessionRepo
+	deviceVerificationURL string
+	loginAPIKeyTTL        time.Duration
+	stateGenerator        func() string
+	sessionIDGenerator    func() string
+	userCodeGenerator     func() string
+	now                   func() time.Time
 }
 
-func NewService(authClient port.Auth0Client, apiKeys port.APIKeyService, stateGenerator func() string) *Service {
+func NewService(
+	authClient port.Auth0Client,
+	apiKeys port.APIKeyService,
+	sessions port.LoginSessionRepo,
+	deviceVerificationURL string,
+	stateGenerator func() string,
+	sessionIDGenerator func() string,
+	userCodeGenerator func() string,
+	now func() time.Time,
+	loginAPIKeyTTL time.Duration,
+) *Service {
 	if stateGenerator == nil {
 		stateGenerator = func() string {
 			return "state-" + time.Now().UTC().Format("20060102150405")
 		}
 	}
+	if sessionIDGenerator == nil {
+		sessionIDGenerator = func() string {
+			return "lsn-" + time.Now().UTC().Format("20060102150405.000000000")
+		}
+	}
+	if userCodeGenerator == nil {
+		userCodeGenerator = func() string {
+			return "ANYCAP-" + time.Now().UTC().Format("150405")
+		}
+	}
+	if now == nil {
+		now = time.Now
+	}
+	if deviceVerificationURL == "" {
+		deviceVerificationURL = "https://anycap.local/device"
+	}
 
 	return &Service{
-		authClient:     authClient,
-		apiKeys:        apiKeys,
-		stateGenerator: stateGenerator,
+		authClient:            authClient,
+		apiKeys:               apiKeys,
+		sessions:              sessions,
+		deviceVerificationURL: deviceVerificationURL,
+		loginAPIKeyTTL:        loginAPIKeyTTL,
+		stateGenerator:        stateGenerator,
+		sessionIDGenerator:    sessionIDGenerator,
+		userCodeGenerator:     userCodeGenerator,
+		now:                   now,
 	}
 }
 
-func (s *Service) Init(ctx context.Context) (model.LoginInitResult, error) {
-	state := s.stateGenerator()
-	authURL, err := s.authClient.BuildLoginURL(ctx, state)
-	if err != nil {
-		return model.LoginInitResult{}, err
+func (s *Service) Init(ctx context.Context, method string, redirectPort int) (model.LoginInitResult, error) {
+	if s.sessions == nil {
+		return model.LoginInitResult{}, model.ErrInternal
+	}
+	now := s.now().UTC()
+	session := model.LoginSession{
+		ID:        s.sessionIDGenerator(),
+		FlowType:  method,
+		Status:    model.LoginSessionStatusPending,
+		ExpiresAt: now.Add(15 * time.Minute),
+		CreatedAt: now,
 	}
 
-	return model.LoginInitResult{
-		AuthURL: authURL,
-		State:   state,
-	}, nil
+	switch method {
+	case "", model.LoginFlowLocalhost:
+		if redirectPort <= 0 {
+			return model.LoginInitResult{}, model.ErrInvalidParam
+		}
+		session.FlowType = model.LoginFlowLocalhost
+		session.State = s.stateGenerator()
+		session.RedirectURI = fmt.Sprintf("http://127.0.0.1:%d/callback", redirectPort)
+		session.CodeVerifier = "pkce-" + session.ID
+
+		authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
+		if err != nil {
+			return model.LoginInitResult{}, err
+		}
+		if err := s.sessions.CreateSession(ctx, session); err != nil {
+			return model.LoginInitResult{}, err
+		}
+
+		return model.LoginInitResult{
+			FlowType:       session.FlowType,
+			LoginSessionID: session.ID,
+			AuthorizeURL:   authURL,
+			State:          session.State,
+			ExpiresIn:      int((15 * time.Minute).Seconds()),
+		}, nil
+	case model.LoginFlowDevice:
+		deviceAuth, err := s.authClient.StartDeviceFlow(ctx)
+		if err != nil {
+			return model.LoginInitResult{}, err
+		}
+		session.DeviceCode = deviceAuth.DeviceCode
+		session.UserCode = deviceAuth.UserCode
+		if session.UserCode == "" {
+			session.UserCode = s.userCodeGenerator()
+		}
+		if deviceAuth.ExpiresIn > 0 {
+			session.ExpiresAt = now.Add(time.Duration(deviceAuth.ExpiresIn) * time.Second)
+		}
+		if err := s.sessions.CreateSession(ctx, session); err != nil {
+			return model.LoginInitResult{}, err
+		}
+		verificationURI := deviceAuth.VerificationURI
+		if verificationURI == "" {
+			verificationURI = s.deviceVerificationURL
+		}
+		interval := deviceAuth.Interval
+		if interval <= 0 {
+			interval = 5
+		}
+		return model.LoginInitResult{
+			FlowType:        session.FlowType,
+			LoginSessionID:  session.ID,
+			VerificationURI: verificationURI,
+			UserCode:        session.UserCode,
+			ExpiresIn:       int(session.ExpiresAt.Sub(now).Seconds()),
+			Interval:        interval,
+		}, nil
+	default:
+		return model.LoginInitResult{}, model.ErrInvalidParam
+	}
 }
 
-func (s *Service) Callback(ctx context.Context, code string) (model.LoginCallbackResult, error) {
-	if code == "" {
+func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirectURI string) (model.LoginCallbackResult, error) {
+	if sessionID == "" || code == "" {
 		return model.LoginCallbackResult{}, model.ErrInvalidParam
 	}
+	if s.sessions == nil {
+		return model.LoginCallbackResult{}, model.ErrInternal
+	}
 
-	user, err := s.authClient.ExchangeCode(ctx, code)
+	session, err := s.sessions.GetByID(ctx, sessionID)
 	if err != nil {
 		return model.LoginCallbackResult{}, err
 	}
+	if session.ID == "" || session.FlowType != model.LoginFlowLocalhost {
+		return model.LoginCallbackResult{}, model.ErrAuthInvalid
+	}
+	if session.State != state {
+		return model.LoginCallbackResult{}, model.ErrAuthInvalid
+	}
+	if redirectURI != "" && session.RedirectURI != "" && redirectURI != session.RedirectURI {
+		return model.LoginCallbackResult{}, model.ErrAuthInvalid
+	}
 
-	created, err := s.apiKeys.CreateAPIKey(ctx, user.UserID, "cli")
+	user, err := s.authClient.ExchangeCode(ctx, code, session.RedirectURI)
 	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+	if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+
+	created, err := s.createLoginAPIKey(ctx, user.UserID)
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+	if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
 		return model.LoginCallbackResult{}, err
 	}
 
 	return model.LoginCallbackResult{
-		UserID:   user.UserID,
 		APIKeyID: created.APIKey.ID,
 		APIKey:   created.RawKey,
+		User: &model.LoginUser{
+			ID:    user.UserID,
+			Email: user.Email,
+			Name:  user.Name,
+		},
 	}, nil
+}
+
+func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollResult, error) {
+	if sessionID == "" {
+		return model.LoginPollResult{}, model.ErrInvalidParam
+	}
+	if s.sessions == nil {
+		return model.LoginPollResult{}, model.ErrInternal
+	}
+
+	session, err := s.sessions.GetByID(ctx, sessionID)
+	if err != nil {
+		return model.LoginPollResult{}, err
+	}
+	if session.ID == "" || session.FlowType != model.LoginFlowDevice {
+		return model.LoginPollResult{}, model.ErrAuthInvalid
+	}
+	if s.now().UTC().After(session.ExpiresAt) {
+		return model.LoginPollResult{Status: model.LoginSessionStatusExpired}, nil
+	}
+
+	switch session.Status {
+	case model.LoginSessionStatusPending:
+		if session.DeviceCode == "" {
+			return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
+		}
+		pollResult, err := s.authClient.PollDeviceFlow(ctx, session.DeviceCode)
+		if err != nil {
+			return model.LoginPollResult{}, err
+		}
+		switch pollResult.Status {
+		case model.LoginSessionStatusPending, model.LoginSessionStatusSlowDown, model.LoginSessionStatusExpired:
+			return model.LoginPollResult{Status: pollResult.Status}, nil
+		case model.LoginSessionStatusComplete:
+			user := pollResult.User
+			if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
+				return model.LoginPollResult{}, err
+			}
+			created, err := s.createLoginAPIKey(ctx, user.UserID)
+			if err != nil {
+				return model.LoginPollResult{}, err
+			}
+			if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
+				return model.LoginPollResult{}, err
+			}
+			return model.LoginPollResult{
+				Status:   model.LoginSessionStatusComplete,
+				APIKeyID: created.APIKey.ID,
+				APIKey:   created.RawKey,
+				User: &model.LoginUser{
+					ID:    user.UserID,
+					Email: user.Email,
+					Name:  user.Name,
+				},
+			}, nil
+		default:
+			return model.LoginPollResult{Status: pollResult.Status}, nil
+		}
+	case model.LoginSessionStatusCompleted:
+		return model.LoginPollResult{Status: model.LoginSessionStatusComplete}, nil
+	default:
+		return model.LoginPollResult{Status: session.Status}, nil
+	}
+}
+
+func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.CreatedAPIKey, error) {
+	if s.loginAPIKeyTTL > 0 {
+		return s.apiKeys.CreateAPIKeyWithTTL(ctx, userID, "cli", s.loginAPIKeyTTL)
+	}
+	return s.apiKeys.CreateAPIKey(ctx, userID, "cli")
 }

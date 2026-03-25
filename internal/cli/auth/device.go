@@ -21,7 +21,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 	var initResp struct {
 		Data struct {
-			DeviceCode      string `json:"device_code"`
+			LoginSessionID  string `json:"login_session_id"`
 			UserCode        string `json:"user_code"`
 			VerificationURI string `json:"verification_uri"`
 			Interval        int    `json:"interval"`
@@ -62,7 +62,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		}
 
 		pollResp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
-			"device_code": d.DeviceCode,
+			"login_session_id": d.LoginSessionID,
 		})
 		if err != nil {
 			fmt.Fprint(stderr, ".")
@@ -71,11 +71,9 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 		var poll struct {
 			Data struct {
-				Status       string `json:"status"`
-				AccessToken  string `json:"access_token"`
-				RefreshToken string `json:"refresh_token"`
-				ExpiresIn    int    `json:"expires_in"`
-				User         *struct {
+				Status string `json:"status"`
+				APIKey string `json:"api_key"`
+				User   *struct {
 					Email string `json:"email"`
 					Name  string `json:"name"`
 				} `json:"user"`
@@ -87,15 +85,14 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		}
 
 		switch poll.Data.Status {
-		case "complete":
+		case "complete", "completed":
 			fmt.Fprintln(stderr, " done!")
 			userEmail := ""
 			if poll.Data.User != nil {
 				userEmail = poll.Data.User.Email
 			}
-			expiresAt := time.Now().Add(time.Duration(poll.Data.ExpiresIn) * time.Second)
-			oauthCred := cliconfig.NewOAuthCredential(poll.Data.AccessToken, poll.Data.RefreshToken, expiresAt)
-			return oauthCred, userEmail, nil
+			apiKeyCred := cliconfig.NewAPIKeyCredential(poll.Data.APIKey)
+			return apiKeyCred, userEmail, nil
 		case "expired":
 			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":

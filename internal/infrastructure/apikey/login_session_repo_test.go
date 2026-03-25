@@ -1,0 +1,158 @@
+package apikey
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+)
+
+type fakeLoginSessionDB struct {
+	query   string
+	args    []any
+	scanFn  func(dest ...any) error
+	execErr error
+}
+
+func (f *fakeLoginSessionDB) ExecContext(_ context.Context, query string, args ...any) (Result, error) {
+	f.query = query
+	f.args = args
+	if f.execErr != nil {
+		return nil, f.execErr
+	}
+	return fakeResult{rowsAffected: 1}, nil
+}
+
+func (f *fakeLoginSessionDB) QueryRowContext(_ context.Context, query string, args ...any) Row {
+	f.query = query
+	f.args = args
+	return fakeLoginSessionRow{scanFn: f.scanFn}
+}
+
+type fakeLoginSessionRow struct {
+	scanFn func(dest ...any) error
+}
+
+func (r fakeLoginSessionRow) Scan(dest ...any) error {
+	if r.scanFn != nil {
+		return r.scanFn(dest...)
+	}
+	return errors.New("scanFn not configured")
+}
+
+func TestLoginSessionRepo_CreateSession(t *testing.T) {
+	db := &fakeLoginSessionDB{}
+	repo := NewLoginSessionRepo(db)
+	expiresAt := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+
+	err := repo.CreateSession(context.Background(), model.LoginSession{
+		ID:           "lsn-1",
+		FlowType:     model.LoginFlowLocalhost,
+		State:        "state-1",
+		CodeVerifier: "verifier-1",
+		RedirectURI:  "http://127.0.0.1:14565/callback",
+		Status:       model.LoginSessionStatusPending,
+		ExpiresAt:    expiresAt,
+		CreatedAt:    time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatalf("CreateSession() error = %v", err)
+	}
+	if db.query == "" {
+		t.Fatal("expected insert query to be executed")
+	}
+	if len(db.args) != 11 {
+		t.Fatalf("expected 11 args, got %d", len(db.args))
+	}
+}
+
+func TestLoginSessionRepo_GetByID(t *testing.T) {
+	expiresAt := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	createdAt := time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC)
+	db := &fakeLoginSessionDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*string)) = "lsn-1"
+			*(dest[1].(*string)) = model.LoginFlowLocalhost
+			*(dest[2].(*string)) = "state-1"
+			*(dest[3].(*string)) = "verifier-1"
+			*(dest[4].(*string)) = "http://127.0.0.1:14565/callback"
+			*(dest[5].(*string)) = ""
+			*(dest[6].(*string)) = ""
+			*(dest[7].(*string)) = ""
+			*(dest[8].(*string)) = model.LoginSessionStatusPending
+			*(dest[9].(*time.Time)) = expiresAt
+			*(dest[10].(*time.Time)) = createdAt
+			return nil
+		},
+	}
+	repo := NewLoginSessionRepo(db)
+
+	got, err := repo.GetByID(context.Background(), "lsn-1")
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.ID != "lsn-1" {
+		t.Fatalf("expected lsn-1, got %q", got.ID)
+	}
+	if got.State != "state-1" {
+		t.Fatalf("expected state-1, got %q", got.State)
+	}
+}
+
+func TestLoginSessionRepo_GetByState(t *testing.T) {
+	expiresAt := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	createdAt := time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC)
+	db := &fakeLoginSessionDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*string)) = "lsn-2"
+			*(dest[1].(*string)) = model.LoginFlowLocalhost
+			*(dest[2].(*string)) = "state-2"
+			*(dest[3].(*string)) = "verifier-2"
+			*(dest[4].(*string)) = "http://127.0.0.1:14566/callback"
+			*(dest[5].(*string)) = ""
+			*(dest[6].(*string)) = ""
+			*(dest[7].(*string)) = ""
+			*(dest[8].(*string)) = model.LoginSessionStatusPending
+			*(dest[9].(*time.Time)) = expiresAt
+			*(dest[10].(*time.Time)) = createdAt
+			return nil
+		},
+	}
+	repo := NewLoginSessionRepo(db)
+
+	got, err := repo.GetByState(context.Background(), "state-2")
+	if err != nil {
+		t.Fatalf("GetByState() error = %v", err)
+	}
+	if got.ID != "lsn-2" {
+		t.Fatalf("expected lsn-2, got %q", got.ID)
+	}
+}
+
+func TestLoginSessionRepo_MarkAuthorized(t *testing.T) {
+	db := &fakeLoginSessionDB{}
+	repo := NewLoginSessionRepo(db)
+
+	err := repo.MarkAuthorized(context.Background(), "lsn-3", "auth0|user-1", time.Date(2026, 3, 25, 10, 1, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("MarkAuthorized() error = %v", err)
+	}
+	if len(db.args) != 4 {
+		t.Fatalf("expected 4 args, got %d", len(db.args))
+	}
+}
+
+func TestLoginSessionRepo_MarkCompleted(t *testing.T) {
+	db := &fakeLoginSessionDB{}
+	repo := NewLoginSessionRepo(db)
+
+	err := repo.MarkCompleted(context.Background(), "lsn-4", "key-1", time.Date(2026, 3, 25, 10, 2, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("MarkCompleted() error = %v", err)
+	}
+	if len(db.args) != 4 {
+		t.Fatalf("expected 4 args, got %d", len(db.args))
+	}
+}

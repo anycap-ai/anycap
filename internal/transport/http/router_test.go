@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
@@ -33,13 +34,34 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
+	loginSessions := apikey.NewMemoryLoginSessionRepo()
 	created, err := apiKeys.CreateAPIKey(t.Context(), "user-123", "cli")
 	if err != nil {
 		t.Fatalf("CreateAPIKey() error = %v", err)
 	}
 
-	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}))
-	loginHandler := handlers.NewLoginHandler(loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}), apiKeys, func() string { return "state-123" }))
+	sessionSeq := 0
+	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}, apiKeys))
+	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
+		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
+		apiKeys,
+		loginSessions,
+		"https://anycap.local/device",
+		func() string {
+			sessionSeq++
+			return "state-" + string(rune('0'+sessionSeq))
+		},
+		func() string {
+			sessionSeq++
+			return "lsn-" + string(rune('0'+sessionSeq))
+		},
+		func() string {
+			sessionSeq++
+			return "CODE-" + string(rune('0'+sessionSeq))
+		},
+		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
+		7*24*time.Hour,
+	))
 	imageHandler := handlers.NewImageHandler(imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-123": 3}), apikey.NewMemoryCallLogRepo()))
 	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}}}}}))
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
@@ -79,17 +101,50 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 		t.Fatalf("expected 200, got %d", resp.Code)
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"localhost","redirect_port":14565}`)), Len: len(`{"method":"localhost","redirect_port":14565}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"localhost"}`)), Len: len(`{"method":"localhost"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	var initEnvelope map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &initEnvelope); err != nil {
+		t.Fatalf("unmarshal init response: %v", err)
+	}
+	data, ok := initEnvelope["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", initEnvelope["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	state, _ := data["state"].(string)
+	if loginSessionID == "" || state == "" {
+		t.Fatalf("expected login_session_id and state, got %#v", data)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader([]byte(`{"code":"code-123"}`)), Len: len(`{"code":"code-123"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	var deviceEnvelope map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &deviceEnvelope); err != nil {
+		t.Fatalf("unmarshal device init response: %v", err)
+	}
+	deviceData, ok := deviceEnvelope["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", deviceEnvelope["data"])
+	}
+	deviceSessionID, _ := deviceData["login_session_id"].(string)
+	if deviceSessionID == "" {
+		t.Fatalf("expected device login_session_id, got %#v", deviceData)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-poll", &ut.Body{Body: bytes.NewReader([]byte(`{"login_session_id":"` + deviceSessionID + `"}`)), Len: len(`{"login_session_id":"` + deviceSessionID + `"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	callbackBody := []byte(`{"login_session_id":"` + loginSessionID + `","code":"code-123","state":"` + state + `","redirect_uri":"http://127.0.0.1:14565/callback"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader(callbackBody), Len: len(callbackBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -117,6 +172,16 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/logout", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 after logout revoke, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

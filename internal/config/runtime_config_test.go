@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestLoadFromEnv_DevModeRequiresDiscreteInfraConfig(t *testing.T) {
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
@@ -56,5 +59,17 @@ func TestLoadFromEnv_DevModeReadsAutoMigrate(t *testing.T) {
 	}
 	if !cfg.PGAutoMigrate {
 		t.Fatal("expected auto migrate to be enabled")
+	}
+}
+
+func TestLoadFromEnv_ReadsLoginAPIKeyTTL(t *testing.T) {
+	t.Setenv("ANYCAP_LOGIN_API_KEY_TTL", "72h")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.LoginAPIKeyTTL != 72*time.Hour {
+		t.Fatalf("expected login api key ttl 72h, got %v", cfg.LoginAPIKeyTTL)
 	}
 }
