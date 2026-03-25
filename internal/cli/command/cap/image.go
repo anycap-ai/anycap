@@ -255,7 +255,7 @@ func injectDownloadHint(body []byte) []byte {
 	if err := json.Unmarshal(body, &obj); err != nil {
 		return body
 	}
-	hint, _ := json.Marshal("use 'anycap download <url> -o <path>' or rerun with '-o <path>' to save the image locally")
+	hint, _ := json.Marshal("use 'anycap download <url> -o <path>' to save the image locally, or add '-o <path>' next time")
 	obj["hint"] = hint
 	result, _ := json.Marshal(obj)
 	return result
