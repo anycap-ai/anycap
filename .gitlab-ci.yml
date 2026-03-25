@@ -3,6 +3,7 @@
 #
 # Branch strategy:
 #   main / MR              -> lint + test
+#   feat*                  -> lint + test
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
@@ -38,6 +39,8 @@ workflow:
   rules:
     # MR pipelines: lint + test
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    # Feature branches: lint + test
+    - if: $CI_COMMIT_BRANCH =~ /^feat.*/
     # Main branch: lint + test
     - if: $CI_COMMIT_BRANCH == "main"
     # CLI release branches: goreleaser
