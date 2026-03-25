@@ -1,0 +1,195 @@
+name: Publish npm
+
+# Triggered when GitLab CI creates a GitHub Release, or manually.
+# Uses OIDC trusted publishing -- no NPM_TOKEN needed.
+# Prerequisite: configure trusted publishers on npmjs.com for each
+# @anycap/* package pointing to this repo and workflow file.
+# Note: the very first version of each package must be published
+# manually with a token before OIDC can take over.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+
+jobs:
+  publish-platform:
+    name: "npm: @anycap/cli-${{ matrix.npm_suffix }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { go_os: darwin,  go_arch: amd64, npm_suffix: darwin-x64,   npm_os: darwin, npm_cpu: x64,   ext: tar.gz }
+          - { go_os: darwin,  go_arch: arm64, npm_suffix: darwin-arm64, npm_os: darwin, npm_cpu: arm64, ext: tar.gz }
+          - { go_os: linux,   go_arch: amd64, npm_suffix: linux-x64,   npm_os: linux,  npm_cpu: x64,   ext: tar.gz }
+          - { go_os: linux,   go_arch: arm64, npm_suffix: linux-arm64, npm_os: linux,  npm_cpu: arm64, ext: tar.gz }
+          - { go_os: windows, go_arch: amd64, npm_suffix: win32-x64,   npm_os: win32,  npm_cpu: x64,   ext: zip }
+          - { go_os: windows, go_arch: arm64, npm_suffix: win32-arm64, npm_os: win32,  npm_cpu: arm64, ext: zip }
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure latest npm
+        run: npm install -g npm@latest
+
+      - name: Download release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG#v}"
+          ARCHIVE="anycap_${VERSION}_${{ matrix.go_os }}_${{ matrix.go_arch }}.${{ matrix.ext }}"
+          gh release download "${RELEASE_TAG}" \
+            --repo "${{ github.repository }}" \
+            --pattern "${ARCHIVE}" \
+            --dir .
+          echo "ARCHIVE=${ARCHIVE}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          BIN_NAME="anycap"
+          if [ "${{ matrix.go_os }}" = "windows" ]; then
+            BIN_NAME="anycap.exe"
+          fi
+
+          mkdir -p pkg/bin
+          if [ "${{ matrix.ext }}" = "zip" ]; then
+            unzip -o -j "${ARCHIVE}" "${BIN_NAME}" -d pkg/bin/
+          else
+            tar -xzf "${ARCHIVE}" -C pkg/bin/ "${BIN_NAME}"
+          fi
+          chmod +x "pkg/bin/${BIN_NAME}"
+
+          PKG_NAME="@anycap/cli-${{ matrix.npm_suffix }}"
+          node -e "
+            const fs = require('fs');
+            fs.writeFileSync('pkg/package.json', JSON.stringify({
+              name: '${PKG_NAME}',
+              version: '${VERSION}',
+              description: 'AnyCap CLI binary for ${{ matrix.npm_os }}-${{ matrix.npm_cpu }}',
+              license: 'MIT',
+              repository: { type: 'git', url: 'https://github.com/${{ github.repository }}' },
+              os: ['${{ matrix.npm_os }}'],
+              cpu: ['${{ matrix.npm_cpu }}'],
+              bin: { anycap: 'bin/${BIN_NAME}' },
+              files: ['bin/']
+            }, null, 2) + '\n');
+          "
+
+          echo "Generated package.json:"
+          cat pkg/package.json
+
+      - name: Publish
+        run: npm publish pkg/ --provenance --access public
+
+  publish-main:
+    name: "npm: @anycap/cli"
+    needs: [publish-platform]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure latest npm
+        run: npm install -g npm@latest
+
+      - name: Generate package
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG#v}"
+          PKG="pkg"
+          mkdir -p "${PKG}/bin"
+
+          # -- JS wrapper (bin/anycap) --
+          node -e "
+            const fs = require('fs');
+            const wrapper = [
+              '#!/usr/bin/env node',
+              '"use strict";',
+              '',
+              'const { platform, arch } = require("os");',
+              'const { spawnSync } = require("child_process");',
+              '',
+              'const PLATFORM_PACKAGES = {',
+              '  "darwin-arm64": "@anycap/cli-darwin-arm64",',
+              '  "darwin-x64": "@anycap/cli-darwin-x64",',
+              '  "linux-arm64": "@anycap/cli-linux-arm64",',
+              '  "linux-x64": "@anycap/cli-linux-x64",',
+              '  "win32-arm64": "@anycap/cli-win32-arm64",',
+              '  "win32-x64": "@anycap/cli-win32-x64",',
+              '};',
+              '',
+              'function getBinaryPath() {',
+              '  const key = \`\${platform()}-\${arch()}\`;',
+              '  const pkg = PLATFORM_PACKAGES[key];',
+              '  if (!pkg) {',
+              '    console.error(\`Error: Unsupported platform \${key}.\\nAnyCap CLI supports: \${Object.keys(PLATFORM_PACKAGES).join(\", \")}\`);',
+              '    process.exit(1);',
+              '  }',
+              '  const binName = platform() === "win32" ? "anycap.exe" : "anycap";',
+              '  try {',
+              '    return require.resolve(\`\${pkg}/bin/\${binName}\`);',
+              '  } catch (e) {',
+              '    console.error(\`Error: Could not find the AnyCap binary for \${key}.\\nThe platform package \"\${pkg}\" does not appear to be installed.\\nTry reinstalling: npm install -g @anycap/cli\`);',
+              '    process.exit(1);',
+              '  }',
+              '}',
+              '',
+              'const binary = getBinaryPath();',
+              'const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });',
+              'if (result.error) {',
+              '  console.error(\`Error: Failed to execute AnyCap CLI: \${result.error.message}\`);',
+              '  process.exit(1);',
+              '}',
+              'process.exit(result.status !== null ? result.status : 1);',
+            ].join('\n') + '\n';
+            fs.writeFileSync('${PKG}/bin/anycap', wrapper, { mode: 0o755 });
+          "
+
+          # -- package.json --
+          node -e "
+            const fs = require('fs');
+            const platforms = ['darwin-arm64','darwin-x64','linux-arm64','linux-x64','win32-arm64','win32-x64'];
+            const optDeps = {};
+            platforms.forEach(p => optDeps['@anycap/cli-' + p] = '${VERSION}');
+            fs.writeFileSync('${PKG}/package.json', JSON.stringify({
+              name: '@anycap/cli',
+              version: '${VERSION}',
+              description: 'AnyCap CLI - AI Agent capability runtime',
+              license: 'MIT',
+              repository: { type: 'git', url: 'https://github.com/${{ github.repository }}' },
+              homepage: 'https://anycap.ai',
+              bin: { anycap: 'bin/anycap' },
+              files: ['bin/'],
+              optionalDependencies: optDeps,
+              engines: { node: '>=16' },
+              keywords: ['anycap','ai','agent','cli','capability']
+            }, null, 2) + '\n');
+          "
+
+          echo "Package to publish:"
+          cat "${PKG}/package.json"
+          echo "---"
+          echo "Wrapper (first 5 lines):"
+          head -5 "${PKG}/bin/anycap"
+
+      - name: Publish
+        run: npm publish pkg/ --provenance --access public

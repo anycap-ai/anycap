@@ -1,0 +1,263 @@
+name: Post-Release Verification
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to verify (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Verify all expected release assets exist
+  # ---------------------------------------------------------------------------
+  verify-assets:
+    name: Verify release assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          echo "Checking assets for ${RELEASE_TAG} (version ${VERSION})..."
+
+          EXPECTED_ASSETS=(
+            "anycap_${VERSION}_darwin_amd64.tar.gz"
+            "anycap_${VERSION}_darwin_arm64.tar.gz"
+            "anycap_${VERSION}_linux_amd64.tar.gz"
+            "anycap_${VERSION}_linux_arm64.tar.gz"
+            "anycap_${VERSION}_windows_amd64.zip"
+            "anycap_${VERSION}_windows_arm64.zip"
+            "checksums.txt"
+          )
+
+          ASSETS=$(gh release view "${RELEASE_TAG}" --json assets -q '.assets[].name')
+          MISSING=0
+
+          for expected in "${EXPECTED_ASSETS[@]}"; do
+            if echo "$ASSETS" | grep -qx "$expected"; then
+              echo "  OK: $expected"
+            else
+              echo "  MISSING: $expected"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          if [ "$MISSING" -gt 0 ]; then
+            echo "ERROR: ${MISSING} asset(s) missing from release"
+            exit 1
+          fi
+
+          echo "All ${#EXPECTED_ASSETS[@]} expected assets present."
+
+      - name: Verify checksums file
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          gh release download "${RELEASE_TAG}" -p "checksums.txt" -D /tmp/release
+
+          echo "Checksums content:"
+          cat /tmp/release/checksums.txt
+
+          # Verify all 6 archives are listed
+          EXPECTED_COUNT=6
+          ACTUAL_COUNT=$(wc -l < /tmp/release/checksums.txt | tr -d ' ')
+
+          if [ "$ACTUAL_COUNT" -lt "$EXPECTED_COUNT" ]; then
+            echo "ERROR: Expected at least ${EXPECTED_COUNT} checksum entries, got ${ACTUAL_COUNT}"
+            exit 1
+          fi
+
+          echo "Checksums file has ${ACTUAL_COUNT} entries."
+
+  # ---------------------------------------------------------------------------
+  # 2. Verify install.sh works on macOS and Linux
+  # ---------------------------------------------------------------------------
+  verify-install-sh:
+    name: "install.sh (${{ matrix.os }})"
+    needs: [verify-assets]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install script
+        env:
+          ANYCAP_VERSION: ${{ env.RELEASE_TAG }}
+          ANYCAP_INSTALL_DIR: ${{ runner.temp }}/anycap-bin
+          ANYCAP_NO_MODIFY_PATH: "1"
+        run: |
+          sh web/public/install.sh
+
+      - name: Verify binary
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          BINARY="${{ runner.temp }}/anycap-bin/anycap"
+
+          echo "Binary path: ${BINARY}"
+          ls -la "${BINARY}"
+          file "${BINARY}"
+
+          OUTPUT=$("${BINARY}" --version 2>&1 || true)
+          echo "Version output: ${OUTPUT}"
+
+          if echo "$OUTPUT" | grep -q "${VERSION}"; then
+            echo "Version matches: ${VERSION}"
+          else
+            echo "ERROR: Version mismatch. Expected ${VERSION} in output."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 3. Verify install.sh works on Windows (Git Bash)
+  # ---------------------------------------------------------------------------
+  verify-install-sh-windows:
+    name: "install.sh (windows)"
+    needs: [verify-assets]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install script
+        env:
+          ANYCAP_VERSION: ${{ env.RELEASE_TAG }}
+          ANYCAP_INSTALL_DIR: ${{ runner.temp }}/anycap-bin
+          ANYCAP_NO_MODIFY_PATH: "1"
+        run: |
+          sh web/public/install.sh
+
+      - name: Verify binary
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          BINARY="${{ runner.temp }}/anycap-bin/anycap.exe"
+
+          echo "Binary path: ${BINARY}"
+          ls -la "${BINARY}"
+
+          OUTPUT=$("${BINARY}" --version 2>&1 || true)
+          echo "Version output: ${OUTPUT}"
+
+          if echo "$OUTPUT" | grep -q "${VERSION}"; then
+            echo "Version matches: ${VERSION}"
+          else
+            echo "ERROR: Version mismatch. Expected ${VERSION} in output."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 4. Verify npm install works on all platforms
+  # ---------------------------------------------------------------------------
+  verify-npm:
+    name: "npm install (${{ matrix.os }})"
+    needs: [verify-assets]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Wait for npm packages
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          echo "Waiting for @anycap/cli@${VERSION} to be available on npm..."
+
+          MAX_RETRIES=30
+          RETRY_DELAY=10
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            if npm view "@anycap/cli@${VERSION}" version 2>/dev/null | grep -q "${VERSION}"; then
+              echo "Package available after attempt ${i}."
+              break
+            fi
+            if [ "$i" -eq "$MAX_RETRIES" ]; then
+              echo "WARNING: @anycap/cli@${VERSION} not found on npm after ${MAX_RETRIES} attempts."
+              echo "npm publish may not have been configured yet. Skipping npm verification."
+              echo "NPM_SKIP=true" >> "$GITHUB_ENV"
+              break
+            fi
+            echo "  Attempt ${i}/${MAX_RETRIES}: not yet available, waiting ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+
+      - name: Install via npm
+        if: env.NPM_SKIP != 'true'
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          npm install -g "@anycap/cli@${VERSION}"
+
+      - name: Verify binary
+        if: env.NPM_SKIP != 'true'
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+
+          OUTPUT=$(anycap --version 2>&1 || true)
+          echo "Version output: ${OUTPUT}"
+
+          if echo "$OUTPUT" | grep -q "${VERSION}"; then
+            echo "Version matches: ${VERSION}"
+          else
+            echo "ERROR: Version mismatch. Expected ${VERSION} in output."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 5. Verify skill file version matches release
+  # ---------------------------------------------------------------------------
+  verify-skill:
+    name: Verify skill file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check skill metadata version
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          SKILL_FILE="skills/anycap-cli/SKILL.md"
+
+          if [ ! -f "$SKILL_FILE" ]; then
+            echo "WARNING: ${SKILL_FILE} not found. Skipping skill version check."
+            exit 0
+          fi
+
+          SKILL_VERSION=$(grep -oP 'version:\s*\K[0-9]+\.[0-9]+\.[0-9]+' "$SKILL_FILE" | head -1 || true)
+
+          if [ -z "$SKILL_VERSION" ]; then
+            echo "WARNING: Could not extract version from skill file."
+            exit 0
+          fi
+
+          echo "Skill version: ${SKILL_VERSION}"
+          echo "Release version: ${VERSION}"
+
+          if [ "$SKILL_VERSION" = "$VERSION" ]; then
+            echo "Skill version matches release."
+          else
+            echo "WARNING: Skill version (${SKILL_VERSION}) does not match release (${VERSION})."
+            echo "The sync:skills CI job may not have run yet, or the skill file needs updating."
+          fi
