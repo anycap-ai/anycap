@@ -188,6 +188,45 @@ func (c *PlatformClient) fetchAtomicNodes(ctx context.Context, category string) 
 	return result.Data, nil
 }
 
+func (c *PlatformClient) GetOperationSchemas(ctx context.Context, abilityKey string) (map[string]any, error) {
+	node, err := c.getAtomicNode(ctx, abilityKey)
+	if err != nil {
+		return nil, err
+	}
+	return node.OperationSchemas, nil
+}
+
+func (c *PlatformClient) getAtomicNode(ctx context.Context, abilityKey string) (*atomicNodeDTO, error) {
+	endpoint := fmt.Sprintf("%s/v1/atomic_node/%s", c.baseURL, url.PathEscape(abilityKey))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		req.Header.Set("X-Request-Id", requestID)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status %d from NexusHub", resp.StatusCode)
+	}
+
+	var node atomicNodeDTO
+	if err := json.NewDecoder(resp.Body).Decode(&node); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	return &node, nil
+}
+
 // --- AtomicNode → ModelSpec 转换 ---
 
 func resolveModelID(node *atomicNodeDTO) string {

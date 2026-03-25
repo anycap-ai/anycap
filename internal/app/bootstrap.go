@@ -108,12 +108,12 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			imageCatalog,
 			videoCatalog,
 			audioCatalog,
+			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
-				modelRouteHandler.RegisterRoutes(protected)
 			}),
 		},
 	})
@@ -201,7 +201,18 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 		if err != nil {
 			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
 		} else {
-			log.Println("catalog: using postgres anycap_model_routes table")
+			if cfg.NexusHubBaseURL != "" {
+				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", cfg.NexusHubBaseURL)
+				return nexushub.NewCatalogSchemaEnricher(
+					repo,
+					nexushub.NewPlatformClient(nexushub.PlatformClientConfig{
+						BaseURL: cfg.NexusHubBaseURL,
+						Token:   cfg.NexusHubToken,
+					}),
+				)
+			}
+
+			log.Println("catalog: using postgres anycap_model_routes table without schema enrichment")
 			return repo
 		}
 	}
