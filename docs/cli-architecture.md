@@ -710,7 +710,7 @@ CLI 使用 Go 语言开发，基于 Cobra 框架。
 ```
 ~/.anycap/
 ├── credentials          # 认证 token（login 后持久化）
-├── config.json          # 用户配置（endpoint、auth、default-model 等）
+├── config.toml          # 用户配置（endpoint、auth、default-model 等）
 └── cache/
     ├── models/          # 模型列表缓存（按能力分文件，TTL 1h）
     │   ├── image.json
@@ -721,7 +721,7 @@ CLI 使用 Go 语言开发，基于 Cobra 框架。
         └── ...
 ```
 
-#### config.json 结构
+#### config.toml 结构
 
 ```json
 // 个人用户（默认）
@@ -783,7 +783,7 @@ AnyCap 的 API Key 存储在本地 `~/.anycap/credentials` 中。AI Agent 具有
 | --------------------- | -------------------------------------------------------------- |
 | Agent 机器上无 AnyCap Key | Key 仅存在于 Proxy Server，Agent 无法读取和泄露                            |
 | 内网鉴权与 AnyCap 鉴权解耦     | Proxy 使用企业自有的 token 体系（SSO、内网 token 等），与 AnyCap API Key 无关     |
-| CLI 零改动               | 仅需修改 `config.json` 中的 `endpoint` 和 `auth.token`，CLI 代码无需区分两种模式 |
+| CLI 零改动               | 仅需修改 `config.toml` 中的 `endpoint` 和 `auth.token`，CLI 代码无需区分两种模式 |
 | Proxy 本身很薄            | 核心逻辑为 auth 转换 + 请求转发，由 AnyCap 提供开源参考实现                         |
 | 内网部署                  | Proxy 运行在企业内网，网络层天然安全                                          |
 

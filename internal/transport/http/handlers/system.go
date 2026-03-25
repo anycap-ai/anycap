@@ -4,10 +4,10 @@ import (
 	"context"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/common/utils"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
@@ -19,42 +19,29 @@ func NewSystemHandler(service *systemapp.Service) *SystemHandler {
 	return &SystemHandler{service: service}
 }
 
-// RegisterRootRoutes registers top-level health/ping routes (outside /v1).
 func (h *SystemHandler) RegisterRootRoutes(group *route.RouterGroup) {
 	group.GET("/ping", h.Ping)
 	group.GET("/healthz", h.Healthz)
 }
 
-// RegisterRoutes registers system routes under the /v1 group.
 func (h *SystemHandler) RegisterRoutes(group *route.RouterGroup) {
 	group.GET("/healthz", h.Healthz)
+}
+
+func (h *SystemHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/status", h.Status)
 }
 
 func (h *SystemHandler) Ping(_ context.Context, ctx *app.RequestContext) {
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data": utils.H{
-			"message": "pong",
-		},
-	})
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]string{"message": "pong"}))
 }
 
 func (h *SystemHandler) Healthz(_ context.Context, ctx *app.RequestContext) {
-	status := h.service.Status()
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data": utils.H{
-			"name":   status.Name,
-			"env":    status.Env,
-			"status": status.Status,
-		},
-	})
+	status := h.service.Status(nil)
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), status.Service))
 }
 
 func (h *SystemHandler) Status(_ context.Context, ctx *app.RequestContext) {
-	ctx.JSON(consts.StatusOK, utils.H{
-		"status": "success",
-		"data":   h.service.Status(),
-	})
+	principal, _ := middleware.GetPrincipal(ctx)
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), h.service.Status(principal)))
 }

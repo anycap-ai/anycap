@@ -1,8 +1,6 @@
-package http
+package handlers
 
 import (
-	"context"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -19,14 +17,22 @@ type errorPayload struct {
 	Message string `json:"message"`
 }
 
-func writeSuccess(_ context.Context, ctx *app.RequestContext, data any) {
+func writeSuccess(ctx *app.RequestContext, data any) {
 	ctx.JSON(consts.StatusOK, envelope{
 		Status: "success",
 		Data:   data,
 	})
 }
 
-func writeError(_ context.Context, ctx *app.RequestContext, statusCode int, code, message string) {
+func writeSuccessWithID(ctx *app.RequestContext, id string, data any) {
+	ctx.JSON(consts.StatusOK, envelope{
+		ID:     id,
+		Status: "success",
+		Data:   data,
+	})
+}
+
+func writeError(ctx *app.RequestContext, statusCode int, code, message string) {
 	ctx.JSON(statusCode, envelope{
 		Status: "error",
 		Error: &errorPayload{

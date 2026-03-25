@@ -1,0 +1,41 @@
+version: 2
+
+project_name: anycap
+
+builds:
+  - id: anycap
+    binary: anycap
+    main: ./cmd/anycap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Version={{.Version}}
+      - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Commit={{.FullCommit}}
+      - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Date={{.Date}}
+
+archives:
+  - id: anycap
+    ids:
+      - anycap
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "anycap_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  disable: true
+

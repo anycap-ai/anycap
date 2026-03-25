@@ -103,7 +103,7 @@ go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
 生成图片：
 
 ```bash
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate --prompt "paper crane"
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate --prompt "paper crane"
 ```
 
 也可以直接使用脚本：
@@ -112,6 +112,34 @@ go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate --prompt "pa
 scripts/dev/run-server.sh
 scripts/dev/run-cli.sh status
 ```
+
+## CLI 本地调试
+
+项目提供了独立的 mock auth server（`cmd/anycap-mock`），不依赖真实 Auth0，可在本地完整跑通登录流程。
+
+```bash
+# 终端 1: 启动 mock auth server（默认 :9999）
+go run ./cmd/anycap-mock
+
+# 终端 2: 测试登录
+go run ./cmd/anycap --endpoint http://localhost:9999 login             # 自动检测流程
+go run ./cmd/anycap --endpoint http://localhost:9999 login --headless  # device code 流程
+echo "sk-test-key" | go run ./cmd/anycap login --with-token            # stdin 输入
+
+# 验证 & 登出
+go run ./cmd/anycap --endpoint http://localhost:9999 status
+go run ./cmd/anycap logout
+```
+
+凭证存储优先级：环境变量 `ANYCAP_API_KEY` > OS 钥匙串 > 回退文件 `~/.anycap/credentials`。
+
+测试：
+
+```bash
+go test ./internal/cli/... -v -count=1
+```
+
+测试中使用内存 mock 钥匙串（`keyring.MockInit()`），`t.TempDir()` 隔离 HOME，不会弹浏览器也不会碰真实钥匙串。
 
 ## 后续扩展建议
 

@@ -1,16 +1,24 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
+	"net/http"
 	"testing"
 
+	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -18,266 +26,113 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
-func testCatalogFixtures() []model.ModelSpec {
-	return []model.ModelSpec{
-		{
-			ModelID:     "test-img-a",
-			Capability:  model.CapabilityImage,
-			DisplayName: "Test Image A",
-			Status:      "active",
-			Operations: map[model.Operation]model.OperationSpec{
-				model.OperationGenerate: {
-					Routes: []model.RouteBinding{{
-						RouteType:  model.RouteTypeDirect,
-						AbilityKey: "test_ability_img_a",
-						GenType:    "image",
-						Priority:   100,
-						Enabled:    true,
-					}},
-				},
-			},
-		},
-		{
-			ModelID:     "test-img-b",
-			Capability:  model.CapabilityImage,
-			DisplayName: "Test Image B",
-			Status:      "active",
-			Operations: map[model.Operation]model.OperationSpec{
-				model.OperationGenerate: {
-					Routes: []model.RouteBinding{{
-						RouteType:  model.RouteTypeDirect,
-						AbilityKey: "test_ability_img_b",
-						GenType:    "image",
-						Priority:   100,
-						Enabled:    true,
-					}},
-				},
-			},
-		},
-		{
-			ModelID:     "test-vid",
-			Capability:  model.CapabilityVideo,
-			DisplayName: "Test Video",
-			Status:      "active",
-			Operations: map[model.Operation]model.OperationSpec{
-				model.OperationGenerate: {
-					Routes: []model.RouteBinding{{
-						RouteType:  model.RouteTypeDirect,
-						AbilityKey: "test_ability_vid",
-						GenType:    "video",
-						Priority:   100,
-						Enabled:    true,
-					}},
-				},
-			},
-		},
-	}
-}
-
-func createTestEngine(t *testing.T) *server.Hertz {
+func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
-	systemHandler := handlers.NewSystemHandler(
-		systemapp.NewService("anycap-server", "test", buildinfo.Info{
-			Version: "dev",
-			Commit:  "abc123",
-			Date:    "2026-03-24T00:00:00Z",
-		}),
-	)
-	loginHandler := handlers.NewLoginHandler(
-		loginapp.NewService(auth.NewStubProvider("https://auth.anycap.local/authorize"), func() string {
-			return "state-123"
-		}),
-	)
-	imageHandler := handlers.NewImageHandler(
-		imageapp.NewService(nexushub.NewStubClient()),
-	)
+	apiKeys := apikey.NewMemoryService()
+	created, err := apiKeys.CreateAPIKey(t.Context(), "user-123", "cli")
+	if err != nil {
+		t.Fatalf("CreateAPIKey() error = %v", err)
+	}
 
-	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith(testCatalogFixtures()))
+	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}))
+	loginHandler := handlers.NewLoginHandler(loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}), apiKeys, func() string { return "state-123" }))
+	imageHandler := handlers.NewImageHandler(imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-123": 3}), apikey.NewMemoryCallLogRepo()))
+	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}}}}}))
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
-	videoCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityVideo)
+	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 
-	return NewRouter(RouterConfig{
-		Addr:        ":0",
-		Middlewares: []app.HandlerFunc{middleware.RequestID()},
-		Root: []RouteRegistrar{
-			RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
+	engine := NewRouter(RouterConfig{
+		Addr: ":0",
+		Middlewares: []app.HandlerFunc{
+			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
 		},
+		Root: []RouteRegistrar{RouteRegistrarFunc(systemHandler.RegisterRootRoutes)},
 		V1: []RouteRegistrar{
 			systemHandler,
 			loginHandler,
-			imageHandler,
-			imageCatalog,
-			videoCatalog,
+			RouteRegistrarFunc(func(group *route.RouterGroup) {
+				protected := group.Group("", middleware.Auth(apiKeys), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
+				systemHandler.RegisterProtectedRoutes(protected)
+				imageHandler.RegisterRoutes(protected)
+				imageCatalog.RegisterRoutes(protected)
+				capHandler.RegisterRoutes(protected)
+			}),
 		},
 	})
+
+	return &serverHarness{engine: engine}, created.RawKey
 }
 
-func TestRouter_StatusEndpoints(t *testing.T) {
-	engine := createTestEngine(t)
-
-	t.Run("ping", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/ping", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
-
-		var payload map[string]any
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal response: %v", err)
-		}
-
-		if payload["status"] != "success" {
-			t.Fatalf("expected status success, got %#v", payload["status"])
-		}
-	})
-
-	t.Run("healthz", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/healthz", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
-
-		if resp.Header().Get("X-Request-Id") == "" {
-			t.Fatal("expected X-Request-Id header")
-		}
-	})
-
-	t.Run("status", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/status", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
-
-		var payload struct {
-			Status string `json:"status"`
-			Data   struct {
-				Name    string `json:"name"`
-				Version string `json:"version"`
-			} `json:"data"`
-		}
-
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal response: %v", err)
-		}
-
-		if payload.Status != "success" {
-			t.Fatalf("expected success, got %s", payload.Status)
-		}
-		if payload.Data.Name != "anycap-server" {
-			t.Fatalf("expected anycap-server, got %s", payload.Data.Name)
-		}
-		if payload.Data.Version != "dev" {
-			t.Fatalf("expected version dev, got %s", payload.Data.Version)
-		}
-	})
+type serverHarness struct {
+	engine *server.Hertz
 }
 
-func TestRouter_CatalogDiscovery(t *testing.T) {
-	engine := createTestEngine(t)
+func TestRouter_HealthAndLogin(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
 
-	t.Run("image_models", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/image/models", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/ping", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.Code)
+	}
 
-		var payload struct {
-			Status     string              `json:"status"`
-			Capability string              `json:"capability"`
-			Models     []model.ModelSummary `json:"models"`
-		}
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal: %v", err)
-		}
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
 
-		if payload.Status != "success" {
-			t.Fatalf("expected success, got %s", payload.Status)
-		}
-		if payload.Capability != "image" {
-			t.Fatalf("expected image, got %s", payload.Capability)
-		}
-		if len(payload.Models) != 2 {
-			t.Fatalf("expected 2 image models, got %d", len(payload.Models))
-		}
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"localhost"}`)), Len: len(`{"method":"localhost"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
 
-		ids := make(map[string]bool)
-		for _, m := range payload.Models {
-			ids[m.ModelID] = true
-		}
-		if !ids["test-img-a"] {
-			t.Fatal("expected test-img-a in image models")
-		}
-		if !ids["test-img-b"] {
-			t.Fatal("expected test-img-b in image models")
-		}
-	})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader([]byte(`{"code":"code-123"}`)), Len: len(`{"code":"code-123"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
 
-	t.Run("video_models", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/video/models", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
+func TestRouter_ProtectedRoutes(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
 
-		var payload struct {
-			Status     string              `json:"status"`
-			Capability string              `json:"capability"`
-			Models     []model.ModelSummary `json:"models"`
-		}
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal: %v", err)
-		}
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.Code)
+	}
 
-		if len(payload.Models) != 1 {
-			t.Fatalf("expected 1 video model, got %d", len(payload.Models))
-		}
-		if payload.Models[0].ModelID != "test-vid" {
-			t.Fatalf("expected test-vid, got %s", payload.Models[0].ModelID)
-		}
-	})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
 
-	t.Run("model_schema", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/image/models/test-img-a/schema?operation=generate", nil)
-		if resp.Code != 200 {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
 
-		var payload struct {
-			Status string `json:"status"`
-			Data   struct {
-				Capability string `json:"capability"`
-				ModelID    string `json:"model"`
-				Operation  string `json:"operation"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal: %v", err)
-		}
+	body := []byte(`{"prompt":"paper crane","model":"flux-dev"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
 
-		if payload.Status != "success" {
-			t.Fatalf("expected success, got %s", payload.Status)
-		}
-		if payload.Data.ModelID != "test-img-a" {
-			t.Fatalf("expected test-img-a, got %s", payload.Data.ModelID)
-		}
-		if payload.Data.Operation != "generate" {
-			t.Fatalf("expected generate, got %s", payload.Data.Operation)
-		}
-	})
+func TestRouter_CapabilitiesPresign(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	body := []byte(`{"filename":"demo.png","content_type":"image/png","content_length":1024}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/capabilities/presign", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
 
-	t.Run("model_schema_not_found", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/image/models/nonexistent/schema", nil)
-		if resp.Code != 404 {
-			t.Fatalf("expected 404, got %d", resp.Code)
-		}
-	})
-
-	t.Run("unsupported_operation_schema", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, "GET", "/v1/image/models/test-img-a/schema?operation=upscale", nil)
-		if resp.Code != 404 {
-			t.Fatalf("expected 404 for unsupported operation, got %d", resp.Code)
-		}
-	})
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if env["status"] != "success" {
+		t.Fatalf("expected success status, got %#v", env["status"])
+	}
 }

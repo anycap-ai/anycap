@@ -6,9 +6,10 @@ import (
 
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
@@ -20,41 +21,58 @@ func NewImageHandler(service *imageapp.Service) *ImageHandler {
 	return &ImageHandler{service: service}
 }
 
-// RegisterRoutes registers image execution routes under the given group (/v1/image/...).
-// Discovery endpoints (GET /models, GET /models/:model/schema) are handled by CatalogHandler.
 func (h *ImageHandler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/image")
 	g.POST("/generate", h.Generate)
 }
 
-func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
-	var req model.GenerateImageRequest
-	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(consts.StatusBadRequest, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "INVALID_PARAM",
-				"message": "invalid json request body",
-			},
-		})
-		return
-	}
-
-	result, err := h.service.Generate(c, req)
+func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
+	models, err := h.service.ListModels(c)
 	if err != nil {
-		ctx.JSON(consts.StatusBadRequest, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "INVALID_PARAM",
-				"message": err.Error(),
-			},
-		})
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), models))
+}
+
+func (h *ImageHandler) GetModelSchema(c context.Context, ctx *app.RequestContext) {
+	schema, err := h.service.GetModelSchema(c, ctx.Param("name"))
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), schema))
+}
+
+func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
+	var payload dto.GenerateImageRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
-	ctx.JSON(consts.StatusOK, map[string]any{
-		"id":     result.ID,
-		"status": "success",
-		"data":   result,
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		ctx.JSON(401, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "AUTH_INVALID", "invalid api key"))
+		return
+	}
+
+	result, err := h.service.Generate(c, model.GenerateImageRequest{
+		RequestID: middleware.GetRequestID(ctx),
+		UserID:    principal.UserID,
+		Prompt:    payload.Prompt,
+		Model:     payload.Model,
 	})
+	if err != nil {
+		status, response := dto.MapDomainError(err)
+		response.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, response)
+		return
+	}
+
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
