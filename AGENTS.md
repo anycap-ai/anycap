@@ -134,8 +134,14 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
 2. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 3. CI runs goreleaser to cross-compile and archive CLI binaries.
-4. CI creates GitHub release with the release notes and uploads artifacts (requires `GITHUB_TOKEN` in CI/CD variables).
+4. CI creates GitHub release with the release notes and uploads artifacts.
 5. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
+
+**GitHub authentication (GitLab CI -> GitHub):**
+- Primary: GitHub App (`GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` as File-type variable)
+- Fallback: `GITHUB_TOKEN` (personal/machine token)
+- Shared logic: `scripts/release/github-auth.sh`
+- Commits appear as `anycap-bot[bot]` when using GitHub App
 
 **npm distribution:**
 - Main package: `@anycap/cli` (JS wrapper + optionalDependencies)

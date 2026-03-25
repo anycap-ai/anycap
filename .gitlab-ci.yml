@@ -164,7 +164,7 @@ release:github:
     - job: build:cli
       artifacts: true
   before_script:
-    - apk add --no-cache curl jq
+    - apk add --no-cache curl jq openssl
   script:
     - |
       TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
@@ -191,7 +191,7 @@ sync:skills:
   needs:
     - job: build:cli
   before_script:
-    - apk add --no-cache git sed
+    - apk add --no-cache git sed curl jq openssl
   script:
     - |
       TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
