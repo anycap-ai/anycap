@@ -73,6 +73,7 @@ anycap actions video-read --url https://example.com/clip.mp4 --instruction "Summ
 ```
 
 Options:
+
 - `--url`: Video URL to analyze
 - `--file`: Local video file to upload and analyze
 - `--instruction`: Custom instruction for analysis

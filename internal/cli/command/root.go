@@ -76,6 +76,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewFeedbackCmd(clientFactory, opts.Stdout),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
 		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
+		meta.NewDownloadCmd(opts.Stdout),
 	)
 
 	// Feature-gated meta commands.

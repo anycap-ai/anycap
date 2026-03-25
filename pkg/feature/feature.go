@@ -32,11 +32,11 @@ const (
 // defaults defines the code-level default state for each feature.
 // Features not listed here default to false.
 var defaults = map[string]bool{
-	ImageGenerate:   false, // NexusHub not implemented yet
-	ImageModels:     false, // NexusHub not implemented yet
-	ImageUnderstand: true,  // agent-platform real implementation
-	VideoRead:       true,  // agent-platform real implementation
-	Login:           true,  // auth flow (stub but expected soon)
+	ImageGenerate:   true, // CLI exposes commands; server returns error if not ready
+	ImageModels:     true, // CLI exposes commands; server returns error if not ready
+	ImageUnderstand: true, // agent-platform real implementation
+	VideoRead:       true, // agent-platform real implementation
+	Login:           true, // auth flow (stub but expected soon)
 }
 
 var (

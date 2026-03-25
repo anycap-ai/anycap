@@ -84,17 +84,21 @@ web/
 ## Local Development
 
 ```bash
-# Start server
-go run ./cmd/anycap-server
-# or
-scripts/dev/run-server.sh
+# Start local Postgres + Redis
+make infra-up
+
+# Start server (connects to local infra)
+make dev
 
 # Use the CLI
 go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate --prompt "paper crane"
-# or
 scripts/dev/run-cli.sh status
+
+# Stop infra (keep data)
+make infra-down
+
+# Reset infra (destroy volumes and restart fresh)
+make infra-reset
 ```
 
 ## Coding Conventions
@@ -191,7 +195,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 |------|------|--------|
 | Framework | `docs/cli/spec/framework.md` | Config resolution, HTTP client, output formatting, error handling, help grouping, command patterns |
 | OAuth | `docs/cli/spec/oauth.md` | Login flows (localhost callback, device code polling), credential storage, security |
-| Capabilities | `docs/cli/spec/capabilities.md` | Image understand, video read, file upload flow, API contracts |
+| Capabilities | `docs/cli/spec/capabilities.md` | Image generation, model discovery, schema fetch, API contracts |
 
 ### Key Architectural Decisions
 

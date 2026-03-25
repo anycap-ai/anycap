@@ -1,195 +1,322 @@
-# CLI Capabilities Spec
+# CLI Image Capabilities Spec
 
-> Date: 2026-03-24
+> Date: 2026-03-25
 > Status: Draft
 
-## 1. Overview
+## 1. Scope
 
-This document specifies the CLI commands for multimodal understanding capabilities: image understanding and video reading. These commands wrap the server's `/v1/capabilities/` API endpoints.
+This spec covers the CLI commands for image generation. It is based on verified server API responses as of 2026-03-25.
 
-Design goals:
-- Agent-friendly: URL-based input for programmatic use, file-based input for local workflows
-- Consistent command structure across capabilities (image, video, future audio)
-- Transparent file upload: `--file` flag handles presign + upload + call as a single step
+Out of scope: Image understanding and video reading (moved to the Actions product line under `anycap actions`).
 
-## 2. Commands
+## 2. Server APIs (verified)
 
-### 2.1 Image Understand
+### 2.1 List Models (public, no auth)
 
-```
-anycap image understand --url <url> [--instruction <text>] [--model <id>]
-anycap image understand --file <path> [--instruction <text>] [--model <id>]
+```http
+GET /v1/image/models
 ```
 
-Analyzes an image using vision models. Returns a text description or answers a question about the image.
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--url` | one of url/file | Public image URL |
-| `--file` | one of url/file | Local image file (auto-uploads via presign) |
-| `--instruction` | no | What to look for, describe, or extract |
-| `--model` | no | Model ID (server picks default if omitted) |
-
-`--url` and `--file` are mutually exclusive; exactly one is required.
-
-### 2.2 Video Read
-
-```
-anycap video read --url <url> [--instruction <text>] [--model <id>]
-anycap video read --file <path> [--instruction <text>] [--model <id>]
+```json
+{
+  "status": "success",
+  "capability": "image",
+  "models": [
+    {
+      "model": "nano-banana-2",
+      "capability": "image",
+      "display_name": "Nano Banana 2",
+      "status": "active",
+      "operations": ["edit", "generate"]
+    }
+  ]
+}
 ```
 
-Analyzes a video using vision models. Returns a text summary or answers a question about the video content.
+### 2.2 Model Schema (public, no auth)
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--url` | one of url/file | Public video URL |
-| `--file` | one of url/file | Local video file (auto-uploads via presign) |
-| `--instruction` | no | What to look for or summarize |
-| `--model` | no | Model ID (server picks default if omitted) |
-
-### 2.3 Command Hierarchy
-
+```http
+GET /v1/image/models/:model/schema?operation=generate
 ```
-anycap
-  image
-    generate       # existing
-    models         # existing
-    understand     # new
-  video
-    read           # new
-```
-
-## 3. File Upload Flow
-
-When `--file` is provided, the CLI performs a three-step upload-then-analyze flow:
-
-```mermaid
-sequenceDiagram
-    participant C as CLI
-    participant S as AnyCap Server
-    participant O as Object Storage (S3/R2)
-
-    C->>S: POST /v1/capabilities/presign {filename, content_type}
-    S-->>C: {upload_url, object_url}
-
-    C->>O: PUT upload_url (raw file content)
-    O-->>C: 200 OK
-
-    C->>S: POST /v1/capabilities/image/understand {url: object_url, ...}
-    S-->>C: {content, model, usage, duration_ms}
-```
-
-Key decisions:
-- **CLI detects content type from file extension.** No magic byte sniffing needed; the server validates.
-- **Upload goes directly to object storage** (S3 presigned PUT), not through the AnyCap server. This avoids server-side memory pressure for large video files.
-- **Progress is written to stderr.** Agents read stdout (JSON result), humans see progress on stderr.
-
-### 3.1 Content Type Detection
-
-| Extension | MIME Type |
-|-----------|-----------|
-| `.jpg`, `.jpeg` | `image/jpeg` |
-| `.png` | `image/png` |
-| `.gif` | `image/gif` |
-| `.webp` | `image/webp` |
-| `.mp4` | `video/mp4` |
-| `.webm` | `video/webm` |
-| `.mov` | `video/quicktime` |
-| `.avi` | `video/x-msvideo` |
-| `.mkv` | `video/x-matroska` |
-
-Unknown extensions fall back to `application/octet-stream`.
-
-## 4. Server API Contracts
-
-### 4.1 Presign
-
-**POST /v1/capabilities/presign**
-
-| Direction | Field | Type | Description |
-|-----------|-------|------|-------------|
-| Request | `filename` | string | Original filename |
-| Request | `content_type` | string | MIME type (`image/*` or `video/*`) |
-| Response | `upload_url` | string | Presigned PUT URL (direct to storage) |
-| Response | `object_url` | string | Public URL after upload completes |
-| Response | `expires_in` | int | Presign expiry in seconds |
-
-### 4.2 Image Understand
-
-**POST /v1/capabilities/image/understand**
-
-| Direction | Field | Type | Description |
-|-----------|-------|------|-------------|
-| Request | `url` | string | Image URL (mutually exclusive with `data`) |
-| Request | `data` | string | Base64-encoded image (mutually exclusive with `url`) |
-| Request | `mime_type` | string | Required when `data` is provided |
-| Request | `instruction` | string | Optional analysis instruction |
-| Request | `model` | string | Optional model ID |
-| Response | `content` | string | Analysis result text |
-| Response | `model` | string | Model used |
-| Response | `usage` | object | Token usage (`input_tokens`, `output_tokens`, `total_tokens`) |
-| Response | `duration_ms` | int | Processing time |
-
-CLI always uses the `url` path (either direct URL or uploaded object URL). The `data` (base64) path exists in the server API but is not exposed via CLI flags.
-
-### 4.3 Video Read
-
-**POST /v1/capabilities/video/read**
-
-| Direction | Field | Type | Description |
-|-----------|-------|------|-------------|
-| Request | `url` | string | Video URL |
-| Request | `instruction` | string | Optional analysis instruction |
-| Request | `model` | string | Optional model ID |
-| Response | `content` | string | Analysis result text |
-| Response | `model` | string | Model used |
-| Response | `usage` | object | Token usage |
-| Response | `duration_ms` | int | Processing time |
-
-## 5. Output
-
-JSON to stdout (consistent with all other commands):
 
 ```json
 {
   "status": "success",
   "data": {
-    "content": "The image shows a paper crane on a wooden table...",
-    "model": "claude-sonnet-4-20250514",
-    "usage": {
-      "input_tokens": 1200,
-      "output_tokens": 350,
-      "total_tokens": 1550
+    "capability": "image",
+    "model": "nano-banana-2",
+    "operation": "generate",
+    "schema": {
+      "model_params": {
+        "prompt": {"type": "string", "required": true},
+        "aspect_ratio": {"type": "string", "enum": ["1:1","16:9","9:16","4:3","3:4","21:9"]},
+        "resolution": {"type": "string", "enum": ["1k","2k","4k"]}
+      }
     },
-    "duration_ms": 2340
+    "request_hints": { ... }
   }
 }
 ```
 
-Progress and errors go to stderr:
+### 2.3 Generate Image (auth required)
+
+```http
+POST /v1/image/generate
+Authorization: Bearer <api_key>
+```
+
+Request:
+```json
+{"prompt": "a paper crane on a wooden table", "model": "nano-banana-2"}
+```
+
+Response:
+```json
+{
+  "id": "req_xxx",
+  "status": "success",
+  "data": {
+    "id": "img_req_xxx",
+    "status": "success",
+    "model": "nano-banana-2",
+    "outputs": [
+      {"type": "image", "url": "https://files.anycap.ai/.../output.png", "mime_type": "image/png"}
+    ],
+    "usage": {"credits": 1},
+    "credit_cost": 1
+  }
+}
+```
+
+Note: The request body currently accepts top-level `prompt` and `model`. Schema-discovered parameters (`aspect_ratio`, `resolution`) are not yet supported by the server in the generate endpoint. The CLI should be ready to pass them once the server adds support.
+
+### 2.4 Feature Flags (from status)
+
+```http
+GET /v1/status
+Authorization: Bearer <api_key>
+```
+
+The server reports feature flags. The CLI should sync these at startup or command execution to decide which subcommands to expose.
+
+Current server state:
+```json
+{
+  "features": {
+    "image.generate": false,
+    "image.models": false,
+    "image.understand": true,
+    "video.read": true,
+    "login": false
+  }
+}
+```
+
+## 3. Command Design
+
+### 3.1 Command Tree
 
 ```
-Uploading screenshot.png (245760 bytes)...
-Analyzing screenshot.png...
+anycap image
+  models                 # List available image models
+  models <model>         # Show details for a specific model
+  models <model> schema  # Show request schema for a model
+  generate               # Generate an image
 ```
 
-## 6. Implementation Plan
+### 3.2 image models
+
+List all available image models.
+
+```bash
+anycap image models
+```
+
+Output (JSON passthrough from server):
+```json
+{
+  "status": "success",
+  "capability": "image",
+  "models": [
+    {
+      "model": "nano-banana-2",
+      "display_name": "Nano Banana 2",
+      "status": "active",
+      "operations": ["edit", "generate"]
+    }
+  ]
+}
+```
+
+### 3.3 image models \<model\>
+
+Show details for a specific model (same as list but filtered to one model).
+
+```bash
+anycap image models nano-banana-2
+```
+
+Output (JSON): Single model object from the models list, filtered client-side.
+
+### 3.4 image models \<model\> schema
+
+Show the request schema for a model. Agents use this to discover what parameters to pass to generate.
+
+```bash
+anycap image models nano-banana-2 schema
+anycap image models nano-banana-2 schema --operation edit
+```
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--operation` | no | `generate` | Operation to get schema for |
+
+Output (JSON): Raw schema response from server (passthrough).
+
+### 3.5 image generate
+
+Generate an image from a text prompt.
+
+```bash
+anycap image generate --prompt "a paper crane" --model nano-banana-2
+anycap image generate --prompt "a landscape" --model nano-banana-2 --param aspect_ratio=16:9 --param resolution=2k
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--prompt` | yes | Text prompt for image generation |
+| `--model` | yes | Model ID (from `image models`) |
+| `--param` | no | Extra parameter as key=value (repeatable). Keys come from schema. |
+
+The `--param` flag passes additional model-specific parameters. Values are sent as strings; the server is responsible for type coercion. If the server does not yet support a parameter, it will either ignore it or return an error.
+
+Output (JSON passthrough from server):
+```json
+{
+  "id": "req_xxx",
+  "status": "success",
+  "data": {
+    "id": "img_req_xxx",
+    "status": "success",
+    "model": "nano-banana-2",
+    "outputs": [
+      {"type": "image", "url": "https://...", "mime_type": "image/png"}
+    ],
+    "usage": {"credits": 1},
+    "credit_cost": 1
+  }
+}
+```
+
+## 4. Request Body Construction
+
+The CLI builds the generate request body as follows:
+
+```mermaid
+flowchart LR
+    A["--prompt, --model"] --> B["base body:<br/>{prompt, model}"]
+    C["--param k=v pairs"] --> D["merge into body"]
+    B --> D
+    D --> E["POST /v1/image/generate"]
+```
+
+Example: `--prompt "test" --model nano-banana-2 --param aspect_ratio=16:9`
+
+Produces:
+```json
+{
+  "prompt": "test",
+  "model": "nano-banana-2",
+  "aspect_ratio": "16:9"
+}
+```
+
+`--param` values are parsed as JSON first (to support numbers and booleans), falling back to string:
+- `--param count=3` sends `"count": 3` (number)
+- `--param ratio=16:9` sends `"ratio": "16:9"` (string, since `16:9` is not valid JSON)
+- `--param hd=true` sends `"hd": true` (boolean)
+
+## 5. Feature Flag Strategy
+
+Current approach: feature flags are compile-time defaults in `pkg/feature/feature.go`, overridable by env vars.
+
+Proposed change for image commands:
+
+```go
+var defaults = map[string]bool{
+    ImageGenerate: true,  // flip from false -> true
+    ImageModels:   true,  // flip from false -> true
+}
+```
+
+The server still reports `image.generate=false` and `image.models=false` in its own status because the NexusHub executor is stubbed. But the CLI feature flags are independent -- they control CLI command visibility, not server readiness. The CLI should expose the commands so agents can discover and call them. If the server is not ready, the server returns an error, which the CLI surfaces.
+
+This decouples CLI releases from server deployment.
+
+## 6. Error Handling
+
+Server error responses follow the standard envelope:
+
+```json
+{
+  "id": "req_xxx",
+  "status": "error",
+  "error": {"code": "INSUFFICIENT_CREDIT", "message": "insufficient credit balance"}
+}
+```
+
+The CLI should:
+1. Detect `status: "error"` in the response
+2. Print `error.message` to stderr
+3. Exit with non-zero code
+4. In JSON mode, still write the full error envelope to stdout for agent parsing
+
+Common errors:
+
+| Code | HTTP | Meaning |
+|------|------|---------|
+| `AUTH_INVALID` | 401 | Missing or invalid API key |
+| `INVALID_PARAM` | 400 | Bad request (missing prompt/model) |
+| `INSUFFICIENT_CREDIT` | 402 | No credits remaining |
+| `IMAGE_PROVIDER_NOT_CONFIGURED` | 503 | Server cannot generate images yet |
+| `RATE_LIMITED` | 429 | Too many requests |
+
+## 7. Agent Workflow
+
+The expected agent workflow for image generation:
+
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant C as CLI
+
+    A->>C: anycap image models
+    C-->>A: [{model: "nano-banana-2", operations: ["generate"]}]
+
+    A->>C: anycap image models nano-banana-2 schema
+    C-->>A: {prompt: required, aspect_ratio: enum[...], resolution: enum[...]}
+
+    A->>C: anycap image generate --prompt "..." --model nano-banana-2 --param aspect_ratio=16:9
+    C-->>A: {outputs: [{url: "https://..."}]}
+```
+
+The agent discovers models, learns parameters, then generates. All three steps produce machine-parseable JSON on stdout.
+
+## 8. Implementation Plan
 
 | File | Change |
 |------|--------|
-| `cap/upload.go` | New: shared presign + upload helper, content type detection |
-| `cap/image.go` | Add `understand` subcommand; add `stderr` parameter to `NewImageCmd` |
-| `cap/video.go` | New: `video` command with `read` subcommand |
-| `command/root.go` | Register `video` command; pass `stderr` to `image` |
-| `testutil/mockserver/server.go` | Add mock endpoints: presign, image/understand, video/read, mock upload |
-| `command/cap_test.go` | Tests: understand with URL, understand with file, video read with URL, video read with file |
+| `pkg/feature/feature.go` | Flip `ImageGenerate` and `ImageModels` defaults to `true` |
+| `cap/image.go` | Restructure: positional arg for model name, `schema` subcommand |
+| `cap/image.go` | Add `--param` flag to generate |
+| `cap/image.go` | Add `--operation` flag to schema |
 
-## 7. Testing
+| `cap_test.go` | Tests: models list, models detail, schema fetch, generate with params |
+| `testutil/mockserver/` | Add mock endpoints matching verified API responses |
 
-Tests use the mock server pattern established in the codebase:
+## 9. Future Work
 
-- **URL path:** command -> mock server endpoint -> assert JSON output
-- **File upload path:** command -> presign (mock) -> upload to mock endpoint -> understand/read (mock) -> assert JSON output
-
-The mock server auto-approves uploads and returns deterministic results for assertion.
+- **image edit** -- `anycap image edit --model X --prompt "..." --image-url <url>` (requires server support)
+- **image upscale** -- `anycap image upscale --model X --image-url <url>` (requires server support)
+- **File upload** -- `--file` flag with presign+upload flow (reuse `upload.go` from actions)
+- **Polling** -- Long-running generation with status polling (when server supports async)
