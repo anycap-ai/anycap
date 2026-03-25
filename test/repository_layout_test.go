@@ -12,8 +12,7 @@ func TestProductAssetsExist(t *testing.T) {
 
 	requiredPaths := []string{
 		"../README.md",
-		"../skills/anycap.skill",
-		"../skills/capabilities/anycap-image.skill",
+		"../.skills/anycap-cli/SKILL.md",
 		"../.env.example",
 		"../configs/cli/config.example.toml",
 		"../web/package.json",
@@ -58,7 +57,7 @@ func TestRepositoryDocs(t *testing.T) {
 		"│   │   │   ├── meta/       # 管理命令，例如 login、status、config、skill",
 		"│   │   │   └── extension/  # 动态扩展命令，例如 run",
 		"│   │   └── output/         # CLI 输出封装，例如 JSON-first stdout",
-		"├── skills/                 # AnyCap skill files 总目录",
+		"├── .skills/                # AnyCap CLI skill files (agent-facing documentation)",
 		"└── web/                    # 面向人类用户的 Web 产品目录",
 		"    ├── dashboard/          # Dashboard 功能模块目录",
 		"## 本地运行",

@@ -1,4 +1,10 @@
-# Cloudflare Pages deployment helpers
+# Cloudflare Pages deployment helpers (manual fallback)
+#
+# Primary deployment: auto-deploy via CF Pages connected to github.com/anycap-ai/anycap.
+# Push to GitHub main -> production deploy. Push to other branches -> preview deploy.
+#
+# This Makefile is for manual/emergency deploys only.
+#
 # Usage:
 #   make cf-up-env              # Upload secrets from .env.preview to preview (default)
 #   make cf-up-env ENV=preview  # Upload secrets from .env.preview to preview

@@ -1,12 +1,13 @@
 package model
 
 type ServiceStatus struct {
-	Name    string `json:"name"`
-	Env     string `json:"env"`
-	Version string `json:"version"`
-	Commit  string `json:"commit"`
-	BuildAt string `json:"build_at"`
-	Status  string `json:"status"`
+	Name     string          `json:"name"`
+	Env      string          `json:"env"`
+	Version  string          `json:"version"`
+	Commit   string          `json:"commit"`
+	BuildAt  string          `json:"build_at"`
+	Status   string          `json:"status"`
+	Features map[string]bool `json:"features,omitempty"`
 }
 
 type LoginInitResult struct {

@@ -100,7 +100,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// --- Mock Authorize (simulates Auth0 login page, auto-redirects) ---
+// --- Mock Authorize (simulates auth login page, auto-redirects) ---
 
 func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
@@ -155,9 +155,10 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 
 	writeSuccess(w, map[string]any{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-		"expires_in":    3600,
+		"credential_type": "oauth",
+		"access_token":    accessToken,
+		"refresh_token":   refreshToken,
+		"expires_in":      3600,
 		"user": map[string]string{
 			"email": "dev@anycap.ai",
 			"name":  "Dev User",
@@ -223,10 +224,11 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 
 	// Mock: auto-approve immediately
 	writeSuccess(w, map[string]any{
-		"status":        "complete",
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-		"expires_in":    3600,
+		"status":          "complete",
+		"credential_type": "oauth",
+		"access_token":    accessToken,
+		"refresh_token":   refreshToken,
+		"expires_in":      3600,
 		"user": map[string]string{
 			"email": entry.Email,
 			"name":  "Dev User",
@@ -325,20 +327,32 @@ func (s *Server) handleMockUpload(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleImageUnderstand(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		URL         string `json:"url"`
-		Instruction string `json:"instruction"`
-		Model       string `json:"model"`
+		URL         string           `json:"url"`
+		Images      []map[string]any `json:"images"`
+		Instruction string           `json:"instruction"`
+		Model       string           `json:"model"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
 		return
 	}
-	if req.URL == "" {
-		writeError(w, http.StatusUnprocessableEntity, "MISSING_INPUT", "url is required")
+
+	imageCount := 0
+	if len(req.Images) > 0 {
+		imageCount = len(req.Images)
+	} else if req.URL != "" {
+		imageCount = 1
+	}
+
+	if imageCount == 0 {
+		writeError(w, http.StatusUnprocessableEntity, "MISSING_INPUT", "url or images is required")
 		return
 	}
 
 	content := "This is a mock image analysis result."
+	if imageCount > 1 {
+		content = fmt.Sprintf("Mock analysis of %d images.", imageCount)
+	}
 	if req.Instruction != "" {
 		content = fmt.Sprintf("Mock analysis for instruction: %s", req.Instruction)
 	}

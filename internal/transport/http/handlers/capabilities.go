@@ -103,6 +103,9 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 	if errors.Is(err, model.ErrMissingMIME) {
 		return consts.StatusUnprocessableEntity, "missing_input", err.Error()
 	}
+	if errors.Is(err, model.ErrTooManyImages) {
+		return consts.StatusUnprocessableEntity, "too_many_images", err.Error()
+	}
 	if errors.Is(err, model.ErrStorageNotConfigured) {
 		return consts.StatusBadGateway, "storage_not_configured", err.Error()
 	}

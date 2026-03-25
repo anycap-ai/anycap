@@ -28,7 +28,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			ExpiresIn       int    `json:"expires_in"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(resp, &initResp); err != nil {
+	if err := json.Unmarshal(resp.Body, &initResp); err != nil {
 		return nil, "", fmt.Errorf("failed to parse device code response: %w", err)
 	}
 
@@ -71,17 +71,10 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 		var poll struct {
 			Data struct {
-				Status       string `json:"status"`
-				AccessToken  string `json:"access_token"`
-				RefreshToken string `json:"refresh_token"`
-				ExpiresIn    int    `json:"expires_in"`
-				User         *struct {
-					Email string `json:"email"`
-					Name  string `json:"name"`
-				} `json:"user"`
+				Status string `json:"status"`
 			} `json:"data"`
 		}
-		if err := json.Unmarshal(pollResp, &poll); err != nil {
+		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {
 			fmt.Fprint(stderr, ".")
 			continue
 		}
@@ -89,13 +82,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		switch poll.Data.Status {
 		case "complete":
 			fmt.Fprintln(stderr, " done!")
-			userEmail := ""
-			if poll.Data.User != nil {
-				userEmail = poll.Data.User.Email
+			cred, email, err := parseTokenResponse(pollResp.Body)
+			if err != nil {
+				return nil, "", err
 			}
-			expiresAt := time.Now().Add(time.Duration(poll.Data.ExpiresIn) * time.Second)
-			oauthCred := cliconfig.NewOAuthCredential(poll.Data.AccessToken, poll.Data.RefreshToken, expiresAt)
-			return oauthCred, userEmail, nil
+			return cred, email, nil
 		case "expired":
 			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":

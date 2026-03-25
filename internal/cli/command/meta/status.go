@@ -14,12 +14,12 @@ func NewStatusCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *co
 		Use:   "status",
 		Short: "Show AnyCap server status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			payload, err := clientFactory().Get(cmd.Context(), "/v1/status")
+			resp, err := clientFactory().Get(cmd.Context(), "/v1/status")
 			if err != nil {
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
 		},
 	}
 }

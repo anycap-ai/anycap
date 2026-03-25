@@ -12,6 +12,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/selfupdate"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -66,16 +67,28 @@ func NewRootCmd(opts Options) *cobra.Command {
 		)
 	}
 
+	// Meta commands (always available).
 	rootCmd.AddCommand(
-		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
 		meta.NewLogoutCmd(opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
 		meta.NewCredentialCmd(opts.Stdout, opts.Stderr),
 		meta.NewConfigCmd(opts.Stdout, opts.Stderr),
+		meta.NewFeedbackCmd(clientFactory, opts.Stdout),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
-		cap.NewImageCmd(clientFactory, opts.Stdout),
-		cap.NewVideoCmd(clientFactory, opts.Stdout),
 	)
+
+	// Feature-gated meta commands.
+	if feature.Enabled(feature.Login) {
+		rootCmd.AddCommand(meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr))
+	}
+
+	// Capability commands (gated by feature flags; skip parent if no subcommands).
+	if imageCmd := cap.NewImageCmd(clientFactory, opts.Stdout); imageCmd.HasSubCommands() {
+		rootCmd.AddCommand(imageCmd)
+	}
+	if videoCmd := cap.NewVideoCmd(clientFactory, opts.Stdout); videoCmd.HasSubCommands() {
+		rootCmd.AddCommand(videoCmd)
+	}
 
 	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr)
 

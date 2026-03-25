@@ -25,6 +25,7 @@ import (
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	hertzapp "github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -66,6 +67,16 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	if err != nil {
 		panic(err)
 	}
+
+	// Determine feature flags based on configured providers.
+	serverFeatures := map[string]bool{
+		feature.Login:           false, // auth provider is stub
+		feature.ImageGenerate:   false, // nexushub image generation not wired yet
+		feature.ImageModels:     false, // nexushub image models not wired yet
+		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
+		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
+	}
+	deps.systemService.SetFeatures(serverFeatures)
 
 	systemHandler := handlers.NewSystemHandler(deps.systemService)
 	loginHandler := handlers.NewLoginHandler(deps.loginService)

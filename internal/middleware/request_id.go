@@ -20,6 +20,7 @@ func RequestID() app.HandlerFunc {
 
 		SetRequestID(c, requestID)
 		c.Response.Header.Set(requestIDHeader, requestID)
+		ctx = ContextWithRequestID(ctx, requestID)
 		c.Next(ctx)
 	}
 }

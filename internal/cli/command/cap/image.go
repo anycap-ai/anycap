@@ -2,25 +2,34 @@ package cap
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
+
+const maxCLIImages = 10
 
 func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	imageCmd := &cobra.Command{
 		Use:   "image",
 		Short: "Generate, edit, and understand images",
+		RunE:  requireSubcommand,
 	}
 
-	imageCmd.AddCommand(
-		newImageModelsCmd(clientFactory, stdout),
-		newImageGenerateCmd(clientFactory, stdout),
-		newImageUnderstandCmd(clientFactory, stdout),
-	)
+	if feature.Enabled(feature.ImageModels) {
+		imageCmd.AddCommand(newImageModelsCmd(clientFactory, stdout))
+	}
+	if feature.Enabled(feature.ImageGenerate) {
+		imageCmd.AddCommand(newImageGenerateCmd(clientFactory, stdout))
+	}
+	if feature.Enabled(feature.ImageUnderstand) {
+		imageCmd.AddCommand(newImageUnderstandCmd(clientFactory, stdout))
+	}
 
 	return imageCmd
 }
@@ -30,12 +39,12 @@ func newImageModelsCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		Use:   "models",
 		Short: "List available image models",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			payload, err := clientFactory().Get(cmd.Context(), "/v1/image/models")
+			resp, err := clientFactory().Get(cmd.Context(), "/v1/image/models")
 			if err != nil {
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
 		},
 	}
 }
@@ -48,7 +57,7 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 		Use:   "generate",
 		Short: "Generate an image from a prompt",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			payload, err := clientFactory().PostJSON(context.Background(), "/v1/image/generate", map[string]any{
+			resp, err := clientFactory().PostJSON(context.Background(), "/v1/image/generate", map[string]any{
 				"prompt": prompt,
 				"model":  model,
 			})
@@ -56,7 +65,7 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 				return err
 			}
 
-			return output.WriteJSON(stdout, payload)
+			return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
 		},
 	}
 
@@ -68,33 +77,60 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 }
 
 func newImageUnderstandCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var urlFlag string
-	var fileFlag string
+	var urls []string
+	var files []string
 	var instruction string
 	var modelFlag string
 
 	cmd := &cobra.Command{
 		Use:   "understand",
-		Short: "Analyze an image (describe, extract text, answer questions)",
-		Long: `Analyze an image using vision models. Provide either a URL or a local file.
+		Short: "Analyze one or more images (describe, extract text, answer questions)",
+		Long: `Analyze images using vision models. Provide URLs, local files, or a mix of both.
+Up to 10 images can be analyzed in a single request.
 
 Examples:
   anycap image understand --url https://example.com/photo.jpg
   anycap image understand --url https://example.com/photo.jpg --instruction "What text is in this image?"
-  anycap image understand --file ./screenshot.png`,
+  anycap image understand --file ./screenshot.png
+  anycap image understand --url https://example.com/p1.jpg --url https://example.com/p2.jpg --instruction "Compare these images"
+  anycap image understand --url https://example.com/photo.jpg --file ./local.png --instruction "Describe each image"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client := clientFactory()
-			targetURL := urlFlag
+			if len(urls) == 0 && len(files) == 0 {
+				return fmt.Errorf("at least one --url or --file is required")
+			}
 
-			if fileFlag != "" {
-				result, err := uploadFile(cmd.Context(), client, fileFlag)
+			totalImages := len(urls) + len(files)
+			if totalImages > maxCLIImages {
+				return fmt.Errorf("too many images: %d provided, maximum is %d", totalImages, maxCLIImages)
+			}
+
+			client := clientFactory()
+
+			// Upload local files and collect all image URLs.
+			imageURLs := make([]string, 0, totalImages)
+			imageURLs = append(imageURLs, urls...)
+			for _, f := range files {
+				result, err := uploadFile(cmd.Context(), client, f)
 				if err != nil {
 					return err
 				}
-				targetURL = result.ObjectURL
+				imageURLs = append(imageURLs, result.ObjectURL)
 			}
 
-			body := map[string]any{"url": targetURL}
+			body := map[string]any{}
+
+			if len(imageURLs) == 1 {
+				// Single-image shorthand.
+				body["url"] = imageURLs[0]
+			} else {
+				// Multi-image list.
+				images := make([]map[string]string, len(imageURLs))
+				for i, u := range imageURLs {
+					images[i] = map[string]string{"url": u}
+				}
+				body["images"] = images
+			}
+
 			if instruction != "" {
 				body["instruction"] = instruction
 			}
@@ -102,21 +138,19 @@ Examples:
 				body["model"] = modelFlag
 			}
 
-			payload, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/understand", body)
+			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/understand", body)
 			if err != nil {
 				return err
 			}
 
-			return output.WriteContent(stdout, payload)
+			return output.WriteServerContent(stdout, resp.Body, resp.RequestID)
 		},
 	}
 
-	cmd.Flags().StringVar(&urlFlag, "url", "", "Image URL to analyze")
-	cmd.Flags().StringVar(&fileFlag, "file", "", "Local image file to upload and analyze")
-	cmd.Flags().StringVar(&instruction, "instruction", "", "What to look for or describe")
+	cmd.Flags().StringArrayVar(&urls, "url", nil, "Image URL to analyze (can be repeated)")
+	cmd.Flags().StringArrayVar(&files, "file", nil, "Local image file to upload and analyze (can be repeated)")
+	cmd.Flags().StringVar(&instruction, "instruction", "", "Custom instruction for image analysis")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
-	cmd.MarkFlagsOneRequired("url", "file")
-	cmd.MarkFlagsMutuallyExclusive("url", "file")
 
 	return cmd
 }

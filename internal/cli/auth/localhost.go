@@ -57,7 +57,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 			State   string `json:"state"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(resp, &initResp); err != nil {
+	if err := json.Unmarshal(resp.Body, &initResp); err != nil {
 		listener.Close()
 		return nil, "", fmt.Errorf("failed to parse login response: %w", err)
 	}
@@ -117,24 +117,11 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 		return nil, "", fmt.Errorf("failed to exchange code: %w", err)
 	}
 
-	var tokenResp struct {
-		Data struct {
-			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"refresh_token"`
-			ExpiresIn    int    `json:"expires_in"`
-			User         struct {
-				Email string `json:"email"`
-				Name  string `json:"name"`
-			} `json:"user"`
-		} `json:"data"`
+	cred, userEmail, err := parseTokenResponse(callbackResp.Body)
+	if err != nil {
+		return nil, "", err
 	}
-	if err := json.Unmarshal(callbackResp, &tokenResp); err != nil {
-		return nil, "", fmt.Errorf("failed to parse callback response: %w", err)
-	}
-
-	expiresAt := time.Now().Add(time.Duration(tokenResp.Data.ExpiresIn) * time.Second)
-	oauthCred := cliconfig.NewOAuthCredential(tokenResp.Data.AccessToken, tokenResp.Data.RefreshToken, expiresAt)
-	return oauthCred, tokenResp.Data.User.Email, nil
+	return cred, userEmail, nil
 }
 
 // CanBindLocalPort tests whether we can bind a local TCP port.

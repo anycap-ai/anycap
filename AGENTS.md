@@ -55,8 +55,8 @@ scripts/
   dev/               # Local dev scripts (run-server.sh, run-cli.sh)
   release/           # Release build scripts
 
-skills/
-  capabilities/      # Skill files per capability (e.g. image)
+.skills/
+  anycap-cli/         # Unified CLI skill file for all capabilities
 
 test/
   integration/       # Integration and smoke tests
@@ -104,9 +104,18 @@ scripts/dev/run-cli.sh status
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
-- **Skill files:** one file per capability under `skills/capabilities/`.
+- **Skill files:** unified CLI skill in `.skills/anycap-cli/SKILL.md`.
 
 ## CI/CD
+
+### Source Repositories
+
+| Repo | Purpose |
+|------|---------|
+| `gitlab.knoffice.tech/engineering/anycap` (origin) | Primary development, CI/CD pipelines, server deployment |
+| `github.com/anycap-ai/anycap` (github) | Public distribution: CLI releases, web auto-deploy, skill files |
+
+### GitLab CI
 
 Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go workflow.
 
@@ -128,7 +137,31 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
 2. Merge to `deploy/server-prod` to deploy to production.
 
-**Web (landing/dashboard):** deployed via Cloudflare Pages, not part of GitLab CI. See `web/Makefile`.
+### Web (landing/dashboard)
+
+Deployed via **Cloudflare Pages** connected to the GitHub repo `anycap-ai/anycap`.
+
+| Environment | Trigger | Domain |
+|-------------|---------|--------|
+| Production | Push to `main` branch on GitHub | `anycap.ai` |
+| Preview | Push to any other branch on GitHub | `*.anycap-web.pages.dev` |
+
+CF Pages build configuration (set in Cloudflare Dashboard):
+
+| Setting | Value |
+|---------|-------|
+| Framework preset | None |
+| Root directory | `web` |
+| Build command | `pnpm install && pnpm build && npx @cloudflare/next-on-pages` |
+| Build output directory | `.vercel/output/static` |
+
+Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-deploy`).
+
+**Workflow:** develop on GitLab -> push to GitHub -> CF Pages auto-deploys.
+
+### Skills
+
+The CLI skill file lives in `.skills/anycap-cli/SKILL.md`. It documents all CLI commands and capabilities in a single file for agent consumption. This is distributed via the GitHub repo and served from the latest `main` branch.
 
 ## CLI Design and Implementation
 
@@ -144,8 +177,8 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 
 ### Key Architectural Decisions
 
-- **CLI only talks to Server.** CLI never directly accesses Auth0, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
-- **Auth0 is the auth provider.** Server wraps Auth0 flows. CLI calls Server login APIs which internally interact with Auth0.
+- **CLI only talks to Server.** CLI never directly accesses external auth providers, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
+- **Server handles authentication.** CLI calls Server login APIs. The auth backend is a server implementation detail invisible to the CLI.
 - **Config + Credential separation.** `~/.anycap/config.toml` for preferences (0644), `~/.anycap/credentials` for credential JSON (0600). Keychain is primary store; file is fallback.
 - **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, dev scripts inject `http://127.0.0.1:8080`.
 - **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.

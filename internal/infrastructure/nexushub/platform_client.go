@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 )
 
 const (
@@ -119,14 +120,14 @@ type nodeCapabilitiesDTO struct {
 }
 
 type imageCapabilitiesDTO struct {
-	SupportsText2Img         bool     `json:"supports_text_2_img"`
-	SupportsImg2Img          bool     `json:"supports_img_2_img"`
-	SupportsUltraImg         bool     `json:"supports_ultra_img"`
-	SupportsImageEdit        bool     `json:"supports_image_edit"`
-	SupportsMultiRef2Img     bool     `json:"supports_multi_ref_2_img"`
-	SupportsGroupImgGen      bool     `json:"supports_group_img_gen"`
-	SupportedResolutions     []string `json:"supported_resolutions"`
-	SupportedAspectRatios    []string `json:"supported_aspect_ratios"`
+	SupportsText2Img      bool     `json:"supports_text_2_img"`
+	SupportsImg2Img       bool     `json:"supports_img_2_img"`
+	SupportsUltraImg      bool     `json:"supports_ultra_img"`
+	SupportsImageEdit     bool     `json:"supports_image_edit"`
+	SupportsMultiRef2Img  bool     `json:"supports_multi_ref_2_img"`
+	SupportsGroupImgGen   bool     `json:"supports_group_img_gen"`
+	SupportedResolutions  []string `json:"supported_resolutions"`
+	SupportedAspectRatios []string `json:"supported_aspect_ratios"`
 }
 
 type videoCapabilitiesDTO struct {
@@ -164,6 +165,9 @@ func (c *PlatformClient) fetchAtomicNodes(ctx context.Context, category string) 
 	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		req.Header.Set("X-Request-Id", requestID)
 	}
 
 	resp, err := c.httpClient.Do(req)

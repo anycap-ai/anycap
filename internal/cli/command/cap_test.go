@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -125,6 +126,61 @@ func TestImageUnderstandRequiresURLOrFile(t *testing.T) {
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("expected error when neither --url nor --file provided")
+	}
+}
+
+func TestImageUnderstandMultipleURLs(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{
+		"image", "understand",
+		"--url", "https://example.com/img1.jpg",
+		"--url", "https://example.com/img2.jpg",
+		"--instruction", "Compare these images",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("image understand multi-url failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "Compare these images") {
+		t.Fatalf("expected instruction in output, got: %s", output)
+	}
+}
+
+func TestImageUnderstandTooManyImages(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	args := []string{"image", "understand"}
+	for i := 0; i < 11; i++ {
+		args = append(args, "--url", fmt.Sprintf("https://example.com/img%d.jpg", i))
+	}
+	cmd.SetArgs(args)
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when too many images provided")
+	}
+	if !strings.Contains(err.Error(), "too many images") {
+		t.Fatalf("expected 'too many images' error, got: %v", err)
 	}
 }
 
