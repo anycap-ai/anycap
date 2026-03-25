@@ -1,5 +1,12 @@
 package model
 
+import "errors"
+
+var (
+	ErrModelRequired              = errors.New("model is required")
+	ErrImageProviderNotConfigured = errors.New("image provider is not configured")
+)
+
 type ImageModel struct {
 	ID          string   `json:"id"`
 	Capability  string   `json:"capability"`
@@ -17,6 +24,9 @@ type GenerateImageRequest struct {
 func (r GenerateImageRequest) Validate() error {
 	if r.Prompt == "" {
 		return ErrPromptRequired
+	}
+	if r.Model == "" {
+		return ErrModelRequired
 	}
 
 	return nil

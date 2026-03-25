@@ -136,3 +136,15 @@ func TestRouter_CapabilitiesPresign(t *testing.T) {
 		t.Fatalf("expected success status, got %#v", env["status"])
 	}
 }
+
+func TestRouter_Healthz(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/healthz", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.Code)
+	}
+	if resp.Header().Get("X-Request-Id") == "" {
+		t.Fatal("expected X-Request-Id header")
+	}
+}

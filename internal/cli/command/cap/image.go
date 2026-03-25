@@ -70,8 +70,9 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	}
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
-	cmd.Flags().StringVar(&model, "model", "flux-dev", "Model ID to use")
+	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
 	_ = cmd.MarkFlagRequired("prompt")
+	_ = cmd.MarkFlagRequired("model")
 
 	return cmd
 }

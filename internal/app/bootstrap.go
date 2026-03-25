@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
+	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -19,6 +21,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
@@ -77,7 +80,6 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
 	}
 	deps.systemService.SetFeatures(serverFeatures)
-
 	systemHandler := handlers.NewSystemHandler(deps.systemService)
 	loginHandler := handlers.NewLoginHandler(deps.loginService)
 	imageHandler := handlers.NewImageHandler(deps.imageService)
@@ -85,6 +87,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
+	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(buildModelRouteRepo()))
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr: deps.config.HTTPAddr,
@@ -107,6 +110,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				imageCatalog.RegisterRoutes(protected)
 				videoCatalog.RegisterRoutes(protected)
 				audioCatalog.RegisterRoutes(protected)
+				modelRouteHandler.RegisterRoutes(protected)
 			}),
 		},
 	})
@@ -229,4 +233,18 @@ func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*apikey.SQLDB, error) {
 func (s *Server) Run() {
 	log.Printf("%s listening on %s (env=%s version=%s)", s.config.AppName, s.config.HTTPAddr, s.config.AppEnv, s.buildInfo.Version)
 	s.httpServer.Spin()
+}
+
+func buildModelRouteRepo() port.ModelRouteRepository {
+	if os.Getenv("ANYCAP_PG_CONFIG") == "" {
+		log.Println("model-routes: postgres is not configured; admin CRUD endpoints will be unavailable")
+		return nil
+	}
+
+	repo, err := postgres.NewCatalogRepoFromEnv(context.Background())
+	if err != nil {
+		log.Fatalf("failed to initialize postgres model route repo: %v", err)
+	}
+	log.Println("model-routes: using postgres anycap_model_routes table")
+	return repo
 }

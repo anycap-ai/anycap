@@ -1,5 +1,9 @@
 package model
 
+import "errors"
+
+var ErrAuthProviderNotConfigured = errors.New("auth provider is not configured")
+
 type ServiceStatus struct {
 	Name     string          `json:"name"`
 	Env      string          `json:"env"`
@@ -16,9 +20,10 @@ type LoginInitResult struct {
 }
 
 type LoginCallbackResult struct {
-	UserID   string `json:"user_id"`
-	APIKeyID string `json:"api_key_id"`
-	APIKey   string `json:"api_key"`
+	UserID   string    `json:"user_id"`
+	APIKeyID string    `json:"api_key_id"`
+	APIKey   string    `json:"api_key"`
+	User     *AuthUser `json:"user,omitempty"`
 }
 
 type Balance struct {

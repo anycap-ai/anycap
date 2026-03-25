@@ -3,7 +3,7 @@
 #
 # Branch strategy:
 #   main / MR              -> lint + test
-#   feat*                  -> lint + test
+#   feat* / fix* / chore* -> lint + test
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
@@ -22,7 +22,8 @@ stages:
   - deploy
 
 variables:
-  GOVERSION: "1.24"
+  GOVERSION: "1.25"
+  GOTOOLCHAIN: "auto"
   CI_IMAGE: "kntech-registry-vpc.ap-southeast-1.cr.aliyuncs.com/kntech-dev/ci/ci:go-1.24"
   # Docker build config
   APP_server_DOCKERFILE: "deploy/docker/Dockerfile.server"
@@ -39,8 +40,8 @@ workflow:
   rules:
     # MR pipelines: lint + test
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
-    # Feature branches: lint + test
-    - if: $CI_COMMIT_BRANCH =~ /^feat.*/
+    # Feature/fix/chore branches: lint + test
+    - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore)([\/-].+)?$/
     # Main branch: lint + test
     - if: $CI_COMMIT_BRANCH == "main"
     # CLI release branches: goreleaser
