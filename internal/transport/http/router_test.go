@@ -54,11 +54,11 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		V1: []RouteRegistrar{
 			systemHandler,
 			loginHandler,
+			imageCatalog,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(apiKeys), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
-				imageCatalog.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 			}),
 		},
@@ -103,12 +103,12 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 		t.Fatalf("expected 401, got %d", resp.Code)
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}

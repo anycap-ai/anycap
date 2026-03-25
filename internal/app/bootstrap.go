@@ -44,6 +44,9 @@ var (
 		}
 		return apikey.ApplyMigrations(ctx, dbtx)
 	}
+	newCatalogRepoFromEnv = func(ctx context.Context) (*postgres.CatalogRepo, error) {
+		return postgres.NewCatalogRepoFromEnv(ctx)
+	}
 )
 
 type serverDependencies struct {
@@ -102,14 +105,14 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		V1: []transporthttp.RouteRegistrar{
 			systemHandler,
 			loginHandler,
+			imageCatalog,
+			videoCatalog,
+			audioCatalog,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
-				imageCatalog.RegisterRoutes(protected)
-				videoCatalog.RegisterRoutes(protected)
-				audioCatalog.RegisterRoutes(protected)
 				modelRouteHandler.RegisterRoutes(protected)
 			}),
 		},
@@ -193,6 +196,16 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
+	if os.Getenv("ANYCAP_PG_CONFIG") != "" {
+		repo, err := newCatalogRepoFromEnv(context.Background())
+		if err != nil {
+			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
+		} else {
+			log.Println("catalog: using postgres anycap_model_routes table")
+			return repo
+		}
+	}
+
 	if cfg.NexusHubBaseURL == "" {
 		log.Println("catalog: using stub (set NEXUSHUB_BASE_URL for real catalog)")
 		return nexushub.NewCatalogStubWith([]model.ModelSpec{
@@ -216,6 +229,8 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 			},
 		})
 	}
+
+	log.Printf("catalog: using nexushub platform at %s", cfg.NexusHubBaseURL)
 	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: cfg.NexusHubBaseURL, Token: cfg.NexusHubToken})
 }
 
@@ -241,7 +256,7 @@ func buildModelRouteRepo() port.ModelRouteRepository {
 		return nil
 	}
 
-	repo, err := postgres.NewCatalogRepoFromEnv(context.Background())
+	repo, err := newCatalogRepoFromEnv(context.Background())
 	if err != nil {
 		log.Fatalf("failed to initialize postgres model route repo: %v", err)
 	}
