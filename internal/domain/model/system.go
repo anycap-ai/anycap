@@ -1,12 +1,17 @@
 package model
 
+import "errors"
+
+var ErrAuthProviderNotConfigured = errors.New("auth provider is not configured")
+
 type ServiceStatus struct {
-	Name    string `json:"name"`
-	Env     string `json:"env"`
-	Version string `json:"version"`
-	Commit  string `json:"commit"`
-	BuildAt string `json:"build_at"`
-	Status  string `json:"status"`
+	Name     string          `json:"name"`
+	Env      string          `json:"env"`
+	Version  string          `json:"version"`
+	Commit   string          `json:"commit"`
+	BuildAt  string          `json:"build_at"`
+	Status   string          `json:"status"`
+	Features map[string]bool `json:"features,omitempty"`
 }
 
 type LoginInitResult struct {
@@ -21,16 +26,24 @@ type LoginInitResult struct {
 }
 
 type LoginCallbackResult struct {
-	APIKeyID string     `json:"api_key_id"`
-	APIKey   string     `json:"api_key"`
-	User     *LoginUser `json:"user,omitempty"`
+	CredentialType string     `json:"credential_type,omitempty"`
+	AccessToken    string     `json:"access_token,omitempty"`
+	RefreshToken   string     `json:"refresh_token,omitempty"`
+	ExpiresIn      int        `json:"expires_in,omitempty"`
+	APIKeyID       string     `json:"api_key_id,omitempty"`
+	APIKey         string     `json:"api_key,omitempty"`
+	User           *LoginUser `json:"user,omitempty"`
 }
 
 type LoginPollResult struct {
-	Status   string     `json:"status"`
-	APIKeyID string     `json:"api_key_id,omitempty"`
-	APIKey   string     `json:"api_key,omitempty"`
-	User     *LoginUser `json:"user,omitempty"`
+	Status         string     `json:"status"`
+	CredentialType string     `json:"credential_type,omitempty"`
+	AccessToken    string     `json:"access_token,omitempty"`
+	RefreshToken   string     `json:"refresh_token,omitempty"`
+	ExpiresIn      int        `json:"expires_in,omitempty"`
+	APIKeyID       string     `json:"api_key_id,omitempty"`
+	APIKey         string     `json:"api_key,omitempty"`
+	User           *LoginUser `json:"user,omitempty"`
 }
 
 type LoginUser struct {

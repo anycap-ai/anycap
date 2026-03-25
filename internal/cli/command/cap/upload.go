@@ -50,7 +50,7 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string)
 			ObjectURL string `json:"object_url"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(resp, &presign); err != nil {
+	if err := json.Unmarshal(resp.Body, &presign); err != nil {
 		return nil, fmt.Errorf("failed to parse presign response: %w", err)
 	}
 

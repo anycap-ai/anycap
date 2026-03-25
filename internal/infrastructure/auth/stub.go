@@ -31,6 +31,10 @@ func NewStubClient(baseURL string, users map[string]model.AuthUser) *StubClient 
 	}
 }
 
+func NewStubProvider(baseURL string) *StubClient {
+	return NewStubClient(baseURL, nil)
+}
+
 func (c *StubClient) BuildLoginURL(_ context.Context, state, redirectURI string) (string, error) {
 	u, err := url.Parse(c.baseURL)
 	if err != nil {

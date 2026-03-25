@@ -51,6 +51,10 @@ func (s *Service) GetModelSchema(ctx context.Context, capability model.Capabilit
 		RequestHints: opSpec.RequestHints,
 	}
 
+	if len(opSpec.RequestHints) > 0 {
+		schema.Schema = opSpec.RequestHints
+	}
+
 	if opSpec.SchemaRef != "" {
 		schema.Schema = map[string]any{"$ref": opSpec.SchemaRef}
 	}

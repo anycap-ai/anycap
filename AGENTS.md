@@ -55,8 +55,11 @@ scripts/
   dev/               # Local dev scripts (run-server.sh, run-cli.sh)
   release/           # Release build scripts
 
-skills/
-  capabilities/      # Skill files per capability (e.g. image)
+npm/
+  anycap/            # npm main package template (@anycap/cli)
+
+.skills/
+  anycap-cli/         # Unified CLI skill file for all capabilities
 
 test/
   integration/       # Integration and smoke tests
@@ -104,9 +107,18 @@ scripts/dev/run-cli.sh status
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
-- **Skill files:** one file per capability under `skills/capabilities/`.
+- **Skill files:** unified CLI skill in `.skills/anycap-cli/SKILL.md`.
 
 ## CI/CD
+
+### Source Repositories
+
+| Repo | Purpose |
+|------|---------|
+| `gitlab.knoffice.tech/engineering/anycap` (origin) | Primary development, CI/CD pipelines, server deployment |
+| `github.com/anycap-ai/anycap` (github) | Public distribution: CLI releases, web auto-deploy, skill files |
+
+### GitLab CI
 
 Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go workflow.
 
@@ -120,15 +132,54 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 
 **CLI Release flow:**
 1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
-2. Push branch `release/cli-v0.1.0` (version extracted from branch name).
+2. **Review gate:** present the release notes to the user and get explicit approval before proceeding. Do NOT push the release branch until confirmed.
+3. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 3. CI runs goreleaser to cross-compile and archive CLI binaries.
-4. CI creates GitHub release with the release notes and uploads artifacts (requires `GITHUB_TOKEN` in CI/CD variables).
+4. CI creates GitHub release with the release notes and uploads artifacts.
+5. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
+
+**GitHub authentication (GitLab CI -> GitHub):**
+- Primary: GitHub App (`GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` as File-type variable)
+- Fallback: `GITHUB_TOKEN` (personal/machine token)
+- Shared logic: `scripts/release/github-auth.sh`
+- Commits appear as `anycap-bot[bot]` when using GitHub App
+
+**npm distribution:**
+- Main package: `@anycap/cli` (JS wrapper + optionalDependencies)
+- Platform packages: `@anycap/cli-{darwin,linux,win32}-{x64,arm64}` (Go binaries)
+- Publishing: GitHub Actions OIDC trusted publishing (no NPM_TOKEN needed)
+- Workflow: `anycap-github/.github/workflows/publish-npm.yml`
+- Post-release verification: `anycap-github/.github/workflows/post-release.yml`
 
 **Server deploy flow:**
 1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
 2. Merge to `deploy/server-prod` to deploy to production.
 
-**Web (landing/dashboard):** deployed via Cloudflare Pages, not part of GitLab CI. See `web/Makefile`.
+### Web (landing/dashboard)
+
+Deployed via **Cloudflare Pages** connected to the GitHub repo `anycap-ai/anycap`.
+
+| Environment | Trigger | Domain |
+|-------------|---------|--------|
+| Production | Push to `main` branch on GitHub | `anycap.ai` |
+| Preview | Push to any other branch on GitHub | `*.anycap-web.pages.dev` |
+
+CF Pages build configuration (set in Cloudflare Dashboard):
+
+| Setting | Value |
+|---------|-------|
+| Framework preset | None |
+| Root directory | `web` |
+| Build command | `pnpm install && pnpm build && npx @cloudflare/next-on-pages` |
+| Build output directory | `.vercel/output/static` |
+
+Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-deploy`).
+
+**Workflow:** develop on GitLab -> push to GitHub -> CF Pages auto-deploys.
+
+### Skills
+
+The CLI skill file lives in `.skills/anycap-cli/SKILL.md`. It documents all CLI commands and capabilities in a single file for agent consumption. This is distributed via the GitHub repo and served from the latest `main` branch.
 
 ## CLI Design and Implementation
 
@@ -144,12 +195,13 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 
 ### Key Architectural Decisions
 
-- **CLI only talks to Server.** CLI never directly accesses Auth0, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
-- **Auth0 is the auth provider.** Server wraps Auth0 flows. CLI calls Server login APIs which internally interact with Auth0.
+- **CLI only talks to Server.** CLI never directly accesses external auth providers, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
+- **Server handles authentication.** CLI calls Server login APIs. The auth backend is a server implementation detail invisible to the CLI.
 - **Config + Credential separation.** `~/.anycap/config.toml` for preferences (0644), `~/.anycap/credentials` for credential JSON (0600). Keychain is primary store; file is fallback.
 - **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, dev scripts inject `http://127.0.0.1:8080`.
 - **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.
 - **Release via goreleaser.** CLI binary and skill files will be hosted on GitHub. Use goreleaser for cross-platform builds and GitHub Releases.
+- **npm via OIDC.** npm packages published from GitHub Actions using trusted publishing. No long-lived tokens. Platform packages use `os`+`cpu` fields for automatic platform selection.
 
 ### Testing
 

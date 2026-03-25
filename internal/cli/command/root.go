@@ -66,16 +66,30 @@ func NewRootCmd(opts Options) *cobra.Command {
 		)
 	}
 
+	// Meta commands (always available).
 	rootCmd.AddCommand(
 		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
 		meta.NewLogoutCmd(clientFactory, opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
 		meta.NewCredentialCmd(opts.Stdout, opts.Stderr),
 		meta.NewConfigCmd(opts.Stdout, opts.Stderr),
+		meta.NewFeedbackCmd(clientFactory, opts.Stdout),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
-		cap.NewImageCmd(clientFactory, opts.Stdout),
-		cap.NewVideoCmd(clientFactory, opts.Stdout),
+		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
 	)
+
+	// Action commands (AI analysis: image-understand, video-read, etc.).
+	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {
+		rootCmd.AddCommand(actionsCmd)
+	}
+
+	// Capability commands (gated by feature flags; skip parent if no subcommands).
+	if imageCmd := cap.NewImageCmd(clientFactory, opts.Stdout); imageCmd.HasSubCommands() {
+		rootCmd.AddCommand(imageCmd)
+	}
+	if videoCmd := cap.NewVideoCmd(clientFactory, opts.Stdout); videoCmd.HasSubCommands() {
+		rootCmd.AddCommand(videoCmd)
+	}
 
 	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr)
 

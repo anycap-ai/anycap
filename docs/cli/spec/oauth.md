@@ -22,7 +22,7 @@ AnyCap CLI supports multiple authentication methods for `anycap login`:
 
 The CLI auto-detects the best flow and falls back gracefully. Users can force a specific method via flags.
 
-**Core principle:** CLI never talks to Auth0 directly. All auth flows go through the AnyCap Server, which internally integrates with Auth0. This is consistent with the system architecture where Server is the sole gateway.
+**Core principle:** CLI never talks to the auth provider directly. All auth flows go through the AnyCap Server, which internally handles authentication. The server's auth backend (Auth0, custom, etc.) is an implementation detail invisible to the CLI.
 
 ## 2. Authentication Model
 
@@ -32,8 +32,8 @@ AnyCap CLI supports two authentication types with distinct credential models.
 
 | Auth Type | Description | Identity | What CLI Receives |
 |-----------|-------------|----------|-------------------|
-| **Interactive Login** | CLI asks Server to orchestrate Auth0 login. After browser/device verification, Server returns an AnyCap API key. | User identity (email, name) | `api_key` + `user` |
-| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only (no user identity in CLI) | Created outside the CLI |
+| **Interactive Login** | CLI asks Server to orchestrate Auth0 login. In the current MVP, the Server returns an AnyCap API key after browser/device verification. The CLI is forward-compatible with the unified token response format. | User identity (email, name) | MVP: `api_key` + `user`; compatibility format: `credential_type:"api_key"` + `access_token` + `user` |
+| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only, or user identity when issued by the login flow | Created outside the CLI or returned by interactive login |
 
 ### 2.2 Methods Matrix
 
@@ -241,7 +241,7 @@ sequenceDiagram
     participant U as User (Browser)
     participant C as CLI
     participant S as AnyCap Server
-    participant A as Auth0
+    participant A as Auth Provider
 
     C->>C: Bind random port on 127.0.0.1
     C->>S: POST /v1/auth/login {method: localhost, redirect_port: 12345}
@@ -283,14 +283,14 @@ sequenceDiagram
 - CLI verifies the `state` in the callback matches what the server returned.
 - Prevents CSRF attacks.
 
-**Auth0 redirect URI strategy (important)**
-- Auth0 does NOT support wildcard ports in redirect URIs.
-- Solution: **server-side redirect proxy.** Register a single redirect URI: `https://anycap.ai/auth/cli-callback`. Auth0 redirects there. The server-side handler extracts the port from the `state` parameter, then 302-redirects the browser to `http://localhost:{port}/callback?code=...&state=...`.
-- This works with any port and requires no Auth0 configuration changes when adding ports.
+**Server-side redirect proxy (important)**
+- Many auth providers do NOT support wildcard ports in redirect URIs.
+- Solution: **server-side redirect proxy.** Register a single redirect URI: `https://anycap.ai/auth/cli-callback`. The auth provider redirects there. The server-side handler extracts the port from the `state` parameter, then 302-redirects the browser to `http://localhost:{port}/callback?code=...&state=...`.
+- This works with any port and requires no auth provider configuration changes when adding ports.
 
 ```mermaid
 flowchart LR
-    Auth0 -->|redirect| A["anycap.ai/auth/cli-callback"]
+    Auth Provider -->|redirect| A["anycap.ai/auth/cli-callback"]
     A -->|extract port from state| B["302 redirect"]
     B -->|"http://localhost:{port}/callback"| CLI
 ```
@@ -328,7 +328,7 @@ sequenceDiagram
     C->>C: Try to open browser to verification_uri
 
     U->>U: Opens URL, enters user_code
-    U->>S: Authenticates (server handles Auth0 internally)
+    U->>S: Authenticates (server handles auth internally)
 
     loop Poll every {interval} seconds
         C->>S: POST /v1/auth/device-poll {device_code}
@@ -349,9 +349,9 @@ sequenceDiagram
 
 ### 6.2 Key Design Decisions
 
-**Server-generated device code (not Auth0 native)**
-- The server generates its own device code and maps it to an Auth0 web login.
-- Reasons: not all Auth0 plans support device flow natively; server can customize the verification page (`anycap.ai/device`); server controls the user_code format.
+**Server-generated device code**
+- The server generates its own device code and manages the verification flow.
+- Reasons: server can customize the verification page (`anycap.ai/device`); server controls the user_code format; no dependency on auth provider's native device flow support.
 
 **User code format**
 - 8 characters, split by hyphen: `ABCD-1234` (4 alpha + 4 numeric).
@@ -366,11 +366,68 @@ sequenceDiagram
 
 **Verification page flow**
 - `https://anycap.ai/device` is a web page where user enters the code.
-- After entering code, user is redirected to Auth0 for authentication.
+- After entering code, user is redirected to the server's auth page for authentication.
 - After auth, the page shows "Device authorized, you can return to the terminal."
 - Server marks the device_code as authorized and returns OAuth tokens on next poll.
 
 ## 7. Server API Contracts
+
+All login endpoints that return credentials use a **unified token response** format.
+The server decides whether to issue an API key or OAuth tokens based on its own
+configuration. CLI handles both transparently.
+
+### 7.0 Unified Token Response
+
+Login completion endpoints (`/v1/auth/callback`, `/v1/auth/device-poll`) return
+credentials in a unified format. The `credential_type` field determines how the
+CLI stores and uses the credential.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `credential_type` | string | yes | `"api_key"` or `"oauth"` |
+| `access_token` | string | yes | Bearer token for API calls |
+| `refresh_token` | string | oauth only | Long-lived refresh token (empty/absent for api_key) |
+| `expires_in` | int | oauth only | Access token TTL in seconds (0/absent for api_key) |
+| `user.email` | string | no | User's email |
+| `user.name` | string | no | User's display name |
+
+**API key response** (server issues a static key, no refresh needed):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "credential_type": "api_key",
+    "access_token": "sk-abc123...",
+    "user": {"email": "dev@anycap.ai", "name": "Dev User"}
+  }
+}
+```
+
+**OAuth response** (server issues short-lived token with refresh):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "credential_type": "oauth",
+    "access_token": "eyJhbG...",
+    "refresh_token": "rt-xyz789...",
+    "expires_in": 3600,
+    "user": {"email": "dev@anycap.ai", "name": "Dev User"}
+  }
+}
+```
+
+**CLI behavior by credential_type:**
+
+| credential_type | Stored as | Auto-refresh | Token expiry |
+|-----------------|-----------|-------------|-------------|
+| `api_key` | `APIKeyCredential` | No | Never (client-side) |
+| `oauth` | `OAuthCredential` | Yes (via `/v1/auth/refresh`) | `expires_in` seconds |
+
+**Backward compatibility:** If `credential_type` is absent, CLI infers the type:
+presence of `refresh_token` implies `oauth`, otherwise `api_key`.
 
 ### 7.1 Localhost Flow
 
@@ -380,20 +437,16 @@ sequenceDiagram
 |-----------|-------|------|-------------|
 | Request | `method` | string | `"localhost"` |
 | Request | `redirect_port` | int | CLI's local server port |
-| Response | `auth_url` | string | Full Auth0 authorize URL (with PKCE, state, scopes) |
+| Response | `auth_url` | string | Server-generated authorize URL (with PKCE, state, scopes) |
 | Response | `state` | string | State value for CLI to verify in callback |
 
 **POST /v1/auth/callback**
 
 | Direction | Field | Type | Description |
 |-----------|-------|------|-------------|
-| Request | `code` | string | Authorization code from Auth0 |
+| Request | `code` | string | Authorization code from server auth flow |
 | Request | `state` | string | State value to verify |
-| Response | `access_token` | string | Short-lived access token |
-| Response | `refresh_token` | string | Long-lived refresh token |
-| Response | `expires_in` | int | Access token TTL in seconds |
-| Response | `user.email` | string | User's email |
-| Response | `user.name` | string | User's display name |
+| Response | | | Unified token response (see 7.0) |
 
 ### 7.2 Device Code Flow
 
@@ -414,10 +467,7 @@ sequenceDiagram
 |-----------|-------|------|-------------|
 | Request | `device_code` | string | Device code from init response |
 | Response | `status` | string | `"pending"`, `"complete"`, `"expired"`, or `"slow_down"` |
-| Response | `access_token` | string | (only when status=complete) Short-lived access token |
-| Response | `refresh_token` | string | (only when status=complete) Long-lived refresh token |
-| Response | `expires_in` | int | (only when status=complete) Access token TTL in seconds |
-| Response | `user` | object | (only when status=complete) |
+| Response | | | When status=`complete`: unified token response fields (see 7.0) |
 
 ### 7.3 Token Refresh
 
@@ -526,7 +576,7 @@ Implementation: `internal/cli/httpclient/client.go` (`do()` method with pre-flig
 | Network loss during polling | HTTP error on poll. CLI retries up to 3 times, then fails. |
 | Multiple `anycap login` at same time | Each gets its own state/device_code. Last one to complete wins (overwrites credentials). |
 | Credentials file is read-only | Save returns error. CLI prints "failed to save" with the API key in stderr so user can manually save. |
-| Auth0 is down | Server returns error on `/v1/auth/login`. CLI shows error with hint to try later. |
+| Auth provider is down | Server returns error on `/v1/auth/login`. CLI shows error with hint to try later. |
 | Already logged in | CLI prints "Already logged in. Use 'anycap logout' to switch accounts." and exits 0. |
 
 ## 12. Mock Auth Server (Development and Testing)
@@ -602,5 +652,5 @@ Implementation: `internal/cli/testutil/mockserver/server.go`, `cmd/anycap-mock/m
 
 ### Pending
 
-- [ ] Real Auth0 integration on server side
+- [ ] Auth provider integration on server side
 - [ ] Server-side `/v1/auth/*` endpoints (currently only mock server implements them)

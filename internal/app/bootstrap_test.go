@@ -7,6 +7,8 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 )
 
@@ -68,5 +70,55 @@ func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 	}
 	if !strings.Contains(result.AuthorizeURL, "example.auth0.com/authorize") {
 		t.Fatalf("expected real auth0 authorize url, got %q", result.AuthorizeURL)
+	}
+}
+
+func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
+
+	original := newCatalogRepoFromEnv
+	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromEnv = original
+	})
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.CatalogSchemaEnricher); !ok {
+		t.Fatalf("expected catalog schema enricher, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
+
+	original := newCatalogRepoFromEnv
+	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromEnv = original
+	})
+
+	repo := buildCatalogRepo(config.Config{})
+
+	if _, ok := repo.(*postgres.CatalogRepo); !ok {
+		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }

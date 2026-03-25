@@ -23,19 +23,28 @@ func NewService(nexusHub port.NexusHubClient, credit port.CreditClient, callLogs
 }
 
 func (s *Service) ListModels(ctx context.Context) ([]model.ImageModel, error) {
+	if s == nil || s.nexusHub == nil {
+		return nil, model.ErrImageProviderNotConfigured
+	}
 	return s.nexusHub.ListImageModels(ctx)
 }
 
 func (s *Service) GetModelSchema(ctx context.Context, modelName string) (map[string]any, error) {
+	if s == nil || s.nexusHub == nil {
+		return nil, model.ErrImageProviderNotConfigured
+	}
 	return s.nexusHub.GetImageModelSchema(ctx, modelName)
 }
 
 func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) (model.GenerateImageResult, error) {
-	if req.Model == "" {
-		req.Model = "flux-dev"
-	}
 	if err := req.Validate(); err != nil {
 		return model.GenerateImageResult{}, err
+	}
+	if s == nil || s.nexusHub == nil {
+		return model.GenerateImageResult{}, model.ErrImageProviderNotConfigured
+	}
+	if s.credit == nil {
+		return model.GenerateImageResult{}, model.ErrInternal
 	}
 	if req.UserID == "" {
 		return model.GenerateImageResult{}, model.ErrAuthInvalid

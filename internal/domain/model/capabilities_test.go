@@ -36,13 +36,60 @@ func TestImageUnderstandRequest_Validate(t *testing.T) {
 			req:     ImageUnderstandRequest{Data: "aGVsbG8="},
 			wantErr: ErrMissingMIME,
 		},
+		{
+			name: "valid multi-image",
+			req: ImageUnderstandRequest{
+				Images: []MediaInput{
+					{URL: "https://example.com/img1.png"},
+					{Data: "aGVsbG8=", MIMEType: "image/png"},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "ambiguous single and multi",
+			req: ImageUnderstandRequest{
+				URL:    "https://example.com/img.png",
+				Images: []MediaInput{{URL: "https://example.com/img2.png"}},
+			},
+			wantErr: ErrAmbiguousInput,
+		},
+		{
+			name: "too many images",
+			req: ImageUnderstandRequest{
+				Images: func() []MediaInput {
+					imgs := make([]MediaInput, MaxImagesPerRequest+1)
+					for i := range imgs {
+						imgs[i] = MediaInput{URL: "https://example.com/img.png"}
+					}
+					return imgs
+				}(),
+			},
+			wantErr: ErrTooManyImages,
+		},
+		{
+			name: "multi-image with invalid item",
+			req: ImageUnderstandRequest{
+				Images: []MediaInput{
+					{URL: "https://example.com/img.png"},
+					{Data: "aGVsbG8="},
+				},
+			},
+			wantErr: ErrMissingMIME,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.req.Validate()
-			if err != tt.wantErr {
-				t.Errorf("Validate() = %v, want %v", err, tt.wantErr)
+			if tt.wantErr == nil {
+				if err != nil {
+					t.Errorf("Validate() = %v, want nil", err)
+				}
+			} else {
+				if !errors.Is(err, tt.wantErr) {
+					t.Errorf("Validate() = %v, want %v", err, tt.wantErr)
+				}
 			}
 		})
 	}

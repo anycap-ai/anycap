@@ -1,8 +1,7 @@
 #!/bin/sh
 # Upload goreleaser artifacts to GitHub Release.
 #
-# Required CI/CD variable:
-#   GITHUB_TOKEN  - GitHub token with contents:write on anycap-ai/anycap
+# Authentication: see scripts/release/github-auth.sh
 #
 # Set by the calling CI job:
 #   RELEASE_TAG   - Version tag (e.g. "v0.1.0")
@@ -11,17 +10,16 @@
 #   dist/         - goreleaser output from the previous job
 set -eu
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GITHUB_OWNER="anycap-ai"
 GITHUB_REPO="anycap"
 TAG="${RELEASE_TAG:?RELEASE_TAG is not set}"
 
-if [ -z "${GITHUB_TOKEN:-}" ]; then
-  echo "ERROR: GITHUB_TOKEN is not set" >&2
-  exit 1
-fi
+# -- Authenticate ------------------------------------------------------------
+. "${SCRIPT_DIR}/github-auth.sh"
 
 API="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}"
-AUTH="Authorization: token ${GITHUB_TOKEN}"
+AUTH="Authorization: token ${GIT_TOKEN}"
 
 # ── Create release (or get existing) ───────────────────────────────────────
 echo "Creating GitHub release for ${TAG} ..."

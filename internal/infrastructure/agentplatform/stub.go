@@ -15,8 +15,12 @@ func NewStubClient() *StubClient {
 }
 
 func (c *StubClient) ImageUnderstand(_ context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
-	source := req.URL
-	if source == "" {
+	var source string
+	if len(req.Images) > 0 {
+		source = fmt.Sprintf("%d images", len(req.Images))
+	} else if req.URL != "" {
+		source = req.URL
+	} else {
 		source = fmt.Sprintf("base64 (%s, %d bytes)", req.MIMEType, len(req.Data))
 	}
 

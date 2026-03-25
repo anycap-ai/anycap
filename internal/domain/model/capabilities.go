@@ -24,27 +24,79 @@ var allowedContentTypes = map[string]bool{
 	"video/quicktime": true,
 }
 
+// MaxImagesPerRequest is the maximum number of images allowed in a single multi-image request.
+const MaxImagesPerRequest = 10
+
 var (
-	ErrMissingInput          = errors.New("either url or data must be provided")
-	ErrAmbiguousInput        = errors.New("provide either url or data, not both")
-	ErrMissingMIME           = errors.New("mime_type is required when data is provided")
-	ErrStorageNotConfigured  = errors.New("object storage is not configured")
-	ErrInvalidContentType    = errors.New("content_type is not allowed")
-	ErrInvalidFilename       = errors.New("filename contains invalid characters")
-	ErrContentLengthRequired = errors.New("content_length must be positive")
-	ErrFileTooLarge          = errors.New("file exceeds maximum upload size")
+	ErrMissingInput                      = errors.New("either url or data must be provided")
+	ErrAmbiguousInput                    = errors.New("provide either url or data, not both")
+	ErrMissingMIME                       = errors.New("mime_type is required when data is provided")
+	ErrTooManyImages                     = fmt.Errorf("request exceeds maximum of %d images", MaxImagesPerRequest)
+	ErrCapabilitiesProviderNotConfigured = errors.New("capabilities provider is not configured")
+	ErrStorageNotConfigured              = errors.New("object storage is not configured")
+	ErrInvalidContentType                = errors.New("content_type is not allowed")
+	ErrInvalidFilename                   = errors.New("filename contains invalid characters")
+	ErrContentLengthRequired             = errors.New("content_length must be positive")
+	ErrFileTooLarge                      = errors.New("file exceeds maximum upload size")
 )
 
-// ImageUnderstandRequest represents a request to analyze an image.
+// MediaInput represents a single image in a multi-image request.
+type MediaInput struct {
+	URL      string `json:"url,omitempty"`
+	Data     string `json:"data,omitempty"`
+	MIMEType string `json:"mime_type,omitempty"`
+}
+
+func (m MediaInput) Validate() error {
+	hasURL := m.URL != ""
+	hasData := m.Data != ""
+
+	if !hasURL && !hasData {
+		return ErrMissingInput
+	}
+	if hasURL && hasData {
+		return ErrAmbiguousInput
+	}
+	if hasData && m.MIMEType == "" {
+		return ErrMissingMIME
+	}
+	return nil
+}
+
+// ImageUnderstandRequest represents a request to analyze one or more images.
+// Either the top-level url/data fields (single-image shorthand) or the images
+// list must be provided, but not both.
 type ImageUnderstandRequest struct {
-	URL         string `json:"url,omitempty"`
-	Data        string `json:"data,omitempty"`
-	MIMEType    string `json:"mime_type,omitempty"`
-	Instruction string `json:"instruction,omitempty"`
-	Model       string `json:"model,omitempty"`
+	URL         string       `json:"url,omitempty"`
+	Data        string       `json:"data,omitempty"`
+	MIMEType    string       `json:"mime_type,omitempty"`
+	Images      []MediaInput `json:"images,omitempty"`
+	Instruction string       `json:"instruction,omitempty"`
+	Model       string       `json:"model,omitempty"`
 }
 
 func (r ImageUnderstandRequest) Validate() error {
+	hasSingle := r.URL != "" || r.Data != ""
+	hasMulti := len(r.Images) > 0
+
+	// Mutually exclusive: single-image fields vs images list.
+	if hasSingle && hasMulti {
+		return ErrAmbiguousInput
+	}
+
+	if hasMulti {
+		if len(r.Images) > MaxImagesPerRequest {
+			return ErrTooManyImages
+		}
+		for i := range r.Images {
+			if err := r.Images[i].Validate(); err != nil {
+				return fmt.Errorf("images[%d]: %w", i, err)
+			}
+		}
+		return nil
+	}
+
+	// Single-image validation.
 	hasURL := r.URL != ""
 	hasData := r.Data != ""
 

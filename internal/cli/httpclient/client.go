@@ -15,13 +15,25 @@ import (
 )
 
 // AuthError is returned when the server responds with 401 Unauthorized.
-// Callers can type-assert to provide user-friendly re-login hints.
+// Used internally for OAuth token refresh retry logic.
 type AuthError struct {
 	Body string
 }
 
 func (e *AuthError) Error() string {
-	return "not authenticated or API key expired. Run 'anycap login' to authenticate"
+	return "not authenticated or API key expired, run 'anycap login' to authenticate"
+}
+
+// APIError is returned when the server responds with a 4xx/5xx error.
+// It preserves the structured error code and message from the server JSON envelope.
+type APIError struct {
+	StatusCode int
+	Code       string
+	Message    string
+}
+
+func (e *APIError) Error() string {
+	return e.Message
 }
 
 // Client wraps HTTP communication with the AnyCap Server.
@@ -67,11 +79,17 @@ func New(baseURL string, opts ...Option) *Client {
 	return c
 }
 
-func (c *Client) Get(ctx context.Context, path string) ([]byte, error) {
+// Response wraps the server HTTP response body and metadata.
+type Response struct {
+	Body      []byte // Raw JSON response body
+	RequestID string // X-Request-Id from server
+}
+
+func (c *Client) Get(ctx context.Context, path string) (*Response, error) {
 	return c.do(ctx, http.MethodGet, path, nil)
 }
 
-func (c *Client) PostJSON(ctx context.Context, path string, payload any) ([]byte, error) {
+func (c *Client) PostJSON(ctx context.Context, path string, payload any) (*Response, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -79,13 +97,13 @@ func (c *Client) PostJSON(ctx context.Context, path string, payload any) ([]byte
 	return c.do(ctx, http.MethodPost, path, body)
 }
 
-func (c *Client) do(ctx context.Context, method, path string, body []byte) ([]byte, error) {
+func (c *Client) do(ctx context.Context, method, path string, body []byte) (*Response, error) {
 	// Pre-flight: refresh expired OAuth token before sending.
 	if c.canRefresh() && c.credential.IsExpired() {
 		_ = c.refreshToken(ctx) // best effort; if it fails, proceed and let server 401
 	}
 
-	data, err := c.doRaw(ctx, method, path, body)
+	resp, err := c.doRaw(ctx, method, path, body)
 	if err != nil {
 		// On 401 with an OAuth credential, try one refresh + retry.
 		var authErr *AuthError
@@ -96,10 +114,10 @@ func (c *Client) do(ctx context.Context, method, path string, body []byte) ([]by
 		}
 		return nil, err
 	}
-	return data, nil
+	return resp, nil
 }
 
-func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) ([]byte, error) {
+func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*Response, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		bodyReader = bytes.NewReader(body)
@@ -118,26 +136,46 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) ([
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	httpResp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer httpResp.Body.Close()
 
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	if resp.StatusCode == http.StatusUnauthorized {
+	requestID := httpResp.Header.Get("X-Request-Id")
+
+	if httpResp.StatusCode == http.StatusUnauthorized {
 		return nil, &AuthError{Body: strings.TrimSpace(string(data))}
 	}
 
-	if resp.StatusCode >= http.StatusBadRequest {
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, strings.TrimSpace(string(data)))
+	if httpResp.StatusCode >= http.StatusBadRequest {
+		// Try to parse server JSON error envelope: {"error":{"code":"...","message":"..."}}
+		var env struct {
+			Error struct {
+				Code    string `json:"code"`
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		if json.Unmarshal(data, &env) == nil && env.Error.Code != "" {
+			return nil, &APIError{
+				StatusCode: httpResp.StatusCode,
+				Code:       env.Error.Code,
+				Message:    fmt.Sprintf("%s (request_id: %s)", env.Error.Message, requestID),
+			}
+		}
+		return nil, &APIError{
+			StatusCode: httpResp.StatusCode,
+			Code:       fmt.Sprintf("http_%d", httpResp.StatusCode),
+			Message:    fmt.Sprintf("%s (request_id: %s)", strings.TrimSpace(string(data)), requestID),
+		}
 	}
 
-	return data, nil
+	return &Response{Body: data, RequestID: requestID}, nil
 }
 
 // canRefresh reports whether the current credential supports token refresh.

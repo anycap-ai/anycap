@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
+	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
@@ -29,6 +31,57 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/ut"
 	"github.com/cloudwego/hertz/pkg/route"
 )
+
+type modelRouteRepoStub struct {
+	items []model.ModelRoute
+}
+
+func (s *modelRouteRepoStub) ListModelRoutes(_ context.Context, _ model.ListModelRoutesFilter) ([]model.ModelRoute, error) {
+	return s.items, nil
+}
+
+func (s *modelRouteRepoStub) GetModelRoute(_ context.Context, id int64) (*model.ModelRoute, error) {
+	for i := range s.items {
+		if s.items[i].ID == id {
+			return &s.items[i], nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *modelRouteRepoStub) CreateModelRoute(_ context.Context, input model.CreateModelRouteInput) (*model.ModelRoute, error) {
+	item := model.ModelRoute{
+		ID:          1,
+		ModelID:     input.ModelID,
+		Capability:  input.Capability,
+		Operation:   input.Operation,
+		AbilityKey:  input.AbilityKey,
+		AlgoType:    input.AlgoType,
+		DisplayName: input.DisplayName,
+		Status:      input.Status,
+		Extra:       input.Extra,
+	}
+	return &item, nil
+}
+
+func (s *modelRouteRepoStub) UpdateModelRoute(_ context.Context, id int64, input model.UpdateModelRouteInput) (*model.ModelRoute, error) {
+	item := model.ModelRoute{
+		ID:          id,
+		ModelID:     input.ModelID,
+		Capability:  input.Capability,
+		Operation:   input.Operation,
+		AbilityKey:  input.AbilityKey,
+		AlgoType:    input.AlgoType,
+		DisplayName: input.DisplayName,
+		Status:      input.Status,
+		Extra:       input.Extra,
+	}
+	return &item, nil
+}
+
+func (s *modelRouteRepoStub) DeleteModelRoute(_ context.Context, _ int64) error {
+	return nil
+}
 
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
@@ -66,6 +119,19 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}}}}}))
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
+	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
+		items: []model.ModelRoute{
+			{
+				ID:         1,
+				ModelID:    "nano-banana-2",
+				Capability: model.CapabilityImage,
+				Operation:  model.OperationEdit,
+				AbilityKey: "google_nano_banana_2",
+				AlgoType:   "img_2_img",
+				Status:     model.ModelRouteStatusActive,
+			},
+		},
+	}))
 
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
@@ -76,11 +142,12 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		V1: []RouteRegistrar{
 			systemHandler,
 			loginHandler,
+			imageCatalog,
+			modelRouteHandler,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(apiKeys), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
-				imageCatalog.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 			}),
 		},
@@ -158,12 +225,12 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 		t.Fatalf("expected 401, got %d", resp.Code)
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -185,6 +252,23 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	}
 }
 
+func TestRouter_ModelRoutesDoNotRequireAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if env["status"] != "success" {
+		t.Fatalf("expected success status, got %#v", env["status"])
+	}
+}
+
 func TestRouter_CapabilitiesPresign(t *testing.T) {
 	h, rawKey := newRouterForTest(t, 10)
 	body := []byte(`{"filename":"demo.png","content_type":"image/png","content_length":1024}`)
@@ -199,5 +283,17 @@ func TestRouter_CapabilitiesPresign(t *testing.T) {
 	}
 	if env["status"] != "success" {
 		t.Fatalf("expected success status, got %#v", env["status"])
+	}
+}
+
+func TestRouter_Healthz(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/healthz", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.Code)
+	}
+	if resp.Header().Get("X-Request-Id") == "" {
+		t.Fatal("expected X-Request-Id header")
 	}
 }

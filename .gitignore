@@ -7,7 +7,7 @@
 
 # Go
 dist/
-bin/
+/bin/
 .gocache/
 .gomodcache/
 
@@ -30,7 +30,10 @@ next-env.d.ts
 .env.preview
 .env.production
 
-# Go binaries
-anycap-server
-anycap
-anycap-mock
+# Go binaries (root only)
+/anycap-server
+/anycap
+/anycap-mock
+
+# Public repo
+/anycap-github

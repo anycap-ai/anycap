@@ -11,6 +11,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 )
 
 // Client calls Agent Platform's capabilities API for image/video understanding.
@@ -60,14 +61,35 @@ type upstreamError struct {
 // ImageUnderstand calls POST /api/v1/capabilities/image/understand.
 func (c *Client) ImageUnderstand(ctx context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
 	body := map[string]any{}
-	if req.URL != "" {
-		body["url"] = req.URL
-	}
-	if req.Data != "" {
-		body["data"] = req.Data
-	}
-	if req.MIMEType != "" {
-		body["mime_type"] = req.MIMEType
+
+	if len(req.Images) > 0 {
+		// Multi-image mode.
+		images := make([]map[string]any, len(req.Images))
+		for i, img := range req.Images {
+			m := map[string]any{}
+			if img.URL != "" {
+				m["url"] = img.URL
+			}
+			if img.Data != "" {
+				m["data"] = img.Data
+			}
+			if img.MIMEType != "" {
+				m["mime_type"] = img.MIMEType
+			}
+			images[i] = m
+		}
+		body["images"] = images
+	} else {
+		// Single-image shorthand.
+		if req.URL != "" {
+			body["url"] = req.URL
+		}
+		if req.Data != "" {
+			body["data"] = req.Data
+		}
+		if req.MIMEType != "" {
+			body["mime_type"] = req.MIMEType
+		}
 	}
 	if req.Instruction != "" {
 		body["instruction"] = req.Instruction
@@ -111,6 +133,9 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
 	if c.tenantID != "" {
 		httpReq.Header.Set("X-Tenant-ID", c.tenantID)
+	}
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		httpReq.Header.Set("X-Request-ID", requestID)
 	}
 
 	start := time.Now()

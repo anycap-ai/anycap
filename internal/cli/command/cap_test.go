@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -26,7 +27,7 @@ func TestImageUnderstandWithURL(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "understand", "--url", "https://example.com/photo.jpg"})
+	cmd.SetArgs([]string{"actions", "image-understand", "--url", "https://example.com/photo.jpg"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("image understand --url failed: %v\nstderr: %s", err, stderr.String())
@@ -56,7 +57,7 @@ func TestImageUnderstandWithInstruction(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "understand", "--url", "https://example.com/photo.jpg", "--instruction", "What color is the car?"})
+	cmd.SetArgs([]string{"actions", "image-understand", "--url", "https://example.com/photo.jpg", "--instruction", "What color is the car?"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("image understand with instruction failed: %v", err)
@@ -89,7 +90,7 @@ func TestImageUnderstandWithFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "understand", "--file", imgPath})
+	cmd.SetArgs([]string{"actions", "image-understand", "--file", imgPath})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("image understand --file failed: %v\nstderr: %s", err, stderr.String())
@@ -120,11 +121,66 @@ func TestImageUnderstandRequiresURLOrFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "understand"})
+	cmd.SetArgs([]string{"actions", "image-understand"})
 
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("expected error when neither --url nor --file provided")
+	}
+}
+
+func TestImageUnderstandMultipleURLs(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{
+		"actions", "image-understand",
+		"--url", "https://example.com/img1.jpg",
+		"--url", "https://example.com/img2.jpg",
+		"--instruction", "Compare these images",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("image understand multi-url failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "Compare these images") {
+		t.Fatalf("expected instruction in output, got: %s", output)
+	}
+}
+
+func TestImageUnderstandTooManyImages(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	args := []string{"actions", "image-understand"}
+	for i := 0; i < 11; i++ {
+		args = append(args, "--url", fmt.Sprintf("https://example.com/img%d.jpg", i))
+	}
+	cmd.SetArgs(args)
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when too many images provided")
+	}
+	if !strings.Contains(err.Error(), "too many images") {
+		t.Fatalf("expected 'too many images' error, got: %v", err)
 	}
 }
 
@@ -142,7 +198,7 @@ func TestVideoReadWithURL(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"video", "read", "--url", "https://example.com/clip.mp4"})
+	cmd.SetArgs([]string{"actions", "video-read", "--url", "https://example.com/clip.mp4"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("video read --url failed: %v\nstderr: %s", err, stderr.String())
@@ -172,7 +228,7 @@ func TestVideoReadWithInstruction(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"video", "read", "--url", "https://example.com/clip.mp4", "--instruction", "Count the people"})
+	cmd.SetArgs([]string{"actions", "video-read", "--url", "https://example.com/clip.mp4", "--instruction", "Count the people"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("video read with instruction failed: %v", err)
@@ -205,7 +261,7 @@ func TestVideoReadWithFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"video", "read", "--file", vidPath})
+	cmd.SetArgs([]string{"actions", "video-read", "--file", vidPath})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("video read --file failed: %v\nstderr: %s", err, stderr.String())
@@ -236,7 +292,7 @@ func TestVideoReadRequiresURLOrFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"video", "read"})
+	cmd.SetArgs([]string{"actions", "video-read"})
 
 	err := cmd.Execute()
 	if err == nil {
@@ -244,7 +300,7 @@ func TestVideoReadRequiresURLOrFile(t *testing.T) {
 	}
 }
 
-func TestHelpIncludesVideoCommand(t *testing.T) {
+func TestHelpIncludesActionsCommand(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
 		BuildInfo: buildinfo.Info{Version: "test"},
@@ -259,7 +315,7 @@ func TestHelpIncludesVideoCommand(t *testing.T) {
 	}
 
 	output := stdout.String()
-	for _, expected := range []string{"image", "video", "login", "logout", "status"} {
+	for _, expected := range []string{"actions", "login", "logout", "status"} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected %q in help output: %s", expected, output)
 		}

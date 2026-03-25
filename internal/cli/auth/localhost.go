@@ -58,7 +58,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 			State          string `json:"state"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(resp, &initResp); err != nil {
+	if err := json.Unmarshal(resp.Body, &initResp); err != nil {
 		listener.Close()
 		return nil, "", fmt.Errorf("failed to parse login response: %w", err)
 	}
@@ -109,7 +109,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 		return nil, "", fmt.Errorf("state mismatch: possible CSRF attack")
 	}
 
-	// Step 6: Exchange code for API key
+	// Step 6: Exchange code for credentials
 	callbackResp, err := client.PostJSON(ctx, "/v1/auth/callback", map[string]any{
 		"login_session_id": initResp.Data.LoginSessionID,
 		"code":             result.Code,
@@ -120,21 +120,11 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 		return nil, "", fmt.Errorf("failed to exchange code: %w", err)
 	}
 
-	var callbackResult struct {
-		Data struct {
-			APIKey string `json:"api_key"`
-			User         struct {
-				Email string `json:"email"`
-				Name  string `json:"name"`
-			} `json:"user"`
-		} `json:"data"`
+	cred, userEmail, err := parseTokenResponse(callbackResp.Body)
+	if err != nil {
+		return nil, "", err
 	}
-	if err := json.Unmarshal(callbackResp, &callbackResult); err != nil {
-		return nil, "", fmt.Errorf("failed to parse callback response: %w", err)
-	}
-
-	apiKeyCred := cliconfig.NewAPIKeyCredential(callbackResult.Data.APIKey)
-	return apiKeyCred, callbackResult.Data.User.Email, nil
+	return cred, userEmail, nil
 }
 
 // CanBindLocalPort tests whether we can bind a local TCP port.

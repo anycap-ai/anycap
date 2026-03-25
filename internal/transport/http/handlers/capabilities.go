@@ -38,6 +38,11 @@ type presignResponse struct {
 }
 
 func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+
 	var req model.PresignRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		writeError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
@@ -59,6 +64,11 @@ func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext
 }
 
 func (h *CapabilitiesHandler) ImageUnderstand(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+
 	var req model.ImageUnderstandRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		writeError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
@@ -76,6 +86,11 @@ func (h *CapabilitiesHandler) ImageUnderstand(c context.Context, ctx *app.Reques
 }
 
 func (h *CapabilitiesHandler) VideoRead(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+
 	var req model.VideoReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		writeError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
@@ -103,8 +118,14 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 	if errors.Is(err, model.ErrMissingMIME) {
 		return consts.StatusUnprocessableEntity, "missing_input", err.Error()
 	}
+	if errors.Is(err, model.ErrCapabilitiesProviderNotConfigured) {
+		return consts.StatusServiceUnavailable, "capabilities_service_unavailable", err.Error()
+	}
+	if errors.Is(err, model.ErrTooManyImages) {
+		return consts.StatusUnprocessableEntity, "too_many_images", err.Error()
+	}
 	if errors.Is(err, model.ErrStorageNotConfigured) {
-		return consts.StatusBadGateway, "storage_not_configured", err.Error()
+		return consts.StatusServiceUnavailable, "storage_not_configured", err.Error()
 	}
 
 	// Upload validation errors -> 400/413

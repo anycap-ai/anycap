@@ -28,7 +28,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			ExpiresIn       int    `json:"expires_in"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(resp, &initResp); err != nil {
+	if err := json.Unmarshal(resp.Body, &initResp); err != nil {
 		return nil, "", fmt.Errorf("failed to parse device code response: %w", err)
 	}
 
@@ -72,14 +72,9 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		var poll struct {
 			Data struct {
 				Status string `json:"status"`
-				APIKey string `json:"api_key"`
-				User   *struct {
-					Email string `json:"email"`
-					Name  string `json:"name"`
-				} `json:"user"`
 			} `json:"data"`
 		}
-		if err := json.Unmarshal(pollResp, &poll); err != nil {
+		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {
 			fmt.Fprint(stderr, ".")
 			continue
 		}
@@ -87,12 +82,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		switch poll.Data.Status {
 		case "complete", "completed":
 			fmt.Fprintln(stderr, " done!")
-			userEmail := ""
-			if poll.Data.User != nil {
-				userEmail = poll.Data.User.Email
+			cred, email, err := parseTokenResponse(pollResp.Body)
+			if err != nil {
+				return nil, "", err
 			}
-			apiKeyCred := cliconfig.NewAPIKeyCredential(poll.Data.APIKey)
-			return apiKeyCred, userEmail, nil
+			return cred, email, nil
 		case "expired":
 			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":

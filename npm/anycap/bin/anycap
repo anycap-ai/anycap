@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+
+"use strict";
+
+const { platform, arch } = require("os");
+const { spawnSync } = require("child_process");
+const { resolve } = require("path");
+
+const PLATFORM_PACKAGES = {
+  "darwin-arm64": "@anycap/cli-darwin-arm64",
+  "darwin-x64": "@anycap/cli-darwin-x64",
+  "linux-arm64": "@anycap/cli-linux-arm64",
+  "linux-x64": "@anycap/cli-linux-x64",
+  "win32-arm64": "@anycap/cli-win32-arm64",
+  "win32-x64": "@anycap/cli-win32-x64",
+};
+
+function getBinaryPath() {
+  const key = `${platform()}-${arch()}`;
+  const pkg = PLATFORM_PACKAGES[key];
+
+  if (!pkg) {
+    console.error(
+      `Error: Unsupported platform ${key}.\n` +
+        `AnyCap CLI supports: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`
+    );
+    process.exit(1);
+  }
+
+  const binName = platform() === "win32" ? "anycap.exe" : "anycap";
+
+  try {
+    return require.resolve(`${pkg}/bin/${binName}`);
+  } catch (e) {
+    console.error(
+      `Error: Could not find the AnyCap binary for ${key}.\n` +
+        `The platform package "${pkg}" does not appear to be installed.\n` +
+        `Try reinstalling: npm install -g @anycap/cli`
+    );
+    process.exit(1);
+  }
+}
+
+const binary = getBinaryPath();
+const result = spawnSync(binary, process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+if (result.error) {
+  console.error(`Error: Failed to execute AnyCap CLI: ${result.error.message}`);
+  process.exit(1);
+}
+
+process.exit(result.status !== null ? result.status : 1);
