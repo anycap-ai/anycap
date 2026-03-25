@@ -91,6 +91,12 @@ func TestGenerateImage_Success(t *testing.T) {
 	if result.Status != "success" {
 		t.Fatalf("expected success, got %q", result.Status)
 	}
+	if result.Model != "flux-dev" {
+		t.Fatalf("expected flux-dev, got %s", result.Model)
+	}
+	if len(result.Outputs) != 1 {
+		t.Fatalf("expected 1 output, got %d", len(result.Outputs))
+	}
 	if logs.Count() != 1 {
 		t.Fatalf("expected 1 call log, got %d", logs.Count())
 	}

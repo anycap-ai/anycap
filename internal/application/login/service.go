@@ -29,6 +29,10 @@ func NewService(authClient port.Auth0Client, apiKeys port.APIKeyService, stateGe
 }
 
 func (s *Service) Init(ctx context.Context) (model.LoginInitResult, error) {
+	if s == nil || s.authClient == nil {
+		return model.LoginInitResult{}, model.ErrAuthProviderNotConfigured
+	}
+
 	state := s.stateGenerator()
 	authURL, err := s.authClient.BuildLoginURL(ctx, state)
 	if err != nil {
@@ -45,6 +49,12 @@ func (s *Service) Callback(ctx context.Context, code string) (model.LoginCallbac
 	if code == "" {
 		return model.LoginCallbackResult{}, model.ErrInvalidParam
 	}
+	if s == nil || s.authClient == nil {
+		return model.LoginCallbackResult{}, model.ErrAuthProviderNotConfigured
+	}
+	if s.apiKeys == nil {
+		return model.LoginCallbackResult{}, model.ErrInternal
+	}
 
 	user, err := s.authClient.ExchangeCode(ctx, code)
 	if err != nil {
@@ -60,5 +70,6 @@ func (s *Service) Callback(ctx context.Context, code string) (model.LoginCallbac
 		UserID:   user.UserID,
 		APIKeyID: created.APIKey.ID,
 		APIKey:   created.RawKey,
+		User:     &user,
 	}, nil
 }

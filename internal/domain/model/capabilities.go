@@ -28,15 +28,16 @@ var allowedContentTypes = map[string]bool{
 const MaxImagesPerRequest = 10
 
 var (
-	ErrMissingInput          = errors.New("either url or data must be provided")
-	ErrAmbiguousInput        = errors.New("provide either url or data, not both")
-	ErrMissingMIME           = errors.New("mime_type is required when data is provided")
-	ErrTooManyImages         = fmt.Errorf("request exceeds maximum of %d images", MaxImagesPerRequest)
-	ErrStorageNotConfigured  = errors.New("object storage is not configured")
-	ErrInvalidContentType    = errors.New("content_type is not allowed")
-	ErrInvalidFilename       = errors.New("filename contains invalid characters")
-	ErrContentLengthRequired = errors.New("content_length must be positive")
-	ErrFileTooLarge          = errors.New("file exceeds maximum upload size")
+	ErrMissingInput                      = errors.New("either url or data must be provided")
+	ErrAmbiguousInput                    = errors.New("provide either url or data, not both")
+	ErrMissingMIME                       = errors.New("mime_type is required when data is provided")
+	ErrTooManyImages                     = fmt.Errorf("request exceeds maximum of %d images", MaxImagesPerRequest)
+	ErrCapabilitiesProviderNotConfigured = errors.New("capabilities provider is not configured")
+	ErrStorageNotConfigured              = errors.New("object storage is not configured")
+	ErrInvalidContentType                = errors.New("content_type is not allowed")
+	ErrInvalidFilename                   = errors.New("filename contains invalid characters")
+	ErrContentLengthRequired             = errors.New("content_length must be positive")
+	ErrFileTooLarge                      = errors.New("file exceeds maximum upload size")
 )
 
 // MediaInput represents a single image in a multi-image request.

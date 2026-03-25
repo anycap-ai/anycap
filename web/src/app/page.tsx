@@ -61,7 +61,7 @@ export default function AgentLanding() {
               "anycap image models",
               "",
               "# Generate an image",
-              'anycap image generate --prompt "paper crane" --model flux-dev',
+              'anycap image generate --prompt "paper crane" --model <model-id>',
               "",
               "# Generate a video",
               'anycap video generate --prompt "sunrise over mountains"',
@@ -107,7 +107,7 @@ export default function AgentLanding() {
                 status: "success",
                 data: {
                   url: "https://cdn.anycap.ai/img/abc123.png",
-                  model: "flux-dev",
+                  model: "<model-id>",
                   prompt: "paper crane",
                 },
               },

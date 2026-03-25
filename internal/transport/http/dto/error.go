@@ -45,11 +45,15 @@ func MapDomainError(err error) (int, Envelope) {
 		return consts.StatusUnauthorized, ErrorEnvelope("", model.ErrAuthInvalid.Code, model.ErrAuthInvalid.Message)
 	case errors.Is(err, model.ErrRateLimited):
 		return consts.StatusTooManyRequests, ErrorEnvelope("", model.ErrRateLimited.Code, model.ErrRateLimited.Message)
+	case errors.Is(err, model.ErrAuthProviderNotConfigured):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", "AUTH_PROVIDER_NOT_CONFIGURED", model.ErrAuthProviderNotConfigured.Error())
+	case errors.Is(err, model.ErrImageProviderNotConfigured):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", "IMAGE_PROVIDER_NOT_CONFIGURED", model.ErrImageProviderNotConfigured.Error())
 	case errors.Is(err, model.ErrInsufficientCredit):
 		return consts.StatusPaymentRequired, ErrorEnvelope("", model.ErrInsufficientCredit.Code, model.ErrInsufficientCredit.Message)
 	case errors.Is(err, model.ErrBillingUncertain):
 		return consts.StatusBadGateway, ErrorEnvelope("", model.ErrBillingUncertain.Code, model.ErrBillingUncertain.Message)
-	case errors.Is(err, model.ErrPromptRequired), errors.Is(err, model.ErrInvalidParam):
+	case errors.Is(err, model.ErrPromptRequired), errors.Is(err, model.ErrModelRequired), errors.Is(err, model.ErrInvalidParam):
 		message := model.ErrInvalidParam.Message
 		if err != nil {
 			message = err.Error()

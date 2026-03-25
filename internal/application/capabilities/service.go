@@ -22,7 +22,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 		return model.PresignResult{}, err
 	}
 
-	if s.storage == nil {
+	if s == nil || s.storage == nil {
 		return model.PresignResult{}, model.ErrStorageNotConfigured
 	}
 
@@ -33,6 +33,9 @@ func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstand
 	if err := req.Validate(); err != nil {
 		return model.UnderstandResult{}, err
 	}
+	if s == nil || s.provider == nil {
+		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
+	}
 
 	return s.provider.ImageUnderstand(ctx, req)
 }
@@ -40,6 +43,9 @@ func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstand
 func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
 	if err := req.Validate(); err != nil {
 		return model.UnderstandResult{}, err
+	}
+	if s == nil || s.provider == nil {
+		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 
 	return s.provider.VideoRead(ctx, req)

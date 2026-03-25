@@ -74,7 +74,7 @@ func TestImageModelsCommandCallsServer(t *testing.T) {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status":"success","data":[{"id":"flux-dev","capability":"image"}]}`))
+		_, _ = w.Write([]byte(`{"status":"success","data":[{"id":"test-image-model","capability":"image"}]}`))
 	}))
 	defer server.Close()
 
@@ -93,7 +93,7 @@ func TestImageModelsCommandCallsServer(t *testing.T) {
 		t.Fatalf("execute image models: %v", err)
 	}
 
-	if !strings.Contains(stdout.String(), `"flux-dev"`) {
+	if !strings.Contains(stdout.String(), `"test-image-model"`) {
 		t.Fatalf("expected model payload, got %s", stdout.String())
 	}
 }
