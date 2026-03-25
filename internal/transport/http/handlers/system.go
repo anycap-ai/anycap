@@ -8,6 +8,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type SystemHandler struct {
@@ -16,6 +17,19 @@ type SystemHandler struct {
 
 func NewSystemHandler(service *systemapp.Service) *SystemHandler {
 	return &SystemHandler{service: service}
+}
+
+func (h *SystemHandler) RegisterRootRoutes(group *route.RouterGroup) {
+	group.GET("/ping", h.Ping)
+	group.GET("/healthz", h.Healthz)
+}
+
+func (h *SystemHandler) RegisterRoutes(group *route.RouterGroup) {
+	group.GET("/healthz", h.Healthz)
+}
+
+func (h *SystemHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
+	group.GET("/status", h.Status)
 }
 
 func (h *SystemHandler) Ping(_ context.Context, ctx *app.RequestContext) {

@@ -13,12 +13,13 @@ import (
 func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	imageCmd := &cobra.Command{
 		Use:   "image",
-		Short: "Work with image capabilities",
+		Short: "Generate, edit, and understand images",
 	}
 
 	imageCmd.AddCommand(
 		newImageModelsCmd(clientFactory, stdout),
 		newImageGenerateCmd(clientFactory, stdout),
+		newImageUnderstandCmd(clientFactory, stdout),
 	)
 
 	return imageCmd
@@ -62,6 +63,60 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
 	cmd.Flags().StringVar(&model, "model", "flux-dev", "Model ID to use")
 	_ = cmd.MarkFlagRequired("prompt")
+
+	return cmd
+}
+
+func newImageUnderstandCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+	var urlFlag string
+	var fileFlag string
+	var instruction string
+	var modelFlag string
+
+	cmd := &cobra.Command{
+		Use:   "understand",
+		Short: "Analyze an image (describe, extract text, answer questions)",
+		Long: `Analyze an image using vision models. Provide either a URL or a local file.
+
+Examples:
+  anycap image understand --url https://example.com/photo.jpg
+  anycap image understand --url https://example.com/photo.jpg --instruction "What text is in this image?"
+  anycap image understand --file ./screenshot.png`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := clientFactory()
+			targetURL := urlFlag
+
+			if fileFlag != "" {
+				result, err := uploadFile(cmd.Context(), client, fileFlag)
+				if err != nil {
+					return err
+				}
+				targetURL = result.ObjectURL
+			}
+
+			body := map[string]any{"url": targetURL}
+			if instruction != "" {
+				body["instruction"] = instruction
+			}
+			if modelFlag != "" {
+				body["model"] = modelFlag
+			}
+
+			payload, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/understand", body)
+			if err != nil {
+				return err
+			}
+
+			return output.WriteContent(stdout, payload)
+		},
+	}
+
+	cmd.Flags().StringVar(&urlFlag, "url", "", "Image URL to analyze")
+	cmd.Flags().StringVar(&fileFlag, "file", "", "Local image file to upload and analyze")
+	cmd.Flags().StringVar(&instruction, "instruction", "", "What to look for or describe")
+	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
+	cmd.MarkFlagsOneRequired("url", "file")
+	cmd.MarkFlagsMutuallyExclusive("url", "file")
 
 	return cmd
 }

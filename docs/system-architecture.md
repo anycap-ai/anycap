@@ -61,7 +61,7 @@ graph TB
 | CLI Binary | Go + Cobra | Agent 交互界面，渐进式发现，JSON I/O |
 | Skill Files | Anthropic Agent Skills 规范 | Agent 发现入口，能力索引 + best practice |
 
-CLI 核心行为：读取 `config.json`（endpoint）+ `credentials`（API Key）→ 发请求 → 输出 JSON 到 stdout。CLI 只与 Server 通信，不直接访问任何 Infra 服务。
+CLI 核心行为：读取 `config.toml`（endpoint）+ `credentials`（API Key）→ 发请求 → 输出 JSON 到 stdout。CLI 只与 Server 通信，不直接访问任何 Infra 服务。
 
 ### 2.2 AnyCap Server
 

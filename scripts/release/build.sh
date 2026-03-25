@@ -6,5 +6,8 @@ DIST_DIR="${ROOT_DIR}/dist"
 
 mkdir -p "${DIST_DIR}"
 
-go build -o "${DIST_DIR}/anycap" ./cmd/anycap
+CLI_PKG="gitlab.knoffice.tech/engineering/anycap"
+CLI_LDFLAGS="-X ${CLI_PKG}/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
+
+go build -ldflags "${CLI_LDFLAGS}" -o "${DIST_DIR}/anycap" ./cmd/anycap
 go build -o "${DIST_DIR}/anycap-server" ./cmd/anycap-server

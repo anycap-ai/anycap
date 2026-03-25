@@ -10,6 +10,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type ImageHandler struct {
@@ -20,6 +21,11 @@ func NewImageHandler(service *imageapp.Service) *ImageHandler {
 	return &ImageHandler{service: service}
 }
 
+func (h *ImageHandler) RegisterRoutes(group *route.RouterGroup) {
+	g := group.Group("/image")
+	g.POST("/generate", h.Generate)
+}
+
 func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
 	models, err := h.service.ListModels(c)
 	if err != nil {
@@ -28,7 +34,6 @@ func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(status, payload)
 		return
 	}
-
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), models))
 }
 
@@ -40,7 +45,6 @@ func (h *ImageHandler) GetModelSchema(c context.Context, ctx *app.RequestContext
 		ctx.JSON(status, payload)
 		return
 	}
-
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), schema))
 }
 

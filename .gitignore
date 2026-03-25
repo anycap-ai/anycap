@@ -1,5 +1,36 @@
+# OS
 .DS_Store
+
+# IDE
 .idea/
+.vscode/
+
+# Go
 dist/
 bin/
 .gocache/
+.gomodcache/
+
+# Node
+node_modules/
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Cloudflare
+.vercel/
+.wrangler/
+
+# Env
+.env
+.env.local
+.env.preview
+.env.production
+
+# Go binaries
+anycap-server
+anycap
+anycap-mock

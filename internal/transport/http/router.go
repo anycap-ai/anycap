@@ -1,50 +1,40 @@
 package http
 
 import (
-	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
-	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
-	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
-	"gitlab.knoffice.tech/engineering/anycap/internal/config"
-	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
-
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type Dependencies struct {
-	Config        config.Config
-	BuildInfo     buildinfo.Info
-	SystemService *systemapp.Service
-	LoginService  *loginapp.Service
-	ImageService  *imageapp.Service
-	APIKeyService port.APIKeyService
-	RateLimiter   port.RateLimiter
-	ProtectedRPM  int
+type RouteRegistrar interface {
+	RegisterRoutes(group *route.RouterGroup)
 }
 
-func NewRouter(deps Dependencies) *server.Hertz {
-	h := server.Default(server.WithHostPorts(deps.Config.HTTPAddr))
-	h.Use(middleware.Recover(), middleware.RequestID(), middleware.AccessLog())
+type RouteRegistrarFunc func(group *route.RouterGroup)
 
-	systemHandler := handlers.NewSystemHandler(deps.SystemService)
-	loginHandler := handlers.NewLoginHandler(deps.LoginService)
-	imageHandler := handlers.NewImageHandler(deps.ImageService)
+func (f RouteRegistrarFunc) RegisterRoutes(group *route.RouterGroup) {
+	f(group)
+}
 
-	h.GET("/ping", systemHandler.Ping)
-	h.GET("/healthz", systemHandler.Healthz)
+type RouterConfig struct {
+	Addr        string
+	Middlewares []app.HandlerFunc
+	Root        []RouteRegistrar
+	V1          []RouteRegistrar
+}
 
+func NewRouter(cfg RouterConfig) *server.Hertz {
+	h := server.Default(server.WithHostPorts(cfg.Addr))
+	for _, mw := range cfg.Middlewares {
+		h.Use(mw)
+	}
+	root := h.Group("")
+	for _, r := range cfg.Root {
+		r.RegisterRoutes(root)
+	}
 	v1 := h.Group("/v1")
-	v1.GET("/healthz", systemHandler.Healthz)
-	v1.POST("/login/init", loginHandler.Init)
-	v1.POST("/login/callback", loginHandler.Callback)
-
-	protected := v1.Group("", middleware.Auth(deps.APIKeyService), middleware.RateLimit(deps.RateLimiter, deps.ProtectedRPM))
-	protected.GET("/status", systemHandler.Status)
-	protected.GET("/image/models", imageHandler.ListModels)
-	protected.GET("/image/models/:name/schema", imageHandler.GetModelSchema)
-	protected.POST("/image/generate", imageHandler.Generate)
-
+	for _, r := range cfg.V1 {
+		r.RegisterRoutes(v1)
+	}
 	return h
 }

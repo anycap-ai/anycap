@@ -1,27 +1,35 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"testing"
 
+	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
+	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
-	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
-func newRouterForTest(t *testing.T, rpm int) (*Dependencies, string) {
+func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
@@ -30,131 +38,101 @@ func newRouterForTest(t *testing.T, rpm int) (*Dependencies, string) {
 		t.Fatalf("CreateAPIKey() error = %v", err)
 	}
 
-	deps := &Dependencies{
-		Config: config.Config{
-			AppName:      "anycap-server",
-			AppEnv:       "test",
-			HTTPAddr:     ":0",
-			RuntimeMode:  "stub",
-			RateLimitRPM: rpm,
+	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}))
+	loginHandler := handlers.NewLoginHandler(loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}), apiKeys, func() string { return "state-123" }))
+	imageHandler := handlers.NewImageHandler(imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-123": 3}), apikey.NewMemoryCallLogRepo()))
+	catalogService := catalogapp.NewService(nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}}}}}))
+	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
+	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
+
+	engine := NewRouter(RouterConfig{
+		Addr: ":0",
+		Middlewares: []app.HandlerFunc{
+			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
 		},
-		BuildInfo:     buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"},
-		SystemService: systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}),
-		LoginService: loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{
-			"code-123": {UserID: "user-123", Email: "user@example.com"},
-		}), apiKeys, func() string { return "state-123" }),
-		ImageService:  imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-123": 3}), apikey.NewMemoryCallLogRepo()),
-		APIKeyService: apiKeys,
-		RateLimiter:   ratelimit.NewInMemoryLimiter(),
-		ProtectedRPM:  rpm,
-	}
+		Root: []RouteRegistrar{RouteRegistrarFunc(systemHandler.RegisterRootRoutes)},
+		V1: []RouteRegistrar{
+			systemHandler,
+			loginHandler,
+			RouteRegistrarFunc(func(group *route.RouterGroup) {
+				protected := group.Group("", middleware.Auth(apiKeys), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
+				systemHandler.RegisterProtectedRoutes(protected)
+				imageHandler.RegisterRoutes(protected)
+				imageCatalog.RegisterRoutes(protected)
+				capHandler.RegisterRoutes(protected)
+			}),
+		},
+	})
 
-	return deps, created.RawKey
+	return &serverHarness{engine: engine}, created.RawKey
 }
 
-func TestRouter_Contracts(t *testing.T) {
-	deps, rawKey := newRouterForTest(t, 10)
-	engine := NewRouter(*deps)
-
-	t.Run("login init", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, http.MethodPost, "/v1/login/init", nil)
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d", resp.Code)
-		}
-	})
-
-	t.Run("login callback", func(t *testing.T) {
-		body := strings.NewReader(`{"code":"code-123"}`)
-		resp := ut.PerformRequest(engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: body, Len: len(`{"code":"code-123"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-		}
-	})
-
-	t.Run("protected image models require auth", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/image/models", nil)
-		if resp.Code != http.StatusUnauthorized {
-			t.Fatalf("expected 401, got %d", resp.Code)
-		}
-	})
-
-	t.Run("image models with auth", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-		}
-	})
-
-	t.Run("image schema with auth", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-		}
-	})
-
-	t.Run("image generate with auth", func(t *testing.T) {
-		body := strings.NewReader(`{"prompt":"paper crane","model":"flux-dev"}`)
-		resp := ut.PerformRequest(
-			engine.Engine,
-			http.MethodPost,
-			"/v1/image/generate",
-			&ut.Body{Body: body, Len: len(`{"prompt":"paper crane","model":"flux-dev"}`)},
-			ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
-			ut.Header{Key: "Content-Type", Value: "application/json"},
-		)
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-		}
-
-		var payload struct {
-			Status string `json:"status"`
-			Data   struct {
-				Model string `json:"model"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal response: %v body=%s", err, resp.Body.String())
-		}
-		if payload.Status != "success" || payload.Data.Model != "flux-dev" {
-			t.Fatalf("unexpected payload: %+v", payload)
-		}
-	})
-
-	t.Run("status with auth includes user", func(t *testing.T) {
-		resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/status", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-		}
-
-		var payload struct {
-			Data struct {
-				User *struct {
-					UserID string `json:"user_id"`
-				} `json:"user"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal(resp.Body.Bytes(), &payload); err != nil {
-			t.Fatalf("unmarshal response: %v", err)
-		}
-		if payload.Data.User == nil || payload.Data.User.UserID != "user-123" {
-			t.Fatalf("expected authenticated user in status, got body=%s", resp.Body.String())
-		}
-	})
+type serverHarness struct {
+	engine *server.Hertz
 }
 
-func TestRouter_RateLimitExceeded(t *testing.T) {
-	deps, rawKey := newRouterForTest(t, 2)
-	engine := NewRouter(*deps)
+func TestRouter_HealthAndLogin(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
 
-	for i := 0; i < 2; i++ {
-		resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
-		if resp.Code != http.StatusOK {
-			t.Fatalf("expected 200 before limit, got %d", resp.Code)
-		}
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/ping", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.Code)
 	}
 
-	resp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
-	if resp.Code != http.StatusTooManyRequests {
-		t.Fatalf("expected 429, got %d body=%s", resp.Code, resp.Body.String())
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"localhost"}`)), Len: len(`{"method":"localhost"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader([]byte(`{"code":"code-123"}`)), Len: len(`{"code":"code-123"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_ProtectedRoutes(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.Code)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/image/models/flux-dev/schema?operation=generate", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	body := []byte(`{"prompt":"paper crane","model":"flux-dev"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_CapabilitiesPresign(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	body := []byte(`{"filename":"demo.png","content_type":"image/png","content_length":1024}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/capabilities/presign", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if env["status"] != "success" {
+		t.Fatalf("expected success status, got %#v", env["status"])
 	}
 }

@@ -7,14 +7,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/joho/godotenv"
 )
 
 const (
-	defaultAppName      = "anycap-server"
-	defaultAppEnv       = "local"
-	defaultHTTPAddr     = ":8080"
-	defaultRuntimeMode  = "stub"
-	defaultRateLimitRPM = 60
+	defaultAppName              = "anycap-server"
+	defaultAppEnv               = "local"
+	defaultHTTPAddr             = ":18080"
+	defaultRuntimeMode          = "stub"
+	defaultRateLimitRPM         = 60
+	defaultAgentPlatformTimeout = 120 * time.Second
+	defaultPresignExpiry        = 600  // seconds (10 minutes)
+	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
 )
 
 type Config struct {
@@ -43,6 +49,37 @@ type Config struct {
 	Auth0ClientID     string
 	Auth0ClientSecret string
 	Auth0RedirectURL  string
+	NexusHubBaseURL   string
+	NexusHubToken     string
+	AgentPlatform     AgentPlatformConfig
+	S3                S3Config
+}
+
+type AgentPlatformConfig struct {
+	BaseURL  string
+	APIKey   string
+	TenantID string
+	Timeout  time.Duration
+}
+
+func (c AgentPlatformConfig) Enabled() bool {
+	return c.BaseURL != "" && c.APIKey != ""
+}
+
+type S3Config struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	Bucket          string
+	Region          string
+	PublicURL       string
+	KeyPrefix       string
+	PresignExpiry   int
+	ForcePathStyle  bool
+}
+
+func (c S3Config) Enabled() bool {
+	return c.Endpoint != "" && c.AccessKeyID != "" && c.SecretAccessKey != "" && c.Bucket != ""
 }
 
 func Load() Config {
@@ -50,11 +87,12 @@ func Load() Config {
 	if err != nil {
 		panic(err)
 	}
-
 	return cfg
 }
 
 func LoadFromEnv() (Config, error) {
+	_ = godotenv.Load()
+
 	cfg := Config{
 		AppName:           getEnv("ANYCAP_APP_NAME", defaultAppName),
 		AppEnv:            getEnv("ANYCAP_APP_ENV", defaultAppEnv),
@@ -81,6 +119,10 @@ func LoadFromEnv() (Config, error) {
 		Auth0ClientID:     os.Getenv("ANYCAP_AUTH0_CLIENT_ID"),
 		Auth0ClientSecret: os.Getenv("ANYCAP_AUTH0_CLIENT_SECRET"),
 		Auth0RedirectURL:  os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
+		NexusHubBaseURL:   getEnv("NEXUSHUB_BASE_URL", ""),
+		NexusHubToken:     getEnv("NEXUSHUB_TOKEN", ""),
+		AgentPlatform:     loadAgentPlatformConfig(),
+		S3:                loadS3Config(),
 	}
 
 	if cfg.requiresExternalInfra() {
@@ -99,6 +141,52 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func loadAgentPlatformConfig() AgentPlatformConfig {
+	timeout := defaultAgentPlatformTimeout
+	if s := os.Getenv("AGENT_PLATFORM_TIMEOUT_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			timeout = time.Duration(n) * time.Second
+		}
+	}
+
+	return AgentPlatformConfig{
+		BaseURL:  getEnv("AGENT_PLATFORM_BASE_URL", ""),
+		APIKey:   getEnv("AGENT_PLATFORM_API_KEY", ""),
+		TenantID: getEnv("AGENT_PLATFORM_TENANT_ID", ""),
+		Timeout:  timeout,
+	}
+}
+
+func loadS3Config() S3Config {
+	expiry := defaultPresignExpiry
+	if s := os.Getenv("S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			expiry = n
+		}
+	}
+
+	forcePathStyle := false
+	if s := os.Getenv("S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
+		forcePathStyle = true
+	}
+
+	if expiry > maxPresignExpiry {
+		expiry = maxPresignExpiry
+	}
+
+	return S3Config{
+		Endpoint:        getEnv("S3_ENDPOINT", ""),
+		AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
+		SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
+		Bucket:          getEnv("S3_BUCKET", "anycap-tmp"),
+		Region:          getEnv("S3_REGION", "auto"),
+		PublicURL:       getEnv("S3_PUBLIC_URL", ""),
+		KeyPrefix:       getEnv("S3_KEY_PREFIX", "user_upload"),
+		PresignExpiry:   expiry,
+		ForcePathStyle:  forcePathStyle,
+	}
 }
 
 func (c Config) requiresExternalInfra() bool {
@@ -128,7 +216,6 @@ func getEnv(key, fallback string) string {
 	if value == "" {
 		return fallback
 	}
-
 	return value
 }
 
@@ -137,12 +224,10 @@ func getEnvInt(key string, fallback int) int {
 	if value == "" {
 		return fallback
 	}
-
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
 		return fallback
 	}
-
 	return parsed
 }
 
@@ -151,11 +236,9 @@ func getEnvBool(key string, fallback bool) bool {
 	if value == "" {
 		return fallback
 	}
-
 	parsed, err := strconv.ParseBool(value)
 	if err != nil {
 		return fallback
 	}
-
 	return parsed
 }
