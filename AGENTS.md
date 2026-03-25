@@ -55,6 +55,9 @@ scripts/
   dev/               # Local dev scripts (run-server.sh, run-cli.sh)
   release/           # Release build scripts
 
+npm/
+  anycap/            # npm main package template (@anycap/cli)
+
 .skills/
   anycap-cli/         # Unified CLI skill file for all capabilities
 
@@ -132,6 +135,14 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 2. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 3. CI runs goreleaser to cross-compile and archive CLI binaries.
 4. CI creates GitHub release with the release notes and uploads artifacts (requires `GITHUB_TOKEN` in CI/CD variables).
+5. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
+
+**npm distribution:**
+- Main package: `@anycap/cli` (JS wrapper + optionalDependencies)
+- Platform packages: `@anycap/cli-{darwin,linux,win32}-{x64,arm64}` (Go binaries)
+- Publishing: GitHub Actions OIDC trusted publishing (no NPM_TOKEN needed)
+- Workflow: `anycap-github/.github/workflows/publish-npm.yml`
+- Post-release verification: `anycap-github/.github/workflows/post-release.yml`
 
 **Server deploy flow:**
 1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
@@ -183,6 +194,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 - **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, dev scripts inject `http://127.0.0.1:8080`.
 - **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.
 - **Release via goreleaser.** CLI binary and skill files will be hosted on GitHub. Use goreleaser for cross-platform builds and GitHub Releases.
+- **npm via OIDC.** npm packages published from GitHub Actions using trusted publishing. No long-lived tokens. Platform packages use `os`+`cpu` fields for automatic platform selection.
 
 ### Testing
 
