@@ -19,14 +19,14 @@ func NewProvisioner(db apikey.TxStarter) *Provisioner {
 	return &Provisioner{db: db}
 }
 
-func (p *Provisioner) FindOrCreateByAuthIdentity(ctx context.Context, provider string, authUser model.AuthUser, now time.Time) (user model.User, err error) {
+func (p *Provisioner) FindOrCreateByAuthIdentity(ctx context.Context, provider string, authUser model.AuthUser, now time.Time) (user model.User, created bool, err error) {
 	if p == nil || p.db == nil || provider == "" || authUser.UserID == "" {
-		return model.User{}, model.ErrInternal
+		return model.User{}, false, model.ErrInternal
 	}
 
 	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, false, err
 	}
 	defer func() {
 		if err != nil {
@@ -37,29 +37,29 @@ func (p *Provisioner) FindOrCreateByAuthIdentity(ctx context.Context, provider s
 	user, err = getUserByIdentity(ctx, tx, provider, authUser.UserID)
 	if err == nil {
 		if err = updateUserAndIdentity(ctx, tx, user.ID, provider, authUser, now.UTC()); err != nil {
-			return model.User{}, err
+			return model.User{}, false, err
 		}
 		user, err = getUserByIdentity(ctx, tx, provider, authUser.UserID)
 		if err != nil {
-			return model.User{}, err
+			return model.User{}, false, err
 		}
 		if err = tx.Commit(); err != nil {
-			return model.User{}, err
+			return model.User{}, false, err
 		}
-		return user, nil
+		return user, false, nil
 	}
 	if err != sql.ErrNoRows {
-		return model.User{}, err
+		return model.User{}, false, err
 	}
 
 	user, err = insertUserAndIdentity(ctx, tx, provider, authUser, now.UTC())
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, false, err
 	}
 	if err = tx.Commit(); err != nil {
-		return model.User{}, err
+		return model.User{}, false, err
 	}
-	return user, nil
+	return user, true, nil
 }
 
 func getUserByIdentity(ctx context.Context, db apikey.DBTX, provider, externalSubject string) (model.User, error) {

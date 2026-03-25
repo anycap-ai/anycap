@@ -30,9 +30,9 @@ func NewMemoryProvisioner() *MemoryProvisioner {
 	}
 }
 
-func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, now time.Time) (model.User, error) {
+func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, now time.Time) (model.User, bool, error) {
 	if provider == "" || authUser.UserID == "" {
-		return model.User{}, model.ErrInternal
+		return model.User{}, false, model.ErrInternal
 	}
 
 	p.mu.Lock()
@@ -46,11 +46,11 @@ func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provid
 		user.AvatarURL = firstNonEmpty(authUser.Picture, user.AvatarURL)
 		user.UpdatedAt = now.UTC()
 		p.users[userID] = user
-		return user, nil
+		return user, false, nil
 	}
 
 	if p.nextID >= maxUserID {
-		return model.User{}, model.ErrInternal
+		return model.User{}, false, model.ErrInternal
 	}
 	userID := strconv.FormatInt(p.nextID, 10)
 	p.nextID++
@@ -66,7 +66,7 @@ func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provid
 	}
 	p.identities[key] = userID
 	p.users[userID] = user
-	return user, nil
+	return user, true, nil
 }
 
 func identityKey(provider, externalSubject string) string {

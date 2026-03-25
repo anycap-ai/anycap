@@ -3,6 +3,7 @@ package config
 import (
 	"testing"
 	"time"
+	"strings"
 )
 
 func TestLoadFromEnv_Defaults(t *testing.T) {
@@ -116,6 +117,16 @@ func TestLoadFromEnv_RejectsAmbiguousPostgresConfig(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnv_RejectsAmbiguousPostgresTimezoneConfig(t *testing.T) {
+	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
+	t.Setenv("ANYCAP_PG_TIMEZONE", "UTC")
+
+	_, err := LoadFromEnv()
+	if err == nil {
+		t.Fatal("expected error for ambiguous postgres timezone config")
+	}
+}
+
 func TestLoadFromEnv_RejectsAmbiguousRedisConfig(t *testing.T) {
 	t.Setenv("ANYCAP_REDIS_ADDR", "redis.example.com:6379")
 	t.Setenv("ANYCAP_REDIS_HOST", "redis.example.com")
@@ -123,5 +134,22 @@ func TestLoadFromEnv_RejectsAmbiguousRedisConfig(t *testing.T) {
 	_, err := LoadFromEnv()
 	if err == nil {
 		t.Fatal("expected error for ambiguous redis config")
+	}
+}
+
+func TestConfig_postgresDSN_IncludesTimezoneWhenConfigured(t *testing.T) {
+	cfg := Config{
+		PGHost:     "pg.example.com",
+		PGPort:     5432,
+		PGUser:     "demo",
+		PGPassword: "secret",
+		PGDatabase: "postgres",
+		PGSSLMode:  "require",
+		PGTimezone: "UTC",
+	}
+
+	dsn := cfg.postgresDSN()
+	if !strings.Contains(dsn, "timezone=UTC") {
+		t.Fatalf("expected dsn to contain timezone=UTC, got %q", dsn)
 	}
 }

@@ -20,6 +20,7 @@ type HTTPClient struct {
 	baseURL    string
 	bizToken   string
 	httpClient *http.Client
+	config     config.CreditConfig
 }
 
 func NewHTTPClient(cfg config.CreditConfig, httpClient *http.Client) *HTTPClient {
@@ -30,6 +31,7 @@ func NewHTTPClient(cfg config.CreditConfig, httpClient *http.Client) *HTTPClient
 		baseURL:    strings.TrimRight(cfg.BaseURL, "/"),
 		bizToken:   cfg.BizToken,
 		httpClient: httpClient,
+		config:     cfg,
 	}
 }
 
@@ -83,6 +85,39 @@ func (c *HTTPClient) Deduct(ctx context.Context, userID string, amount int64, re
 		return nil
 	case 2001, 2002:
 		return model.ErrInsufficientCredit
+	default:
+		return model.ErrBillingUncertain
+	}
+}
+
+func (c *HTTPClient) GrantSignupReward(ctx context.Context, userID string) error {
+	numericUserID, err := parseUserID(userID)
+	if err != nil {
+		return model.ErrInternal
+	}
+	if c.config.SignupRewardPackageID <= 0 && (c.config.SignupRewardPackageType == "" || c.config.SignupRewardPackageSubtype == "") {
+		return nil
+	}
+
+	payload := map[string]any{
+		"user_id":   numericUserID,
+		"source_id": fmt.Sprintf("anycap-signup-bonus-%d", numericUserID),
+	}
+	if c.config.SignupRewardPackageID > 0 {
+		payload["package_id"] = c.config.SignupRewardPackageID
+	} else {
+		payload["package_type"] = c.config.SignupRewardPackageType
+		payload["package_subtype"] = c.config.SignupRewardPackageSubtype
+	}
+
+	var resp envelope[map[string]any]
+	if err := c.post(ctx, "/api/v1/credit/grant/by-package", payload, &resp); err != nil {
+		return err
+	}
+
+	switch resp.Code {
+	case 0, 2007:
+		return nil
 	default:
 		return model.ErrBillingUncertain
 	}

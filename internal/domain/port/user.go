@@ -8,5 +8,5 @@ import (
 )
 
 type UserProvisioner interface {
-	FindOrCreateByAuthIdentity(ctx context.Context, provider string, authUser model.AuthUser, now time.Time) (model.User, error)
+	FindOrCreateByAuthIdentity(ctx context.Context, provider string, authUser model.AuthUser, now time.Time) (model.User, bool, error)
 }

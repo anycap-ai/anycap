@@ -23,6 +23,7 @@ func TestLoadFromEnv_DevModeBuildsDiscreteInfraConfig(t *testing.T) {
 	t.Setenv("ANYCAP_PG_USER", "kntech")
 	t.Setenv("ANYCAP_PG_PASSWORD", "secret")
 	t.Setenv("ANYCAP_PG_DATABASE", "postgres")
+	t.Setenv("ANYCAP_PG_TIMEZONE", "UTC")
 	t.Setenv("ANYCAP_REDIS_HOST", "redis.example.com")
 	t.Setenv("ANYCAP_REDIS_PORT", "6379")
 	t.Setenv("ANYCAP_REDIS_USERNAME", "default")
@@ -34,6 +35,9 @@ func TestLoadFromEnv_DevModeBuildsDiscreteInfraConfig(t *testing.T) {
 	}
 	if cfg.PGDSN == "" {
 		t.Fatal("expected postgres dsn to be derived")
+	}
+	if cfg.PGTimezone != "UTC" {
+		t.Fatalf("expected postgres timezone UTC, got %q", cfg.PGTimezone)
 	}
 	if cfg.RedisAddr != "redis.example.com:6379" {
 		t.Fatalf("expected redis addr to be derived, got %q", cfg.RedisAddr)
@@ -78,6 +82,8 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	t.Setenv("ANYCAP_CREDIT_BASE_URL", "https://credit.example.com")
 	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
 	t.Setenv("ANYCAP_CREDIT_TIMEOUT_SECONDS", "15")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", "REWARD")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", "SIGNUP_BONUS")
 
 	cfg, err := LoadFromEnv()
 	if err != nil {
@@ -91,6 +97,12 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	}
 	if cfg.Credit.Timeout != 15*time.Second {
 		t.Fatalf("expected credit timeout 15s, got %v", cfg.Credit.Timeout)
+	}
+	if cfg.Credit.SignupRewardPackageType != "REWARD" {
+		t.Fatalf("expected signup reward package type, got %q", cfg.Credit.SignupRewardPackageType)
+	}
+	if cfg.Credit.SignupRewardPackageSubtype != "SIGNUP_BONUS" {
+		t.Fatalf("expected signup reward package subtype, got %q", cfg.Credit.SignupRewardPackageSubtype)
 	}
 }
 

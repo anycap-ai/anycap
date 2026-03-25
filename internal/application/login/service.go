@@ -14,6 +14,7 @@ const loginCredentialTypeAPIKey = "api_key"
 type Service struct {
 	authClient            port.Auth0Client
 	users                 port.UserProvisioner
+	credit                port.CreditClient
 	apiKeys               port.APIKeyService
 	sessions              port.LoginSessionRepo
 	deviceVerificationURL string
@@ -27,6 +28,7 @@ type Service struct {
 func NewService(
 	authClient port.Auth0Client,
 	users port.UserProvisioner,
+	credit port.CreditClient,
 	apiKeys port.APIKeyService,
 	sessions port.LoginSessionRepo,
 	deviceVerificationURL string,
@@ -61,6 +63,7 @@ func NewService(
 	return &Service{
 		authClient:            authClient,
 		users:                 users,
+		credit:                credit,
 		apiKeys:               apiKeys,
 		sessions:              sessions,
 		deviceVerificationURL: deviceVerificationURL,
@@ -187,10 +190,11 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
 		return model.LoginCallbackResult{}, err
 	}
-	localUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
+	localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
 	if err != nil {
 		return model.LoginCallbackResult{}, err
 	}
+	s.grantSignupReward(ctx, localUser.ID, createdUser)
 
 	created, err := s.createLoginAPIKey(ctx, localUser.ID)
 	if err != nil {
@@ -250,10 +254,11 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 			if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
 				return model.LoginPollResult{}, err
 			}
-			localUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
+			localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
 			if err != nil {
 				return model.LoginPollResult{}, err
 			}
+			s.grantSignupReward(ctx, localUser.ID, createdUser)
 			created, err := s.createLoginAPIKey(ctx, localUser.ID)
 			if err != nil {
 				return model.LoginPollResult{}, err
@@ -289,4 +294,11 @@ func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.C
 		return s.apiKeys.CreateAPIKeyWithTTL(ctx, userID, "cli", s.loginAPIKeyTTL)
 	}
 	return s.apiKeys.CreateAPIKey(ctx, userID, "cli")
+}
+
+func (s *Service) grantSignupReward(ctx context.Context, userID string, createdUser bool) {
+	if !createdUser || s.credit == nil || userID == "" {
+		return
+	}
+	_ = s.credit.GrantSignupReward(ctx, userID)
 }
