@@ -132,7 +132,8 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 
 **CLI Release flow:**
 1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
-2. Push branch `release/cli-v0.1.0` (version extracted from branch name).
+2. **Review gate:** present the release notes to the user and get explicit approval before proceeding. Do NOT push the release branch until confirmed.
+3. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 3. CI runs goreleaser to cross-compile and archive CLI binaries.
 4. CI creates GitHub release with the release notes and uploads artifacts.
 5. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
