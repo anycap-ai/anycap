@@ -101,15 +101,13 @@ jobs:
           ANYCAP_VERSION: ${{ env.RELEASE_TAG }}
           ANYCAP_INSTALL_DIR: ${{ runner.temp }}/anycap-bin
           ANYCAP_NO_MODIFY_PATH: "1"
-        run: |
-          sh web/public/install.sh
+        run: sh scripts/install.sh
 
       - name: Verify binary
         run: |
           VERSION="${RELEASE_TAG#v}"
           BINARY="${{ runner.temp }}/anycap-bin/anycap"
 
-          echo "Binary path: ${BINARY}"
           ls -la "${BINARY}"
           file "${BINARY}"
 
@@ -141,15 +139,13 @@ jobs:
           ANYCAP_VERSION: ${{ env.RELEASE_TAG }}
           ANYCAP_INSTALL_DIR: ${{ runner.temp }}/anycap-bin
           ANYCAP_NO_MODIFY_PATH: "1"
-        run: |
-          sh web/public/install.sh
+        run: sh scripts/install.sh
 
       - name: Verify binary
         run: |
           VERSION="${RELEASE_TAG#v}"
           BINARY="${{ runner.temp }}/anycap-bin/anycap.exe"
 
-          echo "Binary path: ${BINARY}"
           ls -la "${BINARY}"
 
           OUTPUT=$("${BINARY}" --version 2>&1 || true)
