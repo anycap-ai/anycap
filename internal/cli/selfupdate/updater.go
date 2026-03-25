@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -36,6 +37,10 @@ const (
 	downloadTimeout = 120 * time.Second
 
 	timestampFile = ".last_update_check"
+
+	// semverPattern matches clean semver versions like "0.1.2" or "1.0.0".
+	// No pre-release suffixes, no commit hashes, no "-dirty".
+	semverPattern = `^\d+\.\d+\.\d+$`
 )
 
 // Release holds information about an available release.
@@ -63,6 +68,10 @@ type Updater struct {
 	GitHubAPIBase string
 	// ConfigDir is ~/.anycap (override for testing).
 	ConfigDir string
+	// Verbose enables debug logging to Logger.
+	Verbose bool
+	// Logger receives verbose output. Defaults to io.Discard.
+	Logger io.Writer
 }
 
 // NewUpdater returns an Updater with production defaults.
@@ -70,7 +79,37 @@ func NewUpdater() *Updater {
 	return &Updater{
 		GitHubAPIBase: "https://api.github.com",
 		ConfigDir:     defaultConfigDir(),
+		Logger:        io.Discard,
 	}
+}
+
+func (u *Updater) logf(format string, args ...any) {
+	if u.Verbose && u.Logger != nil {
+		fmt.Fprintf(u.Logger, "[update] "+format+"\n", args...)
+	}
+}
+
+// IsNPMInstall returns true if the current binary is installed via npm
+// (i.e. lives inside a node_modules directory).
+func IsNPMInstall() bool {
+	exe, err := ExecutablePath()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(exe, "node_modules")
+}
+
+var semverRe = regexp.MustCompile(semverPattern)
+
+// IsDevVersion returns true if the version string does not look like a
+// clean release semver (e.g. "0.0.2"). Local builds produce versions
+// like "dev", "af0055f-dirty", or "v0.0.2-3-gaf0055f".
+func IsDevVersion(version string) bool {
+	if version == "" || version == "dev" {
+		return true
+	}
+	v := strings.TrimPrefix(version, "v")
+	return !semverRe.MatchString(v)
 }
 
 // ShouldCheck returns true if enough time has passed since the last check.
@@ -78,9 +117,13 @@ func (u *Updater) ShouldCheck() bool {
 	path := filepath.Join(u.ConfigDir, timestampFile)
 	info, err := os.Stat(path)
 	if err != nil {
+		u.logf("no previous check recorded, should check")
 		return true
 	}
-	return time.Since(info.ModTime()) >= CheckInterval
+	age := time.Since(info.ModTime())
+	should := age >= CheckInterval
+	u.logf("last check %s ago, interval=%s, should_check=%v", age.Round(time.Second), CheckInterval, should)
+	return should
 }
 
 // RecordCheck saves the current time as the last check timestamp.
@@ -96,6 +139,7 @@ func (u *Updater) CheckLatest(ctx context.Context) (*Release, error) {
 	defer cancel()
 
 	url := fmt.Sprintf("%s/repos/%s/%s/releases/latest", u.GitHubAPIBase, GitHubOwner, GitHubRepo)
+	u.logf("checking latest release: GET %s", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -118,6 +162,7 @@ func (u *Updater) CheckLatest(ctx context.Context) (*Release, error) {
 	}
 
 	version := strings.TrimPrefix(gh.TagName, "v")
+	u.logf("latest release: %s (%d assets)", gh.TagName, len(gh.Assets))
 	return &Release{
 		Version: version,
 		TagName: gh.TagName,
@@ -158,6 +203,7 @@ func (u *Updater) Update(ctx context.Context, rel *Release) error {
 	if !ok {
 		return fmt.Errorf("no matching asset for %s/%s", runtime.GOOS, runtime.GOARCH)
 	}
+	u.logf("matched asset: %s", asset.Name)
 
 	checksumAsset, hasChecksum := rel.FindChecksumAsset()
 
@@ -165,6 +211,7 @@ func (u *Updater) Update(ctx context.Context, rel *Release) error {
 	defer cancel()
 
 	// Download archive.
+	u.logf("downloading %s", asset.DownloadURL)
 	archiveData, err := u.download(ctx, asset.DownloadURL)
 	if err != nil {
 		return fmt.Errorf("download asset: %w", err)
@@ -172,13 +219,16 @@ func (u *Updater) Update(ctx context.Context, rel *Release) error {
 
 	// Verify checksum if available.
 	if hasChecksum {
+		u.logf("downloading checksums.txt")
 		checksumData, err := u.download(ctx, checksumAsset.DownloadURL)
 		if err != nil {
 			return fmt.Errorf("download checksums: %w", err)
 		}
+		u.logf("verifying SHA256 checksum")
 		if err := verifyChecksum(archiveData, asset.Name, checksumData); err != nil {
 			return fmt.Errorf("checksum verification failed: %w", err)
 		}
+		u.logf("checksum OK")
 	}
 
 	// Extract binary from archive.
@@ -192,10 +242,12 @@ func (u *Updater) Update(ctx context.Context, rel *Release) error {
 	if err != nil {
 		return fmt.Errorf("locate executable: %w", err)
 	}
+	u.logf("replacing binary at %s", exePath)
 
 	if err := replaceBinary(exePath, binaryData); err != nil {
 		return fmt.Errorf("replace binary: %w", err)
 	}
+	u.logf("binary replaced successfully")
 
 	return nil
 }

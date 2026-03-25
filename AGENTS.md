@@ -91,7 +91,7 @@ make infra-up
 make dev
 
 # Use the CLI
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 status
 scripts/dev/run-cli.sh status
 
 # Stop infra (keep data)
