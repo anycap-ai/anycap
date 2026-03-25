@@ -43,6 +43,7 @@ func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
 	}
 	result, err := h.service.Init(c, req.Method, req.RedirectPort)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
@@ -60,6 +61,7 @@ func (h *LoginHandler) Callback(c context.Context, ctx *app.RequestContext) {
 
 	result, err := h.service.Callback(c, req.LoginSessionID, req.Code, req.State, req.RedirectURI)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
@@ -71,6 +73,7 @@ func (h *LoginHandler) Callback(c context.Context, ctx *app.RequestContext) {
 func (h *LoginHandler) DeviceCode(c context.Context, ctx *app.RequestContext) {
 	result, err := h.service.Init(c, "device", 0)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
@@ -88,6 +91,7 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 
 	result, err := h.service.Poll(c, req.LoginSessionID)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
