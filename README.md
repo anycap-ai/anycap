@@ -91,13 +91,13 @@ go run ./cmd/anycap-server
 查看状态：
 
 ```bash
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 status
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
 ```
 
 查看图片模型：
 
 ```bash
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
 ```
 
 生成图片：

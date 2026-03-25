@@ -53,10 +53,16 @@ type Config struct {
 	Auth0RedirectURL  string
 	NexusHubBaseURL   string
 	NexusHubToken     string
-	Credit            CreditConfig
-	AgentPlatform     AgentPlatformConfig
-	S3                S3Config
-	Lark              LarkConfig
+	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
+	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
+	NexusHubPlatformBaseURL string
+	NexusHubPlatformToken   string
+	NexusHubCoreBaseURL     string
+	NexusHubCoreToken       string
+	Credit                  CreditConfig
+	AgentPlatform           AgentPlatformConfig
+	S3                      S3Config
+	Lark                    LarkConfig
 }
 
 type CreditConfig struct {
@@ -118,37 +124,41 @@ func LoadFromEnv() (Config, error) {
 	_ = godotenv.Load()
 
 	cfg := Config{
-		AppName:           getEnv("ANYCAP_APP_NAME", defaultAppName),
-		AppEnv:            getEnv("ANYCAP_APP_ENV", defaultAppEnv),
-		HTTPAddr:          getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
-		RuntimeMode:       getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
-		PGDSN:             os.Getenv("ANYCAP_PG_DSN"),
-		PGHost:            os.Getenv("ANYCAP_PG_HOST"),
-		PGPort:            getEnvInt("ANYCAP_PG_PORT", 5432),
-		PGUser:            os.Getenv("ANYCAP_PG_USER"),
-		PGPassword:        os.Getenv("ANYCAP_PG_PASSWORD"),
-		PGDatabase:        getEnv("ANYCAP_PG_DATABASE", "postgres"),
-		PGSSLMode:         getEnv("ANYCAP_PG_SSL_MODE", "prefer"),
-		PGAutoMigrate:     getEnvBool("ANYCAP_PG_AUTO_MIGRATE", false),
-		RedisAddr:         os.Getenv("ANYCAP_REDIS_ADDR"),
-		RedisHost:         os.Getenv("ANYCAP_REDIS_HOST"),
-		RedisPort:         getEnvInt("ANYCAP_REDIS_PORT", 6379),
-		RedisUsername:     getEnv("ANYCAP_REDIS_USERNAME", "default"),
-		RedisPassword:     os.Getenv("ANYCAP_REDIS_PASSWORD"),
-		RedisDB:           getEnvInt("ANYCAP_REDIS_DB", 0),
-		RateLimitRPM:      getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
-		LoginAPIKeyTTL:    getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
-		Auth0Enabled:      getEnvBool("ANYCAP_AUTH0_ENABLED", false),
-		Auth0Issuer:       os.Getenv("ANYCAP_AUTH0_ISSUER"),
-		Auth0Audience:     os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
-		Auth0ClientID:     os.Getenv("ANYCAP_AUTH0_CLIENT_ID"),
-		Auth0ClientSecret: os.Getenv("ANYCAP_AUTH0_CLIENT_SECRET"),
-		Auth0RedirectURL:  os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
-		NexusHubBaseURL:   getEnv("NEXUSHUB_BASE_URL", ""),
-		NexusHubToken:     getEnv("NEXUSHUB_TOKEN", ""),
-		Credit:            loadCreditConfig(),
-		AgentPlatform:     loadAgentPlatformConfig(),
-		S3:                loadS3Config(),
+		AppName:                 getEnv("ANYCAP_APP_NAME", defaultAppName),
+		AppEnv:                  getEnv("ANYCAP_APP_ENV", defaultAppEnv),
+		HTTPAddr:                getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
+		RuntimeMode:             getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
+		PGDSN:                   os.Getenv("ANYCAP_PG_DSN"),
+		PGHost:                  os.Getenv("ANYCAP_PG_HOST"),
+		PGPort:                  getEnvInt("ANYCAP_PG_PORT", 5432),
+		PGUser:                  os.Getenv("ANYCAP_PG_USER"),
+		PGPassword:              os.Getenv("ANYCAP_PG_PASSWORD"),
+		PGDatabase:              getEnv("ANYCAP_PG_DATABASE", "postgres"),
+		PGSSLMode:               getEnv("ANYCAP_PG_SSL_MODE", "prefer"),
+		PGAutoMigrate:           getEnvBool("ANYCAP_PG_AUTO_MIGRATE", false),
+		RedisAddr:               os.Getenv("ANYCAP_REDIS_ADDR"),
+		RedisHost:               os.Getenv("ANYCAP_REDIS_HOST"),
+		RedisPort:               getEnvInt("ANYCAP_REDIS_PORT", 6379),
+		RedisUsername:           getEnv("ANYCAP_REDIS_USERNAME", "default"),
+		RedisPassword:           os.Getenv("ANYCAP_REDIS_PASSWORD"),
+		RedisDB:                 getEnvInt("ANYCAP_REDIS_DB", 0),
+		RateLimitRPM:            getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
+		LoginAPIKeyTTL:          getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
+		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
+		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
+		Auth0Audience:           os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
+		Auth0ClientID:           os.Getenv("ANYCAP_AUTH0_CLIENT_ID"),
+		Auth0ClientSecret:       os.Getenv("ANYCAP_AUTH0_CLIENT_SECRET"),
+		Auth0RedirectURL:        os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
+		NexusHubBaseURL:         getEnv("NEXUSHUB_BASE_URL", ""),
+		NexusHubToken:           getEnv("NEXUSHUB_TOKEN", ""),
+		NexusHubPlatformBaseURL: getEnv("NEXUSHUB_PLATFORM_BASE_URL", ""),
+		NexusHubPlatformToken:   getEnv("NEXUSHUB_PLATFORM_TOKEN", ""),
+		NexusHubCoreBaseURL:     getEnv("NEXUSHUB_CORE_BASE_URL", ""),
+		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
+		Credit:                  loadCreditConfig(),
+		AgentPlatform:           loadAgentPlatformConfig(),
+		S3:                      loadS3Config(),
 		Lark: LarkConfig{
 			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
 			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),
@@ -255,6 +265,34 @@ func (c Config) postgresDSN() string {
 	query.Set("sslmode", c.PGSSLMode)
 	u.RawQuery = query.Encode()
 	return u.String()
+}
+
+func (c Config) ResolvedNexusHubPlatformBaseURL() string {
+	if c.NexusHubPlatformBaseURL != "" {
+		return c.NexusHubPlatformBaseURL
+	}
+	return c.NexusHubBaseURL
+}
+
+func (c Config) ResolvedNexusHubPlatformToken() string {
+	if c.NexusHubPlatformToken != "" {
+		return c.NexusHubPlatformToken
+	}
+	return c.NexusHubToken
+}
+
+func (c Config) ResolvedNexusHubCoreBaseURL() string {
+	if c.NexusHubCoreBaseURL != "" {
+		return c.NexusHubCoreBaseURL
+	}
+	return c.NexusHubBaseURL
+}
+
+func (c Config) ResolvedNexusHubCoreToken() string {
+	if c.NexusHubCoreToken != "" {
+		return c.NexusHubCoreToken
+	}
+	return c.NexusHubToken
 }
 
 func getEnv(key, fallback string) string {

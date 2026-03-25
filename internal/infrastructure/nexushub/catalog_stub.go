@@ -8,7 +8,7 @@ import (
 )
 
 // CatalogStub 是 CatalogRepository 的空实现，仅用于单元测试。
-// 生产环境必须配置 NEXUSHUB_BASE_URL 使用 PlatformClient。
+// 生产环境必须配置 NEXUSHUB_PLATFORM_BASE_URL，或使用兼容的 NEXUSHUB_BASE_URL。
 type CatalogStub struct {
 	models []model.ModelSpec
 }

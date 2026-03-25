@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
@@ -27,6 +28,13 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 			return
 		}
 
+		SetPrincipal(c, principal)
+		c.Next(ctx)
+	}
+}
+
+func LocalBypassAuth(principal model.Principal) app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
 		SetPrincipal(c, principal)
 		c.Next(ctx)
 	}

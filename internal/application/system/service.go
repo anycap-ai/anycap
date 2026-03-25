@@ -13,8 +13,8 @@ type Service struct {
 	env       string
 	runtime   string
 	buildInfo buildinfo.Info
-	features  map[string]bool
 	apiKeys   port.APIKeyService
+	features  map[string]bool
 }
 
 func NewService(name, env, runtime string, info buildinfo.Info, apiKeys port.APIKeyService) *Service {

@@ -3,22 +3,19 @@ package model
 import "errors"
 
 var (
-	ErrModelRequired              = errors.New("model is required")
-	ErrImageProviderNotConfigured = errors.New("image provider is not configured")
+	ErrModelRequired               = errors.New("model is required")
+	ErrImageExecutionNotConfigured = errors.New("image execution is not configured")
 )
 
-type ImageModel struct {
-	ID          string   `json:"id"`
-	Capability  string   `json:"capability"`
-	DisplayName string   `json:"display_name"`
-	Operations  []string `json:"operations,omitempty"`
-}
-
 type GenerateImageRequest struct {
-	RequestID string `json:"request_id,omitempty"`
-	UserID    string `json:"user_id,omitempty"`
-	Prompt    string `json:"prompt"`
-	Model     string `json:"model"`
+	RequestID          string   `json:"request_id,omitempty"`
+	UserID             string   `json:"user_id,omitempty"`
+	Prompt             string   `json:"prompt"`
+	Model              string   `json:"model"`
+	NegativePrompt     string   `json:"negative_prompt,omitempty"`
+	Ratio              string   `json:"ratio,omitempty"`
+	Resolution         string   `json:"resolution,omitempty"`
+	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
 }
 
 func (r GenerateImageRequest) Validate() error {

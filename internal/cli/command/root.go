@@ -12,7 +12,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/selfupdate"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -71,6 +70,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 
 	// Meta commands (always available).
 	rootCmd.AddCommand(
+		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
 		meta.NewLogoutCmd(clientFactory, opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
 		meta.NewCredentialCmd(opts.Stdout, opts.Stderr),
@@ -80,11 +80,6 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
 		meta.NewDownloadCmd(opts.Stdout),
 	)
-
-	// Feature-gated meta commands.
-	if feature.Enabled(feature.Login) {
-		rootCmd.AddCommand(meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr))
-	}
 
 	// Action commands (AI analysis: image-understand, video-read, etc.).
 	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {

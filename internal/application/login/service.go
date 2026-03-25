@@ -9,6 +9,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 )
 
+const loginCredentialTypeAPIKey = "api_key"
+
 type Service struct {
 	authClient            port.Auth0Client
 	users                 port.UserProvisioner
@@ -77,6 +79,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 	if s.sessions == nil {
 		return model.LoginInitResult{}, model.ErrInternal
 	}
+
 	now := s.now().UTC()
 	session := model.LoginSession{
 		ID:        s.sessionIDGenerator(),
@@ -91,6 +94,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 		if redirectPort <= 0 {
 			return model.LoginInitResult{}, model.ErrInvalidParam
 		}
+
 		session.FlowType = model.LoginFlowLocalhost
 		session.State = s.stateGenerator()
 		session.RedirectURI = fmt.Sprintf("http://127.0.0.1:%d/callback", redirectPort)
@@ -116,6 +120,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 		if err != nil {
 			return model.LoginInitResult{}, err
 		}
+
 		session.DeviceCode = deviceAuth.DeviceCode
 		session.UserCode = deviceAuth.UserCode
 		if session.UserCode == "" {
@@ -127,6 +132,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 		if err := s.sessions.CreateSession(ctx, session); err != nil {
 			return model.LoginInitResult{}, err
 		}
+
 		verificationURI := deviceAuth.VerificationURI
 		if verificationURI == "" {
 			verificationURI = s.deviceVerificationURL
@@ -135,6 +141,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 		if interval <= 0 {
 			interval = 5
 		}
+
 		return model.LoginInitResult{
 			FlowType:        session.FlowType,
 			LoginSessionID:  session.ID,
@@ -155,13 +162,7 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if s == nil || s.authClient == nil {
 		return model.LoginCallbackResult{}, model.ErrAuthProviderNotConfigured
 	}
-	if s.sessions == nil {
-		return model.LoginCallbackResult{}, model.ErrInternal
-	}
-	if s.users == nil {
-		return model.LoginCallbackResult{}, model.ErrInternal
-	}
-	if s.apiKeys == nil {
+	if s.sessions == nil || s.users == nil || s.apiKeys == nil {
 		return model.LoginCallbackResult{}, model.ErrInternal
 	}
 
@@ -200,8 +201,10 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	}
 
 	return model.LoginCallbackResult{
-		APIKeyID: created.APIKey.ID,
-		APIKey:   created.RawKey,
+		CredentialType: loginCredentialTypeAPIKey,
+		AccessToken:    created.RawKey,
+		APIKeyID:       created.APIKey.ID,
+		APIKey:         created.RawKey,
 		User: &model.LoginUser{
 			ID:    localUser.ID,
 			Email: localUser.Email,
@@ -214,10 +217,7 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 	if sessionID == "" {
 		return model.LoginPollResult{}, model.ErrInvalidParam
 	}
-	if s.sessions == nil {
-		return model.LoginPollResult{}, model.ErrInternal
-	}
-	if s.users == nil {
+	if s.sessions == nil || s.users == nil {
 		return model.LoginPollResult{}, model.ErrInternal
 	}
 
@@ -237,6 +237,7 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 		if session.DeviceCode == "" {
 			return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
 		}
+
 		pollResult, err := s.authClient.PollDeviceFlow(ctx, session.DeviceCode)
 		if err != nil {
 			return model.LoginPollResult{}, err
@@ -260,10 +261,13 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 			if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
 				return model.LoginPollResult{}, err
 			}
+
 			return model.LoginPollResult{
-				Status:   model.LoginSessionStatusComplete,
-				APIKeyID: created.APIKey.ID,
-				APIKey:   created.RawKey,
+				Status:         model.LoginSessionStatusComplete,
+				CredentialType: loginCredentialTypeAPIKey,
+				AccessToken:    created.RawKey,
+				APIKeyID:       created.APIKey.ID,
+				APIKey:         created.RawKey,
 				User: &model.LoginUser{
 					ID:    localUser.ID,
 					Email: localUser.Email,

@@ -227,6 +227,12 @@ func TestService_CallbackCreatesAPIKey(t *testing.T) {
 	if result.APIKey == "" {
 		t.Fatal("expected api key")
 	}
+	if result.CredentialType != loginCredentialTypeAPIKey {
+		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
+	}
+	if result.AccessToken != "ak-created" {
+		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
+	}
 	if result.User == nil || result.User.ID != "2000000001" {
 		t.Fatalf("expected local user id 2000000001, got %#v", result.User)
 	}
@@ -345,6 +351,12 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 	}
 	if result.APIKey == "" {
 		t.Fatal("expected api key")
+	}
+	if result.CredentialType != loginCredentialTypeAPIKey {
+		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
+	}
+	if result.AccessToken != "ak-device" {
+		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
 	}
 	if result.User == nil || result.User.ID != "2000000002" {
 		t.Fatalf("expected local user id 2000000002, got %#v", result.User)
