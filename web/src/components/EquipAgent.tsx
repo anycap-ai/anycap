@@ -47,7 +47,7 @@ export function EquipAgent() {
   const [showAgents, setShowAgents] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<(typeof agents)[number] | null>(null);
   const [copied, setCopied] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Keep last selected agent so panel content persists during exit animation
