@@ -62,19 +62,19 @@ func main() {
 
 ```bash
 # Public endpoints (no auth needed)
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models nano-banana-2
-go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image models nano-banana-2 schema
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models nano-banana-2
+go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image models nano-banana-2 schema
 
 # Authenticated endpoints (needs API key)
 ANYCAP_API_KEY=ak_deadbeef1234567890abcdef \
-  go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate \
+  go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate \
     --prompt "a paper crane on a wooden table" \
     --model nano-banana-2
 
 # With extra params
 ANYCAP_API_KEY=ak_deadbeef1234567890abcdef \
-  go run ./cmd/anycap --endpoint http://127.0.0.1:8080 image generate \
+  go run ./cmd/anycap --endpoint http://127.0.0.1:18080 image generate \
     --prompt "a landscape" \
     --model nano-banana-2 \
     --param aspect_ratio=16:9 \

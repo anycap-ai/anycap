@@ -50,6 +50,7 @@ func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
 		ReferenceImageURLs: append([]string(nil), payload.ReferenceImageURLs...),
 	})
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, response := dto.MapDomainError(err)
 		response.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, response)

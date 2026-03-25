@@ -57,6 +57,7 @@ func (h *SystemHandler) Logout(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 	if err := h.service.Logout(c, principal); err != nil {
+		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)

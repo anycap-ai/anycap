@@ -60,6 +60,7 @@ func (h *FeedbackHandler) Submit(c context.Context, ctx *app.RequestContext) {
 
 	id, err := h.service.Submit(c, fb)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		status, response := dto.MapDomainError(err)
 		response.ID = reqID
 		ctx.JSON(status, response)

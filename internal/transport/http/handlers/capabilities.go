@@ -8,6 +8,7 @@ import (
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -51,6 +52,7 @@ func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext
 
 	result, err := h.service.Presign(c, req)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
 		writeError(ctx, code, errCode, msg)
 		return
@@ -77,6 +79,7 @@ func (h *CapabilitiesHandler) ImageUnderstand(c context.Context, ctx *app.Reques
 
 	result, err := h.service.ImageUnderstand(c, req)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
 		writeError(ctx, code, errCode, msg)
 		return
@@ -99,6 +102,7 @@ func (h *CapabilitiesHandler) VideoRead(c context.Context, ctx *app.RequestConte
 
 	result, err := h.service.VideoRead(c, req)
 	if err != nil {
+		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
 		writeError(ctx, code, errCode, msg)
 		return

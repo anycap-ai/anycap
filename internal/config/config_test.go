@@ -1,9 +1,9 @@
 package config
 
 import (
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 func TestLoadFromEnv_Defaults(t *testing.T) {
@@ -27,7 +27,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.AppName != "anycap-server" {
 		t.Fatalf("expected default app name, got %q", cfg.AppName)
 	}
-	if cfg.HTTPAddr != ":8080" {
+	if cfg.HTTPAddr != ":18080" {
 		t.Fatalf("expected default addr, got %q", cfg.HTTPAddr)
 	}
 	if cfg.RuntimeMode != "stub" {
@@ -106,7 +106,6 @@ func TestLoadFromEnv_NexusHubSplitConfigFallsBackToLegacy(t *testing.T) {
 		t.Fatalf("expected legacy core token fallback, got %q", cfg.ResolvedNexusHubCoreToken())
 	}
 }
-
 func TestLoadFromEnv_RejectsAmbiguousPostgresConfig(t *testing.T) {
 	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")

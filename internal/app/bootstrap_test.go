@@ -91,7 +91,6 @@ func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testin
 		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
-
 func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 	deps, err := buildServerDependencies(config.Config{
 		AppName:           "anycap-server",
@@ -148,7 +147,6 @@ func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *t
 		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
-
 func TestBuildImageExecutionClient_UsesCoreConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
 	client := buildImageExecutionClient(config.Config{
 		NexusHubCoreBaseURL: "http://core.example.com",

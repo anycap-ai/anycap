@@ -22,6 +22,7 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 		rawKey := strings.TrimSpace(header[len("Bearer "):])
 		principal, err := apiKeys.AuthenticateAPIKey(ctx, rawKey)
 		if err != nil {
+			ReportError(c, err)
 			status, payload := dto.MapDomainError(err)
 			payload.ID = GetRequestID(c)
 			c.AbortWithStatusJSON(status, payload)
