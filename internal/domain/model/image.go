@@ -1,9 +1,5 @@
 package model
 
-import "errors"
-
-var ErrPromptRequired = errors.New("prompt is required")
-
 type ImageModel struct {
 	ID          string   `json:"id"`
 	Capability  string   `json:"capability"`
@@ -12,8 +8,10 @@ type ImageModel struct {
 }
 
 type GenerateImageRequest struct {
-	Prompt string `json:"prompt"`
-	Model  string `json:"model"`
+	RequestID string `json:"request_id,omitempty"`
+	UserID    string `json:"user_id,omitempty"`
+	Prompt    string `json:"prompt"`
+	Model     string `json:"model"`
 }
 
 func (r GenerateImageRequest) Validate() error {
@@ -31,9 +29,10 @@ type Artifact struct {
 }
 
 type GenerateImageResult struct {
-	ID      string         `json:"id"`
-	Status  string         `json:"status"`
-	Model   string         `json:"model"`
-	Outputs []Artifact     `json:"outputs,omitempty"`
-	Usage   map[string]any `json:"usage,omitempty"`
+	ID         string         `json:"id"`
+	Status     string         `json:"status"`
+	Model      string         `json:"model"`
+	Outputs    []Artifact     `json:"outputs,omitempty"`
+	Usage      map[string]any `json:"usage,omitempty"`
+	CreditCost int64          `json:"credit_cost,omitempty"`
 }

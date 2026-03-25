@@ -9,11 +9,12 @@ import (
 )
 
 type Service struct {
-	authProvider   port.AuthProvider
+	authClient     port.Auth0Client
+	apiKeys        port.APIKeyService
 	stateGenerator func() string
 }
 
-func NewService(authProvider port.AuthProvider, stateGenerator func() string) *Service {
+func NewService(authClient port.Auth0Client, apiKeys port.APIKeyService, stateGenerator func() string) *Service {
 	if stateGenerator == nil {
 		stateGenerator = func() string {
 			return "state-" + time.Now().UTC().Format("20060102150405")
@@ -21,14 +22,15 @@ func NewService(authProvider port.AuthProvider, stateGenerator func() string) *S
 	}
 
 	return &Service{
-		authProvider:   authProvider,
+		authClient:     authClient,
+		apiKeys:        apiKeys,
 		stateGenerator: stateGenerator,
 	}
 }
 
 func (s *Service) Init(ctx context.Context) (model.LoginInitResult, error) {
 	state := s.stateGenerator()
-	authURL, err := s.authProvider.BuildLoginURL(ctx, state)
+	authURL, err := s.authClient.BuildLoginURL(ctx, state)
 	if err != nil {
 		return model.LoginInitResult{}, err
 	}
@@ -36,5 +38,27 @@ func (s *Service) Init(ctx context.Context) (model.LoginInitResult, error) {
 	return model.LoginInitResult{
 		AuthURL: authURL,
 		State:   state,
+	}, nil
+}
+
+func (s *Service) Callback(ctx context.Context, code string) (model.LoginCallbackResult, error) {
+	if code == "" {
+		return model.LoginCallbackResult{}, model.ErrInvalidParam
+	}
+
+	user, err := s.authClient.ExchangeCode(ctx, code)
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+
+	created, err := s.apiKeys.CreateAPIKey(ctx, user.UserID, "cli")
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+
+	return model.LoginCallbackResult{
+		UserID:   user.UserID,
+		APIKeyID: created.APIKey.ID,
+		APIKey:   created.RawKey,
 	}, nil
 }

@@ -4,7 +4,7 @@
 
 **Goal:** 在当前 Hertz 骨架上落地 AnyCap Server Phase 1 MVP 框架，完成 API Key 系统、限流、login 封装、image 能力主链路、外部 Infra 抽象与基础可观测性。
 
-**Architecture:** 采用分层模块化单体（transport/middleware/application/domain/infrastructure）。Server 是 CLI 的唯一后端入口，统一承接 API Key、限流、登录、计费、路由与日志。外部依赖通过 ports 抽象接入，MVP 优先保证接口稳定、主链路打通与关键链路幂等。
+**Architecture:** 采用分层模块化单体（transport/middleware/application/domain/infrastructure）。Server 是 CLI 的唯一后端入口，统一承接 API Key、限流、登录、计费、路由与日志。`internal/application` 按 `image`、`login`、`system` 功能模块组织，`internal/infrastructure` 按 `apikey`、`auth`、`credit`、`nexushub`、`ratelimit` 一级目录组织；外部依赖通过 ports 抽象接入，MVP 优先保证接口稳定、主链路打通与关键链路幂等。
 
 **Tech Stack:** Go 1.24, Hertz, PostgreSQL, Redis, `testing`, `httptest`
 
@@ -15,12 +15,14 @@
 - `docs/system-architecture.md`
 - `docs/cli-architecture.md`
 
+> 说明：以下实现计划已按 `README.md` 的最新目录结构更新。重点是不再使用 `cmd/service`、`internal/infrastructure/postgres`、`internal/infrastructure/redis`、`internal/infrastructure/payment` 这类旧路径，而是统一对齐到当前的 server 入口和按功能模块划分的目录布局。
+
 ### Task 0: 对齐现有 Hertz 骨架与目标目录布局
 
 **Files:**
-- Modify: `cmd/service/main.go`
-- Move/Create: `internal/http/handlers/health.go` -> `internal/transport/http/handlers/health.go`
-- Move/Create: `internal/config/http.go` -> `internal/config/config.go`
+- Modify: `cmd/anycap-server/main.go`
+- Move/Create: 旧 `internal/http/handlers/health.go` -> `internal/transport/http/handlers/health.go`
+- Move/Create: 旧 `internal/config/http.go` -> `internal/config/config.go`
 - Create: `internal/transport/http/router.go`
 
 **Step 1: 写最小健康路由回归测试**
@@ -50,7 +52,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add cmd/service/main.go internal/config internal/http internal/transport/http
+git add cmd/anycap-server/main.go internal/config internal/transport/http
 git commit -m "refactor: align hertz skeleton with target server layout"
 ```
 
@@ -59,7 +61,7 @@ git commit -m "refactor: align hertz skeleton with target server layout"
 **Files:**
 - Create: `internal/app/bootstrap.go`
 - Modify: `internal/config/config.go`
-- Modify: `cmd/service/main.go`
+- Modify: `cmd/anycap-server/main.go`
 
 **Step 1: 写配置加载测试**
 
@@ -113,7 +115,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add cmd/service/main.go internal/app/bootstrap.go internal/config/config.go
+git add cmd/anycap-server/main.go internal/app/bootstrap.go internal/config/config.go
 git commit -m "refactor: add bootstrap and runtime config loading"
 ```
 
@@ -178,7 +180,7 @@ git commit -m "feat: define anycap server domain models and ports"
 - Create: `internal/infrastructure/auth/auth0_client.go`
 - Create: `internal/infrastructure/credit/client_stub.go`
 - Create: `internal/infrastructure/nexushub/client_stub.go`
-- Create: `internal/infrastructure/payment/client_stub.go`
+- Modify: `internal/domain/port/payment.go`
 
 **Step 1: 写 stub 编译期与最小行为测试**
 
@@ -187,13 +189,12 @@ func TestAuth0Stub_BuildLoginURL(t *testing.T) {}
 func TestCreditStub_GetBalance(t *testing.T) {}
 func TestCreditStub_DeductIsIdempotent(t *testing.T) {}
 func TestNexusHubStub_ListImageModels(t *testing.T) {}
-func TestPaymentStub_CreateTopUpSession(t *testing.T) {}
-func TestPaymentStub_WebhookIsIdempotent(t *testing.T) {}
+func TestPaymentPort_Compile(t *testing.T) {}
 ```
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/infrastructure/... -run 'TestAuth0Stub|TestCreditStub|TestNexusHubStub|TestPaymentStub' -v`
+Run: `go test ./internal/infrastructure/... ./internal/domain/port -run 'TestAuth0Stub|TestCreditStub|TestNexusHubStub|TestPaymentPort' -v`
 Expected: FAIL
 
 **Step 3: 实现最小 Infra stub 基座**
@@ -201,17 +202,17 @@ Expected: FAIL
 - `Auth0Client` stub 返回固定 login URL，并支持固定 code -> user 映射
 - `CreditClient` stub 返回固定 balance，并支持基于 `request_id` 的幂等 deduct
 - `NexusHubClient` stub 返回固定 models/schema/generate 结果
-- `PaymentClient` stub 只返回占位 checkout session，并基于 `idempotency_key` / `event_id` 提供最小去重语义
+- `PaymentClient` 在当前目录结构下先只保留 domain port 边界，不新增 `internal/infrastructure/payment/` 一级目录
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/infrastructure/... -run 'TestAuth0Stub|TestCreditStub|TestNexusHubStub|TestPaymentStub' -v`
+Run: `go test ./internal/infrastructure/... ./internal/domain/port -run 'TestAuth0Stub|TestCreditStub|TestNexusHubStub|TestPaymentPort' -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/infrastructure/auth internal/infrastructure/credit internal/infrastructure/nexushub internal/infrastructure/payment
+git add internal/infrastructure/auth internal/infrastructure/credit internal/infrastructure/nexushub internal/domain/port/payment.go
 git commit -m "feat: add infra client stubs and integration boundaries"
 ```
 
@@ -262,9 +263,9 @@ git commit -m "feat: add shared response layer and base middleware"
 ### Task 5: PostgreSQL API Key System 与鉴权中间件
 
 **Files:**
-- Create: `internal/infrastructure/postgres/db.go`
-- Create: `internal/infrastructure/postgres/api_key_repo.go`
-- Create: `internal/infrastructure/postgres/migrations/0001_init_api_keys.sql`
+- Create: `internal/infrastructure/apikey/db.go`
+- Create: `internal/infrastructure/apikey/api_key_repo.go`
+- Create: `internal/infrastructure/apikey/migrations/0001_init_api_keys.sql`
 - Create: `internal/infrastructure/auth/apikey_authenticator.go`
 - Create: `internal/middleware/auth.go`
 
@@ -282,7 +283,7 @@ func TestAuthMiddleware_RejectMissingBearer(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/infrastructure/auth ./internal/middleware -v`
+Run: `go test ./internal/infrastructure/apikey ./internal/infrastructure/auth ./internal/middleware -v`
 Expected: FAIL
 
 **Step 3: 实现最小 API Key 主链路**
@@ -294,21 +295,21 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/infrastructure/auth ./internal/middleware -v`
+Run: `go test ./internal/infrastructure/apikey ./internal/infrastructure/auth ./internal/middleware -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/infrastructure/postgres internal/infrastructure/auth internal/middleware/auth.go
+git add internal/infrastructure/apikey internal/infrastructure/auth internal/middleware/auth.go
 git commit -m "feat: implement api key auth pipeline"
 ```
 
 ### Task 6: Redis Rate Limiter
 
 **Files:**
-- Create: `internal/infrastructure/redis/ratelimiter.go`
-- Create: `internal/infrastructure/redis/lua/fixed_window.lua`
+- Create: `internal/infrastructure/ratelimit/ratelimiter.go`
+- Create: `internal/infrastructure/ratelimit/lua/fixed_window.lua`
 - Create: `internal/middleware/ratelimit.go`
 
 **Step 1: 写限流测试**
@@ -321,7 +322,7 @@ func TestRateLimit_Exceeded(t *testing.T) {
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/infrastructure/redis ./internal/middleware -v`
+Run: `go test ./internal/infrastructure/ratelimit ./internal/middleware -v`
 Expected: FAIL
 
 **Step 3: 实现最小限流能力**
@@ -332,20 +333,20 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/infrastructure/redis ./internal/middleware -v`
+Run: `go test ./internal/infrastructure/ratelimit ./internal/middleware -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/infrastructure/redis internal/middleware/ratelimit.go
+git add internal/infrastructure/ratelimit internal/middleware/ratelimit.go
 git commit -m "feat: add redis rate limiter middleware"
 ```
 
 ### Task 7: image models 元数据接口
 
 **Files:**
-- Create: `internal/application/image_models.go`
+- Create: `internal/application/image/models.go`
 - Create: `internal/transport/http/dto/image.go`
 - Create: `internal/transport/http/handlers/image_models.go`
 
@@ -358,7 +359,7 @@ func TestImageModelSchemaHandler(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/application ./internal/transport/http/handlers -run 'TestImageModels|TestImageModelSchema' -v`
+Run: `go test ./internal/application/image ./internal/transport/http/handlers -run 'TestImageModels|TestImageModelSchema' -v`
 Expected: FAIL
 
 **Step 3: 实现最小元数据接口**
@@ -369,20 +370,20 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/application ./internal/transport/http/handlers -run 'TestImageModels|TestImageModelSchema' -v`
+Run: `go test ./internal/application/image ./internal/transport/http/handlers -run 'TestImageModels|TestImageModelSchema' -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/application internal/infrastructure/nexushub internal/transport/http
+git add internal/application/image internal/infrastructure/nexushub internal/transport/http
 git commit -m "feat: add image model metadata endpoints"
 ```
 
 ### Task 8: image generate 主链路
 
 **Files:**
-- Create: `internal/application/image_generate.go`
+- Create: `internal/application/image/generate.go`
 - Create: `internal/transport/http/handlers/image.go`
 
 **Step 1: 写 usecase 测试**
@@ -397,7 +398,7 @@ func TestGenerateImage_Success(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/application -run TestGenerateImage -v`
+Run: `go test ./internal/application/image -run TestGenerateImage -v`
 Expected: FAIL
 
 **Step 3: 实现最小 happy path**
@@ -410,21 +411,21 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/application ./internal/transport/http/handlers -run TestGenerateImage -v`
+Run: `go test ./internal/application/image ./internal/transport/http/handlers -run TestGenerateImage -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/application internal/infrastructure/credit internal/transport/http
+git add internal/application/image internal/infrastructure/credit internal/transport/http
 git commit -m "feat: add image generate usecase and handler"
 ```
 
 ### Task 9: login init / callback 主链路
 
 **Files:**
-- Create: `internal/application/login_init.go`
-- Create: `internal/application/login_callback.go`
+- Create: `internal/application/login/init.go`
+- Create: `internal/application/login/callback.go`
 - Create: `internal/transport/http/dto/login.go`
 - Create: `internal/transport/http/handlers/login.go`
 
@@ -438,7 +439,7 @@ func TestLoginCallback_IsIdempotent(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/application ./internal/transport/http/handlers -run 'TestLoginInit|TestLoginCallback' -v`
+Run: `go test ./internal/application/login ./internal/transport/http/handlers -run 'TestLoginInit|TestLoginCallback' -v`
 Expected: FAIL
 
 **Step 3: 实现最小 login 流程**
@@ -451,22 +452,22 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/application ./internal/transport/http/handlers -run 'TestLoginInit|TestLoginCallback' -v`
+Run: `go test ./internal/application/login ./internal/transport/http/handlers -run 'TestLoginInit|TestLoginCallback' -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/application internal/infrastructure/auth internal/transport/http
+git add internal/application/login internal/infrastructure/auth internal/transport/http
 git commit -m "feat: add login init and callback flow"
 ```
 
 ### Task 10: 调用日志与状态接口
 
 **Files:**
-- Create: `internal/infrastructure/postgres/call_log_repo.go`
-- Create: `internal/infrastructure/postgres/migrations/0002_call_logs.sql`
-- Create: `internal/application/status.go`
+- Create: `internal/infrastructure/apikey/call_log_repo.go`
+- Create: `internal/infrastructure/apikey/migrations/0002_call_logs.sql`
+- Create: `internal/application/system/status.go`
 - Create: `internal/transport/http/dto/status.go`
 - Create: `internal/transport/http/handlers/status.go`
 
@@ -479,7 +480,7 @@ func TestCallLogRepo_Insert(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/infrastructure/postgres ./internal/transport/http/handlers -v`
+Run: `go test ./internal/infrastructure/apikey ./internal/application/system ./internal/transport/http/handlers -v`
 Expected: FAIL
 
 **Step 3: 实现最小状态与日志能力**
@@ -489,21 +490,21 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/infrastructure/postgres ./internal/transport/http/handlers -v`
+Run: `go test ./internal/infrastructure/apikey ./internal/application/system ./internal/transport/http/handlers -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/infrastructure/postgres internal/application/status.go internal/transport/http
+git add internal/infrastructure/apikey internal/application/system internal/transport/http
 git commit -m "feat: add status endpoint and call logging"
 ```
 
 ### Task 11: 幂等记录与关键去重存储
 
 **Files:**
-- Create: `internal/infrastructure/postgres/migrations/0003_idempotency.sql`
-- Create: `internal/infrastructure/postgres/idempotency_repo.go`
+- Create: `internal/infrastructure/apikey/migrations/0003_idempotency.sql`
+- Create: `internal/infrastructure/apikey/idempotency_repo.go`
 - Modify: `internal/domain/port/payment.go`
 - Modify: `internal/domain/port/credit.go`
 
@@ -516,7 +517,7 @@ func TestIdempotencyRepo_DuplicateClaim(t *testing.T) {}
 
 **Step 2: 运行测试确认失败**
 
-Run: `go test ./internal/infrastructure/postgres -run TestIdempotencyRepo -v`
+Run: `go test ./internal/infrastructure/apikey -run TestIdempotencyRepo -v`
 Expected: FAIL
 
 **Step 3: 实现最小幂等存储能力**
@@ -527,13 +528,13 @@ Expected: FAIL
 
 **Step 4: 运行测试确认通过**
 
-Run: `go test ./internal/infrastructure/postgres -run TestIdempotencyRepo -v`
+Run: `go test ./internal/infrastructure/apikey -run TestIdempotencyRepo -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-git add internal/infrastructure/postgres internal/domain/port/payment.go internal/domain/port/credit.go
+git add internal/infrastructure/apikey internal/domain/port/payment.go internal/domain/port/credit.go
 git commit -m "feat: add idempotency storage for critical operations"
 ```
 
@@ -542,7 +543,7 @@ git commit -m "feat: add idempotency storage for critical operations"
 **Files:**
 - Modify: `internal/transport/http/router.go`
 - Modify: `internal/app/bootstrap.go`
-- Modify: `cmd/service/main.go`
+- Modify: `cmd/anycap-server/main.go`
 
 **Step 1: 写最小 HTTP 合约测试**
 
@@ -570,7 +571,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add cmd/service/main.go internal/app/bootstrap.go internal/transport/http/router.go
+git add cmd/anycap-server/main.go internal/app/bootstrap.go internal/transport/http/router.go
 git commit -m "feat: wire anycap server mvp routes"
 ```
 
@@ -591,7 +592,7 @@ git commit -m "feat: wire anycap server mvp routes"
 
 **Step 2: 运行最小 smoke test**
 
-Run: `go test ./... && go run ./cmd/service`
+Run: `go test ./... && go run ./cmd/anycap-server`
 Expected: tests PASS，服务启动成功
 
 **Step 3: Commit**

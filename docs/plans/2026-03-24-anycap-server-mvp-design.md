@@ -53,9 +53,9 @@
 
 1. `transport/http`：Hertz 路由、DTO、错误映射
 2. `middleware`：request id、access log、recover、auth、rate limit
-3. `application`：用例编排（login、status、image generate、image models）
+3. `application`：按功能模块组织用例编排（`image`、`login`、`system`）
 4. `domain`：核心模型、错误、ports
-5. `infrastructure`：Postgres、Redis、Auth0、Credit、NexusHub、Payment
+5. `infrastructure`：按职责模块组织适配器（`apikey`、`auth`、`credit`、`nexushub`、`ratelimit`）
 
 核心原则：
 
@@ -67,7 +67,7 @@
 ## 4. 建议目录
 
 ```text
-cmd/service/main.go
+cmd/anycap-server/main.go
 
 internal/
   app/
@@ -100,11 +100,14 @@ internal/
     ratelimit.go
 
   application/
-    login_init.go
-    login_callback.go
-    image_generate.go
-    image_models.go
-    status.go
+    image/
+      models.go
+      generate.go
+    login/
+      init.go
+      callback.go
+    system/
+      status.go
 
   domain/
     model/
@@ -124,15 +127,12 @@ internal/
       ratelimit.go
 
   infrastructure/
-    postgres/
+    apikey/
       db.go
       api_key_repo.go
       call_log_repo.go
       idempotency_repo.go
       migrations/
-    redis/
-      ratelimiter.go
-      lua/
     auth/
       auth0_client.go
       apikey_authenticator.go
@@ -140,9 +140,12 @@ internal/
       client_stub.go
     nexushub/
       client_stub.go
-    payment/
-      client_stub.go
+    ratelimit/
+      ratelimiter.go
+      lua/
 ```
+
+为了和 `README.md` 的最新目录结构保持一致，`internal/infrastructure/` 一级目录按职责模块拆分，不再新增 `postgres/`、`redis/`、`payment/` 这类技术选型一级目录；如果要区分具体存储实现，建议在对应模块目录内使用文件名区分，例如 `db.go`、`*_postgres.go`、`*_redis.go`。`Payment` 在 Phase 1 先只保留 `internal/domain/port/payment.go` 的边界定义，不单独落一个 `internal/infrastructure/payment/` 目录。
 
 ## 5. 核心模型与接口
 
@@ -459,7 +462,7 @@ MVP 不做分布式事务，但要把行为定义清楚：
 
 ## 11. 里程碑建议
 
-- Milestone A：现有 Hertz 骨架迁移到目标目录
+- Milestone A：现有 Hertz 骨架对齐到 `README.md` 中的 server 目录布局
 - Milestone B：配置 / domain / middleware 基础设施就位
 - Milestone C：API Key 系统 + 限流 + Infra stubs
 - Milestone D：image 主链路打通

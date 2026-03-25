@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type LoginHandler struct {
@@ -20,18 +22,29 @@ func NewLoginHandler(service *loginapp.Service) *LoginHandler {
 func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
 	result, err := h.service.Init(c)
 	if err != nil {
-		ctx.JSON(consts.StatusInternalServerError, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "LOGIN_INIT_FAILED",
-				"message": err.Error(),
-			},
-		})
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
 		return
 	}
 
-	ctx.JSON(consts.StatusOK, map[string]any{
-		"status": "success",
-		"data":   result,
-	})
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *LoginHandler) Callback(c context.Context, ctx *app.RequestContext) {
+	var req dto.LoginCallbackRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	result, err := h.service.Callback(c, req.Code)
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
