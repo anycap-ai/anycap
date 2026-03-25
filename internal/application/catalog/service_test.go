@@ -17,6 +17,11 @@ func newTestService() *Service {
 			Status:      "active",
 			Operations: map[model.Operation]model.OperationSpec{
 				model.OperationGenerate: {
+					RequestHints: map[string]any{
+						"model_params": map[string]any{
+							"prompt": map[string]any{"type": "string", "required": true},
+						},
+					},
 					Routes: []model.RouteBinding{{
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "test_ability_key_img",
@@ -99,6 +104,12 @@ func TestService_GetModelSchema(t *testing.T) {
 	}
 	if schema.Operation != "generate" {
 		t.Fatalf("expected generate, got %s", schema.Operation)
+	}
+	if len(schema.RequestHints) == 0 {
+		t.Fatal("expected request hints in schema response")
+	}
+	if len(schema.Schema) == 0 {
+		t.Fatal("expected schema payload in schema response")
 	}
 }
 
