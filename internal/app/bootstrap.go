@@ -48,8 +48,8 @@ var (
 		}
 		return apikey.ApplyMigrations(ctx, dbtx)
 	}
-	newCatalogRepoFromEnv = func(ctx context.Context) (*postgres.CatalogRepo, error) {
-		return postgres.NewCatalogRepoFromEnv(ctx)
+	newCatalogRepoFromDSN = func(ctx context.Context, dsn string) (*postgres.CatalogRepo, error) {
+		return postgres.NewCatalogRepoFromDSN(ctx, dsn)
 	}
 )
 
@@ -101,7 +101,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
-	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(buildModelRouteRepo()))
+	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(buildModelRouteRepo(cfg)))
 	feedbackHandler := handlers.NewFeedbackHandler(deps.feedbackService)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
@@ -255,9 +255,8 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 	platformBaseURL := cfg.ResolvedNexusHubPlatformBaseURL()
 	platformToken := cfg.ResolvedNexusHubPlatformToken()
-
-	if os.Getenv("ANYCAP_PG_CONFIG") != "" {
-		repo, err := newCatalogRepoFromEnv(context.Background())
+	if cfg.PGDSN != "" {
+		repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 		if err != nil {
 			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
 		} else {
@@ -322,7 +321,7 @@ func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
 }
 
 func hasCatalogProvider(cfg config.Config) bool {
-	return os.Getenv("ANYCAP_PG_CONFIG") != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
+	return cfg.PGDSN != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
 }
 
 func hasImageExecutionProvider(cfg config.Config) bool {
@@ -370,13 +369,13 @@ func (s *Server) Run() {
 	s.httpServer.Spin()
 }
 
-func buildModelRouteRepo() port.ModelRouteRepository {
-	if os.Getenv("ANYCAP_PG_CONFIG") == "" {
+func buildModelRouteRepo(cfg config.Config) port.ModelRouteRepository {
+	if cfg.PGDSN == "" {
 		log.Println("model-routes: postgres is not configured; admin CRUD endpoints will be unavailable")
 		return nil
 	}
 
-	repo, err := newCatalogRepoFromEnv(context.Background())
+	repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 	if err != nil {
 		log.Fatalf("failed to initialize postgres model route repo: %v", err)
 	}

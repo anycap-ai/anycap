@@ -47,6 +47,51 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	}
 }
 
+func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
+	original := newCatalogRepoFromDSN
+	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromDSN = original
+	})
+
+	repo := buildCatalogRepo(config.Config{
+		PGDSN:           "postgres://demo",
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.CatalogSchemaEnricher); !ok {
+		t.Fatalf("expected catalog schema enricher, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
+	original := newCatalogRepoFromDSN
+	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromDSN = original
+	})
+
+	repo := buildCatalogRepo(config.Config{PGDSN: "postgres://demo"})
+
+	if _, ok := repo.(*postgres.CatalogRepo); !ok {
+		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testing.T) {
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
+
 func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 	deps, err := buildServerDependencies(config.Config{
 		AppName:           "anycap-server",

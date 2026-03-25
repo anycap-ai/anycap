@@ -93,3 +93,39 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 		t.Fatalf("expected credit timeout 15s, got %v", cfg.Credit.Timeout)
 	}
 }
+
+func TestLoadFromEnv_AllowsPostgresDSNWithoutDiscreteFields(t *testing.T) {
+	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
+	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
+	t.Setenv("ANYCAP_PG_HOST", "")
+	t.Setenv("ANYCAP_PG_USER", "")
+	t.Setenv("ANYCAP_PG_PASSWORD", "")
+	t.Setenv("ANYCAP_REDIS_HOST", "redis.example.com")
+	t.Setenv("ANYCAP_REDIS_PASSWORD", "secret")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PGDSN == "" {
+		t.Fatal("expected postgres dsn to be preserved")
+	}
+}
+
+func TestLoadFromEnv_AllowsRedisAddrWithoutDiscreteFields(t *testing.T) {
+	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
+	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
+	t.Setenv("ANYCAP_PG_USER", "demo")
+	t.Setenv("ANYCAP_PG_PASSWORD", "secret")
+	t.Setenv("ANYCAP_REDIS_ADDR", "redis.example.com:6379")
+	t.Setenv("ANYCAP_REDIS_HOST", "")
+	t.Setenv("ANYCAP_REDIS_PASSWORD", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.RedisAddr != "redis.example.com:6379" {
+		t.Fatalf("expected redis addr to be preserved, got %q", cfg.RedisAddr)
+	}
+}

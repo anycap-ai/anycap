@@ -166,6 +166,10 @@ func LoadFromEnv() (Config, error) {
 		},
 	}
 
+	if err := cfg.validateInfraConfigExclusivity(); err != nil {
+		return Config{}, err
+	}
+
 	if cfg.requiresExternalInfra() {
 		if cfg.PGDSN == "" {
 			if cfg.PGHost == "" || cfg.PGUser == "" || cfg.PGPassword == "" {
@@ -182,6 +186,16 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (c Config) validateInfraConfigExclusivity() error {
+	if c.PGDSN != "" && (c.PGHost != "" || c.PGUser != "" || c.PGPassword != "" || c.PGDatabase != "postgres" || c.PGPort != 5432 || c.PGSSLMode != "prefer") {
+		return fmt.Errorf("postgres config is ambiguous: use either ANYCAP_PG_DSN or discrete ANYCAP_PG_* fields, not both")
+	}
+	if c.RedisAddr != "" && (c.RedisHost != "" || c.RedisPassword != "" || c.RedisUsername != "default" || c.RedisPort != 6379 || c.RedisDB != 0) {
+		return fmt.Errorf("redis config is ambiguous: use either ANYCAP_REDIS_ADDR or discrete ANYCAP_REDIS_* fields, not both")
+	}
+	return nil
 }
 
 func loadCreditConfig() CreditConfig {

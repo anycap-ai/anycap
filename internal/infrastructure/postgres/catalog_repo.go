@@ -83,13 +83,8 @@ func NewCatalogRepo(pool *pgxpool.Pool) *CatalogRepo {
 	return &CatalogRepo{pool: pool}
 }
 
-func NewCatalogRepoFromEnv(ctx context.Context) (*CatalogRepo, error) {
-	cfg, err := loadConfigFromEnv()
-	if err != nil {
-		return nil, err
-	}
-
-	poolCfg, err := pgxpool.ParseConfig(cfg.dsn())
+func NewCatalogRepoFromDSN(ctx context.Context, dsn string) (*CatalogRepo, error) {
+	poolCfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("parse pg dsn: %w", err)
 	}
@@ -110,6 +105,14 @@ func NewCatalogRepoFromEnv(ctx context.Context) (*CatalogRepo, error) {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 	return NewCatalogRepo(pool), nil
+}
+
+func NewCatalogRepoFromEnv(ctx context.Context) (*CatalogRepo, error) {
+	cfg, err := loadConfigFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	return NewCatalogRepoFromDSN(ctx, cfg.dsn())
 }
 
 func (r *CatalogRepo) Close() {
