@@ -15,7 +15,7 @@ import (
 const (
 	defaultAppName              = "anycap-server"
 	defaultAppEnv               = "local"
-	defaultHTTPAddr             = ":18080"
+	defaultHTTPAddr             = ":8080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
