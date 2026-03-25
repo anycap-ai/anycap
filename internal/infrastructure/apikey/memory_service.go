@@ -72,13 +72,23 @@ func (s *MemoryService) AuthenticateAPIKey(_ context.Context, rawKey string) (mo
 }
 
 func (s *MemoryService) CreateAPIKey(_ context.Context, userID, name string) (model.CreatedAPIKey, error) {
+	return s.createAPIKey(userID, name, 0)
+}
+
+func (s *MemoryService) CreateAPIKeyWithTTL(_ context.Context, userID, name string, ttl time.Duration) (model.CreatedAPIKey, error) {
+	return s.createAPIKey(userID, name, ttl)
+}
+
+func (s *MemoryService) createAPIKey(userID, name string, ttl time.Duration) (model.CreatedAPIKey, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	lookupKey := userID + ":" + name
 	if existingID, ok := s.byUserName[lookupKey]; ok {
 		record := s.byID[existingID]
-		return model.CreatedAPIKey{APIKey: record.apiKey, RawKey: record.rawKey}, nil
+		if record.apiKey.Status == activeStatus && (record.apiKey.ExpiresAt == nil || time.Now().Before(*record.apiKey.ExpiresAt)) {
+			return model.CreatedAPIKey{APIKey: record.apiKey, RawKey: record.rawKey}, nil
+		}
 	}
 
 	s.seq++
@@ -96,6 +106,10 @@ func (s *MemoryService) CreateAPIKey(_ context.Context, userID, name string) (mo
 		KeyHash:   HashRawKey(rawKey),
 		Status:    activeStatus,
 		CreatedAt: now,
+	}
+	if ttl > 0 {
+		expiresAt := now.Add(ttl)
+		apiKey.ExpiresAt = &expiresAt
 	}
 	record := memoryRecord{apiKey: apiKey, rawKey: rawKey}
 	s.byID[apiKey.ID] = record

@@ -29,9 +29,15 @@ type Server struct {
 	mux *http.ServeMux
 
 	mu            sync.Mutex
-	loginStates   map[string]int             // state -> redirect_port
-	deviceCodes   map[string]deviceCodeEntry // device_code -> entry
+	loginStates   map[string]loginStateEntry // state -> entry
+	deviceCodes   map[string]deviceCodeEntry // login_session_id -> entry
 	refreshTokens map[string]string          // refresh_token -> user email
+	logoutCalls   int
+}
+
+type loginStateEntry struct {
+	LoginSessionID string
+	RedirectPort   int
 }
 
 type deviceCodeEntry struct {
@@ -43,7 +49,7 @@ type deviceCodeEntry struct {
 func New() *Server {
 	s := &Server{
 		mux:           http.NewServeMux(),
-		loginStates:   make(map[string]int),
+		loginStates:   make(map[string]loginStateEntry),
 		deviceCodes:   make(map[string]deviceCodeEntry),
 		refreshTokens: make(map[string]string),
 	}
@@ -52,6 +58,7 @@ func New() *Server {
 	s.mux.HandleFunc("POST /v1/auth/callback", s.handleCallback)
 	s.mux.HandleFunc("POST /v1/auth/device-code", s.handleDeviceCode)
 	s.mux.HandleFunc("POST /v1/auth/device-poll", s.handleDevicePoll)
+	s.mux.HandleFunc("POST /v1/auth/logout", s.handleLogout)
 	s.mux.HandleFunc("POST /v1/auth/refresh", s.handleRefresh)
 	s.mux.HandleFunc("GET /mock/authorize", s.handleMockAuthorize)
 	s.mux.HandleFunc("GET /v1/status", s.handleStatus)
@@ -87,9 +94,13 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := randomHex(16)
+	loginSessionID := "lsn-" + randomHex(8)
 
 	s.mu.Lock()
-	s.loginStates[state] = req.RedirectPort
+	s.loginStates[state] = loginStateEntry{
+		LoginSessionID: loginSessionID,
+		RedirectPort:   req.RedirectPort,
+	}
 	s.mu.Unlock()
 
 	scheme := "http"
@@ -100,8 +111,11 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	authURL := fmt.Sprintf("%s://%s/mock/authorize?state=%s", scheme, host, state)
 
 	writeSuccess(w, map[string]any{
-		"auth_url": authURL,
-		"state":    state,
+		"flow_type":        "localhost",
+		"login_session_id": loginSessionID,
+		"authorize_url":    authURL,
+		"state":            state,
+		"expires_in":       300,
 	})
 }
 
@@ -115,7 +129,7 @@ func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
-	port, ok := s.loginStates[state]
+	entry, ok := s.loginStates[state]
 	s.mu.Unlock()
 
 	if !ok {
@@ -124,16 +138,18 @@ func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := "mock-code-" + randomHex(8)
-	redirectURL := fmt.Sprintf("http://localhost:%d/callback?code=%s&state=%s", port, code, state)
+	redirectURL := fmt.Sprintf("http://localhost:%d/callback?code=%s&state=%s", entry.RedirectPort, code, state)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
-// --- Auth Callback (exchange code for OAuth tokens) ---
+// --- Auth Callback (exchange code for API key) ---
 
 func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Code  string `json:"code"`
-		State string `json:"state"`
+		LoginSessionID string `json:"login_session_id"`
+		Code           string `json:"code"`
+		State          string `json:"state"`
+		RedirectURI    string `json:"redirect_uri"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -141,31 +157,23 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
-	_, ok := s.loginStates[req.State]
+	entry, ok := s.loginStates[req.State]
 	if ok {
 		delete(s.loginStates, req.State)
 	}
 	s.mu.Unlock()
 
-	if !ok {
+	if !ok || entry.LoginSessionID != req.LoginSessionID {
 		writeError(w, http.StatusBadRequest, "INVALID_STATE", "unknown or expired state")
 		return
 	}
 
-	accessToken := "mock-at-" + randomHex(16)
-	refreshToken := "mock-rt-" + randomHex(16)
-
-	s.mu.Lock()
-	s.refreshTokens[refreshToken] = "dev@anycap.ai"
-	s.mu.Unlock()
-
 	writeSuccess(w, map[string]any{
-		"credential_type": "oauth",
-		"access_token":    accessToken,
-		"refresh_token":   refreshToken,
-		"expires_in":      3600,
+		"api_key":    "mock-ak-" + randomHex(16),
+		"api_key_id": "key-" + randomHex(8),
 		"user": map[string]string{
 			"email": "dev@anycap.ai",
+			"id":    "user-dev",
 			"name":  "Dev User",
 		},
 	})
@@ -174,11 +182,11 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 // --- Device Code Flow ---
 
 func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
-	deviceCode := randomHex(16)
+	loginSessionID := "lsn-" + randomHex(8)
 	userCode := randomUserCode()
 
 	s.mu.Lock()
-	s.deviceCodes[deviceCode] = deviceCodeEntry{
+	s.deviceCodes[loginSessionID] = deviceCodeEntry{
 		UserCode: userCode,
 		Email:    "dev@anycap.ai",
 	}
@@ -191,7 +199,8 @@ func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
 	verificationURI := fmt.Sprintf("%s://%s/device", scheme, r.Host)
 
 	writeSuccess(w, map[string]any{
-		"device_code":      deviceCode,
+		"flow_type":        "device",
+		"login_session_id": loginSessionID,
 		"user_code":        userCode,
 		"verification_uri": verificationURI,
 		"interval":         1,
@@ -201,7 +210,7 @@ func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		DeviceCode string `json:"device_code"`
+		LoginSessionID string `json:"login_session_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -209,9 +218,9 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
-	entry, ok := s.deviceCodes[req.DeviceCode]
+	entry, ok := s.deviceCodes[req.LoginSessionID]
 	if ok {
-		delete(s.deviceCodes, req.DeviceCode)
+		delete(s.deviceCodes, req.LoginSessionID)
 	}
 	s.mu.Unlock()
 
@@ -220,22 +229,14 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken := "mock-at-" + randomHex(16)
-	refreshToken := "mock-rt-" + randomHex(16)
-
-	s.mu.Lock()
-	s.refreshTokens[refreshToken] = entry.Email
-	s.mu.Unlock()
-
 	// Mock: auto-approve immediately
 	writeSuccess(w, map[string]any{
-		"status":          "complete",
-		"credential_type": "oauth",
-		"access_token":    accessToken,
-		"refresh_token":   refreshToken,
-		"expires_in":      3600,
+		"status":     "complete",
+		"api_key":    "mock-ak-" + randomHex(16),
+		"api_key_id": "key-" + randomHex(8),
 		"user": map[string]string{
 			"email": entry.Email,
+			"id":    "user-dev",
 			"name":  "Dev User",
 		},
 	})
@@ -279,6 +280,16 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	s.logoutCalls++
+	s.mu.Unlock()
+
+	writeSuccess(w, map[string]any{
+		"message": "logged out",
+	})
+}
+
 // --- Status ---
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -288,6 +299,22 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"version": "mock",
 		"status":  "ok",
 	})
+}
+
+// SeedRefreshToken registers a refresh token for tests that specifically cover
+// OAuth credential refresh behavior.
+func (s *Server) SeedRefreshToken(email string) string {
+	token := "mock-rt-" + randomHex(16)
+	s.mu.Lock()
+	s.refreshTokens[token] = email
+	s.mu.Unlock()
+	return token
+}
+
+func (s *Server) LogoutCalls() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.logoutCalls
 }
 
 // --- Capabilities: Presign ---

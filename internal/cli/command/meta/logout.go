@@ -5,15 +5,21 @@ import (
 	"io"
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 
 	"github.com/spf13/cobra"
 )
 
-func NewLogoutCmd(stderr io.Writer) *cobra.Command {
+func NewLogoutCmd(clientFactory func() *httpclient.Client, stderr io.Writer) *cobra.Command {
 	return &cobra.Command{
 		Use:   "logout",
 		Short: "Remove stored credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if clientFactory != nil {
+				if cred := cliconfig.LoadCredential(); cred != nil && cred.Token() != "" {
+					_, _ = clientFactory().PostJSON(cmd.Context(), "/v1/auth/logout", map[string]any{})
+				}
+			}
 			if err := cliconfig.DeleteCredential(); err != nil {
 				return fmt.Errorf("failed to remove credentials: %w", err)
 			}

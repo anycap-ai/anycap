@@ -62,7 +62,7 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 			}
 
 			if err := cliconfig.SaveCredential(cred); err != nil {
-				fmt.Fprintf(stderr, "Failed to save credential: %v\nYour access token: %s\n", err, cred.Token())
+				fmt.Fprintf(stderr, "Failed to save credential: %v\nYour credential token: %s\n", err, cred.Token())
 				return err
 			}
 

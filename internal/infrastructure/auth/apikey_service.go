@@ -44,6 +44,14 @@ func (s *RepositoryAPIKeyService) AuthenticateAPIKey(ctx context.Context, rawKey
 }
 
 func (s *RepositoryAPIKeyService) CreateAPIKey(ctx context.Context, userID, name string) (model.CreatedAPIKey, error) {
+	return s.createAPIKey(ctx, userID, name, 0)
+}
+
+func (s *RepositoryAPIKeyService) CreateAPIKeyWithTTL(ctx context.Context, userID, name string, ttl time.Duration) (model.CreatedAPIKey, error) {
+	return s.createAPIKey(ctx, userID, name, ttl)
+}
+
+func (s *RepositoryAPIKeyService) createAPIKey(ctx context.Context, userID, name string, ttl time.Duration) (model.CreatedAPIKey, error) {
 	rawKey, err := s.rawKeyGen()
 	if err != nil {
 		return model.CreatedAPIKey{}, err
@@ -58,6 +66,10 @@ func (s *RepositoryAPIKeyService) CreateAPIKey(ctx context.Context, userID, name
 		KeyHash:   apikeyinfra.HashRawKey(rawKey),
 		Status:    apikeyinfra.ActiveStatus(),
 		CreatedAt: now,
+	}
+	if ttl > 0 {
+		expiresAt := now.Add(ttl)
+		apiKey.ExpiresAt = &expiresAt
 	}
 	if err := s.repo.Insert(ctx, apiKey); err != nil {
 		return model.CreatedAPIKey{}, err

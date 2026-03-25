@@ -18,11 +18,11 @@ func TestDeviceCodeFlow(t *testing.T) {
 	resp := postJSON(t, ts.URL+"/v1/auth/device-code", map[string]any{})
 
 	data := resp["data"].(map[string]any)
-	deviceCode := data["device_code"].(string)
+	loginSessionID := data["login_session_id"].(string)
 	userCode := data["user_code"].(string)
 
-	if len(deviceCode) == 0 {
-		t.Fatal("expected non-empty device_code")
+	if len(loginSessionID) == 0 {
+		t.Fatal("expected non-empty login_session_id")
 	}
 	if len(userCode) != 9 || userCode[4] != '-' {
 		t.Fatalf("expected user_code in XXXX-XXXX format, got %s", userCode)
@@ -30,29 +30,24 @@ func TestDeviceCodeFlow(t *testing.T) {
 
 	// Step 2: Poll (mock auto-approves)
 	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
-		"device_code": deviceCode,
+		"login_session_id": loginSessionID,
 	})
 
 	data = resp["data"].(map[string]any)
 	if data["status"] != "complete" {
 		t.Fatalf("expected complete, got %s", data["status"])
 	}
-	accessToken := data["access_token"].(string)
-	if len(accessToken) == 0 || accessToken[:8] != "mock-at-" {
-		t.Fatalf("expected mock-at-... access token, got %s", accessToken)
+	apiKey := data["api_key"].(string)
+	if len(apiKey) == 0 || apiKey[:8] != "mock-ak-" {
+		t.Fatalf("expected mock-ak-... api key, got %s", apiKey)
 	}
-	refreshToken := data["refresh_token"].(string)
-	if len(refreshToken) == 0 || refreshToken[:8] != "mock-rt-" {
-		t.Fatalf("expected mock-rt-... refresh token, got %s", refreshToken)
-	}
-	expiresIn := data["expires_in"].(float64)
-	if expiresIn <= 0 {
-		t.Fatalf("expected positive expires_in, got %v", expiresIn)
+	if user := data["user"].(map[string]any); user["email"] != "dev@anycap.ai" {
+		t.Fatalf("expected dev@anycap.ai, got %v", user["email"])
 	}
 
 	// Step 3: Polling again should return expired (code consumed)
 	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
-		"device_code": deviceCode,
+		"login_session_id": loginSessionID,
 	})
 	data = resp["data"].(map[string]any)
 	if data["status"] != "expired" {
@@ -72,8 +67,9 @@ func TestLocalhostCallbackFlow(t *testing.T) {
 	})
 
 	data := resp["data"].(map[string]any)
+	loginSessionID := data["login_session_id"].(string)
 	state := data["state"].(string)
-	authURL := data["auth_url"].(string)
+	authURL := data["authorize_url"].(string)
 
 	if len(state) == 0 {
 		t.Fatal("expected non-empty state")
@@ -101,19 +97,17 @@ func TestLocalhostCallbackFlow(t *testing.T) {
 	}
 	t.Logf("redirect location: %s", location)
 
-	// Step 3: Exchange code for OAuth tokens
+	// Step 3: Exchange code for API key
 	resp = postJSON(t, ts.URL+"/v1/auth/callback", map[string]any{
-		"code":  "mock-code-test",
-		"state": state,
+		"login_session_id": loginSessionID,
+		"code":             "mock-code-test",
+		"state":            state,
+		"redirect_uri":     "http://localhost:59999/callback",
 	})
 	data = resp["data"].(map[string]any)
-	accessToken := data["access_token"].(string)
-	if len(accessToken) == 0 || accessToken[:8] != "mock-at-" {
-		t.Fatalf("expected mock-at-... access token, got %s", accessToken)
-	}
-	refreshToken := data["refresh_token"].(string)
-	if len(refreshToken) == 0 || refreshToken[:8] != "mock-rt-" {
-		t.Fatalf("expected mock-rt-... refresh token, got %s", refreshToken)
+	apiKey := data["api_key"].(string)
+	if len(apiKey) == 0 || apiKey[:8] != "mock-ak-" {
+		t.Fatalf("expected mock-ak-... api key, got %s", apiKey)
 	}
 
 	user := data["user"].(map[string]any)
@@ -127,22 +121,13 @@ func TestRefreshToken(t *testing.T) {
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
 
-	// Login first to get a refresh token
-	resp := postJSON(t, ts.URL+"/v1/auth/device-code", map[string]any{})
-	data := resp["data"].(map[string]any)
-	deviceCode := data["device_code"].(string)
-
-	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
-		"device_code": deviceCode,
-	})
-	data = resp["data"].(map[string]any)
-	refreshToken := data["refresh_token"].(string)
+	refreshToken := ms.SeedRefreshToken("dev@anycap.ai")
 
 	// Refresh
-	resp = postJSON(t, ts.URL+"/v1/auth/refresh", map[string]any{
+	resp := postJSON(t, ts.URL+"/v1/auth/refresh", map[string]any{
 		"refresh_token": refreshToken,
 	})
-	data = resp["data"].(map[string]any)
+	data := resp["data"].(map[string]any)
 	newAccessToken := data["access_token"].(string)
 	newRefreshToken := data["refresh_token"].(string)
 

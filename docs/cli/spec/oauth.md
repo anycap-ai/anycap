@@ -1,7 +1,14 @@
 # CLI OAuth Authentication Spec
 
 > Date: 2026-03-24 (updated 2026-03-25)
-> Status: Active (Phase 1+2+3 implemented)
+> Status: Active
+>
+> MVP authoritative note:
+> - Current MVP login result is `api_key`, not `access_token + refresh_token`.
+> - CLI never talks to Auth0 directly. CLI only talks to AnyCap Server.
+> - `POST /v1/auth/refresh` is future work, not MVP.
+> - `POST /v1/auth/device-poll` returns `status` and, when complete, `api_key`.
+> - Sections below that still describe direct OAuth credential persistence should be treated as Phase 2 design notes until they are fully updated.
 
 ## 1. Overview
 
@@ -25,17 +32,15 @@ AnyCap CLI supports two authentication types with distinct credential models.
 
 | Auth Type | Description | Identity | What CLI Receives |
 |-----------|-------------|----------|-------------------|
-| **OAuth** | Server issues short-lived access token + refresh token. CLI auto-refreshes when token expires. | User identity (email, name) | `credential_type:"oauth"` + `access_token` + `refresh_token` + `expires_in` |
-| **API Key** | Server issues a static long-lived key. No refresh needed. Can be provisioned via login flows or manual input. | User identity (from login) or key-level only (from manual input) | `credential_type:"api_key"` + `access_token` |
-
-The server decides which type to issue. The CLI handles both transparently -- the same `anycap login` command works regardless of what the server returns.
+| **Interactive Login** | CLI asks Server to orchestrate Auth0 login. After browser/device verification, Server returns an AnyCap API key. | User identity (email, name) | `api_key` + `user` |
+| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only (no user identity in CLI) | Created outside the CLI |
 
 ### 2.2 Methods Matrix
 
 | Method | Auth Type | Command | Interactive | Server Call | Best For |
 |--------|-----------|---------|-------------|-------------|----------|
-| Localhost Callback | Server decides | `anycap login` | Yes (browser) | `/v1/auth/login` + `/v1/auth/callback` | Desktop terminals with browser |
-| Device Code | Server decides | `anycap login --headless` | Yes (code entry) | `/v1/auth/device-code` + `/v1/auth/device-poll` | SSH, headless, remote |
+| Localhost Callback | Server-orchestrated login | `anycap login` | Yes (browser) | `/v1/auth/login` + `/v1/auth/callback` | Desktop terminals with browser |
+| Device Code | Server-orchestrated login | `anycap login --headless` | Yes (code entry) | `/v1/auth/device-code` + `/v1/auth/device-poll` | SSH, headless, remote |
 | Stdin Token | API Key | `anycap login --with-token` | No | None | CI/CD pipeline provisioning |
 | Direct Set | API Key | `anycap credentials set-key <key>` | No | None | Manual key provisioning |
 | Env Variable | API Key | `ANYCAP_API_KEY=sk-...` | No | None | Containers, ephemeral envs |
@@ -54,28 +59,26 @@ Resolution happens on every CLI command. Higher priority wins.
 
 | Auth Type | Expiry | Refresh | Re-auth |
 |-----------|--------|---------|---------|
-| OAuth | `access_token` expires after `expires_in` seconds | CLI auto-refreshes using `refresh_token` via `POST /v1/auth/refresh`. New tokens are persisted automatically. | `anycap login` if refresh_token is also expired |
+| Interactive Login | No client-side refresh in MVP. CLI stores the returned API key. | N/A in MVP | `anycap login` again if key is revoked or replaced |
 | API Key | No client-side expiry | N/A (no refresh token) | Obtain new key from dashboard |
 | Env var | No client-side expiry | N/A | Update the env var |
 
-**Auto-refresh behavior:**
+**MVP behavior:**
 
-1. Before each request: if OAuth credential's `access_token` is expired (with 30s buffer), the client calls `POST /v1/auth/refresh` to obtain new tokens.
-2. On 401 response: if the credential is OAuth and has a `refresh_token`, the client refreshes and retries the request once.
-3. The refresh endpoint does NOT require an `Authorization` header -- it validates the `refresh_token` from the request body.
-4. If refresh fails (e.g. refresh_token revoked), the original `AuthError` is returned with a hint to re-login.
-5. On successful refresh, both `access_token` and `refresh_token` may be rotated (server decides).
+1. `anycap login` completes an interactive flow and persists the returned API key.
+2. Subsequent requests always send `Authorization: Bearer <api_key>`.
+3. `POST /v1/auth/refresh` is reserved for a future OAuth-token-based phase and is not required for MVP.
 
 ### 2.5 Transport
 
-Both credential types produce the same HTTP header:
+All credential types produce the same HTTP header:
 
 ```
-Authorization: Bearer <access_token or api_key>
+Authorization: Bearer <api_key or access_token>
 User-Agent: anycap-cli/<version>
 ```
 
-The server validates the bearer token regardless of how it was obtained.
+For MVP, the bearer value is expected to be an AnyCap API key.
 
 ### 2.6 Flow Selection Diagram
 
@@ -100,16 +103,16 @@ flowchart TD
 
 ### 2.7 API Path Migration
 
-The current login command calls `/v1/login/init`. This spec defines new endpoints under `/v1/auth/`:
+The current login command calls `/v1/login/init`. The server now exposes aligned endpoints under `/v1/auth/` aliases:
 
 | Old (current code) | New (this spec) | Purpose |
 |----|----|----|
 | `POST /v1/login/init` | `POST /v1/auth/login` | Initiate localhost callback flow |
 | (none) | `POST /v1/auth/callback` | Complete localhost callback flow |
 | (none) | `POST /v1/auth/device-code` | Initiate device code flow |
-| (none) | `POST /v1/auth/device-poll` | Poll device code status |
+| (none) | `POST /v1/auth/device-poll` | Poll device code status and receive `api_key` on completion |
 
-The server must implement the new endpoints. The old `/v1/login/init` can be removed once the CLI is updated.
+The old `/v1/login/*` endpoints remain as compatibility paths in MVP.
 
 ## 3. User Experience
 
@@ -530,7 +533,7 @@ Service name: `anycap`, Account: `credential`. Value is JSON string.
 2. Try OS keychain -- parse JSON to `Credential`.
 3. Try fallback file. If found AND keychain is available, auto-migrate to keychain and delete the file.
 
-**Logout:** `anycap logout` deletes from both keychain and fallback file. Does NOT revoke tokens server-side (keeps logout fast and offline-capable).
+**Logout:** `anycap logout` best-effort calls `POST /v1/auth/logout` to revoke the current API key, then deletes local credentials. If the server is unreachable, local credential deletion still succeeds.
 
 **Testing:** Tests call `keyring.MockInit()` in `TestMain` to use an in-memory keyring backend. No real OS keychain interaction during tests.
 
@@ -638,7 +641,7 @@ Implementation: `internal/cli/testutil/mockserver/server.go`, `cmd/anycap-mock/m
 - [x] `anycap login --headless` -- device code polling flow (returns OAuth credential)
 - [x] `anycap login --with-token` -- stdin API key input for CI/CD
 - [x] AutoFlow with `HasBrowser()` + `CanBindLocalPort()` detection
-- [x] `anycap logout` -- delete local credentials (no server-side revocation)
+- [x] `anycap logout` -- best-effort server revoke + local credential deletion
 - [x] `anycap credentials set-key sk-xxx` -- direct API key input (saves as `api_key` type)
 - [x] `anycap credentials show` -- display credential type, source, endpoint, auth state
 - [x] 401 auto-recovery: OAuth auto-refresh + re-login hint for API key

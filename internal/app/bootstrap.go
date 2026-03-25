@@ -122,19 +122,21 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {
-	systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info)
 	catalogService := catalogapp.NewService(buildCatalogRepo(cfg))
 	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
+	authClient := buildAuthClient(cfg)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
 		apiKeys := apikey.NewMemoryService()
 		callLogs := apikey.NewMemoryCallLogRepo()
+		loginSessions := apikey.NewMemoryLoginSessionRepo()
+		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", nil), apiKeys, nil),
+			loginService:        loginapp.NewService(authClient, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
@@ -152,14 +154,16 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			return serverDependencies{}, err
 		}
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
+		loginSessionRepo := apikey.NewLoginSessionRepo(db)
 		callLogs := apikey.NewCallLogDBRepo(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
+		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(auth.NewStubClient("https://auth.anycap.local/authorize", nil), apiKeyService, nil),
+			loginService:        loginapp.NewService(authClient, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
@@ -170,6 +174,21 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
 	}
+}
+
+func buildAuthClient(cfg config.Config) port.Auth0Client {
+	if cfg.Auth0Enabled {
+		log.Printf("auth: using Auth0 issuer %s", cfg.Auth0Issuer)
+		return auth.NewClient(auth.ClientConfig{
+			Issuer:       cfg.Auth0Issuer,
+			Audience:     cfg.Auth0Audience,
+			ClientID:     cfg.Auth0ClientID,
+			ClientSecret: cfg.Auth0ClientSecret,
+			RedirectURL:  cfg.Auth0RedirectURL,
+		}, nil)
+	}
+	log.Println("auth: using stub client (set ANYCAP_AUTH0_ENABLED=true for real Auth0)")
+	return auth.NewStubClient("https://auth.anycap.local/authorize", nil)
 }
 
 func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {

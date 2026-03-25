@@ -54,6 +54,34 @@ func TestRepositoryAPIKeyService_CreateAPIKey(t *testing.T) {
 	if repo.inserted[0].UserID != "user-123" {
 		t.Fatalf("expected inserted user user-123, got %q", repo.inserted[0].UserID)
 	}
+	if repo.inserted[0].ExpiresAt != nil {
+		t.Fatalf("expected default api key to have no expiry, got %v", repo.inserted[0].ExpiresAt)
+	}
+}
+
+func TestRepositoryAPIKeyService_CreateAPIKeyWithTTL(t *testing.T) {
+	repo := &fakeAPIKeyRepo{}
+	now := time.Date(2026, 3, 24, 12, 0, 0, 0, time.UTC)
+	service := NewRepositoryAPIKeyService(repo, func() time.Time {
+		return now
+	}, func() (string, error) {
+		return "ak_test_raw_key_123456", nil
+	})
+
+	_, err := service.CreateAPIKeyWithTTL(context.Background(), "user-123", "cli", 7*24*time.Hour)
+	if err != nil {
+		t.Fatalf("CreateAPIKeyWithTTL() error = %v", err)
+	}
+	if len(repo.inserted) != 1 {
+		t.Fatalf("expected 1 inserted key, got %d", len(repo.inserted))
+	}
+	if repo.inserted[0].ExpiresAt == nil {
+		t.Fatal("expected expires_at to be set")
+	}
+	want := now.Add(7 * 24 * time.Hour)
+	if !repo.inserted[0].ExpiresAt.Equal(want) {
+		t.Fatalf("expected expires_at %v, got %v", want, *repo.inserted[0].ExpiresAt)
+	}
 }
 
 func TestRepositoryAPIKeyService_AuthenticateAPIKey(t *testing.T) {

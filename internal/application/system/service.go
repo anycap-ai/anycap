@@ -1,7 +1,10 @@
 package system
 
 import (
+	"context"
+
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 )
 
@@ -11,14 +14,16 @@ type Service struct {
 	runtime   string
 	buildInfo buildinfo.Info
 	features  map[string]bool
+	apiKeys   port.APIKeyService
 }
 
-func NewService(name, env, runtime string, info buildinfo.Info) *Service {
+func NewService(name, env, runtime string, info buildinfo.Info, apiKeys port.APIKeyService) *Service {
 	return &Service{
 		name:      name,
 		env:       env,
 		runtime:   runtime,
 		buildInfo: info,
+		apiKeys:   apiKeys,
 	}
 }
 
@@ -41,4 +46,14 @@ func (s *Service) Status(principal *model.Principal) model.StatusResult {
 		RuntimeMode: s.runtime,
 		User:        principal,
 	}
+}
+
+func (s *Service) Logout(ctx context.Context, principal *model.Principal) error {
+	if principal == nil || principal.APIKeyID == "" {
+		return model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		return model.ErrInternal
+	}
+	return s.apiKeys.RevokeAPIKey(ctx, principal.APIKeyID)
 }

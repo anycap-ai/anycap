@@ -21,7 +21,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 	var initResp struct {
 		Data struct {
-			DeviceCode      string `json:"device_code"`
+			LoginSessionID  string `json:"login_session_id"`
 			UserCode        string `json:"user_code"`
 			VerificationURI string `json:"verification_uri"`
 			Interval        int    `json:"interval"`
@@ -62,7 +62,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		}
 
 		pollResp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
-			"device_code": d.DeviceCode,
+			"login_session_id": d.LoginSessionID,
 		})
 		if err != nil {
 			fmt.Fprint(stderr, ".")
@@ -72,6 +72,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		var poll struct {
 			Data struct {
 				Status string `json:"status"`
+				APIKey string `json:"api_key"`
+				User   *struct {
+					Email string `json:"email"`
+					Name  string `json:"name"`
+				} `json:"user"`
 			} `json:"data"`
 		}
 		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {
@@ -80,7 +85,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		}
 
 		switch poll.Data.Status {
-		case "complete":
+		case "complete", "completed":
 			fmt.Fprintln(stderr, " done!")
 			cred, email, err := parseTokenResponse(pollResp.Body)
 			if err != nil {

@@ -8,7 +8,21 @@ type Principal struct {
 }
 
 type AuthUser struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email,omitempty"`
-	Name   string `json:"name,omitempty"`
+	UserID  string `json:"user_id"`
+	Email   string `json:"email,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Picture string `json:"picture,omitempty"`
+}
+
+type DeviceAuthorization struct {
+	DeviceCode      string `json:"device_code"`
+	UserCode        string `json:"user_code"`
+	VerificationURI string `json:"verification_uri"`
+	ExpiresIn       int    `json:"expires_in"`
+	Interval        int    `json:"interval"`
+}
+
+type DeviceAuthorizationStatus struct {
+	Status string   `json:"status"`
+	User   AuthUser `json:"user,omitempty"`
 }

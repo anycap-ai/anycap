@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestLoadFromEnv_Defaults(t *testing.T) {
 	t.Setenv("ANYCAP_APP_NAME", "")
@@ -25,6 +28,9 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.RateLimitRPM != 60 {
 		t.Fatalf("expected default rate limit 60, got %d", cfg.RateLimitRPM)
+	}
+	if cfg.LoginAPIKeyTTL != 7*24*time.Hour {
+		t.Fatalf("expected default login api key ttl 7d, got %v", cfg.LoginAPIKeyTTL)
 	}
 }
 

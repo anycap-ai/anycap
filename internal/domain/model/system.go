@@ -15,15 +15,33 @@ type ServiceStatus struct {
 }
 
 type LoginInitResult struct {
-	AuthURL string `json:"auth_url"`
-	State   string `json:"state"`
+	FlowType        string `json:"flow_type"`
+	LoginSessionID  string `json:"login_session_id"`
+	AuthorizeURL    string `json:"authorize_url,omitempty"`
+	VerificationURI string `json:"verification_uri,omitempty"`
+	UserCode        string `json:"user_code,omitempty"`
+	State           string `json:"state,omitempty"`
+	ExpiresIn       int    `json:"expires_in,omitempty"`
+	Interval        int    `json:"interval,omitempty"`
 }
 
 type LoginCallbackResult struct {
-	UserID   string    `json:"user_id"`
-	APIKeyID string    `json:"api_key_id"`
-	APIKey   string    `json:"api_key"`
-	User     *AuthUser `json:"user,omitempty"`
+	APIKeyID string     `json:"api_key_id"`
+	APIKey   string     `json:"api_key"`
+	User     *LoginUser `json:"user,omitempty"`
+}
+
+type LoginPollResult struct {
+	Status   string     `json:"status"`
+	APIKeyID string     `json:"api_key_id,omitempty"`
+	APIKey   string     `json:"api_key,omitempty"`
+	User     *LoginUser `json:"user,omitempty"`
+}
+
+type LoginUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email,omitempty"`
+	Name  string `json:"name,omitempty"`
 }
 
 type Balance struct {
