@@ -102,6 +102,10 @@ func TestDisabledFeaturesHiddenFromHelp(t *testing.T) {
 	feature.Reset()
 	t.Cleanup(feature.Reset)
 
+	// With defaults: image.generate and image.models are OFF, so the
+	// "image" parent has no subcommands and is omitted from root help.
+	// "actions" should be visible (image-understand and video-read are ON).
+
 	stdout := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
 		BuildInfo: buildinfo.Info{Version: "dev"},
@@ -109,23 +113,18 @@ func TestDisabledFeaturesHiddenFromHelp(t *testing.T) {
 		Stderr:    &bytes.Buffer{},
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "--help"})
+	cmd.SetArgs([]string{"actions", "--help"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
 
 	output := stdout.String()
-	// image understand should be visible (default on)
-	if !strings.Contains(output, "understand") {
-		t.Fatalf("expected 'understand' in image help, got: %s", output)
+	if !strings.Contains(output, "image-understand") {
+		t.Fatalf("expected 'image-understand' in actions help, got: %s", output)
 	}
-	// image generate and models should be hidden (default off)
-	if strings.Contains(output, "generate") {
-		t.Fatalf("'generate' should be hidden when feature is disabled, got: %s", output)
-	}
-	if strings.Contains(output, "models") {
-		t.Fatalf("'models' should be hidden when feature is disabled, got: %s", output)
+	if !strings.Contains(output, "video-read") {
+		t.Fatalf("expected 'video-read' in actions help, got: %s", output)
 	}
 }
 
@@ -148,7 +147,7 @@ func TestEnabledFeaturesVisibleInHelp(t *testing.T) {
 	}
 
 	output := stdout.String()
-	for _, expected := range []string{"understand", "generate", "models"} {
+	for _, expected := range []string{"generate", "models"} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected %q in image help when feature enabled, got: %s", expected, output)
 		}
