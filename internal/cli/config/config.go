@@ -18,7 +18,7 @@ func init() {
 // file overrides it. Release builds inject the production URL via ldflags:
 //
 //	-ldflags "-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
-var DefaultEndpoint = "http://127.0.0.1:8080"
+var DefaultEndpoint = "http://127.0.0.1:18080"
 
 // Config holds user preferences loaded from ~/.anycap/config.toml.
 type Config struct {
