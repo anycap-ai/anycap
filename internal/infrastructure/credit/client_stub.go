@@ -62,3 +62,13 @@ func (c *StubClient) Deduct(_ context.Context, userID string, amount int64, _ st
 	c.deductions[requestID] = struct{}{}
 	return nil
 }
+
+func (c *StubClient) GrantSignupReward(_ context.Context, userID string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if _, ok := c.balances[userID]; !ok {
+		c.balances[userID] = 10
+	}
+	return nil
+}

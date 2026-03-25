@@ -11,7 +11,7 @@ import (
 func TestMemoryProvisioner_AssignsUserIDInReservedRange(t *testing.T) {
 	provisioner := NewMemoryProvisioner()
 
-	user, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+	user, created, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
 		UserID:  "auth0|abc123",
 		Email:   "user@example.com",
 		Name:    "Demo User",
@@ -19,6 +19,9 @@ func TestMemoryProvisioner_AssignsUserIDInReservedRange(t *testing.T) {
 	}, time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatalf("FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if !created {
+		t.Fatal("expected first identity lookup to create a local user")
 	}
 	if user.ID != "2000000000" {
 		t.Fatalf("expected first reserved user id 2000000000, got %q", user.ID)
@@ -32,7 +35,7 @@ func TestMemoryProvisioner_ReusesIdentityMapping(t *testing.T) {
 	provisioner := NewMemoryProvisioner()
 	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
 
-	first, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+	first, createdFirst, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
 		UserID: "auth0|abc123",
 		Email:  "first@example.com",
 		Name:   "First Name",
@@ -40,14 +43,20 @@ func TestMemoryProvisioner_ReusesIdentityMapping(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first FindOrCreateByAuthIdentity() error = %v", err)
 	}
+	if !createdFirst {
+		t.Fatal("expected first lookup to create user")
+	}
 
-	second, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+	second, createdSecond, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
 		UserID: "auth0|abc123",
 		Email:  "updated@example.com",
 		Name:   "Updated Name",
 	}, now.Add(time.Minute))
 	if err != nil {
 		t.Fatalf("second FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if createdSecond {
+		t.Fatal("expected second lookup to reuse existing user")
 	}
 
 	if first.ID != second.ID {

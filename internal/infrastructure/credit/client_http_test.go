@@ -137,3 +137,47 @@ func TestHTTPClient_DeductInsufficient(t *testing.T) {
 		t.Fatalf("expected ErrInsufficientCredit, got %v", err)
 	}
 }
+
+func TestHTTPClient_GrantSignupRewardByPackageType(t *testing.T) {
+	httpClient := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.Path != "/api/v1/credit/grant/by-package" {
+				t.Fatalf("unexpected request path %q", req.URL.Path)
+			}
+			if got := req.Header.Get("X-Biz-Token"); got != "biz-token-123" {
+				t.Fatalf("expected X-Biz-Token header, got %q", got)
+			}
+			body, _ := io.ReadAll(req.Body)
+			text := string(body)
+			if !strings.Contains(text, `"user_id":2000000001`) {
+				t.Fatalf("expected numeric user_id in request body, got %s", text)
+			}
+			if !strings.Contains(text, `"package_type":"REWARD"`) {
+				t.Fatalf("expected package_type REWARD, got %s", text)
+			}
+			if !strings.Contains(text, `"package_subtype":"SIGNUP_BONUS"`) {
+				t.Fatalf("expected package_subtype SIGNUP_BONUS, got %s", text)
+			}
+			if !strings.Contains(text, `"source_id":"anycap-signup-bonus-2000000001"`) {
+				t.Fatalf("expected stable signup bonus source_id, got %s", text)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(`{"code":0,"message":"success","data":{}}`)),
+			}, nil
+		}),
+	}
+
+	client := NewHTTPClient(config.CreditConfig{
+		BaseURL:                    "https://credit.example.com",
+		BizToken:                   "biz-token-123",
+		Timeout:                    5 * time.Second,
+		SignupRewardPackageType:    "REWARD",
+		SignupRewardPackageSubtype: "SIGNUP_BONUS",
+	}, httpClient)
+
+	if err := client.GrantSignupReward(context.Background(), "2000000001"); err != nil {
+		t.Fatalf("GrantSignupReward() error = %v", err)
+	}
+}

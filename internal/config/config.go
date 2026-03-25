@@ -15,7 +15,7 @@ import (
 const (
 	defaultAppName              = "anycap-server"
 	defaultAppEnv               = "local"
-	defaultHTTPAddr             = ":8080"
+	defaultHTTPAddr             = ":18080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
@@ -36,6 +36,7 @@ type Config struct {
 	PGPassword        string
 	PGDatabase        string
 	PGSSLMode         string
+	PGTimezone        string
 	PGAutoMigrate     bool
 	RedisAddr         string
 	RedisHost         string
@@ -66,9 +67,12 @@ type Config struct {
 }
 
 type CreditConfig struct {
-	BaseURL  string
-	BizToken string
-	Timeout  time.Duration
+	BaseURL                    string
+	BizToken                   string
+	Timeout                    time.Duration
+	SignupRewardPackageID      int64
+	SignupRewardPackageType    string
+	SignupRewardPackageSubtype string
 }
 
 func (c CreditConfig) Enabled() bool {
@@ -135,6 +139,7 @@ func LoadFromEnv() (Config, error) {
 		PGPassword:              os.Getenv("ANYCAP_PG_PASSWORD"),
 		PGDatabase:              getEnv("ANYCAP_PG_DATABASE", "postgres"),
 		PGSSLMode:               getEnv("ANYCAP_PG_SSL_MODE", "prefer"),
+		PGTimezone:              os.Getenv("ANYCAP_PG_TIMEZONE"),
 		PGAutoMigrate:           getEnvBool("ANYCAP_PG_AUTO_MIGRATE", false),
 		RedisAddr:               os.Getenv("ANYCAP_REDIS_ADDR"),
 		RedisHost:               os.Getenv("ANYCAP_REDIS_HOST"),
@@ -166,6 +171,10 @@ func LoadFromEnv() (Config, error) {
 		},
 	}
 
+	if err := cfg.validateInfraConfigExclusivity(); err != nil {
+		return Config{}, err
+	}
+
 	if cfg.requiresExternalInfra() {
 		if cfg.PGDSN == "" {
 			if cfg.PGHost == "" || cfg.PGUser == "" || cfg.PGPassword == "" {
@@ -184,6 +193,16 @@ func LoadFromEnv() (Config, error) {
 	return cfg, nil
 }
 
+func (c Config) validateInfraConfigExclusivity() error {
+	if c.PGDSN != "" && (c.PGHost != "" || c.PGUser != "" || c.PGPassword != "" || c.PGDatabase != "postgres" || c.PGPort != 5432 || c.PGSSLMode != "prefer" || c.PGTimezone != "") {
+		return fmt.Errorf("postgres config is ambiguous: use either ANYCAP_PG_DSN or discrete ANYCAP_PG_* fields, not both")
+	}
+	if c.RedisAddr != "" && (c.RedisHost != "" || c.RedisPassword != "" || c.RedisUsername != "default" || c.RedisPort != 6379 || c.RedisDB != 0) {
+		return fmt.Errorf("redis config is ambiguous: use either ANYCAP_REDIS_ADDR or discrete ANYCAP_REDIS_* fields, not both")
+	}
+	return nil
+}
+
 func loadCreditConfig() CreditConfig {
 	timeout := 10 * time.Second
 	if s := os.Getenv("ANYCAP_CREDIT_TIMEOUT_SECONDS"); s != "" {
@@ -193,9 +212,12 @@ func loadCreditConfig() CreditConfig {
 	}
 
 	return CreditConfig{
-		BaseURL:  getEnv("ANYCAP_CREDIT_BASE_URL", ""),
-		BizToken: getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
-		Timeout:  timeout,
+		BaseURL:                    getEnv("ANYCAP_CREDIT_BASE_URL", ""),
+		BizToken:                   getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
+		Timeout:                    timeout,
+		SignupRewardPackageID:      getEnvInt64("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_ID", 0),
+		SignupRewardPackageType:    getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", ""),
+		SignupRewardPackageSubtype: getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", ""),
 	}
 }
 
@@ -263,6 +285,9 @@ func (c Config) postgresDSN() string {
 	}
 	query := u.Query()
 	query.Set("sslmode", c.PGSSLMode)
+	if c.PGTimezone != "" {
+		query.Set("timezone", c.PGTimezone)
+	}
 	u.RawQuery = query.Encode()
 	return u.String()
 }
@@ -309,6 +334,18 @@ func getEnvInt(key string, fallback int) int {
 		return fallback
 	}
 	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func getEnvInt64(key string, fallback int64) int64 {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return fallback
 	}

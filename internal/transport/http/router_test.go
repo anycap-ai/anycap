@@ -101,6 +101,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
 		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
 		userstore.NewMemoryProvisioner(),
+		credit.NewStubClient(nil),
 		apiKeys,
 		loginSessions,
 		"https://anycap.local/device",

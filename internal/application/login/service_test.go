@@ -30,7 +30,13 @@ type fakeLoginAPIKeyService struct {
 }
 
 type fakeUserProvisioner struct {
-	users map[string]model.User
+	users   map[string]model.User
+	created map[string]bool
+}
+
+type fakeLoginCreditClient struct {
+	grants   []string
+	grantErr error
 }
 
 func (f *fakeLoginAPIKeyService) AuthenticateAPIKey(_ context.Context, _ string) (model.Principal, error) {
@@ -59,9 +65,22 @@ func (f *fakeLoginAPIKeyService) RevokeAPIKey(_ context.Context, _ string) error
 	return nil
 }
 
-func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, error) {
+func (f *fakeLoginCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
+	return model.Balance{}, nil
+}
+
+func (f *fakeLoginCreditClient) Deduct(_ context.Context, _ string, _ int64, _ string, _ string) error {
+	return nil
+}
+
+func (f *fakeLoginCreditClient) GrantSignupReward(_ context.Context, userID string) error {
+	f.grants = append(f.grants, userID)
+	return f.grantErr
+}
+
+func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, bool, error) {
 	if user, ok := f.users[provider+":"+authUser.UserID]; ok {
-		return user, nil
+		return user, f.created != nil && f.created[provider+":"+authUser.UserID], nil
 	}
 	return model.User{
 		ID:        authUser.UserID,
@@ -69,7 +88,7 @@ func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, prov
 		Name:      authUser.Name,
 		AvatarURL: authUser.Picture,
 		Status:    model.UserStatusActive,
-	}, nil
+	}, true, nil
 }
 
 func (f *fakeAuthClient) BuildLoginURL(_ context.Context, _, redirectURI string) (string, error) {
@@ -149,6 +168,7 @@ func TestService_InitLocalhost(t *testing.T) {
 	service := NewService(
 		authClient,
 		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
 		apikey.NewMemoryService(),
 		repo,
 		"https://anycap.local/device",
@@ -210,6 +230,7 @@ func TestService_CallbackCreatesAPIKey(t *testing.T) {
 				"auth0:user-123": {ID: "2000000001", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
 			},
 		},
+		&fakeLoginCreditClient{},
 		apiKeys,
 		repo,
 		"https://anycap.local/device",
@@ -267,6 +288,7 @@ func TestService_InitDeviceAndPollPending(t *testing.T) {
 			},
 		},
 		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
 		apikey.NewMemoryService(),
 		repo,
 		"https://anycap.local/device",
@@ -332,6 +354,7 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 				"auth0:auth0|user-1": {ID: "2000000002", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
 			},
 		},
+		&fakeLoginCreditClient{},
 		apiKeys,
 		repo,
 		"https://anycap.local/device",
@@ -369,5 +392,164 @@ func TestService_PollDeviceCompleteCreatesAPIKey(t *testing.T) {
 	}
 	if apiKeys.created[0].TTL != 7*24*time.Hour {
 		t.Fatalf("expected 7d ttl, got %v", apiKeys.created[0].TTL)
+	}
+}
+
+func TestService_CallbackGrantsSignupRewardForNewUser(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-123"] = model.LoginSession{
+		ID:          "lsn-123",
+		FlowType:    model.LoginFlowLocalhost,
+		State:       "state-123",
+		RedirectURI: "http://127.0.0.1:14565/callback",
+		Status:      model.LoginSessionStatusPending,
+		ExpiresAt:   now.Add(5 * time.Minute),
+		CreatedAt:   now,
+	}
+	authClient := &fakeAuthClient{
+		codeUsers: map[string]model.AuthUser{
+			"code-123": {UserID: "auth0-user-123", Email: "new@example.com", Name: "New User"},
+		},
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
+			RawKey: "ak-created",
+		},
+	}
+	credits := &fakeLoginCreditClient{}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:auth0-user-123": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
+			},
+			created: map[string]bool{
+				"auth0:auth0-user-123": true,
+			},
+		},
+		credits,
+		apiKeys,
+		repo,
+		"https://anycap.local/device",
+		func() string { return "state-unused" },
+		func() string { return "lsn-unused" },
+		func() string { return "code-unused" },
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	_, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
+	if err != nil {
+		t.Fatalf("Callback() error = %v", err)
+	}
+	if len(credits.grants) != 1 || credits.grants[0] != "2000000001" {
+		t.Fatalf("expected one signup reward grant for local user, got %#v", credits.grants)
+	}
+}
+
+func TestService_CallbackDoesNotGrantSignupRewardForExistingUser(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-123"] = model.LoginSession{
+		ID:          "lsn-123",
+		FlowType:    model.LoginFlowLocalhost,
+		State:       "state-123",
+		RedirectURI: "http://127.0.0.1:14565/callback",
+		Status:      model.LoginSessionStatusPending,
+		ExpiresAt:   now.Add(5 * time.Minute),
+		CreatedAt:   now,
+	}
+	authClient := &fakeAuthClient{
+		codeUsers: map[string]model.AuthUser{
+			"code-123": {UserID: "auth0-user-123", Email: "existing@example.com", Name: "Existing User"},
+		},
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
+			RawKey: "ak-created",
+		},
+	}
+	credits := &fakeLoginCreditClient{}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:auth0-user-123": {ID: "2000000001", Email: "existing@example.com", Name: "Existing User", Status: model.UserStatusActive},
+			},
+		},
+		credits,
+		apiKeys,
+		repo,
+		"https://anycap.local/device",
+		func() string { return "state-unused" },
+		func() string { return "lsn-unused" },
+		func() string { return "code-unused" },
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	_, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
+	if err != nil {
+		t.Fatalf("Callback() error = %v", err)
+	}
+	if len(credits.grants) != 0 {
+		t.Fatalf("expected no signup reward grant for existing user, got %#v", credits.grants)
+	}
+}
+
+func TestService_CallbackDoesNotFailWhenSignupRewardGrantFails(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-123"] = model.LoginSession{
+		ID:          "lsn-123",
+		FlowType:    model.LoginFlowLocalhost,
+		State:       "state-123",
+		RedirectURI: "http://127.0.0.1:14565/callback",
+		Status:      model.LoginSessionStatusPending,
+		ExpiresAt:   now.Add(5 * time.Minute),
+		CreatedAt:   now,
+	}
+	authClient := &fakeAuthClient{
+		codeUsers: map[string]model.AuthUser{
+			"code-123": {UserID: "auth0-user-123", Email: "new@example.com", Name: "New User"},
+		},
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
+			RawKey: "ak-created",
+		},
+	}
+	credits := &fakeLoginCreditClient{grantErr: model.ErrBillingUncertain}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:auth0-user-123": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
+			},
+			created: map[string]bool{
+				"auth0:auth0-user-123": true,
+			},
+		},
+		credits,
+		apiKeys,
+		repo,
+		"https://anycap.local/device",
+		func() string { return "state-unused" },
+		func() string { return "lsn-unused" },
+		func() string { return "code-unused" },
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
+	if err != nil {
+		t.Fatalf("Callback() error = %v", err)
+	}
+	if result.APIKey != "ak-created" {
+		t.Fatalf("expected login to still succeed, got %#v", result)
 	}
 }

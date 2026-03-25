@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,7 +23,9 @@ const (
 	defaultConnectTimeout    = 10 * time.Second
 )
 
-// Config mirrors the JSON object stored in ANYCAP_PG_CONFIG.
+// Config is the normalized PostgreSQL config used by CLI-side DB helpers.
+// Preferred source is discrete ANYCAP_PG_* fields. ANYCAP_PG_CONFIG remains as
+// a backward-compatible fallback only.
 type Config struct {
 	Host     string `json:"Host"`
 	Port     string `json:"Port"`
@@ -44,12 +48,23 @@ func (c Config) DSN() string {
 	return dsn
 }
 
-// LoadConfig reads and parses ANYCAP_PG_CONFIG from the environment.
-// Returns an error if the variable is missing or the JSON is malformed.
+// LoadConfig reads PostgreSQL config from environment.
+//
+// Resolution order:
+//  1. Discrete ANYCAP_PG_* fields
+//  2. Legacy ANYCAP_PG_CONFIG JSON
+//
+// Returns an error if no valid config is found.
 func LoadConfig() (Config, error) {
+	if cfg, ok, err := loadDiscreteConfig(); err != nil {
+		return Config{}, err
+	} else if ok {
+		return cfg, nil
+	}
+
 	raw := os.Getenv(envKey)
 	if raw == "" {
-		return Config{}, fmt.Errorf("environment variable %s is not set", envKey)
+		return Config{}, fmt.Errorf("postgres config is not set: use ANYCAP_PG_* fields (preferred) or legacy %s", envKey)
 	}
 
 	var cfg Config
@@ -62,6 +77,49 @@ func LoadConfig() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func loadDiscreteConfig() (Config, bool, error) {
+	host := strings.TrimSpace(os.Getenv("ANYCAP_PG_HOST"))
+	port := strings.TrimSpace(os.Getenv("ANYCAP_PG_PORT"))
+	user := strings.TrimSpace(os.Getenv("ANYCAP_PG_USER"))
+	password := os.Getenv("ANYCAP_PG_PASSWORD")
+	dbName := strings.TrimSpace(os.Getenv("ANYCAP_PG_DATABASE"))
+	sslMode := strings.TrimSpace(os.Getenv("ANYCAP_PG_SSL_MODE"))
+
+	anySet := host != "" || port != "" || user != "" || password != "" || dbName != "" || sslMode != ""
+	if !anySet {
+		return Config{}, false, nil
+	}
+
+	if host == "" || user == "" || password == "" {
+		return Config{}, true, fmt.Errorf("pg config: ANYCAP_PG_HOST, ANYCAP_PG_USER, and ANYCAP_PG_PASSWORD are required when using discrete ANYCAP_PG_* fields")
+	}
+	if port == "" {
+		port = "5432"
+	} else if _, err := strconv.Atoi(port); err != nil {
+		return Config{}, true, fmt.Errorf("pg config: ANYCAP_PG_PORT must be numeric")
+	}
+	if dbName == "" {
+		dbName = "postgres"
+	}
+	if sslMode == "" {
+		sslMode = "prefer"
+	}
+
+	cfg := Config{
+		Host:     host,
+		Port:     port,
+		User:     user,
+		Password: password,
+		DBName:   dbName,
+		SSLMode:  sslMode,
+		TimeZone: strings.TrimSpace(os.Getenv("ANYCAP_PG_TIME_ZONE")),
+	}
+	if err := cfg.validate(); err != nil {
+		return Config{}, true, err
+	}
+	return cfg, true, nil
 }
 
 func (c Config) validate() error {
@@ -86,7 +144,7 @@ type Pool struct {
 	cfg Config
 }
 
-// Connect creates a connection pool using the config parsed from ANYCAP_PG_CONFIG.
+// Connect creates a connection pool using environment-derived config.
 // The pool is validated via Ping before being returned.
 func Connect(ctx context.Context) (*Pool, error) {
 	cfg, err := LoadConfig()
