@@ -54,6 +54,7 @@ anycap actions image-understand --url https://example.com/photo.jpg --file ./loc
 ```
 
 Options:
+
 - `--url`: Image URL to analyze (can be repeated)
 - `--file`: Local image file to upload and analyze (can be repeated)
 - `--instruction`: Custom instruction for analysis
