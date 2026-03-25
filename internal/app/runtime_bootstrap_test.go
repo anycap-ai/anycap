@@ -23,11 +23,11 @@ func TestBuildServerDependencies_DevModeUsesRealInfraAdapters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
-	if deps.APIKeyService == nil {
+	if deps.apiKeyService == nil {
 		t.Fatal("expected api key service")
 	}
-	if _, ok := deps.RateLimiter.(*infraratelimit.RedisLimiter); !ok {
-		t.Fatalf("expected redis limiter, got %T", deps.RateLimiter)
+	if _, ok := deps.rateLimiter.(*infraratelimit.RedisLimiter); !ok {
+		t.Fatalf("expected redis limiter, got %T", deps.rateLimiter)
 	}
 }
 
@@ -46,10 +46,10 @@ func TestBuildServerDependencies_ProdModeUsesRealInfraAdapters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
-	if deps.APIKeyService == nil {
+	if deps.apiKeyService == nil {
 		t.Fatal("expected api key service")
 	}
-	if _, ok := deps.RateLimiter.(*infraratelimit.RedisLimiter); !ok {
-		t.Fatalf("expected redis limiter, got %T", deps.RateLimiter)
+	if _, ok := deps.rateLimiter.(*infraratelimit.RedisLimiter); !ok {
+		t.Fatalf("expected redis limiter, got %T", deps.rateLimiter)
 	}
 }

@@ -46,7 +46,7 @@ func TestBuildServerDependencies_DevModeRunsMigrationsWhenEnabled(t *testing.T) 
 	if !called {
 		t.Fatal("expected migrations to run")
 	}
-	if _, ok := deps.RateLimiter.(*infraratelimit.RedisLimiter); !ok {
-		t.Fatalf("expected redis limiter, got %T", deps.RateLimiter)
+	if _, ok := deps.rateLimiter.(*infraratelimit.RedisLimiter); !ok {
+		t.Fatalf("expected redis limiter, got %T", deps.rateLimiter)
 	}
 }

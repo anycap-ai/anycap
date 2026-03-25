@@ -11,6 +11,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type CapabilitiesHandler struct {
@@ -19,6 +20,13 @@ type CapabilitiesHandler struct {
 
 func NewCapabilitiesHandler(service *capapp.Service) *CapabilitiesHandler {
 	return &CapabilitiesHandler{service: service}
+}
+
+func (h *CapabilitiesHandler) RegisterRoutes(group *route.RouterGroup) {
+	g := group.Group("/capabilities")
+	g.POST("/presign", h.Presign)
+	g.POST("/image/understand", h.ImageUnderstand)
+	g.POST("/video/read", h.VideoRead)
 }
 
 // presignResponse is the public API shape for presign results.

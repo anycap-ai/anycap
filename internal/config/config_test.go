@@ -17,7 +17,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.AppName != "anycap-server" {
 		t.Fatalf("expected default app name, got %q", cfg.AppName)
 	}
-	if cfg.HTTPAddr != ":8080" {
+	if cfg.HTTPAddr != ":18080" {
 		t.Fatalf("expected default addr, got %q", cfg.HTTPAddr)
 	}
 	if cfg.RuntimeMode != "stub" {

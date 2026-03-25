@@ -18,7 +18,7 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
-	if deps.APIKeyService == nil || deps.ImageService == nil || deps.LoginService == nil {
+	if deps.apiKeyService == nil || deps.imageService == nil || deps.loginService == nil {
 		t.Fatal("expected stub dependencies to be initialized")
 	}
 }
@@ -36,7 +36,7 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	if err != nil {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
-	if deps.APIKeyService == nil || deps.RateLimiter == nil {
+	if deps.apiKeyService == nil || deps.rateLimiter == nil {
 		t.Fatal("expected integration dependencies to be initialized")
 	}
 }
