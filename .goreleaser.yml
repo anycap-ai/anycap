@@ -2,10 +2,6 @@ version: 2
 
 project_name: anycap
 
-gitlab_urls:
-  api: https://gitlab.knoffice.tech/api/v4/
-  download: https://gitlab.knoffice.tech/
-
 builds:
   - id: anycap
     binary: anycap
@@ -49,7 +45,3 @@ changelog:
       - "^ci:"
       - "^chore:"
 
-release:
-  gitlab:
-    owner: engineering
-    name: anycap
