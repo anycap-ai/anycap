@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"bytes"
 	"context"
 
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -22,5 +24,28 @@ func TestAuthMiddleware_RejectMissingBearer(t *testing.T) {
 	resp := ut.PerformRequest(h.Engine, http.MethodGet, "/protected", nil)
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestLocalBypassAuth_SetsPrincipal(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(RequestID())
+	h.GET("/protected", LocalBypassAuth(model.Principal{
+		UserID:   "123",
+		AuthType: "local_bypass",
+	}), func(ctx context.Context, c *app.RequestContext) {
+		principal, ok := GetPrincipal(c)
+		if !ok {
+			t.Fatal("expected principal in request context")
+		}
+		c.JSON(http.StatusOK, principal)
+	})
+
+	resp := ut.PerformRequest(h.Engine, http.MethodGet, "/protected", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"user_id":"123"`)) {
+		t.Fatalf("expected bypass principal in response, got %s", resp.Body.String())
 	}
 }

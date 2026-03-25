@@ -7,6 +7,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -43,56 +44,6 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	}
 	if deps.apiKeyService == nil || deps.rateLimiter == nil {
 		t.Fatal("expected integration dependencies to be initialized")
-	}
-}
-
-func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
-	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
-
-	original := newCatalogRepoFromEnv
-	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
-		return &postgres.CatalogRepo{}, nil
-	}
-	t.Cleanup(func() {
-		newCatalogRepoFromEnv = original
-	})
-
-	repo := buildCatalogRepo(config.Config{
-		NexusHubBaseURL: "http://localhost:8080",
-	})
-
-	if _, ok := repo.(*nexushub.CatalogSchemaEnricher); !ok {
-		t.Fatalf("expected catalog schema enricher, got %T", repo)
-	}
-}
-
-func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
-	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
-
-	original := newCatalogRepoFromEnv
-	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
-		return &postgres.CatalogRepo{}, nil
-	}
-	t.Cleanup(func() {
-		newCatalogRepoFromEnv = original
-	})
-
-	repo := buildCatalogRepo(config.Config{})
-
-	if _, ok := repo.(*postgres.CatalogRepo); !ok {
-		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
-	}
-}
-
-func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testing.T) {
-	t.Setenv("ANYCAP_PG_CONFIG", "")
-
-	repo := buildCatalogRepo(config.Config{
-		NexusHubBaseURL: "http://localhost:8080",
-	})
-
-	if _, ok := repo.(*nexushub.PlatformClient); !ok {
-		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
 
@@ -140,5 +91,96 @@ func TestBuildServerDependencies_CreditEnabledUsesRealClient(t *testing.T) {
 	}
 	if deps.imageService == nil {
 		t.Fatal("expected image service to be initialized")
+	}
+}
+
+func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
+
+	original := newCatalogRepoFromEnv
+	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromEnv = original
+	})
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.CatalogSchemaEnricher); !ok {
+		t.Fatalf("expected catalog schema enricher, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
+
+	original := newCatalogRepoFromEnv
+	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromEnv = original
+	})
+
+	repo := buildCatalogRepo(config.Config{})
+
+	if _, ok := repo.(*postgres.CatalogRepo); !ok {
+		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
+
+func TestBuildImageExecutionClient_UsesCoreConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
+	client := buildImageExecutionClient(config.Config{
+		NexusHubCoreBaseURL: "http://core.example.com",
+		NexusHubCoreToken:   "core-token",
+	})
+
+	if _, ok := client.(*nexushub.Client); !ok {
+		t.Fatalf("expected real nexushub execution client, got %T", client)
+	}
+}
+
+func TestBuildImageExecutionClient_DoesNotUsePlatformConfigForExecution(t *testing.T) {
+	client := buildImageExecutionClient(config.Config{
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+		NexusHubPlatformToken:   "platform-token",
+	})
+
+	if _, ok := client.(*nexushub.StubClient); !ok {
+		t.Fatalf("expected stub client when only platform config is set, got %T", client)
+	}
+}
+
+func TestBuildCreditClient_UsesStubWhenDisabled(t *testing.T) {
+	client := buildCreditClient(config.Config{})
+	if _, ok := client.(*credit.StubClient); !ok {
+		t.Fatalf("expected credit stub client, got %T", client)
 	}
 }

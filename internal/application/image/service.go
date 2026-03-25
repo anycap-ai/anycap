@@ -2,6 +2,7 @@ package image
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -9,39 +10,27 @@ import (
 )
 
 type Service struct {
+	catalog  port.CatalogRepository
 	nexusHub port.NexusHubClient
 	credit   port.CreditClient
 	callLogs port.CallLogRepo
 }
 
-func NewService(nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
+func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
 	return &Service{
+		catalog:  catalog,
 		nexusHub: nexusHub,
 		credit:   credit,
 		callLogs: callLogs,
 	}
 }
 
-func (s *Service) ListModels(ctx context.Context) ([]model.ImageModel, error) {
-	if s == nil || s.nexusHub == nil {
-		return nil, model.ErrImageProviderNotConfigured
-	}
-	return s.nexusHub.ListImageModels(ctx)
-}
-
-func (s *Service) GetModelSchema(ctx context.Context, modelName string) (map[string]any, error) {
-	if s == nil || s.nexusHub == nil {
-		return nil, model.ErrImageProviderNotConfigured
-	}
-	return s.nexusHub.GetImageModelSchema(ctx, modelName)
-}
-
 func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) (model.GenerateImageResult, error) {
 	if err := req.Validate(); err != nil {
 		return model.GenerateImageResult{}, err
 	}
-	if s == nil || s.nexusHub == nil {
-		return model.GenerateImageResult{}, model.ErrImageProviderNotConfigured
+	if s == nil || s.catalog == nil || s.nexusHub == nil {
+		return model.GenerateImageResult{}, model.ErrImageExecutionNotConfigured
 	}
 	if s.credit == nil {
 		return model.GenerateImageResult{}, model.ErrInternal
@@ -58,8 +47,17 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 		return model.GenerateImageResult{}, model.ErrInsufficientCredit
 	}
 
+	spec, err := s.catalog.GetModel(ctx, model.CapabilityImage, req.Model)
+	if err != nil {
+		return model.GenerateImageResult{}, err
+	}
+	route, err := selectGenerateRoute(spec)
+	if err != nil {
+		return model.GenerateImageResult{}, err
+	}
+
 	startedAt := time.Now()
-	result, err := s.nexusHub.GenerateImage(ctx, req)
+	result, err := s.nexusHub.GenerateImage(ctx, req, route)
 	if err != nil {
 		return model.GenerateImageResult{}, err
 	}
@@ -85,4 +83,36 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 	}
 
 	return result, nil
+}
+
+func selectGenerateRoute(spec *model.ModelSpec) (model.RouteBinding, error) {
+	if spec == nil {
+		return model.RouteBinding{}, fmt.Errorf("%w: model spec is nil", model.ErrModelRouteNotConfigured)
+	}
+
+	opSpec, ok := spec.Operations[model.OperationGenerate]
+	if !ok || len(opSpec.Routes) == 0 {
+		return model.RouteBinding{}, fmt.Errorf("%w: model=%s operation=%s", model.ErrModelRouteNotConfigured, spec.ModelID, model.OperationGenerate)
+	}
+
+	var (
+		selected model.RouteBinding
+		found    bool
+	)
+
+	for _, route := range opSpec.Routes {
+		if !route.Enabled || route.AbilityKey == "" || route.GenType == "" {
+			continue
+		}
+		if !found || route.Priority > selected.Priority {
+			selected = route
+			found = true
+		}
+	}
+
+	if !found {
+		return model.RouteBinding{}, fmt.Errorf("%w: model=%s operation=%s", model.ErrModelRouteNotConfigured, spec.ModelID, model.OperationGenerate)
+	}
+
+	return selected, nil
 }

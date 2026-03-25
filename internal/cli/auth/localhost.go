@@ -109,7 +109,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 		return nil, "", fmt.Errorf("state mismatch: possible CSRF attack")
 	}
 
-	// Step 6: Exchange code for API key
+	// Step 6: Exchange code for credentials
 	callbackResp, err := client.PostJSON(ctx, "/v1/auth/callback", map[string]any{
 		"login_session_id": initResp.Data.LoginSessionID,
 		"code":             result.Code,

@@ -1,0 +1,290 @@
+package nexushub
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"mime"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+)
+
+const (
+	defaultExecuteTimeout    = 30 * time.Minute
+	defaultNexusHubBizID     = "anycap"
+	defaultNexusHubEnterFrom = "anycap_api"
+	submitAtomicProcessPath  = "/v1/submit_atomic_process"
+	defaultImageGenerateAlgo = "txt_2_img"
+	defaultImageEditAlgo     = "img_2_img"
+)
+
+type ClientConfig struct {
+	BaseURL        string
+	Token          string
+	RequestTimeout time.Duration
+}
+
+type Client struct {
+	baseURL    string
+	token      string
+	httpClient *http.Client
+}
+
+func NewClient(cfg ClientConfig) *Client {
+	timeout := cfg.RequestTimeout
+	if timeout == 0 {
+		timeout = defaultExecuteTimeout
+	}
+
+	return &Client{
+		baseURL: strings.TrimRight(cfg.BaseURL, "/"),
+		token:   cfg.Token,
+		httpClient: &http.Client{
+			Timeout: timeout,
+		},
+	}
+}
+
+func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageRequest, route model.RouteBinding) (model.GenerateImageResult, error) {
+	if c == nil || c.baseURL == "" || c.token == "" {
+		return model.GenerateImageResult{}, model.ErrImageExecutionNotConfigured
+	}
+	if route.AbilityKey == "" {
+		return model.GenerateImageResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+	}
+
+	uid, err := parseNexusHubUID(req.UserID)
+	if err != nil {
+		return model.GenerateImageResult{}, err
+	}
+
+	payload := atomicProcessPayload{
+		GenType: route.GenType,
+		Prompt:  req.Prompt,
+		ImageOption: &atomicImageOption{
+			Type:           resolveImageAlgoType(route, req),
+			Ratio:          req.Ratio,
+			Resolution:     req.Resolution,
+			NegativePrompt: req.NegativePrompt,
+			ReferImageURLs: append([]string(nil), req.ReferenceImageURLs...),
+		},
+		MetaOption: map[string]any{
+			"request_id": req.RequestID,
+			"model_id":   req.Model,
+		},
+	}
+
+	reqPayload, err := json.Marshal(payload)
+	if err != nil {
+		return model.GenerateImageResult{}, fmt.Errorf("marshal req_payload: %w", err)
+	}
+
+	body := submitAtomicProcessRequest{
+		AbilityKey: route.AbilityKey,
+		ReqPayload: string(reqPayload),
+		Token:      c.token,
+		BizInfo: submitBizInfo{
+			BizID:     defaultNexusHubBizID,
+			EnterFrom: defaultNexusHubEnterFrom,
+		},
+		UserInfo: submitUserInfo{
+			UID: uid,
+		},
+		Extra: map[string]any{
+			"model_id":   req.Model,
+			"capability": string(model.CapabilityImage),
+			"operation":  string(model.OperationGenerate),
+			"request_id": req.RequestID,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return model.GenerateImageResult{}, fmt.Errorf("marshal submit request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return model.GenerateImageResult{}, fmt.Errorf("build request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		httpReq.Header.Set("X-Request-Id", requestID)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return model.GenerateImageResult{}, fmt.Errorf("submit atomic process: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var parsed submitAtomicProcessResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return model.GenerateImageResult{}, fmt.Errorf("decode submit response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return model.GenerateImageResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Message)
+	}
+
+	result := model.GenerateImageResult{
+		ID:     parsed.TaskID,
+		Status: normalizeNexusHubStatus(parsed.Status),
+		Model:  req.Model,
+		Usage:  parsed.NexusUsage,
+	}
+
+	if parsed.RespPayload != "" {
+		var respPayload atomicRespPayload
+		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
+			return model.GenerateImageResult{}, fmt.Errorf("decode resp_payload: %w", err)
+		}
+
+		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
+		for _, resource := range respPayload.Resources {
+			resourceURL := resource.URL
+			if resourceURL == "" {
+				resourceURL = resource.Path
+			}
+
+			outputs = append(outputs, model.Artifact{
+				Type:     "image",
+				URL:      resourceURL,
+				MIMEType: guessMIMEType(resourceURL),
+			})
+			if result.CreditCost == 0 && resource.CreditCost > 0 {
+				result.CreditCost = resource.CreditCost
+			}
+		}
+		result.Outputs = outputs
+	}
+
+	return result, nil
+}
+
+type submitAtomicProcessRequest struct {
+	AbilityKey string         `json:"ability_key"`
+	ReqPayload string         `json:"req_payload"`
+	Token      string         `json:"token"`
+	BizInfo    submitBizInfo  `json:"biz_info"`
+	UserInfo   submitUserInfo `json:"user_info"`
+	Extra      map[string]any `json:"extra,omitempty"`
+}
+
+type submitBizInfo struct {
+	BizID     string `json:"biz_id,omitempty"`
+	BizToken  string `json:"biz_token,omitempty"`
+	EnterFrom string `json:"enter_from,omitempty"`
+}
+
+type submitUserInfo struct {
+	UID int64 `json:"uid"`
+}
+
+type atomicProcessPayload struct {
+	GenType     string             `json:"gen_type"`
+	Prompt      string             `json:"prompt,omitempty"`
+	ImageOption *atomicImageOption `json:"image_option,omitempty"`
+	MetaOption  map[string]any     `json:"meta_option,omitempty"`
+}
+
+type atomicImageOption struct {
+	Type           string   `json:"type,omitempty"`
+	Ratio          string   `json:"ratio,omitempty"`
+	Resolution     string   `json:"resolution,omitempty"`
+	NegativePrompt string   `json:"negative_prompt,omitempty"`
+	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
+}
+
+type submitAtomicProcessResponse struct {
+	Base        submitBaseResponse `json:"base"`
+	TaskID      string             `json:"task_id"`
+	RespPayload string             `json:"resp_payload,omitempty"`
+	Status      string             `json:"status,omitempty"`
+	NexusUsage  map[string]any     `json:"nexus_usage,omitempty"`
+}
+
+type submitBaseResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+type atomicRespPayload struct {
+	Resources []atomicResource `json:"resources"`
+}
+
+type atomicResource struct {
+	URL        string `json:"url,omitempty"`
+	Path       string `json:"path,omitempty"`
+	CreditCost int64  `json:"credit_cost,omitempty"`
+}
+
+func parseNexusHubUID(userID string) (int64, error) {
+	if userID == "" {
+		return 0, fmt.Errorf("%w: user_id is required", model.ErrInvalidParam)
+	}
+
+	if uid, err := strconv.ParseInt(userID, 10, 64); err == nil {
+		return uid, nil
+	}
+
+	end := len(userID)
+	start := end
+	for start > 0 && userID[start-1] >= '0' && userID[start-1] <= '9' {
+		start--
+	}
+	if start < end {
+		uid, err := strconv.ParseInt(userID[start:end], 10, 64)
+		if err == nil {
+			return uid, nil
+		}
+	}
+
+	return 0, fmt.Errorf("%w: nexushub requires a numeric user id, got %q", model.ErrInvalidParam, userID)
+}
+
+func resolveImageAlgoType(route model.RouteBinding, req model.GenerateImageRequest) string {
+	if route.AlgoType != "" {
+		return route.AlgoType
+	}
+	if len(req.ReferenceImageURLs) > 0 {
+		return defaultImageEditAlgo
+	}
+	return defaultImageGenerateAlgo
+}
+
+func normalizeNexusHubStatus(status string) string {
+	switch strings.ToLower(status) {
+	case "succeeded", "success", "completed":
+		return "success"
+	default:
+		return status
+	}
+}
+
+func guessMIMEType(resourceURL string) string {
+	if resourceURL == "" {
+		return ""
+	}
+	return mime.TypeByExtension(filepath.Ext(resourceURL))
+}
+
+func mapSubmitError(statusCode int, message string) error {
+	message = strings.TrimSpace(message)
+	if message == "" {
+		message = "nexushub request failed"
+	}
+
+	if statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError {
+		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
+	}
+
+	return fmt.Errorf("nexushub request failed: %s", message)
+}

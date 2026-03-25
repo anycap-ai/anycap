@@ -168,9 +168,12 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	apiKey := "mock-ak-" + randomHex(16)
 	writeSuccess(w, map[string]any{
-		"api_key":    "mock-ak-" + randomHex(16),
-		"api_key_id": "key-" + randomHex(8),
+		"credential_type": "api_key",
+		"access_token":    apiKey,
+		"api_key":         apiKey,
+		"api_key_id":      "key-" + randomHex(8),
 		"user": map[string]string{
 			"email": "dev@anycap.ai",
 			"id":    "user-dev",
@@ -230,10 +233,13 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mock: auto-approve immediately
+	apiKey := "mock-ak-" + randomHex(16)
 	writeSuccess(w, map[string]any{
-		"status":     "complete",
-		"api_key":    "mock-ak-" + randomHex(16),
-		"api_key_id": "key-" + randomHex(8),
+		"status":          "complete",
+		"credential_type": "api_key",
+		"access_token":    apiKey,
+		"api_key":         apiKey,
+		"api_key_id":      "key-" + randomHex(8),
 		"user": map[string]string{
 			"email": entry.Email,
 			"id":    "user-dev",

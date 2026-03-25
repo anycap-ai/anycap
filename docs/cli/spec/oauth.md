@@ -32,8 +32,8 @@ AnyCap CLI supports two authentication types with distinct credential models.
 
 | Auth Type | Description | Identity | What CLI Receives |
 |-----------|-------------|----------|-------------------|
-| **Interactive Login** | CLI asks Server to orchestrate Auth0 login. After browser/device verification, Server returns an AnyCap API key. | User identity (email, name) | `api_key` + `user` |
-| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only (no user identity in CLI) | Created outside the CLI |
+| **Interactive Login** | CLI asks Server to orchestrate Auth0 login. In the current MVP, the Server returns an AnyCap API key after browser/device verification. The CLI is forward-compatible with the unified token response format. | User identity (email, name) | MVP: `api_key` + `user`; compatibility format: `credential_type:"api_key"` + `access_token` + `user` |
+| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only, or user identity when issued by the login flow | Created outside the CLI or returned by interactive login |
 
 ### 2.2 Methods Matrix
 
