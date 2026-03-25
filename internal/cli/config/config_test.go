@@ -32,7 +32,7 @@ func TestResolveEndpoint_ConfigFileOverridesDefault(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"endpoint":"http://config:9999"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte("endpoint = \"http://config:9999\"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -95,7 +95,7 @@ func TestLoad_AutoUpdateFromFile(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"auto_update":false}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte("auto_update = false\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -116,7 +116,7 @@ func TestLoad_ValidConfigFile(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"endpoint":"http://custom:8080"}`), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte("endpoint = \"http://custom:8080\"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 

@@ -1,7 +1,7 @@
 # CLI OAuth Authentication Spec
 
-> Date: 2026-03-24
-> Status: Active (Phase 1+2 implemented)
+> Date: 2026-03-24 (updated 2026-03-25)
+> Status: Active (Phase 1+2+3 implemented)
 
 ## 1. Overview
 
@@ -11,13 +11,92 @@ AnyCap CLI supports multiple authentication methods for `anycap login`:
 |--------|-----------|----------|
 | **Localhost Callback** | CLI starts local HTTP server, browser redirects back to `localhost` | Interactive terminals with browser access |
 | **Device Code Polling** | CLI displays a code, user enters it on a web page, CLI polls for completion | Headless / SSH / remote environments |
-| **Direct Key Input** | `anycap config set-key sk-xxx` or `anycap login --with-token` | CI/CD, scripted provisioning |
+| **Direct Key Input** | `anycap credentials set-key sk-xxx` or `anycap login --with-token` | CI/CD, scripted provisioning |
 
 The CLI auto-detects the best flow and falls back gracefully. Users can force a specific method via flags.
 
 **Core principle:** CLI never talks to Auth0 directly. All auth flows go through the AnyCap Server, which internally integrates with Auth0. This is consistent with the system architecture where Server is the sole gateway.
 
-## 2. API Path Migration
+## 2. Authentication Model
+
+AnyCap CLI supports two authentication types with distinct credential models.
+
+### 2.1 Auth Types
+
+| Auth Type | Description | Identity | What CLI Receives |
+|-----------|-------------|----------|-------------------|
+| **OAuth** | Interactive login via Auth0. Server manages the OAuth flow and returns short-lived access token + long-lived refresh token. CLI auto-refreshes when token expires. | User identity (email, name) | `access_token` + `refresh_token` + `expires_in` |
+| **API Key** | Pre-provisioned key from dashboard, admin API, or another user. No interactive flow needed. Static, long-lived. | Key-level only (no user identity in CLI) | Created outside the CLI |
+
+### 2.2 Methods Matrix
+
+| Method | Auth Type | Command | Interactive | Server Call | Best For |
+|--------|-----------|---------|-------------|-------------|----------|
+| Localhost Callback | OAuth | `anycap login` | Yes (browser) | `/v1/auth/login` + `/v1/auth/callback` | Desktop terminals with browser |
+| Device Code | OAuth | `anycap login --headless` | Yes (code entry) | `/v1/auth/device-code` + `/v1/auth/device-poll` | SSH, headless, remote |
+| Stdin Token | API Key | `anycap login --with-token` | No | None | CI/CD pipeline provisioning |
+| Direct Set | API Key | `anycap credentials set-key <key>` | No | None | Manual key provisioning |
+| Env Variable | API Key | `ANYCAP_API_KEY=sk-...` | No | None | Containers, ephemeral envs |
+
+### 2.3 Credential Resolution
+
+Resolution happens on every CLI command. Higher priority wins.
+
+| Priority | Source | Persisted | Mechanism |
+|----------|--------|-----------|-----------|
+| 1 (highest) | `ANYCAP_API_KEY` env var | No | Runtime override, never written to disk |
+| 2 | OS keychain | Yes | macOS Keychain / Linux Secret Service / Windows Credential Manager |
+| 3 (lowest) | `~/.anycap/credentials` file | Yes | Fallback when keychain is unavailable (Docker, headless Linux) |
+
+### 2.4 Token Lifecycle
+
+| Auth Type | Expiry | Refresh | Re-auth |
+|-----------|--------|---------|---------|
+| OAuth | `access_token` expires after `expires_in` seconds | CLI auto-refreshes using `refresh_token` via `POST /v1/auth/refresh`. New tokens are persisted automatically. | `anycap login` if refresh_token is also expired |
+| API Key | No client-side expiry | N/A (no refresh token) | Obtain new key from dashboard |
+| Env var | No client-side expiry | N/A | Update the env var |
+
+**Auto-refresh behavior:**
+
+1. Before each request: if OAuth credential's `access_token` is expired (with 30s buffer), the client calls `POST /v1/auth/refresh` to obtain new tokens.
+2. On 401 response: if the credential is OAuth and has a `refresh_token`, the client refreshes and retries the request once.
+3. The refresh endpoint does NOT require an `Authorization` header -- it validates the `refresh_token` from the request body.
+4. If refresh fails (e.g. refresh_token revoked), the original `AuthError` is returned with a hint to re-login.
+5. On successful refresh, both `access_token` and `refresh_token` may be rotated (server decides).
+
+### 2.5 Transport
+
+Both credential types produce the same HTTP header:
+
+```
+Authorization: Bearer <access_token or api_key>
+User-Agent: anycap-cli/<version>
+```
+
+The server validates the bearer token regardless of how it was obtained.
+
+### 2.6 Flow Selection Diagram
+
+```mermaid
+flowchart TD
+    start["User wants to authenticate"]
+    haskey{"Already has\nan API Key?"}
+    interactive{"Interactive\nterminal?"}
+
+    setkey["anycap credentials set-key sk-xxx\nor ANYCAP_API_KEY env var"]
+    pipe["echo sk-xxx | anycap login --with-token"]
+    auto["anycap login\n(auto-detects best OAuth flow)"]
+    headless["anycap login --headless\n(device code)"]
+
+    start --> haskey
+    haskey -->|Yes| setkey
+    haskey -->|"Yes (CI/CD)"| pipe
+    haskey -->|No| interactive
+    interactive -->|Yes| auto
+    interactive -->|No| headless
+```
+
+### 2.7 API Path Migration
 
 The current login command calls `/v1/login/init`. This spec defines new endpoints under `/v1/auth/`:
 
@@ -42,7 +121,7 @@ If the browser doesn't open, visit: https://anycap.ai/auth/cli?state=...
 
 Waiting for authentication... done!
 Logged in as user@example.com
-API Key saved to ~/.anycap/credentials
+Credential saved.
 ```
 
 ### 3.2 Headless (Device Code Polling)
@@ -56,15 +135,15 @@ Then open this URL in a browser: https://anycap.ai/device
 
 Waiting for authentication... done!
 Logged in as user@example.com
-API Key saved to ~/.anycap/credentials
+Credential saved.
 ```
 
 ### 3.3 Direct Key Input (Skip OAuth entirely)
 
 ```
-$ anycap config set-key sk-xxxxxxxx
+$ anycap credentials set-key sk-xxxxxxxx
 
-API Key saved to ~/.anycap/credentials
+API Key saved.
 ```
 
 ### 3.4 Stdin Token (CI/CD pipelines)
@@ -74,7 +153,7 @@ Inspired by `gh auth login --with-token`:
 ```
 $ echo "sk-xxxxxxxx" | anycap login --with-token
 
-API Key saved to ~/.anycap/credentials
+API Key saved.
 ```
 
 Reads a single line from stdin and saves it as the credential. No server call is made. Useful for CI/CD pipelines, scripted provisioning, and Docker entrypoints.
@@ -179,10 +258,10 @@ sequenceDiagram
     C->>S: POST /v1/auth/callback {code, state, method: localhost}
     S->>A: Exchange code for tokens (using server-side code_verifier)
     A-->>S: User info + tokens
-    S->>S: Create/find user, generate API Key
-    S-->>C: {api_key, user}
+    S->>S: Create/find user, generate tokens
+    S-->>C: {access_token, refresh_token, expires_in, user}
 
-    C->>C: Save API Key to ~/.anycap/credentials
+    C->>C: Save OAuth credential
     C->>C: Shutdown local server
 ```
 
@@ -251,7 +330,7 @@ sequenceDiagram
         alt pending
             S-->>C: {status: pending}
         else complete
-            S-->>C: {status: complete, api_key, user}
+            S-->>C: {status: complete, access_token, refresh_token, expires_in, user}
         else expired
             S-->>C: {status: expired}
         else slow_down
@@ -260,7 +339,7 @@ sequenceDiagram
         end
     end
 
-    C->>C: Save API Key to ~/.anycap/credentials
+    C->>C: Save OAuth credential
 ```
 
 ### 6.2 Key Design Decisions
@@ -284,7 +363,7 @@ sequenceDiagram
 - `https://anycap.ai/device` is a web page where user enters the code.
 - After entering code, user is redirected to Auth0 for authentication.
 - After auth, the page shows "Device authorized, you can return to the terminal."
-- Server marks the device_code as authorized and returns the API key on next poll.
+- Server marks the device_code as authorized and returns OAuth tokens on next poll.
 
 ## 7. Server API Contracts
 
@@ -305,8 +384,9 @@ sequenceDiagram
 |-----------|-------|------|-------------|
 | Request | `code` | string | Authorization code from Auth0 |
 | Request | `state` | string | State value to verify |
-| Request | `method` | string | `"localhost"` |
-| Response | `api_key` | string | Generated API key (`sk-...`) |
+| Response | `access_token` | string | Short-lived access token |
+| Response | `refresh_token` | string | Long-lived refresh token |
+| Response | `expires_in` | int | Access token TTL in seconds |
 | Response | `user.email` | string | User's email |
 | Response | `user.name` | string | User's display name |
 
@@ -329,34 +409,76 @@ sequenceDiagram
 |-----------|-------|------|-------------|
 | Request | `device_code` | string | Device code from init response |
 | Response | `status` | string | `"pending"`, `"complete"`, `"expired"`, or `"slow_down"` |
-| Response | `api_key` | string | (only when status=complete) |
+| Response | `access_token` | string | (only when status=complete) Short-lived access token |
+| Response | `refresh_token` | string | (only when status=complete) Long-lived refresh token |
+| Response | `expires_in` | int | (only when status=complete) Access token TTL in seconds |
 | Response | `user` | object | (only when status=complete) |
+
+### 7.3 Token Refresh
+
+**POST /v1/auth/refresh**
+
+| Direction | Field | Type | Description |
+|-----------|-------|------|-------------|
+| Request | `refresh_token` | string | Current refresh token |
+| Response | `access_token` | string | New access token |
+| Response | `refresh_token` | string | New refresh token (rotation) |
+| Response | `expires_in` | int | New access token TTL in seconds |
+
+No `Authorization` header required. Returns 401 if the refresh token is invalid or expired.
 
 ## 8. Credential Storage
 
+### 8.1 Credential Model
+
+Credentials are stored as JSON with a `type` discriminator:
+
+**OAuth credential** (from `anycap login`):
+```json
+{
+  "type": "oauth",
+  "access_token": "eyJ...",
+  "refresh_token": "v1.MR...",
+  "expires_at": "2026-03-25T12:00:00Z"
+}
+```
+
+**API Key credential** (from `credentials set-key`, `login --with-token`, or `ANYCAP_API_KEY`):
+```json
+{
+  "type": "api_key",
+  "access_token": "sk-xxxxxxxx"
+}
+```
+
+Both types send `Authorization: Bearer <access_token>` on every request. The `type` field determines whether the client attempts token refresh.
+
+Implementation: `internal/cli/config/credential.go` (`Credential` struct, `NewOAuthCredential()`, `NewAPIKeyCredential()`).
+
+### 8.2 Storage Backends
+
 **Resolution order:** `ANYCAP_API_KEY` env var > OS keychain > `~/.anycap/credentials` fallback file.
 
-Env var always wins (for CI/CD, testing, enterprise proxy). The OS keychain is the primary persistent store. The plain-text file is a fallback for environments where no keychain backend is available (headless Linux without D-Bus/Secret Service, Docker containers, etc.).
+Env var always wins (for CI/CD, testing, enterprise proxy). Creates an `api_key` credential at runtime without persisting. The OS keychain is the primary persistent store. The fallback file is for environments where no keychain backend is available (headless Linux without D-Bus/Secret Service, Docker containers, etc.).
 
 **Keychain backend:** `github.com/zalando/go-keyring`
 - macOS: Keychain (via Security framework)
 - Linux: Secret Service D-Bus API (GNOME Keyring, KDE Wallet, etc.)
 - Windows: Windows Credential Manager
 
-Service name: `anycap`, Account: `api-key`.
+Service name: `anycap`, Account: `credential`. Value is JSON string.
 
 **Save behavior:**
-1. Try OS keychain. If success, delete any existing fallback file and return.
-2. If keychain unavailable, write `~/.anycap/credentials` (plain text, single line, `0600`).
+1. Marshal `Credential` to JSON.
+2. Try OS keychain. If success, delete any existing fallback file and return.
+3. If keychain unavailable, write JSON to `~/.anycap/credentials` (mode `0600`).
 
 **Load behavior:**
-1. Check `ANYCAP_API_KEY` env var.
-2. Try OS keychain.
+1. Check `ANYCAP_API_KEY` env var -- return `NewAPIKeyCredential(value)`.
+2. Try OS keychain -- parse JSON to `Credential`.
 3. Try fallback file. If found AND keychain is available, auto-migrate to keychain and delete the file.
 
-**Auto-migration:** When `LoadCredential()` finds a key in the fallback file and the keychain is working, it transparently migrates the credential to the keychain and removes the plain-text file. This ensures users who upgrade from file-only versions automatically get keychain protection.
-
-**Logout:** `anycap logout` deletes from both keychain and fallback file. Does NOT revoke the API key server-side (keeps logout fast and offline-capable). Future: `anycap logout --revoke` for server-side revocation.
+**Logout:** `anycap logout` deletes from both keychain and fallback file. Does NOT revoke tokens server-side (keeps logout fast and offline-capable).
 
 **Testing:** Tests call `keyring.MockInit()` in `TestMain` to use an in-memory keyring backend. No real OS keychain interaction during tests.
 
@@ -374,12 +496,20 @@ Service name: `anycap`, Account: `api-key`.
 
 ## 10. 401 Auto-Recovery
 
-When any command receives HTTP 401, the CLI should:
-- Map to exit code 1 (see framework.md Section 6)
-- Output to stderr: `Error: Not authenticated or API key expired. Run 'anycap login' to authenticate.`
-- In JSON mode, include `error.hint: "anycap login"` in stdout
+When any command receives HTTP 401, the CLI handles it based on credential type:
 
-This covers: first-time users, revoked keys, expired keys (if expiry is implemented later).
+**OAuth credential (has refresh_token):**
+1. Attempt token refresh via `POST /v1/auth/refresh`.
+2. If refresh succeeds: retry the original request with the new access_token.
+3. If refresh fails: return `AuthError` with re-login hint.
+
+**API Key credential (no refresh_token) or no credential:**
+- Map to exit code 1.
+- Output to stderr: `Error: Not authenticated or API key expired. Run 'anycap login' to authenticate.`
+
+Additionally, OAuth credentials are proactively refreshed before each request if the access_token is within 30 seconds of expiry, avoiding unnecessary 401 round-trips.
+
+Implementation: `internal/cli/httpclient/client.go` (`do()` method with pre-flight check and 401 retry).
 
 ## 11. Edge Cases
 
@@ -404,7 +534,7 @@ It implements all auth API contracts using plain `net/http`, with no server-side
 - Only imported from `_test.go` files -- never compiled into the CLI production binary.
 - Device codes are auto-approved on creation (first poll returns `complete`).
 - Mock authorize endpoint (`/mock/authorize`) immediately 302-redirects to the CLI localhost callback.
-- Generates deterministic-format API keys (`sk-mock-{random hex}`) for easy assertion.
+- Generates deterministic-format tokens (`mock-at-{hex}`, `mock-rt-{hex}`) for easy assertion.
 
 **Automated testing pattern:**
 
@@ -420,9 +550,9 @@ sequenceDiagram
     C->>M: POST /v1/auth/device-code
     M-->>C: {device_code, user_code}
     C->>M: POST /v1/auth/device-poll
-    M-->>C: {status: complete, api_key: sk-mock-xxx}
-    C->>C: Save to $HOME/.anycap/credentials
-    T->>T: Assert credentials file contains sk-mock-xxx
+    M-->>C: {status: complete, access_token: mock-at-xxx, refresh_token: mock-rt-xxx}
+    C->>C: Save OAuth credential to keychain
+    T->>T: Assert credential type is oauth with mock-at-xxx token
 ```
 
 Test isolation:
@@ -446,25 +576,26 @@ Implementation: `internal/cli/testutil/mockserver/server.go`, `cmd/anycap-mock/m
 
 ## 13. Implementation Status
 
-### Done (Phase 1+2)
+### Done (Phase 1+2+3)
 
-- [x] Credential storage: `LoadCredential()`, `SaveCredential()`, `DeleteCredential()` with OS keychain + file fallback + auto-migration
-- [x] HTTP client with `Authorization: Bearer` header and `User-Agent`
-- [x] `anycap login --with-token` -- stdin token input for CI/CD
-- [x] `anycap login --headless` -- device code polling flow
-- [x] `anycap login` -- localhost callback flow with auto-redirect
+- [x] Structured credential model: `Credential` type with `oauth` and `api_key` variants
+- [x] Credential storage (JSON): `LoadCredential()`, `SaveCredential()`, `DeleteCredential()` with OS keychain + file fallback + auto-migration
+- [x] OAuth login flows return `access_token` + `refresh_token` + `expires_in`
+- [x] HTTP client auto-refresh: pre-flight expiry check + 401 retry with `POST /v1/auth/refresh`
+- [x] `anycap login` -- localhost callback flow (returns OAuth credential)
+- [x] `anycap login --headless` -- device code polling flow (returns OAuth credential)
+- [x] `anycap login --with-token` -- stdin API key input for CI/CD
 - [x] AutoFlow with `HasBrowser()` + `CanBindLocalPort()` detection
-- [x] `anycap logout` -- delete credentials
+- [x] `anycap logout` -- delete local credentials (no server-side revocation)
+- [x] `anycap credentials set-key sk-xxx` -- direct API key input (saves as `api_key` type)
+- [x] `anycap credentials show` -- display credential type, source, endpoint, auth state
+- [x] 401 auto-recovery: OAuth auto-refresh + re-login hint for API key
+- [x] "Already logged in" check before OAuth flows
 - [x] Platform-specific browser opening (macOS/Linux/Windows)
-- [x] Mock auth server for testing (`internal/cli/testutil/mockserver/`)
-- [x] End-to-end test coverage (device code, with-token, logout, login-then-status)
+- [x] Mock auth server with OAuth token responses + `/v1/auth/refresh` endpoint
+- [x] End-to-end test coverage (device code, with-token, logout, auto-refresh, 401 retry)
 
-### Pending (Phase 3)
+### Pending
 
-- [ ] `anycap config set-key sk-xxx` -- direct key input command
-- [ ] `anycap config show` -- display current config
-- [ ] 401 auto-recovery messaging
-- [ ] `anycap login --status` -- show current auth state
-- [ ] `anycap logout --revoke` -- server-side key revocation
-- [ ] Token refresh (if API keys have expiry)
 - [ ] Real Auth0 integration on server side
+- [ ] Server-side `/v1/auth/*` endpoints (currently only mock server implements them)

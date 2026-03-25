@@ -58,7 +58,7 @@ CLI flag  >  Environment variable  >  Config file  >  Default
 
 ```
 ~/.anycap/
-  config.json          # User preferences (endpoint, defaults) -- 0644
+  config.toml          # User preferences (endpoint, defaults) -- 0644
   credentials          # API Key (plain text, single line) -- 0600
   cache/
     models/            # Model list cache (TTL-based, per capability)

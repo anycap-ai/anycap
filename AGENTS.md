@@ -119,9 +119,10 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | `deploy/server-prod` | Docker build + deploy to infra-prod |
 
 **CLI Release flow:**
-1. Push branch `release/cli-v0.1.0` (version extracted from branch name).
-2. CI runs goreleaser to cross-compile and archive CLI binaries.
-3. CI creates GitHub release and uploads artifacts (requires `GITHUB_TOKEN` in CI/CD variables).
+1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
+2. Push branch `release/cli-v0.1.0` (version extracted from branch name).
+3. CI runs goreleaser to cross-compile and archive CLI binaries.
+4. CI creates GitHub release with the release notes and uploads artifacts (requires `GITHUB_TOKEN` in CI/CD variables).
 
 **Server deploy flow:**
 1. Merge to `deploy/server-dev` to build and deploy the server image to dev.
@@ -145,7 +146,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 
 - **CLI only talks to Server.** CLI never directly accesses Auth0, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
 - **Auth0 is the auth provider.** Server wraps Auth0 flows. CLI calls Server login APIs which internally interact with Auth0.
-- **Config + Credential separation.** `~/.anycap/config.json` for preferences (0644), `~/.anycap/credentials` for API key (0600).
+- **Config + Credential separation.** `~/.anycap/config.toml` for preferences (0644), `~/.anycap/credentials` for credential JSON (0600). Keychain is primary store; file is fallback.
 - **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, dev scripts inject `http://127.0.0.1:8080`.
 - **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.
 - **Release via goreleaser.** CLI binary and skill files will be hosted on GitHub. Use goreleaser for cross-platform builds and GitHub Releases.

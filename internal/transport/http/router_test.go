@@ -125,9 +125,10 @@ func TestRouter_Presign_Success(t *testing.T) {
 	engine := NewRouter(newTestDeps())
 
 	resp := ut.PerformRequest(engine.Engine, "POST", "/v1/capabilities/presign",
-		jsonBody(map[string]string{
-			"filename":     "test.png",
-			"content_type": "image/png",
+		jsonBody(map[string]any{
+			"filename":       "test.png",
+			"content_type":   "image/png",
+			"content_length": 1024,
 		}),
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -160,8 +161,9 @@ func TestRouter_Presign_MissingFilename(t *testing.T) {
 	engine := NewRouter(newTestDeps())
 
 	resp := ut.PerformRequest(engine.Engine, "POST", "/v1/capabilities/presign",
-		jsonBody(map[string]string{
-			"content_type": "image/png",
+		jsonBody(map[string]any{
+			"content_type":   "image/png",
+			"content_length": 1024,
 		}),
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -175,9 +177,10 @@ func TestRouter_Presign_InvalidContentType(t *testing.T) {
 	engine := NewRouter(newTestDeps())
 
 	resp := ut.PerformRequest(engine.Engine, "POST", "/v1/capabilities/presign",
-		jsonBody(map[string]string{
-			"filename":     "test.txt",
-			"content_type": "text/plain",
+		jsonBody(map[string]any{
+			"filename":       "test.txt",
+			"content_type":   "text/plain",
+			"content_length": 100,
 		}),
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -199,9 +202,10 @@ func TestRouter_Presign_NoStorage(t *testing.T) {
 	engine := NewRouter(deps)
 
 	resp := ut.PerformRequest(engine.Engine, "POST", "/v1/capabilities/presign",
-		jsonBody(map[string]string{
-			"filename":     "test.png",
-			"content_type": "image/png",
+		jsonBody(map[string]any{
+			"filename":       "test.png",
+			"content_type":   "image/png",
+			"content_length": 1024,
 		}),
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)

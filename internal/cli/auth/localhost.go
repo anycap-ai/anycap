@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 )
 
@@ -31,12 +32,12 @@ type callbackResult struct {
 
 // LocalhostFlow runs the localhost callback auth flow.
 // It binds a local port, calls the server to get an auth URL, opens the browser,
-// waits for the callback, and exchanges the code for an API key.
-func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (apiKey string, email string, err error) {
+// waits for the callback, and exchanges the code for OAuth tokens.
+func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
 	// Step 1: Bind a random local port
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return "", "", fmt.Errorf("failed to bind local port: %w", err)
+		return nil, "", fmt.Errorf("failed to bind local port: %w", err)
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 
@@ -47,7 +48,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 	})
 	if err != nil {
 		listener.Close()
-		return "", "", fmt.Errorf("failed to init login: %w", err)
+		return nil, "", fmt.Errorf("failed to init login: %w", err)
 	}
 
 	var initResp struct {
@@ -58,7 +59,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 	}
 	if err := json.Unmarshal(resp, &initResp); err != nil {
 		listener.Close()
-		return "", "", fmt.Errorf("failed to parse login response: %w", err)
+		return nil, "", fmt.Errorf("failed to parse login response: %w", err)
 	}
 
 	// Step 3: Start local callback server
@@ -94,42 +95,46 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 	select {
 	case result = <-resultCh:
 	case <-time.After(callbackTimeout):
-		return "", "", fmt.Errorf("authentication timed out after %v. Try 'anycap login --headless' instead", callbackTimeout)
+		return nil, "", fmt.Errorf("authentication timed out after %v. Try 'anycap login --headless' instead", callbackTimeout)
 	case <-ctx.Done():
-		return "", "", ctx.Err()
+		return nil, "", ctx.Err()
 	}
 
 	if result.Err != nil {
-		return "", "", result.Err
+		return nil, "", result.Err
 	}
 
 	if result.State != initResp.Data.State {
-		return "", "", fmt.Errorf("state mismatch: possible CSRF attack")
+		return nil, "", fmt.Errorf("state mismatch: possible CSRF attack")
 	}
 
-	// Step 6: Exchange code for API key
+	// Step 6: Exchange code for OAuth tokens
 	callbackResp, err := client.PostJSON(ctx, "/v1/auth/callback", map[string]any{
 		"code":  result.Code,
 		"state": result.State,
 	})
 	if err != nil {
-		return "", "", fmt.Errorf("failed to exchange code: %w", err)
+		return nil, "", fmt.Errorf("failed to exchange code: %w", err)
 	}
 
 	var tokenResp struct {
 		Data struct {
-			APIKey string `json:"api_key"`
-			User   struct {
+			AccessToken  string `json:"access_token"`
+			RefreshToken string `json:"refresh_token"`
+			ExpiresIn    int    `json:"expires_in"`
+			User         struct {
 				Email string `json:"email"`
 				Name  string `json:"name"`
 			} `json:"user"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(callbackResp, &tokenResp); err != nil {
-		return "", "", fmt.Errorf("failed to parse callback response: %w", err)
+		return nil, "", fmt.Errorf("failed to parse callback response: %w", err)
 	}
 
-	return tokenResp.Data.APIKey, tokenResp.Data.User.Email, nil
+	expiresAt := time.Now().Add(time.Duration(tokenResp.Data.ExpiresIn) * time.Second)
+	oauthCred := cliconfig.NewOAuthCredential(tokenResp.Data.AccessToken, tokenResp.Data.RefreshToken, expiresAt)
+	return oauthCred, tokenResp.Data.User.Email, nil
 }
 
 // CanBindLocalPort tests whether we can bind a local TCP port.

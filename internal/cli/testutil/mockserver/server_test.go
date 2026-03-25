@@ -37,9 +37,17 @@ func TestDeviceCodeFlow(t *testing.T) {
 	if data["status"] != "complete" {
 		t.Fatalf("expected complete, got %s", data["status"])
 	}
-	apiKey := data["api_key"].(string)
-	if len(apiKey) == 0 || apiKey[:8] != "sk-mock-" {
-		t.Fatalf("expected sk-mock-... API key, got %s", apiKey)
+	accessToken := data["access_token"].(string)
+	if len(accessToken) == 0 || accessToken[:8] != "mock-at-" {
+		t.Fatalf("expected mock-at-... access token, got %s", accessToken)
+	}
+	refreshToken := data["refresh_token"].(string)
+	if len(refreshToken) == 0 || refreshToken[:8] != "mock-rt-" {
+		t.Fatalf("expected mock-rt-... refresh token, got %s", refreshToken)
+	}
+	expiresIn := data["expires_in"].(float64)
+	if expiresIn <= 0 {
+		t.Fatalf("expected positive expires_in, got %v", expiresIn)
 	}
 
 	// Step 3: Polling again should return expired (code consumed)
@@ -93,22 +101,70 @@ func TestLocalhostCallbackFlow(t *testing.T) {
 	}
 	t.Logf("redirect location: %s", location)
 
-	// Step 3: Exchange code (extract code from redirect URL)
-	// The redirect URL is: http://localhost:59999/callback?code=xxx&state=yyy
-	// We just need the code parameter
+	// Step 3: Exchange code for OAuth tokens
 	resp = postJSON(t, ts.URL+"/v1/auth/callback", map[string]any{
 		"code":  "mock-code-test",
 		"state": state,
 	})
 	data = resp["data"].(map[string]any)
-	apiKey := data["api_key"].(string)
-	if len(apiKey) == 0 || apiKey[:8] != "sk-mock-" {
-		t.Fatalf("expected sk-mock-... API key, got %s", apiKey)
+	accessToken := data["access_token"].(string)
+	if len(accessToken) == 0 || accessToken[:8] != "mock-at-" {
+		t.Fatalf("expected mock-at-... access token, got %s", accessToken)
+	}
+	refreshToken := data["refresh_token"].(string)
+	if len(refreshToken) == 0 || refreshToken[:8] != "mock-rt-" {
+		t.Fatalf("expected mock-rt-... refresh token, got %s", refreshToken)
 	}
 
 	user := data["user"].(map[string]any)
 	if user["email"] != "dev@anycap.ai" {
 		t.Fatalf("expected dev@anycap.ai, got %s", user["email"])
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	ms := New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	// Login first to get a refresh token
+	resp := postJSON(t, ts.URL+"/v1/auth/device-code", map[string]any{})
+	data := resp["data"].(map[string]any)
+	deviceCode := data["device_code"].(string)
+
+	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
+		"device_code": deviceCode,
+	})
+	data = resp["data"].(map[string]any)
+	refreshToken := data["refresh_token"].(string)
+
+	// Refresh
+	resp = postJSON(t, ts.URL+"/v1/auth/refresh", map[string]any{
+		"refresh_token": refreshToken,
+	})
+	data = resp["data"].(map[string]any)
+	newAccessToken := data["access_token"].(string)
+	newRefreshToken := data["refresh_token"].(string)
+
+	if newAccessToken[:8] != "mock-at-" {
+		t.Fatalf("expected mock-at-... access token, got %s", newAccessToken)
+	}
+	if newRefreshToken[:8] != "mock-rt-" {
+		t.Fatalf("expected mock-rt-... refresh token, got %s", newRefreshToken)
+	}
+	if newRefreshToken == refreshToken {
+		t.Fatal("expected rotated refresh token")
+	}
+
+	// Old refresh token should be invalid
+	b, _ := json.Marshal(map[string]any{"refresh_token": refreshToken})
+	httpResp, err := http.Post(ts.URL+"/v1/auth/refresh", "application/json", bytes.NewReader(b))
+	if err != nil {
+		t.Fatalf("refresh with old token: %v", err)
+	}
+	defer httpResp.Body.Close()
+	if httpResp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for expired refresh token, got %d", httpResp.StatusCode)
 	}
 }
 

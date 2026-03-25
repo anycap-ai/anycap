@@ -14,7 +14,8 @@ const (
 	defaultHTTPAddr = ":18080"
 
 	defaultAgentPlatformTimeout = 120 * time.Second
-	defaultPresignExpiry        = 3600 // seconds
+	defaultPresignExpiry        = 600  // seconds (10 minutes)
+	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
 )
 
 type Config struct {
@@ -47,6 +48,7 @@ type S3Config struct {
 	Bucket          string
 	Region          string
 	PublicURL       string
+	KeyPrefix       string
 	PresignExpiry   int // seconds
 	ForcePathStyle  bool
 }
@@ -98,6 +100,10 @@ func loadS3Config() S3Config {
 		forcePathStyle = true
 	}
 
+	if expiry > maxPresignExpiry {
+		expiry = maxPresignExpiry
+	}
+
 	return S3Config{
 		Endpoint:        getEnv("S3_ENDPOINT", ""),
 		AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
@@ -105,6 +111,7 @@ func loadS3Config() S3Config {
 		Bucket:          getEnv("S3_BUCKET", "anycap-tmp"),
 		Region:          getEnv("S3_REGION", "auto"),
 		PublicURL:       getEnv("S3_PUBLIC_URL", ""),
+		KeyPrefix:       getEnv("S3_KEY_PREFIX", "user_upload"),
 		PresignExpiry:   expiry,
 		ForcePathStyle:  forcePathStyle,
 	}

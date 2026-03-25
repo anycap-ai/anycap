@@ -36,9 +36,11 @@ func TestIntegration_PresignAndUpload(t *testing.T) {
 	}
 
 	// Step 1: Generate presigned PUT URL
+	testContent := fmt.Sprintf("AnyCap S3 integration test at %s", time.Now().UTC().Format(time.RFC3339))
 	req := model.PresignRequest{
-		Filename:    "integration-test.txt",
-		ContentType: "text/plain",
+		Filename:      "integration-test.png",
+		ContentType:   "image/png",
+		ContentLength: int64(len(testContent)),
 	}
 	result, err := client.PresignPut(ctx, req)
 	if err != nil {
@@ -66,12 +68,12 @@ func TestIntegration_PresignAndUpload(t *testing.T) {
 	})
 
 	// Step 2: Upload a test file via presigned PUT
-	testContent := fmt.Sprintf("AnyCap S3 integration test at %s", time.Now().UTC().Format(time.RFC3339))
 	putReq, err := http.NewRequestWithContext(ctx, http.MethodPut, result.UploadURL, bytes.NewReader([]byte(testContent)))
 	if err != nil {
 		t.Fatalf("create PUT request: %v", err)
 	}
-	putReq.Header.Set("Content-Type", "text/plain")
+	putReq.Header.Set("Content-Type", "image/png")
+	putReq.ContentLength = int64(len(testContent))
 
 	resp, err := http.DefaultClient.Do(putReq)
 	if err != nil {

@@ -21,12 +21,10 @@ On success, the CLI re-executes the original command with the new binary.
 
 ### Config
 
-`~/.anycap/config.json`:
+`~/.anycap/config.toml`:
 
-```json
-{
-  "auto_update": false
-}
+```toml
+auto_update = false
 ```
 
 | Field | Type | Default | Description |

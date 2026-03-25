@@ -26,10 +26,13 @@ AUTH="Authorization: token ${GITHUB_TOKEN}"
 # ── Create release (or get existing) ───────────────────────────────────────
 echo "Creating GitHub release for ${TAG} ..."
 
-# Use goreleaser changelog if available, otherwise fallback
-if [ -f dist/CHANGELOG.md ]; then
-  BODY=$(cat dist/CHANGELOG.md)
+# Use hand-written release notes if available
+NOTES_FILE="releases/${TAG}.md"
+if [ -f "$NOTES_FILE" ]; then
+  BODY=$(cat "$NOTES_FILE")
+  echo "Using release notes from ${NOTES_FILE}"
 else
+  echo "WARNING: ${NOTES_FILE} not found, using placeholder" >&2
   BODY="Release ${TAG}"
 fi
 

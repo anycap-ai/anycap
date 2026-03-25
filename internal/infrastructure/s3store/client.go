@@ -22,6 +22,7 @@ type Client struct {
 	presignClient *s3.PresignClient
 	bucket        string
 	publicURL     string
+	keyPrefix     string
 	expiry        time.Duration
 }
 
@@ -62,6 +63,7 @@ func NewClient(ctx context.Context, cfg config.S3Config) (*Client, error) {
 		presignClient: s3.NewPresignClient(s3Client),
 		bucket:        cfg.Bucket,
 		publicURL:     publicURL,
+		keyPrefix:     cfg.KeyPrefix,
 		expiry:        time.Duration(cfg.PresignExpiry) * time.Second,
 	}, nil
 }
@@ -70,12 +72,13 @@ func NewClient(ctx context.Context, cfg config.S3Config) (*Client, error) {
 func (c *Client) PresignPut(ctx context.Context, req model.PresignRequest) (model.PresignResult, error) {
 	date := time.Now().UTC().Format("2006-01-02")
 	id := uuid.New().String()
-	key := fmt.Sprintf("caps/%s/%s/%s", date, id, req.Filename)
+	key := fmt.Sprintf("%s/%s/%s/%s", c.keyPrefix, date, id, req.Filename)
 
 	presigned, err := c.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(c.bucket),
-		Key:         aws.String(key),
-		ContentType: aws.String(req.ContentType),
+		Bucket:        aws.String(c.bucket),
+		Key:           aws.String(key),
+		ContentType:   aws.String(req.ContentType),
+		ContentLength: aws.Int64(req.ContentLength),
 	}, s3.WithPresignExpires(c.expiry))
 	if err != nil {
 		return model.PresignResult{}, fmt.Errorf("presign put: %w", err)

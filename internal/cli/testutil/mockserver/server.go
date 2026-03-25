@@ -28,29 +28,31 @@ import (
 type Server struct {
 	mux *http.ServeMux
 
-	mu          sync.Mutex
-	loginStates map[string]int             // state -> redirect_port
-	deviceCodes map[string]deviceCodeEntry // device_code -> entry
+	mu            sync.Mutex
+	loginStates   map[string]int             // state -> redirect_port
+	deviceCodes   map[string]deviceCodeEntry // device_code -> entry
+	refreshTokens map[string]string          // refresh_token -> user email
 }
 
 type deviceCodeEntry struct {
 	UserCode string
-	APIKey   string
 	Email    string
 }
 
 // New creates a mock server with all auth and capabilities endpoints registered.
 func New() *Server {
 	s := &Server{
-		mux:         http.NewServeMux(),
-		loginStates: make(map[string]int),
-		deviceCodes: make(map[string]deviceCodeEntry),
+		mux:           http.NewServeMux(),
+		loginStates:   make(map[string]int),
+		deviceCodes:   make(map[string]deviceCodeEntry),
+		refreshTokens: make(map[string]string),
 	}
 
 	s.mux.HandleFunc("POST /v1/auth/login", s.handleLogin)
 	s.mux.HandleFunc("POST /v1/auth/callback", s.handleCallback)
 	s.mux.HandleFunc("POST /v1/auth/device-code", s.handleDeviceCode)
 	s.mux.HandleFunc("POST /v1/auth/device-poll", s.handleDevicePoll)
+	s.mux.HandleFunc("POST /v1/auth/refresh", s.handleRefresh)
 	s.mux.HandleFunc("GET /mock/authorize", s.handleMockAuthorize)
 	s.mux.HandleFunc("GET /v1/status", s.handleStatus)
 
@@ -85,7 +87,6 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	s.loginStates[state] = req.RedirectPort
 	s.mu.Unlock()
 
-	// Build mock authorize URL using the incoming request's host
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
@@ -122,7 +123,7 @@ func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
-// --- Auth Callback (exchange code for API key) ---
+// --- Auth Callback (exchange code for OAuth tokens) ---
 
 func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	var req struct {
@@ -146,8 +147,17 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accessToken := "mock-at-" + randomHex(16)
+	refreshToken := "mock-rt-" + randomHex(16)
+
+	s.mu.Lock()
+	s.refreshTokens[refreshToken] = "dev@anycap.ai"
+	s.mu.Unlock()
+
 	writeSuccess(w, map[string]any{
-		"api_key": "sk-mock-" + randomHex(8),
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    3600,
 		"user": map[string]string{
 			"email": "dev@anycap.ai",
 			"name":  "Dev User",
@@ -160,12 +170,10 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
 	deviceCode := randomHex(16)
 	userCode := randomUserCode()
-	apiKey := "sk-mock-" + randomHex(8)
 
 	s.mu.Lock()
 	s.deviceCodes[deviceCode] = deviceCodeEntry{
 		UserCode: userCode,
-		APIKey:   apiKey,
 		Email:    "dev@anycap.ai",
 	}
 	s.mu.Unlock()
@@ -206,14 +214,61 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accessToken := "mock-at-" + randomHex(16)
+	refreshToken := "mock-rt-" + randomHex(16)
+
+	s.mu.Lock()
+	s.refreshTokens[refreshToken] = entry.Email
+	s.mu.Unlock()
+
 	// Mock: auto-approve immediately
 	writeSuccess(w, map[string]any{
-		"status":  "complete",
-		"api_key": entry.APIKey,
+		"status":        "complete",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    3600,
 		"user": map[string]string{
 			"email": entry.Email,
 			"name":  "Dev User",
 		},
+	})
+}
+
+// --- Auth Refresh ---
+
+func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	s.mu.Lock()
+	email, ok := s.refreshTokens[req.RefreshToken]
+	if ok {
+		// Rotate: delete old, issue new
+		delete(s.refreshTokens, req.RefreshToken)
+	}
+	s.mu.Unlock()
+
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "INVALID_REFRESH_TOKEN", "refresh token is invalid or expired")
+		return
+	}
+
+	newAccessToken := "mock-at-" + randomHex(16)
+	newRefreshToken := "mock-rt-" + randomHex(16)
+
+	s.mu.Lock()
+	s.refreshTokens[newRefreshToken] = email
+	s.mu.Unlock()
+
+	writeSuccess(w, map[string]any{
+		"access_token":  newAccessToken,
+		"refresh_token": newRefreshToken,
+		"expires_in":    3600,
 	})
 }
 
@@ -232,8 +287,9 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handlePresign(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Filename    string `json:"filename"`
-		ContentType string `json:"content_type"`
+		Filename      string `json:"filename"`
+		ContentType   string `json:"content_type"`
+		ContentLength int64  `json:"content_length"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -261,7 +317,6 @@ func (s *Server) handlePresign(w http.ResponseWriter, r *http.Request) {
 // --- Capabilities: Mock Upload (simulates S3 presigned PUT) ---
 
 func (s *Server) handleMockUpload(w http.ResponseWriter, r *http.Request) {
-	// Accept any PUT, discard the body
 	defer r.Body.Close()
 	w.WriteHeader(http.StatusOK)
 }

@@ -99,20 +99,32 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 		return consts.StatusBadGateway, "storage_not_configured", err.Error()
 	}
 
+	// Upload validation errors -> 400/413
+	if errors.Is(err, model.ErrInvalidContentType) {
+		return consts.StatusBadRequest, "invalid_content_type", err.Error()
+	}
+	if errors.Is(err, model.ErrInvalidFilename) {
+		return consts.StatusBadRequest, "invalid_filename", err.Error()
+	}
+	if errors.Is(err, model.ErrContentLengthRequired) {
+		return consts.StatusBadRequest, "invalid_param", err.Error()
+	}
+	if errors.Is(err, model.ErrFileTooLarge) {
+		return 413, "file_too_large", err.Error()
+	}
+
 	// Upstream errors from agent-platform
 	var ue *agentplatform.UpstreamError
 	if errors.As(err, &ue) {
 		return consts.StatusBadGateway, ue.Code, ue.Message
 	}
 
-	// Content-type / filename validation
-	if err.Error() == "content_type must be image/* or video/*" {
-		return consts.StatusBadRequest, "invalid_content_type", err.Error()
-	}
-	if err.Error() == "filename is required" || err.Error() == "content_type is required" {
-		return consts.StatusBadRequest, "invalid_param", err.Error()
+	// Remaining param validation (filename/content_type required)
+	msg := err.Error()
+	if msg == "filename is required" || msg == "content_type is required" {
+		return consts.StatusBadRequest, "invalid_param", msg
 	}
 
 	// Default
-	return consts.StatusInternalServerError, "internal_error", err.Error()
+	return consts.StatusInternalServerError, "internal_error", msg
 }

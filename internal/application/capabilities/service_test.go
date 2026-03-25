@@ -99,8 +99,9 @@ func TestService_Presign_Success(t *testing.T) {
 	svc := newTestService()
 
 	result, err := svc.Presign(context.Background(), model.PresignRequest{
-		Filename:    "test.png",
-		ContentType: "image/png",
+		Filename:      "test.png",
+		ContentType:   "image/png",
+		ContentLength: 1024,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -117,8 +118,9 @@ func TestService_Presign_NoStorage(t *testing.T) {
 	svc := NewService(agentplatform.NewStubClient(), nil)
 
 	_, err := svc.Presign(context.Background(), model.PresignRequest{
-		Filename:    "test.png",
-		ContentType: "image/png",
+		Filename:      "test.png",
+		ContentType:   "image/png",
+		ContentLength: 1024,
 	})
 	if err != model.ErrStorageNotConfigured {
 		t.Errorf("expected ErrStorageNotConfigured, got %v", err)
@@ -129,8 +131,9 @@ func TestService_Presign_InvalidContentType(t *testing.T) {
 	svc := newTestService()
 
 	_, err := svc.Presign(context.Background(), model.PresignRequest{
-		Filename:    "test.txt",
-		ContentType: "text/plain",
+		Filename:      "test.txt",
+		ContentType:   "text/plain",
+		ContentLength: 1024,
 	})
 	if err == nil {
 		t.Error("expected error for invalid content_type")

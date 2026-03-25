@@ -28,10 +28,17 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string)
 	filename := filepath.Base(filePath)
 	contentType := detectContentType(filePath)
 
+	// Stat file to get exact size for presign request.
+	stat, err := os.Stat(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat file: %w", err)
+	}
+
 	// Step 1: Get presigned upload URL from AnyCap server
 	resp, err := client.PostJSON(ctx, "/v1/capabilities/presign", map[string]any{
-		"filename":     filename,
-		"content_type": contentType,
+		"filename":       filename,
+		"content_type":   contentType,
+		"content_length": stat.Size(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("presign failed: %w", err)
@@ -54,11 +61,6 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string)
 	}
 	defer f.Close()
 
-	stat, err := f.Stat()
-	if err != nil {
-		return nil, fmt.Errorf("failed to stat file: %w", err)
-	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, presign.Data.UploadURL, f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create upload request: %w", err)
@@ -66,7 +68,13 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string)
 	req.Header.Set("Content-Type", contentType)
 	req.ContentLength = stat.Size()
 
-	uploadResp, err := http.DefaultClient.Do(req)
+	// Use a client that does not follow redirects to prevent SSRF.
+	uploadClient := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	uploadResp, err := uploadClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("upload failed: %w", err)
 	}

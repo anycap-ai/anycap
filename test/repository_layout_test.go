@@ -15,7 +15,7 @@ func TestProductAssetsExist(t *testing.T) {
 		"../skills/anycap.skill",
 		"../skills/capabilities/anycap-image.skill",
 		"../.env.example",
-		"../configs/cli/config.example.json",
+		"../configs/cli/config.example.toml",
 		"../web/package.json",
 		"../internal/cli/command/cap/image.go",
 		"../internal/cli/command/meta/login.go",

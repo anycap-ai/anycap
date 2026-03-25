@@ -50,11 +50,19 @@ func NewRootCmd(opts Options) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&endpointFlag, "endpoint", opts.Endpoint, "AnyCap server endpoint")
 
 	clientFactory := func() *httpclient.Client {
-		apiKey := cliconfig.LoadCredential()
+		cred := cliconfig.LoadCredential()
+		clientOpts := []httpclient.Option{
+			httpclient.WithVersion(opts.BuildInfo.Version),
+		}
+		if cred != nil {
+			clientOpts = append(clientOpts,
+				httpclient.WithCredential(cred),
+				httpclient.WithCredentialSaver(cliconfig.SaveCredential),
+			)
+		}
 		return httpclient.New(
 			cliconfig.ResolveEndpoint(endpointFlag),
-			httpclient.WithAPIKey(apiKey),
-			httpclient.WithVersion(opts.BuildInfo.Version),
+			clientOpts...,
 		)
 	}
 
@@ -62,6 +70,8 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewLoginCmd(clientFactory, opts.Stdin, opts.Stdout, opts.Stderr),
 		meta.NewLogoutCmd(opts.Stderr),
 		meta.NewStatusCmd(clientFactory, opts.Stdout),
+		meta.NewCredentialCmd(opts.Stdout, opts.Stderr),
+		meta.NewConfigCmd(opts.Stdout, opts.Stderr),
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
 		cap.NewImageCmd(clientFactory, opts.Stdout),
 		cap.NewVideoCmd(clientFactory, opts.Stdout),
@@ -75,6 +85,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 // skipAutoUpdateCmds lists commands that should not trigger auto-update.
 var skipAutoUpdateCmds = map[string]bool{
 	"update":  true,
+	"config":  true,
 	"help":    true,
 	"version": true,
 }

@@ -1,12 +1,38 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
+// Upload size limits per content type category.
+const (
+	MaxImageUploadSize int64 = 20 * 1024 * 1024  // 20 MB
+	MaxVideoUploadSize int64 = 200 * 1024 * 1024 // 200 MB
+)
+
+// allowedContentTypes is the explicit set of MIME types accepted for upload.
+// SVG is intentionally excluded (XSS risk via embedded scripts).
+var allowedContentTypes = map[string]bool{
+	"image/jpeg":      true,
+	"image/png":       true,
+	"image/gif":       true,
+	"image/webp":      true,
+	"video/mp4":       true,
+	"video/webm":      true,
+	"video/quicktime": true,
+}
 
 var (
-	ErrMissingInput         = errors.New("either url or data must be provided")
-	ErrAmbiguousInput       = errors.New("provide either url or data, not both")
-	ErrMissingMIME          = errors.New("mime_type is required when data is provided")
-	ErrStorageNotConfigured = errors.New("object storage is not configured")
+	ErrMissingInput          = errors.New("either url or data must be provided")
+	ErrAmbiguousInput        = errors.New("provide either url or data, not both")
+	ErrMissingMIME           = errors.New("mime_type is required when data is provided")
+	ErrStorageNotConfigured  = errors.New("object storage is not configured")
+	ErrInvalidContentType    = errors.New("content_type is not allowed")
+	ErrInvalidFilename       = errors.New("filename contains invalid characters")
+	ErrContentLengthRequired = errors.New("content_length must be positive")
+	ErrFileTooLarge          = errors.New("file exceeds maximum upload size")
 )
 
 // ImageUnderstandRequest represents a request to analyze an image.
@@ -69,26 +95,41 @@ type UnderstandResult struct {
 
 // PresignRequest asks the server to generate a presigned PUT URL.
 type PresignRequest struct {
-	Filename    string `json:"filename"`
-	ContentType string `json:"content_type"`
+	Filename      string `json:"filename"`
+	ContentType   string `json:"content_type"`
+	ContentLength int64  `json:"content_length"`
 }
 
 func (r PresignRequest) Validate() error {
 	if r.Filename == "" {
 		return errors.New("filename is required")
 	}
+	// Reject path separators and traversal sequences to prevent key manipulation.
+	if strings.ContainsAny(r.Filename, "/\\") || r.Filename == "." || r.Filename == ".." || strings.Contains(r.Filename, "..") {
+		return ErrInvalidFilename
+	}
 	if r.ContentType == "" {
 		return errors.New("content_type is required")
 	}
-	if !isAllowedContentType(r.ContentType) {
-		return errors.New("content_type must be image/* or video/*")
+	if !allowedContentTypes[r.ContentType] {
+		return fmt.Errorf("%w: %s", ErrInvalidContentType, r.ContentType)
 	}
-
+	if r.ContentLength <= 0 {
+		return ErrContentLengthRequired
+	}
+	maxSize := maxUploadSize(r.ContentType)
+	if r.ContentLength > maxSize {
+		return fmt.Errorf("%w: %d bytes exceeds %d byte limit for %s",
+			ErrFileTooLarge, r.ContentLength, maxSize, r.ContentType)
+	}
 	return nil
 }
 
-func isAllowedContentType(ct string) bool {
-	return len(ct) > 6 && (ct[:6] == "image/" || ct[:6] == "video/")
+func maxUploadSize(ct string) int64 {
+	if strings.HasPrefix(ct, "video/") {
+		return MaxVideoUploadSize
+	}
+	return MaxImageUploadSize
 }
 
 // PresignResult contains the presigned upload URL and the public object URL.

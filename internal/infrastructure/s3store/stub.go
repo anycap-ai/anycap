@@ -15,9 +15,15 @@ func NewStubClient() *StubClient {
 }
 
 func (c *StubClient) PresignPut(_ context.Context, req model.PresignRequest) (model.PresignResult, error) {
+	key := fmt.Sprintf("user_upload/stub-date/stub-id/%s", req.Filename)
 	return model.PresignResult{
-		UploadURL: fmt.Sprintf("https://storage.stub.local/anycap-tmp/caps/stub-id/%s?X-Amz-Signature=stub", req.Filename),
-		ObjectURL: fmt.Sprintf("https://cdn.stub.local/caps/stub-id/%s", req.Filename),
-		ExpiresIn: 3600,
+		UploadURL: fmt.Sprintf("https://storage.stub.local/anycap-tmp/%s?X-Amz-Signature=stub", key),
+		ObjectURL: fmt.Sprintf("https://cdn.stub.local/%s", key),
+		ObjectKey: key,
+		ExpiresIn: 600,
 	}, nil
+}
+
+func (c *StubClient) Delete(_ context.Context, _ string) error {
+	return nil
 }

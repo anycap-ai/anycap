@@ -7,15 +7,16 @@ import (
 	"io"
 	"time"
 
+	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 )
 
 // DeviceFlow runs the device code polling auth flow.
-func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (apiKey string, email string, err error) {
+func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
 	// Step 1: Request device code
 	resp, err := client.PostJSON(ctx, "/v1/auth/device-code", map[string]any{})
 	if err != nil {
-		return "", "", fmt.Errorf("failed to init device code flow: %w", err)
+		return nil, "", fmt.Errorf("failed to init device code flow: %w", err)
 	}
 
 	var initResp struct {
@@ -28,7 +29,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(resp, &initResp); err != nil {
-		return "", "", fmt.Errorf("failed to parse device code response: %w", err)
+		return nil, "", fmt.Errorf("failed to parse device code response: %w", err)
 	}
 
 	d := initResp.Data
@@ -52,12 +53,12 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 	for {
 		select {
 		case <-ctx.Done():
-			return "", "", ctx.Err()
+			return nil, "", ctx.Err()
 		case <-time.After(interval):
 		}
 
 		if time.Now().After(deadline) {
-			return "", "", fmt.Errorf("\nauthentication expired. Please try again")
+			return nil, "", fmt.Errorf("\nauthentication expired. Please try again")
 		}
 
 		pollResp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
@@ -70,9 +71,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 		var poll struct {
 			Data struct {
-				Status string `json:"status"`
-				APIKey string `json:"api_key"`
-				User   *struct {
+				Status       string `json:"status"`
+				AccessToken  string `json:"access_token"`
+				RefreshToken string `json:"refresh_token"`
+				ExpiresIn    int    `json:"expires_in"`
+				User         *struct {
 					Email string `json:"email"`
 					Name  string `json:"name"`
 				} `json:"user"`
@@ -90,9 +93,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			if poll.Data.User != nil {
 				userEmail = poll.Data.User.Email
 			}
-			return poll.Data.APIKey, userEmail, nil
+			expiresAt := time.Now().Add(time.Duration(poll.Data.ExpiresIn) * time.Second)
+			oauthCred := cliconfig.NewOAuthCredential(poll.Data.AccessToken, poll.Data.RefreshToken, expiresAt)
+			return oauthCred, userEmail, nil
 		case "expired":
-			return "", "", fmt.Errorf("\ndevice code expired. Please try again")
+			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":
 			interval *= 2
 			fmt.Fprint(stderr, ".")

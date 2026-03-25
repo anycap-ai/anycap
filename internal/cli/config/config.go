@@ -1,10 +1,10 @@
 package config
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
 	"github.com/joho/godotenv"
 )
 
@@ -20,10 +20,10 @@ func init() {
 //	-ldflags "-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
 var DefaultEndpoint = "http://127.0.0.1:18080"
 
-// Config holds user preferences loaded from ~/.anycap/config.json.
+// Config holds user preferences loaded from ~/.anycap/config.toml.
 type Config struct {
-	Endpoint   string `json:"endpoint,omitempty"`
-	AutoUpdate *bool  `json:"auto_update,omitempty"`
+	Endpoint   string `toml:"endpoint,omitempty"`
+	AutoUpdate *bool  `toml:"auto_update,omitempty"`
 }
 
 // IsAutoUpdateEnabled returns whether auto-update is enabled.
@@ -33,6 +33,12 @@ func (c Config) IsAutoUpdateEnabled() bool {
 		return true
 	}
 	return *c.AutoUpdate
+}
+
+// ConfigDir returns ~/.anycap, creating it if needed.
+func ConfigDir() string {
+	dir, _ := configDir()
+	return dir
 }
 
 // configDir returns ~/.anycap, creating it if needed.
@@ -48,23 +54,40 @@ func configDir() (string, error) {
 	return dir, nil
 }
 
-// Load reads ~/.anycap/config.json. Returns zero Config if the file doesn't exist.
+// ConfigPath returns the full path to the config file.
+func ConfigPath() string {
+	return filepath.Join(ConfigDir(), "config.toml")
+}
+
+// Save writes the config to ~/.anycap/config.toml.
+// Fields with zero/nil values are omitted (omitempty).
+func Save(cfg Config) error {
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, "config.toml")
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return toml.NewEncoder(f).Encode(cfg)
+}
+
+// Load reads ~/.anycap/config.toml. Returns zero Config if the file doesn't exist.
 func Load() (Config, error) {
 	dir, err := configDir()
 	if err != nil {
 		return Config{}, err
 	}
 
-	data, err := os.ReadFile(filepath.Join(dir, "config.json"))
-	if os.IsNotExist(err) {
-		return Config{}, nil
-	}
-	if err != nil {
-		return Config{}, err
-	}
-
+	path := filepath.Join(dir, "config.toml")
 	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	if _, err := toml.DecodeFile(path, &cfg); err != nil {
+		if os.IsNotExist(err) {
+			return Config{}, nil
+		}
 		return Config{}, err
 	}
 	return cfg, nil
