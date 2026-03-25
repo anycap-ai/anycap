@@ -93,6 +93,18 @@ func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured
 	}
 }
 
+func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
+
 func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
 	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
 
@@ -120,5 +132,27 @@ func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testin
 
 	if _, ok := repo.(*nexushub.PlatformClient); !ok {
 		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
+
+func TestBuildImageExecutionClient_UsesCoreConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
+	client := buildImageExecutionClient(config.Config{
+		NexusHubCoreBaseURL: "http://core.example.com",
+		NexusHubCoreToken:   "core-token",
+	})
+
+	if _, ok := client.(*nexushub.Client); !ok {
+		t.Fatalf("expected real nexushub execution client, got %T", client)
+	}
+}
+
+func TestBuildImageExecutionClient_DoesNotUsePlatformConfigForExecution(t *testing.T) {
+	client := buildImageExecutionClient(config.Config{
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+		NexusHubPlatformToken:   "platform-token",
+	})
+
+	if _, ok := client.(*nexushub.StubClient); !ok {
+		t.Fatalf("expected stub client when only platform config is set, got %T", client)
 	}
 }

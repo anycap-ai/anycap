@@ -26,28 +26,6 @@ func (h *ImageHandler) RegisterRoutes(group *route.RouterGroup) {
 	g.POST("/generate", h.Generate)
 }
 
-func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
-	models, err := h.service.ListModels(c)
-	if err != nil {
-		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
-		ctx.JSON(status, payload)
-		return
-	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), models))
-}
-
-func (h *ImageHandler) GetModelSchema(c context.Context, ctx *app.RequestContext) {
-	schema, err := h.service.GetModelSchema(c, ctx.Param("name"))
-	if err != nil {
-		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
-		ctx.JSON(status, payload)
-		return
-	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), schema))
-}
-
 func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
 	var payload dto.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
@@ -62,10 +40,14 @@ func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.Generate(c, model.GenerateImageRequest{
-		RequestID: middleware.GetRequestID(ctx),
-		UserID:    principal.UserID,
-		Prompt:    payload.Prompt,
-		Model:     payload.Model,
+		RequestID:          middleware.GetRequestID(ctx),
+		UserID:             principal.UserID,
+		Prompt:             payload.Prompt,
+		Model:              payload.Model,
+		NegativePrompt:     payload.NegativePrompt,
+		Ratio:              payload.Ratio,
+		Resolution:         payload.Resolution,
+		ReferenceImageURLs: append([]string(nil), payload.ReferenceImageURLs...),
 	})
 	if err != nil {
 		status, response := dto.MapDomainError(err)

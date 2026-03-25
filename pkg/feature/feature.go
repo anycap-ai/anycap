@@ -32,8 +32,8 @@ const (
 // defaults defines the code-level default state for each feature.
 // Features not listed here default to false.
 var defaults = map[string]bool{
-	ImageGenerate:   false, // NexusHub not implemented yet
-	ImageModels:     false, // NexusHub not implemented yet
+	ImageGenerate:   false, // disabled until an execution provider is configured
+	ImageModels:     false, // disabled until a catalog provider is configured
 	ImageUnderstand: true,  // agent-platform real implementation
 	VideoRead:       true,  // agent-platform real implementation
 	Login:           true,  // auth flow (stub but expected soon)

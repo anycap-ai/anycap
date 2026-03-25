@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-go run ./cmd/anycap-server
+ANYCAP_HTTP_ADDR="${ANYCAP_HTTP_ADDR:-:18080}" go run ./cmd/anycap-server

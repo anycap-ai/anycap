@@ -11,32 +11,32 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 )
 
-func TestService_ListModels(t *testing.T) {
-	service := NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), apikey.NewMemoryCallLogRepo())
-
-	models, err := service.ListModels(context.Background())
-	if err != nil {
-		t.Fatalf("ListModels() error = %v", err)
-	}
-	if len(models) == 0 {
-		t.Fatal("expected models")
-	}
-}
-
-func TestService_GetModelSchema(t *testing.T) {
-	service := NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), apikey.NewMemoryCallLogRepo())
-
-	schema, err := service.GetModelSchema(context.Background(), "flux-dev")
-	if err != nil {
-		t.Fatalf("GetModelSchema() error = %v", err)
-	}
-	if len(schema) == 0 {
-		t.Fatal("expected schema")
-	}
+func testCatalog() *nexushub.CatalogStub {
+	return nexushub.NewCatalogStubWith([]model.ModelSpec{
+		{
+			ModelID:     "flux-dev",
+			Capability:  model.CapabilityImage,
+			DisplayName: "FLUX Dev",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "flux-dev",
+						GenType:    string(model.CapabilityImage),
+						AlgoType:   "txt_2_img",
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+	})
 }
 
 func TestGenerateImage_InsufficientCredit(t *testing.T) {
-	service := NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 0}), apikey.NewMemoryCallLogRepo())
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 0}), apikey.NewMemoryCallLogRepo())
 
 	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
 		UserID:    "user-1",
@@ -51,7 +51,7 @@ func TestGenerateImage_InsufficientCredit(t *testing.T) {
 
 func TestGenerateImage_DeductIsIdempotent(t *testing.T) {
 	creditClient := credit.NewStubClient(map[string]int64{"user-1": 3})
-	service := NewService(nexushub.NewStubClient(), creditClient, apikey.NewMemoryCallLogRepo())
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, apikey.NewMemoryCallLogRepo())
 	req := model.GenerateImageRequest{
 		UserID:    "user-1",
 		RequestID: "req-1",
@@ -77,7 +77,7 @@ func TestGenerateImage_DeductIsIdempotent(t *testing.T) {
 
 func TestGenerateImage_Success(t *testing.T) {
 	logs := apikey.NewMemoryCallLogRepo()
-	service := NewService(nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), logs)
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), logs)
 
 	result, err := service.Generate(context.Background(), model.GenerateImageRequest{
 		UserID:    "user-1",
@@ -99,5 +99,30 @@ func TestGenerateImage_Success(t *testing.T) {
 	}
 	if logs.Count() != 1 {
 		t.Fatalf("expected 1 call log, got %d", logs.Count())
+	}
+}
+
+func TestGenerateImage_RouteNotConfigured(t *testing.T) {
+	catalog := nexushub.NewCatalogStubWith([]model.ModelSpec{
+		{
+			ModelID:     "flux-dev",
+			Capability:  model.CapabilityImage,
+			DisplayName: "FLUX Dev",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {},
+			},
+		},
+	})
+	service := NewService(catalog, nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), apikey.NewMemoryCallLogRepo())
+
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
+		UserID:    "user-1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if !errors.Is(err, model.ErrModelRouteNotConfigured) {
+		t.Fatalf("expected ErrModelRouteNotConfigured, got %v", err)
 	}
 }

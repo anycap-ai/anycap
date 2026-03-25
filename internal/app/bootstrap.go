@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
@@ -49,6 +50,12 @@ var (
 	}
 )
 
+const (
+	localAuthBypassEnvKey       = "ANYCAP_BYPASS_AUTH_FOR_LOCAL_TEST"
+	localAuthBypassUserIDEnvKey = "ANYCAP_BYPASS_AUTH_USER_ID"
+	defaultBypassUserID         = "123"
+)
+
 type serverDependencies struct {
 	config              config.Config
 	buildInfo           buildinfo.Info
@@ -77,8 +84,8 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	// Determine feature flags based on configured providers.
 	serverFeatures := map[string]bool{
 		feature.Login:           false, // auth provider is stub
-		feature.ImageGenerate:   false, // nexushub image generation not wired yet
-		feature.ImageModels:     false, // nexushub image models not wired yet
+		feature.ImageGenerate:   hasImageExecutionProvider(cfg),
+		feature.ImageModels:     hasCatalogProvider(cfg),
 		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
 		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
 	}
@@ -110,7 +117,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			audioCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", middleware.Auth(deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
+				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
 				systemHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -122,9 +129,11 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {
-	catalogService := catalogapp.NewService(buildCatalogRepo(cfg))
+	catalogRepo := buildCatalogRepo(cfg)
+	catalogService := catalogapp.NewService(catalogRepo)
 	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
 	authClient := buildAuthClient(cfg)
+	imageExecutionClient := buildImageExecutionClient(cfg)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
@@ -137,7 +146,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			buildInfo:           info,
 			systemService:       systemService,
 			loginService:        loginapp.NewService(authClient, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
+			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, credit.NewStubClient(nil), callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
 			apiKeyService:       apiKeys,
@@ -164,7 +173,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			buildInfo:           info,
 			systemService:       systemService,
 			loginService:        loginapp.NewService(authClient, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(nexushub.NewStubClient(), credit.NewStubClient(nil), callLogs),
+			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, credit.NewStubClient(nil), callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
 			apiKeyService:       apiKeyService,
@@ -215,18 +224,21 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
+	platformBaseURL := cfg.ResolvedNexusHubPlatformBaseURL()
+	platformToken := cfg.ResolvedNexusHubPlatformToken()
+
 	if os.Getenv("ANYCAP_PG_CONFIG") != "" {
 		repo, err := newCatalogRepoFromEnv(context.Background())
 		if err != nil {
 			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
 		} else {
-			if cfg.NexusHubBaseURL != "" {
-				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", cfg.NexusHubBaseURL)
+			if platformBaseURL != "" {
+				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", platformBaseURL)
 				return nexushub.NewCatalogSchemaEnricher(
 					repo,
 					nexushub.NewPlatformClient(nexushub.PlatformClientConfig{
-						BaseURL: cfg.NexusHubBaseURL,
-						Token:   cfg.NexusHubToken,
+						BaseURL: platformBaseURL,
+						Token:   platformToken,
 					}),
 				)
 			}
@@ -236,8 +248,8 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 		}
 	}
 
-	if cfg.NexusHubBaseURL == "" {
-		log.Println("catalog: using stub (set NEXUSHUB_BASE_URL for real catalog)")
+	if platformBaseURL == "" {
+		log.Println("catalog: using stub (set NEXUSHUB_PLATFORM_BASE_URL or NEXUSHUB_BASE_URL for real catalog)")
 		return nexushub.NewCatalogStubWith([]model.ModelSpec{
 			{
 				ModelID:     "flux-dev",
@@ -260,8 +272,57 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 		})
 	}
 
-	log.Printf("catalog: using nexushub platform at %s", cfg.NexusHubBaseURL)
-	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: cfg.NexusHubBaseURL, Token: cfg.NexusHubToken})
+	log.Printf("catalog: using nexushub platform at %s", platformBaseURL)
+	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: platformBaseURL, Token: platformToken})
+}
+
+func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
+	coreBaseURL := cfg.ResolvedNexusHubCoreBaseURL()
+	coreToken := cfg.ResolvedNexusHubCoreToken()
+
+	if hasImageExecutionProvider(cfg) {
+		log.Printf("image-execution: using nexushub client at %s", coreBaseURL)
+		return nexushub.NewClient(nexushub.ClientConfig{
+			BaseURL: coreBaseURL,
+			Token:   coreToken,
+		})
+	}
+
+	log.Println("image-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	return nexushub.NewStubClient()
+}
+
+func hasCatalogProvider(cfg config.Config) bool {
+	return os.Getenv("ANYCAP_PG_CONFIG") != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
+}
+
+func hasImageExecutionProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService) hertzapp.HandlerFunc {
+	if shouldBypassAuthForLocalTest(cfg) {
+		principal := buildBypassPrincipal()
+		log.Printf("auth: bypass enabled for local testing with user_id=%s", principal.UserID)
+		return middleware.LocalBypassAuth(principal)
+	}
+	return middleware.Auth(apiKeys)
+}
+
+func shouldBypassAuthForLocalTest(_ config.Config) bool {
+	value := strings.TrimSpace(strings.ToLower(os.Getenv(localAuthBypassEnvKey)))
+	return value == "1" || value == "true"
+}
+
+func buildBypassPrincipal() model.Principal {
+	userID := strings.TrimSpace(os.Getenv(localAuthBypassUserIDEnvKey))
+	if userID == "" {
+		userID = defaultBypassUserID
+	}
+	return model.Principal{
+		UserID:   userID,
+		AuthType: "local_bypass",
+	}
 }
 
 func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*apikey.SQLDB, error) {

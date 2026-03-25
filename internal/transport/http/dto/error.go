@@ -47,12 +47,14 @@ func MapDomainError(err error) (int, Envelope) {
 		return consts.StatusTooManyRequests, ErrorEnvelope("", model.ErrRateLimited.Code, model.ErrRateLimited.Message)
 	case errors.Is(err, model.ErrAuthProviderNotConfigured):
 		return consts.StatusServiceUnavailable, ErrorEnvelope("", "AUTH_PROVIDER_NOT_CONFIGURED", model.ErrAuthProviderNotConfigured.Error())
-	case errors.Is(err, model.ErrImageProviderNotConfigured):
-		return consts.StatusServiceUnavailable, ErrorEnvelope("", "IMAGE_PROVIDER_NOT_CONFIGURED", model.ErrImageProviderNotConfigured.Error())
+	case errors.Is(err, model.ErrImageExecutionNotConfigured):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", "IMAGE_PROVIDER_NOT_CONFIGURED", model.ErrImageExecutionNotConfigured.Error())
 	case errors.Is(err, model.ErrInsufficientCredit):
 		return consts.StatusPaymentRequired, ErrorEnvelope("", model.ErrInsufficientCredit.Code, model.ErrInsufficientCredit.Message)
 	case errors.Is(err, model.ErrBillingUncertain):
 		return consts.StatusBadGateway, ErrorEnvelope("", model.ErrBillingUncertain.Code, model.ErrBillingUncertain.Message)
+	case errors.Is(err, model.ErrModelRouteNotConfigured):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", model.ErrModelRouteNotConfigured.Code, err.Error())
 	case errors.Is(err, model.ErrPromptRequired), errors.Is(err, model.ErrModelRequired), errors.Is(err, model.ErrInvalidParam):
 		message := model.ErrInvalidParam.Message
 		if err != nil {
