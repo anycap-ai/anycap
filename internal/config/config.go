@@ -9,16 +9,20 @@ const (
 )
 
 type Config struct {
-	AppName  string
-	AppEnv   string
-	HTTPAddr string
+	AppName         string
+	AppEnv          string
+	HTTPAddr        string
+	NexusHubBaseURL string
+	NexusHubToken   string
 }
 
 func Load() Config {
 	return Config{
-		AppName:  getEnv("ANYCAP_APP_NAME", defaultAppName),
-		AppEnv:   getEnv("ANYCAP_APP_ENV", defaultAppEnv),
-		HTTPAddr: getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
+		AppName:         getEnv("ANYCAP_APP_NAME", defaultAppName),
+		AppEnv:          getEnv("ANYCAP_APP_ENV", defaultAppEnv),
+		HTTPAddr:        getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
+		NexusHubBaseURL: getEnv("NEXUSHUB_BASE_URL", ""),
+		NexusHubToken:   getEnv("NEXUSHUB_TOKEN", ""),
 	}
 }
 

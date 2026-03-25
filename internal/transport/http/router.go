@@ -1,42 +1,50 @@
 package http
 
 import (
-	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
-	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
-	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
-	"gitlab.knoffice.tech/engineering/anycap/internal/config"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
-
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type Dependencies struct {
-	Config        config.Config
-	BuildInfo     buildinfo.Info
-	SystemService *systemapp.Service
-	LoginService  *loginapp.Service
-	ImageService  *imageapp.Service
+// RouteRegistrar allows handlers to self-register routes on a given router group.
+// Handlers implement this interface and create their own sub-groups as needed.
+type RouteRegistrar interface {
+	RegisterRoutes(group *route.RouterGroup)
 }
 
-func NewRouter(deps Dependencies) *server.Hertz {
-	h := server.Default(server.WithHostPorts(deps.Config.HTTPAddr))
-	h.Use(middleware.RequestID())
+// RouteRegistrarFunc adapts a plain function into a RouteRegistrar.
+type RouteRegistrarFunc func(group *route.RouterGroup)
 
-	systemHandler := handlers.NewSystemHandler(deps.SystemService)
-	loginHandler := handlers.NewLoginHandler(deps.LoginService)
-	imageHandler := handlers.NewImageHandler(deps.ImageService)
+func (f RouteRegistrarFunc) RegisterRoutes(group *route.RouterGroup) {
+	f(group)
+}
 
-	h.GET("/ping", systemHandler.Ping)
-	h.GET("/healthz", systemHandler.Healthz)
+// RouterConfig holds the configuration for building the HTTP router.
+// Adding a new capability (video, audio, etc.) only requires appending
+// its handler to V1 — no struct changes or router edits needed.
+type RouterConfig struct {
+	Addr        string
+	Middlewares []app.HandlerFunc
+	Root        []RouteRegistrar
+	V1          []RouteRegistrar
+}
+
+func NewRouter(cfg RouterConfig) *server.Hertz {
+	h := server.Default(server.WithHostPorts(cfg.Addr))
+
+	for _, mw := range cfg.Middlewares {
+		h.Use(mw)
+	}
+
+	root := h.Group("")
+	for _, r := range cfg.Root {
+		r.RegisterRoutes(root)
+	}
 
 	v1 := h.Group("/v1")
-	v1.GET("/healthz", systemHandler.Healthz)
-	v1.GET("/status", systemHandler.Status)
-	v1.POST("/login/init", loginHandler.Init)
-	v1.GET("/image/models", imageHandler.ListModels)
-	v1.POST("/image/generate", imageHandler.Generate)
+	for _, r := range cfg.V1 {
+		r.RegisterRoutes(v1)
+	}
 
 	return h
 }

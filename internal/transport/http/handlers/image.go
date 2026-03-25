@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type ImageHandler struct {
@@ -19,23 +20,11 @@ func NewImageHandler(service *imageapp.Service) *ImageHandler {
 	return &ImageHandler{service: service}
 }
 
-func (h *ImageHandler) ListModels(c context.Context, ctx *app.RequestContext) {
-	models, err := h.service.ListModels(c)
-	if err != nil {
-		ctx.JSON(consts.StatusInternalServerError, map[string]any{
-			"status": "error",
-			"error": map[string]any{
-				"code":    "LIST_MODELS_FAILED",
-				"message": err.Error(),
-			},
-		})
-		return
-	}
-
-	ctx.JSON(consts.StatusOK, map[string]any{
-		"status": "success",
-		"data":   models,
-	})
+// RegisterRoutes registers image execution routes under the given group (/v1/image/...).
+// Discovery endpoints (GET /models, GET /models/:model/schema) are handled by CatalogHandler.
+func (h *ImageHandler) RegisterRoutes(group *route.RouterGroup) {
+	g := group.Group("/image")
+	g.POST("/generate", h.Generate)
 }
 
 func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {

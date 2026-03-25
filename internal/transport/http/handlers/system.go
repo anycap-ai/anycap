@@ -8,6 +8,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type SystemHandler struct {
@@ -16,6 +17,18 @@ type SystemHandler struct {
 
 func NewSystemHandler(service *systemapp.Service) *SystemHandler {
 	return &SystemHandler{service: service}
+}
+
+// RegisterRootRoutes registers top-level health/ping routes (outside /v1).
+func (h *SystemHandler) RegisterRootRoutes(group *route.RouterGroup) {
+	group.GET("/ping", h.Ping)
+	group.GET("/healthz", h.Healthz)
+}
+
+// RegisterRoutes registers system routes under the /v1 group.
+func (h *SystemHandler) RegisterRoutes(group *route.RouterGroup) {
+	group.GET("/healthz", h.Healthz)
+	group.GET("/status", h.Status)
 }
 
 func (h *SystemHandler) Ping(_ context.Context, ctx *app.RequestContext) {

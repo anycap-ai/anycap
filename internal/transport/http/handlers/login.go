@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type LoginHandler struct {
@@ -15,6 +16,12 @@ type LoginHandler struct {
 
 func NewLoginHandler(service *loginapp.Service) *LoginHandler {
 	return &LoginHandler{service: service}
+}
+
+// RegisterRoutes registers login routes under the given group (/v1/login/...).
+func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
+	g := group.Group("/login")
+	g.POST("/init", h.Init)
 }
 
 func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
