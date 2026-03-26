@@ -157,6 +157,7 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int, red
 			return model.LoginInitResult{}, err
 		}
 
+
 		return model.LoginInitResult{
 			FlowType:        session.FlowType,
 			LoginSessionID:  session.ID,

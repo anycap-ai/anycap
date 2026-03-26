@@ -15,6 +15,7 @@ import (
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
+	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
@@ -67,6 +68,7 @@ type serverDependencies struct {
 	systemService       *systemapp.Service
 	loginService        *loginapp.Service
 	imageService        *imageapp.Service
+	videoService        *videoapp.Service
 	catalogService      *catalogapp.Service
 	modelRouteService   *modelrouteapp.Service
 	capabilitiesService *capapp.Service
@@ -92,6 +94,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	systemHandler := handlers.NewSystemHandler(deps.systemService)
 	loginHandler := handlers.NewLoginHandler(deps.loginService)
 	imageHandler := handlers.NewImageHandler(deps.imageService)
+	videoHandler := handlers.NewVideoHandler(deps.videoService)
 	capHandler := handlers.NewCapabilitiesHandler(deps.capabilitiesService)
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
@@ -122,6 +125,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				videoHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 			}),
@@ -137,6 +141,8 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.ImageGenerate:   hasImageExecutionProvider(cfg),
 		feature.ImageModels:     hasCatalogProvider(cfg),
 		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
+		feature.VideoGenerate:   hasVideoExecutionProvider(cfg),
+		feature.VideoModels:     hasCatalogProvider(cfg),
 		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
 	}
 }
@@ -148,6 +154,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
 	authClient := buildAuthClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
+	videoExecutionClient := buildVideoExecutionClient(cfg)
 	creditClient := buildCreditClient(cfg)
 
 	switch cfg.RuntimeMode {
@@ -166,6 +173,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			systemService:       systemService,
 			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
+			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
@@ -199,6 +207,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			systemService:       systemService,
 			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
+			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
@@ -362,7 +371,27 @@ func hasCatalogProvider(cfg config.Config) bool {
 	return cfg.PGDSN != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
 }
 
+func buildVideoExecutionClient(cfg config.Config) port.NexusHubClient {
+	coreBaseURL := cfg.ResolvedNexusHubCoreBaseURL()
+	coreToken := cfg.ResolvedNexusHubCoreToken()
+
+	if hasVideoExecutionProvider(cfg) {
+		log.Printf("video-execution: using nexushub client at %s", coreBaseURL)
+		return nexushub.NewClient(nexushub.ClientConfig{
+			BaseURL: coreBaseURL,
+			Token:   coreToken,
+		})
+	}
+
+	log.Println("video-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	return nexushub.NewStubClient()
+}
+
 func hasImageExecutionProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func hasVideoExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
 

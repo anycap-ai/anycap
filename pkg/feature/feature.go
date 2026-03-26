@@ -25,6 +25,8 @@ const (
 	ImageGenerate   = "image.generate"
 	ImageModels     = "image.models"
 	ImageUnderstand = "image.understand"
+	VideoGenerate   = "video.generate"
+	VideoModels     = "video.models"
 	VideoRead       = "video.read"
 	Login           = "login"
 )
@@ -35,6 +37,8 @@ var defaults = map[string]bool{
 	ImageGenerate:   true, // CLI exposes commands; server returns error if not ready
 	ImageModels:     true, // CLI exposes commands; server returns error if not ready
 	ImageUnderstand: true, // agent-platform real implementation
+	VideoGenerate:   true, // CLI exposes commands; server returns error if not ready
+	VideoModels:     true, // CLI exposes commands; server returns error if not ready
 	VideoRead:       true, // agent-platform real implementation
 	Login:           true, // auth flow (stub but expected soon)
 }

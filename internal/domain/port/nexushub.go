@@ -8,4 +8,5 @@ import (
 
 type NexusHubClient interface {
 	GenerateImage(ctx context.Context, req model.GenerateImageRequest, route model.RouteBinding) (model.GenerateImageResult, error)
+	GenerateVideo(ctx context.Context, req model.GenerateVideoRequest, route model.RouteBinding) (model.GenerateVideoResult, error)
 }

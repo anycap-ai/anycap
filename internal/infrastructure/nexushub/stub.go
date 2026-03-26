@@ -34,3 +34,23 @@ func (c *StubClient) GenerateImage(_ context.Context, req model.GenerateImageReq
 		Usage: map[string]any{"credits": 1},
 	}, nil
 }
+
+func (c *StubClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
+	safePrompt := url.PathEscape(strings.ReplaceAll(req.Prompt, " ", "-"))
+	if req.Model == "" {
+		req.Model = "kling-v1"
+	}
+
+	return model.GenerateVideoResult{
+		ID:         fmt.Sprintf("vid_%s", req.RequestID),
+		Status:     "success",
+		Model:      req.Model,
+		CreditCost: 5,
+		Outputs: []model.Artifact{{
+			Type:     "video",
+			URL:      fmt.Sprintf("https://files.anycap.local/generated/%s/%s.mp4", req.Model, safePrompt),
+			MIMEType: "video/mp4",
+		}},
+		Usage: map[string]any{"credits": 5},
+	}, nil
+}

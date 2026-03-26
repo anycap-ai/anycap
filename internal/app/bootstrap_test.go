@@ -232,6 +232,7 @@ func TestBuildCatalogRepo_FallsBackToNexusHubWhenNoPostgresConfigIsPresent(t *te
 		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
+
 func TestBuildImageExecutionClient_UsesCoreConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
 	client := buildImageExecutionClient(config.Config{
 		NexusHubCoreBaseURL: "http://core.example.com",
