@@ -73,6 +73,7 @@ func New() *Server {
 	s.mux.HandleFunc("GET /v1/image/models", s.handleImageModels)
 	s.mux.HandleFunc("GET /v1/image/models/{model}/schema", s.handleImageModelSchema)
 	s.mux.HandleFunc("POST /v1/image/generate", s.handleImageGenerate)
+	s.mux.HandleFunc("GET /images/", s.handleMockImage)
 
 	return s
 }
@@ -508,6 +509,11 @@ func (s *Server) handleImageGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := "img_req_" + randomHex(8)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	imageURL := fmt.Sprintf("%s://%s/images/%s.png", scheme, r.Host, reqID)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
 		"id":     "req_" + randomHex(8),
@@ -519,7 +525,7 @@ func (s *Server) handleImageGenerate(w http.ResponseWriter, r *http.Request) {
 			"outputs": []map[string]any{
 				{
 					"type":      "image",
-					"url":       "https://mock.anycap.ai/images/" + reqID + ".png",
+					"url":       imageURL,
 					"mime_type": "image/png",
 				},
 			},
@@ -527,6 +533,12 @@ func (s *Server) handleImageGenerate(w http.ResponseWriter, r *http.Request) {
 			"credit_cost": 1,
 		},
 	})
+}
+
+// handleMockImage serves fake image data for download tests.
+func (s *Server) handleMockImage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/png")
+	w.Write([]byte("mock-image-data"))
 }
 
 // --- Helpers ---

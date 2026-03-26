@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"strings"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/fileutil"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
@@ -135,8 +137,8 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 		Long: `Generate an image using a text prompt. Use --param to pass model-specific
 parameters discovered from 'image models <model> schema'.
 
-Use -o to download the generated image to a local file. Without -o, the output
-includes a hint showing how to download it with 'anycap download'.
+The generated image is automatically downloaded to the current directory.
+Use -o to specify a custom output path.
 
 Examples:
   anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
@@ -162,30 +164,40 @@ Examples:
 				return err
 			}
 
-			// If -o is specified, download the first output image.
-			if outputPath != "" {
-				imageURL := extractFirstOutputURL(resp.Body)
-				if imageURL != "" {
-					absPath, dlErr := fileutil.DownloadFile(imageURL, outputPath)
-					if dlErr != nil {
-						return fmt.Errorf("generation succeeded but download failed: %w", dlErr)
-					}
-					// Inject local_path into the response.
-					resp.Body = injectLocalPath(resp.Body, absPath)
-				}
+			// Parse server response.
+			genResult, parseErr := parseGenerateResponse(resp.Body)
+			if parseErr != nil {
+				// Can't parse; pass through raw response.
 				return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
 			}
 
-			// No -o: inject download hint for agents.
-			resp.Body = injectDownloadHint(resp.Body)
-			return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
+			// Error from server: pass through.
+			if genResult.Status != "success" {
+				return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
+			}
+
+			// Download the generated image.
+			if genResult.ImageURL != "" {
+				savePath := outputPath
+				if savePath == "" {
+					savePath = defaultImageFilename(genResult.ImageURL)
+				}
+				absPath, dlErr := fileutil.DownloadFile(genResult.ImageURL, savePath)
+				if dlErr != nil {
+					return fmt.Errorf("generation succeeded but download failed: %w", dlErr)
+				}
+				genResult.LocalPath = absPath
+			}
+
+			// Write flat, agent-friendly output.
+			return writeImageResult(stdout, genResult, resp.RequestID)
 		},
 	}
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
 	cmd.Flags().StringArrayVar(&params, "param", nil, "Extra parameter as key=value (repeatable)")
-	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Download generated image to this path")
+	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated image to this path (default: current directory)")
 	_ = cmd.MarkFlagRequired("prompt")
 	_ = cmd.MarkFlagRequired("model")
 
@@ -207,56 +219,66 @@ func parseParamValue(v string) any {
 	return v
 }
 
-// extractFirstOutputURL extracts the URL of the first output from a generate response.
-func extractFirstOutputURL(body []byte) string {
+// generateResult holds the parsed fields from an image generate response.
+type generateResult struct {
+	Status      string
+	ImageURL    string
+	LocalPath   string
+	Model       string
+	CreditsUsed int
+}
+
+// defaultImageFilename generates a clean default filename for a generated image.
+// Uses a timestamp-based name with the extension from the URL (e.g., image_20260326_175540.png).
+func defaultImageFilename(imageURL string) string {
+	ext := path.Ext(fileutil.FilenameFromURL(imageURL))
+	if ext == "" {
+		ext = ".png"
+	}
+	return "image_" + time.Now().Format("20060102_150405") + ext
+}
+
+// parseGenerateResponse extracts key fields from the server's generate response.
+func parseGenerateResponse(body []byte) (*generateResult, error) {
 	var env struct {
-		Data struct {
+		Status string `json:"status"`
+		Data   struct {
+			Model   string `json:"model"`
 			Outputs []struct {
 				URL string `json:"url"`
 			} `json:"outputs"`
+			CreditCost int `json:"credit_cost"`
 		} `json:"data"`
 	}
-	if json.Unmarshal(body, &env) == nil && len(env.Data.Outputs) > 0 {
-		return env.Data.Outputs[0].URL
+	if err := json.Unmarshal(body, &env); err != nil {
+		return nil, err
 	}
-	return ""
+
+	result := &generateResult{
+		Status:      env.Status,
+		Model:       env.Data.Model,
+		CreditsUsed: env.Data.CreditCost,
+	}
+	if len(env.Data.Outputs) > 0 {
+		result.ImageURL = env.Data.Outputs[0].URL
+	}
+	return result, nil
 }
 
-// injectLocalPath adds a local_path field to the first output in the generate response.
-func injectLocalPath(body []byte, localPath string) []byte {
-	var obj map[string]json.RawMessage
-	if err := json.Unmarshal(body, &obj); err != nil {
-		return body
+// writeImageResult writes a flat, agent-friendly JSON result for image generation.
+func writeImageResult(w io.Writer, r *generateResult, requestID string) error {
+	result := map[string]any{
+		"status":       r.Status,
+		"local_path":   r.LocalPath,
+		"model":        r.Model,
+		"credits_used": r.CreditsUsed,
 	}
-
-	var data map[string]json.RawMessage
-	if err := json.Unmarshal(obj["data"], &data); err != nil {
-		return body
+	if requestID != "" {
+		result["request_id"] = requestID
 	}
-
-	var outputs []map[string]any
-	if err := json.Unmarshal(data["outputs"], &outputs); err != nil || len(outputs) == 0 {
-		return body
+	data, err := json.Marshal(result)
+	if err != nil {
+		return err
 	}
-
-	outputs[0]["local_path"] = localPath
-	outputsJSON, _ := json.Marshal(outputs)
-	data["outputs"] = outputsJSON
-	dataJSON, _ := json.Marshal(data)
-	obj["data"] = dataJSON
-	result, _ := json.Marshal(obj)
-	return result
-}
-
-// injectDownloadHint adds a hint field to the generate response, guiding agents
-// to use 'anycap download' to save the file locally.
-func injectDownloadHint(body []byte) []byte {
-	var obj map[string]json.RawMessage
-	if err := json.Unmarshal(body, &obj); err != nil {
-		return body
-	}
-	hint, _ := json.Marshal("use 'anycap download <url> -o <path>' to save the image locally, or add '-o <path>' next time")
-	obj["hint"] = hint
-	result, _ := json.Marshal(obj)
-	return result
+	return output.WriteJSON(w, data)
 }

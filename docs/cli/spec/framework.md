@@ -50,7 +50,7 @@ CLI flag  >  Environment variable  >  Config file  >  Default
 
 | Value | Flag | Env | Config file key | Default |
 |-------|------|-----|-----------------|---------|
-| Endpoint | `--endpoint` | `ANYCAP_API_ENDPOINT` | `endpoint` | `https://api.anycap.ai` (release) / `http://127.0.0.1:18080` (dev, see 3.4) |
+| Endpoint | `--endpoint` | `ANYCAP_API_ENDPOINT` | `endpoint` | `https://api.anycap.ai` (release) / `http://127.0.0.1:8080` (dev, see 3.4) |
 | API Key | (none) | `ANYCAP_API_KEY` | (from credentials file) | (none) |
 | Output format | `--json` / `--pretty` | (none) | (none) | auto-detect TTY |
 
@@ -79,7 +79,7 @@ CLI flag  >  Environment variable  >  Config file  >  Default
 
 ### 3.4 Default Endpoint Strategy
 
-`DefaultEndpoint` is a package-level `var` in `internal/cli/config/config.go`, defaulting to `http://127.0.0.1:18080` for local development. Release builds inject `https://api.anycap.ai` via ldflags in `scripts/release/build.sh`:
+`DefaultEndpoint` is a package-level `var` in `internal/cli/config/config.go`, defaulting to `http://127.0.0.1:8080` for local development. Release builds inject `https://api.anycap.ai` via ldflags in `scripts/release/build.sh`:
 
 ```
 -X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai

@@ -93,7 +93,7 @@ make infra-up
 make dev
 
 # Use the CLI
-go run ./cmd/anycap --endpoint http://127.0.0.1:18080 status
+go run ./cmd/anycap --endpoint http://127.0.0.1:8080 status
 scripts/dev/run-cli.sh status
 
 # Stop infra (keep data)
@@ -209,7 +209,7 @@ CLI spec documents live in `docs/cli/spec/`. These are **high-level design only*
 - **CLI only talks to Server.** CLI never directly accesses external auth providers, Credit, NexusHub, or any other Infra service. Server is the sole gateway.
 - **Server handles authentication.** CLI calls Server login APIs. The auth backend is a server implementation detail invisible to the CLI.
 - **Config + Credential separation.** `~/.anycap/config.toml` for preferences (0644), `~/.anycap/credentials` for credential JSON (0600). Keychain is primary store; file is fallback.
-- **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, local development defaults use `http://127.0.0.1:18080`.
+- **DefaultEndpoint via ldflags.** Release builds default to `https://api.anycap.ai`, local development defaults use `http://127.0.0.1:8080`.
 - **JSON-first output.** Non-TTY = JSON to stdout; TTY = human-readable. `--json` / `--pretty` to override.
 - **Release via goreleaser.** CLI binary and skill files will be hosted on GitHub. Use goreleaser for cross-platform builds and GitHub Releases.
 - **npm via OIDC.** npm packages published from GitHub Actions using trusted publishing. No long-lived tokens. Platform packages use `os`+`cpu` fields for automatic platform selection.

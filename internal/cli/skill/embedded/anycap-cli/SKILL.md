@@ -77,7 +77,7 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 AnyCap capabilities are organized into two groups:
 
 **Generation** -- create new content from prompts.
-Read [references/generation.md](references/generation.md) when you need to generate images. This is a multi-step workflow: discover models, check schema, generate, then download.
+Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
@@ -154,8 +154,8 @@ anycap status | jq -r '.status'
 # List available model IDs
 anycap image models | jq -r '.models[].model'
 
-# Get the image URL from a generate response
-anycap image generate --prompt "..." --model flux-schnell | jq -r '.data.outputs[0].url'
+# Get the local file path from a generate response (use -o for a descriptive name)
+anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.png | jq -r '.local_path'
 
 # Extract content from an action response
 anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.content'
@@ -164,7 +164,7 @@ anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.co
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model flux-schnell | jq -r '.request_id // .id')
+REQ_ID=$(anycap image generate --prompt "..." --model flux-schnell | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 
@@ -173,7 +173,7 @@ Common jq patterns:
 | Pattern | Purpose |
 |---------|----------|
 | `jq -r '.field'` | Extract a string field (raw, no quotes) |
-| `jq -r '.data.outputs[0].url'` | Nested field access |
+| `jq -r '.local_path'` | Get downloaded file path from generate |
 | `jq -r '.models[].model'` | List all values of a field in an array |
 | `jq -e '.status == "success"'` | Check condition (exit code 1 if false) |
 | `jq -r '.message // empty'` | Extract error message if present |

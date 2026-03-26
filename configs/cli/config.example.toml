@@ -2,7 +2,7 @@
 # Location: ~/.anycap/config.toml
 
 # Server endpoint (overridden by --endpoint flag or ANYCAP_API_ENDPOINT env)
-endpoint = "http://127.0.0.1:18080"
+endpoint = "http://127.0.0.1:8080"
 
 # Automatically check and update CLI binary from GitHub Releases (default: true)
 auto_update = true

@@ -475,6 +475,11 @@ func TestImageGenerate(t *testing.T) {
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
 
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
@@ -491,14 +496,19 @@ func TestImageGenerate(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, "mock.anycap.ai/images/") {
-		t.Fatalf("expected image URL in output, got: %s", output)
-	}
-	if !strings.Contains(output, "mock-model-1") {
-		t.Fatalf("expected model name in output, got: %s", output)
+	if !strings.Contains(output, `"model":"mock-model-1"`) && !strings.Contains(output, `"model": "mock-model-1"`) {
+		t.Fatalf("expected model in flat output, got: %s", output)
 	}
 	if !strings.Contains(output, `"success"`) {
 		t.Fatalf("expected success status in output, got: %s", output)
+	}
+	// Should auto-download and inject local_path.
+	if !strings.Contains(output, "local_path") {
+		t.Fatalf("expected local_path in output (auto-download), got: %s", output)
+	}
+	// Flat output should have credits_used.
+	if !strings.Contains(output, "credits_used") {
+		t.Fatalf("expected credits_used in flat output, got: %s", output)
 	}
 }
 
@@ -506,6 +516,11 @@ func TestImageGenerateWithParams(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
@@ -529,8 +544,8 @@ func TestImageGenerateWithParams(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, "mock.anycap.ai/images/") {
-		t.Fatalf("expected image URL in output, got: %s", output)
+	if !strings.Contains(output, "local_path") {
+		t.Fatalf("expected local_path in output (auto-download), got: %s", output)
 	}
 }
 
@@ -605,6 +620,11 @@ func TestImageParamValueParsing(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
@@ -732,10 +752,15 @@ func TestDownloadAutoFilename(t *testing.T) {
 	}
 }
 
-func TestImageGenerateHint(t *testing.T) {
+func TestImageGenerateAutoDownload(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
@@ -753,8 +778,28 @@ func TestImageGenerateHint(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, "anycap download") {
-		t.Fatalf("expected download hint in output when no -o, got: %s", output)
+	// Should auto-download: local_path present, no download hint.
+	if !strings.Contains(output, "local_path") {
+		t.Fatalf("expected local_path in output (auto-download), got: %s", output)
+	}
+	if strings.Contains(output, "anycap download") {
+		t.Fatalf("should not have download hint, got: %s", output)
+	}
+
+	// Verify a .png file was actually created in tmpDir.
+	entries, _ := os.ReadDir(tmpDir)
+	found := false
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".png") {
+			found = true
+			data, _ := os.ReadFile(filepath.Join(tmpDir, e.Name()))
+			if string(data) != "mock-image-data" {
+				t.Fatalf("expected 'mock-image-data', got: %s", string(data))
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected a .png file in tmpDir, found: %v", entries)
 	}
 }
 
@@ -804,7 +849,7 @@ func TestImageGenerateWithOutput(t *testing.T) {
 		t.Fatalf("expected 'generated-image-data', got: %s", string(data))
 	}
 
-	// Verify JSON includes local_path.
+	// Verify JSON includes local_path in flat format.
 	output := stdout.String()
 	if !strings.Contains(output, "local_path") {
 		t.Fatalf("expected local_path in output, got: %s", output)
@@ -812,8 +857,12 @@ func TestImageGenerateWithOutput(t *testing.T) {
 	if !strings.Contains(output, outPath) {
 		t.Fatalf("expected output path in JSON, got: %s", output)
 	}
-	// Should NOT have the hint when -o is used.
-	if strings.Contains(output, "anycap download") {
-		t.Fatalf("should not have download hint when -o is used, got: %s", output)
+	// Flat output: should have credits_used and model at top level.
+	if !strings.Contains(output, "credits_used") {
+		t.Fatalf("expected credits_used in flat output, got: %s", output)
+	}
+	// Should not contain nested data/outputs structure.
+	if strings.Contains(output, `"outputs"`) {
+		t.Fatalf("expected flat output without nested outputs, got: %s", output)
 	}
 }

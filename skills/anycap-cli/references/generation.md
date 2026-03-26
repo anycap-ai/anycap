@@ -1,6 +1,6 @@
 # Image Generation
 
-Generate images from text prompts. This is a multi-step workflow: discover available models, check the model's parameter schema, generate, then download the result.
+Generate images from text prompts. The generated image is automatically downloaded to the current directory.
 
 ## Workflow
 
@@ -8,7 +8,6 @@ Generate images from text prompts. This is a multi-step workflow: discover avail
 graph LR
     A[List models] --> B[Get schema]
     B --> C[Generate]
-    C --> D[Download]
 ```
 
 ### Step 1: Discover models
@@ -50,6 +49,10 @@ anycap image models <model-id> schema | jq -r '.data.schema.model_params | to_en
 
 ### Step 3: Generate
 
+The generated image is automatically saved to the current directory. Use `-o` to specify a custom path.
+
+**Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o coffee-shop-logo.png`). Without `-o`, the file gets a generic timestamped name like `image_20260326_175540.png`.
+
 ```bash
 anycap image generate --prompt "a paper crane on a wooden table" --model <model-id>
 ```
@@ -64,7 +67,7 @@ anycap image generate \
   --param style=photographic
 ```
 
-Save directly to a local file:
+Save to a specific path:
 
 ```bash
 anycap image generate \
@@ -80,20 +83,28 @@ Options:
 | `--prompt` | yes | Text description of the image to generate |
 | `--model` | yes | Model ID from `image models` |
 | `--param` | no | Model-specific parameter as `key=value` (repeatable) |
-| `-o, --output` | no | Save generated image to this path |
+| `-o, --output` | no | Custom output path (default: current directory, filename from server) |
 
-Without `-o`, the response includes the image URL. Extract it with jq:
+### Output Format
 
-```bash
-anycap image generate --prompt "..." --model <model-id> | jq -r '.data.outputs[0].url'
+The output is a flat JSON object optimized for agent consumption:
+
+```json
+{"status":"success","local_path":"/absolute/path/to/img.png","model":"nano-banana-2","credits_used":1,"request_id":"req_abc123"}
 ```
 
-### Step 4: Download (if no -o)
+| Field | Description |
+|-------|-------------|
+| `status` | `"success"` or `"error"` |
+| `local_path` | Absolute path to the downloaded image file |
+| `model` | Model ID used for generation |
+| `credits_used` | Number of credits consumed |
+| `request_id` | Server request ID for debugging |
 
-If you did not use `-o` during generation, download the result:
+Extract the local file path:
 
 ```bash
-anycap download <url-from-generate-response> -o output.png
+anycap image generate --prompt "..." --model <model-id> | jq -r '.local_path'
 ```
 
 ## Complete Example
@@ -105,7 +116,7 @@ anycap image models
 # Check what parameters it accepts
 anycap image models flux-schnell schema
 
-# Generate with parameters and save locally
+# Generate with parameters and save to a specific path
 anycap image generate \
   --prompt "a watercolor painting of a Japanese garden" \
   --model flux-schnell \

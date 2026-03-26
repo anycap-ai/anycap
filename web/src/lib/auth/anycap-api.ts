@@ -14,7 +14,7 @@ function anycapAPIBaseURL(): string {
   return (
     process.env.ANYCAP_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://127.0.0.1:18080"
+    "http://127.0.0.1:8080"
   );
 }
 
