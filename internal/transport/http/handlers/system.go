@@ -32,6 +32,7 @@ func (h *SystemHandler) RegisterRoutes(group *route.RouterGroup) {
 
 func (h *SystemHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/status", h.Status)
+	group.GET("/dashboard/summary", h.DashboardSummary)
 	group.GET("/me", h.Me)
 	group.GET("/credits/balance", h.CreditBalance)
 	group.GET("/logs", h.Logs)
@@ -125,6 +126,25 @@ func (h *SystemHandler) Logs(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.Logs(c, principal, limit)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *SystemHandler) DashboardSummary(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	result, err := h.service.DashboardSummary(c, principal)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
