@@ -54,7 +54,7 @@ func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
 			return
 		}
 	}
-	result, err := h.service.Init(c, req.Method, req.RedirectPort)
+	result, err := h.service.Init(c, req.Method, req.RedirectPort, req.RedirectURL)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
@@ -125,7 +125,7 @@ func (h *LoginHandler) Callback(c context.Context, ctx *app.RequestContext) {
 }
 
 func (h *LoginHandler) DeviceCode(c context.Context, ctx *app.RequestContext) {
-	result, err := h.service.Init(c, "device", 0)
+	result, err := h.service.Init(c, "device", 0, "")
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

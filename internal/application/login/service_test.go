@@ -206,7 +206,7 @@ func TestService_InitLocalhost(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	result, err := service.Init(context.Background(), model.LoginFlowLocalhost, 14565)
+	result, err := service.Init(context.Background(), model.LoginFlowLocalhost, 14565, "")
 	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
@@ -224,6 +224,40 @@ func TestService_InitLocalhost(t *testing.T) {
 	}
 	if authClient.redirectURI != "http://127.0.0.1:14565/callback" {
 		t.Fatalf("expected redirect uri to be forwarded, got %q", authClient.redirectURI)
+	}
+}
+
+func TestService_InitWeb(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	authClient := &fakeAuthClient{
+		loginURL: "https://auth.anycap.local/authorize?state=state-web",
+	}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.local/device",
+		func() string { return "state-web" },
+		func() string { return "lsn-web" },
+		func() string { return "ABCD-EFGH" },
+		func() time.Time { return time.Date(2026, 3, 26, 1, 0, 0, 0, time.UTC) },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Init(context.Background(), model.LoginFlowWeb, 0, "http://localhost:3000/auth/callback")
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if result.FlowType != model.LoginFlowWeb {
+		t.Fatalf("expected web flow, got %q", result.FlowType)
+	}
+	if authClient.redirectURI != "http://localhost:3000/auth/callback" {
+		t.Fatalf("expected web redirect url to be forwarded, got %q", authClient.redirectURI)
+	}
+	if repo.sessions["lsn-web"].RedirectURI != "http://localhost:3000/auth/callback" {
+		t.Fatalf("expected session redirect uri, got %#v", repo.sessions["lsn-web"])
 	}
 }
 
@@ -298,6 +332,59 @@ func TestService_CallbackCreatesAPIKey(t *testing.T) {
 	}
 }
 
+func TestService_CallbackAcceptsWebFlow(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 1, 5, 0, 0, time.UTC)
+	repo.sessions["lsn-web"] = model.LoginSession{
+		ID:          "lsn-web",
+		FlowType:    model.LoginFlowWeb,
+		State:       "state-web",
+		RedirectURI: "http://localhost:3000/auth/callback",
+		Status:      model.LoginSessionStatusPending,
+		ExpiresAt:   now.Add(5 * time.Minute),
+		CreatedAt:   now,
+	}
+	authClient := &fakeAuthClient{
+		codeUsers: map[string]model.AuthUser{
+			"code-web": {UserID: "user-web", Email: "web@example.com", Name: "Web User"},
+		},
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-web", UserID: "2000000008"},
+			RawKey: "ak-web",
+		},
+	}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:user-web": {ID: "2000000008", Email: "web@example.com", Name: "Web User", Status: model.UserStatusActive},
+			},
+		},
+		&fakeLoginCreditClient{},
+		apiKeys,
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Callback(context.Background(), "lsn-web", "code-web", "state-web", "http://localhost:3000/auth/callback")
+	if err != nil {
+		t.Fatalf("Callback() error = %v", err)
+	}
+	if result.APIKey != "ak-web" {
+		t.Fatalf("expected api key, got %#v", result)
+	}
+	if authClient.redirectURI != "http://localhost:3000/auth/callback" {
+		t.Fatalf("expected redirect uri to be used, got %q", authClient.redirectURI)
+	}
+}
+
 func TestService_InitDeviceAndPollPending(t *testing.T) {
 	repo := newFakeLoginSessionRepo()
 	service := NewService(
@@ -314,7 +401,7 @@ func TestService_InitDeviceAndPollPending(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	initResult, err := service.Init(context.Background(), model.LoginFlowDevice, 0)
+	initResult, err := service.Init(context.Background(), model.LoginFlowDevice, 0, "")
 	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

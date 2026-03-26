@@ -5,6 +5,7 @@ import "time"
 const (
 	LoginFlowLocalhost = "localhost"
 	LoginFlowDevice    = "device"
+	LoginFlowWeb       = "web"
 )
 
 const (

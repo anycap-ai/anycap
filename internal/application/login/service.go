@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -78,7 +79,7 @@ func NewService(
 	}
 }
 
-func (s *Service) Init(ctx context.Context, method string, redirectPort int) (model.LoginInitResult, error) {
+func (s *Service) Init(ctx context.Context, method string, redirectPort int, redirectURL string) (model.LoginInitResult, error) {
 	if s == nil || s.authClient == nil {
 		return model.LoginInitResult{}, model.ErrAuthProviderNotConfigured
 	}
@@ -104,6 +105,32 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 		session.FlowType = model.LoginFlowLocalhost
 		session.State = s.stateGenerator()
 		session.RedirectURI = fmt.Sprintf("http://127.0.0.1:%d/callback", redirectPort)
+		session.CodeVerifier = "pkce-" + session.ID
+
+		authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
+		if err != nil {
+			return model.LoginInitResult{}, err
+		}
+		if err := s.sessions.CreateSession(ctx, session); err != nil {
+			return model.LoginInitResult{}, err
+		}
+
+		return model.LoginInitResult{
+			FlowType:       session.FlowType,
+			LoginSessionID: session.ID,
+			AuthorizeURL:   authURL,
+			State:          session.State,
+			ExpiresIn:      int((15 * time.Minute).Seconds()),
+		}, nil
+	case model.LoginFlowWeb:
+		parsedRedirect, err := url.Parse(strings.TrimSpace(redirectURL))
+		if err != nil || parsedRedirect.Scheme == "" || parsedRedirect.Host == "" {
+			return model.LoginInitResult{}, model.ErrInvalidParam
+		}
+
+		session.FlowType = model.LoginFlowWeb
+		session.State = s.stateGenerator()
+		session.RedirectURI = parsedRedirect.String()
 		session.CodeVerifier = "pkce-" + session.ID
 
 		authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
@@ -158,7 +185,7 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if err != nil {
 		return model.LoginCallbackResult{}, err
 	}
-	if session.ID == "" || session.FlowType != model.LoginFlowLocalhost {
+	if session.ID == "" || (session.FlowType != model.LoginFlowLocalhost && session.FlowType != model.LoginFlowWeb) {
 		return model.LoginCallbackResult{}, model.ErrAuthInvalid
 	}
 	if session.State != state {

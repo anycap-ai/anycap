@@ -3,6 +3,7 @@ package dto
 type LoginInitRequest struct {
 	Method       string `json:"method,omitempty"`
 	RedirectPort int    `json:"redirect_port,omitempty"`
+	RedirectURL  string `json:"redirect_url,omitempty"`
 }
 
 type LoginCallbackRequest struct {

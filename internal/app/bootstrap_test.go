@@ -150,7 +150,7 @@ func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
 
-	result, err := deps.loginService.Init(context.Background(), model.LoginFlowLocalhost, 14565)
+	result, err := deps.loginService.Init(context.Background(), model.LoginFlowLocalhost, 14565, "")
 	if err != nil {
 		t.Fatalf("loginService.Init() error = %v", err)
 	}

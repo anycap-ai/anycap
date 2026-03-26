@@ -249,6 +249,47 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 	}
 }
 
+func TestRouter_WebLoginFlow(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	initBody := []byte(`{"method":"web","redirect_url":"http://localhost:3000/auth/callback"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader(initBody), Len: len(initBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	state, _ := data["state"].(string)
+	if loginSessionID == "" || state == "" {
+		t.Fatalf("expected login_session_id and state, got %#v", data)
+	}
+
+	callbackBody := []byte(`{"login_session_id":"` + loginSessionID + `","code":"code-123","state":"` + state + `","redirect_uri":"http://localhost:3000/auth/callback"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/callback", &ut.Body{Body: bytes.NewReader(callbackBody), Len: len(callbackBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal callback response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if apiKey, _ := data["api_key"].(string); apiKey == "" {
+		t.Fatalf("expected api_key, got %#v", data)
+	}
+}
+
 func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
