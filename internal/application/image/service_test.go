@@ -126,3 +126,48 @@ func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 		t.Fatalf("expected ErrModelRouteNotConfigured, got %v", err)
 	}
 }
+
+func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
+	spec := &model.ModelSpec{
+		ModelID:    "flux-dev",
+		Capability: model.CapabilityImage,
+		Operations: map[model.Operation]model.OperationSpec{
+			model.OperationGenerate: {
+				Routes: []model.RouteBinding{
+					{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "disabled-top",
+						GenType:    string(model.CapabilityImage),
+						Priority:   300,
+						Enabled:    false,
+					},
+					{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "secondary",
+						GenType:    string(model.CapabilityImage),
+						Priority:   100,
+						Enabled:    true,
+					},
+					{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "primary",
+						GenType:    string(model.CapabilityImage),
+						Priority:   200,
+						Enabled:    true,
+					},
+				},
+			},
+		},
+	}
+
+	route, err := selectGenerateRoute(spec)
+	if err != nil {
+		t.Fatalf("selectGenerateRoute() error = %v", err)
+	}
+	if route.AbilityKey != "primary" {
+		t.Fatalf("expected primary route, got %s", route.AbilityKey)
+	}
+	if route.Priority != 200 {
+		t.Fatalf("expected priority 200, got %d", route.Priority)
+	}
+}

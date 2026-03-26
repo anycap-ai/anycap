@@ -6,7 +6,13 @@ import (
 	"time"
 )
 
+func clearLegacyPGConfig(t *testing.T) {
+	t.Helper()
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+}
+
 func TestLoadFromEnv_Defaults(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_APP_NAME", "")
 	t.Setenv("ANYCAP_APP_ENV", "")
 	t.Setenv("ANYCAP_HTTP_ADDR", "")
@@ -27,7 +33,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.AppName != "anycap-server" {
 		t.Fatalf("expected default app name, got %q", cfg.AppName)
 	}
-	if cfg.HTTPAddr != ":8080" {
+	if cfg.HTTPAddr != ":18080" {
 		t.Fatalf("expected default addr, got %q", cfg.HTTPAddr)
 	}
 	if cfg.RuntimeMode != "stub" {
@@ -45,6 +51,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 }
 
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "integration")
 	t.Setenv("ANYCAP_PG_DSN", "")
 	t.Setenv("ANYCAP_REDIS_ADDR", "")
@@ -56,6 +63,7 @@ func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {
 }
 
 func TestLoadFromEnv_ReadsSplitNexusHubConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("NEXUSHUB_BASE_URL", "http://legacy.example.com")
 	t.Setenv("NEXUSHUB_TOKEN", "legacy-token")
 	t.Setenv("NEXUSHUB_PLATFORM_BASE_URL", "http://platform.example.com")
@@ -82,6 +90,7 @@ func TestLoadFromEnv_ReadsSplitNexusHubConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_NexusHubSplitConfigFallsBackToLegacy(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("NEXUSHUB_BASE_URL", "http://legacy.example.com")
 	t.Setenv("NEXUSHUB_TOKEN", "legacy-token")
 	t.Setenv("NEXUSHUB_PLATFORM_BASE_URL", "")
@@ -107,6 +116,7 @@ func TestLoadFromEnv_NexusHubSplitConfigFallsBackToLegacy(t *testing.T) {
 	}
 }
 func TestLoadFromEnv_RejectsAmbiguousPostgresConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
 
@@ -117,6 +127,7 @@ func TestLoadFromEnv_RejectsAmbiguousPostgresConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_RejectsAmbiguousPostgresTimezoneConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
 	t.Setenv("ANYCAP_PG_TIMEZONE", "UTC")
 
@@ -127,6 +138,7 @@ func TestLoadFromEnv_RejectsAmbiguousPostgresTimezoneConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_RejectsAmbiguousRedisConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_REDIS_ADDR", "redis.example.com:6379")
 	t.Setenv("ANYCAP_REDIS_HOST", "redis.example.com")
 
@@ -137,6 +149,7 @@ func TestLoadFromEnv_RejectsAmbiguousRedisConfig(t *testing.T) {
 }
 
 func TestConfig_postgresDSN_IncludesTimezoneWhenConfigured(t *testing.T) {
+	clearLegacyPGConfig(t)
 	cfg := Config{
 		PGHost:     "pg.example.com",
 		PGPort:     5432,
@@ -150,5 +163,23 @@ func TestConfig_postgresDSN_IncludesTimezoneWhenConfigured(t *testing.T) {
 	dsn := cfg.postgresDSN()
 	if !strings.Contains(dsn, "timezone=UTC") {
 		t.Fatalf("expected dsn to contain timezone=UTC, got %q", dsn)
+	}
+}
+
+func TestLoadFromEnv_FallsBackToLegacyPGConfig(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"legacy.example.com","Port":"5432","User":"legacy","Password":"secret","DBName":"anycap","SSLMode":"disable","TimeZone":"Asia/Shanghai"}`)
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PGDSN == "" {
+		t.Fatal("expected postgres dsn to be derived from legacy config")
+	}
+	if !strings.Contains(cfg.PGDSN, "legacy.example.com:5432") {
+		t.Fatalf("expected legacy host in dsn, got %q", cfg.PGDSN)
+	}
+	if !strings.Contains(cfg.PGDSN, "timezone=Asia%2FShanghai") {
+		t.Fatalf("expected legacy timezone in dsn, got %q", cfg.PGDSN)
 	}
 }

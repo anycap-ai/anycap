@@ -74,7 +74,15 @@ func (r *CatalogRepo) GetModelRoute(ctx context.Context, id int64) (*model.Model
 }
 
 func (r *CatalogRepo) CreateModelRoute(ctx context.Context, input model.CreateModelRouteInput) (*model.ModelRoute, error) {
-	extraBytes, err := marshalExtra(input.Extra)
+	extraBytes, err := marshalExtra(
+		input.Extra,
+		input.RouteType,
+		input.Region,
+		input.Tier,
+		input.Env,
+		input.Priority,
+		enabledValue(input.Enabled),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +111,15 @@ func (r *CatalogRepo) CreateModelRoute(ctx context.Context, input model.CreateMo
 }
 
 func (r *CatalogRepo) UpdateModelRoute(ctx context.Context, id int64, input model.UpdateModelRouteInput) (*model.ModelRoute, error) {
-	extraBytes, err := marshalExtra(input.Extra)
+	extraBytes, err := marshalExtra(
+		input.Extra,
+		input.RouteType,
+		input.Region,
+		input.Tier,
+		input.Env,
+		input.Priority,
+		enabledValue(input.Enabled),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -192,15 +208,33 @@ func scanModelRoute(row rowScanner) (*model.ModelRoute, error) {
 	if route.Extra == nil {
 		route.Extra = map[string]any{}
 	}
+	hydrateRouteFields(&route)
 
 	return &route, nil
 }
 
-func marshalExtra(extra map[string]any) ([]byte, error) {
+func marshalExtra(
+	extra map[string]any,
+	routeType model.RouteType,
+	region string,
+	tier string,
+	env string,
+	priority int,
+	enabled bool,
+) ([]byte, error) {
 	if extra == nil {
 		extra = map[string]any{}
 	}
-	data, err := json.Marshal(extra)
+
+	payload := cloneExtra(extra)
+	payload["route_type"] = routeType
+	payload["region"] = region
+	payload["tier"] = tier
+	payload["env"] = env
+	payload["priority"] = priority
+	payload["enabled"] = enabled
+
+	data, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("marshal route extra: %w", err)
 	}
@@ -213,4 +247,114 @@ func translateWriteError(action string, err error) error {
 		return fmt.Errorf("%s: duplicate model_id + operation + algo_type", action)
 	}
 	return fmt.Errorf("%s: %w", action, err)
+}
+
+func hydrateRouteFields(route *model.ModelRoute) {
+	if route == nil {
+		return
+	}
+
+	route.RouteType = readRouteType(route.Extra, "route_type", model.RouteTypeDirect)
+	route.Region = readString(route.Extra, "region")
+	route.Tier = readString(route.Extra, "tier")
+	route.Env = readString(route.Extra, "env")
+	route.Priority = readInt(route.Extra, "priority", model.DefaultRoutePriority)
+	route.Enabled = readBool(route.Extra, "enabled", true)
+
+	delete(route.Extra, "route_type")
+	delete(route.Extra, "region")
+	delete(route.Extra, "tier")
+	delete(route.Extra, "env")
+	delete(route.Extra, "priority")
+	delete(route.Extra, "enabled")
+}
+
+func cloneExtra(extra map[string]any) map[string]any {
+	cloned := make(map[string]any, len(extra)+6)
+	for key, value := range extra {
+		cloned[key] = value
+	}
+	return cloned
+}
+
+func enabledValue(value *bool) bool {
+	if value == nil {
+		return true
+	}
+	return *value
+}
+
+func readRouteType(extra map[string]any, key string, fallback model.RouteType) model.RouteType {
+	value := model.RouteType(readString(extra, key))
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+func readString(extra map[string]any, key string) string {
+	if extra == nil {
+		return ""
+	}
+	value, ok := extra[key]
+	if !ok {
+		return ""
+	}
+	switch typed := value.(type) {
+	case string:
+		return typed
+	case model.RouteType:
+		return string(typed)
+	default:
+		return ""
+	}
+}
+
+func readInt(extra map[string]any, key string, fallback int) int {
+	if extra == nil {
+		return fallback
+	}
+	value, ok := extra[key]
+	if !ok {
+		return fallback
+	}
+
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int8:
+		return int(typed)
+	case int16:
+		return int(typed)
+	case int32:
+		return int(typed)
+	case int64:
+		return int(typed)
+	case float32:
+		return int(typed)
+	case float64:
+		return int(typed)
+	case json.Number:
+		parsed, err := typed.Int64()
+		if err == nil {
+			return int(parsed)
+		}
+	}
+
+	return fallback
+}
+
+func readBool(extra map[string]any, key string, fallback bool) bool {
+	if extra == nil {
+		return fallback
+	}
+	value, ok := extra[key]
+	if !ok {
+		return fallback
+	}
+	parsed, ok := value.(bool)
+	if !ok {
+		return fallback
+	}
+	return parsed
 }

@@ -48,6 +48,31 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	}
 }
 
+func TestNewServer_UsesSingleSharedPostgresRepoForCatalogAndModelRoutes(t *testing.T) {
+	original := newCatalogRepoFromDSN
+	callCount := 0
+	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
+		callCount++
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromDSN = original
+	})
+
+	_ = NewServer(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		PGDSN:        "postgres://demo",
+		RateLimitRPM: 60,
+	}, buildinfo.Info{Version: "dev"})
+
+	if callCount != 1 {
+		t.Fatalf("expected postgres repo to be initialized once, got %d", callCount)
+	}
+}
+
 func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
 	original := newCatalogRepoFromDSN
 	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {

@@ -28,6 +28,8 @@ const (
 	RouteTypeScheduler RouteType = "scheduler"
 )
 
+const DefaultRoutePriority = 100
+
 // ModelSpec 描述一个公开模型支持哪些 operation 及其路由绑定。
 // model_id 是对外稳定标识，ability_key 是对内执行标识，两者解耦。
 type ModelSpec struct {

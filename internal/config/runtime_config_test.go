@@ -6,6 +6,7 @@ import (
 )
 
 func TestLoadFromEnv_DevModeRequiresDiscreteInfraConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
 	t.Setenv("ANYCAP_PG_HOST", "")
 	t.Setenv("ANYCAP_REDIS_HOST", "")
@@ -17,6 +18,7 @@ func TestLoadFromEnv_DevModeRequiresDiscreteInfraConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_DevModeBuildsDiscreteInfraConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
 	t.Setenv("ANYCAP_PG_PORT", "5432")
@@ -48,6 +50,7 @@ func TestLoadFromEnv_DevModeBuildsDiscreteInfraConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_DevModeReadsAutoMigrate(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
 	t.Setenv("ANYCAP_PG_PORT", "5432")
@@ -67,6 +70,7 @@ func TestLoadFromEnv_DevModeReadsAutoMigrate(t *testing.T) {
 }
 
 func TestLoadFromEnv_ReadsLoginAPIKeyTTL(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_LOGIN_API_KEY_TTL", "72h")
 
 	cfg, err := LoadFromEnv()
@@ -79,6 +83,7 @@ func TestLoadFromEnv_ReadsLoginAPIKeyTTL(t *testing.T) {
 }
 
 func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_CREDIT_BASE_URL", "https://credit.example.com")
 	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
 	t.Setenv("ANYCAP_CREDIT_TIMEOUT_SECONDS", "15")
@@ -107,6 +112,7 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 }
 
 func TestLoadFromEnv_AllowsPostgresDSNWithoutDiscreteFields(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
 	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
 	t.Setenv("ANYCAP_PG_HOST", "")
@@ -125,6 +131,7 @@ func TestLoadFromEnv_AllowsPostgresDSNWithoutDiscreteFields(t *testing.T) {
 }
 
 func TestLoadFromEnv_AllowsRedisAddrWithoutDiscreteFields(t *testing.T) {
+	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
 	t.Setenv("ANYCAP_PG_USER", "demo")
@@ -139,5 +146,20 @@ func TestLoadFromEnv_AllowsRedisAddrWithoutDiscreteFields(t *testing.T) {
 	}
 	if cfg.RedisAddr != "redis.example.com:6379" {
 		t.Fatalf("expected redis addr to be preserved, got %q", cfg.RedisAddr)
+	}
+}
+
+func TestLoadFromEnv_DevModeFallsBackToLegacyPGConfig(t *testing.T) {
+	t.Setenv("ANYCAP_RUNTIME_MODE", "dev")
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"legacy.example.com","Port":"5432","User":"legacy","Password":"secret","DBName":"anycap","SSLMode":"disable","TimeZone":"UTC"}`)
+	t.Setenv("ANYCAP_REDIS_HOST", "redis.example.com")
+	t.Setenv("ANYCAP_REDIS_PASSWORD", "secret")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PGDSN == "" {
+		t.Fatal("expected postgres dsn to be derived from legacy config")
 	}
 }

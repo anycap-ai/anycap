@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/url"
@@ -15,13 +16,14 @@ import (
 const (
 	defaultAppName              = "anycap-server"
 	defaultAppEnv               = "local"
-	defaultHTTPAddr             = ":8080"
+	defaultHTTPAddr             = ":18080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
 	defaultAgentPlatformTimeout = 120 * time.Second
 	defaultPresignExpiry        = 600  // seconds (10 minutes)
 	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
+	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
 )
 
 type Config struct {
@@ -171,6 +173,16 @@ func LoadFromEnv() (Config, error) {
 		},
 	}
 
+	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {
+		legacyDSN, ok, err := loadLegacyPostgresDSNFromEnv()
+		if err != nil {
+			return Config{}, err
+		}
+		if ok {
+			cfg.PGDSN = legacyDSN
+		}
+	}
+
 	if err := cfg.validateInfraConfigExclusivity(); err != nil {
 		return Config{}, err
 	}
@@ -191,6 +203,73 @@ func LoadFromEnv() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+type legacyPostgresConfig struct {
+	Host     string `json:"Host"`
+	Port     string `json:"Port"`
+	User     string `json:"User"`
+	Password string `json:"Password"`
+	DBName   string `json:"DBName"`
+	SSLMode  string `json:"SSLMode"`
+	TimeZone string `json:"TimeZone"`
+}
+
+func hasDiscretePostgresEnv() bool {
+	keys := []string{
+		"ANYCAP_PG_HOST",
+		"ANYCAP_PG_PORT",
+		"ANYCAP_PG_USER",
+		"ANYCAP_PG_DATABASE",
+		"ANYCAP_PG_SSL_MODE",
+		"ANYCAP_PG_TIMEZONE",
+	}
+	for _, key := range keys {
+		if strings.TrimSpace(os.Getenv(key)) != "" {
+			return true
+		}
+	}
+	return os.Getenv("ANYCAP_PG_PASSWORD") != ""
+}
+
+func loadLegacyPostgresDSNFromEnv() (string, bool, error) {
+	raw := strings.TrimSpace(os.Getenv(legacyPGConfigEnvKey))
+	if raw == "" {
+		return "", false, nil
+	}
+
+	var legacy legacyPostgresConfig
+	if err := json.Unmarshal([]byte(raw), &legacy); err != nil {
+		return "", false, fmt.Errorf("parse %s: %w", legacyPGConfigEnvKey, err)
+	}
+
+	port := 5432
+	if strings.TrimSpace(legacy.Port) != "" {
+		parsedPort, err := strconv.Atoi(strings.TrimSpace(legacy.Port))
+		if err != nil {
+			return "", false, fmt.Errorf("%s Port must be numeric", legacyPGConfigEnvKey)
+		}
+		port = parsedPort
+	}
+
+	cfg := Config{
+		PGHost:     strings.TrimSpace(legacy.Host),
+		PGPort:     port,
+		PGUser:     strings.TrimSpace(legacy.User),
+		PGPassword: legacy.Password,
+		PGDatabase: strings.TrimSpace(legacy.DBName),
+		PGSSLMode:  strings.TrimSpace(legacy.SSLMode),
+		PGTimezone: strings.TrimSpace(legacy.TimeZone),
+	}
+
+	if cfg.PGHost == "" || cfg.PGUser == "" || cfg.PGDatabase == "" {
+		return "", false, fmt.Errorf("%s requires Host, User, and DBName", legacyPGConfigEnvKey)
+	}
+	if cfg.PGSSLMode == "" {
+		cfg.PGSSLMode = "disable"
+	}
+
+	return cfg.postgresDSN(), true, nil
 }
 
 func (c Config) validateInfraConfigExclusivity() error {

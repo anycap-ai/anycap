@@ -83,6 +83,9 @@ func validateCreateInput(input model.CreateModelRouteInput) error {
 	if input.Status != "" && !isValidStatus(input.Status) {
 		return fmt.Errorf("status must be active or inactive")
 	}
+	if input.RouteType != "" && !isValidRouteType(input.RouteType) {
+		return fmt.Errorf("route_type must be direct or scheduler")
+	}
 	return nil
 }
 
@@ -94,6 +97,12 @@ func validateUpdateInput(input model.UpdateModelRouteInput) error {
 		AbilityKey:  input.AbilityKey,
 		AlgoType:    input.AlgoType,
 		DisplayName: input.DisplayName,
+		RouteType:   input.RouteType,
+		Region:      input.Region,
+		Tier:        input.Tier,
+		Env:         input.Env,
+		Priority:    input.Priority,
+		Enabled:     input.Enabled,
 		Status:      input.Status,
 		Extra:       input.Extra,
 	})
@@ -109,6 +118,16 @@ func normalizeCreateInput(input model.CreateModelRouteInput) model.CreateModelRo
 	if input.Extra == nil {
 		input.Extra = map[string]any{}
 	}
+	if input.RouteType == "" {
+		input.RouteType = model.RouteTypeDirect
+	}
+	if input.Priority == 0 {
+		input.Priority = model.DefaultRoutePriority
+	}
+	if input.Enabled == nil {
+		enabled := true
+		input.Enabled = &enabled
+	}
 	return input
 }
 
@@ -122,12 +141,31 @@ func normalizeUpdateInput(input model.UpdateModelRouteInput) model.UpdateModelRo
 	if input.Extra == nil {
 		input.Extra = map[string]any{}
 	}
+	if input.RouteType == "" {
+		input.RouteType = model.RouteTypeDirect
+	}
+	if input.Priority == 0 {
+		input.Priority = model.DefaultRoutePriority
+	}
+	if input.Enabled == nil {
+		enabled := true
+		input.Enabled = &enabled
+	}
 	return input
 }
 
 func isValidStatus(status string) bool {
 	switch status {
 	case model.ModelRouteStatusActive, model.ModelRouteStatusInactive:
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidRouteType(routeType model.RouteType) bool {
+	switch routeType {
+	case model.RouteTypeDirect, model.RouteTypeScheduler:
 		return true
 	default:
 		return false
