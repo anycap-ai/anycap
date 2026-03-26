@@ -5,7 +5,7 @@
 - Type: `analyze`
 - Status: `done`
 - Scope: `web/docs/seo/`
-- Related: [`../change-log/2026-03-26-1127-seo-documentation-system-bootstrap.md`](../change-log/2026-03-26-1127-seo-documentation-system-bootstrap.md)
+- Related: [`../index.md`](../index.md)
 
 ## Background
 

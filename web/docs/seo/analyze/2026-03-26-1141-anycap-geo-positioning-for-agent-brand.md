@@ -5,7 +5,7 @@
 - Type: `analyze`
 - Status: `done`
 - Scope: `anycap.ai` brand positioning, GEO content architecture, AI-search messaging
-- Related: [`../change-log/2026-03-26-1141-anycap-geo-positioning-for-agent-brand.md`](../change-log/2026-03-26-1141-anycap-geo-positioning-for-agent-brand.md)
+- Related: [`../todo/2026-03-26-1203-today-seo-todo.md`](../todo/2026-03-26-1203-today-seo-todo.md)
 
 ## Core Premise
 

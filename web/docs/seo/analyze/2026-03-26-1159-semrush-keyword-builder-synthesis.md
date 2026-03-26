@@ -5,7 +5,7 @@
 - Type: `analyze`
 - Status: `done`
 - Scope: `seo-plan`, `seo-geo`, `keyword-discovery`, Semrush cluster CSV synthesis
-- Related: [`../change-log/2026-03-26-1159-semrush-keyword-builder-synthesis.md`](../change-log/2026-03-26-1159-semrush-keyword-builder-synthesis.md)
+- Related: [`../todo/2026-03-26-1203-today-seo-todo.md`](../todo/2026-03-26-1203-today-seo-todo.md)
 
 ## Executive Summary
 

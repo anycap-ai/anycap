@@ -5,7 +5,7 @@
 - Type: `analyze`
 - Status: `done`
 - Scope: `anycap.ai`, keyword discovery, page-intent mapping, agent ecosystem search language
-- Related: [`../change-log/2026-03-26-1145-anycap-ai-keyword-discovery-baseline.md`](../change-log/2026-03-26-1145-anycap-ai-keyword-discovery-baseline.md)
+- Related: [`../todo/2026-03-26-1203-today-seo-todo.md`](../todo/2026-03-26-1203-today-seo-todo.md)
 
 ## Executive Summary
 

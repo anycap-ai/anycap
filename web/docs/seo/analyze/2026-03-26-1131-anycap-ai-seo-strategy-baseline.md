@@ -5,7 +5,7 @@
 - Type: `analyze`
 - Status: `done`
 - Scope: `anycap.ai`, `web/src/app/`, `web/src/lib/site.ts`
-- Related: [`../change-log/2026-03-26-1131-anycap-ai-seo-strategy-baseline.md`](../change-log/2026-03-26-1131-anycap-ai-seo-strategy-baseline.md)
+- Related: [`../todo/2026-03-26-1203-today-seo-todo.md`](../todo/2026-03-26-1203-today-seo-todo.md)
 
 ## Executive Summary
 
