@@ -169,6 +169,139 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	return result, nil
 }
 
+const (
+	defaultVideoGenerateAlgo = "txt_2_video"
+	defaultVideoEditAlgo     = "img_2_video"
+)
+
+func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoRequest, route model.RouteBinding) (model.GenerateVideoResult, error) {
+	if c == nil || c.baseURL == "" || c.token == "" {
+		return model.GenerateVideoResult{}, model.ErrVideoExecutionNotConfigured
+	}
+	if route.AbilityKey == "" {
+		return model.GenerateVideoResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+	}
+
+	uid, err := parseNexusHubUID(req.UserID)
+	if err != nil {
+		return model.GenerateVideoResult{}, err
+	}
+
+	payload := atomicProcessPayload{
+		GenType: route.GenType,
+		Prompt:  req.Prompt,
+		VideoOption: &atomicVideoOption{
+			Type:           resolveVideoAlgoType(route, req),
+			Ratio:          req.Ratio,
+			Resolution:     req.Resolution,
+			Duration:       req.Duration,
+			NegativePrompt: req.NegativePrompt,
+			ReferImageURLs: append([]string(nil), req.ReferenceImageURLs...),
+		},
+		MetaOption: map[string]any{
+			"request_id": req.RequestID,
+			"model_id":   req.Model,
+		},
+	}
+
+	reqPayload, err := json.Marshal(payload)
+	if err != nil {
+		return model.GenerateVideoResult{}, fmt.Errorf("marshal req_payload: %w", err)
+	}
+
+	body := submitAtomicProcessRequest{
+		AbilityKey: route.AbilityKey,
+		ReqPayload: string(reqPayload),
+		Token:      c.token,
+		BizInfo: submitBizInfo{
+			BizID:     defaultNexusHubBizID,
+			EnterFrom: defaultNexusHubEnterFrom,
+		},
+		UserInfo: submitUserInfo{
+			UID: uid,
+		},
+		Extra: map[string]any{
+			"model_id":   req.Model,
+			"capability": string(model.CapabilityVideo),
+			"operation":  string(model.OperationGenerate),
+			"request_id": req.RequestID,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return model.GenerateVideoResult{}, fmt.Errorf("marshal submit request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return model.GenerateVideoResult{}, fmt.Errorf("build request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		httpReq.Header.Set("X-Request-Id", requestID)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return model.GenerateVideoResult{}, fmt.Errorf("submit atomic process: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var parsed submitAtomicProcessResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return model.GenerateVideoResult{}, fmt.Errorf("decode submit response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return model.GenerateVideoResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Message)
+	}
+
+	result := model.GenerateVideoResult{
+		ID:     parsed.TaskID,
+		Status: normalizeNexusHubStatus(parsed.Status),
+		Model:  req.Model,
+		Usage:  parsed.NexusUsage,
+	}
+
+	if parsed.RespPayload != "" {
+		var respPayload atomicRespPayload
+		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
+			return model.GenerateVideoResult{}, fmt.Errorf("decode resp_payload: %w", err)
+		}
+
+		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
+		for _, resource := range respPayload.Resources {
+			resourceURL := resource.URL
+			if resourceURL == "" {
+				resourceURL = resource.Path
+			}
+
+			outputs = append(outputs, model.Artifact{
+				Type:     "video",
+				URL:      resourceURL,
+				MIMEType: guessMIMEType(resourceURL),
+			})
+			if result.CreditCost == 0 && resource.CreditCost > 0 {
+				result.CreditCost = resource.CreditCost
+			}
+		}
+		result.Outputs = outputs
+	}
+
+	return result, nil
+}
+
+func resolveVideoAlgoType(route model.RouteBinding, req model.GenerateVideoRequest) string {
+	if route.AlgoType != "" {
+		return route.AlgoType
+	}
+	if len(req.ReferenceImageURLs) > 0 {
+		return defaultVideoEditAlgo
+	}
+	return defaultVideoGenerateAlgo
+}
+
 type submitAtomicProcessRequest struct {
 	AbilityKey string         `json:"ability_key"`
 	ReqPayload string         `json:"req_payload"`
@@ -192,6 +325,7 @@ type atomicProcessPayload struct {
 	GenType     string             `json:"gen_type"`
 	Prompt      string             `json:"prompt,omitempty"`
 	ImageOption *atomicImageOption `json:"image_option,omitempty"`
+	VideoOption *atomicVideoOption `json:"video_option,omitempty"`
 	MetaOption  map[string]any     `json:"meta_option,omitempty"`
 }
 
@@ -199,6 +333,15 @@ type atomicImageOption struct {
 	Type           string   `json:"type,omitempty"`
 	Ratio          string   `json:"ratio,omitempty"`
 	Resolution     string   `json:"resolution,omitempty"`
+	NegativePrompt string   `json:"negative_prompt,omitempty"`
+	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
+}
+
+type atomicVideoOption struct {
+	Type           string   `json:"type,omitempty"`
+	Ratio          string   `json:"ratio,omitempty"`
+	Resolution     string   `json:"resolution,omitempty"`
+	Duration       int      `json:"duration,omitempty"`
 	NegativePrompt string   `json:"negative_prompt,omitempty"`
 	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
 }
