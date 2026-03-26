@@ -44,7 +44,7 @@ func NewService(
 ) *Service {
 	if stateGenerator == nil {
 		stateGenerator = func() string {
-			return "state-" + time.Now().UTC().Format("20060102150405")
+			return "state-" + time.Now().UTC().Format("20060102150405.000000000")
 		}
 	}
 	if sessionIDGenerator == nil {

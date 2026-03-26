@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"slices"
 	"strings"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
@@ -108,6 +109,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			middleware.Recover(),
 			middleware.RequestID(),
 			middleware.AccessLog(),
+			middleware.CORS(buildCORSAllowedOrigins(cfg)),
 		},
 		Root: []transporthttp.RouteRegistrar{
 			transporthttp.RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
@@ -233,6 +235,33 @@ func buildDeviceVerificationURL(cfg config.Config) string {
 	parsed.RawQuery = ""
 	parsed.Fragment = ""
 	return parsed.String()
+}
+
+func buildCORSAllowedOrigins(cfg config.Config) []string {
+	origins := map[string]struct{}{}
+	addOrigin := func(raw string) {
+		parsed, err := url.Parse(strings.TrimSpace(raw))
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+			return
+		}
+		origins[parsed.Scheme+"://"+parsed.Host] = struct{}{}
+	}
+
+	addOrigin(cfg.Auth0RedirectURL)
+	origins["https://anycap.ai"] = struct{}{}
+
+	switch strings.ToLower(strings.TrimSpace(cfg.AppEnv)) {
+	case "", "local", "dev", "test":
+		origins["http://localhost:3000"] = struct{}{}
+		origins["http://127.0.0.1:3000"] = struct{}{}
+	}
+
+	result := make([]string, 0, len(origins))
+	for origin := range origins {
+		result = append(result, origin)
+	}
+	slices.Sort(result)
+	return result
 }
 
 func buildAuthClient(cfg config.Config) port.Auth0Client {

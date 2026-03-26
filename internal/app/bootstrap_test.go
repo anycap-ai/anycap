@@ -175,6 +175,36 @@ func TestBuildDeviceVerificationURL_FallsBackWhenRedirectURLMissing(t *testing.T
 	}
 }
 
+func TestBuildCORSAllowedOrigins_IncludesRedirectOriginAndLocalDevOrigins(t *testing.T) {
+	got := buildCORSAllowedOrigins(config.Config{
+		AppEnv:           "dev",
+		Auth0RedirectURL: "https://preview.anycap-web.pages.dev/auth/callback",
+	})
+
+	want := map[string]bool{
+		"https://preview.anycap-web.pages.dev": true,
+		"https://anycap.ai":                    true,
+		"http://localhost:3000":                true,
+		"http://127.0.0.1:3000":                true,
+	}
+	for _, origin := range got {
+		delete(want, origin)
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing expected origins: %#v got=%v", want, got)
+	}
+}
+
+func TestBuildCORSAllowedOrigins_OnlyIncludesValidOrigins(t *testing.T) {
+	got := buildCORSAllowedOrigins(config.Config{
+		AppEnv:           "prod",
+		Auth0RedirectURL: "not-a-url",
+	})
+	if len(got) != 1 || got[0] != "https://anycap.ai" {
+		t.Fatalf("expected only production anycap origin, got %v", got)
+	}
+}
+
 func TestBuildServerDependencies_CreditEnabledUsesRealClient(t *testing.T) {
 	deps, err := buildServerDependencies(config.Config{
 		AppName:      "anycap-server",
