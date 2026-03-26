@@ -80,11 +80,29 @@ export function ScrambleText({
   return (
     <span
       className={className}
-      style={style}
+      style={{
+        ...style,
+        display: "inline-block",
+        position: "relative",
+        whiteSpace: "pre",
+      }}
       onMouseEnter={scramble}
       onMouseLeave={reset}
+      aria-label={text}
     >
-      {display}
+      <span aria-hidden className="invisible">
+        {text}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          whiteSpace: "pre",
+        }}
+      >
+        {display}
+      </span>
     </span>
   );
 }

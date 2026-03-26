@@ -15,46 +15,62 @@ export default function ForHumanPage() {
   return (
     <main className="overflow-x-hidden">
       {/* ── Header ── */}
-      <header className="flex items-center px-8 md:px-16 lg:px-24 pt-8 md:pt-12">
-        <div className="flex items-center gap-3">
+      <header className="px-6 md:px-12 lg:px-20 pt-6 md:pt-10">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-3">
           <AnycapMark size={28} className="shrink-0" />
           <AnycapWordmark
             className="text-xl font-bold leading-none"
             style={{ ...mono, letterSpacing: "-0.5px" }}
           />
-        </div>
-        <div className="ml-auto">
-          <Link
-            href="/"
-            className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
-            style={mono}
-          >
-            I&apos;m Agent →
-          </Link>
+          <div className="ml-auto">
+            <Link
+              href="/"
+              className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+              style={mono}
+            >
+              I&apos;m Agent →
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* ── Hero ── */}
-      <section className="px-8 md:px-16 lg:px-24 pt-16 md:pt-28">
-        <h1
-          className="leading-[1.0] tracking-[-0.02em] text-[#1c1f17]"
-          style={{ ...pixel, fontSize: "clamp(48px, 9vw, 128px)" }}
-        >
-          Your <ScrambleText text="Agent" className="text-[#6b7d3a]" style={{ fontSize: "1.15em" }} speed={30} ticks={3} />
-          <br />
-          can do anything.
-          <br />
-          It just needs{" "}
-          <ScrambleText
-            text="AnyCap."
-            className="text-[#6b7d3a]"
-            style={{ fontSize: "1.15em" }}
-            speed={30}
-            ticks={3}
-          />
-        </h1>
-        <div className="mt-10 md:mt-14">
-          <EquipAgent />
+      <section className="px-6 md:px-12 lg:px-20 pt-12 md:pt-20 lg:pt-24">
+        <div className="mx-auto max-w-[1280px]">
+          <div className="max-w-[1080px]">
+            <h1
+              className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
+              style={{ ...pixel, fontSize: "clamp(42px, 8vw, 108px)" }}
+            >
+              Your{" "}
+              <ScrambleText
+                text="Agent"
+                className="text-[#6b7d3a]"
+                style={{ fontSize: "1.08em" }}
+                speed={30}
+                ticks={3}
+              />
+              <br />
+              can do anything.
+              <br />
+              It just needs{" "}
+              <ScrambleText
+                text="AnyCap."
+                className="text-[#6b7d3a]"
+                style={{ fontSize: "1.08em" }}
+                speed={30}
+                ticks={3}
+              />
+            </h1>
+            <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
+              AnyCap is a capability runtime built for agents, so tools like Claude Code,
+              Cursor, Codex, and OpenClaw can install and use capabilities through one
+              interface instead of scattered SDKs and dashboards.
+            </p>
+          </div>
+          <div className="mt-8 md:mt-10">
+            <EquipAgent />
+          </div>
         </div>
       </section>
 

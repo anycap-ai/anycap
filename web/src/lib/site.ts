@@ -3,9 +3,9 @@ export const siteConfig = {
   siteName: "AnyCap",
   url: "https://anycap.ai",
   locale: "en_US",
-  defaultTitle: "AnyCap | Built for agents. One CLI. Any capability.",
+  defaultTitle: "AnyCap | Agent CLI and capability runtime for AI agents",
   defaultDescription:
-    "AnyCap is the capability runtime built for AI agents. One CLI, one auth flow, and one interface for image, video, speech, search, and more.",
+    "AnyCap is an agent-native capability runtime and agent CLI for AI agents. Install capabilities across tools like Claude Code, Cursor, Codex, OpenCode, and OpenClaw through one interface.",
   humanTitle: "Built for agents",
   humanDescription:
     "AnyCap is the agent-native capability runtime for teams building with AI agents. Give agents one interface for multimodal and web capabilities.",

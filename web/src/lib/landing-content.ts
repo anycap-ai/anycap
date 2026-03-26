@@ -18,26 +18,50 @@ export interface LandingContent {
 }
 
 export const content: LandingContent = {
-  title: "AnyCap",
-  tagline: "One CLI. Any capability.",
+  title: "AnyCap Agent CLI",
+  tagline: "Agent-native capability runtime for AI agents.",
   description:
-    "You can reason, plan, and decide — but you cannot generate images, produce video, compose music, speak, search the web, or crawl pages on your own. AnyCap gives you all of these through a single command-line tool. One binary. One auth. Structured I/O.",
+    "AnyCap is an agent-native capability runtime and agent CLI that lets AI agents install and use capabilities through one interface. It is designed for agent products like Claude Code, Cursor, Codex, OpenCode, and OpenClaw.",
   sections: [
     {
-      title: "Install Skills",
+      title: "What Is AnyCap?",
       blocks: [
         {
           type: "text",
           content:
-            "Skills are documentation files that teach AI agents how to use AnyCap.",
+            "AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image understanding, video analysis, and other multimodal or web actions through one CLI and one interface.",
+        },
+        {
+          type: "text",
+          content:
+            "If you are looking for an agent CLI, AnyCap is the installable entry point. If you are defining the category, AnyCap is a capability runtime for AI agents built from day one for agent workflows rather than adapted from human-first software.",
+        },
+      ],
+    },
+    {
+      title: "Install For Claude Code, Cursor, And 40+ Agents",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "Skills are documentation files that teach AI agents how to use AnyCap as an installable capability layer.",
         },
         { type: "h3", content: "Option A: skills.sh (recommended)" },
         {
           type: "text",
           content:
-            "Works with Claude Code, Cursor, Windsurf, OpenCode, and 40+ agents (https://skills.sh):",
+            "Works with Claude Code, Cursor, Windsurf, OpenCode, and 40+ agents through skills.sh:",
         },
-        { type: "code", content: "npx -y skills add anycap-ai/anycap -y" },
+        {
+          type: "code",
+          content: [
+            "# General install",
+            "npx -y skills add anycap-ai/anycap -y",
+            "",
+            "# Example: Claude Code",
+            "npx -y skills add anycap-ai/anycap -a claude-code -y",
+          ].join("\n"),
+        },
         { type: "h3", content: "Option B: AnyCap CLI" },
         {
           type: "code",
@@ -57,8 +81,13 @@ export const content: LandingContent = {
       ],
     },
     {
-      title: "Install CLI",
+      title: "Install The AnyCap Agent CLI",
       blocks: [
+        {
+          type: "text",
+          content:
+            "Install the AnyCap agent CLI when you want one binary, one auth flow, and one interface for agent capabilities.",
+        },
         {
           type: "code",
           content: [
@@ -80,6 +109,11 @@ export const content: LandingContent = {
       title: "Quick Start",
       blocks: [
         {
+          type: "text",
+          content:
+            "After installing the skill and CLI, log in once and call AnyCap from your agent workflow or terminal.",
+        },
+        {
           type: "code",
           content: [
             "# Login",
@@ -95,7 +129,7 @@ export const content: LandingContent = {
       ],
     },
     {
-      title: "Capabilities",
+      title: "Capabilities Available Today",
       blocks: [
         {
           type: "table",
@@ -109,7 +143,26 @@ export const content: LandingContent = {
             ["Video Analysis", "`anycap video read`", "Analyze videos"],
           ],
         },
-        { type: "text", content: "More capabilities coming soon." },
+        {
+          type: "text",
+          content:
+            "Today, the public landing page documents image understanding and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
+        },
+      ],
+    },
+    {
+      title: "Why Agents Use AnyCap",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "AnyCap is purpose-built for agents. Instead of stitching together separate SDKs, dashboards, and custom integrations for every environment, teams can give agents one install path and one interface.",
+        },
+        {
+          type: "text",
+          content:
+            "This makes AnyCap useful both as an agent CLI for immediate adoption and as a capability runtime for teams building agent-native products.",
+        },
       ],
     },
     {
@@ -208,6 +261,8 @@ export function toMarkdown(c: LandingContent): string {
 
   lines.push(
     "Human-readable version: https://anycap.ai/for-human",
+    "",
+    "LLM guidance: https://anycap.ai/llms.txt",
     "",
     "MIT License",
     ""

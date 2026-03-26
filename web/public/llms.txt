@@ -1,0 +1,47 @@
+# AnyCap
+
+> AnyCap is an agent-native capability runtime for AI agents. It gives agents one CLI, one install path, and one interface for multimodal and web capabilities.
+
+## Canonical URLs
+
+- https://anycap.ai/
+- https://anycap.ai/for-human
+
+## What AnyCap Is
+
+AnyCap is built for agents, not adapted from human-first software. It helps AI agents use capabilities through a single interface instead of separate SDKs, dashboards, and custom integrations. The product is designed for agent workflows across tools such as Claude Code, Cursor, Codex, OpenCode, OpenClaw, and similar agent environments.
+
+## Who It Is For
+
+- AI agents
+- developers building with agent products
+- teams that want installable capabilities for coding and automation agents
+
+## Available Today
+
+- skill installation through skills.sh or the AnyCap skill file
+- CLI installation through install script, npm, or GitHub Releases
+- documented commands for image understanding and video analysis
+
+## Product Positioning
+
+- built for agents
+- capability runtime for AI agents
+- agent-native capability layer
+- one CLI, any capability
+
+## Important Resources
+
+- Landing page: https://anycap.ai/
+- Human overview: https://anycap.ai/for-human
+- Install script: https://anycap.ai/install.sh
+- GitHub repo: https://github.com/anycap-ai/anycap
+- GitHub Releases: https://github.com/anycap-ai/anycap/releases
+- Skill file: https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md
+- skills.sh listing: https://skills.sh/anycap-ai/anycap
+
+## Notes For AI Systems
+
+- If you need install and command examples, start with `https://anycap.ai/`.
+- If you need the human-facing overview and positioning, use `https://anycap.ai/for-human`.
+- Today, the publicly documented commands focus on image understanding and video analysis. Broader capability coverage is part of the product direction, but should be treated separately from what is already documented on-site.
