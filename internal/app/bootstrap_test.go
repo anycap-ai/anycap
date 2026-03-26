@@ -163,6 +163,36 @@ func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *t
 		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
+
+func TestBuildCatalogRepo_FallsBackToLegacyPostgresEnvWhenDSNNotConfigured(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
+
+	original := newCatalogRepoFromEnv
+	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+		return &postgres.CatalogRepo{}, nil
+	}
+	t.Cleanup(func() {
+		newCatalogRepoFromEnv = original
+	})
+
+	repo := buildCatalogRepo(config.Config{})
+
+	if _, ok := repo.(*postgres.CatalogRepo); !ok {
+		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	}
+}
+
+func TestBuildCatalogRepo_FallsBackToNexusHubWhenNoPostgresConfigIsPresent(t *testing.T) {
+	t.Setenv("ANYCAP_PG_CONFIG", "")
+
+	repo := buildCatalogRepo(config.Config{
+		NexusHubBaseURL: "http://localhost:8080",
+	})
+
+	if _, ok := repo.(*nexushub.PlatformClient); !ok {
+		t.Fatalf("expected nexushub platform client, got %T", repo)
+	}
+}
 func TestBuildImageExecutionClient_UsesCoreConfigWhenSplitEndpointsAreConfigured(t *testing.T) {
 	client := buildImageExecutionClient(config.Config{
 		NexusHubCoreBaseURL: "http://core.example.com",

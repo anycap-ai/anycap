@@ -106,6 +106,7 @@ func TestLoadFromEnv_NexusHubSplitConfigFallsBackToLegacy(t *testing.T) {
 		t.Fatalf("expected legacy core token fallback, got %q", cfg.ResolvedNexusHubCoreToken())
 	}
 }
+
 func TestLoadFromEnv_RejectsAmbiguousPostgresConfig(t *testing.T) {
 	t.Setenv("ANYCAP_PG_DSN", "postgres://demo:secret@pg.example.com:5432/postgres?sslmode=require")
 	t.Setenv("ANYCAP_PG_HOST", "pg.example.com")
