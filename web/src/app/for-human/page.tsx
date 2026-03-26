@@ -193,13 +193,15 @@ export default function ForHumanPage() {
           </p>
         </FadeIn>
         <FadeIn delay={300}>
-          <Link
-            href="/"
+          <a
+            href="https://github.com/anycap-ai/anycap"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block px-10 py-4 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
             style={mono}
           >
             Get Started
-          </Link>
+          </a>
         </FadeIn>
       </section>
 

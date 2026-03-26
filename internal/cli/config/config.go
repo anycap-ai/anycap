@@ -24,6 +24,7 @@ var DefaultEndpoint = "http://127.0.0.1:18080"
 type Config struct {
 	Endpoint   string `toml:"endpoint,omitempty"`
 	AutoUpdate *bool  `toml:"auto_update,omitempty"`
+	Feedback   *bool  `toml:"feedback,omitempty"`
 }
 
 // IsAutoUpdateEnabled returns whether auto-update is enabled.
@@ -33,6 +34,15 @@ func (c Config) IsAutoUpdateEnabled() bool {
 		return true
 	}
 	return *c.AutoUpdate
+}
+
+// IsFeedbackEnabled returns whether the feedback command is enabled.
+// Defaults to true when the field is not set.
+func (c Config) IsFeedbackEnabled() bool {
+	if c.Feedback == nil {
+		return true
+	}
+	return *c.Feedback
 }
 
 // ConfigDir returns ~/.anycap, creating it if needed.

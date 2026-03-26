@@ -15,20 +15,29 @@ import {
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
-const agents: { name: string; icon: ReactNode }[] = [
-  { name: "Cursor", icon: <Cursor size={20} /> },
-  { name: "Claude Code", icon: <ClaudeCode.Color size={20} /> },
-  { name: "Codex", icon: <Codex.Color size={20} /> },
-  { name: "Antigravity", icon: <Antigravity.Color size={20} /> },
-  { name: "OpenCode", icon: <OpenCode size={20} /> },
-  { name: "OpenClaw", icon: <OpenClaw.Color size={20} /> },
-  { name: "V0", icon: <V0 size={20} /> },
-  { name: "Lovable", icon: <Lovable.Color size={20} /> },
-  { name: "Replit", icon: <Replit.Color size={20} /> },
-  { name: "Other Agent", icon: null },
+interface Agent {
+  name: string;
+  icon: ReactNode;
+  slug: string | null; // skills CLI agent slug for -a flag
+}
+
+const agents: Agent[] = [
+  { name: "Cursor", icon: <Cursor size={20} />, slug: "cursor" },
+  { name: "Claude Code", icon: <ClaudeCode.Color size={20} />, slug: "claude-code" },
+  { name: "Codex", icon: <Codex.Color size={20} />, slug: "codex" },
+  { name: "Antigravity", icon: <Antigravity.Color size={20} />, slug: "antigravity" },
+  { name: "OpenCode", icon: <OpenCode size={20} />, slug: "opencode" },
+  { name: "OpenClaw", icon: <OpenClaw.Color size={20} />, slug: "openclaw" },
+  { name: "V0", icon: <V0 size={20} />, slug: "v0" },
+  { name: "Lovable", icon: <Lovable.Color size={20} />, slug: "lovable" },
+  { name: "Replit", icon: <Replit.Color size={20} />, slug: "replit" },
+  { name: "Other Agent", icon: null, slug: null },
 ];
 
-const installPrompt = `Help me set up AnyCap — install the CLI from anycap.ai/install, then run anycap login to connect my account. After that you'll have image, video, music, speech, search, and crawl capabilities ready to use.`;
+function getInstallPrompt(agent: Agent): string {
+  const agentFlag = agent.slug ? ` -a ${agent.slug}` : "";
+  return `Help me set up AnyCap — first install the skill with "npx -y skills add anycap-ai/anycap${agentFlag} -y", then install the CLI with "curl -fsSL https://anycap.ai/install.sh | sh", and run anycap login to connect my account. After that you'll have image, video, music, speech, search, and crawl capabilities ready to use.`;
+}
 
 function AgentIconSlot({ icon }: { icon: ReactNode }) {
   return (
@@ -45,13 +54,13 @@ function AgentIconSlot({ icon }: { icon: ReactNode }) {
 
 export function EquipAgent() {
   const [showAgents, setShowAgents] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<(typeof agents)[number] | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [copied, setCopied] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Keep last selected agent so panel content persists during exit animation
-  const lastAgentRef = useRef<(typeof agents)[number] | null>(null);
+  const lastAgentRef = useRef<Agent | null>(null);
   if (selectedAgent) lastAgentRef.current = selectedAgent;
   const displayAgent = selectedAgent ?? lastAgentRef.current;
 
@@ -67,7 +76,7 @@ export function EquipAgent() {
     closeTimer.current = setTimeout(() => setShowAgents(false), 200);
   }, []);
 
-  const selectAgent = (agent: (typeof agents)[number]) => {
+  const selectAgent = (agent: Agent) => {
     setSelectedAgent(agent);
     setShowAgents(false);
   };
@@ -78,7 +87,7 @@ export function EquipAgent() {
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(installPrompt);
+    await navigator.clipboard.writeText(getInstallPrompt(selectedAgent!));
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
@@ -198,7 +207,7 @@ export function EquipAgent() {
                 className="text-[#d4e0a4] text-[13px] leading-relaxed mb-4"
                 style={mono}
               >
-                {installPrompt}
+                {getInstallPrompt(displayAgent!)}
               </p>
               <button
                 onClick={copy}

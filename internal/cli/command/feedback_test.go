@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -150,6 +152,35 @@ func TestFeedbackCommand_RequiresTypeAndMessage(t *testing.T) {
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("expected error for missing required flags")
+	}
+}
+
+func TestFeedbackCommand_DisabledViaConfig(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	dir := filepath.Join(tmpHome, ".anycap")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte("feedback = false\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "dev"},
+		Stdout:    &bytes.Buffer{},
+		Stderr:    &bytes.Buffer{},
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"feedback", "--type", "bug", "-m", "test"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when feedback is disabled")
+	}
+	if !strings.Contains(err.Error(), "feedback is disabled") {
+		t.Fatalf("expected 'feedback is disabled' error, got: %v", err)
 	}
 }
 

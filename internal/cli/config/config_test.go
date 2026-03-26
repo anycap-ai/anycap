@@ -108,6 +108,50 @@ func TestLoad_AutoUpdateFromFile(t *testing.T) {
 	}
 }
 
+func TestIsFeedbackEnabled_DefaultTrue(t *testing.T) {
+	cfg := Config{}
+	if !cfg.IsFeedbackEnabled() {
+		t.Error("expected feedback enabled by default (nil pointer)")
+	}
+}
+
+func TestIsFeedbackEnabled_ExplicitFalse(t *testing.T) {
+	f := false
+	cfg := Config{Feedback: &f}
+	if cfg.IsFeedbackEnabled() {
+		t.Error("expected feedback disabled when set to false")
+	}
+}
+
+func TestIsFeedbackEnabled_ExplicitTrue(t *testing.T) {
+	tr := true
+	cfg := Config{Feedback: &tr}
+	if !cfg.IsFeedbackEnabled() {
+		t.Error("expected feedback enabled when set to true")
+	}
+}
+
+func TestLoad_FeedbackFromFile(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	dir := filepath.Join(tmpHome, ".anycap")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte("feedback = false\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.IsFeedbackEnabled() {
+		t.Error("expected feedback disabled from config file")
+	}
+}
+
 func TestLoad_ValidConfigFile(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

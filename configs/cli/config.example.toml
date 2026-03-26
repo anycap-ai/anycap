@@ -6,3 +6,6 @@ endpoint = "http://127.0.0.1:18080"
 
 # Automatically check and update CLI binary from GitHub Releases (default: true)
 auto_update = true
+
+# Enable the feedback command for submitting bug reports and feature requests (default: true)
+feedback = true

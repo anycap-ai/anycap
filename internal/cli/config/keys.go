@@ -53,6 +53,12 @@ var Keys = []KeyDef{
 		Description: "Automatically check and update CLI from GitHub Releases",
 		EnvVar:      "ANYCAP_NO_UPDATE (set any value to disable)",
 	},
+	{
+		Name:        "feedback",
+		Type:        KeyTypeBool,
+		Default:     "true",
+		Description: "Enable the feedback command for submitting bug reports and feature requests",
+	},
 }
 
 // LookupKey returns the key definition by name, or nil if not found.
@@ -114,6 +120,8 @@ func (c *Config) GetEffective(key string) (any, error) {
 		return DefaultEndpoint, nil
 	case "auto_update":
 		return c.IsAutoUpdateEnabled(), nil
+	case "feedback":
+		return c.IsFeedbackEnabled(), nil
 	}
 	return nil, fmt.Errorf("unhandled config key: %q", key)
 }
@@ -125,6 +133,8 @@ func (c *Config) IsSet(key string) bool {
 		return c.Endpoint != ""
 	case "auto_update":
 		return c.AutoUpdate != nil
+	case "feedback":
+		return c.Feedback != nil
 	}
 	return false
 }
@@ -143,6 +153,12 @@ func (c *Config) SetValue(key, value string) error {
 			return fmt.Errorf("invalid value for %q: expected true/false, got %q", key, value)
 		}
 		c.AutoUpdate = &b
+	case "feedback":
+		b, err := parseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for %q: expected true/false, got %q", key, value)
+		}
+		c.Feedback = &b
 	}
 	return nil
 }
@@ -157,6 +173,8 @@ func (c *Config) UnsetValue(key string) error {
 		c.Endpoint = ""
 	case "auto_update":
 		c.AutoUpdate = nil
+	case "feedback":
+		c.Feedback = nil
 	}
 	return nil
 }
