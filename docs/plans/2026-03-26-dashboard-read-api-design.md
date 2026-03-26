@@ -70,17 +70,23 @@ These are useful, but not required for the first dashboard release.
 
 ## Recommended API Set
 
-The recommended MVP uses three protected endpoints:
+The recommended MVP uses three protected endpoints, plus one convenience summary endpoint
+for dashboard first paint:
 
 1. `GET /v1/me`
 2. `GET /v1/credits/balance`
 3. `GET /v1/logs`
+4. `GET /v1/dashboard/summary`
 
-This is preferred over a single large summary endpoint because:
+The three base endpoints remain the source of truth because:
 
 - it maps directly to the three product needs
 - it keeps payloads simple and independently evolvable
 - it is easier for dashboard developers to consume incrementally
+
+The summary endpoint is an optimization layer for dashboard first screen load. It should
+be derived from the same underlying reads, not introduce separate persistence or business
+rules.
 
 ---
 
@@ -369,6 +375,75 @@ Envelope:
 }
 ```
 
+### `GET /v1/dashboard/summary`
+
+Envelope:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "user": {
+      "id": "2000000000",
+      "email": "user@example.com",
+      "name": "Sichen Zhao",
+      "avatar_url": "https://...",
+      "status": "active"
+    },
+    "balance": {
+      "available": 12,
+      "currency": "credit",
+      "credit_cent_balance": 1200
+    },
+    "recent_activity": [
+      {
+        "type": "capability_call",
+        "occurred_at": "2026-03-26T10:30:00Z",
+        "request_id": "req_123",
+        "capability": "image.generate",
+        "status": "success",
+        "credit_cost": 1
+      }
+    ],
+    "usage_summary": {
+      "last_capability": "image.generate",
+      "last_model": "flux-1.1-pro",
+      "last_occurred_at": "2026-03-26T10:30:00Z"
+    },
+    "error_summary": {
+      "last_error_capability": "image.generate",
+      "last_error_code": "UPSTREAM_TIMEOUT",
+      "last_error_occurred_at": "2026-03-25T08:00:00Z"
+    }
+  }
+}
+```
+
+Purpose:
+
+- allow `/dashboard` to render user card, balance card, recent activity, and lightweight
+  usage/error summary from one request
+
+Derivation rules:
+
+- `user`
+  - same payload shape as `GET /v1/me`
+- `balance`
+  - same payload shape as `GET /v1/credits/balance`
+- `recent_activity`
+  - latest timeline items, default top `5`
+- `usage_summary`
+  - derived from the most recent `capability_call` item
+- `error_summary`
+  - derived from the most recent failed `capability_call` item
+  - omitted when no recent error exists
+
+Notes:
+
+- this endpoint is a convenience projection
+- it should reuse the same application-layer reads as the base endpoints
+- the base endpoints remain stable integration points for non-dashboard clients
+
 ### `GET /v1/credits/balance`
 
 Envelope:
@@ -414,10 +489,8 @@ Envelope:
 Dashboard developers can use the APIs like this:
 
 - `/dashboard`
-  - show user info from `GET /v1/me`
-  - show credit balance from `GET /v1/credits/balance`
-  - show recent capability summary from latest timeline items
-  - show recent error summary from latest timeline items with failure state
+  - prefer `GET /v1/dashboard/summary` for first screen load
+  - alternatively compose from `GET /v1/me`, `GET /v1/credits/balance`, and `GET /v1/logs`
 - `/logs`
   - render the unified timeline from `GET /v1/logs`
 - `/usage`
@@ -445,11 +518,13 @@ This keeps dashboard development moving without waiting for payment or analytics
 
 ## Recommendation
 
-Implement the three read-only endpoints first:
+Implement the three base read-only endpoints first, then add the dashboard convenience
+summary endpoint:
 
 1. `GET /v1/me`
 2. `GET /v1/credits/balance`
 3. `GET /v1/logs`
+4. `GET /v1/dashboard/summary`
 
-This is the smallest useful server surface for dashboard MVP, while preserving a clean path
-to future billing and analytics features.
+This keeps the core API surface explicit while giving dashboard first paint a smaller
+number of requests.

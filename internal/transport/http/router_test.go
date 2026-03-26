@@ -526,6 +526,25 @@ func TestRouter_DashboardReadAPIs(t *testing.T) {
 	if !ok || len(items) == 0 {
 		t.Fatalf("expected non-empty items in /v1/logs response, got %#v", data)
 	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/dashboard/summary", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/dashboard/summary response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if _, ok := data["user"].(map[string]any); !ok {
+		t.Fatalf("expected user object in summary, got %#v", data)
+	}
+	if _, ok := data["balance"].(map[string]any); !ok {
+		t.Fatalf("expected balance object in summary, got %#v", data)
+	}
 }
 
 func TestRouter_DeviceCodeCheck(t *testing.T) {

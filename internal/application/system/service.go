@@ -152,3 +152,48 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 
 	return model.LogsResult{Items: items}, nil
 }
+
+func (s *Service) DashboardSummary(ctx context.Context, principal *model.Principal) (model.DashboardSummaryResult, error) {
+	user, err := s.CurrentUser(ctx, principal)
+	if err != nil {
+		return model.DashboardSummaryResult{}, err
+	}
+	balance, err := s.CreditBalance(ctx, principal)
+	if err != nil {
+		return model.DashboardSummaryResult{}, err
+	}
+	logs, err := s.Logs(ctx, principal, 5)
+	if err != nil {
+		return model.DashboardSummaryResult{}, err
+	}
+
+	result := model.DashboardSummaryResult{
+		User:           user,
+		Balance:        balance,
+		RecentActivity: logs.Items,
+	}
+
+	for _, item := range logs.Items {
+		if result.UsageSummary == nil && item.Type == "capability_call" {
+			occurredAt := item.OccurredAt
+			result.UsageSummary = &model.DashboardUsageSummary{
+				LastCapability: item.Capability,
+				LastModel:      item.Model,
+				LastOccurredAt: &occurredAt,
+			}
+		}
+		if result.ErrorSummary == nil && item.Type == "capability_call" && item.Status != "success" {
+			occurredAt := item.OccurredAt
+			result.ErrorSummary = &model.DashboardErrorSummary{
+				LastErrorCapability: item.Capability,
+				LastErrorCode:       item.ErrorCode,
+				LastErrorOccurredAt: &occurredAt,
+			}
+		}
+		if result.UsageSummary != nil && result.ErrorSummary != nil {
+			break
+		}
+	}
+
+	return result, nil
+}

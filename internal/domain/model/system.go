@@ -104,6 +104,26 @@ type LogsResult struct {
 	NextCursor string         `json:"next_cursor,omitempty"`
 }
 
+type DashboardUsageSummary struct {
+	LastCapability string     `json:"last_capability,omitempty"`
+	LastModel      string     `json:"last_model,omitempty"`
+	LastOccurredAt *time.Time `json:"last_occurred_at,omitempty"`
+}
+
+type DashboardErrorSummary struct {
+	LastErrorCapability string     `json:"last_error_capability,omitempty"`
+	LastErrorCode       string     `json:"last_error_code,omitempty"`
+	LastErrorOccurredAt *time.Time `json:"last_error_occurred_at,omitempty"`
+}
+
+type DashboardSummaryResult struct {
+	User           User                   `json:"user"`
+	Balance        Balance                `json:"balance"`
+	RecentActivity []TimelineItem         `json:"recent_activity"`
+	UsageSummary   *DashboardUsageSummary `json:"usage_summary,omitempty"`
+	ErrorSummary   *DashboardErrorSummary `json:"error_summary,omitempty"`
+}
+
 type StatusResult struct {
 	Service     ServiceStatus `json:"service"`
 	RuntimeMode string        `json:"runtime_mode"`

@@ -212,3 +212,78 @@ func TestService_LogsMergesTimeline(t *testing.T) {
 		t.Fatalf("expected second item credit_transaction, got %+v", result.Items[1])
 	}
 }
+
+func TestService_DashboardSummary(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetUserReader(&fakeUserReader{
+		users: map[string]model.User{
+			"2000000001": {
+				ID:        "2000000001",
+				Email:     "user@example.com",
+				Name:      "Demo User",
+				AvatarURL: "https://cdn.example.com/avatar.png",
+				Status:    model.UserStatusActive,
+			},
+		},
+	})
+	service.SetCreditClient(&fakeSystemCreditClient{
+		balance: model.Balance{
+			Available:         12,
+			Currency:          "credit",
+			CreditCentBalance: 1200,
+		},
+		transactions: []model.CreditTransaction{
+			{
+				ID:               "txn-1",
+				Type:             "CONSUMPTION",
+				CreditCentAmount: -100,
+				SourceID:         "image.generate-req_123",
+				Description:      "image.generate | model:flux-1.1-pro",
+				CreatedAt:        time.Date(2026, 3, 26, 10, 29, 30, 0, time.UTC),
+			},
+		},
+	})
+	service.SetCallLogRepo(&fakeCallLogRepo{
+		logs: []model.CallLog{
+			{
+				RequestID:  "req_456",
+				UserID:     "2000000001",
+				Capability: "image.generate",
+				Model:      "flux-1.1-pro",
+				Status:     "failed",
+				ErrorCode:  "UPSTREAM_TIMEOUT",
+				CreditCost: 1,
+				CreatedAt:  time.Date(2026, 3, 26, 10, 31, 0, 0, time.UTC),
+			},
+			{
+				RequestID:  "req_123",
+				UserID:     "2000000001",
+				Capability: "image.generate",
+				Model:      "flux-1.1-pro",
+				Status:     "success",
+				CreditCost: 1,
+				CreatedAt:  time.Date(2026, 3, 26, 10, 30, 0, 0, time.UTC),
+			},
+		},
+	})
+
+	result, err := service.DashboardSummary(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"})
+	if err != nil {
+		t.Fatalf("DashboardSummary() error = %v", err)
+	}
+	if result.User.ID != "2000000001" {
+		t.Fatalf("unexpected user: %+v", result.User)
+	}
+	if result.Balance.CreditCentBalance != 1200 {
+		t.Fatalf("unexpected balance: %+v", result.Balance)
+	}
+	if len(result.RecentActivity) != 3 {
+		t.Fatalf("expected 3 recent activity items, got %d", len(result.RecentActivity))
+	}
+	if result.UsageSummary == nil || result.UsageSummary.LastCapability != "image.generate" {
+		t.Fatalf("unexpected usage summary: %+v", result.UsageSummary)
+	}
+	if result.ErrorSummary == nil || result.ErrorSummary.LastErrorCode != "UPSTREAM_TIMEOUT" {
+		t.Fatalf("unexpected error summary: %+v", result.ErrorSummary)
+	}
+}
