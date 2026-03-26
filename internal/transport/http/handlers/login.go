@@ -36,9 +36,12 @@ func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
 
 	authGroup := group.Group("/auth")
 	authGroup.POST("/login", h.Init)
+	authGroup.POST("/browser-bind", h.BrowserBind)
+	authGroup.POST("/browser-complete", h.BrowserComplete)
 	authGroup.POST("/callback", h.Callback)
 	authGroup.POST("/device-code", h.DeviceCode)
 	authGroup.POST("/device-code-check", h.DeviceCodeCheck)
+	authGroup.POST("/poll", h.Poll)
 	authGroup.POST("/device-poll", h.Poll)
 }
 
@@ -154,6 +157,49 @@ func (h *LoginHandler) DeviceCodeCheck(c context.Context, ctx *app.RequestContex
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
+func (h *LoginHandler) BrowserBind(c context.Context, ctx *app.RequestContext) {
+	var req dto.BrowserBindRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	result, err := h.service.BrowserBind(c, strings.TrimSpace(req.BrowserToken))
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *LoginHandler) BrowserComplete(c context.Context, ctx *app.RequestContext) {
+	var req dto.BrowserCompleteRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	err := h.service.BrowserComplete(
+		c,
+		req.LoginSessionID,
+		strings.TrimSpace(req.BrowserToken),
+		req.Code,
+		req.State,
+		req.RedirectURI,
+	)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]string{"status": "authorized"}))
+}
+
 func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 	var req dto.LoginPollRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -161,7 +207,7 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	result, err := h.service.Poll(c, req.LoginSessionID)
+	result, err := h.service.Poll(c, req.LoginSessionID, strings.TrimSpace(req.PollToken))
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

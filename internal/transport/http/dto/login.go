@@ -15,6 +15,7 @@ type LoginCallbackRequest struct {
 
 type LoginPollRequest struct {
 	LoginSessionID string `json:"login_session_id"`
+	PollToken      string `json:"poll_token,omitempty"`
 }
 
 type DeviceCodeCheckRequest struct {
@@ -23,4 +24,16 @@ type DeviceCodeCheckRequest struct {
 
 type DeviceVerifyRequest struct {
 	UserCode string `json:"user_code"`
+}
+
+type BrowserBindRequest struct {
+	BrowserToken string `json:"browser_token"`
+}
+
+type BrowserCompleteRequest struct {
+	LoginSessionID string `json:"login_session_id"`
+	BrowserToken   string `json:"browser_token"`
+	Code           string `json:"code"`
+	State          string `json:"state,omitempty"`
+	RedirectURI    string `json:"redirect_uri,omitempty"`
 }

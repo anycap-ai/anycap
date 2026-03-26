@@ -18,6 +18,8 @@ type LoginInitResult struct {
 	FlowType        string `json:"flow_type"`
 	LoginSessionID  string `json:"login_session_id"`
 	AuthorizeURL    string `json:"authorize_url,omitempty"`
+	BrowserURL      string `json:"browser_url,omitempty"`
+	PollToken       string `json:"poll_token,omitempty"`
 	VerificationURI string `json:"verification_uri,omitempty"`
 	UserCode        string `json:"user_code,omitempty"`
 	State           string `json:"state,omitempty"`

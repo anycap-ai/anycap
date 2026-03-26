@@ -14,7 +14,7 @@ type Auth0Client interface {
 }
 
 type LoginService interface {
-	Init(ctx context.Context, method string, redirectPort int) (model.LoginInitResult, error)
+	Init(ctx context.Context, method string, redirectPort int, redirectURL string) (model.LoginInitResult, error)
 	Callback(ctx context.Context, sessionID, code, state, redirectURI string) (model.LoginCallbackResult, error)
-	Poll(ctx context.Context, sessionID string) (model.LoginPollResult, error)
+	Poll(ctx context.Context, sessionID, pollToken string) (model.LoginPollResult, error)
 }

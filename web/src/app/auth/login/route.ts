@@ -12,12 +12,34 @@ type LoginInitData = {
   authorize_url: string;
 };
 
+type BrowserBindData = {
+  login_session_id: string;
+  authorize_url: string;
+};
+
 export async function GET(request: NextRequest) {
   const returnTo = normalizeReturnTo(request.nextUrl.searchParams.get("return_to"));
   const deviceCode = normalizeUserCode(request.nextUrl.searchParams.get("device_code"));
+  const browserToken = request.nextUrl.searchParams.get("browser_token") || "";
   const callbackURL = new URL("/auth/callback", request.nextUrl.origin).toString();
 
   try {
+    if (browserToken) {
+      const data = await anycapPost<BrowserBindData>("/v1/auth/browser-bind", {
+        browser_token: browserToken,
+      });
+
+      const response = NextResponse.redirect(data.authorize_url);
+      setLoginCookie(response.cookies, {
+        loginSessionID: data.login_session_id,
+        returnTo: "/device/complete",
+        mode: "browser_poll",
+        browserToken,
+        issuedAt: Date.now(),
+      });
+      return response;
+    }
+
     const data = await anycapPost<LoginInitData>("/v1/auth/login", {
       method: "web",
       redirect_url: callbackURL,
@@ -27,6 +49,7 @@ export async function GET(request: NextRequest) {
     setLoginCookie(response.cookies, {
       loginSessionID: data.login_session_id,
       returnTo,
+      mode: "web",
       issuedAt: Date.now(),
     });
     if (deviceCode) {

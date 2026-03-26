@@ -28,11 +28,12 @@ import (
 type Server struct {
 	mux *http.ServeMux
 
-	mu            sync.Mutex
-	loginStates   map[string]loginStateEntry // state -> entry
-	deviceCodes   map[string]deviceCodeEntry // login_session_id -> entry
-	refreshTokens map[string]string          // refresh_token -> user email
-	logoutCalls   int
+	mu                 sync.Mutex
+	loginStates        map[string]loginStateEntry       // state -> entry
+	browserPollSessions map[string]browserPollStateEntry // login_session_id -> entry
+	deviceCodes        map[string]deviceCodeEntry       // login_session_id -> entry
+	refreshTokens      map[string]string                // refresh_token -> user email
+	logoutCalls        int
 }
 
 type loginStateEntry struct {
@@ -45,17 +46,24 @@ type deviceCodeEntry struct {
 	Email    string
 }
 
+type browserPollStateEntry struct {
+	PollToken string
+	Email     string
+}
+
 // New creates a mock server with all auth and capabilities endpoints registered.
 func New() *Server {
 	s := &Server{
-		mux:           http.NewServeMux(),
-		loginStates:   make(map[string]loginStateEntry),
-		deviceCodes:   make(map[string]deviceCodeEntry),
-		refreshTokens: make(map[string]string),
+		mux:                 http.NewServeMux(),
+		loginStates:         make(map[string]loginStateEntry),
+		browserPollSessions: make(map[string]browserPollStateEntry),
+		deviceCodes:         make(map[string]deviceCodeEntry),
+		refreshTokens:       make(map[string]string),
 	}
 
 	s.mux.HandleFunc("POST /v1/auth/login", s.handleLogin)
 	s.mux.HandleFunc("POST /v1/auth/callback", s.handleCallback)
+	s.mux.HandleFunc("POST /v1/auth/poll", s.handlePoll)
 	s.mux.HandleFunc("POST /v1/auth/device-code", s.handleDeviceCode)
 	s.mux.HandleFunc("POST /v1/auth/device-poll", s.handleDevicePoll)
 	s.mux.HandleFunc("POST /v1/auth/logout", s.handleLogout)
@@ -96,6 +104,26 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	state := randomHex(16)
 	loginSessionID := "lsn-" + randomHex(8)
 
+	if req.Method == "browser_poll" {
+		pollToken := "pt-" + randomHex(8)
+		s.mu.Lock()
+		s.browserPollSessions[loginSessionID] = browserPollStateEntry{
+			PollToken: pollToken,
+			Email:     "dev@anycap.ai",
+		}
+		s.mu.Unlock()
+
+		writeSuccess(w, map[string]any{
+			"flow_type":        "browser_poll",
+			"login_session_id": loginSessionID,
+			"browser_url":      "https://anycap.ai/auth/login?browser_token=bt-" + randomHex(8) + "&cli=1",
+			"poll_token":       pollToken,
+			"interval":         1,
+			"expires_in":       300,
+		})
+		return
+	}
+
 	s.mu.Lock()
 	s.loginStates[state] = loginStateEntry{
 		LoginSessionID: loginSessionID,
@@ -116,6 +144,43 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		"authorize_url":    authURL,
 		"state":            state,
 		"expires_in":       300,
+	})
+}
+
+func (s *Server) handlePoll(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		LoginSessionID string `json:"login_session_id"`
+		PollToken      string `json:"poll_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	s.mu.Lock()
+	entry, ok := s.browserPollSessions[req.LoginSessionID]
+	if ok {
+		delete(s.browserPollSessions, req.LoginSessionID)
+	}
+	s.mu.Unlock()
+
+	if !ok || req.PollToken != entry.PollToken {
+		writeSuccess(w, map[string]any{"status": "expired"})
+		return
+	}
+
+	apiKey := "mock-ak-" + randomHex(16)
+	writeSuccess(w, map[string]any{
+		"status":          "complete",
+		"credential_type": "api_key",
+		"access_token":    apiKey,
+		"api_key":         apiKey,
+		"api_key_id":      "key-" + randomHex(8),
+		"user": map[string]string{
+			"email": entry.Email,
+			"id":    "user-dev",
+			"name":  "Dev User",
+		},
 	})
 }
 

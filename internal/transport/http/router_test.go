@@ -290,6 +290,92 @@ func TestRouter_WebLoginFlow(t *testing.T) {
 	}
 }
 
+func TestRouter_BrowserPollLoginFlow(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	initBody := []byte(`{"method":"browser_poll"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader(initBody), Len: len(initBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	browserURLRaw, _ := data["browser_url"].(string)
+	pollToken, _ := data["poll_token"].(string)
+	if loginSessionID == "" || browserURLRaw == "" || pollToken == "" {
+		t.Fatalf("expected login_session_id/browser_url/poll_token, got %#v", data)
+	}
+
+	browserURL, err := url.Parse(browserURLRaw)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+	browserToken := browserURL.Query().Get("browser_token")
+	if browserToken == "" {
+		t.Fatalf("expected browser_token in browser url, got %q", browserURLRaw)
+	}
+
+	bindBody := []byte(`{"browser_token":"` + browserToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-bind", &ut.Body{Body: bytes.NewReader(bindBody), Len: len(bindBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal bind response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	authorizeURL, _ := data["authorize_url"].(string)
+	if authorizeURL == "" {
+		t.Fatalf("expected authorize_url, got %#v", data)
+	}
+	authURL, err := url.Parse(authorizeURL)
+	if err != nil {
+		t.Fatalf("parse authorize url: %v", err)
+	}
+	state := authURL.Query().Get("state")
+	if state == "" {
+		t.Fatalf("expected state in authorize url, got %q", authorizeURL)
+	}
+
+	completeBody := []byte(`{"login_session_id":"` + loginSessionID + `","browser_token":"` + browserToken + `","code":"code-123","state":"` + state + `","redirect_uri":"https://anycap.local/auth/callback"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-complete", &ut.Body{Body: bytes.NewReader(completeBody), Len: len(completeBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	pollBody := []byte(`{"login_session_id":"` + loginSessionID + `","poll_token":"` + pollToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/poll", &ut.Body{Body: bytes.NewReader(pollBody), Len: len(pollBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal poll response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if data["status"] != model.LoginSessionStatusComplete {
+		t.Fatalf("expected complete, got %#v", data["status"])
+	}
+	if apiKey, _ := data["api_key"].(string); apiKey == "" {
+		t.Fatalf("expected api_key in poll response, got %#v", data)
+	}
+}
+
 func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 

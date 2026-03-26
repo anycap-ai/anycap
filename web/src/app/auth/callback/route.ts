@@ -28,6 +28,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (login.mode === "browser_poll") {
+      if (!login.browserToken) {
+        return NextResponse.redirect(new URL("/for-human?tip=login_callback_invalid", request.nextUrl.origin));
+      }
+
+      await anycapPost<{ status: string }>("/v1/auth/browser-complete", {
+        login_session_id: login.loginSessionID,
+        browser_token: login.browserToken,
+        code,
+        state,
+        redirect_uri: callbackURL,
+      });
+
+      const response = NextResponse.redirect(new URL(login.returnTo || "/device/complete", request.nextUrl.origin));
+      clearLoginCookie(response.cookies);
+      return response;
+    }
+
     const data = await anycapPost<CallbackData>("/v1/auth/callback", {
       login_session_id: login.loginSessionID,
       code,

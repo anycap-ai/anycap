@@ -73,6 +73,52 @@ func TestLoginDeviceCodeFlow(t *testing.T) {
 	}
 }
 
+func TestLoginBrowserPollFlow(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("DISPLAY", ":1")
+	t.Setenv("CI", "")
+	t.Setenv("SSH_CONNECTION", "")
+	t.Setenv("SSH_TTY", "")
+	if err := cliconfig.DeleteCredential(); err != nil {
+		t.Fatalf("clear credential: %v", err)
+	}
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"login"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("login failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	cred := cliconfig.LoadCredential()
+	if cred == nil {
+		t.Fatal("expected credential, got nil")
+	}
+	if cred.Type != cliconfig.CredentialTypeAPIKey {
+		t.Fatalf("expected API key credential, got %s", cred.Type)
+	}
+	if !strings.HasPrefix(cred.Token(), "mock-ak-") {
+		t.Fatalf("expected mock-ak-... api key, got %q", cred.Token())
+	}
+	if !strings.Contains(stderr.String(), "Credential saved") {
+		t.Fatalf("expected save confirmation, got: %s", stderr.String())
+	}
+}
+
 func TestLoginWithToken(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

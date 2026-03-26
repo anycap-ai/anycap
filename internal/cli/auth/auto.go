@@ -13,13 +13,13 @@ import (
 // AutoFlow automatically selects the best auth flow based on environment detection.
 //
 // Decision logic:
-//  1. If a browser is available AND we can bind a local port: localhost callback flow.
+//  1. If a browser is available: browser poll flow.
 //  2. Otherwise: device code polling flow.
 //
 // The user can always override with --headless (force device code) or --with-token (stdin).
 func AutoFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
-	if HasBrowser() && CanBindLocalPort() {
-		return LocalhostFlow(ctx, client, stderr)
+	if HasBrowser() {
+		return BrowserPollFlow(ctx, client, stderr)
 	}
 	return DeviceFlow(ctx, client, stderr)
 }
