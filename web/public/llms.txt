@@ -1,6 +1,6 @@
 # AnyCap
 
-> AnyCap is an agent-native capability runtime for AI agents. It gives agents one CLI, one install path, and one interface for multimodal and web capabilities.
+> AnyCap is an agent-native capability platform for AI agents. It gives agents one CLI, one install path, and one interface for multimodal and web capabilities.
 
 ## Canonical URLs
 
@@ -26,7 +26,7 @@ AnyCap is built for agents, not adapted from human-first software. It helps AI a
 ## Product Positioning
 
 - built for agents
-- capability runtime for AI agents
+- capability platform for AI agents
 - agent-native capability layer
 - one CLI, any capability
 

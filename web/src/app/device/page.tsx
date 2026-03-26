@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { AnycapMark } from "@/components/brand/AnycapMark";
@@ -18,7 +20,7 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 export default async function DevicePage({ searchParams }: Props) {
   const params = (await searchParams) || {};
   const cookieStore = await cookies();
-  const session = readSessionCookie(cookieStore);
+  const session = await readSessionCookie(cookieStore);
   const initialCode = normalizeUserCode(params.code);
   const urlError = params.error === "verify_failed" ? "Authorization failed. Please retry." : "";
 

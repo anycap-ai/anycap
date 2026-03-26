@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import { normalizeUserCode } from "@/lib/auth/session";

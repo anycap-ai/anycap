@@ -30,7 +30,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = readSessionCookie(await cookies());
+  const session = await readSessionCookie(await cookies());
   if (!session?.apiKey) {
     redirect("/auth/login?return_to=/dashboard");
   }

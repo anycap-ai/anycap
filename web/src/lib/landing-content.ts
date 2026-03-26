@@ -19,9 +19,9 @@ export interface LandingContent {
 
 export const content: LandingContent = {
   title: "AnyCap Agent CLI",
-  tagline: "Agent-native capability runtime for AI agents.",
+  tagline: "Every capability your agent needs. One command.",
   description:
-    "AnyCap is an agent-native capability runtime and agent CLI that lets AI agents install and use capabilities through one interface. It is designed for agent products like Claude Code, Cursor, Codex, OpenCode, and OpenClaw.",
+    "Agents can think, but they can't act — no images, no video, no music, no voice. AnyCap gives them every capability through a single CLI and a single credential. Built for agents, not adapted from human tools.",
   sections: [
     {
       title: "What Is AnyCap?",
@@ -29,12 +29,12 @@ export const content: LandingContent = {
         {
           type: "text",
           content:
-            "AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image understanding, video analysis, and other multimodal or web actions through one CLI and one interface.",
+            "AnyCap is a capability platform that lets AI agents install and use capabilities such as image generation, video analysis, music composition, speech synthesis, and web actions through one CLI and one interface.",
         },
         {
           type: "text",
           content:
-            "If you are looking for an agent CLI, AnyCap is the installable entry point. If you are defining the category, AnyCap is a capability runtime for AI agents built from day one for agent workflows rather than adapted from human-first software.",
+            "If you are looking for an agent CLI, AnyCap is the installable entry point. It is an agent capability platform built from day one for agent workflows rather than adapted from human-first software.",
         },
       ],
     },
@@ -161,7 +161,7 @@ export const content: LandingContent = {
         {
           type: "text",
           content:
-            "This makes AnyCap useful both as an agent CLI for immediate adoption and as a capability runtime for teams building agent-native products.",
+            "This makes AnyCap useful both as an agent CLI for immediate adoption and as a capability platform for teams building agent-native products.",
         },
       ],
     },

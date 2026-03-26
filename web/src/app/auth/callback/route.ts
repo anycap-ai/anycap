@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import {
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
   const state = request.nextUrl.searchParams.get("state") || "";
   const callbackURL = new URL("/auth/callback", request.nextUrl.origin).toString();
 
-  const login = readLoginCookie(request.cookies);
+  const login = await readLoginCookie(request.cookies);
   if (!login || !code || !state) {
     return NextResponse.redirect(new URL("/for-human?tip=login_callback_invalid", request.nextUrl.origin));
   }
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     let redirectTarget = login.returnTo || "/dashboard";
     const response = NextResponse.redirect(new URL(redirectTarget, request.nextUrl.origin));
-    setSessionCookie(response.cookies, {
+    await setSessionCookie(response.cookies, {
       apiKey: data.api_key,
       user: {
         id: data.user?.id || "",
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
     });
     clearLoginCookie(response.cookies);
 
-    const deviceCode = readDeviceCodeCookie(request.cookies);
+    const deviceCode = await readDeviceCodeCookie(request.cookies);
     if (deviceCode?.userCode) {
       try {
         await anycapPost<{ message: string }>(

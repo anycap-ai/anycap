@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from "crypto";
-
 export const SESSION_COOKIE_NAME = "anycap_session";
 export const LOGIN_COOKIE_NAME = "anycap_login";
 export const DEVICE_CODE_COOKIE_NAME = "device_user_code";
@@ -44,25 +42,58 @@ function cookieSecret(): string {
   return process.env.ANYCAP_WEB_COOKIE_SECRET || "anycap-dev-cookie-secret";
 }
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
 function toBase64URL(value: string): string {
-  return Buffer.from(value, "utf-8").toString("base64url");
+  const bytes = encoder.encode(value);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function fromBase64URL(value: string): string {
-  return Buffer.from(value, "base64url").toString("utf-8");
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return decoder.decode(bytes);
 }
 
-function sign(input: string): string {
-  return createHmac("sha256", cookieSecret()).update(input).digest("base64url");
+async function getSigningKey(): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    encoder.encode(cookieSecret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
 }
 
-function encodeSignedJSON<T>(payload: T): string {
+async function sign(input: string): Promise<string> {
+  const key = await getSigningKey();
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(input));
+  let binary = "";
+  for (const b of new Uint8Array(sig)) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function encodeSignedJSON<T>(payload: T): Promise<string> {
   const body = toBase64URL(JSON.stringify(payload));
-  const signature = sign(body);
+  const signature = await sign(body);
   return `${body}.${signature}`;
 }
 
-function decodeSignedJSON<T>(raw: string | undefined): T | null {
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+async function decodeSignedJSON<T>(raw: string | undefined): Promise<T | null> {
   if (!raw) {
     return null;
   }
@@ -75,10 +106,8 @@ function decodeSignedJSON<T>(raw: string | undefined): T | null {
     return null;
   }
 
-  const expected = sign(body);
-  const expectedBuf = Buffer.from(expected, "utf-8");
-  const actualBuf = Buffer.from(signature, "utf-8");
-  if (expectedBuf.length !== actualBuf.length || !timingSafeEqual(expectedBuf, actualBuf)) {
+  const expected = await sign(body);
+  if (!timingSafeEqual(expected, signature)) {
     return null;
   }
 
@@ -93,22 +122,22 @@ function getCookieValue(cookies: CookieReadStore, name: string): string | undefi
   return cookies.get(name)?.value;
 }
 
-export function setSessionCookie(cookies: CookieWriteStore, session: SessionPayload): void {
-  cookies.set(SESSION_COOKIE_NAME, encodeSignedJSON(session), {
+export async function setSessionCookie(cookies: CookieWriteStore, session: SessionPayload): Promise<void> {
+  cookies.set(SESSION_COOKIE_NAME, await encodeSignedJSON(session), {
     ...defaultCookieOptions,
     maxAge: sessionMaxAge,
   });
 }
 
-export function setLoginCookie(cookies: CookieWriteStore, login: LoginPayload): void {
-  cookies.set(LOGIN_COOKIE_NAME, encodeSignedJSON(login), {
+export async function setLoginCookie(cookies: CookieWriteStore, login: LoginPayload): Promise<void> {
+  cookies.set(LOGIN_COOKIE_NAME, await encodeSignedJSON(login), {
     ...defaultCookieOptions,
     maxAge: loginMaxAge,
   });
 }
 
-export function setDeviceCodeCookie(cookies: CookieWriteStore, payload: DeviceCodePayload): void {
-  cookies.set(DEVICE_CODE_COOKIE_NAME, encodeSignedJSON(payload), {
+export async function setDeviceCodeCookie(cookies: CookieWriteStore, payload: DeviceCodePayload): Promise<void> {
+  cookies.set(DEVICE_CODE_COOKIE_NAME, await encodeSignedJSON(payload), {
     ...defaultCookieOptions,
     maxAge: deviceCodeMaxAge,
   });
@@ -128,15 +157,15 @@ export function clearDeviceCodeCookie(cookies: CookieWriteStore): void {
   cookies.delete(DEVICE_CODE_COOKIE_NAME);
 }
 
-export function readSessionCookie(cookies: CookieReadStore): SessionPayload | null {
+export function readSessionCookie(cookies: CookieReadStore): Promise<SessionPayload | null> {
   return decodeSignedJSON<SessionPayload>(getCookieValue(cookies, SESSION_COOKIE_NAME));
 }
 
-export function readLoginCookie(cookies: CookieReadStore): LoginPayload | null {
+export function readLoginCookie(cookies: CookieReadStore): Promise<LoginPayload | null> {
   return decodeSignedJSON<LoginPayload>(getCookieValue(cookies, LOGIN_COOKIE_NAME));
 }
 
-export function readDeviceCodeCookie(cookies: CookieReadStore): DeviceCodePayload | null {
+export function readDeviceCodeCookie(cookies: CookieReadStore): Promise<DeviceCodePayload | null> {
   return decodeSignedJSON<DeviceCodePayload>(getCookieValue(cookies, DEVICE_CODE_COOKIE_NAME));
 }
 

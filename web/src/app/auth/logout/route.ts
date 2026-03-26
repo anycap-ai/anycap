@@ -1,9 +1,11 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import { clearAuthCookies, readSessionCookie } from "@/lib/auth/session";
 
 export async function GET(request: NextRequest) {
-  const session = readSessionCookie(request.cookies);
+  const session = await readSessionCookie(request.cookies);
 
   if (session?.apiKey) {
     try {

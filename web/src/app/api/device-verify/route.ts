@@ -1,9 +1,11 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import { normalizeUserCode, readSessionCookie } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
-  const session = readSessionCookie(request.cookies);
+  const session = await readSessionCookie(request.cookies);
   if (!session?.apiKey) {
     return NextResponse.json({ message: "not_authenticated" }, { status: 401 });
   }

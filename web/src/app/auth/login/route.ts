@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from "next/server";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import {
@@ -46,14 +48,14 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.redirect(data.authorize_url);
-    setLoginCookie(response.cookies, {
+    await setLoginCookie(response.cookies, {
       loginSessionID: data.login_session_id,
       returnTo,
       mode: "web",
       issuedAt: Date.now(),
     });
     if (deviceCode) {
-      setDeviceCodeCookie(response.cookies, {
+      await setDeviceCodeCookie(response.cookies, {
         userCode: deviceCode,
         issuedAt: Date.now(),
       });

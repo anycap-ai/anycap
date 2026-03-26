@@ -14,3 +14,39 @@
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Scrollbar ── */
+
+/* Firefox / standard */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(154, 158, 144, 0) transparent;
+}
+
+html:hover {
+  scrollbar-color: rgba(154, 158, 144, 0.35) transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(154, 158, 144, 0);
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+html:hover ::-webkit-scrollbar-thumb {
+  background: rgba(154, 158, 144, 0.35);
+}
+
+html:hover ::-webkit-scrollbar-thumb:hover {
+  background: rgba(154, 158, 144, 0.55);
+}
