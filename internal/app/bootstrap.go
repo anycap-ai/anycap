@@ -85,15 +85,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		panic(err)
 	}
 
-	// Determine feature flags based on configured providers.
-	serverFeatures := map[string]bool{
-		feature.Login:           false, // auth provider is stub
-		feature.ImageGenerate:   hasImageExecutionProvider(cfg),
-		feature.ImageModels:     hasCatalogProvider(cfg),
-		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
-		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
-	}
-	deps.systemService.SetFeatures(serverFeatures)
+	deps.systemService.SetFeatures(buildServerFeatures(cfg))
 	systemHandler := handlers.NewSystemHandler(deps.systemService)
 	loginHandler := handlers.NewLoginHandler(deps.loginService)
 	imageHandler := handlers.NewImageHandler(deps.imageService)
@@ -132,6 +124,16 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	})
 
 	return &Server{config: cfg, buildInfo: info, httpServer: httpServer}
+}
+
+func buildServerFeatures(cfg config.Config) map[string]bool {
+	return map[string]bool{
+		feature.Login:           cfg.Auth0Enabled,
+		feature.ImageGenerate:   hasImageExecutionProvider(cfg),
+		feature.ImageModels:     hasCatalogProvider(cfg),
+		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
+		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
+	}
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {

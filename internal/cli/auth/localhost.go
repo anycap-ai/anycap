@@ -14,6 +14,7 @@ import (
 )
 
 const callbackTimeout = 5 * time.Minute
+const localhostCallbackPort = 14565
 
 // successHTML is displayed in the browser after successful auth.
 const successHTML = `<!DOCTYPE html>
@@ -34,12 +35,12 @@ type callbackResult struct {
 // It binds a local port, calls the server to get an auth URL, opens the browser,
 // waits for the callback, and exchanges the code for an API key.
 func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
-	// Step 1: Bind a random local port
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	// Step 1: Bind the fixed localhost callback port configured in Auth0.
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", localhostCallbackPort))
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to bind local port: %w", err)
+		return nil, "", fmt.Errorf("failed to bind localhost callback port %d: %w. Close the process using it or run 'anycap login --headless' instead", localhostCallbackPort, err)
 	}
-	port := listener.Addr().(*net.TCPAddr).Port
+	port := localhostCallbackPort
 
 	// Step 2: Call server to initiate login
 	resp, err := client.PostJSON(ctx, "/v1/auth/login", map[string]any{
@@ -130,7 +131,7 @@ func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Wri
 // CanBindLocalPort tests whether we can bind a local TCP port.
 // Used by AutoFlow to decide between localhost and device code flows.
 func CanBindLocalPort() bool {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", localhostCallbackPort))
 	if err != nil {
 		return false
 	}

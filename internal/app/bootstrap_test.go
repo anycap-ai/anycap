@@ -11,6 +11,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 )
 
 func TestBuildServerDependencies_StubMode(t *testing.T) {
@@ -91,6 +92,21 @@ func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testin
 		t.Fatalf("expected nexushub platform client, got %T", repo)
 	}
 }
+
+func TestBuildServerFeatures_LoginEnabledWhenAuth0Configured(t *testing.T) {
+	features := buildServerFeatures(config.Config{Auth0Enabled: true})
+	if !features[feature.Login] {
+		t.Fatal("expected login feature enabled when Auth0 is enabled")
+	}
+}
+
+func TestBuildServerFeatures_LoginDisabledWhenAuth0NotConfigured(t *testing.T) {
+	features := buildServerFeatures(config.Config{})
+	if features[feature.Login] {
+		t.Fatal("expected login feature disabled when Auth0 is not enabled")
+	}
+}
+
 func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 	deps, err := buildServerDependencies(config.Config{
 		AppName:           "anycap-server",

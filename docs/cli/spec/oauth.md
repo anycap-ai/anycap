@@ -16,7 +16,7 @@ AnyCap CLI supports multiple authentication methods for `anycap login`:
 
 | Method | Mechanism | Best for |
 |--------|-----------|----------|
-| **Localhost Callback** | CLI starts local HTTP server, browser redirects back to `localhost` | Interactive terminals with browser access |
+| **Localhost Callback** | CLI starts local HTTP server on fixed `127.0.0.1:14565`, browser redirects back there | Interactive terminals with browser access |
 | **Device Code Polling** | CLI displays a code, user enters it on a web page, CLI polls for completion | Headless / SSH / remote environments |
 | **Direct Key Input** | `anycap credentials set-key sk-xxx` or `anycap login --with-token` | CI/CD, scripted provisioning |
 
@@ -243,19 +243,19 @@ sequenceDiagram
     participant S as AnyCap Server
     participant A as Auth Provider
 
-    C->>C: Bind random port on 127.0.0.1
-    C->>S: POST /v1/auth/login {method: localhost, redirect_port: 12345}
+    C->>C: Bind fixed port 14565 on 127.0.0.1
+    C->>S: POST /v1/auth/login {method: localhost, redirect_port: 14565}
     S->>S: Generate state + PKCE code_verifier (stored server-side)
     S-->>C: {auth_url, state}
 
     C->>C: Open browser to auth_url
-    C->>C: Start local HTTP server on :12345
+    C->>C: Start local HTTP server on :14565
 
     U->>A: User authenticates in browser
     A->>U: Redirect to https://anycap.ai/auth/cli-callback?code=xxx&state=yyy
     U->>S: GET /auth/cli-callback?code=xxx&state=yyy
     S->>S: Extract port from state, redirect to localhost
-    U->>C: GET http://localhost:12345/callback?code=xxx&state=yyy
+    U->>C: GET http://127.0.0.1:14565/callback?code=xxx&state=yyy
 
     C->>C: Verify state matches
     C-->>U: HTML success page
