@@ -304,6 +304,12 @@ main() {
   info "  anycap login"
   info "  anycap status"
   printf '\n'
+  info "Using AnyCap with an AI agent? Install the skill so your agent knows how to use AnyCap:"
+  printf '\n'
+  info "  npx -y skills add anycap-ai/anycap -y"
+  printf '\n'
+  info "Learn more: https://anycap.ai"
+  printf '\n'
 }
 
 main

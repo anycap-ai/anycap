@@ -38,13 +38,39 @@ anycap status
 
 ## Authentication
 
+Three methods, depending on environment:
+
 ```bash
+# Interactive (default) -- opens browser
 anycap login
+
+# Headless (SSH, containers) -- device code flow
+anycap login --headless
+
+# CI/CD -- pipe API key from stdin
+echo "$ANYCAP_API_KEY" | anycap login --with-token
 ```
 
-Follow the browser prompt to complete authentication. Credentials are stored in `~/.anycap/credentials` (file-based fallback) or the system keychain.
+Alternatively, set the `ANYCAP_API_KEY` environment variable directly -- the CLI reads it without requiring `login`.
 
 To check current auth state: `anycap status`.
+
+Read [references/cli-reference.md](references/cli-reference.md) for full details on credential management and logout.
+
+## Configuration
+
+Config file: `~/.anycap/config.toml`. Manage via `anycap config` subcommands.
+
+```bash
+anycap config show             # show all values
+anycap config set <key> <val>  # set a value
+anycap config get <key>        # get a value
+anycap config unset <key>      # reset to default
+```
+
+Key settings: `endpoint` (server URL), `auto_update` (default true), `feedback` (default true).
+
+Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
 
 ## Capabilities
 
@@ -74,6 +100,8 @@ anycap download <url> [-o path]
 ## Feedback
 
 When something goes wrong, or when you have ideas for improvement, submit feedback directly. This helps the AnyCap team prioritize fixes and features.
+
+Feedback is enabled by default. To disable it, run `anycap config set feedback false` or set `feedback = false` in `~/.anycap/config.toml`.
 
 ```bash
 anycap feedback --type bug -m "image generate returned 500 for prompt X" --request-id <id>
@@ -110,20 +138,67 @@ Successful response:
 Error response:
 
 ```json
-{"status": "error", "error": {"code": "...", "message": "..."}, "request_id": "req_abc123"}
+{"error": "...", "message": "...", "hint": "...", "request_id": "req_abc123"}
 ```
 
 Save the `request_id` when submitting feedback about a failed request.
 
-## Keeping Up to Date
+### Parsing with jq
 
-Update the skill to the latest version:
+All commands return JSON. Use `jq` to extract fields:
 
 ```bash
-npx skills add anycap-ai/anycap
+# Check if a command succeeded
+anycap status | jq -r '.status'
+
+# List available model IDs
+anycap image models | jq -r '.models[].model'
+
+# Get the image URL from a generate response
+anycap image generate --prompt "..." --model flux-schnell | jq -r '.data.outputs[0].url'
+
+# Extract content from an action response
+anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.content'
+
+# Get the error message on failure
+anycap ... | jq -r '.message // empty'
+
+# Save request_id for feedback
+REQ_ID=$(anycap image generate --prompt "..." --model flux-schnell | jq -r '.request_id // .id')
+anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 
-Or check manually whether this skill file matches your CLI version:
+Common jq patterns:
+
+| Pattern | Purpose |
+|---------|----------|
+| `jq -r '.field'` | Extract a string field (raw, no quotes) |
+| `jq -r '.data.outputs[0].url'` | Nested field access |
+| `jq -r '.models[].model'` | List all values of a field in an array |
+| `jq -e '.status == "success"'` | Check condition (exit code 1 if false) |
+| `jq -r '.message // empty'` | Extract error message if present |
+
+## Keeping Up to Date
+
+Check if skills are outdated:
+
+```bash
+npx -y skills check
+```
+
+Update all installed skills to the latest version:
+
+```bash
+npx -y skills update
+```
+
+Or re-install this skill directly:
+
+```bash
+npx -y skills add anycap-ai/anycap -y
+```
+
+You can also check whether this skill file matches your CLI version:
 
 ```bash
 anycap skill check --target <path-to-this-file>

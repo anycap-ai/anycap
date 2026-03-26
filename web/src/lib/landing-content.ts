@@ -37,7 +37,7 @@ export const content: LandingContent = {
           content:
             "Works with Claude Code, Cursor, Windsurf, OpenCode, and 40+ agents (https://skills.sh):",
         },
-        { type: "code", content: "npx skills add anycap-ai/anycap" },
+        { type: "code", content: "npx -y skills add anycap-ai/anycap -y" },
         { type: "h3", content: "Option B: AnyCap CLI" },
         {
           type: "code",
@@ -118,15 +118,19 @@ export const content: LandingContent = {
         {
           type: "text",
           content:
-            "The skill file contains a `metadata.version` field that matches the CLI version. Use `anycap skill check` to verify:",
+            "Check if your installed skills are outdated:",
         },
         {
           type: "code",
-          content:
-            "anycap skill check --target ~/.claude/skills/anycap-cli/SKILL.md",
+          content: "npx -y skills check",
         },
-        { type: "text", content: "If outdated, re-install:" },
-        { type: "code", content: "npx skills add anycap-ai/anycap" },
+        { type: "text", content: "Update all installed skills:" },
+        { type: "code", content: "npx -y skills update" },
+        {
+          type: "text",
+          content: "Or re-install directly:",
+        },
+        { type: "code", content: "npx -y skills add anycap-ai/anycap -y" },
       ],
     },
     {

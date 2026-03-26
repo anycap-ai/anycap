@@ -6,6 +6,7 @@ import (
 	"io"
 	"runtime"
 
+	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -30,6 +31,12 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 		Use:   "feedback",
 		Short: "Submit a bug report or feature request",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Check if feedback is disabled in config
+			cfg, _ := cliconfig.Load()
+			if !cfg.IsFeedbackEnabled() {
+				return fmt.Errorf("feedback is disabled in config (set feedback = true in %s to re-enable)", cliconfig.ConfigPath())
+			}
+
 			// Validate type
 			if !isValidType(feedbackType) {
 				return fmt.Errorf("invalid feedback type %q: must be one of %v", feedbackType, feedbackTypes)
