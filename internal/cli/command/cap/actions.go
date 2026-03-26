@@ -66,7 +66,7 @@ Examples:
 			imageURLs := make([]string, 0, totalImages)
 			imageURLs = append(imageURLs, urls...)
 			for _, f := range files {
-				result, err := uploadFile(cmd.Context(), client, f)
+				result, err := uploadFile(cmd.Context(), client, f, verboseWriter(cmd))
 				if err != nil {
 					return err
 				}
@@ -131,7 +131,7 @@ Examples:
 			targetURL := urlFlag
 
 			if fileFlag != "" {
-				result, err := uploadFile(cmd.Context(), client, fileFlag)
+				result, err := uploadFile(cmd.Context(), client, fileFlag, verboseWriter(cmd))
 				if err != nil {
 					return err
 				}

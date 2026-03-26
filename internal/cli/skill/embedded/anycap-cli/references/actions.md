@@ -41,6 +41,12 @@ At least one `--url` or `--file` is required. Maximum 10 images per request.
 
 The response `content` field contains the model's text output.
 
+Extract just the text:
+
+```bash
+anycap actions image-understand --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
+```
+
 ## video-read
 
 Analyze a video: describe content, summarize events, extract information.
@@ -60,6 +66,27 @@ Options:
 | `--model` | no | Specific model ID |
 
 Exactly one of `--url` or `--file` is required.
+
+## Parsing Responses
+
+All action responses share the same shape: `{"content": "...", "request_id": "req_..."}`.
+
+```bash
+# Extract content as plain text
+anycap actions video-read --file ./clip.mp4 | jq -r '.content'
+
+# Pipe content into another tool or file
+anycap actions image-understand --url https://example.com/chart.png \
+  --instruction "Extract the data as CSV" | jq -r '.content' > data.csv
+
+# Check for errors before using content
+result=$(anycap actions image-understand --file ./photo.jpg)
+if echo "$result" | jq -e 'has("error")' > /dev/null 2>&1; then
+  echo "$result" | jq -r '.message'
+else
+  echo "$result" | jq -r '.content'
+fi
+```
 
 ## Tips
 

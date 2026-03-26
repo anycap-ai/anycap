@@ -11,7 +11,18 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+
+	"github.com/spf13/cobra"
 )
+
+// verboseWriter returns cmd.ErrOrStderr() if --verbose is set, nil otherwise.
+func verboseWriter(cmd *cobra.Command) io.Writer {
+	v, _ := cmd.Flags().GetBool("verbose")
+	if v {
+		return cmd.ErrOrStderr()
+	}
+	return nil
+}
 
 // uploadResult contains the public URL after a successful presign + upload.
 type uploadResult struct {
@@ -19,12 +30,13 @@ type uploadResult struct {
 }
 
 // uploadFile presigns and uploads a local file to AnyCap storage.
+// If verboseLog is non-nil, debug info (URLs, sizes) is written to it.
 //
 // Flow:
 //  1. POST /v1/capabilities/presign -> {upload_url, object_url}
 //  2. PUT upload_url (direct to storage, raw file content)
 //  3. Return object_url for use in subsequent API calls
-func uploadFile(ctx context.Context, client *httpclient.Client, filePath string) (*uploadResult, error) {
+func uploadFile(ctx context.Context, client *httpclient.Client, filePath string, verboseLog io.Writer) (*uploadResult, error) {
 	filename := filepath.Base(filePath)
 	contentType := detectContentType(filePath)
 
@@ -52,6 +64,12 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string)
 	}
 	if err := json.Unmarshal(resp.Body, &presign); err != nil {
 		return nil, fmt.Errorf("failed to parse presign response: %w", err)
+	}
+
+	if verboseLog != nil {
+		fmt.Fprintf(verboseLog, "[upload] file=%s size=%d content_type=%s\n", filename, stat.Size(), contentType)
+		fmt.Fprintf(verboseLog, "[upload] object_url=%s\n", presign.Data.ObjectURL)
+		fmt.Fprintf(verboseLog, "[upload] upload_url=%s\n", presign.Data.UploadURL)
 	}
 
 	// Step 2: Upload file content directly to storage (S3/R2/etc.)

@@ -19,6 +19,12 @@ anycap image models
 
 Response includes a list of available models with their capabilities and supported operations.
 
+Extract model IDs:
+
+```bash
+anycap image models | jq -r '.models[].model'
+```
+
 To inspect a specific model:
 
 ```bash
@@ -35,6 +41,12 @@ anycap image models <model-id> schema --operation edit
 ```
 
 The schema response describes all accepted parameters (aspect ratio, style, seed, etc.) with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
+
+List all parameter names and their types:
+
+```bash
+anycap image models <model-id> schema | jq -r '.data.schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
+```
 
 ### Step 3: Generate
 
@@ -70,7 +82,11 @@ Options:
 | `--param` | no | Model-specific parameter as `key=value` (repeatable) |
 | `-o, --output` | no | Save generated image to this path |
 
-Without `-o`, the response includes the image URL and a hint to download it.
+Without `-o`, the response includes the image URL. Extract it with jq:
+
+```bash
+anycap image generate --prompt "..." --model <model-id> | jq -r '.data.outputs[0].url'
+```
 
 ### Step 4: Download (if no -o)
 
