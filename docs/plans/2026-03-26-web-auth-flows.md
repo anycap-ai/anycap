@@ -130,7 +130,7 @@ sequenceDiagram
     participant S as AnyCap Server
     participant A as Auth0
     participant B as User Browser
-    participant W as anycap.ai/device
+    participant N as Next.js Server
 
     C->>S: POST /v1/auth/device-code {}
     S->>A: POST /oauth/device/code {client_id, scope}
@@ -141,19 +141,28 @@ sequenceDiagram
     C->>C: Print: "Visit https://anycap.ai/device and enter code: ABCD-1234"
 
     par User authorization
-        B->>W: Open /device page
-        W->>B: Show code input form
-        B->>W: Enter "ABCD-1234"
-        W->>W: Check login status
+        B->>N: Open /device (or /device?code=ABCD-1234)
+        N->>N: Check session cookie
         alt Not logged in
-            W->>B: Redirect to Auth0 login (state carries user_code)
+            N->>B: Show "Please log in first" + Login button
+            B->>N: Click Login → GET /auth/login?return_to=/device?code=ABCD-1234
+            Note over N,A: (Web Login — Flow 1)
+            N->>B: 302 → Auth0 Universal Login
             B->>A: Complete login
-            A->>B: Callback to /device?code=ABCD-1234
+            A->>B: 302 → /auth/callback
+            B->>N: GET /auth/callback?code=xxx&state=yyy
+            N->>S: POST /v1/auth/callback {login_session_id, code, state}
+            S-->>N: {api_key, user}
+            N->>N: Store api_key in httpOnly cookie
+            N->>B: 302 → /device?code=ABCD-1234 (return_to)
         end
-        W->>S: POST /v1/auth/device-verify {user_code: "ABCD-1234"} (API key auth)
-        S->>S: Mark LoginSession complete, create API Key
-        S-->>W: {message: "authorized"}
-        W->>B: Show "Authorized. You can close this page."
+        B->>N: Open /device?code=ABCD-1234 (logged in)
+        N->>B: Show code input form (prefilled if code in URL)
+        B->>N: Submit "ABCD-1234"
+        N->>S: POST /v1/auth/device-verify {user_code: "ABCD-1234"} (API key auth)
+        S->>S: Mark LoginSession complete, create API Key for CLI
+        S-->>N: {message: "authorized"}
+        N->>B: Show "Authorized. You can close this page."
     and CLI polling
         loop Every 5 seconds
             C->>S: POST /v1/auth/device-poll {login_session_id}
@@ -165,6 +174,17 @@ sequenceDiagram
 
     C->>C: Save to Keychain
 ```
+
+### /device page UX states
+
+| State | Page shows |
+|-------|-----------|
+| Not logged in, no code in URL | "Please log in to authorize a device" + Login button |
+| Not logged in, code in URL | "Please log in to authorize a device" + Login button (code preserved in return_to) |
+| Logged in, no code in URL | Code input form |
+| Logged in, code in URL | Code input form (prefilled), user clicks "Authorize" |
+| Authorization success | "Device authorized. You can close this page." |
+| Code invalid/expired | Error message + option to re-enter |
 
 ### APIs involved
 

@@ -142,8 +142,8 @@ calls to AnyCap Server.
 
 | File | Purpose |
 |------|---------|
-| `web/src/app/auth/login/route.ts` | GET handler: call Server `/v1/auth/login`, store session_id in cookie, redirect to Auth0 |
-| `web/src/app/auth/callback/route.ts` | GET handler: receive Auth0 callback, call Server `/v1/auth/callback`, store api_key in cookie, redirect to dashboard |
+| `web/src/app/auth/login/route.ts` | GET handler: call Server `/v1/auth/login`, store session_id + `return_to` in cookie, redirect to Auth0 |
+| `web/src/app/auth/callback/route.ts` | GET handler: receive Auth0 callback, call Server `/v1/auth/callback`, store api_key in cookie, redirect to `return_to` (default: `/dashboard`) |
 | `web/src/app/auth/logout/route.ts` | GET handler: call Server `/v1/auth/logout`, clear cookie, redirect home |
 
 **Cookie strategy:**
@@ -172,14 +172,27 @@ Read user info from session cookie. Display email in sidebar. Add logout link.
 
 ### F5. `/device` page (for CLI device code flow)
 
-**New file:** `web/src/app/device/page.tsx`
+**New files:**
+- `web/src/app/device/page.tsx` — Device code verification page
+- `web/src/app/api/device-verify/route.ts` — API route proxying to AnyCap Server
 
-- User code input form (XXXX-XXXX format)
-- Support URL param prefill: `/device?code=ABCD-1234`
-- If not logged in → redirect to `/auth/login` (with return URL `/device?code=...`)
-- If logged in → submit code to server via Next.js API route → show success/error
-- Needs a Next.js API route: `web/src/app/api/device-verify/route.ts` that proxies to
-  `POST /v1/auth/device-verify` with the user's API key
+**Page UX states:**
+
+| State | Page shows |
+|-------|-----------|
+| Not logged in, no code in URL | "Please log in to authorize a device" + Login button |
+| Not logged in, code in URL | Same message + Login button (code preserved via `return_to`) |
+| Logged in, no code | Code input form (empty) |
+| Logged in, code in URL | Code input form (prefilled), user clicks "Authorize" |
+| Success | "Device authorized. You can close this page." |
+| Error | Code invalid / expired / already used — show error + option to retry |
+
+**Key behavior:**
+- Not logged in → show message prompting login, do NOT show code input form
+- Login button links to `/auth/login?return_to=/device?code=ABCD-1234`
+- After login, `/auth/callback` reads `return_to` and redirects back to `/device?code=...`
+- Logged in + submit code → Next.js API route calls `POST /v1/auth/device-verify`
+  with user's API key from session cookie
 
 ---
 
