@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "20b74ca9310c1339360b54916621f81abeac34576758bfffcd70062cfd1d73cd"
     },
+    "alert-manager": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "7a95766e335dee3cc94e523bfbca427ca3752fdf227ee82cd6c113498c321905"
+    },
     "animate": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
@@ -20,6 +25,11 @@
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "bf302f77a47430b0996bea0200c10e247f968d45c16f4389fd14e5bdbe2b5a74"
+    },
+    "backlink-analyzer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "f930196cc2423cde069165f22e1391012fd3b25ab953f1cd35b695b034b4b6e8"
     },
     "bolder": {
       "source": "pbakaus/impeccable",
@@ -36,6 +46,26 @@
       "sourceType": "github",
       "computedHash": "a29101990cf8bddf1835159858cb9a1ebd3ac0011598cbed334f0f28c4aa67a2"
     },
+    "competitor-analysis": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "9b77f0f466fe2210fb7befa2ab207e865170b52f08c5c6f1242edd788b03a414"
+    },
+    "content-gap-analysis": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "a49e174d04e03cc7331e9c50de62c0a1d836cdcfbbe5841d5cb68cc866430562"
+    },
+    "content-quality-auditor": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "88b219719b94a21f5ba844be5e9441305843d609f6963c426bf6af4ee4aef084"
+    },
+    "content-refresher": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "9a8f13e8a9b9bc4396458ef84a277a27b21045cb61e90b1b5bf78b96aa8f400f"
+    },
     "critique": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
@@ -51,6 +81,16 @@
       "sourceType": "github",
       "computedHash": "fb6257d06d3fe491dde3528493d30bc9a12329b6f61da8ef6429e9a579a61af9"
     },
+    "domain-authority-auditor": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "f234bc8b6f77298817e2ae944c28167088528b3f61cbdbea827e95eabe561cf9"
+    },
+    "entity-optimizer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "3f8f25cb7c2ef7e6cdbfd71d4b0343213531841f7a770d4cfca93154ef5694b6"
+    },
     "extract": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
@@ -61,15 +101,45 @@
       "sourceType": "github",
       "computedHash": "f8ecd3028ae60e1b710a9e1c13a43ddfb3a9d4bf67df99209a1855297c1ea2bd"
     },
+    "geo-content-optimizer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "89f59e837ae762cbdedd8bd3f4121c049277c55bc67b9d127d10b6b0fd7399c0"
+    },
     "harden": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "c7bd8bf067e761f4a8f4c17b907bacce7d8915391491b7c9b29ff70166bc6628"
     },
+    "internal-linking-optimizer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "c95ed605c9bccae34f659a70ff5362e70440a2387005289e70d5e50b9f5c9aef"
+    },
+    "keyword-research": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "43dd49dea61a63f0dd53ac626d40c60e0788ccfb02452e926f8a2a9aef3cebe0"
+    },
+    "memory-management": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "0a68a27f9d007e5df7969fcaf8ca3fcf72930051c4cb5d29c3c8e343241951c2"
+    },
+    "meta-tags-optimizer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "03a01862c656945e6fb9ef50a83905199a55a88b5a14483c4fbd1e27c72481fa"
+    },
     "normalize": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "209464da656b28060b4c0e10c3770fdd1985fe2a4755b30c04b4a924808a4f8f"
+    },
+    "on-page-seo-auditor": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "01da16872f8218e7a3a03aa30d65fd85adc34eecf6af7b4ba1c09b2338c55f15"
     },
     "onboard": {
       "source": "pbakaus/impeccable",
@@ -86,6 +156,11 @@
       "sourceType": "github",
       "computedHash": "148cccee462a59fb15ed54c6b5ef053b1ecb9ce691a8ffa8490788e8031d6785"
     },
+    "performance-reporter": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "f125525a7219a1121a23230d643c81b7748bf8364d50928b5f618e6f1dedd242"
+    },
     "polish": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
@@ -96,10 +171,35 @@
       "sourceType": "github",
       "computedHash": "5a19677046d48f1cca67175ad336308e8e2744d1a4d1ab0a2760338855fa2f1e"
     },
+    "rank-tracker": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "37a4baa15ae2a61676ff6e913d693136207facf5fcd0379a83156c0410937183"
+    },
+    "schema-markup-generator": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "5c8e0a14b496faabd6bb67311e46e2a4282373dba37cce5e0c282ed931e253e6"
+    },
+    "seo-content-writer": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "17f4009a7b7c4831f02cd59d6ad48283cf63f0008632b90b4f7b44ecddb54f6c"
+    },
+    "serp-analysis": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "d46b2fcd4f15501b7e173210d5a53a51a81023507722eb5c8124393f972bfa53"
+    },
     "teach-impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "b3b5541bb9b0a260af793c7d79c2db4a436c2cd9384be34a4024c7f28af72e62"
+    },
+    "technical-seo-checker": {
+      "source": "aaron-he-zhu/seo-geo-claude-skills",
+      "sourceType": "github",
+      "computedHash": "cde79bc4e35f71d6f812ffadcc08d4da7824440d3412236592ff08613ce1205e"
     },
     "typeset": {
       "source": "pbakaus/impeccable",
