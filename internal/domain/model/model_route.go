@@ -17,6 +17,12 @@ type ModelRoute struct {
 	AbilityKey  string         `json:"ability_key"`
 	AlgoType    string         `json:"algo_type,omitempty"`
 	DisplayName string         `json:"display_name,omitempty"`
+	RouteType   RouteType      `json:"route_type,omitempty"`
+	Region      string         `json:"region,omitempty"`
+	Tier        string         `json:"tier,omitempty"`
+	Env         string         `json:"env,omitempty"`
+	Priority    int            `json:"priority"`
+	Enabled     bool           `json:"enabled"`
 	Status      string         `json:"status"`
 	Extra       map[string]any `json:"extra,omitempty"`
 	CreatedAt   time.Time      `json:"created_at"`
@@ -36,6 +42,12 @@ type CreateModelRouteInput struct {
 	AbilityKey  string         `json:"ability_key"`
 	AlgoType    string         `json:"algo_type,omitempty"`
 	DisplayName string         `json:"display_name,omitempty"`
+	RouteType   RouteType      `json:"route_type,omitempty"`
+	Region      string         `json:"region,omitempty"`
+	Tier        string         `json:"tier,omitempty"`
+	Env         string         `json:"env,omitempty"`
+	Priority    int            `json:"priority,omitempty"`
+	Enabled     *bool          `json:"enabled,omitempty"`
 	Status      string         `json:"status,omitempty"`
 	Extra       map[string]any `json:"extra,omitempty"`
 }
@@ -47,6 +59,36 @@ type UpdateModelRouteInput struct {
 	AbilityKey  string         `json:"ability_key"`
 	AlgoType    string         `json:"algo_type,omitempty"`
 	DisplayName string         `json:"display_name,omitempty"`
+	RouteType   RouteType      `json:"route_type,omitempty"`
+	Region      string         `json:"region,omitempty"`
+	Tier        string         `json:"tier,omitempty"`
+	Env         string         `json:"env,omitempty"`
+	Priority    int            `json:"priority,omitempty"`
+	Enabled     *bool          `json:"enabled,omitempty"`
 	Status      string         `json:"status,omitempty"`
 	Extra       map[string]any `json:"extra,omitempty"`
+}
+
+func (r ModelRoute) ToRouteBinding() RouteBinding {
+	routeType := r.RouteType
+	if routeType == "" {
+		routeType = RouteTypeDirect
+	}
+
+	priority := r.Priority
+	if priority == 0 {
+		priority = DefaultRoutePriority
+	}
+
+	return RouteBinding{
+		RouteType:  routeType,
+		AbilityKey: r.AbilityKey,
+		GenType:    string(r.Capability),
+		AlgoType:   r.AlgoType,
+		Region:     r.Region,
+		Tier:       r.Tier,
+		Env:        r.Env,
+		Priority:   priority,
+		Enabled:    r.Enabled,
+	}
 }

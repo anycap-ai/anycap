@@ -62,6 +62,12 @@ func (s *modelRouteRepoStub) CreateModelRoute(_ context.Context, input model.Cre
 		AbilityKey:  input.AbilityKey,
 		AlgoType:    input.AlgoType,
 		DisplayName: input.DisplayName,
+		RouteType:   input.RouteType,
+		Region:      input.Region,
+		Tier:        input.Tier,
+		Env:         input.Env,
+		Priority:    input.Priority,
+		Enabled:     routeInputEnabled(input.Enabled),
 		Status:      input.Status,
 		Extra:       input.Extra,
 	}
@@ -77,6 +83,12 @@ func (s *modelRouteRepoStub) UpdateModelRoute(_ context.Context, id int64, input
 		AbilityKey:  input.AbilityKey,
 		AlgoType:    input.AlgoType,
 		DisplayName: input.DisplayName,
+		RouteType:   input.RouteType,
+		Region:      input.Region,
+		Tier:        input.Tier,
+		Env:         input.Env,
+		Priority:    input.Priority,
+		Enabled:     routeInputEnabled(input.Enabled),
 		Status:      input.Status,
 		Extra:       input.Extra,
 	}
@@ -85,6 +97,13 @@ func (s *modelRouteRepoStub) UpdateModelRoute(_ context.Context, id int64, input
 
 func (s *modelRouteRepoStub) DeleteModelRoute(_ context.Context, _ int64) error {
 	return nil
+}
+
+func routeInputEnabled(value *bool) bool {
+	if value == nil {
+		return false
+	}
+	return *value
 }
 
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {

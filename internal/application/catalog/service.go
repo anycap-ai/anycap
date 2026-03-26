@@ -61,8 +61,3 @@ func (s *Service) GetModelSchema(ctx context.Context, capability model.Capabilit
 
 	return schema, nil
 }
-
-// GetModel 获取完整的 ModelSpec（含 RouteBinding，仅内部使用）。
-func (s *Service) GetModel(ctx context.Context, capability model.Capability, modelID string) (*model.ModelSpec, error) {
-	return s.repo.GetModel(ctx, capability, modelID)
-}

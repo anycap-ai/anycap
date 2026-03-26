@@ -68,6 +68,7 @@ type serverDependencies struct {
 	loginService        *loginapp.Service
 	imageService        *imageapp.Service
 	catalogService      *catalogapp.Service
+	modelRouteService   *modelrouteapp.Service
 	capabilitiesService *capapp.Service
 	feedbackService     *feedbackapp.Service
 	apiKeyService       port.APIKeyService
@@ -95,7 +96,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
-	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(buildModelRouteRepo(cfg)))
+	modelRouteHandler := handlers.NewModelRouteHandler(deps.modelRouteService)
 	feedbackHandler := handlers.NewFeedbackHandler(deps.feedbackService)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
@@ -140,8 +141,9 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {
-	catalogRepo := buildCatalogRepo(cfg)
+	catalogRepo, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
 	catalogService := catalogapp.NewService(catalogRepo)
+	modelRouteService := modelrouteapp.NewService(modelRouteRepo)
 	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
 	authClient := buildAuthClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
@@ -161,6 +163,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
+			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
 			feedbackService:     feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
@@ -190,6 +193,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
+			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
 			feedbackService:     feedbackapp.NewService(apikey.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
@@ -272,12 +276,19 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
+	catalogRepo, _ := buildCatalogAndModelRouteRepos(cfg)
+	return catalogRepo
+}
+
+func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, port.ModelRouteRepository) {
 	platformBaseURL := cfg.ResolvedNexusHubPlatformBaseURL()
 	platformToken := cfg.ResolvedNexusHubPlatformToken()
+	modelRouteUnavailableMessage := "model-routes: postgres is not configured; admin CRUD endpoints will be unavailable"
 	if cfg.PGDSN != "" {
 		repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 		if err != nil {
 			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
+			modelRouteUnavailableMessage = "model-routes: postgres repo unavailable; admin CRUD endpoints will be unavailable"
 		} else {
 			if platformBaseURL != "" {
 				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", platformBaseURL)
@@ -287,14 +298,15 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 						BaseURL: platformBaseURL,
 						Token:   platformToken,
 					}),
-				)
+				), repo
 			}
 
 			log.Println("catalog: using postgres anycap_model_routes table without schema enrichment")
-			return repo
+			return repo, repo
 		}
 	}
 
+	log.Println(modelRouteUnavailableMessage)
 	if platformBaseURL == "" {
 		log.Println("catalog: using stub (set NEXUSHUB_PLATFORM_BASE_URL or NEXUSHUB_BASE_URL for real catalog)")
 		return nexushub.NewCatalogStubWith([]model.ModelSpec{
@@ -316,11 +328,11 @@ func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 					model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "gpt-image-1.5"}}},
 				},
 			},
-		})
+		}), nil
 	}
 
 	log.Printf("catalog: using nexushub platform at %s", platformBaseURL)
-	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: platformBaseURL, Token: platformToken})
+	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: platformBaseURL, Token: platformToken}), nil
 }
 
 func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
@@ -389,15 +401,6 @@ func (s *Server) Run() {
 }
 
 func buildModelRouteRepo(cfg config.Config) port.ModelRouteRepository {
-	if cfg.PGDSN == "" {
-		log.Println("model-routes: postgres is not configured; admin CRUD endpoints will be unavailable")
-		return nil
-	}
-
-	repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
-	if err != nil {
-		log.Fatalf("failed to initialize postgres model route repo: %v", err)
-	}
-	log.Println("model-routes: using postgres anycap_model_routes table")
-	return repo
+	_, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
+	return modelRouteRepo
 }

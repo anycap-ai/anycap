@@ -122,28 +122,6 @@ func TestService_GetModelSchema_NotFound(t *testing.T) {
 	}
 }
 
-func TestService_GetModel(t *testing.T) {
-	svc := newTestService()
-
-	spec, err := svc.GetModel(context.Background(), model.CapabilityImage, "test-img-model")
-	if err != nil {
-		t.Fatalf("get model: %v", err)
-	}
-	if len(spec.Operations) != 2 {
-		t.Fatalf("expected 2 operations (generate, edit), got %d", len(spec.Operations))
-	}
-	genOp, ok := spec.Operations[model.OperationGenerate]
-	if !ok {
-		t.Fatal("expected generate operation")
-	}
-	if len(genOp.Routes) == 0 {
-		t.Fatal("expected at least one route binding")
-	}
-	if genOp.Routes[0].AbilityKey != "test_ability_key_img" {
-		t.Fatalf("expected test_ability_key_img, got %s", genOp.Routes[0].AbilityKey)
-	}
-}
-
 func TestService_ListModels_Empty(t *testing.T) {
 	svc := NewService(nexushub.NewCatalogStub())
 
