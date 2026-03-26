@@ -53,6 +53,9 @@ var (
 	newCatalogRepoFromDSN = func(ctx context.Context, dsn string) (*postgres.CatalogRepo, error) {
 		return postgres.NewCatalogRepoFromDSN(ctx, dsn)
 	}
+	newCatalogRepoFromEnv = func(ctx context.Context) (*postgres.CatalogRepo, error) {
+		return postgres.NewCatalogRepoFromEnv(ctx)
+	}
 )
 
 const (
@@ -274,10 +277,32 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
 	platformBaseURL := cfg.ResolvedNexusHubPlatformBaseURL()
 	platformToken := cfg.ResolvedNexusHubPlatformToken()
+
 	if cfg.PGDSN != "" {
 		repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 		if err != nil {
 			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
+		} else {
+			if platformBaseURL != "" {
+				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", platformBaseURL)
+				return nexushub.NewCatalogSchemaEnricher(
+					repo,
+					nexushub.NewPlatformClient(nexushub.PlatformClientConfig{
+						BaseURL: platformBaseURL,
+						Token:   platformToken,
+					}),
+				)
+			}
+
+			log.Println("catalog: using postgres anycap_model_routes table without schema enrichment")
+			return repo
+		}
+	}
+
+	if strings.TrimSpace(os.Getenv("ANYCAP_PG_CONFIG")) != "" {
+		repo, err := newCatalogRepoFromEnv(context.Background())
+		if err != nil {
+			log.Printf("catalog: failed to initialize legacy postgres repo, falling back: %v", err)
 		} else {
 			if platformBaseURL != "" {
 				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", platformBaseURL)
@@ -340,7 +365,7 @@ func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
 }
 
 func hasCatalogProvider(cfg config.Config) bool {
-	return cfg.PGDSN != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
+	return cfg.PGDSN != "" || strings.TrimSpace(os.Getenv("ANYCAP_PG_CONFIG")) != "" || cfg.ResolvedNexusHubPlatformBaseURL() != ""
 }
 
 func hasImageExecutionProvider(cfg config.Config) bool {
