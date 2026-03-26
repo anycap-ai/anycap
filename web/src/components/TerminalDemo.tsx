@@ -17,7 +17,7 @@ const lines: Line[] = [
   { type: "text", content: "I'll use AnyCap to generate this. Let me load the skill first.", delay: 600 },
   { type: "tool", content: 'load_skill("anycap")', sub: "image · video · music · tts · search · crawl", delay: 400 },
   { type: "text", content: "Found image capability. Generating now.", delay: 500 },
-  { type: "tool", content: `run("anycap image generate --prompt 'paper crane in morning light'")`, sub: '✓ { status: "success", url: "cdn.anycap.ai/img/a3f…" }', delay: 400 },
+  { type: "tool", content: `run("anycap image generate --prompt 'paper crane in morning light'")`, sub: '✓ { status: "success", url: "cdn.anycap.cloud/img/a3f…" }', delay: 400 },
   { type: "text", content: "Done. Image generated and saved.", delay: 800 },
   { type: "cursor", delay: 400 },
 ];

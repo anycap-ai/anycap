@@ -106,7 +106,7 @@ Presigned PUT URLs are reusable within their TTL (S3/R2 does not support single-
 |---------|-------|
 | Bucket name | `anycap` |
 | Region | `auto` |
-| Public access | Custom domain (`cdn.anycap.ai`) |
+| Public access | Custom domain (`cdn.anycap.cloud`) |
 | S3 API access | Path-style via `https://{account_id}.r2.cloudflarestorage.com` |
 
 ### Environment Variables
@@ -120,7 +120,7 @@ S3_BUCKET=anycap
 S3_FORCE_PATH_STYLE=true
 
 # Public URL for read access (required -- hides bucket name)
-S3_PUBLIC_URL=https://cdn.anycap.ai
+S3_PUBLIC_URL=https://cdn.anycap.cloud
 
 # Optional (defaults shown)
 S3_REGION=auto
@@ -272,7 +272,7 @@ HTTP/1.1 200 OK
   "status": "success",
   "data": {
     "upload_url": "https://...r2.cloudflarestorage.com/anycap/user_upload/...?X-Amz-Signature=...",
-    "object_url": "https://cdn.anycap.ai/user_upload/2026-03-25/uuid/photo.jpg",
+    "object_url": "https://cdn.anycap.cloud/user_upload/2026-03-25/uuid/photo.jpg",
     "expires_in": 600
   }
 }
