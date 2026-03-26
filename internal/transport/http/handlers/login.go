@@ -82,7 +82,7 @@ func (h *LoginHandler) DeviceAuthorize(c context.Context, ctx *app.RequestContex
 	authURL, err := h.service.BeginDeviceAuthorization(c, userCode)
 	if err != nil {
 		status, _ := dto.MapDomainError(err)
-		ctx.Data(status, "text/html; charset=utf-8", []byte("<!doctype html><html><body><p>Unable to continue login. " + err.Error() + `</p><p>Please return to the terminal and run <code>anycap login --headless</code> again.</p></body></html>`))
+		ctx.Data(status, "text/html; charset=utf-8", []byte("<!doctype html><html><body><p>Unable to continue login. "+err.Error()+`</p><p>Please return to the terminal and run <code>anycap login --headless</code> again.</p></body></html>`))
 		return
 	}
 	ctx.Redirect(302, []byte(authURL))
@@ -94,7 +94,7 @@ func (h *LoginHandler) WebCallback(c context.Context, ctx *app.RequestContext) {
 	err := h.service.CompleteDeviceAuthorization(c, code, state)
 	if err != nil {
 		status, _ := dto.MapDomainError(err)
-		ctx.Data(status, "text/html; charset=utf-8", []byte("<!doctype html><html><body><p>Login failed. " + err.Error() + `</p><p>Please return to the terminal and retry.</p></body></html>`))
+		ctx.Data(status, "text/html; charset=utf-8", []byte("<!doctype html><html><body><p>Login failed. "+err.Error()+`</p><p>Please return to the terminal and retry.</p></body></html>`))
 		return
 	}
 	ctx.Data(200, "text/html; charset=utf-8", []byte(`<!doctype html><html><body><p>Login complete. You can return to the terminal.</p></body></html>`))

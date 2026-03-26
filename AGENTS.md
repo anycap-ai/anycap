@@ -131,6 +131,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | Branch pattern | Action |
 |---|---|
 | `main` / MR to main | lint + test |
+| `main` | + CLI dev build (goreleaser snapshot, GitLab artifacts only) |
 | `release/cli-v<semver>` | goreleaser cross-compile, GitHub release |
 | `build/server` | Docker build server image only |
 | `deploy/server-dev` | Docker build + deploy to kntech-dev |

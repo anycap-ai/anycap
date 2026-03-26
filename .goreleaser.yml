@@ -2,14 +2,16 @@ version: 2
 
 project_name: anycap
 
+before:
+  hooks:
+    - sh -c "rm -rf internal/cli/skill/embedded/anycap-cli && mkdir -p internal/cli/skill/embedded/anycap-cli/references && cp skills/anycap-cli/SKILL.md internal/cli/skill/embedded/anycap-cli/ && cp skills/anycap-cli/references/*.md internal/cli/skill/embedded/anycap-cli/references/"
+
 builds:
   - id: anycap
     binary: anycap
     main: ./cmd/anycap
     env:
       - CGO_ENABLED=0
-    hooks:
-      pre: sh -c "rm -rf internal/cli/skill/embedded/anycap-cli && mkdir -p internal/cli/skill/embedded/anycap-cli/references && cp skills/anycap-cli/SKILL.md internal/cli/skill/embedded/anycap-cli/ && cp skills/anycap-cli/references/*.md internal/cli/skill/embedded/anycap-cli/references/"
     goos:
       - linux
       - darwin
@@ -22,6 +24,7 @@ builds:
       - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Version={{.Version}}
       - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Commit={{.FullCommit}}
       - -X gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo.Date={{.Date}}
+      - -X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint={{ if index .Env "CLI_DEFAULT_ENDPOINT" }}{{ .Env.CLI_DEFAULT_ENDPOINT }}{{ else }}https://api.anycap.ai{{ end }}
 
 archives:
   - id: anycap
@@ -40,4 +43,7 @@ checksum:
 
 changelog:
   disable: true
+
+snapshot:
+  version_template: "{{ .Tag }}-dev.{{ .ShortCommit }}"
 

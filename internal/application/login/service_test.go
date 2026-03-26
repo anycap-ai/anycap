@@ -424,15 +424,15 @@ func TestService_PollAuthorizedDeviceCreatesAPIKey(t *testing.T) {
 	repo := newFakeLoginSessionRepo()
 	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
 	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:              "lsn-device",
-		FlowType:        model.LoginFlowDevice,
-		Auth0Subject:    "auth0|user-1",
-		AuthUserEmail:   "user@example.com",
-		AuthUserName:    "Demo User",
-		Status:          model.LoginSessionStatusAuthorized,
-		ExpiresAt:       now.Add(15 * time.Minute),
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		Auth0Subject:      "auth0|user-1",
+		AuthUserEmail:     "user@example.com",
+		AuthUserName:      "Demo User",
+		Status:            model.LoginSessionStatusAuthorized,
+		ExpiresAt:         now.Add(15 * time.Minute),
 		UserCodeExpiresAt: now.Add(5 * time.Minute),
-		CreatedAt:       now,
+		CreatedAt:         now,
 	}
 	apiKeys := &fakeLoginAPIKeyService{
 		createdResult: model.CreatedAPIKey{

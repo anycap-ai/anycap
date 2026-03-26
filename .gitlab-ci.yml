@@ -3,6 +3,7 @@
 #
 # Branch strategy:
 #   main / MR              -> lint + test
+#   main                   -> + CLI dev build (goreleaser snapshot, artifacts only)
 #   feat* / fix* / chore* -> lint + test
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
@@ -120,6 +121,33 @@ build:image:
 
 deploy:dev:
   image: $CI_IMAGE
+
+# ---------------------------------------------------------------------------
+# Build: CLI dev binaries (goreleaser snapshot, on main)
+#
+# Produces cross-compiled binaries with DefaultEndpoint pointing to dev server.
+# ---------------------------------------------------------------------------
+
+build:cli:dev:
+  stage: build
+  tags:
+    - docker
+  image:
+    name: goreleaser/goreleaser:latest
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: 0
+    CLI_DEFAULT_ENDPOINT: "https://anycap-server.dev.knoffice.tech"
+  script:
+    - |
+      git config --global --add safe.directory "$CI_PROJECT_DIR"
+      goreleaser release --clean --snapshot
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 7 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 # ---------------------------------------------------------------------------
 # Build: CLI binaries (goreleaser, no publish)
