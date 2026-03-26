@@ -1,6 +1,9 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var ErrAuthProviderNotConfigured = errors.New("auth provider is not configured")
 
@@ -61,8 +64,42 @@ type LoginUser struct {
 }
 
 type Balance struct {
-	Available int64  `json:"available"`
-	Currency  string `json:"currency"`
+	Available         int64  `json:"available"`
+	Currency          string `json:"currency"`
+	CreditCentBalance int64  `json:"credit_cent_balance,omitempty"`
+}
+
+type CreditTransaction struct {
+	ID               string         `json:"id"`
+	Type             string         `json:"type"`
+	CreditCentAmount int64          `json:"credit_cent_amount"`
+	SourceID         string         `json:"source_id,omitempty"`
+	Description      string         `json:"description,omitempty"`
+	CreditBatchType  string         `json:"credit_batch_type,omitempty"`
+	Metadata         map[string]any `json:"metadata,omitempty"`
+	CreatedAt        time.Time      `json:"created_at,omitempty"`
+}
+
+type TimelineItem struct {
+	Type             string    `json:"type"`
+	OccurredAt       time.Time `json:"occurred_at"`
+	RequestID        string    `json:"request_id,omitempty"`
+	Capability       string    `json:"capability,omitempty"`
+	Model            string    `json:"model,omitempty"`
+	Status           string    `json:"status,omitempty"`
+	CreditCost       int64     `json:"credit_cost,omitempty"`
+	ErrorCode        string    `json:"error_code,omitempty"`
+	TransactionID    string    `json:"transaction_id,omitempty"`
+	TransactionType  string    `json:"transaction_type,omitempty"`
+	CreditCentAmount int64     `json:"credit_cent_amount,omitempty"`
+	Description      string    `json:"description,omitempty"`
+	SourceID         string    `json:"source_id,omitempty"`
+	CreditBatchType  string    `json:"credit_batch_type,omitempty"`
+}
+
+type LogsResult struct {
+	Items      []TimelineItem `json:"items"`
+	NextCursor string         `json:"next_cursor,omitempty"`
 }
 
 type StatusResult struct {

@@ -15,8 +15,16 @@ type Row interface {
 	Scan(dest ...any) error
 }
 
+type Rows interface {
+	Next() bool
+	Scan(dest ...any) error
+	Close() error
+	Err() error
+}
+
 type DBTX interface {
 	ExecContext(ctx context.Context, query string, args ...any) (Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...any) Row
 }
 
@@ -27,6 +35,7 @@ type Tx interface {
 }
 
 type TxStarter interface {
+	DBTX
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (Tx, error)
 }
 
@@ -44,6 +53,10 @@ func NewSQLDB(db *sql.DB) *SQLDB {
 
 func (d *SQLDB) ExecContext(ctx context.Context, query string, args ...any) (Result, error) {
 	return d.db.ExecContext(ctx, query, args...)
+}
+
+func (d *SQLDB) QueryContext(ctx context.Context, query string, args ...any) (Rows, error) {
+	return d.db.QueryContext(ctx, query, args...)
 }
 
 func (d *SQLDB) QueryRowContext(ctx context.Context, query string, args ...any) Row {
@@ -64,6 +77,10 @@ type SQLTx struct {
 
 func (t *SQLTx) ExecContext(ctx context.Context, query string, args ...any) (Result, error) {
 	return t.tx.ExecContext(ctx, query, args...)
+}
+
+func (t *SQLTx) QueryContext(ctx context.Context, query string, args ...any) (Rows, error) {
+	return t.tx.QueryContext(ctx, query, args...)
 }
 
 func (t *SQLTx) QueryRowContext(ctx context.Context, query string, args ...any) Row {

@@ -51,8 +51,9 @@ func (c *HTTPClient) GetBalance(ctx context.Context, userID string) (model.Balan
 	switch resp.Code {
 	case 0:
 		return model.Balance{
-			Available: resp.Data.CreditCentBalance / creditCentPerCredit,
-			Currency:  "credit",
+			Available:         resp.Data.CreditCentBalance / creditCentPerCredit,
+			Currency:          "credit",
+			CreditCentBalance: resp.Data.CreditCentBalance,
 		}, nil
 	case 2001, 2002:
 		return model.Balance{}, model.ErrInsufficientCredit
@@ -123,6 +124,46 @@ func (c *HTTPClient) GrantSignupReward(ctx context.Context, userID string) error
 	}
 }
 
+func (c *HTTPClient) ListTransactions(ctx context.Context, userID string, limit, offset int) ([]model.CreditTransaction, int, error) {
+	numericUserID, err := parseUserID(userID)
+	if err != nil {
+		return nil, 0, model.ErrInternal
+	}
+	if limit <= 0 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	var resp envelope[transactionsData]
+	if err := c.post(ctx, "/api/v1/credit/transaction/list", map[string]any{
+		"user_id": numericUserID,
+		"limit":   limit,
+		"offset":  offset,
+	}, &resp); err != nil {
+		return nil, 0, err
+	}
+
+	if resp.Code != 0 {
+		return nil, 0, model.ErrBillingUncertain
+	}
+
+	items := make([]model.CreditTransaction, 0, len(resp.Data.Transactions))
+	for _, txn := range resp.Data.Transactions {
+		items = append(items, model.CreditTransaction{
+			ID:               strconv.FormatInt(txn.ID, 10),
+			Type:             txn.Type,
+			CreditCentAmount: txn.CreditCentAmount,
+			SourceID:         txn.SourceID,
+			Description:      txn.Description,
+			Metadata:         txn.Metadata,
+			CreatedAt:        txn.CreatedAt,
+		})
+	}
+	return items, resp.Data.Total, nil
+}
+
 type envelope[T any] struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -131,6 +172,21 @@ type envelope[T any] struct {
 
 type balanceData struct {
 	CreditCentBalance int64 `json:"credit_cent_balance"`
+}
+
+type transactionsData struct {
+	Transactions []transactionData `json:"transactions"`
+	Total        int               `json:"total"`
+}
+
+type transactionData struct {
+	ID               int64          `json:"id"`
+	Type             string         `json:"type"`
+	CreditCentAmount int64          `json:"credit_cent_amount"`
+	SourceID         string         `json:"source_id"`
+	Description      string         `json:"description"`
+	Metadata         map[string]any `json:"metadata"`
+	CreatedAt        time.Time      `json:"created_at"`
 }
 
 func (c *HTTPClient) post(ctx context.Context, path string, payload any, dest any) error {

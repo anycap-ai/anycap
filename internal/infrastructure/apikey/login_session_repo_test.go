@@ -32,6 +32,12 @@ func (f *fakeLoginSessionDB) QueryRowContext(_ context.Context, query string, ar
 	return fakeLoginSessionRow{scanFn: f.scanFn}
 }
 
+func (f *fakeLoginSessionDB) QueryContext(_ context.Context, query string, args ...any) (Rows, error) {
+	f.query = query
+	f.args = args
+	return fakeRows{}, nil
+}
+
 type fakeLoginSessionRow struct {
 	scanFn func(dest ...any) error
 }

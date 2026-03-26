@@ -62,6 +62,34 @@ func (p *Provisioner) FindOrCreateByAuthIdentity(ctx context.Context, provider s
 	return user, true, nil
 }
 
+func (p *Provisioner) GetUserByID(ctx context.Context, userID string) (model.User, error) {
+	if p == nil || p.db == nil || userID == "" {
+		return model.User{}, model.ErrInternal
+	}
+
+	numericID, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return model.User{}, model.ErrInternal
+	}
+
+	row := p.db.QueryRowContext(ctx, `
+		SELECT id, COALESCE(email, ''), COALESCE(name, ''), COALESCE(avatar_url, ''), status, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`, numericID)
+
+	var user model.User
+	var fetchedID int64
+	if err := row.Scan(&fetchedID, &user.Email, &user.Name, &user.AvatarURL, &user.Status, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return model.User{}, model.ErrAuthInvalid
+		}
+		return model.User{}, err
+	}
+	user.ID = strconv.FormatInt(fetchedID, 10)
+	return user, nil
+}
+
 func getUserByIdentity(ctx context.Context, db apikey.DBTX, provider, externalSubject string) (model.User, error) {
 	row := db.QueryRowContext(ctx, `
 		SELECT u.id, COALESCE(u.email, ''), COALESCE(u.name, ''), COALESCE(u.avatar_url, ''), u.status, u.created_at, u.updated_at
