@@ -14,4 +14,6 @@ type LoginSessionRepo interface {
 	GetByUserCode(ctx context.Context, userCode string) (model.LoginSession, error)
 	MarkAuthorized(ctx context.Context, sessionID string, authUser model.AuthUser, authorizedAt time.Time) error
 	MarkCompleted(ctx context.Context, sessionID, apiKeyID string, completedAt time.Time) error
+	MarkVerified(ctx context.Context, sessionID, userID string, verifiedAt time.Time) error
+	MarkPolled(ctx context.Context, sessionID string, polledAt time.Time) error
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
@@ -37,7 +38,12 @@ func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
 	authGroup.POST("/login", h.Init)
 	authGroup.POST("/callback", h.Callback)
 	authGroup.POST("/device-code", h.DeviceCode)
+	authGroup.POST("/device-code-check", h.DeviceCodeCheck)
 	authGroup.POST("/device-poll", h.Poll)
+}
+
+func (h *LoginHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
+	group.POST("/auth/device-verify", h.DeviceVerify)
 }
 
 func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
@@ -130,6 +136,24 @@ func (h *LoginHandler) DeviceCode(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
+func (h *LoginHandler) DeviceCodeCheck(c context.Context, ctx *app.RequestContext) {
+	var req dto.DeviceCodeCheckRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	result, err := h.service.CheckDeviceCode(c, strings.TrimSpace(req.UserCode))
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
 func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 	var req dto.LoginPollRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -138,6 +162,32 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.Poll(c, req.LoginSessionID)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	var req dto.DeviceVerifyRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	result, err := h.service.VerifyDeviceCode(c, strings.TrimSpace(req.UserCode), *principal)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

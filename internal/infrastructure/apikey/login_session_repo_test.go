@@ -64,8 +64,8 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 	if db.query == "" {
 		t.Fatal("expected insert query to be executed")
 	}
-	if len(db.args) != 15 {
-		t.Fatalf("expected 15 args, got %d", len(db.args))
+	if len(db.args) != 17 {
+		t.Fatalf("expected 17 args, got %d", len(db.args))
 	}
 }
 
@@ -82,13 +82,15 @@ func TestLoginSessionRepo_GetByID(t *testing.T) {
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
 			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[8].(*string)) = ""
+			*(dest[8].(*sql.NullInt64)) = sql.NullInt64{}
 			*(dest[9].(*string)) = ""
 			*(dest[10].(*string)) = ""
 			*(dest[11].(*string)) = ""
-			*(dest[12].(*string)) = model.LoginSessionStatusPending
-			*(dest[13].(*time.Time)) = expiresAt
-			*(dest[14].(*time.Time)) = createdAt
+			*(dest[12].(*string)) = ""
+			*(dest[13].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[14].(*string)) = model.LoginSessionStatusPending
+			*(dest[15].(*time.Time)) = expiresAt
+			*(dest[16].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -119,13 +121,15 @@ func TestLoginSessionRepo_GetByState(t *testing.T) {
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
 			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[8].(*string)) = ""
+			*(dest[8].(*sql.NullInt64)) = sql.NullInt64{}
 			*(dest[9].(*string)) = ""
 			*(dest[10].(*string)) = ""
 			*(dest[11].(*string)) = ""
-			*(dest[12].(*string)) = model.LoginSessionStatusPending
-			*(dest[13].(*time.Time)) = expiresAt
-			*(dest[14].(*time.Time)) = createdAt
+			*(dest[12].(*string)) = ""
+			*(dest[13].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[14].(*string)) = model.LoginSessionStatusPending
+			*(dest[15].(*time.Time)) = expiresAt
+			*(dest[16].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -168,5 +172,31 @@ func TestLoginSessionRepo_MarkCompleted(t *testing.T) {
 	}
 	if len(db.args) != 4 {
 		t.Fatalf("expected 4 args, got %d", len(db.args))
+	}
+}
+
+func TestLoginSessionRepo_MarkVerified(t *testing.T) {
+	db := &fakeLoginSessionDB{}
+	repo := NewLoginSessionRepo(db)
+
+	err := repo.MarkVerified(context.Background(), "lsn-5", "2000000001", time.Date(2026, 3, 25, 10, 3, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("MarkVerified() error = %v", err)
+	}
+	if len(db.args) != 4 {
+		t.Fatalf("expected 4 args, got %d", len(db.args))
+	}
+}
+
+func TestLoginSessionRepo_MarkPolled(t *testing.T) {
+	db := &fakeLoginSessionDB{}
+	repo := NewLoginSessionRepo(db)
+
+	err := repo.MarkPolled(context.Background(), "lsn-6", time.Date(2026, 3, 25, 10, 4, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("MarkPolled() error = %v", err)
+	}
+	if len(db.args) != 2 {
+		t.Fatalf("expected 2 args, got %d", len(db.args))
 	}
 }

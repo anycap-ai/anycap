@@ -46,6 +46,14 @@ type LoginPollResult struct {
 	User           *LoginUser `json:"user,omitempty"`
 }
 
+type DeviceCodeCheckResult struct {
+	Valid bool `json:"valid"`
+}
+
+type DeviceVerifyResult struct {
+	Message string `json:"message"`
+}
+
 type LoginUser struct {
 	ID    string `json:"id"`
 	Email string `json:"email,omitempty"`

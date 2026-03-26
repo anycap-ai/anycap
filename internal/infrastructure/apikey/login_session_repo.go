@@ -20,11 +20,11 @@ func (r *LoginSessionRepo) CreateSession(ctx context.Context, session model.Logi
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO login_sessions (
 			id, flow_type, state, code_verifier, redirect_uri,
-			device_code, user_code, user_code_expires_at,
+			device_code, user_code, user_code_expires_at, authorized_user_id,
 			auth0_subject, auth_user_email, auth_user_name, auth_user_picture,
-			status, expires_at, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), timeToNil(session.UserCodeExpiresAt), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt)
+			status, expires_at, created_at, last_polled_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
 	return err
 }
 
@@ -39,10 +39,12 @@ func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			user_code_expires_at,
+			authorized_user_id,
 			COALESCE(auth0_subject, ''),
 			COALESCE(auth_user_email, ''),
 			COALESCE(auth_user_name, ''),
 			COALESCE(auth_user_picture, ''),
+			last_polled_at,
 			status,
 			expires_at,
 			created_at
@@ -62,10 +64,12 @@ func (r *LoginSessionRepo) GetByState(ctx context.Context, state string) (model.
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			user_code_expires_at,
+			authorized_user_id,
 			COALESCE(auth0_subject, ''),
 			COALESCE(auth_user_email, ''),
 			COALESCE(auth_user_name, ''),
 			COALESCE(auth_user_picture, ''),
+			last_polled_at,
 			status,
 			expires_at,
 			created_at
@@ -85,10 +89,12 @@ func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			user_code_expires_at,
+			authorized_user_id,
 			COALESCE(auth0_subject, ''),
 			COALESCE(auth_user_email, ''),
 			COALESCE(auth_user_name, ''),
 			COALESCE(auth_user_picture, ''),
+			last_polled_at,
 			status,
 			expires_at,
 			created_at
@@ -115,11 +121,35 @@ func (r *LoginSessionRepo) MarkCompleted(ctx context.Context, sessionID, apiKeyI
 	return err
 }
 
+func (r *LoginSessionRepo) MarkVerified(ctx context.Context, sessionID, userID string, verifiedAt time.Time) error {
+	numericID, err := parseUserID(userID)
+	if err != nil {
+		return model.ErrInternal
+	}
+	_, err = r.db.ExecContext(ctx, `
+		UPDATE login_sessions
+		SET authorized_user_id = $2, status = $3, completed_at = $4
+		WHERE id = $1
+	`, sessionID, numericID, model.LoginSessionStatusCompleted, verifiedAt)
+	return err
+}
+
+func (r *LoginSessionRepo) MarkPolled(ctx context.Context, sessionID string, polledAt time.Time) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE login_sessions
+		SET last_polled_at = $2
+		WHERE id = $1
+	`, sessionID, polledAt)
+	return err
+}
+
 func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string) (model.LoginSession, error) {
 	row := r.db.QueryRowContext(ctx, query, arg)
 
 	var session model.LoginSession
 	var userCodeExpiresAt sql.NullTime
+	var authorizedUserID sql.NullInt64
+	var lastPolledAt sql.NullTime
 	err := row.Scan(
 		&session.ID,
 		&session.FlowType,
@@ -129,10 +159,12 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 		&session.DeviceCode,
 		&session.UserCode,
 		&userCodeExpiresAt,
+		&authorizedUserID,
 		&session.Auth0Subject,
 		&session.AuthUserEmail,
 		&session.AuthUserName,
 		&session.AuthUserPicture,
+		&lastPolledAt,
 		&session.Status,
 		&session.ExpiresAt,
 		&session.CreatedAt,
@@ -142,6 +174,12 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 	}
 	if userCodeExpiresAt.Valid {
 		session.UserCodeExpiresAt = userCodeExpiresAt.Time
+	}
+	if authorizedUserID.Valid {
+		session.AuthorizedUserID = int64ToString(authorizedUserID.Int64)
+	}
+	if lastPolledAt.Valid {
+		session.LastPolledAt = lastPolledAt.Time
 	}
 
 	return session, nil
@@ -159,4 +197,19 @@ func timeToNil(t time.Time) any {
 		return nil
 	}
 	return t
+}
+
+func stringToInt64Nil(value string) any {
+	if value == "" {
+		return nil
+	}
+	id, err := parseUserID(value)
+	if err != nil {
+		return nil
+	}
+	return id
+}
+
+func int64ToString(value int64) string {
+	return formatUserID(value)
 }

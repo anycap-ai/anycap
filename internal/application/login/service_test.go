@@ -172,6 +172,21 @@ func (r *fakeLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, apiKe
 	return nil
 }
 
+func (r *fakeLoginSessionRepo) MarkVerified(_ context.Context, sessionID, userID string, _ time.Time) error {
+	session := r.sessions[sessionID]
+	session.AuthorizedUserID = userID
+	session.Status = model.LoginSessionStatusCompleted
+	r.sessions[sessionID] = session
+	return nil
+}
+
+func (r *fakeLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, polledAt time.Time) error {
+	session := r.sessions[sessionID]
+	session.LastPolledAt = polledAt
+	r.sessions[sessionID] = session
+	return nil
+}
+
 func TestService_InitLocalhost(t *testing.T) {
 	repo := newFakeLoginSessionRepo()
 	authClient := &fakeAuthClient{
@@ -577,6 +592,127 @@ func TestService_PollCompletedDeviceReissuesAPIKey(t *testing.T) {
 	}
 	if repo.sessions["lsn-device"].APIKeyID != "key-reissued" {
 		t.Fatalf("expected session api key id to be updated, got %#v", repo.sessions["lsn-device"])
+	}
+}
+
+func TestService_CheckDeviceCodeValid(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-device"] = model.LoginSession{
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		UserCode:          "ABCD-1234",
+		Status:            model.LoginSessionStatusPending,
+		ExpiresAt:         now.Add(10 * time.Minute),
+		UserCodeExpiresAt: now.Add(5 * time.Minute),
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		&fakeLoginAPIKeyService{},
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.CheckDeviceCode(context.Background(), "ABCD-1234")
+	if err != nil {
+		t.Fatalf("CheckDeviceCode() error = %v", err)
+	}
+	if !result.Valid {
+		t.Fatalf("expected valid result, got %#v", result)
+	}
+}
+
+func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-device"] = model.LoginSession{
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		UserCode:          "ABCD-1234",
+		Status:            model.LoginSessionStatusPending,
+		ExpiresAt:         now.Add(10 * time.Minute),
+		UserCodeExpiresAt: now.Add(5 * time.Minute),
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		&fakeLoginAPIKeyService{},
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.VerifyDeviceCode(context.Background(), "ABCD-1234", model.Principal{
+		UserID:   "2000000009",
+		APIKeyID: "key-web",
+		AuthType: "api_key",
+	})
+	if err != nil {
+		t.Fatalf("VerifyDeviceCode() error = %v", err)
+	}
+	if result.Message != "authorized" {
+		t.Fatalf("expected authorized message, got %#v", result)
+	}
+	session := repo.sessions["lsn-device"]
+	if session.Status != model.LoginSessionStatusCompleted {
+		t.Fatalf("expected completed session, got %#v", session)
+	}
+	if session.AuthorizedUserID != "2000000009" {
+		t.Fatalf("expected authorized user id to be recorded, got %#v", session)
+	}
+}
+
+func TestService_PollDeviceTooFastReturnsSlowDown(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-device"] = model.LoginSession{
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		UserCode:          "ABCD-1234",
+		Status:            model.LoginSessionStatusPending,
+		ExpiresAt:         now.Add(10 * time.Minute),
+		UserCodeExpiresAt: now.Add(5 * time.Minute),
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		&fakeLoginAPIKeyService{},
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	first, err := service.Poll(context.Background(), "lsn-device")
+	if err != nil {
+		t.Fatalf("first Poll() error = %v", err)
+	}
+	if first.Status != model.LoginSessionStatusPending {
+		t.Fatalf("expected first poll pending, got %#v", first)
+	}
+
+	second, err := service.Poll(context.Background(), "lsn-device")
+	if err != nil {
+		t.Fatalf("second Poll() error = %v", err)
+	}
+	if second.Status != model.LoginSessionStatusSlowDown {
+		t.Fatalf("expected slow_down, got %#v", second)
 	}
 }
 

@@ -76,3 +76,22 @@ func (r *MemoryLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, api
 	r.sessions[sessionID] = session
 	return nil
 }
+
+func (r *MemoryLoginSessionRepo) MarkVerified(_ context.Context, sessionID, userID string, _ time.Time) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	session := r.sessions[sessionID]
+	session.AuthorizedUserID = userID
+	session.Status = model.LoginSessionStatusCompleted
+	r.sessions[sessionID] = session
+	return nil
+}
+
+func (r *MemoryLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, polledAt time.Time) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	session := r.sessions[sessionID]
+	session.LastPolledAt = polledAt
+	r.sessions[sessionID] = session
+	return nil
+}

@@ -120,6 +120,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
 				systemHandler.RegisterProtectedRoutes(protected)
+				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)

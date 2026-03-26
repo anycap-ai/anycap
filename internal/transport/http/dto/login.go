@@ -15,3 +15,11 @@ type LoginCallbackRequest struct {
 type LoginPollRequest struct {
 	LoginSessionID string `json:"login_session_id"`
 }
+
+type DeviceCodeCheckRequest struct {
+	UserCode string `json:"user_code"`
+}
+
+type DeviceVerifyRequest struct {
+	UserCode string `json:"user_code"`
+}
