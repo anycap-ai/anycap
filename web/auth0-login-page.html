@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — AnyCap</title>
+  <style>
+    @font-face {
+      font-family: "GeistPixelSquare";
+      src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-pixel-square/GeistPixelSquare-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "SpaceMono";
+      src: url("https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "SpaceMono";
+      src: url("https://fonts.gstatic.com/s/spacemono/v12/i7dMIFZifjKcF5UAWdDRaPpZYFKQHwyVd3U.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f5f0;
+      font-family: SpaceMono, monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Grain overlay ── */
+    #grain {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.1;
+      mix-blend-mode: multiply;
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 24px;
+      border: 1px solid #d4dbb8;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      padding: 40px 32px 32px;
+    }
+
+    /* ── Logo row ── */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .logo svg { flex-shrink: 0; }
+    .wordmark {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .wordmark-any { color: #1c1f17; }
+    .wordmark-cap { color: #6b7d3a; }
+
+    /* ── Heading ── */
+    h1 {
+      font-family: GeistPixelSquare, monospace;
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1.1;
+      color: #1c1f17;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #9a9e90;
+      margin-bottom: 32px;
+    }
+
+    /* ── Google button ── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 20px;
+      border: none;
+      background: #1c1f17;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-google:hover { background: #6b7d3a; }
+    .btn-google:disabled { opacity: 0.6; cursor: default; }
+
+    .btn-google .g-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 2px;
+    }
+    .btn-google .g-icon svg { width: 14px; height: 14px; }
+
+    .btn-google span {
+      font-family: SpaceMono, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #f4f5f0;
+    }
+
+    /* ── Error ── */
+    .error {
+      display: none;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      border-left: 3px solid #c0392b;
+      background: #fdf0ef;
+      font-size: 12px;
+      color: #6b2018;
+      line-height: 1.5;
+      white-space: break-spaces;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="grain"></div>
+
+  <div class="card">
+    <!-- Logo -->
+    <div class="logo">
+      <svg width="28" height="28" viewBox="20 25 160 150" fill="none">
+        <g transform="rotate(-5 100 100)"><rect x="15" y="15" width="170" height="170" rx="8" fill="#d4e0a4" opacity=".18"/></g>
+        <g transform="rotate(-3 100 100)"><rect x="28" y="28" width="144" height="144" rx="5" fill="#8fa34e" opacity=".42"/></g>
+        <rect x="49" y="49" width="102" height="102" rx="3" fill="#6b7d3a"/>
+        <rect x="83" y="83" width="34" height="34" rx="2" fill="#f4f5f0"/>
+      </svg>
+      <span class="wordmark">
+        <span class="wordmark-any">any</span><span class="wordmark-cap">cap</span>
+      </span>
+    </div>
+
+    <h1>Sign in</h1>
+    <p class="subtitle">to continue to AnyCap</p>
+
+    <div id="error-message" class="error"></div>
+
+    <!-- Google button -->
+    <button class="btn-google" id="btn-google">
+      <span class="g-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 0 0 1 12c0 1.94.46 3.77 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      </span>
+      <span>Continue with Google</span>
+    </button>
+  </div>
+
+  <script src="https://cdn.auth0.com/js/auth0/9.28/auth0.min.js"></script>
+  <script>
+    // ── Grain texture ──
+    (function() {
+      var el = document.getElementById('grain');
+      var c = document.createElement('canvas');
+      c.width = c.height = 200;
+      var ctx = c.getContext('2d');
+      var img = ctx.createImageData(200, 200);
+      for (var i = 0; i < img.data.length; i += 4) {
+        var v = Math.random() * 255;
+        img.data[i] = img.data[i+1] = img.data[i+2] = v;
+        img.data[i+3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+      el.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+      el.style.backgroundRepeat = 'repeat';
+    })();
+
+    // ── Auth0 ──
+    window.addEventListener('load', function() {
+      var config = JSON.parse(
+        decodeURIComponent(escape(window.atob('@@config@@')))
+      );
+
+      var leeway = config.internalOptions.leeway;
+      if (leeway) {
+        var converted = parseInt(leeway);
+        if (!isNaN(converted)) config.internalOptions.leeway = converted;
+      }
+
+      var webAuth = new auth0.WebAuth({
+        overrides: {
+          __tenant: config.auth0Tenant,
+          __token_issuer: config.authorizationServer.issuer
+        },
+        domain: config.auth0Domain,
+        clientID: config.clientID,
+        redirectUri: config.callbackURL,
+        responseType: 'code',
+        scope: config.internalOptions.scope,
+        _csrf: config.internalOptions._csrf,
+        state: config.internalOptions.state,
+        _intstate: config.internalOptions._intstate
+      });
+
+      document.getElementById('btn-google').addEventListener('click', function() {
+        this.disabled = true;
+        this.querySelector('span:last-child').textContent = 'REDIRECTING...';
+        webAuth.authorize({ connection: 'google-oauth2' }, function(err) {
+          if (err) {
+            var msg = document.getElementById('error-message');
+            msg.textContent = err.description || 'Something went wrong';
+            msg.style.display = 'block';
+            var btn = document.getElementById('btn-google');
+            btn.disabled = false;
+            btn.querySelector('span:last-child').textContent = 'CONTINUE WITH GOOGLE';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

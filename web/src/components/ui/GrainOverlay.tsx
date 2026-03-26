@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
  * Generates a canvas-based noise texture and tiles it across the viewport.
  * Creates a visible paper-grain effect — printed, not digital.
  */
-export function GrainOverlay() {
+export function GrainOverlay({ opacity = 0.18 }: { opacity?: number }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function GrainOverlay() {
       ref={ref}
       aria-hidden
       className="pointer-events-none fixed inset-0 z-50"
-      style={{ opacity: 0.18, mixBlendMode: "multiply" }}
+      style={{ opacity, mixBlendMode: "multiply" }}
     />
   );
 }
