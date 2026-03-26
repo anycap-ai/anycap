@@ -138,7 +138,7 @@ func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := "mock-code-" + randomHex(8)
-	redirectURL := fmt.Sprintf("http://localhost:%d/callback?code=%s&state=%s", entry.RedirectPort, code, state)
+	redirectURL := fmt.Sprintf("http://127.0.0.1:%d/callback?code=%s&state=%s", entry.RedirectPort, code, state)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
