@@ -3,14 +3,16 @@
 > Date: 2026-03-26
 > Status: Draft
 > Depends on: [web-auth-flows.md](2026-03-26-web-auth-flows.md)
-> References: [anycap-auth-bff-design.md](2026-03-25-anycap-auth-bff-design.md) Section 7.2
+> References: [anycap-auth-bff-design.md](2026-03-25-anycap-auth-bff-design.md) Section 7.2, [headless-login-relay-design.md](2026-03-26-headless-login-relay-design.md)
 
 ## Design Decisions
 
-1. **Device flow is self-hosted** — Server self-generates `user_code`, does NOT call Auth0's native Device Authorization Grant (`/oauth/device/code`). Per BFF design doc 7.2.
-2. **Verification page lives in Next.js** — The `/device` page is part of the Next.js web app (`anycap.ai/device`), not hosted by AnyCap Server.
-3. **No Auth0 SDK on frontend** — Reuse existing Server endpoints. Next.js only does fetch calls.
-4. **API key in httpOnly cookie** — Browser JS never sees the API key.
+1. **Device flow is self-hosted** — Server self-generates `user_code`, does NOT call Auth0's native Device Authorization Grant. Per BFF design doc 7.2 and headless relay design.
+2. **Code first, login second** — User enters device code FIRST on the verification page, then is guided through Auth0 login. Login completion automatically authorizes the device. One seamless step.
+3. **Verification page lives in Next.js** — The `/device` page is part of the Next.js web app (`anycap.ai/device`), not hosted by AnyCap Server.
+4. **No Auth0 SDK on frontend** — Reuse existing Server endpoints. Next.js only does fetch calls.
+5. **API key in httpOnly cookie** — Browser JS never sees the API key.
+6. **Dual expiry** — `user_code` expires in 5 minutes, `login_session` expires in 15 minutes (per headless relay design 4.1).
 
 ---
 
@@ -90,23 +92,26 @@ Add to the existing Auth0 Application's Allowed Callback URLs:
 
 ### B4. Device code — self-hosted, no Auth0 dependency
 
-Per BFF design doc 7.2, the device flow should NOT call Auth0's `/oauth/device/code`.
+Per BFF design doc 7.2 and headless relay design, the device flow should NOT call
+Auth0's `/oauth/device/code`.
 
 **File:** `internal/application/login/service.go`
 
 **Change `Init()` device branch:**
 
 ```go
-// Before (current)
+// Before (current — calls Auth0)
 case model.LoginFlowDevice:
-    deviceAuth, err := s.authClient.StartDeviceFlow(ctx)  // calls Auth0
-    ...
+    deviceAuth, err := s.authClient.StartDeviceFlow(ctx)
     session.DeviceCode = deviceAuth.DeviceCode
+    session.UserCode = deviceAuth.UserCode
+    ...
 
-// After (self-hosted)
+// After (self-hosted — no Auth0 call)
 case model.LoginFlowDevice:
     session.UserCode = s.userCodeGenerator()
-    // NO Auth0 call. Server self-manages user_code.
+    session.UserCodeExpiresAt = now.Add(5 * time.Minute)  // 5 min code expiry
+    session.ExpiresAt = now.Add(15 * time.Minute)          // 15 min session expiry
     if err := s.sessions.CreateSession(ctx, session); err != nil { ... }
     return model.LoginInitResult{
         FlowType:        model.LoginFlowDevice,
@@ -118,33 +123,57 @@ case model.LoginFlowDevice:
     }, nil
 ```
 
-**Change `Poll()` method:**
-
-```go
-// Before (current)
-pollResult, err := s.authClient.PollDeviceFlow(ctx, session.DeviceCode)  // calls Auth0
-
-// After (self-hosted)
-// Just check session status. No Auth0 call.
-// Session gets marked complete by device-verify endpoint.
-switch session.Status {
-case model.LoginSessionStatusPending:
-    return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
-case model.LoginSessionStatusCompleted:
-    // Return stored API key + user from session
-    ...
-}
-```
-
-**Note:** `LoginSession` model may need additional fields (`APIKeyRaw`, `UserID`,
-`UserEmail`, `UserName`) so that Poll can return them after device-verify completes
-the session. Or Poll can look up the API key + user by `session.APIKeyID`.
+**Model change:** Add `UserCodeExpiresAt time.Time` field to `LoginSession`.
 
 ---
 
-### B5. `POST /v1/auth/device-verify` — new endpoint
+### B5. Device poll — self-hosted, no Auth0 dependency
 
-Allows a logged-in web user to authorize a CLI device code session.
+**File:** `internal/application/login/service.go`
+
+**Change `Poll()` method** to remove Auth0 calls and add self-hosted logic:
+
+```go
+func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollResult, error) {
+    session, err := s.sessions.GetByID(ctx, sessionID)
+    // ... validation ...
+
+    now := s.now().UTC()
+
+    // Session-level expiry
+    if now.After(session.ExpiresAt) {
+        return model.LoginPollResult{Status: model.LoginSessionStatusExpired}, nil
+    }
+
+    // User code expiry: if code expired and not yet authorized, treat as expired
+    if !session.UserCodeExpiresAt.IsZero() && now.After(session.UserCodeExpiresAt) &&
+        session.Status == model.LoginSessionStatusPending {
+        return model.LoginPollResult{Status: model.LoginSessionStatusExpired}, nil
+    }
+
+    // TODO: rate-limit polling — return slow_down if too frequent
+
+    switch session.Status {
+    case model.LoginSessionStatusPending:
+        return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
+    case model.LoginSessionStatusCompleted:
+        // Return stored API key + user (see B6 for how these get stored)
+        ...
+    }
+}
+```
+
+**Polling slow_down** (per headless relay design 4.1):
+- Track `last_polled_at` on the session or use rate limiter
+- If interval between polls < server-specified interval → return `slow_down`
+- CLI must double its interval on `slow_down`
+
+---
+
+### B6. `POST /v1/auth/device-verify` — new endpoint
+
+Allows a logged-in web user to authorize a CLI device code session. Called by Next.js
+after the user completes web login.
 
 **Request:**
 
@@ -159,9 +188,11 @@ Authorization: Bearer <api_key>
 1. Auth middleware validates API key, extracts principal (user_id)
 2. Look up LoginSession by `user_code` where `flow_type == "device"` and `status == "pending"`
 3. Validate session not expired
-4. Create API key for CLI (using principal's user_id)
-5. Mark session as authorized + completed
-6. Return success
+4. Validate user_code not expired (`user_code_expires_at`)
+5. Create API key for CLI (using principal's user_id)
+6. Store created API key + user info on session (so Poll can return them)
+7. Mark session as completed
+8. Return success
 
 **Response:**
 
@@ -173,6 +204,7 @@ Authorization: Bearer <api_key>
 
 | File | Change |
 |------|--------|
+| `internal/domain/model/login_session.go` | Add `UserCodeExpiresAt` field |
 | `internal/domain/port/login_session.go` | Add `GetByUserCode(ctx, userCode)` to `LoginSessionRepo` |
 | `internal/infrastructure/apikey/` | Implement `GetByUserCode` for memory + postgres repos |
 | `internal/application/login/service.go` | Add `DeviceVerify(ctx, userCode, userID)` method |
@@ -182,7 +214,36 @@ Authorization: Bearer <api_key>
 
 ---
 
-### B6. `deviceVerificationURL` — update to production URL
+### B7. `POST /v1/auth/device-code-check` — new endpoint
+
+Lightweight endpoint for the `/device` page to validate a user_code before starting
+the login flow. Public (no auth required).
+
+**Request:**
+
+```jsonc
+POST /v1/auth/device-code-check
+{ "user_code": "ABCD-1234" }
+```
+
+**Logic:**
+1. Look up LoginSession by `user_code`
+2. Check session exists, is pending, and user_code not expired
+3. Return validity
+
+**Response:**
+
+```jsonc
+// Valid
+{ "data": { "valid": true } }
+
+// Invalid or expired
+{ "data": { "valid": false, "reason": "expired" } }
+```
+
+---
+
+### B8. `deviceVerificationURL` — update to production URL
 
 **File:** `internal/app/bootstrap.go`
 
@@ -203,12 +264,13 @@ calls to AnyCap Server.
 | File | Purpose |
 |------|---------|
 | `web/src/app/auth/login/route.ts` | GET handler: call Server `/v1/auth/login`, store session_id + `return_to` in cookie, redirect to Auth0 |
-| `web/src/app/auth/callback/route.ts` | GET handler: receive Auth0 callback, call Server `/v1/auth/callback`, store api_key in cookie, redirect to `return_to` (default: `/dashboard`) |
+| `web/src/app/auth/callback/route.ts` | GET handler: receive Auth0 callback, call Server `/v1/auth/callback`, store api_key in cookie. **If `device_user_code` cookie present → auto-call device-verify, clear cookie.** Redirect to `return_to` (default: `/dashboard`). |
 | `web/src/app/auth/logout/route.ts` | GET handler: call Server `/v1/auth/logout`, clear cookie, redirect home |
 
 **Cookie strategy:**
 - `anycap_session` httpOnly cookie containing `{api_key, user}` (encrypted or signed)
 - `anycap_login` httpOnly cookie for `login_session_id` + `return_to` during login flow (temp, deleted after callback)
+- `device_user_code` httpOnly cookie for device code during login-for-device flow (temp, deleted after callback)
 
 ### F2. Landing page login button
 
@@ -232,29 +294,47 @@ Read user info from session cookie. Display email in sidebar. Add logout link.
 
 ### F5. `/device` page (for CLI device code flow)
 
-The verification page lives in Next.js, not on AnyCap Server.
+The verification page lives in Next.js. User enters code FIRST, then is guided
+through login. Login completion automatically authorizes the device.
 
 **New files:**
-- `web/src/app/device/page.tsx` — Device code verification page
-- `web/src/app/api/device-verify/route.ts` — API route proxying to AnyCap Server
+- `web/src/app/device/page.tsx` — Code input form
+- `web/src/app/device/complete/page.tsx` — Success page ("Device authorized")
+- `web/src/app/api/device-code-check/route.ts` — Proxy to Server `device-code-check`
+
+**Page flow:**
+
+```
+1. User opens /device (or /device?code=ABCD-1234)
+2. Page shows code input form (prefilled if code in URL)
+3. User submits code
+4. Next.js calls POST /v1/auth/device-code-check {user_code} → validate
+5. If invalid/expired → show error
+6. If valid:
+   a. If already logged in (session cookie exists):
+      → Next.js calls POST /v1/auth/device-verify {user_code} with API key
+      → Redirect to /device/complete
+   b. If not logged in:
+      → Store user_code in device_user_code cookie
+      → Redirect to /auth/login?return_to=/device/complete
+      → After login, /auth/callback reads device_user_code cookie
+      → Auto-calls POST /v1/auth/device-verify
+      → Clears device_user_code cookie
+      → Redirects to /device/complete
+7. /device/complete shows "Device authorized. You can close this page."
+```
 
 **Page UX states:**
 
 | State | Page shows |
 |-------|-----------|
-| Not logged in, no code in URL | "Please log in to authorize a device" + Login button |
-| Not logged in, code in URL | Same message + Login button (code preserved via `return_to`) |
-| Logged in, no code | Code input form (empty) |
-| Logged in, code in URL | Code input form (prefilled), user clicks "Authorize" |
-| Success | "Device authorized. You can close this page." |
-| Error | Code invalid / expired / already used — show error + option to retry |
-
-**Key behavior:**
-- Not logged in → show login prompt, do NOT show code input form
-- Login button links to `/auth/login?return_to=/device?code=ABCD-1234`
-- After login, `/auth/callback` reads `return_to` and redirects back to `/device?code=...`
-- Logged in + submit code → Next.js API route calls `POST /v1/auth/device-verify`
-  with user's API key from session cookie
+| No code in URL | Code input form (empty) |
+| Code in URL | Code input form (prefilled) |
+| Code submitted, valid, not logged in | Redirect to Auth0 login (transparent) |
+| Code submitted, valid, logged in | Redirect to /device/complete |
+| Code invalid | Error: "Invalid code" + retry |
+| Code expired (> 5 min) | Error: "Code expired. Please request a new one in your terminal." |
+| Authorization complete | "Device authorized. You can close this page." |
 
 ---
 
@@ -269,11 +349,11 @@ B1 (auth/login web method)
                     ├── F3 (route protection)
                     └── F4 (dashboard user info)
 
-B4 (device self-hosted) + B5 (device-verify) + B6 (verification URL)
+B4 (device self-hosted) + B5 (device poll) + B6 (device-verify) + B7 (device-code-check) + B8 (verification URL)
   └── F5 (/device page)
 ```
 
-Web login (B1→B2→B3→F1→F2→F3→F4) and device page (B4→B5→B6→F5) can be developed in
+Web login (B1→B2→B3→F1→F2→F3→F4) and device page (B4-B8→F5) can be developed in
 parallel.
 
 ---
