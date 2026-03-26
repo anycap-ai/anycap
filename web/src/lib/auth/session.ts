@@ -30,6 +30,8 @@ export type SessionPayload = {
 export type LoginPayload = {
   loginSessionID: string;
   returnTo: string;
+  mode?: "web" | "browser_poll";
+  browserToken?: string;
   issuedAt: number;
 };
 

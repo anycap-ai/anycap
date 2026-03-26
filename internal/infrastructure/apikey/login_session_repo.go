@@ -20,11 +20,12 @@ func (r *LoginSessionRepo) CreateSession(ctx context.Context, session model.Logi
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO login_sessions (
 			id, flow_type, state, code_verifier, redirect_uri,
-			device_code, user_code, user_code_expires_at, authorized_user_id,
-			auth0_subject, auth_user_email, auth_user_name, auth_user_picture,
+			device_code, user_code, browser_token, poll_token,
+			user_code_expires_at, authorized_user_id, auth0_subject,
+			auth_user_email, auth_user_name, auth_user_picture,
 			status, expires_at, created_at, last_polled_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), emptyToNil(session.BrowserToken), emptyToNil(session.PollToken), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
 	return err
 }
 
@@ -38,6 +39,8 @@ func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model
 			COALESCE(redirect_uri, ''),
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
+			COALESCE(browser_token, ''),
+			COALESCE(poll_token, ''),
 			user_code_expires_at,
 			authorized_user_id,
 			COALESCE(auth0_subject, ''),
@@ -63,6 +66,8 @@ func (r *LoginSessionRepo) GetByState(ctx context.Context, state string) (model.
 			COALESCE(redirect_uri, ''),
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
+			COALESCE(browser_token, ''),
+			COALESCE(poll_token, ''),
 			user_code_expires_at,
 			authorized_user_id,
 			COALESCE(auth0_subject, ''),
@@ -88,6 +93,8 @@ func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (
 			COALESCE(redirect_uri, ''),
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
+			COALESCE(browser_token, ''),
+			COALESCE(poll_token, ''),
 			user_code_expires_at,
 			authorized_user_id,
 			COALESCE(auth0_subject, ''),
@@ -99,8 +106,35 @@ func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (
 			expires_at,
 			created_at
 		FROM login_sessions
-		WHERE user_code = $1
+	WHERE user_code = $1
 	`, userCode)
+}
+
+func (r *LoginSessionRepo) GetByBrowserToken(ctx context.Context, browserToken string) (model.LoginSession, error) {
+	return r.getOne(ctx, `
+		SELECT
+			id,
+			flow_type,
+			COALESCE(state, ''),
+			COALESCE(code_verifier, ''),
+			COALESCE(redirect_uri, ''),
+			COALESCE(device_code, ''),
+			COALESCE(user_code, ''),
+			COALESCE(browser_token, ''),
+			COALESCE(poll_token, ''),
+			user_code_expires_at,
+			authorized_user_id,
+			COALESCE(auth0_subject, ''),
+			COALESCE(auth_user_email, ''),
+			COALESCE(auth_user_name, ''),
+			COALESCE(auth_user_picture, ''),
+			last_polled_at,
+			status,
+			expires_at,
+			created_at
+		FROM login_sessions
+		WHERE browser_token = $1
+	`, browserToken)
 }
 
 func (r *LoginSessionRepo) MarkAuthorized(ctx context.Context, sessionID string, authUser model.AuthUser, authorizedAt time.Time) error {
@@ -158,6 +192,8 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 		&session.RedirectURI,
 		&session.DeviceCode,
 		&session.UserCode,
+		&session.BrowserToken,
+		&session.PollToken,
 		&userCodeExpiresAt,
 		&authorizedUserID,
 		&session.Auth0Subject,

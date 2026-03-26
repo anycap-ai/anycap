@@ -56,10 +56,12 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 
 	err := repo.CreateSession(context.Background(), model.LoginSession{
 		ID:           "lsn-1",
-		FlowType:     model.LoginFlowLocalhost,
+		FlowType:     model.LoginFlowBrowserPoll,
 		State:        "state-1",
 		CodeVerifier: "verifier-1",
-		RedirectURI:  "http://127.0.0.1:14565/callback",
+		RedirectURI:  "https://anycap.ai/auth/callback",
+		BrowserToken: "bt-1",
+		PollToken:    "pt-1",
 		Status:       model.LoginSessionStatusPending,
 		ExpiresAt:    expiresAt,
 		CreatedAt:    time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC),
@@ -70,8 +72,8 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 	if db.query == "" {
 		t.Fatal("expected insert query to be executed")
 	}
-	if len(db.args) != 17 {
-		t.Fatalf("expected 17 args, got %d", len(db.args))
+	if len(db.args) != 19 {
+		t.Fatalf("expected 19 args, got %d", len(db.args))
 	}
 }
 
@@ -87,16 +89,18 @@ func TestLoginSessionRepo_GetByID(t *testing.T) {
 			*(dest[4].(*string)) = "http://127.0.0.1:14565/callback"
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
-			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[8].(*sql.NullInt64)) = sql.NullInt64{}
-			*(dest[9].(*string)) = ""
-			*(dest[10].(*string)) = ""
+			*(dest[7].(*string)) = ""
+			*(dest[8].(*string)) = ""
+			*(dest[9].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[10].(*sql.NullInt64)) = sql.NullInt64{}
 			*(dest[11].(*string)) = ""
 			*(dest[12].(*string)) = ""
-			*(dest[13].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[14].(*string)) = model.LoginSessionStatusPending
-			*(dest[15].(*time.Time)) = expiresAt
-			*(dest[16].(*time.Time)) = createdAt
+			*(dest[13].(*string)) = ""
+			*(dest[14].(*string)) = ""
+			*(dest[15].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[16].(*string)) = model.LoginSessionStatusPending
+			*(dest[17].(*time.Time)) = expiresAt
+			*(dest[18].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -126,16 +130,18 @@ func TestLoginSessionRepo_GetByState(t *testing.T) {
 			*(dest[4].(*string)) = "http://127.0.0.1:14566/callback"
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
-			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[8].(*sql.NullInt64)) = sql.NullInt64{}
-			*(dest[9].(*string)) = ""
-			*(dest[10].(*string)) = ""
+			*(dest[7].(*string)) = ""
+			*(dest[8].(*string)) = ""
+			*(dest[9].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[10].(*sql.NullInt64)) = sql.NullInt64{}
 			*(dest[11].(*string)) = ""
 			*(dest[12].(*string)) = ""
-			*(dest[13].(*sql.NullTime)) = sql.NullTime{}
-			*(dest[14].(*string)) = model.LoginSessionStatusPending
-			*(dest[15].(*time.Time)) = expiresAt
-			*(dest[16].(*time.Time)) = createdAt
+			*(dest[13].(*string)) = ""
+			*(dest[14].(*string)) = ""
+			*(dest[15].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[16].(*string)) = model.LoginSessionStatusPending
+			*(dest[17].(*time.Time)) = expiresAt
+			*(dest[18].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -147,6 +153,50 @@ func TestLoginSessionRepo_GetByState(t *testing.T) {
 	}
 	if got.ID != "lsn-2" {
 		t.Fatalf("expected lsn-2, got %q", got.ID)
+	}
+}
+
+func TestLoginSessionRepo_GetByBrowserToken(t *testing.T) {
+	expiresAt := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
+	createdAt := time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC)
+	db := &fakeLoginSessionDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*string)) = "lsn-browser"
+			*(dest[1].(*string)) = model.LoginFlowBrowserPoll
+			*(dest[2].(*string)) = "state-browser"
+			*(dest[3].(*string)) = "verifier-browser"
+			*(dest[4].(*string)) = "https://anycap.ai/auth/callback"
+			*(dest[5].(*string)) = ""
+			*(dest[6].(*string)) = ""
+			*(dest[7].(*string)) = "bt-123"
+			*(dest[8].(*string)) = "pt-123"
+			*(dest[9].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[10].(*sql.NullInt64)) = sql.NullInt64{}
+			*(dest[11].(*string)) = ""
+			*(dest[12].(*string)) = ""
+			*(dest[13].(*string)) = ""
+			*(dest[14].(*string)) = ""
+			*(dest[15].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[16].(*string)) = model.LoginSessionStatusPending
+			*(dest[17].(*time.Time)) = expiresAt
+			*(dest[18].(*time.Time)) = createdAt
+			return nil
+		},
+	}
+	repo := NewLoginSessionRepo(db)
+
+	got, err := repo.GetByBrowserToken(context.Background(), "bt-123")
+	if err != nil {
+		t.Fatalf("GetByBrowserToken() error = %v", err)
+	}
+	if got.ID != "lsn-browser" {
+		t.Fatalf("expected lsn-browser, got %q", got.ID)
+	}
+	if got.BrowserToken != "bt-123" {
+		t.Fatalf("expected browser token bt-123, got %q", got.BrowserToken)
+	}
+	if got.PollToken != "pt-123" {
+		t.Fatalf("expected poll token pt-123, got %q", got.PollToken)
 	}
 }
 

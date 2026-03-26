@@ -157,6 +157,15 @@ func (r *fakeLoginSessionRepo) GetByUserCode(_ context.Context, userCode string)
 	return model.LoginSession{}, nil
 }
 
+func (r *fakeLoginSessionRepo) GetByBrowserToken(_ context.Context, browserToken string) (model.LoginSession, error) {
+	for _, session := range r.sessions {
+		if session.BrowserToken == browserToken {
+			return session, nil
+		}
+	}
+	return model.LoginSession{}, nil
+}
+
 func (r *fakeLoginSessionRepo) MarkAuthorized(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
 	session := r.sessions[sessionID]
 	session.Auth0Subject = authUser.UserID
@@ -262,6 +271,190 @@ func TestService_InitWeb(t *testing.T) {
 	}
 	if repo.sessions["lsn-web"].RedirectURI != "http://localhost:3000/auth/callback" {
 		t.Fatalf("expected session redirect uri, got %#v", repo.sessions["lsn-web"])
+	}
+}
+
+func TestService_InitBrowserPoll(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	authClient := &fakeAuthClient{}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.ai/device",
+		func() string { return "state-browser" },
+		func() string { return "lsn-browser" },
+		func() string { return "ABCD-EFGH" },
+		func() time.Time { return time.Date(2026, 3, 26, 2, 0, 0, 0, time.UTC) },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll, 0, "")
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if result.FlowType != model.LoginFlowBrowserPoll {
+		t.Fatalf("expected browser_poll flow, got %q", result.FlowType)
+	}
+	if result.BrowserURL != "https://anycap.ai/auth/login?browser_token=browser-lsn-browser&cli=1" {
+		t.Fatalf("expected browser url, got %q", result.BrowserURL)
+	}
+	if result.PollToken != "poll-lsn-browser" {
+		t.Fatalf("expected poll token, got %q", result.PollToken)
+	}
+	stored := repo.sessions["lsn-browser"]
+	if stored.RedirectURI != "https://anycap.ai/auth/callback" {
+		t.Fatalf("expected browser callback redirect uri, got %q", stored.RedirectURI)
+	}
+	if stored.BrowserToken != "browser-lsn-browser" {
+		t.Fatalf("expected browser token stored, got %q", stored.BrowserToken)
+	}
+	if stored.PollToken != "poll-lsn-browser" {
+		t.Fatalf("expected poll token stored, got %q", stored.PollToken)
+	}
+}
+
+func TestService_BrowserBindBuildsAuthURL(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 2, 5, 0, 0, time.UTC)
+	repo.sessions["lsn-browser"] = model.LoginSession{
+		ID:           "lsn-browser",
+		FlowType:     model.LoginFlowBrowserPoll,
+		State:        "state-browser",
+		RedirectURI:  "https://anycap.ai/auth/callback",
+		BrowserToken: "browser-lsn-browser",
+		PollToken:    "poll-lsn-browser",
+		Status:       model.LoginSessionStatusPending,
+		ExpiresAt:    now.Add(15 * time.Minute),
+		CreatedAt:    now,
+	}
+	authClient := &fakeAuthClient{
+		loginURL: "https://auth.anycap.local/authorize?state=state-browser",
+	}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.ai/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.BrowserBind(context.Background(), "browser-lsn-browser")
+	if err != nil {
+		t.Fatalf("BrowserBind() error = %v", err)
+	}
+	if result.LoginSessionID != "lsn-browser" {
+		t.Fatalf("expected login session id lsn-browser, got %q", result.LoginSessionID)
+	}
+	if result.AuthorizeURL != "https://auth.anycap.local/authorize?state=state-browser" {
+		t.Fatalf("expected authorize url, got %q", result.AuthorizeURL)
+	}
+	if authClient.redirectURI != "https://anycap.ai/auth/callback" {
+		t.Fatalf("expected redirect uri to be used, got %q", authClient.redirectURI)
+	}
+}
+
+func TestService_BrowserCompleteMarksSessionAuthorized(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 2, 10, 0, 0, time.UTC)
+	repo.sessions["lsn-browser"] = model.LoginSession{
+		ID:           "lsn-browser",
+		FlowType:     model.LoginFlowBrowserPoll,
+		State:        "state-browser",
+		RedirectURI:  "https://anycap.ai/auth/callback",
+		BrowserToken: "browser-lsn-browser",
+		PollToken:    "poll-lsn-browser",
+		Status:       model.LoginSessionStatusPending,
+		ExpiresAt:    now.Add(15 * time.Minute),
+		CreatedAt:    now,
+	}
+	authClient := &fakeAuthClient{
+		codeUsers: map[string]model.AuthUser{
+			"code-browser": {UserID: "auth0|browser-user", Email: "browser@example.com", Name: "Browser User"},
+		},
+	}
+	service := NewService(
+		authClient,
+		&fakeUserProvisioner{},
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.ai/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	if err := service.BrowserComplete(context.Background(), "lsn-browser", "browser-lsn-browser", "code-browser", "state-browser", "https://anycap.ai/auth/callback"); err != nil {
+		t.Fatalf("BrowserComplete() error = %v", err)
+	}
+	stored := repo.sessions["lsn-browser"]
+	if stored.Status != model.LoginSessionStatusAuthorized {
+		t.Fatalf("expected authorized status, got %q", stored.Status)
+	}
+	if stored.Auth0Subject != "auth0|browser-user" {
+		t.Fatalf("expected auth subject, got %q", stored.Auth0Subject)
+	}
+}
+
+func TestService_PollBrowserAuthorizedCreatesAPIKey(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 26, 2, 15, 0, 0, time.UTC)
+	repo.sessions["lsn-browser"] = model.LoginSession{
+		ID:            "lsn-browser",
+		FlowType:      model.LoginFlowBrowserPoll,
+		BrowserToken:  "browser-lsn-browser",
+		PollToken:     "poll-lsn-browser",
+		Auth0Subject:  "auth0|browser-user",
+		AuthUserEmail: "browser@example.com",
+		AuthUserName:  "Browser User",
+		Status:        model.LoginSessionStatusAuthorized,
+		ExpiresAt:     now.Add(15 * time.Minute),
+		CreatedAt:     now,
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-browser", UserID: "2000000099"},
+			RawKey: "ak-browser",
+		},
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"auth0:auth0|browser-user": {ID: "2000000099", Email: "browser@example.com", Name: "Browser User", Status: model.UserStatusActive},
+			},
+		},
+		&fakeLoginCreditClient{},
+		apiKeys,
+		repo,
+		"https://anycap.ai/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Poll(context.Background(), "lsn-browser", "poll-lsn-browser")
+	if err != nil {
+		t.Fatalf("Poll() error = %v", err)
+	}
+	if result.Status != model.LoginSessionStatusComplete {
+		t.Fatalf("expected complete status, got %q", result.Status)
+	}
+	if result.APIKey != "ak-browser" {
+		t.Fatalf("expected api key ak-browser, got %q", result.APIKey)
 	}
 }
 
@@ -429,7 +622,7 @@ func TestService_InitDeviceAndPollPending(t *testing.T) {
 		t.Fatalf("expected user code to expire in 5m, got %v", stored.UserCodeExpiresAt)
 	}
 
-	pollResult, err := service.Poll(context.Background(), "lsn-device")
+	pollResult, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("Poll() error = %v", err)
 	}
@@ -564,7 +757,7 @@ func TestService_PollAuthorizedDeviceCreatesAPIKey(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	result, err := service.Poll(context.Background(), "lsn-device")
+	result, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("Poll() error = %v", err)
 	}
@@ -620,7 +813,7 @@ func TestService_PollDeviceExpiresWhenUserCodeExpires(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	result, err := service.Poll(context.Background(), "lsn-device")
+	result, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("Poll() error = %v", err)
 	}
@@ -668,7 +861,7 @@ func TestService_PollCompletedDeviceReissuesAPIKey(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	result, err := service.Poll(context.Background(), "lsn-device")
+	result, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("Poll() error = %v", err)
 	}
@@ -790,7 +983,7 @@ func TestService_PollDeviceTooFastReturnsSlowDown(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	first, err := service.Poll(context.Background(), "lsn-device")
+	first, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("first Poll() error = %v", err)
 	}
@@ -798,7 +991,7 @@ func TestService_PollDeviceTooFastReturnsSlowDown(t *testing.T) {
 		t.Fatalf("expected first poll pending, got %#v", first)
 	}
 
-	second, err := service.Poll(context.Background(), "lsn-device")
+	second, err := service.Poll(context.Background(), "lsn-device", "")
 	if err != nil {
 		t.Fatalf("second Poll() error = %v", err)
 	}

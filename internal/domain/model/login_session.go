@@ -6,6 +6,7 @@ const (
 	LoginFlowLocalhost = "localhost"
 	LoginFlowDevice    = "device"
 	LoginFlowWeb       = "web"
+	LoginFlowBrowserPoll = "browser_poll"
 )
 
 const (
@@ -25,6 +26,8 @@ type LoginSession struct {
 	RedirectURI       string    `json:"redirect_uri,omitempty"`
 	DeviceCode        string    `json:"device_code,omitempty"`
 	UserCode          string    `json:"user_code,omitempty"`
+	BrowserToken      string    `json:"browser_token,omitempty"`
+	PollToken         string    `json:"poll_token,omitempty"`
 	UserCodeExpiresAt time.Time `json:"user_code_expires_at,omitempty"`
 	AuthorizedUserID  string    `json:"authorized_user_id,omitempty"`
 	Auth0Subject      string    `json:"auth0_subject,omitempty"`

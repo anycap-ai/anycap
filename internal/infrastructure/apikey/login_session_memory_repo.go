@@ -54,6 +54,17 @@ func (r *MemoryLoginSessionRepo) GetByUserCode(_ context.Context, userCode strin
 	return model.LoginSession{}, nil
 }
 
+func (r *MemoryLoginSessionRepo) GetByBrowserToken(_ context.Context, browserToken string) (model.LoginSession, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, session := range r.sessions {
+		if session.BrowserToken == browserToken {
+			return session, nil
+		}
+	}
+	return model.LoginSession{}, nil
+}
+
 func (r *MemoryLoginSessionRepo) MarkAuthorized(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
