@@ -103,6 +103,10 @@ make infra-down
 make infra-reset
 ```
 
+## Web Design Guideline
+
+When developing any page under `web/`, always follow `web/docs/design-guideline.md`. It defines the full visual language — colors, typography, spacing, backgrounds, borders, effects, and component patterns. All web pages must be visually consistent with this guideline.
+
 ## Coding Conventions
 
 - **Language:** Go. Follow standard Go idioms and `gofmt` formatting.
