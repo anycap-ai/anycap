@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { siteConfig } from "@/lib/site";
+import { GlobalTipToast } from "@/components/ui/GlobalTipToast";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -49,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#0a0a0a] text-[#e0e0e0] font-mono antialiased">
+        <GlobalTipToast />
         {children}
       </body>
     </html>

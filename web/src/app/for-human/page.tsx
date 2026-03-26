@@ -1,17 +1,23 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
 import { EquipAgent } from "@/components/EquipAgent";
 import { ScrambleText } from "@/components/ScrambleText";
 import { TerminalDemo } from "@/components/TerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
+import { readSessionCookie } from "@/lib/auth/session";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
 
-export default function ForHumanPage() {
+export default async function ForHumanPage() {
+  const cookieStore = await cookies();
+  const session = readSessionCookie(cookieStore);
+  const isLoggedIn = Boolean(session?.apiKey);
+
   return (
     <main className="overflow-x-hidden">
       {/* ── Header ── */}
@@ -22,7 +28,39 @@ export default function ForHumanPage() {
             className="text-xl font-bold leading-none"
             style={{ ...mono, letterSpacing: "-0.5px" }}
           />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-5">
+            {session?.user?.email ? (
+              <span className="text-[11px] text-[#7a7e71] tracking-[1.5px]" style={mono}>
+                {session.user.email}
+              </span>
+            ) : null}
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+                  style={mono}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/auth/logout"
+                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+                  style={mono}
+                >
+                  Logout
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+                style={mono}
+              >
+                Login
+              </Link>
+            )}
             <Link
               href="/"
               className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
