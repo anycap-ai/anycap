@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { siteConfig } from "@/lib/site";
@@ -50,7 +51,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#0a0a0a] text-[#e0e0e0] font-mono antialiased">
-        <GlobalTipToast />
+        <Suspense fallback={null}>
+          <GlobalTipToast />
+        </Suspense>
         {children}
       </body>
     </html>
