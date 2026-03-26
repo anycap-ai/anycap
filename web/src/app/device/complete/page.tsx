@@ -21,12 +21,6 @@ export default function DeviceCompletePage() {
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.45),rgba(255,255,255,0.08))]" />
 
           <div className="relative mx-auto max-w-[680px]">
-            <p
-              className="text-[11px] uppercase tracking-[3.6px] text-[#7a7e71] mb-5"
-              style={mono}
-            >
-              Device Authorized
-            </p>
             <h1
               className="leading-[0.95] tracking-[-0.03em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(34px, 6vw, 68px)" }}
@@ -38,16 +32,6 @@ export default function DeviceCompletePage() {
             <p className="mt-6 text-base md:text-lg leading-8 text-[#3f433b]">
               Your terminal should finish login automatically in a few seconds.
             </p>
-
-            <div className="mt-9">
-              <Link
-                href="/for-human"
-                className="inline-block px-10 py-4 text-[12px] uppercase tracking-[3px] bg-[#6b7d3a] text-[#f4f5f0] hover:bg-[#1c1f17] transition-colors"
-                style={mono}
-              >
-                Back to AnyCap
-              </Link>
-            </div>
           </div>
         </section>
       </div>
