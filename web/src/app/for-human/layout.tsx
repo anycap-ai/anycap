@@ -2,6 +2,7 @@ import { GeistPixelSquare } from "geist/font/pixel";
 import { Space_Mono } from "next/font/google";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import type { Metadata } from "next";
+import { siteConfig } from "@/lib/site";
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -11,9 +12,24 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AnyCap — Your Agent Can Do Anything",
-  description:
-    "Your Agent can do anything. It just needs AnyCap. One entry point to every AI capability. Zero friction.",
+  title: siteConfig.humanTitle,
+  description: siteConfig.humanDescription,
+  alternates: {
+    canonical: "/for-human",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/for-human",
+    siteName: siteConfig.siteName,
+    title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
+    description: siteConfig.humanDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
+    description: siteConfig.humanDescription,
+  },
 };
 
 export default function ForHumanLayout({
