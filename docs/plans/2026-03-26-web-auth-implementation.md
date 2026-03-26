@@ -3,6 +3,16 @@
 > Date: 2026-03-26
 > Status: Draft
 > Depends on: [web-auth-flows.md](2026-03-26-web-auth-flows.md)
+> References: [anycap-auth-bff-design.md](2026-03-25-anycap-auth-bff-design.md) Section 7.2
+
+## Design Decisions
+
+1. **Device flow is self-hosted** — Server self-generates `user_code`, does NOT call Auth0's native Device Authorization Grant (`/oauth/device/code`). Per BFF design doc 7.2.
+2. **Verification page lives in Next.js** — The `/device` page is part of the Next.js web app (`anycap.ai/device`), not hosted by AnyCap Server.
+3. **No Auth0 SDK on frontend** — Reuse existing Server endpoints. Next.js only does fetch calls.
+4. **API key in httpOnly cookie** — Browser JS never sees the API key.
+
+---
 
 ## Backend Tasks (AnyCap Server)
 
@@ -78,9 +88,63 @@ Add to the existing Auth0 Application's Allowed Callback URLs:
 
 ---
 
-### B4. `POST /v1/auth/device-verify` (for /device page, separate from web login)
+### B4. Device code — self-hosted, no Auth0 dependency
 
-New endpoint. Allows a logged-in web user to authorize a CLI device code session.
+Per BFF design doc 7.2, the device flow should NOT call Auth0's `/oauth/device/code`.
+
+**File:** `internal/application/login/service.go`
+
+**Change `Init()` device branch:**
+
+```go
+// Before (current)
+case model.LoginFlowDevice:
+    deviceAuth, err := s.authClient.StartDeviceFlow(ctx)  // calls Auth0
+    ...
+    session.DeviceCode = deviceAuth.DeviceCode
+
+// After (self-hosted)
+case model.LoginFlowDevice:
+    session.UserCode = s.userCodeGenerator()
+    // NO Auth0 call. Server self-manages user_code.
+    if err := s.sessions.CreateSession(ctx, session); err != nil { ... }
+    return model.LoginInitResult{
+        FlowType:        model.LoginFlowDevice,
+        LoginSessionID:  session.ID,
+        VerificationURI: s.deviceVerificationURL,
+        UserCode:        session.UserCode,
+        ExpiresIn:       int(session.ExpiresAt.Sub(now).Seconds()),
+        Interval:        5,
+    }, nil
+```
+
+**Change `Poll()` method:**
+
+```go
+// Before (current)
+pollResult, err := s.authClient.PollDeviceFlow(ctx, session.DeviceCode)  // calls Auth0
+
+// After (self-hosted)
+// Just check session status. No Auth0 call.
+// Session gets marked complete by device-verify endpoint.
+switch session.Status {
+case model.LoginSessionStatusPending:
+    return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
+case model.LoginSessionStatusCompleted:
+    // Return stored API key + user from session
+    ...
+}
+```
+
+**Note:** `LoginSession` model may need additional fields (`APIKeyRaw`, `UserID`,
+`UserEmail`, `UserName`) so that Poll can return them after device-verify completes
+the session. Or Poll can look up the API key + user by `session.APIKeyID`.
+
+---
+
+### B5. `POST /v1/auth/device-verify` — new endpoint
+
+Allows a logged-in web user to authorize a CLI device code session.
 
 **Request:**
 
@@ -95,8 +159,8 @@ Authorization: Bearer <api_key>
 1. Auth middleware validates API key, extracts principal (user_id)
 2. Look up LoginSession by `user_code` where `flow_type == "device"` and `status == "pending"`
 3. Validate session not expired
-4. Mark session as authorized + completed with principal's user_id
-5. Create API key for CLI
+4. Create API key for CLI (using principal's user_id)
+5. Mark session as authorized + completed
 6. Return success
 
 **Response:**
@@ -114,15 +178,11 @@ Authorization: Bearer <api_key>
 | `internal/application/login/service.go` | Add `DeviceVerify(ctx, userCode, userID)` method |
 | `internal/transport/http/dto/login.go` | Add `DeviceVerifyRequest` struct |
 | `internal/transport/http/handlers/login.go` | Add `DeviceVerify()` handler |
-| `internal/transport/http/handlers/login.go` | Register `POST /auth/device-verify` as protected route |
-
-**Note:** This is a protected route (requires auth middleware), unlike the other login
-endpoints which are public. Register it alongside `/v1/auth/logout` in the protected
-route group.
+| Route registration | Register `POST /auth/device-verify` as **protected** route (with auth middleware) |
 
 ---
 
-### B5. `deviceVerificationURL` — update to production URL
+### B6. `deviceVerificationURL` — update to production URL
 
 **File:** `internal/app/bootstrap.go`
 
@@ -148,7 +208,7 @@ calls to AnyCap Server.
 
 **Cookie strategy:**
 - `anycap_session` httpOnly cookie containing `{api_key, user}` (encrypted or signed)
-- `anycap_login` httpOnly cookie for `login_session_id` during login flow (temp, deleted after callback)
+- `anycap_login` httpOnly cookie for `login_session_id` + `return_to` during login flow (temp, deleted after callback)
 
 ### F2. Landing page login button
 
@@ -172,6 +232,8 @@ Read user info from session cookie. Display email in sidebar. Add logout link.
 
 ### F5. `/device` page (for CLI device code flow)
 
+The verification page lives in Next.js, not on AnyCap Server.
+
 **New files:**
 - `web/src/app/device/page.tsx` — Device code verification page
 - `web/src/app/api/device-verify/route.ts` — API route proxying to AnyCap Server
@@ -188,7 +250,7 @@ Read user info from session cookie. Display email in sidebar. Add logout link.
 | Error | Code invalid / expired / already used — show error + option to retry |
 
 **Key behavior:**
-- Not logged in → show message prompting login, do NOT show code input form
+- Not logged in → show login prompt, do NOT show code input form
 - Login button links to `/auth/login?return_to=/device?code=ABCD-1234`
 - After login, `/auth/callback` reads `return_to` and redirects back to `/device?code=...`
 - Logged in + submit code → Next.js API route calls `POST /v1/auth/device-verify`
@@ -207,17 +269,18 @@ B1 (auth/login web method)
                     ├── F3 (route protection)
                     └── F4 (dashboard user info)
 
-B4 (device-verify endpoint) + B5 (verification URL)
+B4 (device self-hosted) + B5 (device-verify) + B6 (verification URL)
   └── F5 (/device page)
 ```
 
-Web login (B1→B2→B3→F1→F2→F3→F4) and device page (B4→B5→F5) can be developed in
+Web login (B1→B2→B3→F1→F2→F3→F4) and device page (B4→B5→B6→F5) can be developed in
 parallel.
 
 ---
 
 ## Out of Scope
 
+- Auth0 native Device Authorization Grant (replaced by self-hosted device flow)
 - JWT validation on server (not needed — web uses API key via server-to-server calls)
 - CORS (not needed — Next.js server calls AnyCap Server, not browser)
 - `@auth0/nextjs-auth0` SDK (not needed — reusing existing server endpoints)
