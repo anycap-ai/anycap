@@ -10,18 +10,17 @@ type PostOptions = {
   apiKey?: string;
 };
 
-function anycapAPIBaseURL(): string {
+function baseURL(): string {
   return (
-    process.env.ANYCAP_API_URL ||
-    "http://127.0.0.1:8080"
+    process.env.NEXT_PUBLIC_ANYCAP_API_URL || "http://127.0.0.1:8080"
   );
 }
 
-function withAbsolutePath(path: string): string {
+function withPath(path: string): string {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `${anycapAPIBaseURL().replace(/\/+$/, "")}${path}`;
+  return `${baseURL().replace(/\/+$/, "")}${path}`;
 }
 
 export async function anycapPost<T>(
@@ -36,7 +35,7 @@ export async function anycapPost<T>(
     headers.Authorization = `Bearer ${options.apiKey}`;
   }
 
-  const response = await fetch(withAbsolutePath(path), {
+  const response = await fetch(withPath(path), {
     method: "POST",
     headers,
     body: JSON.stringify(body),

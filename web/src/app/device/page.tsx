@@ -1,28 +1,23 @@
-export const runtime = 'edge';
+"use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { useSearchParams } from "next/navigation";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
-import { normalizeUserCode, readSessionCookie } from "@/lib/auth/session";
+import { normalizeUserCode } from "@/lib/auth/session";
 import { DeviceCodeForm } from "./DeviceCodeForm";
-
-type Props = {
-  searchParams?: Promise<{
-    code?: string;
-    error?: string;
-  }>;
-};
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
-export default async function DevicePage({ searchParams }: Props) {
-  const params = (await searchParams) || {};
-  const cookieStore = await cookies();
-  const session = await readSessionCookie(cookieStore);
-  const initialCode = normalizeUserCode(params.code);
-  const urlError = params.error === "verify_failed" ? "Authorization failed. Please retry." : "";
+function DevicePageInner() {
+  const searchParams = useSearchParams();
+  const initialCode = normalizeUserCode(searchParams.get("code"));
+  const urlError =
+    searchParams.get("error") === "verify_failed"
+      ? "Authorization failed. Please retry."
+      : "";
 
   return (
     <main className="min-h-screen px-6 py-6 md:px-10 md:py-8 lg:px-16 flex items-center justify-center">
@@ -62,11 +57,19 @@ export default async function DevicePage({ searchParams }: Props) {
             ) : null}
 
             <div className="mt-10">
-              <DeviceCodeForm initialCode={initialCode} authenticated={Boolean(session?.apiKey)} />
+              <DeviceCodeForm initialCode={initialCode} />
             </div>
           </div>
         </section>
       </div>
     </main>
+  );
+}
+
+export default function DevicePage() {
+  return (
+    <Suspense fallback={null}>
+      <DevicePageInner />
+    </Suspense>
   );
 }

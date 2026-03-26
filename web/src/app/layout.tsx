@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import "@/styles/globals.css";
 import { siteConfig } from "@/lib/site";
 import { GlobalTipToast } from "@/components/ui/GlobalTipToast";

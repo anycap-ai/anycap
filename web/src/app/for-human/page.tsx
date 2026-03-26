@@ -8,7 +8,7 @@ import { EquipAgent } from "@/components/EquipAgent";
 import { ScrambleText } from "@/components/ScrambleText";
 import { TerminalDemo } from "@/components/TerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
-import { readSessionCookie } from "@/lib/auth/session";
+import { readSessionFromStore } from "@/lib/auth/session";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
@@ -17,7 +17,7 @@ const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
 
 export default async function ForHumanPage() {
   const cookieStore = await cookies();
-  const session = await readSessionCookie(cookieStore);
+  const session = readSessionFromStore(cookieStore);
   const isLoggedIn = Boolean(session?.apiKey);
 
   return (

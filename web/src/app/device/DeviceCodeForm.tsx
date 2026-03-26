@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { anycapPost } from "@/lib/auth/anycap-api";
+import { getSession } from "@/lib/auth/session";
 
 type Props = {
   initialCode: string;
-  authenticated: boolean;
 };
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
@@ -20,7 +21,7 @@ function errorMessage(reason: string | undefined): string {
   }
 }
 
-export function DeviceCodeForm({ initialCode, authenticated }: Props) {
+export function DeviceCodeForm({ initialCode }: Props) {
   const [code, setCode] = useState(initialCode);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,34 +40,35 @@ export function DeviceCodeForm({ initialCode, authenticated }: Props) {
     setError("");
 
     try {
-      const checkResp = await fetch("/api/device-code-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_code: normalizedCode }),
-      });
-      const check = (await checkResp.json().catch(() => ({}))) as {
-        valid?: boolean;
-        reason?: string;
-      };
+      let check: { valid?: boolean; reason?: string };
+      try {
+        check = await anycapPost<{ valid: boolean; reason?: string }>(
+          "/v1/auth/device-code-check",
+          { user_code: normalizedCode },
+        );
+      } catch {
+        check = { valid: false, reason: "invalid" };
+      }
 
       if (!check.valid) {
         setError(errorMessage(check.reason));
         return;
       }
 
-      if (authenticated) {
-        const verifyResp = await fetch("/api/device-verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_code: normalizedCode }),
-        });
-        if (!verifyResp.ok) {
-          const payload = (await verifyResp.json().catch(() => ({}))) as { message?: string };
-          setError(errorMessage(payload.message));
+      const session = getSession();
+      if (session?.apiKey) {
+        try {
+          await anycapPost(
+            "/v1/auth/device-verify",
+            { user_code: normalizedCode },
+            { apiKey: session.apiKey },
+          );
+          window.location.assign("/device/complete");
+          return;
+        } catch {
+          setError(errorMessage("verify_failed"));
           return;
         }
-        window.location.assign("/device/complete");
-        return;
       }
 
       const target = `/auth/login?return_to=${encodeURIComponent("/device/complete")}&device_code=${encodeURIComponent(normalizedCode)}`;

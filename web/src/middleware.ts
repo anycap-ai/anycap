@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { content, toMarkdown } from "@/lib/landing-content";
+import { SESSION_COOKIE } from "@/lib/auth/session";
 
 const markdown = toMarkdown(content);
 const protectedPaths = ["/dashboard", "/billing", "/usage", "/logs"];
-const sessionCookieName = "anycap_session";
 
 export function middleware(req: NextRequest) {
   if (protectedPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
-    const hasSession = Boolean(req.cookies.get(sessionCookieName)?.value);
+    const hasSession = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
     if (!hasSession) {
       const loginURL = new URL("/auth/login", req.nextUrl.origin);
       const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
