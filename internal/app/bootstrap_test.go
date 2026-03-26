@@ -205,18 +205,16 @@ func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *t
 	}
 }
 
-func TestBuildCatalogRepo_FallsBackToLegacyPostgresEnvWhenDSNNotConfigured(t *testing.T) {
-	t.Setenv("ANYCAP_PG_CONFIG", `{"Host":"localhost","Port":"5432","User":"demo","DBName":"anycap"}`)
-
-	original := newCatalogRepoFromEnv
-	newCatalogRepoFromEnv = func(context.Context) (*postgres.CatalogRepo, error) {
+func TestBuildCatalogRepo_UsesPostgresDSNWhenConfigured(t *testing.T) {
+	original := newCatalogRepoFromDSN
+	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
 		return &postgres.CatalogRepo{}, nil
 	}
 	t.Cleanup(func() {
-		newCatalogRepoFromEnv = original
+		newCatalogRepoFromDSN = original
 	})
 
-	repo := buildCatalogRepo(config.Config{})
+	repo := buildCatalogRepo(config.Config{PGDSN: "postgres://demo:demo@localhost:5432/anycap?sslmode=disable"})
 
 	if _, ok := repo.(*postgres.CatalogRepo); !ok {
 		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
