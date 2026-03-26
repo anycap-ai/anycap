@@ -22,6 +22,12 @@ func (f *fakeCallLogDB) QueryRowContext(context.Context, string, ...any) Row {
 	return fakeRow{}
 }
 
+func (f *fakeCallLogDB) QueryContext(_ context.Context, query string, args ...any) (Rows, error) {
+	f.query = query
+	f.args = args
+	return fakeRows{}, nil
+}
+
 func TestCallLogDBRepo_Insert(t *testing.T) {
 	db := &fakeCallLogDB{}
 	repo := NewCallLogDBRepo(db)

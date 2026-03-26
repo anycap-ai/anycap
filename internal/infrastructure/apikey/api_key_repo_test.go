@@ -26,11 +26,24 @@ func (f *fakeAPIKeyDB) QueryRowContext(_ context.Context, query string, args ...
 	return f.row
 }
 
+func (f *fakeAPIKeyDB) QueryContext(_ context.Context, query string, args ...any) (Rows, error) {
+	f.query = query
+	f.args = args
+	return fakeRows{}, nil
+}
+
 type scanRow struct {
 	scan func(dest ...any) error
 }
 
 func (r scanRow) Scan(dest ...any) error { return r.scan(dest...) }
+
+type fakeRows struct{}
+
+func (fakeRows) Next() bool              { return false }
+func (fakeRows) Scan(...any) error       { return nil }
+func (fakeRows) Close() error            { return nil }
+func (fakeRows) Err() error              { return nil }
 
 func TestAPIKeyRepo_Insert(t *testing.T) {
 	db := &fakeAPIKeyDB{}

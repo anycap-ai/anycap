@@ -28,6 +28,10 @@ func (d *migrationDBStub) QueryRowContext(_ context.Context, _ string, _ ...any)
 	panic("unexpected QueryRowContext call")
 }
 
+func (d *migrationDBStub) QueryContext(_ context.Context, _ string, _ ...any) (Rows, error) {
+	panic("unexpected QueryContext call")
+}
+
 func (brokenMigrationFS) Open(string) (fs.File, error) {
 	return nil, fs.ErrNotExist
 }

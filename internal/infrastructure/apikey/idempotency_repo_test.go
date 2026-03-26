@@ -21,6 +21,12 @@ func (f *fakeExecDB) QueryRowContext(context.Context, string, ...any) Row {
 	return fakeRow{}
 }
 
+func (f *fakeExecDB) QueryContext(_ context.Context, query string, args ...any) (Rows, error) {
+	f.query = query
+	f.args = args
+	return fakeRows{}, nil
+}
+
 type fakeResult struct {
 	rowsAffected int64
 }

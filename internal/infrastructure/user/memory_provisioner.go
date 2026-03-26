@@ -69,6 +69,17 @@ func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provid
 	return user, true, nil
 }
 
+func (p *MemoryProvisioner) GetUserByID(_ context.Context, userID string) (model.User, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	user, ok := p.users[userID]
+	if !ok {
+		return model.User{}, model.ErrAuthInvalid
+	}
+	return user, nil
+}
+
 func identityKey(provider, externalSubject string) string {
 	return fmt.Sprintf("%s:%s", provider, externalSubject)
 }

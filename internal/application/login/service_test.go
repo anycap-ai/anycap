@@ -78,6 +78,10 @@ func (f *fakeLoginCreditClient) GrantSignupReward(_ context.Context, userID stri
 	return f.grantErr
 }
 
+func (f *fakeLoginCreditClient) ListTransactions(_ context.Context, _ string, _, _ int) ([]model.CreditTransaction, int, error) {
+	return nil, 0, nil
+}
+
 func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, bool, error) {
 	if user, ok := f.users[provider+":"+authUser.UserID]; ok {
 		return user, f.created != nil && f.created[provider+":"+authUser.UserID], nil

@@ -111,16 +111,41 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 
 	apiKeys := apikey.NewMemoryService()
 	loginSessions := apikey.NewMemoryLoginSessionRepo()
-	created, err := apiKeys.CreateAPIKey(t.Context(), "user-123", "cli")
+	users := userstore.NewMemoryProvisioner()
+	seededUser, _, err := users.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:  "auth0|user-123",
+		Email:   "user@example.com",
+		Name:    "Demo User",
+		Picture: "https://cdn.example.com/avatar.png",
+	}, time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	callLogs := apikey.NewMemoryCallLogRepo()
+	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 3})
+	_ = callLogs.Insert(context.Background(), model.CallLog{
+		RequestID:  "req_123",
+		UserID:     seededUser.ID,
+		Capability: "image.generate",
+		Model:      "flux-dev",
+		Status:     "success",
+		CreditCost: 1,
+		CreatedAt:  time.Date(2026, 3, 26, 10, 30, 0, 0, time.UTC),
+	})
+	created, err := apiKeys.CreateAPIKey(t.Context(), seededUser.ID, "cli")
 	if err != nil {
 		t.Fatalf("CreateAPIKey() error = %v", err)
 	}
 
 	sessionSeq := 0
-	systemHandler := handlers.NewSystemHandler(systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}, apiKeys))
+	systemService := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}, apiKeys)
+	systemService.SetUserReader(users)
+	systemService.SetCreditClient(creditClient)
+	systemService.SetCallLogRepo(callLogs)
+	systemHandler := handlers.NewSystemHandler(systemService)
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
 		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
-		userstore.NewMemoryProvisioner(),
+		users,
 		credit.NewStubClient(nil),
 		apiKeys,
 		loginSessions,
@@ -141,7 +166,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		7*24*time.Hour,
 	))
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}, Routes: []model.RouteBinding{{RouteType: model.RouteTypeDirect, AbilityKey: "flux-dev", GenType: string(model.CapabilityImage), AlgoType: "txt_2_img", Priority: 100, Enabled: true}}}}}})
-	imageHandler := handlers.NewImageHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-123": 3}), apikey.NewMemoryCallLogRepo()))
+	imageHandler := handlers.NewImageHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
@@ -444,6 +469,62 @@ func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	}
 	if apiKey, _ := pollData["api_key"].(string); apiKey == "" {
 		t.Fatalf("expected api_key in poll response, got %#v", pollData)
+	}
+}
+
+func TestRouter_DashboardReadAPIs(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/me", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/me response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if email, _ := data["email"].(string); email == "" {
+		t.Fatalf("expected email in /v1/me response, got %#v", data)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/credits/balance", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/credits/balance response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if available, _ := data["available"].(float64); available <= 0 {
+		t.Fatalf("expected positive available balance, got %#v", data)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/logs?limit=20", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/logs response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected non-empty items in /v1/logs response, got %#v", data)
 	}
 }
 

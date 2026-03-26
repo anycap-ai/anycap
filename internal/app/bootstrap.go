@@ -159,6 +159,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		loginSessions := apikey.NewMemoryLoginSessionRepo()
 		users := userstore.NewMemoryProvisioner()
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
+		systemService.SetUserReader(users)
+		systemService.SetCreditClient(creditClient)
+		systemService.SetCallLogRepo(callLogs)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
@@ -188,6 +191,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
+		systemService.SetUserReader(users)
+		systemService.SetCreditClient(creditClient)
+		systemService.SetCallLogRepo(callLogs)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
 			config:              cfg,
