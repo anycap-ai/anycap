@@ -43,6 +43,8 @@ func MapDomainError(err error) (int, Envelope) {
 	switch {
 	case errors.Is(err, model.ErrAuthInvalid):
 		return consts.StatusUnauthorized, ErrorEnvelope("", model.ErrAuthInvalid.Code, model.ErrAuthInvalid.Message)
+	case errors.Is(err, model.ErrAuthExpired):
+		return consts.StatusUnauthorized, ErrorEnvelope("", model.ErrAuthExpired.Code, model.ErrAuthExpired.Message)
 	case errors.Is(err, model.ErrRateLimited):
 		return consts.StatusTooManyRequests, ErrorEnvelope("", model.ErrRateLimited.Code, model.ErrRateLimited.Message)
 	case errors.Is(err, model.ErrAuthProviderNotConfigured):

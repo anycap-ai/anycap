@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -145,7 +146,10 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		Middlewares: []app.HandlerFunc{
 			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
 		},
-		Root: []RouteRegistrar{RouteRegistrarFunc(systemHandler.RegisterRootRoutes)},
+		Root: []RouteRegistrar{
+			RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
+			RouteRegistrarFunc(loginHandler.RegisterRootRoutes),
+		},
 		V1: []RouteRegistrar{
 			systemHandler,
 			loginHandler,
@@ -222,6 +226,77 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader(callbackBody), Len: len(callbackBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_HeadlessRelayFlow(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/device", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var deviceEnvelope map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &deviceEnvelope); err != nil {
+		t.Fatalf("unmarshal device init response: %v", err)
+	}
+	deviceData, ok := deviceEnvelope["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", deviceEnvelope["data"])
+	}
+	loginSessionID, _ := deviceData["login_session_id"].(string)
+	userCode, _ := deviceData["user_code"].(string)
+	if loginSessionID == "" || userCode == "" {
+		t.Fatalf("expected login_session_id and user_code, got %#v", deviceData)
+	}
+
+	formBody := []byte("user_code=" + url.QueryEscape(userCode))
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/device", &ut.Body{Body: bytes.NewReader(formBody), Len: len(formBody)}, ut.Header{Key: "Content-Type", Value: "application/x-www-form-urlencoded"})
+	if resp.Code != http.StatusFound {
+		t.Fatalf("expected 302, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	location := string(resp.Header().Peek("Location"))
+	if location == "" {
+		t.Fatal("expected redirect location")
+	}
+	redirectURL, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("parse redirect location: %v", err)
+	}
+	state := redirectURL.Query().Get("state")
+	if state == "" {
+		t.Fatalf("expected state query param in redirect, got %q", location)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/auth/callback?code=code-123&state="+url.QueryEscape(state), nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-poll", &ut.Body{Body: bytes.NewReader([]byte(`{"login_session_id":"` + loginSessionID + `"}`)), Len: len(`{"login_session_id":"` + loginSessionID + `"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var pollEnvelope map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &pollEnvelope); err != nil {
+		t.Fatalf("unmarshal device poll response: %v", err)
+	}
+	pollData, ok := pollEnvelope["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", pollEnvelope["data"])
+	}
+	if pollData["status"] != model.LoginSessionStatusComplete {
+		t.Fatalf("expected complete, got %#v", pollData["status"])
+	}
+	if apiKey, _ := pollData["api_key"].(string); apiKey == "" {
+		t.Fatalf("expected api_key in poll response, got %#v", pollData)
 	}
 }
 

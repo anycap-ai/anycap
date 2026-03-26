@@ -3,6 +3,8 @@ package login
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -119,39 +121,21 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int) (mo
 			ExpiresIn:      int((15 * time.Minute).Seconds()),
 		}, nil
 	case model.LoginFlowDevice:
-		deviceAuth, err := s.authClient.StartDeviceFlow(ctx)
-		if err != nil {
-			return model.LoginInitResult{}, err
-		}
-
-		session.DeviceCode = deviceAuth.DeviceCode
-		session.UserCode = deviceAuth.UserCode
-		if session.UserCode == "" {
-			session.UserCode = s.userCodeGenerator()
-		}
-		if deviceAuth.ExpiresIn > 0 {
-			session.ExpiresAt = now.Add(time.Duration(deviceAuth.ExpiresIn) * time.Second)
-		}
+		session.State = s.stateGenerator()
+		session.UserCode = s.userCodeGenerator()
+		session.UserCodeExpiresAt = now.Add(5 * time.Minute)
+		session.RedirectURI = s.deviceCallbackURL()
 		if err := s.sessions.CreateSession(ctx, session); err != nil {
 			return model.LoginInitResult{}, err
-		}
-
-		verificationURI := deviceAuth.VerificationURI
-		if verificationURI == "" {
-			verificationURI = s.deviceVerificationURL
-		}
-		interval := deviceAuth.Interval
-		if interval <= 0 {
-			interval = 5
 		}
 
 		return model.LoginInitResult{
 			FlowType:        session.FlowType,
 			LoginSessionID:  session.ID,
-			VerificationURI: verificationURI,
+			VerificationURI: s.deviceVerificationURL,
 			UserCode:        session.UserCode,
 			ExpiresIn:       int(session.ExpiresAt.Sub(now).Seconds()),
-			Interval:        interval,
+			Interval:        5,
 		}, nil
 	default:
 		return model.LoginInitResult{}, model.ErrInvalidParam
@@ -187,7 +171,7 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	if err != nil {
 		return model.LoginCallbackResult{}, err
 	}
-	if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
+	if err := s.sessions.MarkAuthorized(ctx, sessionID, user, s.now().UTC()); err != nil {
 		return model.LoginCallbackResult{}, err
 	}
 	localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
@@ -238,55 +222,71 @@ func (s *Service) Poll(ctx context.Context, sessionID string) (model.LoginPollRe
 
 	switch session.Status {
 	case model.LoginSessionStatusPending:
-		if session.DeviceCode == "" {
-			return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
+		if !session.UserCodeExpiresAt.IsZero() && s.now().UTC().After(session.UserCodeExpiresAt) {
+			return model.LoginPollResult{Status: model.LoginSessionStatusExpired}, nil
 		}
-
-		pollResult, err := s.authClient.PollDeviceFlow(ctx, session.DeviceCode)
-		if err != nil {
-			return model.LoginPollResult{}, err
-		}
-		switch pollResult.Status {
-		case model.LoginSessionStatusPending, model.LoginSessionStatusSlowDown, model.LoginSessionStatusExpired:
-			return model.LoginPollResult{Status: pollResult.Status}, nil
-		case model.LoginSessionStatusComplete:
-			user := pollResult.User
-			if err := s.sessions.MarkAuthorized(ctx, sessionID, user.UserID, s.now().UTC()); err != nil {
-				return model.LoginPollResult{}, err
-			}
-			localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
-			if err != nil {
-				return model.LoginPollResult{}, err
-			}
-			s.grantSignupReward(ctx, localUser.ID, createdUser)
-			created, err := s.createLoginAPIKey(ctx, localUser.ID)
-			if err != nil {
-				return model.LoginPollResult{}, err
-			}
-			if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
-				return model.LoginPollResult{}, err
-			}
-
-			return model.LoginPollResult{
-				Status:         model.LoginSessionStatusComplete,
-				CredentialType: loginCredentialTypeAPIKey,
-				AccessToken:    created.RawKey,
-				APIKeyID:       created.APIKey.ID,
-				APIKey:         created.RawKey,
-				User: &model.LoginUser{
-					ID:    localUser.ID,
-					Email: localUser.Email,
-					Name:  localUser.Name,
-				},
-			}, nil
-		default:
-			return model.LoginPollResult{Status: pollResult.Status}, nil
-		}
+		return model.LoginPollResult{Status: model.LoginSessionStatusPending}, nil
+	case model.LoginSessionStatusAuthorized:
+		return s.issueDeviceCredential(ctx, sessionID, session)
 	case model.LoginSessionStatusCompleted:
-		return model.LoginPollResult{Status: model.LoginSessionStatusComplete}, nil
+		return s.issueDeviceCredential(ctx, sessionID, session)
 	default:
 		return model.LoginPollResult{Status: session.Status}, nil
 	}
+}
+
+func (s *Service) BeginDeviceAuthorization(ctx context.Context, userCode string) (string, error) {
+	if userCode == "" {
+		return "", model.ErrInvalidParam
+	}
+	if s == nil || s.authClient == nil {
+		return "", model.ErrAuthProviderNotConfigured
+	}
+	if s.sessions == nil {
+		return "", model.ErrInternal
+	}
+
+	session, err := s.sessions.GetByUserCode(ctx, userCode)
+	if err != nil {
+		return "", err
+	}
+	if session.ID == "" || session.FlowType != model.LoginFlowDevice {
+		return "", model.ErrAuthInvalid
+	}
+	now := s.now().UTC()
+	if now.After(session.ExpiresAt) || (!session.UserCodeExpiresAt.IsZero() && now.After(session.UserCodeExpiresAt)) {
+		return "", model.ErrAuthExpired
+	}
+	return s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
+}
+
+func (s *Service) CompleteDeviceAuthorization(ctx context.Context, code, state string) error {
+	if code == "" || state == "" {
+		return model.ErrInvalidParam
+	}
+	if s == nil || s.authClient == nil {
+		return model.ErrAuthProviderNotConfigured
+	}
+	if s.sessions == nil {
+		return model.ErrInternal
+	}
+
+	session, err := s.sessions.GetByState(ctx, state)
+	if err != nil {
+		return err
+	}
+	if session.ID == "" || session.FlowType != model.LoginFlowDevice {
+		return model.ErrAuthInvalid
+	}
+	if s.now().UTC().After(session.ExpiresAt) {
+		return model.ErrAuthExpired
+	}
+
+	user, err := s.authClient.ExchangeCode(ctx, code, session.RedirectURI)
+	if err != nil {
+		return err
+	}
+	return s.sessions.MarkAuthorized(ctx, session.ID, user, s.now().UTC())
 }
 
 func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.CreatedAPIKey, error) {
@@ -301,4 +301,55 @@ func (s *Service) grantSignupReward(ctx context.Context, userID string, createdU
 		return
 	}
 	_ = s.credit.GrantSignupReward(ctx, userID)
+}
+
+func (s *Service) deviceCallbackURL() string {
+	if s.deviceVerificationURL == "" {
+		return "https://anycap.local/auth/callback"
+	}
+	parsed, err := url.Parse(s.deviceVerificationURL)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return "https://anycap.local/auth/callback"
+	}
+	parsed.Path = path.Join("/", "auth", "callback")
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.String()
+}
+
+func (s *Service) issueDeviceCredential(ctx context.Context, sessionID string, session model.LoginSession) (model.LoginPollResult, error) {
+	if session.Auth0Subject == "" {
+		return model.LoginPollResult{}, model.ErrAuthInvalid
+	}
+	authUser := model.AuthUser{
+		UserID:  session.Auth0Subject,
+		Email:   session.AuthUserEmail,
+		Name:    session.AuthUserName,
+		Picture: session.AuthUserPicture,
+	}
+	localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", authUser, s.now().UTC())
+	if err != nil {
+		return model.LoginPollResult{}, err
+	}
+	s.grantSignupReward(ctx, localUser.ID, createdUser)
+	created, err := s.createLoginAPIKey(ctx, localUser.ID)
+	if err != nil {
+		return model.LoginPollResult{}, err
+	}
+	if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
+		return model.LoginPollResult{}, err
+	}
+
+	return model.LoginPollResult{
+		Status:         model.LoginSessionStatusComplete,
+		CredentialType: loginCredentialTypeAPIKey,
+		AccessToken:    created.RawKey,
+		APIKeyID:       created.APIKey.ID,
+		APIKey:         created.RawKey,
+		User: &model.LoginUser{
+			ID:    localUser.ID,
+			Email: localUser.Email,
+			Name:  localUser.Name,
+		},
+	}, nil
 }

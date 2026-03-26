@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -19,9 +20,11 @@ func (r *LoginSessionRepo) CreateSession(ctx context.Context, session model.Logi
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO login_sessions (
 			id, flow_type, state, code_verifier, redirect_uri,
-			device_code, user_code, auth0_subject, status, expires_at, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), emptyToNil(session.Auth0Subject), session.Status, session.ExpiresAt, session.CreatedAt)
+			device_code, user_code, user_code_expires_at,
+			auth0_subject, auth_user_email, auth_user_name, auth_user_picture,
+			status, expires_at, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), timeToNil(session.UserCodeExpiresAt), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt)
 	return err
 }
 
@@ -35,7 +38,11 @@ func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model
 			COALESCE(redirect_uri, ''),
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
+			user_code_expires_at,
 			COALESCE(auth0_subject, ''),
+			COALESCE(auth_user_email, ''),
+			COALESCE(auth_user_name, ''),
+			COALESCE(auth_user_picture, ''),
 			status,
 			expires_at,
 			created_at
@@ -54,7 +61,11 @@ func (r *LoginSessionRepo) GetByState(ctx context.Context, state string) (model.
 			COALESCE(redirect_uri, ''),
 			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
+			user_code_expires_at,
 			COALESCE(auth0_subject, ''),
+			COALESCE(auth_user_email, ''),
+			COALESCE(auth_user_name, ''),
+			COALESCE(auth_user_picture, ''),
 			status,
 			expires_at,
 			created_at
@@ -63,12 +74,35 @@ func (r *LoginSessionRepo) GetByState(ctx context.Context, state string) (model.
 	`, state)
 }
 
-func (r *LoginSessionRepo) MarkAuthorized(ctx context.Context, sessionID, auth0Subject string, authorizedAt time.Time) error {
+func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (model.LoginSession, error) {
+	return r.getOne(ctx, `
+		SELECT
+			id,
+			flow_type,
+			COALESCE(state, ''),
+			COALESCE(code_verifier, ''),
+			COALESCE(redirect_uri, ''),
+			COALESCE(device_code, ''),
+			COALESCE(user_code, ''),
+			user_code_expires_at,
+			COALESCE(auth0_subject, ''),
+			COALESCE(auth_user_email, ''),
+			COALESCE(auth_user_name, ''),
+			COALESCE(auth_user_picture, ''),
+			status,
+			expires_at,
+			created_at
+		FROM login_sessions
+		WHERE user_code = $1
+	`, userCode)
+}
+
+func (r *LoginSessionRepo) MarkAuthorized(ctx context.Context, sessionID string, authUser model.AuthUser, authorizedAt time.Time) error {
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE login_sessions
-		SET auth0_subject = $2, status = $3, authorized_at = $4
+		SET auth0_subject = $2, auth_user_email = $3, auth_user_name = $4, auth_user_picture = $5, status = $6, authorized_at = $7
 		WHERE id = $1
-	`, sessionID, auth0Subject, model.LoginSessionStatusAuthorized, authorizedAt)
+	`, sessionID, authUser.UserID, emptyToNil(authUser.Email), emptyToNil(authUser.Name), emptyToNil(authUser.Picture), model.LoginSessionStatusAuthorized, authorizedAt)
 	return err
 }
 
@@ -85,6 +119,7 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 	row := r.db.QueryRowContext(ctx, query, arg)
 
 	var session model.LoginSession
+	var userCodeExpiresAt sql.NullTime
 	err := row.Scan(
 		&session.ID,
 		&session.FlowType,
@@ -93,13 +128,20 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 		&session.RedirectURI,
 		&session.DeviceCode,
 		&session.UserCode,
+		&userCodeExpiresAt,
 		&session.Auth0Subject,
+		&session.AuthUserEmail,
+		&session.AuthUserName,
+		&session.AuthUserPicture,
 		&session.Status,
 		&session.ExpiresAt,
 		&session.CreatedAt,
 	)
 	if err != nil {
 		return model.LoginSession{}, err
+	}
+	if userCodeExpiresAt.Valid {
+		session.UserCodeExpiresAt = userCodeExpiresAt.Time
 	}
 
 	return session, nil
@@ -110,4 +152,11 @@ func emptyToNil(s string) any {
 		return nil
 	}
 	return s
+}
+
+func timeToNil(t time.Time) any {
+	if t.IsZero() {
+		return nil
+	}
+	return t
 }

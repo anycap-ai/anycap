@@ -8,6 +8,8 @@
 > - CLI never talks to Auth0 directly. CLI only talks to AnyCap Server.
 > - `POST /v1/auth/refresh` is future work, not MVP.
 > - `POST /v1/auth/device-poll` returns `status` and, when complete, `api_key`.
+> - `--headless` is intended to use a **server-hosted device login page / callback relay**, not Auth0 native Device Authorization Grant directly.
+> - Any sections below that describe OAuth refresh-token persistence or auth-provider-native device grant semantics should be treated as historical design notes if they conflict with the relay-based MVP direction.
 > - Sections below that still describe direct OAuth credential persistence should be treated as Phase 2 design notes until they are fully updated.
 
 ## 1. Overview
@@ -310,7 +312,16 @@ flowchart LR
 
 ## 6. Flow 2: Device Code Polling
 
-Inspired by GitHub CLI (`gh auth login`) and the OAuth 2.0 Device Authorization Grant (RFC 8628).
+The authoritative direction for headless login is a **server-hosted device login page**
+that preserves the same architectural rule as the rest of the system:
+
+- CLI only talks to AnyCap Server
+- AnyCap Server handles Auth0 internally
+- CLI receives an AnyCap API key when authentication completes
+
+This flow is intentionally **not** defined as "CLI directly uses the auth provider's
+native device grant". The server owns device code generation, verification, polling,
+and login-session state.
 
 ### 6.1 Sequence
 
@@ -319,23 +330,26 @@ sequenceDiagram
     participant U as User (Browser)
     participant C as CLI
     participant S as AnyCap Server
+    participant A as Auth Provider
 
     C->>S: POST /v1/auth/device-code
-    S->>S: Generate device_code + user_code
-    S-->>C: {device_code, user_code, verification_uri, interval, expires_in}
+    S->>S: Create login_session (15m) and user_code (5m)
+    S-->>C: {login_session_id, user_code, verification_uri, interval, expires_in}
 
     C->>C: Display user_code and verification_uri
     C->>C: Try to open browser to verification_uri
 
-    U->>U: Opens URL, enters user_code
-    U->>S: Authenticates (server handles auth internally)
+    U->>S: Open verification_uri and enter user_code
+    S->>S: Resolve login_session by user_code
+    S->>A: Redirect user into normal web login flow
+    A-->>S: Authentication completes via server-managed callback
 
     loop Poll every {interval} seconds
-        C->>S: POST /v1/auth/device-poll {device_code}
+        C->>S: POST /v1/auth/device-poll {login_session_id}
         alt pending
             S-->>C: {status: pending}
         else complete
-            S-->>C: {status: complete, access_token, refresh_token, expires_in, user}
+            S-->>C: {status: complete, api_key, api_key_id, user}
         else expired
             S-->>C: {status: expired}
         else slow_down
@@ -344,7 +358,7 @@ sequenceDiagram
         end
     end
 
-    C->>C: Save OAuth credential
+    C->>C: Save API key credential
 ```
 
 ### 6.2 Key Design Decisions
@@ -352,21 +366,28 @@ sequenceDiagram
 **Server-generated device code**
 - The server generates its own device code and manages the verification flow.
 - Reasons: server can customize the verification page (`anycap.ai/device`); server controls the user_code format; no dependency on auth provider's native device flow support.
+- This keeps headless login aligned with the same AnyCap Server BFF model used by localhost/browser login.
 
 **User code format**
 - 8 characters, split by hyphen: `ABCD-1234` (4 alpha + 4 numeric).
 - Easy to read aloud, type, and visually verify.
-- Expires in 15 minutes.
+- Expires in 5 minutes.
+
+**Session expiry**
+- `login_session` expiry is 15 minutes.
+- The shorter `user_code` expiry prevents stale verification codes from being reused while keeping the overall polling window practical.
+- If either the overall session expires, or the code expires before authorization completes, the server should return `status=expired` to stop CLI polling cleanly.
 
 **Polling behavior**
 - Initial interval: 5 seconds (server-specified in response).
 - CLI respects `interval` from the server.
 - On `slow_down` response, CLI doubles the interval.
-- Maximum poll duration: 15 minutes (matches code expiry).
+- Maximum poll duration: 15 minutes (matches login session expiry).
+- Server should use `slow_down` to protect against over-polling and keep enough distance from upstream auth rate limits.
 
 **Verification page flow**
 - `https://anycap.ai/device` is a web page where user enters the code.
-- After entering code, user is redirected to the server's auth page for authentication.
+- After entering code, the server redirects the user into the normal server-managed web auth flow.
 - After auth, the page shows "Device authorized, you can return to the terminal."
 - Server marks the login session as authorized and returns an AnyCap API key on next poll.
 
@@ -481,7 +502,7 @@ as an API key.
 | Response | `user_code` | string | User-facing code (`ABCD-1234`) |
 | Response | `verification_uri` | string | URL to enter the code (`https://anycap.ai/device`) |
 | Response | `interval` | int | Polling interval in seconds |
-| Response | `expires_in` | int | Code expiry in seconds |
+| Response | `expires_in` | int | Login session expiry in seconds (recommended: 900) |
 
 **POST /v1/auth/device-poll**
 

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"path"
 	"strings"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
@@ -105,6 +107,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		},
 		Root: []transporthttp.RouteRegistrar{
 			transporthttp.RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
+			transporthttp.RouteRegistrarFunc(loginHandler.RegisterRootRoutes),
 		},
 		V1: []transporthttp.RouteRegistrar{
 			systemHandler,
@@ -155,7 +158,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
@@ -184,7 +187,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, "https://anycap.local/device", nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			catalogService:      catalogService,
 			capabilitiesService: capService,
@@ -196,6 +199,20 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
 	}
+}
+
+func buildDeviceVerificationURL(cfg config.Config) string {
+	if strings.TrimSpace(cfg.Auth0RedirectURL) == "" {
+		return "https://anycap.local/device"
+	}
+	parsed, err := url.Parse(cfg.Auth0RedirectURL)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return "https://anycap.local/device"
+	}
+	parsed.Path = path.Join("/", "device")
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.String()
 }
 
 func buildAuthClient(cfg config.Config) port.Auth0Client {

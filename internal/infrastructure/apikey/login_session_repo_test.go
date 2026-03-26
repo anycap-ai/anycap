@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -63,8 +64,8 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 	if db.query == "" {
 		t.Fatal("expected insert query to be executed")
 	}
-	if len(db.args) != 11 {
-		t.Fatalf("expected 11 args, got %d", len(db.args))
+	if len(db.args) != 15 {
+		t.Fatalf("expected 15 args, got %d", len(db.args))
 	}
 }
 
@@ -80,10 +81,14 @@ func TestLoginSessionRepo_GetByID(t *testing.T) {
 			*(dest[4].(*string)) = "http://127.0.0.1:14565/callback"
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
-			*(dest[7].(*string)) = ""
-			*(dest[8].(*string)) = model.LoginSessionStatusPending
-			*(dest[9].(*time.Time)) = expiresAt
-			*(dest[10].(*time.Time)) = createdAt
+			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[8].(*string)) = ""
+			*(dest[9].(*string)) = ""
+			*(dest[10].(*string)) = ""
+			*(dest[11].(*string)) = ""
+			*(dest[12].(*string)) = model.LoginSessionStatusPending
+			*(dest[13].(*time.Time)) = expiresAt
+			*(dest[14].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -113,10 +118,14 @@ func TestLoginSessionRepo_GetByState(t *testing.T) {
 			*(dest[4].(*string)) = "http://127.0.0.1:14566/callback"
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*string)) = ""
-			*(dest[7].(*string)) = ""
-			*(dest[8].(*string)) = model.LoginSessionStatusPending
-			*(dest[9].(*time.Time)) = expiresAt
-			*(dest[10].(*time.Time)) = createdAt
+			*(dest[7].(*sql.NullTime)) = sql.NullTime{}
+			*(dest[8].(*string)) = ""
+			*(dest[9].(*string)) = ""
+			*(dest[10].(*string)) = ""
+			*(dest[11].(*string)) = ""
+			*(dest[12].(*string)) = model.LoginSessionStatusPending
+			*(dest[13].(*time.Time)) = expiresAt
+			*(dest[14].(*time.Time)) = createdAt
 			return nil
 		},
 	}
@@ -135,12 +144,17 @@ func TestLoginSessionRepo_MarkAuthorized(t *testing.T) {
 	db := &fakeLoginSessionDB{}
 	repo := NewLoginSessionRepo(db)
 
-	err := repo.MarkAuthorized(context.Background(), "lsn-3", "auth0|user-1", time.Date(2026, 3, 25, 10, 1, 0, 0, time.UTC))
+	err := repo.MarkAuthorized(context.Background(), "lsn-3", model.AuthUser{
+		UserID:  "auth0|user-1",
+		Email:   "user@example.com",
+		Name:    "Demo User",
+		Picture: "https://example.com/avatar.png",
+	}, time.Date(2026, 3, 25, 10, 1, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatalf("MarkAuthorized() error = %v", err)
 	}
-	if len(db.args) != 4 {
-		t.Fatalf("expected 4 args, got %d", len(db.args))
+	if len(db.args) != 7 {
+		t.Fatalf("expected 7 args, got %d", len(db.args))
 	}
 }
 
