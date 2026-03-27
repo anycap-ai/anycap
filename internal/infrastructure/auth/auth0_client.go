@@ -46,6 +46,7 @@ func (c *Client) BuildLoginURL(_ context.Context, state, redirectURI string) (st
 	query.Set("redirect_uri", resolveRedirectURI(c.cfg.RedirectURL, redirectURI))
 	query.Set("scope", "openid profile email")
 	query.Set("state", state)
+	query.Set("prompt", "login")
 	if c.cfg.Audience != "" {
 		query.Set("audience", c.cfg.Audience)
 	}
