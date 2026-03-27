@@ -89,3 +89,7 @@ func parseTokenResponse(body []byte) (cred *cliconfig.Credential, email string, 
 		return nil, "", fmt.Errorf("unknown credential_type: %q", credType)
 	}
 }
+
+func ParseTokenResponseForCLI(body []byte) (cred *cliconfig.Credential, email string, err error) {
+	return parseTokenResponse(body)
+}

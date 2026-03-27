@@ -55,6 +55,35 @@ func TestDeviceCodeFlow(t *testing.T) {
 	}
 }
 
+func TestDeviceCodeFlowPendingUntilAuthorized(t *testing.T) {
+	ms := New()
+	ms.RequireDeviceAuthorization()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	resp := postJSON(t, ts.URL+"/v1/auth/device-code", map[string]any{})
+	data := resp["data"].(map[string]any)
+	loginSessionID := data["login_session_id"].(string)
+
+	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
+		"login_session_id": loginSessionID,
+	})
+	data = resp["data"].(map[string]any)
+	if data["status"] != "pending" {
+		t.Fatalf("expected pending before authorization, got %s", data["status"])
+	}
+
+	ms.AuthorizeDeviceSession(loginSessionID)
+
+	resp = postJSON(t, ts.URL+"/v1/auth/device-poll", map[string]any{
+		"login_session_id": loginSessionID,
+	})
+	data = resp["data"].(map[string]any)
+	if data["status"] != "complete" {
+		t.Fatalf("expected complete after authorization, got %s", data["status"])
+	}
+}
+
 func TestLocalhostCallbackFlow(t *testing.T) {
 	ms := New()
 	ts := httptest.NewServer(ms)

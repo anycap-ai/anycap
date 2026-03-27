@@ -28,12 +28,14 @@ import (
 type Server struct {
 	mux *http.ServeMux
 
-	mu                 sync.Mutex
-	loginStates        map[string]loginStateEntry       // state -> entry
+	mu                  sync.Mutex
+	loginStates         map[string]loginStateEntry       // state -> entry
 	browserPollSessions map[string]browserPollStateEntry // login_session_id -> entry
-	deviceCodes        map[string]deviceCodeEntry       // login_session_id -> entry
-	refreshTokens      map[string]string                // refresh_token -> user email
-	logoutCalls        int
+	deviceCodes         map[string]deviceCodeEntry       // login_session_id -> entry
+	refreshTokens       map[string]string                // refresh_token -> user email
+	logoutCalls         int
+	deviceAutoApprove   bool
+	lastDeviceSessionID string
 }
 
 type loginStateEntry struct {
@@ -42,8 +44,9 @@ type loginStateEntry struct {
 }
 
 type deviceCodeEntry struct {
-	UserCode string
-	Email    string
+	UserCode   string
+	Email      string
+	Authorized bool
 }
 
 type browserPollStateEntry struct {
@@ -59,6 +62,7 @@ func New() *Server {
 		browserPollSessions: make(map[string]browserPollStateEntry),
 		deviceCodes:         make(map[string]deviceCodeEntry),
 		refreshTokens:       make(map[string]string),
+		deviceAutoApprove:   true,
 	}
 
 	s.mux.HandleFunc("POST /v1/auth/login", s.handleLogin)
@@ -255,9 +259,11 @@ func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	s.deviceCodes[loginSessionID] = deviceCodeEntry{
-		UserCode: userCode,
-		Email:    "dev@anycap.ai",
+		UserCode:   userCode,
+		Email:      "dev@anycap.ai",
+		Authorized: s.deviceAutoApprove,
 	}
+	s.lastDeviceSessionID = loginSessionID
 	s.mu.Unlock()
 
 	scheme := "http"
@@ -287,7 +293,7 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	entry, ok := s.deviceCodes[req.LoginSessionID]
-	if ok {
+	if ok && entry.Authorized {
 		delete(s.deviceCodes, req.LoginSessionID)
 	}
 	s.mu.Unlock()
@@ -297,7 +303,11 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mock: auto-approve immediately
+	if !entry.Authorized {
+		writeSuccess(w, map[string]any{"status": "pending"})
+		return
+	}
+
 	apiKey := "mock-ak-" + randomHex(16)
 	writeSuccess(w, map[string]any{
 		"status":          "complete",
@@ -386,6 +396,29 @@ func (s *Server) LogoutCalls() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.logoutCalls
+}
+
+func (s *Server) RequireDeviceAuthorization() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.deviceAutoApprove = false
+}
+
+func (s *Server) LastDeviceSessionID() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lastDeviceSessionID
+}
+
+func (s *Server) AuthorizeDeviceSession(loginSessionID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	entry, ok := s.deviceCodes[loginSessionID]
+	if !ok {
+		return
+	}
+	entry.Authorized = true
+	s.deviceCodes[loginSessionID] = entry
 }
 
 // --- Capabilities: Presign ---

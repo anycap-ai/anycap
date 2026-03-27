@@ -45,6 +45,30 @@ anycap login --headless
 
 Prints a URL and code. Open the URL on any device, enter the code, and approve. The CLI polls until authentication completes.
 
+For agent / toolcall environments where blocking stdout is hard to consume, use the nonblocking variant:
+
+```bash
+anycap login --headless --no-wait --json
+```
+
+This returns structured JSON including:
+
+- `login_session_id`
+- `verification_uri`
+- `user_code`
+- `expires_in`
+- `interval`
+- `poll_command`
+- `next_action_hint`
+
+After the human finishes browser login and confirms completion, resume with:
+
+```bash
+anycap login poll --session <login_session_id> --json
+```
+
+In agent flows, prefer the returned `poll_command` directly. It already includes the real session ID.
+
 ### API Key (CI/CD)
 
 For automated pipelines and non-interactive environments. Two options:

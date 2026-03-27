@@ -47,11 +47,25 @@ anycap login
 # Headless (SSH, containers) -- device code flow
 anycap login --headless
 
+# Headless for agent/toolcall runtimes -- initialize without blocking
+anycap login --headless --no-wait --json
+
+# Resume a previously initialized headless login after the user confirms completion
+anycap login poll --session <login_session_id> --json
+
 # CI/CD -- pipe API key from stdin
 echo "$ANYCAP_API_KEY" | anycap login --with-token
 ```
 
 Alternatively, set the `ANYCAP_API_KEY` environment variable directly -- the CLI reads it without requiring `login`.
+
+For agent/toolcall usage, prefer the nonblocking headless flow:
+
+1. Run `anycap login --headless --no-wait --json`
+2. Read `verification_uri`, `user_code`, `poll_command`, and `next_action_hint`
+3. Show the URL and code to the human
+4. Ask the human to reply when browser login is complete
+5. After confirmation, run `poll_command`
 
 To check current auth state: `anycap status`.
 
