@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 export default function DashboardPage() {

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
 import { UserProfileHeader } from "@/components/dashboard/UserProfileHeader";
 import { SWRProvider } from "@/components/providers/SWRProvider";
-import { readSessionFromStore } from "@/lib/auth/session";
+import { auth0 } from "@/lib/auth/auth0";
 
 export const metadata: Metadata = {
   robots: {
@@ -27,8 +26,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = readSessionFromStore(await cookies());
-  if (!session?.apiKey) {
+  const session = await auth0.getSession();
+  if (!session) {
     redirect("/auth/login?return_to=/dashboard");
   }
 

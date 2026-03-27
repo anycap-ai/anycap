@@ -1,7 +1,6 @@
 "use client";
 
 import { SWRConfig } from "swr";
-import { clearSessionCookie } from "@/lib/auth/session";
 
 export function SWRProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +12,6 @@ export function SWRProvider({ children }: { children: React.ReactNode }) {
         errorRetryCount: 2,
         onError(err) {
           if ((err as any)?.status === 401) {
-            clearSessionCookie();
             window.location.assign("/auth/login?return_to=" + encodeURIComponent(window.location.pathname));
           }
         },

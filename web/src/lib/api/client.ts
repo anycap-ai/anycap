@@ -7,7 +7,7 @@ type APIEnvelope<T> = {
 };
 
 type RequestOptions = {
-  apiKey?: string;
+  bearerToken?: string | null;
 };
 
 function baseURL(): string {
@@ -21,9 +21,9 @@ function withPath(path: string): string {
   return `${baseURL().replace(/\/+$/, "")}${path}`;
 }
 
-function authHeaders(apiKey?: string): Record<string, string> {
+function authHeaders(bearerToken?: string | null): Record<string, string> {
   const h: Record<string, string> = {};
-  if (apiKey) h.Authorization = `Bearer ${apiKey}`;
+  if (bearerToken) h.Authorization = `Bearer ${bearerToken}`;
   return h;
 }
 
@@ -46,7 +46,7 @@ export async function anycapGet<T>(
 ): Promise<T> {
   const response = await fetch(withPath(path), {
     method: "GET",
-    headers: authHeaders(options.apiKey),
+    headers: authHeaders(options.bearerToken),
     cache: "no-store",
   });
   return unwrap<T>(response);
@@ -59,14 +59,9 @@ export async function anycapPost<T>(
 ): Promise<T> {
   const response = await fetch(withPath(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders(options.apiKey) },
+    headers: { "Content-Type": "application/json", ...authHeaders(options.bearerToken) },
     body: JSON.stringify(body),
     cache: "no-store",
   });
   return unwrap<T>(response);
-}
-
-/** SWR fetcher factory — pass apiKey, get a fetcher for GET requests */
-export function createFetcher(apiKey: string) {
-  return <T>(path: string) => anycapGet<T>(path, { apiKey });
 }

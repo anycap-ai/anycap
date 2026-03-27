@@ -7,7 +7,7 @@ type APIEnvelope<T> = {
 };
 
 type PostOptions = {
-  apiKey?: string;
+  bearerToken?: string;
 };
 
 function baseURL(): string {
@@ -31,8 +31,8 @@ export async function anycapPost<T>(
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  if (options.apiKey) {
-    headers.Authorization = `Bearer ${options.apiKey}`;
+  if (options.bearerToken) {
+    headers.Authorization = `Bearer ${options.bearerToken}`;
   }
 
   const response = await fetch(withPath(path), {
@@ -44,8 +44,12 @@ export async function anycapPost<T>(
 
   const json = (await response.json().catch(() => ({}))) as APIEnvelope<T>;
   if (!response.ok || !json.data) {
+    const code = json.error?.code || "";
     const message = json.error?.message || `request failed (${response.status})`;
-    throw new Error(message);
+    const err = new Error(message);
+    (err as any).status = response.status;
+    (err as any).code = code;
+    throw err;
   }
   return json.data;
 }

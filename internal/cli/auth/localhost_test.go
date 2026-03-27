@@ -35,7 +35,7 @@ func TestBrowserPollFlow_OpensBrowserURLAndPollsForCredential(t *testing.T) {
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
 				"login_session_id": "lsn-1",
-				"browser_url":      "https://anycap.ai/auth/login?browser_token=bt-1&cli=1",
+				"browser_url":      "https://anycap.ai/auth/cli-login?browser_token=bt-1&cli=1",
 				"poll_token":       "pt-1",
 				"interval":         0,
 				"expires_in":       300,
@@ -71,7 +71,7 @@ func TestBrowserPollFlow_OpensBrowserURLAndPollsForCredential(t *testing.T) {
 	if email != "dev@anycap.ai" {
 		t.Fatalf("expected email dev@anycap.ai, got %q", email)
 	}
-	if openedURL != "https://anycap.ai/auth/login?browser_token=bt-1&cli=1" {
+	if openedURL != "https://anycap.ai/auth/cli-login?browser_token=bt-1&cli=1" {
 		t.Fatalf("expected browser url to be opened, got %q", openedURL)
 	}
 }
@@ -85,7 +85,7 @@ func TestBrowserPollFlow_PrintsBrowserURLWhenOpenFails(t *testing.T) {
 		case "/v1/auth/login":
 			_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
 				"login_session_id": "lsn-1",
-				"browser_url":      "https://anycap.ai/auth/login?browser_token=bt-1&cli=1",
+				"browser_url":      "https://anycap.ai/auth/cli-login?browser_token=bt-1&cli=1",
 				"poll_token":       "pt-1",
 				"interval":         0,
 				"expires_in":       1,
@@ -107,7 +107,7 @@ func TestBrowserPollFlow_PrintsBrowserURLWhenOpenFails(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when poll expires")
 	}
-	if !strings.Contains(stderr.String(), "https://anycap.ai/auth/login?browser_token=bt-1&cli=1") {
+	if !strings.Contains(stderr.String(), "https://anycap.ai/auth/cli-login?browser_token=bt-1&cli=1") {
 		t.Fatalf("expected browser url in stderr, got %q", stderr.String())
 	}
 }

@@ -94,7 +94,7 @@ sequenceDiagram
 
 CLI 通过 Web 完成 Auth0 登录，Web 用 Auth0 access token 代 CLI 换取 API Key。
 
-#### Localhost Callback 模式
+#### Browser Poll 模式（推荐）
 
 ```mermaid
 sequenceDiagram
@@ -104,21 +104,33 @@ sequenceDiagram
     participant A as Auth0
     participant S as AnyCap Server
 
-    C->>C: 绑定 localhost 端口
-    C->>B: 打开 https://anycap.ai/auth/cli-login?port=12345
+    C->>S: POST /v1/auth/login {method:"browser_poll"}
+    S-->>C: {browser_url, login_session_id, poll_token}
+    C->>B: 打开 https://anycap.ai/auth/cli-login?browser_token=...
 
     B->>W: 加载 CLI 登录页
     W->>A: Auth0 SDK 登录 (如果未登录)
     A->>B: 用户完成登录
     A->>W: 返回 access token
 
-    W->>S: POST /v1/auth/exchange (Authorization: Bearer <Auth0 JWT>)
-    S->>S: 验 JWT → FindOrCreateUser → 签发 API Key
-    S-->>W: {api_key: "ak-...", user: {id, email, name}}
+    W->>S: POST /v1/auth/browser-verify (Authorization: Bearer <Auth0 JWT>)
+    S->>S: 验 JWT → 绑定 browser_poll session 到当前用户
+    S-->>W: {message: "authorized"}
 
-    W->>C: 重定向到 http://localhost:12345/callback?api_key=ak-...
+    loop 每 5 秒
+        C->>S: POST /v1/auth/poll {login_session_id, poll_token}
+        S-->>C: {status: "pending"}
+    end
+    C->>S: POST /v1/auth/poll {login_session_id, poll_token}
+    S-->>C: {status: "complete", api_key: "ak-...", user: {...}}
     C->>C: 保存 API Key 到 Keychain
 ```
+
+说明：
+- 这是当前推荐的 CLI 浏览器登录模型
+- Auth0 callback 始终落在前端真实域名，而不是 localhost
+- 避免了 Auth0 将 localhost callback 识别为本地应用而触发 consent 的问题
+- CLI 统一通过 poll 获取最终 API Key，更适合 agent、SSH 和无桌面环境
 
 #### Device Code 模式（Headless）
 
@@ -228,7 +240,7 @@ Response:
 | 引入 Auth0 SDK | `package.json` | 加 `@auth0/nextjs-auth0` |
 | Auth0 配置 | `.env` / `auth0.ts` | `AUTH0_SECRET`, `AUTH0_ISSUER_BASE_URL`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` |
 | 登录/回调路由 | `src/app/auth/` | 替换为 Auth0 SDK 提供的 route handlers |
-| CLI 登录页 | `src/app/auth/cli-login/` | 新建，处理 CLI localhost callback 模式 |
+| CLI 登录页 | `src/app/auth/cli-login/` | 新建，处理 CLI browser poll 模式 |
 | 删除自建 session 管理 | `src/lib/auth/session.ts` | 删除 `setSessionCookie`、`clearSessionCookie`、`getSession` |
 | 删除自建 API 客户端 auth | `src/lib/auth/anycap-api.ts` | 不再需要 `apiKey` 参数 |
 | API client 改用 Auth0 token | `src/lib/api/client.ts` | 从 Auth0 SDK 获取 access token 放到 Bearer header |
@@ -238,8 +250,8 @@ Response:
 ### 5.3 删除的代码
 
 - `src/lib/auth/session.ts` 中的 cookie 编解码逻辑
-- `src/app/auth/callback/CallbackClient.tsx` 中的手动 token exchange
-- `src/app/auth/login/LoginClient.tsx` 中的手动 login init
+- `src/app/auth/callback/CallbackClient.tsx` 中旧的 server-side Auth0 code exchange 分支
+- `src/app/auth/login/LoginClient.tsx` 中旧的 CLI browser poll 绑定逻辑
 - 后端 `auth0_client.go` 中的 `ExchangeCode()`、`GetUserInfo()`
 
 ### 5.4 不变的部分

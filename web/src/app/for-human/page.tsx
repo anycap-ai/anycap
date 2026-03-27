@@ -1,7 +1,4 @@
-export const runtime = 'edge';
-
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
 import { EquipAgent } from "@/components/EquipAgent";
@@ -11,7 +8,7 @@ import { FadeIn } from "@/components/FadeIn";
 import { ParticleAgent } from "@/components/animation/ParticleAgent";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { readSessionFromStore } from "@/lib/auth/session";
+import { auth0 } from "@/lib/auth/auth0";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
@@ -19,9 +16,8 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
 
 export default async function ForHumanPage() {
-  const cookieStore = await cookies();
-  const session = readSessionFromStore(cookieStore);
-  const isLoggedIn = Boolean(session?.apiKey);
+  const session = await auth0.getSession();
+  const isLoggedIn = Boolean(session);
 
   return (
     <main className="overflow-x-hidden">

@@ -2,14 +2,8 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { anycapPost } from "@/lib/auth/anycap-api";
-import { normalizeReturnTo, normalizeUserCode } from "@/lib/auth/session";
+import { normalizeReturnTo, normalizeUserCode, savePendingLogin } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
-
-type LoginResponse = {
-  login_session_id: string;
-  authorize_url: string;
-};
 
 export function LoginClient() {
   const params = useSearchParams();
@@ -22,37 +16,18 @@ export function LoginClient() {
     (async () => {
       try {
         if (browserToken) {
-          const data = await anycapPost<LoginResponse>("/v1/auth/browser-bind", {
-            browser_token: browserToken,
-          });
-          sessionStorage.setItem(
-            "anycap_login",
-            JSON.stringify({
-              loginSessionID: data.login_session_id,
-              returnTo: "/device/complete",
-              mode: "browser_poll",
-              browserToken,
-            }),
-          );
-          window.location.assign(data.authorize_url);
+          const cliLoginURL = `/auth/cli-login?browser_token=${encodeURIComponent(browserToken)}`;
+          window.location.assign(cliLoginURL);
           return;
         }
 
-        const callbackURL = `${window.location.origin}/auth/callback`;
-        const data = await anycapPost<LoginResponse>("/v1/auth/login", {
-          method: "web",
-          redirect_url: callbackURL,
+        savePendingLogin({
+          returnTo,
+          mode: "web",
+          deviceCode,
         });
-        sessionStorage.setItem(
-          "anycap_login",
-          JSON.stringify({
-            loginSessionID: data.login_session_id,
-            returnTo,
-            mode: "web",
-            deviceCode,
-          }),
-        );
-        window.location.assign(data.authorize_url);
+        const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent("/auth/callback")}`;
+        window.location.assign(sdkLoginURL);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
         const tip = msg.includes("invalid request") ? "login_web_not_enabled" : "login_failed";

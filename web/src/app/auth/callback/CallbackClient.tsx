@@ -1,72 +1,49 @@
 "use client";
 
+import { getAccessToken } from "@auth0/nextjs-auth0/client";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { anycapPost } from "@/lib/auth/anycap-api";
-import { setSessionCookie } from "@/lib/auth/session";
+import { consumePendingLogin } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
-
-type CallbackData = {
-  api_key: string;
-  user: { id: string; email?: string; name?: string };
-};
-
-type LoginState = {
-  loginSessionID: string;
-  returnTo: string;
-  mode?: "web" | "browser_poll";
-  browserToken?: string;
-  deviceCode?: string;
-};
 
 export function CallbackClient() {
   const params = useSearchParams();
 
   useEffect(() => {
-    const code = params.get("code") || "";
-    const state = params.get("state") || "";
-
     (async () => {
-      const raw = sessionStorage.getItem("anycap_login");
-      sessionStorage.removeItem("anycap_login");
+      const login = consumePendingLogin();
 
-      if (!raw || !code || !state) {
+      if (!login) {
         window.location.assign("/for-human?tip=login_callback_invalid");
         return;
       }
 
-      const login: LoginState = JSON.parse(raw);
-      const callbackURL = `${window.location.origin}/auth/callback`;
-
       try {
-        if (login.mode === "browser_poll") {
+        if (login.mode === "browser_poll" || login.mode === "cli_login") {
           if (!login.browserToken) {
             window.location.assign("/for-human?tip=login_callback_invalid");
             return;
           }
-          await anycapPost<{ status: string }>("/v1/auth/browser-complete", {
-            login_session_id: login.loginSessionID,
+          const accessToken = await getAccessToken();
+          if (!accessToken) {
+            window.location.assign("/for-human?tip=login_callback_failed");
+            return;
+          }
+          await anycapPost<{ message: string }>("/v1/auth/browser-verify", {
             browser_token: login.browserToken,
-            code,
-            state,
-            redirect_uri: callbackURL,
+          }, {
+            bearerToken: accessToken,
           });
           window.location.assign(login.returnTo || "/device/complete");
           return;
         }
 
-        const data = await anycapPost<CallbackData>("/v1/auth/callback", {
-          login_session_id: login.loginSessionID,
-          code,
-          state,
-          redirect_uri: callbackURL,
-        });
-
-        setSessionCookie({
-          apiKey: data.api_key,
-          user: { id: data.user?.id || "", email: data.user?.email, name: data.user?.name },
-          issuedAt: Date.now(),
-        });
+        const accessToken = await getAccessToken();
+        if (!accessToken) {
+          window.location.assign("/for-human?tip=login_callback_failed");
+          return;
+        }
 
         let redirectTarget = login.returnTo || "/dashboard";
 
@@ -76,13 +53,8 @@ export function CallbackClient() {
               "/v1/auth/device-verify",
               {
                 user_code: login.deviceCode,
-                user: {
-                  id: data.user?.id || "",
-                  email: data.user?.email,
-                  name: data.user?.name,
-                },
               },
-              { apiKey: data.api_key },
+              { bearerToken: accessToken },
             );
           } catch {
             redirectTarget = "/device?error=verify_failed";

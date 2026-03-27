@@ -263,6 +263,53 @@ func (s *Service) BrowserComplete(ctx context.Context, sessionID, browserToken, 
 	return s.sessions.MarkAuthorized(ctx, sessionID, user, s.now().UTC())
 }
 
+func (s *Service) BrowserVerify(ctx context.Context, browserToken string, principal model.Principal) (model.DeviceVerifyResult, error) {
+	if browserToken == "" {
+		return model.DeviceVerifyResult{}, model.ErrInvalidParam
+	}
+	if principal.UserID == "" || principal.AuthType == "" {
+		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
+	}
+	if principal.AuthType != "auth0_jwt" && principal.AuthType != "local_bypass" {
+		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
+	}
+	if s.sessions == nil || s.users == nil {
+		return model.DeviceVerifyResult{}, model.ErrInternal
+	}
+
+	session, err := s.sessions.GetByBrowserToken(ctx, browserToken)
+	if err != nil {
+		return model.DeviceVerifyResult{}, err
+	}
+	if session.ID == "" || session.FlowType != model.LoginFlowBrowserPoll {
+		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
+	}
+	if session.Status == model.LoginSessionStatusCompleted {
+		return model.DeviceVerifyResult{Message: "authorized"}, nil
+	}
+	if session.Status != model.LoginSessionStatusPending {
+		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
+	}
+	if s.now().UTC().After(session.ExpiresAt) {
+		return model.DeviceVerifyResult{}, model.ErrAuthExpired
+	}
+
+	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	if err != nil {
+		return model.DeviceVerifyResult{}, err
+	}
+	authUser := model.AuthUser{
+		UserID:  principal.UserID,
+		Email:   user.Email,
+		Name:    user.Name,
+		Picture: user.AvatarURL,
+	}
+	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
+		return model.DeviceVerifyResult{}, err
+	}
+	return model.DeviceVerifyResult{Message: "authorized"}, nil
+}
+
 func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirectURI string) (model.LoginCallbackResult, error) {
 	if sessionID == "" || code == "" {
 		return model.LoginCallbackResult{}, model.ErrInvalidParam
@@ -527,7 +574,7 @@ func (s *Service) browserCallbackURL() string {
 }
 
 func (s *Service) browserLoginURL(browserToken string) string {
-	loginURL := s.callbackURLForPath(path.Join("/", "auth", "login"))
+	loginURL := s.callbackURLForPath(path.Join("/", "auth", "cli-login"))
 	parsed, err := url.Parse(loginURL)
 	if err != nil {
 		return loginURL
