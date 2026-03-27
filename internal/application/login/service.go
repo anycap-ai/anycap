@@ -16,8 +16,11 @@ const loginCredentialTypeAPIKey = "api_key"
 const devicePollInterval = 5 * time.Second
 
 type Service struct {
-	authClient            port.Auth0Client
-	users                 port.UserProvisioner
+	authClient port.Auth0Client
+	users      interface {
+		port.UserProvisioner
+		port.UserReader
+	}
 	credit                port.CreditClient
 	apiKeys               port.APIKeyService
 	sessions              port.LoginSessionRepo
@@ -31,7 +34,10 @@ type Service struct {
 
 func NewService(
 	authClient port.Auth0Client,
-	users port.UserProvisioner,
+	users interface {
+		port.UserProvisioner
+		port.UserReader
+	},
 	credit port.CreditClient,
 	apiKeys port.APIKeyService,
 	sessions port.LoginSessionRepo,
@@ -385,8 +391,15 @@ func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, princip
 	if session.Status != model.LoginSessionStatusPending {
 		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
 	}
-	if authUser.UserID == "" {
-		authUser.UserID = principal.UserID
+	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	if err != nil {
+		return model.DeviceVerifyResult{}, err
+	}
+	authUser = model.AuthUser{
+		UserID:  principal.UserID,
+		Email:   user.Email,
+		Name:    user.Name,
+		Picture: user.AvatarURL,
 	}
 	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		return model.DeviceVerifyResult{}, err
