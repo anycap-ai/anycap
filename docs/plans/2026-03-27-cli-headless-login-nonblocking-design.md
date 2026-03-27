@@ -90,9 +90,16 @@ The command should return immediately with JSON:
   "verification_uri": "https://preview.anycap-web.pages.dev/device",
   "user_code": "ABCD-EFGH",
   "expires_in": 900,
-  "interval": 5
+  "interval": 5,
+  "next_action_hint": {
+    "type": "login_poll",
+    "when": "after_user_confirms_browser_step_complete",
+    "command_template": "anycap login poll --session <login_session_id> --json"
+  }
 }
 ```
+
+`next_action_hint` should be treated as structured guidance for orchestration, not as an authoritative command string to copy literally.
 
 ### 4.2 Human handoff
 
@@ -187,6 +194,9 @@ Instead, recovery should rely on these structured fields directly:
 - `login_session_id`
 - `expires_in`
 - `interval`
+- `next_action_hint.type`
+- `next_action_hint.when`
+- `next_action_hint.command_template`
 
 The agent can then construct the follow-up command using the real returned session ID, for example:
 
@@ -194,7 +204,7 @@ The agent can then construct the follow-up command using the real returned sessi
 anycap login poll --session <login_session_id> --json
 ```
 
-where `<login_session_id>` is substituted from the actual structured response rather than copied from a fixed example string.
+where `<login_session_id>` is substituted from the actual structured response rather than copied from a fixed example string. `next_action_hint.command_template` is only a template; the actual session ID must come from `login_session_id`.
 
 ### 6.2 Guarantee
 
