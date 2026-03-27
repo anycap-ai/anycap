@@ -1,31 +1,16 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { createForHumanMetadata } from "@/lib/localized-metadata";
+import { defaultLocale } from "@/lib/site";
+import { ForHumanShell } from "@/components/ForHumanShell";
 
-export const metadata: Metadata = {
-  title: siteConfig.humanTitle,
-  description: siteConfig.humanDescription,
-  alternates: {
-    canonical: "/for-human",
-  },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/for-human",
-    siteName: siteConfig.siteName,
-    title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
-    description: siteConfig.humanDescription,
-  },
-  twitter: {
-    card: "summary",
-    title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
-    description: siteConfig.humanDescription,
-  },
-};
+export const runtime = "edge";
+
+export const metadata: Metadata = createForHumanMetadata(defaultLocale);
 
 export default function ForHumanLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <ForHumanShell>{children}</ForHumanShell>;
 }

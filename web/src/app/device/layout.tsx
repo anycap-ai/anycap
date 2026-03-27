@@ -1,4 +1,16 @@
 import type { Metadata } from "next";
+import { GeistPixelSquare } from "geist/font/pixel";
+import { Space_Mono } from "next/font/google";
+import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
+
+export const runtime = "edge";
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   robots: {
@@ -12,5 +24,13 @@ export default function DeviceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <div
+      className={`${GeistPixelSquare.variable} ${spaceMono.variable} relative min-h-screen bg-[#f4f5f0] text-[#1c1f17] antialiased`}
+      style={{ fontFamily: "sans-serif" }}
+    >
+      <LazyGrainOverlay />
+      {children}
+    </div>
+  );
 }

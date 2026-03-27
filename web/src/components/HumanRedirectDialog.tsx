@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
+import Link from "next/link";
 
-export function HumanRedirectDialog() {
+export function HumanRedirectDialog({ href }: { href: string }) {
   const [dismissed, setDismissed] = useState(false);
-  const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
+
+  const handleNavigate = useCallback(() => {
+    setNavigating(true);
+  }, []);
 
   if (dismissed) return null;
 
@@ -17,12 +21,14 @@ export function HumanRedirectDialog() {
           You seem to be a human. Want the human-readable version?
         </p>
         <div className="flex flex-col gap-3">
-          <button
-            onClick={() => router.push("/for-human")}
+          <Link
+            href={href}
+            prefetch={true}
+            onClick={handleNavigate}
             className="px-6 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded hover:bg-white transition-colors"
           >
-            Take me to the human page
-          </button>
+            {navigating ? "Loading…" : "Take me to the human page"}
+          </Link>
           <button
             onClick={() => setDismissed(true)}
             className="px-6 py-2.5 text-sm text-[#666] hover:text-[#888] transition-colors"
