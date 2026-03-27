@@ -83,6 +83,9 @@ func TestAuth0Client_BuildLoginURL(t *testing.T) {
 	if query.Get("scope") != "openid profile email" {
 		t.Fatalf("expected scope, got %q", query.Get("scope"))
 	}
+	if query.Get("prompt") != "login" {
+		t.Fatalf("expected prompt=login, got %q", query.Get("prompt"))
+	}
 }
 
 func TestAuth0Client_ExchangeCode(t *testing.T) {
