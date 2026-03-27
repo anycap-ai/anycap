@@ -114,6 +114,9 @@ func TestLoginDeviceCodeNoWaitJSON(t *testing.T) {
 	if got := payload["poll_command"]; got == "" {
 		t.Fatalf("expected poll_command, got %#v", payload)
 	}
+	if got := payload["poll_command"]; got != "anycap login poll --session "+payload["login_session_id"].(string)+" --json --wait" {
+		t.Fatalf("expected blocking poll_command, got %#v", got)
+	}
 	if got := payload["next_action_hint"]; got == "" {
 		t.Fatalf("expected next_action_hint, got %#v", payload)
 	}
@@ -234,6 +237,75 @@ func TestLoginPollCompleteJSONSavesCredential(t *testing.T) {
 	cred := cliconfig.LoadCredential()
 	if cred == nil || cred.Token() != "ak-test" {
 		t.Fatalf("expected saved api key ak-test, got %+v", cred)
+	}
+}
+
+func TestLoginPollWaitBlocksUntilComplete(t *testing.T) {
+	ms := mockserver.New()
+	ms.RequireDeviceAuthorization()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	_ = cliconfig.DeleteCredential()
+
+	initStdout := &bytes.Buffer{}
+	initCmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    initStdout,
+		Stderr:    &bytes.Buffer{},
+		Stdin:     strings.NewReader(""),
+	})
+	initCmd.SetArgs([]string{"login", "--headless", "--no-wait", "--json"})
+	if err := initCmd.Execute(); err != nil {
+		t.Fatalf("headless no-wait init failed: %v", err)
+	}
+
+	var initPayload map[string]any
+	if err := json.Unmarshal(initStdout.Bytes(), &initPayload); err != nil {
+		t.Fatalf("unmarshal init payload: %v", err)
+	}
+	loginSessionID, _ := initPayload["login_session_id"].(string)
+	if loginSessionID == "" {
+		t.Fatalf("expected login_session_id in init payload, got %#v", initPayload)
+	}
+
+	go func() {
+		time.Sleep(150 * time.Millisecond)
+		ms.AuthorizeDeviceSession(loginSessionID)
+	}()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"login", "poll", "--session", loginSessionID, "--json", "--wait"})
+
+	start := time.Now()
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("login poll --wait failed: %v\nstderr: %s", err, stderr.String())
+	}
+	if elapsed := time.Since(start); elapsed < 150*time.Millisecond {
+		t.Fatalf("expected poll --wait to block, only waited %s", elapsed)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("unmarshal stdout json: %v\nstdout: %s", err, stdout.String())
+	}
+	if got := payload["status"]; got != "complete" {
+		t.Fatalf("expected complete status, got %#v", payload)
+	}
+	cred := cliconfig.LoadCredential()
+	if cred == nil || !strings.HasPrefix(cred.Token(), "mock-ak-") {
+		t.Fatalf("expected saved mock api key, got %+v", cred)
 	}
 }
 

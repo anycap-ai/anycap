@@ -74,7 +74,14 @@ export function CallbackClient() {
           try {
             await anycapPost<{ message: string }>(
               "/v1/auth/device-verify",
-              { user_code: login.deviceCode },
+              {
+                user_code: login.deviceCode,
+                user: {
+                  id: data.user?.id || "",
+                  email: data.user?.email,
+                  name: data.user?.name,
+                },
+              },
               { apiKey: data.api_key },
             );
           } catch {

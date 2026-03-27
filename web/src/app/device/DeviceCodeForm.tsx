@@ -2,7 +2,6 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { anycapPost } from "@/lib/auth/anycap-api";
-import { getSession } from "@/lib/auth/session";
 
 type Props = {
   initialCode: string;
@@ -53,22 +52,6 @@ export function DeviceCodeForm({ initialCode }: Props) {
       if (!check.valid) {
         setError(errorMessage(check.reason));
         return;
-      }
-
-      const session = getSession();
-      if (session?.apiKey) {
-        try {
-          await anycapPost(
-            "/v1/auth/device-verify",
-            { user_code: normalizedCode },
-            { apiKey: session.apiKey },
-          );
-          window.location.assign("/device/complete");
-          return;
-        } catch {
-          setError(errorMessage("verify_failed"));
-          return;
-        }
       }
 
       const target = `/auth/login?return_to=${encodeURIComponent("/device/complete")}&device_code=${encodeURIComponent(normalizedCode)}`;

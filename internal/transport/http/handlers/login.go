@@ -233,7 +233,12 @@ func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 
-	result, err := h.service.VerifyDeviceCode(c, strings.TrimSpace(req.UserCode), *principal)
+	result, err := h.service.VerifyDeviceCode(c, strings.TrimSpace(req.UserCode), *principal, model.AuthUser{
+		UserID:  principal.UserID,
+		Email:   strings.TrimSpace(req.User.Email),
+		Name:    strings.TrimSpace(req.User.Name),
+		Picture: "",
+	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

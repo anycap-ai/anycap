@@ -88,11 +88,14 @@ func (r *MemoryLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, api
 	return nil
 }
 
-func (r *MemoryLoginSessionRepo) MarkVerified(_ context.Context, sessionID, userID string, _ time.Time) error {
+func (r *MemoryLoginSessionRepo) MarkVerified(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	session := r.sessions[sessionID]
-	session.AuthorizedUserID = userID
+	session.AuthorizedUserID = authUser.UserID
+	session.AuthUserEmail = authUser.Email
+	session.AuthUserName = authUser.Name
+	session.AuthUserPicture = authUser.Picture
 	session.Status = model.LoginSessionStatusCompleted
 	r.sessions[sessionID] = session
 	return nil

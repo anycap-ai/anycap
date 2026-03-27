@@ -149,7 +149,7 @@ For agent / toolcall runtimes where blocking stdout is not surfaced incrementall
 
 ```bash
 anycap login --headless --no-wait --json
-anycap login poll --session <login_session_id> --json
+anycap login poll --session <login_session_id> --json --wait
 ```
 
 The init command returns structured JSON including:
@@ -169,7 +169,7 @@ Expected agent workflow:
 3. Tell the human to reply when browser login is complete
 4. After the human confirms completion, run the returned `poll_command`
 
-`next_action_hint` is natural-language orchestration guidance for the agent. `poll_command` is the directly suggested next command, with the real `login_session_id` already substituted.
+`next_action_hint` is natural-language orchestration guidance for the agent. `poll_command` is the directly suggested next command, with the real `login_session_id` already substituted and `--wait` included so the follow-up command blocks until completion.
 
 ### 3.3 Direct Key Input (Skip OAuth entirely)
 

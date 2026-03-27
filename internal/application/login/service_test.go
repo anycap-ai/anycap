@@ -185,9 +185,12 @@ func (r *fakeLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, apiKe
 	return nil
 }
 
-func (r *fakeLoginSessionRepo) MarkVerified(_ context.Context, sessionID, userID string, _ time.Time) error {
+func (r *fakeLoginSessionRepo) MarkVerified(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
 	session := r.sessions[sessionID]
-	session.AuthorizedUserID = userID
+	session.AuthorizedUserID = authUser.UserID
+	session.AuthUserEmail = authUser.Email
+	session.AuthUserName = authUser.Name
+	session.AuthUserPicture = authUser.Picture
 	session.Status = model.LoginSessionStatusCompleted
 	r.sessions[sessionID] = session
 	return nil
@@ -938,11 +941,21 @@ func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
 		7*24*time.Hour,
 	)
 
-	result, err := service.VerifyDeviceCode(context.Background(), "ABCD-1234", model.Principal{
-		UserID:   "2000000009",
-		APIKeyID: "key-web",
-		AuthType: "api_key",
-	})
+	result, err := service.VerifyDeviceCode(
+		context.Background(),
+		"ABCD-1234",
+		model.Principal{
+			UserID:   "2000000009",
+			APIKeyID: "key-web",
+			AuthType: "api_key",
+		},
+		model.AuthUser{
+			UserID:  "2000000009",
+			Email:   "viewer@example.com",
+			Name:    "Viewer User",
+			Picture: "https://img.example.com/u.png",
+		},
+	)
 	if err != nil {
 		t.Fatalf("VerifyDeviceCode() error = %v", err)
 	}
@@ -955,6 +968,9 @@ func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
 	}
 	if session.AuthorizedUserID != "2000000009" {
 		t.Fatalf("expected authorized user id to be recorded, got %#v", session)
+	}
+	if session.AuthUserEmail != "viewer@example.com" || session.AuthUserName != "Viewer User" {
+		t.Fatalf("expected verified user profile to be recorded, got %#v", session)
 	}
 }
 

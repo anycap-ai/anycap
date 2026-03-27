@@ -371,7 +371,7 @@ func (s *Service) CheckDeviceCode(ctx context.Context, userCode string) (model.D
 	return model.DeviceCodeCheckResult{Valid: true}, nil
 }
 
-func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, principal model.Principal) (model.DeviceVerifyResult, error) {
+func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, principal model.Principal, authUser model.AuthUser) (model.DeviceVerifyResult, error) {
 	if principal.UserID == "" || principal.AuthType == "" {
 		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
 	}
@@ -385,7 +385,10 @@ func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, princip
 	if session.Status != model.LoginSessionStatusPending {
 		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
 	}
-	if err := s.sessions.MarkVerified(ctx, session.ID, principal.UserID, s.now().UTC()); err != nil {
+	if authUser.UserID == "" {
+		authUser.UserID = principal.UserID
+	}
+	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		return model.DeviceVerifyResult{}, err
 	}
 	return model.DeviceVerifyResult{Message: "authorized"}, nil
