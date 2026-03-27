@@ -95,9 +95,25 @@ func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, prov
 	}, true, nil
 }
 
+func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (model.User, error) {
+	if user, ok := f.users[userID]; ok {
+		return user, nil
+	}
+	for _, user := range f.users {
+		if user.ID == userID {
+			return user, nil
+		}
+	}
+	return model.User{}, model.ErrAuthInvalid
+}
+
 func (f *fakeAuthClient) BuildLoginURL(_ context.Context, _, redirectURI string) (string, error) {
 	f.redirectURI = redirectURI
 	return f.loginURL, nil
+}
+
+func (f *fakeAuthClient) BuildLogoutURL(_ context.Context, _ string) (string, error) {
+	return "https://auth.anycap.local/v2/logout", nil
 }
 
 func (f *fakeAuthClient) ExchangeCode(_ context.Context, code, redirectURI string) (model.AuthUser, error) {
@@ -804,7 +820,17 @@ func TestService_PollDeviceExpiresWhenUserCodeExpires(t *testing.T) {
 	}
 	service := NewService(
 		&fakeAuthClient{},
-		&fakeUserProvisioner{},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"2000000009": {
+					ID:        "2000000009",
+					Email:     "viewer@example.com",
+					Name:      "Viewer User",
+					AvatarURL: "https://img.example.com/u.png",
+					Status:    model.UserStatusActive,
+				},
+			},
+		},
 		&fakeLoginCreditClient{},
 		apikey.NewMemoryService(),
 		repo,
@@ -895,7 +921,17 @@ func TestService_CheckDeviceCodeValid(t *testing.T) {
 	}
 	service := NewService(
 		&fakeAuthClient{},
-		&fakeUserProvisioner{},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"2000000009": {
+					ID:        "2000000009",
+					Email:     "viewer@example.com",
+					Name:      "Viewer User",
+					AvatarURL: "https://img.example.com/u.png",
+					Status:    model.UserStatusActive,
+				},
+			},
+		},
 		&fakeLoginCreditClient{},
 		&fakeLoginAPIKeyService{},
 		repo,
@@ -929,7 +965,17 @@ func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
 	}
 	service := NewService(
 		&fakeAuthClient{},
-		&fakeUserProvisioner{},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"2000000009": {
+					ID:        "2000000009",
+					Email:     "viewer@example.com",
+					Name:      "Viewer User",
+					AvatarURL: "https://img.example.com/u.png",
+					Status:    model.UserStatusActive,
+				},
+			},
+		},
 		&fakeLoginCreditClient{},
 		&fakeLoginAPIKeyService{},
 		repo,
@@ -971,6 +1017,127 @@ func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
 	}
 	if session.AuthUserEmail != "viewer@example.com" || session.AuthUserName != "Viewer User" {
 		t.Fatalf("expected verified user profile to be recorded, got %#v", session)
+	}
+}
+
+func TestService_VerifyDeviceCodeLoadsUserProfileFromServer(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 27, 6, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-device"] = model.LoginSession{
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		UserCode:          "ABCD-1234",
+		Status:            model.LoginSessionStatusPending,
+		ExpiresAt:         now.Add(10 * time.Minute),
+		UserCodeExpiresAt: now.Add(5 * time.Minute),
+	}
+	users := &fakeUserProvisioner{
+		users: map[string]model.User{
+			"2000000009": {
+				ID:        "2000000009",
+				Email:     "viewer@example.com",
+				Name:      "Viewer User",
+				AvatarURL: "https://img.example.com/u.png",
+				Status:    model.UserStatusActive,
+			},
+		},
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		users,
+		&fakeLoginCreditClient{},
+		&fakeLoginAPIKeyService{},
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	_, err := service.VerifyDeviceCode(
+		context.Background(),
+		"ABCD-1234",
+		model.Principal{
+			UserID:   "2000000009",
+			APIKeyID: "key-web",
+			AuthType: "api_key",
+		},
+		model.AuthUser{},
+	)
+	if err != nil {
+		t.Fatalf("VerifyDeviceCode() error = %v", err)
+	}
+
+	session := repo.sessions["lsn-device"]
+	if session.AuthUserEmail != "viewer@example.com" || session.AuthUserName != "Viewer User" {
+		t.Fatalf("expected verified user profile to be loaded from server, got %#v", session)
+	}
+}
+
+func TestService_PollAfterVerifyIncludesUserProfile(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 27, 6, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-device"] = model.LoginSession{
+		ID:                "lsn-device",
+		FlowType:          model.LoginFlowDevice,
+		UserCode:          "ABCD-1234",
+		Status:            model.LoginSessionStatusPending,
+		ExpiresAt:         now.Add(10 * time.Minute),
+		UserCodeExpiresAt: now.Add(5 * time.Minute),
+	}
+	users := &fakeUserProvisioner{
+		users: map[string]model.User{
+			"2000000009": {
+				ID:        "2000000009",
+				Email:     "viewer@example.com",
+				Name:      "Viewer User",
+				AvatarURL: "https://img.example.com/u.png",
+				Status:    model.UserStatusActive,
+			},
+		},
+	}
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key-poll", UserID: "2000000009"},
+			RawKey: "ak-poll",
+		},
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		repo,
+		"https://anycap.local/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	_, err := service.VerifyDeviceCode(
+		context.Background(),
+		"ABCD-1234",
+		model.Principal{
+			UserID:   "2000000009",
+			APIKeyID: "key-web",
+			AuthType: "api_key",
+		},
+		model.AuthUser{},
+	)
+	if err != nil {
+		t.Fatalf("VerifyDeviceCode() error = %v", err)
+	}
+
+	pollResult, err := service.Poll(context.Background(), "lsn-device", "")
+	if err != nil {
+		t.Fatalf("Poll() error = %v", err)
+	}
+	if pollResult.User == nil || pollResult.User.Email != "viewer@example.com" || pollResult.User.Name != "Viewer User" {
+		t.Fatalf("expected poll user profile to be populated, got %#v", pollResult.User)
 	}
 }
 
