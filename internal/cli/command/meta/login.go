@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/auth"
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
@@ -75,7 +76,7 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 						"user_code":        result.UserCode,
 						"expires_in":       result.ExpiresIn,
 						"interval":         result.Interval,
-						"poll_command":     fmt.Sprintf("anycap login poll --session %s --json", result.LoginSessionID),
+						"poll_command":     fmt.Sprintf("anycap login poll --session %s --json --wait", result.LoginSessionID),
 						"next_action_hint": "Show the verification URL and code to the user, ask them to complete login in a browser, and tell them to reply to the agent once they have finished. After the user confirms completion, run `poll_command`.",
 					}
 					data, err := json.Marshal(payload)
@@ -113,6 +114,7 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 
 	var pollSession string
 	var pollJSON bool
+	var pollWait bool
 	pollCmd := &cobra.Command{
 		Use:   "poll",
 		Short: "Poll a previously initialized headless login session",
@@ -128,6 +130,23 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 			result, err := auth.DevicePoll(cmd.Context(), client, strings.TrimSpace(pollSession))
 			if err != nil {
 				return err
+			}
+			if pollWait {
+				for result.Status == "pending" || result.Status == "slow_down" {
+					wait := time.Second
+					if result.Status == "slow_down" {
+						wait = 5 * time.Second
+					}
+					select {
+					case <-cmd.Context().Done():
+						return cmd.Context().Err()
+					case <-time.After(wait):
+					}
+					result, err = auth.DevicePoll(cmd.Context(), client, strings.TrimSpace(pollSession))
+					if err != nil {
+						return err
+					}
+				}
 			}
 
 			payload := map[string]any{
@@ -166,6 +185,7 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 	}
 	pollCmd.Flags().StringVar(&pollSession, "session", "", "Login session ID returned by headless init")
 	pollCmd.Flags().BoolVar(&pollJSON, "json", false, "Output structured JSON for agent/toolcall usage")
+	pollCmd.Flags().BoolVar(&pollWait, "wait", false, "Block and keep polling until the login session completes or expires")
 	cmd.AddCommand(pollCmd)
 
 	return cmd

@@ -4,7 +4,6 @@ import { FormEvent, useMemo, useState } from "react";
 
 type Props = {
   initialCode: string;
-  authenticated: boolean;
 };
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
@@ -20,7 +19,7 @@ function errorMessage(reason: string | undefined): string {
   }
 }
 
-export function DeviceCodeForm({ initialCode, authenticated }: Props) {
+export function DeviceCodeForm({ initialCode }: Props) {
   const [code, setCode] = useState(initialCode);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -51,21 +50,6 @@ export function DeviceCodeForm({ initialCode, authenticated }: Props) {
 
       if (!check.valid) {
         setError(errorMessage(check.reason));
-        return;
-      }
-
-      if (authenticated) {
-        const verifyResp = await fetch("/api/device-verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_code: normalizedCode }),
-        });
-        if (!verifyResp.ok) {
-          const payload = (await verifyResp.json().catch(() => ({}))) as { message?: string };
-          setError(errorMessage(payload.message));
-          return;
-        }
-        window.location.assign("/device/complete");
         return;
       }
 

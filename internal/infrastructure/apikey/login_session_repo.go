@@ -155,16 +155,16 @@ func (r *LoginSessionRepo) MarkCompleted(ctx context.Context, sessionID, apiKeyI
 	return err
 }
 
-func (r *LoginSessionRepo) MarkVerified(ctx context.Context, sessionID, userID string, verifiedAt time.Time) error {
-	numericID, err := parseUserID(userID)
+func (r *LoginSessionRepo) MarkVerified(ctx context.Context, sessionID string, authUser model.AuthUser, verifiedAt time.Time) error {
+	numericID, err := parseUserID(authUser.UserID)
 	if err != nil {
 		return model.ErrInternal
 	}
 	_, err = r.db.ExecContext(ctx, `
 		UPDATE login_sessions
-		SET authorized_user_id = $2, status = $3, completed_at = $4
+		SET authorized_user_id = $2, auth_user_email = $3, auth_user_name = $4, auth_user_picture = $5, status = $6, completed_at = $7
 		WHERE id = $1
-	`, sessionID, numericID, model.LoginSessionStatusCompleted, verifiedAt)
+	`, sessionID, numericID, emptyToNil(authUser.Email), emptyToNil(authUser.Name), emptyToNil(authUser.Picture), model.LoginSessionStatusCompleted, verifiedAt)
 	return err
 }
 

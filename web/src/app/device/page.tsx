@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
-import { normalizeUserCode, readSessionCookie } from "@/lib/auth/session";
+import { normalizeUserCode } from "@/lib/auth/session";
 import { DeviceCodeForm } from "./DeviceCodeForm";
 
 type Props = {
@@ -17,8 +16,6 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 export default async function DevicePage({ searchParams }: Props) {
   const params = (await searchParams) || {};
-  const cookieStore = await cookies();
-  const session = readSessionCookie(cookieStore);
   const initialCode = normalizeUserCode(params.code);
   const urlError = params.error === "verify_failed" ? "Authorization failed. Please retry." : "";
 
@@ -60,7 +57,7 @@ export default async function DevicePage({ searchParams }: Props) {
             ) : null}
 
             <div className="mt-10">
-              <DeviceCodeForm initialCode={initialCode} authenticated={Boolean(session?.apiKey)} />
+              <DeviceCodeForm initialCode={initialCode} />
             </div>
           </div>
         </section>
