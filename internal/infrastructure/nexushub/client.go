@@ -131,7 +131,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return model.GenerateImageResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Message)
+		return model.GenerateImageResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
 	}
 
 	result := model.GenerateImageResult{
@@ -254,7 +254,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return model.GenerateVideoResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Message)
+		return model.GenerateVideoResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
 	}
 
 	result := model.GenerateVideoResult{
@@ -419,13 +419,39 @@ func guessMIMEType(resourceURL string) string {
 	return mime.TypeByExtension(filepath.Ext(resourceURL))
 }
 
-func mapSubmitError(statusCode int, message string) error {
+// mapSubmitError maps NexusHub submit_atomic_process errors to domain errors.
+//
+// NexusHub always returns HTTP 500 for task processing failures, embedding the
+// real error semantics in base.code (the responseCode). We use base.code for
+// structured mapping instead of relying on HTTP status alone.
+//
+// Known NexusHub base.code values:
+//
+//	  0 = success
+//	400 = invalid request (ResponseCodeInvalidRequest)
+//	422 = validation failed (ResponseCodeValidationFailed)
+//	429 = rate limit (ResponseCodeRateLimit)
+//	500 = internal error (ResponseCodeInternalError)
+//	5003 = rate limit (TaskErrCodeRateLimit)
+//	5005 = invalid request params (TaskErrCodeInvalidRequest)
+func mapSubmitError(httpStatus, baseCode int, message string) error {
 	message = strings.TrimSpace(message)
 	if message == "" {
 		message = "nexushub request failed"
 	}
 
-	if statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError {
+	// 1. HTTP 4xx is always a client error.
+	if httpStatus >= http.StatusBadRequest && httpStatus < http.StatusInternalServerError {
+		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
+	}
+
+	// 2. Map by NexusHub base.code (responseCode / TaskErrCode).
+	switch baseCode {
+	case 400, 422, 5005: // invalid request / validation failed / TaskErrCodeInvalidRequest
+		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
+	case 429, 5003: // rate limit / TaskErrCodeRateLimit
+		return fmt.Errorf("%w: %s", model.ErrRateLimited, message)
+	case 5001: // TaskErrCodeReview (content moderation)
 		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
 	}
 

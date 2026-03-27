@@ -121,6 +121,132 @@ func TestClient_GenerateImage(t *testing.T) {
 	}
 }
 
+// TestMapSubmitError_NexusHub500WithValidationCode reproduces the exact error
+// from production: NexusHub returns HTTP 500 with base.code=5005 for what is
+// actually a parameter validation error (unsupported video duration).
+func TestMapSubmitError_NexusHub500WithValidationCode(t *testing.T) {
+	tests := []struct {
+		name       string
+		httpStatus int
+		baseCode   int
+		message    string
+		wantErr    error // sentinel error to match
+	}{
+		{
+			name:       "HTTP 500 + base.code 5005 (TaskErrCodeInvalidRequest) maps to ErrInvalidParam",
+			httpStatus: 500,
+			baseCode:   5005,
+			message:    "internal server error: [3] Unsupported output video duration 5 seconds, supported durations are [8,4,6] for feature text_to_video.",
+			wantErr:    model.ErrInvalidParam,
+		},
+		{
+			name:       "HTTP 500 + base.code 422 (validation failed) maps to ErrInvalidParam",
+			httpStatus: 500,
+			baseCode:   422,
+			message:    "validation failed: invalid ratio",
+			wantErr:    model.ErrInvalidParam,
+		},
+		{
+			name:       "HTTP 500 + base.code 5003 (rate limit) maps to ErrRateLimited",
+			httpStatus: 500,
+			baseCode:   5003,
+			message:    "too many requests",
+			wantErr:    model.ErrRateLimited,
+		},
+		{
+			name:       "HTTP 500 + base.code 500 (true internal error) remains untyped",
+			httpStatus: 500,
+			baseCode:   500,
+			message:    "internal server error",
+			wantErr:    nil, // no sentinel wrapping
+		},
+		{
+			name:       "HTTP 400 always maps to ErrInvalidParam regardless of base.code",
+			httpStatus: 400,
+			baseCode:   0,
+			message:    "bad request",
+			wantErr:    model.ErrInvalidParam,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := mapSubmitError(tt.httpStatus, tt.baseCode, tt.message)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if tt.wantErr != nil {
+				if !strings.Contains(err.Error(), tt.wantErr.Error()) {
+					t.Fatalf("expected error to wrap %v, got: %v", tt.wantErr, err)
+				}
+			} else {
+				// Should NOT wrap a sentinel error
+				if strings.Contains(err.Error(), model.ErrInvalidParam.Error()) ||
+					strings.Contains(err.Error(), model.ErrRateLimited.Error()) {
+					t.Fatalf("expected untyped error, got: %v", err)
+				}
+			}
+			// Message should always be preserved
+			if !strings.Contains(err.Error(), tt.message) {
+				t.Fatalf("expected message %q in error, got: %v", tt.message, err)
+			}
+		})
+	}
+}
+
+// TestClient_GenerateVideo_NexusHub500ValidationError tests the full roundtrip:
+// NexusHub returns HTTP 500 with base.code=5005 for an invalid duration,
+// and the client should return an ErrInvalidParam-wrapped error.
+func TestClient_GenerateVideo_NexusHub500ValidationError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate NexusHub returning HTTP 500 with base.code=5005
+		resp := submitAtomicProcessResponse{
+			Base: submitBaseResponse{
+				Code:    5005,
+				Message: "internal server error: [3] Unsupported output video duration 5 seconds, supported durations are [8,4,6] for feature text_to_video.",
+			},
+			TaskID: "task-failed",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(resp)
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{
+		BaseURL: srv.URL,
+		Token:   "nexus-token",
+	})
+
+	ctx := middleware.ContextWithRequestID(context.Background(), "req-test-duration")
+
+	_, err := client.GenerateVideo(ctx, model.GenerateVideoRequest{
+		RequestID: "req-test-duration",
+		UserID:    "12345",
+		Prompt:    "ocean waves",
+		Model:     "veo-3.1",
+		Duration:  5,
+	}, model.RouteBinding{
+		AbilityKey: "veo3.1",
+		GenType:    string(model.CapabilityVideo),
+		Enabled:    true,
+	})
+
+	if err == nil {
+		t.Fatal("expected error for unsupported duration")
+	}
+
+	// Must be ErrInvalidParam, not a generic internal error
+	if !strings.Contains(err.Error(), model.ErrInvalidParam.Error()) {
+		t.Fatalf("expected ErrInvalidParam, got: %v", err)
+	}
+
+	// Error message must contain the useful detail
+	if !strings.Contains(err.Error(), "supported durations are [8,4,6]") {
+		t.Fatalf("expected duration constraint in error, got: %v", err)
+	}
+}
+
 func TestClient_GenerateImageRequiresNumericUserID(t *testing.T) {
 	client := NewClient(ClientConfig{
 		BaseURL: "https://example.com",
