@@ -91,7 +91,8 @@ The command should return immediately with JSON:
   "user_code": "ABCD-EFGH",
   "expires_in": 900,
   "interval": 5,
-  "next_action_hint": "Show the verification URL and code to the user, ask them to complete login in a browser, and tell them to reply to the agent once they have finished. After the user confirms completion, run `anycap login poll --session <login_session_id> --json` using the returned login_session_id."
+  "poll_command": "anycap login poll --session lsn_123 --json",
+  "next_action_hint": "Show the verification URL and code to the user, ask them to complete login in a browser, and tell them to reply to the agent once they have finished. After the user confirms completion, run `poll_command`."
 }
 ```
 
@@ -193,14 +194,20 @@ Instead, recovery should rely on these structured fields directly:
 - `interval`
 - `verification_uri`
 - `user_code`
+- `poll_command`
 
-The agent can then construct the follow-up command using the real returned session ID, for example:
+The response should also provide a ready-to-run `poll_command` with the real session ID already substituted. For example:
 
 ```bash
-anycap login poll --session <login_session_id> --json
+anycap login poll --session lsn_123 --json
 ```
 
-where `<login_session_id>` is substituted from the actual structured response rather than copied from the example text inside `next_action_hint`.
+This makes tool-call orchestration simpler:
+
+- `next_action_hint` explains **when** to run the follow-up command
+- `poll_command` gives the agent a near-directly executable next step
+
+Even with `poll_command`, `login_session_id` remains the authoritative session identifier in the response model.
 
 ### 6.2 Guarantee
 

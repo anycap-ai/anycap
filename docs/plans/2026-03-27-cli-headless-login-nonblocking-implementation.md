@@ -68,8 +68,9 @@ git commit -m "refactor: extract headless login init and poll helpers"
 - 为 `login` 命令新增测试，覆盖：
   - `anycap login --headless --no-wait --json` 返回结构化 JSON 到 stdout
   - 返回字段至少包含 `login_session_id`、`verification_uri`、`user_code`、`expires_in`、`interval`
+  - 返回 `poll_command`
   - 返回字符串 `next_action_hint`
-  - `next_action_hint` 明确告诉 agent：先把 URL/code 给用户，要求用户完成后回到 agent 确认，再执行 poll
+  - `next_action_hint` 明确告诉 agent：先把 URL/code 给用户，要求用户完成后回到 agent 确认，再执行 `poll_command`
   - `--no-wait` 不保存 credential，不进入阻塞 poll
   - `--no-wait` 仅允许和 `--headless` 组合
   - `--json` 在此阶段至少覆盖 `--no-wait` 和 `login poll`
@@ -90,10 +91,12 @@ Expected: FAIL
 - `--headless --no-wait --json` 路径：
   - 调 `auth.DeviceInit`
   - 用 `output.WriteJSON` 将 init 结果输出到 stdout
+  - 输出 `poll_command`，例如：
+    - `anycap login poll --session <real-login-session-id> --json`
   - 输出字符串 `next_action_hint`，明确提示 agent：
     - 展示 `verification_uri` 与 `user_code`
     - 告诉用户完成后要回来回复 agent 确认已完成
-    - 在用户确认后，使用返回里的真实 `login_session_id` 执行 poll
+    - 在用户确认后，执行 `poll_command`
   - stderr 不再打印阻塞等待文案
 - 如果后续希望支持非 JSON 模式，可留 TODO，但 phase 1 先把 agent 场景走通
 
@@ -254,8 +257,9 @@ git commit -m "test: cover blocking and nonblocking login flows"
   - 再 poll
 - 标出 `poll` 不要求紧跟 `init`
 - 标出持久化 session 是 server 重启可恢复的前提
-- 标出 agent 应使用结构化返回里的 `login_session_id` 来组装 poll 命令，而不是依赖示例 session 值
-- 标出 `next_action_hint` 是给 agent 的一句话 orchestration hint，不是可直接照抄执行的固定命令
+- 标出 `poll_command` 是给 agent 的直接建议命令，更适合 tool-call 场景
+- 标出 `next_action_hint` 是给 agent 的一句话 orchestration hint，说明何时执行 `poll_command`
+- 标出 `login_session_id` 仍是权威会话标识；`poll_command` 只是基于它生成的便捷字段
 
 **Step 2: 更新文档**
 
@@ -265,7 +269,7 @@ git commit -m "test: cover blocking and nonblocking login flows"
 
 **Step 3: 运行最小文档校对**
 
-Run: `rg -n "no-wait|login poll|确认语义|login_session_id|next_action_hint" docs/cli/spec/oauth.md skills/anycap-cli docs/plans/2026-03-27-cli-headless-login-nonblocking-design.md`
+Run: `rg -n "no-wait|login poll|确认语义|login_session_id|next_action_hint|poll_command" docs/cli/spec/oauth.md skills/anycap-cli docs/plans/2026-03-27-cli-headless-login-nonblocking-design.md`
 Expected: matching lines found in all relevant docs
 
 **Step 4: Commit**
@@ -316,5 +320,7 @@ Expected: only intended files changed
 - phase 1 不改 server API shape；只消费现有 `/v1/auth/device-code` 与 `/v1/auth/device-poll`
 - phase 1 不改 `anycap login` 浏览器流
 - phase 1 不要求 agent 自动持续 poll；推荐的人机协作方式仍是“人类给出确认语义后再 poll”
-- phase 1 引入字符串 `next_action_hint`，但它只是 orchestration hint；恢复仍依赖结构化返回里的 `login_session_id`、`verification_uri`、`user_code`、`expires_in`、`interval`
+- phase 1 引入字符串 `next_action_hint` 与便捷字段 `poll_command`
+- `next_action_hint` 负责说明人机协作步骤；`poll_command` 负责给 agent 一个可直接执行的下一步命令
+- 恢复的权威数据仍是结构化返回里的 `login_session_id`、`verification_uri`、`user_code`、`expires_in`、`interval`
 - 若后续需要完整 machine-to-machine orchestration，再考虑增加 server-side poll token 或 resume token，但不在本计划范围内
