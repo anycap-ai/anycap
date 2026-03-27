@@ -235,12 +235,12 @@ func TestLoginSessionRepo_MarkVerified(t *testing.T) {
 	db := &fakeLoginSessionDB{}
 	repo := NewLoginSessionRepo(db)
 
-	err := repo.MarkVerified(context.Background(), "lsn-5", "2000000001", time.Date(2026, 3, 25, 10, 3, 0, 0, time.UTC))
+	err := repo.MarkVerified(context.Background(), "lsn-5", model.AuthUser{UserID: "2000000001"}, time.Date(2026, 3, 25, 10, 3, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatalf("MarkVerified() error = %v", err)
 	}
-	if len(db.args) != 4 {
-		t.Fatalf("expected 4 args, got %d", len(db.args))
+	if len(db.args) != 7 {
+		t.Fatalf("expected 7 args, got %d", len(db.args))
 	}
 }
 
