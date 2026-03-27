@@ -78,6 +78,7 @@ AnyCap capabilities are organized into two groups:
 
 **Generation** -- create new content from prompts.
 Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
+Read [references/video-generation.md](references/video-generation.md) when you need to generate videos. Videos are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o product-demo.mp4`). Supports text-to-video and image-to-video via `--reference-image`.
 
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
@@ -87,7 +88,6 @@ Read [references/actions.md](references/actions.md) when you need to understand 
 - Music composition (text-to-music)
 - Text-to-speech / voice synthesis
 - Web search and web crawling
-- Video generation
 
 Use `anycap feedback --type feature` to request prioritization of upcoming capabilities.
 
@@ -156,6 +156,9 @@ anycap image models | jq -r '.models[].model'
 
 # Get the local file path from a generate response (use -o for a descriptive name)
 anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.png | jq -r '.local_path'
+
+# Generate a video and get its path
+anycap video generate --prompt "..." --model wan-2.1 -o clip.mp4 | jq -r '.local_path'
 
 # Extract content from an action response
 anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.content'

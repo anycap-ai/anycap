@@ -40,10 +40,10 @@ func (r scanRow) Scan(dest ...any) error { return r.scan(dest...) }
 
 type fakeRows struct{}
 
-func (fakeRows) Next() bool              { return false }
-func (fakeRows) Scan(...any) error       { return nil }
-func (fakeRows) Close() error            { return nil }
-func (fakeRows) Err() error              { return nil }
+func (fakeRows) Next() bool        { return false }
+func (fakeRows) Scan(...any) error { return nil }
+func (fakeRows) Close() error      { return nil }
+func (fakeRows) Err() error        { return nil }
 
 func TestAPIKeyRepo_Insert(t *testing.T) {
 	db := &fakeAPIKeyDB{}

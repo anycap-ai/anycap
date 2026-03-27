@@ -8,7 +8,9 @@ import (
 
 // WriteJSON writes raw JSON payload to the writer.
 // Used for local commands that don't have a server request_id.
+// Automatically injects _system_reminder if one is set.
 func WriteJSON(w io.Writer, payload []byte) error {
+	payload = injectReminder(payload)
 	_, err := fmt.Fprintln(w, string(payload))
 	return err
 }
@@ -49,8 +51,7 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 		return WriteServerJSON(w, payload, requestID)
 	}
 
-	_, err = fmt.Fprintln(w, string(data))
-	return err
+	return WriteJSON(w, data)
 }
 
 // WriteError writes a structured JSON error to the writer.
@@ -64,8 +65,7 @@ func WriteError(w io.Writer, code, message, hint, requestID string) error {
 		obj["request_id"] = requestID
 	}
 	data, _ := json.Marshal(obj)
-	_, err := fmt.Fprintln(w, string(data))
-	return err
+	return WriteJSON(w, data)
 }
 
 // injectRequestID adds a request_id field to a JSON object payload.

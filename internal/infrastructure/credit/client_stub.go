@@ -12,7 +12,7 @@ type StubClient struct {
 	mu         sync.Mutex
 	balances   map[string]int64
 	deductions map[string]struct{}
-	events      []model.CreditTransaction
+	events     []model.CreditTransaction
 }
 
 func NewStubClient(initialBalances map[string]int64) *StubClient {

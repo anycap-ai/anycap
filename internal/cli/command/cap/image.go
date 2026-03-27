@@ -76,7 +76,12 @@ Examples:
 
 // listModels fetches all models and optionally filters to a single model.
 func listModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, args []string) error {
-	resp, err := client.Get(cmd.Context(), "/v1/image/models")
+	return listCapModels(cmd, client, stdout, "image", args)
+}
+
+// listCapModels fetches models for a given capability and optionally filters to one.
+func listCapModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability string, args []string) error {
+	resp, err := client.Get(cmd.Context(), fmt.Sprintf("/v1/%s/models", capability))
 	if err != nil {
 		return err
 	}
@@ -117,7 +122,12 @@ func listModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer,
 
 // fetchModelSchema fetches the request schema for a specific model and operation.
 func fetchModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, model, operation string) error {
-	path := fmt.Sprintf("/v1/image/models/%s/schema?operation=%s", model, operation)
+	return fetchCapModelSchema(cmd, client, stdout, "image", model, operation)
+}
+
+// fetchCapModelSchema fetches the request schema for any capability.
+func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability, model, operation string) error {
+	path := fmt.Sprintf("/v1/%s/models/%s/schema?operation=%s", capability, model, operation)
 	resp, err := client.Get(cmd.Context(), path)
 	if err != nil {
 		return err
@@ -177,12 +187,12 @@ Examples:
 			}
 
 			// Download the generated image.
-			if genResult.ImageURL != "" {
+			if genResult.OutputURL != "" {
 				savePath := outputPath
 				if savePath == "" {
-					savePath = defaultImageFilename(genResult.ImageURL)
+					savePath = defaultImageFilename(genResult.OutputURL)
 				}
-				absPath, dlErr := fileutil.DownloadFile(genResult.ImageURL, savePath)
+				absPath, dlErr := fileutil.DownloadFile(genResult.OutputURL, savePath)
 				if dlErr != nil {
 					return fmt.Errorf("generation succeeded but download failed: %w", dlErr)
 				}
@@ -190,7 +200,7 @@ Examples:
 			}
 
 			// Write flat, agent-friendly output.
-			return writeImageResult(stdout, genResult, resp.RequestID)
+			return writeGenerateResult(stdout, genResult, resp.RequestID)
 		},
 	}
 
@@ -219,10 +229,10 @@ func parseParamValue(v string) any {
 	return v
 }
 
-// generateResult holds the parsed fields from an image generate response.
+// generateResult holds the parsed fields from a generate response (image or video).
 type generateResult struct {
 	Status      string
-	ImageURL    string
+	OutputURL   string
 	LocalPath   string
 	Model       string
 	CreditsUsed int
@@ -260,13 +270,13 @@ func parseGenerateResponse(body []byte) (*generateResult, error) {
 		CreditsUsed: env.Data.CreditCost,
 	}
 	if len(env.Data.Outputs) > 0 {
-		result.ImageURL = env.Data.Outputs[0].URL
+		result.OutputURL = env.Data.Outputs[0].URL
 	}
 	return result, nil
 }
 
-// writeImageResult writes a flat, agent-friendly JSON result for image generation.
-func writeImageResult(w io.Writer, r *generateResult, requestID string) error {
+// writeGenerateResult writes a flat, agent-friendly JSON result for generation commands.
+func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error {
 	result := map[string]any{
 		"status":       r.Status,
 		"local_path":   r.LocalPath,

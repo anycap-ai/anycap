@@ -30,6 +30,7 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 		}
 
 		SetPrincipal(c, principal)
+		ctx = ContextWithUserID(ctx, principal.UserID)
 		c.Next(ctx)
 	}
 }
@@ -37,6 +38,7 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 func LocalBypassAuth(principal model.Principal) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
 		SetPrincipal(c, principal)
+		ctx = ContextWithUserID(ctx, principal.UserID)
 		c.Next(ctx)
 	}
 }

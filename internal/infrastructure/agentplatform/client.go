@@ -134,6 +134,9 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	if c.tenantID != "" {
 		httpReq.Header.Set("X-Tenant-ID", c.tenantID)
 	}
+	if userID := middleware.UserIDFromContext(ctx); userID != "" {
+		httpReq.Header.Set("X-User-ID", userID)
+	}
 	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
 		httpReq.Header.Set("X-Request-ID", requestID)
 	}

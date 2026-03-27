@@ -28,12 +28,12 @@ import (
 type Server struct {
 	mux *http.ServeMux
 
-	mu                 sync.Mutex
-	loginStates        map[string]loginStateEntry       // state -> entry
+	mu                  sync.Mutex
+	loginStates         map[string]loginStateEntry       // state -> entry
 	browserPollSessions map[string]browserPollStateEntry // login_session_id -> entry
-	deviceCodes        map[string]deviceCodeEntry       // login_session_id -> entry
-	refreshTokens      map[string]string                // refresh_token -> user email
-	logoutCalls        int
+	deviceCodes         map[string]deviceCodeEntry       // login_session_id -> entry
+	refreshTokens       map[string]string                // refresh_token -> user email
+	logoutCalls         int
 }
 
 type loginStateEntry struct {
@@ -82,6 +82,12 @@ func New() *Server {
 	s.mux.HandleFunc("GET /v1/image/models/{model}/schema", s.handleImageModelSchema)
 	s.mux.HandleFunc("POST /v1/image/generate", s.handleImageGenerate)
 	s.mux.HandleFunc("GET /images/", s.handleMockImage)
+
+	// Video generation
+	s.mux.HandleFunc("GET /v1/video/models", s.handleVideoModels)
+	s.mux.HandleFunc("GET /v1/video/models/{model}/schema", s.handleVideoModelSchema)
+	s.mux.HandleFunc("POST /v1/video/generate", s.handleVideoGenerate)
+	s.mux.HandleFunc("GET /videos/", s.handleMockVideo)
 
 	return s
 }
@@ -604,6 +610,107 @@ func (s *Server) handleImageGenerate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMockImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
 	w.Write([]byte("mock-image-data"))
+}
+
+// --- Video Generation Capabilities ---
+
+func (s *Server) handleVideoModels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"status":     "success",
+		"capability": "video",
+		"models": []map[string]any{
+			{
+				"model":        "mock-video-1",
+				"capability":   "video",
+				"display_name": "Mock Video 1",
+				"status":       "active",
+				"operations":   []string{"generate"},
+			},
+			{
+				"model":        "mock-video-2",
+				"capability":   "video",
+				"display_name": "Mock Video 2",
+				"status":       "active",
+				"operations":   []string{"generate"},
+			},
+		},
+	})
+}
+
+func (s *Server) handleVideoModelSchema(w http.ResponseWriter, r *http.Request) {
+	model := r.PathValue("model")
+	operation := r.URL.Query().Get("operation")
+	if operation == "" {
+		operation = "generate"
+	}
+
+	writeSuccess(w, map[string]any{
+		"capability": "video",
+		"model":      model,
+		"operation":  operation,
+		"schema": map[string]any{
+			"model_params": map[string]any{
+				"prompt":          map[string]any{"type": "string", "required": true},
+				"negative_prompt": map[string]any{"type": "string"},
+				"ratio":           map[string]any{"type": "string", "enum": []string{"1:1", "16:9", "9:16"}},
+				"resolution":      map[string]any{"type": "string", "enum": []string{"720p", "1080p"}},
+				"duration":        map[string]any{"type": "integer", "min": 2, "max": 10},
+			},
+		},
+	})
+}
+
+func (s *Server) handleVideoGenerate(w http.ResponseWriter, r *http.Request) {
+	var req map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	prompt, _ := req["prompt"].(string)
+	model, _ := req["model"].(string)
+
+	if prompt == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "prompt is required")
+		return
+	}
+	if model == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "model is required")
+		return
+	}
+
+	reqID := "vid_req_" + randomHex(8)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	videoURL := fmt.Sprintf("%s://%s/videos/%s.mp4", scheme, r.Host, reqID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"id":     "req_" + randomHex(8),
+		"status": "success",
+		"data": map[string]any{
+			"id":     reqID,
+			"status": "success",
+			"model":  model,
+			"outputs": []map[string]any{
+				{
+					"type":      "video",
+					"url":       videoURL,
+					"mime_type": "video/mp4",
+				},
+			},
+			"usage":       map[string]int{"credits": 5},
+			"credit_cost": 5,
+		},
+	})
+}
+
+// handleMockVideo serves fake video data for download tests.
+func (s *Server) handleMockVideo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Write([]byte("mock-video-data"))
 }
 
 // --- Helpers ---

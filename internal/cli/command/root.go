@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command/cap"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command/meta"
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/selfupdate"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
@@ -112,6 +114,10 @@ var skipAutoUpdateCmds = map[string]bool{
 // normal command execution.
 func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		// Always check for skill reminder marker (written by previous
+		// process before re-exec after a self-update).
+		consumeSkillReminder()
+
 		v := verbose != nil && *verbose
 		logf := func(format string, a ...any) {
 			if v {
@@ -179,6 +185,8 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) fu
 		}
 
 		fmt.Fprintf(stderr, "Updated to %s. Re-executing...\n", rel.Version)
+		// Write marker so the re-exec'd process knows an update just happened.
+		writeSkillReminderMarker()
 		// Re-exec replaces the process on Unix; on Windows it starts
 		// a new process and exits.
 		if err := selfupdate.ReExec(); err != nil {
@@ -186,4 +194,38 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) fu
 		}
 		return nil
 	}
+}
+
+const skillReminderFile = ".skill_reminder"
+
+// writeSkillReminderMarker creates a marker file in ~/.anycap/ so the
+// re-exec'd process knows to show a skill update reminder.
+func writeSkillReminderMarker() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	path := filepath.Join(home, ".anycap", skillReminderFile)
+	_ = os.WriteFile(path, []byte("1"), 0644)
+}
+
+// consumeSkillReminder checks for the skill reminder marker. If present,
+// it sets the global system reminder and removes the marker.
+func consumeSkillReminder() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	path := filepath.Join(home, ".anycap", skillReminderFile)
+	if _, err := os.Stat(path); err != nil {
+		return
+	}
+	_ = os.Remove(path)
+
+	output.SetSystemReminder(&output.SystemReminder{
+		Description: "AnyCap CLI was updated. Please install or update skill files to match the new version.",
+		Commands: []string{
+			"npx skills add anycap-ai/anycap",
+		},
+	})
 }

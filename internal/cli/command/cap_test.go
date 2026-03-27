@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -864,5 +865,290 @@ func TestImageGenerateWithOutput(t *testing.T) {
 	// Should not contain nested data/outputs structure.
 	if strings.Contains(output, `"outputs"`) {
 		t.Fatalf("expected flat output without nested outputs, got: %s", output)
+	}
+}
+
+// --- Video Generation Tests ---
+
+func TestVideoModels(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "models"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video models failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "mock-video-1") {
+		t.Fatalf("expected mock-video-1 in output, got: %s", output)
+	}
+	if !strings.Contains(output, "mock-video-2") {
+		t.Fatalf("expected mock-video-2 in output, got: %s", output)
+	}
+	if !strings.Contains(output, `"video"`) {
+		t.Fatalf("expected capability video in output, got: %s", output)
+	}
+}
+
+func TestVideoModelsSingleModel(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "models", "mock-video-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video models single failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "mock-video-1") {
+		t.Fatalf("expected mock-video-1 in output, got: %s", output)
+	}
+	// Should NOT contain the other model.
+	if strings.Contains(output, "mock-video-2") {
+		t.Fatalf("expected only mock-video-1 but got mock-video-2: %s", output)
+	}
+}
+
+func TestVideoModelSchema(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "models", "mock-video-1", "schema"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video model schema failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "duration") {
+		t.Fatalf("expected duration in schema output, got: %s", output)
+	}
+	if !strings.Contains(output, "ratio") {
+		t.Fatalf("expected ratio in schema output, got: %s", output)
+	}
+}
+
+func TestVideoGenerateAutoDownload(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "generate", "--prompt", "a cat on the beach", "--model", "mock-video-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video generate failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "local_path") {
+		t.Fatalf("expected local_path in output, got: %s", output)
+	}
+	if !strings.Contains(output, `"credits_used":5`) {
+		t.Fatalf("expected credits_used:5 in output, got: %s", output)
+	}
+
+	// Verify a .mp4 file was created.
+	entries, _ := os.ReadDir(tmpDir)
+	found := false
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".mp4") {
+			found = true
+			data, _ := os.ReadFile(filepath.Join(tmpDir, e.Name()))
+			if string(data) != "mock-video-data" {
+				t.Fatalf("expected 'mock-video-data', got: %s", string(data))
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected a .mp4 file in tmpDir, found: %v", entries)
+	}
+}
+
+func TestVideoGenerateWithOutput(t *testing.T) {
+	fileMux := http.NewServeMux()
+	fileMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "video/mp4")
+		w.Write([]byte("generated-video-data"))
+	})
+	fileServer := httptest.NewServer(fileMux)
+	defer fileServer.Close()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /v1/video/generate", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"id":"req_1","status":"success","data":{"id":"vid_1","status":"success","model":"m","outputs":[{"type":"video","url":"%s/output.mp4","mime_type":"video/mp4"}],"usage":{"credits":5},"credit_cost":5}}`, fileServer.URL)
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	outPath := filepath.Join(tmpDir, "result.mp4")
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "generate", "--prompt", "test", "--model", "m", "-o", outPath})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video generate -o failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	data, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read output file: %v", err)
+	}
+	if string(data) != "generated-video-data" {
+		t.Fatalf("expected 'generated-video-data', got: %s", string(data))
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, outPath) {
+		t.Fatalf("expected output path in JSON, got: %s", output)
+	}
+	if strings.Contains(output, `"outputs"`) {
+		t.Fatalf("expected flat output without nested outputs, got: %s", output)
+	}
+}
+
+func TestVideoGenerateWithVideoParams(t *testing.T) {
+	var receivedBody map[string]any
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /v1/video/generate", func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&receivedBody)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"id":"req_1","status":"success","data":{"id":"vid_1","status":"success","model":"m","outputs":[],"credit_cost":5}}`))
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{
+		"video", "generate",
+		"--prompt", "ocean waves",
+		"--model", "mock-video-1",
+		"--negative-prompt", "blurry",
+		"--ratio", "16:9",
+		"--resolution", "1080p",
+		"--duration", "5",
+		"--reference-image", "https://example.com/ref.jpg",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("video generate with params failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	// Verify all params were sent in the request body.
+	if receivedBody["negative_prompt"] != "blurry" {
+		t.Fatalf("expected negative_prompt=blurry, got: %v", receivedBody["negative_prompt"])
+	}
+	if receivedBody["ratio"] != "16:9" {
+		t.Fatalf("expected ratio=16:9, got: %v", receivedBody["ratio"])
+	}
+	if receivedBody["resolution"] != "1080p" {
+		t.Fatalf("expected resolution=1080p, got: %v", receivedBody["resolution"])
+	}
+	dur, _ := receivedBody["duration"].(float64)
+	if dur != 5 {
+		t.Fatalf("expected duration=5, got: %v", receivedBody["duration"])
+	}
+	refs, ok := receivedBody["reference_image_urls"].([]any)
+	if !ok || len(refs) != 1 || refs[0] != "https://example.com/ref.jpg" {
+		t.Fatalf("expected reference_image_urls=[https://example.com/ref.jpg], got: %v", receivedBody["reference_image_urls"])
+	}
+}
+
+func TestVideoGenerateRequiresPrompt(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "generate", "--model", "m"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when --prompt missing")
+	}
+}
+
+func TestVideoGenerateRequiresModel(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"video", "generate", "--prompt", "test"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when --model missing")
 	}
 }

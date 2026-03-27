@@ -1,9 +1,16 @@
 package cap
 
 import (
+	"fmt"
 	"io"
+	"path"
+	"strings"
+	"time"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/fileutil"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +22,167 @@ func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		RunE:  requireSubcommand,
 	}
 
-	// Future: video generate, video models, etc.
+	if feature.Enabled(feature.VideoModels) {
+		videoCmd.AddCommand(newVideoModelsCmd(clientFactory, stdout))
+	}
+	if feature.Enabled(feature.VideoGenerate) {
+		videoCmd.AddCommand(newVideoGenerateCmd(clientFactory, stdout))
+	}
 
 	return videoCmd
+}
+
+// newVideoModelsCmd handles three forms:
+//
+//	video models                       -> list all models
+//	video models <model>               -> show one model (client-side filter)
+//	video models <model> schema        -> fetch model schema from server
+func newVideoModelsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+	var operation string
+
+	cmd := &cobra.Command{
+		Use:   "models [model] [schema]",
+		Short: "List available video models or show model details",
+		Long: `List all available video models, show details for a specific model,
+or fetch the request schema for a model.
+
+Examples:
+  anycap video models
+  anycap video models wan-2.1
+  anycap video models wan-2.1 schema
+  anycap video models wan-2.1 schema --operation generate`,
+		Args: cobra.MaximumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := clientFactory()
+
+			// video models <model> schema
+			if len(args) == 2 {
+				if args[1] != "schema" {
+					return fmt.Errorf("unknown argument %q; did you mean 'schema'?", args[1])
+				}
+				return fetchCapModelSchema(cmd, client, stdout, "video", args[0], operation)
+			}
+
+			// video models / video models <model>
+			return listCapModels(cmd, client, stdout, "video", args)
+		},
+	}
+
+	cmd.Flags().StringVar(&operation, "operation", "generate", "Operation to get schema for (used with 'schema')")
+
+	return cmd
+}
+
+func newVideoGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+	var (
+		prompt         string
+		model          string
+		negativePrompt string
+		ratio          string
+		resolution     string
+		duration       int
+		referenceImage []string
+		params         []string
+		outputPath     string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "generate",
+		Short: "Generate a video from a prompt",
+		Long: `Generate a video using a text prompt. Use dedicated flags for common parameters
+and --param for model-specific parameters discovered from 'video models <model> schema'.
+
+The generated video is automatically downloaded to the current directory.
+Use -o to specify a custom output path.
+
+Examples:
+  anycap video generate --prompt "a cat walking on the beach" --model wan-2.1
+  anycap video generate --prompt "ocean waves" --model wan-2.1 --ratio 16:9 --duration 5
+  anycap video generate --prompt "a landscape" --model wan-2.1 -o landscape.mp4
+  anycap video generate --prompt "animate this" --model wan-2.1 --reference-image https://example.com/photo.jpg`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			body := map[string]any{
+				"prompt": prompt,
+				"model":  model,
+			}
+
+			if negativePrompt != "" {
+				body["negative_prompt"] = negativePrompt
+			}
+			if ratio != "" {
+				body["ratio"] = ratio
+			}
+			if resolution != "" {
+				body["resolution"] = resolution
+			}
+			if duration > 0 {
+				body["duration"] = duration
+			}
+			if len(referenceImage) > 0 {
+				body["reference_image_urls"] = referenceImage
+			}
+
+			// Parse --param key=value pairs into the request body.
+			for _, p := range params {
+				k, v, ok := strings.Cut(p, "=")
+				if !ok {
+					return fmt.Errorf("invalid --param format %q: expected key=value", p)
+				}
+				body[k] = parseParamValue(v)
+			}
+
+			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/video/generate", body)
+			if err != nil {
+				return err
+			}
+
+			// Parse server response (same envelope as image).
+			genResult, parseErr := parseGenerateResponse(resp.Body)
+			if parseErr != nil {
+				return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
+			}
+
+			if genResult.Status != "success" {
+				return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
+			}
+
+			// Download the generated video.
+			if genResult.OutputURL != "" {
+				savePath := outputPath
+				if savePath == "" {
+					savePath = defaultVideoFilename(genResult.OutputURL)
+				}
+				absPath, dlErr := fileutil.DownloadFile(genResult.OutputURL, savePath)
+				if dlErr != nil {
+					return fmt.Errorf("generation succeeded but download failed: %w", dlErr)
+				}
+				genResult.LocalPath = absPath
+			}
+
+			return writeGenerateResult(stdout, genResult, resp.RequestID)
+		},
+	}
+
+	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for video generation")
+	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
+	cmd.Flags().StringVar(&negativePrompt, "negative-prompt", "", "Negative prompt (what to avoid)")
+	cmd.Flags().StringVar(&ratio, "ratio", "", "Aspect ratio (e.g. 16:9, 9:16, 1:1)")
+	cmd.Flags().StringVar(&resolution, "resolution", "", "Output resolution (e.g. 1080p, 720p)")
+	cmd.Flags().IntVar(&duration, "duration", 0, "Video duration in seconds")
+	cmd.Flags().StringArrayVar(&referenceImage, "reference-image", nil, "Reference image URL for image-to-video (repeatable)")
+	cmd.Flags().StringArrayVar(&params, "param", nil, "Extra parameter as key=value (repeatable)")
+	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated video to this path (default: current directory)")
+	_ = cmd.MarkFlagRequired("prompt")
+	_ = cmd.MarkFlagRequired("model")
+
+	return cmd
+}
+
+// defaultVideoFilename generates a clean default filename for a generated video.
+func defaultVideoFilename(videoURL string) string {
+	ext := path.Ext(fileutil.FilenameFromURL(videoURL))
+	if ext == "" {
+		ext = ".mp4"
+	}
+	return "video_" + time.Now().Format("20060102_150405") + ext
 }
