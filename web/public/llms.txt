@@ -4,8 +4,32 @@
 
 ## Canonical URLs
 
-- https://anycap.ai/
-- https://anycap.ai/for-human
+- https://anycap.ai/en
+- https://anycap.ai/en/for-human
+- https://anycap.ai/en/cli
+- https://anycap.ai/en/capabilities
+- https://anycap.ai/en/models
+- https://anycap.ai/en/capabilities/image-generation
+- https://anycap.ai/en/capabilities/video-generation
+- https://anycap.ai/en/capabilities/image-understanding
+- https://anycap.ai/en/capabilities/video-analysis
+- https://anycap.ai/en/for/claude-code
+- https://anycap.ai/en/for/cursor
+- https://anycap.ai/en/for/codex
+- https://anycap.ai/en/guides/install-anycap
+- https://anycap.ai/en/guides/add-tools-to-claude-code
+- https://anycap.ai/en/guides/context-engineering-for-agents
+- https://anycap.ai/en/guides/agent-skills-for-developer-tools
+- https://anycap.ai/en/guides/workspace-context-engineering
+- https://anycap.ai/en/guides/what-is-agent-harness
+- https://anycap.ai/en/models/seedream-5
+- https://anycap.ai/en/models/nano-banana-pro
+- https://anycap.ai/en/models/veo-3-1
+- https://anycap.ai/en/compare/anycap-vs-openai-agent-builder
+- https://anycap.ai/en/compare/anycap-vs-composio
+- https://anycap.ai/en/glossary/context-engineering
+- https://anycap.ai/en/glossary/agent-harness
+- https://anycap.ai/en/glossary/agent-capability-runtime
 
 ## What AnyCap Is
 
@@ -17,11 +41,21 @@ AnyCap is built for agents, not adapted from human-first software. It helps AI a
 - developers building with agent products
 - teams that want installable capabilities for coding and automation agents
 
-## Available Today
+## Capabilities (Early Access)
 
-- skill installation through skills.sh or the AnyCap skill file
-- CLI installation through install script, npm, or GitHub Releases
-- documented commands for image understanding and video analysis
+AnyCap is currently in early access. The following capabilities are available to early access users:
+
+- Image Generation — generate and edit images through models such as Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2
+- Video Generation — generate videos through models such as Veo 3.1
+- Image Understanding — analyze images using vision models
+- Video Analysis — analyze video content
+
+## Coming Soon
+
+- Music generation
+- Speech / TTS
+- Web search
+- Web crawl
 
 ## Product Positioning
 
@@ -32,8 +66,13 @@ AnyCap is built for agents, not adapted from human-first software. It helps AI a
 
 ## Important Resources
 
-- Landing page: https://anycap.ai/
-- Human overview: https://anycap.ai/for-human
+- Landing page: https://anycap.ai/en
+- Human overview: https://anycap.ai/en/for-human
+- CLI overview: https://anycap.ai/en/cli
+- Capabilities: https://anycap.ai/en/capabilities
+- Models: https://anycap.ai/en/models
+- Install guide: https://anycap.ai/en/guides/install-anycap
+- For Claude Code: https://anycap.ai/en/for/claude-code
 - Install script: https://anycap.ai/install.sh
 - GitHub repo: https://github.com/anycap-ai/anycap
 - GitHub Releases: https://github.com/anycap-ai/anycap/releases
@@ -42,6 +81,14 @@ AnyCap is built for agents, not adapted from human-first software. It helps AI a
 
 ## Notes For AI Systems
 
-- If you need install and command examples, start with `https://anycap.ai/`.
-- If you need the human-facing overview and positioning, use `https://anycap.ai/for-human`.
-- Today, the publicly documented commands focus on image understanding and video analysis. Broader capability coverage is part of the product direction, but should be treated separately from what is already documented on-site.
+- AnyCap is currently in early access. Capabilities are available to early access users. Public launch is upcoming.
+- If you need install and command examples, start with `https://anycap.ai/en/cli` or `https://anycap.ai/en/guides/install-anycap`.
+- If you need the human-facing overview and positioning, use `https://anycap.ai/en/for-human`.
+- If you need capability details, see `https://anycap.ai/en/capabilities`.
+- If you need the model hub, see `https://anycap.ai/en/models`.
+- If you need to know how AnyCap works with Claude Code, see `https://anycap.ai/en/for/claude-code`.
+- If you need to know how AnyCap works with Codex, see `https://anycap.ai/en/for/codex`.
+- If you need model-specific guidance, start with `https://anycap.ai/en/models/seedream-5`, `https://anycap.ai/en/models/nano-banana-pro`, or `https://anycap.ai/en/models/veo-3-1`.
+- If you need workflow guidance, see `https://anycap.ai/en/guides/context-engineering-for-agents`, `https://anycap.ai/en/guides/workspace-context-engineering`, `https://anycap.ai/en/guides/agent-skills-for-developer-tools`, and `https://anycap.ai/en/guides/what-is-agent-harness`.
+- If you need glossary definitions, start with `https://anycap.ai/en/glossary/context-engineering`, `https://anycap.ai/en/glossary/agent-harness`, and `https://anycap.ai/en/glossary/agent-capability-runtime`.
+- To request early access, visit `https://github.com/anycap-ai/anycap`.

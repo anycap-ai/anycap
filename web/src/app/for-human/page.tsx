@@ -1,103 +1,96 @@
-export const runtime = 'edge';
-
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { AnycapMark } from "@/components/brand/AnycapMark";
-import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
-import { EquipAgent } from "@/components/EquipAgent";
-import { ScrambleText } from "@/components/ScrambleText";
-import { TerminalDemo } from "@/components/TerminalDemo";
+import { Suspense } from "react";
+import { Footer } from "@/components/Footer";
+import { Header, humanNavLinks } from "@/components/Header";
+import { AuthNav } from "@/components/AuthNav";
+import { LazyEquipAgent } from "@/components/LazyEquipAgent";
+import { LazyTerminalDemo } from "@/components/LazyTerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
+import { ScrambleText } from "@/components/ScrambleText";
 import { ParticleAgent } from "@/components/animation/ParticleAgent";
-import { LoginButton } from "@/components/auth/LoginButton";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-import { readSessionFromStore } from "@/lib/auth/session";
+import { buildLocalizedPath, defaultLocale } from "@/lib/site";
+
+export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
+const cliHref = buildLocalizedPath(defaultLocale, "/cli");
+const capabilitiesHref = buildLocalizedPath(defaultLocale, "/capabilities");
+const imageUnderstandingHref = buildLocalizedPath(
+  defaultLocale,
+  "/capabilities/image-understanding"
+);
+const videoAnalysisHref = buildLocalizedPath(defaultLocale, "/capabilities/video-analysis");
+const installGuideHref = buildLocalizedPath(defaultLocale, "/guides/install-anycap");
+const modelsHref = buildLocalizedPath(defaultLocale, "/models");
 
-export default async function ForHumanPage() {
-  const cookieStore = await cookies();
-  const session = readSessionFromStore(cookieStore);
-  const isLoggedIn = Boolean(session?.apiKey);
+const startLinks = [
+  {
+    href: installGuideHref,
+    label: "Install AnyCap",
+    description: "Set up the skill, CLI, and login flow.",
+  },
+  {
+    href: cliHref,
+    label: "CLI Overview",
+    description: "See the agent-facing command model and workflow.",
+  },
+  {
+    href: capabilitiesHref,
+    label: "Capabilities",
+    description: "Browse what AnyCap exposes today and what is next.",
+  },
+] as const;
 
+const bodyLinkClass =
+  "underline decoration-[#6b7d3a] underline-offset-4 transition-colors hover:text-[#1c1f17]";
+
+export default function ForHumanPage() {
   return (
     <main className="overflow-x-hidden">
-      {/* ── Header ── */}
-      <header className="px-8 md:px-16 lg:px-24 pt-6 md:pt-10">
-        <div className="flex items-center gap-3">
-          <AnycapMark size={28} className="shrink-0" />
-          <AnycapWordmark
-            className="text-xl font-bold leading-none"
-            style={{ ...mono, letterSpacing: "-0.5px" }}
-          />
-          <div className="ml-auto flex items-center gap-5">
-            {session?.user?.email ? (
-              <span className="text-[11px] text-[#7a7e71] tracking-[1.5px]" style={mono}>
-                {session.user.email}
-              </span>
-            ) : null}
+      <Header
+        logoHref="/for-human"
+        links={humanNavLinks}
+        authSlot={
+          <Suspense fallback={null}>
+            <AuthNav />
+          </Suspense>
+        }
+      />
 
-            {isLoggedIn ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
-                  style={mono}
-                >
-                  Dashboard
-                </Link>
-                <LogoutButton
-                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
-                  style={mono}
-                />
-              </>
-            ) : (
-              <LoginButton
-                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
-                style={mono}
-              />
-            )}
-            <Link
-              href="/"
-              className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
-              style={mono}
-            >
-              I&apos;m Agent →
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero ── */}
-      <section className="px-8 md:px-16 lg:px-24 pt-12 md:pt-20 lg:pt-24">
-        <div className="flex items-center gap-12">
-          <div className="flex-1 min-w-0">
+      <section className="px-8 pt-12 md:px-16 md:pt-20 lg:px-24 lg:pt-24">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12">
+          <div className="min-w-0 flex-1">
             <h1
               className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(42px, 8vw, 108px)" }}
             >
-              Your{" "}
-              <ScrambleText
-                text="Agent"
-                className="text-[#6b7d3a]"
-                style={{ fontSize: "1.08em" }}
-                speed={30}
-                ticks={3}
-              />
-              <br />
-              can do anything.
-              <br />
-              It just needs{" "}
-              <ScrambleText
-                text="AnyCap."
-                className="text-[#6b7d3a]"
-                style={{ fontSize: "1.08em" }}
-                speed={30}
-                ticks={3}
-              />
+              <span className="sr-only">
+                Your Agent can do anything. It just needs AnyCap.
+              </span>
+              <span aria-hidden>
+                Your{" "}
+                <ScrambleText
+                  text="Agent"
+                  className="text-[#6b7d3a]"
+                  style={{ fontSize: "1.08em" }}
+                  speed={30}
+                  ticks={3}
+                />
+                <br />
+                can do anything.
+                <br />
+                It just needs{" "}
+                <ScrambleText
+                  text="AnyCap."
+                  className="text-[#6b7d3a]"
+                  style={{ fontSize: "1.08em" }}
+                  speed={30}
+                  ticks={3}
+                />
+              </span>
             </h1>
             <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
               Agents can think, but they can&apos;t act — no images, no video, no music,
@@ -105,71 +98,142 @@ export default async function ForHumanPage() {
               a different API key. AnyCap makes it one command.
             </p>
             <div className="mt-8 md:mt-10">
-              <EquipAgent />
+              <LazyEquipAgent style={mono} />
             </div>
           </div>
-          <div className="hidden lg:block shrink-0 -translate-x-24">
+
+          <div className="hidden shrink-0 lg:block lg:-translate-x-12 xl:-translate-x-24">
             <ParticleAgent scale={0.85} />
           </div>
         </div>
       </section>
 
-      {/* ── Terminal — full-width dark band ── */}
-      <div className="mt-16 md:mt-24 bg-[#1c1f17] py-6 md:py-10 px-8 md:px-16 lg:px-24">
-        <TerminalDemo />
-      </div>
+      <section className="mt-16 px-8 md:mt-24 md:px-16 lg:px-24">
+        <div className="grid gap-10 border border-[#d4dbb8] bg-[#eef0e5] p-8 md:p-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)]">
+          <div className="max-w-[760px]">
+            <h2
+              className="text-[#1c1f17] leading-[1.04] tracking-[-0.02em]"
+              style={{ ...pixel, fontSize: "clamp(28px, 4.4vw, 58px)" }}
+            >
+              What AnyCap gives human teams building with agents.
+            </h2>
+            <p className="mt-6 text-base leading-7 text-[#3f4437] md:text-lg">
+              AnyCap is an agent-native capability runtime and CLI for teams using
+              Cursor, Claude Code, Codex, and other agent tooling. It gives agents one
+              install path, one authentication flow, and one interface for image, video,
+              music, speech, search, and crawl capabilities.
+            </p>
+            <p className="mt-5 text-base leading-7 text-[#4d5145] md:text-lg">
+              Instead of wiring separate SDKs, dashboards, and API keys for every model
+              vendor, you can standardize on the{" "}
+              <Link href={cliHref} className={bodyLinkClass}>
+                AnyCap CLI
+              </Link>{" "}
+              and roll out new workflows faster. Start with the{" "}
+              <Link href={installGuideHref} className={bodyLinkClass}>
+                install guide
+              </Link>
+              , review the documented{" "}
+              <Link href={capabilitiesHref} className={bodyLinkClass}>
+                capabilities
+              </Link>
+              , and use the{" "}
+              <Link href={modelsHref} className={bodyLinkClass}>
+                models hub
+              </Link>{" "}
+              when you need provider-level detail.
+            </p>
+          </div>
 
-      {/* ── Pull quote — right-aligned ── */}
-      <FadeIn from="right" className="px-8 md:px-16 lg:px-24 mt-16 md:mt-28 flex justify-end">
-        <div className="border-r-[3px] border-[#1c1f17] pr-6 md:pr-8 text-right max-w-[520px]">
-          <p className="text-lg md:text-[22px] leading-[1.65] text-[#3a3e32]">
+          <aside className="border border-[#d4dbb8] bg-[#f4f5f0] p-6">
+            <h3
+              className="text-[#1c1f17] uppercase tracking-[3px] text-[12px]"
+              style={mono}
+            >
+              Start Here
+            </h3>
+            <div className="mt-5 space-y-4">
+              {startLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block border border-[#d4dbb8] bg-white px-4 py-4 transition-colors hover:border-[#6b7d3a] hover:bg-[#f7f9f0]"
+                >
+                  <p className="text-[12px] uppercase tracking-[2px] text-[#1c1f17]" style={mono}>
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[#4d5145]">{item.description}</p>
+                </Link>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section className="mt-16 bg-[#1c1f17] px-8 py-8 md:mt-24 md:px-16 md:py-10 lg:px-24">
+        <div className="max-w-[800px]">
+          <h2
+            className="text-[#d4e0a4] leading-[1.1] tracking-[-0.02em]"
+            style={{ ...pixel, fontSize: "clamp(24px, 3.2vw, 40px)" }}
+          >
+            How AnyCap works in an agent workflow.
+          </h2>
+          <p className="mt-4 max-w-[720px] text-sm leading-7 text-[#9a9e90] md:text-base">
+            Install the skill, install the CLI, log in once, and let your agent call
+            capabilities from the environment it already uses. The demo below is backed
+            by the same interface described across the CLI and capability pages.
+          </p>
+          <div className="mt-6">
+            <LazyTerminalDemo style={mono} />
+          </div>
+        </div>
+      </section>
+
+      <FadeIn from="right" className="mt-16 flex justify-end px-8 md:mt-28 md:px-16 lg:px-24">
+        <div className="max-w-[520px] border-r-[3px] border-[#1c1f17] pr-6 text-right md:pr-8">
+          <p className="text-lg leading-[1.65] text-[#3a3e32] md:text-[22px]">
             It reasons. It plans. It decides.
             <br />
             It cannot paint, compose, or speak.
           </p>
-          <p
-            className="text-xl md:text-[24px] text-[#1c1f17] mt-5"
-            style={pixel}
-          >
+          <p className="mt-5 text-xl text-[#1c1f17] md:text-[24px]" style={pixel}>
             <ScrambleText text="We built the hands." speed={20} ticks={2} />
           </p>
         </div>
       </FadeIn>
 
-      {/* ── Anti-pattern ── */}
-      <FadeIn className="px-8 md:px-16 lg:px-24 mt-24 md:mt-36">
+      <FadeIn className="mt-24 px-8 md:mt-36 md:px-16 lg:px-24">
         <p
-          className="text-[#c8d4a0] line-through tracking-[6px] md:tracking-[10px] uppercase mb-4"
+          className="mb-4 uppercase tracking-[6px] text-[#c8d4a0] line-through md:tracking-[10px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
           SDK&nbsp;&nbsp;&nbsp;DOCS&nbsp;&nbsp;&nbsp;DASHBOARD&nbsp;&nbsp;&nbsp;UI
         </p>
         <p
-          className="tracking-[4px] md:tracking-[8px] uppercase text-[#1c1f17]"
+          className="uppercase tracking-[4px] text-[#1c1f17] md:tracking-[8px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
           <ScrambleText text="ONE COMMAND. ONE RESULT. DONE." speed={20} ticks={2} />
         </p>
       </FadeIn>
 
-      <div className="px-8 md:px-16 lg:px-24 mt-24 md:mt-36">
+      <div className="mt-24 px-8 md:mt-36 md:px-16 lg:px-24">
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
-      {/* ── Belief ── */}
-      <section className="px-8 md:px-16 lg:px-24 py-20 md:py-32">
+      <section className="px-8 py-20 md:px-16 md:py-32 lg:px-24">
         <FadeIn>
-          <p
-            className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17] mb-6"
+          <h2
+            className="mb-6 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(28px, 4.5vw, 60px)" }}
           >
             We believe Agents deserve
             <br />
             products built for them.
-          </p>
+          </h2>
         </FadeIn>
         <FadeIn delay={200}>
-          <p className="text-xl md:text-2xl text-[#6b7d3a]" style={mono}>
+          <p className="text-xl text-[#6b7d3a] md:text-2xl" style={mono}>
             Not adapted. Not retrofitted. Built.
           </p>
         </FadeIn>
@@ -179,8 +243,30 @@ export default async function ForHumanPage() {
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
-      {/* ── Capabilities — full-width dramatic stack ── */}
-      <section className="px-8 md:px-16 lg:px-24 py-20 md:py-32">
+      <section className="px-8 py-20 md:px-16 md:py-32 lg:px-24">
+        <div className="mb-12 max-w-[760px]">
+          <h2
+            className="text-[#1c1f17] leading-[1.08] tracking-[-0.02em]"
+            style={{ ...pixel, fontSize: "clamp(28px, 4.4vw, 56px)" }}
+          >
+            Capabilities your agent can use without a new integration each time.
+          </h2>
+          <p className="mt-5 text-base leading-7 text-[#4d5145] md:text-lg">
+            Today the public site documents production-ready entry points such as{" "}
+            <Link href={imageUnderstandingHref} className={bodyLinkClass}>
+              image understanding
+            </Link>{" "}
+            and{" "}
+            <Link href={videoAnalysisHref} className={bodyLinkClass}>
+              video analysis
+            </Link>
+            . The broader{" "}
+            <Link href={capabilitiesHref} className={bodyLinkClass}>
+              capabilities overview
+            </Link>{" "}
+            explains how these building blocks fit together for agent-native products.
+          </p>
+        </div>
         <div className="mb-10">
           {capabilities.map((cap, i) => (
             <p
@@ -198,8 +284,8 @@ export default async function ForHumanPage() {
         </div>
         <div className="flex justify-end">
           <p
-            className="tracking-[3px] uppercase text-[#9a9e90] text-right"
-            style={{ ...mono, fontSize: "11px" }}
+            className="text-right text-[11px] uppercase tracking-[3px] text-[#5a5e52]"
+            style={mono}
           >
             Same interface.
             <br />
@@ -212,20 +298,19 @@ export default async function ForHumanPage() {
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
-      {/* ── Philosophy ── */}
-      <section className="px-8 md:px-16 lg:px-24 py-20 md:py-32">
+      <section className="px-8 py-20 md:px-16 md:py-32 lg:px-24">
         <FadeIn from="left">
-          <div className="border-l-[3px] border-[#6b7d3a] pl-6 md:pl-8 max-w-[700px]">
-            <p
+          <div className="max-w-[700px] border-l-[3px] border-[#6b7d3a] pl-6 md:pl-8">
+            <h2
               className="leading-[1.3] text-[#6b7d3a]"
               style={{ ...pixel, fontSize: "clamp(22px, 3.5vw, 40px)" }}
             >
               The best infrastructure is the kind you forget exists.
-            </p>
+            </h2>
           </div>
         </FadeIn>
         <FadeIn delay={200}>
-          <p className="text-xl md:text-2xl leading-[1.7] text-[#3a3e32] mt-12 md:mt-16 max-w-[640px]">
+          <p className="mt-12 max-w-[640px] text-xl leading-[1.7] text-[#3a3e32] md:mt-16 md:text-2xl">
             No SDK to learn. No docs to read. No dashboard to check.
             Your agent sends a command. It gets a result. That&apos;s the entire interface.
           </p>
@@ -236,52 +321,58 @@ export default async function ForHumanPage() {
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
-      {/* ── Close ── */}
-      <section className="px-8 md:px-16 lg:px-24 py-24 md:py-40 text-center">
+      <section className="px-8 py-24 text-center md:px-16 md:py-40 lg:px-24">
         <FadeIn>
-          <p
-            className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17] mb-14"
+          <h2
+            className="mb-14 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
           >
             And we&apos;re just
             <br />
             getting started.
-          </p>
+          </h2>
         </FadeIn>
         <FadeIn delay={300}>
-          <a
-            href="https://github.com/anycap-ai/anycap"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-10 py-4 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
-            style={mono}
-          >
-            Get Started
-          </a>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href={installGuideHref}
+              className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold uppercase tracking-[3px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+              style={mono}
+            >
+              Install AnyCap
+            </Link>
+            <Link
+              href={cliHref}
+              className="inline-block border border-[#1c1f17] px-10 py-4 text-[11px] font-bold uppercase tracking-[3px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+              style={mono}
+            >
+              Explore the CLI
+            </Link>
+          </div>
+          <p className="mx-auto mt-8 max-w-[720px] text-sm leading-7 text-[#4d5145] md:text-base">
+            Need more context first? Browse the{" "}
+            <Link href={capabilitiesHref} className={bodyLinkClass}>
+              capabilities overview
+            </Link>
+            , inspect the{" "}
+            <Link href={modelsHref} className={bodyLinkClass}>
+              models hub
+            </Link>
+            , or visit{" "}
+            <a
+              href="https://github.com/anycap-ai/anycap"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={bodyLinkClass}
+            >
+              GitHub
+            </a>{" "}
+            for the repository and release history.
+          </p>
         </FadeIn>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="px-8 md:px-16 lg:px-24 py-10 border-t border-[#d4dbb8]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <AnycapMark size={16} />
-            <span
-              className="text-[10px] text-[#9a9e90] tracking-[2px] uppercase"
-              style={mono}
-            >
-              Built for agents.
-            </span>
-          </div>
-          <Link
-            href="/"
-            className="text-[10px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
-            style={mono}
-          >
-            Agent Interface →
-          </Link>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
