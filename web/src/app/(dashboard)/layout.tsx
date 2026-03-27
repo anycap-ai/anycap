@@ -2,18 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Space_Mono } from "next/font/google";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { readSessionFromStore } from "@/lib/auth/session";
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   robots: {
@@ -44,7 +36,7 @@ export default async function DashboardLayout({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className={`${spaceMono.variable} min-h-screen bg-[#f4f5f0] text-[#1c1f17]`}>
+    <div className="min-h-screen">
       <header className="px-6 md:px-12 lg:px-20 py-6 border-b border-[#d4dbb8]">
         <div className="mx-auto max-w-[1280px] flex items-center gap-3">
           <Link href="/for-human" className="flex items-center gap-3">

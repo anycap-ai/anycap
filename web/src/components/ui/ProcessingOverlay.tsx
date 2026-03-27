@@ -4,7 +4,7 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 export function ProcessingOverlay({ message = "Processing" }: { message?: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#f4f5f0]/95 backdrop-blur-xl">
       <div className="flex flex-col items-center gap-4">
         <svg
           className="animate-spin"
@@ -22,7 +22,7 @@ export function ProcessingOverlay({ message = "Processing" }: { message?: string
           />
         </svg>
         <span
-          className="text-[11px] uppercase tracking-[2px] text-[#d4dbb8]"
+          className="text-[11px] uppercase tracking-[2px] text-[#4d5145]"
           style={mono}
         >
           {message}
