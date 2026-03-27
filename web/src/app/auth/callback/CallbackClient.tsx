@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import { setSessionCookie } from "@/lib/auth/session";
+import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
 type CallbackData = {
   api_key: string;
@@ -88,5 +89,5 @@ export function CallbackClient() {
     })();
   }, [params]);
 
-  return <p style={{ padding: "2rem", color: "#707468" }}>Processing login…</p>;
+  return <ProcessingOverlay message="Processing login" />;
 }

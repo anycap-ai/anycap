@@ -50,7 +50,8 @@ export function setSessionCookie(session: SessionPayload): void {
 }
 
 export function clearSessionCookie(): void {
-  document.cookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0`;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
 }
 
 /* ---- server-side (middleware, server components) ---- */

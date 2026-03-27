@@ -8,6 +8,9 @@ import { EquipAgent } from "@/components/EquipAgent";
 import { ScrambleText } from "@/components/ScrambleText";
 import { TerminalDemo } from "@/components/TerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
+import { ParticleAgent } from "@/components/animation/ParticleAgent";
+import { LoginButton } from "@/components/auth/LoginButton";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { readSessionFromStore } from "@/lib/auth/session";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
@@ -46,22 +49,16 @@ export default async function ForHumanPage() {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  href="/auth/logout"
-                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+                <LogoutButton
+                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
                   style={mono}
-                >
-                  Logout
-                </Link>
+                />
               </>
             ) : (
-              <Link
-                href="/auth/login"
-                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+              <LoginButton
+                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
                 style={mono}
-              >
-                Login
-              </Link>
+              />
             )}
             <Link
               href="/"
@@ -76,8 +73,8 @@ export default async function ForHumanPage() {
 
       {/* ── Hero ── */}
       <section className="px-8 md:px-16 lg:px-24 pt-12 md:pt-20 lg:pt-24">
-        <div>
-          <div>
+        <div className="flex items-center gap-12">
+          <div className="flex-1 min-w-0">
             <h1
               className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(42px, 8vw, 108px)" }}
@@ -107,9 +104,12 @@ export default async function ForHumanPage() {
               no voice. Every capability they need is locked behind a different SDK and
               a different API key. AnyCap makes it one command.
             </p>
+            <div className="mt-8 md:mt-10">
+              <EquipAgent />
+            </div>
           </div>
-          <div className="mt-8 md:mt-10">
-            <EquipAgent />
+          <div className="hidden lg:block shrink-0 -translate-x-24">
+            <ParticleAgent scale={0.85} />
           </div>
         </div>
       </section>

@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { anycapPost } from "@/lib/auth/anycap-api";
 import { normalizeReturnTo, normalizeUserCode } from "@/lib/auth/session";
+import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
 type LoginResponse = {
   login_session_id: string;
@@ -60,5 +61,5 @@ export function LoginClient() {
     })();
   }, [params]);
 
-  return <p style={{ padding: "2rem", color: "#707468" }}>Redirecting to login…</p>;
+  return <ProcessingOverlay message="Redirecting to login" />;
 }

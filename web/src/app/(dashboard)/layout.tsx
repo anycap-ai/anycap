@@ -2,9 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Space_Mono } from "next/font/google";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { readSessionFromStore } from "@/lib/auth/session";
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   robots: {
@@ -35,7 +44,7 @@ export default async function DashboardLayout({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#f4f5f0] text-[#1c1f17]">
+    <div className={`${spaceMono.variable} min-h-screen bg-[#f4f5f0] text-[#1c1f17]`}>
       <header className="px-6 md:px-12 lg:px-20 py-6 border-b border-[#d4dbb8]">
         <div className="mx-auto max-w-[1280px] flex items-center gap-3">
           <Link href="/for-human" className="flex items-center gap-3">
@@ -68,13 +77,10 @@ export default async function DashboardLayout({
 
             {/* Hover dropdown */}
             <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-30">
-              <Link
-                href="/auth/logout"
-                className="block px-5 py-2.5 text-[11px] uppercase tracking-[2px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8] transition-colors whitespace-nowrap"
+              <LogoutButton
+                className="block px-5 py-2.5 text-[11px] uppercase tracking-[2px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8] transition-colors whitespace-nowrap cursor-pointer"
                 style={mono}
-              >
-                Logout
-              </Link>
+              />
             </div>
           </div>
         </div>
