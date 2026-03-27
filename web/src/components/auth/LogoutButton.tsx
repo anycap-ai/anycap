@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildLogoutURL } from "@/lib/auth/logout";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
 type Props = {
@@ -15,7 +16,7 @@ export function LogoutButton({ className, style, children }: Props) {
   function handleLogout() {
     setLoading(true);
     sessionStorage.removeItem("anycap_login");
-    window.location.assign("/api/auth/logout?returnTo=/for-human");
+    window.location.assign(buildLogoutURL("/for-human"));
   }
 
   return (
