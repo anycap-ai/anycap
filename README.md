@@ -1,111 +1,93 @@
 # AnyCap
 
-AnyCap is a CLI-native capability harness for AI agents. It provides access to multimodal AI capabilities -- image understanding, video analysis, and more -- through a single CLI.
+One CLI. Any capability. A capability runtime for AI agents.
 
-## Install Skills
+## For Agents
 
-Skills are documentation files that teach AI agents how to use AnyCap. Choose one of the methods below to install.
+Copy this to your agent:
 
-### Option A: skills.sh (recommended)
-
-Works with Claude Code, Cursor, Windsurf, OpenCode, and [40+ agents](https://skills.sh):
-
-```bash
-npx skills add anycap-ai/anycap
+```text
+Read https://raw.githubusercontent.com/anycap-ai/anycap/main/llms.txt and follow the instructions to install AnyCap CLI and skill. If you can't access the URL, run these commands instead:
+1. curl -fsSL https://anycap.ai/install.sh | sh
+2. npx -y skills add anycap-ai/anycap
+3. anycap login
+4. anycap status
+Learn more at https://anycap.ai
 ```
 
-### Option B: AnyCap CLI
+______________________________________________________________________
 
-If you already have the `anycap` CLI installed:
-
-```bash
-anycap skill install --target ~/.claude/skills/anycap-cli/
-```
-
-To check if your skills are up to date:
-
-```bash
-anycap skill check --target ~/.claude/skills/anycap-cli/SKILL.md
-```
-
-### Option C: Manual
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
-  --create-dirs -o ~/.claude/skills/anycap-cli/SKILL.md
-```
+Oh, you're still here? Well, since you're reading this yourself, here's how to install it manually.
 
 ## Install CLI
 
-### macOS / Linux
+macOS / Linux / Windows (Git Bash):
 
 ```bash
 curl -fsSL https://anycap.ai/install.sh | sh
 ```
 
-### Windows (Git Bash)
-
-```bash
-curl -fsSL https://anycap.ai/install.sh | sh
-```
-
-### npm (all platforms)
+npm (all platforms):
 
 ```bash
 npm install -g @anycap/cli
 ```
 
-### Manual download
+Or grab a binary from [GitHub Releases](https://github.com/anycap-ai/anycap/releases).
 
-Binaries for all platforms are available on [GitHub Releases](https://github.com/anycap-ai/anycap/releases).
+## Install Skill
 
-### Verify
+Works with Claude Code, Cursor, Windsurf, OpenCode, and [40+ agents](https://skills.sh):
 
 ```bash
-anycap status
+npx -y skills add anycap-ai/anycap
 ```
 
 ## Quick Start
 
 ```bash
-# Login
+# Log in to AnyCap (opens browser)
 anycap login
 
-# Image understanding
-anycap image understand --url https://example.com/photo.jpg
+# Check connection and auth status
+anycap status
 
-# Video analysis
-anycap video read --url https://example.com/clip.mp4
+# Check for CLI updates
+anycap update
+```
+
+## More Ways to Install Skills
+
+```bash
+# Direct download
+curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
+  --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md
+
+# Via AnyCap CLI
+anycap skill install --target ~/.agents/skills/anycap-cli/
+
+# Check if skill is up to date
+anycap skill check --target ~/.agents/skills/anycap-cli/SKILL.md
 ```
 
 ## Capabilities
 
-| Capability          | Command                   | Description                        |
-| ------------------- | ------------------------- | ---------------------------------- |
-| Image Understanding | `anycap image understand` | Analyze images using vision models |
-| Video Analysis      | `anycap video read`       | Analyze videos                     |
+| Capability          | Command                           | Description                        |
+| ------------------- | --------------------------------- | ---------------------------------- |
+| Image Generation    | `anycap image generate`           | Generate images from text prompts  |
+| Video Generation    | `anycap video generate`           | Generate videos from text or image |
+| Image Understanding | `anycap actions image-understand` | Analyze images using vision models |
+| Video Analysis      | `anycap actions video-read`       | Analyze video content              |
+| File Download       | `anycap download`                 | Download any remote file locally   |
 
-More capabilities are coming soon.
-
-## Keeping Skills Up to Date
-
-The skill file contains a `metadata.version` field that matches the CLI version. Use `anycap skill check` to verify compatibility:
-
-```bash
-anycap skill check --target ~/.claude/skills/anycap-cli/SKILL.md
-```
-
-If the skill is outdated, re-install:
-
-```bash
-npx skills add anycap-ai/anycap
-```
+More capabilities coming soon — music, TTS, web search, web crawling.
 
 ## Links
 
-- [Skill File](skills/anycap-cli/SKILL.md) -- Full skill documentation for agents
-- [skills.sh](https://skills.sh/anycap-ai/anycap) -- Skills directory listing
-- [GitHub Releases](https://github.com/anycap-ai/anycap/releases) -- CLI binaries
+- [llms.txt](llms.txt) — Give this to your agent
+- [Skill File](skills/anycap-cli/SKILL.md) — Full capability documentation
+- [GitHub Releases](https://github.com/anycap-ai/anycap/releases) — CLI binaries
+- [skills.sh](https://skills.sh/anycap-ai/anycap) — Skills directory listing
 - [Website](https://anycap.ai)
 
 ## License

@@ -1,0 +1,67 @@
+# AnyCap — Capability Runtime for AI Agents
+
+One CLI. Any capability. Image generation, video generation, image understanding, video analysis, and more.
+
+## Step 1: Install CLI
+
+macOS / Linux / Windows (Git Bash):
+
+```bash
+curl -fsSL https://anycap.ai/install.sh | sh
+```
+
+Or via npm:
+
+```bash
+npm install -g @anycap/cli
+```
+
+## Step 2: Install Skill
+
+```bash
+npx -y skills add anycap-ai/anycap
+```
+
+Or manually:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
+  --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md
+```
+
+## Step 3: Login
+
+```bash
+# Interactive (opens browser)
+anycap login
+
+# Headless (SSH, containers, agent runtimes)
+anycap login --headless
+```
+
+## Step 4: Verify
+
+```bash
+anycap status
+```
+
+## Step 5: Check for Updates
+
+The CLI auto-updates on each run. To update manually:
+
+```bash
+anycap update
+```
+
+To check if skills are up to date:
+
+```bash
+npx -y skills check
+```
+
+## Resources
+
+- Skill file: https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md
+- GitHub: https://github.com/anycap-ai/anycap
+- Releases: https://github.com/anycap-ai/anycap/releases
+- Website: https://anycap.ai
