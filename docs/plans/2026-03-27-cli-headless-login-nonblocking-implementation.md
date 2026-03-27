@@ -68,7 +68,8 @@ git commit -m "refactor: extract headless login init and poll helpers"
 - 为 `login` 命令新增测试，覆盖：
   - `anycap login --headless --no-wait --json` 返回结构化 JSON 到 stdout
   - 返回字段至少包含 `login_session_id`、`verification_uri`、`user_code`、`expires_in`、`interval`
-  - 返回结构化 `next_action_hint`
+  - 返回字符串 `next_action_hint`
+  - `next_action_hint` 明确告诉 agent：先把 URL/code 给用户，要求用户完成后回到 agent 确认，再执行 poll
   - `--no-wait` 不保存 credential，不进入阻塞 poll
   - `--no-wait` 仅允许和 `--headless` 组合
   - `--json` 在此阶段至少覆盖 `--no-wait` 和 `login poll`
@@ -89,10 +90,10 @@ Expected: FAIL
 - `--headless --no-wait --json` 路径：
   - 调 `auth.DeviceInit`
   - 用 `output.WriteJSON` 将 init 结果输出到 stdout
-  - 输出结构化 `next_action_hint`，例如：
-    - `type=login_poll`
-    - `when=after_user_confirms_browser_step_complete`
-    - `command_template="anycap login poll --session <login_session_id> --json"`
+  - 输出字符串 `next_action_hint`，明确提示 agent：
+    - 展示 `verification_uri` 与 `user_code`
+    - 告诉用户完成后要回来回复 agent 确认已完成
+    - 在用户确认后，使用返回里的真实 `login_session_id` 执行 poll
   - stderr 不再打印阻塞等待文案
 - 如果后续希望支持非 JSON 模式，可留 TODO，但 phase 1 先把 agent 场景走通
 
@@ -254,7 +255,7 @@ git commit -m "test: cover blocking and nonblocking login flows"
 - 标出 `poll` 不要求紧跟 `init`
 - 标出持久化 session 是 server 重启可恢复的前提
 - 标出 agent 应使用结构化返回里的 `login_session_id` 来组装 poll 命令，而不是依赖示例 session 值
-- 标出 `next_action_hint` 是结构化 orchestration hint，不是可直接照抄执行的固定命令
+- 标出 `next_action_hint` 是给 agent 的一句话 orchestration hint，不是可直接照抄执行的固定命令
 
 **Step 2: 更新文档**
 
@@ -315,5 +316,5 @@ Expected: only intended files changed
 - phase 1 不改 server API shape；只消费现有 `/v1/auth/device-code` 与 `/v1/auth/device-poll`
 - phase 1 不改 `anycap login` 浏览器流
 - phase 1 不要求 agent 自动持续 poll；推荐的人机协作方式仍是“人类给出确认语义后再 poll”
-- phase 1 引入结构化 `next_action_hint`，但它只是 orchestration hint；恢复仍依赖结构化返回里的 `login_session_id`、`expires_in`、`interval`
+- phase 1 引入字符串 `next_action_hint`，但它只是 orchestration hint；恢复仍依赖结构化返回里的 `login_session_id`、`verification_uri`、`user_code`、`expires_in`、`interval`
 - 若后续需要完整 machine-to-machine orchestration，再考虑增加 server-side poll token 或 resume token，但不在本计划范围内

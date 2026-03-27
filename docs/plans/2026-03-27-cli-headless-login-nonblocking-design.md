@@ -91,19 +91,15 @@ The command should return immediately with JSON:
   "user_code": "ABCD-EFGH",
   "expires_in": 900,
   "interval": 5,
-  "next_action_hint": {
-    "type": "login_poll",
-    "when": "after_user_confirms_browser_step_complete",
-    "command_template": "anycap login poll --session <login_session_id> --json"
-  }
+  "next_action_hint": "Show the verification URL and code to the user, ask them to complete login in a browser, and tell them to reply to the agent once they have finished. After the user confirms completion, run `anycap login poll --session <login_session_id> --json` using the returned login_session_id."
 }
 ```
 
-`next_action_hint` should be treated as structured guidance for orchestration, not as an authoritative command string to copy literally.
+`next_action_hint` should be treated as orchestration guidance for the agent, not as an authoritative command string to copy literally.
 
 ### 4.2 Human handoff
 
-After receiving the response, the agent should explicitly instruct the human:
+After receiving the response, the agent should explicitly instruct the human. `next_action_hint` exists to remind the agent to do exactly that:
 
 ```text
 请在浏览器打开以下链接并输入验证码完成登录。
@@ -131,6 +127,7 @@ Important clarification:
 - this is a recommended example, not a required fixed phrase
 - replies such as `继续`, `好了`, `已完成`, `可以了`, `搞定了，继续吧` should all be treated as valid confirmation if the meaning is clearly “the browser step is done, please continue”
 - the agent should judge by **user intent / confirmation semantics**, not exact string equality
+- the wording inside `next_action_hint` is guidance, not a hard protocol token
 
 ### 4.4 Poll
 
@@ -187,16 +184,15 @@ The agent may also keep:
 - `expires_in`
 - `interval`
 
-The CLI contract should not rely on a free-form `next_action_hint` string that embeds a concrete session ID in command text.
+The CLI contract should not rely on `next_action_hint` as the only recovery mechanism.
 
 Instead, recovery should rely on these structured fields directly:
 
 - `login_session_id`
 - `expires_in`
 - `interval`
-- `next_action_hint.type`
-- `next_action_hint.when`
-- `next_action_hint.command_template`
+- `verification_uri`
+- `user_code`
 
 The agent can then construct the follow-up command using the real returned session ID, for example:
 
@@ -204,7 +200,7 @@ The agent can then construct the follow-up command using the real returned sessi
 anycap login poll --session <login_session_id> --json
 ```
 
-where `<login_session_id>` is substituted from the actual structured response rather than copied from a fixed example string. `next_action_hint.command_template` is only a template; the actual session ID must come from `login_session_id`.
+where `<login_session_id>` is substituted from the actual structured response rather than copied from the example text inside `next_action_hint`.
 
 ### 6.2 Guarantee
 
