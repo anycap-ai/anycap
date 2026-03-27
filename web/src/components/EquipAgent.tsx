@@ -1,36 +1,27 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, type ReactNode } from "react";
-import {
-  Cursor,
-  ClaudeCode,
-  Codex,
-  Antigravity,
-  OpenCode,
-  OpenClaw,
-  V0,
-  Lovable,
-  Replit,
-} from "@lobehub/icons";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
+const ICON_CDN = "https://unpkg.com/@lobehub/icons-static-svg@latest/icons";
+
 interface Agent {
   name: string;
-  icon: ReactNode;
+  icon: string | null; // SVG filename on CDN
   slug: string | null; // skills CLI agent slug for -a flag
 }
 
 const agents: Agent[] = [
-  { name: "Cursor", icon: <Cursor size={20} />, slug: "cursor" },
-  { name: "Claude Code", icon: <ClaudeCode.Color size={20} />, slug: "claude-code" },
-  { name: "Codex", icon: <Codex.Color size={20} />, slug: "codex" },
-  { name: "Antigravity", icon: <Antigravity.Color size={20} />, slug: "antigravity" },
-  { name: "OpenCode", icon: <OpenCode size={20} />, slug: "opencode" },
-  { name: "OpenClaw", icon: <OpenClaw.Color size={20} />, slug: "openclaw" },
-  { name: "V0", icon: <V0 size={20} />, slug: "v0" },
-  { name: "Lovable", icon: <Lovable.Color size={20} />, slug: "lovable" },
-  { name: "Replit", icon: <Replit.Color size={20} />, slug: "replit" },
+  { name: "Cursor", icon: "cursor.svg", slug: "cursor" },
+  { name: "Claude Code", icon: "claudecode-color.svg", slug: "claude-code" },
+  { name: "Codex", icon: "codex-color.svg", slug: "codex" },
+  { name: "Antigravity", icon: "antigravity-color.svg", slug: "antigravity" },
+  { name: "OpenCode", icon: "opencode.svg", slug: "opencode" },
+  { name: "OpenClaw", icon: "openclaw-color.svg", slug: "openclaw" },
+  { name: "V0", icon: "v0.svg", slug: "v0" },
+  { name: "Lovable", icon: "lovable-color.svg", slug: "lovable" },
+  { name: "Replit", icon: "replit-color.svg", slug: "replit" },
   { name: "Other Agent", icon: null, slug: null },
 ];
 
@@ -39,10 +30,12 @@ function getInstallPrompt(agent: Agent): string {
   return `Help me set up AnyCap — first install the skill with "npx -y skills add anycap-ai/anycap${agentFlag} -y", then install the CLI with "curl -fsSL https://anycap.ai/install.sh | sh", and run anycap login to connect my account. After that you'll have image, video, music, speech, search, and crawl capabilities ready to use.`;
 }
 
-function AgentIconSlot({ icon }: { icon: ReactNode }) {
+function AgentIconSlot({ icon }: { icon: string | null }) {
   return (
     <span className="shrink-0 w-5 h-5 flex items-center justify-center">
-      {icon ?? (
+      {icon ? (
+        <img src={`${ICON_CDN}/${icon}`} alt="" width={20} height={20} />
+      ) : (
         <svg width={18} height={18} viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="8" stroke="#9a9e90" strokeWidth="1.5" strokeDasharray="3 2" />
           <circle cx="9" cy="9" r="2" fill="#9a9e90" />
