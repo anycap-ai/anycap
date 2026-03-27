@@ -38,7 +38,7 @@ func classifyError(err error) (code, message, hint, requestID string) {
 	// Authentication error (401)
 	var authErr *httpclient.AuthError
 	if errors.As(err, &authErr) {
-		return "auth_required", authErr.Error(), "run 'anycap login' to authenticate", ""
+		return "auth_required", authErr.Error(), "run 'anycap login' to authenticate (use 'anycap login --headless' in environments without a browser)", ""
 	}
 
 	// Network / connection errors
@@ -71,7 +71,7 @@ func classifyError(err error) (code, message, hint, requestID string) {
 func hintForAPIError(e *httpclient.APIError) string {
 	switch {
 	case e.StatusCode == 401:
-		return "run 'anycap login' to authenticate"
+		return "run 'anycap login' to authenticate (use 'anycap login --headless' in environments without a browser)"
 	case e.StatusCode == 429:
 		return "rate limited, retry after a short delay"
 	case e.Code == "credit_insufficient":

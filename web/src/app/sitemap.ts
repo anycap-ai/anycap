@@ -1,18 +1,19 @@
 import type { MetadataRoute } from "next";
-import { publicSiteRoutes, siteConfig } from "@/lib/site";
-
-const routePriority: Record<(typeof publicSiteRoutes)[number], number> = {
-  "/": 1,
-  "/for-human": 0.8,
-};
+import { defaultLocale, getLocalizedPublicRoutes } from "@/lib/site";
+import { shouldAllowIndexing } from "@/lib/seo-metadata";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  if (!shouldAllowIndexing()) {
+    return [];
+  }
 
-  return publicSiteRoutes.map((route) => ({
-    url: `${siteConfig.url}${route === "/" ? "" : route}`,
+  const lastModified = new Date();
+  const localizedRoutes = getLocalizedPublicRoutes(defaultLocale);
+
+  return localizedRoutes.map((route) => ({
+    url: route.url,
     lastModified,
-    changeFrequency: "weekly",
-    priority: routePriority[route],
+    changeFrequency: "weekly" as const,
+    priority: route.priority,
   }));
 }

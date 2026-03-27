@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
+export const runtime = "edge";
+
 export default function LogoutPage() {
   useEffect(() => {
     sessionStorage.removeItem("anycap_login");

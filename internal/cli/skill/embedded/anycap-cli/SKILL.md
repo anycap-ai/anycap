@@ -51,7 +51,7 @@ anycap login --headless
 anycap login --headless --no-wait --json
 
 # Resume a previously initialized headless login after the user confirms completion
-anycap login poll --session <login_session_id> --json
+anycap login poll --session <login_session_id> --json --wait
 
 # CI/CD -- pipe API key from stdin
 echo "$ANYCAP_API_KEY" | anycap login --with-token

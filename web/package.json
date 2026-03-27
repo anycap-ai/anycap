@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+    "check:edge-runtime": "node ./scripts/ensure-edge-runtime.mjs",
+    "build": "pnpm run check:edge-runtime && next build",
     "start": "next start",
     "lint": "next lint"
   },

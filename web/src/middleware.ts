@@ -1,46 +1,108 @@
 import { NextRequest, NextResponse } from "next/server";
-import { content, toMarkdown } from "@/lib/landing-content";
 import { auth0 } from "@/lib/auth/auth0";
+import { getLandingContent, toMarkdown } from "@/lib/landing-content";
+import {
+  buildLocalizedPath,
+  defaultLocale,
+  getPublicRouteByPath,
+  localeHeaderName,
+  normalizePublicPath,
+  stripLocalePrefix,
+} from "@/lib/site";
 
-const markdown = toMarkdown(content);
-const protectedPaths = ["/dashboard", "/billing", "/usage", "/logs"];
+const markdown = toMarkdown(getLandingContent());
+const protectedPaths = ["/dashboard"];
+
+function redirectToLocalizedPath(req: NextRequest, pathname: string) {
+  const redirectURL = req.nextUrl.clone();
+  redirectURL.pathname = buildLocalizedPath(defaultLocale, pathname);
+  return NextResponse.redirect(redirectURL);
+}
+
+function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
+  for (const cookie of authResponse.cookies.getAll()) {
+    target.cookies.set(cookie);
+  }
+
+  authResponse.headers.forEach((value, key) => {
+    if (key.toLowerCase() === "set-cookie" || target.headers.has(key)) {
+      return;
+    }
+    target.headers.set(key, value);
+  });
+
+  return target;
+}
 
 export async function middleware(req: NextRequest) {
   const authResponse = await auth0.middleware(req);
+  const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
 
-  if (req.nextUrl.pathname.startsWith("/api/auth/") || req.nextUrl.pathname === "/auth/access-token") {
+  if (
+    req.nextUrl.pathname.startsWith("/api/auth/") ||
+    req.nextUrl.pathname === "/auth/access-token"
+  ) {
     return authResponse;
   }
 
-  if (protectedPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
+  if (
+    protectedPaths.some(
+      (path) => normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+    )
+  ) {
     const session = await auth0.getSession(req);
     if (!session) {
       const loginURL = new URL("/auth/login", req.nextUrl.origin);
-      const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
-      loginURL.searchParams.set("return_to", returnTo);
-      return NextResponse.redirect(loginURL);
+      loginURL.searchParams.set("return_to", `${normalizedPath}${req.nextUrl.search}`);
+      return applyAuthResponse(NextResponse.redirect(loginURL), authResponse);
     }
   }
 
-  if (req.nextUrl.pathname === "/") {
+  if (normalizedPath === "/") {
     const accept = req.headers.get("accept") ?? "";
     if (!accept.includes("text/html")) {
-      return new NextResponse(markdown, {
-        headers: { "content-type": "text/plain; charset=utf-8" },
-      });
+      return applyAuthResponse(
+        new NextResponse(markdown, {
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        }),
+        authResponse,
+      );
+    }
+
+    return applyAuthResponse(redirectToLocalizedPath(req, "/"), authResponse);
+  }
+
+  const { locale } = stripLocalePrefix(normalizedPath);
+  if (!locale) {
+    const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
+    if (matchedPublicRoute) {
+      return applyAuthResponse(
+        redirectToLocalizedPath(req, matchedPublicRoute.path),
+        authResponse,
+      );
     }
   }
-  return authResponse;
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(localeHeaderName, locale ?? defaultLocale);
+
+  return applyAuthResponse(
+    NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    }),
+    authResponse,
+  );
 }
 
 export const config = {
   matcher: [
     "/",
+    "/for-human/:path*",
+    "/dashboard/:path*",
     "/auth/:path*",
     "/api/auth/:path*",
-    "/dashboard/:path*",
-    "/billing/:path*",
-    "/usage/:path*",
-    "/logs/:path*",
+    "/:locale/:path*",
   ],
 };

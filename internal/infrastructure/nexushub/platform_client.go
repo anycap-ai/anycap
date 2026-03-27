@@ -273,6 +273,9 @@ func nodeToModelSpec(node *atomicNodeDTO, capability model.Capability) *model.Mo
 				}
 			}
 		}
+		// Enrich RequestHints with capability-level constraints that may
+		// not be present in operation_schemas (e.g. supported_durations).
+		enrichHintsFromCapabilities(&spec, capability, node)
 		operationSpecs[op] = spec
 	}
 
@@ -282,6 +285,48 @@ func nodeToModelSpec(node *atomicNodeDTO, capability model.Capability) *model.Mo
 		DisplayName: node.Name,
 		Status:      node.State,
 		Operations:  operationSpecs,
+	}
+}
+
+// enrichHintsFromCapabilities merges capability-level constraints (supported
+// durations, ratios, resolutions) into the operation's RequestHints so they
+// are visible to CLI users via `models <model> schema`.
+// It only fills in fields that are not already present in RequestHints.
+func enrichHintsFromCapabilities(spec *model.OperationSpec, capability model.Capability, node *atomicNodeDTO) {
+	if node.Capabilities == nil {
+		return
+	}
+	if spec.RequestHints == nil {
+		spec.RequestHints = make(map[string]any)
+	}
+
+	switch capability {
+	case model.CapabilityImage:
+		img := node.Capabilities.Image
+		if img == nil {
+			return
+		}
+		if _, exists := spec.RequestHints["ratio"]; !exists && len(img.SupportedAspectRatios) > 0 {
+			spec.RequestHints["ratio"] = map[string]any{"type": "string", "enum": img.SupportedAspectRatios}
+		}
+		if _, exists := spec.RequestHints["resolution"]; !exists && len(img.SupportedResolutions) > 0 {
+			spec.RequestHints["resolution"] = map[string]any{"type": "string", "enum": img.SupportedResolutions}
+		}
+
+	case model.CapabilityVideo:
+		vid := node.Capabilities.Video
+		if vid == nil {
+			return
+		}
+		if _, exists := spec.RequestHints["duration"]; !exists && len(vid.SupportedDurations) > 0 {
+			spec.RequestHints["duration"] = map[string]any{"type": "integer", "enum": vid.SupportedDurations}
+		}
+		if _, exists := spec.RequestHints["ratio"]; !exists && len(vid.SupportedAspectRatios) > 0 {
+			spec.RequestHints["ratio"] = map[string]any{"type": "string", "enum": vid.SupportedAspectRatios}
+		}
+		if _, exists := spec.RequestHints["resolution"]; !exists && len(vid.SupportedResolutions) > 0 {
+			spec.RequestHints["resolution"] = map[string]any{"type": "string", "enum": vid.SupportedResolutions}
+		}
 	}
 }
 

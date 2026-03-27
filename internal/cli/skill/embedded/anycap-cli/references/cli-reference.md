@@ -64,7 +64,7 @@ This returns structured JSON including:
 After the human finishes browser login and confirms completion, resume with:
 
 ```bash
-anycap login poll --session <login_session_id> --json
+anycap login poll --session <login_session_id> --json --wait
 ```
 
 In agent flows, prefer the returned `poll_command` directly. It already includes the real session ID.

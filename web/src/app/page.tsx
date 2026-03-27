@@ -1,16 +1,25 @@
 import Link from "next/link";
-import { content, type Block } from "@/lib/landing-content";
+import { getLandingContent, type Block } from "@/lib/landing-content";
 import { HumanRedirectDialog } from "@/components/HumanRedirectDialog";
+import { getRequestLocale } from "@/lib/request-locale";
+import { localizePublicPath } from "@/lib/site";
 
-export default function AgentLanding() {
+export const runtime = "edge";
+
+export default async function AgentLanding() {
+  const locale = await getRequestLocale();
+  const content = getLandingContent(locale);
+  const humanPageHref = localizePublicPath(locale, "/for-human");
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] font-mono">
     <main className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
-      <HumanRedirectDialog />
+      <HumanRedirectDialog href={humanPageHref} />
 
       <div className="mb-10 flex justify-end">
         <Link
-          href="/for-human"
+          href={humanPageHref}
+          prefetch={true}
           className="inline-block px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded hover:bg-white transition-colors"
         >
           {"I'm Human →"}

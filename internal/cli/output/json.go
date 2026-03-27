@@ -42,7 +42,7 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 		return WriteServerJSON(w, payload, requestID)
 	}
 
-	out := map[string]string{"content": env.Data.Content}
+	out := map[string]string{"status": "success", "content": env.Data.Content}
 	if requestID != "" {
 		out["request_id"] = requestID
 	}

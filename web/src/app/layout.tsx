@@ -1,11 +1,18 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
-import { siteConfig } from "@/lib/site";
-import { GlobalTipToast } from "@/components/ui/GlobalTipToast";
+import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
+import {
+
+  defaultLocale,
+  getLocaleConfig,
+  siteConfig,
+} from "@/lib/site";
+import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
+
+export const runtime = "edge";
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -21,52 +28,97 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.defaultDescription,
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
-    url: "/",
     siteName: siteConfig.siteName,
     title: siteConfig.defaultTitle,
     description: siteConfig.defaultDescription,
+    images: [defaultSocialImage],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: siteConfig.defaultTitle,
     description: siteConfig.defaultDescription,
+    images: [defaultSocialImage.url],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
+  robots: createRobotsMetadata(),
   icons: {
     icon: "/anycap-mark.svg",
   },
 };
 
-export default function RootLayout({
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "AnyCap",
+  url: siteConfig.url,
+  logo: `${siteConfig.url}/anycap-mark.svg`,
+  sameAs: [
+    "https://github.com/anycap-ai/anycap",
+  ],
+  description: siteConfig.defaultDescription,
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteConfig.siteName,
+  url: siteConfig.url,
+};
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AnyCap CLI",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "macOS, Linux, Windows",
+  url: siteConfig.url,
+  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
+  installUrl: `${siteConfig.url}/install.sh`,
+  description:
+    "Agent-native capability runtime and CLI that lets AI agents install and use capabilities through one interface.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const htmlLang = getLocaleConfig(defaultLocale).htmlLang;
+
   return (
-    <html lang="en">
+    <html lang={htmlLang}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(softwareJsonLd),
+          }}
+        />
+      </head>
       <body
         className={`${GeistPixelSquare.variable} ${spaceMono.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
         style={{ fontFamily: "sans-serif" }}
       >
-        <Suspense fallback={null}>
-          <GlobalTipToast />
-        </Suspense>
+        <LazyGlobalTipToast />
         {children}
         <GrainOverlay />
       </body>

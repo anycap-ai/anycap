@@ -19,7 +19,7 @@ export type Balance = {
 /** Items inside GET /v1/logs */
 export type TimelineItem = {
   type: "capability_call" | "credit_transaction";
-  timestamp: string;
+  occurred_at: string;
   // capability_call fields
   request_id?: string;
   capability?: string;
@@ -30,14 +30,16 @@ export type TimelineItem = {
   // credit_transaction fields
   transaction_id?: string;
   transaction_type?: string;
-  amount?: number;
+  credit_cent_amount?: number;
   description?: string;
   source_id?: string;
+  credit_batch_type?: string;
 };
 
 /** GET /v1/logs */
 export type LogsResult = {
   items: TimelineItem[];
+  next_cursor?: string;
 };
 
 /** GET /v1/dashboard/summary */
@@ -46,13 +48,13 @@ export type DashboardSummary = {
   balance: Balance;
   recent_activity: TimelineItem[];
   usage_summary?: {
-    capability: string;
-    model: string;
-    timestamp: string;
+    last_capability: string;
+    last_model: string;
+    last_occurred_at: string;
   };
   error_summary?: {
-    capability: string;
-    error_code: string;
-    timestamp: string;
+    last_error_capability: string;
+    last_error_code: string;
+    last_error_occurred_at: string;
   };
 };

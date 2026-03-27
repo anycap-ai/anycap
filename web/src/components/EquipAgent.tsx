@@ -173,7 +173,7 @@ export function EquipAgent() {
               <div className="flex items-center gap-2">
                 <AgentIconSlot icon={displayAgent.icon} />
                 <span
-                  className="text-[#9a9e90] text-[11px] tracking-[1px] uppercase"
+                  className="text-[#d4e0a4] text-[11px] tracking-[1px] uppercase"
                   style={mono}
                 >
                   Send to {displayAgent.name}
@@ -181,7 +181,7 @@ export function EquipAgent() {
               </div>
               <button
                 onClick={close}
-                className="text-[#4a4e42] hover:text-[#9a9e90] transition-colors p-1"
+                className="text-[#6b705f] hover:text-[#d4e0a4] transition-colors p-1"
               >
                 <svg width="12" height="12" viewBox="0 0 12 12">
                   <path
