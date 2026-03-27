@@ -1,6 +1,6 @@
 # AnyCap
 
-AnyCap is a capability runtime for AI agents. It provides access to multimodal AI capabilities -- image understanding, video analysis, and more -- through a single CLI.
+AnyCap is a CLI-native capability harness for AI agents. It provides access to multimodal AI capabilities -- image understanding, video analysis, and more -- through a single CLI.
 
 ## Install Skills
 
