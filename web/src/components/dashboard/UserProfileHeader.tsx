@@ -19,7 +19,7 @@ export function UserProfileHeader() {
     <div className="ml-auto relative group">
       <div className="flex items-center gap-3 cursor-default">
         <span
-          className="text-[11px] text-[#7a7e71] tracking-[1.5px] uppercase"
+          className="text-[12px] text-[#5f6358] tracking-[0.2px]"
           style={mono}
         >
           {displayName}
@@ -50,7 +50,7 @@ export function UserProfileHeader() {
       {/* Hover dropdown */}
       <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-30">
         <LogoutButton
-          className="block px-5 py-2.5 text-[11px] uppercase tracking-[2px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8] transition-colors whitespace-nowrap cursor-pointer"
+          className="block px-5 py-2.5 text-[12px] tracking-[0.3px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8] transition-colors whitespace-nowrap cursor-pointer"
           style={mono}
         />
       </div>

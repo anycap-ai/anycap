@@ -4,6 +4,7 @@ export const runtime = "edge";
 
 import { useDashboardSummary } from "@/lib/api/hooks";
 import type { TimelineItem, Balance } from "@/lib/api/types";
+import { formatCredit } from "@/lib/credit";
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
@@ -23,7 +24,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse ${className}`} />;
+  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded-sm ${className}`} />;
 }
 
 function StatCard({
@@ -34,9 +35,9 @@ function StatCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#d4dbb8] px-5 py-4">
+    <div className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-5 min-h-[122px]">
       <p
-        className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-3"
+        className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
         style={mono}
       >
         {label}
@@ -50,7 +51,7 @@ function BalanceCard({ balance }: { balance: Balance }) {
   return (
     <StatCard label="Balance">
       <p className="text-2xl text-[#1c1f17] font-bold leading-none">
-        {balance.available.toLocaleString()}
+        {formatCredit(balance.available)}
       </p>
       <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
         credits
@@ -122,67 +123,41 @@ function ErrorCard({
 }
 
 function ActivityRow({ item }: { item: TimelineItem }) {
-  const isCall = item.type === "capability_call";
   return (
-    <div className="flex items-center gap-4 py-3 border-b border-[#d4dbb8]/60 text-[13px]">
+    <div className="flex items-center gap-4 px-3 py-3.5 border-b border-[#d4dbb8]/60 text-[13px]">
       <span className="text-[#4d5145] w-16 shrink-0" style={mono}>
         {timeAgo(item.occurred_at)}
       </span>
+      <span className="text-[#1c1f17] w-20 shrink-0">{item.capability || "—"}</span>
+      <span className="text-[#4d5145] flex-1 truncate" style={mono}>
+        {item.model || "—"}
+      </span>
       <span
-        className="text-[11px] uppercase tracking-[1.5px] text-[#707468] w-16 shrink-0"
+        className={`w-16 shrink-0 text-right ${item.status === "ok" || item.status === "success"
+            ? "text-[#6b7d3a]"
+            : "text-[#a83f32]"
+          }`}
         style={mono}
       >
-        {isCall ? "call" : "credit"}
+        {item.status || "—"}
       </span>
-      {isCall ? (
-        <>
-          <span className="text-[#1c1f17] w-20 shrink-0">{item.capability}</span>
-          <span className="text-[#4d5145] flex-1 truncate" style={mono}>
-            {item.model || "—"}
-          </span>
-          <span
-            className={`w-16 shrink-0 text-right ${
-              item.status === "ok" || item.status === "success"
-                ? "text-[#6b7d3a]"
-                : "text-[#a83f32]"
-            }`}
-            style={mono}
-          >
-            {item.status}
-          </span>
-          <span className="text-[#4d5145] w-16 shrink-0 text-right" style={mono}>
-            {item.credit_cost != null ? `-${item.credit_cost}` : "—"}
-          </span>
-        </>
-      ) : (
-        <>
-          <span className="text-[#1c1f17] flex-1 truncate">
-            {item.description || item.transaction_type || "—"}
-          </span>
-          <span
-            className={`w-20 shrink-0 text-right font-bold ${
-              (item.credit_cent_amount ?? 0) >= 0
-                ? "text-[#6b7d3a]"
-                : "text-[#1c1f17]"
-            }`}
-            style={mono}
-          >
-            {(item.credit_cent_amount ?? 0) >= 0 ? "+" : ""}
-            {item.credit_cent_amount}
-          </span>
-        </>
-      )}
+      <span className="text-[#4d5145] w-16 shrink-0 text-right" style={mono}>
+        {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
+      </span>
     </div>
   );
 }
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboardSummary();
+  const recentUsage = data?.recent_activity?.filter(
+    (item) => item.type === "capability_call",
+  );
 
   return (
     <div>
       <p
-        className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-6"
+        className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-6"
         style={mono}
       >
         Overview
@@ -190,9 +165,9 @@ export default function DashboardPage() {
 
       {/* Stats cards */}
       {isLoading || !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="border border-[#d4dbb8] px-5 py-4">
+            <div key={i} className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-5">
               <Skeleton className="h-3 w-16 mb-4" />
               <Skeleton className="h-6 w-24 mb-2" />
               <Skeleton className="h-3 w-20" />
@@ -200,7 +175,7 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <BalanceCard balance={data.balance} />
           <LastActivityCard summary={data.usage_summary} />
           <ErrorCard summary={data.error_summary} />
@@ -208,32 +183,32 @@ export default function DashboardPage() {
       )}
 
       {/* Recent activity */}
-      <div className="mt-10">
+      <div className="mt-11">
         <p
-          className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-4"
+          className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4"
           style={mono}
         >
           Recent Activity
         </p>
 
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-3 border border-[#d4dbb8] bg-[#f9faf5] px-3 py-2">
             {[0, 1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </div>
-        ) : data?.recent_activity?.length ? (
-          <div>
-            {data.recent_activity.map((item, i) => (
+        ) : recentUsage?.length ? (
+          <div className="border border-[#d4dbb8] bg-[#f9faf5]">
+            {recentUsage.map((item, i) => (
               <ActivityRow
-                key={item.request_id || item.transaction_id || i}
+                key={item.request_id || i}
                 item={item}
               />
             ))}
           </div>
         ) : (
           <p className="text-[13px] text-[#7a7e71] py-6" style={mono}>
-            No activity yet. Start by making an API call.
+            No activity yet. Ask your agent to use anycap.
           </p>
         )}
       </div>
