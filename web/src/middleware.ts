@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { content, toMarkdown } from "@/lib/landing-content";
+import { auth0 } from "@/lib/auth/auth0";
 
 const markdown = toMarkdown(content);
 const protectedPaths = ["/dashboard", "/billing", "/usage", "/logs"];
-const sessionCookieName = "anycap_session";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
+  const authResponse = await auth0.middleware(req);
+
+  if (req.nextUrl.pathname.startsWith("/api/auth/") || req.nextUrl.pathname === "/auth/access-token") {
+    return authResponse;
+  }
+
   if (protectedPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
-    const hasSession = Boolean(req.cookies.get(sessionCookieName)?.value);
-    if (!hasSession) {
+    const session = await auth0.getSession(req);
+    if (!session) {
       const loginURL = new URL("/auth/login", req.nextUrl.origin);
       const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
       loginURL.searchParams.set("return_to", returnTo);
@@ -24,9 +30,17 @@ export function middleware(req: NextRequest) {
       });
     }
   }
-  return NextResponse.next();
+  return authResponse;
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/billing/:path*", "/usage/:path*", "/logs/:path*"],
+  matcher: [
+    "/",
+    "/auth/:path*",
+    "/api/auth/:path*",
+    "/dashboard/:path*",
+    "/billing/:path*",
+    "/usage/:path*",
+    "/logs/:path*",
+  ],
 };

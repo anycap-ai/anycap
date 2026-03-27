@@ -120,7 +120,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeSuccess(w, map[string]any{
 			"flow_type":        "browser_poll",
 			"login_session_id": loginSessionID,
-			"browser_url":      "https://anycap.ai/auth/login?browser_token=bt-" + randomHex(8) + "&cli=1",
+			"browser_url":      "https://anycap.ai/auth/cli-login?browser_token=bt-" + randomHex(8) + "&cli=1",
 			"poll_token":       pollToken,
 			"interval":         1,
 			"expires_in":       300,

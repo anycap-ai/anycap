@@ -80,6 +80,22 @@ func TestAuthMiddleware_UsesJWTAuthenticatorForNonAPIKeyBearer(t *testing.T) {
 	}
 }
 
+func TestAuthMiddleware_RejectsJWTBearerWhenIdentityAuthenticatorDisabled(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(RequestID())
+	h.GET("/protected", Auth(apikey.NewMemoryService(), nil), func(ctx context.Context, c *app.RequestContext) {
+		c.String(http.StatusOK, "ok")
+	})
+
+	resp := ut.PerformRequest(h.Engine, http.MethodGet, "/protected", nil, ut.Header{
+		Key:   "Authorization",
+		Value: "Bearer eyJhbGciOiJSUzI1NiJ9.test.payload",
+	})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
 func TestLocalBypassAuth_SetsPrincipal(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
 	h.Use(RequestID())

@@ -317,7 +317,7 @@ func TestService_InitBrowserPoll(t *testing.T) {
 	if result.FlowType != model.LoginFlowBrowserPoll {
 		t.Fatalf("expected browser_poll flow, got %q", result.FlowType)
 	}
-	if result.BrowserURL != "https://anycap.ai/auth/login?browser_token=browser-lsn-browser&cli=1" {
+	if result.BrowserURL != "https://anycap.ai/auth/cli-login?browser_token=browser-lsn-browser&cli=1" {
 		t.Fatalf("expected browser url, got %q", result.BrowserURL)
 	}
 	if result.PollToken != "poll-lsn-browser" {
@@ -332,6 +332,66 @@ func TestService_InitBrowserPoll(t *testing.T) {
 	}
 	if stored.PollToken != "poll-lsn-browser" {
 		t.Fatalf("expected poll token stored, got %q", stored.PollToken)
+	}
+}
+
+func TestService_BrowserVerifyMarksSessionCompleted(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 27, 11, 0, 0, 0, time.UTC)
+	repo.sessions["lsn-browser"] = model.LoginSession{
+		ID:           "lsn-browser",
+		FlowType:     model.LoginFlowBrowserPoll,
+		BrowserToken: "browser-lsn-browser",
+		PollToken:    "poll-lsn-browser",
+		Status:       model.LoginSessionStatusPending,
+		ExpiresAt:    now.Add(15 * time.Minute),
+		CreatedAt:    now,
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		&fakeUserProvisioner{
+			users: map[string]model.User{
+				"2000000001": {
+					ID:        "2000000001",
+					Email:     "browser@example.com",
+					Name:      "Browser User",
+					AvatarURL: "https://cdn.example.com/avatar.png",
+					Status:    model.UserStatusActive,
+				},
+			},
+		},
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.ai/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.BrowserVerify(context.Background(), "browser-lsn-browser", model.Principal{
+		UserID:   "2000000001",
+		AuthType: "auth0_jwt",
+		Email:    "browser@example.com",
+		Name:     "Browser User",
+	})
+	if err != nil {
+		t.Fatalf("BrowserVerify() error = %v", err)
+	}
+	if result.Message != "authorized" {
+		t.Fatalf("expected authorized message, got %#v", result)
+	}
+	stored := repo.sessions["lsn-browser"]
+	if stored.Status != model.LoginSessionStatusCompleted {
+		t.Fatalf("expected completed status, got %q", stored.Status)
+	}
+	if stored.AuthorizedUserID != "2000000001" {
+		t.Fatalf("expected authorized user id, got %#v", stored)
+	}
+	if stored.AuthUserEmail != "browser@example.com" || stored.AuthUserName != "Browser User" {
+		t.Fatalf("expected browser user profile stored, got %#v", stored)
 	}
 }
 

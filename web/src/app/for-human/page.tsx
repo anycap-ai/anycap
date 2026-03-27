@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { AnycapMark } from "@/components/brand/AnycapMark";
 import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
 import { EquipAgent } from "@/components/EquipAgent";
 import { ScrambleText } from "@/components/ScrambleText";
 import { TerminalDemo } from "@/components/TerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
-import { readSessionCookie } from "@/lib/auth/session";
+import { ParticleAgent } from "@/components/animation/ParticleAgent";
+import { LoginButton } from "@/components/auth/LoginButton";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { auth0 } from "@/lib/auth/auth0";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
@@ -14,15 +16,14 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
 
 export default async function ForHumanPage() {
-  const cookieStore = await cookies();
-  const session = readSessionCookie(cookieStore);
-  const isLoggedIn = Boolean(session?.apiKey);
+  const session = await auth0.getSession();
+  const isLoggedIn = Boolean(session);
 
   return (
     <main className="overflow-x-hidden">
       {/* ── Header ── */}
-      <header className="px-6 md:px-12 lg:px-20 pt-6 md:pt-10">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-3">
+      <header className="px-8 md:px-16 lg:px-24 pt-6 md:pt-10">
+        <div className="flex items-center gap-3">
           <AnycapMark size={28} className="shrink-0" />
           <AnycapWordmark
             className="text-xl font-bold leading-none"
@@ -44,22 +45,16 @@ export default async function ForHumanPage() {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  href="/auth/logout"
-                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+                <LogoutButton
+                  className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
                   style={mono}
-                >
-                  Logout
-                </Link>
+                />
               </>
             ) : (
-              <Link
-                href="/auth/login"
-                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors"
+              <LoginButton
+                className="text-[11px] text-[#9a9e90] hover:text-[#6b7d3a] tracking-[2px] uppercase transition-colors cursor-pointer"
                 style={mono}
-              >
-                Login
-              </Link>
+              />
             )}
             <Link
               href="/"
@@ -73,9 +68,9 @@ export default async function ForHumanPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="px-6 md:px-12 lg:px-20 pt-12 md:pt-20 lg:pt-24">
-        <div className="mx-auto max-w-[1280px]">
-          <div className="max-w-[1080px]">
+      <section className="px-8 md:px-16 lg:px-24 pt-12 md:pt-20 lg:pt-24">
+        <div className="flex items-center gap-12">
+          <div className="flex-1 min-w-0">
             <h1
               className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(42px, 8vw, 108px)" }}
@@ -101,13 +96,16 @@ export default async function ForHumanPage() {
               />
             </h1>
             <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
-              AnyCap is a capability runtime built for agents, so tools like Claude Code,
-              Cursor, Codex, and OpenClaw can install and use capabilities through one
-              interface instead of scattered SDKs and dashboards.
+              Agents can think, but they can&apos;t act — no images, no video, no music,
+              no voice. Every capability they need is locked behind a different SDK and
+              a different API key. AnyCap makes it one command.
             </p>
+            <div className="mt-8 md:mt-10">
+              <EquipAgent />
+            </div>
           </div>
-          <div className="mt-8 md:mt-10">
-            <EquipAgent />
+          <div className="hidden lg:block shrink-0 -translate-x-24">
+            <ParticleAgent scale={0.85} />
           </div>
         </div>
       </section>
@@ -224,8 +222,8 @@ export default async function ForHumanPage() {
         </FadeIn>
         <FadeIn delay={200}>
           <p className="text-xl md:text-2xl leading-[1.7] text-[#3a3e32] mt-12 md:mt-16 max-w-[640px]">
-            We&apos;re building the utility layer for the age of Agents —
-            so they stop managing tools and start doing work.
+            No SDK to learn. No docs to read. No dashboard to check.
+            Your agent sends a command. It gets a result. That&apos;s the entire interface.
           </p>
         </FadeIn>
       </section>
@@ -268,7 +266,7 @@ export default async function ForHumanPage() {
               className="text-[10px] text-[#9a9e90] tracking-[2px] uppercase"
               style={mono}
             >
-              Capability Runtime
+              Built for agents.
             </span>
           </div>
           <Link

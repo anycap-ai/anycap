@@ -24,11 +24,6 @@ type DeviceCodeCheckRequest struct {
 
 type DeviceVerifyRequest struct {
 	UserCode string `json:"user_code"`
-	User     struct {
-		ID    string `json:"id,omitempty"`
-		Email string `json:"email,omitempty"`
-		Name  string `json:"name,omitempty"`
-	} `json:"user,omitempty"`
 }
 
 type BrowserBindRequest struct {
@@ -41,4 +36,8 @@ type BrowserCompleteRequest struct {
 	Code           string `json:"code"`
 	State          string `json:"state,omitempty"`
 	RedirectURI    string `json:"redirect_uri,omitempty"`
+}
+
+type BrowserVerifyRequest struct {
+	BrowserToken string `json:"browser_token"`
 }

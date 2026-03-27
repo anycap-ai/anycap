@@ -601,6 +601,21 @@ func TestRouter_ExchangeIssuesAPIKeyForJWTBearer(t *testing.T) {
 	}
 }
 
+func TestRouter_ExchangeRejectsAPIKeyBearer(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/exchange", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"code":"AUTH_INVALID"`)) {
+		t.Fatalf("expected auth invalid error, got %s", resp.Body.String())
+	}
+}
+
 func TestRouter_DeviceCodeCheck(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
@@ -730,6 +745,101 @@ func TestRouter_DeviceVerifyCompletesSessionWithJWTBearer(t *testing.T) {
 
 	if !bytes.Contains(resp.Body.Bytes(), []byte(`"status":"complete"`)) {
 		t.Fatalf("expected completed poll response, got %s", resp.Body.String())
+	}
+}
+
+func TestRouter_BrowserVerifyCompletesBrowserPollSessionWithJWTBearer(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{
+		Body: bytes.NewReader([]byte(`{"method":"browser_poll"}`)),
+		Len:  len(`{"method":"browser_poll"}`),
+	}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal browser poll init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	browserURL, _ := data["browser_url"].(string)
+	pollToken, _ := data["poll_token"].(string)
+	if loginSessionID == "" || browserURL == "" || pollToken == "" {
+		t.Fatalf("expected browser poll init data, got %#v", data)
+	}
+
+	parsedURL, err := url.Parse(browserURL)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+	browserToken := parsedURL.Query().Get("browser_token")
+	if browserToken == "" {
+		t.Fatalf("expected browser token in %q", browserURL)
+	}
+
+	verifyBody := []byte(`{"browser_token":"` + browserToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-verify",
+		&ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	pollBody := []byte(`{"login_session_id":"` + loginSessionID + `","poll_token":"` + pollToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/poll", &ut.Body{Body: bytes.NewReader(pollBody), Len: len(pollBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"status":"complete"`)) {
+		t.Fatalf("expected completed poll response, got %s", resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"api_key":"ak_`)) {
+		t.Fatalf("expected api key in poll response, got %s", resp.Body.String())
+	}
+}
+
+func TestRouter_BrowserVerifyRejectsAPIKeyBearer(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{
+		Body: bytes.NewReader([]byte(`{"method":"browser_poll"}`)),
+		Len:  len(`{"method":"browser_poll"}`),
+	}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal browser poll init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	browserURL, _ := data["browser_url"].(string)
+	parsedURL, err := url.Parse(browserURL)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+	browserToken := parsedURL.Query().Get("browser_token")
+
+	verifyBody := []byte(`{"browser_token":"` + browserToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-verify",
+		&ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

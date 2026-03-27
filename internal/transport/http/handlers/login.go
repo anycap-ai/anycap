@@ -48,6 +48,7 @@ func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
 func (h *LoginHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.POST("/auth/exchange", h.Exchange)
 	group.POST("/auth/device-verify", h.DeviceVerify)
+	group.POST("/auth/browser-verify", h.BrowserVerify)
 }
 
 func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
@@ -256,10 +257,36 @@ func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) 
 
 	result, err := h.service.VerifyDeviceCode(c, strings.TrimSpace(req.UserCode), *principal, model.AuthUser{
 		UserID:  principal.UserID,
-		Email:   strings.TrimSpace(req.User.Email),
-		Name:    strings.TrimSpace(req.User.Name),
+		Email:   principal.Email,
+		Name:    principal.Name,
 		Picture: "",
 	})
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *LoginHandler) BrowserVerify(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	var req dto.BrowserVerifyRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		return
+	}
+
+	result, err := h.service.BrowserVerify(c, strings.TrimSpace(req.BrowserToken), *principal)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
