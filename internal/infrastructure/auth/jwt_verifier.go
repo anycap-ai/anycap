@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -82,6 +83,57 @@ func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) 
 		Email:   stringClaim(claims, "email"),
 		Name:    stringClaim(claims, "name"),
 		Picture: stringClaim(claims, "picture"),
+	}, nil
+}
+
+func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string) (model.AuthUser, error) {
+	if v == nil || strings.TrimSpace(rawToken) == "" {
+		return model.AuthUser{}, model.ErrInternal
+	}
+
+	issuerURL, err := normalizeIssuerURL(v.cfg.Issuer)
+	if err != nil {
+		return model.AuthUser{}, err
+	}
+	issuerURL.Path = joinURLPath(issuerURL.Path, "userinfo")
+	issuerURL.RawQuery = ""
+	issuerURL.Fragment = ""
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, issuerURL.String(), nil)
+	if err != nil {
+		return model.AuthUser{}, model.ErrInternal
+	}
+	req.Header.Set("Authorization", "Bearer "+rawToken)
+
+	resp, err := v.httpClient.Do(req)
+	if err != nil {
+		return model.AuthUser{}, model.ErrInternal
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		return model.AuthUser{}, mapAuthError(resp)
+	}
+
+	var profile struct {
+		Sub     string `json:"sub"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		return model.AuthUser{}, model.ErrInternal
+	}
+	if profile.Sub == "" {
+		return model.AuthUser{}, model.ErrAuthInvalid
+	}
+
+	return model.AuthUser{
+		UserID:  profile.Sub,
+		Email:   profile.Email,
+		Name:    profile.Name,
+		Picture: profile.Picture,
 	}, nil
 }
 

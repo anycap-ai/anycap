@@ -109,3 +109,34 @@ func TestJWTVerifier_RejectsWrongAudience(t *testing.T) {
 		t.Fatalf("expected ErrAuthInvalid, got %v", err)
 	}
 }
+
+func TestJWTVerifier_FetchIdentityProfile(t *testing.T) {
+	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/userinfo" {
+			t.Fatalf("unexpected path %q", r.URL.Path)
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer access-token-123" {
+			t.Fatalf("unexpected Authorization header %q", got)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"sub":     "auth0|demo-user",
+			"email":   "demo@example.com",
+			"name":    "Demo User",
+			"picture": "https://cdn.example.com/avatar.png",
+		})
+	}))
+	defer jwksServer.Close()
+
+	verifier := NewJWTVerifier(JWTVerifierConfig{
+		Issuer:   jwksServer.URL + "/",
+		Audience: "https://api.anycap.local",
+	}, jwksServer.Client())
+
+	authUser, err := verifier.FetchIdentityProfile(context.Background(), "access-token-123")
+	if err != nil {
+		t.Fatalf("FetchIdentityProfile() error = %v", err)
+	}
+	if authUser.UserID != "auth0|demo-user" || authUser.Email != "demo@example.com" || authUser.Name != "Demo User" {
+		t.Fatalf("unexpected auth user: %#v", authUser)
+	}
+}

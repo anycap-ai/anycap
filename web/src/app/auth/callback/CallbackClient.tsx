@@ -7,13 +7,13 @@ import { anycapPost } from "@/lib/auth/anycap-api";
 import { consumePendingLogin } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
-type AuthProfile = {
+export type AuthProfile = {
   email?: string;
   name?: string;
   picture?: string;
 };
 
-export function CallbackClient() {
+export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfile | null }) {
   const params = useSearchParams();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function CallbackClient() {
       }
 
       try {
-        const profile = await loadAuthProfile();
+        const profile = initialProfile ?? (await loadAuthProfile());
 
         if (login.mode === "browser_poll" || login.mode === "cli_login") {
           if (!login.browserToken) {
@@ -76,26 +76,30 @@ export function CallbackClient() {
         window.location.assign("/for-human?tip=login_callback_failed");
       }
     })();
-  }, [params]);
+  }, [initialProfile, params]);
 
   return <ProcessingOverlay message="Processing login" />;
 }
 
 async function loadAuthProfile(): Promise<AuthProfile | null> {
-  const resp = await fetch("/auth/profile", {
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
-  });
-  if (!resp.ok) {
-    return null;
+  for (const path of ["/auth/profile", "/api/auth/profile"]) {
+    const resp = await fetch(path, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+    if (!resp.ok) {
+      continue;
+    }
+
+    const data = (await resp.json()) as AuthProfile;
+    return {
+      email: data.email || "",
+      name: data.name || "",
+      picture: data.picture || "",
+    };
   }
 
-  const data = (await resp.json()) as AuthProfile;
-  return {
-    email: data.email || "",
-    name: data.name || "",
-    picture: data.picture || "",
-  };
+  return null;
 }

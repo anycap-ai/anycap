@@ -12,6 +12,10 @@ type IdentityTokenVerifier interface {
 	VerifyIdentityToken(ctx context.Context, rawToken string) (model.AuthUser, error)
 }
 
+type IdentityTokenProfileFetcher interface {
+	FetchIdentityProfile(ctx context.Context, rawToken string) (model.AuthUser, error)
+}
+
 type IdentityTokenAuthenticator struct {
 	verifier IdentityTokenVerifier
 	users    port.UserProvisioner
@@ -38,6 +42,16 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 	if err != nil {
 		return model.Principal{}, err
 	}
+	if shouldHydrateAuthProfile(authUser) {
+		if fetcher, ok := a.verifier.(IdentityTokenProfileFetcher); ok {
+			profile, fetchErr := fetcher.FetchIdentityProfile(ctx, rawToken)
+			if fetchErr == nil && profile.UserID == authUser.UserID {
+				authUser.Email = firstNonEmpty(profile.Email, authUser.Email)
+				authUser.Name = firstNonEmpty(profile.Name, authUser.Name)
+				authUser.Picture = firstNonEmpty(profile.Picture, authUser.Picture)
+			}
+		}
+	}
 
 	user, _, err := a.users.FindOrCreateByAuthIdentity(ctx, "auth0", authUser, a.now().UTC())
 	if err != nil {
@@ -53,6 +67,19 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 		Name:           user.Name,
 		Picture:        user.AvatarURL,
 	}, nil
+}
+
+func shouldHydrateAuthProfile(authUser model.AuthUser) bool {
+	return authUser.Email == "" || authUser.Name == "" || authUser.Picture == ""
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 var _ port.IdentityTokenAuthenticator = (*IdentityTokenAuthenticator)(nil)
