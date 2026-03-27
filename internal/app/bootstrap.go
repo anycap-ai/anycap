@@ -75,6 +75,7 @@ type serverDependencies struct {
 	capabilitiesService *capapp.Service
 	feedbackService     *feedbackapp.Service
 	apiKeyService       port.APIKeyService
+	identityTokens      port.IdentityTokenAuthenticator
 	rateLimiter         port.RateLimiter
 	protectedRPM        int
 }
@@ -123,7 +124,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			audioCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
+				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
@@ -181,6 +182,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			capabilitiesService: capService,
 			feedbackService:     feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
+			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			protectedRPM:        cfg.RateLimitRPM,
 		}, nil
@@ -215,6 +217,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			capabilitiesService: capService,
 			feedbackService:     feedbackapp.NewService(apikey.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
+			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			protectedRPM:        cfg.RateLimitRPM,
 		}, nil
@@ -424,13 +427,23 @@ func hasVideoExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
 
-func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService) hertzapp.HandlerFunc {
+func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthenticator) hertzapp.HandlerFunc {
 	if shouldBypassAuthForLocalTest(cfg) {
 		principal := buildBypassPrincipal()
 		log.Printf("auth: bypass enabled for local testing with user_id=%s", principal.UserID)
 		return middleware.LocalBypassAuth(principal)
 	}
-	return middleware.Auth(apiKeys)
+	return middleware.Auth(apiKeys, identityTokens)
+}
+
+func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner) port.IdentityTokenAuthenticator {
+	if !cfg.Auth0Enabled || users == nil {
+		return nil
+	}
+	return auth.NewIdentityTokenAuthenticator(auth.NewJWTVerifier(auth.JWTVerifierConfig{
+		Issuer:   cfg.Auth0Issuer,
+		Audience: cfg.Auth0Audience,
+	}, nil), users, nil)
 }
 
 func shouldBypassAuthForLocalTest(_ config.Config) bool {

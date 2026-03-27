@@ -426,6 +426,63 @@ func TestService_BrowserCompleteMarksSessionAuthorized(t *testing.T) {
 	}
 }
 
+func TestService_ExchangeIssuesAPIKeyForJWTPrincipal(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	apiKeys := &fakeLoginAPIKeyService{
+		createdResult: model.CreatedAPIKey{
+			APIKey: model.APIKey{ID: "key_123"},
+			RawKey: "ak_test_exchange",
+		},
+	}
+	users := &fakeUserProvisioner{
+		users: map[string]model.User{
+			"2000000001": {
+				ID:        "2000000001",
+				Email:     "demo@example.com",
+				Name:      "Demo User",
+				AvatarURL: "https://cdn.example.com/avatar.png",
+				Status:    model.UserStatusActive,
+			},
+		},
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		repo,
+		"https://anycap.ai/device",
+		func() string { return "state-1" },
+		func() string { return "lsn-1" },
+		func() string { return "CODE-1" },
+		func() time.Time { return time.Date(2026, 3, 27, 10, 0, 0, 0, time.UTC) },
+		7*24*time.Hour,
+	)
+
+	result, err := service.Exchange(context.Background(), model.Principal{
+		UserID:         "2000000001",
+		AuthType:       "auth0_jwt",
+		ExternalUserID: "auth0|demo-user",
+		Email:          "demo@example.com",
+		Name:           "Demo User",
+	})
+	if err != nil {
+		t.Fatalf("Exchange() error = %v", err)
+	}
+	if len(apiKeys.created) != 1 {
+		t.Fatalf("expected one api key creation, got %d", len(apiKeys.created))
+	}
+	if apiKeys.created[0].UserID != "2000000001" {
+		t.Fatalf("expected api key to be created for internal user, got %#v", apiKeys.created[0])
+	}
+	if result.APIKey != "ak_test_exchange" || result.APIKeyID != "key_123" {
+		t.Fatalf("unexpected api key result: %#v", result)
+	}
+	if result.User == nil || result.User.ID != "2000000001" || result.User.Email != "demo@example.com" || result.User.Name != "Demo User" {
+		t.Fatalf("expected user info in exchange result, got %#v", result.User)
+	}
+}
+
 func TestService_PollBrowserAuthorizedCreatesAPIKey(t *testing.T) {
 	repo := newFakeLoginSessionRepo()
 	now := time.Date(2026, 3, 26, 2, 15, 0, 0, time.UTC)

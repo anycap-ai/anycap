@@ -40,6 +40,18 @@ type modelRouteRepoStub struct {
 	items []model.ModelRoute
 }
 
+type testIdentityTokenAuthenticator struct {
+	principals map[string]model.Principal
+}
+
+func (a *testIdentityTokenAuthenticator) AuthenticateIdentityToken(_ context.Context, rawToken string) (model.Principal, error) {
+	principal, ok := a.principals[rawToken]
+	if !ok {
+		return model.Principal{}, model.ErrAuthInvalid
+	}
+	return principal, nil
+}
+
 func (s *modelRouteRepoStub) ListModelRoutes(_ context.Context, _ model.ListModelRoutesFilter) ([]model.ModelRoute, error) {
 	return s.items, nil
 }
@@ -184,6 +196,18 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 			},
 		},
 	}))
+	identityTokens := &testIdentityTokenAuthenticator{
+		principals: map[string]model.Principal{
+			"jwt-demo-token": {
+				UserID:         seededUser.ID,
+				AuthType:       "auth0_jwt",
+				ExternalUserID: "auth0|user-123",
+				Email:          seededUser.Email,
+				Name:           seededUser.Name,
+				Picture:        seededUser.AvatarURL,
+			},
+		},
+	}
 
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
@@ -200,7 +224,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 			imageCatalog,
 			modelRouteHandler,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", middleware.Auth(apiKeys), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
+				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
@@ -547,6 +571,36 @@ func TestRouter_DashboardReadAPIs(t *testing.T) {
 	}
 }
 
+func TestRouter_MeSupportsJWTBearer(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/me", nil, ut.Header{
+		Key:   "Authorization",
+		Value: "Bearer jwt-demo-token",
+	})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"email":"user@example.com"`)) {
+		t.Fatalf("expected user profile in response, got %s", resp.Body.String())
+	}
+}
+
+func TestRouter_ExchangeIssuesAPIKeyForJWTBearer(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/exchange", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"api_key":"ak_`)) {
+		t.Fatalf("expected api key in response, got %s", resp.Body.String())
+	}
+}
+
 func TestRouter_DeviceCodeCheck(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
@@ -636,6 +690,46 @@ func TestRouter_DeviceVerifyCompletesSession(t *testing.T) {
 	}
 	if apiKey, _ := data["api_key"].(string); apiKey == "" {
 		t.Fatalf("expected api_key in poll response, got %#v", data)
+	}
+}
+
+func TestRouter_DeviceVerifyCompletesSessionWithJWTBearer(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal device init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	userCode, _ := data["user_code"].(string)
+
+	verifyBody := []byte(`{"user_code":"` + userCode + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-verify",
+		&ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	pollBody := []byte(`{"login_session_id":"` + loginSessionID + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-poll", &ut.Body{Body: bytes.NewReader(pollBody), Len: len(pollBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"status":"complete"`)) {
+		t.Fatalf("expected completed poll response, got %s", resp.Body.String())
 	}
 }
 
