@@ -10,7 +10,7 @@ import {
   stripLocalePrefix,
 } from "@/lib/site";
 
-const markdown = toMarkdown(content);
+const markdown = toMarkdown(getLandingContent());
 const protectedPaths = ["/dashboard"];
 
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
