@@ -49,7 +49,8 @@ cp web/public/install.sh "${CLONE_DIR}/scripts/install.sh"
 SKILL_FILE="${CLONE_DIR}/skills/anycap-cli/SKILL.md"
 if [ -f "$SKILL_FILE" ]; then
   echo "Updating SKILL.md version to ${VERSION} ..."
-  sed -i.bak "s/^  version: .*/  version: \"${VERSION}\"/" "$SKILL_FILE"
+  # Keep version style consistent with mdformat-frontmatter in anycap-github.
+  sed -i.bak "s/^  version: .*/  version: ${VERSION}/" "$SKILL_FILE"
   rm -f "${SKILL_FILE}.bak"
 fi
 
