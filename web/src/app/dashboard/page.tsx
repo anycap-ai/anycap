@@ -1,0 +1,242 @@
+"use client";
+
+export const runtime = "edge";
+
+import { useDashboardSummary } from "@/lib/api/hooks";
+import type { TimelineItem, Balance } from "@/lib/api/types";
+
+const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+
+function timeAgo(ts: string): string {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "—";
+  const diff = Date.now() - d.getTime();
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return "just now";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  return d.toLocaleDateString();
+}
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`bg-[#d4dbb8]/30 animate-pulse ${className}`} />;
+}
+
+function StatCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border border-[#d4dbb8] px-5 py-4">
+      <p
+        className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-3"
+        style={mono}
+      >
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function BalanceCard({ balance }: { balance: Balance }) {
+  return (
+    <StatCard label="Balance">
+      <p className="text-2xl text-[#1c1f17] font-bold leading-none">
+        {balance.available.toLocaleString()}
+      </p>
+      <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+        credits
+      </p>
+    </StatCard>
+  );
+}
+
+function LastActivityCard({
+  summary,
+}: {
+  summary?: {
+    last_capability: string;
+    last_model: string;
+    last_occurred_at: string;
+  };
+}) {
+  return (
+    <StatCard label="Last Activity">
+      {summary ? (
+        <>
+          <p className="text-base text-[#1c1f17] leading-none">
+            {summary.last_capability}
+            <span className="text-[#9a9e90] mx-1.5">·</span>
+            <span className="text-[#3a3e32]">{summary.last_model}</span>
+          </p>
+          <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+            {timeAgo(summary.last_occurred_at)}
+          </p>
+        </>
+      ) : (
+        <p className="text-[13px] text-[#7a7e71]" style={mono}>
+          No activity yet
+        </p>
+      )}
+    </StatCard>
+  );
+}
+
+function ErrorCard({
+  summary,
+}: {
+  summary?: {
+    last_error_capability: string;
+    last_error_code: string;
+    last_error_occurred_at: string;
+  };
+}) {
+  return (
+    <StatCard label="Last Error">
+      {summary ? (
+        <>
+          <p className="text-base text-[#a83f32] leading-none">
+            {summary.last_error_code}
+            <span className="text-[#9a9e90] mx-1.5">·</span>
+            <span className="text-[#3a3e32]">{summary.last_error_capability}</span>
+          </p>
+          <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+            {timeAgo(summary.last_error_occurred_at)}
+          </p>
+        </>
+      ) : (
+        <p className="text-[13px] text-[#6b7d3a]" style={mono}>
+          No errors
+        </p>
+      )}
+    </StatCard>
+  );
+}
+
+function ActivityRow({ item }: { item: TimelineItem }) {
+  const isCall = item.type === "capability_call";
+  return (
+    <div className="flex items-center gap-4 py-3 border-b border-[#d4dbb8]/60 text-[13px]">
+      <span className="text-[#4d5145] w-16 shrink-0" style={mono}>
+        {timeAgo(item.occurred_at)}
+      </span>
+      <span
+        className="text-[11px] uppercase tracking-[1.5px] text-[#707468] w-16 shrink-0"
+        style={mono}
+      >
+        {isCall ? "call" : "credit"}
+      </span>
+      {isCall ? (
+        <>
+          <span className="text-[#1c1f17] w-20 shrink-0">{item.capability}</span>
+          <span className="text-[#4d5145] flex-1 truncate" style={mono}>
+            {item.model || "—"}
+          </span>
+          <span
+            className={`w-16 shrink-0 text-right ${
+              item.status === "ok" || item.status === "success"
+                ? "text-[#6b7d3a]"
+                : "text-[#a83f32]"
+            }`}
+            style={mono}
+          >
+            {item.status}
+          </span>
+          <span className="text-[#4d5145] w-16 shrink-0 text-right" style={mono}>
+            {item.credit_cost != null ? `-${item.credit_cost}` : "—"}
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="text-[#1c1f17] flex-1 truncate">
+            {item.description || item.transaction_type || "—"}
+          </span>
+          <span
+            className={`w-20 shrink-0 text-right font-bold ${
+              (item.credit_cent_amount ?? 0) >= 0
+                ? "text-[#6b7d3a]"
+                : "text-[#1c1f17]"
+            }`}
+            style={mono}
+          >
+            {(item.credit_cent_amount ?? 0) >= 0 ? "+" : ""}
+            {item.credit_cent_amount}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const { data, isLoading } = useDashboardSummary();
+
+  return (
+    <div>
+      <p
+        className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-6"
+        style={mono}
+      >
+        Overview
+      </p>
+
+      {/* Stats cards */}
+      {isLoading || !data ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="border border-[#d4dbb8] px-5 py-4">
+              <Skeleton className="h-3 w-16 mb-4" />
+              <Skeleton className="h-6 w-24 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <BalanceCard balance={data.balance} />
+          <LastActivityCard summary={data.usage_summary} />
+          <ErrorCard summary={data.error_summary} />
+        </div>
+      )}
+
+      {/* Recent activity */}
+      <div className="mt-10">
+        <p
+          className="text-[11px] uppercase tracking-[2px] text-[#707468] mb-4"
+          style={mono}
+        >
+          Recent Activity
+        </p>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : data?.recent_activity?.length ? (
+          <div>
+            {data.recent_activity.map((item, i) => (
+              <ActivityRow
+                key={item.request_id || item.transaction_id || i}
+                item={item}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-[#7a7e71] py-6" style={mono}>
+            No activity yet. Start by making an API call.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

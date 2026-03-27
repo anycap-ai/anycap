@@ -10,8 +10,8 @@ import {
   stripLocalePrefix,
 } from "@/lib/site";
 
-const markdown = toMarkdown(getLandingContent(defaultLocale));
-const protectedPaths = ["/dashboard", "/billing", "/usage", "/logs"];
+const markdown = toMarkdown(content);
+const protectedPaths = ["/dashboard"];
 
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
   const redirectUrl = req.nextUrl.clone();
@@ -66,5 +66,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/", "/dashboard/:path*"],
 };
