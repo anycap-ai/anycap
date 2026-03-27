@@ -322,6 +322,39 @@ func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirect
 	}, nil
 }
 
+func (s *Service) Exchange(ctx context.Context, principal model.Principal) (model.LoginCallbackResult, error) {
+	if principal.UserID == "" || principal.AuthType == "" {
+		return model.LoginCallbackResult{}, model.ErrAuthInvalid
+	}
+	if s == nil || s.users == nil || s.apiKeys == nil {
+		return model.LoginCallbackResult{}, model.ErrInternal
+	}
+	if principal.AuthType != "auth0_jwt" && principal.AuthType != "local_bypass" {
+		return model.LoginCallbackResult{}, model.ErrAuthInvalid
+	}
+
+	localUser, err := s.users.GetUserByID(ctx, principal.UserID)
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+	created, err := s.createLoginAPIKey(ctx, localUser.ID)
+	if err != nil {
+		return model.LoginCallbackResult{}, err
+	}
+
+	return model.LoginCallbackResult{
+		CredentialType: loginCredentialTypeAPIKey,
+		AccessToken:    created.RawKey,
+		APIKeyID:       created.APIKey.ID,
+		APIKey:         created.RawKey,
+		User: &model.LoginUser{
+			ID:    localUser.ID,
+			Email: localUser.Email,
+			Name:  localUser.Name,
+		},
+	}, nil
+}
+
 func (s *Service) Poll(ctx context.Context, sessionID, pollToken string) (model.LoginPollResult, error) {
 	if sessionID == "" {
 		return model.LoginPollResult{}, model.ErrInvalidParam

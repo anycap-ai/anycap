@@ -46,6 +46,7 @@ func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
 }
 
 func (h *LoginHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
+	group.POST("/auth/exchange", h.Exchange)
 	group.POST("/auth/device-verify", h.DeviceVerify)
 }
 
@@ -208,6 +209,26 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.Poll(c, req.LoginSessionID, strings.TrimSpace(req.PollToken))
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *LoginHandler) Exchange(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	result, err := h.service.Exchange(c, *principal)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

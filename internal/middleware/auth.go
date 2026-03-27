@@ -11,7 +11,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
+func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthenticator) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
 		header := string(c.Request.Header.Peek("Authorization"))
 		if !strings.HasPrefix(strings.ToLower(header), "bearer ") {
@@ -19,8 +19,20 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 			return
 		}
 
-		rawKey := strings.TrimSpace(header[len("Bearer "):])
-		principal, err := apiKeys.AuthenticateAPIKey(ctx, rawKey)
+		rawToken := strings.TrimSpace(header[len("Bearer "):])
+		var (
+			principal model.Principal
+			err       error
+		)
+
+		switch {
+		case strings.HasPrefix(rawToken, "ak_"):
+			principal, err = apiKeys.AuthenticateAPIKey(ctx, rawToken)
+		case identityTokens != nil:
+			principal, err = identityTokens.AuthenticateIdentityToken(ctx, rawToken)
+		default:
+			err = model.ErrAuthInvalid
+		}
 		if err != nil {
 			ReportError(c, err)
 			status, payload := dto.MapDomainError(err)
@@ -30,6 +42,7 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 		}
 
 		SetPrincipal(c, principal)
+		ctx = ContextWithUserID(ctx, principal.UserID)
 		c.Next(ctx)
 	}
 }
@@ -37,6 +50,7 @@ func Auth(apiKeys port.APIKeyService) app.HandlerFunc {
 func LocalBypassAuth(principal model.Principal) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
 		SetPrincipal(c, principal)
+		ctx = ContextWithUserID(ctx, principal.UserID)
 		c.Next(ctx)
 	}
 }

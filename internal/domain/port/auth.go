@@ -13,6 +13,10 @@ type Auth0Client interface {
 	PollDeviceFlow(ctx context.Context, deviceCode string) (model.DeviceAuthorizationStatus, error)
 }
 
+type IdentityTokenAuthenticator interface {
+	AuthenticateIdentityToken(ctx context.Context, rawToken string) (model.Principal, error)
+}
+
 type LoginService interface {
 	Init(ctx context.Context, method string, redirectPort int, redirectURL string) (model.LoginInitResult, error)
 	Callback(ctx context.Context, sessionID, code, state, redirectURI string) (model.LoginCallbackResult, error)

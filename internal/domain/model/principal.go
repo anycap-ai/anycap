@@ -1,10 +1,14 @@
 package model
 
 type Principal struct {
-	UserID   string   `json:"user_id"`
-	APIKeyID string   `json:"api_key_id,omitempty"`
-	AuthType string   `json:"auth_type"`
-	Scopes   []string `json:"scopes,omitempty"`
+	UserID         string   `json:"user_id"`
+	APIKeyID       string   `json:"api_key_id,omitempty"`
+	AuthType       string   `json:"auth_type"`
+	Scopes         []string `json:"scopes,omitempty"`
+	ExternalUserID string   `json:"external_user_id,omitempty"`
+	Email          string   `json:"email,omitempty"`
+	Name           string   `json:"name,omitempty"`
+	Picture        string   `json:"picture,omitempty"`
 }
 
 type AuthUser struct {
