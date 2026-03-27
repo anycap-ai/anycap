@@ -257,9 +257,9 @@ func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) 
 
 	result, err := h.service.VerifyDeviceCode(c, strings.TrimSpace(req.UserCode), *principal, model.AuthUser{
 		UserID:  principal.UserID,
-		Email:   principal.Email,
-		Name:    principal.Name,
-		Picture: "",
+		Email:   firstNonEmpty(principal.Email, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Email })),
+		Name:    firstNonEmpty(principal.Name, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Name })),
+		Picture: firstNonEmpty(principal.Picture, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Picture })),
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
@@ -286,7 +286,12 @@ func (h *LoginHandler) BrowserVerify(c context.Context, ctx *app.RequestContext)
 		return
 	}
 
-	result, err := h.service.BrowserVerify(c, strings.TrimSpace(req.BrowserToken), *principal)
+	result, err := h.service.BrowserVerify(c, strings.TrimSpace(req.BrowserToken), *principal, model.AuthUser{
+		UserID:  principal.UserID,
+		Email:   firstNonEmpty(principal.Email, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Email })),
+		Name:    firstNonEmpty(principal.Name, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Name })),
+		Picture: firstNonEmpty(principal.Picture, profileField(req.User, func(user *dto.AuthUserProfile) string { return user.Picture })),
+	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
@@ -295,4 +300,20 @@ func (h *LoginHandler) BrowserVerify(c context.Context, ctx *app.RequestContext)
 		return
 	}
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func profileField(user *dto.AuthUserProfile, pick func(*dto.AuthUserProfile) string) string {
+	if user == nil {
+		return ""
+	}
+	return pick(user)
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }

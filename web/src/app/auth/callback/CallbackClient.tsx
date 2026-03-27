@@ -7,6 +7,12 @@ import { anycapPost } from "@/lib/auth/anycap-api";
 import { consumePendingLogin } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
+type AuthProfile = {
+  email?: string;
+  name?: string;
+  picture?: string;
+};
+
 export function CallbackClient() {
   const params = useSearchParams();
 
@@ -20,6 +26,8 @@ export function CallbackClient() {
       }
 
       try {
+        const profile = await loadAuthProfile();
+
         if (login.mode === "browser_poll" || login.mode === "cli_login") {
           if (!login.browserToken) {
             window.location.assign("/for-human?tip=login_callback_invalid");
@@ -32,6 +40,7 @@ export function CallbackClient() {
           }
           await anycapPost<{ message: string }>("/v1/auth/browser-verify", {
             browser_token: login.browserToken,
+            ...(profile ? { user: profile } : {}),
           }, {
             bearerToken: accessToken,
           });
@@ -53,6 +62,7 @@ export function CallbackClient() {
               "/v1/auth/device-verify",
               {
                 user_code: login.deviceCode,
+                ...(profile ? { user: profile } : {}),
               },
               { bearerToken: accessToken },
             );
@@ -69,4 +79,23 @@ export function CallbackClient() {
   }, [params]);
 
   return <ProcessingOverlay message="Processing login" />;
+}
+
+async function loadAuthProfile(): Promise<AuthProfile | null> {
+  const resp = await fetch("/auth/profile", {
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  if (!resp.ok) {
+    return null;
+  }
+
+  const data = (await resp.json()) as AuthProfile;
+  return {
+    email: data.email || "",
+    name: data.name || "",
+    picture: data.picture || "",
+  };
 }

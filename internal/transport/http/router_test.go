@@ -133,6 +133,12 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	if err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
+	sparseUser, _, err := users.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID: "auth0|user-sparse",
+	}, time.Date(2026, 3, 25, 10, 5, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("seed sparse user: %v", err)
+	}
 	callLogs := apikey.NewMemoryCallLogRepo()
 	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 3})
 	_ = callLogs.Insert(context.Background(), model.CallLog{
@@ -205,6 +211,11 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				Email:          seededUser.Email,
 				Name:           seededUser.Name,
 				Picture:        seededUser.AvatarURL,
+			},
+			"jwt-sparse-token": {
+				UserID:         sparseUser.ID,
+				AuthType:       "auth0_jwt",
+				ExternalUserID: "auth0|user-sparse",
 			},
 		},
 	}
@@ -840,6 +851,58 @@ func TestRouter_BrowserVerifyRejectsAPIKeyBearer(t *testing.T) {
 	)
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_BrowserVerifyUsesProfileFallbackForSparseJWT(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{
+		Body: bytes.NewReader([]byte(`{"method":"browser_poll"}`)),
+		Len:  len(`{"method":"browser_poll"}`),
+	}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal browser poll init response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	loginSessionID, _ := data["login_session_id"].(string)
+	browserURL, _ := data["browser_url"].(string)
+	pollToken, _ := data["poll_token"].(string)
+
+	parsedURL, err := url.Parse(browserURL)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+	browserToken := parsedURL.Query().Get("browser_token")
+	if browserToken == "" {
+		t.Fatalf("expected browser token in %q", browserURL)
+	}
+
+	verifyBody := []byte(`{"browser_token":"` + browserToken + `","user":{"email":"fallback@example.com","name":"Fallback User","picture":"https://cdn.example.com/fallback.png"}}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-verify",
+		&ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-sparse-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	pollBody := []byte(`{"login_session_id":"` + loginSessionID + `","poll_token":"` + pollToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/poll", &ut.Body{Body: bytes.NewReader(pollBody), Len: len(pollBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !bytes.Contains(resp.Body.Bytes(), []byte(`"email":"fallback@example.com"`)) || !bytes.Contains(resp.Body.Bytes(), []byte(`"name":"Fallback User"`)) {
+		t.Fatalf("expected fallback profile in poll response, got %s", resp.Body.String())
 	}
 }
 

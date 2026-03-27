@@ -32,6 +32,7 @@ type fakeLoginAPIKeyService struct {
 type fakeUserProvisioner struct {
 	users   map[string]model.User
 	created map[string]bool
+	links   map[string]string
 }
 
 type fakeLoginCreditClient struct {
@@ -83,16 +84,34 @@ func (f *fakeLoginCreditClient) ListTransactions(_ context.Context, _ string, _,
 }
 
 func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, bool, error) {
-	if user, ok := f.users[provider+":"+authUser.UserID]; ok {
-		return user, f.created != nil && f.created[provider+":"+authUser.UserID], nil
+	key := provider + ":" + authUser.UserID
+	if linkedID, ok := f.links[key]; ok {
+		user := f.users[linkedID]
+		user.Email = firstNonEmpty(authUser.Email, user.Email)
+		user.Name = firstNonEmpty(authUser.Name, user.Name)
+		user.AvatarURL = firstNonEmpty(authUser.Picture, user.AvatarURL)
+		f.users[linkedID] = user
+		return user, f.created != nil && f.created[key], nil
 	}
-	return model.User{
+	if user, ok := f.users[key]; ok {
+		return user, f.created != nil && f.created[key], nil
+	}
+	user := model.User{
 		ID:        authUser.UserID,
 		Email:     authUser.Email,
 		Name:      authUser.Name,
 		AvatarURL: authUser.Picture,
 		Status:    model.UserStatusActive,
-	}, true, nil
+	}
+	if f.users == nil {
+		f.users = make(map[string]model.User)
+	}
+	if f.links == nil {
+		f.links = make(map[string]string)
+	}
+	f.users[user.ID] = user
+	f.links[key] = user.ID
+	return user, true, nil
 }
 
 func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (model.User, error) {
@@ -376,7 +395,7 @@ func TestService_BrowserVerifyMarksSessionCompleted(t *testing.T) {
 		AuthType: "auth0_jwt",
 		Email:    "browser@example.com",
 		Name:     "Browser User",
-	})
+	}, model.AuthUser{})
 	if err != nil {
 		t.Fatalf("BrowserVerify() error = %v", err)
 	}
@@ -438,6 +457,69 @@ func TestService_BrowserBindBuildsAuthURL(t *testing.T) {
 	}
 	if authClient.redirectURI != "https://anycap.ai/auth/callback" {
 		t.Fatalf("expected redirect uri to be used, got %q", authClient.redirectURI)
+	}
+}
+
+func TestService_BrowserVerifyUsesFallbackProfileWhenLocalUserBlank(t *testing.T) {
+	repo := newFakeLoginSessionRepo()
+	now := time.Date(2026, 3, 27, 9, 30, 0, 0, time.UTC)
+	repo.sessions["lsn-browser"] = model.LoginSession{
+		ID:           "lsn-browser",
+		FlowType:     model.LoginFlowBrowserPoll,
+		BrowserToken: "browser-lsn-browser",
+		Status:       model.LoginSessionStatusPending,
+		ExpiresAt:    now.Add(15 * time.Minute),
+	}
+	users := &fakeUserProvisioner{
+		users: map[string]model.User{
+			"2000000001": {
+				ID:     "2000000001",
+				Status: model.UserStatusActive,
+			},
+		},
+		links: map[string]string{
+			"auth0:google-oauth2|abc": "2000000001",
+		},
+	}
+	service := NewService(
+		&fakeAuthClient{},
+		users,
+		&fakeLoginCreditClient{},
+		apikey.NewMemoryService(),
+		repo,
+		"https://anycap.ai/device",
+		nil,
+		nil,
+		nil,
+		func() time.Time { return now },
+		7*24*time.Hour,
+	)
+
+	result, err := service.BrowserVerify(context.Background(), "browser-lsn-browser", model.Principal{
+		UserID:         "2000000001",
+		AuthType:       "auth0_jwt",
+		ExternalUserID: "google-oauth2|abc",
+	}, model.AuthUser{
+		Email:   "browser@example.com",
+		Name:    "Browser User",
+		Picture: "https://cdn.example.com/u.png",
+	})
+	if err != nil {
+		t.Fatalf("BrowserVerify() error = %v", err)
+	}
+	if result.Message != "authorized" {
+		t.Fatalf("expected authorized message, got %#v", result)
+	}
+	stored := repo.sessions["lsn-browser"]
+	if stored.AuthUserEmail != "browser@example.com" || stored.AuthUserName != "Browser User" {
+		t.Fatalf("expected fallback browser user profile stored, got %#v", stored)
+	}
+	updatedUser, err := users.GetUserByID(context.Background(), "2000000001")
+	if err != nil {
+		t.Fatalf("GetUserByID() error = %v", err)
+	}
+	if updatedUser.Email != "browser@example.com" || updatedUser.Name != "Browser User" {
+		t.Fatalf("expected local user profile refreshed, got %#v", updatedUser)
 	}
 }
 

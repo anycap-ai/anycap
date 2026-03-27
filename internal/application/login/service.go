@@ -263,7 +263,7 @@ func (s *Service) BrowserComplete(ctx context.Context, sessionID, browserToken, 
 	return s.sessions.MarkAuthorized(ctx, sessionID, user, s.now().UTC())
 }
 
-func (s *Service) BrowserVerify(ctx context.Context, browserToken string, principal model.Principal) (model.DeviceVerifyResult, error) {
+func (s *Service) BrowserVerify(ctx context.Context, browserToken string, principal model.Principal, authUser model.AuthUser) (model.DeviceVerifyResult, error) {
 	if browserToken == "" {
 		return model.DeviceVerifyResult{}, model.ErrInvalidParam
 	}
@@ -294,15 +294,9 @@ func (s *Service) BrowserVerify(ctx context.Context, browserToken string, princi
 		return model.DeviceVerifyResult{}, model.ErrAuthExpired
 	}
 
-	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	authUser, err = s.resolveVerifiedAuthUser(ctx, principal, authUser)
 	if err != nil {
 		return model.DeviceVerifyResult{}, err
-	}
-	authUser := model.AuthUser{
-		UserID:  principal.UserID,
-		Email:   user.Email,
-		Name:    user.Name,
-		Picture: user.AvatarURL,
 	}
 	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		return model.DeviceVerifyResult{}, err
@@ -471,20 +465,54 @@ func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, princip
 	if session.Status != model.LoginSessionStatusPending {
 		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
 	}
-	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	authUser, err = s.resolveVerifiedAuthUser(ctx, principal, authUser)
 	if err != nil {
 		return model.DeviceVerifyResult{}, err
-	}
-	authUser = model.AuthUser{
-		UserID:  principal.UserID,
-		Email:   user.Email,
-		Name:    user.Name,
-		Picture: user.AvatarURL,
 	}
 	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		return model.DeviceVerifyResult{}, err
 	}
 	return model.DeviceVerifyResult{Message: "authorized"}, nil
+}
+
+func (s *Service) resolveVerifiedAuthUser(ctx context.Context, principal model.Principal, fallback model.AuthUser) (model.AuthUser, error) {
+	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	if err != nil {
+		return model.AuthUser{}, err
+	}
+
+	authUser := model.AuthUser{
+		UserID:  principal.UserID,
+		Email:   firstNonEmpty(user.Email, fallback.Email, principal.Email),
+		Name:    firstNonEmpty(user.Name, fallback.Name, principal.Name),
+		Picture: firstNonEmpty(user.AvatarURL, fallback.Picture, principal.Picture),
+	}
+
+	if principal.ExternalUserID != "" {
+		updatedUser, _, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", model.AuthUser{
+			UserID:  principal.ExternalUserID,
+			Email:   authUser.Email,
+			Name:    authUser.Name,
+			Picture: authUser.Picture,
+		}, s.now().UTC())
+		if err != nil {
+			return model.AuthUser{}, err
+		}
+		authUser.Email = firstNonEmpty(updatedUser.Email, authUser.Email)
+		authUser.Name = firstNonEmpty(updatedUser.Name, authUser.Name)
+		authUser.Picture = firstNonEmpty(updatedUser.AvatarURL, authUser.Picture)
+	}
+
+	return authUser, nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func (s *Service) BeginDeviceAuthorization(ctx context.Context, userCode string) (string, error) {

@@ -120,14 +120,14 @@ func updateUserAndIdentity(ctx context.Context, db apikey.DBTX, userID, provider
 
 	if _, err = db.ExecContext(ctx, `
 		UPDATE users
-		SET email = $2, name = $3, avatar_url = $4, updated_at = $5
+		SET email = COALESCE($2, email), name = COALESCE($3, name), avatar_url = COALESCE($4, avatar_url), updated_at = $5
 		WHERE id = $1
 	`, numericID, emptyStringToNil(authUser.Email), emptyStringToNil(authUser.Name), emptyStringToNil(authUser.Picture), now); err != nil {
 		return err
 	}
 	if _, err = db.ExecContext(ctx, `
 		UPDATE auth_identities
-		SET email = $4, raw_profile = $5, updated_at = $6
+		SET email = COALESCE($4, email), raw_profile = $5, updated_at = $6
 		WHERE user_id = $1 AND provider = $2 AND external_subject = $3
 	`, numericID, provider, authUser.UserID, emptyStringToNil(authUser.Email), rawProfile, now); err != nil {
 		return err

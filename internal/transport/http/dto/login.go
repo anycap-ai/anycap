@@ -23,7 +23,8 @@ type DeviceCodeCheckRequest struct {
 }
 
 type DeviceVerifyRequest struct {
-	UserCode string `json:"user_code"`
+	UserCode string           `json:"user_code"`
+	User     *AuthUserProfile `json:"user,omitempty"`
 }
 
 type BrowserBindRequest struct {
@@ -39,5 +40,12 @@ type BrowserCompleteRequest struct {
 }
 
 type BrowserVerifyRequest struct {
-	BrowserToken string `json:"browser_token"`
+	BrowserToken string           `json:"browser_token"`
+	User         *AuthUserProfile `json:"user,omitempty"`
+}
+
+type AuthUserProfile struct {
+	Email   string `json:"email,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Picture string `json:"picture,omitempty"`
 }
