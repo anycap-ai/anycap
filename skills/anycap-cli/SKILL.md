@@ -10,7 +10,7 @@ description: >
   errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on
   mentions of AnyCap, multimodal capabilities, or AI-generated media.
 metadata:
-  version: "0.0.3"
+  version: 0.0.3
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -125,12 +125,12 @@ anycap feedback --type other -m "schema for model Y is missing aspect_ratio"
 
 Options:
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--type` | yes | `bug`, `feature`, or `other` |
-| `-m, --message` | yes | Description of the issue or idea |
-| `--request-id` | no | Request ID from a previous command (found in JSON output) |
-| `--context` | no | Additional context as JSON |
+| Flag            | Required | Description                                               |
+| --------------- | -------- | --------------------------------------------------------- |
+| `--type`        | yes      | `bug`, `feature`, or `other`                              |
+| `-m, --message` | yes      | Description of the issue or idea                          |
+| `--request-id`  | no       | Request ID from a previous command (found in JSON output) |
+| `--context`     | no       | Additional context as JSON                                |
 
 When to submit feedback:
 
@@ -187,13 +187,13 @@ anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 
 Common jq patterns:
 
-| Pattern | Purpose |
-|---------|----------|
-| `jq -r '.field'` | Extract a string field (raw, no quotes) |
-| `jq -r '.local_path'` | Get downloaded file path from generate |
-| `jq -r '.models[].model'` | List all values of a field in an array |
-| `jq -e '.status == "success"'` | Check condition (exit code 1 if false) |
-| `jq -r '.message // empty'` | Extract error message if present |
+| Pattern                        | Purpose                                 |
+| ------------------------------ | --------------------------------------- |
+| `jq -r '.field'`               | Extract a string field (raw, no quotes) |
+| `jq -r '.local_path'`          | Get downloaded file path from generate  |
+| `jq -r '.models[].model'`      | List all values of a field in an array  |
+| `jq -e '.status == "success"'` | Check condition (exit code 1 if false)  |
+| `jq -r '.message // empty'`    | Extract error message if present        |
 
 ## Keeping Up to Date
 

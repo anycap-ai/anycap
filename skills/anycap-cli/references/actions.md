@@ -30,12 +30,12 @@ anycap actions image-understand \
 
 Options:
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--url` | at least one | Image URL (repeatable, up to 10 total with --file) |
-| `--file` | at least one | Local image file (repeatable, auto-uploaded) |
-| `--instruction` | no | Guide the model on what to analyze |
-| `--model` | no | Specific model ID |
+| Flag            | Required     | Description                                        |
+| --------------- | ------------ | -------------------------------------------------- |
+| `--url`         | at least one | Image URL (repeatable, up to 10 total with --file) |
+| `--file`        | at least one | Local image file (repeatable, auto-uploaded)       |
+| `--instruction` | no           | Guide the model on what to analyze                 |
+| `--model`       | no           | Specific model ID                                  |
 
 At least one `--url` or `--file` is required. Maximum 10 images per request.
 
@@ -58,12 +58,12 @@ anycap actions video-read --file ./recording.mp4 --instruction "List all on-scre
 
 Options:
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--url` | one of url/file | Video URL |
-| `--file` | one of url/file | Local video file (auto-uploaded) |
-| `--instruction` | no | What to look for or describe |
-| `--model` | no | Specific model ID |
+| Flag            | Required        | Description                      |
+| --------------- | --------------- | -------------------------------- |
+| `--url`         | one of url/file | Video URL                        |
+| `--file`        | one of url/file | Local video file (auto-uploaded) |
+| `--instruction` | no              | What to look for or describe     |
+| `--model`       | no              | Specific model ID                |
 
 Exactly one of `--url` or `--file` is required.
 

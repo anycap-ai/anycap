@@ -80,10 +80,10 @@ anycap video read --url https://example.com/clip.mp4
 
 ## Capabilities
 
-| Capability | Command | Description |
-|------------|---------|-------------|
+| Capability          | Command                   | Description                        |
+| ------------------- | ------------------------- | ---------------------------------- |
 | Image Understanding | `anycap image understand` | Analyze images using vision models |
-| Video Analysis | `anycap video read` | Analyze videos |
+| Video Analysis      | `anycap video read`       | Analyze videos                     |
 
 More capabilities are coming soon.
 

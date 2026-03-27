@@ -86,23 +86,23 @@ anycap image generate \
 
 ### Flags
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--prompt` | yes | Text description of the image to generate |
-| `--model` | yes | Model ID from `image models` |
-| `--param` | no | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
-| `-o, --output` | no | Custom output path (default: current directory) |
+| Flag           | Required | Description                                                                       |
+| -------------- | -------- | --------------------------------------------------------------------------------- |
+| `--prompt`     | yes      | Text description of the image to generate                                         |
+| `--model`      | yes      | Model ID from `image models`                                                      |
+| `--param`      | no       | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
+| `-o, --output` | no       | Custom output path (default: current directory)                                   |
 
 ### --param value types
 
 Values are auto-parsed as JSON when possible:
 
-| Example | Parsed as |
-|---------|-----------|
-| `--param aspect_ratio=16:9` | string `"16:9"` |
-| `--param duration=5` | number `5` |
-| `--param hd=true` | boolean `true` |
-| `--param negative_prompt="blurry"` | string `"blurry"` |
+| Example                                          | Parsed as               |
+| ------------------------------------------------ | ----------------------- |
+| `--param aspect_ratio=16:9`                      | string `"16:9"`         |
+| `--param duration=5`                             | number `5`              |
+| `--param hd=true`                                | boolean `true`          |
+| `--param negative_prompt="blurry"`               | string `"blurry"`       |
 | `--param reference_image_urls='["url1","url2"]'` | array `["url1","url2"]` |
 
 ### Output Format
@@ -113,13 +113,13 @@ The output is a flat JSON object optimized for agent consumption:
 {"status":"success","local_path":"/absolute/path/to/img.png","model":"nano-banana-2","credits_used":1,"request_id":"req_abc123"}
 ```
 
-| Field | Description |
-|-------|-------------|
-| `status` | `"success"` or `"error"` |
-| `local_path` | Absolute path to the downloaded image file |
-| `model` | Model ID used for generation |
-| `credits_used` | Number of credits consumed |
-| `request_id` | Server request ID for debugging |
+| Field          | Description                                |
+| -------------- | ------------------------------------------ |
+| `status`       | `"success"` or `"error"`                   |
+| `local_path`   | Absolute path to the downloaded image file |
+| `model`        | Model ID used for generation               |
+| `credits_used` | Number of credits consumed                 |
+| `request_id`   | Server request ID for debugging            |
 
 Extract the local file path:
 
