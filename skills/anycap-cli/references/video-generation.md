@@ -16,8 +16,6 @@ graph LR
 anycap video models
 ```
 
-Response includes a list of available models with their capabilities and supported operations.
-
 Extract model IDs:
 
 ```bash
@@ -30,15 +28,15 @@ To inspect a specific model:
 anycap video models <model-id>
 ```
 
-### Step 2: Check parameter schema
+### Step 2: Check parameter schema (important)
 
-Each model accepts different parameters. Fetch the schema before generating:
+Each model accepts different parameters. Always fetch the schema before generating to discover available parameters:
 
 ```bash
 anycap video models <model-id> schema
 ```
 
-The schema response describes all accepted parameters (ratio, resolution, duration, etc.) with their types, defaults, and allowed values.
+The schema response describes all accepted parameters (ratio, resolution, duration, negative_prompt, etc.) with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
 
 List all parameter names and their types:
 
@@ -52,28 +50,21 @@ The generated video is automatically saved to the current directory. Use `-o` to
 
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o ocean-waves.mp4`). Without `-o`, the file gets a generic timestamped name like `video_20260327_103000.mp4`.
 
+Basic generation:
+
 ```bash
 anycap video generate --prompt "a cat walking on the beach at sunset" --model <model-id>
 ```
 
-With dedicated video parameters:
+With parameters discovered from the schema:
 
 ```bash
 anycap video generate \
   --prompt "ocean waves crashing on rocks" \
   --model <model-id> \
-  --ratio 16:9 \
-  --duration 5 \
-  --resolution 1080p
-```
-
-With a negative prompt:
-
-```bash
-anycap video generate \
-  --prompt "a peaceful garden" \
-  --model <model-id> \
-  --negative-prompt "blurry, low quality"
+  --param ratio=16:9 \
+  --param duration=5 \
+  --param negative_prompt="blurry, low quality"
 ```
 
 Image-to-video (animate a reference image):
@@ -82,7 +73,7 @@ Image-to-video (animate a reference image):
 anycap video generate \
   --prompt "animate this scene with gentle wind" \
   --model <model-id> \
-  --reference-image https://example.com/photo.jpg
+  --param reference_image_urls='["https://example.com/photo.jpg"]'
 ```
 
 Save to a specific path:
@@ -94,36 +85,33 @@ anycap video generate \
   -o logo-animation.mp4
 ```
 
-With additional model-specific parameters from the schema:
-
-```bash
-anycap video generate \
-  --prompt "a timelapse of clouds" \
-  --model <model-id> \
-  --param seed=42 \
-  --param style=cinematic
-```
-
-Options:
+### Flags
 
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--prompt` | yes | Text description of the video to generate |
 | `--model` | yes | Model ID from `video models` |
-| `--negative-prompt` | no | What to avoid in the generated video |
-| `--ratio` | no | Aspect ratio (e.g. 16:9, 9:16, 1:1) |
-| `--resolution` | no | Output resolution (e.g. 720p, 1080p) |
-| `--duration` | no | Video duration in seconds |
-| `--reference-image` | no | Reference image URL for image-to-video (repeatable) |
-| `--param` | no | Model-specific parameter as `key=value` (repeatable) |
+| `--param` | no | Parameter as `key=value` (repeatable); discover via `video models <model> schema` |
 | `-o, --output` | no | Custom output path (default: current directory) |
+
+### --param value types
+
+Values are auto-parsed as JSON when possible:
+
+| Example | Parsed as |
+|---------|-----------|
+| `--param ratio=16:9` | string `"16:9"` |
+| `--param duration=5` | number `5` |
+| `--param resolution=1080p` | string `"1080p"` |
+| `--param negative_prompt="blurry"` | string `"blurry"` |
+| `--param reference_image_urls='["url1","url2"]'` | array `["url1","url2"]` |
 
 ### Output Format
 
 The output is a flat JSON object optimized for agent consumption:
 
 ```json
-{"status":"success","local_path":"/absolute/path/to/video.mp4","model":"wan-2.1","credits_used":5,"request_id":"req_abc123"}
+{"status":"success","local_path":"/absolute/path/to/video.mp4","model":"veo-3.1","credits_used":5,"request_id":"req_abc123"}
 ```
 
 | Field | Description |
@@ -147,13 +135,13 @@ anycap video generate --prompt "..." --model <model-id> | jq -r '.local_path'
 anycap video models
 
 # Check what parameters it accepts
-anycap video models wan-2.1 schema
+anycap video models veo-3.1 schema
 
-# Generate with parameters and save to a specific path
+# Generate with parameters from the schema
 anycap video generate \
   --prompt "a watercolor animation of cherry blossoms falling" \
-  --model wan-2.1 \
-  --ratio 16:9 \
-  --duration 5 \
+  --model veo-3.1 \
+  --param ratio=16:9 \
+  --param duration=5 \
   -o cherry-blossoms.mp4
 ```

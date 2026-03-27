@@ -75,51 +75,30 @@ Examples:
 
 func newVideoGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		prompt         string
-		model          string
-		negativePrompt string
-		ratio          string
-		resolution     string
-		duration       int
-		referenceImage []string
-		params         []string
-		outputPath     string
+		prompt     string
+		model      string
+		params     []string
+		outputPath string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a video from a prompt",
-		Long: `Generate a video using a text prompt. Use dedicated flags for common parameters
-and --param for model-specific parameters discovered from 'video models <model> schema'.
+		Long: `Generate a video using a text prompt. Use --param to pass parameters
+discovered from 'video models <model> schema'.
 
 The generated video is automatically downloaded to the current directory.
 Use -o to specify a custom output path.
 
 Examples:
-  anycap video generate --prompt "a cat walking on the beach" --model wan-2.1
-  anycap video generate --prompt "ocean waves" --model wan-2.1 --ratio 16:9 --duration 5
-  anycap video generate --prompt "a landscape" --model wan-2.1 -o landscape.mp4
-  anycap video generate --prompt "animate this" --model wan-2.1 --reference-image https://example.com/photo.jpg`,
+  anycap video generate --prompt "a cat walking on the beach" --model veo-3.1
+  anycap video generate --prompt "ocean waves" --model veo-3.1 --param ratio=16:9 --param duration=5
+  anycap video generate --prompt "a landscape" --model veo-3.1 -o landscape.mp4
+  anycap video generate --prompt "animate this" --model veo-3.1 --param reference_image_urls='["https://example.com/photo.jpg"]'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"prompt": prompt,
 				"model":  model,
-			}
-
-			if negativePrompt != "" {
-				body["negative_prompt"] = negativePrompt
-			}
-			if ratio != "" {
-				body["ratio"] = ratio
-			}
-			if resolution != "" {
-				body["resolution"] = resolution
-			}
-			if duration > 0 {
-				body["duration"] = duration
-			}
-			if len(referenceImage) > 0 {
-				body["reference_image_urls"] = referenceImage
 			}
 
 			// Parse --param key=value pairs into the request body.
@@ -165,12 +144,7 @@ Examples:
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for video generation")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
-	cmd.Flags().StringVar(&negativePrompt, "negative-prompt", "", "Negative prompt (what to avoid)")
-	cmd.Flags().StringVar(&ratio, "ratio", "", "Aspect ratio (e.g. 16:9, 9:16, 1:1)")
-	cmd.Flags().StringVar(&resolution, "resolution", "", "Output resolution (e.g. 1080p, 720p)")
-	cmd.Flags().IntVar(&duration, "duration", 0, "Video duration in seconds")
-	cmd.Flags().StringArrayVar(&referenceImage, "reference-image", nil, "Reference image URL for image-to-video (repeatable)")
-	cmd.Flags().StringArrayVar(&params, "param", nil, "Extra parameter as key=value (repeatable)")
+	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'video models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated video to this path (default: current directory)")
 	_ = cmd.MarkFlagRequired("prompt")
 	_ = cmd.MarkFlagRequired("model")

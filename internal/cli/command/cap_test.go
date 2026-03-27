@@ -1088,11 +1088,11 @@ func TestVideoGenerateWithVideoParams(t *testing.T) {
 		"video", "generate",
 		"--prompt", "ocean waves",
 		"--model", "mock-video-1",
-		"--negative-prompt", "blurry",
-		"--ratio", "16:9",
-		"--resolution", "1080p",
-		"--duration", "5",
-		"--reference-image", "https://example.com/ref.jpg",
+		"--param", "negative_prompt=blurry",
+		"--param", "ratio=16:9",
+		"--param", "resolution=1080p",
+		"--param", "duration=5",
+		"--param", `reference_image_urls=["https://example.com/ref.jpg"]`,
 	})
 
 	if err := cmd.Execute(); err != nil {

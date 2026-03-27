@@ -16,8 +16,6 @@ graph LR
 anycap image models
 ```
 
-Response includes a list of available models with their capabilities and supported operations.
-
 Extract model IDs:
 
 ```bash
@@ -30,16 +28,15 @@ To inspect a specific model:
 anycap image models <model-id>
 ```
 
-### Step 2: Check parameter schema
+### Step 2: Check parameter schema (important)
 
-Each model accepts different parameters. Fetch the schema before generating:
+Each model accepts different parameters. Always fetch the schema before generating to discover available parameters:
 
 ```bash
 anycap image models <model-id> schema
-anycap image models <model-id> schema --operation edit
 ```
 
-The schema response describes all accepted parameters (aspect ratio, style, seed, etc.) with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
+The schema response describes all accepted parameters with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
 
 List all parameter names and their types:
 
@@ -53,18 +50,29 @@ The generated image is automatically saved to the current directory. Use `-o` to
 
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o coffee-shop-logo.png`). Without `-o`, the file gets a generic timestamped name like `image_20260326_175540.png`.
 
+Basic generation:
+
 ```bash
 anycap image generate --prompt "a paper crane on a wooden table" --model <model-id>
 ```
 
-With model-specific parameters discovered from the schema:
+With parameters discovered from the schema:
 
 ```bash
 anycap image generate \
   --prompt "a mountain landscape at sunset" \
   --model <model-id> \
   --param aspect_ratio=16:9 \
-  --param style=photographic
+  --param negative_prompt="blurry, watermark"
+```
+
+With a reference image (for editing operations):
+
+```bash
+anycap image generate \
+  --prompt "make it look like a watercolor painting" \
+  --model <model-id> \
+  --param reference_image_urls='["https://example.com/photo.jpg"]'
 ```
 
 Save to a specific path:
@@ -76,14 +84,26 @@ anycap image generate \
   -o logo.png
 ```
 
-Options:
+### Flags
 
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--prompt` | yes | Text description of the image to generate |
 | `--model` | yes | Model ID from `image models` |
-| `--param` | no | Model-specific parameter as `key=value` (repeatable) |
-| `-o, --output` | no | Custom output path (default: current directory, filename from server) |
+| `--param` | no | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
+| `-o, --output` | no | Custom output path (default: current directory) |
+
+### --param value types
+
+Values are auto-parsed as JSON when possible:
+
+| Example | Parsed as |
+|---------|-----------|
+| `--param aspect_ratio=16:9` | string `"16:9"` |
+| `--param duration=5` | number `5` |
+| `--param hd=true` | boolean `true` |
+| `--param negative_prompt="blurry"` | string `"blurry"` |
+| `--param reference_image_urls='["url1","url2"]'` | array `["url1","url2"]` |
 
 ### Output Format
 
@@ -116,7 +136,7 @@ anycap image models
 # Check what parameters it accepts
 anycap image models flux-schnell schema
 
-# Generate with parameters and save to a specific path
+# Generate with parameters from the schema
 anycap image generate \
   --prompt "a watercolor painting of a Japanese garden" \
   --model flux-schnell \

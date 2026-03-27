@@ -136,16 +136,18 @@ func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout i
 }
 
 func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var prompt string
-	var model string
-	var params []string
-	var outputPath string
+	var (
+		prompt     string
+		model      string
+		params     []string
+		outputPath string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate an image from a prompt",
-		Long: `Generate an image using a text prompt. Use --param to pass model-specific
-parameters discovered from 'image models <model> schema'.
+		Long: `Generate an image using a text prompt. Use --param to pass parameters
+discovered from 'image models <model> schema'.
 
 The generated image is automatically downloaded to the current directory.
 Use -o to specify a custom output path.
@@ -153,7 +155,8 @@ Use -o to specify a custom output path.
 Examples:
   anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
   anycap image generate --prompt "a landscape" --model nano-banana-2 -o landscape.png
-  anycap image generate --prompt "a landscape" --model nano-banana-2 --param aspect_ratio=16:9`,
+  anycap image generate --prompt "a landscape" --model nano-banana-2 --param ratio=16:9
+  anycap image generate --prompt "a photo" --model nano-banana-2 --param negative_prompt="blurry"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"prompt": prompt,
@@ -206,7 +209,7 @@ Examples:
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
-	cmd.Flags().StringArrayVar(&params, "param", nil, "Extra parameter as key=value (repeatable)")
+	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'image models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated image to this path (default: current directory)")
 	_ = cmd.MarkFlagRequired("prompt")
 	_ = cmd.MarkFlagRequired("model")
@@ -214,17 +217,12 @@ Examples:
 	return cmd
 }
 
-// parseParamValue tries to parse a value as JSON (number, boolean, null),
+// parseParamValue tries to parse a value as JSON (any valid type),
 // falling back to string if JSON parsing fails.
 func parseParamValue(v string) any {
-	// Try JSON parse for numbers, booleans, null.
 	var parsed any
 	if err := json.Unmarshal([]byte(v), &parsed); err == nil {
-		// Only accept scalar JSON types; reject arrays/objects to avoid confusion.
-		switch parsed.(type) {
-		case float64, bool, nil:
-			return parsed
-		}
+		return parsed
 	}
 	return v
 }
