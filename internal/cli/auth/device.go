@@ -11,28 +11,64 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 )
 
-// DeviceFlow runs the device code polling auth flow.
-func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
-	// Step 1: Request device code
+type DeviceInitResult struct {
+	LoginSessionID  string `json:"login_session_id"`
+	UserCode        string `json:"user_code"`
+	VerificationURI string `json:"verification_uri"`
+	Interval        int    `json:"interval"`
+	ExpiresIn       int    `json:"expires_in"`
+}
+
+type DevicePollResult struct {
+	Status   string `json:"status"`
+	APIKey   string `json:"api_key"`
+	APIKeyID string `json:"api_key_id"`
+	User     *struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	} `json:"user"`
+}
+
+func DeviceInit(ctx context.Context, client *httpclient.Client) (DeviceInitResult, error) {
 	resp, err := client.PostJSON(ctx, "/v1/auth/device-code", map[string]any{})
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to init device code flow: %w", err)
+		return DeviceInitResult{}, fmt.Errorf("failed to init device code flow: %w", err)
 	}
 
 	var initResp struct {
-		Data struct {
-			LoginSessionID  string `json:"login_session_id"`
-			UserCode        string `json:"user_code"`
-			VerificationURI string `json:"verification_uri"`
-			Interval        int    `json:"interval"`
-			ExpiresIn       int    `json:"expires_in"`
-		} `json:"data"`
+		Data DeviceInitResult `json:"data"`
 	}
 	if err := json.Unmarshal(resp.Body, &initResp); err != nil {
-		return nil, "", fmt.Errorf("failed to parse device code response: %w", err)
+		return DeviceInitResult{}, fmt.Errorf("failed to parse device code response: %w", err)
 	}
 
-	d := initResp.Data
+	return initResp.Data, nil
+}
+
+func DevicePoll(ctx context.Context, client *httpclient.Client, loginSessionID string) (DevicePollResult, error) {
+	resp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
+		"login_session_id": loginSessionID,
+	})
+	if err != nil {
+		return DevicePollResult{}, err
+	}
+
+	var pollResp struct {
+		Data DevicePollResult `json:"data"`
+	}
+	if err := json.Unmarshal(resp.Body, &pollResp); err != nil {
+		return DevicePollResult{}, fmt.Errorf("failed to parse device poll response: %w", err)
+	}
+
+	return pollResp.Data, nil
+}
+
+// DeviceFlow runs the device code polling auth flow.
+func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
+	d, err := DeviceInit(ctx, client)
+	if err != nil {
+		return nil, "", err
+	}
 
 	// Step 2: Display code to user
 	fmt.Fprintf(stderr, "\n! First, copy your one-time code: %s\n\n", d.UserCode)
@@ -61,33 +97,22 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			return nil, "", fmt.Errorf("\nauthentication expired. Please try again")
 		}
 
-		pollResp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
-			"login_session_id": d.LoginSessionID,
-		})
+		poll, err := DevicePoll(ctx, client, d.LoginSessionID)
 		if err != nil {
 			fmt.Fprint(stderr, ".")
 			continue
 		}
 
-		var poll struct {
-			Data struct {
-				Status string `json:"status"`
-				APIKey string `json:"api_key"`
-				User   *struct {
-					Email string `json:"email"`
-					Name  string `json:"name"`
-				} `json:"user"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {
-			fmt.Fprint(stderr, ".")
-			continue
-		}
-
-		switch poll.Data.Status {
+		switch poll.Status {
 		case "complete", "completed":
 			fmt.Fprintln(stderr, " done!")
-			cred, email, err := parseTokenResponse(pollResp.Body)
+			body, marshalErr := json.Marshal(map[string]any{
+				"data": poll,
+			})
+			if marshalErr != nil {
+				return nil, "", fmt.Errorf("failed to re-encode device poll response: %w", marshalErr)
+			}
+			cred, email, err := parseTokenResponse(body)
 			if err != nil {
 				return nil, "", err
 			}

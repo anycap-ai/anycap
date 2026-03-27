@@ -145,6 +145,32 @@ Logged in as user@example.com
 Credential saved.
 ```
 
+For agent / toolcall runtimes where blocking stdout is not surfaced incrementally, the CLI also supports a nonblocking two-step variant:
+
+```bash
+anycap login --headless --no-wait --json
+anycap login poll --session <login_session_id> --json
+```
+
+The init command returns structured JSON including:
+
+- `login_session_id`
+- `verification_uri`
+- `user_code`
+- `expires_in`
+- `interval`
+- `poll_command`
+- `next_action_hint`
+
+Expected agent workflow:
+
+1. Run `anycap login --headless --no-wait --json`
+2. Show the returned URL and code to the human
+3. Tell the human to reply when browser login is complete
+4. After the human confirms completion, run the returned `poll_command`
+
+`next_action_hint` is natural-language orchestration guidance for the agent. `poll_command` is the directly suggested next command, with the real `login_session_id` already substituted.
+
 ### 3.3 Direct Key Input (Skip OAuth entirely)
 
 ```
