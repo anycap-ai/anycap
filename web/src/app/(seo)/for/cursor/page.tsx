@@ -43,7 +43,7 @@ export default function ForCursorPage() {
       <article className="px-6 md:px-12 lg:px-20">
       <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
         <FadeIn>
-          <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+          <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
             For Cursor
           </p>
           <h1
@@ -76,19 +76,19 @@ export default function ForCursorPage() {
             </h2>
             <div className="space-y-6 max-w-[800px]">
               <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>Step 1 — Install the skill</p>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>Step 1 — Install the skill</p>
                 <div className="bg-[#1c1f17] px-5 py-4">
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>npx -y skills add anycap-ai/anycap -a cursor -y</p>
                 </div>
               </div>
               <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>Step 2 — Install the CLI</p>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>Step 2 — Install the CLI</p>
                 <div className="bg-[#1c1f17] px-5 py-4">
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>curl -fsSL https://anycap.ai/install.sh | sh</p>
                 </div>
               </div>
               <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>Step 3 — Log in and verify</p>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>Step 3 — Log in and verify</p>
                 <div className="bg-[#1c1f17] px-5 py-4">
                   <p className="text-[13px] text-[#d4e0a4] mb-2" style={mono}>anycap login</p>
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap status</p>
@@ -110,7 +110,7 @@ export default function ForCursorPage() {
                 <div key={cap.name} className="border border-[#d4dbb8] p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-2 h-2 rounded-full bg-[#6b7d3a]" />
-                    <h3 className="text-[13px] font-bold text-[#1c1f17] uppercase tracking-[1px]" style={mono}>{cap.name}</h3>
+                    <h3 className="text-[13px] font-bold text-[#1c1f17] tracking-[1px]" style={mono}>{cap.name}</h3>
                   </div>
                   <p className="text-sm text-[#4d5145] leading-6">{cap.models}</p>
                 </div>
@@ -128,14 +128,14 @@ export default function ForCursorPage() {
                 href="https://github.com/anycap-ai/anycap"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                 style={mono}
               >
                 Request Early Access
               </a>
-              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
-              <Link href="/for/claude-code" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>For Claude Code</Link>
-              <Link href="/for/codex" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>For Codex</Link>
+              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
+              <Link href="/for/claude-code" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>For Claude Code</Link>
+              <Link href="/for/codex" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>For Codex</Link>
             </div>
           </section>
         </FadeIn>

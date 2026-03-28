@@ -171,7 +171,7 @@ export default function CapabilitiesPage() {
                       <div className="flex items-center gap-2 mb-3">
                         <span className="w-2 h-2 rounded-full bg-[#6b7d3a]" />
                         <span
-                          className="text-[10px] text-[#5a5e52] tracking-[2px] uppercase"
+                          className="text-[10px] text-[#5a5e52] tracking-[0.5px]"
                           style={mono}
                         >
                           {cap.category}
@@ -223,7 +223,7 @@ export default function CapabilitiesPage() {
                   href="/models"
                   className="border border-[#d4dbb8] p-6 hover:border-[#6b7d3a] transition-colors"
                 >
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Hub
                   </p>
                   <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -238,7 +238,7 @@ export default function CapabilitiesPage() {
                   href="/guides/context-engineering-for-agents"
                   className="border border-[#d4dbb8] p-6 hover:border-[#6b7d3a] transition-colors"
                 >
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Guide
                   </p>
                   <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -274,7 +274,7 @@ export default function CapabilitiesPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-2 h-2 rounded-full bg-[#d4dbb8]" />
                       <span
-                        className="text-[10px] text-[#5a5e52] tracking-[2px] uppercase"
+                        className="text-[10px] text-[#5a5e52] tracking-[0.5px]"
                         style={mono}
                       >
                         {cap.category}
@@ -313,21 +313,21 @@ export default function CapabilitiesPage() {
                   href="https://github.com/anycap-ai/anycap"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   Request Early Access
                 </a>
                 <Link
                   href="/for/claude-code"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   For Claude Code
                 </Link>
                 <Link
                   href="/cli"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   CLI Overview

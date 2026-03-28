@@ -65,7 +65,7 @@ export default function ForCodexPage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               For Codex
             </p>
             <h1
@@ -99,7 +99,7 @@ export default function ForCodexPage() {
               </h2>
               <div className="space-y-6 max-w-[800px]">
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 1 — Install the skill
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -109,7 +109,7 @@ export default function ForCodexPage() {
                   </div>
                 </div>
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 2 — Install the CLI
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -119,7 +119,7 @@ export default function ForCodexPage() {
                   </div>
                 </div>
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 3 — Log in and verify
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -153,7 +153,7 @@ export default function ForCodexPage() {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="w-2 h-2 rounded-full bg-[#6b7d3a]" />
-                      <h3 className="text-[13px] font-bold text-[#1c1f17] uppercase tracking-[1px]" style={mono}>
+                      <h3 className="text-[13px] font-bold text-[#1c1f17] tracking-[1px]" style={mono}>
                         {cap.name}
                       </h3>
                     </div>
@@ -204,21 +204,21 @@ export default function ForCodexPage() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/cli"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   CLI Overview
                 </Link>
                 <Link
                   href="/guides/install-anycap"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Install Guide
                 </Link>
                 <Link
                   href="/guides/agent-skills-for-developer-tools"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Agent Skills Guide

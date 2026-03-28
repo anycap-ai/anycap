@@ -3,7 +3,7 @@ const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 export function EarlyAccessBanner() {
   return (
     <div className="border border-[#6b7d3a]/40 bg-[#6b7d3a]/5 px-5 py-4 max-w-[800px]">
-      <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-1.5" style={mono}>
+      <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-1.5" style={mono}>
         Early Access
       </p>
       <p className="text-sm text-[#4d5145] leading-6">

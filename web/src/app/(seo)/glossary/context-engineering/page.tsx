@@ -44,7 +44,7 @@ export default function ContextEngineeringGlossaryPage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>Glossary</p>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Glossary</p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
@@ -98,9 +98,9 @@ export default function ContextEngineeringGlossaryPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link href="/guides/context-engineering-for-agents" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors" style={mono}>Context Guide</Link>
-                <Link href="/guides/workspace-context-engineering" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>Workspace Context</Link>
-                <Link href="/glossary/agent-capability-runtime" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>Capability Runtime</Link>
+                <Link href="/guides/context-engineering-for-agents" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors" style={mono}>Context Guide</Link>
+                <Link href="/guides/workspace-context-engineering" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>Workspace Context</Link>
+                <Link href="/glossary/agent-capability-runtime" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>Capability Runtime</Link>
               </div>
             </section>
           </FadeIn>

@@ -69,7 +69,7 @@ export default function AnycapVsComposioPage() {
       <article className="px-6 md:px-12 lg:px-20">
       <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
         <FadeIn>
-          <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>Compare</p>
+          <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Compare</p>
           <h1
             className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
@@ -102,9 +102,9 @@ export default function AnycapVsComposioPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-[#d4dbb8]">
-                    <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase w-[160px]" style={mono}>Dimension</th>
-                    <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[2px] uppercase" style={mono}>AnyCap</th>
-                    <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Composio</th>
+                    <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px] w-[160px]" style={mono}>Dimension</th>
+                    <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>AnyCap</th>
+                    <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Composio</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,7 +161,7 @@ export default function AnycapVsComposioPage() {
                 href="/compare/anycap-vs-openai-agent-builder"
                 className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
               >
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                   Compare
                 </p>
                 <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -175,7 +175,7 @@ export default function AnycapVsComposioPage() {
                 href="/guides/what-is-agent-harness"
                 className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
               >
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                   Guide
                 </p>
                 <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -198,12 +198,12 @@ export default function AnycapVsComposioPage() {
                 href="https://github.com/anycap-ai/anycap"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                 style={mono}
               >
                 Request Early Access
               </a>
-              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
+              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
             </div>
           </section>
         </FadeIn>

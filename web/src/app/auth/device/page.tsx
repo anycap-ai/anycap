@@ -32,7 +32,7 @@ function DevicePageInner() {
           />
           <Link
             href="/for-human"
-            className="ml-auto text-[11px] text-[#8f9487] hover:text-[#6b7d3a] tracking-[2.5px] uppercase transition-colors"
+            className="ml-auto text-[11px] text-[#8f9487] hover:text-[#6b7d3a] tracking-[0.5px] transition-colors"
             style={mono}
           >
             Back →

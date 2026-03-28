@@ -173,7 +173,7 @@ export function EquipAgent() {
               <div className="flex items-center gap-2">
                 <AgentIconSlot icon={displayAgent.icon} />
                 <span
-                  className="text-[#d4e0a4] text-[11px] tracking-[1px] uppercase"
+                  className="text-[#d4e0a4] text-[11px] tracking-[1px]"
                   style={mono}
                 >
                   Send to {displayAgent.name}
@@ -204,7 +204,7 @@ export function EquipAgent() {
               </p>
               <button
                 onClick={copy}
-                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#6b7d3a] hover:bg-[#8fa34e] text-[#f4f5f0] text-[11px] font-bold tracking-[2px] uppercase rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#6b7d3a] hover:bg-[#8fa34e] text-[#f4f5f0] text-[11px] font-bold tracking-[0.5px] rounded-lg transition-colors"
                 style={mono}
               >
                 {copied ? "Copied!" : "Copy"}

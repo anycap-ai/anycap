@@ -147,7 +147,7 @@ export default function ForHumanPage() {
 
           <aside className="border border-[#d4dbb8] bg-[#f4f5f0] p-6">
             <h3
-              className="text-[#1c1f17] uppercase tracking-[3px] text-[12px]"
+              className="text-[#1c1f17] tracking-[0.8px] text-[12px]"
               style={mono}
             >
               Start Here
@@ -160,7 +160,7 @@ export default function ForHumanPage() {
                   className="block border border-[#d4dbb8] bg-white px-4 py-4 transition-colors hover:border-[#6b7d3a] hover:bg-[#f7f9f0]"
                 >
                   <p
-                    className="text-[12px] uppercase tracking-[2px] text-[#1c1f17]"
+                    className="text-[12px] tracking-[0.5px] text-[#1c1f17]"
                     style={mono}
                   >
                     {item.label}
@@ -207,13 +207,13 @@ export default function ForHumanPage() {
 
       <FadeIn className="mt-24 px-8 md:mt-36 md:px-16 lg:px-24">
         <p
-          className="mb-4 uppercase tracking-[6px] text-[#c8d4a0] line-through md:tracking-[10px]"
+          className="mb-4 tracking-[1px] text-[#c8d4a0] line-through md:tracking-[1px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
           SDK&nbsp;&nbsp;&nbsp;DOCS&nbsp;&nbsp;&nbsp;DASHBOARD&nbsp;&nbsp;&nbsp;UI
         </p>
         <p
-          className="uppercase tracking-[4px] text-[#1c1f17] md:tracking-[8px]"
+          className="tracking-[1px] text-[#1c1f17] md:tracking-[1px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
           <ScrambleText text="ONE COMMAND. ONE RESULT. DONE." speed={20} ticks={2} />
@@ -287,7 +287,7 @@ export default function ForHumanPage() {
         </div>
         <div className="flex justify-end">
           <p
-            className="text-right text-[11px] uppercase tracking-[3px] text-[#5a5e52]"
+            className="text-right text-[11px] tracking-[0.8px] text-[#5a5e52]"
             style={mono}
           >
             Same interface.
@@ -339,14 +339,14 @@ export default function ForHumanPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href={installGuideHref}
-              className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold uppercase tracking-[3px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+              className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
               style={mono}
             >
               Install AnyCap
             </Link>
             <Link
               href={cliHref}
-              className="inline-block border border-[#1c1f17] px-10 py-4 text-[11px] font-bold uppercase tracking-[3px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+              className="inline-block border border-[#1c1f17] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
               style={mono}
             >
               Explore the CLI

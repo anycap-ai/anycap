@@ -6,10 +6,10 @@ import { localizePublicPath } from "@/lib/site";
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 const linkClass =
-  "px-2 py-1 text-[10px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[2px] uppercase rounded transition-all duration-200 ease-out";
+  "px-2 py-1 text-[10px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.5px] rounded transition-all duration-200 ease-out";
 
 const columnTitleClass =
-  "text-[10px] text-[#3a3e32] tracking-[2px] uppercase font-bold mb-2";
+  "text-[10px] text-[#3a3e32] tracking-[0.5px] font-bold mb-2";
 
 type FooterLink = { href: string; label: string };
 
@@ -102,7 +102,7 @@ export async function Footer() {
         <div className="flex items-center gap-4 pt-6 border-t border-[#d4dbb8]">
           <AnycapMark size={16} />
           <span
-            className="text-[10px] text-[#3f4437] tracking-[2px]"
+            className="text-[10px] text-[#3f4437] tracking-[0.5px]"
             style={mono}
           >
             anycap

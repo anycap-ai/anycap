@@ -22,7 +22,7 @@ export function ProcessingOverlay({ message = "Processing" }: { message?: string
           />
         </svg>
         <span
-          className="text-[11px] uppercase tracking-[2px] text-[#4d5145]"
+          className="text-[11px] tracking-[0.5px] text-[#4d5145]"
           style={mono}
         >
           {message}

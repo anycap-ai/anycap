@@ -4,7 +4,7 @@ export default function ForHumanLoading() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <p
-        className="text-sm tracking-[4px] uppercase text-[#5a5e52] animate-pulse"
+        className="text-sm tracking-[1px] text-[#5a5e52] animate-pulse"
         style={pixel}
       >
         Loading…

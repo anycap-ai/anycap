@@ -100,7 +100,7 @@ export default function OpenGraphImage() {
               flexWrap: "wrap",
               color: "#6b7d3a",
               fontSize: "20px",
-              textTransform: "uppercase",
+              textTransform: "",
               letterSpacing: "0.22em",
             }}
           >

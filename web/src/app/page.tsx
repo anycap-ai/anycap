@@ -36,7 +36,7 @@ export default async function AgentLanding() {
 
       {content.sections.map((section) => (
         <section key={section.title} className="mb-10">
-          <h2 className="text-sm font-bold uppercase text-[#888] mb-3">
+          <h2 className="text-sm font-bold text-[#888] mb-3">
             {section.title}
           </h2>
           {section.blocks.map((block, i) => (
@@ -59,7 +59,7 @@ function BlockRenderer({ block }: { block: Block }) {
       return <p className="text-sm text-[#888] mb-3">{block.content}</p>;
     case "h3":
       return (
-        <h3 className="text-xs text-[#666] uppercase tracking-wider mt-5 mb-2">
+        <h3 className="text-xs text-[#666] tracking-normal mt-5 mb-2">
           {block.content}
         </h3>
       );

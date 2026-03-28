@@ -93,7 +93,7 @@ export default function ImageGenerationPage() {
         {/* Hero */}
         <FadeIn>
           <p
-            className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4"
+            className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4"
             style={mono}
           >
             Capability
@@ -134,8 +134,8 @@ export default function ImageGenerationPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-[#d4dbb8]">
-                    <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Model</th>
-                    <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Status</th>
+                    <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Model</th>
+                    <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -143,7 +143,7 @@ export default function ImageGenerationPage() {
                     <tr key={model.name} className="border-b border-[#d4dbb8]/50">
                       <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17]">{model.name}</td>
                       <td className="py-4">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6b7d3a] tracking-[1px] uppercase" style={mono}>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6b7d3a] tracking-[1px]" style={mono}>
                           <span className="w-1.5 h-1.5 rounded-full bg-[#6b7d3a]" />
                           {model.status}
                         </span>
@@ -172,7 +172,7 @@ export default function ImageGenerationPage() {
 
             <div className="space-y-6 max-w-[800px]">
               <div>
-                <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                   Text to Image
                 </p>
                 <div className="bg-[#1c1f17] px-5 py-4">
@@ -183,7 +183,7 @@ export default function ImageGenerationPage() {
               </div>
 
               <div>
-                <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                   Image to Image (edit)
                 </p>
                 <div className="bg-[#1c1f17] px-5 py-4">
@@ -194,7 +194,7 @@ export default function ImageGenerationPage() {
               </div>
 
               <div>
-                <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                   List available models
                 </p>
                 <div className="bg-[#1c1f17] px-5 py-4">
@@ -266,7 +266,7 @@ export default function ImageGenerationPage() {
                 href="/models/seedream-5"
                 className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
               >
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                   Model
                 </p>
                 <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -280,7 +280,7 @@ export default function ImageGenerationPage() {
                 href="/models/nano-banana-pro"
                 className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
               >
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                   Model
                 </p>
                 <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -294,7 +294,7 @@ export default function ImageGenerationPage() {
                 href="/guides/context-engineering-for-agents"
                 className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
               >
-                <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                   Guide
                 </p>
                 <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -345,21 +345,21 @@ export default function ImageGenerationPage() {
                 href="https://github.com/anycap-ai/anycap"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                 style={mono}
               >
                 Request Early Access
               </a>
               <Link
                 href="/capabilities"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                 style={mono}
               >
                 All Capabilities
               </Link>
               <Link
                 href="/for/claude-code"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                 style={mono}
               >
                 For Claude Code

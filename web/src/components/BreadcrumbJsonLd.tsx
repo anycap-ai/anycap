@@ -55,14 +55,14 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
                 {item.href && !isLast ? (
                   <Link
                     href={item.href}
-                    className="text-[11px] tracking-[2px] uppercase text-[#5a5e52] hover:text-[#1c1f17] transition-colors"
+                    className="text-[11px] tracking-[0.5px] text-[#5a5e52] hover:text-[#1c1f17] transition-colors"
                     style={mono}
                   >
                     {item.name}
                   </Link>
                 ) : (
                   <span
-                    className="text-[11px] tracking-[2px] uppercase text-[#3a3e32]"
+                    className="text-[11px] tracking-[0.5px] text-[#3a3e32]"
                     style={mono}
                   >
                     {item.name}

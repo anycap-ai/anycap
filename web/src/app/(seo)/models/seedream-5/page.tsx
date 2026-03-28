@@ -98,7 +98,7 @@ export default function Seedream5Page() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               Model
             </p>
             <h1
@@ -153,7 +153,7 @@ export default function Seedream5Page() {
               </h2>
               <div className="space-y-6 max-w-[820px]">
                 <div>
-                  <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                  <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                     Generate a new image
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -163,7 +163,7 @@ export default function Seedream5Page() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                  <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                     List available image models
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -189,9 +189,9 @@ export default function Seedream5Page() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#d4dbb8]">
-                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Dimension</th>
-                      <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[2px] uppercase" style={mono}>Seedream 5</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Alternative</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Dimension</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>Seedream 5</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Alternative</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -239,21 +239,21 @@ export default function Seedream5Page() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/capabilities/image-generation"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   Image Generation
                 </Link>
                 <Link
                   href="/models/nano-banana-pro"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Nano Banana Pro
                 </Link>
                 <Link
                   href="/guides/context-engineering-for-agents"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Context Guide

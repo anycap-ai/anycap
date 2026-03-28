@@ -35,7 +35,7 @@ export default function WorkspaceContextEngineeringPage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               Guide
             </p>
             <h1
@@ -127,21 +127,21 @@ export default function WorkspaceContextEngineeringPage() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/guides/context-engineering-for-agents"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   Context Engineering
                 </Link>
                 <Link
                   href="/capabilities/image-understanding"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Image Understanding
                 </Link>
                 <Link
                   href="/capabilities/video-analysis"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Video Analysis

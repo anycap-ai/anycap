@@ -93,7 +93,7 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               Compare
             </p>
             <h1
@@ -129,9 +129,9 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#d4dbb8]">
-                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Dimension</th>
-                      <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[2px] uppercase" style={mono}>AnyCap</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>OpenAI Agent Builder</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Dimension</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>AnyCap</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>OpenAI Agent Builder</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -187,7 +187,7 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
                   href="/compare/anycap-vs-composio"
                   className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
                 >
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Compare
                   </p>
                   <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -201,7 +201,7 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
                   href="/glossary/agent-capability-runtime"
                   className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
                 >
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Glossary
                   </p>
                   <h3 className="text-[15px] font-bold text-[#1c1f17] mb-2" style={mono}>
@@ -246,21 +246,21 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/cli"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   CLI Overview
                 </Link>
                 <Link
                   href="/guides/what-is-agent-harness"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Agent Harness Guide
                 </Link>
                 <Link
                   href="/compare/anycap-vs-composio"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Compare with Composio

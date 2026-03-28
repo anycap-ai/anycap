@@ -37,7 +37,7 @@ export default function VideoAnalysisPage() {
       <article className="px-6 md:px-12 lg:px-20">
       <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
         <FadeIn>
-          <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+          <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
             Capability
           </p>
           <h1
@@ -68,7 +68,7 @@ export default function VideoAnalysisPage() {
             </h2>
             <div className="space-y-6 max-w-[800px]">
               <div>
-                <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>Analyze a remote video</p>
+                <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>Analyze a remote video</p>
                 <div className="bg-[#1c1f17] px-5 py-4">
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>
                     anycap video read --url https://example.com/demo.mp4
@@ -76,7 +76,7 @@ export default function VideoAnalysisPage() {
                 </div>
               </div>
               <div>
-                <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>Analyze a local video</p>
+                <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>Analyze a local video</p>
                 <div className="bg-[#1c1f17] px-5 py-4">
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>
                     anycap video read --file ./recording.mp4
@@ -124,12 +124,12 @@ export default function VideoAnalysisPage() {
                 href="https://github.com/anycap-ai/anycap"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                 style={mono}
               >
                 Request Early Access
               </a>
-              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
+              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>All Capabilities</Link>
             </div>
           </section>
         </FadeIn>

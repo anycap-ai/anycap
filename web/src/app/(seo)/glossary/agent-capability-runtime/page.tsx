@@ -47,7 +47,7 @@ export default function AgentCapabilityRuntimePage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>Glossary</p>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Glossary</p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
@@ -113,9 +113,9 @@ export default function AgentCapabilityRuntimePage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#d4dbb8]">
-                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Approach</th>
-                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>What it does</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Trade-off</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Approach</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>What it does</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Trade-off</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -167,13 +167,13 @@ export default function AgentCapabilityRuntimePage() {
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors" style={mono}>See Capabilities</Link>
-                <Link href="/cli" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>CLI Overview</Link>
+                <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors" style={mono}>See Capabilities</Link>
+                <Link href="/cli" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors" style={mono}>CLI Overview</Link>
                 <a
                   href="https://github.com/anycap-ai/anycap"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Request Early Access

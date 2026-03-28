@@ -66,7 +66,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
       <div className="text-left">
         <label className="block">
           <span
-            className="block text-[11px] uppercase tracking-[3px] text-[#707468] mb-2"
+            className="block text-[11px] tracking-[0.8px] text-[#707468] mb-2"
             style={mono}
           >
             One-time Code
@@ -78,7 +78,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full h-[88px] md:h-[106px] border border-[#c7cfad] bg-[#fcfdf8] px-5 text-[26px] md:text-[34px] leading-none tracking-[3px] md:tracking-[4px] text-[#1c1f17] text-center placeholder:text-[#7a7e74] outline-none focus:border-[#6b7d3a] focus:shadow-[0_0_0_4px_rgba(107,125,58,0.12)]"
+            className="w-full h-[88px] md:h-[106px] border border-[#c7cfad] bg-[#fcfdf8] px-5 text-[26px] md:text-[34px] leading-none tracking-[0.8px] md:tracking-[1px] text-[#1c1f17] text-center placeholder:text-[#7a7e74] outline-none focus:border-[#6b7d3a] focus:shadow-[0_0_0_4px_rgba(107,125,58,0.12)]"
             style={mono}
           />
         </label>
@@ -94,7 +94,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
         <button
           type="submit"
           disabled={!normalizedCode || submitting}
-          className="w-full md:w-auto min-w-[220px] px-10 py-4 text-[12px] uppercase tracking-[3px] bg-[#66793a] text-[#f4f5f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_22px_rgba(102,121,58,0.28)] disabled:opacity-50 hover:bg-[#1c1f17] transition-colors"
+          className="w-full md:w-auto min-w-[220px] px-10 py-4 text-[12px] tracking-[0.8px] bg-[#66793a] text-[#f4f5f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_22px_rgba(102,121,58,0.28)] disabled:opacity-50 hover:bg-[#1c1f17] transition-colors"
           style={mono}
         >
           {submitting ? "Authorizing..." : "Continue"}

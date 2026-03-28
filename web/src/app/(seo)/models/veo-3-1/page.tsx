@@ -45,7 +45,7 @@ export default function Veo31Page() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4" style={mono}>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               Model
             </p>
             <h1
@@ -99,7 +99,7 @@ export default function Veo31Page() {
               </h2>
               <div className="space-y-6 max-w-[820px]">
                 <div>
-                  <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                  <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                     Generate a video
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -109,7 +109,7 @@ export default function Veo31Page() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-3" style={mono}>
+                  <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
                     List available video models
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -139,7 +139,7 @@ export default function Veo31Page() {
               </p>
               <div className="grid gap-6 sm:grid-cols-2 max-w-[960px]">
                 <div className="border border-[#d4dbb8] p-5">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Upstream
                   </p>
                   <p className="text-sm text-[#4d5145] leading-6">
@@ -147,7 +147,7 @@ export default function Veo31Page() {
                   </p>
                 </div>
                 <div className="border border-[#d4dbb8] p-5">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Downstream
                   </p>
                   <p className="text-sm text-[#4d5145] leading-6">
@@ -167,21 +167,21 @@ export default function Veo31Page() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/capabilities/video-generation"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   Video Generation
                 </Link>
                 <Link
                   href="/guides/agent-skills-for-developer-tools"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Agent Skills Guide
                 </Link>
                 <Link
                   href="/guides/context-engineering-for-agents"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   Context Guide

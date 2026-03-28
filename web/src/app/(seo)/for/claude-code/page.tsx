@@ -108,7 +108,7 @@ export default function ForClaudeCodePage() {
           {/* Hero */}
           <FadeIn>
             <p
-              className="text-[11px] text-[#6b7d3a] tracking-[3px] uppercase mb-4"
+              className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4"
               style={mono}
             >
               For Claude Code
@@ -147,7 +147,7 @@ export default function ForClaudeCodePage() {
               <div className="space-y-6 max-w-[800px]">
                 {/* Step 1 */}
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 1 — Install the skill
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -166,7 +166,7 @@ export default function ForClaudeCodePage() {
 
                 {/* Step 2 */}
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 2 — Install the CLI
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -181,7 +181,7 @@ export default function ForClaudeCodePage() {
 
                 {/* Step 3 */}
                 <div className="border-l-[3px] border-[#6b7d3a] pl-6">
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     Step 3 — Log in and verify
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
@@ -215,10 +215,10 @@ export default function ForClaudeCodePage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#d4dbb8]">
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Capability</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Command</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase hidden md:table-cell" style={mono}>Models</th>
-                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[2px] uppercase" style={mono}>Status</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Capability</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Command</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px] hidden md:table-cell" style={mono}>Models</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -234,7 +234,7 @@ export default function ForClaudeCodePage() {
                         </td>
                         <td className="py-4 text-sm text-[#4d5145] hidden md:table-cell">{cap.models}</td>
                         <td className="py-4">
-                          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6b7d3a] tracking-[1px] uppercase" style={mono}>
+                          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6b7d3a] tracking-[1px]" style={mono}>
                             <span className="w-1.5 h-1.5 rounded-full bg-[#6b7d3a]" />
                             {cap.status}
                           </span>
@@ -296,7 +296,7 @@ export default function ForClaudeCodePage() {
               </h2>
               <div className="grid gap-6 sm:grid-cols-2 max-w-[900px]">
                 <div>
-                  <p className="text-[11px] text-[#5a5e52] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-2" style={mono}>
                     Without AnyCap
                   </p>
                   <ul className="space-y-2 text-sm text-[#4d5145] leading-6">
@@ -307,7 +307,7 @@ export default function ForClaudeCodePage() {
                   </ul>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6b7d3a] tracking-[2px] uppercase mb-2" style={mono}>
+                  <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px] mb-2" style={mono}>
                     With AnyCap
                   </p>
                   <ul className="space-y-2 text-sm text-[#1c1f17] leading-6">
@@ -329,14 +329,14 @@ export default function ForClaudeCodePage() {
                   href="https://github.com/anycap-ai/anycap"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors"
                   style={mono}
                 >
                   Request Early Access
                 </a>
                 <Link
                   href="/capabilities"
-                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[3px] uppercase text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
+                  className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors"
                   style={mono}
                 >
                   All Capabilities
