@@ -44,7 +44,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
   }
 
   return (
-    <header className="px-8 pt-6 md:px-16 md:pt-10 lg:px-24">
+    <header className="fixed top-0 left-0 right-0 z-40 px-8 pt-6 md:px-16 md:pt-10 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <Link href={localizedLogoHref}>
           <AnycapLogo size={36} />

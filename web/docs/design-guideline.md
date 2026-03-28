@@ -38,7 +38,7 @@ AnyCap uses a nature-inspired olive/sage palette on warm off-white, with a dark 
 | **Text Secondary** | `#4d5145` | Supporting text |
 | **Text Label** | `#707468` | Labels, captions |
 | **Text Muted** | `#7a7e71` | Email, subtle info |
-| **Text Neutral** | `#9a9e90` | Navigation, footer, placeholders |
+| **Text Neutral** | `#9a9e90` | Placeholders, decorative labels |
 
 ### Borders (on light)
 
@@ -87,7 +87,7 @@ Headlines use `clamp()` for fluid sizing between mobile and desktop:
 
 | Level | clamp() | Usage |
 |-------|---------|-------|
-| **Hero** | `clamp(42px, 8vw, 108px)` | Main hero headline |
+| **Hero** | `clamp(36px, 5.5vw, 76px)` | Main hero headline |
 | **Display** | `clamp(36px, 7vw, 96px)` | Capability list items |
 | **H1** | `clamp(32px, 6vw, 72px)` | Section closers |
 | **H2** | `clamp(28px, 4.5vw, 60px)` | Section openers ("We believe...") |
@@ -101,9 +101,9 @@ Headlines use `clamp()` for fluid sizing between mobile and desktop:
 | 22-24px | Pixel / Sans | Secondary headings, pull quote punchline |
 | 18-20px | Sans | Body paragraphs |
 | 16px | Sans | Base body text |
-| 13px | Mono | Terminal content, button labels |
-| 11px | Mono | Navigation, CTA buttons, uppercase labels |
-| 10px | Mono | Footer, smallest labels |
+| 14px | Mono | Navigation, terminal header, CTA buttons |
+| 13px | Mono | Terminal content |
+| 10px | Mono | Footer smallest labels |
 
 ### Line Height
 
@@ -120,13 +120,19 @@ Headlines use `clamp()` for fluid sizing between mobile and desktop:
 | Range | Context |
 |-------|---------|
 | `-0.03em` to `-0.02em` | Large headlines (negative for tightness) |
-| `1px` to `3px` | Uppercase labels, buttons, navigation |
-| `6px` to `10px` | Dramatic uppercase sections (anti-pattern) |
+| `0.3px` | Navigation, buttons, labels |
+| `0.8px` | CTA buttons, small labels |
+| `1px` | Decorative sections (anti-pattern) |
+
+### Casing
+
+- **Sentence case everywhere.** No uppercase transforms on navigation, buttons, labels, or footer text.
+- Content that is inherently uppercase (e.g. "SDK", "DOCS") stays as-is in the source text.
 
 ### Rules
 
 - Headlines: **pixel font**, negative tracking, tight leading
-- UI chrome: **mono**, uppercase, wide tracking (2-3px), 10-11px
+- UI chrome: **mono**, sentence case, tight tracking (0.3px), 14px
 - Body: **sans-serif**, natural tracking, relaxed leading (1.7)
 - Font weights: 400 (regular) and 700 (bold) only
 
@@ -138,9 +144,9 @@ Headlines use `clamp()` for fluid sizing between mobile and desktop:
 
 | Breakpoint | Horizontal | Vertical (sections) |
 |------------|-----------|-------------------|
-| Mobile | `px-6` (24px) or `px-8` (32px) | `py-20` (80px) |
-| Tablet (`md:`) | `px-12` (48px) or `px-16` (64px) | `py-24` to `py-32` |
-| Desktop (`lg:`) | `px-20` (80px) or `px-24` (96px) | `py-32` to `py-40` |
+| Mobile | `px-8` (32px) | `py-20` (80px) |
+| Tablet (`md:`) | `px-16` (64px) | `py-24` to `py-32` |
+| Desktop (`lg:`) | `px-24` (96px) | `py-32` to `py-40` |
 
 ### Section Rhythm
 
@@ -154,11 +160,11 @@ Headlines use `clamp()` for fluid sizing between mobile and desktop:
 
 | Width | Usage |
 |-------|-------|
-| `1280px` | Page-level max container |
-| `1080px` | Hero content area |
 | `800px` | Terminal demo |
 | `700px` | Body text blocks, hero description |
 | `520px` | Pull quotes |
+
+No global max-width on page containers — content stretches with padding.
 
 ---
 
@@ -177,7 +183,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 ### Surface Treatments
 
 - Light pages: flat `#f4f5f0` + grain overlay
-- Terminal band: full-width `#1c1f17` dark band breaking light page flow
+- Terminal card: `#1c1f17` rounded card embedded in hero section
 - Device auth: subtle `linear-gradient(to bottom, rgba(255,255,255,0.45), rgba(255,255,255,0.08))` glass effect
 - Dashboard: `#f9faf5` sidebar against `#f4f5f0` main content
 
@@ -189,7 +195,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 - **Left accent border**: 3px solid `#6b7d3a` (philosophy) or `#1c1f17` (pull quote)
 - **Card borders**: 1px `#d4dbb8` on light, `#2a2e22` on dark
 - **Input borders**: 1px `#c7cfad`, focus: `#6b7d3a`
-- **Border radius**: minimal — `rounded` (4px) for buttons, `rounded-lg` (8px) for dialogs
+- **Border radius**: minimal — `rounded` (4px) for buttons, `rounded-lg` (8px) for cards and dialogs
 
 ---
 
@@ -219,6 +225,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 | **Fade-in** | 0.4s ease-out | Terminal header appear |
 | **Scroll reveal** | 700ms ease-out | `FadeIn` on viewport intersection (15% threshold) |
 | **ScrambleText** | 20-30ms/char | On viewport entry — characters cycle randomly before locking |
+| **Terminal lines** | Sequential delays | All lines pre-rendered as `invisible` for stable height; animation toggles visibility — no layout shift |
 
 ### FadeIn Directions
 
@@ -230,42 +237,55 @@ A canvas-generated noise texture applied to all light-mode pages:
 
 ## 7. Component Patterns
 
-### Logo (AnycapMark)
+### Logo (AnycapLogo)
 
-Nested rounded squares with rotation and opacity layers:
+A single component combining mark + wordmark. The `size` prop controls the mark icon size; font size and gap scale proportionally (`fontSize = size * 0.71`, `gap = size * 0.43`).
+
+#### Mark layers
 
 1. Outermost: `#d4e0a4` at `0.18` opacity, `rx=8`, rotated `-5deg`
 2. Middle: `#8fa34e` at `0.42` opacity, `rx=5`, rotated `-3deg`
 3. Inner: `#6b7d3a`, `rx=3`
 4. Center dot: `#f4f5f0`, `rx=2`
 
-### Wordmark (AnycapWordmark)
+#### Wordmark
 
 - Primary: "any" in `#1c1f17`, "cap" in `#6b7d3a`
 - Alternate: "any" in `#6b7d3a`, "cap" in `#8fa34e`
 - Font: mono, bold, `letter-spacing: -0.5px`
 
+#### Sizes in use
+
+| Context | size |
+|---------|------|
+| Header | 36 |
+| Dashboard desktop sidebar | 24 |
+| Dashboard mobile header | 22 |
+| Footer | 16 |
+
 ### Buttons
 
 **Primary (olive)**:
-- `bg-[#6b7d3a]`, text `#f4f5f0`, 11px mono, uppercase, tracking `3px`
+- `bg-[#6b7d3a]`, text `#f4f5f0`, 14px mono, sentence case, tracking `0.8px`
 - Hover: `bg-[#1c1f17]`
 
 **No rounded corners on primary CTAs** — sharp rectangular shape.
 
 ### Navigation Links
 
-- 11px mono, uppercase, tracking `2px`
-- Color: `#9a9e90` -> hover `#6b7d3a`
-- `transition-colors`
+- 14px mono, sentence case, tracking `0.3px`
+- Color: `#3f4437` -> hover `#1c1f17`
+- Hover background: `rgba(107,125,58,0.08)`
+- `transition-all duration-200 ease-out`
 
 ### Terminal Demo
 
-- Dark band (`#1c1f17`) breaking full-width across light page
-- Header: icon (`#8fa34e`) + title (`#9a9e90`)
+- Embedded as a rounded card (`rounded-lg`) in the hero section, not a full-width band
+- Header: icon (`#8fa34e`) + title "agent with anycap" (`#9a9e90`, 14px) + optional slot for ParticleAgent animation
 - Prompt symbol: `#6b7d3a`, command text: `#d4e0a4`
 - Output: `#b8cc6e`, comments: `#6b7d3a`
 - Blinking block cursor: `#b8cc6e`, 7x14px
+- All lines pre-rendered as `invisible` — animation only toggles visibility for stable container height
 
 ### Form Inputs
 
@@ -277,10 +297,13 @@ Nested rounded squares with rotation and opacity layers:
 
 ## 8. Layout Principles
 
+- **Hero fills viewport**: on desktop, the hero section occupies `100dvh - header` so the first screen shows headline + terminal demo with no content leaking below
+- **Hero two-column**: left side is text (headline, description, CTA), right side is terminal card with embedded ParticleAgent — user sees how AnyCap works at first glance
+- **Header alignment**: header uses the same horizontal padding as body sections (`px-8 md:px-16 lg:px-24`) with no max-width constraint, so edges align on all screen sizes
 - **Alignment**: left-aligned by default, occasional right-aligned pull quotes for contrast
 - **Breakpoints**: mobile-first, `md:` (768px), `lg:` (1024px)
-- **Content width**: capped at `1280px`, prose capped at `700px`
-- **Rhythm**: alternating text sections with full-width dark bands and horizontal dividers
+- **Content width**: prose capped at `700px`, terminal at `800px`
+- **Rhythm**: alternating text sections with horizontal dividers
 - **Z-index**: `30` for dropdowns, `50` for grain overlay and modals
 
 ---
@@ -290,11 +313,12 @@ Nested rounded squares with rotation and opacity layers:
 1. **Analog warmth on digital**: grain overlay + warm palette creates printed/tactile feel
 2. **Pixel font as voice**: GeistPixelSquare gives a technical-yet-playful brand voice
 3. **Restraint in color**: olive green is the only accent — everything else is neutral
-4. **Full-width breaks**: terminal demo and dark bands disrupt the light page flow intentionally
-5. **Uppercase labels**: all UI chrome (nav, buttons, footer) is uppercase mono with wide tracking
+4. **Hero as product demo**: the first screen shows what AnyCap does — terminal animation embedded alongside the headline
+5. **Sentence case**: all UI text uses natural sentence casing — no uppercase transforms
 6. **Sharp edges**: primary CTAs have no border-radius — deliberate sharpness
 7. **Minimal decoration**: no icons (except logo), no illustrations, no gradients on light mode
 8. **Scroll-triggered reveals**: content fades in directionally as user scrolls
+9. **Stable animations**: animated content pre-renders at final size to prevent layout shift
 
 ---
 
@@ -307,6 +331,10 @@ Nested rounded squares with rotation and opacity layers:
 | Use pixel font only for headlines/statements | Use pixel font for body copy or small text |
 | Use grain overlay on all light-mode pages | Apply grain to dark backgrounds |
 | Keep CTAs sharp-edged (no rounded corners) | Round primary action buttons |
-| Use uppercase + wide tracking for UI chrome | Mix casing in navigation/labels |
-| Let sections breathe with generous vertical spacing | Compress sections together |
+| Use sentence case for all UI text | Apply uppercase transforms to navigation or labels |
+| Use tight tracking (0.3px) for UI chrome | Use wide letter-spacing on navigation or buttons |
+| Embed terminal demo in the hero | Separate the terminal into its own full-width section |
+| Let hero fill the viewport on desktop | Let content below the hero leak into the first screen |
+| Align header padding with body sections | Give header different padding or max-width constraints |
 | Fade content in on scroll | Use flashy entrance animations |
+| Pre-render animated content at final size | Let animations cause layout shifts |

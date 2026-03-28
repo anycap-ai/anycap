@@ -55,3 +55,21 @@ html:hover ::-webkit-scrollbar-thumb {
 html:hover ::-webkit-scrollbar-thumb:hover {
   background: rgba(154, 158, 144, 0.55);
 }
+
+/* Always-visible scrollbar for specific containers */
+.scrollbar-visible {
+  scrollbar-color: rgba(154, 158, 144, 0.4) transparent;
+}
+
+.scrollbar-visible::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(154, 158, 144, 0.4);
+  border-radius: 3px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: rgba(154, 158, 144, 0.6);
+}

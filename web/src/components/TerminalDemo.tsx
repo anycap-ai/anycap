@@ -43,6 +43,8 @@ function TypeWriter({ text, speed = 18 }: { text: string; speed?: number }) {
 export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
   // Trigger on scroll into view
@@ -67,23 +69,50 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
     return () => clearTimeout(timer);
   }, [started, visibleCount]);
 
+  const handleClick = () => {
+    window.dispatchEvent(new CustomEvent("openEquipModal"));
+  };
+
   return (
-    <div ref={ref} className="max-w-[800px] text-[13px] md:text-sm leading-relaxed" style={mono}>
+    <div
+      ref={ref}
+      className="relative max-w-[800px] text-sm md:text-base leading-loose cursor-pointer"
+      style={mono}
+      onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onMouseMove={(e) => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (rect) setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      }}
+    >
+      {/* Hover tooltip — follows mouse */}
+      <div
+        className={`absolute z-10 flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-lg pointer-events-none transition-opacity duration-150 ${
+          hovered ? "opacity-100" : "opacity-0"
+        }`}
+        style={{ left: mousePos.x + 12, top: mousePos.y - 16 }}
+      >
+        <span className="text-[#6b7d3a] text-xs">✻</span>
+        <span className="text-[#1c1f17] text-[11px] tracking-[0.3px] whitespace-nowrap" style={mono}>
+          Click to set up with your agent
+        </span>
+      </div>
       {lines.map((line, i) => {
         const shown = i < visibleCount;
         const hide = shown ? "" : " invisible";
         switch (line.type) {
           case "header":
             return (
-              <div key={i} className={`flex items-center gap-2 mb-1 border-b border-[#2a2e22]${hide}`}>
+              <div key={i} className={`flex items-center gap-2 mb-2 border-b border-[#2a2e22]${hide}`}>
                 <span className="text-[#8fa34e]">✻</span>
-                <span className="text-[#9a9e90] text-sm tracking-wide">agent with anycap</span>
+                <span className="text-[#9a9e90] text-base tracking-wide">agent with anycap</span>
                 {headerRight && <div className="ml-auto">{headerRight}</div>}
               </div>
             );
           case "prompt":
             return (
-              <div key={i} className={`mb-5${hide}`}>
+              <div key={i} className={`mb-6${hide}`}>
                 <span className="text-[#6b7d3a]">❯ </span>
                 <span className="text-[#d4e0a4]">
                   {shown ? <TypeWriter text={line.content!} speed={20} /> : line.content}
@@ -92,13 +121,13 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
             );
           case "text":
             return (
-              <p key={i} className={`text-[#9a9e90] mb-5${hide}`}>
+              <p key={i} className={`text-[#9a9e90] mb-6${hide}`}>
                 {line.content}
               </p>
             );
           case "tool":
             return (
-              <div key={i} className={`mb-5${hide}`}>
+              <div key={i} className={`mb-6${hide}`}>
                 <div className="flex items-start gap-2">
                   <span className="text-[#8fa34e] mt-[1px]">●</span>
                   <span className="text-[#b8cc6e]">{line.content}</span>

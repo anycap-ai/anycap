@@ -28,7 +28,7 @@ export default function ForHumanPage() {
         }
       />
 
-      <section className="flex flex-col px-8 pt-12 md:px-16 md:pt-16 lg:h-[calc(100dvh-72px)] lg:px-24 lg:pb-8 lg:pt-10">
+      <section className="flex flex-col px-8 pt-24 md:px-16 md:pt-28 lg:h-dvh lg:px-24 lg:pb-8 lg:pt-24">
         <div className="flex flex-col gap-10 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
           <div className="min-w-0 flex-1">
             <h1
@@ -71,9 +71,8 @@ export default function ForHumanPage() {
           </div>
 
           <div className="w-full shrink-0 lg:flex lg:w-[50%] lg:items-center">
-            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-4 pt-0 pb-5 md:px-5 md:pb-6 lg:px-6 lg:pb-8">
+            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
               <TerminalDemo
-                style={mono}
                 headerRight={
                   <div className="hidden lg:block">
                     <ParticleAgent scale={0.35} />

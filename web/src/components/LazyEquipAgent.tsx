@@ -8,7 +8,7 @@ const EquipAgent = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="inline-flex items-center gap-3 px-8 py-4 bg-[#6b7d3a] text-[#f4f5f0] text-[13px] font-bold tracking-[1px]">
+      <div className="inline-flex items-center gap-3 px-8 py-4 rounded bg-[#8fa34e] text-[#f4f5f0] text-[13px] font-bold tracking-[1px]">
         Equip your Agent
       </div>
     ),
@@ -25,7 +25,7 @@ export function LazyEquipAgent({
       <EquipAgent />
       <noscript>
         <div
-          className="inline-flex items-center gap-3 px-8 py-4 bg-[#6b7d3a] text-[#f4f5f0] text-[13px] font-bold tracking-[1px]"
+          className="inline-flex items-center gap-3 px-8 py-4 rounded bg-[#8fa34e] text-[#f4f5f0] text-[13px] font-bold tracking-[1px]"
           style={style}
         >
           Equip your Agent
