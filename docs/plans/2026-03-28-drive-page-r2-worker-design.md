@@ -1,7 +1,8 @@
 # Drive / Page (R2 + Worker) 设计方案
 
 > Date: 2026-03-28
-> Status: Draft v4 (补充 CLI/Dashboard 设计)
+> Last Updated: 2026-03-28
+> Status: Draft v6 (spa_fallback 归属、presign 分配 node_id、worker 设计收敛)
 > Scope: Drive、Page、Space、PG->KV 同步、Dashboard/CLI 管理面
 
 ## 1. 目标与约束
@@ -97,18 +98,20 @@ graph TD
 - `page_sites`
   - `id`, `space_id`, `name`, `page_name`, `current_version_id(nullable)`
   - `access_mode(public|password|private_reserved)`
-  - `password_hash(nullable)`, `password_salt(nullable)`
+  - `password_hash(nullable)`, `password_salt(nullable)`, `spa_fallback(bool)`
   - `edge_version`, `created_at`, `updated_at`, `deleted_at(nullable)`
 
 - `page_versions`
   - `id`, `page_id`, `version_no`, `source_version_id(nullable)`
   - `status(draft|uploaded|verified|published|archived)`
-  - `asset_prefix`, `spa_fallback(bool)`, `created_by`, `created_at`
+  - `asset_prefix`, `created_by`, `created_at`
 
 - `page_slug_registry`
   - `slug`, `status(active|tombstone)`, `page_id`, `created_at`
 
 说明：`tombstone` 不清理，保证“删除后不可复用”。
+
+约束：`page_versions(page_id, version_no)` 唯一，防并发创建版本号冲突。
 
 ### 3.4 上传会话与存储对象
 
@@ -122,6 +125,7 @@ graph TD
 规则：
 
 - `storage_objects` 在 complete 阶段创建，不在 presign 阶段创建。
+- Drive 上传在 presign 阶段预分配 `drive_node(file)`，用于稳定 object key 中的 `{node_id}`。
 - complete 时服务端对 R2 执行 `HEAD` 校验对象存在与基础元信息。
 - 后台定时清理 `expired` upload session：删除对应 R2 对象并标记 session 过期，避免 orphaned objects。
 
@@ -129,7 +133,7 @@ graph TD
 
 - `kv_sync_jobs`
   - `id`, `job_type`, `target_id`, `edge_version`, `payload`
-  - `status(pending|processing|done|failed|dead)`
+  - `status(pending|processing|done|obsolete|failed|dead)`
   - `attempts`, `max_attempts`, `next_retry_at`, `locked_by(nullable)`, `locked_at(nullable)`
   - `last_error(nullable)`, `created_at`, `updated_at`
 
@@ -158,14 +162,16 @@ graph TD
 - Phase 1 仅支持单次 PUT（presign 上传）。
 - 不支持 multipart。
 - 必须设置服务端文件大小上限（小于 5GB；建议业务上限 500MB/1GB）。
+- presign 负责预分配 `file node_id` 与 `object_key`（上传前即可确定 key）。
+- complete 负责 `HEAD` 校验、创建 `storage_object`、回填 `drive_node` 的对象关联与元信息。
 
 ### 5.3 分享
 
 - 外链格式：`https://drive.anycap.cloud/s/{token}`
 - `token` 是分享链接随机串，仅用于授权入口。
-- `drive:share:{token}` 记录：`root_dir_id`（分享根目录）、访问策略、过期、密码等。
-  - 分享子目录时，`root_dir_id` 为该子目录。
-  - 分享整个 drive 根目录时，`root_dir_id` 为 space 根目录。
+- `drive:share:{token}` 记录：`root_node_id`、`root_node_kind(file|folder)`、访问策略、过期、密码等。
+  - 分享文件时，`root_node_kind=file`，入口直接返回文件。
+  - 分享目录时，`root_node_kind=folder`，入口返回目录浏览页。
 
 ### 5.4 目录索引 KV 设计（与 token 解耦）
 
@@ -186,7 +192,7 @@ graph TD
 - 所有会影响目录 children 的操作，不直接写 KV。
 - 事务内更新对应节点的 `edge_version`，并写入 `kv_sync_jobs`。
 - worker 执行 job 时先读取 PG 当前 `edge_version`：
-  - 若 `job.edge_version < current`，直接标记 obsolete/done。
+  - 若 `job.edge_version < current`，直接标记 `obsolete`。
   - 仅 `==` 时重建并写 KV。
 
 ### 5.6 单文件操作的同步 job 粒度（Phase 1）
@@ -204,14 +210,17 @@ graph TD
 
 ### 5.8 Worker 目录浏览路由
 
-- `GET /s/{token}` -> 展示 `root_dir_id` 的 children
+- `GET /s/{token}`
+  - 若 `root_node_kind=file`：直接返回该文件
+  - 若 `root_node_kind=folder`：展示该目录的 children
 - `GET /s/{token}/dir/{dir_id}` -> 展示该目录 children
 - `GET /s/{token}/file/{file_id}` -> 文件读取/渲染/下载
 
 授权边界：
 
-- token 先鉴权，再校验目标 `dir_id/file_id` 是否位于 `root_dir_id` 子树。
-- 子树校验通过 `parent_id` 向上追溯实现（依赖 `drive:dir:*:meta` / `drive:file:*`）。
+- token 先鉴权，再校验目标 `dir_id/file_id` 是否位于 `root_node_id` 授权范围。
+- `root_node_kind=file` 时，仅允许访问该 `file_id` 本身。
+- `root_node_kind=folder` 时，子树校验通过 `parent_id` 向上追溯实现（依赖 `drive:dir:*:meta` / `drive:file:*`）。
 
 ## 6. Page 设计
 
@@ -230,10 +239,15 @@ graph TD
 
 ### 6.3 状态流转触发
 
-- `draft -> uploaded`: upload complete API
-- `uploaded -> verified`: 服务端校验 R2 资产存在性通过
+- `draft -> uploaded`: 调用 `finalize` API（声明“版本上传结束”）
+- `uploaded -> verified`: `finalize` 内执行资产校验通过后推进
 - `verified -> published`: 用户显式调用 publish API
 - `published -> archived`: 新版本发布后旧版本自动归档
+
+说明：
+
+- 单文件 `complete` 只表示该文件上传完成，不表示整个版本上传结束。
+- `finalize` 是版本级收口点，避免半上传版本进入发布链路。
 
 ### 6.4 访问模式
 
@@ -245,7 +259,7 @@ graph TD
 
 - 上传方式：目录文件逐个 presign 上传。
 - Phase 1 不要求 manifest。
-- Worker 路由规则（按 `asset_prefix` 解析）：
+- Worker 路由规则（按 `asset_prefix` 解析，`spa_fallback` 取自 `page_sites` 站点默认配置）：
   - 先尝试 `{path}`
   - 再尝试 `{path}/index.html`
   - 再尝试 `{path}.html`
@@ -267,7 +281,8 @@ graph TD
 
 - 所有 KV 变更均由 `kv_sync_jobs` 驱动。
 - API 请求成功语义基于 PG 成功提交。
-- 安全敏感操作可配置为“等待对应 KV job 完成后再返回成功”。
+- 安全敏感操作默认启用 wait-for-sync：`share/rotate/unshare`、`publish/unpublish`。
+- wait-for-sync 有超时保护；超时返回“同步中”状态，由客户端轮询或重试确认。
 
 ### 7.3 同步流程
 
@@ -286,7 +301,7 @@ sequenceDiagram
     W->>PG: "claim pending jobs (FOR UPDATE SKIP LOCKED)"
     W->>PG: "load current edge_version"
     alt "job.edge_version < current"
-        W->>PG: "mark obsolete/done"
+        W->>PG: "mark obsolete"
     else "job.edge_version == current"
         W->>KV: "upsert"
         W->>PG: "mark done"
@@ -301,6 +316,7 @@ sequenceDiagram
 - 抢任务 SQL 使用 `FOR UPDATE SKIP LOCKED`，避免同一 job 被并发处理。
 - `processing` 超时自动回收为 `pending`（防 pod 崩溃丢任务）。
 - `max_attempts`（建议 10）后置 `dead` 并告警。
+- `obsolete` 任务不重试，仅用于观测“任务因版本落后被淘汰”。
 
 ### 7.5 删除与失效同步
 
@@ -326,70 +342,79 @@ if (host.endsWith(".page.anycap.cloud")) {
 return notFound()
 ```
 
-### 8.2 TODO: 待补充设计
+### 8.2 Worker 实现规范（实现前已收敛）
 
-以下内容在实现 Worker 前补充详细设计：
-
-- [ ] **项目结构**：Worker 代码位置（建议 `workers/edge/`）、wrangler.toml（KV namespace / R2 bucket binding / secrets）
-- [ ] **Drive handler 流程**：token 鉴权 → 过期检查 → 密码校验 → 子树权限校验 → 目录浏览 vs 文件服务的完整流程
-- [ ] **Page handler 流程**：hostname → KV 查 `page:host:{hostname}` → access_mode 校验 → convention routing 路径解析 → R2 取资产
-- [ ] **内容处理策略**：哪些 MIME type 浏览器内渲染（HTML/图片/PDF/Markdown），哪些触发下载
-- [ ] **UI 页面**：目录浏览页、密码输入页、错误页（404 / 410 revoked / expired / 下架）— 风格定义（极简 or 品牌样式）
-- [ ] **缓存策略**：是否使用 Cache API 缓存 R2 读取、缓存失效机制
-- [ ] **Rate limit**：密码校验防爆破的具体实现（Worker 侧 in-memory / Durable Object / KV counter）
+- **项目结构**：`workers/edge/`；`wrangler.toml` 绑定 KV namespace、R2 bucket、secret。
+- **Drive handler 流程**：token 鉴权 → 过期/撤销检查 → 密码校验 → 子树权限校验 → 目录浏览或文件服务。
+- **Page handler 流程**：hostname → KV 查 `page:host:{hostname}` → access_mode 校验 → convention routing → R2 取资产。
+- **内容处理策略**：`text/*`、`image/*`、`application/pdf` 默认 inline；未知二进制默认 attachment。
+- **UI 页面**：目录浏览页、密码页、错误页（404/410/expired/unpublished）统一极简品牌样式。
+- **缓存策略**：静态资产响应使用 Cache API（短 TTL）；分享入口与密码页不缓存。
+- **Rate limit**：密码校验按 `token + IP` 限流，采用 KV counter（时间窗计数）。
 
 ### 8.3 密码校验
 
 - 算法：`PBKDF2-HMAC-SHA256`。
-- 存储：`password_hash + per-resource random salt`。
-- 全局 `pepper`：存放在 Worker Secret，不落库。
+- 存储：
+  - `password_salt`：随机 salt（建议 16/32 bytes，base64 编码）
+  - `password_hash`：格式 `pbkdf2_sha256$<iter>$<pepper_version>$<base64(hash)>`
+- 全局 `pepper`：存放在 Server/Worker Secret，不落库；按 `pepper_version` 支持轮换。
 - 校验：常量时间比较。
 - 防爆破：按 `token + IP` 进行 rate limit。
 
-## 10. API 草案（最小集）
+计算规则：
 
-### 10.1 Drive
+- `derived = PBKDF2(password + pepper, salt, iter, 32 bytes, sha256)`
+- 存储/比较 `derived` 的 base64 值。
+
+## 9. API 草案（最小集）
+
+### 9.1 Drive
 
 - `POST /v1/drive/folders`
 - `POST /v1/drive/files/presign`
 - `POST /v1/drive/files/complete`
-- `GET /v1/drive/nodes`
+- `GET /v1/drive/nodes`（id-first：按 `parent_id` 列目录）
 - `PATCH /v1/drive/nodes/{id}`
 - `DELETE /v1/drive/nodes/{id}`
 - `PUT /v1/drive/nodes/{id}/share`
 - `POST /v1/drive/nodes/{id}/share/rotate`
 - `DELETE /v1/drive/nodes/{id}/share`
 
-### 10.2 Page
+### 9.2 Page
 
 - `POST /v1/pages`
 - `POST /v1/pages/{id}/versions`
+- `POST /v1/pages/{id}/versions/{version_id}/finalize`
+- `GET /v1/pages/{id}/versions`
 - `POST /v1/pages/{id}/versions/{version_id}/publish`
 - `POST /v1/pages/{id}/versions/{version_id}/rollback-clone`
+- `POST /v1/pages/{id}/unpublish`
 - `PATCH /v1/pages/{id}`
 - `GET /v1/pages`
 - `GET /v1/pages/{id}`
 
-## 11. CLI 设计
+## 10. CLI 设计
 
-### 11.1 命令层级
+### 10.1 命令层级
 
-Drive 和 Page 作为**顶层命令**，与 `image`/`video` 平级。`infra/` 保留给 browser、sandbox 等辅助基础设施。
+Drive 和 Page 作为**顶层命令**，与 `image`/`video` 平级。
+实现代码放在 `internal/cli/command/infra/` 子包中，但通过 `root.go` 注册为顶层入口（`anycap drive/page`）。
 
 ```
 anycap drive ...
 anycap page ...
 ```
 
-### 11.2 Drive 命令
+### 10.2 Drive 命令
 
 ```bash
-# 文件操作
-anycap drive upload <file> [--dir <path>]       # 上传文件（透明处理 presign+PUT+complete）
-anycap drive mkdir <path>                        # 创建目录
-anycap drive ls [path]                           # 列出目录内容
-anycap drive mv <src> <dst>                      # 移动/重命名
-anycap drive rm <path>                           # 删除
+# 文件操作（服务端 API 为 id-first）
+anycap drive upload <file> --parent <id>         # 上传文件（透明处理 presign+PUT+complete）
+anycap drive mkdir --parent <id> --name <name>   # 创建目录
+anycap drive ls --parent <id>                    # 列出目录内容
+anycap drive mv <id> --dst-parent <id> [--name <n>]  # 移动/重命名
+anycap drive rm <id>                             # 删除
 
 # 分享
 anycap drive share <id>                          # 创建或查看 active 链接
@@ -406,8 +431,9 @@ anycap drive unshare <id>                        # 撤销分享
 - `drive upload` 对 Agent 透明：内部自动完成 presign -> PUT R2 -> complete 三步。
 - `drive share <id>` 幂等：无 active 链接则创建，已有则显示并可通过 flags 更新。
 - 上传后**不**自动创建分享链接，Agent 按需调用 `drive share`。
+- CLI 提供路径便捷输入（如 `--parent-path /a/b`、`--src-path`、`--dst-path`），内部先 resolve path -> id，再调用 id-first API。
 
-### 11.3 Page 命令
+### 10.3 Page 命令
 
 ```bash
 # 站点管理
@@ -434,20 +460,21 @@ anycap page unpublish <id>                       # 下架（current_version_id �
 
 - `page deploy` 默认**不**自动发布，需显式 `--publish`。Agent 一步到位：`anycap page deploy ./dist --publish`。
 - `page unpublish` = 下架：`current_version_id` 设为 null，当前 published 版本状态改为 archived。站点仍存在，Worker 返回 404/下架页。
-- `page deploy` 对 Agent 透明：内部逐文件 presign + upload + complete，最终生成版本。
+- `page deploy` 对 Agent 透明：内部逐文件 presign + upload + complete + finalize，最终生成可发布版本。
 
-### 11.4 access_mode 与 publish 的关系
+### 10.4 access_mode 与 publish 的关系
 
 两个正交概念：
 
 - `access_mode`（`page_sites` 表）：控制**谁能访问**（public / password / private_reserved）。
+- `spa_fallback`（`page_sites` 表）：控制站点默认 SPA 回退行为。
 - `published`（`page_versions` 表状态）：控制**是否有 live 版本**。
 
 站点可以是 `access_mode=public` 但没有 published 版本（已下架），此时 Worker 返回 404。
 
-## 12. Dashboard 设计
+## 11. Dashboard 设计
 
-### 12.1 导航
+### 11.1 导航
 
 在现有 sidebar 分组中新增 Drive 和 Page：
 
@@ -460,7 +487,7 @@ Pages
 API Keys / Settings (disabled)
 ```
 
-### 12.2 Drive 页面
+### 11.2 Drive 页面
 
 文件浏览器视图：
 
@@ -479,7 +506,7 @@ Share 管理面板（侧边栏或弹窗）：
 - Rotate 按钮（重新生成 token）
 - 撤销按钮
 
-### 12.3 Page 管理页面
+### 11.3 Page 管理页面
 
 站点列表视图：
 
@@ -493,18 +520,18 @@ Share 管理面板（侧边栏或弹窗）：
 - 操作按钮：Publish（对 verified 版本）、Unpublish（下架）
 - 设置面板：access_mode、password、SPA fallback
 
-## 13. 复用策略（合理复用）
+## 12. 复用策略（合理复用）
 
 - 只复用稳定基础层：`ObjectStore`、`EdgeProjector`、`ShareSecurityCore`、`TokenGenerator`、`Audit`。
 - Drive/Page 业务层独立演进，不做统一”超级资源表”。
 
-## 14. 运行策略（Phase 1）
+## 13. 运行策略（Phase 1）
 
 - 配额：按 space 总存储量做硬上限。
 - GC：软删后异步物理删除（按保留期）。
 - Worker + KV 架构直接上线，不做 Phase 0.5。
 
-## 15. 分阶段
+## 14. 分阶段
 
 ### Phase 1
 

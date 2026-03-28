@@ -67,8 +67,8 @@ test/
   integration/       # Integration and smoke tests
 
 web/
-  dashboard/         # Dashboard (billing, usage, logs)
-  landing/           # Landing page
+  src/app/           # Next.js App Router pages (dashboard, landing, auth, i18n)
+  docs/              # Web docs (including design guideline)
 ```
 
 ## Architecture Layers (server)
@@ -111,9 +111,11 @@ When developing any page under `web/`, always follow `web/docs/design-guideline.
 
 - **Language:** Go. Follow standard Go idioms and `gofmt` formatting.
 - **New commands:** add under the appropriate `internal/cli/command/` sub-package (`cap/`, `meta/`, `infra/`, `extension/`).
+- **Drive/Page CLI placement:** implement under `internal/cli/command/infra/`, and register in `root.go` as top-level commands (`anycap drive`, `anycap page`).
 - **New capabilities:** add a use-case in `internal/application/`, define ports in `internal/domain/port/`, implement adapters in `internal/infrastructure/`.
 - **No business logic in transport or middleware.** Keep handlers thin.
 - **Domain layer has zero external dependencies.** Only standard library and internal models.
+- **Migrations:** current runner does not track `schema_migrations`; all new SQL migrations must be idempotent (`IF NOT EXISTS` / guard checks).
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
@@ -145,9 +147,9 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
 2. **Review gate:** present the release notes to the user and get explicit approval before proceeding. Do NOT push the release branch until confirmed.
 3. Push branch `release/cli-v0.1.0` (version extracted from branch name).
-3. CI runs goreleaser to cross-compile and archive CLI binaries.
-4. CI creates GitHub release with the release notes and uploads artifacts.
-5. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
+4. CI runs goreleaser to cross-compile and archive CLI binaries.
+5. CI creates GitHub release with the release notes and uploads artifacts.
+6. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
 
 **GitHub authentication (GitLab CI -> GitHub):**
 - Primary: GitHub App (`GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` as File-type variable)

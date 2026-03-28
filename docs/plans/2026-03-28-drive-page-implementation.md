@@ -1,6 +1,7 @@
 # Drive / Page 实施计划
 
 > Date: 2026-03-28
+> Last Updated: 2026-03-28
 > 设计文档: `2026-03-28-drive-page-r2-worker-design.md`
 > 原则: 每个 Step 可独立测试验证，完成后再进入下一步。
 
@@ -49,23 +50,29 @@ Step 7: Cloudflare Worker
 ### 0a: DB Migration
 
 **产出文件：**
-- `internal/infrastructure/postgres/migrations/` 下新增 migration 文件
+- `internal/infrastructure/apikey/migrations/` 下新增 migration 文件（与当前 migration runner 保持一致）
+
+**说明：**
+- 当前启动流程仅执行 `apikey` 目录下 migration。
+- Phase 1 先复用现有入口，后续再抽离为统一 `postgres/migrations`（避免本阶段改动过大）。
+- 当前 migration runner 无 schema_migrations 跟踪；本阶段新增 migration 必须保证可重复执行（`IF NOT EXISTS`/幂等 guard）。
 
 **建表（按设计文档 Section 3）：**
 - `spaces` (id, owner_user_id, name, created_at)
 - `drive_nodes` (id, space_id, parent_id, kind, name, storage_object_id, size, mime, edge_version, created_by, created_at, updated_at, deleted_at)
 - `drive_share_links` (id, node_id, token, status, expires_at, password_hash, password_salt, edge_version, created_at, updated_at)
-- `page_sites` (id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, edge_version, created_at, updated_at, deleted_at)
-- `page_versions` (id, page_id, version_no, source_version_id, status, asset_prefix, spa_fallback, created_by, created_at)
+- `page_sites` (id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at)
+- `page_versions` (id, page_id, version_no, source_version_id, status, asset_prefix, created_by, created_at)
 - `page_slug_registry` (slug, status, page_id, created_at)
 - `upload_sessions` (id, space_id, target_type, target_id, object_key, status, expires_at, created_at)
 - `storage_objects` (id, space_id, bucket, object_key, size, mime, etag, sha256, created_at)
-- `kv_sync_jobs` (id, job_type, target_id, edge_version, payload, status, attempts, max_attempts, next_retry_at, locked_by, locked_at, last_error, created_at, updated_at)
+- `kv_sync_jobs` (id, job_type, target_id, edge_version, payload, status[pending|processing|done|obsolete|failed|dead], attempts, max_attempts, next_retry_at, locked_by, locked_at, last_error, created_at, updated_at)
 
 **索引（关键）：**
 - `drive_nodes`: (space_id, parent_id), (space_id, deleted_at) 复合索引
 - `drive_share_links`: (node_id) WHERE status='active' 唯一索引, (token) 唯一索引
 - `page_sites`: (space_id), (page_name) 唯一索引
+- `page_versions`: (page_id, version_no) 唯一索引（防并发创建版本号冲突）
 - `page_slug_registry`: (slug) 唯一索引
 - `kv_sync_jobs`: (status, next_retry_at) 用于 worker 抢任务
 
@@ -133,7 +140,7 @@ Step 7: Cloudflare Worker
 
 **API：**
 - `POST /v1/drive/folders` — 创建目录
-- `GET /v1/drive/nodes` — 列出目录内容（query param: parent_id 或 path）
+- `GET /v1/drive/nodes` — 列出目录内容（id-first，query param: `parent_id`）
 - `PATCH /v1/drive/nodes/{id}` — 重命名/移动
 - `DELETE /v1/drive/nodes/{id}` — 软删除（目录递归）
 
@@ -155,8 +162,8 @@ Step 7: Cloudflare Worker
 - handler 方法追加到 `drive_handler.go`
 
 **API：**
-- `POST /v1/drive/files/presign` — 生成 presign URL，创建 upload_session(pending)
-- `POST /v1/drive/files/complete` — HEAD 校验 R2 -> 创建 storage_object -> 创建 drive_node(file)
+- `POST /v1/drive/files/presign` — 生成 presign URL，创建 upload_session(pending) + 预分配 `drive_node(file)`（仅逻辑壳，`storage_object_id` 为空）
+- `POST /v1/drive/files/complete` — HEAD 校验 R2 -> 创建 storage_object -> 回填 drive_node(file) 的对象关联与元数据
 
 **R2 配置：** 新 bucket `anycap-cloud`，复用现有 S3 client 库，独立 config。
 
@@ -164,7 +171,7 @@ Step 7: Cloudflare Worker
 - presign 返回有效 PUT URL
 - curl PUT 上传文件到 R2
 - complete 后 drive_node + storage_object 正确创建
-- `drive ls` 能看到上传的文件
+- `GET /v1/drive/nodes?parent_id=...` 能看到上传文件
 
 ### 2c: Drive Share
 
@@ -180,7 +187,15 @@ Step 7: Cloudflare Worker
 - `POST /v1/drive/nodes/{id}/share/rotate` — 失效旧 token，生成新 token
 - `DELETE /v1/drive/nodes/{id}/share` — 撤销
 
-**密码处理：** PBKDF2-HMAC-SHA256 + random salt（服务端生成 hash，存入 DB）。
+**分享模型：**
+- 支持“分享文件”和“分享目录”。
+- `drive:share:{token}` payload 使用 `root_node_id + root_node_kind(file|folder)`。
+
+**密码处理：**
+- `PBKDF2-HMAC-SHA256`。
+- `password_salt` 存随机 salt（base64）。
+- `password_hash` 存 `pbkdf2_sha256$<iter>$<pepper_version>$<base64(hash)>`。
+- 计算规则：`PBKDF2(password + pepper, salt, iter)`。
 
 **验证：**
 - 创建分享 -> 返回 token URL
@@ -188,6 +203,8 @@ Step 7: Cloudflare Worker
 - rotate -> 旧 token 失效，新 token 生成
 - 撤销 -> status=revoked
 - 同一 node 不允许两个 active 链接
+- token 访问行为在 Step 7（Worker）统一验证
+- Step 4 接入后，对 `share/rotate/unshare` 启用 wait-for-sync（安全敏感操作）
 
 ---
 
@@ -207,14 +224,14 @@ Step 7: Cloudflare Worker
 - `POST /v1/pages` — 创建站点（自动生成 page_name + slug 注册）
 - `GET /v1/pages` — 列出用户站点
 - `GET /v1/pages/{id}` — 站点详情
-- `PATCH /v1/pages/{id}` — 更新 name/access_mode/password/spa_fallback
+- `PATCH /v1/pages/{id}` — 更新 name/access_mode/password/spa_fallback（站点默认）
 
 **page-name 生成：** 从 name 提取 slug + 随机后缀，最小 12 字符。
 
 **验证：**
 - 创建站点 -> page_name 格式正确，slug_registry 记录 active
 - 列出 -> 只返回当前用户的站点
-- 更新 access_mode/password -> DB 正确
+- 更新 access_mode/password/spa_fallback -> DB 正确
 - 软删除 -> slug_registry 变为 tombstone，同名不可重新创建
 
 ### 3b: Page 版本上传
@@ -229,13 +246,14 @@ Step 7: Cloudflare Worker
 **API：**
 - `POST /v1/pages/{id}/versions` — 创建版本(draft)，返回 version_id + asset_prefix
 - 资产上传复用 presign/complete 流程（target_type=page）
-- complete 后版本状态：`draft -> uploaded`
-- 服务端校验资产存在性：`uploaded -> verified`
+- `POST /v1/pages/{id}/versions/{vid}/finalize` — 版本收口（`draft -> uploaded -> verified`）
+- `GET /v1/pages/{id}/versions` — 查询版本历史
 
 **验证：**
 - 创建版本 -> status=draft, version_no 递增
 - 上传资产 -> R2 对象在正确 prefix 下
-- complete -> status 推进到 uploaded -> verified
+- 单文件 complete 不推进版本状态
+- finalize 后状态推进到 verified（校验失败则返回错误，保持 draft/uploaded）
 
 ### 3c: Page 发布 / 下架 / 回滚
 
@@ -249,6 +267,9 @@ Step 7: Cloudflare Worker
 - `POST /v1/pages/{id}/versions/{vid}/publish` — 校验 version_no > current，更新 current_version_id，旧版本 archived
 - `POST /v1/pages/{id}/versions/{vid}/rollback-clone` — 复制历史版本资产到新版本 -> verified -> 可 publish
 - `POST /v1/pages/{id}/unpublish` — current_version_id=null，当前版本 archived
+
+**同步一致性：**
+- Step 4 接入后，对 `publish/unpublish` 启用 wait-for-sync（安全敏感操作）。
 
 **验证：**
 - publish v2 成功，publish v1 失败（forward-only）
@@ -274,15 +295,17 @@ Step 7: Cloudflare Worker
 - 轮询 `kv_sync_jobs WHERE status IN ('pending','failed') AND next_retry_at <= now()`
 - `FOR UPDATE SKIP LOCKED` 抢任务，标记 processing
 - 按 `job_type` 分发给对应 projector
+- `job.edge_version < current` -> 标记 obsolete（不重试）
 - 成功 -> done；失败 -> 递增 attempts + 指数退避；超 max_attempts -> dead + 告警
 - processing 超时回收（如 5 分钟无更新 -> 重置为 pending）
+- 提供 wait-for-sync 能力：按 job id 轮询状态，供 share/publish/unpublish 接口在事务提交后等待 `done/obsolete`
 
 **Cloudflare KV client：** 调用 Cloudflare API 写 KV（`PUT /accounts/{id}/storage/kv/namespaces/{ns}/values/{key}`）。
 
 **集成到 bootstrap.go：** dev/prod 模式下启动后台 goroutine。
 
 **验证：**
-- 单元测试：job 状态流转（pending -> processing -> done/failed/dead）
+- 单元测试：job 状态流转（pending -> processing -> done/obsolete/failed/dead）
 - 集成测试：插入 mock job -> worker 拾取并执行 -> 状态变为 done
 - 并发测试：两个 worker 不会同时处理同一 job
 
@@ -297,7 +320,7 @@ Step 7: Cloudflare Worker
 - `drive_file_meta_sync` -> `drive:file:{file_id}` (object_key, mime, size, etag, name, parent_id, edge_version)
 - `drive_dir_children_sync` -> `drive:dir:{dir_id}:children` (从 PG 全量重建当前一层子节点)
 - `drive_dir_meta_sync` -> `drive:dir:{dir_id}:meta` (dir_id, parent_id, space_id, name, edge_version)
-- `drive_share_sync` -> `drive:share:{token}` (root_dir_id, 访问策略, 过期, 密码等)
+- `drive_share_sync` -> `drive:share:{token}` (root_node_id, root_node_kind, 访问策略, 过期, 密码等)
 - `dir_tree_delete` -> 批量删除子树相关 KV 条目
 
 **接入点：** 在 Step 2 的 service 层追加 `kv_sync_jobs` 写入逻辑（事务内 edge_version++ 并 insert job）。
@@ -305,7 +328,7 @@ Step 7: Cloudflare Worker
 **验证：**
 - 上传文件 -> kv_sync_jobs 有 2 条 pending（file_meta + dir_children）
 - worker 执行后 KV 中有正确数据（mock KV client 验证 payload）
-- edge_version 过期的 job 被标记 obsolete
+- edge_version 过期的 job 被标记 obsolete（非 done）
 
 ### 4c: Page Edge Projector
 
@@ -334,13 +357,13 @@ Step 7: Cloudflare Worker
 > 目标：实现 `anycap drive` 全部子命令。
 
 **产出文件：**
-- `internal/cli/command/drive/drive.go` — 父命令
-- `internal/cli/command/drive/upload.go` — 透明处理 presign+PUT+complete
-- `internal/cli/command/drive/mkdir.go`
-- `internal/cli/command/drive/ls.go`
-- `internal/cli/command/drive/mv.go`
-- `internal/cli/command/drive/rm.go`
-- `internal/cli/command/drive/share.go` — share / share rotate / unshare
+- `internal/cli/command/infra/drive.go` — 父命令（注册为顶层 `anycap drive`）
+- `internal/cli/command/infra/drive_upload.go` — 透明处理 presign+PUT+complete
+- `internal/cli/command/infra/drive_mkdir.go`
+- `internal/cli/command/infra/drive_ls.go`
+- `internal/cli/command/infra/drive_mv.go`
+- `internal/cli/command/infra/drive_rm.go`
+- `internal/cli/command/infra/drive_share.go` — share / share rotate / unshare
 - 在 `root.go` 注册 `drive` 顶层命令
 
 **upload 实现要点：**
@@ -349,39 +372,46 @@ Step 7: Cloudflare Worker
 3. 调用 `/v1/drive/files/complete`
 4. 输出 `{"status":"success","file_id":"...","name":"...","size":...}`
 
+**命令输入策略：**
+- 服务端 API 统一 id-first。
+- CLI 同时支持 path 便捷参数，内部先 resolve path -> id，再调用 id-first API。
+- `mv` 场景支持“移动到某个路径”：CLI 将目标路径解析为 destination parent id。
+
 **验证：**
-- `anycap drive mkdir /test` -> 成功
-- `anycap drive upload ./file.txt --dir /test` -> 文件出现在 /test 下
-- `anycap drive ls /test` -> 列出 file.txt
+- `anycap drive mkdir --parent <root-id> --name test` -> 成功
+- `anycap drive mkdir --parent-path / --name test2` -> 成功（CLI path->id 转换）
+- `anycap drive upload ./file.txt --parent-path /test` -> 文件出现在 /test 下
+- `anycap drive ls --parent-path /test` -> 列出 file.txt
 - `anycap drive share <id> --expires 7d --password secret` -> 返回链接
 - `anycap drive share rotate <id>` -> 新 token
 - `anycap drive unshare <id>` -> 撤销
-- `anycap drive mv /test/file.txt /test/renamed.txt` -> 重命名
-- `anycap drive rm /test` -> 目录及内容删除
+- `anycap drive mv <file-id> --dst-parent-path /test --name renamed.txt` -> 移动并重命名
+- `anycap drive rm <dir-id>` -> 目录及内容删除
 
 ### 5b: Page CLI 命令
 
 > 目标：实现 `anycap page` 全部子命令。
 
 **产出文件：**
-- `internal/cli/command/page/page.go` — 父命令
-- `internal/cli/command/page/create.go`
-- `internal/cli/command/page/deploy.go` — 扫描目录 + 逐文件上传 + 可选 publish
-- `internal/cli/command/page/publish.go`
-- `internal/cli/command/page/unpublish.go`
-- `internal/cli/command/page/rollback.go`
-- `internal/cli/command/page/list.go`
-- `internal/cli/command/page/info.go`
-- `internal/cli/command/page/versions.go`
-- `internal/cli/command/page/set.go`
+- `internal/cli/command/infra/page.go` — 父命令（注册为顶层 `anycap page`）
+- `internal/cli/command/infra/page_create.go`
+- `internal/cli/command/infra/page_deploy.go` — 扫描目录 + 逐文件上传 + 可选 publish
+- `internal/cli/command/infra/page_publish.go`
+- `internal/cli/command/infra/page_unpublish.go`
+- `internal/cli/command/infra/page_rollback.go`
+- `internal/cli/command/infra/page_list.go`
+- `internal/cli/command/infra/page_info.go`
+- `internal/cli/command/infra/page_versions.go`
+- `internal/cli/command/infra/page_set.go`
 - 在 `root.go` 注册 `page` 顶层命令
 
 **deploy 实现要点：**
 1. 若 `--name` 指定且站点不存在，先 create
 2. 调用 create version -> 获取 version_id + asset_prefix
 3. 遍历目录文件，逐个 presign + PUT + complete
-4. 若 `--publish`，调用 publish API
-5. 输出 `{"status":"success","page_url":"https://xxx.page.anycap.cloud","version":2,"published":true}`
+4. 调用 finalize API，推进版本到 verified
+5. 若 `--publish`，调用 publish API
+6. 输出 `{"status":"success","page_url":"https://xxx.page.anycap.cloud","version":2,"published":true}`
 
 **验证：**
 - `anycap page create --name "test-site"` -> 返回 page_name URL
@@ -450,7 +480,7 @@ Step 7: Cloudflare Worker
 
 ## Step 7: Cloudflare Worker
 
-> 前置：补充设计文档 Section 8.2 TODO 项。
+> 前置：设计文档 Section 8.2 已收敛为可执行规范。
 
 ### 7a: 项目搭建 + Drive Handler
 
@@ -465,7 +495,7 @@ Step 7: Cloudflare Worker
 - `workers/edge/src/ui/` — HTML 模板（目录浏览页 / 密码页 / 错误页）
 
 **Drive handler 流程：**
-1. `GET /s/{token}` -> KV 读 `drive:share:{token}` -> 鉴权 -> 渲染 root_dir_id children
+1. `GET /s/{token}` -> KV 读 `drive:share:{token}` -> 鉴权 -> 按 `root_node_kind` 分流（file 直出 / folder 渲染 children）
 2. `GET /s/{token}/dir/{dir_id}` -> 鉴权 -> 子树校验 -> 渲染 children
 3. `GET /s/{token}/file/{file_id}` -> 鉴权 -> 子树校验 -> R2 读文件 -> 返回
 
