@@ -86,9 +86,9 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
         if (rect) setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
       }}
     >
-      {/* Hover tooltip — follows mouse */}
+      {/* Hover tooltip — follows mouse, hidden on touch/mobile */}
       <div
-        className={`absolute z-10 flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-lg pointer-events-none transition-opacity duration-150 ${
+        className={`absolute z-10 hidden md:flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-lg pointer-events-none transition-opacity duration-150 ${
           hovered ? "opacity-100" : "opacity-0"
         }`}
         style={{ left: mousePos.x + 12, top: mousePos.y - 16 }}

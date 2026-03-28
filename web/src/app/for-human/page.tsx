@@ -28,12 +28,12 @@ export default function ForHumanPage() {
         }
       />
 
-      <section className="flex flex-col px-8 pt-24 md:px-16 md:pt-28 lg:h-dvh lg:px-24 lg:pb-8 lg:pt-24">
-        <div className="flex flex-col gap-10 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
+      <section className="flex flex-col px-5 pt-24 md:px-16 md:pt-28 lg:h-dvh lg:px-24 lg:pb-8 lg:pt-24">
+        <div className="flex flex-col gap-8 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
           <div className="min-w-0 flex-1">
             <h1
-              className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(36px, 5.5vw, 76px)" }}
+              className="leading-[1.15] tracking-[-0.03em] text-[#1c1f17]"
+              style={{ ...pixel, fontSize: "clamp(42px, 5.5vw, 76px)" }}
             >
               <span className="sr-only">
                 Your Agent can do anything. It just needs AnyCap.
@@ -60,23 +60,21 @@ export default function ForHumanPage() {
                 />
               </span>
             </h1>
-            <p className="mt-5 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
+            <p className="mt-5 hidden max-w-[700px] text-base leading-7 text-[#4d5145] md:block md:text-lg">
               Agents can think, but they can&apos;t act — no images, no video, no music,
               no voice. Every capability they need is locked behind a different SDK and
               a different API key. AnyCap makes it one command.
             </p>
-            <div className="mt-7 md:mt-8">
+            <div className="mt-8 md:mt-8">
               <LazyEquipAgent style={mono} />
             </div>
           </div>
 
           <div className="w-full shrink-0 lg:flex lg:w-[50%] lg:items-center">
-            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
+            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
               <TerminalDemo
                 headerRight={
-                  <div className="hidden lg:block">
-                    <ParticleAgent scale={0.35} />
-                  </div>
+                  <ParticleAgent scale={0.35} />
                 }
               />
             </div>
@@ -134,7 +132,7 @@ export default function ForHumanPage() {
         </FadeIn>
       </section>
 
-      <div className="px-8 md:px-16 lg:px-24">
+      <div className="px-5 md:px-16 lg:px-24">
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
@@ -166,7 +164,7 @@ export default function ForHumanPage() {
         </div>
       </section>
 
-      <div className="px-8 md:px-16 lg:px-24">
+      <div className="px-5 md:px-16 lg:px-24">
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 
@@ -189,7 +187,7 @@ export default function ForHumanPage() {
         </FadeIn>
       </section>
 
-      <div className="px-8 md:px-16 lg:px-24">
+      <div className="px-5 md:px-16 lg:px-24">
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 

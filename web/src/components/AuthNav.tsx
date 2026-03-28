@@ -33,7 +33,7 @@ export function AuthNav() {
           Login
         </Link>
       )}
-      <Link href="/" prefetch={false} className={linkClass} style={mono}>
+      <Link href="/" prefetch={false} className={`hidden sm:inline-block ${linkClass}`} style={mono}>
         I&apos;m Agent &rarr;
       </Link>
     </>

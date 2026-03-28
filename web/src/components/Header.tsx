@@ -44,12 +44,13 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 px-8 pt-6 md:px-16 md:pt-10 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-40 px-5 py-4 md:px-16 md:py-6 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
       <div className="flex items-center gap-3">
-        <Link href={localizedLogoHref}>
-          <AnycapLogo size={36} />
+        <Link href={localizedLogoHref} className="shrink-0">
+          <span className="block md:hidden"><AnycapLogo size={28} /></span>
+          <span className="hidden md:block"><AnycapLogo size={36} /></span>
         </Link>
-        <nav className="ml-auto flex items-center gap-1">
+        <nav className="ml-auto flex items-center gap-0.5 sm:gap-1 overflow-hidden">
           {links.map((entry) => {
             if (isDropdown(entry)) {
               const localizedItems = entry.items.map((item) => ({
@@ -93,6 +94,7 @@ const capabilitiesDropdown: NavDropdownDef = {
   kind: "dropdown",
   label: "Capabilities",
   href: "/capabilities",
+  hideBelow: "sm",
   items: [
     { href: "/capabilities/image-generation", label: "Image Generation" },
     { href: "/capabilities/video-generation", label: "Video Generation" },

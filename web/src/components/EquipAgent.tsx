@@ -208,7 +208,7 @@ export function EquipAgent() {
               </div>
             ) : (
               /* ── Prompt panel ── */
-              <div className="bg-[#1c1f17] rounded-xl shadow-2xl shadow-black/30 overflow-hidden w-full max-w-[420px] mx-auto">
+              <div className="bg-[#1c1f17] rounded-xl shadow-2xl shadow-black/30 overflow-hidden w-full mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3 border-b border-[#2a2e22]">
                   <div className="flex items-center gap-2">

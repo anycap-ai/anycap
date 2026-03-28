@@ -47,7 +47,7 @@ export async function Footer() {
   const locale = await getRequestLocale();
 
   return (
-    <footer className="px-8 md:px-16 lg:px-24 pt-16 pb-10 border-t border-[#d4dbb8]">
+    <footer className="px-5 md:px-16 lg:px-24 pt-16 pb-10 border-t border-[#d4dbb8]">
       <div className="mx-auto max-w-[1280px]">
         {/* Column links */}
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 mb-12">
