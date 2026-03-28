@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AnycapMark } from "@/components/brand/AnycapMark";
+import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
@@ -99,14 +99,8 @@ export async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex items-center gap-4 pt-6 border-t border-[#d4dbb8]">
-          <AnycapMark size={16} />
-          <span
-            className="text-[10px] text-[#3f4437] tracking-[0.5px]"
-            style={mono}
-          >
-            anycap
-          </span>
+        <div className="pt-6 border-t border-[#d4dbb8]">
+          <AnycapLogo size={16} />
         </div>
       </div>
     </footer>

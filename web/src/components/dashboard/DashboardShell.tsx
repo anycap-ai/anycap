@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { AnycapMark } from "@/components/brand/AnycapMark";
-import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
+import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { useUser } from "@/lib/api/hooks";
 
@@ -77,12 +76,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#f4f5f0]">
       {/* ── Mobile header ── */}
       <header className="lg:hidden px-6 py-4 border-b border-[#d4dbb8] bg-[#f9faf5] flex items-center">
-        <Link href="/for-human" className="flex items-center gap-2">
-          <AnycapMark size={22} className="shrink-0" />
-          <AnycapWordmark
-            className="text-lg font-bold leading-none"
-            style={{ ...mono, letterSpacing: "-0.5px" }}
-          />
+        <Link href="/for-human">
+          <AnycapLogo size={22} />
         </Link>
         <div className="ml-auto">
           <UserAvatar user={user} size={28} />
@@ -124,12 +119,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-[#d4dbb8] bg-[#f9faf5] sticky top-0 h-screen">
           {/* Logo */}
           <div className="px-7 py-7">
-            <Link href="/for-human" className="flex items-center gap-2.5">
-              <AnycapMark size={24} className="shrink-0" />
-              <AnycapWordmark
-                className="text-lg font-bold leading-none"
-                style={{ ...mono, letterSpacing: "-0.5px" }}
-              />
+            <Link href="/for-human">
+              <AnycapLogo size={24} />
             </Link>
           </div>
 

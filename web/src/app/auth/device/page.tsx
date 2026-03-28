@@ -3,8 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AnycapMark } from "@/components/brand/AnycapMark";
-import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
+import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { normalizeUserCode } from "@/lib/auth/session";
 import { DeviceCodeForm } from "./DeviceCodeForm";
 
@@ -25,11 +24,7 @@ function DevicePageInner() {
     <main className="min-h-screen px-6 py-6 md:px-10 md:py-8 lg:px-16 flex items-center justify-center">
       <div className="w-full max-w-[980px]">
         <header className="flex items-center gap-3 mb-8 md:mb-10">
-          <AnycapMark size={28} className="shrink-0" />
-          <AnycapWordmark
-            className="text-xl font-bold leading-none"
-            style={{ ...mono, letterSpacing: "-0.5px" }}
-          />
+          <AnycapLogo size={28} />
           <Link
             href="/for-human"
             className="ml-auto text-[11px] text-[#8f9487] hover:text-[#6b7d3a] tracking-[0.5px] transition-colors"

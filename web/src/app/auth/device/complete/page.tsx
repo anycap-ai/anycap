@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { AnycapMark } from "@/components/brand/AnycapMark";
-import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
+import { AnycapLogo } from "@/components/brand/AnycapLogo";
 
 export const runtime = "edge";
 
@@ -12,11 +11,7 @@ export default function DeviceCompletePage() {
     <main className="min-h-screen px-6 py-6 md:px-10 md:py-8 lg:px-16 flex items-center justify-center">
       <div className="w-full max-w-[940px]">
         <header className="flex items-center gap-3 mb-8 md:mb-10">
-          <AnycapMark size={28} className="shrink-0" />
-          <AnycapWordmark
-            className="text-xl font-bold leading-none"
-            style={{ ...mono, letterSpacing: "-0.5px" }}
-          />
+          <AnycapLogo size={28} />
         </header>
 
         <section className="relative border border-[#d1d8b7] bg-[#fbfcf7]/95 px-6 py-10 md:px-12 md:py-14 shadow-[0_18px_50px_rgba(28,31,23,0.06)] text-center">

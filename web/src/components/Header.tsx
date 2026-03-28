@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { AnycapMark } from "@/components/brand/AnycapMark";
-import { AnycapWordmark } from "@/components/brand/AnycapWordmark";
+import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { NavDropdown, type DropdownItem } from "@/components/NavDropdown";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
@@ -45,14 +44,10 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
   }
 
   return (
-    <header className="px-6 md:px-12 lg:px-20 pt-6 md:pt-10">
-      <div className="mx-auto flex max-w-[1280px] items-center gap-3">
-        <Link href={localizedLogoHref} className="flex items-center gap-3">
-          <AnycapMark size={28} className="shrink-0" />
-          <AnycapWordmark
-            className="text-xl font-bold leading-none"
-            style={{ ...mono, letterSpacing: "-0.5px" }}
-          />
+    <header className="px-8 pt-6 md:px-16 md:pt-10 lg:px-24">
+      <div className="flex items-center gap-3">
+        <Link href={localizedLogoHref}>
+          <AnycapLogo size={28} />
         </Link>
         <nav className="ml-auto flex items-center gap-1">
           {links.map((entry) => {
