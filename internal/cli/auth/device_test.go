@@ -21,7 +21,7 @@ func TestDeviceInit_ReturnsStructuredResult(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
 			"login_session_id": "lsn-123",
 			"user_code":        "ABCD-EFGH",
-			"verification_uri": "https://anycap.ai/device",
+			"verification_uri": "https://anycap.ai/auth/device",
 			"interval":         5,
 			"expires_in":       900,
 		}})
@@ -40,7 +40,7 @@ func TestDeviceInit_ReturnsStructuredResult(t *testing.T) {
 	if result.UserCode != "ABCD-EFGH" {
 		t.Fatalf("expected user_code ABCD-EFGH, got %q", result.UserCode)
 	}
-	if result.VerificationURI != "https://anycap.ai/device" {
+	if result.VerificationURI != "https://anycap.ai/auth/device" {
 		t.Fatalf("expected verification_uri, got %q", result.VerificationURI)
 	}
 	if result.Interval != 5 || result.ExpiresIn != 900 {
@@ -101,7 +101,7 @@ func TestDeviceFlow_UsesInitAndPollHelpers(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
 				"login_session_id": "lsn-123",
 				"user_code":        "ABCD-EFGH",
-				"verification_uri": "https://anycap.ai/device",
+				"verification_uri": "https://anycap.ai/auth/device",
 				"interval":         0,
 				"expires_in":       60,
 			}})
@@ -131,7 +131,7 @@ func TestDeviceFlow_UsesInitAndPollHelpers(t *testing.T) {
 	if email != "dev@anycap.ai" {
 		t.Fatalf("expected email dev@anycap.ai, got %q", email)
 	}
-	if openedURL != "https://anycap.ai/device" {
+	if openedURL != "https://anycap.ai/auth/device" {
 		t.Fatalf("expected browser open url, got %q", openedURL)
 	}
 	if !strings.Contains(stderr.String(), "ABCD-EFGH") {

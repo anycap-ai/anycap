@@ -54,7 +54,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
         return;
       }
 
-      const target = `/auth/login?return_to=${encodeURIComponent("/device/complete")}&device_code=${encodeURIComponent(normalizedCode)}`;
+      const target = `/auth/login?return_to=${encodeURIComponent("/auth/device/complete")}&device_code=${encodeURIComponent(normalizedCode)}`;
       window.location.assign(target);
     } finally {
       setSubmitting(false);

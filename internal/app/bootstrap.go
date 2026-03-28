@@ -228,13 +228,13 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 
 func buildDeviceVerificationURL(cfg config.Config) string {
 	if strings.TrimSpace(cfg.Auth0RedirectURL) == "" {
-		return "https://anycap.local/device"
+		return "https://anycap.local/auth/device"
 	}
 	parsed, err := url.Parse(cfg.Auth0RedirectURL)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return "https://anycap.local/device"
+		return "https://anycap.local/auth/device"
 	}
-	parsed.Path = path.Join("/", "device")
+	parsed.Path = path.Join("/", "auth", "device")
 	parsed.RawQuery = ""
 	parsed.Fragment = ""
 	return parsed.String()

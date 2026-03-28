@@ -87,7 +87,7 @@ The command should return immediately with JSON:
 ```json
 {
   "login_session_id": "lsn_123",
-  "verification_uri": "https://preview.anycap-web.pages.dev/device",
+  "verification_uri": "https://preview.anycap-web.pages.dev/auth/device",
   "user_code": "ABCD-EFGH",
   "expires_in": 900,
   "interval": 5,

@@ -167,7 +167,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		credit.NewStubClient(nil),
 		apiKeys,
 		loginSessions,
-		"https://anycap.local/device",
+		"https://anycap.local/auth/device",
 		func() string {
 			sessionSeq++
 			return "state-" + string(rune('0'+sessionSeq))
@@ -439,7 +439,7 @@ func TestRouter_BrowserPollLoginFlow(t *testing.T) {
 func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
-	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/device", nil)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/auth/device", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -464,7 +464,7 @@ func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	}
 
 	formBody := []byte("user_code=" + url.QueryEscape(userCode))
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/device", &ut.Body{Body: bytes.NewReader(formBody), Len: len(formBody)}, ut.Header{Key: "Content-Type", Value: "application/x-www-form-urlencoded"})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/auth/device", &ut.Body{Body: bytes.NewReader(formBody), Len: len(formBody)}, ut.Header{Key: "Content-Type", Value: "application/x-www-form-urlencoded"})
 	if resp.Code != http.StatusFound {
 		t.Fatalf("expected 302, got %d body=%s", resp.Code, resp.Body.String())
 	}

@@ -186,7 +186,7 @@
 {
   "flow_type": "device",
   "login_session_id": "lsn_456",
-  "verification_uri": "https://anycap.ai/device",
+  "verification_uri": "https://anycap.ai/auth/device",
   "user_code": "ABCD-EFGH",
   "expires_in": 900,
   "interval": 5

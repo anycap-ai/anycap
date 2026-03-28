@@ -277,7 +277,7 @@ func (s *Server) handleDeviceCode(w http.ResponseWriter, r *http.Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	verificationURI := fmt.Sprintf("%s://%s/device", scheme, r.Host)
+	verificationURI := fmt.Sprintf("%s://%s/auth/device", scheme, r.Host)
 
 	writeSuccess(w, map[string]any{
 		"flow_type":        "device",

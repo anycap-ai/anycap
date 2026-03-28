@@ -138,7 +138,7 @@ $ anycap login --headless
 
 ! First, copy your one-time code: ABCD-1234
 
-Then open this URL in a browser: https://anycap.ai/device
+Then open this URL in a browser: https://anycap.ai/auth/device
 
 Waiting for authentication... done!
 Logged in as user@example.com
@@ -391,7 +391,7 @@ sequenceDiagram
 
 **Server-generated device code**
 - The server generates its own device code and manages the verification flow.
-- Reasons: server can customize the verification page (`anycap.ai/device`); server controls the user_code format; no dependency on auth provider's native device flow support.
+- Reasons: server can customize the verification page (`anycap.ai/auth/device`); server controls the user_code format; no dependency on auth provider's native device flow support.
 - This keeps headless login aligned with the same AnyCap Server BFF model used by localhost/browser login.
 
 **User code format**
@@ -412,7 +412,7 @@ sequenceDiagram
 - Server should use `slow_down` to protect against over-polling and keep enough distance from upstream auth rate limits.
 
 **Verification page flow**
-- `https://anycap.ai/device` is a web page where user enters the code.
+- `https://anycap.ai/auth/device` is a web page where user enters the code.
 - After entering code, the server redirects the user into the normal server-managed web auth flow.
 - After auth, the page shows "Device authorized, you can return to the terminal."
 - Server marks the login session as authorized and returns an AnyCap API key on next poll.
@@ -526,7 +526,7 @@ as an API key.
 | Request | (empty body) | | |
 | Response | `login_session_id` | string | Server-generated login session id |
 | Response | `user_code` | string | User-facing code (`ABCD-1234`) |
-| Response | `verification_uri` | string | URL to enter the code (`https://anycap.ai/device`) |
+| Response | `verification_uri` | string | URL to enter the code (`https://anycap.ai/auth/device`) |
 | Response | `interval` | int | Polling interval in seconds |
 | Response | `expires_in` | int | Login session expiry in seconds (recommended: 900) |
 

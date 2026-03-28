@@ -44,7 +44,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
           }, {
             bearerToken: accessToken,
           });
-          window.location.assign(login.returnTo || "/device/complete");
+          window.location.assign(login.returnTo || "/auth/device/complete");
           return;
         }
 
@@ -67,7 +67,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
               { bearerToken: accessToken },
             );
           } catch {
-            redirectTarget = "/device?error=verify_failed";
+            redirectTarget = "/auth/device?error=verify_failed";
           }
         }
 

@@ -145,10 +145,10 @@ sequenceDiagram
     C->>S: POST /v1/auth/device-code
     S-->>C: {user_code: "ABCD-1234", verification_uri, login_session_id}
 
-    C->>C: 显示 "Visit https://anycap.ai/device and enter ABCD-1234"
+    C->>C: 显示 "Visit https://anycap.ai/auth/device and enter ABCD-1234"
 
     par 用户在浏览器操作
-        B->>W: 打开 /device，输入 ABCD-1234
+        B->>W: 打开 /auth/device，输入 ABCD-1234
         W->>S: POST /v1/auth/device-code-check {user_code}
         S-->>W: {valid: true}
         W->>A: Auth0 SDK 登录 (如果未登录)

@@ -17,7 +17,7 @@ export function CLILoginClient() {
     }
 
     savePendingLogin({
-      returnTo: "/device/complete",
+      returnTo: "/auth/device/complete",
       mode: "cli_login",
       browserToken,
     });

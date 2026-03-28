@@ -142,18 +142,18 @@ sequenceDiagram
 
     C->>S: POST /v1/auth/device-code {}
     S->>S: Self-generate user_code (5 min expiry) + Create LoginSession (15 min expiry)
-    S-->>C: {login_session_id, user_code: "ABCD-1234", verification_uri: "https://anycap.ai/device", interval: 5, expires_in: 900}
+    S-->>C: {login_session_id, user_code: "ABCD-1234", verification_uri: "https://anycap.ai/auth/device", interval: 5, expires_in: 900}
 
-    C->>C: Print: "Visit https://anycap.ai/device and enter code: ABCD-1234"
+    C->>C: Print: "Visit https://anycap.ai/auth/device and enter code: ABCD-1234"
 
     par User enters code and logs in (one seamless step)
-        B->>N: Open /device (or /device?code=ABCD-1234)
+        B->>N: Open /auth/device (or /auth/device?code=ABCD-1234)
         N->>B: Show code input form (prefilled if code in URL)
         B->>N: Submit "ABCD-1234"
         N->>S: POST /v1/auth/device-code-check {user_code: "ABCD-1234"}
         S-->>N: {valid: true}
         N->>N: Store user_code in httpOnly cookie
-        N->>B: 302 → /auth/login?return_to=/device/complete
+        N->>B: 302 → /auth/login?return_to=/auth/device/complete
 
         Note over B,A: === Web Login (Flow 1) ===
         N->>S: POST /v1/auth/login {method: "web", redirect_url: ".../auth/callback"}
@@ -171,7 +171,7 @@ sequenceDiagram
         S->>S: Create API Key for CLI, mark session complete
         S-->>N: {message: "authorized"}
         N->>N: Clear user_code cookie
-        N->>B: 302 → /device/complete
+        N->>B: 302 → /auth/device/complete
         N->>B: Show "Device authorized. You can close this page."
 
     and CLI polls for completion
@@ -187,7 +187,7 @@ sequenceDiagram
     C->>C: Save to Keychain
 ```
 
-### /device page UX states
+### /auth/device page UX states
 
 | State | Page shows |
 |-------|-----------|
@@ -198,7 +198,7 @@ sequenceDiagram
 | Code expired (> 5 min) | Error: "Code expired, please request a new one in your terminal" |
 | Login + authorization success | "Device authorized. You can close this page." |
 
-Note: The `/device` page always shows the code input form, regardless of login state.
+Note: The `/auth/device` page always shows the code input form, regardless of login state.
 After submitting a valid code, the page seamlessly triggers the login → authorize flow.
 If the user is already logged in (has session cookie), the login step is skipped and
 device-verify is called directly.

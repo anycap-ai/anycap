@@ -69,7 +69,7 @@ func (c *StubClient) StartDeviceFlow(_ context.Context) (model.DeviceAuthorizati
 	return model.DeviceAuthorization{
 		DeviceCode:      deviceCode,
 		UserCode:        "ANYCAP-0000",
-		VerificationURI: "https://anycap.local/device",
+		VerificationURI: "https://anycap.local/auth/device",
 		ExpiresIn:       900,
 		Interval:        5,
 	}, nil

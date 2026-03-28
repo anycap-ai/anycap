@@ -23,8 +23,8 @@ func NewLoginHandler(service *loginapp.Service) *LoginHandler {
 }
 
 func (h *LoginHandler) RegisterRootRoutes(group *route.RouterGroup) {
-	group.GET("/device", h.DevicePage)
-	group.POST("/device", h.DeviceAuthorize)
+	group.GET("/auth/device", h.DevicePage)
+	group.POST("/auth/device", h.DeviceAuthorize)
 	group.GET("/auth/callback", h.WebCallback)
 }
 
@@ -78,7 +78,7 @@ func (h *LoginHandler) DevicePage(_ context.Context, ctx *app.RequestContext) {
 <main style="max-width:480px;margin:48px auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <h1>AnyCap Device Login</h1>
 <p>Enter the one-time code shown in your terminal to continue.</p>
-<form method="post" action="/device">
+<form method="post" action="/auth/device">
 <label for="user_code">One-time code</label><br/>
 <input id="user_code" name="user_code" type="text" style="width:100%;padding:12px;margin:12px 0;" autofocus />
 <button type="submit">Continue</button>

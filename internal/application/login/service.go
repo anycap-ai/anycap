@@ -67,7 +67,7 @@ func NewService(
 		now = time.Now
 	}
 	if deviceVerificationURL == "" {
-		deviceVerificationURL = "https://anycap.local/device"
+		deviceVerificationURL = "https://anycap.local/auth/device"
 	}
 
 	return &Service{

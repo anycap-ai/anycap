@@ -9,7 +9,7 @@
 
 1. **Device flow is self-hosted** — Server self-generates `user_code`, does NOT call Auth0's native Device Authorization Grant. Per BFF design doc 7.2 and headless relay design.
 2. **Code first, login second** — User enters device code FIRST on the verification page, then is guided through Auth0 login. Login completion automatically authorizes the device. One seamless step.
-3. **Verification page lives in Next.js** — The `/device` page is part of the Next.js web app (`anycap.ai/device`), not hosted by AnyCap Server.
+3. **Verification page lives in Next.js** — The `/auth/device` page is part of the Next.js web app (`anycap.ai/auth/device`), not hosted by AnyCap Server.
 4. **No Auth0 SDK on frontend** — Reuse existing Server endpoints. Next.js only does fetch calls.
 5. **API key in httpOnly cookie** — Browser JS never sees the API key.
 6. **Dual expiry** — `user_code` expires in 5 minutes, `login_session` expires in 15 minutes (per headless relay design 4.1).
@@ -216,7 +216,7 @@ Authorization: Bearer <api_key>
 
 ### B7. `POST /v1/auth/device-code-check` — new endpoint
 
-Lightweight endpoint for the `/device` page to validate a user_code before starting
+Lightweight endpoint for the `/auth/device` page to validate a user_code before starting
 the login flow. Public (no auth required).
 
 **Request:**
@@ -247,7 +247,7 @@ POST /v1/auth/device-code-check
 
 **File:** `internal/app/bootstrap.go`
 
-Change `"https://anycap.local/device"` to `"https://anycap.ai/device"` (or make it
+Change `"https://anycap.local/auth/device"` to `"https://anycap.ai/auth/device"` (or make it
 configurable via environment variable).
 
 ---
@@ -292,20 +292,20 @@ redirect to `/auth/login`.
 
 Read user info from session cookie. Display email in sidebar. Add logout link.
 
-### F5. `/device` page (for CLI device code flow)
+### F5. `/auth/device` page (for CLI device code flow)
 
 The verification page lives in Next.js. User enters code FIRST, then is guided
 through login. Login completion automatically authorizes the device.
 
 **New files:**
-- `web/src/app/device/page.tsx` — Code input form
-- `web/src/app/device/complete/page.tsx` — Success page ("Device authorized")
+- `web/src/app/auth/device/page.tsx` — Code input form
+- `web/src/app/auth/device/complete/page.tsx` — Success page ("Device authorized")
 - `web/src/app/api/device-code-check/route.ts` — Proxy to Server `device-code-check`
 
 **Page flow:**
 
 ```
-1. User opens /device (or /device?code=ABCD-1234)
+1. User opens /auth/device (or /auth/device?code=ABCD-1234)
 2. Page shows code input form (prefilled if code in URL)
 3. User submits code
 4. Next.js calls POST /v1/auth/device-code-check {user_code} → validate
@@ -313,15 +313,15 @@ through login. Login completion automatically authorizes the device.
 6. If valid:
    a. If already logged in (session cookie exists):
       → Next.js calls POST /v1/auth/device-verify {user_code} with API key
-      → Redirect to /device/complete
+      → Redirect to /auth/device/complete
    b. If not logged in:
       → Store user_code in device_user_code cookie
-      → Redirect to /auth/login?return_to=/device/complete
+      → Redirect to /auth/login?return_to=/auth/device/complete
       → After login, /auth/callback reads device_user_code cookie
       → Auto-calls POST /v1/auth/device-verify
       → Clears device_user_code cookie
-      → Redirects to /device/complete
-7. /device/complete shows "Device authorized. You can close this page."
+      → Redirects to /auth/device/complete
+7. /auth/device/complete shows "Device authorized. You can close this page."
 ```
 
 **Page UX states:**
@@ -331,7 +331,7 @@ through login. Login completion automatically authorizes the device.
 | No code in URL | Code input form (empty) |
 | Code in URL | Code input form (prefilled) |
 | Code submitted, valid, not logged in | Redirect to Auth0 login (transparent) |
-| Code submitted, valid, logged in | Redirect to /device/complete |
+| Code submitted, valid, logged in | Redirect to /auth/device/complete |
 | Code invalid | Error: "Invalid code" + retry |
 | Code expired (> 5 min) | Error: "Code expired. Please request a new one in your terminal." |
 | Authorization complete | "Device authorized. You can close this page." |
@@ -350,7 +350,7 @@ B1 (auth/login web method)
                     └── F4 (dashboard user info)
 
 B4 (device self-hosted) + B5 (device poll) + B6 (device-verify) + B7 (device-code-check) + B8 (verification URL)
-  └── F5 (/device page)
+  └── F5 (/auth/device page)
 ```
 
 Web login (B1→B2→B3→F1→F2→F3→F4) and device page (B4-B8→F5) can be developed in

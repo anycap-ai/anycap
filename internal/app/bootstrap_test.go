@@ -201,14 +201,14 @@ func TestBuildDeviceVerificationURL_UsesAuth0RedirectHost(t *testing.T) {
 	got := buildDeviceVerificationURL(config.Config{
 		Auth0RedirectURL: "https://anycap.ai/auth/callback",
 	})
-	if got != "https://anycap.ai/device" {
-		t.Fatalf("expected https://anycap.ai/device, got %q", got)
+	if got != "https://anycap.ai/auth/device" {
+		t.Fatalf("expected https://anycap.ai/auth/device, got %q", got)
 	}
 }
 
 func TestBuildDeviceVerificationURL_FallsBackWhenRedirectURLMissing(t *testing.T) {
 	got := buildDeviceVerificationURL(config.Config{})
-	if got != "https://anycap.local/device" {
+	if got != "https://anycap.local/auth/device" {
 		t.Fatalf("expected fallback device url, got %q", got)
 	}
 }
