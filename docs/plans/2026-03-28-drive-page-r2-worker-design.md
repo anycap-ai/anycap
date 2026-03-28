@@ -307,14 +307,14 @@ sequenceDiagram
 - 软删除文件/目录后，必须同步失效相关 share token（`revoked`）。
 - Page 软删除/下线后，必须同步删除 `page:host:{hostname}` 或切换到无效状态。
 
-## 8. Worker 路由与部署
+## 8. Worker 设计
 
-### 8.1 域名
+### 8.1 域名与路由
 
-- `drive.anycap.cloud`
-- `*.page.anycap.cloud`
+- `drive.anycap.cloud` — Drive 分享访问
+- `*.page.anycap.cloud` — Page 站点访问
 
-### 8.2 入口分发伪代码
+入口分发：
 
 ```ts
 if (host === "drive.anycap.cloud") {
@@ -326,7 +326,19 @@ if (host.endsWith(".page.anycap.cloud")) {
 return notFound()
 ```
 
-## 9. 密码校验（Worker 侧）
+### 8.2 TODO: 待补充设计
+
+以下内容在实现 Worker 前补充详细设计：
+
+- [ ] **项目结构**：Worker 代码位置（建议 `workers/edge/`）、wrangler.toml（KV namespace / R2 bucket binding / secrets）
+- [ ] **Drive handler 流程**：token 鉴权 → 过期检查 → 密码校验 → 子树权限校验 → 目录浏览 vs 文件服务的完整流程
+- [ ] **Page handler 流程**：hostname → KV 查 `page:host:{hostname}` → access_mode 校验 → convention routing 路径解析 → R2 取资产
+- [ ] **内容处理策略**：哪些 MIME type 浏览器内渲染（HTML/图片/PDF/Markdown），哪些触发下载
+- [ ] **UI 页面**：目录浏览页、密码输入页、错误页（404 / 410 revoked / expired / 下架）— 风格定义（极简 or 品牌样式）
+- [ ] **缓存策略**：是否使用 Cache API 缓存 R2 读取、缓存失效机制
+- [ ] **Rate limit**：密码校验防爆破的具体实现（Worker 侧 in-memory / Durable Object / KV counter）
+
+### 8.3 密码校验
 
 - 算法：`PBKDF2-HMAC-SHA256`。
 - 存储：`password_hash + per-resource random salt`。
@@ -358,18 +370,141 @@ return notFound()
 - `GET /v1/pages`
 - `GET /v1/pages/{id}`
 
-## 11. 复用策略（合理复用）
+## 11. CLI 设计
+
+### 11.1 命令层级
+
+Drive 和 Page 作为**顶层命令**，与 `image`/`video` 平级。`infra/` 保留给 browser、sandbox 等辅助基础设施。
+
+```
+anycap drive ...
+anycap page ...
+```
+
+### 11.2 Drive 命令
+
+```bash
+# 文件操作
+anycap drive upload <file> [--dir <path>]       # 上传文件（透明处理 presign+PUT+complete）
+anycap drive mkdir <path>                        # 创建目录
+anycap drive ls [path]                           # 列出目录内容
+anycap drive mv <src> <dst>                      # 移动/重命名
+anycap drive rm <path>                           # 删除
+
+# 分享
+anycap drive share <id>                          # 创建或查看 active 链接
+    [--expires <duration>]                       #   设置过期时间（如 7d, 24h, 30d）
+    [--no-expire]                                #   改为永久
+    [--password <pwd>]                           #   设置密码
+    [--no-password]                              #   移除密码
+anycap drive share rotate <id>                   # 失效旧 token，生成新 token
+anycap drive unshare <id>                        # 撤销分享
+```
+
+说明：
+
+- `drive upload` 对 Agent 透明：内部自动完成 presign -> PUT R2 -> complete 三步。
+- `drive share <id>` 幂等：无 active 链接则创建，已有则显示并可通过 flags 更新。
+- 上传后**不**自动创建分享链接，Agent 按需调用 `drive share`。
+
+### 11.3 Page 命令
+
+```bash
+# 站点管理
+anycap page create --name <name>                 # 创建站点
+anycap page list                                 # 列出站点
+anycap page info <id>                            # 站点详情（含当前版本、URL）
+anycap page set <id>                             # 修改站点设置
+    [--access public|password]                   #   访问模式
+    [--password <pwd>]                           #   设置密码
+    [--no-password]                              #   移除密码
+    [--spa-fallback]                             #   启用 SPA fallback
+    [--no-spa-fallback]                          #   关闭 SPA fallback
+
+# 版本与发布
+anycap page deploy <dir> [--name <name>]         # 上传版本（无站点则自动创建）
+    [--publish]                                  #   上传后自动发布
+anycap page publish <id> [--version <n>]         # 发布指定版本（默认最新 verified）
+anycap page rollback <id> --version <n>          # 从历史版本克隆资产生成新版本并发布
+anycap page versions <id>                        # 版本历史
+anycap page unpublish <id>                       # 下架（current_version_id 置空，当前版本归档）
+```
+
+说明：
+
+- `page deploy` 默认**不**自动发布，需显式 `--publish`。Agent 一步到位：`anycap page deploy ./dist --publish`。
+- `page unpublish` = 下架：`current_version_id` 设为 null，当前 published 版本状态改为 archived。站点仍存在，Worker 返回 404/下架页。
+- `page deploy` 对 Agent 透明：内部逐文件 presign + upload + complete，最终生成版本。
+
+### 11.4 access_mode 与 publish 的关系
+
+两个正交概念：
+
+- `access_mode`（`page_sites` 表）：控制**谁能访问**（public / password / private_reserved）。
+- `published`（`page_versions` 表状态）：控制**是否有 live 版本**。
+
+站点可以是 `access_mode=public` 但没有 published 版本（已下架），此时 Worker 返回 404。
+
+## 12. Dashboard 设计
+
+### 12.1 导航
+
+在现有 sidebar 分组中新增 Drive 和 Page：
+
+```
+Overview / Logs / Billing
+───
+Drive
+Pages
+───
+API Keys / Settings (disabled)
+```
+
+### 12.2 Drive 页面
+
+文件浏览器视图：
+
+- 顶部操作栏：`[Upload]` `[New Folder]`
+- 面包屑导航：`/ > projects > demo`
+- 文件列表表格：Name / Size / Modified / Share
+- 目录行点击进入子目录
+- 文件/目录行提供 `...` 菜单：Rename、Move、Delete
+- Share 列：有 active 链接时显示链接图标，点击打开 share 管理面板
+
+Share 管理面板（侧边栏或弹窗）：
+
+- 显示当前分享链接 URL
+- 过期时间设置（duration 选择 / 永久）
+- 密码开关与设置
+- Rotate 按钮（重新生成 token）
+- 撤销按钮
+
+### 12.3 Page 管理页面
+
+站点列表视图：
+
+- 顶部操作栏：`[Create Page]`
+- 列表表格：Name / URL / Status / Updated
+
+站点详情视图（点击进入）：
+
+- 基本信息：name、page-name、URL、access_mode
+- 版本列表表格：Version / Status / Created
+- 操作按钮：Publish（对 verified 版本）、Unpublish（下架）
+- 设置面板：access_mode、password、SPA fallback
+
+## 13. 复用策略（合理复用）
 
 - 只复用稳定基础层：`ObjectStore`、`EdgeProjector`、`ShareSecurityCore`、`TokenGenerator`、`Audit`。
-- Drive/Page 业务层独立演进，不做统一“超级资源表”。
+- Drive/Page 业务层独立演进，不做统一”超级资源表”。
 
-## 12. 运行策略（Phase 1）
+## 14. 运行策略（Phase 1）
 
 - 配额：按 space 总存储量做硬上限。
 - GC：软删后异步物理删除（按保留期）。
 - Worker + KV 架构直接上线，不做 Phase 0.5。
 
-## 13. 分阶段
+## 15. 分阶段
 
 ### Phase 1
 
