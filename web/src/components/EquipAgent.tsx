@@ -84,16 +84,6 @@ export function EquipAgent() {
     }, 1200);
   };
 
-  // Preload agent icons on mount
-  useEffect(() => {
-    agents.forEach((a) => {
-      if (a.icon) {
-        const img = new Image();
-        img.src = `${ICON_CDN}/${a.icon}`;
-      }
-    });
-  }, []);
-
   // Listen for custom event from terminal click
   useEffect(() => {
     const handler = () => openModal();
@@ -158,7 +148,7 @@ export function EquipAgent() {
                       Which agent are you using?
                     </span>
                     <p className="text-[#9a9e90] text-[11px] mt-0.5" style={mono}>
-                      We'll generate a setup prompt you can paste in.
+                      We&apos;ll generate a setup prompt you can paste in.
                     </p>
                   </div>
                   <button
