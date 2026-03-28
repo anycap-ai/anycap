@@ -5,10 +5,10 @@ import Link from "next/link";
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 const triggerClass =
-  "px-2.5 py-1.5 text-[11px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.5px] rounded transition-all duration-200 ease-out cursor-default select-none inline-flex items-center gap-1";
+  "px-2.5 py-1.5 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded transition-all duration-200 ease-out cursor-default select-none inline-flex items-center gap-1";
 
 const dropdownLinkClass =
-  "block px-4 py-2 text-[11px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] tracking-[0.5px] rounded transition-all duration-200 ease-out whitespace-nowrap";
+  "block px-4 py-2 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] tracking-[0.3px] rounded transition-all duration-200 ease-out whitespace-nowrap";
 
 export type DropdownItem = {
   href: string;

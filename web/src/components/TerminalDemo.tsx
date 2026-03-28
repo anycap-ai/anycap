@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
@@ -40,7 +40,7 @@ function TypeWriter({ text, speed = 18 }: { text: string; speed?: number }) {
   return <>{displayed}</>;
 }
 
-export function TerminalDemo() {
+export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,33 +69,36 @@ export function TerminalDemo() {
 
   return (
     <div ref={ref} className="max-w-[800px] text-[13px] md:text-sm leading-relaxed" style={mono}>
-      {lines.slice(0, visibleCount).map((line, i) => {
+      {lines.map((line, i) => {
+        const shown = i < visibleCount;
+        const hide = shown ? "" : " invisible";
         switch (line.type) {
           case "header":
             return (
-              <div key={i} className="flex items-center gap-2 pb-4 mb-5 border-b border-[#2a2e22] animate-fade-in">
+              <div key={i} className={`flex items-center gap-2 mb-1 border-b border-[#2a2e22]${hide}`}>
                 <span className="text-[#8fa34e]">✻</span>
-                <span className="text-[#9a9e90] text-xs tracking-wide">agent</span>
+                <span className="text-[#9a9e90] text-sm tracking-wide">agent with anycap</span>
+                {headerRight && <div className="ml-auto">{headerRight}</div>}
               </div>
             );
           case "prompt":
             return (
-              <div key={i} className="mb-5">
+              <div key={i} className={`mb-5${hide}`}>
                 <span className="text-[#6b7d3a]">❯ </span>
                 <span className="text-[#d4e0a4]">
-                  <TypeWriter text={line.content!} speed={20} />
+                  {shown ? <TypeWriter text={line.content!} speed={20} /> : line.content}
                 </span>
               </div>
             );
           case "text":
             return (
-              <p key={i} className="text-[#9a9e90] mb-5 animate-fade-in">
+              <p key={i} className={`text-[#9a9e90] mb-5${hide}`}>
                 {line.content}
               </p>
             );
           case "tool":
             return (
-              <div key={i} className="mb-5 animate-fade-in">
+              <div key={i} className={`mb-5${hide}`}>
                 <div className="flex items-start gap-2">
                   <span className="text-[#8fa34e] mt-[1px]">●</span>
                   <span className="text-[#b8cc6e]">{line.content}</span>
@@ -107,7 +110,7 @@ export function TerminalDemo() {
             );
           case "cursor":
             return (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className={`flex items-center gap-2${hide}`}>
                 <span className="text-[#6b7d3a]">❯</span>
                 <span className="inline-block w-[7px] h-[14px] bg-[#b8cc6e] animate-blink" />
               </div>

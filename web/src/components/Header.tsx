@@ -7,7 +7,7 @@ import { localizePublicPath } from "@/lib/site";
 const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 const linkClass =
-  "px-2.5 py-1.5 text-[11px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.5px] rounded transition-all duration-200 ease-out";
+  "px-2.5 py-1.5 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded transition-all duration-200 ease-out";
 
 export type NavItem = {
   href: string;
@@ -47,7 +47,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
     <header className="px-8 pt-6 md:px-16 md:pt-10 lg:px-24">
       <div className="flex items-center gap-3">
         <Link href={localizedLogoHref}>
-          <AnycapLogo size={28} />
+          <AnycapLogo size={36} />
         </Link>
         <nav className="ml-auto flex items-center gap-1">
           {links.map((entry) => {

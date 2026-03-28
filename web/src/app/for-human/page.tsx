@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Header, humanNavLinks } from "@/components/Header";
 import { AuthNav } from "@/components/AuthNav";
 import { LazyEquipAgent } from "@/components/LazyEquipAgent";
-import { LazyTerminalDemo } from "@/components/LazyTerminalDemo";
+import { TerminalDemo } from "@/components/TerminalDemo";
 import { FadeIn } from "@/components/FadeIn";
 import { ScrambleText } from "@/components/ScrambleText";
 import { ParticleAgent } from "@/components/animation/ParticleAgent";
@@ -28,12 +28,12 @@ export default function ForHumanPage() {
         }
       />
 
-      <section className="px-8 pt-12 md:px-16 md:pt-20 lg:px-24 lg:pt-24">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12">
+      <section className="flex flex-col px-8 pt-12 md:px-16 md:pt-16 lg:h-[calc(100dvh-72px)] lg:px-24 lg:pb-8 lg:pt-10">
+        <div className="flex flex-col gap-10 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
           <div className="min-w-0 flex-1">
             <h1
               className="leading-[0.92] tracking-[-0.03em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(42px, 8vw, 108px)" }}
+              style={{ ...pixel, fontSize: "clamp(36px, 5.5vw, 76px)" }}
             >
               <span className="sr-only">
                 Your Agent can do anything. It just needs AnyCap.
@@ -60,25 +60,30 @@ export default function ForHumanPage() {
                 />
               </span>
             </h1>
-            <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
+            <p className="mt-5 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
               Agents can think, but they can&apos;t act — no images, no video, no music,
               no voice. Every capability they need is locked behind a different SDK and
               a different API key. AnyCap makes it one command.
             </p>
-            <div className="mt-8 md:mt-10">
+            <div className="mt-7 md:mt-8">
               <LazyEquipAgent style={mono} />
             </div>
           </div>
 
-          <div className="hidden shrink-0 lg:block lg:-translate-x-12 xl:-translate-x-24">
-            <ParticleAgent scale={0.85} />
+          <div className="w-full shrink-0 lg:flex lg:w-[50%] lg:items-center">
+            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-4 pt-0 pb-5 md:px-5 md:pb-6 lg:px-6 lg:pb-8">
+              <TerminalDemo
+                style={mono}
+                headerRight={
+                  <div className="hidden lg:block">
+                    <ParticleAgent scale={0.35} />
+                  </div>
+                }
+              />
+            </div>
           </div>
         </div>
       </section>
-
-      <div className="mt-16 bg-[#1c1f17] px-8 py-6 md:mt-24 md:px-16 md:py-10 lg:px-24">
-        <LazyTerminalDemo style={mono} />
-      </div>
 
       <FadeIn from="right" className="mt-16 flex justify-end px-8 md:mt-28 md:px-16 lg:px-24">
         <div className="max-w-[520px] border-r-[3px] border-[#1c1f17] pr-6 text-right md:pr-8">
