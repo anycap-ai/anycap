@@ -1460,6 +1460,21 @@ func TestRouter_DriveRequiresAuth(t *testing.T) {
 	}
 }
 
+func TestRouter_DriveInvalidIDReturns400(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/drive/nodes/abc", &ut.Body{Body: bytes.NewReader([]byte(`{"name":"x"}`)), Len: 13}, authz, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid ID, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodDelete, "/v1/drive/nodes/abc", nil, authz)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid ID on delete, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
 // --- Page tests ---
 
 func TestRouter_PageCreateSiteAndList(t *testing.T) {

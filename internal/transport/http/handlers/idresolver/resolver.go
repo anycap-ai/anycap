@@ -32,19 +32,27 @@ type IDResolver interface {
 type PassthroughIDResolver struct{}
 
 func (PassthroughIDResolver) ResolveDriveNodeID(_ context.Context, raw string) (int64, error) {
-	return handlers.ParsePathID(raw)
+	return passthroughResolve(raw)
 }
 func (PassthroughIDResolver) ResolveUploadSessionID(_ context.Context, raw string) (int64, error) {
-	return handlers.ParsePathID(raw)
+	return passthroughResolve(raw)
 }
 func (PassthroughIDResolver) ResolvePageSiteID(_ context.Context, raw string) (int64, error) {
-	return handlers.ParsePathID(raw)
+	return passthroughResolve(raw)
 }
 func (PassthroughIDResolver) ResolvePageVersionID(_ context.Context, raw string) (int64, error) {
-	return handlers.ParsePathID(raw)
+	return passthroughResolve(raw)
 }
 func (PassthroughIDResolver) ResolveModelRouteID(_ context.Context, raw string) (int64, error) {
-	return handlers.ParsePathID(raw)
+	return passthroughResolve(raw)
+}
+
+func passthroughResolve(raw string) (int64, error) {
+	id, err := handlers.ParsePathID(raw)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrExternalIDInvalid, err)
+	}
+	return id, nil
 }
 
 // PostgresExternalIDMapper implements both IDResolver and presenter.IDMapper
