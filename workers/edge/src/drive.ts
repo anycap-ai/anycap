@@ -220,7 +220,8 @@ async function serveFile(
 	if (url.searchParams.get("raw") === "1") {
 		return serveFileRaw(request, env, config, file);
 	}
-	const mime = file.mime || guessMimeFromFilename(file.name);
+	const guessed = guessMimeFromFilename(file.name);
+	const mime = guessed !== "application/octet-stream" ? guessed : (file.mime || guessed);
 	const rawUrl = `${url.pathname}?raw=1`;
 	return renderFilePreviewPage({
 		fileName: file.name,

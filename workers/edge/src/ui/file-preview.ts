@@ -66,7 +66,7 @@ export function renderFilePreviewPage(options: {
 	const mode = getRenderMode(options.mime);
 	const sizeStr = options.fileSize != null && options.fileSize >= 0 ? formatFileSize(options.fileSize) : undefined;
 	const extraHead = mode === "markdown" ? HLJS_CSS : "";
-	const contentClass = mode === "html" ? "content content-full" : "content";
+	const contentClass = mode === "html" ? "content content-full" : (mode === "markdown" || mode === "text" || mode === "pdf") ? "content content-doc" : "content";
 	const html = `${pageHead(`${options.fileName} - AnyCap Drive`, FILE_PREVIEW_STYLES, extraHead)}
 <body>
 <div class="wrapper">
