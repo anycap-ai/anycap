@@ -9,8 +9,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-const pageHostSuffix = ".page.anycap.cloud"
-
 func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.siteRepo == nil {
 		return nil, fmt.Errorf("page version service is not configured")
@@ -102,7 +100,7 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 	}
 
 	jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostDelete, updatedSite.ID, updatedSite.EdgeVersion, model.KVSyncPageHostDeletePayload{
-		Hostname: strings.ToLower(strings.TrimSpace(updatedSite.PageName)) + pageHostSuffix,
+		Hostname: strings.ToLower(strings.TrimSpace(updatedSite.PageName)) + normalizePageHostSuffix(s.pageHostSuffix),
 	})
 	if err != nil {
 		return nil, err

@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	minPageNameLength    = 12
-	pageNameRandomLength = 8
+	minPageNameLength     = 12
+	pageNameRandomLength  = 8
+	defaultPageHostSuffix = ".page.anycap.cloud"
 )
 
 var slugRegex = regexp.MustCompile(`[^a-z0-9-]+`)
@@ -33,6 +34,7 @@ type Service struct {
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
 	passwordPepper    string
+	pageHostSuffix    string
 	now               func() time.Time
 }
 
@@ -44,6 +46,7 @@ func NewService(spaceService port.SpaceService, siteRepo port.PageSiteRepository
 		siteRepo:       siteRepo,
 		slugRepo:       slugRepo,
 		passwordPepper: passwordPepper,
+		pageHostSuffix: defaultPageHostSuffix,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
@@ -70,6 +73,12 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 		s.kvSyncJobRepo = jobRepo
 		s.kvSyncWaiter = waiter
 		s.waitForKVSync = waitForKVSync
+	}
+}
+
+func WithPageHostSuffix(hostSuffix string) ServiceOption {
+	return func(s *Service) {
+		s.pageHostSuffix = normalizePageHostSuffix(hostSuffix)
 	}
 }
 
@@ -122,6 +131,17 @@ func (s *Service) waitKVSyncJobs(ctx context.Context, jobIDs ...int64) error {
 		return nil
 	}
 	return s.kvSyncWaiter.Wait(ctx, filtered)
+}
+
+func normalizePageHostSuffix(hostSuffix string) string {
+	normalized := strings.ToLower(strings.TrimSpace(hostSuffix))
+	if normalized == "" {
+		normalized = defaultPageHostSuffix
+	}
+	if !strings.HasPrefix(normalized, ".") {
+		normalized = "." + normalized
+	}
+	return normalized
 }
 
 func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error) {
