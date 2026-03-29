@@ -45,7 +45,6 @@ export const auth0 = new Auth0Client({
   appBaseUrl: resolveAppBaseURL(),
   authorizationParameters: {
     scope: "openid profile email",
-    prompt: "login",
     ...(audience ? { audience } : {}),
   },
   routes: {
