@@ -7,7 +7,7 @@ import { createEnv, createMockKV, createMockR2, setKVJSON } from "./test_helpers
 function testConfig(): EdgeConfig {
 	return {
 		driveHost: "drive.anycap.cloud",
-		pageHostSuffix: ".page.anycap.cloud",
+		pageHostPrefix: "page-",
 		driveAssetCacheTTLSeconds: 0,
 		pageAssetCacheTTLSeconds: 0,
 		drivePasswordRateLimitWindowSeconds: 300,

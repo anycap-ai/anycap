@@ -7,7 +7,7 @@ import { createEnv, createMockKV, createMockR2, setKVJSON } from "./test_helpers
 function testConfig(): EdgeConfig {
 	return {
 		driveHost: "drive.anycap.cloud",
-		pageHostSuffix: ".page.anycap.cloud",
+		pageHostPrefix: "page-",
 		driveAssetCacheTTLSeconds: 0,
 		pageAssetCacheTTLSeconds: 0,
 		drivePasswordRateLimitWindowSeconds: 300,
@@ -28,7 +28,7 @@ describe("handlePage route", () => {
 				contentType: "text/html; charset=utf-8",
 			},
 		});
-		setKVJSON(kv.store, "page:host:docs.page.anycap.cloud", {
+		setKVJSON(kv.store, "page:host:page-docs.anycap.cloud", {
 			page_id: 9,
 			space_id: 1,
 			current_version_id: 2,
@@ -41,7 +41,7 @@ describe("handlePage route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handlePage(new Request("https://docs.page.anycap.cloud/"), env, testConfig());
+		const response = await handlePage(new Request("https://page-docs.anycap.cloud/"), env, testConfig());
 		const body = await response.text();
 
 		expect(response.status).toBe(200);
@@ -57,7 +57,7 @@ describe("handlePage route", () => {
 				contentType: "text/html; charset=utf-8",
 			},
 		});
-		setKVJSON(kv.store, "page:host:docs.page.anycap.cloud", {
+		setKVJSON(kv.store, "page:host:page-docs.anycap.cloud", {
 			page_id: 9,
 			space_id: 1,
 			current_version_id: 2,
@@ -70,7 +70,7 @@ describe("handlePage route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handlePage(new Request("https://docs.page.anycap.cloud/about"), env, testConfig());
+		const response = await handlePage(new Request("https://page-docs.anycap.cloud/about"), env, testConfig());
 		const body = await response.text();
 
 		expect(response.status).toBe(200);
@@ -80,7 +80,7 @@ describe("handlePage route", () => {
 	it("returns password page for password-protected site without session", async () => {
 		const kv = createMockKV();
 		const r2 = createMockR2();
-		setKVJSON(kv.store, "page:host:docs.page.anycap.cloud", {
+		setKVJSON(kv.store, "page:host:page-docs.anycap.cloud", {
 			page_id: 9,
 			space_id: 1,
 			current_version_id: 2,
@@ -95,7 +95,7 @@ describe("handlePage route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handlePage(new Request("https://docs.page.anycap.cloud/"), env, testConfig());
+		const response = await handlePage(new Request("https://page-docs.anycap.cloud/"), env, testConfig());
 		const body = await response.text();
 
 		expect(response.status).toBe(200);
@@ -106,7 +106,7 @@ describe("handlePage route", () => {
 	it("returns 404 when site is unpublished", async () => {
 		const kv = createMockKV();
 		const r2 = createMockR2();
-		setKVJSON(kv.store, "page:host:docs.page.anycap.cloud", {
+		setKVJSON(kv.store, "page:host:page-docs.anycap.cloud", {
 			page_id: 9,
 			space_id: 1,
 			current_version_id: 0,
@@ -119,7 +119,7 @@ describe("handlePage route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handlePage(new Request("https://docs.page.anycap.cloud/"), env, testConfig());
+		const response = await handlePage(new Request("https://page-docs.anycap.cloud/"), env, testConfig());
 
 		expect(response.status).toBe(404);
 	});

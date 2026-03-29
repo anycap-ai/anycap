@@ -11,28 +11,19 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 )
 
-const defaultPageHostSuffix = ".page.anycap.cloud"
-
 type PageProjector struct {
 	kvClient    KVClient
 	siteRepo    port.PageSiteRepository
 	versionRepo port.PageVersionRepository
-	hostSuffix  string
+	hostFormat  string
 }
 
-func NewPageProjector(kvClient KVClient, siteRepo port.PageSiteRepository, versionRepo port.PageVersionRepository, hostSuffix string) *PageProjector {
-	suffix := strings.TrimSpace(hostSuffix)
-	if suffix == "" {
-		suffix = defaultPageHostSuffix
-	}
-	if !strings.HasPrefix(suffix, ".") {
-		suffix = "." + suffix
-	}
+func NewPageProjector(kvClient KVClient, siteRepo port.PageSiteRepository, versionRepo port.PageVersionRepository, hostFormat string) *PageProjector {
 	return &PageProjector{
 		kvClient:    kvClient,
 		siteRepo:    siteRepo,
 		versionRepo: versionRepo,
-		hostSuffix:  strings.ToLower(suffix),
+		hostFormat:  model.NormalizePageHostFormat(hostFormat),
 	}
 }
 
@@ -142,5 +133,5 @@ func (p *PageProjector) projectHostDelete(ctx context.Context, job model.KVSyncJ
 }
 
 func (p *PageProjector) hostnameForPage(pageName string) string {
-	return strings.ToLower(strings.TrimSpace(pageName)) + p.hostSuffix
+	return model.FormatPageHostname(p.hostFormat, pageName)
 }

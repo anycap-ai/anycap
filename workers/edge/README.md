@@ -7,9 +7,9 @@ Cloudflare Worker that serves Drive, Page, and CDN public access.
 | | Dev | Prod |
 |---|---|---|
 | Worker | `anycap-edge-dev` | `anycap-edge` |
-| CDN | `cdn.dev.anycap.cloud` | `cdn.anycap.cloud` |
-| Drive | `drive.dev.anycap.cloud` | `drive.anycap.cloud` |
-| Page | `*.page.dev.anycap.cloud` | `*.page.anycap.cloud` |
+| CDN | `cdndev.anycap.cloud` | `cdn.anycap.cloud` |
+| Drive | `drivedev.anycap.cloud` | `drive.anycap.cloud` |
+| Page | `pagedev-<name>.anycap.cloud` | `page-<name>.anycap.cloud` |
 | R2 bucket | `anycap-cloud-dev` | `anycap-cloud` |
 
 ## Setup

@@ -240,6 +240,7 @@ func TestPageDeployWithoutNameAndPublish(t *testing.T) {
 				"id":        7,
 				"name":      createdName,
 				"page_name": "site-abc1234",
+				"page_url":  "https://page-site-abc1234.anycap.cloud",
 			})
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions":
 			writeSuccessEnvelope(t, w, map[string]any{
@@ -295,7 +296,7 @@ func TestPageDeployWithoutNameAndPublish(t *testing.T) {
 	if !strings.Contains(out, `"published":true`) || !strings.Contains(out, `"version":2`) {
 		t.Fatalf("unexpected output: %s", out)
 	}
-	if !strings.Contains(out, `"page_url":"https://site-abc1234.page.anycap.cloud"`) {
+	if !strings.Contains(out, `"page_url":"https://page-site-abc1234.anycap.cloud"`) {
 		t.Fatalf("unexpected page_url in output: %s", out)
 	}
 }
@@ -310,6 +311,7 @@ func TestPageRollbackAutoPublishWhenCurrentPublished(t *testing.T) {
 				"id":                 9,
 				"name":               "docs",
 				"page_name":          "docs-live",
+				"page_url":           "https://page-docs-live.anycap.cloud",
 				"current_version_id": 3,
 			})
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/9/versions":

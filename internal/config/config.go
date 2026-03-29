@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
 const (
@@ -27,8 +28,7 @@ const (
 	maxPresignGetExpiry         = 86400 // seconds (24 hours hard cap)
 	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
 	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
-	defaultPageHostSuffix       = ".page.anycap.cloud"
-	defaultKVSyncPollInterval   = 1 * time.Second
+	defaultKVSyncPollInterval = 1 * time.Second
 	defaultKVSyncLockTTL        = 5 * time.Minute
 	defaultKVSyncWaitTimeout    = 5 * time.Second
 	defaultCloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
@@ -76,7 +76,7 @@ type Config struct {
 	Lark                    LarkConfig
 	PasswordPepper          string
 	DriveShareBaseURL       string
-	PageHostSuffix          string
+	PageHostFormat          string
 	CloudflareKV            CloudflareKVConfig
 	KVSyncEnabled           bool
 	KVSyncWaitEnabled       bool
@@ -200,7 +200,7 @@ func LoadFromEnv() (Config, error) {
 		},
 		PasswordPepper:    os.Getenv("ANYCAP_PASSWORD_PEPPER"),
 		DriveShareBaseURL: getEnv("ANYCAP_DRIVE_SHARE_BASE_URL", defaultDriveShareBaseURL),
-		PageHostSuffix:    normalizeHostSuffix(getEnv("ANYCAP_PAGE_HOST_SUFFIX", defaultPageHostSuffix), defaultPageHostSuffix),
+		PageHostFormat:    model.NormalizePageHostFormat(getEnv("ANYCAP_PAGE_HOST_FORMAT", "")),
 		CloudflareKV: CloudflareKVConfig{
 			AccountID:   getEnv("ANYCAP_CLOUDFLARE_ACCOUNT_ID", ""),
 			NamespaceID: getEnv("ANYCAP_CLOUDFLARE_KV_NAMESPACE_ID", ""),
@@ -505,16 +505,3 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	return parsed
 }
 
-func normalizeHostSuffix(raw string, fallback string) string {
-	normalized := strings.ToLower(strings.TrimSpace(raw))
-	if normalized == "" {
-		normalized = strings.ToLower(strings.TrimSpace(fallback))
-	}
-	if normalized == "" {
-		return ""
-	}
-	if !strings.HasPrefix(normalized, ".") {
-		normalized = "." + normalized
-	}
-	return normalized
-}

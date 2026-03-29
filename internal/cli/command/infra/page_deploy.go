@@ -113,7 +113,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				"status":    "success",
 				"page_id":   site.ID,
 				"page_name": site.PageName,
-				"page_url":  pageURLFromPageName(site.PageName),
+				"page_url":  site.PageURL,
 				"version":   finalVersion.VersionNo,
 				"published": published,
 			})

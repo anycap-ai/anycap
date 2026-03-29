@@ -9,7 +9,7 @@ describe("resolveConfig", () => {
 		expect(config).toEqual({
 			cdnHost: "cdn.anycap.cloud",
 			driveHost: "drive.anycap.cloud",
-			pageHostSuffix: ".page.anycap.cloud",
+			pageHostPrefix: "page-",
 			driveAssetCacheTTLSeconds: 60,
 			pageAssetCacheTTLSeconds: 60,
 			drivePasswordRateLimitWindowSeconds: 300,
@@ -26,7 +26,7 @@ describe("resolveConfig", () => {
 			createEnv({
 				CDN_HOST: " CDN.EXAMPLE.COM ",
 				DRIVE_HOST: " DRIVE.EXAMPLE.COM ",
-				PAGE_HOST_SUFFIX: "Pages.Example.COM",
+				PAGE_HOST_PREFIX: "pages",
 				DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS: "120",
 				PAGE_STATIC_ASSET_CACHE_TTL_SECONDS: "-1",
 				DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: "900",
@@ -40,7 +40,7 @@ describe("resolveConfig", () => {
 
 		expect(config.cdnHost).toBe("cdn.example.com");
 		expect(config.driveHost).toBe("drive.example.com");
-		expect(config.pageHostSuffix).toBe(".pages.example.com");
+		expect(config.pageHostPrefix).toBe("pages-");
 		expect(config.driveAssetCacheTTLSeconds).toBe(120);
 		expect(config.pageAssetCacheTTLSeconds).toBe(60);
 		expect(config.drivePasswordRateLimitWindowSeconds).toBe(900);

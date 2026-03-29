@@ -51,8 +51,8 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.PasswordPepper != "" {
 		t.Fatalf("expected default password pepper empty, got %q", cfg.PasswordPepper)
 	}
-	if cfg.PageHostSuffix != ".page.anycap.cloud" {
-		t.Fatalf("expected default page host suffix .page.anycap.cloud, got %q", cfg.PageHostSuffix)
+	if cfg.PageHostFormat != "page-%s.anycap.cloud" {
+		t.Fatalf("expected default page host format page-%%s.anycap.cloud, got %q", cfg.PageHostFormat)
 	}
 }
 
@@ -69,16 +69,16 @@ func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
 	}
 }
 
-func TestLoadFromEnv_ReadsPageHostSuffix(t *testing.T) {
+func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
 	clearLegacyPGConfig(t)
-	t.Setenv("ANYCAP_PAGE_HOST_SUFFIX", "PAGE.DEV.ANYCAP.CLOUD")
+	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "PAGEDEV-%s.ANYCAP.CLOUD")
 
 	cfg, err := LoadFromEnv()
 	if err != nil {
 		t.Fatalf("LoadFromEnv() error = %v", err)
 	}
-	if cfg.PageHostSuffix != ".page.dev.anycap.cloud" {
-		t.Fatalf("expected normalized page host suffix, got %q", cfg.PageHostSuffix)
+	if cfg.PageHostFormat != "pagedev-%s.anycap.cloud" {
+		t.Fatalf("expected normalized page host format, got %q", cfg.PageHostFormat)
 	}
 }
 

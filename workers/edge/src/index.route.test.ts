@@ -54,7 +54,7 @@ describe("worker host routing", () => {
 				contentType: "text/html; charset=utf-8",
 			},
 		});
-		setKVJSON(kv.store, "page:host:docs.page.anycap.cloud", {
+		setKVJSON(kv.store, "page:host:page-docs.anycap.cloud", {
 			page_id: 9,
 			space_id: 1,
 			current_version_id: 2,
@@ -67,7 +67,7 @@ describe("worker host routing", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await worker.fetch(new Request("https://docs.page.anycap.cloud/"), env);
+		const response = await worker.fetch(new Request("https://page-docs.anycap.cloud/"), env);
 		expect(response.status).toBe(200);
 	});
 

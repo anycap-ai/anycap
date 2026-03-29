@@ -21,8 +21,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 )
 
-const defaultPageHostSuffix = ".page.anycap.cloud"
-
 type successEnvelope struct {
 	Status string          `json:"status"`
 	Data   json.RawMessage `json:"data"`
@@ -43,6 +41,7 @@ type pageSiteSummary struct {
 	ID               int64  `json:"id"`
 	Name             string `json:"name"`
 	PageName         string `json:"page_name"`
+	PageURL          string `json:"page_url"`
 	CurrentVersionID *int64 `json:"current_version_id,omitempty"`
 }
 
@@ -373,18 +372,3 @@ func randomSiteName() (string, error) {
 	return "site-" + hex.EncodeToString(buf), nil
 }
 
-func pageURLFromPageName(pageName string) string {
-	trimmed := strings.ToLower(strings.TrimSpace(pageName))
-	return "https://" + trimmed + resolvePageHostSuffix()
-}
-
-func resolvePageHostSuffix() string {
-	suffix := strings.ToLower(strings.TrimSpace(os.Getenv("ANYCAP_PAGE_HOST_SUFFIX")))
-	if suffix == "" {
-		suffix = defaultPageHostSuffix
-	}
-	if !strings.HasPrefix(suffix, ".") {
-		suffix = "." + suffix
-	}
-	return suffix
-}

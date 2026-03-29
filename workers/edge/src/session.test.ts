@@ -34,7 +34,7 @@ describe("session", () => {
 		const setCookie = await createSessionCookie(env, "ac_page_auth", "page", "site.anycap.cloud", 120);
 		const pair = extractCookiePair(setCookie);
 		const tampered = pair.slice(0, -1) + (pair.endsWith("a") ? "b" : "a");
-		const req = new Request("https://site.page.anycap.cloud", {
+		const req = new Request("https://page-site.anycap.cloud", {
 			headers: {
 				cookie: tampered,
 			},
@@ -61,14 +61,14 @@ describe("session", () => {
 			EDGE_SESSION_SECRET: "",
 			ANYCAP_PASSWORD_PEPPER: "pepper_only_secret",
 		});
-		const setCookie = await createSessionCookie(env, "ac_page_auth", "page", "site.page.anycap.cloud", 30);
-		const req = new Request("https://site.page.anycap.cloud", {
+		const setCookie = await createSessionCookie(env, "ac_page_auth", "page", "page-site.anycap.cloud", 30);
+		const req = new Request("https://page-site.anycap.cloud", {
 			headers: {
 				cookie: extractCookiePair(setCookie),
 			},
 		});
 
-		await expect(isSessionValid(env, req, "ac_page_auth", "page", "site.page.anycap.cloud")).resolves.toBe(true);
+		await expect(isSessionValid(env, req, "ac_page_auth", "page", "page-site.anycap.cloud")).resolves.toBe(true);
 	});
 
 	it("throws when no session secret is available", async () => {
@@ -76,7 +76,7 @@ describe("session", () => {
 			EDGE_SESSION_SECRET: "",
 			ANYCAP_PASSWORD_PEPPER: "",
 		});
-		await expect(createSessionCookie(env, "ac_page_auth", "page", "site.page.anycap.cloud", 60)).rejects.toThrow(
+		await expect(createSessionCookie(env, "ac_page_auth", "page", "page-site.anycap.cloud", 60)).rejects.toThrow(
 			"missing EDGE_SESSION_SECRET",
 		);
 	});

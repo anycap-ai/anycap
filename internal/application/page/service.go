@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	minPageNameLength     = 12
-	pageNameRandomLength  = 8
-	defaultPageHostSuffix = ".page.anycap.cloud"
+	minPageNameLength    = 12
+	pageNameRandomLength = 8
 )
 
 var slugRegex = regexp.MustCompile(`[^a-z0-9-]+`)
@@ -34,7 +33,7 @@ type Service struct {
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
 	passwordPepper    string
-	pageHostSuffix    string
+	pageHostFormat    string
 	now               func() time.Time
 }
 
@@ -46,7 +45,7 @@ func NewService(spaceService port.SpaceService, siteRepo port.PageSiteRepository
 		siteRepo:       siteRepo,
 		slugRepo:       slugRepo,
 		passwordPepper: passwordPepper,
-		pageHostSuffix: defaultPageHostSuffix,
+		pageHostFormat: model.DefaultPageHostFormat,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
@@ -76,9 +75,9 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 	}
 }
 
-func WithPageHostSuffix(hostSuffix string) ServiceOption {
+func WithPageHostFormat(hostFormat string) ServiceOption {
 	return func(s *Service) {
-		s.pageHostSuffix = normalizePageHostSuffix(hostSuffix)
+		s.pageHostFormat = model.NormalizePageHostFormat(hostFormat)
 	}
 }
 
@@ -133,15 +132,17 @@ func (s *Service) waitKVSyncJobs(ctx context.Context, jobIDs ...int64) error {
 	return s.kvSyncWaiter.Wait(ctx, filtered)
 }
 
-func normalizePageHostSuffix(hostSuffix string) string {
-	normalized := strings.ToLower(strings.TrimSpace(hostSuffix))
-	if normalized == "" {
-		normalized = defaultPageHostSuffix
+
+func (s *Service) fillPageURL(site *model.PageSite) {
+	if site != nil {
+		site.PageURL = "https://" + model.FormatPageHostname(s.pageHostFormat, site.PageName)
 	}
-	if !strings.HasPrefix(normalized, ".") {
-		normalized = "." + normalized
+}
+
+func (s *Service) fillPageURLs(sites []model.PageSite) {
+	for i := range sites {
+		s.fillPageURL(&sites[i])
 	}
-	return normalized
 }
 
 func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error) {
@@ -182,6 +183,7 @@ func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.P
 			return nil, err
 		}
 
+		s.fillPageURL(site)
 		return site, nil
 	}
 
@@ -198,7 +200,12 @@ func (s *Service) ListSites(ctx context.Context, userID string) ([]model.PageSit
 		return nil, err
 	}
 
-	return s.siteRepo.ListBySpace(ctx, space.ID)
+	sites, err := s.siteRepo.ListBySpace(ctx, space.ID)
+	if err != nil {
+		return nil, err
+	}
+	s.fillPageURLs(sites)
+	return sites, nil
 }
 
 func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error) {
@@ -222,6 +229,7 @@ func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*mo
 		return nil, fmt.Errorf("page site not found")
 	}
 
+	s.fillPageURL(site)
 	return site, nil
 }
 
@@ -300,6 +308,7 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 		return nil, err
 	}
 
+	s.fillPageURL(updatedSite)
 	return updatedSite, nil
 }
 

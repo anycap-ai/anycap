@@ -100,7 +100,7 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 	}
 
 	jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostDelete, updatedSite.ID, updatedSite.EdgeVersion, model.KVSyncPageHostDeletePayload{
-		Hostname: strings.ToLower(strings.TrimSpace(updatedSite.PageName)) + normalizePageHostSuffix(s.pageHostSuffix),
+		Hostname: model.FormatPageHostname(s.pageHostFormat, updatedSite.PageName),
 	})
 	if err != nil {
 		return nil, err
@@ -109,6 +109,7 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 		return nil, err
 	}
 
+	s.fillPageURL(updatedSite)
 	return updatedSite, nil
 }
 

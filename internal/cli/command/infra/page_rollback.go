@@ -72,8 +72,8 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				"new_version":    newVersion.VersionNo,
 				"published":      published,
 			}
-			if site.PageName != "" {
-				payload["page_url"] = pageURLFromPageName(site.PageName)
+			if site.PageURL != "" {
+				payload["page_url"] = site.PageURL
 			}
 			return writeFlatSuccess(stdout, requestID, payload)
 		},

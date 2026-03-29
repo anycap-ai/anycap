@@ -102,7 +102,7 @@ func TestPageProjector_HostSync(t *testing.T) {
 	}}
 	kv := &fakeKVClient{}
 
-	projector := NewPageProjector(kv, siteRepo, versionRepo, ".page.anycap.cloud")
+	projector := NewPageProjector(kv, siteRepo, versionRepo, "page-%s.anycap.cloud")
 	result, err := projector.Project(context.Background(), model.KVSyncJob{
 		JobType:     model.KVSyncJobTypePageHostSync,
 		TargetID:    "1",
@@ -115,7 +115,7 @@ func TestPageProjector_HostSync(t *testing.T) {
 		t.Fatalf("expected done result, got %v", result)
 	}
 
-	key := "page:host:docs-center.page.anycap.cloud"
+	key := "page:host:page-docs-center.anycap.cloud"
 	raw, ok := kv.values[key]
 	if !ok {
 		t.Fatalf("expected key %q", key)
@@ -139,11 +139,11 @@ func TestPageProjector_HostDelete(t *testing.T) {
 	versionRepo := &fakeProjectorPageVersionRepo{}
 	kv := &fakeKVClient{
 		values: map[string][]byte{
-			"page:host:docs-center.page.anycap.cloud": []byte(`{"ok":true}`),
+			"page:host:page-docs-center.anycap.cloud": []byte(`{"ok":true}`),
 		},
 	}
 
-	projector := NewPageProjector(kv, siteRepo, versionRepo, ".page.anycap.cloud")
+	projector := NewPageProjector(kv, siteRepo, versionRepo, "page-%s.anycap.cloud")
 	result, err := projector.Project(context.Background(), model.KVSyncJob{
 		JobType:     model.KVSyncJobTypePageHostDelete,
 		TargetID:    "1",
@@ -155,7 +155,7 @@ func TestPageProjector_HostDelete(t *testing.T) {
 	if result != ProjectResultDone {
 		t.Fatalf("expected done result, got %v", result)
 	}
-	if _, ok := kv.values["page:host:docs-center.page.anycap.cloud"]; ok {
+	if _, ok := kv.values["page:host:page-docs-center.anycap.cloud"]; ok {
 		t.Fatal("expected page host key to be deleted")
 	}
 }

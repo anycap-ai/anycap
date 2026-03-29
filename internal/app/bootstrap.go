@@ -239,7 +239,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
 		kvClient := buildKVSyncClient(cfg)
 		driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
-		pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, cfg.PageHostSuffix)
+		pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, cfg.PageHostFormat)
 		kvSyncWorker := kvsync.NewWorker(kvSyncJobRepo, map[string]kvsync.Projector{
 			model.KVSyncJobTypeDriveFileMetaSync:    driveProjector,
 			model.KVSyncJobTypeDriveDirChildrenSync: driveProjector,
@@ -302,7 +302,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				pageSlugRepo,
 				cfg.PasswordPepper,
 				pageapp.WithVersioning(pageVersionRepo, uploadSessionRepo, storageObjectRepo, cloudObjectStore),
-				pageapp.WithPageHostSuffix(cfg.PageHostSuffix),
+				pageapp.WithPageHostFormat(cfg.PageHostFormat),
 				pageKVSyncOption,
 			),
 			catalogService:      catalogService,
