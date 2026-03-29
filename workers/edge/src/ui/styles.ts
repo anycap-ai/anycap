@@ -1,5 +1,5 @@
 export const BASE_STYLES = `*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--navy:#1c1f17;--olive:#6b7d3a;--sage:#8fa34e;--surface:#f4f5f0;--surface-raised:#f9faf5;--text-primary:#1c1f17;--text-body:#3a3e32;--text-secondary:#4d5145;--text-label:#707468;--text-neutral:#9a9e90;--border-default:rgba(212,219,184,0.7);--border-divider:#d4dbb8;--font-mono:'Space Mono',monospace}
+:root{--navy:#1c1f17;--olive:#6b7d3a;--sage:#8fa34e;--surface:#f4f5f0;--surface-raised:#f9faf5;--text-primary:#1c1f17;--text-body:#3a3e32;--text-secondary:#4d5145;--text-label:#707468;--text-neutral:#9a9e90;--border-default:rgba(212,219,184,0.7);--border-divider:#d4dbb8;--font-mono:'Inter',sans-serif;--font-logo:'Space Mono',monospace}
 html,body{height:100%;background:var(--surface);color:var(--text-primary);font-family:sans-serif}
 a{color:inherit;text-decoration:none}
 .wrapper{display:flex;flex-direction:column;min-height:100vh}
@@ -7,7 +7,7 @@ a{color:inherit;text-decoration:none}
 @media(min-width:768px){.topbar{padding:12px 40px}}
 .badge{display:flex;align-items:center;gap:8px;transition:opacity 200ms ease;flex-shrink:0}
 .badge:hover{opacity:0.75}
-.badge-wm{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:-0.5px;line-height:1}
+.badge-wm{font-family:var(--font-logo);font-weight:700;font-size:15px;letter-spacing:-0.5px;line-height:1}
 .badge-wm .a{color:var(--navy)}.badge-wm .c{color:var(--olive)}
 .sep{width:1px;height:20px;background:var(--border-divider);flex-shrink:0}
 .file-info{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1}

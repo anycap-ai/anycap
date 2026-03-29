@@ -76,7 +76,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f5f0]" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-[#f4f5f0]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
       <header className="lg:hidden px-6 py-4 border-b border-[#d4dbb8] bg-[#f9faf5] flex items-center">
         <Link href="/for-human">

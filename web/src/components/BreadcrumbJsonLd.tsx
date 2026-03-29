@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/site";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export interface BreadcrumbItem {
   name: string;

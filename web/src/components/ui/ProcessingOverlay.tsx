@@ -1,6 +1,6 @@
 "use client";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export function ProcessingOverlay({ message = "Processing" }: { message?: string }) {
   return (

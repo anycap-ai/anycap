@@ -11,7 +11,7 @@ export function pageHead(title: string, extraStyles = "", extraHead = ""): strin
 <title>${escapeHTML(title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />${extraHead}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />${extraHead}
 <style>${BASE_STYLES}${extraStyles}</style>
 </head>`;
 }

@@ -7,7 +7,7 @@ type TipToastProps = {
   durationMs?: number;
 };
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export function TipToast({ message, durationMs = 4200 }: TipToastProps) {
   const [open, setOpen] = useState(Boolean(message));

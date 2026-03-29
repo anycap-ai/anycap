@@ -16,14 +16,14 @@ export const runtime = "edge";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-mono",
   display: "swap",
 });
 
-const spaceMono = Space_Mono({
+const logoFont = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
-  variable: "--font-mono",
+  variable: "--font-logo",
   display: "swap",
 });
 
@@ -121,7 +121,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${GeistPixelSquare.variable} ${spaceMono.variable} ${inter.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
+        className={`${GeistPixelSquare.variable} ${inter.variable} ${logoFont.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
         style={{ fontFamily: "sans-serif" }}
       >
         <LazyGlobalTipToast />

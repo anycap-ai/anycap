@@ -21,7 +21,7 @@ export function AnycapLogo({ size = 28, variant = "primary", className }: Anycap
       <AnycapWordmark
         variant={variant}
         style={{
-          fontFamily: "var(--font-mono), monospace",
+          fontFamily: "var(--font-logo), monospace",
           fontSize,
           fontWeight: 700,
           lineHeight: 1,
