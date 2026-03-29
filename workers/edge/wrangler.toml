@@ -12,16 +12,16 @@ account_id = "3ad0d55d5adf982237e3d8ea0f2d9842"
 name = "anycap-edge-dev"
 
 [[env.dev.routes]]
-pattern = "cdndev.anycap.cloud/*"
-zone_name = "anycap.cloud"
+pattern = "cdn.anycap.dev/*"
+zone_name = "anycap.dev"
 
 [[env.dev.routes]]
-pattern = "drivedev.anycap.cloud/*"
-zone_name = "anycap.cloud"
+pattern = "drive.anycap.dev/*"
+zone_name = "anycap.dev"
 
 [[env.dev.routes]]
-pattern = "pagedev-*.anycap.cloud/*"
-zone_name = "anycap.cloud"
+pattern = "*.anycap.dev/*"
+zone_name = "anycap.dev"
 
 [[env.dev.kv_namespaces]]
 binding = "EDGE_KV"
@@ -32,9 +32,9 @@ binding = "ANYCAP_CLOUD_R2"
 bucket_name = "anycap-cloud-dev"
 
 [env.dev.vars]
-CDN_HOST = "cdndev.anycap.cloud"
-DRIVE_HOST = "drivedev.anycap.cloud"
-PAGE_HOST_PREFIX = "pagedev-"
+CDN_HOST = "cdn.anycap.dev"
+DRIVE_HOST = "drive.anycap.dev"
+PAGE_HOST_PREFIX = "page-"
 DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
 PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
 DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
@@ -57,7 +57,7 @@ pattern = "drive.anycap.cloud/*"
 zone_name = "anycap.cloud"
 
 [[env.prod.routes]]
-pattern = "page-*.anycap.cloud/*"
+pattern = "*.anycap.cloud/*"
 zone_name = "anycap.cloud"
 
 [[env.prod.kv_namespaces]]
