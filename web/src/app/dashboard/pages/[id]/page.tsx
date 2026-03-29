@@ -13,12 +13,10 @@ import {
 } from "@/lib/api/hooks";
 import type { PageAccessMode } from "@/lib/api/types";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 export default function PageDetailPage() {
   const params = useParams<{ id: string }>();
-  const pageID = Number(params.id);
-  const validPageID = Number.isInteger(pageID) && pageID > 0 ? pageID : undefined;
+  const validPageID = params.id?.trim() ? params.id : undefined;
   const { data, isLoading, mutate } = usePageSite(validPageID);
   const {
     data: versionsData,
@@ -31,7 +29,7 @@ export default function PageDetailPage() {
   const [spaFallback, setSpaFallback] = useState(false);
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
-  const [publishingVersionID, setPublishingVersionID] = useState<number | null>(null);
+  const [publishingVersionID, setPublishingVersionID] = useState<string | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,7 +83,7 @@ export default function PageDetailPage() {
     }
   }
 
-  async function onPublish(versionID: number) {
+  async function onPublish(versionID: string) {
     if (!data) return;
     setPublishingVersionID(versionID);
     setError("");
@@ -119,38 +117,38 @@ export default function PageDetailPage() {
 
   return (
     <div>
-      <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-6" style={mono}>
+      <p className="text-[16px] font-medium text-[#1c1f17] mb-6">
         Page Detail
       </p>
 
       {isLoading ? (
-        <p className="text-[13px] text-[#707468]" style={mono}>Loading...</p>
+        <p className="text-[13px] text-[#707468]">Loading...</p>
       ) : !data ? (
-        <p className="text-[13px] text-[#a83f32]" style={mono}>Page not found</p>
+        <p className="text-[13px] text-[#a83f32]">Page not found</p>
       ) : (
         <div className="space-y-6">
           <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
-            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4" style={mono}>
+            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4">
               Basic Info
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
               <div>
-                <p className="text-[#707468] mb-1" style={mono}>Name</p>
+                <p className="text-[#707468] mb-1">Name</p>
                 <p className="text-[#1c1f17]">{data.name}</p>
               </div>
               <div>
-                <p className="text-[#707468] mb-1" style={mono}>URL</p>
-                <a href={`https://${data.page_name}.page.anycap.cloud`} className="text-[#1c1f17] hover:text-[#6b7d3a]" style={mono} target="_blank" rel="noreferrer">
+                <p className="text-[#707468] mb-1">URL</p>
+                <a href={`https://${data.page_name}.page.anycap.cloud`} className="text-[#1c1f17] hover:text-[#6b7d3a]" target="_blank" rel="noreferrer">
                   https://{data.page_name}.page.anycap.cloud
                 </a>
               </div>
               <div>
-                <p className="text-[#707468] mb-1" style={mono}>Access mode</p>
-                <p className="text-[#1c1f17]" style={mono}>{data.access_mode}</p>
+                <p className="text-[#707468] mb-1">Access mode</p>
+                <p className="text-[#1c1f17]">{data.access_mode}</p>
               </div>
               <div>
-                <p className="text-[#707468] mb-1" style={mono}>Status</p>
-                <p className={data.current_version_id ? "text-[#6b7d3a]" : "text-[#707468]"} style={mono}>
+                <p className="text-[#707468] mb-1">Status</p>
+                <p className={data.current_version_id ? "text-[#6b7d3a]" : "text-[#707468]"}>
                   {data.current_version_id
                     ? `live (v${currentVersion?.version_no ?? "?"})`
                     : "unpublished"}
@@ -160,13 +158,13 @@ export default function PageDetailPage() {
           </section>
 
           <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
-            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4" style={mono}>
+            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4">
               Settings
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="block">
-                <span className="block text-[12px] text-[#707468] mb-1.5" style={mono}>Name</span>
+                <span className="block text-[12px] text-[#707468] mb-1.5">Name</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -175,7 +173,7 @@ export default function PageDetailPage() {
               </label>
 
               <label className="block">
-                <span className="block text-[12px] text-[#707468] mb-1.5" style={mono}>Access Mode</span>
+                <span className="block text-[12px] text-[#707468] mb-1.5">Access Mode</span>
                 <select
                   value={accessMode}
                   onChange={(e) => setAccessMode(e.target.value as PageAccessMode)}
@@ -196,7 +194,7 @@ export default function PageDetailPage() {
                 onChange={(e) => setSpaFallback(e.target.checked)}
                 className="accent-[#6b7d3a]"
               />
-              <label htmlFor="spa_fallback" className="text-[12px] text-[#4d5145]" style={mono}>
+              <label htmlFor="spa_fallback" className="text-[12px] text-[#4d5145]">
                 Enable SPA fallback
               </label>
             </div>
@@ -204,7 +202,7 @@ export default function PageDetailPage() {
             {accessMode === "password" && (
               <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                 <label className="block">
-                  <span className="block text-[12px] text-[#707468] mb-1.5" style={mono}>Password (leave empty to keep current)</span>
+                  <span className="block text-[12px] text-[#707468] mb-1.5">Password (leave empty to keep current)</span>
                   <input
                     type="password"
                     value={password}
@@ -214,7 +212,7 @@ export default function PageDetailPage() {
                 </label>
                 <button
                   className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#707468] hover:text-[#6b7d3a] rounded-lg"
-                  style={mono}
+                 
                   onClick={onClearPassword}
                   disabled={saving}
                 >
@@ -226,7 +224,7 @@ export default function PageDetailPage() {
             <div className="mt-5">
               <button
                 className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-                style={mono}
+               
                 onClick={onSave}
                 disabled={saving}
               >
@@ -237,12 +235,12 @@ export default function PageDetailPage() {
 
           <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <p className="text-[12px] tracking-[0.3px] text-[#5f6358]" style={mono}>
+              <p className="text-[12px] tracking-[0.3px] text-[#5f6358]">
                 Versions
               </p>
               <button
                 className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-                style={mono}
+               
                 onClick={onUnpublish}
                 disabled={unpublishing || data.current_version_id == null}
               >
@@ -254,16 +252,16 @@ export default function PageDetailPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[#d4dbb8]">
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal" style={mono}>
+                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
                       Version
                     </th>
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal" style={mono}>
+                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
                       Status
                     </th>
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal" style={mono}>
+                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
                       Created
                     </th>
-                    <th className="text-right py-3 px-3 text-[12px] text-[#626658] font-normal" style={mono}>
+                    <th className="text-right py-3 px-3 text-[12px] text-[#626658] font-normal">
                       Action
                     </th>
                   </tr>
@@ -271,7 +269,7 @@ export default function PageDetailPage() {
                 <tbody>
                   {versionsLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]" style={mono}>
+                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]">
                         Loading versions...
                       </td>
                     </tr>
@@ -281,21 +279,21 @@ export default function PageDetailPage() {
                       const publishable = version.status === "verified";
                       return (
                         <tr key={version.id} className="border-b border-[#d4dbb8]/60">
-                          <td className="py-3 px-3 text-[13px] text-[#1c1f17]" style={mono}>
+                          <td className="py-3 px-3 text-[13px] text-[#1c1f17]">
                             v{version.version_no}
                           </td>
-                          <td className="py-3 px-3 text-[13px]" style={mono}>
+                          <td className="py-3 px-3 text-[13px]">
                             <span className={isLive ? "text-[#6b7d3a]" : "text-[#4d5145]"}>
                               {isLive ? "published" : version.status}
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-[13px] text-[#4d5145]" style={mono}>
+                          <td className="py-3 px-3 text-[13px] text-[#4d5145]">
                             {new Date(version.created_at).toLocaleString()}
                           </td>
                           <td className="py-3 px-3 text-right">
                             <button
                               className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-                              style={mono}
+                             
                               onClick={() => onPublish(version.id)}
                               disabled={!publishable || publishingVersionID != null}
                             >
@@ -307,7 +305,7 @@ export default function PageDetailPage() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]" style={mono}>
+                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]">
                         No versions yet
                       </td>
                     </tr>
@@ -318,7 +316,7 @@ export default function PageDetailPage() {
           </section>
 
           {error && (
-            <p className="text-[12px] text-[#a83f32]" style={mono}>
+            <p className="text-[12px] text-[#a83f32]">
               {error}
             </p>
           )}

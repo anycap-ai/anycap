@@ -6,7 +6,6 @@ import { useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 function timeAgo(ts: string): string {
   const d = new Date(ts);
@@ -34,13 +33,13 @@ const tdClass = "py-3 px-3.5 text-[13px]";
 function LogRow({ item }: { item: TimelineItem }) {
   return (
     <tr className="border-b border-[#d4dbb8]/60">
-      <td className={`${tdClass} text-[#4d5145]`} style={mono}>
+      <td className={`${tdClass} text-[#4d5145]`}>
         {timeAgo(item.occurred_at)}
       </td>
       <td className={`${tdClass} text-[#1c1f17]`}>
         {item.capability || "—"}
       </td>
-      <td className={`${tdClass} text-[#4d5145]`} style={mono}>
+      <td className={`${tdClass} text-[#4d5145]`}>
         {item.model || "—"}
       </td>
       <td className={tdClass}>
@@ -50,19 +49,19 @@ function LogRow({ item }: { item: TimelineItem }) {
               ? "text-[#6b7d3a]"
               : "text-[#a83f32]"
           }
-          style={mono}
+         
         >
           {item.status || "—"}
         </span>
       </td>
-      <td className={`${tdClass} text-right`} style={mono}>
+      <td className={`${tdClass} text-right`}>
         <span className="text-[#4d5145]">
           {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
         </span>
       </td>
       <td
         className={`${tdClass} text-[#707468] text-right hidden md:table-cell`}
-        style={mono}
+       
       >
         {item.request_id
           ? item.request_id.slice(0, 8)
@@ -79,8 +78,8 @@ export default function LogsPage() {
   return (
     <div>
       <p
-        className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-6"
-        style={mono}
+        className="text-[16px] font-medium text-[#1c1f17] mb-6"
+       
       >
         Logs
       </p>
@@ -90,14 +89,14 @@ export default function LogsPage() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4dbb8]">
-              <th className={thClass} style={mono}>Time</th>
-              <th className={thClass} style={mono}>Capability</th>
-              <th className={thClass} style={mono}>Model</th>
-              <th className={thClass} style={mono}>Status</th>
-              <th className={`${thClass} text-right`} style={mono}>Cost</th>
+              <th className={thClass}>Time</th>
+              <th className={thClass}>Capability</th>
+              <th className={thClass}>Model</th>
+              <th className={thClass}>Status</th>
+              <th className={`${thClass} text-right`}>Cost</th>
               <th
                 className={`${thClass} text-right hidden md:table-cell`}
-                style={mono}
+               
               >
                 ID
               </th>
@@ -124,7 +123,7 @@ export default function LogsPage() {
             ) : (
               <tr>
                 <td colSpan={6} className="py-10 text-center">
-                  <p className="text-[13px] text-[#707468]" style={mono}>
+                  <p className="text-[13px] text-[#707468]">
                     No usage logs yet
                   </p>
                 </td>

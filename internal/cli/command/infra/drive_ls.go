@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -14,7 +13,7 @@ import (
 
 func newDriveLsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		parentID   int64
+		parentID   string
 		parentPath string
 	)
 
@@ -28,9 +27,13 @@ func newDriveLsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 			}
 
 			client := clientFactory()
-			var resolvedParentID *int64
+			var resolvedParentID *string
 			if parentIDSet {
-				resolvedParentID = &parentID
+				parsedParentID, parseErr := parseResourceID(parentID, "parent")
+				if parseErr != nil {
+					return parseErr
+				}
+				resolvedParentID = &parsedParentID
 			} else if parentPath != "" {
 				id, err := resolveDriveFolderPath(cmd.Context(), client, parentPath)
 				if err != nil {
@@ -41,7 +44,7 @@ func newDriveLsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 
 			path := "/v1/drive/nodes"
 			if resolvedParentID != nil {
-				path += "?parent_id=" + url.QueryEscape(strconv.FormatInt(*resolvedParentID, 10))
+				path += "?parent_id=" + url.QueryEscape(*resolvedParentID)
 			}
 
 			resp, err := client.Get(cmd.Context(), path)
@@ -52,7 +55,7 @@ func newDriveLsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		},
 	}
 
-	cmd.Flags().Int64Var(&parentID, "parent", 0, "Parent folder ID")
+	cmd.Flags().StringVar(&parentID, "parent", "", "Parent folder ID")
 	cmd.Flags().StringVar(&parentPath, "parent-path", "", "Parent folder path (for example: /docs)")
 
 	return cmd

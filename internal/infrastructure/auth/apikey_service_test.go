@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -53,6 +54,9 @@ func TestRepositoryAPIKeyService_CreateAPIKey(t *testing.T) {
 	}
 	if repo.inserted[0].UserID != "user-123" {
 		t.Fatalf("expected inserted user user-123, got %q", repo.inserted[0].UserID)
+	}
+	if !strings.HasPrefix(repo.inserted[0].ID, "akid_") {
+		t.Fatalf("expected api key id prefix akid_, got %q", repo.inserted[0].ID)
 	}
 	if repo.inserted[0].ExpiresAt != nil {
 		t.Fatalf("expected default api key to have no expiry, got %v", repo.inserted[0].ExpiresAt)

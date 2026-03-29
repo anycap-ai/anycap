@@ -12,7 +12,7 @@ import (
 
 func newDriveMkdirCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		parentID   int64
+		parentID   string
 		parentPath string
 		folderName string
 	)
@@ -30,9 +30,13 @@ func newDriveMkdirCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 			}
 
 			client := clientFactory()
-			var resolvedParentID *int64
+			var resolvedParentID *string
 			if parentIDSet {
-				resolvedParentID = &parentID
+				parsedParentID, parseErr := parseResourceID(parentID, "parent")
+				if parseErr != nil {
+					return parseErr
+				}
+				resolvedParentID = &parsedParentID
 			} else if parentPath != "" {
 				id, err := resolveDriveFolderPath(cmd.Context(), client, parentPath)
 				if err != nil {
@@ -53,7 +57,7 @@ func newDriveMkdirCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 	}
 
 	cmd.Flags().StringVar(&folderName, "name", "", "Folder name")
-	cmd.Flags().Int64Var(&parentID, "parent", 0, "Parent folder ID")
+	cmd.Flags().StringVar(&parentID, "parent", "", "Parent folder ID")
 	cmd.Flags().StringVar(&parentPath, "parent-path", "", "Parent folder path (for example: /docs)")
 	_ = cmd.MarkFlagRequired("name")
 

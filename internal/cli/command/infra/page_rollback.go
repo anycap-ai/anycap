@@ -3,7 +3,6 @@ package infra
 import (
 	"fmt"
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 
@@ -18,7 +17,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 		Short: "Clone a historical version into a new version (auto publish if site is currently published)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parsePositiveInt64(args[0], "page-id")
+			pageID, err := parseResourceID(args[0], "page-id")
 			if err != nil {
 				return err
 			}
@@ -27,7 +26,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 			}
 
 			client := clientFactory()
-			siteResp, err := client.Get(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10))
+			siteResp, err := client.Get(cmd.Context(), "/v1/pages/"+pageID)
 			if err != nil {
 				return err
 			}
@@ -45,7 +44,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				return err
 			}
 
-			rollbackResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10)+"/versions/"+strconv.FormatInt(sourceVersionID, 10)+"/rollback-clone", map[string]any{})
+			rollbackResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+sourceVersionID+"/rollback-clone", map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -57,7 +56,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 			requestID := rollbackResp.RequestID
 			published := false
 			if site.CurrentVersionID != nil {
-				publishResp, publishErr := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10)+"/versions/"+strconv.FormatInt(newVersion.ID, 10)+"/publish", map[string]any{})
+				publishResp, publishErr := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+newVersion.ID+"/publish", map[string]any{})
 				if publishErr != nil {
 					return publishErr
 				}

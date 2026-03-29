@@ -7,7 +7,6 @@ import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { useUser } from "@/lib/api/hooks";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 type NavItem = { label: string; href: string; disabled?: boolean };
 
@@ -56,7 +55,7 @@ function UserAvatar({
   return (
     <div
       className="bg-[#6b7d3a] flex items-center justify-center shrink-0 rounded-full"
-      style={{ width: size, height: size, ...mono }}
+      style={{ width: size, height: size }}
     >
       <span className="text-[11px] font-bold text-[#f4f5f0] leading-none">
         {initial}
@@ -77,7 +76,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f5f0]">
+    <div className="min-h-screen bg-[#f4f5f0]" style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
       <header className="lg:hidden px-6 py-4 border-b border-[#d4dbb8] bg-[#f9faf5] flex items-center">
         <Link href="/for-human">
@@ -96,7 +95,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <span
                 key={item.href}
                 className="text-[12px] tracking-[0.3px] text-[#9a9e90] opacity-45 whitespace-nowrap cursor-not-allowed"
-                style={mono}
+               
               >
                 {item.label}
               </span>
@@ -109,7 +108,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     ? "text-[#1c1f17]"
                     : "text-[#707468] hover:text-[#6b7d3a]"
                 }`}
-                style={mono}
+               
               >
                 {item.label}
               </Link>
@@ -139,8 +138,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   item.disabled ? (
                     <span
                       key={item.href}
-                      className="flex items-center justify-between px-3 py-2.5 text-[12px] tracking-[0.3px] text-[#9a9e90] opacity-45 cursor-not-allowed border-l-[3px] border-transparent"
-                      style={mono}
+                      className="flex items-center justify-between px-3 py-2.5 text-[13px] text-[#9a9e90] opacity-45 cursor-not-allowed border-l-[3px] border-transparent"
+                     
                     >
                       {item.label}
                       <span className="text-[10px] tracking-[0.2px] normal-case">
@@ -151,12 +150,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`block px-3 py-2.5 text-[12px] tracking-[0.3px] transition-colors border-l-[3px] ${
+                      className={`block px-3 py-2.5 rounded-r-md text-[13px] transition-colors border-l-[3px] ${
                         isActive(item.href)
-                          ? "text-[#1c1f17] border-[#6b7d3a]"
-                          : "text-[#707468] hover:text-[#6b7d3a] border-transparent"
+                          ? "text-[#1c1f17] font-medium border-[#6b7d3a]"
+                          : "text-[#707468] hover:text-[#6b7d3a] hover:bg-[#edeee7] border-transparent"
                       }`}
-                      style={mono}
+                     
                     >
                       {item.label}
                     </Link>
@@ -172,14 +171,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <UserAvatar user={user} size={28} />
               <span
                 className="text-[12px] text-[#5f6358] tracking-[0.2px] truncate"
-                style={mono}
+               
               >
                 {displayName}
               </span>
             </div>
             <LogoutButton
               className="text-[12px] tracking-[0.3px] text-[#707468] hover:text-[#6b7d3a] transition-colors"
-              style={mono}
+             
             />
           </div>
         </aside>

@@ -3,7 +3,6 @@ package infra
 import (
 	"fmt"
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -26,7 +25,7 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		Short: "Update page site settings",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parsePositiveInt64(args[0], "page-id")
+			pageID, err := parseResourceID(args[0], "page-id")
 			if err != nil {
 				return err
 			}
@@ -64,7 +63,7 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				return fmt.Errorf("no update fields provided")
 			}
 
-			resp, err := clientFactory().PatchJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10), payload)
+			resp, err := clientFactory().PatchJSON(cmd.Context(), "/v1/pages/"+pageID, payload)
 			if err != nil {
 				return err
 			}

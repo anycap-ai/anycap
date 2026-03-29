@@ -9,6 +9,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 type CapsUploadRepo struct {
@@ -25,10 +26,21 @@ func (r *CapsUploadRepo) Create(ctx context.Context, input model.CapsUpload) (*m
 	}
 
 	row := r.db.QueryRowContext(ctx, `
-		INSERT INTO caps_uploads (space_id, object_key, filename, mime, size, sha256, status, expires_at, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
-	`, input.SpaceID, input.ObjectKey, strings.TrimSpace(input.Filename), strings.TrimSpace(input.MIME), input.Size, input.SHA256, string(input.Status), input.ExpiresAt, strings.TrimSpace(input.CreatedBy))
+		INSERT INTO caps_uploads (external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id, external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
+	`,
+		externalid.Generate(externalid.PrefixCapsUpload),
+		input.SpaceID,
+		input.ObjectKey,
+		strings.TrimSpace(input.Filename),
+		strings.TrimSpace(input.MIME),
+		input.Size,
+		input.SHA256,
+		string(input.Status),
+		input.ExpiresAt,
+		strings.TrimSpace(input.CreatedBy),
+	)
 
 	item, err := scanCapsUpload(row)
 	if err != nil {
@@ -43,7 +55,7 @@ func (r *CapsUploadRepo) GetByID(ctx context.Context, id int64) (*model.CapsUplo
 	}
 
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
+		SELECT id, external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
 		FROM caps_uploads
 		WHERE id = $1
 	`, id)
@@ -54,6 +66,27 @@ func (r *CapsUploadRepo) GetByID(ctx context.Context, id int64) (*model.CapsUplo
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get caps upload: %w", err)
+	}
+	return item, nil
+}
+
+func (r *CapsUploadRepo) GetByExternalID(ctx context.Context, externalID string) (*model.CapsUpload, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("caps upload repo db is not configured")
+	}
+
+	row := r.db.QueryRowContext(ctx, `
+		SELECT id, external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
+		FROM caps_uploads
+		WHERE external_id = $1
+	`, strings.TrimSpace(externalID))
+
+	item, err := scanCapsUpload(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get caps upload by external id: %w", err)
 	}
 	return item, nil
 }
@@ -69,7 +102,7 @@ func (r *CapsUploadRepo) FindReusable(ctx context.Context, spaceID int64, sha256
 	}
 
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
+		SELECT id, external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
 		FROM caps_uploads
 		WHERE space_id = $1
 		  AND sha256 = $2
@@ -102,7 +135,7 @@ func (r *CapsUploadRepo) MarkUsed(ctx context.Context, id int64, usedAt time.Tim
 			last_used_at = $3,
 			use_count = use_count + 1
 		WHERE id = $1
-		RETURNING id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
+		RETURNING id, external_id, space_id, object_key, filename, mime, size, sha256, status, expires_at, last_used_at, use_count, created_by, created_at
 	`, id, string(model.CapsUploadStatusUploaded), usedAt.UTC())
 
 	item, err := scanCapsUpload(row)
@@ -125,6 +158,7 @@ func scanCapsUpload(row rowScanner) (*model.CapsUpload, error) {
 
 	if err := row.Scan(
 		&item.ID,
+		&item.ExternalID,
 		&item.SpaceID,
 		&item.ObjectKey,
 		&item.Filename,

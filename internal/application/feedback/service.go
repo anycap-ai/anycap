@@ -8,6 +8,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 // Service orchestrates feedback submission: persist then notify.
@@ -60,8 +61,6 @@ func (s *Service) Submit(ctx context.Context, fb model.Feedback) (string, error)
 	return fb.ID, nil
 }
 
-// generateID produces a feedback ID like "fb_20260325_<unix_nano_hex>".
 func generateID() string {
-	now := time.Now().UTC()
-	return fmt.Sprintf("fb_%s_%x", now.Format("20060102"), now.UnixNano())
+	return externalid.Generate(externalid.PrefixFeedback)
 }

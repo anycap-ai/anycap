@@ -3,9 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"strconv"
-	"strings"
 
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -17,10 +14,25 @@ import (
 
 type ModelRouteHandler struct {
 	service *modelrouteapp.Service
+	mapper  ExternalIDMapper
 }
 
-func NewModelRouteHandler(service *modelrouteapp.Service) *ModelRouteHandler {
-	return &ModelRouteHandler{service: service}
+type ModelRouteHandlerOption func(*ModelRouteHandler)
+
+func WithModelRouteExternalIDMapper(mapper ExternalIDMapper) ModelRouteHandlerOption {
+	return func(h *ModelRouteHandler) {
+		h.mapper = mapper
+	}
+}
+
+func NewModelRouteHandler(service *modelrouteapp.Service, options ...ModelRouteHandlerOption) *ModelRouteHandler {
+	handler := &ModelRouteHandler{service: service}
+	for _, option := range options {
+		if option != nil {
+			option(handler)
+		}
+	}
+	return handler
 }
 
 func (h *ModelRouteHandler) RegisterRoutes(group *route.RouterGroup) {
@@ -29,6 +41,26 @@ func (h *ModelRouteHandler) RegisterRoutes(group *route.RouterGroup) {
 	group.GET("/admin/model-routes/:id", h.Get)
 	group.PUT("/admin/model-routes/:id", h.Update)
 	group.DELETE("/admin/model-routes/:id", h.Delete)
+}
+
+type modelRouteDTO struct {
+	ID          string         `json:"id"`
+	ModelID     string         `json:"model_id"`
+	Capability  string         `json:"capability"`
+	Operation   string         `json:"operation"`
+	AbilityKey  string         `json:"ability_key"`
+	AlgoType    string         `json:"algo_type,omitempty"`
+	DisplayName string         `json:"display_name,omitempty"`
+	RouteType   string         `json:"route_type,omitempty"`
+	Region      string         `json:"region,omitempty"`
+	Tier        string         `json:"tier,omitempty"`
+	Env         string         `json:"env,omitempty"`
+	Priority    int            `json:"priority"`
+	Enabled     bool           `json:"enabled"`
+	Status      string         `json:"status"`
+	Extra       map[string]any `json:"extra,omitempty"`
+	CreatedAt   string         `json:"created_at"`
+	UpdatedAt   string         `json:"updated_at"`
 }
 
 func (h *ModelRouteHandler) List(c context.Context, ctx *app.RequestContext) {
@@ -46,10 +78,23 @@ func (h *ModelRouteHandler) List(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, consts.StatusInternalServerError, "list_model_routes_failed", err.Error())
 		return
 	}
+	if h.mapper == nil {
+		writeSuccess(ctx, map[string]any{
+			"items": items,
+			"total": len(items),
+		})
+		return
+	}
+
+	presentedItems, err := h.presentModelRoutes(c, items)
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "present_model_routes_failed", err.Error())
+		return
+	}
 
 	writeSuccess(ctx, map[string]any{
-		"items": items,
-		"total": len(items),
+		"items": presentedItems,
+		"total": len(presentedItems),
 	})
 }
 
@@ -59,9 +104,9 @@ func (h *ModelRouteHandler) Get(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := parsePathID(ctx.Param("id"))
+	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
 	if err != nil {
-		writeError(ctx, consts.StatusBadRequest, "invalid_model_route_id", err.Error())
+		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
 	}
 
@@ -70,7 +115,12 @@ func (h *ModelRouteHandler) Get(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, consts.StatusNotFound, "model_route_not_found", err.Error())
 		return
 	}
-	writeSuccess(ctx, item)
+	presented, err := h.presentModelRoute(c, item)
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		return
+	}
+	writeSuccess(ctx, presented)
 }
 
 func (h *ModelRouteHandler) Create(c context.Context, ctx *app.RequestContext) {
@@ -90,7 +140,12 @@ func (h *ModelRouteHandler) Create(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "create_model_route_failed", err.Error())
 		return
 	}
-	writeSuccess(ctx, item)
+	presented, err := h.presentModelRoute(c, item)
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		return
+	}
+	writeSuccess(ctx, presented)
 }
 
 func (h *ModelRouteHandler) Update(c context.Context, ctx *app.RequestContext) {
@@ -99,9 +154,9 @@ func (h *ModelRouteHandler) Update(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := parsePathID(ctx.Param("id"))
+	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
 	if err != nil {
-		writeError(ctx, consts.StatusBadRequest, "invalid_model_route_id", err.Error())
+		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
 	}
 
@@ -116,7 +171,12 @@ func (h *ModelRouteHandler) Update(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "update_model_route_failed", err.Error())
 		return
 	}
-	writeSuccess(ctx, item)
+	presented, err := h.presentModelRoute(c, item)
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		return
+	}
+	writeSuccess(ctx, presented)
 }
 
 func (h *ModelRouteHandler) Delete(c context.Context, ctx *app.RequestContext) {
@@ -125,9 +185,9 @@ func (h *ModelRouteHandler) Delete(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := parsePathID(ctx.Param("id"))
+	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
 	if err != nil {
-		writeError(ctx, consts.StatusBadRequest, "invalid_model_route_id", err.Error())
+		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
 	}
 
@@ -135,42 +195,14 @@ func (h *ModelRouteHandler) Delete(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "delete_model_route_failed", err.Error())
 		return
 	}
-	writeSuccess(ctx, map[string]any{
-		"id":      id,
-		"deleted": true,
-	})
-}
-
-func parsePathID(raw string) (int64, error) {
-	id, err := strconv.ParseInt(raw, 10, 64)
-	if err != nil || id <= 0 {
-		return 0, fmt.Errorf("id must be a positive integer")
-	}
-	return id, nil
-}
-
-func statusCodeForModelRouteError(err error) int {
-	switch {
-	case err == nil:
-		return consts.StatusOK
-	case containsAny(err.Error(), "required", "must be"):
-		return consts.StatusBadRequest
-	case containsAny(err.Error(), "not found"):
-		return consts.StatusNotFound
-	case containsAny(err.Error(), "duplicate"):
-		return consts.StatusConflict
-	case containsAny(err.Error(), "not configured"):
-		return consts.StatusServiceUnavailable
-	default:
-		return consts.StatusInternalServerError
-	}
-}
-
-func containsAny(input string, keywords ...string) bool {
-	for _, keyword := range keywords {
-		if keyword != "" && input != "" && strings.Contains(input, keyword) {
-			return true
+	responseID := any(id)
+	if h.mapper != nil {
+		ids, resolveErr := h.mapper.ResolveModelRouteExternalIDs(c, []int64{id})
+		if resolveErr != nil {
+			writeError(ctx, consts.StatusInternalServerError, "resolve_model_route_id_failed", resolveErr.Error())
+			return
 		}
+		responseID = ids[id]
 	}
-	return false
+	writeSuccess(ctx, map[string]any{"id": responseID, "deleted": true})
 }

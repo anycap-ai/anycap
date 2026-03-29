@@ -3,7 +3,6 @@ package infra
 import (
 	"fmt"
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -55,7 +54,7 @@ func newDriveShareCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				payload["no_password"] = true
 			}
 
-			resp, err := client.PutJSON(cmd.Context(), "/v1/drive/nodes/"+strconv.FormatInt(nodeID, 10)+"/share", payload)
+			resp, err := client.PutJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share", payload)
 			if err != nil {
 				return err
 			}
@@ -87,7 +86,7 @@ func newDriveShareRotateCmd(clientFactory func() *httpclient.Client, stdout io.W
 				return err
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/drive/nodes/"+strconv.FormatInt(nodeID, 10)+"/share/rotate", map[string]any{})
+			resp, err := client.PostJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share/rotate", map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -112,7 +111,7 @@ func newDriveUnshareCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				return err
 			}
 
-			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+strconv.FormatInt(nodeID, 10)+"/share")
+			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share")
 			if err != nil {
 				return err
 			}

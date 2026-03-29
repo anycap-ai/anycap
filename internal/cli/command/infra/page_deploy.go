@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
@@ -49,7 +48,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				return err
 			}
 
-			createVersionResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(site.ID, 10)+"/versions", map[string]any{})
+			createVersionResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions", map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -60,7 +59,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 
 			requestID := createVersionResp.RequestID
 			for _, item := range files {
-				presignResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(site.ID, 10)+"/versions/"+strconv.FormatInt(version.ID, 10)+"/files/presign", map[string]any{
+				presignResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+version.ID+"/files/presign", map[string]any{
 					"asset_path":     item.AssetPath,
 					"content_type":   item.ContentType,
 					"content_length": item.Size,
@@ -69,7 +68,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 					return err
 				}
 				presignData, err := decodeSuccessData[struct {
-					UploadSessionID int64  `json:"upload_session_id"`
+					UploadSessionID string `json:"upload_session_id"`
 					UploadURL       string `json:"upload_url"`
 				}](presignResp)
 				if err != nil {
@@ -80,7 +79,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 					return err
 				}
 
-				completeResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(site.ID, 10)+"/versions/"+strconv.FormatInt(version.ID, 10)+"/files/complete", map[string]any{
+				completeResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+version.ID+"/files/complete", map[string]any{
 					"upload_session_id": presignData.UploadSessionID,
 				})
 				if err != nil {
@@ -89,7 +88,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				requestID = completeResp.RequestID
 			}
 
-			finalizeResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(site.ID, 10)+"/versions/"+strconv.FormatInt(version.ID, 10)+"/finalize", map[string]any{})
+			finalizeResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+version.ID+"/finalize", map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -101,7 +100,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 
 			published := false
 			if publishAfter {
-				publishResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(site.ID, 10)+"/versions/"+strconv.FormatInt(finalVersion.ID, 10)+"/publish", map[string]any{})
+				publishResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+finalVersion.ID+"/publish", map[string]any{})
 				if err != nil {
 					return err
 				}

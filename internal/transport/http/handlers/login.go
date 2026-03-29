@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
@@ -16,10 +17,25 @@ import (
 
 type LoginHandler struct {
 	service *loginapp.Service
+	mapper  ExternalIDMapper
 }
 
-func NewLoginHandler(service *loginapp.Service) *LoginHandler {
-	return &LoginHandler{service: service}
+type LoginHandlerOption func(*LoginHandler)
+
+func WithLoginExternalIDMapper(mapper ExternalIDMapper) LoginHandlerOption {
+	return func(h *LoginHandler) {
+		h.mapper = mapper
+	}
+}
+
+func NewLoginHandler(service *loginapp.Service, options ...LoginHandlerOption) *LoginHandler {
+	handler := &LoginHandler{service: service}
+	for _, option := range options {
+		if option != nil {
+			option(handler)
+		}
+	}
+	return handler
 }
 
 func (h *LoginHandler) RegisterRootRoutes(group *route.RouterGroup) {
@@ -109,6 +125,14 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(status, payload)
 		return
 	}
+	if result.User != nil {
+		userID, resolveErr := h.resolveLoginUserID(c, result.User.ID)
+		if resolveErr != nil {
+			ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+			return
+		}
+		result.User.ID = userID
+	}
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
@@ -128,6 +152,14 @@ func (h *LoginHandler) Exchange(c context.Context, ctx *app.RequestContext) {
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
 		return
+	}
+	if result.User != nil {
+		userID, resolveErr := h.resolveLoginUserID(c, result.User.ID)
+		if resolveErr != nil {
+			ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+			return
+		}
+		result.User.ID = userID
 	}
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
@@ -208,4 +240,19 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func (h *LoginHandler) resolveLoginUserID(ctx context.Context, rawUserID string) (string, error) {
+	trimmed := strings.TrimSpace(rawUserID)
+	if trimmed == "" || h.mapper == nil {
+		return trimmed, nil
+	}
+	if strings.HasPrefix(trimmed, "u_") {
+		return trimmed, nil
+	}
+	externalUserID, err := h.mapper.ResolveUserExternalID(ctx, trimmed)
+	if err != nil {
+		return "", fmt.Errorf("resolve user external id: %w", err)
+	}
+	return externalUserID, nil
 }

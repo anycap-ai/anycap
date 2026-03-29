@@ -2,7 +2,6 @@ package infra
 
 import (
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -16,11 +15,11 @@ func newPageInfoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 		Short: "Show page site details",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parsePositiveInt64(args[0], "page-id")
+			pageID, err := parseResourceID(args[0], "page-id")
 			if err != nil {
 				return err
 			}
-			resp, err := clientFactory().Get(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10))
+			resp, err := clientFactory().Get(cmd.Context(), "/v1/pages/"+pageID)
 			if err != nil {
 				return err
 			}

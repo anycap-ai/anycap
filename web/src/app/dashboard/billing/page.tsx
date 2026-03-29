@@ -6,7 +6,6 @@ import { useBalance, useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit, formatCreditCent } from "@/lib/credit";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 function timeAgo(ts: string): string {
   const d = new Date(ts);
@@ -34,21 +33,21 @@ function TransactionRow({ item }: { item: TimelineItem }) {
 
   return (
     <tr className="border-b border-[#d4dbb8]/60">
-      <td className="py-3 px-3.5 text-[13px] text-[#4d5145]" style={mono}>
+      <td className="py-3 px-3.5 text-[13px] text-[#4d5145]">
         {timeAgo(item.occurred_at)}
       </td>
       <td className="py-3 px-3.5 text-[13px]">
         {isCredit ? (
           <span
             className="text-[12px] tracking-[0.3px] text-[#707468]"
-            style={mono}
+           
           >
             {item.transaction_type || "credit"}
           </span>
         ) : (
           <span
             className="text-[12px] tracking-[0.3px] text-[#707468]"
-            style={mono}
+           
           >
             usage
           </span>
@@ -67,7 +66,7 @@ function TransactionRow({ item }: { item: TimelineItem }) {
               : "text-[#1c1f17]"
             : "text-[#4d5145]"
         }`}
-        style={mono}
+       
       >
         {isCredit
           ? `${positive ? "+" : ""}${formatCreditCent(creditCentAmount)}`
@@ -88,8 +87,8 @@ export default function BillingPage() {
   return (
     <div>
       <p
-        className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-6"
-        style={mono}
+        className="text-[16px] font-medium text-[#1c1f17] mb-6"
+       
       >
         Billing
       </p>
@@ -105,14 +104,14 @@ export default function BillingPage() {
         <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-6 max-w-md rounded-xl">
           <p
             className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
-            style={mono}
+           
           >
             Credit Balance
           </p>
           <p className="text-3xl text-[#1c1f17] font-bold leading-none">
             {formatCredit(balance.available)}
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-2" style={mono}>
+          <p className="text-[13px] text-[#4d5145] mt-2">
             credits remaining
           </p>
         </div>
@@ -122,7 +121,7 @@ export default function BillingPage() {
       <div className="mt-11">
         <p
           className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4"
-          style={mono}
+         
         >
           Transactions
         </p>
@@ -133,25 +132,25 @@ export default function BillingPage() {
               <tr className="border-b border-[#d4dbb8]">
                 <th
                   className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                  style={mono}
+                 
                 >
                   Time
                 </th>
                 <th
                   className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                  style={mono}
+                 
                 >
                   Type
                 </th>
                 <th
                   className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                  style={mono}
+                 
                 >
                   Description
                 </th>
                 <th
                   className="text-right text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                  style={mono}
+                 
                 >
                   Amount
                 </th>
@@ -178,7 +177,7 @@ export default function BillingPage() {
               ) : (
                 <tr>
                   <td colSpan={4} className="py-10 text-center">
-                    <p className="text-[13px] text-[#707468]" style={mono}>
+                    <p className="text-[13px] text-[#707468]">
                       No transactions yet
                     </p>
                   </td>

@@ -60,12 +60,11 @@ export type DashboardSummary = {
 };
 
 export type DriveNode = {
-  id: number;
-  space_id: number;
-  parent_id?: number | null;
+  id: string;
+  space_id: string;
+  parent_id?: string | null;
   kind: "folder" | "file";
   name: string;
-  storage_object_id?: number | null;
   size?: number | null;
   mime?: string | null;
   edge_version: number;
@@ -81,8 +80,8 @@ export type DriveNodeListResult = {
 };
 
 export type DriveFilePresignResult = {
-  upload_session_id: number;
-  file_id: number;
+  upload_session_id: string;
+  file_id: string;
   upload_url: string;
   object_url: string;
   object_key: string;
@@ -90,7 +89,7 @@ export type DriveFilePresignResult = {
 };
 
 export type DriveShareView = {
-  node_id: number;
+  node_id: string;
   token: string;
   url: string;
   expires_at?: string | null;
@@ -101,11 +100,11 @@ export type DriveShareView = {
 export type PageAccessMode = "public" | "password" | "private_reserved";
 
 export type PageSite = {
-  id: number;
-  space_id: number;
+  id: string;
+  space_id: string;
   name: string;
   page_name: string;
-  current_version_id?: number | null;
+  current_version_id?: string | null;
   access_mode: PageAccessMode;
   password_hash?: string | null;
   password_salt?: string | null;
@@ -129,10 +128,10 @@ export type PageVersionStatus =
   | "archived";
 
 export type PageVersion = {
-  id: number;
-  page_id: number;
+  id: string;
+  page_id: string;
   version_no: number;
-  source_version_id?: number | null;
+  source_version_id?: string | null;
   status: PageVersionStatus;
   asset_prefix: string;
   created_by: string;
@@ -145,8 +144,8 @@ export type PageVersionListResult = {
 };
 
 export type PageVersionPresignResult = {
-  upload_session_id: number;
-  version_id: number;
+  upload_session_id: string;
+  version_id: string;
   asset_path: string;
   upload_url: string;
   object_url: string;

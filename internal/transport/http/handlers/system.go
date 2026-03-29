@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -10,15 +11,31 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type SystemHandler struct {
 	service *systemapp.Service
+	mapper  ExternalIDMapper
 }
 
-func NewSystemHandler(service *systemapp.Service) *SystemHandler {
-	return &SystemHandler{service: service}
+type SystemHandlerOption func(*SystemHandler)
+
+func WithSystemExternalIDMapper(mapper ExternalIDMapper) SystemHandlerOption {
+	return func(h *SystemHandler) {
+		h.mapper = mapper
+	}
+}
+
+func NewSystemHandler(service *systemapp.Service, options ...SystemHandlerOption) *SystemHandler {
+	handler := &SystemHandler{service: service}
+	for _, option := range options {
+		if option != nil {
+			option(handler)
+		}
+	}
+	return handler
 }
 
 func (h *SystemHandler) RegisterRootRoutes(group *route.RouterGroup) {
@@ -48,9 +65,18 @@ func (h *SystemHandler) Healthz(_ context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), status.Service))
 }
 
-func (h *SystemHandler) Status(_ context.Context, ctx *app.RequestContext) {
+func (h *SystemHandler) Status(c context.Context, ctx *app.RequestContext) {
 	principal, _ := middleware.GetPrincipal(ctx)
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), h.service.Status(principal)))
+	result := h.service.Status(principal)
+	if h.mapper != nil && result.User != nil {
+		externalUserID, err := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(result.User.UserID))
+		if err != nil {
+			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", err.Error())
+			return
+		}
+		result.User.UserID = externalUserID
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
 func (h *SystemHandler) Logout(c context.Context, ctx *app.RequestContext) {
@@ -86,6 +112,14 @@ func (h *SystemHandler) Me(c context.Context, ctx *app.RequestContext) {
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
 		return
+	}
+	if h.mapper != nil {
+		externalUserID, resolveErr := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(user.ID))
+		if resolveErr != nil {
+			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
+			return
+		}
+		user.ID = externalUserID
 	}
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), user))
 }
@@ -151,6 +185,14 @@ func (h *SystemHandler) DashboardSummary(c context.Context, ctx *app.RequestCont
 		payload.ID = middleware.GetRequestID(ctx)
 		ctx.JSON(status, payload)
 		return
+	}
+	if h.mapper != nil {
+		externalUserID, resolveErr := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(result.User.ID))
+		if resolveErr != nil {
+			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
+			return
+		}
+		result.User.ID = externalUserID
 	}
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }

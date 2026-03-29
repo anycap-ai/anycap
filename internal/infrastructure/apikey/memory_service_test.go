@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,6 +24,9 @@ func TestMemoryService_CreateAPIKeyWithTTL_ReissuesExpiredCLIKey(t *testing.T) {
 
 	if first.APIKey.ID == second.APIKey.ID {
 		t.Fatalf("expected a new key after expiry, got same id %q", first.APIKey.ID)
+	}
+	if !strings.HasPrefix(first.APIKey.ID, "akid_") || !strings.HasPrefix(second.APIKey.ID, "akid_") {
+		t.Fatalf("expected akid_ prefixes, got first=%q second=%q", first.APIKey.ID, second.APIKey.ID)
 	}
 	if second.APIKey.ExpiresAt == nil {
 		t.Fatal("expected new key to have expires_at")

@@ -12,6 +12,7 @@ const (
 
 type CapsUpload struct {
 	ID         int64            `json:"id"`
+	ExternalID string           `json:"external_id,omitempty"`
 	SpaceID    int64            `json:"space_id"`
 	ObjectKey  string           `json:"object_key"`
 	Filename   string           `json:"filename"`

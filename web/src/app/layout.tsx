@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { GeistPixelSquare } from "geist/font/pixel";
-import { Space_Mono } from "next/font/google";
+import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
@@ -13,6 +13,12 @@ import {
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 
 export const runtime = "edge";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -115,7 +121,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${GeistPixelSquare.variable} ${spaceMono.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
+        className={`${GeistPixelSquare.variable} ${spaceMono.variable} ${inter.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
         style={{ fontFamily: "sans-serif" }}
       >
         <LazyGlobalTipToast />

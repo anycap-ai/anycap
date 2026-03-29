@@ -27,7 +27,7 @@ func TestDriveMkdirWithParentPath(t *testing.T) {
 			}
 			writeSuccessEnvelope(t, w, map[string]any{
 				"items": []map[string]any{
-					{"id": 42, "kind": "folder", "name": "test"},
+					{"id": "dn_test", "kind": "folder", "name": "test"},
 				},
 				"total": 1,
 			})
@@ -40,11 +40,11 @@ func TestDriveMkdirWithParentPath(t *testing.T) {
 			if body["name"] != "demo" {
 				t.Fatalf("unexpected folder name: %+v", body)
 			}
-			if int64(body["parent_id"].(float64)) != 42 {
+			if body["parent_id"] != "dn_test" {
 				t.Fatalf("unexpected parent_id: %+v", body)
 			}
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":   100,
+				"id":   "dn_demo",
 				"name": "demo",
 				"kind": "folder",
 			})
@@ -69,7 +69,7 @@ func TestDriveMkdirWithParentPath(t *testing.T) {
 	if atomic.LoadInt32(&createCalled) != 1 {
 		t.Fatalf("expected create folder endpoint to be called")
 	}
-	if !strings.Contains(stdout.String(), `"id":100`) {
+	if !strings.Contains(stdout.String(), `"id":"dn_demo"`) {
 		t.Fatalf("unexpected output: %s", stdout.String())
 	}
 }
@@ -109,8 +109,8 @@ func TestDriveUploadFlow(t *testing.T) {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/drive/files/presign":
 			writeSuccessEnvelope(t, w, map[string]any{
-				"upload_session_id": 77,
-				"file_id":           88,
+				"upload_session_id": "upl_77",
+				"file_id":           "dn_file_88",
 				"upload_url":        server.URL + "/mock-upload",
 			})
 		case r.Method == http.MethodPut && r.URL.Path == "/mock-upload":
@@ -126,11 +126,11 @@ func TestDriveUploadFlow(t *testing.T) {
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				t.Fatalf("decode complete body: %v", err)
 			}
-			if int64(body["upload_session_id"].(float64)) != 77 || int64(body["file_id"].(float64)) != 88 {
+			if body["upload_session_id"] != "upl_77" || body["file_id"] != "dn_file_88" {
 				t.Fatalf("unexpected complete payload: %+v", body)
 			}
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":   88,
+				"id":   "dn_file_88",
 				"name": "hello.txt",
 				"size": len(fileContent),
 			})
@@ -159,7 +159,7 @@ func TestDriveUploadFlow(t *testing.T) {
 	if uploaded.String() != string(fileContent) {
 		t.Fatalf("uploaded content mismatch: %q", uploaded.String())
 	}
-	if !strings.Contains(stdout.String(), `"file_id":88`) || !strings.Contains(stdout.String(), `"status":"success"`) {
+	if !strings.Contains(stdout.String(), `"file_id":"dn_file_88"`) || !strings.Contains(stdout.String(), `"status":"success"`) {
 		t.Fatalf("unexpected output: %s", stdout.String())
 	}
 }
@@ -168,7 +168,7 @@ func TestDriveShareParsesDayDuration(t *testing.T) {
 	var seenSeconds int64
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut || r.URL.Path != "/v1/drive/nodes/5/share" {
+		if r.Method != http.MethodPut || r.URL.Path != "/v1/drive/nodes/dn_5/share" {
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.String())
 		}
 		var body map[string]any
@@ -177,7 +177,7 @@ func TestDriveShareParsesDayDuration(t *testing.T) {
 		}
 		seenSeconds = int64(body["expires_in_seconds"].(float64))
 		writeSuccessEnvelope(t, w, map[string]any{
-			"node_id":      5,
+			"node_id":      "dn_5",
 			"token":        "abc",
 			"url":          "https://drive.anycap.cloud/s/abc",
 			"has_password": false,
@@ -195,7 +195,7 @@ func TestDriveShareParsesDayDuration(t *testing.T) {
 		Stderr:    &bytes.Buffer{},
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"drive", "share", "5", "--expires", "7d"})
+	cmd.SetArgs([]string{"drive", "share", "dn_5", "--expires", "7d"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute drive share: %v", err)
 	}
@@ -237,33 +237,33 @@ func TestPageDeployWithoutNameAndPublish(t *testing.T) {
 			}
 			createdName = body["name"].(string)
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":        7,
+				"id":        "pg_7",
 				"name":      createdName,
 				"page_name": "site-abc1234",
 				"page_url":  "https://page-site-abc1234.anycap.cloud",
 			})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions":
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_7/versions":
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":         11,
+				"id":         "pv_11",
 				"version_no": 2,
 				"status":     "draft",
 			})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions/11/files/presign":
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_7/versions/pv_11/files/presign":
 			idx := atomic.AddInt32(&presignCount, 1)
 			writeSuccessEnvelope(t, w, map[string]any{
-				"upload_session_id": idx,
+				"upload_session_id": "upl_" + strconv.FormatInt(int64(idx), 10),
 				"upload_url":        server.URL + "/upload/" + strconv.FormatInt(int64(idx), 10),
 			})
 		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/upload/"):
 			w.WriteHeader(http.StatusOK)
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions/11/files/complete":
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_7/versions/pv_11/files/complete":
 			atomic.AddInt32(&completeCount, 1)
-			writeSuccessEnvelope(t, w, map[string]any{"id": 11, "version_no": 2, "status": "draft"})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions/11/finalize":
-			writeSuccessEnvelope(t, w, map[string]any{"id": 11, "version_no": 2, "status": "verified"})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/7/versions/11/publish":
+			writeSuccessEnvelope(t, w, map[string]any{"id": "pv_11", "version_no": 2, "status": "draft"})
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_7/versions/pv_11/finalize":
+			writeSuccessEnvelope(t, w, map[string]any{"id": "pv_11", "version_no": 2, "status": "verified"})
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_7/versions/pv_11/publish":
 			atomic.AddInt32(&publishCount, 1)
-			writeSuccessEnvelope(t, w, map[string]any{"id": 11, "version_no": 2, "status": "published"})
+			writeSuccessEnvelope(t, w, map[string]any{"id": "pv_11", "version_no": 2, "status": "published"})
 		default:
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.String())
 		}
@@ -306,31 +306,31 @@ func TestPageRollbackAutoPublishWhenCurrentPublished(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/9":
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/pg_9":
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":                 9,
+				"id":                 "pg_9",
 				"name":               "docs",
 				"page_name":          "docs-live",
 				"page_url":           "https://page-docs-live.anycap.cloud",
-				"current_version_id": 3,
+				"current_version_id": "pv_3",
 			})
-		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/9/versions":
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/pg_9/versions":
 			writeSuccessEnvelope(t, w, map[string]any{
 				"items": []map[string]any{
-					{"id": 101, "version_no": 1, "status": "archived"},
-					{"id": 102, "version_no": 2, "status": "published"},
+					{"id": "pv_101", "version_no": 1, "status": "archived"},
+					{"id": "pv_102", "version_no": 2, "status": "published"},
 				},
 			})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/9/versions/101/rollback-clone":
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_9/versions/pv_101/rollback-clone":
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":         202,
+				"id":         "pv_202",
 				"version_no": 3,
 				"status":     "verified",
 			})
-		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/9/versions/202/publish":
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_9/versions/pv_202/publish":
 			atomic.AddInt32(&publishCalls, 1)
 			writeSuccessEnvelope(t, w, map[string]any{
-				"id":         202,
+				"id":         "pv_202",
 				"version_no": 3,
 				"status":     "published",
 			})
@@ -348,7 +348,7 @@ func TestPageRollbackAutoPublishWhenCurrentPublished(t *testing.T) {
 		Stderr:    &bytes.Buffer{},
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"page", "rollback", "9", "--version", "1"})
+	cmd.SetArgs([]string{"page", "rollback", "pg_9", "--version", "1"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute page rollback: %v", err)
 	}

@@ -2,11 +2,11 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 type APIKeyRepository interface {
@@ -59,7 +59,7 @@ func (s *RepositoryAPIKeyService) createAPIKey(ctx context.Context, userID, name
 
 	now := s.now().UTC()
 	apiKey := model.APIKey{
-		ID:        fmt.Sprintf("key_%d", now.UnixNano()),
+		ID:        externalid.Generate(externalid.PrefixAPIKeyID),
 		UserID:    userID,
 		Name:      name,
 		KeyPrefix: apikeycodec.PrefixFromRawKey(rawKey),

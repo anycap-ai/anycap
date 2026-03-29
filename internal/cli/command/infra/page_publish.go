@@ -2,7 +2,6 @@ package infra
 
 import (
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -18,7 +17,7 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		Short: "Publish a page version (default: latest verified)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parsePositiveInt64(args[0], "page-id")
+			pageID, err := parseResourceID(args[0], "page-id")
 			if err != nil {
 				return err
 			}
@@ -29,7 +28,7 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				return err
 			}
 
-			var versionID int64
+			var versionID string
 			if versionNo > 0 {
 				versionID, err = pickPageVersionIDByNumber(versions, versionNo)
 				if err != nil {
@@ -42,7 +41,7 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				}
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10)+"/versions/"+strconv.FormatInt(versionID, 10)+"/publish", map[string]any{})
+			resp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+versionID+"/publish", map[string]any{})
 			if err != nil {
 				return err
 			}

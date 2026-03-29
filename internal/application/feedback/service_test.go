@@ -3,6 +3,7 @@ package feedback
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 
@@ -63,6 +64,9 @@ func TestSubmit_Success(t *testing.T) {
 	}
 	if id == "" {
 		t.Fatal("expected non-empty feedback ID")
+	}
+	if !strings.HasPrefix(id, "fb_") {
+		t.Fatalf("expected feedback id prefix fb_, got %q", id)
 	}
 	if len(repo.items) != 1 {
 		t.Fatalf("expected 1 stored item, got %d", len(repo.items))
