@@ -22,7 +22,9 @@ a{color:inherit;text-decoration:none}
 export const FILE_PREVIEW_STYLES = `
 .preview-frame{max-width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border-default);background:var(--surface-raised);box-shadow:0 18px 50px rgba(28,31,23,0.06)}
 .preview-frame img,.preview-frame video{display:block;max-width:100%;max-height:calc(100vh - 120px);object-fit:contain}
-.pdf-frame,.html-frame{width:100%;max-width:900px;height:calc(100vh - 120px);border:1px solid var(--border-default);border-radius:12px;background:white}
+.pdf-frame{width:100%;max-width:900px;height:calc(100vh - 120px);border:1px solid var(--border-default);border-radius:12px;background:white}
+.content-full{padding:48px 0 0;align-items:stretch}
+.html-frame{width:100%;flex:1;border:none;background:white}
 .audio-card{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;min-width:320px;max-width:480px;width:100%}
 .audio-card audio{width:100%}
 .audio-card .audio-name{font-family:var(--font-mono);font-size:14px;color:var(--text-primary);letter-spacing:0.3px}

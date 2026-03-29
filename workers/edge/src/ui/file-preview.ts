@@ -18,7 +18,7 @@ function previewContent(mode: RenderMode, rawUrl: string, fileName: string): str
 		case "pdf":
 			return `<iframe src="${url}" class="pdf-frame" title="${name}"></iframe>`;
 		case "html":
-			return `<iframe src="${url}" class="html-frame" sandbox="allow-same-origin" title="${name}"></iframe>`;
+			return `<iframe src="${url}" class="html-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="${name}"></iframe>`;
 		case "markdown":
 			return `<article class="md-content" id="md"></article>`;
 		case "text":
@@ -66,11 +66,12 @@ export function renderFilePreviewPage(options: {
 	const mode = getRenderMode(options.mime);
 	const sizeStr = options.fileSize != null && options.fileSize >= 0 ? formatFileSize(options.fileSize) : undefined;
 	const extraHead = mode === "markdown" ? HLJS_CSS : "";
+	const contentClass = mode === "html" ? "content content-full" : "content";
 	const html = `${pageHead(`${options.fileName} - AnyCap Drive`, FILE_PREVIEW_STYLES, extraHead)}
 <body>
 <div class="wrapper">
 ${topbar({ name: options.fileName, size: sizeStr, rawUrl: options.rawUrl, downloadName: options.fileName })}
-<main class="content">
+<main class="${contentClass}">
 ${previewContent(mode, options.rawUrl, options.fileName)}
 </main>
 </div>
