@@ -8,10 +8,10 @@ const PASSWORD_STYLES = `
 .pw-card h1{font-size:20px;color:var(--text-primary);margin-bottom:8px}
 .pw-card .desc{color:var(--text-secondary);font-size:14px;margin-bottom:16px}
 .pw-card .error{color:#a83f32;font:13px var(--font-mono,monospace);margin-bottom:12px}
-.pw-card form{display:grid;gap:10px;text-align:left}
-.pw-card input[type="password"]{border:1px solid rgba(199,207,173,0.7);background:var(--surface-raised);border-radius:8px;padding:10px;font-size:14px;transition:border 200ms ease,box-shadow 200ms ease}
+.pw-card form{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pw-card input[type="password"]{width:220px;border:1px solid rgba(199,207,173,0.7);background:var(--surface-raised);border-radius:8px;padding:10px;font-size:14px;text-align:center;transition:border 200ms ease,box-shadow 200ms ease}
 .pw-card input[type="password"]:focus{outline:none;border-color:var(--olive);box-shadow:0 0 0 4px rgba(107,125,58,0.12)}
-.pw-card button{border:none;background:var(--olive);color:var(--surface);border-radius:8px;padding:10px;cursor:pointer;font:13px var(--font-mono);letter-spacing:0.8px;transition:background 200ms ease}
+.pw-card button{width:220px;border:none;background:var(--olive);color:var(--surface);border-radius:8px;padding:10px;cursor:pointer;font:13px var(--font-mono);letter-spacing:0.8px;transition:background 200ms ease}
 .pw-card button:hover{background:var(--navy)}`;
 
 export type PasswordPageOptions = {
