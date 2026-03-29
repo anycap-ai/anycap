@@ -118,9 +118,13 @@ async function handlePasswordSubmit(
 		hostname,
 		config.pagePasswordSessionTTLSeconds,
 	);
-	const response = Response.redirect(new URL(redirectPath, request.url).toString(), 302);
-	response.headers.set("set-cookie", setCookie);
-	return response;
+	return new Response(null, {
+		status: 302,
+		headers: {
+			location: new URL(redirectPath, request.url).toString(),
+			"set-cookie": setCookie,
+		},
+	});
 }
 
 async function servePageAsset(

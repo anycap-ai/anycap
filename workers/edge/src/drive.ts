@@ -287,9 +287,13 @@ async function handleDrivePasswordSubmit(
 		config.drivePasswordSessionTTLSeconds,
 	);
 	const redirectURL = new URL(redirectPath, request.url);
-	const response = Response.redirect(redirectURL.toString(), 302);
-	response.headers.set("set-cookie", setCookie);
-	return response;
+	return new Response(null, {
+		status: 302,
+		headers: {
+			location: redirectURL.toString(),
+			"set-cookie": setCookie,
+		},
+	});
 }
 
 export async function handleDrive(request: Request, env: Env, config: EdgeConfig): Promise<Response> {
