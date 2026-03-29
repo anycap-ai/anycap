@@ -1,65 +1,72 @@
 package auth
 
 import (
-	"context"
-	"net/url"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func TestAuth0Stub_BuildLoginURL(t *testing.T) {
-	client := NewStubClient("https://auth.anycap.local/authorize", nil)
-
-	loginURL, err := client.BuildLoginURL(context.Background(), "state-123", "http://127.0.0.1:14565/callback")
+func TestNormalizeIssuerURL(t *testing.T) {
+	issuer, err := normalizeIssuerURL("https://example.auth0.com/")
 	if err != nil {
-		t.Fatalf("BuildLoginURL() error = %v", err)
+		t.Fatalf("normalizeIssuerURL() error = %v", err)
 	}
-	if !strings.Contains(loginURL, "state=state-123") {
-		t.Fatalf("expected state in login URL, got %q", loginURL)
+	if issuer.String() != "https://example.auth0.com/" {
+		t.Fatalf("unexpected issuer: %q", issuer.String())
+	}
+	issuer, err = normalizeIssuerURL("example.auth0.com")
+	if err != nil {
+		t.Fatalf("normalizeIssuerURL() with host only error = %v", err)
+	}
+	if issuer.String() != "https://example.auth0.com" {
+		t.Fatalf("unexpected normalized issuer: %q", issuer.String())
+	}
+
+	if _, err := normalizeIssuerURL(""); err != model.ErrInternal {
+		t.Fatalf("expected ErrInternal for empty issuer, got %v", err)
 	}
 }
 
-func TestAuth0Client_BuildLoginURL(t *testing.T) {
-	client := NewClient(ClientConfig{
-		Issuer:       "https://example.auth0.com/",
-		Audience:     "https://api.anycap.local",
-		ClientID:     "client-123",
-		ClientSecret: "secret-123",
-		RedirectURL:  "https://anycap.local/auth/callback",
-	}, nil)
+func TestJoinURLPath(t *testing.T) {
+	if got := joinURLPath("/tenant/", ".well-known/jwks.json"); got != "/tenant/.well-known/jwks.json" {
+		t.Fatalf("unexpected joined path: %q", got)
+	}
+	if got := joinURLPath("", "userinfo"); got != "userinfo" {
+		t.Fatalf("unexpected joined path: %q", got)
+	}
+}
 
-	loginURL, err := client.BuildLoginURL(context.Background(), "state-123", "http://127.0.0.1:14565/callback")
-	if err != nil {
-		t.Fatalf("BuildLoginURL() error = %v", err)
+func TestMapAuthError(t *testing.T) {
+	cases := []struct {
+		name string
+		resp *http.Response
+		want error
+	}{
+		{
+			name: "nil response",
+			resp: nil,
+			want: model.ErrInternal,
+		},
+		{
+			name: "400 auth invalid",
+			resp: &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(`{"error":"invalid_grant"}`))},
+			want: model.ErrAuthInvalid,
+		},
+		{
+			name: "500 internal",
+			resp: &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader(`{"error":"server_error"}`))},
+			want: model.ErrInternal,
+		},
 	}
 
-	parsed, err := url.Parse(loginURL)
-	if err != nil {
-		t.Fatalf("parse login url: %v", err)
-	}
-	if parsed.Path != "/authorize" {
-		t.Fatalf("expected /authorize path, got %q", parsed.Path)
-	}
-	query := parsed.Query()
-	if query.Get("client_id") != "client-123" {
-		t.Fatalf("expected client_id, got %q", query.Get("client_id"))
-	}
-	if query.Get("redirect_uri") != "http://127.0.0.1:14565/callback" {
-		t.Fatalf("expected redirect_uri, got %q", query.Get("redirect_uri"))
-	}
-	if query.Get("state") != "state-123" {
-		t.Fatalf("expected state, got %q", query.Get("state"))
-	}
-	if query.Get("response_type") != "code" {
-		t.Fatalf("expected response_type=code, got %q", query.Get("response_type"))
-	}
-	if query.Get("audience") != "https://api.anycap.local" {
-		t.Fatalf("expected audience, got %q", query.Get("audience"))
-	}
-	if query.Get("scope") != "openid profile email" {
-		t.Fatalf("expected scope, got %q", query.Get("scope"))
-	}
-	if query.Get("prompt") != "login" {
-		t.Fatalf("expected prompt=login, got %q", query.Get("prompt"))
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := mapAuthError(tc.resp); got != tc.want {
+				t.Fatalf("mapAuthError() = %v, want %v", got, tc.want)
+			}
+		})
 	}
 }

@@ -6,10 +6,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-type Auth0Client interface {
-	BuildLoginURL(ctx context.Context, state, redirectURI string) (string, error)
-}
-
 type IdentityTokenAuthenticator interface {
 	AuthenticateIdentityToken(ctx context.Context, rawToken string) (model.Principal, error)
 }

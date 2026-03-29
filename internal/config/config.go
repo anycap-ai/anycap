@@ -28,42 +28,40 @@ const (
 	maxPresignGetExpiry         = 86400 // seconds (24 hours hard cap)
 	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
 	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
-	defaultKVSyncPollInterval = 1 * time.Second
+	defaultKVSyncPollInterval   = 1 * time.Second
 	defaultKVSyncLockTTL        = 5 * time.Minute
 	defaultKVSyncWaitTimeout    = 5 * time.Second
 	defaultCloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
 )
 
 type Config struct {
-	AppName           string
-	AppEnv            string
-	HTTPAddr          string
-	RuntimeMode       string
-	PGDSN             string
-	PGHost            string
-	PGPort            int
-	PGUser            string
-	PGPassword        string
-	PGDatabase        string
-	PGSSLMode         string
-	PGTimezone        string
-	PGAutoMigrate     bool
-	RedisAddr         string
-	RedisHost         string
-	RedisPort         int
-	RedisUsername     string
-	RedisPassword     string
-	RedisDB           int
-	RateLimitRPM      int
-	LoginAPIKeyTTL    time.Duration
-	Auth0Enabled      bool
-	Auth0Issuer       string
-	Auth0Audience     string
-	Auth0ClientID     string
-	Auth0ClientSecret string
-	Auth0RedirectURL  string
-	NexusHubBaseURL   string
-	NexusHubToken     string
+	AppName          string
+	AppEnv           string
+	HTTPAddr         string
+	RuntimeMode      string
+	PGDSN            string
+	PGHost           string
+	PGPort           int
+	PGUser           string
+	PGPassword       string
+	PGDatabase       string
+	PGSSLMode        string
+	PGTimezone       string
+	PGAutoMigrate    bool
+	RedisAddr        string
+	RedisHost        string
+	RedisPort        int
+	RedisUsername    string
+	RedisPassword    string
+	RedisDB          int
+	RateLimitRPM     int
+	LoginAPIKeyTTL   time.Duration
+	Auth0Enabled     bool
+	Auth0Issuer      string
+	Auth0Audience    string
+	Auth0RedirectURL string
+	NexusHubBaseURL  string
+	NexusHubToken    string
 	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
 	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
 	NexusHubPlatformBaseURL string
@@ -181,8 +179,6 @@ func LoadFromEnv() (Config, error) {
 		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
 		Auth0Audience:           os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
-		Auth0ClientID:           os.Getenv("ANYCAP_AUTH0_CLIENT_ID"),
-		Auth0ClientSecret:       os.Getenv("ANYCAP_AUTH0_CLIENT_SECRET"),
 		Auth0RedirectURL:        os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
 		NexusHubBaseURL:         getEnv("NEXUSHUB_BASE_URL", ""),
 		NexusHubToken:           getEnv("NEXUSHUB_TOKEN", ""),
@@ -504,4 +500,3 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	}
 	return parsed
 }
-

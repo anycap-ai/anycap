@@ -20,9 +20,6 @@ type LoginSession struct {
 	ID                string    `json:"id"`
 	FlowType          string    `json:"flow_type"`
 	State             string    `json:"state,omitempty"`
-	CodeVerifier      string    `json:"code_verifier,omitempty"`
-	RedirectURI       string    `json:"redirect_uri,omitempty"`
-	DeviceCode        string    `json:"device_code,omitempty"`
 	UserCode          string    `json:"user_code,omitempty"`
 	BrowserToken      string    `json:"browser_token,omitempty"`
 	PollToken         string    `json:"poll_token,omitempty"`

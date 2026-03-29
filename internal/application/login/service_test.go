@@ -9,10 +9,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-type fakeAuthClient struct {
-	loginURL string
-}
-
 type fakeLoginAPIKeyService struct {
 	created []struct {
 		UserID string
@@ -114,13 +110,6 @@ func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (mod
 	return model.User{}, model.ErrAuthInvalid
 }
 
-func (f *fakeAuthClient) BuildLoginURL(_ context.Context, _, redirectURI string) (string, error) {
-	if f.loginURL != "" {
-		return f.loginURL, nil
-	}
-	return redirectURI, nil
-}
-
 type fakeLoginSessionRepo struct {
 	sessions map[string]model.LoginSession
 }
@@ -136,15 +125,6 @@ func (r *fakeLoginSessionRepo) CreateSession(_ context.Context, session model.Lo
 
 func (r *fakeLoginSessionRepo) GetByID(_ context.Context, sessionID string) (model.LoginSession, error) {
 	return r.sessions[sessionID], nil
-}
-
-func (r *fakeLoginSessionRepo) GetByState(_ context.Context, state string) (model.LoginSession, error) {
-	for _, session := range r.sessions {
-		if session.State == state {
-			return session, nil
-		}
-	}
-	return model.LoginSession{}, nil
 }
 
 func (r *fakeLoginSessionRepo) GetByUserCode(_ context.Context, userCode string) (model.LoginSession, error) {
@@ -163,17 +143,6 @@ func (r *fakeLoginSessionRepo) GetByBrowserToken(_ context.Context, browserToken
 		}
 	}
 	return model.LoginSession{}, nil
-}
-
-func (r *fakeLoginSessionRepo) MarkAuthorized(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
-	session := r.sessions[sessionID]
-	session.Auth0Subject = authUser.UserID
-	session.AuthUserEmail = authUser.Email
-	session.AuthUserName = authUser.Name
-	session.AuthUserPicture = authUser.Picture
-	session.Status = model.LoginSessionStatusAuthorized
-	r.sessions[sessionID] = session
-	return nil
 }
 
 func (r *fakeLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, apiKeyID string, _ time.Time) error {
@@ -204,7 +173,6 @@ func (r *fakeLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, p
 
 func newServiceForTest(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, sessions *fakeLoginSessionRepo) *Service {
 	return NewService(
-		&fakeAuthClient{loginURL: "https://auth.anycap.local/authorize"},
 		users,
 		&fakeLoginCreditClient{},
 		apiKeys,

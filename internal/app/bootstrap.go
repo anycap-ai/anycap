@@ -183,7 +183,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	capProvider := buildCapabilitiesProvider(cfg)
 	cloudObjectStore := buildCloudObjectStorage(cfg)
 	capGetExpiry := time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second
-	authClient := buildAuthClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
 	videoExecutionClient := buildVideoExecutionClient(cfg)
 	creditClient := buildCreditClient(cfg)
@@ -203,7 +202,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
 			spaceService:        nil,
@@ -285,7 +284,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:        cfg,
 			buildInfo:     info,
 			systemService: systemService,
-			loginService:  loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:  imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			videoService:  videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
 			spaceService:  spaceService,
@@ -364,21 +363,6 @@ func buildCORSAllowedOrigins(cfg config.Config) []string {
 	}
 	slices.Sort(result)
 	return result
-}
-
-func buildAuthClient(cfg config.Config) port.Auth0Client {
-	if cfg.Auth0Enabled {
-		log.Printf("auth: using Auth0 issuer %s", cfg.Auth0Issuer)
-		return auth.NewClient(auth.ClientConfig{
-			Issuer:       cfg.Auth0Issuer,
-			Audience:     cfg.Auth0Audience,
-			ClientID:     cfg.Auth0ClientID,
-			ClientSecret: cfg.Auth0ClientSecret,
-			RedirectURL:  cfg.Auth0RedirectURL,
-		}, nil)
-	}
-	log.Println("auth: using stub client (set ANYCAP_AUTH0_ENABLED=true for real Auth0)")
-	return auth.NewStubClient("https://auth.anycap.local/authorize", nil)
 }
 
 func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {

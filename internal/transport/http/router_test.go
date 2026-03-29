@@ -19,7 +19,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
@@ -165,7 +164,6 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemService.SetCallLogRepo(callLogs)
 	systemHandler := handlers.NewSystemHandler(systemService)
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
-		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
 		users,
 		credit.NewStubClient(nil),
 		apiKeys,

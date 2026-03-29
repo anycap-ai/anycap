@@ -32,17 +32,6 @@ func (r *MemoryLoginSessionRepo) GetByID(_ context.Context, sessionID string) (m
 	return r.sessions[sessionID], nil
 }
 
-func (r *MemoryLoginSessionRepo) GetByState(_ context.Context, state string) (model.LoginSession, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	for _, session := range r.sessions {
-		if session.State == state {
-			return session, nil
-		}
-	}
-	return model.LoginSession{}, nil
-}
-
 func (r *MemoryLoginSessionRepo) GetByUserCode(_ context.Context, userCode string) (model.LoginSession, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -63,19 +52,6 @@ func (r *MemoryLoginSessionRepo) GetByBrowserToken(_ context.Context, browserTok
 		}
 	}
 	return model.LoginSession{}, nil
-}
-
-func (r *MemoryLoginSessionRepo) MarkAuthorized(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	session := r.sessions[sessionID]
-	session.Auth0Subject = authUser.UserID
-	session.AuthUserEmail = authUser.Email
-	session.AuthUserName = authUser.Name
-	session.AuthUserPicture = authUser.Picture
-	session.Status = model.LoginSessionStatusAuthorized
-	r.sessions[sessionID] = session
-	return nil
 }
 
 func (r *MemoryLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, apiKeyID string, _ time.Time) error {

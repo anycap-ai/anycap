@@ -15,8 +15,7 @@ const loginCredentialTypeAPIKey = "api_key"
 const devicePollInterval = 5 * time.Second
 
 type Service struct {
-	authClient port.Auth0Client
-	users      interface {
+	users interface {
 		port.UserProvisioner
 		port.UserReader
 	}
@@ -32,7 +31,6 @@ type Service struct {
 }
 
 func NewService(
-	authClient port.Auth0Client,
 	users interface {
 		port.UserProvisioner
 		port.UserReader
@@ -70,7 +68,6 @@ func NewService(
 	}
 
 	return &Service{
-		authClient:            authClient,
 		users:                 users,
 		credit:                credit,
 		apiKeys:               apiKeys,

@@ -21,13 +21,12 @@ func NewLoginSessionRepo(db sqlstore.DBTX) *LoginSessionRepo {
 func (r *LoginSessionRepo) CreateSession(ctx context.Context, session model.LoginSession) error {
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO login_sessions (
-			id, flow_type, state, code_verifier, redirect_uri,
-			device_code, user_code, browser_token, poll_token,
+			id, flow_type, state, user_code, browser_token, poll_token,
 			user_code_expires_at, authorized_user_id, auth0_subject,
 			auth_user_email, auth_user_name, auth_user_picture,
 			status, expires_at, created_at, last_polled_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.CodeVerifier), emptyToNil(session.RedirectURI), emptyToNil(session.DeviceCode), emptyToNil(session.UserCode), emptyToNil(session.BrowserToken), emptyToNil(session.PollToken), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.UserCode), emptyToNil(session.BrowserToken), emptyToNil(session.PollToken), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
 	return err
 }
 
@@ -37,9 +36,6 @@ func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model
 			id,
 			flow_type,
 			COALESCE(state, ''),
-			COALESCE(code_verifier, ''),
-			COALESCE(redirect_uri, ''),
-			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			COALESCE(browser_token, ''),
 			COALESCE(poll_token, ''),
@@ -55,34 +51,7 @@ func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model
 			created_at
 		FROM login_sessions
 		WHERE id = $1
-	`, sessionID)
-}
-
-func (r *LoginSessionRepo) GetByState(ctx context.Context, state string) (model.LoginSession, error) {
-	return r.getOne(ctx, `
-		SELECT
-			id,
-			flow_type,
-			COALESCE(state, ''),
-			COALESCE(code_verifier, ''),
-			COALESCE(redirect_uri, ''),
-			COALESCE(device_code, ''),
-			COALESCE(user_code, ''),
-			COALESCE(browser_token, ''),
-			COALESCE(poll_token, ''),
-			user_code_expires_at,
-			authorized_user_id,
-			COALESCE(auth0_subject, ''),
-			COALESCE(auth_user_email, ''),
-			COALESCE(auth_user_name, ''),
-			COALESCE(auth_user_picture, ''),
-			last_polled_at,
-			status,
-			expires_at,
-			created_at
-		FROM login_sessions
-		WHERE state = $1
-	`, state)
+		`, sessionID)
 }
 
 func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (model.LoginSession, error) {
@@ -91,9 +60,6 @@ func (r *LoginSessionRepo) GetByUserCode(ctx context.Context, userCode string) (
 			id,
 			flow_type,
 			COALESCE(state, ''),
-			COALESCE(code_verifier, ''),
-			COALESCE(redirect_uri, ''),
-			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			COALESCE(browser_token, ''),
 			COALESCE(poll_token, ''),
@@ -118,9 +84,6 @@ func (r *LoginSessionRepo) GetByBrowserToken(ctx context.Context, browserToken s
 			id,
 			flow_type,
 			COALESCE(state, ''),
-			COALESCE(code_verifier, ''),
-			COALESCE(redirect_uri, ''),
-			COALESCE(device_code, ''),
 			COALESCE(user_code, ''),
 			COALESCE(browser_token, ''),
 			COALESCE(poll_token, ''),
@@ -137,15 +100,6 @@ func (r *LoginSessionRepo) GetByBrowserToken(ctx context.Context, browserToken s
 		FROM login_sessions
 		WHERE browser_token = $1
 	`, browserToken)
-}
-
-func (r *LoginSessionRepo) MarkAuthorized(ctx context.Context, sessionID string, authUser model.AuthUser, authorizedAt time.Time) error {
-	_, err := r.db.ExecContext(ctx, `
-		UPDATE login_sessions
-		SET auth0_subject = $2, auth_user_email = $3, auth_user_name = $4, auth_user_picture = $5, status = $6, authorized_at = $7
-		WHERE id = $1
-	`, sessionID, authUser.UserID, emptyToNil(authUser.Email), emptyToNil(authUser.Name), emptyToNil(authUser.Picture), model.LoginSessionStatusAuthorized, authorizedAt)
-	return err
 }
 
 func (r *LoginSessionRepo) MarkCompleted(ctx context.Context, sessionID, apiKeyID string, completedAt time.Time) error {
@@ -190,9 +144,6 @@ func (r *LoginSessionRepo) getOne(ctx context.Context, query string, arg string)
 		&session.ID,
 		&session.FlowType,
 		&session.State,
-		&session.CodeVerifier,
-		&session.RedirectURI,
-		&session.DeviceCode,
 		&session.UserCode,
 		&session.BrowserToken,
 		&session.PollToken,
