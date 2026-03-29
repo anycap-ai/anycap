@@ -14,6 +14,6 @@ func WriteIDResolveError(ctx *app.RequestContext, code string, err error) {
 	case IsExternalIDNotFoundError(err):
 		handlers.WriteError(ctx, consts.StatusNotFound, code, err.Error())
 	default:
-		handlers.WriteError(ctx, consts.StatusBadRequest, code, err.Error())
+		handlers.WriteError(ctx, consts.StatusInternalServerError, code, err.Error())
 	}
 }

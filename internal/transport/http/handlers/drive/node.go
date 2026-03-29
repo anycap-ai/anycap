@@ -156,7 +156,8 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	nodeID, err := h.resolver.ResolveDriveNodeID(c, string(ctx.Param("id")))
+	rawID := string(ctx.Param("id"))
+	nodeID, err := h.resolver.ResolveDriveNodeID(c, rawID)
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
@@ -168,14 +169,8 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	ids, err := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
-	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", err.Error())
-		return
-	}
-
 	handlers.WriteSuccess(ctx, map[string]any{
-		"id":            ids[nodeID],
+		"id":            rawID,
 		"deleted":       true,
 		"deleted_count": deletedCount,
 	})

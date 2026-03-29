@@ -149,7 +149,8 @@ func (h *Handler) Delete(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
+	rawID := strings.TrimSpace(string(ctx.Param("id")))
+	id, err := h.resolver.ResolveModelRouteID(c, rawID)
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_model_route_id", err)
 		return
@@ -160,10 +161,5 @@ func (h *Handler) Delete(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	ids, err := h.mapper.ResolveModelRouteExternalIDs(c, []int64{id})
-	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "resolve_model_route_id_failed", err.Error())
-		return
-	}
-	handlers.WriteSuccess(ctx, map[string]any{"id": ids[id], "deleted": true})
+	handlers.WriteSuccess(ctx, map[string]any{"id": rawID, "deleted": true})
 }

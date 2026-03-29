@@ -102,19 +102,15 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	rawID := string(ctx.Param("id"))
+
 	if err := h.service.RevokeShare(c, principal.UserID, nodeID); err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "revoke_drive_share_failed", err.Error())
 		return
 	}
 
-	ids, err := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
-	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", err.Error())
-		return
-	}
-
 	handlers.WriteSuccess(ctx, map[string]any{
-		"id":      ids[nodeID],
+		"id":      rawID,
 		"revoked": true,
 	})
 }
