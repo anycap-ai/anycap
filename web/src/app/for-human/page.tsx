@@ -39,7 +39,7 @@ export default function ForHumanPage() {
                 Your Agent can do anything. It just needs AnyCap.
               </span>
               <span aria-hidden>
-                Your{" "}
+                <ScrambleText text="Your" speed={30} ticks={3} />{" "}
                 <ScrambleText
                   text="Agent"
                   className="text-[#6b7d3a]"
@@ -48,9 +48,13 @@ export default function ForHumanPage() {
                   ticks={3}
                 />
                 <br />
-                can do anything.
+                <ScrambleText text="can" speed={30} ticks={3} />{" "}
+                <ScrambleText text="do" speed={30} ticks={3} />{" "}
+                <ScrambleText text="anything." speed={30} ticks={3} />
                 <br />
-                It just needs{" "}
+                <ScrambleText text="It" speed={30} ticks={3} />{" "}
+                <ScrambleText text="just" speed={30} ticks={3} />{" "}
+                <ScrambleText text="needs" speed={30} ticks={3} />{" "}
                 <ScrambleText
                   text="AnyCap."
                   className="text-[#6b7d3a]"
