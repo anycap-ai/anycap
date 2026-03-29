@@ -48,11 +48,42 @@ describe("handleDrive route", () => {
 		const body = await response.text();
 
 		expect(response.status).toBe(200);
-		expect(body).toContain("[FILE] hello.txt");
+		expect(body).toContain("hello.txt");
 		expect(body).toContain("/s/token-a/file/11");
 	});
 
-	it("serves file content with attachment for binary mime", async () => {
+	it("serves preview wrapper for file without raw param", async () => {
+		const kv = createMockKV();
+		const r2 = createMockR2();
+		setKVJSON(kv.store, "drive:share:token-b", {
+			root_node_id: 10,
+			root_node_kind: "folder",
+			has_password: false,
+		});
+		setKVJSON(kv.store, "drive:file:11", {
+			id: 11,
+			parent_id: 10,
+			space_id: 1,
+			name: "archive.bin",
+			object_key: "drive/file-11.bin",
+			mime: "application/octet-stream",
+		});
+
+		const env = createEnv({
+			EDGE_KV: kv.namespace,
+			ANYCAP_CLOUD_R2: r2.bucket,
+		});
+		const response = await handleDrive(new Request("https://drive.anycap.cloud/s/token-b/file/11"), env, testConfig());
+		const body = await response.text();
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toContain("text/html");
+		expect(body).toContain("archive.bin");
+		expect(body).toContain("?raw=1");
+		expect(body).toContain("anycap.ai");
+	});
+
+	it("serves raw file content with ?raw=1", async () => {
 		const kv = createMockKV();
 		const r2 = createMockR2({
 			"drive/file-11.bin": {
@@ -79,7 +110,7 @@ describe("handleDrive route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handleDrive(new Request("https://drive.anycap.cloud/s/token-b/file/11"), env, testConfig());
+		const response = await handleDrive(new Request("https://drive.anycap.cloud/s/token-b/file/11?raw=1"), env, testConfig());
 		const body = await response.text();
 
 		expect(response.status).toBe(200);

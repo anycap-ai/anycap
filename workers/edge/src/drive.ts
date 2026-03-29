@@ -6,7 +6,7 @@ import { forbiddenPage, notFoundPage } from "./response";
 import { hitRateLimit } from "./rate_limit";
 import { clearSessionCookie, createSessionCookie, isSessionValid } from "./session";
 import type { DriveDirChildrenRecord, DriveDirMetaRecord, DriveFileRecord, DriveShareRecord, Env } from "./types";
-import { renderDriveDirectoryPage, renderErrorPage, renderPasswordPage } from "./ui";
+import { renderDriveDirectoryPage, renderErrorPage, renderFilePreviewPage, renderPasswordPage } from "./ui";
 
 const DRIVE_SESSION_COOKIE = "ac_drive_auth";
 
@@ -76,33 +76,26 @@ function shouldInline(mime: string): boolean {
 
 function guessMimeFromFilename(name: string): string {
 	const lower = name.toLowerCase();
-	if (lower.endsWith(".html") || lower.endsWith(".htm")) {
-		return "text/html; charset=utf-8";
-	}
-	if (lower.endsWith(".css")) {
-		return "text/css; charset=utf-8";
-	}
-	if (lower.endsWith(".js")) {
-		return "application/javascript; charset=utf-8";
-	}
-	if (lower.endsWith(".json")) {
-		return "application/json; charset=utf-8";
-	}
-	if (lower.endsWith(".png")) {
-		return "image/png";
-	}
-	if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
-		return "image/jpeg";
-	}
-	if (lower.endsWith(".gif")) {
-		return "image/gif";
-	}
-	if (lower.endsWith(".svg")) {
-		return "image/svg+xml";
-	}
-	if (lower.endsWith(".pdf")) {
-		return "application/pdf";
-	}
+	if (lower.endsWith(".html") || lower.endsWith(".htm")) return "text/html; charset=utf-8";
+	if (lower.endsWith(".css")) return "text/css; charset=utf-8";
+	if (lower.endsWith(".js")) return "application/javascript; charset=utf-8";
+	if (lower.endsWith(".json")) return "application/json; charset=utf-8";
+	if (lower.endsWith(".xml")) return "application/xml; charset=utf-8";
+	if (lower.endsWith(".md") || lower.endsWith(".markdown")) return "text/markdown; charset=utf-8";
+	if (lower.endsWith(".txt")) return "text/plain; charset=utf-8";
+	if (lower.endsWith(".png")) return "image/png";
+	if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+	if (lower.endsWith(".gif")) return "image/gif";
+	if (lower.endsWith(".svg")) return "image/svg+xml";
+	if (lower.endsWith(".webp")) return "image/webp";
+	if (lower.endsWith(".pdf")) return "application/pdf";
+	if (lower.endsWith(".mp4")) return "video/mp4";
+	if (lower.endsWith(".webm")) return "video/webm";
+	if (lower.endsWith(".mov")) return "video/quicktime";
+	if (lower.endsWith(".mp3")) return "audio/mpeg";
+	if (lower.endsWith(".wav")) return "audio/wav";
+	if (lower.endsWith(".ogg")) return "audio/ogg";
+	if (lower.endsWith(".flac")) return "audio/flac";
 	return "application/octet-stream";
 }
 
@@ -188,7 +181,7 @@ async function loadFileRecordForFolderShare(
 	return null;
 }
 
-async function serveFile(
+async function serveFileRaw(
 	request: Request,
 	env: Env,
 	config: EdgeConfig,
@@ -214,6 +207,26 @@ async function serveFile(
 			: `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`;
 		headers.set("content-disposition", contentDisposition);
 		return new Response(object.body, { status: 200, headers });
+	});
+}
+
+async function serveFile(
+	request: Request,
+	env: Env,
+	config: EdgeConfig,
+	file: DriveFileRecord,
+): Promise<Response> {
+	const url = new URL(request.url);
+	if (url.searchParams.get("raw") === "1") {
+		return serveFileRaw(request, env, config, file);
+	}
+	const mime = file.mime || guessMimeFromFilename(file.name);
+	const rawUrl = `${url.pathname}?raw=1`;
+	return renderFilePreviewPage({
+		fileName: file.name,
+		fileSize: file.size ?? undefined,
+		rawUrl,
+		mime,
 	});
 }
 
