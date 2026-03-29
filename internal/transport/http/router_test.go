@@ -11,10 +11,12 @@ import (
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
+	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
@@ -31,11 +33,13 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
+	drivehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	pagehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -128,6 +132,300 @@ func routeInputEnabled(value *bool) bool {
 	return *value
 }
 
+// --- Drive/Page test fakes ---
+
+type fakeSpaceService struct {
+	space *model.Space
+}
+
+func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ string) (*model.Space, error) {
+	return s.space, nil
+}
+
+type fakeDriveNodeRepo struct {
+	nodes  map[int64]*model.DriveNode
+	nextID int64
+}
+
+func (r *fakeDriveNodeRepo) CreateFolder(_ context.Context, input model.CreateDriveFolderInput) (*model.DriveNode, error) {
+	if r.nodes == nil {
+		r.nodes = map[int64]*model.DriveNode{}
+	}
+	r.nextID++
+	node := &model.DriveNode{
+		ID:          r.nextID,
+		SpaceID:     input.SpaceID,
+		ParentID:    input.ParentID,
+		Kind:        model.DriveNodeKindFolder,
+		Name:        input.Name,
+		CreatedBy:   input.CreatedBy,
+		EdgeVersion: 1,
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
+	}
+	r.nodes[node.ID] = node
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) CreateFile(_ context.Context, input model.CreateDriveFileInput) (*model.DriveNode, error) {
+	if r.nodes == nil {
+		r.nodes = map[int64]*model.DriveNode{}
+	}
+	r.nextID++
+	node := &model.DriveNode{
+		ID:          r.nextID,
+		SpaceID:     input.SpaceID,
+		ParentID:    input.ParentID,
+		Kind:        model.DriveNodeKindFile,
+		Name:        input.Name,
+		CreatedBy:   input.CreatedBy,
+		Size:        input.Size,
+		MIME:        input.MIME,
+		EdgeVersion: 1,
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
+	}
+	r.nodes[node.ID] = node
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNode, error) {
+	node, ok := r.nodes[id]
+	if !ok || node.DeletedAt != nil {
+		return nil, nil
+	}
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, error) {
+	items := make([]model.DriveNode, 0)
+	for _, node := range r.nodes {
+		if node.DeletedAt != nil || node.SpaceID != filter.SpaceID {
+			continue
+		}
+		if !sameNullableInt64(node.ParentID, filter.ParentID) {
+			continue
+		}
+		items = append(items, *cloneDriveNode(node))
+	}
+	return items, nil
+}
+
+func (r *fakeDriveNodeRepo) Update(_ context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error) {
+	node, ok := r.nodes[input.ID]
+	if !ok || node.DeletedAt != nil || node.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	if input.Name != nil {
+		node.Name = *input.Name
+	}
+	if input.UpdateParent {
+		node.ParentID = input.ParentID
+	}
+	node.EdgeVersion++
+	node.UpdatedAt = time.Now().UTC()
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) AttachStorageObject(_ context.Context, input model.AttachDriveNodeStorageInput) (*model.DriveNode, error) {
+	node, ok := r.nodes[input.NodeID]
+	if !ok || node.DeletedAt != nil || node.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	node.StorageObjectID = &input.StorageObjectID
+	node.Size = &input.Size
+	node.MIME = &input.MIME
+	node.EdgeVersion++
+	node.UpdatedAt = time.Now().UTC()
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, targetID int64) (bool, error) {
+	visited := map[int64]bool{}
+	queue := []int64{rootID}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if visited[current] {
+			continue
+		}
+		visited[current] = true
+		if current == targetID {
+			return true, nil
+		}
+		for _, node := range r.nodes {
+			if node.DeletedAt != nil || node.SpaceID != spaceID || node.ParentID == nil {
+				continue
+			}
+			if *node.ParentID == current {
+				queue = append(queue, node.ID)
+			}
+		}
+	}
+	return false, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
+	toDelete := []int64{rootID}
+	deletedCount := int64(0)
+	for len(toDelete) > 0 {
+		current := toDelete[0]
+		toDelete = toDelete[1:]
+		node, ok := r.nodes[current]
+		if !ok || node.DeletedAt != nil || node.SpaceID != spaceID {
+			continue
+		}
+		now := time.Now().UTC()
+		node.DeletedAt = &now
+		node.UpdatedAt = now
+		node.EdgeVersion++
+		deletedCount++
+		for _, child := range r.nodes {
+			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
+				continue
+			}
+			if *child.ParentID == current {
+				toDelete = append(toDelete, child.ID)
+			}
+		}
+	}
+	return deletedCount, nil
+}
+
+func cloneDriveNode(n *model.DriveNode) *model.DriveNode {
+	c := *n
+	return &c
+}
+
+func sameNullableInt64(a, b *int64) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
+type fakePageSiteRepo struct {
+	sites  map[int64]*model.PageSite
+	nextID int64
+}
+
+func (r *fakePageSiteRepo) Create(_ context.Context, input model.CreatePageSiteInput) (*model.PageSite, error) {
+	if r.sites == nil {
+		r.sites = map[int64]*model.PageSite{}
+	}
+	r.nextID++
+	now := time.Now().UTC()
+	site := &model.PageSite{
+		ID:           r.nextID,
+		SpaceID:      input.SpaceID,
+		Name:         input.Name,
+		PageName:     input.PageName,
+		AccessMode:   input.AccessMode,
+		PasswordHash: input.PasswordHash,
+		PasswordSalt: input.PasswordSalt,
+		SPAFallback:  input.SPAFallback,
+		EdgeVersion:  1,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	r.sites[site.ID] = site
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) ListBySpace(_ context.Context, spaceID int64) ([]model.PageSite, error) {
+	items := make([]model.PageSite, 0)
+	for _, site := range r.sites {
+		if site.SpaceID != spaceID || site.DeletedAt != nil {
+			continue
+		}
+		items = append(items, *clonePageSite(site))
+	}
+	return items, nil
+}
+
+func (r *fakePageSiteRepo) GetByID(_ context.Context, id int64) (*model.PageSite, error) {
+	site, ok := r.sites[id]
+	if !ok || site.DeletedAt != nil {
+		return nil, nil
+	}
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) Update(_ context.Context, input model.UpdatePageSiteInput) (*model.PageSite, error) {
+	site, ok := r.sites[input.ID]
+	if !ok || site.DeletedAt != nil || site.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	if input.Name != nil {
+		site.Name = *input.Name
+	}
+	if input.AccessMode != nil {
+		site.AccessMode = *input.AccessMode
+	}
+	if input.SPAFallback != nil {
+		site.SPAFallback = *input.SPAFallback
+	}
+	if input.UpdatePassword {
+		site.PasswordHash = input.PasswordHash
+		site.PasswordSalt = input.PasswordSalt
+	}
+	site.EdgeVersion++
+	site.UpdatedAt = time.Now().UTC()
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) SetCurrentVersion(_ context.Context, spaceID, id int64, versionID *int64) (*model.PageSite, error) {
+	site, ok := r.sites[id]
+	if !ok || site.DeletedAt != nil || site.SpaceID != spaceID {
+		return nil, nil
+	}
+	if versionID == nil {
+		site.CurrentVersionID = nil
+	} else {
+		value := *versionID
+		site.CurrentVersionID = &value
+	}
+	site.EdgeVersion++
+	site.UpdatedAt = time.Now().UTC()
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) error {
+	site, ok := r.sites[id]
+	if !ok || site.SpaceID != spaceID || site.DeletedAt != nil {
+		return nil
+	}
+	now := time.Now().UTC()
+	site.DeletedAt = &now
+	site.UpdatedAt = now
+	site.EdgeVersion++
+	return nil
+}
+
+func clonePageSite(s *model.PageSite) *model.PageSite {
+	c := *s
+	return &c
+}
+
+type fakePageSlugRepo struct {
+	slugs map[string]int64
+}
+
+func (r *fakePageSlugRepo) Create(_ context.Context, slug string, pageID int64) error {
+	if r.slugs == nil {
+		r.slugs = map[string]int64{}
+	}
+	r.slugs[slug] = pageID
+	return nil
+}
+
+func (r *fakePageSlugRepo) MarkTombstone(_ context.Context, _ string, _ int64) error {
+	return nil
+}
+
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
@@ -200,6 +498,11 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	passthroughResolver := idresolver.PassthroughIDResolver{}
+	testSpace := &model.Space{ID: 100, OwnerUserID: seededUser.ID}
+	driveService := driveapp.NewService(&fakeSpaceService{space: testSpace}, &fakeDriveNodeRepo{})
+	driveHandler := drivehandler.NewHandler(driveService, passthroughResolver, passthroughMapper)
+	pageService := pageapp.NewService(&fakeSpaceService{space: testSpace}, &fakePageSiteRepo{}, &fakePageSlugRepo{}, "test-pepper")
+	pageHandler := pagehandler.NewHandler(pageService, passthroughResolver, passthroughMapper)
 	modelRouteHandler := modelroute.NewHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
@@ -250,6 +553,8 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				driveHandler.RegisterRoutes(protected)
+				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 			}),
