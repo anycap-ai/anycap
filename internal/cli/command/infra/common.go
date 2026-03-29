@@ -31,22 +31,22 @@ type successEnvelope struct {
 }
 
 type driveNodeSummary struct {
-	ID       int64  `json:"id"`
-	ParentID *int64 `json:"parent_id,omitempty"`
-	Kind     string `json:"kind"`
-	Name     string `json:"name"`
+	ID       string  `json:"id"`
+	ParentID *string `json:"parent_id,omitempty"`
+	Kind     string  `json:"kind"`
+	Name     string  `json:"name"`
 }
 
 type pageSiteSummary struct {
-	ID               int64  `json:"id"`
-	Name             string `json:"name"`
-	PageName         string `json:"page_name"`
-	PageURL          string `json:"page_url"`
-	CurrentVersionID *int64 `json:"current_version_id,omitempty"`
+	ID               string  `json:"id"`
+	Name             string  `json:"name"`
+	PageName         string  `json:"page_name"`
+	PageURL          string  `json:"page_url"`
+	CurrentVersionID *string `json:"current_version_id,omitempty"`
 }
 
 type pageVersionSummary struct {
-	ID        int64  `json:"id"`
+	ID        string `json:"id"`
 	VersionNo int64  `json:"version_no"`
 	Status    string `json:"status"`
 }
@@ -92,6 +92,14 @@ func parsePositiveInt64(value string, fieldName string) (int64, error) {
 		return 0, fmt.Errorf("%s must be a positive integer", fieldName)
 	}
 	return parsed, nil
+}
+
+func parseResourceID(value string, fieldName string) (string, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "", fmt.Errorf("%s is required", fieldName)
+	}
+	return trimmed, nil
 }
 
 func parseExpiryToSeconds(value string) (int64, error) {
@@ -186,10 +194,10 @@ func normalizeAbsolutePath(rawPath string) (string, error) {
 	return cleaned, nil
 }
 
-func listDriveNodes(ctx context.Context, client *httpclient.Client, parentID *int64) ([]driveNodeSummary, error) {
+func listDriveNodes(ctx context.Context, client *httpclient.Client, parentID *string) ([]driveNodeSummary, error) {
 	endpoint := "/v1/drive/nodes"
 	if parentID != nil {
-		endpoint += "?parent_id=" + url.QueryEscape(strconv.FormatInt(*parentID, 10))
+		endpoint += "?parent_id=" + url.QueryEscape(*parentID)
 	}
 
 	resp, err := client.Get(ctx, endpoint)
@@ -210,7 +218,7 @@ func listDriveNodes(ctx context.Context, client *httpclient.Client, parentID *in
 	return data.Items, nil
 }
 
-func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, folderPath string) (*int64, error) {
+func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, folderPath string) (*string, error) {
 	cleaned, err := normalizeAbsolutePath(folderPath)
 	if err != nil {
 		return nil, err
@@ -220,7 +228,7 @@ func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, fold
 	}
 
 	segments := strings.Split(strings.TrimPrefix(cleaned, "/"), "/")
-	var currentParent *int64
+	var currentParent *string
 	for _, segment := range segments {
 		if segment == "" {
 			continue
@@ -246,18 +254,18 @@ func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, fold
 	return currentParent, nil
 }
 
-func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePath string) (int64, error) {
+func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePath string) (string, error) {
 	cleaned, err := normalizeAbsolutePath(nodePath)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	if cleaned == "/" {
-		return 0, fmt.Errorf("node path '/' is not a valid node target")
+		return "", fmt.Errorf("node path '/' is not a valid node target")
 	}
 
 	segments := strings.Split(strings.TrimPrefix(cleaned, "/"), "/")
 	var (
-		currentParent *int64
+		currentParent *string
 		currentNode   *driveNodeSummary
 	)
 	for i, segment := range segments {
@@ -266,7 +274,7 @@ func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePa
 		}
 		children, err := listDriveNodes(ctx, client, currentParent)
 		if err != nil {
-			return 0, err
+			return "", err
 		}
 
 		var matched *driveNodeSummary
@@ -278,31 +286,31 @@ func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePa
 			}
 		}
 		if matched == nil {
-			return 0, fmt.Errorf("node path not found: %s", cleaned)
+			return "", fmt.Errorf("node path not found: %s", cleaned)
 		}
 
 		currentNode = matched
 		if i < len(segments)-1 && matched.Kind != "folder" {
-			return 0, fmt.Errorf("path segment is not a folder: %s", segment)
+			return "", fmt.Errorf("path segment is not a folder: %s", segment)
 		}
 		id := matched.ID
 		currentParent = &id
 	}
 	if currentNode == nil {
-		return 0, fmt.Errorf("node path not found: %s", cleaned)
+		return "", fmt.Errorf("node path not found: %s", cleaned)
 	}
 	return currentNode.ID, nil
 }
 
-func resolveDriveNodeID(client *httpclient.Client, ctx context.Context, args []string, srcPath string) (int64, error) {
+func resolveDriveNodeID(client *httpclient.Client, ctx context.Context, args []string, srcPath string) (string, error) {
 	if len(args) > 0 && strings.TrimSpace(srcPath) != "" {
-		return 0, fmt.Errorf("node-id argument and --src-path cannot be used together")
+		return "", fmt.Errorf("node-id argument and --src-path cannot be used together")
 	}
 	if len(args) > 0 {
-		return parsePositiveInt64(args[0], "node-id")
+		return parseResourceID(args[0], "node-id")
 	}
 	if strings.TrimSpace(srcPath) == "" {
-		return 0, fmt.Errorf("node-id argument or --src-path is required")
+		return "", fmt.Errorf("node-id argument or --src-path is required")
 	}
 	return resolveDriveNodePath(ctx, client, srcPath)
 }
@@ -321,8 +329,8 @@ func listPageSites(ctx context.Context, client *httpclient.Client) ([]pageSiteSu
 	return data.Items, nil
 }
 
-func listPageVersions(ctx context.Context, client *httpclient.Client, pageID int64) ([]pageVersionSummary, error) {
-	resp, err := client.Get(ctx, fmt.Sprintf("/v1/pages/%d/versions", pageID))
+func listPageVersions(ctx context.Context, client *httpclient.Client, pageID string) ([]pageVersionSummary, error) {
+	resp, err := client.Get(ctx, "/v1/pages/"+url.PathEscape(pageID)+"/versions")
 	if err != nil {
 		return nil, err
 	}
@@ -335,16 +343,16 @@ func listPageVersions(ctx context.Context, client *httpclient.Client, pageID int
 	return data.Items, nil
 }
 
-func pickPageVersionIDByNumber(versions []pageVersionSummary, versionNo int64) (int64, error) {
+func pickPageVersionIDByNumber(versions []pageVersionSummary, versionNo int64) (string, error) {
 	for _, item := range versions {
 		if item.VersionNo == versionNo {
 			return item.ID, nil
 		}
 	}
-	return 0, fmt.Errorf("version %d not found", versionNo)
+	return "", fmt.Errorf("version %d not found", versionNo)
 }
 
-func pickLatestVerifiedVersionID(versions []pageVersionSummary) (int64, error) {
+func pickLatestVerifiedVersionID(versions []pageVersionSummary) (string, error) {
 	var (
 		found bool
 		best  pageVersionSummary
@@ -359,7 +367,7 @@ func pickLatestVerifiedVersionID(versions []pageVersionSummary) (int64, error) {
 		}
 	}
 	if !found {
-		return 0, fmt.Errorf("no verified version available, run deploy/finalize first")
+		return "", fmt.Errorf("no verified version available, run deploy/finalize first")
 	}
 	return best.ID, nil
 }
@@ -371,4 +379,3 @@ func randomSiteName() (string, error) {
 	}
 	return "site-" + hex.EncodeToString(buf), nil
 }
-

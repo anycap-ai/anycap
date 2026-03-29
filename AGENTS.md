@@ -107,6 +107,63 @@ make infra-reset
 
 When developing any page under `web/`, always follow `web/docs/design-guideline.md`. It defines the full visual language — colors, typography, spacing, backgrounds, borders, effects, and component patterns. All web pages must be visually consistent with this guideline.
 
+## External ID — CRITICAL RULES (MUST READ)
+
+> **NEVER expose internal auto-increment `int64` IDs to any external interface.**
+> This is a **non-negotiable, zero-tolerance** rule. Violations are security incidents.
+
+### What counts as "external"
+
+Any surface a client (CLI, web, third-party) can observe: HTTP JSON responses, URL path parameters, request/response bodies, CLI stdout, WebSocket messages, error messages containing IDs.
+
+### The architecture
+
+```
+Inbound (client → server):  external string ID  →  IDResolver  →  internal int64
+Outbound (server → client): internal int64       →  IDMapper    →  external string ID (via presenter DTO)
+```
+
+| Layer | Package | Role |
+|---|---|---|
+| **IDResolver** | `internal/transport/http/handlers` | Parses external IDs from requests → internal int64 |
+| **IDMapper** | `internal/transport/http/presenter` | Batch-resolves internal int64 → external string IDs |
+| **Presenter** | `internal/transport/http/presenter` | Builds DTOs with external IDs; the ONLY path to serialize resources |
+| **PassthroughIDResolver / PassthroughIDMapper** | handlers / presenter | For stub mode and tests — converts int64 ↔ string without DB |
+
+### Rules you MUST follow
+
+1. **Handler constructors require `IDResolver` + `presenter.IDMapper`** — they are mandatory parameters, never optional.
+2. **NEVER add `if mapper == nil` fallback** — there is no nil-mapper code path. Every runtime mode (stub, dev, prod) injects a concrete implementation.
+3. **NEVER `json.Marshal` a domain model with int64 ID fields** — domain models (`DriveNode`, `PageSite`, `PageVersion`, `ModelRoute`, `Space`, `UploadSession`, etc.) have **no `json` tags** on their ID fields. All external serialization goes through presenter DTOs.
+4. **NEVER write `result.User.ID = externalID`** (mutate-then-serialize) — always use a presenter function (`presenter.PresentUser`, `presenter.PresentLoginUser`, etc.) to produce a DTO.
+5. **NEVER accept numeric JSON values as IDs in request bodies** — `parseOptionalIDRaw` only accepts strings. Clients must send `"parent_id": "dn_abc123"`, not `"parent_id": 42`.
+6. **New resources** that are externally visible must: add a prefix in `pkg/externalid/`, add an `external_id` column via migration, add resolve methods to `PostgresExternalIDMapper`, add a presenter DTO + present function.
+
+### Prefixes
+
+| Resource | Prefix | Example |
+|---|---|---|
+| User | `u_` | `u_aBcDeFgHiJkLmNoP` |
+| Space | `sp_` | `sp_aBcDeFgHiJkLmNoP` |
+| DriveNode | `dn_` | `dn_aBcDeFgHiJkLmNoP` |
+| UploadSession | `upl_` | `upl_aBcDeFgHiJkLmNoP` |
+| PageSite | `pg_` | `pg_aBcDeFgHiJkLmNoP` |
+| PageVersion | `pv_` | `pv_aBcDeFgHiJkLmNoP` |
+| CapsUpload | `cu_` | `cu_aBcDeFgHiJkLmNoP` |
+| ModelRoute | `mr_` | `mr_aBcDeFgHiJkLmNoP` |
+| LoginSession | `lsn_` | `lsn_aBcDeFgHiJkLmNoP` |
+| APIKey ID | `akid_` | `akid_aBcDeFgHiJkLmNoP` |
+| Feedback | `fb_` | `fb_aBcDeFgHiJkLmNoP` |
+
+### Quick checklist for new handlers
+
+- [ ] Constructor takes `IDResolver` and `presenter.IDMapper`
+- [ ] Path params resolved via `h.resolver.ResolveXxxID(ctx, raw)`
+- [ ] Request body IDs parsed via `parseOptionalIDRaw` / `parseRequiredIDRaw` (string only)
+- [ ] Response built via `presenter.PresentXxx(ctx, h.mapper, domainModel)` — returns a DTO
+- [ ] List endpoints return `[]SomeDTO`, never `[]model.SomeModel`
+- [ ] Delete endpoints resolve external ID for response via `h.mapper.ResolveXxxExternalIDs`
+
 ## Coding Conventions
 
 - **Language:** Go. Follow standard Go idioms and `gofmt` formatting.

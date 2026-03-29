@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 const triggerClass =
-  "px-2.5 py-1.5 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out cursor-pointer select-none inline-flex items-center gap-1";
+  "px-3 py-2 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out cursor-pointer select-none inline-flex items-center gap-1";
 
 const dropdownLinkClass =
-  "block px-4 py-2 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out whitespace-nowrap";
+  "block px-4 py-2.5 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out whitespace-nowrap";
 
 export type DropdownItem = {
   href: string;
@@ -61,8 +61,8 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
 function Chevron() {
   return (
     <svg
-      width="8"
-      height="8"
+      width="10"
+      height="10"
       viewBox="0 0 8 8"
       fill="none"
       className="opacity-40 group-hover/dropdown:opacity-70 transition-opacity"

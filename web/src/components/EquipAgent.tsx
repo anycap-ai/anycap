@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 const ICON_CDN = "https://unpkg.com/@lobehub/icons-static-svg@latest/icons";
 
@@ -50,7 +51,7 @@ function AgentIconSlot({ icon, size = 20 }: { icon: string | null; size?: number
 
 export const EQUIP_MODAL_EVENT = "openEquipModal";
 
-export function EquipAgent() {
+export function EquipAgent({ label = "Equip your Agent" }: { label?: string }) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -111,10 +112,10 @@ export function EquipAgent() {
       {/* Trigger button */}
       <button
         onClick={openModal}
-        className="flex items-center gap-3 px-8 py-4 rounded-lg bg-[#8fa34e] text-white text-[13px] font-bold tracking-[1px] hover:bg-[#6b7d3a] transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]"
+        className="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-[#8fa34e] text-white text-[13px] font-bold tracking-[1px] hover:bg-[#6b7d3a] transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]"
         style={mono}
       >
-        Equip your Agent
+        {label}
         <svg width="6" height="10" viewBox="0 0 6 10" className="opacity-60">
           <path
             d="M1 1l4 4-4 4"
@@ -127,8 +128,8 @@ export function EquipAgent() {
         </svg>
       </button>
 
-      {/* Modal overlay */}
-      {open && (
+      {/* Modal overlay — portalled to body to escape stacking contexts */}
+      {open && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={(e) => {
@@ -278,7 +279,8 @@ export function EquipAgent() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

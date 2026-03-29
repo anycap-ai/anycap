@@ -6,7 +6,6 @@ import { useDashboardSummary } from "@/lib/api/hooks";
 import type { TimelineItem, Balance } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
 
 function timeAgo(ts: string): string {
   const d = new Date(ts);
@@ -38,7 +37,7 @@ function StatCard({
     <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-5 min-h-[122px] rounded-xl">
       <p
         className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
-        style={mono}
+       
       >
         {label}
       </p>
@@ -53,7 +52,7 @@ function BalanceCard({ balance }: { balance: Balance }) {
       <p className="text-2xl text-[#1c1f17] font-bold leading-none">
         {formatCredit(balance.available)}
       </p>
-      <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+      <p className="text-[13px] text-[#4d5145] mt-1.5">
         credits
       </p>
     </StatCard>
@@ -78,12 +77,12 @@ function LastActivityCard({
             <span className="text-[#9a9e90] mx-1.5">·</span>
             <span className="text-[#3a3e32]">{summary.last_model}</span>
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+          <p className="text-[13px] text-[#4d5145] mt-1.5">
             {timeAgo(summary.last_occurred_at)}
           </p>
         </>
       ) : (
-        <p className="text-[13px] text-[#7a7e71]" style={mono}>
+        <p className="text-[13px] text-[#7a7e71]">
           No activity yet
         </p>
       )}
@@ -105,16 +104,20 @@ function ErrorCard({
       {summary ? (
         <>
           <p className="text-base text-[#a83f32] leading-none">
-            {summary.last_error_code}
-            <span className="text-[#9a9e90] mx-1.5">·</span>
-            <span className="text-[#3a3e32]">{summary.last_error_capability}</span>
+            {summary.last_error_code || summary.last_error_capability}
+            {summary.last_error_code && summary.last_error_capability && (
+              <>
+                <span className="text-[#9a9e90] mx-1.5">·</span>
+                <span className="text-[#3a3e32]">{summary.last_error_capability}</span>
+              </>
+            )}
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-1.5" style={mono}>
+          <p className="text-[13px] text-[#4d5145] mt-1.5">
             {timeAgo(summary.last_error_occurred_at)}
           </p>
         </>
       ) : (
-        <p className="text-[13px] text-[#6b7d3a]" style={mono}>
+        <p className="text-[13px] text-[#6b7d3a]">
           No errors
         </p>
       )}
@@ -125,11 +128,11 @@ function ErrorCard({
 function ActivityRow({ item }: { item: TimelineItem }) {
   return (
     <div className="flex items-center gap-4 px-3 py-3.5 border-b border-[#d4dbb8]/60 text-[13px]">
-      <span className="text-[#4d5145] w-16 shrink-0" style={mono}>
+      <span className="text-[#4d5145] w-24 shrink-0">
         {timeAgo(item.occurred_at)}
       </span>
-      <span className="text-[#1c1f17] w-20 shrink-0">{item.capability || "—"}</span>
-      <span className="text-[#4d5145] flex-1 truncate" style={mono}>
+      <span className="text-[#1c1f17] w-36 shrink-0">{item.capability || "—"}</span>
+      <span className="text-[#4d5145] flex-1 truncate">
         {item.model || "—"}
       </span>
       <span
@@ -137,11 +140,11 @@ function ActivityRow({ item }: { item: TimelineItem }) {
             ? "text-[#6b7d3a]"
             : "text-[#a83f32]"
           }`}
-        style={mono}
+       
       >
         {item.status || "—"}
       </span>
-      <span className="text-[#4d5145] w-16 shrink-0 text-right" style={mono}>
+      <span className="text-[#4d5145] w-16 shrink-0 text-right">
         {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
       </span>
     </div>
@@ -157,8 +160,8 @@ export default function DashboardPage() {
   return (
     <div>
       <p
-        className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-6"
-        style={mono}
+        className="text-[16px] font-medium text-[#1c1f17] mb-6"
+       
       >
         Overview
       </p>
@@ -186,7 +189,7 @@ export default function DashboardPage() {
       <div className="mt-11">
         <p
           className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4"
-          style={mono}
+         
         >
           Recent Activity
         </p>
@@ -207,7 +210,7 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <p className="text-[13px] text-[#7a7e71] py-6" style={mono}>
+          <p className="text-[13px] text-[#7a7e71] py-6">
             No activity yet. Ask your agent to use anycap.
           </p>
         )}

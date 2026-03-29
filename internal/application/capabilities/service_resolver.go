@@ -72,7 +72,7 @@ func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, ra
 		return "", artifact, model.ErrMissingInput
 	}
 
-	uploadID, isUploadRef := parseUploadRefID(trimmedURL)
+	uploadExternalID, isUploadRef := parseUploadRefExternalID(trimmedURL)
 	if !isUploadRef {
 		if looksLikeAnyCapRef(trimmedURL) {
 			return "", artifact, model.ErrUploadReferenceInvalid
@@ -82,7 +82,7 @@ func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, ra
 		return trimmedURL, artifact, nil
 	}
 
-	upload, err := s.capsUploadRepo.GetByID(ctx, uploadID)
+	upload, err := s.capsUploadRepo.GetByExternalID(ctx, uploadExternalID)
 	if err != nil {
 		return "", artifact, err
 	}
@@ -126,7 +126,7 @@ func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, ra
 		return "", artifact, err
 	}
 
-	uploadRef := uploadRefURL(upload.ID)
+	uploadRef := uploadRefURL(upload.ExternalID)
 	artifact.SourceKind = model.CapsTaskArtifactSourceKindAnyCapUpload
 	artifact.SourceURL = &uploadRef
 	if stored != nil {

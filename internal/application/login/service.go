@@ -9,6 +9,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 const loginCredentialTypeAPIKey = "api_key"
@@ -52,7 +53,7 @@ func NewService(
 	}
 	if sessionIDGenerator == nil {
 		sessionIDGenerator = func() string {
-			return "lsn-" + time.Now().UTC().Format("20060102150405.000000000")
+			return externalid.Generate(externalid.PrefixLoginSession)
 		}
 	}
 	if userCodeGenerator == nil {

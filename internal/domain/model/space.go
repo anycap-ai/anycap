@@ -5,8 +5,8 @@ import "time"
 const DefaultPersonalSpaceName = "Personal Space"
 
 type Space struct {
-	ID          int64     `json:"id"`
-	OwnerUserID string    `json:"owner_user_id"`
-	Name        string    `json:"name"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int64
+	OwnerUserID string
+	Name        string
+	CreatedAt   time.Time
 }

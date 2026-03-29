@@ -1,5 +1,5 @@
 export const BASE_STYLES = `*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--navy:#1c1f17;--olive:#6b7d3a;--sage:#8fa34e;--surface:#f4f5f0;--surface-raised:#f9faf5;--text-primary:#1c1f17;--text-body:#3a3e32;--text-secondary:#4d5145;--text-label:#707468;--text-neutral:#9a9e90;--border-default:rgba(212,219,184,0.7);--border-divider:#d4dbb8;--font-mono:'Space Mono',monospace}
+:root{--navy:#1c1f17;--olive:#6b7d3a;--sage:#8fa34e;--surface:#f4f5f0;--surface-raised:#f9faf5;--text-primary:#1c1f17;--text-body:#3a3e32;--text-secondary:#4d5145;--text-label:#707468;--text-neutral:#9a9e90;--border-default:rgba(212,219,184,0.7);--border-divider:#d4dbb8;--font-mono:'Inter',sans-serif;--font-logo:'Space Mono',monospace}
 html,body{height:100%;background:var(--surface);color:var(--text-primary);font-family:sans-serif}
 a{color:inherit;text-decoration:none}
 .wrapper{display:flex;flex-direction:column;min-height:100vh}
@@ -7,7 +7,7 @@ a{color:inherit;text-decoration:none}
 @media(min-width:768px){.topbar{padding:12px 40px}}
 .badge{display:flex;align-items:center;gap:8px;transition:opacity 200ms ease;flex-shrink:0}
 .badge:hover{opacity:0.75}
-.badge-wm{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:-0.5px;line-height:1}
+.badge-wm{font-family:var(--font-logo);font-weight:700;font-size:15px;letter-spacing:-0.5px;line-height:1}
 .badge-wm .a{color:var(--navy)}.badge-wm .c{color:var(--olive)}
 .sep{width:1px;height:20px;background:var(--border-divider);flex-shrink:0}
 .file-info{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1}
@@ -22,14 +22,15 @@ a{color:inherit;text-decoration:none}
 export const FILE_PREVIEW_STYLES = `
 .preview-frame{max-width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border-default);background:var(--surface-raised);box-shadow:0 18px 50px rgba(28,31,23,0.06)}
 .preview-frame img,.preview-frame video{display:block;max-width:100%;max-height:calc(100vh - 120px);object-fit:contain}
-.pdf-frame{width:100%;max-width:900px;height:calc(100vh - 120px);border:1px solid var(--border-default);border-radius:12px;background:white}
+.pdf-frame{width:100%;height:calc(100vh - 120px);border:1px solid var(--border-default);border-radius:12px;background:white}
 .content-full{padding:48px 0 0;align-items:stretch}
+.content-doc{align-items:flex-start}
 .html-frame{width:100%;flex:1;border:none;background:white}
 .audio-card{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;min-width:320px;max-width:480px;width:100%}
 .audio-card audio{width:100%}
 .audio-card .audio-name{font-family:var(--font-mono);font-size:14px;color:var(--text-primary);letter-spacing:0.3px}
-.text-content{width:100%;max-width:900px;max-height:calc(100vh - 120px);overflow:auto;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;padding:20px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;word-break:break-word;tab-size:4}
-.md-content{width:100%;max-width:760px;max-height:calc(100vh - 120px);overflow:auto;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;padding:24px 28px;color:var(--text-body);font-size:16px;line-height:1.7}
+.text-content{width:100%;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;padding:20px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;word-break:break-word;tab-size:4}
+.md-content{width:100%;background:var(--surface-raised);border:1px solid var(--border-default);border-radius:12px;padding:24px 28px;color:var(--text-body);font-size:16px;line-height:1.7}
 .md-content h1,.md-content h2,.md-content h3,.md-content h4{color:var(--text-primary);margin:1.2em 0 .4em;line-height:1.3}
 .md-content h1{font-size:1.6em;border-bottom:1px solid var(--border-divider);padding-bottom:.3em}
 .md-content h2{font-size:1.3em;border-bottom:1px solid var(--border-divider);padding-bottom:.2em}

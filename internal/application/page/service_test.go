@@ -238,14 +238,14 @@ func TestUpdateSite_SetPasswordHashesWithPepper(t *testing.T) {
 	if strings.Contains(*updated.PasswordHash, password) {
 		t.Fatalf("expected password hash not to contain raw password, got %q", *updated.PasswordHash)
 	}
-	if !strings.HasPrefix(*updated.PasswordHash, "pbkdf2_sha256$120000$v1$") {
+	if !strings.HasPrefix(*updated.PasswordHash, "pbkdf2_sha256$100000$v1$") {
 		t.Fatalf("expected hash format prefix, got %q", *updated.PasswordHash)
 	}
 }
 
 func TestUpdateSite_PublicModeClearsPassword(t *testing.T) {
 	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
-	hash := "pbkdf2_sha256$120000$v1$abc"
+	hash := "pbkdf2_sha256$100000$v1$abc"
 	salt := "salt"
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{

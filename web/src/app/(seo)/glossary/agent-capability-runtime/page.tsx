@@ -8,7 +8,7 @@ import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
   title: "What is an agent capability runtime?",

@@ -2,7 +2,6 @@ package infra
 
 import (
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -16,11 +15,11 @@ func newPageUnpublishCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 		Short: "Unpublish current live version for a page site",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parsePositiveInt64(args[0], "page-id")
+			pageID, err := parseResourceID(args[0], "page-id")
 			if err != nil {
 				return err
 			}
-			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/pages/"+strconv.FormatInt(pageID, 10)+"/unpublish", map[string]any{})
+			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/unpublish", map[string]any{})
 			if err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -224,6 +225,33 @@ func TestService_InitDevice(t *testing.T) {
 	}
 	if result.UserCode == "" || result.VerificationURI != "https://anycap.ai/auth/device" {
 		t.Fatalf("unexpected device init result: %#v", result)
+	}
+}
+
+func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	service := NewService(
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		sessions,
+		"https://anycap.ai/auth/device",
+		nil,
+		nil,
+		nil,
+		now,
+		7*24*time.Hour,
+	)
+
+	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if !strings.HasPrefix(result.LoginSessionID, "lsn_") {
+		t.Fatalf("expected login session id with lsn_ prefix, got %q", result.LoginSessionID)
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 
 const (
 	PasswordHashAlgo          = "pbkdf2_sha256"
-	PasswordHashIter          = 120000
+	PasswordHashIter          = 100000
 	PasswordHashPepperVersion = "v1"
 )
 

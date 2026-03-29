@@ -7,7 +7,7 @@ type Props = {
   initialCode: string;
 };
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 function errorMessage(reason: string | undefined): string {
   switch (reason) {

@@ -13,7 +13,7 @@ import (
 
 func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		parentID   int64
+		parentID   string
 		parentPath string
 	)
 
@@ -42,9 +42,13 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 			}
 
 			client := clientFactory()
-			var resolvedParentID *int64
+			var resolvedParentID *string
 			if parentIDSet {
-				resolvedParentID = &parentID
+				parsedParentID, parseErr := parseResourceID(parentID, "parent")
+				if parseErr != nil {
+					return parseErr
+				}
+				resolvedParentID = &parsedParentID
 			} else if parentPath != "" {
 				id, resolveErr := resolveDriveFolderPath(cmd.Context(), client, parentPath)
 				if resolveErr != nil {
@@ -64,8 +68,8 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 			}
 
 			presignData, err := decodeSuccessData[struct {
-				UploadSessionID int64  `json:"upload_session_id"`
-				FileID          int64  `json:"file_id"`
+				UploadSessionID string `json:"upload_session_id"`
+				FileID          string `json:"file_id"`
 				UploadURL       string `json:"upload_url"`
 			}](presignResp)
 			if err != nil {
@@ -85,7 +89,7 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 			}
 
 			completeData, err := decodeSuccessData[struct {
-				ID   int64  `json:"id"`
+				ID   string `json:"id"`
 				Name string `json:"name"`
 				Size *int64 `json:"size,omitempty"`
 			}](completeResp)
@@ -106,7 +110,7 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		},
 	}
 
-	cmd.Flags().Int64Var(&parentID, "parent", 0, "Parent folder ID")
+	cmd.Flags().StringVar(&parentID, "parent", "", "Parent folder ID")
 	cmd.Flags().StringVar(&parentPath, "parent-path", "", "Parent folder path (for example: /docs)")
 
 	return cmd

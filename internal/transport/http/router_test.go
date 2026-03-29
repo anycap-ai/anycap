@@ -11,10 +11,12 @@ import (
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
+	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
@@ -29,7 +31,17 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
+	drivehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	pagehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -120,6 +132,300 @@ func routeInputEnabled(value *bool) bool {
 	return *value
 }
 
+// --- Drive/Page test fakes ---
+
+type fakeSpaceService struct {
+	space *model.Space
+}
+
+func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ string) (*model.Space, error) {
+	return s.space, nil
+}
+
+type fakeDriveNodeRepo struct {
+	nodes  map[int64]*model.DriveNode
+	nextID int64
+}
+
+func (r *fakeDriveNodeRepo) CreateFolder(_ context.Context, input model.CreateDriveFolderInput) (*model.DriveNode, error) {
+	if r.nodes == nil {
+		r.nodes = map[int64]*model.DriveNode{}
+	}
+	r.nextID++
+	node := &model.DriveNode{
+		ID:          r.nextID,
+		SpaceID:     input.SpaceID,
+		ParentID:    input.ParentID,
+		Kind:        model.DriveNodeKindFolder,
+		Name:        input.Name,
+		CreatedBy:   input.CreatedBy,
+		EdgeVersion: 1,
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
+	}
+	r.nodes[node.ID] = node
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) CreateFile(_ context.Context, input model.CreateDriveFileInput) (*model.DriveNode, error) {
+	if r.nodes == nil {
+		r.nodes = map[int64]*model.DriveNode{}
+	}
+	r.nextID++
+	node := &model.DriveNode{
+		ID:          r.nextID,
+		SpaceID:     input.SpaceID,
+		ParentID:    input.ParentID,
+		Kind:        model.DriveNodeKindFile,
+		Name:        input.Name,
+		CreatedBy:   input.CreatedBy,
+		Size:        input.Size,
+		MIME:        input.MIME,
+		EdgeVersion: 1,
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
+	}
+	r.nodes[node.ID] = node
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNode, error) {
+	node, ok := r.nodes[id]
+	if !ok || node.DeletedAt != nil {
+		return nil, nil
+	}
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, error) {
+	items := make([]model.DriveNode, 0)
+	for _, node := range r.nodes {
+		if node.DeletedAt != nil || node.SpaceID != filter.SpaceID {
+			continue
+		}
+		if !sameNullableInt64(node.ParentID, filter.ParentID) {
+			continue
+		}
+		items = append(items, *cloneDriveNode(node))
+	}
+	return items, nil
+}
+
+func (r *fakeDriveNodeRepo) Update(_ context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error) {
+	node, ok := r.nodes[input.ID]
+	if !ok || node.DeletedAt != nil || node.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	if input.Name != nil {
+		node.Name = *input.Name
+	}
+	if input.UpdateParent {
+		node.ParentID = input.ParentID
+	}
+	node.EdgeVersion++
+	node.UpdatedAt = time.Now().UTC()
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) AttachStorageObject(_ context.Context, input model.AttachDriveNodeStorageInput) (*model.DriveNode, error) {
+	node, ok := r.nodes[input.NodeID]
+	if !ok || node.DeletedAt != nil || node.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	node.StorageObjectID = &input.StorageObjectID
+	node.Size = &input.Size
+	node.MIME = &input.MIME
+	node.EdgeVersion++
+	node.UpdatedAt = time.Now().UTC()
+	return cloneDriveNode(node), nil
+}
+
+func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, targetID int64) (bool, error) {
+	visited := map[int64]bool{}
+	queue := []int64{rootID}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if visited[current] {
+			continue
+		}
+		visited[current] = true
+		if current == targetID {
+			return true, nil
+		}
+		for _, node := range r.nodes {
+			if node.DeletedAt != nil || node.SpaceID != spaceID || node.ParentID == nil {
+				continue
+			}
+			if *node.ParentID == current {
+				queue = append(queue, node.ID)
+			}
+		}
+	}
+	return false, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
+	toDelete := []int64{rootID}
+	deletedCount := int64(0)
+	for len(toDelete) > 0 {
+		current := toDelete[0]
+		toDelete = toDelete[1:]
+		node, ok := r.nodes[current]
+		if !ok || node.DeletedAt != nil || node.SpaceID != spaceID {
+			continue
+		}
+		now := time.Now().UTC()
+		node.DeletedAt = &now
+		node.UpdatedAt = now
+		node.EdgeVersion++
+		deletedCount++
+		for _, child := range r.nodes {
+			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
+				continue
+			}
+			if *child.ParentID == current {
+				toDelete = append(toDelete, child.ID)
+			}
+		}
+	}
+	return deletedCount, nil
+}
+
+func cloneDriveNode(n *model.DriveNode) *model.DriveNode {
+	c := *n
+	return &c
+}
+
+func sameNullableInt64(a, b *int64) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
+type fakePageSiteRepo struct {
+	sites  map[int64]*model.PageSite
+	nextID int64
+}
+
+func (r *fakePageSiteRepo) Create(_ context.Context, input model.CreatePageSiteInput) (*model.PageSite, error) {
+	if r.sites == nil {
+		r.sites = map[int64]*model.PageSite{}
+	}
+	r.nextID++
+	now := time.Now().UTC()
+	site := &model.PageSite{
+		ID:           r.nextID,
+		SpaceID:      input.SpaceID,
+		Name:         input.Name,
+		PageName:     input.PageName,
+		AccessMode:   input.AccessMode,
+		PasswordHash: input.PasswordHash,
+		PasswordSalt: input.PasswordSalt,
+		SPAFallback:  input.SPAFallback,
+		EdgeVersion:  1,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	r.sites[site.ID] = site
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) ListBySpace(_ context.Context, spaceID int64) ([]model.PageSite, error) {
+	items := make([]model.PageSite, 0)
+	for _, site := range r.sites {
+		if site.SpaceID != spaceID || site.DeletedAt != nil {
+			continue
+		}
+		items = append(items, *clonePageSite(site))
+	}
+	return items, nil
+}
+
+func (r *fakePageSiteRepo) GetByID(_ context.Context, id int64) (*model.PageSite, error) {
+	site, ok := r.sites[id]
+	if !ok || site.DeletedAt != nil {
+		return nil, nil
+	}
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) Update(_ context.Context, input model.UpdatePageSiteInput) (*model.PageSite, error) {
+	site, ok := r.sites[input.ID]
+	if !ok || site.DeletedAt != nil || site.SpaceID != input.SpaceID {
+		return nil, nil
+	}
+	if input.Name != nil {
+		site.Name = *input.Name
+	}
+	if input.AccessMode != nil {
+		site.AccessMode = *input.AccessMode
+	}
+	if input.SPAFallback != nil {
+		site.SPAFallback = *input.SPAFallback
+	}
+	if input.UpdatePassword {
+		site.PasswordHash = input.PasswordHash
+		site.PasswordSalt = input.PasswordSalt
+	}
+	site.EdgeVersion++
+	site.UpdatedAt = time.Now().UTC()
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) SetCurrentVersion(_ context.Context, spaceID, id int64, versionID *int64) (*model.PageSite, error) {
+	site, ok := r.sites[id]
+	if !ok || site.DeletedAt != nil || site.SpaceID != spaceID {
+		return nil, nil
+	}
+	if versionID == nil {
+		site.CurrentVersionID = nil
+	} else {
+		value := *versionID
+		site.CurrentVersionID = &value
+	}
+	site.EdgeVersion++
+	site.UpdatedAt = time.Now().UTC()
+	return clonePageSite(site), nil
+}
+
+func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) error {
+	site, ok := r.sites[id]
+	if !ok || site.SpaceID != spaceID || site.DeletedAt != nil {
+		return nil
+	}
+	now := time.Now().UTC()
+	site.DeletedAt = &now
+	site.UpdatedAt = now
+	site.EdgeVersion++
+	return nil
+}
+
+func clonePageSite(s *model.PageSite) *model.PageSite {
+	c := *s
+	return &c
+}
+
+type fakePageSlugRepo struct {
+	slugs map[string]int64
+}
+
+func (r *fakePageSlugRepo) Create(_ context.Context, slug string, pageID int64) error {
+	if r.slugs == nil {
+		r.slugs = map[string]int64{}
+	}
+	r.slugs[slug] = pageID
+	return nil
+}
+
+func (r *fakePageSlugRepo) MarkTombstone(_ context.Context, _ string, _ int64) error {
+	return nil
+}
+
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
@@ -162,8 +468,9 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemService.SetUserReader(users)
 	systemService.SetCreditClient(creditClient)
 	systemService.SetCallLogRepo(callLogs)
-	systemHandler := handlers.NewSystemHandler(systemService)
-	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
+	passthroughMapper := presenter.PassthroughIDMapper{}
+	systemHandler := system.NewHandler(systemService, passthroughMapper)
+	loginHandler := login.NewHandler(loginapp.NewService(
 		users,
 		credit.NewStubClient(nil),
 		apiKeys,
@@ -183,14 +490,20 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		},
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,
-	))
+	), passthroughMapper)
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}, Routes: []model.RouteBinding{{RouteType: model.RouteTypeDirect, AbilityKey: "flux-dev", GenType: string(model.CapabilityImage), AlgoType: "txt_2_img", Priority: 100, Enabled: true}}}}}})
-	imageHandler := handlers.NewImageHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
-	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
-	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
-	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
-	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
+	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
+	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
+	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
+	passthroughResolver := idresolver.PassthroughIDResolver{}
+	testSpace := &model.Space{ID: 100, OwnerUserID: seededUser.ID}
+	driveService := driveapp.NewService(&fakeSpaceService{space: testSpace}, &fakeDriveNodeRepo{})
+	driveHandler := drivehandler.NewHandler(driveService, passthroughResolver, passthroughMapper)
+	pageService := pageapp.NewService(&fakeSpaceService{space: testSpace}, &fakePageSiteRepo{}, &fakePageSlugRepo{}, "test-pepper")
+	pageHandler := pagehandler.NewHandler(pageService, passthroughResolver, passthroughMapper)
+	modelRouteHandler := modelroute.NewHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
 				ID:         1,
@@ -202,7 +515,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				Status:     model.ModelRouteStatusActive,
 			},
 		},
-	}))
+	}), passthroughResolver, passthroughMapper)
 	identityTokens := &testIdentityTokenAuthenticator{
 		principals: map[string]model.Principal{
 			"jwt-demo-token": {
@@ -240,6 +553,8 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				driveHandler.RegisterRoutes(protected)
+				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 			}),
@@ -1012,5 +1327,266 @@ func TestRouter_FeedbackInvalidType(t *testing.T) {
 	)
 	if resp.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+// --- Drive tests ---
+
+func TestRouter_DriveCreateFolderAndList(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create folder
+	body := []byte(`{"name":"docs"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create folder: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal create response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	if data["name"] != "docs" {
+		t.Fatalf("expected name=docs, got %v", data["name"])
+	}
+	if data["kind"] != "folder" {
+		t.Fatalf("expected kind=folder, got %v", data["kind"])
+	}
+	folderID := data["id"]
+
+	// List root nodes
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list nodes: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal list response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected non-empty items, got %#v", data)
+	}
+	first := items[0].(map[string]any)
+	if first["name"] != "docs" {
+		t.Fatalf("expected listed folder name=docs, got %v", first["name"])
+	}
+
+	// Create subfolder using parent_id
+	subBody := []byte(`{"name":"sub","parent_id":"` + folderID.(string) + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(subBody), Len: len(subBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create subfolder: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_DriveUpdateAndDelete(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create folder
+	body := []byte(`{"name":"old-name"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data := env["data"].(map[string]any)
+	folderID := data["id"].(string)
+
+	// Rename
+	renameBody := []byte(`{"name":"new-name"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/drive/nodes/"+folderID, &ut.Body{Body: bytes.NewReader(renameBody), Len: len(renameBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("update: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["name"] != "new-name" {
+		t.Fatalf("expected renamed to new-name, got %v", data["name"])
+	}
+
+	// Delete
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodDelete, "/v1/drive/nodes/"+folderID, nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("delete: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["deleted"] != true {
+		t.Fatalf("expected deleted=true, got %#v", data)
+	}
+	if data["id"] != folderID {
+		t.Fatalf("expected id=%s in delete response, got %v", folderID, data["id"])
+	}
+
+	// List should be empty now
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list after delete: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	total, _ := data["total"].(float64)
+	if total != 0 {
+		t.Fatalf("expected 0 items after delete, got %v", total)
+	}
+}
+
+func TestRouter_DriveRequiresAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	body := []byte(`{"name":"docs"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_DriveInvalidIDReturns400(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/drive/nodes/abc", &ut.Body{Body: bytes.NewReader([]byte(`{"name":"x"}`)), Len: 13}, authz, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid ID, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodDelete, "/v1/drive/nodes/abc", nil, authz)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid ID on delete, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+// --- Page tests ---
+
+func TestRouter_PageCreateSiteAndList(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create site
+	body := []byte(`{"name":"My Portfolio"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create site: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal create response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	if data["name"] != "My Portfolio" {
+		t.Fatalf("expected name=My Portfolio, got %v", data["name"])
+	}
+	siteID := data["id"].(string)
+
+	// List sites
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list sites: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected non-empty items, got %#v", data)
+	}
+
+	// Get site
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages/"+siteID, nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("get site: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["name"] != "My Portfolio" {
+		t.Fatalf("expected name=My Portfolio, got %v", data["name"])
+	}
+}
+
+func TestRouter_PageUpdateSite(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create
+	body := []byte(`{"name":"Old Name"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	siteID := env["data"].(map[string]any)["id"].(string)
+
+	// Update name
+	updateBody := []byte(`{"name":"New Name"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/pages/"+siteID, &ut.Body{Body: bytes.NewReader(updateBody), Len: len(updateBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("update: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data := env["data"].(map[string]any)
+	if data["name"] != "New Name" {
+		t.Fatalf("expected renamed to New Name, got %v", data["name"])
+	}
+}
+
+func TestRouter_PageRequiresAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	body := []byte(`{"name":"test"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_PageUpdateRejectsEmptyPatch(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create
+	body := []byte(`{"name":"test"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	siteID := env["data"].(map[string]any)["id"].(string)
+
+	// Empty update should fail
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/pages/"+siteID, &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, authz, ct)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for empty update, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }

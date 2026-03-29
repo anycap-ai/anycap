@@ -2,12 +2,12 @@ package apikey
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 type memoryRecord struct {
@@ -17,7 +17,6 @@ type memoryRecord struct {
 
 type MemoryService struct {
 	mu         sync.Mutex
-	seq        int
 	byID       map[string]memoryRecord
 	byPrefix   map[string]string
 	byUserName map[string]string
@@ -83,7 +82,6 @@ func (s *MemoryService) createAPIKey(userID, name string, ttl time.Duration) (mo
 		}
 	}
 
-	s.seq++
 	rawKey, err := apikeycodec.GenerateRawKey()
 	if err != nil {
 		return model.CreatedAPIKey{}, err
@@ -91,7 +89,7 @@ func (s *MemoryService) createAPIKey(userID, name string, ttl time.Duration) (mo
 	prefix := apikeycodec.PrefixFromRawKey(rawKey)
 	now := time.Now().UTC()
 	apiKey := model.APIKey{
-		ID:        fmt.Sprintf("key_%06d", s.seq),
+		ID:        externalid.Generate(externalid.PrefixAPIKeyID),
 		UserID:    userID,
 		Name:      name,
 		KeyPrefix: prefix,

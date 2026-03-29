@@ -3,7 +3,6 @@ package infra
 import (
 	"fmt"
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -13,7 +12,7 @@ import (
 
 func newDriveMvCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		dstParentID   int64
+		dstParentID   string
 		dstParentPath string
 		newName       string
 		srcPath       string
@@ -43,7 +42,11 @@ func newDriveMvCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				payload["name"] = newName
 			}
 			if dstParentIDSet {
-				payload["parent_id"] = dstParentID
+				parsedParentID, parseErr := parseResourceID(dstParentID, "dst-parent")
+				if parseErr != nil {
+					return parseErr
+				}
+				payload["parent_id"] = parsedParentID
 			} else if dstParentPath != "" {
 				resolvedParentID, resolveErr := resolveDriveFolderPath(cmd.Context(), client, dstParentPath)
 				if resolveErr != nil {
@@ -52,7 +55,7 @@ func newDriveMvCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				payload["parent_id"] = resolvedParentID
 			}
 
-			resp, err := client.PatchJSON(cmd.Context(), "/v1/drive/nodes/"+strconv.FormatInt(nodeID, 10), payload)
+			resp, err := client.PatchJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID, payload)
 			if err != nil {
 				return err
 			}
@@ -60,7 +63,7 @@ func newDriveMvCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		},
 	}
 
-	cmd.Flags().Int64Var(&dstParentID, "dst-parent", 0, "Destination parent folder ID")
+	cmd.Flags().StringVar(&dstParentID, "dst-parent", "", "Destination parent folder ID")
 	cmd.Flags().StringVar(&dstParentPath, "dst-parent-path", "", "Destination parent folder path")
 	cmd.Flags().StringVar(&srcPath, "src-path", "", "Source node path (for example: /docs/readme.md)")
 	cmd.Flags().StringVar(&newName, "name", "", "New node name")

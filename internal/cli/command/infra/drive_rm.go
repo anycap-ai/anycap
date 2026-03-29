@@ -2,7 +2,6 @@ package infra
 
 import (
 	"io"
-	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -24,7 +23,7 @@ func newDriveRmCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				return err
 			}
 
-			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+strconv.FormatInt(nodeID, 10))
+			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+nodeID)
 			if err != nil {
 				return err
 			}

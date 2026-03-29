@@ -79,7 +79,8 @@ Three fonts, each with a clear role:
 | Font | CSS Variable | Role |
 |------|-------------|------|
 | **GeistPixelSquare** | `--font-geist-pixel-square` | Display — headlines, bold statements, brand voice |
-| **Space Mono** | `--font-mono` | Chrome — navigation, buttons, labels, code, terminal |
+| **Inter** | `--font-mono` | Chrome — navigation, buttons, labels, code |
+| **Space Mono** | `--font-logo` | Logo wordmark and terminal demos |
 | **System sans-serif** | `sans-serif` | Body — paragraphs, descriptions, readable prose |
 
 ### Type Scale (Responsive)

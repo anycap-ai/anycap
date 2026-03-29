@@ -35,7 +35,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 		if existing != nil {
 			return model.PresignResult{
 				UploadURL: "",
-				ObjectURL: uploadRefURL(existing.ID),
+				ObjectURL: uploadRefURL(existing.ExternalID),
 				ExpiresIn: secondsUntil(existing.ExpiresAt, s.now()),
 				Reused:    true,
 			}, nil
@@ -69,7 +69,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 
 	return model.PresignResult{
 		UploadURL: presignResult.UploadURL,
-		ObjectURL: uploadRefURL(upload.ID),
+		ObjectURL: uploadRefURL(upload.ExternalID),
 		ObjectKey: presignResult.ObjectKey,
 		ExpiresIn: presignResult.ExpiresIn,
 		Reused:    false,

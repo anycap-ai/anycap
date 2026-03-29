@@ -4,10 +4,10 @@ import { NavDropdown, type DropdownItem } from "@/components/NavDropdown";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 const linkClass =
-  "px-2.5 py-1.5 text-sm text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
+  "px-3 py-2 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
 
 export type NavItem = {
   href: string;
@@ -47,8 +47,8 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
     <header className="fixed top-0 left-0 right-0 z-40 px-5 py-4 md:px-16 md:py-6 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <Link href={localizedLogoHref} className="shrink-0">
-          <span className="block md:hidden"><AnycapLogo size={28} /></span>
-          <span className="hidden md:block"><AnycapLogo size={36} /></span>
+          <span className="block md:hidden"><AnycapLogo size={32} /></span>
+          <span className="hidden md:block"><AnycapLogo size={42} /></span>
         </Link>
         <nav className="ml-auto flex items-center gap-0.5 sm:gap-1 overflow-hidden">
           {links.map((entry) => {

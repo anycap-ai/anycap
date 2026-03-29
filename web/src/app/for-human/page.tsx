@@ -11,7 +11,7 @@ import { ParticleAgent } from "@/components/animation/ParticleAgent";
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
 
@@ -207,15 +207,7 @@ export default function ForHumanPage() {
           </p>
         </FadeIn>
         <FadeIn delay={300}>
-          <a
-            href="https://github.com/anycap-ai/anycap"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17] rounded-lg"
-            style={mono}
-          >
-            Get Started
-          </a>
+          <LazyEquipAgent label="Get Started" style={mono} />
         </FadeIn>
       </section>
 

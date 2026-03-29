@@ -2,29 +2,33 @@ package capabilities
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
-func uploadRefURL(uploadID int64) string {
-	return fmt.Sprintf("anycap://upload/%d", uploadID)
+const uploadRefPrefix = "anycap://upload/"
+
+func uploadRefURL(uploadExternalID string) string {
+	return fmt.Sprintf("%s%s", uploadRefPrefix, strings.TrimSpace(uploadExternalID))
 }
 
-func parseUploadRefID(rawURL string) (int64, bool) {
-	const prefix = "anycap://upload/"
+func parseUploadRefExternalID(rawURL string) (string, bool) {
 	trimmed := strings.TrimSpace(rawURL)
-	if !strings.HasPrefix(strings.ToLower(trimmed), prefix) {
-		return 0, false
+	lowerTrimmed := strings.ToLower(trimmed)
+	if !strings.HasPrefix(lowerTrimmed, uploadRefPrefix) {
+		return "", false
 	}
-	rawID := strings.TrimPrefix(strings.ToLower(trimmed), prefix)
+
+	rawID := trimmed[len(uploadRefPrefix):]
+	rawID = strings.TrimSpace(rawID)
 	if rawID == "" || strings.Contains(rawID, "/") {
-		return 0, false
+		return "", false
 	}
-	id, err := strconv.ParseInt(rawID, 10, 64)
-	if err != nil || id <= 0 {
-		return 0, false
+	if err := externalid.ValidatePrefix(rawID, externalid.PrefixCapsUpload); err != nil {
+		return "", false
 	}
-	return id, true
+	return rawID, true
 }
 
 func looksLikeAnyCapRef(rawURL string) bool {

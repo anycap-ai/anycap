@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-const mono = { fontFamily: "var(--font-mono), monospace" } as const;
+const mono = { fontFamily: "var(--font-logo), monospace" } as const;
 
 interface Line {
   type: "header" | "prompt" | "text" | "tool" | "result" | "cursor";
