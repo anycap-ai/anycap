@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign in — AnyCap</title>
+  <link rel="icon" id="favicon">
   <style>
     *,
     *::before,
@@ -45,6 +46,7 @@
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
+      border-radius: 12px;
       padding: 40px 32px 32px;
     }
 
@@ -100,6 +102,7 @@
       padding: 12px 20px;
       border: none;
       background: #1c1f17;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s;
     }
@@ -203,6 +206,16 @@
 
   <script src="https://cdn.auth0.com/js/auth0/9.28/auth0.min.js"></script>
   <script>
+    // ── Favicon from inline logo ──
+    (function () {
+      var svg = document.querySelector('.logo svg');
+      var clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('viewBox', '0 0 200 200');
+      var data = new XMLSerializer().serializeToString(clone);
+      document.getElementById('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(data);
+    })();
+
     // ── Grain texture ──
     (function () {
       var el = document.getElementById('grain');
