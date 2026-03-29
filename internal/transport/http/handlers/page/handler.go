@@ -1,25 +1,26 @@
-package handlers
+package page
 
 import (
 	"encoding/json"
 
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type PageHandler struct {
+type Handler struct {
 	service  *pageapp.Service
-	resolver IDResolver
+	resolver idresolver.IDResolver
 	mapper   presenter.IDMapper
 }
 
-func NewPageHandler(service *pageapp.Service, resolver IDResolver, mapper presenter.IDMapper) *PageHandler {
-	return &PageHandler{service: service, resolver: resolver, mapper: mapper}
+func NewHandler(service *pageapp.Service, resolver idresolver.IDResolver, mapper presenter.IDMapper) *Handler {
+	return &Handler{service: service, resolver: resolver, mapper: mapper}
 }
 
-func (h *PageHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.POST("/pages", h.CreateSite)
 	group.GET("/pages", h.ListSites)
 	group.GET("/pages/:id", h.GetSite)

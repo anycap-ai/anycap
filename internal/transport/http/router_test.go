@@ -29,7 +29,14 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
@@ -164,8 +171,8 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemService.SetCreditClient(creditClient)
 	systemService.SetCallLogRepo(callLogs)
 	passthroughMapper := presenter.PassthroughIDMapper{}
-	systemHandler := handlers.NewSystemHandler(systemService, passthroughMapper)
-	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
+	systemHandler := system.NewHandler(systemService, passthroughMapper)
+	loginHandler := login.NewHandler(loginapp.NewService(
 		users,
 		credit.NewStubClient(nil),
 		apiKeys,
@@ -187,13 +194,13 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		7*24*time.Hour,
 	), passthroughMapper)
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}, Routes: []model.RouteBinding{{RouteType: model.RouteTypeDirect, AbilityKey: "flux-dev", GenType: string(model.CapabilityImage), AlgoType: "txt_2_img", Priority: 100, Enabled: true}}}}}})
-	imageHandler := handlers.NewImageHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
-	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
-	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
-	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
-	passthroughResolver := handlers.PassthroughIDResolver{}
-	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
+	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
+	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
+	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
+	passthroughResolver := idresolver.PassthroughIDResolver{}
+	modelRouteHandler := modelroute.NewHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
 				ID:         1,

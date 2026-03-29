@@ -1,4 +1,4 @@
-package handlers
+package image
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type ImageHandler struct {
+type Handler struct {
 	service *imageapp.Service
 }
 
-func NewImageHandler(service *imageapp.Service) *ImageHandler {
-	return &ImageHandler{service: service}
+func NewHandler(service *imageapp.Service) *Handler {
+	return &Handler{service: service}
 }
 
-func (h *ImageHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/image")
 	g.POST("/generate", h.Generate)
 }
 
-func (h *ImageHandler) Generate(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	var payload dto.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
 		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))

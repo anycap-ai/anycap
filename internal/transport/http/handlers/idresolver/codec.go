@@ -1,4 +1,4 @@
-package handlers
+package idresolver
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func parseOptionalIDRaw(raw json.RawMessage) (*string, error) {
+func ParseOptionalIDRaw(raw json.RawMessage) (*string, error) {
 	if len(raw) == 0 {
 		return nil, nil
 	}
@@ -26,8 +26,8 @@ func parseOptionalIDRaw(raw json.RawMessage) (*string, error) {
 	return &idString, nil
 }
 
-func parseRequiredIDRaw(raw json.RawMessage, fieldName string) (string, error) {
-	value, err := parseOptionalIDRaw(raw)
+func ParseRequiredIDRaw(raw json.RawMessage, fieldName string) (string, error) {
+	value, err := ParseOptionalIDRaw(raw)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", fieldName, err)
 	}
@@ -37,10 +37,10 @@ func parseRequiredIDRaw(raw json.RawMessage, fieldName string) (string, error) {
 	return strings.TrimSpace(*value), nil
 }
 
-func isExternalIDInvalidError(err error) bool {
+func IsExternalIDInvalidError(err error) bool {
 	return errors.Is(err, ErrExternalIDInvalid)
 }
 
-func isExternalIDNotFoundError(err error) bool {
+func IsExternalIDNotFoundError(err error) bool {
 	return errors.Is(err, ErrExternalIDNotFound)
 }

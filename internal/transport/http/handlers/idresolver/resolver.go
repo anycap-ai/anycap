@@ -1,4 +1,4 @@
-package handlers
+package idresolver
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
@@ -31,19 +32,19 @@ type IDResolver interface {
 type PassthroughIDResolver struct{}
 
 func (PassthroughIDResolver) ResolveDriveNodeID(_ context.Context, raw string) (int64, error) {
-	return parsePathID(raw)
+	return handlers.ParsePathID(raw)
 }
 func (PassthroughIDResolver) ResolveUploadSessionID(_ context.Context, raw string) (int64, error) {
-	return parsePathID(raw)
+	return handlers.ParsePathID(raw)
 }
 func (PassthroughIDResolver) ResolvePageSiteID(_ context.Context, raw string) (int64, error) {
-	return parsePathID(raw)
+	return handlers.ParsePathID(raw)
 }
 func (PassthroughIDResolver) ResolvePageVersionID(_ context.Context, raw string) (int64, error) {
-	return parsePathID(raw)
+	return handlers.ParsePathID(raw)
 }
 func (PassthroughIDResolver) ResolveModelRouteID(_ context.Context, raw string) (int64, error) {
-	return parsePathID(raw)
+	return handlers.ParsePathID(raw)
 }
 
 // PostgresExternalIDMapper implements both IDResolver and presenter.IDMapper

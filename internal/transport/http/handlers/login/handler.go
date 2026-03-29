@@ -1,4 +1,4 @@
-package handlers
+package login
 
 import (
 	"context"
@@ -15,20 +15,20 @@ import (
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type LoginHandler struct {
+type Handler struct {
 	service *loginapp.Service
 	mapper  presenter.IDMapper
 }
 
-func NewLoginHandler(service *loginapp.Service, mapper presenter.IDMapper) *LoginHandler {
-	return &LoginHandler{service: service, mapper: mapper}
+func NewHandler(service *loginapp.Service, mapper presenter.IDMapper) *Handler {
+	return &Handler{service: service, mapper: mapper}
 }
 
-func (h *LoginHandler) RegisterRootRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRootRoutes(group *route.RouterGroup) {
 	_ = group
 }
 
-func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	loginGroup := group.Group("/login")
 	loginGroup.POST("/init", h.Init)
 	loginGroup.POST("/poll", h.Poll)
@@ -41,13 +41,13 @@ func (h *LoginHandler) RegisterRoutes(group *route.RouterGroup) {
 	authGroup.POST("/device-poll", h.Poll)
 }
 
-func (h *LoginHandler) RegisterProtectedRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.POST("/auth/exchange", h.Exchange)
 	group.POST("/auth/device-verify", h.DeviceVerify)
 	group.POST("/auth/browser-verify", h.BrowserVerify)
 }
 
-func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Init(c context.Context, ctx *app.RequestContext) {
 	var req dto.LoginInitRequest
 	if len(ctx.Request.Body()) != 0 {
 		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -66,7 +66,7 @@ func (h *LoginHandler) Init(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) DeviceCode(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) DeviceCode(c context.Context, ctx *app.RequestContext) {
 	result, err := h.service.Init(c, "device")
 	if err != nil {
 		middleware.ReportError(ctx, err)
@@ -78,7 +78,7 @@ func (h *LoginHandler) DeviceCode(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) DeviceCodeCheck(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) DeviceCodeCheck(c context.Context, ctx *app.RequestContext) {
 	var req dto.DeviceCodeCheckRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
@@ -96,7 +96,7 @@ func (h *LoginHandler) DeviceCodeCheck(c context.Context, ctx *app.RequestContex
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Poll(c context.Context, ctx *app.RequestContext) {
 	var req dto.LoginPollRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
@@ -121,7 +121,7 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) Exchange(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Exchange(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
@@ -148,7 +148,7 @@ func (h *LoginHandler) Exchange(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) DeviceVerify(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
@@ -179,7 +179,7 @@ func (h *LoginHandler) DeviceVerify(c context.Context, ctx *app.RequestContext) 
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
-func (h *LoginHandler) BrowserVerify(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) BrowserVerify(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)

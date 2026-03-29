@@ -1,25 +1,26 @@
-package handlers
+package drive
 
 import (
 	"encoding/json"
 
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type DriveHandler struct {
+type Handler struct {
 	service  *driveapp.Service
-	resolver IDResolver
+	resolver idresolver.IDResolver
 	mapper   presenter.IDMapper
 }
 
-func NewDriveHandler(service *driveapp.Service, resolver IDResolver, mapper presenter.IDMapper) *DriveHandler {
-	return &DriveHandler{service: service, resolver: resolver, mapper: mapper}
+func NewHandler(service *driveapp.Service, resolver idresolver.IDResolver, mapper presenter.IDMapper) *Handler {
+	return &Handler{service: service, resolver: resolver, mapper: mapper}
 }
 
-func (h *DriveHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.POST("/drive/folders", h.CreateFolder)
 	group.POST("/drive/files/presign", h.PresignFile)
 	group.POST("/drive/files/complete", h.CompleteFile)

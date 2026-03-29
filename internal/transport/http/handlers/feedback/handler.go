@@ -1,4 +1,4 @@
-package handlers
+package feedback
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-// FeedbackHandler handles POST /v1/feedback.
-type FeedbackHandler struct {
+// Handler handles POST /v1/feedback.
+type Handler struct {
 	service *feedbackapp.Service
 }
 
-func NewFeedbackHandler(service *feedbackapp.Service) *FeedbackHandler {
-	return &FeedbackHandler{service: service}
+func NewHandler(service *feedbackapp.Service) *Handler {
+	return &Handler{service: service}
 }
 
-func (h *FeedbackHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.POST("/feedback", h.Submit)
 }
 
-func (h *FeedbackHandler) Submit(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Submit(c context.Context, ctx *app.RequestContext) {
 	reqID := middleware.GetRequestID(ctx)
 
 	var payload dto.SubmitFeedbackRequest

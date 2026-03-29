@@ -44,7 +44,17 @@ import (
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
@@ -93,7 +103,7 @@ type serverDependencies struct {
 	rateLimiter         port.RateLimiter
 	protectedRPM        int
 	kvSyncWorker        *kvsync.Worker
-	idResolver          handlers.IDResolver
+	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
 }
 
@@ -118,18 +128,18 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	}
 
 	deps.systemService.SetFeatures(buildServerFeatures(cfg))
-	systemHandler := handlers.NewSystemHandler(deps.systemService, deps.idMapper)
-	loginHandler := handlers.NewLoginHandler(deps.loginService, deps.idMapper)
-	imageHandler := handlers.NewImageHandler(deps.imageService)
-	videoHandler := handlers.NewVideoHandler(deps.videoService)
-	driveHandler := handlers.NewDriveHandler(deps.driveService, deps.idResolver, deps.idMapper)
-	pageHandler := handlers.NewPageHandler(deps.pageService, deps.idResolver, deps.idMapper)
-	capHandler := handlers.NewCapabilitiesHandler(deps.capabilitiesService)
-	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
-	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
-	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
-	modelRouteHandler := handlers.NewModelRouteHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
-	feedbackHandler := handlers.NewFeedbackHandler(deps.feedbackService)
+	systemHandler := system.NewHandler(deps.systemService, deps.idMapper)
+	loginHandler := login.NewHandler(deps.loginService, deps.idMapper)
+	imageHandler := image.NewHandler(deps.imageService)
+	videoHandler := video.NewHandler(deps.videoService)
+	driveHandler := drive.NewHandler(deps.driveService, deps.idResolver, deps.idMapper)
+	pageHandler := page.NewHandler(deps.pageService, deps.idResolver, deps.idMapper)
+	capHandler := capabilities.NewHandler(deps.capabilitiesService)
+	imageCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityImage)
+	videoCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityVideo)
+	audioCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityAudio)
+	modelRouteHandler := modelroute.NewHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
+	feedbackHandler := feedback.NewHandler(deps.feedbackService)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr: deps.config.HTTPAddr,
@@ -219,7 +229,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			protectedRPM:        cfg.RateLimitRPM,
-			idResolver:          handlers.PassthroughIDResolver{},
+			idResolver:          idresolver.PassthroughIDResolver{},
 			idMapper:            presenter.PassthroughIDMapper{},
 		}, nil
 	case "dev", "prod", "integration":
@@ -275,7 +285,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
-		externalIDMapper := handlers.NewPostgresExternalIDMapper(db)
+		externalIDMapper := idresolver.NewPostgresExternalIDMapper(db)
 		capsUploadRepo := postgres.NewCapsUploadRepo(db)
 		capsTaskRepo := postgres.NewCapsTaskRepo(db)
 		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)

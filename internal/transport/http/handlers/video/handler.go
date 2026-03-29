@@ -1,4 +1,4 @@
-package handlers
+package video
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
-type VideoHandler struct {
+type Handler struct {
 	service *videoapp.Service
 }
 
-func NewVideoHandler(service *videoapp.Service) *VideoHandler {
-	return &VideoHandler{service: service}
+func NewHandler(service *videoapp.Service) *Handler {
+	return &Handler{service: service}
 }
 
-func (h *VideoHandler) RegisterRoutes(group *route.RouterGroup) {
+func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/video")
 	g.POST("/generate", h.Generate)
 }
 
-func (h *VideoHandler) Generate(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	var payload dto.GenerateVideoRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
 		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
