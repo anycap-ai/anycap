@@ -1,16 +1,7 @@
 package dto
 
 type LoginInitRequest struct {
-	Method       string `json:"method,omitempty"`
-	RedirectPort int    `json:"redirect_port,omitempty"`
-	RedirectURL  string `json:"redirect_url,omitempty"`
-}
-
-type LoginCallbackRequest struct {
-	LoginSessionID string `json:"login_session_id"`
-	Code           string `json:"code"`
-	State          string `json:"state,omitempty"`
-	RedirectURI    string `json:"redirect_uri,omitempty"`
+	Method string `json:"method,omitempty"`
 }
 
 type LoginPollRequest struct {
@@ -25,18 +16,6 @@ type DeviceCodeCheckRequest struct {
 type DeviceVerifyRequest struct {
 	UserCode string           `json:"user_code"`
 	User     *AuthUserProfile `json:"user,omitempty"`
-}
-
-type BrowserBindRequest struct {
-	BrowserToken string `json:"browser_token"`
-}
-
-type BrowserCompleteRequest struct {
-	LoginSessionID string `json:"login_session_id"`
-	BrowserToken   string `json:"browser_token"`
-	Code           string `json:"code"`
-	State          string `json:"state,omitempty"`
-	RedirectURI    string `json:"redirect_uri,omitempty"`
 }
 
 type BrowserVerifyRequest struct {

@@ -29,18 +29,11 @@ type Server struct {
 	mux *http.ServeMux
 
 	mu                  sync.Mutex
-	loginStates         map[string]loginStateEntry       // state -> entry
 	browserPollSessions map[string]browserPollStateEntry // login_session_id -> entry
 	deviceCodes         map[string]deviceCodeEntry       // login_session_id -> entry
-	refreshTokens       map[string]string                // refresh_token -> user email
 	logoutCalls         int
 	deviceAutoApprove   bool
 	lastDeviceSessionID string
-}
-
-type loginStateEntry struct {
-	LoginSessionID string
-	RedirectPort   int
 }
 
 type deviceCodeEntry struct {
@@ -58,21 +51,16 @@ type browserPollStateEntry struct {
 func New() *Server {
 	s := &Server{
 		mux:                 http.NewServeMux(),
-		loginStates:         make(map[string]loginStateEntry),
 		browserPollSessions: make(map[string]browserPollStateEntry),
 		deviceCodes:         make(map[string]deviceCodeEntry),
-		refreshTokens:       make(map[string]string),
 		deviceAutoApprove:   true,
 	}
 
 	s.mux.HandleFunc("POST /v1/auth/login", s.handleLogin)
-	s.mux.HandleFunc("POST /v1/auth/callback", s.handleCallback)
 	s.mux.HandleFunc("POST /v1/auth/poll", s.handlePoll)
 	s.mux.HandleFunc("POST /v1/auth/device-code", s.handleDeviceCode)
 	s.mux.HandleFunc("POST /v1/auth/device-poll", s.handleDevicePoll)
 	s.mux.HandleFunc("POST /v1/auth/logout", s.handleLogout)
-	s.mux.HandleFunc("POST /v1/auth/refresh", s.handleRefresh)
-	s.mux.HandleFunc("GET /mock/authorize", s.handleMockAuthorize)
 	s.mux.HandleFunc("GET /v1/status", s.handleStatus)
 
 	// Capabilities
@@ -100,60 +88,37 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
-// --- Auth Login (localhost callback flow) ---
+// --- Auth Login (browser poll flow) ---
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Method       string `json:"method"`
-		RedirectPort int    `json:"redirect_port"`
+		Method string `json:"method"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
 		return
 	}
 
-	state := randomHex(16)
-	loginSessionID := "lsn-" + randomHex(8)
-
-	if req.Method == "browser_poll" {
-		pollToken := "pt-" + randomHex(8)
-		s.mu.Lock()
-		s.browserPollSessions[loginSessionID] = browserPollStateEntry{
-			PollToken: pollToken,
-			Email:     "dev@anycap.ai",
-		}
-		s.mu.Unlock()
-
-		writeSuccess(w, map[string]any{
-			"flow_type":        "browser_poll",
-			"login_session_id": loginSessionID,
-			"browser_url":      "https://anycap.ai/auth/cli-login?browser_token=bt-" + randomHex(8) + "&cli=1",
-			"poll_token":       pollToken,
-			"interval":         1,
-			"expires_in":       300,
-		})
+	if req.Method != "" && req.Method != "browser_poll" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "unsupported login method")
 		return
 	}
 
+	loginSessionID := "lsn-" + randomHex(8)
+	pollToken := "pt-" + randomHex(8)
 	s.mu.Lock()
-	s.loginStates[state] = loginStateEntry{
-		LoginSessionID: loginSessionID,
-		RedirectPort:   req.RedirectPort,
+	s.browserPollSessions[loginSessionID] = browserPollStateEntry{
+		PollToken: pollToken,
+		Email:     "dev@anycap.ai",
 	}
 	s.mu.Unlock()
 
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	host := r.Host
-	authURL := fmt.Sprintf("%s://%s/mock/authorize?state=%s", scheme, host, state)
-
 	writeSuccess(w, map[string]any{
-		"flow_type":        "localhost",
+		"flow_type":        "browser_poll",
 		"login_session_id": loginSessionID,
-		"authorize_url":    authURL,
-		"state":            state,
+		"browser_url":      "https://anycap.ai/auth/cli-login?browser_token=bt-" + randomHex(8) + "&cli=1",
+		"poll_token":       pollToken,
+		"interval":         1,
 		"expires_in":       300,
 	})
 }
@@ -189,69 +154,6 @@ func (s *Server) handlePoll(w http.ResponseWriter, r *http.Request) {
 		"api_key_id":      "key-" + randomHex(8),
 		"user": map[string]string{
 			"email": entry.Email,
-			"id":    "user-dev",
-			"name":  "Dev User",
-		},
-	})
-}
-
-// --- Mock Authorize (simulates auth login page, auto-redirects) ---
-
-func (s *Server) handleMockAuthorize(w http.ResponseWriter, r *http.Request) {
-	state := r.URL.Query().Get("state")
-	if state == "" {
-		writeError(w, http.StatusBadRequest, "MISSING_STATE", "state parameter required")
-		return
-	}
-
-	s.mu.Lock()
-	entry, ok := s.loginStates[state]
-	s.mu.Unlock()
-
-	if !ok {
-		writeError(w, http.StatusBadRequest, "INVALID_STATE", "unknown state")
-		return
-	}
-
-	code := "mock-code-" + randomHex(8)
-	redirectURL := fmt.Sprintf("http://127.0.0.1:%d/callback?code=%s&state=%s", entry.RedirectPort, code, state)
-	http.Redirect(w, r, redirectURL, http.StatusFound)
-}
-
-// --- Auth Callback (exchange code for API key) ---
-
-func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		LoginSessionID string `json:"login_session_id"`
-		Code           string `json:"code"`
-		State          string `json:"state"`
-		RedirectURI    string `json:"redirect_uri"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
-		return
-	}
-
-	s.mu.Lock()
-	entry, ok := s.loginStates[req.State]
-	if ok {
-		delete(s.loginStates, req.State)
-	}
-	s.mu.Unlock()
-
-	if !ok || entry.LoginSessionID != req.LoginSessionID {
-		writeError(w, http.StatusBadRequest, "INVALID_STATE", "unknown or expired state")
-		return
-	}
-
-	apiKey := "mock-ak-" + randomHex(16)
-	writeSuccess(w, map[string]any{
-		"credential_type": "api_key",
-		"access_token":    apiKey,
-		"api_key":         apiKey,
-		"api_key_id":      "key-" + randomHex(8),
-		"user": map[string]string{
-			"email": "dev@anycap.ai",
 			"id":    "user-dev",
 			"name":  "Dev User",
 		},
@@ -330,44 +232,6 @@ func (s *Server) handleDevicePoll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// --- Auth Refresh ---
-
-func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
-		return
-	}
-
-	s.mu.Lock()
-	email, ok := s.refreshTokens[req.RefreshToken]
-	if ok {
-		// Rotate: delete old, issue new
-		delete(s.refreshTokens, req.RefreshToken)
-	}
-	s.mu.Unlock()
-
-	if !ok {
-		writeError(w, http.StatusUnauthorized, "INVALID_REFRESH_TOKEN", "refresh token is invalid or expired")
-		return
-	}
-
-	newAccessToken := "mock-at-" + randomHex(16)
-	newRefreshToken := "mock-rt-" + randomHex(16)
-
-	s.mu.Lock()
-	s.refreshTokens[newRefreshToken] = email
-	s.mu.Unlock()
-
-	writeSuccess(w, map[string]any{
-		"access_token":  newAccessToken,
-		"refresh_token": newRefreshToken,
-		"expires_in":    3600,
-	})
-}
-
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	s.logoutCalls++
@@ -387,16 +251,6 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"version": "mock",
 		"status":  "ok",
 	})
-}
-
-// SeedRefreshToken registers a refresh token for tests that specifically cover
-// OAuth credential refresh behavior.
-func (s *Server) SeedRefreshToken(email string) string {
-	token := "mock-rt-" + randomHex(16)
-	s.mu.Lock()
-	s.refreshTokens[token] = email
-	s.mu.Unlock()
-	return token
 }
 
 func (s *Server) LogoutCalls() int {

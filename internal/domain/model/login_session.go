@@ -3,9 +3,7 @@ package model
 import "time"
 
 const (
-	LoginFlowLocalhost   = "localhost"
 	LoginFlowDevice      = "device"
-	LoginFlowWeb         = "web"
 	LoginFlowBrowserPoll = "browser_poll"
 )
 

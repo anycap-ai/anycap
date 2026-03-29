@@ -97,7 +97,7 @@ func TestLoginSessionRepo_GetByID(t *testing.T) {
 	db := &fakeLoginSessionDB{
 		scanFn: func(dest ...any) error {
 			*(dest[0].(*string)) = "lsn-1"
-			*(dest[1].(*string)) = model.LoginFlowLocalhost
+			*(dest[1].(*string)) = model.LoginFlowBrowserPoll
 			*(dest[2].(*string)) = "state-1"
 			*(dest[3].(*string)) = "verifier-1"
 			*(dest[4].(*string)) = "http://127.0.0.1:14565/callback"
@@ -138,7 +138,7 @@ func TestLoginSessionRepo_GetByState(t *testing.T) {
 	db := &fakeLoginSessionDB{
 		scanFn: func(dest ...any) error {
 			*(dest[0].(*string)) = "lsn-2"
-			*(dest[1].(*string)) = model.LoginFlowLocalhost
+			*(dest[1].(*string)) = model.LoginFlowBrowserPoll
 			*(dest[2].(*string)) = "state-2"
 			*(dest[3].(*string)) = "verifier-2"
 			*(dest[4].(*string)) = "http://127.0.0.1:14566/callback"

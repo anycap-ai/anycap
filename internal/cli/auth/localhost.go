@@ -88,7 +88,7 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			fmt.Fprintln(stderr, " done!")
 			cred, email, err := parseTokenResponse(pollResp.Body)
 			if err != nil {
-				return nil, "", err
+				return nil, "", fmt.Errorf("authentication completed but no api key was returned; run 'anycap login' again")
 			}
 			return cred, email, nil
 		case "expired":
@@ -100,15 +100,4 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			fmt.Fprint(stderr, ".")
 		}
 	}
-}
-
-// LocalhostFlow is kept as a compatibility alias while browser_poll replaces
-// the localhost callback flow as the default browser login path.
-func LocalhostFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
-	return BrowserPollFlow(ctx, client, stderr)
-}
-
-// CanBindLocalPort is kept for compatibility with older code paths.
-func CanBindLocalPort() bool {
-	return true
 }

@@ -96,7 +96,7 @@ func (r *MemoryLoginSessionRepo) MarkVerified(_ context.Context, sessionID strin
 	session.AuthUserEmail = authUser.Email
 	session.AuthUserName = authUser.Name
 	session.AuthUserPicture = authUser.Picture
-	session.Status = model.LoginSessionStatusCompleted
+	session.Status = model.LoginSessionStatusAuthorized
 	r.sessions[sessionID] = session
 	return nil
 }

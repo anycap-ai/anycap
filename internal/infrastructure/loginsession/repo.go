@@ -164,9 +164,9 @@ func (r *LoginSessionRepo) MarkVerified(ctx context.Context, sessionID string, a
 	}
 	_, err = r.db.ExecContext(ctx, `
 		UPDATE login_sessions
-		SET authorized_user_id = $2, auth_user_email = $3, auth_user_name = $4, auth_user_picture = $5, status = $6, completed_at = $7
+		SET authorized_user_id = $2, auth_user_email = $3, auth_user_name = $4, auth_user_picture = $5, status = $6, authorized_at = $7
 		WHERE id = $1
-	`, sessionID, numericID, emptyToNil(authUser.Email), emptyToNil(authUser.Name), emptyToNil(authUser.Picture), model.LoginSessionStatusCompleted, verifiedAt)
+	`, sessionID, numericID, emptyToNil(authUser.Email), emptyToNil(authUser.Name), emptyToNil(authUser.Picture), model.LoginSessionStatusAuthorized, verifiedAt)
 	return err
 }
 
