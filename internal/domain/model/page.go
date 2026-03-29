@@ -51,48 +51,48 @@ const (
 )
 
 type PageSite struct {
-	ID               int64          `json:"id"`
-	SpaceID          int64          `json:"space_id"`
-	Name             string         `json:"name"`
-	PageName         string         `json:"page_name"`
-	CurrentVersionID *int64         `json:"current_version_id,omitempty"`
-	AccessMode       PageAccessMode `json:"access_mode"`
-	PasswordHash     *string        `json:"password_hash,omitempty"`
-	PasswordSalt     *string        `json:"password_salt,omitempty"`
-	SPAFallback      bool           `json:"spa_fallback"`
-	PageURL          string         `json:"page_url,omitempty"`
-	EdgeVersion      int64          `json:"edge_version"`
-	CreatedAt        time.Time      `json:"created_at"`
-	UpdatedAt        time.Time      `json:"updated_at"`
-	DeletedAt        *time.Time     `json:"deleted_at,omitempty"`
+	ID               int64
+	SpaceID          int64
+	Name             string
+	PageName         string
+	CurrentVersionID *int64
+	AccessMode       PageAccessMode
+	PasswordHash     *string
+	PasswordSalt     *string
+	SPAFallback      bool
+	PageURL          string
+	EdgeVersion      int64
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time
 }
 
 type PageVersion struct {
-	ID              int64             `json:"id"`
-	PageID          int64             `json:"page_id"`
-	VersionNo       int64             `json:"version_no"`
-	SourceVersionID *int64            `json:"source_version_id,omitempty"`
-	Status          PageVersionStatus `json:"status"`
-	AssetPrefix     string            `json:"asset_prefix"`
-	CreatedBy       string            `json:"created_by"`
-	CreatedAt       time.Time         `json:"created_at"`
+	ID              int64
+	PageID          int64
+	VersionNo       int64
+	SourceVersionID *int64
+	Status          PageVersionStatus
+	AssetPrefix     string
+	CreatedBy       string
+	CreatedAt       time.Time
 }
 
 type PageVersionPresignResult struct {
-	UploadSessionID int64  `json:"upload_session_id"`
-	VersionID       int64  `json:"version_id"`
-	AssetPath       string `json:"asset_path"`
-	UploadURL       string `json:"upload_url"`
-	ObjectURL       string `json:"object_url"`
-	ObjectKey       string `json:"object_key"`
-	ExpiresIn       int    `json:"expires_in"`
+	UploadSessionID int64
+	VersionID       int64
+	AssetPath       string
+	UploadURL       string
+	ObjectURL       string
+	ObjectKey       string
+	ExpiresIn       int
 }
 
 type PageSlugRegistry struct {
-	Slug      string         `json:"slug"`
-	Status    PageSlugStatus `json:"status"`
-	PageID    int64          `json:"page_id"`
-	CreatedAt time.Time      `json:"created_at"`
+	Slug      string
+	Status    PageSlugStatus
+	PageID    int64
+	CreatedAt time.Time
 }
 
 type CreatePageSiteInput struct {

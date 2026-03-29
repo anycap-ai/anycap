@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,28 +12,42 @@ import (
 )
 
 var (
-	ErrExternalIDInvalid  = errors.New("external id is invalid")
-	ErrExternalIDNotFound = errors.New("external id is not found")
-	ErrInternalIDNotFound = errors.New("internal id is not found")
+	ErrExternalIDInvalid  = fmt.Errorf("external id is invalid")
+	ErrExternalIDNotFound = fmt.Errorf("external id is not found")
+	ErrInternalIDNotFound = fmt.Errorf("internal id is not found")
 )
 
-type ExternalIDMapper interface {
+// IDResolver resolves inbound external IDs to internal IDs.
+type IDResolver interface {
 	ResolveDriveNodeID(ctx context.Context, externalID string) (int64, error)
 	ResolveUploadSessionID(ctx context.Context, externalID string) (int64, error)
 	ResolvePageSiteID(ctx context.Context, externalID string) (int64, error)
 	ResolvePageVersionID(ctx context.Context, externalID string) (int64, error)
 	ResolveModelRouteID(ctx context.Context, externalID string) (int64, error)
-	ResolveUserExternalID(ctx context.Context, internalUserID string) (string, error)
-	ResolveSpaceExternalID(ctx context.Context, internalSpaceID int64) (string, error)
-	ResolveDriveNodeExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolveUploadSessionExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolvePageSiteExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolvePageVersionExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolveModelRouteExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolveSpaceExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
-	ResolveUserExternalIDs(ctx context.Context, internalUserIDs []string) (map[string]string, error)
 }
 
+// PassthroughIDResolver is a no-DB resolver that just parses int64 from strings.
+// Used in stub runtime mode and tests.
+type PassthroughIDResolver struct{}
+
+func (PassthroughIDResolver) ResolveDriveNodeID(_ context.Context, raw string) (int64, error) {
+	return parsePathID(raw)
+}
+func (PassthroughIDResolver) ResolveUploadSessionID(_ context.Context, raw string) (int64, error) {
+	return parsePathID(raw)
+}
+func (PassthroughIDResolver) ResolvePageSiteID(_ context.Context, raw string) (int64, error) {
+	return parsePathID(raw)
+}
+func (PassthroughIDResolver) ResolvePageVersionID(_ context.Context, raw string) (int64, error) {
+	return parsePathID(raw)
+}
+func (PassthroughIDResolver) ResolveModelRouteID(_ context.Context, raw string) (int64, error) {
+	return parsePathID(raw)
+}
+
+// PostgresExternalIDMapper implements both IDResolver and presenter.IDMapper
+// using the database for lookups.
 type PostgresExternalIDMapper struct {
 	db sqlstore.DBTX
 }
@@ -42,6 +55,8 @@ type PostgresExternalIDMapper struct {
 func NewPostgresExternalIDMapper(db sqlstore.DBTX) *PostgresExternalIDMapper {
 	return &PostgresExternalIDMapper{db: db}
 }
+
+// --- IDResolver methods (inbound) ---
 
 func (m *PostgresExternalIDMapper) ResolveDriveNodeID(ctx context.Context, externalID string) (int64, error) {
 	return m.resolveInternalIDByExternalID(ctx, "drive_nodes", externalID, externalid.PrefixDriveNode, "deleted_at IS NULL")
@@ -62,6 +77,8 @@ func (m *PostgresExternalIDMapper) ResolvePageVersionID(ctx context.Context, ext
 func (m *PostgresExternalIDMapper) ResolveModelRouteID(ctx context.Context, externalID string) (int64, error) {
 	return m.resolveInternalIDByExternalID(ctx, "anycap_model_routes", externalID, externalid.PrefixModelRoute, "")
 }
+
+// --- IDMapper methods (outbound) ---
 
 func (m *PostgresExternalIDMapper) ResolveUserExternalID(ctx context.Context, internalUserID string) (string, error) {
 	mapping, err := m.ResolveUserExternalIDs(ctx, []string{internalUserID})
@@ -112,7 +129,7 @@ func (m *PostgresExternalIDMapper) ResolveSpaceExternalIDs(ctx context.Context, 
 }
 
 func (m *PostgresExternalIDMapper) ResolveUserExternalIDs(ctx context.Context, internalUserIDs []string) (map[string]string, error) {
-	if m == nil || m.db == nil || len(internalUserIDs) == 0 {
+	if len(internalUserIDs) == 0 {
 		return map[string]string{}, nil
 	}
 
@@ -149,11 +166,9 @@ func (m *PostgresExternalIDMapper) ResolveUserExternalIDs(ctx context.Context, i
 	return result, nil
 }
 
-func (m *PostgresExternalIDMapper) resolveInternalIDByExternalID(ctx context.Context, table string, rawExternalID string, prefix string, whereExpr string) (int64, error) {
-	if m == nil || m.db == nil {
-		return 0, fmt.Errorf("external id mapper is not configured")
-	}
+// --- internal helpers ---
 
+func (m *PostgresExternalIDMapper) resolveInternalIDByExternalID(ctx context.Context, table string, rawExternalID string, prefix string, whereExpr string) (int64, error) {
 	externalID := strings.TrimSpace(rawExternalID)
 	if err := externalid.ValidatePrefix(externalID, prefix); err != nil {
 		return 0, fmt.Errorf("%w: %v", ErrExternalIDInvalid, err)
@@ -176,7 +191,7 @@ func (m *PostgresExternalIDMapper) resolveInternalIDByExternalID(ctx context.Con
 }
 
 func (m *PostgresExternalIDMapper) resolveExternalIDsByInt64IDs(ctx context.Context, table string, idColumn string, externalIDColumn string, whereExpr string, ids []int64) (map[int64]string, error) {
-	if m == nil || m.db == nil || len(ids) == 0 {
+	if len(ids) == 0 {
 		return map[int64]string{}, nil
 	}
 

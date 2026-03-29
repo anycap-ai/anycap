@@ -30,6 +30,7 @@ import (
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -162,7 +163,8 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemService.SetUserReader(users)
 	systemService.SetCreditClient(creditClient)
 	systemService.SetCallLogRepo(callLogs)
-	systemHandler := handlers.NewSystemHandler(systemService)
+	passthroughMapper := presenter.PassthroughIDMapper{}
+	systemHandler := handlers.NewSystemHandler(systemService, passthroughMapper)
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
 		users,
 		credit.NewStubClient(nil),
@@ -183,13 +185,14 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		},
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,
-	))
+	), passthroughMapper)
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}, Routes: []model.RouteBinding{{RouteType: model.RouteTypeDirect, AbilityKey: "flux-dev", GenType: string(model.CapabilityImage), AlgoType: "txt_2_img", Priority: 100, Enabled: true}}}}}})
 	imageHandler := handlers.NewImageHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
+	passthroughResolver := handlers.PassthroughIDResolver{}
 	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
@@ -202,7 +205,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 				Status:     model.ModelRouteStatusActive,
 			},
 		},
-	}))
+	}), passthroughResolver, passthroughMapper)
 	identityTokens := &testIdentityTokenAuthenticator{
 		principals: map[string]model.Principal{
 			"jwt-demo-token": {

@@ -10,23 +10,23 @@ const (
 // ModelRoute 表示 AnyCap 路由管理表中的一条记录。
 // 每一行都是 model_id + operation + algo_type 到 ability_key 的具体绑定。
 type ModelRoute struct {
-	ID          int64          `json:"id"`
-	ModelID     string         `json:"model_id"`
-	Capability  Capability     `json:"capability"`
-	Operation   Operation      `json:"operation"`
-	AbilityKey  string         `json:"ability_key"`
-	AlgoType    string         `json:"algo_type,omitempty"`
-	DisplayName string         `json:"display_name,omitempty"`
-	RouteType   RouteType      `json:"route_type,omitempty"`
-	Region      string         `json:"region,omitempty"`
-	Tier        string         `json:"tier,omitempty"`
-	Env         string         `json:"env,omitempty"`
-	Priority    int            `json:"priority"`
-	Enabled     bool           `json:"enabled"`
-	Status      string         `json:"status"`
-	Extra       map[string]any `json:"extra,omitempty"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	ID          int64
+	ModelID     string
+	Capability  Capability
+	Operation   Operation
+	AbilityKey  string
+	AlgoType    string
+	DisplayName string
+	RouteType   RouteType
+	Region      string
+	Tier        string
+	Env         string
+	Priority    int
+	Enabled     bool
+	Status      string
+	Extra       map[string]any
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type ListModelRoutesFilter struct {

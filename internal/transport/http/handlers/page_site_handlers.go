@@ -62,20 +62,12 @@ func (h *PageHandler) ListSites(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
 		return
 	}
-	if h.mapper == nil {
-		writeSuccess(ctx, map[string]any{
-			"items": items,
-			"total": len(items),
-		})
-		return
-	}
 
 	presentedItems, err := h.presentPageSites(c, items)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_page_sites_failed", err.Error())
 		return
 	}
-
 	writeSuccess(ctx, map[string]any{
 		"items": presentedItems,
 		"total": len(presentedItems),

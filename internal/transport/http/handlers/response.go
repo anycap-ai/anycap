@@ -11,14 +11,6 @@ func writeSuccess(ctx *app.RequestContext, data any) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), data))
 }
 
-func writeSuccessWithID(ctx *app.RequestContext, id string, data any) {
-	env := dto.SuccessEnvelope(middleware.GetRequestID(ctx), data)
-	if id != "" {
-		env.ID = id
-	}
-	ctx.JSON(200, env)
-}
-
 func writeError(ctx *app.RequestContext, statusCode int, code, message string) {
 	ctx.JSON(statusCode, dto.ErrorEnvelope(middleware.GetRequestID(ctx), code, message))
 }

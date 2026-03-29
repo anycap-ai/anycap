@@ -105,18 +105,14 @@ func (h *DriveHandler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	responseID := any(nodeID)
-	if h.mapper != nil {
-		ids, resolveErr := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
-		if resolveErr != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", resolveErr.Error())
-			return
-		}
-		responseID = ids[nodeID]
+	ids, err := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", err.Error())
+		return
 	}
 
 	writeSuccess(ctx, map[string]any{
-		"id":      responseID,
+		"id":      ids[nodeID],
 		"revoked": true,
 	})
 }

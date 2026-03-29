@@ -45,6 +45,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
@@ -92,7 +93,8 @@ type serverDependencies struct {
 	rateLimiter         port.RateLimiter
 	protectedRPM        int
 	kvSyncWorker        *kvsync.Worker
-	externalIDMapper    handlers.ExternalIDMapper
+	idResolver          handlers.IDResolver
+	idMapper            presenter.IDMapper
 }
 
 type Server struct {
@@ -116,17 +118,17 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	}
 
 	deps.systemService.SetFeatures(buildServerFeatures(cfg))
-	systemHandler := handlers.NewSystemHandler(deps.systemService, handlers.WithSystemExternalIDMapper(deps.externalIDMapper))
-	loginHandler := handlers.NewLoginHandler(deps.loginService, handlers.WithLoginExternalIDMapper(deps.externalIDMapper))
+	systemHandler := handlers.NewSystemHandler(deps.systemService, deps.idMapper)
+	loginHandler := handlers.NewLoginHandler(deps.loginService, deps.idMapper)
 	imageHandler := handlers.NewImageHandler(deps.imageService)
 	videoHandler := handlers.NewVideoHandler(deps.videoService)
-	driveHandler := handlers.NewDriveHandler(deps.driveService, handlers.WithDriveExternalIDMapper(deps.externalIDMapper))
-	pageHandler := handlers.NewPageHandler(deps.pageService, handlers.WithPageExternalIDMapper(deps.externalIDMapper))
+	driveHandler := handlers.NewDriveHandler(deps.driveService, deps.idResolver, deps.idMapper)
+	pageHandler := handlers.NewPageHandler(deps.pageService, deps.idResolver, deps.idMapper)
 	capHandler := handlers.NewCapabilitiesHandler(deps.capabilitiesService)
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityAudio)
-	modelRouteHandler := handlers.NewModelRouteHandler(deps.modelRouteService, handlers.WithModelRouteExternalIDMapper(deps.externalIDMapper))
+	modelRouteHandler := handlers.NewModelRouteHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
 	feedbackHandler := handlers.NewFeedbackHandler(deps.feedbackService)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
@@ -217,7 +219,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			protectedRPM:        cfg.RateLimitRPM,
-			externalIDMapper:    nil,
+			idResolver:          handlers.PassthroughIDResolver{},
+			idMapper:            presenter.PassthroughIDMapper{},
 		}, nil
 	case "dev", "prod", "integration":
 		sqlDB, err := openPostgres(cfg.PGDSN)
@@ -272,6 +275,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
+		externalIDMapper := handlers.NewPostgresExternalIDMapper(db)
 		capsUploadRepo := postgres.NewCapsUploadRepo(db)
 		capsTaskRepo := postgres.NewCapsTaskRepo(db)
 		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)
@@ -314,7 +318,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			protectedRPM:        cfg.RateLimitRPM,
-			externalIDMapper:    handlers.NewPostgresExternalIDMapper(db),
+			idResolver: externalIDMapper,
+			idMapper:   externalIDMapper,
 			kvSyncWorker: func() *kvsync.Worker {
 				if cfg.KVSyncEnabled {
 					return kvSyncWorker

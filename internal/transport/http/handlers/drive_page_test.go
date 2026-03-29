@@ -15,6 +15,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
@@ -353,7 +354,7 @@ func TestDriveHandler_CreateAndList(t *testing.T) {
 	h := server.Default(server.WithHostPorts("127.0.0.1:0"))
 	v1 := h.Group("/v1")
 	protected := v1.Group("", middleware.LocalBypassAuth(model.Principal{UserID: "u-1", AuthType: "test"}))
-	NewDriveHandler(driveSvc).RegisterRoutes(protected)
+	NewDriveHandler(driveSvc, PassthroughIDResolver{}, presenter.PassthroughIDMapper{}).RegisterRoutes(protected)
 
 	createBody := []byte(`{"name":"docs"}`)
 	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/drive/folders",
@@ -382,7 +383,7 @@ func TestPageHandler_CreateAndUpdate(t *testing.T) {
 	h := server.Default(server.WithHostPorts("127.0.0.1:0"))
 	v1 := h.Group("/v1")
 	protected := v1.Group("", middleware.LocalBypassAuth(model.Principal{UserID: "u-1", AuthType: "test"}))
-	NewPageHandler(pageSvc).RegisterRoutes(protected)
+	NewPageHandler(pageSvc, PassthroughIDResolver{}, presenter.PassthroughIDMapper{}).RegisterRoutes(protected)
 
 	createBody := []byte(`{"name":"Docs Site"}`)
 	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/pages",
@@ -401,14 +402,13 @@ func TestPageHandler_CreateAndUpdate(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected object data, got %#v", envelope["data"])
 	}
-	idFloat, ok := data["id"].(float64)
+	idStr, ok := data["id"].(string)
 	if !ok {
-		t.Fatalf("expected id in response, got %#v", data["id"])
+		t.Fatalf("expected string id in response, got %#v", data["id"])
 	}
-	id := int64(idFloat)
 
 	patchBody := []byte(`{"access_mode":"password","password":"secret-123"}`)
-	resp = ut.PerformRequest(h.Engine, http.MethodPatch, fmt.Sprintf("/v1/pages/%d", id),
+	resp = ut.PerformRequest(h.Engine, http.MethodPatch, fmt.Sprintf("/v1/pages/%s", idStr),
 		&ut.Body{Body: bytes.NewReader(patchBody), Len: len(patchBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -432,7 +432,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 	h := server.Default(server.WithHostPorts("127.0.0.1:0"))
 	v1 := h.Group("/v1")
 	protected := v1.Group("", middleware.LocalBypassAuth(model.Principal{UserID: "u-1", AuthType: "test"}))
-	NewPageHandler(pageSvc).RegisterRoutes(protected)
+	NewPageHandler(pageSvc, PassthroughIDResolver{}, presenter.PassthroughIDMapper{}).RegisterRoutes(protected)
 
 	createBody := []byte(`{"name":"Docs Site"}`)
 	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/pages",
@@ -448,9 +448,9 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("unmarshal create site response: %v", err)
 	}
 	createdSite := createSiteEnvelope["data"].(map[string]any)
-	siteID := int64(createdSite["id"].(float64))
+	siteID := createdSite["id"].(string)
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions", siteID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions", siteID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -460,10 +460,10 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("unmarshal create version response: %v", err)
 	}
 	createdVersion := createVersionEnvelope["data"].(map[string]any)
-	versionID := int64(createdVersion["id"].(float64))
+	versionID := createdVersion["id"].(string)
 
 	presignBody := []byte(`{"asset_path":"index.html","content_type":"text/html","content_length":42}`)
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions/%d/files/presign", siteID, versionID),
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions/%s/files/presign", siteID, versionID),
 		&ut.Body{Body: bytes.NewReader(presignBody), Len: len(presignBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -476,10 +476,10 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("unmarshal presign response: %v", err)
 	}
 	presignData := presignEnvelope["data"].(map[string]any)
-	uploadSessionID := int64(presignData["upload_session_id"].(float64))
+	uploadSessionID := presignData["upload_session_id"].(string)
 
-	completeBody := []byte(fmt.Sprintf(`{"upload_session_id":%d}`, uploadSessionID))
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions/%d/files/complete", siteID, versionID),
+	completeBody := []byte(fmt.Sprintf(`{"upload_session_id":"%s"}`, uploadSessionID))
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions/%s/files/complete", siteID, versionID),
 		&ut.Body{Body: bytes.NewReader(completeBody), Len: len(completeBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -490,7 +490,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("expected status=draft before finalize, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions/%d/finalize", siteID, versionID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions/%s/finalize", siteID, versionID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -498,7 +498,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("expected status=verified after finalize, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodGet, fmt.Sprintf("/v1/pages/%d/versions", siteID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodGet, fmt.Sprintf("/v1/pages/%s/versions", siteID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -506,7 +506,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("expected total=1, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions/%d/publish", siteID, versionID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions/%s/publish", siteID, versionID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -514,7 +514,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("expected status=published after publish, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/unpublish", siteID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/unpublish", siteID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -530,7 +530,7 @@ func TestPageHandler_VersionUploadAndFinalize(t *testing.T) {
 		t.Fatalf("expected current_version_id omitted after unpublish, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%d/versions/%d/rollback-clone", siteID, versionID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/pages/%s/versions/%s/rollback-clone", siteID, versionID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -809,9 +809,9 @@ func TestDriveHandler_UploadAndShare(t *testing.T) {
 	h := server.Default(server.WithHostPorts("127.0.0.1:0"))
 	v1 := h.Group("/v1")
 	protected := v1.Group("", middleware.LocalBypassAuth(model.Principal{UserID: "u-1", AuthType: "test"}))
-	NewDriveHandler(driveSvc).RegisterRoutes(protected)
+	NewDriveHandler(driveSvc, PassthroughIDResolver{}, presenter.PassthroughIDMapper{}).RegisterRoutes(protected)
 
-	presignBody := []byte(`{"parent_id":1,"name":"a.txt","content_type":"text/plain","content_length":12}`)
+	presignBody := []byte(`{"parent_id":"1","name":"a.txt","content_type":"text/plain","content_length":12}`)
 	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/drive/files/presign",
 		&ut.Body{Body: bytes.NewReader(presignBody), Len: len(presignBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
@@ -828,10 +828,10 @@ func TestDriveHandler_UploadAndShare(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected object data, got %#v", presignEnvelope["data"])
 	}
-	uploadSessionID := int64(presignData["upload_session_id"].(float64))
-	fileID := int64(presignData["file_id"].(float64))
+	uploadSessionID := presignData["upload_session_id"].(string)
+	fileID := presignData["file_id"].(string)
 
-	completeBody := []byte(fmt.Sprintf(`{"upload_session_id":%d,"file_id":%d}`, uploadSessionID, fileID))
+	completeBody := []byte(fmt.Sprintf(`{"upload_session_id":"%s","file_id":"%s"}`, uploadSessionID, fileID))
 	resp = ut.PerformRequest(h.Engine, http.MethodPost, "/v1/drive/files/complete",
 		&ut.Body{Body: bytes.NewReader(completeBody), Len: len(completeBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
@@ -839,12 +839,12 @@ func TestDriveHandler_UploadAndShare(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
-	if !strings.Contains(resp.Body.String(), `"storage_object_id":`) {
-		t.Fatalf("expected storage object attached in response, got %s", resp.Body.String())
+	if !strings.Contains(resp.Body.String(), `"name":"a.txt"`) {
+		t.Fatalf("expected file name in response, got %s", resp.Body.String())
 	}
 
 	shareBody := []byte(`{"expires_in_seconds":3600,"password":"secret-123"}`)
-	resp = ut.PerformRequest(h.Engine, http.MethodPut, fmt.Sprintf("/v1/drive/nodes/%d/share", fileID),
+	resp = ut.PerformRequest(h.Engine, http.MethodPut, fmt.Sprintf("/v1/drive/nodes/%s/share", fileID),
 		&ut.Body{Body: bytes.NewReader(shareBody), Len: len(shareBody)},
 		ut.Header{Key: "Content-Type", Value: "application/json"},
 	)
@@ -855,12 +855,12 @@ func TestDriveHandler_UploadAndShare(t *testing.T) {
 		t.Fatalf("expected share url in response, got %s", resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/drive/nodes/%d/share/rotate", fileID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodPost, fmt.Sprintf("/v1/drive/nodes/%s/share/rotate", fileID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.Engine, http.MethodDelete, fmt.Sprintf("/v1/drive/nodes/%d/share", fileID), nil)
+	resp = ut.PerformRequest(h.Engine, http.MethodDelete, fmt.Sprintf("/v1/drive/nodes/%s/share", fileID), nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}

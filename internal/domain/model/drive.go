@@ -17,32 +17,32 @@ const (
 )
 
 type DriveNode struct {
-	ID              int64         `json:"id"`
-	SpaceID         int64         `json:"space_id"`
-	ParentID        *int64        `json:"parent_id,omitempty"`
-	Kind            DriveNodeKind `json:"kind"`
-	Name            string        `json:"name"`
-	StorageObjectID *int64        `json:"storage_object_id,omitempty"`
-	Size            *int64        `json:"size,omitempty"`
-	MIME            *string       `json:"mime,omitempty"`
-	EdgeVersion     int64         `json:"edge_version"`
-	CreatedBy       string        `json:"created_by"`
-	CreatedAt       time.Time     `json:"created_at"`
-	UpdatedAt       time.Time     `json:"updated_at"`
-	DeletedAt       *time.Time    `json:"deleted_at,omitempty"`
+	ID              int64
+	SpaceID         int64
+	ParentID        *int64
+	Kind            DriveNodeKind
+	Name            string
+	StorageObjectID *int64
+	Size            *int64
+	MIME            *string
+	EdgeVersion     int64
+	CreatedBy       string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
 }
 
 type DriveShareLink struct {
-	ID           int64            `json:"id"`
-	NodeID       int64            `json:"node_id"`
-	Token        string           `json:"token"`
-	Status       DriveShareStatus `json:"status"`
-	ExpiresAt    *time.Time       `json:"expires_at,omitempty"`
-	PasswordHash *string          `json:"password_hash,omitempty"`
-	PasswordSalt *string          `json:"password_salt,omitempty"`
-	EdgeVersion  int64            `json:"edge_version"`
-	CreatedAt    time.Time        `json:"created_at"`
-	UpdatedAt    time.Time        `json:"updated_at"`
+	ID           int64
+	NodeID       int64
+	Token        string
+	Status       DriveShareStatus
+	ExpiresAt    *time.Time
+	PasswordHash *string
+	PasswordSalt *string
+	EdgeVersion  int64
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type CreateDriveFolderInput struct {
@@ -83,19 +83,19 @@ type AttachDriveNodeStorageInput struct {
 }
 
 type DriveFilePresignResult struct {
-	UploadSessionID int64  `json:"upload_session_id"`
-	FileID          int64  `json:"file_id"`
-	UploadURL       string `json:"upload_url"`
-	ObjectURL       string `json:"object_url"`
-	ObjectKey       string `json:"object_key"`
-	ExpiresIn       int    `json:"expires_in"`
+	UploadSessionID int64
+	FileID          int64
+	UploadURL       string
+	ObjectURL       string
+	ObjectKey       string
+	ExpiresIn       int
 }
 
 type DriveShareView struct {
-	NodeID      int64      `json:"node_id"`
-	Token       string     `json:"token"`
-	URL         string     `json:"url"`
-	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
-	HasPassword bool       `json:"has_password"`
-	Status      string     `json:"status"`
+	NodeID      int64
+	Token       string
+	URL         string
+	ExpiresAt   *time.Time
+	HasPassword bool
+	Status      string
 }

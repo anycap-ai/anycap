@@ -4,31 +4,19 @@ import (
 	"encoding/json"
 
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/route"
 )
 
 type DriveHandler struct {
-	service *driveapp.Service
-	mapper  ExternalIDMapper
+	service  *driveapp.Service
+	resolver IDResolver
+	mapper   presenter.IDMapper
 }
 
-type DriveHandlerOption func(*DriveHandler)
-
-func WithDriveExternalIDMapper(mapper ExternalIDMapper) DriveHandlerOption {
-	return func(h *DriveHandler) {
-		h.mapper = mapper
-	}
-}
-
-func NewDriveHandler(service *driveapp.Service, options ...DriveHandlerOption) *DriveHandler {
-	handler := &DriveHandler{service: service}
-	for _, option := range options {
-		if option != nil {
-			option(handler)
-		}
-	}
-	return handler
+func NewDriveHandler(service *driveapp.Service, resolver IDResolver, mapper presenter.IDMapper) *DriveHandler {
+	return &DriveHandler{service: service, resolver: resolver, mapper: mapper}
 }
 
 func (h *DriveHandler) RegisterRoutes(group *route.RouterGroup) {
@@ -65,37 +53,4 @@ type upsertShareRequest struct {
 	NoExpire         bool    `json:"no_expire"`
 	Password         *string `json:"password"`
 	NoPassword       bool    `json:"no_password"`
-}
-
-type driveNodeDTO struct {
-	ID          string  `json:"id"`
-	SpaceID     string  `json:"space_id"`
-	ParentID    *string `json:"parent_id,omitempty"`
-	Kind        string  `json:"kind"`
-	Name        string  `json:"name"`
-	Size        *int64  `json:"size,omitempty"`
-	MIME        *string `json:"mime,omitempty"`
-	EdgeVersion int64   `json:"edge_version"`
-	CreatedBy   string  `json:"created_by"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
-	DeletedAt   *string `json:"deleted_at,omitempty"`
-}
-
-type driveFilePresignDTO struct {
-	UploadSessionID string `json:"upload_session_id"`
-	FileID          string `json:"file_id"`
-	UploadURL       string `json:"upload_url"`
-	ObjectURL       string `json:"object_url"`
-	ObjectKey       string `json:"object_key"`
-	ExpiresIn       int    `json:"expires_in"`
-}
-
-type driveShareViewDTO struct {
-	NodeID      string  `json:"node_id"`
-	Token       string  `json:"token"`
-	URL         string  `json:"url"`
-	ExpiresAt   *string `json:"expires_at,omitempty"`
-	HasPassword bool    `json:"has_password"`
-	Status      string  `json:"status"`
 }

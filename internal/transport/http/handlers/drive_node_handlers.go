@@ -71,13 +71,6 @@ func (h *DriveHandler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
 		return
 	}
-	if h.mapper == nil {
-		writeSuccess(ctx, map[string]any{
-			"items": items,
-			"total": len(items),
-		})
-		return
-	}
 
 	presentedItems, err := h.presentDriveNodes(c, items)
 	if err != nil {
@@ -102,7 +95,7 @@ func (h *DriveHandler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
+	nodeID, err := h.resolver.ResolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		writeIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
@@ -161,7 +154,7 @@ func (h *DriveHandler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
+	nodeID, err := h.resolver.ResolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		writeIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
@@ -173,18 +166,14 @@ func (h *DriveHandler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	responseID := any(nodeID)
-	if h.mapper != nil {
-		ids, resolveErr := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
-		if resolveErr != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", resolveErr.Error())
-			return
-		}
-		responseID = ids[nodeID]
+	ids, err := h.mapper.ResolveDriveNodeExternalIDs(c, []int64{nodeID})
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_drive_node_id_failed", err.Error())
+		return
 	}
 
 	writeSuccess(ctx, map[string]any{
-		"id":            responseID,
+		"id":            ids[nodeID],
 		"deleted":       true,
 		"deleted_count": deletedCount,
 	})

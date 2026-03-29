@@ -3,13 +3,13 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/route"
@@ -17,25 +17,11 @@ import (
 
 type LoginHandler struct {
 	service *loginapp.Service
-	mapper  ExternalIDMapper
+	mapper  presenter.IDMapper
 }
 
-type LoginHandlerOption func(*LoginHandler)
-
-func WithLoginExternalIDMapper(mapper ExternalIDMapper) LoginHandlerOption {
-	return func(h *LoginHandler) {
-		h.mapper = mapper
-	}
-}
-
-func NewLoginHandler(service *loginapp.Service, options ...LoginHandlerOption) *LoginHandler {
-	handler := &LoginHandler{service: service}
-	for _, option := range options {
-		if option != nil {
-			option(handler)
-		}
-	}
-	return handler
+func NewLoginHandler(service *loginapp.Service, mapper presenter.IDMapper) *LoginHandler {
+	return &LoginHandler{service: service, mapper: mapper}
 }
 
 func (h *LoginHandler) RegisterRootRoutes(group *route.RouterGroup) {
@@ -125,14 +111,13 @@ func (h *LoginHandler) Poll(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(status, payload)
 		return
 	}
-	if result.User != nil {
-		userID, resolveErr := h.resolveLoginUserID(c, result.User.ID)
-		if resolveErr != nil {
-			ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
-			return
-		}
-		result.User.ID = userID
+
+	presentedUser, resolveErr := presenter.PresentLoginUser(c, h.mapper, result.User)
+	if resolveErr != nil {
+		ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+		return
 	}
+	result.User = presentedUser
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
@@ -153,14 +138,13 @@ func (h *LoginHandler) Exchange(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(status, payload)
 		return
 	}
-	if result.User != nil {
-		userID, resolveErr := h.resolveLoginUserID(c, result.User.ID)
-		if resolveErr != nil {
-			ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
-			return
-		}
-		result.User.ID = userID
+
+	presentedUser, resolveErr := presenter.PresentLoginUser(c, h.mapper, result.User)
+	if resolveErr != nil {
+		ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+		return
 	}
+	result.User = presentedUser
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
 }
 
@@ -240,19 +224,4 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
-}
-
-func (h *LoginHandler) resolveLoginUserID(ctx context.Context, rawUserID string) (string, error) {
-	trimmed := strings.TrimSpace(rawUserID)
-	if trimmed == "" || h.mapper == nil {
-		return trimmed, nil
-	}
-	if strings.HasPrefix(trimmed, "u_") {
-		return trimmed, nil
-	}
-	externalUserID, err := h.mapper.ResolveUserExternalID(ctx, trimmed)
-	if err != nil {
-		return "", fmt.Errorf("resolve user external id: %w", err)
-	}
-	return externalUserID, nil
 }

@@ -18,26 +18,26 @@ const (
 )
 
 type UploadSession struct {
-	ID         int64               `json:"id"`
-	SpaceID    int64               `json:"space_id"`
-	TargetType UploadTargetType    `json:"target_type"`
-	TargetID   int64               `json:"target_id"`
-	ObjectKey  string              `json:"object_key"`
-	Status     UploadSessionStatus `json:"status"`
-	ExpiresAt  time.Time           `json:"expires_at"`
-	CreatedAt  time.Time           `json:"created_at"`
+	ID         int64
+	SpaceID    int64
+	TargetType UploadTargetType
+	TargetID   int64
+	ObjectKey  string
+	Status     UploadSessionStatus
+	ExpiresAt  time.Time
+	CreatedAt  time.Time
 }
 
 type StorageObject struct {
-	ID        int64     `json:"id"`
-	SpaceID   int64     `json:"space_id"`
-	Bucket    string    `json:"bucket"`
-	ObjectKey string    `json:"object_key"`
-	Size      int64     `json:"size"`
-	MIME      string    `json:"mime"`
-	ETag      string    `json:"etag"`
-	SHA256    *string   `json:"sha256,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64
+	SpaceID   int64
+	Bucket    string
+	ObjectKey string
+	Size      int64
+	MIME      string
+	ETag      string
+	SHA256    *string
+	CreatedAt time.Time
 }
 
 type StorageObjectHead struct {

@@ -3,12 +3,12 @@ package handlers
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -17,25 +17,11 @@ import (
 
 type SystemHandler struct {
 	service *systemapp.Service
-	mapper  ExternalIDMapper
+	mapper  presenter.IDMapper
 }
 
-type SystemHandlerOption func(*SystemHandler)
-
-func WithSystemExternalIDMapper(mapper ExternalIDMapper) SystemHandlerOption {
-	return func(h *SystemHandler) {
-		h.mapper = mapper
-	}
-}
-
-func NewSystemHandler(service *systemapp.Service, options ...SystemHandlerOption) *SystemHandler {
-	handler := &SystemHandler{service: service}
-	for _, option := range options {
-		if option != nil {
-			option(handler)
-		}
-	}
-	return handler
+func NewSystemHandler(service *systemapp.Service, mapper presenter.IDMapper) *SystemHandler {
+	return &SystemHandler{service: service, mapper: mapper}
 }
 
 func (h *SystemHandler) RegisterRootRoutes(group *route.RouterGroup) {
@@ -68,15 +54,18 @@ func (h *SystemHandler) Healthz(_ context.Context, ctx *app.RequestContext) {
 func (h *SystemHandler) Status(c context.Context, ctx *app.RequestContext) {
 	principal, _ := middleware.GetPrincipal(ctx)
 	result := h.service.Status(principal)
-	if h.mapper != nil && result.User != nil {
-		externalUserID, err := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(result.User.UserID))
-		if err != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", err.Error())
-			return
-		}
-		result.User.UserID = externalUserID
+
+	userDTO, err := presenter.PresentStatusUser(c, h.mapper, result.User)
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", err.Error())
+		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"service":      result.Service,
+		"runtime_mode": result.RuntimeMode,
+		"user":         userDTO,
+	}))
 }
 
 func (h *SystemHandler) Logout(c context.Context, ctx *app.RequestContext) {
@@ -113,15 +102,13 @@ func (h *SystemHandler) Me(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(status, payload)
 		return
 	}
-	if h.mapper != nil {
-		externalUserID, resolveErr := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(user.ID))
-		if resolveErr != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
-			return
-		}
-		user.ID = externalUserID
+
+	userDTO, resolveErr := presenter.PresentUser(c, h.mapper, user)
+	if resolveErr != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
+		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), user))
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), userDTO))
 }
 
 func (h *SystemHandler) CreditBalance(c context.Context, ctx *app.RequestContext) {
@@ -186,13 +173,18 @@ func (h *SystemHandler) DashboardSummary(c context.Context, ctx *app.RequestCont
 		ctx.JSON(status, payload)
 		return
 	}
-	if h.mapper != nil {
-		externalUserID, resolveErr := h.mapper.ResolveUserExternalID(c, strings.TrimSpace(result.User.ID))
-		if resolveErr != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
-			return
-		}
-		result.User.ID = externalUserID
+
+	userDTO, resolveErr := presenter.PresentDashboardUser(c, h.mapper, result.User)
+	if resolveErr != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", resolveErr.Error())
+		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"user":            userDTO,
+		"balance":         result.Balance,
+		"recent_activity": result.RecentActivity,
+		"usage_summary":   result.UsageSummary,
+		"error_summary":   result.ErrorSummary,
+	}))
 }

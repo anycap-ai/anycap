@@ -198,20 +198,12 @@ func (h *PageHandler) ListVersions(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForPageError(err), "list_page_versions_failed", err.Error())
 		return
 	}
-	if h.mapper == nil {
-		writeSuccess(ctx, map[string]any{
-			"items": versions,
-			"total": len(versions),
-		})
-		return
-	}
 
 	presentedVersions, err := h.presentPageVersions(c, versions)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_page_versions_failed", err.Error())
 		return
 	}
-
 	writeSuccess(ctx, map[string]any{
 		"items": presentedVersions,
 		"total": len(presentedVersions),

@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -13,26 +15,13 @@ import (
 )
 
 type ModelRouteHandler struct {
-	service *modelrouteapp.Service
-	mapper  ExternalIDMapper
+	service  *modelrouteapp.Service
+	resolver IDResolver
+	mapper   presenter.IDMapper
 }
 
-type ModelRouteHandlerOption func(*ModelRouteHandler)
-
-func WithModelRouteExternalIDMapper(mapper ExternalIDMapper) ModelRouteHandlerOption {
-	return func(h *ModelRouteHandler) {
-		h.mapper = mapper
-	}
-}
-
-func NewModelRouteHandler(service *modelrouteapp.Service, options ...ModelRouteHandlerOption) *ModelRouteHandler {
-	handler := &ModelRouteHandler{service: service}
-	for _, option := range options {
-		if option != nil {
-			option(handler)
-		}
-	}
-	return handler
+func NewModelRouteHandler(service *modelrouteapp.Service, resolver IDResolver, mapper presenter.IDMapper) *ModelRouteHandler {
+	return &ModelRouteHandler{service: service, resolver: resolver, mapper: mapper}
 }
 
 func (h *ModelRouteHandler) RegisterRoutes(group *route.RouterGroup) {
@@ -41,26 +30,6 @@ func (h *ModelRouteHandler) RegisterRoutes(group *route.RouterGroup) {
 	group.GET("/admin/model-routes/:id", h.Get)
 	group.PUT("/admin/model-routes/:id", h.Update)
 	group.DELETE("/admin/model-routes/:id", h.Delete)
-}
-
-type modelRouteDTO struct {
-	ID          string         `json:"id"`
-	ModelID     string         `json:"model_id"`
-	Capability  string         `json:"capability"`
-	Operation   string         `json:"operation"`
-	AbilityKey  string         `json:"ability_key"`
-	AlgoType    string         `json:"algo_type,omitempty"`
-	DisplayName string         `json:"display_name,omitempty"`
-	RouteType   string         `json:"route_type,omitempty"`
-	Region      string         `json:"region,omitempty"`
-	Tier        string         `json:"tier,omitempty"`
-	Env         string         `json:"env,omitempty"`
-	Priority    int            `json:"priority"`
-	Enabled     bool           `json:"enabled"`
-	Status      string         `json:"status"`
-	Extra       map[string]any `json:"extra,omitempty"`
-	CreatedAt   string         `json:"created_at"`
-	UpdatedAt   string         `json:"updated_at"`
 }
 
 func (h *ModelRouteHandler) List(c context.Context, ctx *app.RequestContext) {
@@ -78,15 +47,8 @@ func (h *ModelRouteHandler) List(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, consts.StatusInternalServerError, "list_model_routes_failed", err.Error())
 		return
 	}
-	if h.mapper == nil {
-		writeSuccess(ctx, map[string]any{
-			"items": items,
-			"total": len(items),
-		})
-		return
-	}
 
-	presentedItems, err := h.presentModelRoutes(c, items)
+	presentedItems, err := presenter.PresentModelRoutes(c, h.mapper, items)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_model_routes_failed", err.Error())
 		return
@@ -104,7 +66,7 @@ func (h *ModelRouteHandler) Get(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
+	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
 	if err != nil {
 		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
@@ -115,7 +77,7 @@ func (h *ModelRouteHandler) Get(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, consts.StatusNotFound, "model_route_not_found", err.Error())
 		return
 	}
-	presented, err := h.presentModelRoute(c, item)
+	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
@@ -140,7 +102,7 @@ func (h *ModelRouteHandler) Create(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "create_model_route_failed", err.Error())
 		return
 	}
-	presented, err := h.presentModelRoute(c, item)
+	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
@@ -154,7 +116,7 @@ func (h *ModelRouteHandler) Update(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
+	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
 	if err != nil {
 		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
@@ -171,7 +133,7 @@ func (h *ModelRouteHandler) Update(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "update_model_route_failed", err.Error())
 		return
 	}
-	presented, err := h.presentModelRoute(c, item)
+	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
 		writeError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
@@ -185,7 +147,7 @@ func (h *ModelRouteHandler) Delete(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	id, err := h.resolveModelRouteID(c, string(ctx.Param("id")))
+	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
 	if err != nil {
 		writeIDResolveError(ctx, "invalid_model_route_id", err)
 		return
@@ -195,14 +157,11 @@ func (h *ModelRouteHandler) Delete(c context.Context, ctx *app.RequestContext) {
 		writeError(ctx, statusCodeForModelRouteError(err), "delete_model_route_failed", err.Error())
 		return
 	}
-	responseID := any(id)
-	if h.mapper != nil {
-		ids, resolveErr := h.mapper.ResolveModelRouteExternalIDs(c, []int64{id})
-		if resolveErr != nil {
-			writeError(ctx, consts.StatusInternalServerError, "resolve_model_route_id_failed", resolveErr.Error())
-			return
-		}
-		responseID = ids[id]
+
+	ids, err := h.mapper.ResolveModelRouteExternalIDs(c, []int64{id})
+	if err != nil {
+		writeError(ctx, consts.StatusInternalServerError, "resolve_model_route_id_failed", err.Error())
+		return
 	}
-	writeSuccess(ctx, map[string]any{"id": responseID, "deleted": true})
+	writeSuccess(ctx, map[string]any{"id": ids[id], "deleted": true})
 }

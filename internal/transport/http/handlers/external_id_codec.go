@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -17,24 +16,14 @@ func parseOptionalIDRaw(raw json.RawMessage) (*string, error) {
 	}
 
 	var idString string
-	if err := json.Unmarshal(raw, &idString); err == nil {
-		idString = strings.TrimSpace(idString)
-		if idString == "" {
-			return nil, nil
-		}
-		return &idString, nil
+	if err := json.Unmarshal(raw, &idString); err != nil {
+		return nil, fmt.Errorf("id must be a string or null")
 	}
-
-	var idNumber int64
-	if err := json.Unmarshal(raw, &idNumber); err == nil {
-		if idNumber <= 0 {
-			return nil, fmt.Errorf("id must be a positive integer")
-		}
-		idText := strconv.FormatInt(idNumber, 10)
-		return &idText, nil
+	idString = strings.TrimSpace(idString)
+	if idString == "" {
+		return nil, nil
 	}
-
-	return nil, fmt.Errorf("id must be string, number, or null")
+	return &idString, nil
 }
 
 func parseRequiredIDRaw(raw json.RawMessage, fieldName string) (string, error) {
