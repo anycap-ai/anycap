@@ -154,7 +154,7 @@ export function DriveSharePanel({
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-[#1c1f17]/20">
-      <div className="w-full max-w-[360px] h-full bg-[#f9faf5] border-l border-[#d4dbb8] p-6">
+      <div className="w-full max-w-[360px] h-full bg-[#f9faf5] border-l border-[#d4dbb8]/70 p-6">
         <div className="flex items-center justify-between mb-6">
           <p className="text-[12px] tracking-[0.3px] text-[#5f6358]" style={mono}>
             Share
@@ -168,14 +168,14 @@ export function DriveSharePanel({
           </button>
         </div>
 
-        <div className="border border-[#d4dbb8] bg-[#f4f5f0] p-4">
+        <div className="border border-[#d4dbb8]/70 bg-[#f4f5f0] p-4 rounded-xl">
           <p className="text-[13px] text-[#1c1f17] mb-1">{node.name}</p>
           <p className="text-[12px] text-[#626658]" style={mono}>
             {node.kind}
           </p>
         </div>
 
-        <div className="mt-6 border border-[#d4dbb8] bg-[#f4f5f0] p-4 space-y-3">
+        <div className="mt-6 border border-[#d4dbb8]/70 bg-[#f4f5f0] p-4 space-y-3 rounded-xl">
           <p className="text-[12px] text-[#626658]" style={mono}>
             Share link
           </p>
@@ -198,7 +198,7 @@ export function DriveSharePanel({
                 expires: {expiresAt ? new Date(expiresAt).toLocaleString() : "never"}
               </div>
               <button
-                className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8] text-[#1c1f17] hover:text-[#6b7d3a] rounded"
+                className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] rounded-lg"
                 style={mono}
                 onClick={onCopyLink}
                 disabled={busy}
@@ -208,7 +208,7 @@ export function DriveSharePanel({
             </div>
           ) : (
             <button
-              className="px-3 py-2 text-[12px] border border-[#d4dbb8] text-[#1c1f17] hover:text-[#6b7d3a] rounded disabled:opacity-45"
+              className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] rounded-lg disabled:opacity-45"
               style={mono}
               onClick={onCreateOrLoad}
               disabled={busy}
@@ -218,7 +218,7 @@ export function DriveSharePanel({
           )}
         </div>
 
-        <div className="mt-4 border border-[#d4dbb8] bg-[#f4f5f0] p-4 space-y-3">
+        <div className="mt-4 border border-[#d4dbb8]/70 bg-[#f4f5f0] p-4 space-y-3 rounded-xl">
           <p className="text-[12px] text-[#626658]" style={mono}>
             Settings
           </p>
@@ -231,7 +231,7 @@ export function DriveSharePanel({
               onChange={(e) => setExpiresInput(e.target.value)}
               placeholder="7d"
               disabled={busy || noExpire}
-              className="w-full border border-[#d4dbb8] bg-[#fbfcf7] px-2.5 py-2 text-[12px] text-[#1c1f17] rounded disabled:opacity-45"
+              className="w-full border border-[#d4dbb8]/70 bg-[#fbfcf7] px-2.5 py-2 text-[12px] text-[#1c1f17] rounded-lg disabled:opacity-45"
               style={mono}
             />
           </label>
@@ -258,7 +258,7 @@ export function DriveSharePanel({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={busy || noPassword}
-              className="w-full border border-[#d4dbb8] bg-[#fbfcf7] px-2.5 py-2 text-[12px] text-[#1c1f17] rounded disabled:opacity-45"
+              className="w-full border border-[#d4dbb8]/70 bg-[#fbfcf7] px-2.5 py-2 text-[12px] text-[#1c1f17] rounded-lg disabled:opacity-45"
             />
           </label>
 
@@ -276,7 +276,7 @@ export function DriveSharePanel({
           </label>
 
           <button
-            className="px-3 py-2 text-[12px] border border-[#d4dbb8] text-[#1c1f17] hover:text-[#6b7d3a] rounded disabled:opacity-45"
+            className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] rounded-lg disabled:opacity-45"
             style={mono}
             onClick={onSaveSettings}
             disabled={busy}
@@ -287,7 +287,7 @@ export function DriveSharePanel({
 
         <div className="mt-4 flex items-center gap-2">
           <button
-            className="px-3 py-2 text-[12px] border border-[#d4dbb8] text-[#1c1f17] hover:text-[#6b7d3a] rounded disabled:opacity-45"
+            className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] rounded-lg disabled:opacity-45"
             style={mono}
             onClick={onRotate}
             disabled={busy || !shareURL}
@@ -295,7 +295,7 @@ export function DriveSharePanel({
             Rotate
           </button>
           <button
-            className="px-3 py-2 text-[12px] border border-[#d4dbb8] text-[#a83f32] hover:opacity-80 rounded disabled:opacity-45"
+            className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 text-[#a83f32] hover:opacity-80 rounded-lg disabled:opacity-45"
             style={mono}
             onClick={onRevoke}
             disabled={busy || !shareURL}

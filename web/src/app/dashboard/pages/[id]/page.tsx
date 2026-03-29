@@ -129,7 +129,7 @@ export default function PageDetailPage() {
         <p className="text-[13px] text-[#a83f32]" style={mono}>Page not found</p>
       ) : (
         <div className="space-y-6">
-          <section className="border border-[#d4dbb8] bg-[#f9faf5] p-5">
+          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
             <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4" style={mono}>
               Basic Info
             </p>
@@ -159,7 +159,7 @@ export default function PageDetailPage() {
             </div>
           </section>
 
-          <section className="border border-[#d4dbb8] bg-[#f9faf5] p-5">
+          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
             <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4" style={mono}>
               Settings
             </p>
@@ -170,7 +170,7 @@ export default function PageDetailPage() {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-[#d4dbb8] bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17]"
+                  className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
                 />
               </label>
 
@@ -179,7 +179,7 @@ export default function PageDetailPage() {
                 <select
                   value={accessMode}
                   onChange={(e) => setAccessMode(e.target.value as PageAccessMode)}
-                  className="w-full border border-[#d4dbb8] bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17]"
+                  className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
                 >
                   <option value="public">public</option>
                   <option value="password">password</option>
@@ -209,11 +209,11 @@ export default function PageDetailPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border border-[#d4dbb8] bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17]"
+                    className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
                   />
                 </label>
                 <button
-                  className="px-3 py-2 text-[12px] border border-[#d4dbb8] bg-[#f4f5f0] text-[#707468] hover:text-[#6b7d3a] rounded"
+                  className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#707468] hover:text-[#6b7d3a] rounded-lg"
                   style={mono}
                   onClick={onClearPassword}
                   disabled={saving}
@@ -225,7 +225,7 @@ export default function PageDetailPage() {
 
             <div className="mt-5">
               <button
-                className="px-3 py-2 text-[12px] border border-[#d4dbb8] bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
+                className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
                 style={mono}
                 onClick={onSave}
                 disabled={saving}
@@ -235,13 +235,13 @@ export default function PageDetailPage() {
             </div>
           </section>
 
-          <section className="border border-[#d4dbb8] bg-[#f9faf5] p-5">
+          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <p className="text-[12px] tracking-[0.3px] text-[#5f6358]" style={mono}>
                 Versions
               </p>
               <button
-                className="px-3 py-2 text-[12px] border border-[#d4dbb8] bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
+                className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
                 style={mono}
                 onClick={onUnpublish}
                 disabled={unpublishing || data.current_version_id == null}
@@ -250,7 +250,7 @@ export default function PageDetailPage() {
               </button>
             </div>
 
-            <div className="overflow-x-auto border border-[#d4dbb8] bg-[#f4f5f0]">
+            <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f4f5f0] rounded-xl overflow-hidden">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[#d4dbb8]">
@@ -294,7 +294,7 @@ export default function PageDetailPage() {
                           </td>
                           <td className="py-3 px-3 text-right">
                             <button
-                              className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded"
+                              className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
                               style={mono}
                               onClick={() => onPublish(version.id)}
                               disabled={!publishable || publishingVersionID != null}

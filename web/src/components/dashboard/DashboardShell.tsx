@@ -47,7 +47,7 @@ function UserAvatar({
         alt={displayName}
         width={size}
         height={size}
-        className="object-cover shrink-0"
+        className="object-cover shrink-0 rounded-full"
         style={{ width: size, height: size }}
         onError={() => setImgError(true)}
       />
@@ -55,7 +55,7 @@ function UserAvatar({
   }
   return (
     <div
-      className="bg-[#6b7d3a] flex items-center justify-center shrink-0"
+      className="bg-[#6b7d3a] flex items-center justify-center shrink-0 rounded-full"
       style={{ width: size, height: size, ...mono }}
     >
       <span className="text-[11px] font-bold text-[#f4f5f0] leading-none">

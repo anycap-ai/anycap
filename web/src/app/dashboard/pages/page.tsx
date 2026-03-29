@@ -31,7 +31,7 @@ export default function PagesPage() {
           Pages
         </p>
         <button
-          className="px-3 py-2 text-[12px] border border-[#d4dbb8] bg-[#f9faf5] text-[#1c1f17] hover:text-[#6b7d3a] rounded"
+          className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f9faf5] text-[#1c1f17] hover:text-[#6b7d3a] rounded-lg"
           style={mono}
           onClick={onCreate}
         >
@@ -39,7 +39,7 @@ export default function PagesPage() {
         </button>
       </div>
 
-      <div className="overflow-x-auto border border-[#d4dbb8] bg-[#f9faf5]">
+      <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4dbb8]">
