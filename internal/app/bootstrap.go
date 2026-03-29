@@ -13,10 +13,13 @@ import (
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
+	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
+	spaceapp "gitlab.knoffice.tech/engineering/anycap/internal/application/space"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
@@ -25,12 +28,18 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
@@ -44,13 +53,13 @@ import (
 )
 
 var (
-	openPostgres          = apikey.OpenPostgres
+	openPostgres          = sqlstore.OpenPostgres
 	runPostgresMigrations = func(ctx context.Context, db any) error {
-		dbtx, ok := db.(apikey.DBTX)
+		dbtx, ok := db.(sqlstore.DBTX)
 		if !ok {
 			return fmt.Errorf("migration db does not implement DBTX: %T", db)
 		}
-		return apikey.ApplyMigrations(ctx, dbtx)
+		return migration.ApplyMigrations(ctx, dbtx)
 	}
 	newCatalogRepoFromDSN = func(ctx context.Context, dsn string) (*postgres.CatalogRepo, error) {
 		return postgres.NewCatalogRepoFromDSN(ctx, dsn)
@@ -70,6 +79,9 @@ type serverDependencies struct {
 	loginService        *loginapp.Service
 	imageService        *imageapp.Service
 	videoService        *videoapp.Service
+	spaceService        *spaceapp.Service
+	driveService        *driveapp.Service
+	pageService         *pageapp.Service
 	catalogService      *catalogapp.Service
 	modelRouteService   *modelrouteapp.Service
 	capabilitiesService *capapp.Service
@@ -78,6 +90,7 @@ type serverDependencies struct {
 	identityTokens      port.IdentityTokenAuthenticator
 	rateLimiter         port.RateLimiter
 	protectedRPM        int
+	kvSyncWorker        *kvsync.Worker
 }
 
 type Server struct {
@@ -92,11 +105,21 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		panic(err)
 	}
 
+	if deps.kvSyncWorker != nil {
+		go func() {
+			if err := deps.kvSyncWorker.Run(context.Background()); err != nil {
+				log.Printf("kvsync worker stopped: %v", err)
+			}
+		}()
+	}
+
 	deps.systemService.SetFeatures(buildServerFeatures(cfg))
 	systemHandler := handlers.NewSystemHandler(deps.systemService)
 	loginHandler := handlers.NewLoginHandler(deps.loginService)
 	imageHandler := handlers.NewImageHandler(deps.imageService)
 	videoHandler := handlers.NewVideoHandler(deps.videoService)
+	driveHandler := handlers.NewDriveHandler(deps.driveService)
+	pageHandler := handlers.NewPageHandler(deps.pageService)
 	capHandler := handlers.NewCapabilitiesHandler(deps.capabilitiesService)
 	imageCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := handlers.NewCatalogHandler(deps.catalogService, model.CapabilityVideo)
@@ -129,6 +152,8 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
+				driveHandler.RegisterRoutes(protected)
+				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 			}),
@@ -163,8 +188,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	switch cfg.RuntimeMode {
 	case "", "stub":
 		apiKeys := apikey.NewMemoryService()
-		callLogs := apikey.NewMemoryCallLogRepo()
-		loginSessions := apikey.NewMemoryLoginSessionRepo()
+		callLogs := calllog.NewMemoryCallLogRepo()
+		loginSessions := loginsession.NewMemoryLoginSessionRepo()
 		users := userstore.NewMemoryProvisioner()
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		systemService.SetUserReader(users)
@@ -177,10 +202,13 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
+			spaceService:        nil,
+			driveService:        nil,
+			pageService:         nil,
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
-			feedbackService:     feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
+			feedbackService:     feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
@@ -195,9 +223,45 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		if err != nil {
 			return serverDependencies{}, err
 		}
+		spaceRepo := postgres.NewSpaceRepo(db)
+		spaceService := spaceapp.NewService(spaceRepo)
+		driveNodeRepo := postgres.NewDriveNodeRepo(db)
+		driveShareRepo := postgres.NewDriveShareRepo(db)
+		uploadSessionRepo := postgres.NewUploadSessionRepo(db)
+		storageObjectRepo := postgres.NewStorageObjectRepo(db)
+		pageSiteRepo := postgres.NewPageSiteRepo(db)
+		pageSlugRepo := postgres.NewPageSlugRepo(db)
+		pageVersionRepo := postgres.NewPageVersionRepo(db)
+		cloudObjectStore := buildCloudObjectStorage(cfg)
+		kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
+		kvClient := buildKVSyncClient(cfg)
+		driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
+		pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, "")
+		kvSyncWorker := kvsync.NewWorker(kvSyncJobRepo, map[string]kvsync.Projector{
+			model.KVSyncJobTypeDriveFileMetaSync:    driveProjector,
+			model.KVSyncJobTypeDriveDirChildrenSync: driveProjector,
+			model.KVSyncJobTypeDriveDirMetaSync:     driveProjector,
+			model.KVSyncJobTypeDriveShareSync:       driveProjector,
+			model.KVSyncJobTypeDriveDirTreeDelete:   driveProjector,
+			model.KVSyncJobTypePageHostSync:         pageProjector,
+			model.KVSyncJobTypePageHostDelete:       pageProjector,
+		}, kvsync.WorkerConfig{
+			WorkerID:     "anycap-server",
+			PollInterval: cfg.KVSyncPollInterval,
+			LockTTL:      cfg.KVSyncLockTTL,
+		})
+		kvSyncWaiter := kvsync.NewWaiter(kvSyncJobRepo, kvsync.WaiterConfig{
+			Timeout: cfg.KVSyncWaitTimeout,
+		})
+		var driveKVSyncOption driveapp.ServiceOption
+		var pageKVSyncOption pageapp.ServiceOption
+		if cfg.KVSyncEnabled {
+			driveKVSyncOption = driveapp.WithKVSync(kvSyncJobRepo, kvSyncWaiter, cfg.KVSyncWaitEnabled)
+			pageKVSyncOption = pageapp.WithKVSync(kvSyncJobRepo, kvSyncWaiter, cfg.KVSyncWaitEnabled)
+		}
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
-		loginSessionRepo := apikey.NewLoginSessionRepo(db)
-		callLogs := apikey.NewCallLogDBRepo(db)
+		loginSessionRepo := loginsession.NewLoginSessionRepo(db)
+		callLogs := calllog.NewCallLogDBRepo(db)
 		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
@@ -206,20 +270,42 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetCallLogRepo(callLogs)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
-			config:              cfg,
-			buildInfo:           info,
-			systemService:       systemService,
-			loginService:        loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
-			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
+			config:        cfg,
+			buildInfo:     info,
+			systemService: systemService,
+			loginService:  loginapp.NewService(authClient, users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			imageService:  imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
+			videoService:  videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
+			spaceService:  spaceService,
+			driveService: driveapp.NewService(
+				spaceService,
+				driveNodeRepo,
+				driveapp.WithUpload(uploadSessionRepo, storageObjectRepo, cloudObjectStore),
+				driveapp.WithShare(driveShareRepo, cfg.PasswordPepper, cfg.DriveShareBaseURL),
+				driveKVSyncOption,
+			),
+			pageService: pageapp.NewService(
+				spaceService,
+				pageSiteRepo,
+				pageSlugRepo,
+				cfg.PasswordPepper,
+				pageapp.WithVersioning(pageVersionRepo, uploadSessionRepo, storageObjectRepo, cloudObjectStore),
+				pageKVSyncOption,
+			),
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
-			feedbackService:     feedbackapp.NewService(apikey.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
+			feedbackService:     feedbackapp.NewService(feedbackstore.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			protectedRPM:        cfg.RateLimitRPM,
+			kvSyncWorker: func() *kvsync.Worker {
+				if cfg.KVSyncEnabled {
+					return kvSyncWorker
+				}
+				return nil
+			}(),
 		}, nil
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
@@ -321,6 +407,39 @@ func buildObjectStorage(cfg config.Config) port.ObjectStorage {
 	}
 	log.Println("storage: using stub (set S3_* env vars for real storage)")
 	return s3store.NewStubClient()
+}
+
+func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {
+	if cfg.CloudS3.Enabled() {
+		s3Client, err := s3store.NewClient(context.Background(), cfg.CloudS3)
+		if err != nil {
+			log.Printf("cloud-storage: failed to initialize S3 client, falling back to stub: %v", err)
+			return s3store.NewStubClient()
+		}
+		log.Printf("cloud-storage: using S3 at %s (bucket=%s)", cfg.CloudS3.Endpoint, cfg.CloudS3.Bucket)
+		return s3Client
+	}
+	log.Println("cloud-storage: using stub (set ANYCAP_CLOUD_S3_* env vars for real storage)")
+	return s3store.NewStubClient()
+}
+
+func buildKVSyncClient(cfg config.Config) kvsync.KVClient {
+	if cfg.CloudflareKV.Enabled() {
+		client, err := kvsync.NewCloudflareKVClient(kvsync.CloudflareKVClientConfig{
+			AccountID:   cfg.CloudflareKV.AccountID,
+			NamespaceID: cfg.CloudflareKV.NamespaceID,
+			APIToken:    cfg.CloudflareKV.APIToken,
+			APIBaseURL:  cfg.CloudflareKV.APIBaseURL,
+		})
+		if err != nil {
+			log.Printf("kvsync: failed to initialize cloudflare kv client, using noop client: %v", err)
+			return kvsync.NewNoopKVClient()
+		}
+		log.Printf("kvsync: using cloudflare kv namespace %s", cfg.CloudflareKV.NamespaceID)
+		return client
+	}
+	log.Println("kvsync: using noop kv client (set ANYCAP_CLOUDFLARE_* env vars for real KV)")
+	return kvsync.NewNoopKVClient()
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
@@ -462,8 +581,8 @@ func buildBypassPrincipal() model.Principal {
 	}
 }
 
-func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*apikey.SQLDB, error) {
-	db := apikey.NewSQLDB(sqlDB)
+func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*sqlstore.SQLDB, error) {
+	db := sqlstore.NewSQLDB(sqlDB)
 	if !cfg.PGAutoMigrate {
 		return db, nil
 	}

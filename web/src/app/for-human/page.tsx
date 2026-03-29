@@ -207,7 +207,7 @@ export default function ForHumanPage() {
             href="https://github.com/anycap-ai/anycap"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+            className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17] rounded-lg"
             style={mono}
           >
             Get Started

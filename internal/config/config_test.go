@@ -48,6 +48,22 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.Credit.Timeout != 10*time.Second {
 		t.Fatalf("expected default credit timeout 10s, got %v", cfg.Credit.Timeout)
 	}
+	if cfg.PasswordPepper != "" {
+		t.Fatalf("expected default password pepper empty, got %q", cfg.PasswordPepper)
+	}
+}
+
+func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PASSWORD_PEPPER", "pepper-value")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PasswordPepper != "pepper-value" {
+		t.Fatalf("expected password pepper from env, got %q", cfg.PasswordPepper)
+	}
 }
 
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {

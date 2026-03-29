@@ -18,6 +18,10 @@ const navSections: NavItem[][] = [
     { label: "Billing", href: "/dashboard/billing" },
   ],
   [
+    { label: "Drive", href: "/dashboard/drive" },
+    { label: "Pages", href: "/dashboard/pages" },
+  ],
+  [
     { label: "API Keys", href: "/dashboard/api-keys", disabled: true },
     { label: "Settings", href: "/dashboard/settings", disabled: true },
   ],

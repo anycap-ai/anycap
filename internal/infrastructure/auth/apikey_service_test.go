@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	apikeyinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 )
 
 type fakeAPIKeyRepo struct {
@@ -109,7 +109,7 @@ func TestRepositoryAPIKeyService_AuthenticateAPIKey(t *testing.T) {
 
 func TestRepositoryAPIKeyService_RevokeAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, time.Now, apikeyinfra.GenerateRawKey)
+	service := NewRepositoryAPIKeyService(repo, time.Now, apikeycodec.GenerateRawKey)
 
 	if err := service.RevokeAPIKey(context.Background(), "key-123"); err != nil {
 		t.Fatalf("RevokeAPIKey() error = %v", err)

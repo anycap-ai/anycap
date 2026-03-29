@@ -40,6 +40,36 @@ function TypeWriter({ text, speed = 18 }: { text: string; speed?: number }) {
   return <>{displayed}</>;
 }
 
+/** Render text with "anycap" highlighted in green, rest in base color */
+function HighlightAnycap({ text, base }: { text: string; base: string }) {
+  const parts = text.split(/(anycap)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part === "anycap" ? (
+          <span key={i} className="text-[#8fa34e]">{part}</span>
+        ) : (
+          <span key={i} style={{ color: base }}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+/** Render tool call: func name + parens bold, quotes and inner content normal, "anycap" green */
+function ToolCall({ text, base }: { text: string; base: string }) {
+  const match = text.match(/^(\w+)(\()(.*)(\))$/);
+  if (!match) return <HighlightAnycap text={text} base={base} />;
+  const [, func, open, inner, close] = match;
+  return (
+    <>
+      <span className="font-bold" style={{ color: base }}>{func}{open}</span>
+      <HighlightAnycap text={inner} base={base} />
+      <span className="font-bold" style={{ color: base }}>{close}</span>
+    </>
+  );
+}
+
 export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(false);
@@ -106,22 +136,22 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
             return (
               <div key={i} className={`flex items-center gap-2 mb-2 border-b border-[#2a2e22]${hide}`}>
                 <span className="text-[#8fa34e]">✻</span>
-                <span className="text-[#9a9e90] text-base tracking-wide">agent with anycap</span>
+                <span className="text-[#e0e0dc] text-base tracking-wide font-bold">agent with anycap</span>
                 {headerRight && <div className="ml-auto">{headerRight}</div>}
               </div>
             );
           case "prompt":
             return (
               <div key={i} className={`mb-6${hide}`}>
-                <span className="text-[#6b7d3a]">❯ </span>
-                <span className="text-[#d4e0a4]">
+                <span className="text-[#e0e0dc]">❯ </span>
+                <span className="text-[#e0e0dc]">
                   {shown ? <TypeWriter text={line.content!} speed={20} /> : line.content}
                 </span>
               </div>
             );
           case "text":
             return (
-              <p key={i} className={`text-[#9a9e90] mb-6${hide}`}>
+              <p key={i} className={`text-[#a0a09c] mb-6${hide}`}>
                 {line.content}
               </p>
             );
@@ -129,19 +159,19 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
             return (
               <div key={i} className={`mb-6${hide}`}>
                 <div className="flex items-start gap-2">
-                  <span className="text-[#8fa34e] mt-[1px]">●</span>
-                  <span className="text-[#b8cc6e]">{line.content}</span>
+                  <span className="text-[#e0e0dc] mt-[1px]">●</span>
+                  <span><ToolCall text={line.content!} base="#e0e0dc" /></span>
                 </div>
                 {line.sub && (
-                  <p className="text-[#6b7d3a] ml-5 mt-1">{line.sub}</p>
+                  <p className="text-[#808080] ml-5 mt-1">{line.sub}</p>
                 )}
               </div>
             );
           case "cursor":
             return (
               <div key={i} className={`flex items-center gap-2${hide}`}>
-                <span className="text-[#6b7d3a]">❯</span>
-                <span className="inline-block w-[7px] h-[14px] bg-[#b8cc6e] animate-blink" />
+                <span className="text-[#e0e0dc]">❯</span>
+                <span className="inline-block w-[7px] h-[14px] bg-[#e0e0dc] animate-blink" />
               </div>
             );
         }

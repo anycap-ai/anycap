@@ -24,6 +24,11 @@ const (
 	defaultPresignExpiry        = 600  // seconds (10 minutes)
 	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
 	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
+	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
+	defaultKVSyncPollInterval   = 1 * time.Second
+	defaultKVSyncLockTTL        = 5 * time.Minute
+	defaultKVSyncWaitTimeout    = 5 * time.Second
+	defaultCloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
 )
 
 type Config struct {
@@ -65,7 +70,16 @@ type Config struct {
 	Credit                  CreditConfig
 	AgentPlatform           AgentPlatformConfig
 	S3                      S3Config
+	CloudS3                 S3Config
 	Lark                    LarkConfig
+	PasswordPepper          string
+	DriveShareBaseURL       string
+	CloudflareKV            CloudflareKVConfig
+	KVSyncEnabled           bool
+	KVSyncWaitEnabled       bool
+	KVSyncPollInterval      time.Duration
+	KVSyncLockTTL           time.Duration
+	KVSyncWaitTimeout       time.Duration
 }
 
 type CreditConfig struct {
@@ -112,6 +126,17 @@ type LarkConfig struct {
 	MsgAPI        string
 	WebhookURL    string
 	WebhookSecret string
+}
+
+type CloudflareKVConfig struct {
+	AccountID   string
+	NamespaceID string
+	APIToken    string
+	APIBaseURL  string
+}
+
+func (c CloudflareKVConfig) Enabled() bool {
+	return c.AccountID != "" && c.NamespaceID != "" && c.APIToken != ""
 }
 
 func (c LarkConfig) Enabled() bool {
@@ -166,11 +191,25 @@ func LoadFromEnv() (Config, error) {
 		Credit:                  loadCreditConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
 		S3:                      loadS3Config(),
+		CloudS3:                 loadCloudS3Config(),
 		Lark: LarkConfig{
 			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
 			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),
 			WebhookSecret: os.Getenv("ANYCAP_LARK_WEBHOOK_SECRET"),
 		},
+		PasswordPepper:    os.Getenv("ANYCAP_PASSWORD_PEPPER"),
+		DriveShareBaseURL: getEnv("ANYCAP_DRIVE_SHARE_BASE_URL", defaultDriveShareBaseURL),
+		CloudflareKV: CloudflareKVConfig{
+			AccountID:   getEnv("ANYCAP_CLOUDFLARE_ACCOUNT_ID", ""),
+			NamespaceID: getEnv("ANYCAP_CLOUDFLARE_KV_NAMESPACE_ID", ""),
+			APIToken:    getEnv("ANYCAP_CLOUDFLARE_API_TOKEN", ""),
+			APIBaseURL:  getEnv("ANYCAP_CLOUDFLARE_API_BASE_URL", defaultCloudflareAPIBaseURL),
+		},
+		KVSyncEnabled:      getEnvBool("ANYCAP_KVSYNC_ENABLED", false),
+		KVSyncWaitEnabled:  getEnvBool("ANYCAP_KVSYNC_WAIT_ENABLED", true),
+		KVSyncPollInterval: getEnvDuration("ANYCAP_KVSYNC_POLL_INTERVAL", defaultKVSyncPollInterval),
+		KVSyncLockTTL:      getEnvDuration("ANYCAP_KVSYNC_LOCK_TTL", defaultKVSyncLockTTL),
+		KVSyncWaitTimeout:  getEnvDuration("ANYCAP_KVSYNC_WAIT_TIMEOUT", defaultKVSyncWaitTimeout),
 	}
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {
@@ -341,6 +380,42 @@ func loadS3Config() S3Config {
 		Region:          getEnv("S3_REGION", "auto"),
 		PublicURL:       getEnv("S3_PUBLIC_URL", ""),
 		KeyPrefix:       getEnv("S3_KEY_PREFIX", "user_upload"),
+		PresignExpiry:   expiry,
+		ForcePathStyle:  forcePathStyle,
+	}
+}
+
+func loadCloudS3Config() S3Config {
+	expiry := defaultPresignExpiry
+	if s := os.Getenv("ANYCAP_CLOUD_S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			expiry = n
+		}
+	} else if s := os.Getenv("S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			expiry = n
+		}
+	}
+
+	forcePathStyle := false
+	if s := os.Getenv("ANYCAP_CLOUD_S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
+		forcePathStyle = true
+	} else if s := os.Getenv("S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
+		forcePathStyle = true
+	}
+
+	if expiry > maxPresignExpiry {
+		expiry = maxPresignExpiry
+	}
+
+	return S3Config{
+		Endpoint:        getEnv("ANYCAP_CLOUD_S3_ENDPOINT", getEnv("S3_ENDPOINT", "")),
+		AccessKeyID:     getEnv("ANYCAP_CLOUD_S3_ACCESS_KEY_ID", getEnv("S3_ACCESS_KEY_ID", "")),
+		SecretAccessKey: getEnv("ANYCAP_CLOUD_S3_SECRET_ACCESS_KEY", getEnv("S3_SECRET_ACCESS_KEY", "")),
+		Bucket:          getEnv("ANYCAP_CLOUD_S3_BUCKET", "anycap-cloud"),
+		Region:          getEnv("ANYCAP_CLOUD_S3_REGION", getEnv("S3_REGION", "auto")),
+		PublicURL:       getEnv("ANYCAP_CLOUD_S3_PUBLIC_URL", ""),
+		KeyPrefix:       getEnv("ANYCAP_CLOUD_S3_KEY_PREFIX", ""),
 		PresignExpiry:   expiry,
 		ForcePathStyle:  forcePathStyle,
 	}

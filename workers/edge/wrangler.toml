@@ -1,0 +1,30 @@
+name = "anycap-edge"
+main = "src/index.ts"
+compatibility_date = "2026-03-29"
+
+# Route bindings are configured in Cloudflare dashboard for production.
+# Keep this file environment-agnostic for local/dev preview.
+
+[[kv_namespaces]]
+binding = "EDGE_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[[r2_buckets]]
+binding = "ANYCAP_CLOUD_R2"
+bucket_name = "anycap-cloud"
+
+[vars]
+DRIVE_HOST = "drive.anycap.cloud"
+PAGE_HOST_SUFFIX = ".page.anycap.cloud"
+DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
+PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
+DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+DRIVE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+PAGE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+PAGE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+DRIVE_PASSWORD_SESSION_TTL_SECONDS = "3600"
+PAGE_PASSWORD_SESSION_TTL_SECONDS = "3600"
+
+# Secrets to set via `wrangler secret put`:
+# - ANYCAP_PASSWORD_PEPPER
+# - EDGE_SESSION_SECRET

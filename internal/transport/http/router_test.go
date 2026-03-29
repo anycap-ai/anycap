@@ -20,8 +20,11 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -122,7 +125,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
-	loginSessions := apikey.NewMemoryLoginSessionRepo()
+	loginSessions := loginsession.NewMemoryLoginSessionRepo()
 	users := userstore.NewMemoryProvisioner()
 	seededUser, _, err := users.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
 		UserID:  "auth0|user-123",
@@ -139,7 +142,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	if err != nil {
 		t.Fatalf("seed sparse user: %v", err)
 	}
-	callLogs := apikey.NewMemoryCallLogRepo()
+	callLogs := calllog.NewMemoryCallLogRepo()
 	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 3})
 	_ = callLogs.Insert(context.Background(), model.CallLog{
 		RequestID:  "req_123",
@@ -188,7 +191,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
-	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
+	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{

@@ -12,6 +12,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/userid"
 )
 
 const creditCentPerCredit int64 = 100
@@ -215,7 +216,7 @@ func (c *HTTPClient) post(ctx context.Context, path string, payload any, dest an
 }
 
 func parseUserID(userID string) (int64, error) {
-	return strconv.ParseInt(userID, 10, 64)
+	return userid.Parse(userID)
 }
 
 func buildSourceID(reason, requestID string) string {

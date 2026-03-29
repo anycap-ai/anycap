@@ -20,7 +20,7 @@ export default async function AgentLanding() {
         <Link
           href={humanPageHref}
           prefetch={true}
-          className="inline-block px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded hover:bg-white transition-colors"
+          className="inline-block px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded-lg hover:bg-white transition-colors"
         >
           {"I'm Human →"}
         </Link>

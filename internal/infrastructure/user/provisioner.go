@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 )
 
 type Provisioner struct {
-	db apikey.TxStarter
+	db sqlstore.TxStarter
 }
 
-func NewProvisioner(db apikey.TxStarter) *Provisioner {
+func NewProvisioner(db sqlstore.TxStarter) *Provisioner {
 	return &Provisioner{db: db}
 }
 
@@ -90,7 +90,7 @@ func (p *Provisioner) GetUserByID(ctx context.Context, userID string) (model.Use
 	return user, nil
 }
 
-func getUserByIdentity(ctx context.Context, db apikey.DBTX, provider, externalSubject string) (model.User, error) {
+func getUserByIdentity(ctx context.Context, db sqlstore.DBTX, provider, externalSubject string) (model.User, error) {
 	row := db.QueryRowContext(ctx, `
 		SELECT u.id, COALESCE(u.email, ''), COALESCE(u.name, ''), COALESCE(u.avatar_url, ''), u.status, u.created_at, u.updated_at
 		FROM auth_identities ai
@@ -108,7 +108,7 @@ func getUserByIdentity(ctx context.Context, db apikey.DBTX, provider, externalSu
 	return user, nil
 }
 
-func updateUserAndIdentity(ctx context.Context, db apikey.DBTX, userID, provider string, authUser model.AuthUser, now time.Time) error {
+func updateUserAndIdentity(ctx context.Context, db sqlstore.DBTX, userID, provider string, authUser model.AuthUser, now time.Time) error {
 	rawProfile, err := json.Marshal(authUser)
 	if err != nil {
 		return model.ErrInternal
@@ -135,7 +135,7 @@ func updateUserAndIdentity(ctx context.Context, db apikey.DBTX, userID, provider
 	return nil
 }
 
-func insertUserAndIdentity(ctx context.Context, db apikey.DBTX, provider string, authUser model.AuthUser, now time.Time) (model.User, error) {
+func insertUserAndIdentity(ctx context.Context, db sqlstore.DBTX, provider string, authUser model.AuthUser, now time.Time) (model.User, error) {
 	rawProfile, err := json.Marshal(authUser)
 	if err != nil {
 		return model.User{}, model.ErrInternal

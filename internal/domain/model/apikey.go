@@ -2,6 +2,11 @@ package model
 
 import "time"
 
+const (
+	APIKeyStatusActive  = "active"
+	APIKeyStatusRevoked = "revoked"
+)
+
 type APIKey struct {
 	ID         string     `json:"id"`
 	UserID     string     `json:"user_id"`

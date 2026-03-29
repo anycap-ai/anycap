@@ -53,15 +53,55 @@ export async function anycapGet<T>(
 }
 
 export async function anycapPost<T>(
-  path: string,
-  body: Record<string, unknown>,
-  options: RequestOptions = {},
+	path: string,
+	body: Record<string, unknown>,
+	options: RequestOptions = {},
 ): Promise<T> {
   const response = await fetch(withPath(path), {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders(options.bearerToken) },
     body: JSON.stringify(body),
     cache: "no-store",
-  });
-  return unwrap<T>(response);
+	});
+	return unwrap<T>(response);
+}
+
+export async function anycapPatch<T>(
+	path: string,
+	body: Record<string, unknown>,
+	options: RequestOptions = {},
+): Promise<T> {
+	const response = await fetch(withPath(path), {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json", ...authHeaders(options.bearerToken) },
+		body: JSON.stringify(body),
+		cache: "no-store",
+	});
+	return unwrap<T>(response);
+}
+
+export async function anycapPut<T>(
+	path: string,
+	body: Record<string, unknown>,
+	options: RequestOptions = {},
+): Promise<T> {
+	const response = await fetch(withPath(path), {
+		method: "PUT",
+		headers: { "Content-Type": "application/json", ...authHeaders(options.bearerToken) },
+		body: JSON.stringify(body),
+		cache: "no-store",
+	});
+	return unwrap<T>(response);
+}
+
+export async function anycapDelete<T>(
+	path: string,
+	options: RequestOptions = {},
+): Promise<T> {
+	const response = await fetch(withPath(path), {
+		method: "DELETE",
+		headers: authHeaders(options.bearerToken),
+		cache: "no-store",
+	});
+	return unwrap<T>(response);
 }

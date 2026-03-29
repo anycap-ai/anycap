@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	apikeyinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 )
 
 type APIKeyRepository interface {
@@ -28,7 +28,7 @@ func NewRepositoryAPIKeyService(repo APIKeyRepository, now func() time.Time, raw
 		now = time.Now
 	}
 	if rawKeyGen == nil {
-		rawKeyGen = apikeyinfra.GenerateRawKey
+		rawKeyGen = apikeycodec.GenerateRawKey
 	}
 
 	return &RepositoryAPIKeyService{
@@ -62,9 +62,9 @@ func (s *RepositoryAPIKeyService) createAPIKey(ctx context.Context, userID, name
 		ID:        fmt.Sprintf("key_%d", now.UnixNano()),
 		UserID:    userID,
 		Name:      name,
-		KeyPrefix: apikeyinfra.PrefixFromRawKey(rawKey),
-		KeyHash:   apikeyinfra.HashRawKey(rawKey),
-		Status:    apikeyinfra.ActiveStatus(),
+		KeyPrefix: apikeycodec.PrefixFromRawKey(rawKey),
+		KeyHash:   apikeycodec.HashRawKey(rawKey),
+		Status:    model.APIKeyStatusActive,
 		CreatedAt: now,
 	}
 	if ttl > 0 {

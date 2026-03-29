@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 )
@@ -36,7 +36,7 @@ func testCatalog() *nexushub.CatalogStub {
 }
 
 func TestGenerateImage_InsufficientCredit(t *testing.T) {
-	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 0}), apikey.NewMemoryCallLogRepo())
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 0}), calllog.NewMemoryCallLogRepo())
 
 	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
 		UserID:    "user-1",
@@ -51,7 +51,7 @@ func TestGenerateImage_InsufficientCredit(t *testing.T) {
 
 func TestGenerateImage_DeductIsIdempotent(t *testing.T) {
 	creditClient := credit.NewStubClient(map[string]int64{"user-1": 3})
-	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, apikey.NewMemoryCallLogRepo())
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())
 	req := model.GenerateImageRequest{
 		UserID:    "user-1",
 		RequestID: "req-1",
@@ -76,7 +76,7 @@ func TestGenerateImage_DeductIsIdempotent(t *testing.T) {
 }
 
 func TestGenerateImage_Success(t *testing.T) {
-	logs := apikey.NewMemoryCallLogRepo()
+	logs := calllog.NewMemoryCallLogRepo()
 	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), logs)
 
 	result, err := service.Generate(context.Background(), model.GenerateImageRequest{
@@ -114,7 +114,7 @@ func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 			},
 		},
 	})
-	service := NewService(catalog, nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), apikey.NewMemoryCallLogRepo())
+	service := NewService(catalog, nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), calllog.NewMemoryCallLogRepo())
 
 	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
 		UserID:    "user-1",

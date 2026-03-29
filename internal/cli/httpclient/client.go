@@ -93,12 +93,32 @@ func (c *Client) Get(ctx context.Context, path string) (*Response, error) {
 	return c.do(ctx, http.MethodGet, path, nil)
 }
 
+func (c *Client) Delete(ctx context.Context, path string) (*Response, error) {
+	return c.do(ctx, http.MethodDelete, path, nil)
+}
+
 func (c *Client) PostJSON(ctx context.Context, path string, payload any) (*Response, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 	return c.do(ctx, http.MethodPost, path, body)
+}
+
+func (c *Client) PutJSON(ctx context.Context, path string, payload any) (*Response, error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return c.do(ctx, http.MethodPut, path, body)
+}
+
+func (c *Client) PatchJSON(ctx context.Context, path string, payload any) (*Response, error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return c.do(ctx, http.MethodPatch, path, body)
 }
 
 func (c *Client) do(ctx context.Context, method, path string, body []byte) (*Response, error) {

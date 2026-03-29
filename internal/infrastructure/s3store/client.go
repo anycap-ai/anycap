@@ -3,6 +3,7 @@ package s3store
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -103,4 +104,64 @@ func (c *Client) Delete(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) PresignPutObject(ctx context.Context, objectKey, contentType string, contentLength int64) (model.PresignResult, error) {
+	presigned, err := c.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		Bucket:        aws.String(c.bucket),
+		Key:           aws.String(objectKey),
+		ContentType:   aws.String(contentType),
+		ContentLength: aws.Int64(contentLength),
+	}, s3.WithPresignExpires(c.expiry))
+	if err != nil {
+		return model.PresignResult{}, fmt.Errorf("presign put object: %w", err)
+	}
+
+	return model.PresignResult{
+		UploadURL: presigned.URL,
+		ObjectURL: fmt.Sprintf("%s/%s", c.publicURL, objectKey),
+		ObjectKey: objectKey,
+		ExpiresIn: int(c.expiry.Seconds()),
+	}, nil
+}
+
+func (c *Client) HeadObject(ctx context.Context, objectKey string) (*model.StorageObjectHead, error) {
+	output, err := c.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(objectKey),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("head object %s: %w", objectKey, err)
+	}
+
+	head := &model.StorageObjectHead{
+		Size: aws.ToInt64(output.ContentLength),
+		MIME: strings.TrimSpace(aws.ToString(output.ContentType)),
+		ETag: strings.Trim(aws.ToString(output.ETag), "\""),
+	}
+	return head, nil
+}
+
+func (c *Client) CopyObject(ctx context.Context, sourceObjectKey, targetObjectKey string) error {
+	copySource := c.bucket + "/" + sourceObjectKey
+	encodedCopySource := url.PathEscape(copySource)
+	encodedCopySource = strings.ReplaceAll(encodedCopySource, "%2F", "/")
+
+	_, err := c.s3Client.CopyObject(ctx, &s3.CopyObjectInput{
+		Bucket:     aws.String(c.bucket),
+		CopySource: aws.String(encodedCopySource),
+		Key:        aws.String(targetObjectKey),
+	})
+	if err != nil {
+		return fmt.Errorf("copy object %s -> %s: %w", sourceObjectKey, targetObjectKey, err)
+	}
+	return nil
+}
+
+func (c *Client) DeleteObject(ctx context.Context, objectKey string) error {
+	return c.Delete(ctx, objectKey)
+}
+
+func (c *Client) BucketName() string {
+	return c.bucket
 }

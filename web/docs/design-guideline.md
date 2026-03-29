@@ -195,7 +195,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 - **Left accent border**: 3px solid `#6b7d3a` (philosophy) or `#1c1f17` (pull quote)
 - **Card borders**: 1px `#d4dbb8` on light, `#2a2e22` on dark
 - **Input borders**: 1px `#c7cfad`, focus: `#6b7d3a`
-- **Border radius**: minimal — `rounded` (4px) for buttons, `rounded-lg` (8px) for cards and dialogs
+- **Border radius**: `rounded-lg` (8px) for buttons, cards, dialogs, and nav links
 
 ---
 
@@ -226,6 +226,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 | **Scroll reveal** | 700ms ease-out | `FadeIn` on viewport intersection (15% threshold) |
 | **ScrambleText** | 20-30ms/char | On viewport entry — characters cycle randomly before locking |
 | **Terminal lines** | Sequential delays | All lines pre-rendered as `invisible` for stable height; animation toggles visibility — no layout shift |
+| **Modal enter/exit** | 250ms ease-out | Backdrop fade + content `scale(0.95)→1` + `translateY(12px)→0`; reverse on close, unmount after animation completes |
 
 ### FadeIn Directions
 
@@ -268,8 +269,9 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 **Primary (olive)**:
 - `bg-[#6b7d3a]`, text `#f4f5f0`, 14px mono, sentence case, tracking `0.8px`
 - Hover: `bg-[#1c1f17]`
+- Border radius: `rounded-lg` (8px)
 
-**No rounded corners on primary CTAs** — sharp rectangular shape.
+**Cursor**: all clickable elements (`button`, `a`, `[role="button"]`) use `cursor: pointer` globally via CSS reset.
 
 ### Navigation Links
 
@@ -315,7 +317,7 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 3. **Restraint in color**: olive green is the only accent — everything else is neutral
 4. **Hero as product demo**: the first screen shows what AnyCap does — terminal animation embedded alongside the headline
 5. **Sentence case**: all UI text uses natural sentence casing — no uppercase transforms
-6. **Sharp edges**: primary CTAs have no border-radius — deliberate sharpness
+6. **Soft rounded edges**: all buttons and interactive elements use `rounded-lg` (8px) for approachable feel
 7. **Minimal decoration**: no icons (except logo), no illustrations, no gradients on light mode
 8. **Scroll-triggered reveals**: content fades in directionally as user scrolls
 9. **Stable animations**: animated content pre-renders at final size to prevent layout shift
@@ -330,7 +332,7 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 | Keep body text in system sans-serif | Add more font families |
 | Use pixel font only for headlines/statements | Use pixel font for body copy or small text |
 | Use grain overlay on all light-mode pages | Apply grain to dark backgrounds |
-| Keep CTAs sharp-edged (no rounded corners) | Round primary action buttons |
+| Use `rounded-lg` (8px) on all buttons | Use sharp-edged (no radius) buttons |
 | Use sentence case for all UI text | Apply uppercase transforms to navigation or labels |
 | Use tight tracking (0.3px) for UI chrome | Use wide letter-spacing on navigation or buttons |
 | Embed terminal demo in the hero | Separate the terminal into its own full-width section |
@@ -338,3 +340,5 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 | Align header padding with body sections | Give header different padding or max-width constraints |
 | Fade content in on scroll | Use flashy entrance animations |
 | Pre-render animated content at final size | Let animations cause layout shifts |
+| Animate modals in/out (fade + scale + translate) | Show/hide modals without transition |
+| Use `cursor: pointer` on all clickable elements | Leave default cursor on buttons or links |
