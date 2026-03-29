@@ -1,42 +1,59 @@
 # AnyCap Edge Worker
 
-Cloudflare Worker for Drive and Page public access.
+Cloudflare Worker that serves Drive, Page, and CDN public access.
 
-## Scope
+## Environments
 
-- Drive host: `drive.anycap.cloud`
-- Page hosts: `*.page.anycap.cloud`
+| | Dev | Prod |
+|---|---|---|
+| Worker | `anycap-edge-dev` | `anycap-edge` |
+| CDN | `cdn.dev.anycap.cloud` | `cdn.anycap.cloud` |
+| Drive | `drive.dev.anycap.cloud` | `drive.anycap.cloud` |
+| Page | `*.page.dev.anycap.cloud` | `*.page.anycap.cloud` |
+| R2 bucket | `anycap-cloud-dev` | `anycap-cloud` |
 
-The worker only reads `EDGE_KV` + `ANYCAP_CLOUD_R2`.
-
-## Local setup
-
-1. Fill `wrangler.toml` binding IDs.
-2. Set secrets:
-	- `ANYCAP_PASSWORD_PEPPER`
-	- `EDGE_SESSION_SECRET`
-3. Run:
+## Setup
 
 ```bash
 pnpm install
-pnpm dev
+
+# Copy and fill in secrets
+cp .secrets.example .secrets.dev
+cp .secrets.example .secrets.prod
 ```
 
-## Runtime vars
+Secrets:
+- `ANYCAP_PASSWORD_PEPPER` — salt for password hashing
+- `EDGE_SESSION_SECRET` — HMAC key for session cookies
 
-- `DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS`
-- `PAGE_STATIC_ASSET_CACHE_TTL_SECONDS`
-- `DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS`
-- `DRIVE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS`
-- `PAGE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS`
-- `PAGE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS`
-- `DRIVE_PASSWORD_SESSION_TTL_SECONDS`
-- `PAGE_PASSWORD_SESSION_TTL_SECONDS`
+## Development
+
+```bash
+make dev          # local dev server
+make typecheck    # type check
+make test         # run tests
+```
+
+## Deploy
+
+```bash
+make deploy              # deploy to dev
+make deploy ENV=prod     # deploy to prod (requires confirmation)
+make secrets             # upload secrets from .secrets.dev
+make secrets ENV=prod    # upload secrets from .secrets.prod
+```
+
+## Architecture
+
+The worker routes requests by hostname:
+- `cdn.*` → public asset serving
+- `drive.*` → shared file/folder access (with optional password protection)
+- `*.page.*` → hosted page serving (with optional password protection)
+
+Bindings: `EDGE_KV` (metadata) + `ANYCAP_CLOUD_R2` (file storage). Read-only, no external API calls.
 
 ## Notes
 
-- Password challenge uses HTML form + HttpOnly session cookie.
-- Password verify rate limit key uses `resource + IP`.
-- File content strategy:
-	- `text/*`, `image/*`, `application/pdf` => inline
-	- others => attachment
+- Password challenge uses HTML form + HttpOnly session cookie
+- Rate limiting keyed on `resource + IP`
+- File content disposition: `text/*`, `image/*`, `application/pdf` inline; others attachment

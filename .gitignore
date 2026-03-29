@@ -29,6 +29,8 @@ next-env.d.ts
 .env.local
 .env.preview
 .env.production
+.secrets.*
+!.secrets.example
 
 # Go binaries (root only)
 /anycap-server
