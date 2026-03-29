@@ -1,6 +1,7 @@
 export type Env = {
 	EDGE_KV: KVNamespace;
 	ANYCAP_CLOUD_R2: R2Bucket;
+	CDN_HOST?: string;
 	DRIVE_HOST?: string;
 	PAGE_HOST_SUFFIX?: string;
 	DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS?: string;

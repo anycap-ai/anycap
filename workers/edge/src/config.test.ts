@@ -7,6 +7,7 @@ describe("resolveConfig", () => {
 	it("uses defaults when values are missing", () => {
 		const config = resolveConfig(createEnv());
 		expect(config).toEqual({
+			cdnHost: "cdn.anycap.cloud",
 			driveHost: "drive.anycap.cloud",
 			pageHostSuffix: ".page.anycap.cloud",
 			driveAssetCacheTTLSeconds: 60,
@@ -23,6 +24,7 @@ describe("resolveConfig", () => {
 	it("normalizes hosts and parses positive integer values", () => {
 		const config = resolveConfig(
 			createEnv({
+				CDN_HOST: " CDN.EXAMPLE.COM ",
 				DRIVE_HOST: " DRIVE.EXAMPLE.COM ",
 				PAGE_HOST_SUFFIX: "Pages.Example.COM",
 				DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS: "120",
@@ -36,6 +38,7 @@ describe("resolveConfig", () => {
 			}),
 		);
 
+		expect(config.cdnHost).toBe("cdn.example.com");
 		expect(config.driveHost).toBe("drive.example.com");
 		expect(config.pageHostSuffix).toBe(".pages.example.com");
 		expect(config.driveAssetCacheTTLSeconds).toBe(120);

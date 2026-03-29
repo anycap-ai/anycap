@@ -14,7 +14,6 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/google/uuid"
 )
 
 // Client generates presigned PUT URLs and manages objects using the S3-compatible API.
@@ -22,9 +21,8 @@ type Client struct {
 	s3Client      *s3.Client
 	presignClient *s3.PresignClient
 	bucket        string
-	publicURL     string
-	keyPrefix     string
-	expiry        time.Duration
+	putExpiry     time.Duration
+	getExpiry     time.Duration
 }
 
 // NewClient creates a new S3 presign client from config.
@@ -52,77 +50,65 @@ func NewClient(ctx context.Context, cfg config.S3Config) (*Client, error) {
 		o.UsePathStyle = cfg.ForcePathStyle
 	})
 
-	publicURL := cfg.PublicURL
-	if publicURL == "" {
-		// Fallback: construct from endpoint + bucket.
-		publicURL = cfg.Endpoint + "/" + cfg.Bucket
-	}
-	publicURL = strings.TrimRight(publicURL, "/")
-
 	return &Client{
 		s3Client:      s3Client,
 		presignClient: s3.NewPresignClient(s3Client),
 		bucket:        cfg.Bucket,
-		publicURL:     publicURL,
-		keyPrefix:     cfg.KeyPrefix,
-		expiry:        time.Duration(cfg.PresignExpiry) * time.Second,
+		putExpiry:     time.Duration(cfg.PresignExpiry) * time.Second,
+		getExpiry:     time.Duration(cfg.PresignGetExpiry) * time.Second,
 	}, nil
 }
 
-// PresignPut generates a presigned PUT URL for the given file.
-func (c *Client) PresignPut(ctx context.Context, req model.PresignRequest) (model.PresignResult, error) {
-	date := time.Now().UTC().Format("2006-01-02")
-	id := uuid.New().String()
-	key := fmt.Sprintf("%s/%s/%s/%s", c.keyPrefix, date, id, req.Filename)
-
-	presigned, err := c.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket:        aws.String(c.bucket),
-		Key:           aws.String(key),
-		ContentType:   aws.String(req.ContentType),
-		ContentLength: aws.Int64(req.ContentLength),
-	}, s3.WithPresignExpires(c.expiry))
-	if err != nil {
-		return model.PresignResult{}, fmt.Errorf("presign put: %w", err)
-	}
-
-	return model.PresignResult{
-		UploadURL: presigned.URL,
-		ObjectURL: fmt.Sprintf("%s/%s", c.publicURL, key),
-		ObjectKey: key,
-		ExpiresIn: int(c.expiry.Seconds()),
-	}, nil
-}
-
-// Delete removes an object from the bucket by key.
-func (c *Client) Delete(ctx context.Context, key string) error {
+func (c *Client) DeleteObject(ctx context.Context, objectKey string) error {
 	_, err := c.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(c.bucket),
-		Key:    aws.String(key),
+		Key:    aws.String(objectKey),
 	})
 	if err != nil {
-		return fmt.Errorf("delete object %s: %w", key, err)
+		return fmt.Errorf("delete object %s: %w", objectKey, err)
 	}
 
 	return nil
 }
 
 func (c *Client) PresignPutObject(ctx context.Context, objectKey, contentType string, contentLength int64) (model.PresignResult, error) {
+	expiry := c.putExpiry
+	if expiry <= 0 {
+		expiry = 10 * time.Minute
+	}
 	presigned, err := c.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket:        aws.String(c.bucket),
 		Key:           aws.String(objectKey),
 		ContentType:   aws.String(contentType),
 		ContentLength: aws.Int64(contentLength),
-	}, s3.WithPresignExpires(c.expiry))
+	}, s3.WithPresignExpires(expiry))
 	if err != nil {
 		return model.PresignResult{}, fmt.Errorf("presign put object: %w", err)
 	}
 
 	return model.PresignResult{
 		UploadURL: presigned.URL,
-		ObjectURL: fmt.Sprintf("%s/%s", c.publicURL, objectKey),
+		ObjectURL: fmt.Sprintf("s3://%s/%s", c.bucket, objectKey),
 		ObjectKey: objectKey,
-		ExpiresIn: int(c.expiry.Seconds()),
+		ExpiresIn: int(expiry.Seconds()),
 	}, nil
+}
+
+func (c *Client) PresignGetObject(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
+	if expiry <= 0 {
+		expiry = c.getExpiry
+		if expiry <= 0 {
+			expiry = time.Hour
+		}
+	}
+	presigned, err := c.presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(objectKey),
+	}, s3.WithPresignExpires(expiry))
+	if err != nil {
+		return "", fmt.Errorf("presign get object: %w", err)
+	}
+	return presigned.URL, nil
 }
 
 func (c *Client) HeadObject(ctx context.Context, objectKey string) (*model.StorageObjectHead, error) {
@@ -156,10 +142,6 @@ func (c *Client) CopyObject(ctx context.Context, sourceObjectKey, targetObjectKe
 		return fmt.Errorf("copy object %s -> %s: %w", sourceObjectKey, targetObjectKey, err)
 	}
 	return nil
-}
-
-func (c *Client) DeleteObject(ctx context.Context, objectKey string) error {
-	return c.Delete(ctx, objectKey)
 }
 
 func (c *Client) BucketName() string {

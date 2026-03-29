@@ -2,6 +2,7 @@ package port
 
 import (
 	"context"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
@@ -21,6 +22,7 @@ type StorageObjectRepository interface {
 
 type CloudObjectStore interface {
 	PresignPutObject(ctx context.Context, objectKey, contentType string, contentLength int64) (model.PresignResult, error)
+	PresignGetObject(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
 	HeadObject(ctx context.Context, objectKey string) (*model.StorageObjectHead, error)
 	CopyObject(ctx context.Context, sourceObjectKey, targetObjectKey string) error
 	DeleteObject(ctx context.Context, objectKey string) error

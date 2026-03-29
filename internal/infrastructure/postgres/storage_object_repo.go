@@ -26,6 +26,12 @@ func (r *StorageObjectRepo) Create(ctx context.Context, input model.StorageObjec
 	row := r.db.QueryRowContext(ctx, `
 		INSERT INTO storage_objects (space_id, bucket, object_key, size, mime, etag, sha256)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (space_id, bucket, object_key)
+		DO UPDATE SET
+			size = EXCLUDED.size,
+			mime = EXCLUDED.mime,
+			etag = EXCLUDED.etag,
+			sha256 = COALESCE(EXCLUDED.sha256, storage_objects.sha256)
 		RETURNING id, space_id, bucket, object_key, size, mime, etag, sha256, created_at
 	`, input.SpaceID, input.Bucket, input.ObjectKey, input.Size, input.MIME, input.ETag, input.SHA256)
 

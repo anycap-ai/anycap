@@ -14,6 +14,7 @@ binding = "ANYCAP_CLOUD_R2"
 bucket_name = "anycap-cloud"
 
 [vars]
+CDN_HOST = "cdn.anycap.cloud"
 DRIVE_HOST = "drive.anycap.cloud"
 PAGE_HOST_SUFFIX = ".page.anycap.cloud"
 DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"

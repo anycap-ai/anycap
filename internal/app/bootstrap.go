@@ -10,6 +10,7 @@ import (
 	"path"
 	"slices"
 	"strings"
+	"time"
 
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
@@ -179,7 +180,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	catalogRepo, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
 	catalogService := catalogapp.NewService(catalogRepo)
 	modelRouteService := modelrouteapp.NewService(modelRouteRepo)
-	capService := capapp.NewService(buildCapabilitiesProvider(cfg), buildObjectStorage(cfg))
+	capProvider := buildCapabilitiesProvider(cfg)
+	cloudObjectStore := buildCloudObjectStorage(cfg)
+	capGetExpiry := time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second
 	authClient := buildAuthClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
 	videoExecutionClient := buildVideoExecutionClient(cfg)
@@ -195,6 +198,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
+		capService := capapp.NewService(capProvider, cloudObjectStore, capapp.WithPresignGetExpiry(capGetExpiry))
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
@@ -232,7 +236,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		pageSiteRepo := postgres.NewPageSiteRepo(db)
 		pageSlugRepo := postgres.NewPageSlugRepo(db)
 		pageVersionRepo := postgres.NewPageVersionRepo(db)
-		cloudObjectStore := buildCloudObjectStorage(cfg)
 		kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
 		kvClient := buildKVSyncClient(cfg)
 		driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
@@ -268,6 +271,15 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
+		capsUploadRepo := postgres.NewCapsUploadRepo(db)
+		capsTaskRepo := postgres.NewCapsTaskRepo(db)
+		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)
+		capService := capapp.NewService(
+			capProvider,
+			cloudObjectStore,
+			capapp.WithAudit(spaceService, capsUploadRepo, storageObjectRepo, capsTaskRepo, capsTaskArtifactRepo),
+			capapp.WithPresignGetExpiry(capGetExpiry),
+		)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
 			config:        cfg,
@@ -393,20 +405,6 @@ func buildCreditClient(cfg config.Config) port.CreditClient {
 	}
 	log.Println("credit: using stub (set ANYCAP_CREDIT_* env vars for real credit)")
 	return credit.NewStubClient(nil)
-}
-
-func buildObjectStorage(cfg config.Config) port.ObjectStorage {
-	if cfg.S3.Enabled() {
-		s3Client, err := s3store.NewClient(context.Background(), cfg.S3)
-		if err != nil {
-			log.Printf("storage: failed to initialize S3 client, falling back to stub: %v", err)
-			return s3store.NewStubClient()
-		}
-		log.Printf("storage: using S3 at %s (bucket=%s)", cfg.S3.Endpoint, cfg.S3.Bucket)
-		return s3Client
-	}
-	log.Println("storage: using stub (set S3_* env vars for real storage)")
-	return s3store.NewStubClient()
 }
 
 func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {

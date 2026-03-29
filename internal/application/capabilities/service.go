@@ -1,52 +1,72 @@
 package capabilities
 
 import (
-	"context"
+	"time"
 
-	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 )
 
-// Service orchestrates capabilities operations (presign, image understand, video read).
+const (
+	capabilityImageUnderstand = "image_understand"
+	capabilityVideoRead       = "video_read"
+)
+
 type Service struct {
-	provider port.CapabilitiesProvider
-	storage  port.ObjectStorage
+	provider             port.CapabilitiesProvider
+	objectStore          port.CloudObjectStore
+	spaceService         port.SpaceService
+	capsUploadRepo       port.CapsUploadRepository
+	storageObjectRepo    port.StorageObjectRepository
+	capsTaskRepo         port.CapsTaskRepository
+	capsTaskArtifactRepo port.CapsTaskArtifactRepository
+	presignGetExpiry     time.Duration
+	now                  func() time.Time
 }
 
-func NewService(provider port.CapabilitiesProvider, storage port.ObjectStorage) *Service {
-	return &Service{provider: provider, storage: storage}
+type ServiceOption func(*Service)
+
+func WithAudit(
+	spaceService port.SpaceService,
+	capsUploadRepo port.CapsUploadRepository,
+	storageObjectRepo port.StorageObjectRepository,
+	capsTaskRepo port.CapsTaskRepository,
+	capsTaskArtifactRepo port.CapsTaskArtifactRepository,
+) ServiceOption {
+	return func(s *Service) {
+		s.spaceService = spaceService
+		s.capsUploadRepo = capsUploadRepo
+		s.storageObjectRepo = storageObjectRepo
+		s.capsTaskRepo = capsTaskRepo
+		s.capsTaskArtifactRepo = capsTaskArtifactRepo
+	}
 }
 
-func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.PresignResult, error) {
-	if err := req.Validate(); err != nil {
-		return model.PresignResult{}, err
+func WithPresignGetExpiry(expiry time.Duration) ServiceOption {
+	return func(s *Service) {
+		if expiry > 0 {
+			s.presignGetExpiry = expiry
+		}
 	}
-
-	if s == nil || s.storage == nil {
-		return model.PresignResult{}, model.ErrStorageNotConfigured
-	}
-
-	return s.storage.PresignPut(ctx, req)
 }
 
-func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
-	if err := req.Validate(); err != nil {
-		return model.UnderstandResult{}, err
+func NewService(provider port.CapabilitiesProvider, objectStore port.CloudObjectStore, options ...ServiceOption) *Service {
+	svc := &Service{
+		provider:         provider,
+		objectStore:      objectStore,
+		presignGetExpiry: time.Hour,
+		now:              time.Now,
 	}
-	if s == nil || s.provider == nil {
-		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
+	for _, option := range options {
+		if option != nil {
+			option(svc)
+		}
 	}
-
-	return s.provider.ImageUnderstand(ctx, req)
+	return svc
 }
 
-func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
-	if err := req.Validate(); err != nil {
-		return model.UnderstandResult{}, err
+func (s *Service) auditEnabled() bool {
+	if s == nil {
+		return false
 	}
-	if s == nil || s.provider == nil {
-		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
-	}
-
-	return s.provider.VideoRead(ctx, req)
+	return s.spaceService != nil && s.capsUploadRepo != nil && s.storageObjectRepo != nil && s.capsTaskRepo != nil && s.capsTaskArtifactRepo != nil && s.objectStore != nil
 }

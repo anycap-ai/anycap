@@ -1,6 +1,7 @@
 import type { Env } from "./types";
 
 export type EdgeConfig = {
+	cdnHost: string;
 	driveHost: string;
 	pageHostSuffix: string;
 	driveAssetCacheTTLSeconds: number;
@@ -27,6 +28,7 @@ function parsePositiveInt(raw: string | undefined, fallback: number): number {
 export function resolveConfig(env: Env): EdgeConfig {
 	const suffix = (env.PAGE_HOST_SUFFIX || ".page.anycap.cloud").trim().toLowerCase();
 	return {
+		cdnHost: (env.CDN_HOST || "cdn.anycap.cloud").trim().toLowerCase(),
 		driveHost: (env.DRIVE_HOST || "drive.anycap.cloud").trim().toLowerCase(),
 		pageHostSuffix: suffix.startsWith(".") ? suffix : `.${suffix}`,
 		driveAssetCacheTTLSeconds: parsePositiveInt(env.DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS, 60),

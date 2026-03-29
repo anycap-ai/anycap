@@ -3,6 +3,7 @@ package s3store
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
@@ -14,27 +15,17 @@ func NewStubClient() *StubClient {
 	return &StubClient{}
 }
 
-func (c *StubClient) PresignPut(_ context.Context, req model.PresignRequest) (model.PresignResult, error) {
-	key := fmt.Sprintf("user_upload/stub-date/stub-id/%s", req.Filename)
-	return model.PresignResult{
-		UploadURL: fmt.Sprintf("https://storage.stub.local/anycap-tmp/%s?X-Amz-Signature=stub", key),
-		ObjectURL: fmt.Sprintf("https://cdn.stub.local/%s", key),
-		ObjectKey: key,
-		ExpiresIn: 600,
-	}, nil
-}
-
-func (c *StubClient) Delete(_ context.Context, _ string) error {
-	return nil
-}
-
 func (c *StubClient) PresignPutObject(_ context.Context, objectKey, _ string, _ int64) (model.PresignResult, error) {
 	return model.PresignResult{
 		UploadURL: fmt.Sprintf("https://storage.stub.local/anycap-cloud/%s?X-Amz-Signature=stub", objectKey),
-		ObjectURL: fmt.Sprintf("https://cdn.stub.local/%s", objectKey),
+		ObjectURL: fmt.Sprintf("s3://anycap-cloud/%s", objectKey),
 		ObjectKey: objectKey,
 		ExpiresIn: 600,
 	}, nil
+}
+
+func (c *StubClient) PresignGetObject(_ context.Context, objectKey string, _ time.Duration) (string, error) {
+	return fmt.Sprintf("https://storage.stub.local/anycap-cloud/%s?X-Amz-Signature=stub-get", objectKey), nil
 }
 
 func (c *StubClient) HeadObject(_ context.Context, _ string) (*model.StorageObjectHead, error) {

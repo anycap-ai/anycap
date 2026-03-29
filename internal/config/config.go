@@ -21,8 +21,10 @@ const (
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
 	defaultAgentPlatformTimeout = 120 * time.Second
-	defaultPresignExpiry        = 600  // seconds (10 minutes)
-	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
+	defaultPresignExpiry        = 600   // seconds (10 minutes)
+	defaultPresignGetExpiry     = 3600  // seconds (1 hour)
+	maxPresignExpiry            = 3600  // seconds (1 hour hard cap)
+	maxPresignGetExpiry         = 86400 // seconds (24 hours hard cap)
 	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
 	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
 	defaultKVSyncPollInterval   = 1 * time.Second
@@ -69,7 +71,6 @@ type Config struct {
 	NexusHubCoreToken       string
 	Credit                  CreditConfig
 	AgentPlatform           AgentPlatformConfig
-	S3                      S3Config
 	CloudS3                 S3Config
 	Lark                    LarkConfig
 	PasswordPepper          string
@@ -107,15 +108,14 @@ func (c AgentPlatformConfig) Enabled() bool {
 }
 
 type S3Config struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	Bucket          string
-	Region          string
-	PublicURL       string
-	KeyPrefix       string
-	PresignExpiry   int
-	ForcePathStyle  bool
+	Endpoint         string
+	AccessKeyID      string
+	SecretAccessKey  string
+	Bucket           string
+	Region           string
+	PresignExpiry    int
+	PresignGetExpiry int
+	ForcePathStyle   bool
 }
 
 func (c S3Config) Enabled() bool {
@@ -190,7 +190,6 @@ func LoadFromEnv() (Config, error) {
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
 		Credit:                  loadCreditConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
-		S3:                      loadS3Config(),
 		CloudS3:                 loadCloudS3Config(),
 		Lark: LarkConfig{
 			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
@@ -355,69 +354,42 @@ func loadAgentPlatformConfig() AgentPlatformConfig {
 	}
 }
 
-func loadS3Config() S3Config {
-	expiry := defaultPresignExpiry
-	if s := os.Getenv("S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
-		if n, err := strconv.Atoi(s); err == nil && n > 0 {
-			expiry = n
-		}
-	}
-
-	forcePathStyle := false
-	if s := os.Getenv("S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
-		forcePathStyle = true
-	}
-
-	if expiry > maxPresignExpiry {
-		expiry = maxPresignExpiry
-	}
-
-	return S3Config{
-		Endpoint:        getEnv("S3_ENDPOINT", ""),
-		AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
-		SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
-		Bucket:          getEnv("S3_BUCKET", "anycap-tmp"),
-		Region:          getEnv("S3_REGION", "auto"),
-		PublicURL:       getEnv("S3_PUBLIC_URL", ""),
-		KeyPrefix:       getEnv("S3_KEY_PREFIX", "user_upload"),
-		PresignExpiry:   expiry,
-		ForcePathStyle:  forcePathStyle,
-	}
-}
-
 func loadCloudS3Config() S3Config {
 	expiry := defaultPresignExpiry
 	if s := os.Getenv("ANYCAP_CLOUD_S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil && n > 0 {
 			expiry = n
 		}
-	} else if s := os.Getenv("S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
+	}
+
+	getExpiry := defaultPresignGetExpiry
+	if s := os.Getenv("ANYCAP_CLOUD_S3_PRESIGN_GET_EXPIRY_SECONDS"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil && n > 0 {
-			expiry = n
+			getExpiry = n
 		}
 	}
 
 	forcePathStyle := false
 	if s := os.Getenv("ANYCAP_CLOUD_S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
 		forcePathStyle = true
-	} else if s := os.Getenv("S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
-		forcePathStyle = true
 	}
 
 	if expiry > maxPresignExpiry {
 		expiry = maxPresignExpiry
 	}
+	if getExpiry > maxPresignGetExpiry {
+		getExpiry = maxPresignGetExpiry
+	}
 
 	return S3Config{
-		Endpoint:        getEnv("ANYCAP_CLOUD_S3_ENDPOINT", getEnv("S3_ENDPOINT", "")),
-		AccessKeyID:     getEnv("ANYCAP_CLOUD_S3_ACCESS_KEY_ID", getEnv("S3_ACCESS_KEY_ID", "")),
-		SecretAccessKey: getEnv("ANYCAP_CLOUD_S3_SECRET_ACCESS_KEY", getEnv("S3_SECRET_ACCESS_KEY", "")),
-		Bucket:          getEnv("ANYCAP_CLOUD_S3_BUCKET", "anycap-cloud"),
-		Region:          getEnv("ANYCAP_CLOUD_S3_REGION", getEnv("S3_REGION", "auto")),
-		PublicURL:       getEnv("ANYCAP_CLOUD_S3_PUBLIC_URL", ""),
-		KeyPrefix:       getEnv("ANYCAP_CLOUD_S3_KEY_PREFIX", ""),
-		PresignExpiry:   expiry,
-		ForcePathStyle:  forcePathStyle,
+		Endpoint:         getEnv("ANYCAP_CLOUD_S3_ENDPOINT", ""),
+		AccessKeyID:      getEnv("ANYCAP_CLOUD_S3_ACCESS_KEY_ID", ""),
+		SecretAccessKey:  getEnv("ANYCAP_CLOUD_S3_SECRET_ACCESS_KEY", ""),
+		Bucket:           getEnv("ANYCAP_CLOUD_S3_BUCKET", "anycap-cloud"),
+		Region:           getEnv("ANYCAP_CLOUD_S3_REGION", "auto"),
+		PresignExpiry:    expiry,
+		PresignGetExpiry: getExpiry,
+		ForcePathStyle:   forcePathStyle,
 	}
 }
 

@@ -4,6 +4,20 @@ import worker from "./index";
 import { createEnv, createMockKV, createMockR2, setKVJSON } from "./test_helpers";
 
 describe("worker host routing", () => {
+	it("routes cdn host to public handler", async () => {
+		const env = createEnv({
+			ANYCAP_CLOUD_R2: createMockR2({
+				"public/fonts/demo.woff2": {
+					body: "font-data",
+					contentType: "font/woff2",
+				},
+			}).bucket,
+		});
+		const response = await worker.fetch(new Request("https://cdn.anycap.cloud/fonts/demo.woff2"), env);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+	});
+
 	it("routes drive host to drive handler", async () => {
 		const kv = createMockKV();
 		const r2 = createMockR2();

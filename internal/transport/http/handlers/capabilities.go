@@ -36,11 +36,25 @@ type presignResponse struct {
 	UploadURL string `json:"upload_url"`
 	ObjectURL string `json:"object_url"`
 	ExpiresIn int    `json:"expires_in"`
+	Reused    bool   `json:"reused,omitempty"`
+}
+
+func userRequestContext(c context.Context, ctx *app.RequestContext) (context.Context, bool) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		writeError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return nil, false
+	}
+	return middleware.ContextWithUserID(c, principal.UserID), true
 }
 
 func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
 		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+	reqCtx, ok := userRequestContext(c, ctx)
+	if !ok {
 		return
 	}
 
@@ -50,7 +64,7 @@ func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext
 		return
 	}
 
-	result, err := h.service.Presign(c, req)
+	result, err := h.service.Presign(reqCtx, req)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
@@ -62,12 +76,17 @@ func (h *CapabilitiesHandler) Presign(c context.Context, ctx *app.RequestContext
 		UploadURL: result.UploadURL,
 		ObjectURL: result.ObjectURL,
 		ExpiresIn: result.ExpiresIn,
+		Reused:    result.Reused,
 	})
 }
 
 func (h *CapabilitiesHandler) ImageUnderstand(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
 		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+	reqCtx, ok := userRequestContext(c, ctx)
+	if !ok {
 		return
 	}
 
@@ -77,7 +96,7 @@ func (h *CapabilitiesHandler) ImageUnderstand(c context.Context, ctx *app.Reques
 		return
 	}
 
-	result, err := h.service.ImageUnderstand(c, req)
+	result, err := h.service.ImageUnderstand(reqCtx, req)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
@@ -93,6 +112,10 @@ func (h *CapabilitiesHandler) VideoRead(c context.Context, ctx *app.RequestConte
 		writeError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
 	}
+	reqCtx, ok := userRequestContext(c, ctx)
+	if !ok {
+		return
+	}
 
 	var req model.VideoReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -100,7 +123,7 @@ func (h *CapabilitiesHandler) VideoRead(c context.Context, ctx *app.RequestConte
 		return
 	}
 
-	result, err := h.service.VideoRead(c, req)
+	result, err := h.service.VideoRead(reqCtx, req)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
@@ -139,11 +162,23 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 	if errors.Is(err, model.ErrInvalidFilename) {
 		return consts.StatusBadRequest, "invalid_filename", err.Error()
 	}
+	if errors.Is(err, model.ErrInvalidSHA256) {
+		return consts.StatusBadRequest, "invalid_sha256", err.Error()
+	}
 	if errors.Is(err, model.ErrContentLengthRequired) {
 		return consts.StatusBadRequest, "invalid_param", err.Error()
 	}
 	if errors.Is(err, model.ErrFileTooLarge) {
 		return 413, "file_too_large", err.Error()
+	}
+	if errors.Is(err, model.ErrUploadReferenceInvalid) {
+		return consts.StatusBadRequest, "invalid_upload_reference", err.Error()
+	}
+	if errors.Is(err, model.ErrUploadReferenceForbidden) {
+		return consts.StatusForbidden, "upload_reference_forbidden", err.Error()
+	}
+	if errors.Is(err, model.ErrUploadReferenceNotFound) || errors.Is(err, model.ErrUploadObjectNotFound) {
+		return consts.StatusNotFound, "upload_reference_not_found", err.Error()
 	}
 
 	// Upstream errors from agent-platform
@@ -154,6 +189,9 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 
 	// Remaining param validation (filename/content_type required)
 	msg := err.Error()
+	if msg == "user_id is required" {
+		return consts.StatusUnauthorized, "auth_invalid", msg
+	}
 	if msg == "filename is required" || msg == "content_type is required" {
 		return consts.StatusBadRequest, "invalid_param", msg
 	}

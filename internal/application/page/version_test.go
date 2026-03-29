@@ -202,6 +202,10 @@ func (s *fakeVersionCloudObjectStore) PresignPutObject(_ context.Context, object
 	}, nil
 }
 
+func (s *fakeVersionCloudObjectStore) PresignGetObject(_ context.Context, objectKey string, _ time.Duration) (string, error) {
+	return "https://download.example.com/" + objectKey, nil
+}
+
 func (s *fakeVersionCloudObjectStore) HeadObject(_ context.Context, objectKey string) (*model.StorageObjectHead, error) {
 	head, ok := s.headByKey[objectKey]
 	if !ok {

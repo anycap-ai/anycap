@@ -289,6 +289,7 @@ func (s *Server) handlePresign(w http.ResponseWriter, r *http.Request) {
 		Filename      string `json:"filename"`
 		ContentType   string `json:"content_type"`
 		ContentLength int64  `json:"content_length"`
+		SHA256        string `json:"sha256"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
@@ -308,8 +309,9 @@ func (s *Server) handlePresign(w http.ResponseWriter, r *http.Request) {
 
 	writeSuccess(w, map[string]any{
 		"upload_url": fmt.Sprintf("%s://%s/mock/upload/%s", scheme, host, key),
-		"object_url": fmt.Sprintf("%s://%s/mock/objects/%s/%s", scheme, host, key, req.Filename),
+		"object_url": fmt.Sprintf("anycap://upload/%s", key),
 		"expires_in": 3600,
+		"reused":     false,
 	})
 }
 

@@ -699,6 +699,10 @@ func (s *testCloudObjectStore) PresignPutObject(_ context.Context, objectKey, co
 	return model.PresignResult{UploadURL: "https://upload.example.com/put", ObjectURL: "https://cdn.example.com/obj", ObjectKey: objectKey, ExpiresIn: 600}, nil
 }
 
+func (s *testCloudObjectStore) PresignGetObject(_ context.Context, objectKey string, _ time.Duration) (string, error) {
+	return "https://download.example.com/" + objectKey, nil
+}
+
 func (s *testCloudObjectStore) HeadObject(_ context.Context, objectKey string) (*model.StorageObjectHead, error) {
 	head, ok := s.headByKey[objectKey]
 	if !ok {
