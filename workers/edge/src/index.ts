@@ -6,7 +6,7 @@ import { handlePage } from "./page";
 import { handlePublic } from "./public";
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		try {
 			const config = resolveConfig(env);
 			const hostname = new URL(request.url).hostname.toLowerCase();
@@ -15,10 +15,10 @@ export default {
 				return await handlePublic(request, env);
 			}
 			if (hostname === config.driveHost) {
-				return await handleDrive(request, env, config);
+				return await handleDrive(request, env, config, ctx);
 			}
 			if (hostname.startsWith(config.pageHostPrefix)) {
-				return await handlePage(request, env, config);
+				return await handlePage(request, env, config, ctx);
 			}
 			return notFoundPage("Unknown host");
 		} catch (err) {

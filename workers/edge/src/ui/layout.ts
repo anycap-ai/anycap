@@ -1,5 +1,5 @@
 import { escapeHTML } from "../response";
-import { DL_ICON, MARK_SVG } from "./icons";
+import { DL_ICON, FAVICON_LINK, MARK_SVG } from "./icons";
 import { BASE_STYLES } from "./styles";
 
 export function pageHead(title: string, extraStyles = "", extraHead = ""): string {
@@ -9,6 +9,7 @@ export function pageHead(title: string, extraStyles = "", extraHead = ""): strin
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHTML(title)}</title>
+${FAVICON_LINK}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />${extraHead}

@@ -132,6 +132,7 @@ async function servePageAsset(
 	env: Env,
 	config: EdgeConfig,
 	host: PageHostRecord,
+	ctx?: ExecutionContext,
 ): Promise<Response> {
 	const url = new URL(request.url);
 	const candidates = listCandidates(url.pathname, host.spa_fallback);
@@ -153,10 +154,10 @@ async function servePageAsset(
 			return new Response(object.body, { status: 200, headers });
 		}
 		return notFoundPage("Page asset not found");
-	});
+	}, ctx);
 }
 
-export async function handlePage(request: Request, env: Env, config: EdgeConfig): Promise<Response> {
+export async function handlePage(request: Request, env: Env, config: EdgeConfig, ctx?: ExecutionContext): Promise<Response> {
 	const url = new URL(request.url);
 	const hostname = url.hostname.toLowerCase();
 	const hostConfig = await fetchPageHost(env, hostname);
@@ -191,5 +192,5 @@ export async function handlePage(request: Request, env: Env, config: EdgeConfig)
 		}
 	}
 
-	return servePageAsset(request, env, config, hostConfig);
+	return servePageAsset(request, env, config, hostConfig, ctx);
 }

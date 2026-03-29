@@ -186,9 +186,12 @@ async function serveFileRaw(
 	env: Env,
 	config: EdgeConfig,
 	file: DriveFileRecord,
+	ctx?: ExecutionContext,
 ): Promise<Response> {
 	return respondWithCache(request, config.driveAssetCacheTTLSeconds, async () => {
+		const tr2 = Date.now();
 		const object = await env.ANYCAP_CLOUD_R2.get(file.object_key);
+		console.log(`[drive] r2:get ${file.object_key}: ${Date.now() - tr2}ms`);
 		if (!object || !object.body) {
 			return notFoundPage("File object not found");
 		}
@@ -207,7 +210,7 @@ async function serveFileRaw(
 			: `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`;
 		headers.set("content-disposition", contentDisposition);
 		return new Response(object.body, { status: 200, headers });
-	});
+	}, ctx);
 }
 
 async function serveFile(
@@ -215,10 +218,11 @@ async function serveFile(
 	env: Env,
 	config: EdgeConfig,
 	file: DriveFileRecord,
+	ctx?: ExecutionContext,
 ): Promise<Response> {
 	const url = new URL(request.url);
 	if (url.searchParams.get("raw") === "1") {
-		return serveFileRaw(request, env, config, file);
+		return serveFileRaw(request, env, config, file, ctx);
 	}
 	const guessed = guessMimeFromFilename(file.name);
 	const mime = guessed !== "application/octet-stream" ? guessed : (file.mime || guessed);
@@ -296,14 +300,18 @@ async function handleDrivePasswordSubmit(
 	});
 }
 
-export async function handleDrive(request: Request, env: Env, config: EdgeConfig): Promise<Response> {
+export async function handleDrive(request: Request, env: Env, config: EdgeConfig, ctx?: ExecutionContext): Promise<Response> {
+	const t0 = Date.now();
 	const url = new URL(request.url);
 	const route = parseDriveRoute(url.pathname);
 	if (!route) {
 		return notFoundPage("Drive route not found");
 	}
 	const { token, rest } = route;
+
+	const t1 = Date.now();
 	const share = await getKVJSON<DriveShareRecord>(env, `drive:share:${token}`);
+	console.log(`[drive] kv:share lookup: ${Date.now() - t1}ms`);
 	if (!share) {
 		return notFoundPage("Share link not found");
 	}
@@ -332,7 +340,9 @@ export async function handleDrive(request: Request, env: Env, config: EdgeConfig
 	}
 
 	if (share.has_password) {
+		const t2 = Date.now();
 		const validSession = await isSessionValid(env, request, DRIVE_SESSION_COOKIE, "drive", token);
+		console.log(`[drive] session validation: ${Date.now() - t2}ms`);
 		if (!validSession) {
 			return renderPasswordPage({
 				title: "Password required",
@@ -345,11 +355,14 @@ export async function handleDrive(request: Request, env: Env, config: EdgeConfig
 
 	if (share.root_node_kind === "file") {
 		if (rest === "") {
+			const t3 = Date.now();
 			const file = await getKVJSON<DriveFileRecord>(env, `drive:file:${share.root_node_id}`);
+			console.log(`[drive] kv:file lookup: ${Date.now() - t3}ms`);
 			if (!file) {
 				return notFoundPage("Shared file not found");
 			}
-			return serveFile(request, env, config, file);
+			console.log(`[drive] total before serve: ${Date.now() - t0}ms`);
+			return serveFile(request, env, config, file, ctx);
 		}
 		if (rest.startsWith("file/")) {
 			const fileID = parsePositiveInt(rest.slice("file/".length));
@@ -360,7 +373,7 @@ export async function handleDrive(request: Request, env: Env, config: EdgeConfig
 			if (!file) {
 				return notFoundPage("Shared file not found");
 			}
-			return serveFile(request, env, config, file);
+			return serveFile(request, env, config, file, ctx);
 		}
 		return forbiddenPage("Path is outside shared scope");
 	}
@@ -388,7 +401,7 @@ export async function handleDrive(request: Request, env: Env, config: EdgeConfig
 		if (!file) {
 			return forbiddenPage("File is outside shared scope");
 		}
-		return serveFile(request, env, config, file);
+		return serveFile(request, env, config, file, ctx);
 	}
 
 	return notFoundPage("Drive path not found");
