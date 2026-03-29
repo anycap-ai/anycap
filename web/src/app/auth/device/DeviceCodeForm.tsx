@@ -94,7 +94,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
         <button
           type="submit"
           disabled={!normalizedCode || submitting}
-          className="w-full md:w-auto min-w-[220px] px-10 py-4 text-[12px] tracking-[0.8px] bg-[#66793a] text-[#f4f5f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_22px_rgba(102,121,58,0.28)] disabled:opacity-50 hover:bg-[#1c1f17] transition-colors"
+          className="w-full md:w-auto min-w-[220px] px-10 py-4 text-[12px] tracking-[0.8px] bg-[#66793a] text-[#f4f5f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_22px_rgba(102,121,58,0.28)] disabled:opacity-50 hover:bg-[#1c1f17] transition-colors rounded-lg"
           style={mono}
         >
           {submitting ? "Authorizing..." : "Continue"}

@@ -39,7 +39,7 @@ export default function ForHumanPage() {
                 Your Agent can do anything. It just needs AnyCap.
               </span>
               <span aria-hidden>
-                Your{" "}
+                <ScrambleText text="Your" speed={30} ticks={3} />{" "}
                 <ScrambleText
                   text="Agent"
                   className="text-[#6b7d3a]"
@@ -48,9 +48,13 @@ export default function ForHumanPage() {
                   ticks={3}
                 />
                 <br />
-                can do anything.
+                <ScrambleText text="can" speed={30} ticks={3} />{" "}
+                <ScrambleText text="do" speed={30} ticks={3} />{" "}
+                <ScrambleText text="anything." speed={30} ticks={3} />
                 <br />
-                It just needs{" "}
+                <ScrambleText text="It" speed={30} ticks={3} />{" "}
+                <ScrambleText text="just" speed={30} ticks={3} />{" "}
+                <ScrambleText text="needs" speed={30} ticks={3} />{" "}
                 <ScrambleText
                   text="AnyCap."
                   className="text-[#6b7d3a]"
@@ -207,7 +211,7 @@ export default function ForHumanPage() {
             href="https://github.com/anycap-ai/anycap"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+            className="inline-block bg-[#6b7d3a] px-10 py-4 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17] rounded-lg"
             style={mono}
           >
             Get Started

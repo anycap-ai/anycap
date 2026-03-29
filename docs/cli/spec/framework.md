@@ -23,10 +23,10 @@ What exists today (`internal/cli/`):
 | Image command | `command/cap/image.go` | generate + models + understand, working |
 | Video command | `command/cap/video.go` | read, working |
 | Upload helper | `command/cap/upload.go` | Shared presign + upload for --file flag |
-| Login command | `command/meta/login.go` | Auto-detect (localhost callback / device code), `--headless`, `--with-token` |
+| Login command | `command/meta/login.go` | Auto-detect (browser poll / device code), `--headless`, `--with-token` |
 | Logout command | `command/meta/logout.go` | Removes credentials from keychain + fallback file |
 | Status command | `command/meta/status.go` | Calls `/v1/status`, working |
-| Auth flows | `auth/` | `AutoFlow`, `LocalhostFlow`, `DeviceFlow`, `HasBrowser()`, platform browser opening |
+| Auth flows | `auth/` | `AutoFlow`, `BrowserPollFlow`, `DeviceFlow`, `HasBrowser()`, platform browser opening |
 | Mock server | `testutil/mockserver/` | All auth endpoints, device code auto-approve, standalone binary (`cmd/anycap-mock`) |
 
 What is missing:

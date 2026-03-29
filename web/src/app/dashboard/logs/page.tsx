@@ -24,7 +24,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded-sm ${className}`} />;
+  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
 }
 
 const thClass =
@@ -86,7 +86,7 @@ export default function LogsPage() {
       </p>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-[#d4dbb8] bg-[#f9faf5]">
+      <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4dbb8]">

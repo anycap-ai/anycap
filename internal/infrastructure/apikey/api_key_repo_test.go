@@ -6,27 +6,28 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 )
 
 type fakeAPIKeyDB struct {
 	query string
 	args  []any
-	row   Row
+	row   sqlstore.Row
 }
 
-func (f *fakeAPIKeyDB) ExecContext(_ context.Context, query string, args ...any) (Result, error) {
+func (f *fakeAPIKeyDB) ExecContext(_ context.Context, query string, args ...any) (sqlstore.Result, error) {
 	f.query = query
 	f.args = args
 	return fakeResult{rowsAffected: 1}, nil
 }
 
-func (f *fakeAPIKeyDB) QueryRowContext(_ context.Context, query string, args ...any) Row {
+func (f *fakeAPIKeyDB) QueryRowContext(_ context.Context, query string, args ...any) sqlstore.Row {
 	f.query = query
 	f.args = args
 	return f.row
 }
 
-func (f *fakeAPIKeyDB) QueryContext(_ context.Context, query string, args ...any) (Rows, error) {
+func (f *fakeAPIKeyDB) QueryContext(_ context.Context, query string, args ...any) (sqlstore.Rows, error) {
 	f.query = query
 	f.args = args
 	return fakeRows{}, nil
@@ -45,6 +46,12 @@ func (fakeRows) Scan(...any) error { return nil }
 func (fakeRows) Close() error      { return nil }
 func (fakeRows) Err() error        { return nil }
 
+type fakeResult struct {
+	rowsAffected int64
+}
+
+func (r fakeResult) RowsAffected() (int64, error) { return r.rowsAffected, nil }
+
 func TestAPIKeyRepo_Insert(t *testing.T) {
 	db := &fakeAPIKeyDB{}
 	repo := NewAPIKeyRepo(db)
@@ -56,7 +63,7 @@ func TestAPIKeyRepo_Insert(t *testing.T) {
 		Name:      "cli",
 		KeyPrefix: "ak_test",
 		KeyHash:   "hash",
-		Status:    ActiveStatus(),
+		Status:    model.APIKeyStatusActive,
 		CreatedAt: now,
 	})
 	if err != nil {
@@ -81,7 +88,7 @@ func TestAPIKeyRepo_FindByPrefix(t *testing.T) {
 		*(dest[2].(*string)) = "cli"
 		*(dest[3].(*string)) = "ak_test"
 		*(dest[4].(*string)) = "hash"
-		*(dest[5].(*string)) = ActiveStatus()
+		*(dest[5].(*string)) = model.APIKeyStatusActive
 		*(dest[6].(**time.Time)) = nil
 		*(dest[7].(**time.Time)) = nil
 		*(dest[8].(*time.Time)) = now

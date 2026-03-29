@@ -2,6 +2,8 @@ package cap
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,12 +47,17 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat file: %w", err)
 	}
+	fileSHA256, err := computeFileSHA256(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash file: %w", err)
+	}
 
 	// Step 1: Get presigned upload URL from AnyCap server
 	resp, err := client.PostJSON(ctx, "/v1/capabilities/presign", map[string]any{
 		"filename":       filename,
 		"content_type":   contentType,
 		"content_length": stat.Size(),
+		"sha256":         fileSHA256,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("presign failed: %w", err)
@@ -60,16 +67,31 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string,
 		Data struct {
 			UploadURL string `json:"upload_url"`
 			ObjectURL string `json:"object_url"`
+			Reused    bool   `json:"reused"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(resp.Body, &presign); err != nil {
 		return nil, fmt.Errorf("failed to parse presign response: %w", err)
 	}
+	if strings.TrimSpace(presign.Data.ObjectURL) == "" {
+		return nil, fmt.Errorf("presign response missing object_url")
+	}
 
 	if verboseLog != nil {
 		fmt.Fprintf(verboseLog, "[upload] file=%s size=%d content_type=%s\n", filename, stat.Size(), contentType)
+		fmt.Fprintf(verboseLog, "[upload] sha256=%s\n", fileSHA256)
+		fmt.Fprintf(verboseLog, "[upload] reused=%t\n", presign.Data.Reused)
 		fmt.Fprintf(verboseLog, "[upload] object_url=%s\n", presign.Data.ObjectURL)
-		fmt.Fprintf(verboseLog, "[upload] upload_url=%s\n", presign.Data.UploadURL)
+		if !presign.Data.Reused {
+			fmt.Fprintf(verboseLog, "[upload] upload_url=%s\n", presign.Data.UploadURL)
+		}
+	}
+
+	if presign.Data.Reused {
+		return &uploadResult{ObjectURL: presign.Data.ObjectURL}, nil
+	}
+	if strings.TrimSpace(presign.Data.UploadURL) == "" {
+		return nil, fmt.Errorf("presign response missing upload_url")
 	}
 
 	// Step 2: Upload file content directly to storage (S3/R2/etc.)
@@ -104,6 +126,20 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string,
 	}
 
 	return &uploadResult{ObjectURL: presign.Data.ObjectURL}, nil
+}
+
+func computeFileSHA256(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 // detectContentType guesses MIME type from file extension.

@@ -24,7 +24,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded-sm ${className}`} />;
+  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
 }
 
 function TransactionRow({ item }: { item: TimelineItem }) {
@@ -96,13 +96,13 @@ export default function BillingPage() {
 
       {/* Balance card */}
       {balanceLoading || !balance ? (
-        <div className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-6 max-w-md">
+        <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-6 max-w-md rounded-xl">
           <Skeleton className="h-3 w-24 mb-4" />
           <Skeleton className="h-8 w-32 mb-2" />
           <Skeleton className="h-4 w-40" />
         </div>
       ) : (
-        <div className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-6 max-w-md">
+        <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-6 max-w-md rounded-xl">
           <p
             className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
             style={mono}
@@ -127,7 +127,7 @@ export default function BillingPage() {
           Transactions
         </p>
 
-        <div className="overflow-x-auto border border-[#d4dbb8] bg-[#f9faf5]">
+        <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[#d4dbb8]">

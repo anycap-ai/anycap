@@ -48,6 +48,38 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.Credit.Timeout != 10*time.Second {
 		t.Fatalf("expected default credit timeout 10s, got %v", cfg.Credit.Timeout)
 	}
+	if cfg.PasswordPepper != "" {
+		t.Fatalf("expected default password pepper empty, got %q", cfg.PasswordPepper)
+	}
+	if cfg.PageHostFormat != "page-%s.anycap.cloud" {
+		t.Fatalf("expected default page host format page-%%s.anycap.cloud, got %q", cfg.PageHostFormat)
+	}
+}
+
+func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PASSWORD_PEPPER", "pepper-value")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PasswordPepper != "pepper-value" {
+		t.Fatalf("expected password pepper from env, got %q", cfg.PasswordPepper)
+	}
+}
+
+func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "PAGEDEV-%s.ANYCAP.CLOUD")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PageHostFormat != "pagedev-%s.anycap.cloud" {
+		t.Fatalf("expected normalized page host format, got %q", cfg.PageHostFormat)
+	}
 }
 
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {

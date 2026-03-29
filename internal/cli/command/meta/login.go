@@ -163,16 +163,18 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 			}
 
 			if result.Status == "complete" || result.Status == "completed" {
-				body, err := json.Marshal(map[string]any{"data": result})
-				if err != nil {
-					return err
-				}
-				cred, _, err := auth.ParseTokenResponseForCLI(body)
-				if err != nil {
-					return err
-				}
-				if err := cliconfig.SaveCredential(cred); err != nil {
-					return fmt.Errorf("failed to save credential: %w", err)
+				if result.APIKey != "" {
+					body, err := json.Marshal(map[string]any{"data": result})
+					if err != nil {
+						return err
+					}
+					cred, _, err := auth.ParseTokenResponseForCLI(body)
+					if err != nil {
+						return err
+					}
+					if err := cliconfig.SaveCredential(cred); err != nil {
+						return fmt.Errorf("failed to save credential: %w", err)
+					}
 				}
 			}
 

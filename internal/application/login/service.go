@@ -2,7 +2,6 @@ package login
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"path"
 	"strings"
@@ -16,8 +15,7 @@ const loginCredentialTypeAPIKey = "api_key"
 const devicePollInterval = 5 * time.Second
 
 type Service struct {
-	authClient port.Auth0Client
-	users      interface {
+	users interface {
 		port.UserProvisioner
 		port.UserReader
 	}
@@ -33,7 +31,6 @@ type Service struct {
 }
 
 func NewService(
-	authClient port.Auth0Client,
 	users interface {
 		port.UserProvisioner
 		port.UserReader
@@ -71,7 +68,6 @@ func NewService(
 	}
 
 	return &Service{
-		authClient:            authClient,
 		users:                 users,
 		credit:                credit,
 		apiKeys:               apiKeys,
@@ -85,10 +81,7 @@ func NewService(
 	}
 }
 
-func (s *Service) Init(ctx context.Context, method string, redirectPort int, redirectURL string) (model.LoginInitResult, error) {
-	if s == nil || s.authClient == nil {
-		return model.LoginInitResult{}, model.ErrAuthProviderNotConfigured
-	}
+func (s *Service) Init(ctx context.Context, method string) (model.LoginInitResult, error) {
 	if s.sessions == nil {
 		return model.LoginInitResult{}, model.ErrInternal
 	}
@@ -103,62 +96,9 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int, red
 	}
 
 	switch method {
-	case "", model.LoginFlowLocalhost:
-		if redirectPort <= 0 {
-			return model.LoginInitResult{}, model.ErrInvalidParam
-		}
-
-		session.FlowType = model.LoginFlowLocalhost
-		session.State = s.stateGenerator()
-		session.RedirectURI = fmt.Sprintf("http://127.0.0.1:%d/callback", redirectPort)
-		session.CodeVerifier = "pkce-" + session.ID
-
-		authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
-		if err != nil {
-			return model.LoginInitResult{}, err
-		}
-		if err := s.sessions.CreateSession(ctx, session); err != nil {
-			return model.LoginInitResult{}, err
-		}
-
-		return model.LoginInitResult{
-			FlowType:       session.FlowType,
-			LoginSessionID: session.ID,
-			AuthorizeURL:   authURL,
-			State:          session.State,
-			ExpiresIn:      int((15 * time.Minute).Seconds()),
-		}, nil
-	case model.LoginFlowWeb:
-		parsedRedirect, err := url.Parse(strings.TrimSpace(redirectURL))
-		if err != nil || parsedRedirect.Scheme == "" || parsedRedirect.Host == "" {
-			return model.LoginInitResult{}, model.ErrInvalidParam
-		}
-
-		session.FlowType = model.LoginFlowWeb
-		session.State = s.stateGenerator()
-		session.RedirectURI = parsedRedirect.String()
-		session.CodeVerifier = "pkce-" + session.ID
-
-		authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
-		if err != nil {
-			return model.LoginInitResult{}, err
-		}
-		if err := s.sessions.CreateSession(ctx, session); err != nil {
-			return model.LoginInitResult{}, err
-		}
-
-		return model.LoginInitResult{
-			FlowType:       session.FlowType,
-			LoginSessionID: session.ID,
-			AuthorizeURL:   authURL,
-			State:          session.State,
-			ExpiresIn:      int((15 * time.Minute).Seconds()),
-		}, nil
-	case model.LoginFlowBrowserPoll:
+	case "", model.LoginFlowBrowserPoll:
 		session.FlowType = model.LoginFlowBrowserPoll
 		session.State = s.stateGenerator()
-		session.RedirectURI = s.browserCallbackURL()
-		session.CodeVerifier = "pkce-" + session.ID
 		session.BrowserToken = "browser-" + session.ID
 		session.PollToken = "poll-" + session.ID
 		if err := s.sessions.CreateSession(ctx, session); err != nil {
@@ -177,7 +117,6 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int, red
 		session.State = s.stateGenerator()
 		session.UserCode = s.userCodeGenerator()
 		session.UserCodeExpiresAt = now.Add(5 * time.Minute)
-		session.RedirectURI = s.deviceCallbackURL()
 		if err := s.sessions.CreateSession(ctx, session); err != nil {
 			return model.LoginInitResult{}, err
 		}
@@ -193,74 +132,6 @@ func (s *Service) Init(ctx context.Context, method string, redirectPort int, red
 	default:
 		return model.LoginInitResult{}, model.ErrInvalidParam
 	}
-}
-
-func (s *Service) BrowserBind(ctx context.Context, browserToken string) (model.LoginInitResult, error) {
-	if browserToken == "" {
-		return model.LoginInitResult{}, model.ErrInvalidParam
-	}
-	if s == nil || s.authClient == nil {
-		return model.LoginInitResult{}, model.ErrAuthProviderNotConfigured
-	}
-	if s.sessions == nil {
-		return model.LoginInitResult{}, model.ErrInternal
-	}
-
-	session, err := s.sessions.GetByBrowserToken(ctx, browserToken)
-	if err != nil {
-		return model.LoginInitResult{}, err
-	}
-	if session.ID == "" || session.FlowType != model.LoginFlowBrowserPoll {
-		return model.LoginInitResult{}, model.ErrAuthInvalid
-	}
-	if s.now().UTC().After(session.ExpiresAt) {
-		return model.LoginInitResult{}, model.ErrAuthExpired
-	}
-
-	authURL, err := s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
-	if err != nil {
-		return model.LoginInitResult{}, err
-	}
-	return model.LoginInitResult{
-		FlowType:       session.FlowType,
-		LoginSessionID: session.ID,
-		AuthorizeURL:   authURL,
-	}, nil
-}
-
-func (s *Service) BrowserComplete(ctx context.Context, sessionID, browserToken, code, state, redirectURI string) error {
-	if sessionID == "" || browserToken == "" || code == "" {
-		return model.ErrInvalidParam
-	}
-	if s == nil || s.authClient == nil {
-		return model.ErrAuthProviderNotConfigured
-	}
-	if s.sessions == nil {
-		return model.ErrInternal
-	}
-
-	session, err := s.sessions.GetByID(ctx, sessionID)
-	if err != nil {
-		return err
-	}
-	if session.ID == "" || session.FlowType != model.LoginFlowBrowserPoll {
-		return model.ErrAuthInvalid
-	}
-	if session.BrowserToken != browserToken || session.State != state {
-		return model.ErrAuthInvalid
-	}
-	if redirectURI != "" && session.RedirectURI != "" && session.RedirectURI != redirectURI {
-		return model.ErrAuthInvalid
-	}
-	if s.now().UTC().After(session.ExpiresAt) {
-		return model.ErrAuthExpired
-	}
-
-	user, err := s.authClient.ExchangeCode(ctx, code, session.RedirectURI)
-	if err != nil {
-		return err
-	}
-	return s.sessions.MarkAuthorized(ctx, sessionID, user, s.now().UTC())
 }
 
 func (s *Service) BrowserVerify(ctx context.Context, browserToken string, principal model.Principal, authUser model.AuthUser) (model.DeviceVerifyResult, error) {
@@ -284,7 +155,7 @@ func (s *Service) BrowserVerify(ctx context.Context, browserToken string, princi
 	if session.ID == "" || session.FlowType != model.LoginFlowBrowserPoll {
 		return model.DeviceVerifyResult{}, model.ErrAuthInvalid
 	}
-	if session.Status == model.LoginSessionStatusCompleted {
+	if session.Status == model.LoginSessionStatusCompleted || session.Status == model.LoginSessionStatusAuthorized {
 		return model.DeviceVerifyResult{Message: "authorized"}, nil
 	}
 	if session.Status != model.LoginSessionStatusPending {
@@ -302,65 +173,6 @@ func (s *Service) BrowserVerify(ctx context.Context, browserToken string, princi
 		return model.DeviceVerifyResult{}, err
 	}
 	return model.DeviceVerifyResult{Message: "authorized"}, nil
-}
-
-func (s *Service) Callback(ctx context.Context, sessionID, code, state, redirectURI string) (model.LoginCallbackResult, error) {
-	if sessionID == "" || code == "" {
-		return model.LoginCallbackResult{}, model.ErrInvalidParam
-	}
-	if s == nil || s.authClient == nil {
-		return model.LoginCallbackResult{}, model.ErrAuthProviderNotConfigured
-	}
-	if s.sessions == nil || s.users == nil || s.apiKeys == nil {
-		return model.LoginCallbackResult{}, model.ErrInternal
-	}
-
-	session, err := s.sessions.GetByID(ctx, sessionID)
-	if err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-	if session.ID == "" || (session.FlowType != model.LoginFlowLocalhost && session.FlowType != model.LoginFlowWeb) {
-		return model.LoginCallbackResult{}, model.ErrAuthInvalid
-	}
-	if session.State != state {
-		return model.LoginCallbackResult{}, model.ErrAuthInvalid
-	}
-	if redirectURI != "" && session.RedirectURI != "" && redirectURI != session.RedirectURI {
-		return model.LoginCallbackResult{}, model.ErrAuthInvalid
-	}
-
-	user, err := s.authClient.ExchangeCode(ctx, code, session.RedirectURI)
-	if err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-	if err := s.sessions.MarkAuthorized(ctx, sessionID, user, s.now().UTC()); err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-	localUser, createdUser, err := s.users.FindOrCreateByAuthIdentity(ctx, "auth0", user, s.now().UTC())
-	if err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-	s.grantSignupReward(ctx, localUser.ID, createdUser)
-
-	created, err := s.createLoginAPIKey(ctx, localUser.ID)
-	if err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-	if err := s.sessions.MarkCompleted(ctx, sessionID, created.APIKey.ID, s.now().UTC()); err != nil {
-		return model.LoginCallbackResult{}, err
-	}
-
-	return model.LoginCallbackResult{
-		CredentialType: loginCredentialTypeAPIKey,
-		AccessToken:    created.RawKey,
-		APIKeyID:       created.APIKey.ID,
-		APIKey:         created.RawKey,
-		User: &model.LoginUser{
-			ID:    localUser.ID,
-			Email: localUser.Email,
-			Name:  localUser.Name,
-		},
-	}, nil
 }
 
 func (s *Service) Exchange(ctx context.Context, principal model.Principal) (model.LoginCallbackResult, error) {
@@ -434,7 +246,7 @@ func (s *Service) Poll(ctx context.Context, sessionID, pollToken string) (model.
 	case model.LoginSessionStatusAuthorized:
 		return s.issueDeviceCredential(ctx, sessionID, session)
 	case model.LoginSessionStatusCompleted:
-		return s.issueDeviceCredential(ctx, sessionID, session)
+		return model.LoginPollResult{Status: model.LoginSessionStatusComplete}, nil
 	default:
 		return model.LoginPollResult{Status: session.Status}, nil
 	}
@@ -459,7 +271,7 @@ func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, princip
 	if err != nil {
 		return model.DeviceVerifyResult{}, err
 	}
-	if session.Status == model.LoginSessionStatusCompleted {
+	if session.Status == model.LoginSessionStatusCompleted || session.Status == model.LoginSessionStatusAuthorized {
 		return model.DeviceVerifyResult{Message: "authorized"}, nil
 	}
 	if session.Status != model.LoginSessionStatusPending {
@@ -515,60 +327,6 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-func (s *Service) BeginDeviceAuthorization(ctx context.Context, userCode string) (string, error) {
-	if userCode == "" {
-		return "", model.ErrInvalidParam
-	}
-	if s == nil || s.authClient == nil {
-		return "", model.ErrAuthProviderNotConfigured
-	}
-	if s.sessions == nil {
-		return "", model.ErrInternal
-	}
-
-	session, err := s.sessions.GetByUserCode(ctx, userCode)
-	if err != nil {
-		return "", err
-	}
-	if session.ID == "" || session.FlowType != model.LoginFlowDevice {
-		return "", model.ErrAuthInvalid
-	}
-	now := s.now().UTC()
-	if now.After(session.ExpiresAt) || (!session.UserCodeExpiresAt.IsZero() && now.After(session.UserCodeExpiresAt)) {
-		return "", model.ErrAuthExpired
-	}
-	return s.authClient.BuildLoginURL(ctx, session.State, session.RedirectURI)
-}
-
-func (s *Service) CompleteDeviceAuthorization(ctx context.Context, code, state string) error {
-	if code == "" || state == "" {
-		return model.ErrInvalidParam
-	}
-	if s == nil || s.authClient == nil {
-		return model.ErrAuthProviderNotConfigured
-	}
-	if s.sessions == nil {
-		return model.ErrInternal
-	}
-
-	session, err := s.sessions.GetByState(ctx, state)
-	if err != nil {
-		return err
-	}
-	if session.ID == "" || session.FlowType != model.LoginFlowDevice {
-		return model.ErrAuthInvalid
-	}
-	if s.now().UTC().After(session.ExpiresAt) {
-		return model.ErrAuthExpired
-	}
-
-	user, err := s.authClient.ExchangeCode(ctx, code, session.RedirectURI)
-	if err != nil {
-		return err
-	}
-	return s.sessions.MarkAuthorized(ctx, session.ID, user, s.now().UTC())
-}
-
 func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.CreatedAPIKey, error) {
 	if s.loginAPIKeyTTL > 0 {
 		return s.apiKeys.CreateAPIKeyWithTTL(ctx, userID, "cli", s.loginAPIKeyTTL)
@@ -581,24 +339,6 @@ func (s *Service) grantSignupReward(ctx context.Context, userID string, createdU
 		return
 	}
 	_ = s.credit.GrantSignupReward(ctx, userID)
-}
-
-func (s *Service) deviceCallbackURL() string {
-	if s.deviceVerificationURL == "" {
-		return "https://anycap.local/auth/callback"
-	}
-	parsed, err := url.Parse(s.deviceVerificationURL)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return "https://anycap.local/auth/callback"
-	}
-	parsed.Path = path.Join("/", "auth", "callback")
-	parsed.RawQuery = ""
-	parsed.Fragment = ""
-	return parsed.String()
-}
-
-func (s *Service) browserCallbackURL() string {
-	return s.callbackURLForPath(path.Join("/", "auth", "callback"))
 }
 
 func (s *Service) browserLoginURL(browserToken string) string {

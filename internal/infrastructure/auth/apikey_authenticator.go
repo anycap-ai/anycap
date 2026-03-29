@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	apikeyinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 )
 
 type APIKeyLookup interface {
@@ -27,17 +27,17 @@ func NewAPIKeyAuthenticator(repo APIKeyLookup, now func() time.Time) *APIKeyAuth
 }
 
 func (a *APIKeyAuthenticator) AuthenticateAPIKey(ctx context.Context, rawKey string) (model.Principal, error) {
-	key, err := a.repo.FindByPrefix(ctx, apikeyinfra.PrefixFromRawKey(rawKey))
+	key, err := a.repo.FindByPrefix(ctx, apikeycodec.PrefixFromRawKey(rawKey))
 	if err != nil {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
-	if key.Status != apikeyinfra.ActiveStatus() {
+	if key.Status != model.APIKeyStatusActive {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 	if key.ExpiresAt != nil && a.now().After(*key.ExpiresAt) {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
-	if key.KeyHash != apikeyinfra.HashRawKey(rawKey) {
+	if key.KeyHash != apikeycodec.HashRawKey(rawKey) {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 	if err := a.repo.TouchLastUsedAt(ctx, key.ID, a.now().UTC()); err != nil {

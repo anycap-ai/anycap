@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command/cap"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command/infra"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command/meta"
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
@@ -81,6 +82,12 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
 		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
 		meta.NewDownloadCmd(opts.Stdout),
+	)
+
+	// Infrastructure commands (always available).
+	rootCmd.AddCommand(
+		infra.NewDriveCmd(clientFactory, opts.Stdout),
+		infra.NewPageCmd(clientFactory, opts.Stdout),
 	)
 
 	// Action commands (AI analysis: image-understand, video-read, etc.).

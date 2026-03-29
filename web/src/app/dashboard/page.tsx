@@ -24,7 +24,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded-sm ${className}`} />;
+  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
 }
 
 function StatCard({
@@ -35,7 +35,7 @@ function StatCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-5 min-h-[122px]">
+    <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-5 min-h-[122px] rounded-xl">
       <p
         className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
         style={mono}
@@ -167,7 +167,7 @@ export default function DashboardPage() {
       {isLoading || !data ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="border border-[#d4dbb8] bg-[#f9faf5] px-6 py-5">
+            <div key={i} className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-5 rounded-xl">
               <Skeleton className="h-3 w-16 mb-4" />
               <Skeleton className="h-6 w-24 mb-2" />
               <Skeleton className="h-3 w-20" />
@@ -192,13 +192,13 @@ export default function DashboardPage() {
         </p>
 
         {isLoading ? (
-          <div className="space-y-3 border border-[#d4dbb8] bg-[#f9faf5] px-3 py-2">
+          <div className="space-y-3 border border-[#d4dbb8]/70 bg-[#f9faf5] px-3 py-2 rounded-xl">
             {[0, 1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </div>
         ) : recentUsage?.length ? (
-          <div className="border border-[#d4dbb8] bg-[#f9faf5]">
+          <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
             {recentUsage.map((item, i) => (
               <ActivityRow
                 key={item.request_id || i}

@@ -114,7 +114,7 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			}
 			cred, email, err := parseTokenResponse(body)
 			if err != nil {
-				return nil, "", err
+				return nil, "", fmt.Errorf("authentication completed but no api key was returned; run 'anycap login' again")
 			}
 			return cred, email, nil
 		case "expired":

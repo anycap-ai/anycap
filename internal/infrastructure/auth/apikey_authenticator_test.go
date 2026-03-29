@@ -57,7 +57,7 @@ func TestAPIKeyAuthenticator_RejectRevokedKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateAPIKey() error = %v", err)
 	}
-	created.APIKey.Status = "revoked"
+	created.APIKey.Status = model.APIKeyStatusRevoked
 
 	authenticator := NewAPIKeyAuthenticator(&fakeAPIKeyLookup{key: created.APIKey}, time.Now)
 	_, err = authenticator.AuthenticateAPIKey(context.Background(), created.RawKey)

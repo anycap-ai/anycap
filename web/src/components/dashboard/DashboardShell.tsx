@@ -18,6 +18,10 @@ const navSections: NavItem[][] = [
     { label: "Billing", href: "/dashboard/billing" },
   ],
   [
+    { label: "Drive", href: "/dashboard/drive" },
+    { label: "Pages", href: "/dashboard/pages" },
+  ],
+  [
     { label: "API Keys", href: "/dashboard/api-keys", disabled: true },
     { label: "Settings", href: "/dashboard/settings", disabled: true },
   ],
@@ -43,7 +47,7 @@ function UserAvatar({
         alt={displayName}
         width={size}
         height={size}
-        className="object-cover shrink-0"
+        className="object-cover shrink-0 rounded-full"
         style={{ width: size, height: size }}
         onError={() => setImgError(true)}
       />
@@ -51,7 +55,7 @@ function UserAvatar({
   }
   return (
     <div
-      className="bg-[#6b7d3a] flex items-center justify-center shrink-0"
+      className="bg-[#6b7d3a] flex items-center justify-center shrink-0 rounded-full"
       style={{ width: size, height: size, ...mono }}
     >
       <span className="text-[11px] font-bold text-[#f4f5f0] leading-none">
@@ -174,7 +178,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
             <LogoutButton
-              className="text-[12px] tracking-[0.3px] text-[#707468] hover:text-[#6b7d3a] transition-colors cursor-pointer"
+              className="text-[12px] tracking-[0.3px] text-[#707468] hover:text-[#6b7d3a] transition-colors"
               style={mono}
             />
           </div>

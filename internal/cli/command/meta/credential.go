@@ -33,8 +33,8 @@ func NewCredentialCmd(stdout io.Writer, stderr io.Writer) *cobra.Command {
 func newSetKeyCmd(stderr io.Writer) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set-key <api-key>",
-		Short: "Set API key directly (skip OAuth)",
-		Long:  "Save an API key without going through the OAuth login flow. Useful for CI/CD, scripted provisioning, or when you already have a key.",
+		Short: "Set API key directly",
+		Long:  "Save an API key without running interactive login. Useful for CI/CD, scripted provisioning, or when you already have a key.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := strings.TrimSpace(args[0])

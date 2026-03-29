@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/zalando/go-keyring"
 )
@@ -25,25 +24,18 @@ const (
 	keyringAccount = "credential"
 )
 
-// CredentialType distinguishes between OAuth and API Key authentication.
+// CredentialType distinguishes credential storage variants.
 type CredentialType string
 
 const (
-	// CredentialTypeOAuth is an OAuth credential with access/refresh tokens.
-	CredentialTypeOAuth CredentialType = "oauth"
-
 	// CredentialTypeAPIKey is a static API Key credential.
 	CredentialTypeAPIKey CredentialType = "api_key"
 )
 
-// Credential holds authentication data. OAuth credentials include refresh
-// tokens and expiry for automatic token renewal. API Key credentials are
-// static long-lived keys that never expire from the client's perspective.
+// Credential holds authentication data for API key auth.
 type Credential struct {
-	Type         CredentialType `json:"type"`
-	AccessToken  string         `json:"access_token"`
-	RefreshToken string         `json:"refresh_token,omitempty"`
-	ExpiresAt    *time.Time     `json:"expires_at,omitempty"`
+	Type        CredentialType `json:"type"`
+	AccessToken string         `json:"access_token"`
 }
 
 // NewAPIKeyCredential creates a static API Key credential.
@@ -54,37 +46,12 @@ func NewAPIKeyCredential(key string) *Credential {
 	}
 }
 
-// NewOAuthCredential creates an OAuth credential with refresh capability.
-func NewOAuthCredential(accessToken, refreshToken string, expiresAt time.Time) *Credential {
-	return &Credential{
-		Type:         CredentialTypeOAuth,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresAt:    &expiresAt,
-	}
-}
-
 // Token returns the bearer token to use in API requests.
 func (c *Credential) Token() string {
 	if c == nil {
 		return ""
 	}
 	return c.AccessToken
-}
-
-// IsExpired reports whether an OAuth credential's access token has expired.
-// Returns true if the token expires within 30 seconds (to avoid edge-case
-// failures). API Key credentials never expire from the client's perspective.
-func (c *Credential) IsExpired() bool {
-	if c == nil || c.Type != CredentialTypeOAuth || c.ExpiresAt == nil {
-		return false
-	}
-	return time.Now().After(c.ExpiresAt.Add(-30 * time.Second))
-}
-
-// IsOAuth reports whether this credential uses OAuth token refresh.
-func (c *Credential) IsOAuth() bool {
-	return c != nil && c.Type == CredentialTypeOAuth
 }
 
 // LoadCredential returns the stored credential.
@@ -172,6 +139,9 @@ func parseCredential(raw string) *Credential {
 	var cred Credential
 	if err := json.Unmarshal([]byte(raw), &cred); err != nil || cred.AccessToken == "" {
 		return nil
+	}
+	if cred.Type == "" || cred.Type != CredentialTypeAPIKey {
+		cred.Type = CredentialTypeAPIKey
 	}
 	return &cred
 }

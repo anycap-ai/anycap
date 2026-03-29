@@ -44,9 +44,10 @@ AnyCap uses a nature-inspired olive/sage palette on warm off-white, with a dark 
 
 | Token | Hex | Role |
 |-------|-----|------|
-| **Border Default** | `#d4dbb8` | Cards, section dividers, dashboard |
+| **Border Default** | `#d4dbb8` at 70% opacity | Cards, containers, dashboard panels |
+| **Border Divider** | `#d4dbb8` | Section dividers (`<hr>`), sidebar borders |
 | **Border Soft** | `#d1d8b7` | Device page borders |
-| **Border Input** | `#c7cfad` | Form input borders |
+| **Border Input** | `#c7cfad` at 70% opacity | Form input borders |
 | **Border Focus** | `#6b7d3a` | Focused input border |
 
 ### Dark Mode (Agent landing, terminal)
@@ -193,9 +194,13 @@ A canvas-generated noise texture applied to all light-mode pages:
 
 - **Section dividers**: 1px `border-t border-[#d4dbb8]` with matching page padding
 - **Left accent border**: 3px solid `#6b7d3a` (philosophy) or `#1c1f17` (pull quote)
-- **Card borders**: 1px `#d4dbb8` on light, `#2a2e22` on dark
-- **Input borders**: 1px `#c7cfad`, focus: `#6b7d3a`
-- **Border radius**: minimal — `rounded` (4px) for buttons, `rounded-lg` (8px) for cards and dialogs
+- **Card borders**: 1px `#d4dbb8/70` (70% opacity) on light, `#2a2e22` on dark — softer than dividers
+- **Input borders**: 1px `#d4dbb8/70`, focus: `#6b7d3a`
+- **Border radius**:
+  - `rounded-xl` (12px) for cards, containers, panels, and table wrappers
+  - `rounded-lg` (8px) for buttons, inputs, selects, dropdowns, and nav links
+  - `rounded-full` for avatars and profile images
+- **Table containers**: use `rounded-xl overflow-hidden` so inner table rows clip to rounded corners
 
 ---
 
@@ -226,6 +231,7 @@ A canvas-generated noise texture applied to all light-mode pages:
 | **Scroll reveal** | 700ms ease-out | `FadeIn` on viewport intersection (15% threshold) |
 | **ScrambleText** | 20-30ms/char | On viewport entry — characters cycle randomly before locking |
 | **Terminal lines** | Sequential delays | All lines pre-rendered as `invisible` for stable height; animation toggles visibility — no layout shift |
+| **Modal enter/exit** | 250ms ease-out | Backdrop fade + content `scale(0.95)→1` + `translateY(12px)→0`; reverse on close, unmount after animation completes |
 
 ### FadeIn Directions
 
@@ -268,8 +274,9 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 **Primary (olive)**:
 - `bg-[#6b7d3a]`, text `#f4f5f0`, 14px mono, sentence case, tracking `0.8px`
 - Hover: `bg-[#1c1f17]`
+- Border radius: `rounded-lg` (8px)
 
-**No rounded corners on primary CTAs** — sharp rectangular shape.
+**Cursor**: all clickable elements (`button`, `a`, `[role="button"]`) use `cursor: pointer` globally via CSS reset.
 
 ### Navigation Links
 
@@ -291,6 +298,7 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 
 - Background: `#fcfdf8`, border: `#c7cfad`
 - Focus: border `#6b7d3a` + ring `rgba(107,125,58,0.12)`
+- Border radius: `rounded-lg` (8px)
 - Large text (26-34px), mono font, center-aligned
 
 ---
@@ -315,7 +323,7 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 3. **Restraint in color**: olive green is the only accent — everything else is neutral
 4. **Hero as product demo**: the first screen shows what AnyCap does — terminal animation embedded alongside the headline
 5. **Sentence case**: all UI text uses natural sentence casing — no uppercase transforms
-6. **Sharp edges**: primary CTAs have no border-radius — deliberate sharpness
+6. **Soft rounded edges**: cards and containers use `rounded-xl` (12px), buttons and inputs use `rounded-lg` (8px), avatars use `rounded-full` — everything feels approachable
 7. **Minimal decoration**: no icons (except logo), no illustrations, no gradients on light mode
 8. **Scroll-triggered reveals**: content fades in directionally as user scrolls
 9. **Stable animations**: animated content pre-renders at final size to prevent layout shift
@@ -330,7 +338,10 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 | Keep body text in system sans-serif | Add more font families |
 | Use pixel font only for headlines/statements | Use pixel font for body copy or small text |
 | Use grain overlay on all light-mode pages | Apply grain to dark backgrounds |
-| Keep CTAs sharp-edged (no rounded corners) | Round primary action buttons |
+| Use `rounded-xl` (12px) on cards and containers | Use sharp-edged (no radius) containers |
+| Use `rounded-lg` (8px) on buttons and inputs | Use `rounded-sm` or no radius on interactive elements |
+| Use `rounded-full` on avatars | Use square or sharp-cornered avatars |
+| Soften card borders with 70% opacity (`border-[#d4dbb8]/70`) | Use full-opacity borders on every element |
 | Use sentence case for all UI text | Apply uppercase transforms to navigation or labels |
 | Use tight tracking (0.3px) for UI chrome | Use wide letter-spacing on navigation or buttons |
 | Embed terminal demo in the hero | Separate the terminal into its own full-width section |
@@ -338,3 +349,5 @@ A single component combining mark + wordmark. The `size` prop controls the mark 
 | Align header padding with body sections | Give header different padding or max-width constraints |
 | Fade content in on scroll | Use flashy entrance animations |
 | Pre-render animated content at final size | Let animations cause layout shifts |
+| Animate modals in/out (fade + scale + translate) | Show/hide modals without transition |
+| Use `cursor: pointer` on all clickable elements | Leave default cursor on buttons or links |

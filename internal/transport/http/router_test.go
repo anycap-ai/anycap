@@ -19,9 +19,11 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -122,7 +124,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
-	loginSessions := apikey.NewMemoryLoginSessionRepo()
+	loginSessions := loginsession.NewMemoryLoginSessionRepo()
 	users := userstore.NewMemoryProvisioner()
 	seededUser, _, err := users.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
 		UserID:  "auth0|user-123",
@@ -139,7 +141,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	if err != nil {
 		t.Fatalf("seed sparse user: %v", err)
 	}
-	callLogs := apikey.NewMemoryCallLogRepo()
+	callLogs := calllog.NewMemoryCallLogRepo()
 	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 3})
 	_ = callLogs.Insert(context.Background(), model.CallLog{
 		RequestID:  "req_123",
@@ -162,7 +164,6 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	systemService.SetCallLogRepo(callLogs)
 	systemHandler := handlers.NewSystemHandler(systemService)
 	loginHandler := handlers.NewLoginHandler(loginapp.NewService(
-		auth.NewStubClient("https://auth.anycap.local/authorize", map[string]model.AuthUser{"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"}}),
 		users,
 		credit.NewStubClient(nil),
 		apiKeys,
@@ -188,7 +189,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := handlers.NewCatalogHandler(catalogService, model.CapabilityImage)
 	capHandler := handlers.NewCapabilitiesHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
-	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(apikey.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
+	feedbackHandler := handlers.NewFeedbackHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	modelRouteHandler := handlers.NewModelRouteHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
@@ -260,7 +261,7 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 		t.Fatalf("expected 200, got %d", resp.Code)
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"localhost","redirect_port":14565}`)), Len: len(`{"method":"localhost","redirect_port":14565}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/init", &ut.Body{Body: bytes.NewReader([]byte(`{"method":"browser_poll"}`)), Len: len(`{"method":"browser_poll"}`)}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -273,10 +274,11 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected object data, got %#v", initEnvelope["data"])
 	}
-	loginSessionID, _ := data["login_session_id"].(string)
-	state, _ := data["state"].(string)
-	if loginSessionID == "" || state == "" {
-		t.Fatalf("expected login_session_id and state, got %#v", data)
+	if loginSessionID, _ := data["login_session_id"].(string); loginSessionID == "" {
+		t.Fatalf("expected login_session_id, got %#v", data)
+	}
+	if browserURL, _ := data["browser_url"].(string); browserURL == "" {
+		t.Fatalf("expected browser_url, got %#v", data)
 	}
 
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
@@ -301,52 +303,15 @@ func TestRouter_HealthAndLogin(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
-
-	callbackBody := []byte(`{"login_session_id":"` + loginSessionID + `","code":"code-123","state":"` + state + `","redirect_uri":"http://127.0.0.1:14565/callback"}`)
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/login/callback", &ut.Body{Body: bytes.NewReader(callbackBody), Len: len(callbackBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-	}
 }
 
-func TestRouter_WebLoginFlow(t *testing.T) {
+func TestRouter_DeprecatedWebFlowRejected(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
 	initBody := []byte(`{"method":"web","redirect_url":"http://localhost:3000/auth/callback"}`)
 	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/login", &ut.Body{Body: bytes.NewReader(initBody), Len: len(initBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-	}
-
-	var env map[string]any
-	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
-		t.Fatalf("unmarshal init response: %v", err)
-	}
-	data, ok := env["data"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected object data, got %#v", env["data"])
-	}
-	loginSessionID, _ := data["login_session_id"].(string)
-	state, _ := data["state"].(string)
-	if loginSessionID == "" || state == "" {
-		t.Fatalf("expected login_session_id and state, got %#v", data)
-	}
-
-	callbackBody := []byte(`{"login_session_id":"` + loginSessionID + `","code":"code-123","state":"` + state + `","redirect_uri":"http://localhost:3000/auth/callback"}`)
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/callback", &ut.Body{Body: bytes.NewReader(callbackBody), Len: len(callbackBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-	}
-
-	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
-		t.Fatalf("unmarshal callback response: %v", err)
-	}
-	data, ok = env["data"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected object data, got %#v", env["data"])
-	}
-	if apiKey, _ := data["api_key"].(string); apiKey == "" {
-		t.Fatalf("expected api_key, got %#v", data)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 
@@ -383,34 +348,11 @@ func TestRouter_BrowserPollLoginFlow(t *testing.T) {
 		t.Fatalf("expected browser_token in browser url, got %q", browserURLRaw)
 	}
 
-	bindBody := []byte(`{"browser_token":"` + browserToken + `"}`)
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-bind", &ut.Body{Body: bytes.NewReader(bindBody), Len: len(bindBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-	}
-
-	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
-		t.Fatalf("unmarshal bind response: %v", err)
-	}
-	data, ok = env["data"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected object data, got %#v", env["data"])
-	}
-	authorizeURL, _ := data["authorize_url"].(string)
-	if authorizeURL == "" {
-		t.Fatalf("expected authorize_url, got %#v", data)
-	}
-	authURL, err := url.Parse(authorizeURL)
-	if err != nil {
-		t.Fatalf("parse authorize url: %v", err)
-	}
-	state := authURL.Query().Get("state")
-	if state == "" {
-		t.Fatalf("expected state in authorize url, got %q", authorizeURL)
-	}
-
-	completeBody := []byte(`{"login_session_id":"` + loginSessionID + `","browser_token":"` + browserToken + `","code":"code-123","state":"` + state + `","redirect_uri":"https://anycap.local/auth/callback"}`)
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-complete", &ut.Body{Body: bytes.NewReader(completeBody), Len: len(completeBody)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	verifyBody := []byte(`{"browser_token":"` + browserToken + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/browser-verify", &ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -439,12 +381,7 @@ func TestRouter_BrowserPollLoginFlow(t *testing.T) {
 func TestRouter_HeadlessRelayFlow(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
-	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/auth/device", nil)
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
-	}
-
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -463,25 +400,19 @@ func TestRouter_HeadlessRelayFlow(t *testing.T) {
 		t.Fatalf("expected login_session_id and user_code, got %#v", deviceData)
 	}
 
-	formBody := []byte("user_code=" + url.QueryEscape(userCode))
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/auth/device", &ut.Body{Body: bytes.NewReader(formBody), Len: len(formBody)}, ut.Header{Key: "Content-Type", Value: "application/x-www-form-urlencoded"})
-	if resp.Code != http.StatusFound {
-		t.Fatalf("expected 302, got %d body=%s", resp.Code, resp.Body.String())
-	}
-	location := string(resp.Header().Peek("Location"))
-	if location == "" {
-		t.Fatal("expected redirect location")
-	}
-	redirectURL, err := url.Parse(location)
-	if err != nil {
-		t.Fatalf("parse redirect location: %v", err)
-	}
-	state := redirectURL.Query().Get("state")
-	if state == "" {
-		t.Fatalf("expected state query param in redirect, got %q", location)
+	checkBody := []byte(`{"user_code":"` + userCode + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-code-check", &ut.Body{Body: bytes.NewReader(checkBody), Len: len(checkBody)},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/auth/callback?code=code-123&state="+url.QueryEscape(state), nil)
+	verifyBody := []byte(`{"user_code":"` + userCode + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/device-verify", &ut.Body{Body: bytes.NewReader(verifyBody), Len: len(verifyBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}

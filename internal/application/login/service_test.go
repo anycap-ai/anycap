@@ -2,23 +2,12 @@ package login
 
 import (
 	"context"
+	"net/url"
 	"testing"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 )
-
-type fakeAuthClient struct {
-	loginURL      string
-	codeUsers     map[string]model.AuthUser
-	deviceInit    model.DeviceAuthorization
-	devicePoll    map[string]model.DeviceAuthorizationStatus
-	exchangeErr   error
-	deviceInitErr error
-	devicePollErr error
-	redirectURI   string
-}
 
 type fakeLoginAPIKeyService struct {
 	created []struct {
@@ -118,43 +107,7 @@ func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (mod
 	if user, ok := f.users[userID]; ok {
 		return user, nil
 	}
-	for _, user := range f.users {
-		if user.ID == userID {
-			return user, nil
-		}
-	}
 	return model.User{}, model.ErrAuthInvalid
-}
-
-func (f *fakeAuthClient) BuildLoginURL(_ context.Context, _, redirectURI string) (string, error) {
-	f.redirectURI = redirectURI
-	return f.loginURL, nil
-}
-
-func (f *fakeAuthClient) BuildLogoutURL(_ context.Context, _ string) (string, error) {
-	return "https://auth.anycap.local/v2/logout", nil
-}
-
-func (f *fakeAuthClient) ExchangeCode(_ context.Context, code, redirectURI string) (model.AuthUser, error) {
-	if f.exchangeErr != nil {
-		return model.AuthUser{}, f.exchangeErr
-	}
-	f.redirectURI = redirectURI
-	return f.codeUsers[code], nil
-}
-
-func (f *fakeAuthClient) StartDeviceFlow(_ context.Context) (model.DeviceAuthorization, error) {
-	if f.deviceInitErr != nil {
-		return model.DeviceAuthorization{}, f.deviceInitErr
-	}
-	return f.deviceInit, nil
-}
-
-func (f *fakeAuthClient) PollDeviceFlow(_ context.Context, deviceCode string) (model.DeviceAuthorizationStatus, error) {
-	if f.devicePollErr != nil {
-		return model.DeviceAuthorizationStatus{}, f.devicePollErr
-	}
-	return f.devicePoll[deviceCode], nil
 }
 
 type fakeLoginSessionRepo struct {
@@ -172,15 +125,6 @@ func (r *fakeLoginSessionRepo) CreateSession(_ context.Context, session model.Lo
 
 func (r *fakeLoginSessionRepo) GetByID(_ context.Context, sessionID string) (model.LoginSession, error) {
 	return r.sessions[sessionID], nil
-}
-
-func (r *fakeLoginSessionRepo) GetByState(_ context.Context, state string) (model.LoginSession, error) {
-	for _, session := range r.sessions {
-		if session.State == state {
-			return session, nil
-		}
-	}
-	return model.LoginSession{}, nil
 }
 
 func (r *fakeLoginSessionRepo) GetByUserCode(_ context.Context, userCode string) (model.LoginSession, error) {
@@ -201,17 +145,6 @@ func (r *fakeLoginSessionRepo) GetByBrowserToken(_ context.Context, browserToken
 	return model.LoginSession{}, nil
 }
 
-func (r *fakeLoginSessionRepo) MarkAuthorized(_ context.Context, sessionID string, authUser model.AuthUser, _ time.Time) error {
-	session := r.sessions[sessionID]
-	session.Auth0Subject = authUser.UserID
-	session.AuthUserEmail = authUser.Email
-	session.AuthUserName = authUser.Name
-	session.AuthUserPicture = authUser.Picture
-	session.Status = model.LoginSessionStatusAuthorized
-	r.sessions[sessionID] = session
-	return nil
-}
-
 func (r *fakeLoginSessionRepo) MarkCompleted(_ context.Context, sessionID, apiKeyID string, _ time.Time) error {
 	session := r.sessions[sessionID]
 	session.APIKeyID = apiKeyID
@@ -226,7 +159,7 @@ func (r *fakeLoginSessionRepo) MarkVerified(_ context.Context, sessionID string,
 	session.AuthUserEmail = authUser.Email
 	session.AuthUserName = authUser.Name
 	session.AuthUserPicture = authUser.Picture
-	session.Status = model.LoginSessionStatusCompleted
+	session.Status = model.LoginSessionStatusAuthorized
 	r.sessions[sessionID] = session
 	return nil
 }
@@ -238,1305 +171,160 @@ func (r *fakeLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, p
 	return nil
 }
 
-func TestService_InitLocalhost(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	authClient := &fakeAuthClient{
-		loginURL: "https://auth.anycap.local/authorize?state=state-123",
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
+func newServiceForTest(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, sessions *fakeLoginSessionRepo) *Service {
+	return NewService(
+		users,
 		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-123" },
-		func() string { return "lsn-123" },
-		func() string { return "ABCD-EFGH" },
-		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
+		apiKeys,
+		sessions,
+		"https://anycap.ai/auth/device",
+		func() string { return "state-test" },
+		func() string { return "lsn-test" },
+		func() string { return "CODE-TEST" },
+		now,
 		7*24*time.Hour,
 	)
-
-	result, err := service.Init(context.Background(), model.LoginFlowLocalhost, 14565, "")
-	if err != nil {
-		t.Fatalf("Init() error = %v", err)
-	}
-	if result.LoginSessionID != "lsn-123" {
-		t.Fatalf("expected lsn-123, got %q", result.LoginSessionID)
-	}
-	if result.FlowType != model.LoginFlowLocalhost {
-		t.Fatalf("expected localhost flow, got %q", result.FlowType)
-	}
-	if result.State != "state-123" {
-		t.Fatalf("expected state-123, got %q", result.State)
-	}
-	if result.AuthorizeURL == "" {
-		t.Fatal("expected authorize url")
-	}
-	if authClient.redirectURI != "http://127.0.0.1:14565/callback" {
-		t.Fatalf("expected redirect uri to be forwarded, got %q", authClient.redirectURI)
-	}
-}
-
-func TestService_InitWeb(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	authClient := &fakeAuthClient{
-		loginURL: "https://auth.anycap.local/authorize?state=state-web",
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-web" },
-		func() string { return "lsn-web" },
-		func() string { return "ABCD-EFGH" },
-		func() time.Time { return time.Date(2026, 3, 26, 1, 0, 0, 0, time.UTC) },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Init(context.Background(), model.LoginFlowWeb, 0, "http://localhost:3000/auth/callback")
-	if err != nil {
-		t.Fatalf("Init() error = %v", err)
-	}
-	if result.FlowType != model.LoginFlowWeb {
-		t.Fatalf("expected web flow, got %q", result.FlowType)
-	}
-	if authClient.redirectURI != "http://localhost:3000/auth/callback" {
-		t.Fatalf("expected web redirect url to be forwarded, got %q", authClient.redirectURI)
-	}
-	if repo.sessions["lsn-web"].RedirectURI != "http://localhost:3000/auth/callback" {
-		t.Fatalf("expected session redirect uri, got %#v", repo.sessions["lsn-web"])
-	}
 }
 
 func TestService_InitBrowserPoll(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	authClient := &fakeAuthClient{}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.ai/auth/device",
-		func() string { return "state-browser" },
-		func() string { return "lsn-browser" },
-		func() string { return "ABCD-EFGH" },
-		func() time.Time { return time.Date(2026, 3, 26, 2, 0, 0, 0, time.UTC) },
-		7*24*time.Hour,
-	)
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTest(now, apiKeys, users, sessions)
 
-	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll, 0, "")
+	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
 	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
 	if result.FlowType != model.LoginFlowBrowserPoll {
 		t.Fatalf("expected browser_poll flow, got %q", result.FlowType)
 	}
-	if result.BrowserURL != "https://anycap.ai/auth/cli-login?browser_token=browser-lsn-browser&cli=1" {
-		t.Fatalf("expected browser url, got %q", result.BrowserURL)
+	if result.LoginSessionID == "" || result.BrowserURL == "" || result.PollToken == "" {
+		t.Fatalf("missing browser_poll fields: %#v", result)
 	}
-	if result.PollToken != "poll-lsn-browser" {
-		t.Fatalf("expected poll token, got %q", result.PollToken)
-	}
-	stored := repo.sessions["lsn-browser"]
-	if stored.RedirectURI != "https://anycap.ai/auth/callback" {
-		t.Fatalf("expected browser callback redirect uri, got %q", stored.RedirectURI)
-	}
-	if stored.BrowserToken != "browser-lsn-browser" {
-		t.Fatalf("expected browser token stored, got %q", stored.BrowserToken)
-	}
-	if stored.PollToken != "poll-lsn-browser" {
-		t.Fatalf("expected poll token stored, got %q", stored.PollToken)
+	if result.Interval != 5 {
+		t.Fatalf("expected interval=5, got %d", result.Interval)
 	}
 }
 
-func TestService_BrowserVerifyMarksSessionCompleted(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 27, 11, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-browser"] = model.LoginSession{
-		ID:           "lsn-browser",
-		FlowType:     model.LoginFlowBrowserPoll,
-		BrowserToken: "browser-lsn-browser",
-		PollToken:    "poll-lsn-browser",
-		Status:       model.LoginSessionStatusPending,
-		ExpiresAt:    now.Add(15 * time.Minute),
-		CreatedAt:    now,
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"2000000001": {
-					ID:        "2000000001",
-					Email:     "browser@example.com",
-					Name:      "Browser User",
-					AvatarURL: "https://cdn.example.com/avatar.png",
-					Status:    model.UserStatusActive,
-				},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.ai/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
+func TestService_InitDevice(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTest(now, apiKeys, users, sessions)
 
-	result, err := service.BrowserVerify(context.Background(), "browser-lsn-browser", model.Principal{
-		UserID:   "2000000001",
-		AuthType: "auth0_jwt",
-		Email:    "browser@example.com",
-		Name:     "Browser User",
-	}, model.AuthUser{})
+	result, err := service.Init(context.Background(), model.LoginFlowDevice)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if result.FlowType != model.LoginFlowDevice {
+		t.Fatalf("expected device flow, got %q", result.FlowType)
+	}
+	if result.UserCode == "" || result.VerificationURI != "https://anycap.ai/auth/device" {
+		t.Fatalf("unexpected device init result: %#v", result)
+	}
+}
+
+func TestService_BrowserVerifyThenPollIssuesSingleAPIKey(t *testing.T) {
+	nowValue := time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC)
+	now := func() time.Time { return nowValue }
+	apiKeys := &fakeLoginAPIKeyService{createdResult: model.CreatedAPIKey{APIKey: model.APIKey{ID: "key-1"}, RawKey: "ak-test-1"}}
+	users := &fakeUserProvisioner{users: map[string]model.User{
+		"user-1": {ID: "user-1", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
+	}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTest(now, apiKeys, users, sessions)
+
+	initResult, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	parsedURL, err := url.Parse(initResult.BrowserURL)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+	browserToken := parsedURL.Query().Get("browser_token")
+
+	_, err = service.BrowserVerify(context.Background(), browserToken, model.Principal{UserID: "user-1", AuthType: "auth0_jwt"}, model.AuthUser{})
 	if err != nil {
 		t.Fatalf("BrowserVerify() error = %v", err)
 	}
-	if result.Message != "authorized" {
-		t.Fatalf("expected authorized message, got %#v", result)
+
+	firstPoll, err := service.Poll(context.Background(), initResult.LoginSessionID, initResult.PollToken)
+	if err != nil {
+		t.Fatalf("first Poll() error = %v", err)
 	}
-	stored := repo.sessions["lsn-browser"]
-	if stored.Status != model.LoginSessionStatusCompleted {
-		t.Fatalf("expected completed status, got %q", stored.Status)
+	if firstPoll.Status != model.LoginSessionStatusComplete || firstPoll.APIKey != "ak-test-1" {
+		t.Fatalf("unexpected first poll result: %#v", firstPoll)
 	}
-	if stored.AuthorizedUserID != "2000000001" {
-		t.Fatalf("expected authorized user id, got %#v", stored)
+	if len(apiKeys.created) != 1 {
+		t.Fatalf("expected one api key issuance, got %d", len(apiKeys.created))
 	}
-	if stored.AuthUserEmail != "browser@example.com" || stored.AuthUserName != "Browser User" {
-		t.Fatalf("expected browser user profile stored, got %#v", stored)
+
+	nowValue = nowValue.Add(6 * time.Second)
+	secondPoll, err := service.Poll(context.Background(), initResult.LoginSessionID, initResult.PollToken)
+	if err != nil {
+		t.Fatalf("second Poll() error = %v", err)
+	}
+	if secondPoll.Status != model.LoginSessionStatusComplete {
+		t.Fatalf("expected complete status on second poll, got %#v", secondPoll)
+	}
+	if secondPoll.APIKey != "" {
+		t.Fatalf("expected no re-issued api key on completed session, got %#v", secondPoll)
+	}
+	if len(apiKeys.created) != 1 {
+		t.Fatalf("expected still one api key issuance, got %d", len(apiKeys.created))
 	}
 }
 
-func TestService_BrowserBindBuildsAuthURL(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 2, 5, 0, 0, time.UTC)
-	repo.sessions["lsn-browser"] = model.LoginSession{
-		ID:           "lsn-browser",
-		FlowType:     model.LoginFlowBrowserPoll,
-		State:        "state-browser",
-		RedirectURI:  "https://anycap.ai/auth/callback",
-		BrowserToken: "browser-lsn-browser",
-		PollToken:    "poll-lsn-browser",
-		Status:       model.LoginSessionStatusPending,
-		ExpiresAt:    now.Add(15 * time.Minute),
-		CreatedAt:    now,
-	}
-	authClient := &fakeAuthClient{
-		loginURL: "https://auth.anycap.local/authorize?state=state-browser",
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.ai/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
+func TestService_VerifyDeviceCodeThenPoll(t *testing.T) {
+	nowValue := time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC)
+	now := func() time.Time { return nowValue }
+	apiKeys := &fakeLoginAPIKeyService{createdResult: model.CreatedAPIKey{APIKey: model.APIKey{ID: "key-2"}, RawKey: "ak-test-2"}}
+	users := &fakeUserProvisioner{users: map[string]model.User{
+		"user-2": {ID: "user-2", Email: "device@example.com", Name: "Device User", Status: model.UserStatusActive},
+	}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTest(now, apiKeys, users, sessions)
 
-	result, err := service.BrowserBind(context.Background(), "browser-lsn-browser")
+	initResult, err := service.Init(context.Background(), model.LoginFlowDevice)
 	if err != nil {
-		t.Fatalf("BrowserBind() error = %v", err)
+		t.Fatalf("Init() error = %v", err)
 	}
-	if result.LoginSessionID != "lsn-browser" {
-		t.Fatalf("expected login session id lsn-browser, got %q", result.LoginSessionID)
-	}
-	if result.AuthorizeURL != "https://auth.anycap.local/authorize?state=state-browser" {
-		t.Fatalf("expected authorize url, got %q", result.AuthorizeURL)
-	}
-	if authClient.redirectURI != "https://anycap.ai/auth/callback" {
-		t.Fatalf("expected redirect uri to be used, got %q", authClient.redirectURI)
-	}
-}
 
-func TestService_BrowserVerifyUsesFallbackProfileWhenLocalUserBlank(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 27, 9, 30, 0, 0, time.UTC)
-	repo.sessions["lsn-browser"] = model.LoginSession{
-		ID:           "lsn-browser",
-		FlowType:     model.LoginFlowBrowserPoll,
-		BrowserToken: "browser-lsn-browser",
-		Status:       model.LoginSessionStatusPending,
-		ExpiresAt:    now.Add(15 * time.Minute),
-	}
-	users := &fakeUserProvisioner{
-		users: map[string]model.User{
-			"2000000001": {
-				ID:     "2000000001",
-				Status: model.UserStatusActive,
-			},
-		},
-		links: map[string]string{
-			"auth0:google-oauth2|abc": "2000000001",
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		users,
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.ai/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.BrowserVerify(context.Background(), "browser-lsn-browser", model.Principal{
-		UserID:         "2000000001",
-		AuthType:       "auth0_jwt",
-		ExternalUserID: "google-oauth2|abc",
-	}, model.AuthUser{
-		Email:   "browser@example.com",
-		Name:    "Browser User",
-		Picture: "https://cdn.example.com/u.png",
-	})
+	verifyResult, err := service.VerifyDeviceCode(context.Background(), initResult.UserCode, model.Principal{UserID: "user-2", AuthType: "auth0_jwt"}, model.AuthUser{})
 	if err != nil {
-		t.Fatalf("BrowserVerify() error = %v", err)
+		t.Fatalf("VerifyDeviceCode() error = %v", err)
 	}
-	if result.Message != "authorized" {
-		t.Fatalf("expected authorized message, got %#v", result)
+	if verifyResult.Message != "authorized" {
+		t.Fatalf("expected authorized message, got %#v", verifyResult)
 	}
-	stored := repo.sessions["lsn-browser"]
-	if stored.AuthUserEmail != "browser@example.com" || stored.AuthUserName != "Browser User" {
-		t.Fatalf("expected fallback browser user profile stored, got %#v", stored)
-	}
-	updatedUser, err := users.GetUserByID(context.Background(), "2000000001")
+
+	pollResult, err := service.Poll(context.Background(), initResult.LoginSessionID, "")
 	if err != nil {
-		t.Fatalf("GetUserByID() error = %v", err)
+		t.Fatalf("Poll() error = %v", err)
 	}
-	if updatedUser.Email != "browser@example.com" || updatedUser.Name != "Browser User" {
-		t.Fatalf("expected local user profile refreshed, got %#v", updatedUser)
-	}
-}
-
-func TestService_BrowserCompleteMarksSessionAuthorized(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 2, 10, 0, 0, time.UTC)
-	repo.sessions["lsn-browser"] = model.LoginSession{
-		ID:           "lsn-browser",
-		FlowType:     model.LoginFlowBrowserPoll,
-		State:        "state-browser",
-		RedirectURI:  "https://anycap.ai/auth/callback",
-		BrowserToken: "browser-lsn-browser",
-		PollToken:    "poll-lsn-browser",
-		Status:       model.LoginSessionStatusPending,
-		ExpiresAt:    now.Add(15 * time.Minute),
-		CreatedAt:    now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-browser": {UserID: "auth0|browser-user", Email: "browser@example.com", Name: "Browser User"},
-		},
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.ai/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	if err := service.BrowserComplete(context.Background(), "lsn-browser", "browser-lsn-browser", "code-browser", "state-browser", "https://anycap.ai/auth/callback"); err != nil {
-		t.Fatalf("BrowserComplete() error = %v", err)
-	}
-	stored := repo.sessions["lsn-browser"]
-	if stored.Status != model.LoginSessionStatusAuthorized {
-		t.Fatalf("expected authorized status, got %q", stored.Status)
-	}
-	if stored.Auth0Subject != "auth0|browser-user" {
-		t.Fatalf("expected auth subject, got %q", stored.Auth0Subject)
+	if pollResult.Status != model.LoginSessionStatusComplete || pollResult.APIKey != "ak-test-2" {
+		t.Fatalf("unexpected device poll result: %#v", pollResult)
 	}
 }
 
 func TestService_ExchangeIssuesAPIKeyForJWTPrincipal(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key_123"},
-			RawKey: "ak_test_exchange",
-		},
-	}
-	users := &fakeUserProvisioner{
-		users: map[string]model.User{
-			"2000000001": {
-				ID:        "2000000001",
-				Email:     "demo@example.com",
-				Name:      "Demo User",
-				AvatarURL: "https://cdn.example.com/avatar.png",
-				Status:    model.UserStatusActive,
-			},
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		users,
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.ai/auth/device",
-		func() string { return "state-1" },
-		func() string { return "lsn-1" },
-		func() string { return "CODE-1" },
-		func() time.Time { return time.Date(2026, 3, 27, 10, 0, 0, 0, time.UTC) },
-		7*24*time.Hour,
-	)
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{createdResult: model.CreatedAPIKey{APIKey: model.APIKey{ID: "key-3"}, RawKey: "ak-test-3"}}
+	users := &fakeUserProvisioner{users: map[string]model.User{
+		"user-3": {ID: "user-3", Email: "jwt@example.com", Name: "JWT User", Status: model.UserStatusActive},
+	}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTest(now, apiKeys, users, sessions)
 
-	result, err := service.Exchange(context.Background(), model.Principal{
-		UserID:         "2000000001",
-		AuthType:       "auth0_jwt",
-		ExternalUserID: "auth0|demo-user",
-		Email:          "demo@example.com",
-		Name:           "Demo User",
-	})
+	result, err := service.Exchange(context.Background(), model.Principal{UserID: "user-3", AuthType: "auth0_jwt"})
 	if err != nil {
 		t.Fatalf("Exchange() error = %v", err)
 	}
-	if len(apiKeys.created) != 1 {
-		t.Fatalf("expected one api key creation, got %d", len(apiKeys.created))
-	}
-	if apiKeys.created[0].UserID != "2000000001" {
-		t.Fatalf("expected api key to be created for internal user, got %#v", apiKeys.created[0])
-	}
-	if result.APIKey != "ak_test_exchange" || result.APIKeyID != "key_123" {
-		t.Fatalf("unexpected api key result: %#v", result)
-	}
-	if result.User == nil || result.User.ID != "2000000001" || result.User.Email != "demo@example.com" || result.User.Name != "Demo User" {
-		t.Fatalf("expected user info in exchange result, got %#v", result.User)
-	}
-}
-
-func TestService_PollBrowserAuthorizedCreatesAPIKey(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 2, 15, 0, 0, time.UTC)
-	repo.sessions["lsn-browser"] = model.LoginSession{
-		ID:            "lsn-browser",
-		FlowType:      model.LoginFlowBrowserPoll,
-		BrowserToken:  "browser-lsn-browser",
-		PollToken:     "poll-lsn-browser",
-		Auth0Subject:  "auth0|browser-user",
-		AuthUserEmail: "browser@example.com",
-		AuthUserName:  "Browser User",
-		Status:        model.LoginSessionStatusAuthorized,
-		ExpiresAt:     now.Add(15 * time.Minute),
-		CreatedAt:     now,
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-browser", UserID: "2000000099"},
-			RawKey: "ak-browser",
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0|browser-user": {ID: "2000000099", Email: "browser@example.com", Name: "Browser User", Status: model.UserStatusActive},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.ai/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Poll(context.Background(), "lsn-browser", "poll-lsn-browser")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if result.Status != model.LoginSessionStatusComplete {
-		t.Fatalf("expected complete status, got %q", result.Status)
-	}
-	if result.APIKey != "ak-browser" {
-		t.Fatalf("expected api key ak-browser, got %q", result.APIKey)
-	}
-}
-
-func TestService_CallbackCreatesAPIKey(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-123"] = model.LoginSession{
-		ID:          "lsn-123",
-		FlowType:    model.LoginFlowLocalhost,
-		State:       "state-123",
-		RedirectURI: "http://127.0.0.1:14565/callback",
-		Status:      model.LoginSessionStatusPending,
-		ExpiresAt:   now.Add(5 * time.Minute),
-		CreatedAt:   now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-123": {UserID: "user-123", Email: "user@example.com", Name: "Demo User"},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
-			RawKey: "ak-created",
-		},
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:user-123": {ID: "2000000001", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-unused" },
-		func() string { return "lsn-unused" },
-		func() string { return "code-unused" },
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
-	if err != nil {
-		t.Fatalf("Callback() error = %v", err)
-	}
-	if result.APIKey == "" {
-		t.Fatal("expected api key")
-	}
-	if result.CredentialType != loginCredentialTypeAPIKey {
-		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
-	}
-	if result.AccessToken != "ak-created" {
-		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
-	}
-	if result.User == nil || result.User.ID != "2000000001" {
-		t.Fatalf("expected local user id 2000000001, got %#v", result.User)
-	}
-	if authClient.redirectURI != "http://127.0.0.1:14565/callback" {
-		t.Fatalf("expected redirect uri to be used for exchange, got %q", authClient.redirectURI)
-	}
-	if len(apiKeys.created) != 1 {
-		t.Fatalf("expected one api key create call, got %d", len(apiKeys.created))
-	}
-	if apiKeys.created[0].UserID != "2000000001" {
-		t.Fatalf("expected api key created for local user id, got %q", apiKeys.created[0].UserID)
-	}
-	if apiKeys.created[0].TTL != 7*24*time.Hour {
-		t.Fatalf("expected 7d ttl, got %v", apiKeys.created[0].TTL)
-	}
-}
-
-func TestService_CallbackAcceptsWebFlow(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 1, 5, 0, 0, time.UTC)
-	repo.sessions["lsn-web"] = model.LoginSession{
-		ID:          "lsn-web",
-		FlowType:    model.LoginFlowWeb,
-		State:       "state-web",
-		RedirectURI: "http://localhost:3000/auth/callback",
-		Status:      model.LoginSessionStatusPending,
-		ExpiresAt:   now.Add(5 * time.Minute),
-		CreatedAt:   now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-web": {UserID: "user-web", Email: "web@example.com", Name: "Web User"},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-web", UserID: "2000000008"},
-			RawKey: "ak-web",
-		},
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:user-web": {ID: "2000000008", Email: "web@example.com", Name: "Web User", Status: model.UserStatusActive},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Callback(context.Background(), "lsn-web", "code-web", "state-web", "http://localhost:3000/auth/callback")
-	if err != nil {
-		t.Fatalf("Callback() error = %v", err)
-	}
-	if result.APIKey != "ak-web" {
-		t.Fatalf("expected api key, got %#v", result)
-	}
-	if authClient.redirectURI != "http://localhost:3000/auth/callback" {
-		t.Fatalf("expected redirect uri to be used, got %q", authClient.redirectURI)
-	}
-}
-
-func TestService_InitDeviceAndPollPending(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	service := NewService(
-		&fakeAuthClient{loginURL: "https://auth.anycap.local/authorize?state=unused"},
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-123" },
-		func() string { return "lsn-device" },
-		func() string { return "ABCD-EFGH" },
-		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
-		7*24*time.Hour,
-	)
-
-	initResult, err := service.Init(context.Background(), model.LoginFlowDevice, 0, "")
-	if err != nil {
-		t.Fatalf("Init() error = %v", err)
-	}
-	if initResult.UserCode != "ABCD-EFGH" {
-		t.Fatalf("expected user code, got %q", initResult.UserCode)
-	}
-	if initResult.VerificationURI != "https://anycap.local/auth/device" {
-		t.Fatalf("expected verification uri, got %q", initResult.VerificationURI)
-	}
-	if initResult.Interval != 5 {
-		t.Fatalf("expected interval 5, got %d", initResult.Interval)
-	}
-	stored := repo.sessions["lsn-device"]
-	if stored.State != "state-123" {
-		t.Fatalf("expected generated state for device flow, got %q", stored.State)
-	}
-	if stored.RedirectURI != "https://anycap.local/auth/callback" {
-		t.Fatalf("expected device callback redirect uri, got %q", stored.RedirectURI)
-	}
-	if stored.UserCodeExpiresAt != time.Date(2026, 3, 25, 10, 5, 0, 0, time.UTC) {
-		t.Fatalf("expected user code to expire in 5m, got %v", stored.UserCodeExpiresAt)
-	}
-
-	pollResult, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if pollResult.Status != model.LoginSessionStatusPending {
-		t.Fatalf("expected pending, got %q", pollResult.Status)
-	}
-}
-
-func TestService_BeginDeviceAuthorizationBuildsAuthURL(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		State:             "state-device",
-		UserCode:          "ABCD-EFGH",
-		RedirectURI:       "https://anycap.local/auth/callback",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(15 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-		CreatedAt:         now,
-	}
-	authClient := &fakeAuthClient{
-		loginURL: "https://auth.anycap.local/authorize?state=state-device",
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	authURL, err := service.BeginDeviceAuthorization(context.Background(), "ABCD-EFGH")
-	if err != nil {
-		t.Fatalf("BeginDeviceAuthorization() error = %v", err)
-	}
-	if authURL != "https://auth.anycap.local/authorize?state=state-device" {
-		t.Fatalf("expected auth url, got %q", authURL)
-	}
-	if authClient.redirectURI != "https://anycap.local/auth/callback" {
-		t.Fatalf("expected device redirect uri to be forwarded, got %q", authClient.redirectURI)
-	}
-}
-
-func TestService_CompleteDeviceAuthorizationMarksSessionAuthorized(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		State:             "state-device",
-		UserCode:          "ABCD-EFGH",
-		RedirectURI:       "https://anycap.local/auth/callback",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(15 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-		CreatedAt:         now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-123": {UserID: "auth0|user-1", Email: "user@example.com", Name: "Demo User"},
-		},
-	}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	if err := service.CompleteDeviceAuthorization(context.Background(), "code-123", "state-device"); err != nil {
-		t.Fatalf("CompleteDeviceAuthorization() error = %v", err)
-	}
-	stored := repo.sessions["lsn-device"]
-	if stored.Status != model.LoginSessionStatusAuthorized {
-		t.Fatalf("expected authorized status, got %q", stored.Status)
-	}
-	if stored.Auth0Subject != "auth0|user-1" || stored.AuthUserEmail != "user@example.com" || stored.AuthUserName != "Demo User" {
-		t.Fatalf("expected auth user profile to be stored, got %#v", stored)
-	}
-}
-
-func TestService_PollAuthorizedDeviceCreatesAPIKey(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		Auth0Subject:      "auth0|user-1",
-		AuthUserEmail:     "user@example.com",
-		AuthUserName:      "Demo User",
-		Status:            model.LoginSessionStatusAuthorized,
-		ExpiresAt:         now.Add(15 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-		CreatedAt:         now,
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-456", UserID: "2000000002"},
-			RawKey: "ak-device",
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0|user-1": {ID: "2000000002", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if result.Status != model.LoginSessionStatusComplete {
-		t.Fatalf("expected complete, got %q", result.Status)
-	}
-	if result.APIKey == "" {
-		t.Fatal("expected api key")
-	}
-	if result.CredentialType != loginCredentialTypeAPIKey {
-		t.Fatalf("expected credential_type api_key, got %q", result.CredentialType)
-	}
-	if result.AccessToken != "ak-device" {
-		t.Fatalf("expected access token alias to be populated, got %q", result.AccessToken)
-	}
-	if result.User == nil || result.User.ID != "2000000002" {
-		t.Fatalf("expected local user id 2000000002, got %#v", result.User)
-	}
-	if len(apiKeys.created) != 1 {
-		t.Fatalf("expected one api key create call, got %d", len(apiKeys.created))
-	}
-	if apiKeys.created[0].UserID != "2000000002" {
-		t.Fatalf("expected api key created for local user id, got %q", apiKeys.created[0].UserID)
-	}
-	if apiKeys.created[0].TTL != 7*24*time.Hour {
-		t.Fatalf("expected 7d ttl, got %v", apiKeys.created[0].TTL)
-	}
-}
-
-func TestService_PollDeviceExpiresWhenUserCodeExpires(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 6, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-EFGH",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(9 * time.Minute),
-		UserCodeExpiresAt: now.Add(-1 * time.Minute),
-		CreatedAt:         now.Add(-6 * time.Minute),
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"2000000009": {
-					ID:        "2000000009",
-					Email:     "viewer@example.com",
-					Name:      "Viewer User",
-					AvatarURL: "https://img.example.com/u.png",
-					Status:    model.UserStatusActive,
-				},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apikey.NewMemoryService(),
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if result.Status != model.LoginSessionStatusExpired {
-		t.Fatalf("expected expired, got %q", result.Status)
-	}
-}
-
-func TestService_PollCompletedDeviceReissuesAPIKey(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 10, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		Auth0Subject:      "auth0|user-1",
-		AuthUserEmail:     "user@example.com",
-		AuthUserName:      "Demo User",
-		Status:            model.LoginSessionStatusCompleted,
-		APIKeyID:          "key-old",
-		ExpiresAt:         now.Add(5 * time.Minute),
-		UserCodeExpiresAt: now.Add(-5 * time.Minute),
-		CreatedAt:         now.Add(-10 * time.Minute),
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-reissued", UserID: "2000000002"},
-			RawKey: "ak-reissued",
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0|user-1": {ID: "2000000002", Email: "user@example.com", Name: "Demo User", Status: model.UserStatusActive},
-			},
-		},
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if result.Status != model.LoginSessionStatusComplete {
-		t.Fatalf("expected complete, got %q", result.Status)
-	}
-	if result.APIKey != "ak-reissued" {
-		t.Fatalf("expected reissued api key, got %#v", result)
-	}
-	if len(apiKeys.created) != 1 {
-		t.Fatalf("expected one api key create call, got %d", len(apiKeys.created))
-	}
-	if repo.sessions["lsn-device"].APIKeyID != "key-reissued" {
-		t.Fatalf("expected session api key id to be updated, got %#v", repo.sessions["lsn-device"])
-	}
-}
-
-func TestService_CheckDeviceCodeValid(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-1234",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(10 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"2000000009": {
-					ID:        "2000000009",
-					Email:     "viewer@example.com",
-					Name:      "Viewer User",
-					AvatarURL: "https://img.example.com/u.png",
-					Status:    model.UserStatusActive,
-				},
-			},
-		},
-		&fakeLoginCreditClient{},
-		&fakeLoginAPIKeyService{},
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.CheckDeviceCode(context.Background(), "ABCD-1234")
-	if err != nil {
-		t.Fatalf("CheckDeviceCode() error = %v", err)
-	}
-	if !result.Valid {
-		t.Fatalf("expected valid result, got %#v", result)
-	}
-}
-
-func TestService_VerifyDeviceCodeMarksSessionForUser(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-1234",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(10 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"2000000009": {
-					ID:        "2000000009",
-					Email:     "viewer@example.com",
-					Name:      "Viewer User",
-					AvatarURL: "https://img.example.com/u.png",
-					Status:    model.UserStatusActive,
-				},
-			},
-		},
-		&fakeLoginCreditClient{},
-		&fakeLoginAPIKeyService{},
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.VerifyDeviceCode(
-		context.Background(),
-		"ABCD-1234",
-		model.Principal{
-			UserID:   "2000000009",
-			APIKeyID: "key-web",
-			AuthType: "api_key",
-		},
-		model.AuthUser{
-			UserID:  "2000000009",
-			Email:   "viewer@example.com",
-			Name:    "Viewer User",
-			Picture: "https://img.example.com/u.png",
-		},
-	)
-	if err != nil {
-		t.Fatalf("VerifyDeviceCode() error = %v", err)
-	}
-	if result.Message != "authorized" {
-		t.Fatalf("expected authorized message, got %#v", result)
-	}
-	session := repo.sessions["lsn-device"]
-	if session.Status != model.LoginSessionStatusCompleted {
-		t.Fatalf("expected completed session, got %#v", session)
-	}
-	if session.AuthorizedUserID != "2000000009" {
-		t.Fatalf("expected authorized user id to be recorded, got %#v", session)
-	}
-	if session.AuthUserEmail != "viewer@example.com" || session.AuthUserName != "Viewer User" {
-		t.Fatalf("expected verified user profile to be recorded, got %#v", session)
-	}
-}
-
-func TestService_VerifyDeviceCodeLoadsUserProfileFromServer(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 27, 6, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-1234",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(10 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-	}
-	users := &fakeUserProvisioner{
-		users: map[string]model.User{
-			"2000000009": {
-				ID:        "2000000009",
-				Email:     "viewer@example.com",
-				Name:      "Viewer User",
-				AvatarURL: "https://img.example.com/u.png",
-				Status:    model.UserStatusActive,
-			},
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		users,
-		&fakeLoginCreditClient{},
-		&fakeLoginAPIKeyService{},
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	_, err := service.VerifyDeviceCode(
-		context.Background(),
-		"ABCD-1234",
-		model.Principal{
-			UserID:   "2000000009",
-			APIKeyID: "key-web",
-			AuthType: "api_key",
-		},
-		model.AuthUser{},
-	)
-	if err != nil {
-		t.Fatalf("VerifyDeviceCode() error = %v", err)
-	}
-
-	session := repo.sessions["lsn-device"]
-	if session.AuthUserEmail != "viewer@example.com" || session.AuthUserName != "Viewer User" {
-		t.Fatalf("expected verified user profile to be loaded from server, got %#v", session)
-	}
-}
-
-func TestService_PollAfterVerifyIncludesUserProfile(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 27, 6, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-1234",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(10 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-	}
-	users := &fakeUserProvisioner{
-		users: map[string]model.User{
-			"2000000009": {
-				ID:        "2000000009",
-				Email:     "viewer@example.com",
-				Name:      "Viewer User",
-				AvatarURL: "https://img.example.com/u.png",
-				Status:    model.UserStatusActive,
-			},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-poll", UserID: "2000000009"},
-			RawKey: "ak-poll",
-		},
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		users,
-		&fakeLoginCreditClient{},
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	_, err := service.VerifyDeviceCode(
-		context.Background(),
-		"ABCD-1234",
-		model.Principal{
-			UserID:   "2000000009",
-			APIKeyID: "key-web",
-			AuthType: "api_key",
-		},
-		model.AuthUser{},
-	)
-	if err != nil {
-		t.Fatalf("VerifyDeviceCode() error = %v", err)
-	}
-
-	pollResult, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("Poll() error = %v", err)
-	}
-	if pollResult.User == nil || pollResult.User.Email != "viewer@example.com" || pollResult.User.Name != "Viewer User" {
-		t.Fatalf("expected poll user profile to be populated, got %#v", pollResult.User)
-	}
-}
-
-func TestService_PollDeviceTooFastReturnsSlowDown(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 26, 6, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-device"] = model.LoginSession{
-		ID:                "lsn-device",
-		FlowType:          model.LoginFlowDevice,
-		UserCode:          "ABCD-1234",
-		Status:            model.LoginSessionStatusPending,
-		ExpiresAt:         now.Add(10 * time.Minute),
-		UserCodeExpiresAt: now.Add(5 * time.Minute),
-	}
-	service := NewService(
-		&fakeAuthClient{},
-		&fakeUserProvisioner{},
-		&fakeLoginCreditClient{},
-		&fakeLoginAPIKeyService{},
-		repo,
-		"https://anycap.local/auth/device",
-		nil,
-		nil,
-		nil,
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	first, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("first Poll() error = %v", err)
-	}
-	if first.Status != model.LoginSessionStatusPending {
-		t.Fatalf("expected first poll pending, got %#v", first)
-	}
-
-	second, err := service.Poll(context.Background(), "lsn-device", "")
-	if err != nil {
-		t.Fatalf("second Poll() error = %v", err)
-	}
-	if second.Status != model.LoginSessionStatusSlowDown {
-		t.Fatalf("expected slow_down, got %#v", second)
-	}
-}
-
-func TestService_CallbackGrantsSignupRewardForNewUser(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-123"] = model.LoginSession{
-		ID:          "lsn-123",
-		FlowType:    model.LoginFlowLocalhost,
-		State:       "state-123",
-		RedirectURI: "http://127.0.0.1:14565/callback",
-		Status:      model.LoginSessionStatusPending,
-		ExpiresAt:   now.Add(5 * time.Minute),
-		CreatedAt:   now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-123": {UserID: "auth0-user-123", Email: "new@example.com", Name: "New User"},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
-			RawKey: "ak-created",
-		},
-	}
-	credits := &fakeLoginCreditClient{}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0-user-123": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
-			},
-			created: map[string]bool{
-				"auth0:auth0-user-123": true,
-			},
-		},
-		credits,
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-unused" },
-		func() string { return "lsn-unused" },
-		func() string { return "code-unused" },
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	_, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
-	if err != nil {
-		t.Fatalf("Callback() error = %v", err)
-	}
-	if len(credits.grants) != 1 || credits.grants[0] != "2000000001" {
-		t.Fatalf("expected one signup reward grant for local user, got %#v", credits.grants)
-	}
-}
-
-func TestService_CallbackDoesNotGrantSignupRewardForExistingUser(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-123"] = model.LoginSession{
-		ID:          "lsn-123",
-		FlowType:    model.LoginFlowLocalhost,
-		State:       "state-123",
-		RedirectURI: "http://127.0.0.1:14565/callback",
-		Status:      model.LoginSessionStatusPending,
-		ExpiresAt:   now.Add(5 * time.Minute),
-		CreatedAt:   now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-123": {UserID: "auth0-user-123", Email: "existing@example.com", Name: "Existing User"},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
-			RawKey: "ak-created",
-		},
-	}
-	credits := &fakeLoginCreditClient{}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0-user-123": {ID: "2000000001", Email: "existing@example.com", Name: "Existing User", Status: model.UserStatusActive},
-			},
-		},
-		credits,
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-unused" },
-		func() string { return "lsn-unused" },
-		func() string { return "code-unused" },
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	_, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
-	if err != nil {
-		t.Fatalf("Callback() error = %v", err)
-	}
-	if len(credits.grants) != 0 {
-		t.Fatalf("expected no signup reward grant for existing user, got %#v", credits.grants)
-	}
-}
-
-func TestService_CallbackDoesNotFailWhenSignupRewardGrantFails(t *testing.T) {
-	repo := newFakeLoginSessionRepo()
-	now := time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC)
-	repo.sessions["lsn-123"] = model.LoginSession{
-		ID:          "lsn-123",
-		FlowType:    model.LoginFlowLocalhost,
-		State:       "state-123",
-		RedirectURI: "http://127.0.0.1:14565/callback",
-		Status:      model.LoginSessionStatusPending,
-		ExpiresAt:   now.Add(5 * time.Minute),
-		CreatedAt:   now,
-	}
-	authClient := &fakeAuthClient{
-		codeUsers: map[string]model.AuthUser{
-			"code-123": {UserID: "auth0-user-123", Email: "new@example.com", Name: "New User"},
-		},
-	}
-	apiKeys := &fakeLoginAPIKeyService{
-		createdResult: model.CreatedAPIKey{
-			APIKey: model.APIKey{ID: "key-123", UserID: "2000000001"},
-			RawKey: "ak-created",
-		},
-	}
-	credits := &fakeLoginCreditClient{grantErr: model.ErrBillingUncertain}
-	service := NewService(
-		authClient,
-		&fakeUserProvisioner{
-			users: map[string]model.User{
-				"auth0:auth0-user-123": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
-			},
-			created: map[string]bool{
-				"auth0:auth0-user-123": true,
-			},
-		},
-		credits,
-		apiKeys,
-		repo,
-		"https://anycap.local/auth/device",
-		func() string { return "state-unused" },
-		func() string { return "lsn-unused" },
-		func() string { return "code-unused" },
-		func() time.Time { return now },
-		7*24*time.Hour,
-	)
-
-	result, err := service.Callback(context.Background(), "lsn-123", "code-123", "state-123", "http://127.0.0.1:14565/callback")
-	if err != nil {
-		t.Fatalf("Callback() error = %v", err)
-	}
-	if result.APIKey != "ak-created" {
-		t.Fatalf("expected login to still succeed, got %#v", result)
+	if result.APIKey != "ak-test-3" || result.APIKeyID != "key-3" {
+		t.Fatalf("unexpected exchange result: %#v", result)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
 const (
@@ -21,41 +22,46 @@ const (
 	defaultRateLimitRPM         = 60
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
 	defaultAgentPlatformTimeout = 120 * time.Second
-	defaultPresignExpiry        = 600  // seconds (10 minutes)
-	maxPresignExpiry            = 3600 // seconds (1 hour hard cap)
+	defaultPresignExpiry        = 600   // seconds (10 minutes)
+	defaultPresignGetExpiry     = 3600  // seconds (1 hour)
+	maxPresignExpiry            = 3600  // seconds (1 hour hard cap)
+	maxPresignGetExpiry         = 86400 // seconds (24 hours hard cap)
 	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
+	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
+	defaultKVSyncPollInterval   = 1 * time.Second
+	defaultKVSyncLockTTL        = 5 * time.Minute
+	defaultKVSyncWaitTimeout    = 5 * time.Second
+	defaultCloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
 )
 
 type Config struct {
-	AppName           string
-	AppEnv            string
-	HTTPAddr          string
-	RuntimeMode       string
-	PGDSN             string
-	PGHost            string
-	PGPort            int
-	PGUser            string
-	PGPassword        string
-	PGDatabase        string
-	PGSSLMode         string
-	PGTimezone        string
-	PGAutoMigrate     bool
-	RedisAddr         string
-	RedisHost         string
-	RedisPort         int
-	RedisUsername     string
-	RedisPassword     string
-	RedisDB           int
-	RateLimitRPM      int
-	LoginAPIKeyTTL    time.Duration
-	Auth0Enabled      bool
-	Auth0Issuer       string
-	Auth0Audience     string
-	Auth0ClientID     string
-	Auth0ClientSecret string
-	Auth0RedirectURL  string
-	NexusHubBaseURL   string
-	NexusHubToken     string
+	AppName          string
+	AppEnv           string
+	HTTPAddr         string
+	RuntimeMode      string
+	PGDSN            string
+	PGHost           string
+	PGPort           int
+	PGUser           string
+	PGPassword       string
+	PGDatabase       string
+	PGSSLMode        string
+	PGTimezone       string
+	PGAutoMigrate    bool
+	RedisAddr        string
+	RedisHost        string
+	RedisPort        int
+	RedisUsername    string
+	RedisPassword    string
+	RedisDB          int
+	RateLimitRPM     int
+	LoginAPIKeyTTL   time.Duration
+	Auth0Enabled     bool
+	Auth0Issuer      string
+	Auth0Audience    string
+	Auth0RedirectURL string
+	NexusHubBaseURL  string
+	NexusHubToken    string
 	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
 	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
 	NexusHubPlatformBaseURL string
@@ -64,8 +70,17 @@ type Config struct {
 	NexusHubCoreToken       string
 	Credit                  CreditConfig
 	AgentPlatform           AgentPlatformConfig
-	S3                      S3Config
+	CloudS3                 S3Config
 	Lark                    LarkConfig
+	PasswordPepper          string
+	DriveShareBaseURL       string
+	PageHostFormat          string
+	CloudflareKV            CloudflareKVConfig
+	KVSyncEnabled           bool
+	KVSyncWaitEnabled       bool
+	KVSyncPollInterval      time.Duration
+	KVSyncLockTTL           time.Duration
+	KVSyncWaitTimeout       time.Duration
 }
 
 type CreditConfig struct {
@@ -93,15 +108,14 @@ func (c AgentPlatformConfig) Enabled() bool {
 }
 
 type S3Config struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	Bucket          string
-	Region          string
-	PublicURL       string
-	KeyPrefix       string
-	PresignExpiry   int
-	ForcePathStyle  bool
+	Endpoint         string
+	AccessKeyID      string
+	SecretAccessKey  string
+	Bucket           string
+	Region           string
+	PresignExpiry    int
+	PresignGetExpiry int
+	ForcePathStyle   bool
 }
 
 func (c S3Config) Enabled() bool {
@@ -112,6 +126,17 @@ type LarkConfig struct {
 	MsgAPI        string
 	WebhookURL    string
 	WebhookSecret string
+}
+
+type CloudflareKVConfig struct {
+	AccountID   string
+	NamespaceID string
+	APIToken    string
+	APIBaseURL  string
+}
+
+func (c CloudflareKVConfig) Enabled() bool {
+	return c.AccountID != "" && c.NamespaceID != "" && c.APIToken != ""
 }
 
 func (c LarkConfig) Enabled() bool {
@@ -154,8 +179,6 @@ func LoadFromEnv() (Config, error) {
 		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
 		Auth0Audience:           os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
-		Auth0ClientID:           os.Getenv("ANYCAP_AUTH0_CLIENT_ID"),
-		Auth0ClientSecret:       os.Getenv("ANYCAP_AUTH0_CLIENT_SECRET"),
 		Auth0RedirectURL:        os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
 		NexusHubBaseURL:         getEnv("NEXUSHUB_BASE_URL", ""),
 		NexusHubToken:           getEnv("NEXUSHUB_TOKEN", ""),
@@ -165,12 +188,26 @@ func LoadFromEnv() (Config, error) {
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
 		Credit:                  loadCreditConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
-		S3:                      loadS3Config(),
+		CloudS3:                 loadCloudS3Config(),
 		Lark: LarkConfig{
 			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
 			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),
 			WebhookSecret: os.Getenv("ANYCAP_LARK_WEBHOOK_SECRET"),
 		},
+		PasswordPepper:    os.Getenv("ANYCAP_PASSWORD_PEPPER"),
+		DriveShareBaseURL: getEnv("ANYCAP_DRIVE_SHARE_BASE_URL", defaultDriveShareBaseURL),
+		PageHostFormat:    model.NormalizePageHostFormat(getEnv("ANYCAP_PAGE_HOST_FORMAT", "")),
+		CloudflareKV: CloudflareKVConfig{
+			AccountID:   getEnv("ANYCAP_CLOUDFLARE_ACCOUNT_ID", ""),
+			NamespaceID: getEnv("ANYCAP_CLOUDFLARE_KV_NAMESPACE_ID", ""),
+			APIToken:    getEnv("ANYCAP_CLOUDFLARE_API_TOKEN", ""),
+			APIBaseURL:  getEnv("ANYCAP_CLOUDFLARE_API_BASE_URL", defaultCloudflareAPIBaseURL),
+		},
+		KVSyncEnabled:      getEnvBool("ANYCAP_KVSYNC_ENABLED", false),
+		KVSyncWaitEnabled:  getEnvBool("ANYCAP_KVSYNC_WAIT_ENABLED", true),
+		KVSyncPollInterval: getEnvDuration("ANYCAP_KVSYNC_POLL_INTERVAL", defaultKVSyncPollInterval),
+		KVSyncLockTTL:      getEnvDuration("ANYCAP_KVSYNC_LOCK_TTL", defaultKVSyncLockTTL),
+		KVSyncWaitTimeout:  getEnvDuration("ANYCAP_KVSYNC_WAIT_TIMEOUT", defaultKVSyncWaitTimeout),
 	}
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {
@@ -316,33 +353,42 @@ func loadAgentPlatformConfig() AgentPlatformConfig {
 	}
 }
 
-func loadS3Config() S3Config {
+func loadCloudS3Config() S3Config {
 	expiry := defaultPresignExpiry
-	if s := os.Getenv("S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
+	if s := os.Getenv("ANYCAP_CLOUD_S3_PRESIGN_EXPIRY_SECONDS"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil && n > 0 {
 			expiry = n
 		}
 	}
 
+	getExpiry := defaultPresignGetExpiry
+	if s := os.Getenv("ANYCAP_CLOUD_S3_PRESIGN_GET_EXPIRY_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			getExpiry = n
+		}
+	}
+
 	forcePathStyle := false
-	if s := os.Getenv("S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
+	if s := os.Getenv("ANYCAP_CLOUD_S3_FORCE_PATH_STYLE"); s == "true" || s == "1" {
 		forcePathStyle = true
 	}
 
 	if expiry > maxPresignExpiry {
 		expiry = maxPresignExpiry
 	}
+	if getExpiry > maxPresignGetExpiry {
+		getExpiry = maxPresignGetExpiry
+	}
 
 	return S3Config{
-		Endpoint:        getEnv("S3_ENDPOINT", ""),
-		AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
-		SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
-		Bucket:          getEnv("S3_BUCKET", "anycap-tmp"),
-		Region:          getEnv("S3_REGION", "auto"),
-		PublicURL:       getEnv("S3_PUBLIC_URL", ""),
-		KeyPrefix:       getEnv("S3_KEY_PREFIX", "user_upload"),
-		PresignExpiry:   expiry,
-		ForcePathStyle:  forcePathStyle,
+		Endpoint:         getEnv("ANYCAP_CLOUD_S3_ENDPOINT", ""),
+		AccessKeyID:      getEnv("ANYCAP_CLOUD_S3_ACCESS_KEY_ID", ""),
+		SecretAccessKey:  getEnv("ANYCAP_CLOUD_S3_SECRET_ACCESS_KEY", ""),
+		Bucket:           getEnv("ANYCAP_CLOUD_S3_BUCKET", "anycap-cloud"),
+		Region:           getEnv("ANYCAP_CLOUD_S3_REGION", "auto"),
+		PresignExpiry:    expiry,
+		PresignGetExpiry: getExpiry,
+		ForcePathStyle:   forcePathStyle,
 	}
 }
 

@@ -5,6 +5,14 @@ body {
   overscroll-behavior-y: none;
 }
 
+@layer base {
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
 @theme {
   --animate-blink: blink 1s step-end infinite;
   --animate-fade-in: fade-in 0.4s ease-out both;

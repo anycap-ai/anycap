@@ -33,7 +33,6 @@ type LoginInitResult struct {
 type LoginCallbackResult struct {
 	CredentialType string     `json:"credential_type,omitempty"`
 	AccessToken    string     `json:"access_token,omitempty"`
-	RefreshToken   string     `json:"refresh_token,omitempty"`
 	ExpiresIn      int        `json:"expires_in,omitempty"`
 	APIKeyID       string     `json:"api_key_id,omitempty"`
 	APIKey         string     `json:"api_key,omitempty"`
@@ -44,7 +43,6 @@ type LoginPollResult struct {
 	Status         string     `json:"status"`
 	CredentialType string     `json:"credential_type,omitempty"`
 	AccessToken    string     `json:"access_token,omitempty"`
-	RefreshToken   string     `json:"refresh_token,omitempty"`
 	ExpiresIn      int        `json:"expires_in,omitempty"`
 	APIKeyID       string     `json:"api_key_id,omitempty"`
 	APIKey         string     `json:"api_key,omitempty"`

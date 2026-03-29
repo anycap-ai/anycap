@@ -52,6 +52,7 @@ export const EQUIP_MODAL_EVENT = "openEquipModal";
 
 export function EquipAgent() {
   const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [copied, setCopied] = useState(false);
   const [atBottom, setAtBottom] = useState(false);
@@ -61,13 +62,19 @@ export function EquipAgent() {
     setSelectedAgent(null);
     setCopied(false);
     setOpen(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setVisible(true));
+    });
   }, []);
 
-  const closeModal = () => {
-    setOpen(false);
-    setSelectedAgent(null);
-    setCopied(false);
-  };
+  const closeModal = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => {
+      setOpen(false);
+      setSelectedAgent(null);
+      setCopied(false);
+    }, 250);
+  }, []);
 
   const backToPicker = () => {
     setSelectedAgent(null);
@@ -104,7 +111,7 @@ export function EquipAgent() {
       {/* Trigger button */}
       <button
         onClick={openModal}
-        className="flex items-center gap-3 px-8 py-4 rounded bg-[#8fa34e] text-white text-[13px] font-bold tracking-[1px] hover:bg-[#6b7d3a] transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]"
+        className="flex items-center gap-3 px-8 py-4 rounded-lg bg-[#8fa34e] text-white text-[13px] font-bold tracking-[1px] hover:bg-[#6b7d3a] transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]"
         style={mono}
       >
         Equip your Agent
@@ -130,12 +137,12 @@ export function EquipAgent() {
         >
           {/* Blur backdrop */}
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-250 ease-out ${visible ? "opacity-100" : "opacity-0"}`}
             onClick={closeModal}
           />
 
           {/* Modal content */}
-          <div className="relative z-10 w-full max-w-[400px] mx-4">
+          <div className={`relative z-10 w-full max-w-[400px] mx-4 transition-all duration-250 ease-out ${visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-3"}`}>
             {!selectedAgent ? (
               /* ── Agent picker ── */
               <div className="bg-white rounded-xl p-2 shadow-2xl shadow-black/20">
@@ -208,13 +215,13 @@ export function EquipAgent() {
               </div>
             ) : (
               /* ── Prompt panel ── */
-              <div className="bg-[#1c1f17] rounded-xl shadow-2xl shadow-black/30 overflow-hidden w-full mx-auto">
+              <div className="bg-[#f4f5f0] rounded-xl shadow-2xl shadow-black/20 overflow-hidden w-full mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-3 border-b border-[#2a2e22]">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-[#d4dbb8]">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={backToPicker}
-                      className="text-[#6b705f] hover:text-[#d4e0a4] transition-colors p-1 mr-1"
+                      className="text-[#9a9e90] hover:text-[#1c1f17] transition-colors p-1 mr-1"
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12">
                         <path
@@ -229,7 +236,7 @@ export function EquipAgent() {
                     </button>
                     <AgentIconSlot icon={selectedAgent.icon} />
                     <span
-                      className="text-[#d4e0a4] text-[11px] tracking-[1px]"
+                      className="text-[#1c1f17] text-[11px] tracking-[1px]"
                       style={mono}
                     >
                       Send to {selectedAgent.name}
@@ -237,7 +244,7 @@ export function EquipAgent() {
                   </div>
                   <button
                     onClick={closeModal}
-                    className="text-[#6b705f] hover:text-[#d4e0a4] transition-colors p-1"
+                    className="text-[#9a9e90] hover:text-[#1c1f17] transition-colors p-1"
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12">
                       <path
@@ -252,12 +259,14 @@ export function EquipAgent() {
 
                 {/* Command body */}
                 <div className="p-5">
-                  <p
-                    className="text-[#d4e0a4] text-[13px] leading-relaxed mb-4"
-                    style={mono}
-                  >
-                    {getInstallPrompt(selectedAgent)}
-                  </p>
+                  <div className="bg-white rounded-lg p-4 mb-4 border border-[#d4dbb8]">
+                    <p
+                      className="text-[#1c1f17] text-[13px] leading-relaxed"
+                      style={mono}
+                    >
+                      {getInstallPrompt(selectedAgent)}
+                    </p>
+                  </div>
                   <button
                     onClick={copy}
                     className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#6b7d3a] hover:bg-[#8fa34e] text-[#f4f5f0] text-[11px] font-bold tracking-[0.5px] rounded-lg transition-colors"

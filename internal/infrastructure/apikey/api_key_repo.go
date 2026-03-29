@@ -5,18 +5,20 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/userid"
 )
 
 type APIKeyRepo struct {
-	db DBTX
+	db sqlstore.DBTX
 }
 
-func NewAPIKeyRepo(db DBTX) *APIKeyRepo {
+func NewAPIKeyRepo(db sqlstore.DBTX) *APIKeyRepo {
 	return &APIKeyRepo{db: db}
 }
 
 func (r *APIKeyRepo) Insert(ctx context.Context, key model.APIKey) error {
-	numericUserID, err := parseUserID(key.UserID)
+	numericUserID, err := userid.Parse(key.UserID)
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func (r *APIKeyRepo) FindByPrefix(ctx context.Context, prefix string) (model.API
 	if err != nil {
 		return model.APIKey{}, err
 	}
-	key.UserID = formatUserID(numericUserID)
+	key.UserID = userid.Format(numericUserID)
 
 	return key, nil
 }
@@ -62,6 +64,6 @@ func (r *APIKeyRepo) TouchLastUsedAt(ctx context.Context, keyID string, usedAt t
 }
 
 func (r *APIKeyRepo) Revoke(ctx context.Context, keyID string) error {
-	_, err := r.db.ExecContext(ctx, `UPDATE api_keys SET status = 'revoked' WHERE id = $1`, keyID)
+	_, err := r.db.ExecContext(ctx, `UPDATE api_keys SET status = $2 WHERE id = $1`, keyID, model.APIKeyStatusRevoked)
 	return err
 }

@@ -2,21 +2,13 @@ package apikey
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 )
-
-const activeStatus = "active"
-
-func ActiveStatus() string {
-	return activeStatus
-}
 
 type memoryRecord struct {
 	apiKey model.APIKey
@@ -43,19 +35,19 @@ func (s *MemoryService) AuthenticateAPIKey(_ context.Context, rawKey string) (mo
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	keyID, ok := s.byPrefix[PrefixFromRawKey(rawKey)]
+	keyID, ok := s.byPrefix[apikeycodec.PrefixFromRawKey(rawKey)]
 	if !ok {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 
 	record := s.byID[keyID]
-	if record.apiKey.Status != activeStatus {
+	if record.apiKey.Status != model.APIKeyStatusActive {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 	if record.apiKey.ExpiresAt != nil && time.Now().After(*record.apiKey.ExpiresAt) {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
-	if record.apiKey.KeyHash != HashRawKey(rawKey) {
+	if record.apiKey.KeyHash != apikeycodec.HashRawKey(rawKey) {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 
@@ -86,25 +78,25 @@ func (s *MemoryService) createAPIKey(userID, name string, ttl time.Duration) (mo
 	lookupKey := userID + ":" + name
 	if existingID, ok := s.byUserName[lookupKey]; ok {
 		record := s.byID[existingID]
-		if record.apiKey.Status == activeStatus && (record.apiKey.ExpiresAt == nil || time.Now().Before(*record.apiKey.ExpiresAt)) {
+		if record.apiKey.Status == model.APIKeyStatusActive && (record.apiKey.ExpiresAt == nil || time.Now().Before(*record.apiKey.ExpiresAt)) {
 			return model.CreatedAPIKey{APIKey: record.apiKey, RawKey: record.rawKey}, nil
 		}
 	}
 
 	s.seq++
-	rawKey, err := GenerateRawKey()
+	rawKey, err := apikeycodec.GenerateRawKey()
 	if err != nil {
 		return model.CreatedAPIKey{}, err
 	}
-	prefix := PrefixFromRawKey(rawKey)
+	prefix := apikeycodec.PrefixFromRawKey(rawKey)
 	now := time.Now().UTC()
 	apiKey := model.APIKey{
 		ID:        fmt.Sprintf("key_%06d", s.seq),
 		UserID:    userID,
 		Name:      name,
 		KeyPrefix: prefix,
-		KeyHash:   HashRawKey(rawKey),
-		Status:    activeStatus,
+		KeyHash:   apikeycodec.HashRawKey(rawKey),
+		Status:    model.APIKeyStatusActive,
 		CreatedAt: now,
 	}
 	if ttl > 0 {
@@ -127,28 +119,7 @@ func (s *MemoryService) RevokeAPIKey(_ context.Context, keyID string) error {
 	if !ok {
 		return model.ErrAuthInvalid
 	}
-	record.apiKey.Status = "revoked"
+	record.apiKey.Status = model.APIKeyStatusRevoked
 	s.byID[keyID] = record
 	return nil
-}
-
-func GenerateRawKey() (string, error) {
-	buf := make([]byte, 12)
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
-	}
-
-	return "ak_" + hex.EncodeToString(buf), nil
-}
-
-func PrefixFromRawKey(rawKey string) string {
-	if len(rawKey) <= 12 {
-		return rawKey
-	}
-	return rawKey[:12]
-}
-
-func HashRawKey(rawKey string) string {
-	sum := sha256.Sum256([]byte(rawKey))
-	return hex.EncodeToString(sum[:])
 }

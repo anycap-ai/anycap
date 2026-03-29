@@ -1,0 +1,82 @@
+name = "anycap-edge"
+main = "src/index.ts"
+compatibility_date = "2026-03-29"
+account_id = "3ad0d55d5adf982237e3d8ea0f2d9842"
+
+# Secrets to set per environment via `wrangler secret put --env <env>`:
+# - ANYCAP_PASSWORD_PEPPER
+# - EDGE_SESSION_SECRET
+
+# ─── Dev ────────────────────────────────────────────────────────────
+[env.dev]
+name = "anycap-edge-dev"
+
+[[env.dev.routes]]
+pattern = "cdn.anycap.dev/*"
+zone_name = "anycap.dev"
+
+[[env.dev.routes]]
+pattern = "drive.anycap.dev/*"
+zone_name = "anycap.dev"
+
+[[env.dev.routes]]
+pattern = "*.anycap.dev/*"
+zone_name = "anycap.dev"
+
+[[env.dev.kv_namespaces]]
+binding = "EDGE_KV"
+id = "64383b7fa5704c3db5cfea9607e19a50"
+
+[[env.dev.r2_buckets]]
+binding = "ANYCAP_CLOUD_R2"
+bucket_name = "anycap-cloud-dev"
+
+[env.dev.vars]
+CDN_HOST = "cdn.anycap.dev"
+DRIVE_HOST = "drive.anycap.dev"
+PAGE_HOST_PREFIX = "page-"
+DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
+PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
+DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+DRIVE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+PAGE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+PAGE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+DRIVE_PASSWORD_SESSION_TTL_SECONDS = "3600"
+PAGE_PASSWORD_SESSION_TTL_SECONDS = "3600"
+
+# ─── Production ─────────────────────────────────────────────────────
+[env.prod]
+name = "anycap-edge"
+
+[[env.prod.routes]]
+pattern = "cdn.anycap.cloud/*"
+zone_name = "anycap.cloud"
+
+[[env.prod.routes]]
+pattern = "drive.anycap.cloud/*"
+zone_name = "anycap.cloud"
+
+[[env.prod.routes]]
+pattern = "*.anycap.cloud/*"
+zone_name = "anycap.cloud"
+
+[[env.prod.kv_namespaces]]
+binding = "EDGE_KV"
+id = "REPLACE_WITH_PROD_KV_NAMESPACE_ID"
+
+[[env.prod.r2_buckets]]
+binding = "ANYCAP_CLOUD_R2"
+bucket_name = "anycap-cloud"
+
+[env.prod.vars]
+CDN_HOST = "cdn.anycap.cloud"
+DRIVE_HOST = "drive.anycap.cloud"
+PAGE_HOST_PREFIX = "page-"
+DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
+PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
+DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+DRIVE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+PAGE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
+PAGE_PASSWORD_RATE_LIMIT_MAX_ATTEMPTS = "10"
+DRIVE_PASSWORD_SESSION_TTL_SECONDS = "3600"
+PAGE_PASSWORD_SESSION_TTL_SECONDS = "3600"
