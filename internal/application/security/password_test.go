@@ -10,7 +10,7 @@ func TestHashPasswordPBKDF2SHA256_Format(t *testing.T) {
 	if hash == "" || salt == "" {
 		t.Fatal("expected non-empty hash and salt")
 	}
-	prefix := "pbkdf2_sha256$120000$v1$"
+	prefix := "pbkdf2_sha256$100000$v1$"
 	if len(hash) <= len(prefix) || hash[:len(prefix)] != prefix {
 		t.Fatalf("expected hash prefix %q, got %q", prefix, hash)
 	}

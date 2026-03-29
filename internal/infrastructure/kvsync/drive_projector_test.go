@@ -112,7 +112,7 @@ func TestDriveProjector_FileMetaSync(t *testing.T) {
 }
 
 func TestDriveProjector_ShareSync(t *testing.T) {
-	hash := "pbkdf2_sha256$120000$v1$abc"
+	hash := "pbkdf2_sha256$100000$v1$abc"
 	salt := "salt-b64"
 	shareRepo := &fakeProjectorDriveShareRepo{link: &model.DriveShareLink{
 		ID:           1,
