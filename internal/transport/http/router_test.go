@@ -1329,3 +1329,249 @@ func TestRouter_FeedbackInvalidType(t *testing.T) {
 		t.Fatalf("expected 400, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
+
+// --- Drive tests ---
+
+func TestRouter_DriveCreateFolderAndList(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create folder
+	body := []byte(`{"name":"docs"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create folder: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal create response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	if data["name"] != "docs" {
+		t.Fatalf("expected name=docs, got %v", data["name"])
+	}
+	if data["kind"] != "folder" {
+		t.Fatalf("expected kind=folder, got %v", data["kind"])
+	}
+	folderID := data["id"]
+
+	// List root nodes
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list nodes: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal list response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected non-empty items, got %#v", data)
+	}
+	first := items[0].(map[string]any)
+	if first["name"] != "docs" {
+		t.Fatalf("expected listed folder name=docs, got %v", first["name"])
+	}
+
+	// Create subfolder using parent_id
+	subBody := []byte(`{"name":"sub","parent_id":"` + folderID.(string) + `"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(subBody), Len: len(subBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create subfolder: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_DriveUpdateAndDelete(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create folder
+	body := []byte(`{"name":"old-name"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data := env["data"].(map[string]any)
+	folderID := data["id"].(string)
+
+	// Rename
+	renameBody := []byte(`{"name":"new-name"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/drive/nodes/"+folderID, &ut.Body{Body: bytes.NewReader(renameBody), Len: len(renameBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("update: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["name"] != "new-name" {
+		t.Fatalf("expected renamed to new-name, got %v", data["name"])
+	}
+
+	// Delete
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodDelete, "/v1/drive/nodes/"+folderID, nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("delete: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["deleted"] != true {
+		t.Fatalf("expected deleted=true, got %#v", data)
+	}
+	if data["id"] != folderID {
+		t.Fatalf("expected id=%s in delete response, got %v", folderID, data["id"])
+	}
+
+	// List should be empty now
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list after delete: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	total, _ := data["total"].(float64)
+	if total != 0 {
+		t.Fatalf("expected 0 items after delete, got %v", total)
+	}
+}
+
+func TestRouter_DriveRequiresAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	body := []byte(`{"name":"docs"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+// --- Page tests ---
+
+func TestRouter_PageCreateSiteAndList(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create site
+	body := []byte(`{"name":"My Portfolio"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create site: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal create response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	if data["name"] != "My Portfolio" {
+		t.Fatalf("expected name=My Portfolio, got %v", data["name"])
+	}
+	siteID := data["id"].(string)
+
+	// List sites
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list sites: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected non-empty items, got %#v", data)
+	}
+
+	// Get site
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages/"+siteID, nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("get site: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data = env["data"].(map[string]any)
+	if data["name"] != "My Portfolio" {
+		t.Fatalf("expected name=My Portfolio, got %v", data["name"])
+	}
+}
+
+func TestRouter_PageUpdateSite(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create
+	body := []byte(`{"name":"Old Name"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	siteID := env["data"].(map[string]any)["id"].(string)
+
+	// Update name
+	updateBody := []byte(`{"name":"New Name"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/pages/"+siteID, &ut.Body{Body: bytes.NewReader(updateBody), Len: len(updateBody)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("update: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	data := env["data"].(map[string]any)
+	if data["name"] != "New Name" {
+		t.Fatalf("expected renamed to New Name, got %v", data["name"])
+	}
+}
+
+func TestRouter_PageRequiresAuth(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	body := []byte(`{"name":"test"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pages", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_PageUpdateRejectsEmptyPatch(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 100)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	ct := ut.Header{Key: "Content-Type", Value: "application/json"}
+
+	// Create
+	body := []byte(`{"name":"test"}`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/pages", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, authz, ct)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	var env map[string]any
+	json.Unmarshal(resp.Body.Bytes(), &env)
+	siteID := env["data"].(map[string]any)["id"].(string)
+
+	// Empty update should fail
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPatch, "/v1/pages/"+siteID, &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, authz, ct)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for empty update, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
