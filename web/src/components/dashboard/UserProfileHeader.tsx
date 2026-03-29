@@ -50,7 +50,7 @@ export function UserProfileHeader() {
       {/* Hover dropdown */}
       <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-30">
         <LogoutButton
-          className="block px-5 py-2.5 text-[12px] tracking-[0.3px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8]/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+          className="block px-5 py-2.5 text-[12px] tracking-[0.3px] text-[#4d5145] hover:text-[#6b7d3a] bg-[#f9faf5] border border-[#d4dbb8]/70 rounded-lg transition-colors whitespace-nowrap"
           style={mono}
         />
       </div>

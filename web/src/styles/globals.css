@@ -5,10 +5,12 @@ body {
   overscroll-behavior-y: none;
 }
 
-button,
-a,
-[role="button"] {
-  cursor: pointer;
+@layer base {
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
 }
 
 @theme {

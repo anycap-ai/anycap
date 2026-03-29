@@ -178,7 +178,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
             <LogoutButton
-              className="text-[12px] tracking-[0.3px] text-[#707468] hover:text-[#6b7d3a] transition-colors cursor-pointer"
+              className="text-[12px] tracking-[0.3px] text-[#707468] hover:text-[#6b7d3a] transition-colors"
               style={mono}
             />
           </div>
