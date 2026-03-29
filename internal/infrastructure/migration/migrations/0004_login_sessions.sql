@@ -16,6 +16,17 @@ CREATE TABLE IF NOT EXISTS login_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_login_sessions_state ON login_sessions (state);
-CREATE INDEX IF NOT EXISTS idx_login_sessions_device_code ON login_sessions (device_code);
 CREATE INDEX IF NOT EXISTS idx_login_sessions_user_code ON login_sessions (user_code);
 CREATE INDEX IF NOT EXISTS idx_login_sessions_status ON login_sessions (status);
+
+DO $$
+BEGIN
+	IF EXISTS (
+		SELECT 1
+		FROM information_schema.columns
+		WHERE table_name = 'login_sessions'
+			AND column_name = 'device_code'
+	) THEN
+		EXECUTE 'CREATE INDEX IF NOT EXISTS idx_login_sessions_device_code ON login_sessions (device_code)';
+	END IF;
+END $$;
