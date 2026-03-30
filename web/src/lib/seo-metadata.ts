@@ -1,15 +1,13 @@
 import "server-only";
 
 import type { Metadata } from "next";
-
-const DEFAULT_SOCIAL_IMAGE_ALT =
-  "AnyCap gives AI agents image, video, music, speech, search, and crawl capabilities through one command.";
+import { defaultSocialImageAlt } from "@/lib/site";
 
 export const defaultSocialImage = {
   url: "/opengraph-image",
   width: 1200,
   height: 630,
-  alt: DEFAULT_SOCIAL_IMAGE_ALT,
+  alt: defaultSocialImageAlt,
 } as const;
 
 function isCloudflarePreviewDeployment() {

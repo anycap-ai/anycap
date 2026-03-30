@@ -12,6 +12,9 @@ import {
 
 const markdown = toMarkdown(getLandingContent());
 const protectedPaths = ["/dashboard"];
+const legacyRouteRedirects = new Map<string, string>([
+  ["/capabilities/image-read", "/capabilities/image-understanding"],
+]);
 
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
@@ -59,6 +62,14 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  const { locale, pathname } = stripLocalePrefix(normalizedPath);
+  const legacyRedirectPath = legacyRouteRedirects.get(pathname);
+  if (legacyRedirectPath) {
+    const redirectURL = req.nextUrl.clone();
+    redirectURL.pathname = buildLocalizedPath(locale ?? defaultLocale, legacyRedirectPath);
+    return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
+  }
+
   if (normalizedPath === "/") {
     const accept = req.headers.get("accept") ?? "";
     if (!accept.includes("text/html")) {
@@ -71,7 +82,6 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const { locale } = stripLocalePrefix(normalizedPath);
   if (!locale) {
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute) {

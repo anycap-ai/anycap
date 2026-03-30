@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "What is an agent capability runtime?",
   description:
-    "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, and web actions through one interface. AnyCap is an example of an agent-native capability runtime.",
+    "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, image understanding, and video analysis through one interface. AnyCap is an example of an agent-native capability runtime.",
   alternates: { canonical: "/glossary/agent-capability-runtime" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "What is an agent capability runtime?",
     description:
-      "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, and web actions through one interface.",
+      "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, image understanding, and video analysis through one interface.",
   },
 };
 
@@ -31,7 +31,7 @@ const definitionJsonLd = {
   "@type": "DefinedTerm",
   name: "Agent Capability Runtime",
   description:
-    "A software layer that gives AI agents installable capabilities such as image generation, video generation, image read, and web actions through a single interface, rather than requiring separate integrations for each capability.",
+    "A software layer that gives AI agents installable capabilities such as image generation, video generation, image understanding, and video analysis through a single interface, rather than requiring separate integrations for each capability.",
   url: `${siteConfig.url}/glossary/agent-capability-runtime`,
 };
 
@@ -62,8 +62,8 @@ export default function AgentCapabilityRuntimePage() {
             <div className="mt-8 border-l-[3px] border-[#6b7d3a] pl-6 max-w-[700px]">
               <p className="text-base leading-7 text-[#4d5145] md:text-lg">
                 An agent capability runtime is a software layer that gives AI agents installable
-                capabilities — such as image generation, video generation, image read,
-                video analysis, web search, and web crawling — through a single interface. Instead
+                capabilities — such as image generation, video generation, image understanding,
+                and video analysis — through a single interface. Instead
                 of requiring agents to integrate separate SDKs, manage multiple auth flows, and
                 learn different APIs for each capability, a capability runtime provides one install
                 path, one auth flow, and one interface for everything. It sits between the agent
@@ -88,7 +88,7 @@ export default function AgentCapabilityRuntimePage() {
                 <p className="text-base leading-7 text-[#4d5145]">
                   AI agents are increasingly expected to do more than reason and generate text.
                   They need to create images, produce videos, understand screenshots, analyze
-                  recordings, search the web, and interact with external systems. Each of these
+                  recordings, and interact with external systems. Each of these
                   capabilities traditionally requires its own API integration, authentication,
                   and error handling.
                 </p>
@@ -155,7 +155,7 @@ export default function AgentCapabilityRuntimePage() {
               <p className="max-w-[700px] text-base leading-7 text-[#4d5145] mb-6">
                 AnyCap is an agent-native capability runtime built from day one for agent
                 workflows. It gives AI agents installable capabilities including image generation
-                (Seedream 5, Nano Banana Pro), video generation (Veo 3.1), image read,
+                (Seedream 5, Nano Banana Pro), video generation (Veo 3.1), image understanding,
                 and video analysis through one CLI and one interface. It works across Claude Code,
                 Cursor, Codex, OpenCode, and OpenClaw.
               </p>

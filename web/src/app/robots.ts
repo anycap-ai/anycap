@@ -14,8 +14,21 @@ export default function robots(): MetadataRoute.Robots {
     };
   }
 
+  const explicitAiCrawlerRules = [
+    "GPTBot",
+    "OAI-SearchBot",
+    "ChatGPT-User",
+    "ClaudeBot",
+    "PerplexityBot",
+  ].map((userAgent) => ({
+    userAgent,
+    allow: "/",
+    disallow: [...blockedSiteRoutes],
+  }));
+
   return {
     rules: [
+      ...explicitAiCrawlerRules,
       {
         userAgent: "*",
         allow: "/",

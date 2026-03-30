@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
+import { defaultSocialImageAlt } from "@/lib/site";
 
 export const runtime = "edge";
 
-export const alt =
-  "AnyCap gives AI agents image, video, music, speech, search, and crawl capabilities through one command.";
+export const alt = defaultSocialImageAlt;
 
 export const size = {
   width: 1200,
@@ -78,7 +78,7 @@ export default function OpenGraphImage() {
                 maxWidth: "980px",
               }}
             >
-              Every capability your agent needs. One command.
+              Image, video, and vision capabilities. One command.
             </div>
             <div
               style={{
@@ -88,8 +88,9 @@ export default function OpenGraphImage() {
                 maxWidth: "920px",
               }}
             >
-              Image, video, music, speech, search, and crawl through one
-              interface. Built for agents, not adapted from human tools.
+              Image generation, video generation, image understanding, and
+              video analysis through one interface. Built for agents, not
+              adapted from human tools.
             </div>
           </div>
 
@@ -99,17 +100,15 @@ export default function OpenGraphImage() {
               gap: "14px",
               flexWrap: "wrap",
               color: "#6b7d3a",
-              fontSize: "20px",
+              fontSize: "18px",
               textTransform: "",
-              letterSpacing: "0.22em",
+              letterSpacing: "0.12em",
             }}
           >
-            <div>Image</div>
-            <div>Video</div>
-            <div>Music</div>
-            <div>Speech</div>
-            <div>Search</div>
-            <div>Crawl</div>
+            <div>Image Gen</div>
+            <div>Video Gen</div>
+            <div>Vision</div>
+            <div>Video Analysis</div>
           </div>
         </div>
       </div>
