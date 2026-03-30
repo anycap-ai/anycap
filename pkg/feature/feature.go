@@ -28,6 +28,8 @@ const (
 	VideoGenerate = "video.generate"
 	VideoModels   = "video.models"
 	VideoRead     = "video.read"
+	MusicGenerate = "music.generate"
+	MusicModels   = "music.models"
 	Login         = "login"
 )
 
@@ -40,6 +42,8 @@ var defaults = map[string]bool{
 	VideoGenerate: true, // CLI exposes commands; server returns error if not ready
 	VideoModels:   true, // CLI exposes commands; server returns error if not ready
 	VideoRead:     true, // agent-platform real implementation
+	MusicGenerate: true, // CLI exposes commands; server returns error if not ready
+	MusicModels:   true, // CLI exposes commands; server returns error if not ready
 	Login:         true, // auth flow (stub but expected soon)
 }
 

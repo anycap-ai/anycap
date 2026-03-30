@@ -165,7 +165,9 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				payload["source_file"] = singleFileSource
 			}
 
-			// Auto-write anycap.toml with resolved site binding
+			// Auto-write anycap.toml with resolved site binding.
+			// Best-effort: deploy already succeeded, so a config write failure
+			// should not make the command appear to fail.
 			_ = projectconfig.SavePage(projectconfig.PageConfig{
 				SiteID: site.ID,
 				Name:   site.Name,

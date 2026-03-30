@@ -335,7 +335,12 @@ func (s *Service) DeleteSite(ctx context.Context, userID string, siteID int64) (
 		return nil, err
 	}
 
-	// Soft delete and mark slug tombstone
+	// Soft delete and mark slug tombstone.
+	// Note: these two operations are not transactional. If MarkTombstone fails
+	// after SoftDelete succeeds, the slug remains unreserved. This is acceptable:
+	// tombstone failure is low-probability, the site is already deleted, and a
+	// retry of DeleteSite will hit "not found" (idempotent). The slug could
+	// theoretically be reused, which is a minor cosmetic issue, not data loss.
 	if err := s.siteRepo.SoftDelete(ctx, site.SpaceID, site.ID); err != nil {
 		return nil, err
 	}

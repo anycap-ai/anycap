@@ -96,6 +96,8 @@ AnyCap capabilities are organized into two groups:
 Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 Read [references/video-generation.md](references/video-generation.md) when you need to generate videos. Videos are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o product-demo.mp4`). Supports text-to-video and image-to-video via `--reference-image`.
 
+**Long-running commands:** Image generation typically takes 5-30 seconds, video generation 30-120 seconds, and music generation 30-90 seconds. If your runtime supports background or async execution (e.g., spawning subprocesses, background tasks, non-blocking tool calls), prefer running generation commands asynchronously so you can continue other work while waiting. Generation commands are self-contained -- they block until complete and write the result file locally, so they are safe to run in the background without supervision.
+
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
 

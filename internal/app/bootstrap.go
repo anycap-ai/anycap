@@ -193,6 +193,8 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.VideoGenerate: hasVideoExecutionProvider(cfg),
 		feature.VideoModels:   hasCatalogProvider(cfg),
 		feature.VideoRead:     cfg.AgentPlatform.Enabled(),
+		feature.MusicGenerate: hasMusicExecutionProvider(cfg),
+		feature.MusicModels:   hasCatalogProvider(cfg),
 	}
 }
 
@@ -294,7 +296,16 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
-		externalIDMapper := idresolver.NewPostgresExternalIDMapper(db)
+		var externalIDMapper interface {
+			idresolver.IDResolver
+			presenter.IDMapper
+		}
+		if shouldBypassAuthForLocalTest(cfg) {
+			log.Println("external-id: using passthrough mapper (bypass auth enabled)")
+			externalIDMapper = passthroughIDMapperResolver{}
+		} else {
+			externalIDMapper = idresolver.NewPostgresExternalIDMapper(db)
+		}
 		capsUploadRepo := postgres.NewCapsUploadRepo(db)
 		capsTaskRepo := postgres.NewCapsTaskRepo(db)
 		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)
@@ -412,6 +423,10 @@ func buildFeedbackNotifier(cfg config.Config) port.FeedbackNotifier {
 }
 
 func buildCreditClient(cfg config.Config) port.CreditClient {
+	if shouldBypassAuthForLocalTest(cfg) {
+		log.Println("credit: using stub (bypass auth enabled, skipping real billing)")
+		return credit.NewStubClient(nil)
+	}
 	if cfg.Credit.Enabled() {
 		log.Printf("credit: using credit service at %s", cfg.Credit.BaseURL)
 		return credit.NewHTTPClient(cfg.Credit, nil)
@@ -625,6 +640,13 @@ func buildBypassPrincipal() model.Principal {
 		UserID:   userID,
 		AuthType: "local_bypass",
 	}
+}
+
+// passthroughIDMapperResolver combines PassthroughIDResolver and PassthroughIDMapper
+// into a single value for use in bypass-auth dev mode.
+type passthroughIDMapperResolver struct {
+	idresolver.PassthroughIDResolver
+	presenter.PassthroughIDMapper
 }
 
 func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*sqlstore.SQLDB, error) {

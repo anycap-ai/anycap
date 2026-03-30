@@ -1152,3 +1152,353 @@ func TestVideoGenerateRequiresModel(t *testing.T) {
 		t.Fatal("expected error when --model missing")
 	}
 }
+
+// --- Music CLI Tests ---
+
+func TestMusicModels(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "models"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music models failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "mock-music-1") {
+		t.Fatalf("expected mock-music-1 in output, got: %s", output)
+	}
+}
+
+func TestMusicModelsSingleFilter(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "models", "mock-music-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music models single filter failed: %v", err)
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "mock-music-1") {
+		t.Fatalf("expected mock-music-1 in output, got: %s", output)
+	}
+}
+
+func TestMusicModelsNotFound(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "models", "nonexistent"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error for nonexistent model")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Fatalf("expected 'not found' error, got: %v", err)
+	}
+}
+
+func TestMusicModelSchema(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "models", "mock-music-1", "schema"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music model schema failed: %v", err)
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "make_instrumental") {
+		t.Fatalf("expected make_instrumental in schema, got: %s", output)
+	}
+}
+
+func TestMusicGenerate(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--prompt", "lofi night drive", "--model", "mock-music-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music generate failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "success") {
+		t.Fatalf("expected success in output, got: %s", output)
+	}
+	if !strings.Contains(output, "mock-music-1") {
+		t.Fatalf("expected mock-music-1 in output, got: %s", output)
+	}
+}
+
+func TestMusicGenerateWithTags(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--tags", "pop,upbeat", "--model", "mock-music-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music generate with tags failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "success") {
+		t.Fatalf("expected success in output, got: %s", output)
+	}
+}
+
+func TestMusicGenerateRequiresPromptOrTags(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--model", "m"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when neither --prompt nor --tags provided")
+	}
+	if !strings.Contains(err.Error(), "prompt") && !strings.Contains(err.Error(), "tags") {
+		t.Fatalf("expected prompt/tags error, got: %v", err)
+	}
+}
+
+func TestMusicGenerateRequiresModel(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--prompt", "test"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when --model missing")
+	}
+}
+
+func TestMusicGenerateAutoDownload(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	outBase := filepath.Join(tmpDir, "output.mp3")
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--prompt", "test beat", "--model", "mock-music-1", "-o", outBase})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music generate auto-download failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	// Mock returns 2 outputs; with -o, they become output_1.mp3 and output_2.mp3.
+	expected1 := filepath.Join(tmpDir, "output_1.mp3")
+	expected2 := filepath.Join(tmpDir, "output_2.mp3")
+
+	data1, err := os.ReadFile(expected1)
+	if err != nil {
+		t.Fatalf("expected downloaded file at %s: %v", expected1, err)
+	}
+	if string(data1) != "mock-audio-data" {
+		t.Fatalf("expected mock-audio-data, got: %s", string(data1))
+	}
+
+	data2, err := os.ReadFile(expected2)
+	if err != nil {
+		t.Fatalf("expected downloaded file at %s: %v", expected2, err)
+	}
+	if string(data2) != "mock-audio-data" {
+		t.Fatalf("expected mock-audio-data, got: %s", string(data2))
+	}
+
+	// Verify output JSON contains both paths.
+	output := stdout.String()
+	if !strings.Contains(output, expected1) {
+		t.Fatalf("expected output_1 path in result, got: %s", output)
+	}
+	if !strings.Contains(output, expected2) {
+		t.Fatalf("expected output_2 path in result, got: %s", output)
+	}
+}
+
+func TestMusicGenerateMultiOutputDefaultNames(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--prompt", "multi output", "--model", "mock-music-1"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music generate multi-output failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	// Verify output has 2 entries in outputs array.
+	output := stdout.String()
+	var result map[string]any
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		t.Fatalf("failed to parse output JSON: %v\noutput: %s", err, output)
+	}
+	outputs, ok := result["outputs"].([]any)
+	if !ok {
+		t.Fatalf("expected outputs array in result, got: %s", output)
+	}
+	if len(outputs) != 2 {
+		t.Fatalf("expected 2 outputs, got %d: %s", len(outputs), output)
+	}
+
+	// Both should have local_path set.
+	for i, o := range outputs {
+		entry, _ := o.(map[string]any)
+		lp, _ := entry["local_path"].(string)
+		if lp == "" {
+			t.Fatalf("output[%d] missing local_path: %v", i, entry)
+		}
+	}
+}
+
+func TestMusicGenerateWithInstrumental(t *testing.T) {
+	var receivedBody map[string]any
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /v1/music/generate", func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&receivedBody)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"status": "success",
+			"data": map[string]any{
+				"id":          "mus_test",
+				"status":      "success",
+				"model":       "mock-music-1",
+				"outputs":     []map[string]any{},
+				"credit_cost": 2,
+			},
+		})
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"music", "generate", "--prompt", "chill", "--model", "mock-music-1", "--instrumental"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("music generate with --instrumental failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	if receivedBody["make_instrumental"] != true {
+		t.Fatalf("expected make_instrumental=true, got: %v", receivedBody["make_instrumental"])
+	}
+}

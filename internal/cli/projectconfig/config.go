@@ -4,6 +4,7 @@
 package projectconfig
 
 import (
+	"errors"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -35,7 +36,7 @@ type DriveConfig struct {
 func Load() (*Config, error) {
 	var cfg Config
 	if _, err := toml.DecodeFile(Filename, &cfg); err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return &Config{}, nil
 		}
 		return nil, err
