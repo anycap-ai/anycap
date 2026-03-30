@@ -92,9 +92,10 @@ func (s *Service) collectDriveSubtreeNodeIDs(ctx context.Context, spaceID int64,
 		queue = queue[1:]
 
 		parentID := currentDirID
-		children, err := s.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
+		children, _, err := s.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
 			SpaceID:  spaceID,
 			ParentID: &parentID,
+			Limit:    10000,
 		})
 		if err != nil {
 			return nil, nil, err

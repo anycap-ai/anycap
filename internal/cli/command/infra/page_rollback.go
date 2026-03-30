@@ -35,16 +35,13 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				return err
 			}
 
-			versions, err := listPageVersions(cmd.Context(), client, pageID)
-			if err != nil {
-				return err
-			}
-			sourceVersionID, err := pickPageVersionIDByNumber(versions, versionNo)
+			// Use server-side by-number lookup
+			sourceVersion, err := getPageVersionByNumber(cmd.Context(), client, pageID, versionNo)
 			if err != nil {
 				return err
 			}
 
-			rollbackResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+sourceVersionID+"/rollback-clone", map[string]any{})
+			rollbackResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+sourceVersion.ID+"/rollback-clone", map[string]any{})
 			if err != nil {
 				return err
 			}

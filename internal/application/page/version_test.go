@@ -80,8 +80,8 @@ func (r *fakeVersionRepo) UpdateStatus(_ context.Context, id int64, status model
 	return &cloned, nil
 }
 
-func (r *fakeVersionRepo) ListByPageID(_ context.Context, pageID int64) ([]model.PageVersion, error) {
-	ids := r.byPage[pageID]
+func (r *fakeVersionRepo) ListByPageID(_ context.Context, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
+	ids := r.byPage[filter.PageID]
 	items := make([]model.PageVersion, 0, len(ids))
 	for i := len(ids) - 1; i >= 0; i-- {
 		version, ok := r.versions[ids[i]]
@@ -90,7 +90,25 @@ func (r *fakeVersionRepo) ListByPageID(_ context.Context, pageID int64) ([]model
 		}
 		items = append(items, *version)
 	}
-	return items, nil
+	total := len(items)
+	if filter.Offset >= len(items) {
+		return []model.PageVersion{}, total, nil
+	}
+	end := filter.Offset + filter.Limit
+	if end > len(items) || filter.Limit <= 0 {
+		end = len(items)
+	}
+	return items[filter.Offset:end], total, nil
+}
+
+func (r *fakeVersionRepo) GetByPageIDAndVersionNo(_ context.Context, pageID, versionNo int64) (*model.PageVersion, error) {
+	for _, version := range r.versions {
+		if version.PageID == pageID && version.VersionNo == versionNo {
+			cloned := *version
+			return &cloned, nil
+		}
+	}
+	return nil, nil
 }
 
 type fakeVersionUploadSessionRepo struct {
@@ -309,7 +327,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		t.Fatalf("expected verified status, got %s", finalized.Status)
 	}
 
-	versions, err := service.ListVersions(context.Background(), "u-1", 1)
+	versions, _, err := service.ListVersions(context.Background(), "u-1", 1, model.ListPageVersionsFilter{Limit: 50})
 	if err != nil {
 		t.Fatalf("ListVersions() error = %v", err)
 	}

@@ -18,6 +18,8 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		noPassword    bool
 		spaFallback   bool
 		noSPAFallback bool
+		badge         bool
+		noBadge       bool
 	)
 
 	cmd := &cobra.Command{
@@ -35,6 +37,9 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 			}
 			if spaFallback && noSPAFallback {
 				return fmt.Errorf("--spa-fallback and --no-spa-fallback cannot be used together")
+			}
+			if badge && noBadge {
+				return fmt.Errorf("--badge and --no-badge cannot be used together")
 			}
 			if accessMode != "" && accessMode != "public" && accessMode != "password" && accessMode != "private_reserved" {
 				return fmt.Errorf("--access must be one of: public, password, private_reserved")
@@ -59,6 +64,12 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 			if noSPAFallback {
 				payload["spa_fallback"] = false
 			}
+			if badge {
+				payload["show_badge"] = true
+			}
+			if noBadge {
+				payload["show_badge"] = false
+			}
 			if len(payload) == 0 {
 				return fmt.Errorf("no update fields provided")
 			}
@@ -77,6 +88,8 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 	cmd.Flags().BoolVar(&noPassword, "no-password", false, "Remove site password")
 	cmd.Flags().BoolVar(&spaFallback, "spa-fallback", false, "Enable SPA fallback")
 	cmd.Flags().BoolVar(&noSPAFallback, "no-spa-fallback", false, "Disable SPA fallback")
+	cmd.Flags().BoolVar(&badge, "badge", false, "Enable AnyCap badge on pages")
+	cmd.Flags().BoolVar(&noBadge, "no-badge", false, "Disable AnyCap badge on pages")
 
 	return cmd
 }

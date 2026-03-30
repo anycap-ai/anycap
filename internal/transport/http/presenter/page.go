@@ -15,6 +15,7 @@ type PageSiteDTO struct {
 	CurrentVersionID *string `json:"current_version_id,omitempty"`
 	AccessMode       string  `json:"access_mode"`
 	SPAFallback      bool    `json:"spa_fallback"`
+	ShowBadge        bool    `json:"show_badge"`
 	PageURL          string  `json:"page_url,omitempty"`
 	EdgeVersion      int64   `json:"edge_version"`
 	CreatedAt        string  `json:"created_at"`
@@ -106,6 +107,7 @@ func PresentPageSites(ctx context.Context, mapper IDMapper, sites []model.PageSi
 			CurrentVersionID: currentVersionExternalID,
 			AccessMode:       string(site.AccessMode),
 			SPAFallback:      site.SPAFallback,
+			ShowBadge:        site.ShowBadge,
 			PageURL:          site.PageURL,
 			EdgeVersion:      site.EdgeVersion,
 			CreatedAt:        site.CreatedAt.UTC().Format(TimeLayout),

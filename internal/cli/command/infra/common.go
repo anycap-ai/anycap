@@ -329,6 +329,20 @@ func listPageSites(ctx context.Context, client *httpclient.Client) ([]pageSiteSu
 	return data.Items, nil
 }
 
+func listPageSitesByName(ctx context.Context, client *httpclient.Client, name string) ([]pageSiteSummary, error) {
+	resp, err := client.Get(ctx, "/v1/pages?name="+url.QueryEscape(name)+"&limit=1")
+	if err != nil {
+		return nil, err
+	}
+	data, err := decodeSuccessData[struct {
+		Items []pageSiteSummary `json:"items"`
+	}](resp)
+	if err != nil {
+		return nil, err
+	}
+	return data.Items, nil
+}
+
 func listPageVersions(ctx context.Context, client *httpclient.Client, pageID string) ([]pageVersionSummary, error) {
 	resp, err := client.Get(ctx, "/v1/pages/"+url.PathEscape(pageID)+"/versions")
 	if err != nil {
@@ -341,6 +355,14 @@ func listPageVersions(ctx context.Context, client *httpclient.Client, pageID str
 		return nil, err
 	}
 	return data.Items, nil
+}
+
+func getPageVersionByNumber(ctx context.Context, client *httpclient.Client, pageID string, versionNo int64) (pageVersionSummary, error) {
+	resp, err := client.Get(ctx, fmt.Sprintf("/v1/pages/%s/versions/by-number/%d", url.PathEscape(pageID), versionNo))
+	if err != nil {
+		return pageVersionSummary{}, err
+	}
+	return decodeSuccessData[pageVersionSummary](resp)
 }
 
 func pickPageVersionIDByNumber(versions []pageVersionSummary, versionNo int64) (string, error) {

@@ -210,6 +210,12 @@ func TestDriveShareParsesDayDuration(t *testing.T) {
 
 func TestPageDeployWithoutNameAndPublish(t *testing.T) {
 	tmpDir := t.TempDir()
+
+	// Change CWD to tmpDir so projectconfig reads/writes are isolated
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
 	if err := os.WriteFile(filepath.Join(tmpDir, "index.html"), []byte("<html></html>"), 0644); err != nil {
 		t.Fatalf("write index: %v", err)
 	}
@@ -314,12 +320,9 @@ func TestPageRollbackAutoPublishWhenCurrentPublished(t *testing.T) {
 				"page_url":           "https://page-docs-live.anycap.cloud",
 				"current_version_id": "pv_3",
 			})
-		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/pg_9/versions":
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/pages/pg_9/versions/by-number/1":
 			writeSuccessEnvelope(t, w, map[string]any{
-				"items": []map[string]any{
-					{"id": "pv_101", "version_no": 1, "status": "archived"},
-					{"id": "pv_102", "version_no": 2, "status": "published"},
-				},
+				"id": "pv_101", "version_no": 1, "status": "archived",
 			})
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/pages/pg_9/versions/pv_101/rollback-clone":
 			writeSuccessEnvelope(t, w, map[string]any{

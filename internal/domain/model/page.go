@@ -60,6 +60,7 @@ type PageSite struct {
 	PasswordHash     *string
 	PasswordSalt     *string
 	SPAFallback      bool
+	ShowBadge        bool
 	PageURL          string
 	EdgeVersion      int64
 	CreatedAt        time.Time
@@ -114,4 +115,20 @@ type UpdatePageSiteInput struct {
 	PasswordSalt   *string
 	UpdatePassword bool
 	SPAFallback    *bool
+	ShowBadge      *bool
+}
+
+// ListPageSitesFilter controls pagination and filtering for page site listing.
+type ListPageSitesFilter struct {
+	SpaceID int64
+	Name    *string // exact match filter (nil = no filter)
+	Limit   int
+	Offset  int
+}
+
+// ListPageVersionsFilter controls pagination for page version listing.
+type ListPageVersionsFilter struct {
+	PageID int64
+	Limit  int
+	Offset int
 }

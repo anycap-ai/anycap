@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.GET("/pages", h.ListSites)
 	group.GET("/pages/:id", h.GetSite)
 	group.PATCH("/pages/:id", h.UpdateSite)
+	group.DELETE("/pages/:id", h.DeleteSite)
 	group.POST("/pages/:id/versions", h.CreateVersion)
 	group.POST("/pages/:id/versions/:vid/files/presign", h.PresignVersionAsset)
 	group.POST("/pages/:id/versions/:vid/files/complete", h.CompleteVersionAsset)
@@ -33,6 +34,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.POST("/pages/:id/versions/:vid/rollback-clone", h.RollbackCloneVersion)
 	group.POST("/pages/:id/unpublish", h.Unpublish)
 	group.GET("/pages/:id/versions", h.ListVersions)
+	group.GET("/pages/:id/versions/by-number/:no", h.GetVersionByNumber)
 }
 
 type createPageSiteRequest struct {

@@ -3,7 +3,9 @@ package page
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
@@ -195,7 +197,17 @@ func (h *Handler) ListVersions(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	versions, err := h.service.ListVersions(c, principal.UserID, siteID)
+	limit, offset := handlers.ParseLimitOffset(
+		string(ctx.Query("limit")),
+		string(ctx.Query("offset")),
+	)
+
+	filter := model.ListPageVersionsFilter{
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	versions, total, err := h.service.ListVersions(c, principal.UserID, siteID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "list_page_versions_failed", err.Error())
 		return
@@ -208,8 +220,46 @@ func (h *Handler) ListVersions(c context.Context, ctx *app.RequestContext) {
 	}
 	handlers.WriteSuccess(ctx, map[string]any{
 		"items": presentedVersions,
-		"total": len(presentedVersions),
+		"total": total,
 	})
+}
+
+func (h *Handler) GetVersionByNumber(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		return
+	}
+
+	versionNo, err := strconv.ParseInt(string(ctx.Param("no")), 10, 64)
+	if err != nil || versionNo <= 0 {
+		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_version_number", "version number must be a positive integer")
+		return
+	}
+
+	version, err := h.service.GetVersionByNumber(c, principal.UserID, siteID, versionNo)
+	if err != nil {
+		handlers.WriteError(ctx, statusCodeForPageError(err), "get_page_version_by_number_failed", err.Error())
+		return
+	}
+
+	presented, err := h.presentPageVersion(c, version)
+	if err != nil {
+		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_version_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(ctx, presented)
 }
 
 func (h *Handler) PublishVersion(c context.Context, ctx *app.RequestContext) {

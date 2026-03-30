@@ -37,7 +37,7 @@ func (r *PageSiteRepo) Create(ctx context.Context, input model.CreatePageSiteInp
 			spa_fallback
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
+		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
 	`, input.SpaceID, strings.TrimSpace(input.Name), input.PageName, string(input.AccessMode), input.PasswordHash, input.PasswordSalt, input.SPAFallback)
 
 	site, err := scanPageSite(row)
@@ -47,19 +47,42 @@ func (r *PageSiteRepo) Create(ctx context.Context, input model.CreatePageSiteInp
 	return site, nil
 }
 
-func (r *PageSiteRepo) ListBySpace(ctx context.Context, spaceID int64) ([]model.PageSite, error) {
+func (r *PageSiteRepo) ListBySpace(ctx context.Context, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
 	if r == nil || r.db == nil {
-		return nil, fmt.Errorf("page site repo db is not configured")
+		return nil, 0, fmt.Errorf("page site repo db is not configured")
 	}
 
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
+	// Build WHERE clause
+	where := "space_id = $1 AND deleted_at IS NULL"
+	args := []any{filter.SpaceID}
+	argIdx := 2
+
+	if filter.Name != nil {
+		where += fmt.Sprintf(" AND name = $%d", argIdx)
+		args = append(args, *filter.Name)
+		argIdx++
+	}
+
+	// Count total
+	var total int
+	countQuery := "SELECT COUNT(*) FROM page_sites WHERE " + where
+	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count page sites: %w", err)
+	}
+
+	// Fetch page
+	selectQuery := fmt.Sprintf(`
+		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
 		FROM page_sites
-		WHERE space_id = $1 AND deleted_at IS NULL
+		WHERE %s
 		ORDER BY updated_at DESC, id DESC
-	`, spaceID)
+		LIMIT $%d OFFSET $%d
+	`, where, argIdx, argIdx+1)
+	args = append(args, filter.Limit, filter.Offset)
+
+	rows, err := r.db.QueryContext(ctx, selectQuery, args...)
 	if err != nil {
-		return nil, fmt.Errorf("list page sites by space: %w", err)
+		return nil, 0, fmt.Errorf("list page sites by space: %w", err)
 	}
 	defer rows.Close()
 
@@ -67,14 +90,14 @@ func (r *PageSiteRepo) ListBySpace(ctx context.Context, spaceID int64) ([]model.
 	for rows.Next() {
 		site, scanErr := scanPageSite(rows)
 		if scanErr != nil {
-			return nil, fmt.Errorf("scan page site: %w", scanErr)
+			return nil, 0, fmt.Errorf("scan page site: %w", scanErr)
 		}
 		items = append(items, *site)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate page sites: %w", err)
+		return nil, 0, fmt.Errorf("iterate page sites: %w", err)
 	}
-	return items, nil
+	return items, total, nil
 }
 
 func (r *PageSiteRepo) GetByID(ctx context.Context, id int64) (*model.PageSite, error) {
@@ -83,7 +106,7 @@ func (r *PageSiteRepo) GetByID(ctx context.Context, id int64) (*model.PageSite, 
 	}
 
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
+		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
 		FROM page_sites
 		WHERE id = $1 AND deleted_at IS NULL
 	`, id)
@@ -126,6 +149,11 @@ func (r *PageSiteRepo) Update(ctx context.Context, input model.UpdatePageSiteInp
 		spaFallback = *input.SPAFallback
 	}
 
+	showBadge := existing.ShowBadge
+	if input.ShowBadge != nil {
+		showBadge = *input.ShowBadge
+	}
+
 	passwordHash := existing.PasswordHash
 	passwordSalt := existing.PasswordSalt
 	if input.UpdatePassword {
@@ -140,11 +168,12 @@ func (r *PageSiteRepo) Update(ctx context.Context, input model.UpdatePageSiteInp
 			password_hash = $5,
 			password_salt = $6,
 			spa_fallback = $7,
+			show_badge = $8,
 			edge_version = edge_version + 1,
 			updated_at = NOW()
 		WHERE id = $1 AND space_id = $2 AND deleted_at IS NULL
-		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
-	`, input.ID, input.SpaceID, name, string(accessMode), passwordHash, passwordSalt, spaFallback)
+		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
+	`, input.ID, input.SpaceID, name, string(accessMode), passwordHash, passwordSalt, spaFallback, showBadge)
 
 	site, err := scanPageSite(row)
 	if err != nil {
@@ -164,7 +193,7 @@ func (r *PageSiteRepo) SetCurrentVersion(ctx context.Context, spaceID, id int64,
 			edge_version = edge_version + 1,
 			updated_at = NOW()
 		WHERE id = $1 AND space_id = $2 AND deleted_at IS NULL
-		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
+		RETURNING id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
 	`, id, spaceID, versionID)
 
 	site, err := scanPageSite(row)
@@ -205,7 +234,7 @@ func (r *PageSiteRepo) SoftDelete(ctx context.Context, spaceID, id int64) error 
 
 func (r *PageSiteRepo) getByIDInSpace(ctx context.Context, id, spaceID int64) (*model.PageSite, error) {
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, edge_version, created_at, updated_at, deleted_at
+		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at
 		FROM page_sites
 		WHERE id = $1 AND space_id = $2 AND deleted_at IS NULL
 	`, id, spaceID)
@@ -240,6 +269,7 @@ func scanPageSite(row rowScanner) (*model.PageSite, error) {
 		&passwordHash,
 		&passwordSalt,
 		&site.SPAFallback,
+		&site.ShowBadge,
 		&site.EdgeVersion,
 		&site.CreatedAt,
 		&site.UpdatedAt,

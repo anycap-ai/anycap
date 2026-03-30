@@ -148,10 +148,10 @@ func (s *Service) fillPageURLs(sites []model.PageSite) {
 
 func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
-		return nil, fmt.Errorf("page service is not configured")
+		return nil, model.ErrNotConfigured("page service is not configured")
 	}
 	if strings.TrimSpace(name) == "" {
-		return nil, fmt.Errorf("site name is required")
+		return nil, model.ErrValidation("site name is required")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
@@ -191,33 +191,34 @@ func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.P
 		return site, nil
 	}
 
-	return nil, fmt.Errorf("failed to allocate unique page name")
+	return nil, model.ErrConflict("failed to allocate unique page name")
 }
 
-func (s *Service) ListSites(ctx context.Context, userID string) ([]model.PageSite, error) {
+func (s *Service) ListSites(ctx context.Context, userID string, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
-		return nil, fmt.Errorf("page service is not configured")
+		return nil, 0, model.ErrNotConfigured("page service is not configured")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	sites, err := s.siteRepo.ListBySpace(ctx, space.ID)
+	filter.SpaceID = space.ID
+	sites, total, err := s.siteRepo.ListBySpace(ctx, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	s.fillPageURLs(sites)
-	return sites, nil
+	return sites, total, nil
 }
 
 func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
-		return nil, fmt.Errorf("page service is not configured")
+		return nil, model.ErrNotConfigured("page service is not configured")
 	}
 	if siteID <= 0 {
-		return nil, fmt.Errorf("id must be greater than zero")
+		return nil, model.ErrValidation("id must be greater than zero")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
@@ -230,7 +231,7 @@ func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*mo
 		return nil, err
 	}
 	if site == nil || site.SpaceID != space.ID {
-		return nil, fmt.Errorf("page site not found")
+		return nil, model.ErrNotFound("page site not found")
 	}
 
 	s.fillPageURL(site)
@@ -239,10 +240,10 @@ func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*mo
 
 func (s *Service) UpdateSite(ctx context.Context, userID string, input model.UpdatePageSiteInput) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
-		return nil, fmt.Errorf("page service is not configured")
+		return nil, model.ErrNotConfigured("page service is not configured")
 	}
 	if input.ID <= 0 {
-		return nil, fmt.Errorf("id must be greater than zero")
+		return nil, model.ErrValidation("id must be greater than zero")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
@@ -255,16 +256,16 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 		return nil, err
 	}
 	if existing == nil || existing.SpaceID != space.ID {
-		return nil, fmt.Errorf("page site not found")
+		return nil, model.ErrNotFound("page site not found")
 	}
 
 	input.SpaceID = space.ID
 
 	if input.Name != nil && strings.TrimSpace(*input.Name) == "" {
-		return nil, fmt.Errorf("name is required")
+		return nil, model.ErrValidation("name is required")
 	}
 	if input.AccessMode != nil && !isValidAccessMode(*input.AccessMode) {
-		return nil, fmt.Errorf("access_mode must be public, password or private_reserved")
+		return nil, model.ErrValidation("access_mode must be public, password or private_reserved")
 	}
 
 	if input.AccessMode != nil && *input.AccessMode == model.PageAccessModePublic {
@@ -275,7 +276,7 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 
 	if input.AccessMode != nil && *input.AccessMode == model.PageAccessModePassword && !input.UpdatePassword {
 		if existing.PasswordHash == nil || existing.PasswordSalt == nil {
-			return nil, fmt.Errorf("password is required when access_mode=password")
+			return nil, model.ErrValidation("password is required when access_mode=password")
 		}
 	}
 
@@ -284,11 +285,11 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 			// Explicit clear path.
 		} else {
 			if input.PasswordHash == nil {
-				return nil, fmt.Errorf("password is required")
+				return nil, model.ErrValidation("password is required")
 			}
 			password := strings.TrimSpace(*input.PasswordHash)
 			if password == "" {
-				return nil, fmt.Errorf("password is required")
+				return nil, model.ErrValidation("password is required")
 			}
 			hash, salt, hashErr := security.HashPasswordPBKDF2SHA256(password, s.passwordPepper)
 			if hashErr != nil {
@@ -304,16 +305,61 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 		return updatedSite, err
 	}
 
-	jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostSync, updatedSite.ID, updatedSite.EdgeVersion, nil)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.waitKVSyncJobs(ctx, jobID); err != nil {
-		return nil, err
+	// Q2: Conditional KV sync -- only enqueue when edge-relevant fields changed
+	// and site has a published version (unpublished sites have no KV entry).
+	edgeRelevant := input.AccessMode != nil || input.UpdatePassword || input.SPAFallback != nil || input.ShowBadge != nil
+	if edgeRelevant && updatedSite.CurrentVersionID != nil {
+		jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostSync, updatedSite.ID, updatedSite.EdgeVersion, nil)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.waitKVSyncJobs(ctx, jobID); err != nil {
+			return nil, err
+		}
 	}
 
 	s.fillPageURL(updatedSite)
 	return updatedSite, nil
+}
+
+func (s *Service) DeleteSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error) {
+	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
+		return nil, model.ErrNotConfigured("page service is not configured")
+	}
+	if siteID <= 0 {
+		return nil, model.ErrValidation("id must be greater than zero")
+	}
+
+	site, err := s.GetSite(ctx, userID, siteID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Soft delete and mark slug tombstone
+	if err := s.siteRepo.SoftDelete(ctx, site.SpaceID, site.ID); err != nil {
+		return nil, err
+	}
+	if err := s.slugRepo.MarkTombstone(ctx, site.PageName, site.ID); err != nil {
+		return nil, err
+	}
+
+	// If site was published, enqueue KV delete job
+	if site.CurrentVersionID != nil {
+		jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostDelete, site.ID, site.EdgeVersion+1, model.KVSyncPageHostDeletePayload{
+			Hostname: model.FormatPageHostname(s.pageHostFormat, site.PageName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if err := s.waitKVSyncJobs(ctx, jobID); err != nil {
+			return nil, err
+		}
+	}
+
+	// Return site with deleted_at populated
+	now := s.now()
+	site.DeletedAt = &now
+	return site, nil
 }
 
 func fallbackSiteName(name string) string {
@@ -327,7 +373,7 @@ func fallbackSiteName(name string) string {
 func generatePageName(name string) (string, error) {
 	base := normalizeSlug(name)
 	if base == "" {
-		return "", fmt.Errorf("site name must contain at least one alphanumeric character")
+		return "", model.ErrValidation("site name must contain at least one alphanumeric character")
 	}
 	if len(base) > 30 {
 		base = strings.Trim(base[:30], "-")
@@ -361,20 +407,24 @@ func normalizeSlug(value string) string {
 	return value
 }
 
+// Q3: Fix randomString modulo bias using rejection sampling.
 func randomString(length int) (string, error) {
 	if length <= 0 {
 		return "", nil
 	}
 
 	const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+	const maxValid = 252 // largest multiple of 36 that fits in a byte (36 * 7 = 252)
 	buf := make([]byte, length)
-	randomBytes := make([]byte, length)
-	if _, err := rand.Read(randomBytes); err != nil {
-		return "", fmt.Errorf("generate random string: %w", err)
-	}
-
-	for i := 0; i < length; i++ {
-		buf[i] = alphabet[int(randomBytes[i])%len(alphabet)]
+	for i := 0; i < length; {
+		b := make([]byte, 1)
+		if _, err := rand.Read(b); err != nil {
+			return "", fmt.Errorf("generate random string: %w", err)
+		}
+		if b[0] < maxValid {
+			buf[i] = alphabet[b[0]%byte(len(alphabet))]
+			i++
+		}
 	}
 	return string(buf), nil
 }

@@ -37,8 +37,8 @@ type fakeProjectorPageSiteRepo struct {
 func (r *fakeProjectorPageSiteRepo) Create(context.Context, model.CreatePageSiteInput) (*model.PageSite, error) {
 	return nil, fmt.Errorf("not implemented")
 }
-func (r *fakeProjectorPageSiteRepo) ListBySpace(context.Context, int64) ([]model.PageSite, error) {
-	return nil, fmt.Errorf("not implemented")
+func (r *fakeProjectorPageSiteRepo) ListBySpace(context.Context, model.ListPageSitesFilter) ([]model.PageSite, int, error) {
+	return nil, 0, fmt.Errorf("not implemented")
 }
 func (r *fakeProjectorPageSiteRepo) GetByID(_ context.Context, _ int64) (*model.PageSite, error) {
 	if r.site == nil {
@@ -77,7 +77,10 @@ func (r *fakeProjectorPageVersionRepo) GetByID(_ context.Context, _ int64) (*mod
 func (r *fakeProjectorPageVersionRepo) UpdateStatus(context.Context, int64, model.PageVersionStatus) (*model.PageVersion, error) {
 	return nil, fmt.Errorf("not implemented")
 }
-func (r *fakeProjectorPageVersionRepo) ListByPageID(context.Context, int64) ([]model.PageVersion, error) {
+func (r *fakeProjectorPageVersionRepo) ListByPageID(context.Context, model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *fakeProjectorPageVersionRepo) GetByPageIDAndVersionNo(context.Context, int64, int64) (*model.PageVersion, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

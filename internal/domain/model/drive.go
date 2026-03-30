@@ -72,6 +72,8 @@ type UpdateDriveNodeInput struct {
 type ListDriveNodesFilter struct {
 	SpaceID  int64
 	ParentID *int64
+	Limit    int
+	Offset   int
 }
 
 type AttachDriveNodeStorageInput struct {

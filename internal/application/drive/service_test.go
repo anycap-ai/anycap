@@ -72,7 +72,7 @@ func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNo
 	return cloneDriveNode(node), nil
 }
 
-func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, error) {
+func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	items := make([]model.DriveNode, 0)
 	for _, node := range r.nodes {
 		if node.DeletedAt != nil || node.SpaceID != filter.SpaceID {
@@ -83,7 +83,18 @@ func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDri
 		}
 		items = append(items, *cloneDriveNode(node))
 	}
-	return items, nil
+	total := len(items)
+	if filter.Limit > 0 {
+		if filter.Offset >= len(items) {
+			return []model.DriveNode{}, total, nil
+		}
+		end := filter.Offset + filter.Limit
+		if end > len(items) {
+			end = len(items)
+		}
+		items = items[filter.Offset:end]
+	}
+	return items, total, nil
 }
 
 func (r *fakeDriveNodeRepo) Update(_ context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error) {
@@ -204,7 +215,7 @@ func TestListNodes_RejectsFileParent(t *testing.T) {
 	}}
 	service := NewService(&fakeSpaceService{space: space}, repo)
 
-	_, err := service.ListNodes(context.Background(), "u-1", &parentID)
+	_, _, err := service.ListNodes(context.Background(), "u-1", &parentID, model.ListDriveNodesFilter{Limit: 50})
 	if err == nil || !strings.Contains(err.Error(), "parent node must be a folder") {
 		t.Fatalf("expected parent folder validation error, got %v", err)
 	}

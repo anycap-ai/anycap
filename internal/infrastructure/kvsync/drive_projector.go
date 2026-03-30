@@ -182,9 +182,10 @@ func (p *DriveProjector) projectDirChildren(ctx context.Context, job model.KVSyn
 		return ProjectResultObsolete, nil
 	}
 
-	children, err := p.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
+	children, _, err := p.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
 		SpaceID:  dirNode.SpaceID,
 		ParentID: &payload.DirID,
+		Limit:    10000,
 	})
 	if err != nil {
 		return ProjectResultDone, err

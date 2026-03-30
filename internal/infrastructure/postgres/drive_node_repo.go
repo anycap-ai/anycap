@@ -75,21 +75,32 @@ func (r *DriveNodeRepo) GetByID(ctx context.Context, id int64) (*model.DriveNode
 	return node, nil
 }
 
-func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, error) {
+func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	if r == nil || r.db == nil {
-		return nil, fmt.Errorf("drive node repo db is not configured")
+		return nil, 0, fmt.Errorf("drive node repo db is not configured")
 	}
 
-	rows, err := r.db.QueryContext(ctx, `
+	baseWhere := `space_id = $1
+		  AND (($2::bigint IS NULL AND parent_id IS NULL) OR parent_id = $2)
+		  AND deleted_at IS NULL`
+
+	var total int
+	countQuery := "SELECT COUNT(*) FROM drive_nodes WHERE " + baseWhere
+	if err := r.db.QueryRowContext(ctx, countQuery, filter.SpaceID, filter.ParentID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count drive nodes: %w", err)
+	}
+
+	query := fmt.Sprintf(`
 		SELECT id, space_id, parent_id, kind, name, storage_object_id, size, mime, edge_version, created_by, created_at, updated_at, deleted_at
 		FROM drive_nodes
-		WHERE space_id = $1
-		  AND (($2::bigint IS NULL AND parent_id IS NULL) OR parent_id = $2)
-		  AND deleted_at IS NULL
+		WHERE %s
 		ORDER BY kind DESC, name ASC, id ASC
-	`, filter.SpaceID, filter.ParentID)
+		LIMIT $3 OFFSET $4
+	`, baseWhere)
+
+	rows, err := r.db.QueryContext(ctx, query, filter.SpaceID, filter.ParentID, filter.Limit, filter.Offset)
 	if err != nil {
-		return nil, fmt.Errorf("list drive nodes by parent: %w", err)
+		return nil, 0, fmt.Errorf("list drive nodes by parent: %w", err)
 	}
 	defer rows.Close()
 
@@ -97,14 +108,14 @@ func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDrive
 	for rows.Next() {
 		node, scanErr := scanDriveNode(rows)
 		if scanErr != nil {
-			return nil, fmt.Errorf("scan drive node: %w", scanErr)
+			return nil, 0, fmt.Errorf("scan drive node: %w", scanErr)
 		}
 		items = append(items, *node)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate drive nodes: %w", err)
+		return nil, 0, fmt.Errorf("iterate drive nodes: %w", err)
 	}
-	return items, nil
+	return items, total, nil
 }
 
 func (r *DriveNodeRepo) Update(ctx context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error) {

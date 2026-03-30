@@ -23,18 +23,21 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 			}
 
 			client := clientFactory()
-			versions, err := listPageVersions(cmd.Context(), client, pageID)
-			if err != nil {
-				return err
-			}
 
 			var versionID string
 			if versionNo > 0 {
-				versionID, err = pickPageVersionIDByNumber(versions, versionNo)
+				// Use server-side by-number lookup
+				version, err := getPageVersionByNumber(cmd.Context(), client, pageID, versionNo)
 				if err != nil {
 					return err
 				}
+				versionID = version.ID
 			} else {
+				// Fallback: list and pick latest verified
+				versions, err := listPageVersions(cmd.Context(), client, pageID)
+				if err != nil {
+					return err
+				}
 				versionID, err = pickLatestVerifiedVersionID(versions)
 				if err != nil {
 					return err

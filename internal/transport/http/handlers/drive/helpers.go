@@ -3,10 +3,10 @@ package drive
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
@@ -77,18 +77,21 @@ func (h *Handler) presentDriveShareView(ctx context.Context, view *model.DriveSh
 }
 
 func statusCodeForDriveError(err error) int {
-	switch {
-	case err == nil:
+	if err == nil {
 		return consts.StatusOK
-	case handlers.ContainsAny(err.Error(), "required", "must be", "invalid"):
-		return consts.StatusBadRequest
-	case handlers.ContainsAny(err.Error(), "not found"):
-		return consts.StatusNotFound
-	case handlers.ContainsAny(err.Error(), "duplicate", "unique"):
-		return consts.StatusConflict
-	case handlers.ContainsAny(err.Error(), "not configured"):
-		return consts.StatusServiceUnavailable
-	default:
-		return consts.StatusInternalServerError
 	}
+	var domainErr *model.DomainError
+	if errors.As(err, &domainErr) {
+		switch domainErr.Code {
+		case "validation":
+			return consts.StatusBadRequest
+		case "not_found":
+			return consts.StatusNotFound
+		case "conflict":
+			return consts.StatusConflict
+		case "not_configured":
+			return consts.StatusServiceUnavailable
+		}
+	}
+	return consts.StatusInternalServerError
 }
