@@ -149,6 +149,9 @@ func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.P
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
 		return nil, fmt.Errorf("page service is not configured")
 	}
+	if strings.TrimSpace(name) == "" {
+		return nil, fmt.Errorf("site name is required")
+	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
 	if err != nil {
@@ -323,13 +326,10 @@ func fallbackSiteName(name string) string {
 func generatePageName(name string) (string, error) {
 	base := normalizeSlug(name)
 	if base == "" {
-		base = "site"
+		return "", fmt.Errorf("site name must contain at least one alphanumeric character")
 	}
 	if len(base) > 30 {
 		base = strings.Trim(base[:30], "-")
-	}
-	if base == "" {
-		base = "site"
 	}
 
 	suffix, err := randomString(pageNameRandomLength)
