@@ -20,6 +20,7 @@ func NewPageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobr
 		newPageInfoCmd(clientFactory, stdout),
 		newPageSetCmd(clientFactory, stdout),
 		newPageDeployCmd(clientFactory, stdout),
+		newPageDeleteCmd(clientFactory, stdout),
 		newPagePublishCmd(clientFactory, stdout),
 		newPageUnpublishCmd(clientFactory, stdout),
 		newPageVersionsCmd(clientFactory, stdout),

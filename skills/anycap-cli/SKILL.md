@@ -3,12 +3,14 @@ name: anycap-cli
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
   image read, video analysis, music composition, text-to-speech,
-  web search, web crawling, file download, and more. Use when the agent needs
-  to generate images, analyze images or video, produce audio/music, search or
-  crawl the web, or download remote files. Also use when the agent needs to
-  authenticate with AnyCap (login, API key, credentials), or when encountering
-  errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on
-  mentions of AnyCap, multimodal capabilities, or AI-generated media.
+  web search, web crawling, file download, static site hosting, and cloud
+  file storage. Use when the agent needs to generate images, analyze images
+  or video, produce audio/music, search or crawl the web, download remote
+  files, deploy static sites, or store and share files. Also use when the
+  agent needs to authenticate with AnyCap (login, API key, credentials),
+  or when encountering errors from AnyCap to submit feedback via
+  'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities,
+  AI-generated media, page hosting, or drive storage.
 metadata:
   version: "dev"
   website: https://anycap.ai
@@ -109,6 +111,29 @@ Use `anycap feedback --type feature` to request prioritization of upcoming capab
 
 ```bash
 anycap download <url> [-o path]
+```
+
+## Infrastructure
+
+AnyCap provides infrastructure services for agents to host content and store files.
+
+**Page Hosting** -- deploy static sites to AnyCap's edge network.
+Read [references/page.md](references/page.md) when you need to deploy HTML files, static sites, or generated reports. Sites get a unique URL and support versioning, rollback, and badge opt-out.
+
+```bash
+# Quick deploy (writes anycap.toml for future deploys)
+anycap page deploy ./dist --name "My Site" --publish
+
+# Subsequent deploys read site from anycap.toml
+anycap page deploy ./dist --publish
+```
+
+**Drive Storage** -- upload, organize, and share files.
+Read [references/drive.md](references/drive.md) when you need to upload files, create folders, or generate share links.
+
+```bash
+anycap drive upload result.pdf --parent-path /reports
+anycap drive share --src-path /reports/result.pdf
 ```
 
 ## Feedback

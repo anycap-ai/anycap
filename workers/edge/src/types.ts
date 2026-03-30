@@ -71,6 +71,7 @@ export type PageHostRecord = {
 	current_version_id: number;
 	asset_prefix: string;
 	spa_fallback: boolean;
+	show_badge?: boolean;
 	access_mode: "public" | "password" | "private_reserved";
 	password_hash?: string | null;
 	password_salt?: string | null;

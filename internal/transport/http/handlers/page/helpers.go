@@ -2,9 +2,9 @@ package page
 
 import (
 	"context"
+	"errors"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -43,18 +43,21 @@ func (h *Handler) presentPageVersionPresign(ctx context.Context, input *model.Pa
 }
 
 func statusCodeForPageError(err error) int {
-	switch {
-	case err == nil:
+	if err == nil {
 		return consts.StatusOK
-	case handlers.ContainsAny(err.Error(), "required", "must be", "invalid", "at least one", "empty"):
-		return consts.StatusBadRequest
-	case handlers.ContainsAny(err.Error(), "not found"):
-		return consts.StatusNotFound
-	case handlers.ContainsAny(err.Error(), "duplicate", "unique"):
-		return consts.StatusConflict
-	case handlers.ContainsAny(err.Error(), "not configured"):
-		return consts.StatusServiceUnavailable
-	default:
-		return consts.StatusInternalServerError
 	}
+	var domainErr *model.DomainError
+	if errors.As(err, &domainErr) {
+		switch domainErr.Code {
+		case "validation":
+			return consts.StatusBadRequest
+		case "not_found":
+			return consts.StatusNotFound
+		case "conflict":
+			return consts.StatusConflict
+		case "not_configured":
+			return consts.StatusServiceUnavailable
+		}
+	}
+	return consts.StatusInternalServerError
 }

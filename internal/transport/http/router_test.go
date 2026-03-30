@@ -197,7 +197,7 @@ func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNo
 	return cloneDriveNode(node), nil
 }
 
-func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, error) {
+func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	items := make([]model.DriveNode, 0)
 	for _, node := range r.nodes {
 		if node.DeletedAt != nil || node.SpaceID != filter.SpaceID {
@@ -208,7 +208,7 @@ func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDri
 		}
 		items = append(items, *cloneDriveNode(node))
 	}
-	return items, nil
+	return items, len(items), nil
 }
 
 func (r *fakeDriveNodeRepo) Update(_ context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error) {
@@ -335,15 +335,18 @@ func (r *fakePageSiteRepo) Create(_ context.Context, input model.CreatePageSiteI
 	return clonePageSite(site), nil
 }
 
-func (r *fakePageSiteRepo) ListBySpace(_ context.Context, spaceID int64) ([]model.PageSite, error) {
+func (r *fakePageSiteRepo) ListBySpace(_ context.Context, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
 	items := make([]model.PageSite, 0)
 	for _, site := range r.sites {
-		if site.SpaceID != spaceID || site.DeletedAt != nil {
+		if site.SpaceID != filter.SpaceID || site.DeletedAt != nil {
+			continue
+		}
+		if filter.Name != nil && site.Name != *filter.Name {
 			continue
 		}
 		items = append(items, *clonePageSite(site))
 	}
-	return items, nil
+	return items, len(items), nil
 }
 
 func (r *fakePageSiteRepo) GetByID(_ context.Context, id int64) (*model.PageSite, error) {

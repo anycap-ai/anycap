@@ -169,21 +169,23 @@ func (s *Service) CreateFolder(ctx context.Context, userID string, parentID *int
 	return created, nil
 }
 
-func (s *Service) ListNodes(ctx context.Context, userID string, parentID *int64) ([]model.DriveNode, error) {
+func (s *Service) ListNodes(ctx context.Context, userID string, parentID *int64, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
-		return nil, fmt.Errorf("drive service is not configured")
+		return nil, 0, fmt.Errorf("drive service is not configured")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err := s.ensureValidParent(ctx, space.ID, parentID, false); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return s.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{SpaceID: space.ID, ParentID: parentID})
+	filter.SpaceID = space.ID
+	filter.ParentID = parentID
+	return s.nodeRepo.ListByParent(ctx, filter)
 }
 
 func (s *Service) UpdateNode(ctx context.Context, userID string, nodeID int64, name *string, parentID *int64, updateParent bool) (*model.DriveNode, error) {

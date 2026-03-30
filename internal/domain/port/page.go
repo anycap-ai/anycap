@@ -8,7 +8,7 @@ import (
 
 type PageSiteRepository interface {
 	Create(ctx context.Context, input model.CreatePageSiteInput) (*model.PageSite, error)
-	ListBySpace(ctx context.Context, spaceID int64) ([]model.PageSite, error)
+	ListBySpace(ctx context.Context, filter model.ListPageSitesFilter) ([]model.PageSite, int, error)
 	GetByID(ctx context.Context, id int64) (*model.PageSite, error)
 	Update(ctx context.Context, input model.UpdatePageSiteInput) (*model.PageSite, error)
 	SetCurrentVersion(ctx context.Context, spaceID, id int64, versionID *int64) (*model.PageSite, error)
@@ -19,8 +19,9 @@ type PageVersionRepository interface {
 	CreateDraft(ctx context.Context, pageID int64, createdBy string, assetPrefix string) (*model.PageVersion, error)
 	CreateDraftFromSource(ctx context.Context, pageID int64, createdBy string, assetPrefix string, sourceVersionID int64) (*model.PageVersion, error)
 	GetByID(ctx context.Context, id int64) (*model.PageVersion, error)
+	GetByPageIDAndVersionNo(ctx context.Context, pageID, versionNo int64) (*model.PageVersion, error)
 	UpdateStatus(ctx context.Context, id int64, status model.PageVersionStatus) (*model.PageVersion, error)
-	ListByPageID(ctx context.Context, pageID int64) ([]model.PageVersion, error)
+	ListByPageID(ctx context.Context, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error)
 }
 
 type PageSlugRepository interface {
@@ -30,9 +31,10 @@ type PageSlugRepository interface {
 
 type PageService interface {
 	CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error)
-	ListSites(ctx context.Context, userID string) ([]model.PageSite, error)
+	ListSites(ctx context.Context, userID string, filter model.ListPageSitesFilter) ([]model.PageSite, int, error)
 	GetSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error)
 	UpdateSite(ctx context.Context, userID string, input model.UpdatePageSiteInput) (*model.PageSite, error)
+	DeleteSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error)
 	CreateVersion(ctx context.Context, userID string, pageID int64) (*model.PageVersion, error)
 	PresignVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, assetPath, contentType string, contentLength int64) (*model.PageVersionPresignResult, error)
 	CompleteVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, uploadSessionID int64) (*model.PageVersion, error)
@@ -40,5 +42,6 @@ type PageService interface {
 	PublishVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error)
 	Unpublish(ctx context.Context, userID string, pageID int64) (*model.PageSite, error)
 	RollbackCloneVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error)
-	ListVersions(ctx context.Context, userID string, pageID int64) ([]model.PageVersion, error)
+	ListVersions(ctx context.Context, userID string, pageID int64, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error)
+	GetVersionByNumber(ctx context.Context, userID string, pageID, versionNo int64) (*model.PageVersion, error)
 }

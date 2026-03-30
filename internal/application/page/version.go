@@ -14,7 +14,7 @@ const maxPageAssetUploadSize int64 = 1024 * 1024 * 1024 // 1GB
 
 func (s *Service) CreateVersion(ctx context.Context, userID string, pageID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	site, err := s.GetSite(ctx, userID, pageID)
 	if err != nil {
@@ -27,10 +27,10 @@ func (s *Service) CreateVersion(ctx context.Context, userID string, pageID int64
 
 func (s *Service) PresignVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, assetPath string, contentType string, contentLength int64) (*model.PageVersionPresignResult, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil || s.objectStore == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	if versionID <= 0 {
-		return nil, fmt.Errorf("version_id must be greater than zero")
+		return nil, model.ErrValidation("version_id must be greater than zero")
 	}
 
 	assetPath, err := validatePageAssetPath(assetPath)
@@ -50,12 +50,12 @@ func (s *Service) PresignVersionAsset(ctx context.Context, userID string, pageID
 		return nil, err
 	}
 	if !canAcceptVersionUpload(version.Status) {
-		return nil, fmt.Errorf("page version is not accepting uploads")
+		return nil, model.ErrValidation("page version is not accepting uploads")
 	}
 
 	assetPrefix := strings.TrimRight(strings.TrimSpace(version.AssetPrefix), "/")
 	if assetPrefix == "" {
-		return nil, fmt.Errorf("page version asset prefix is empty")
+		return nil, model.ErrValidation("page version asset prefix is empty")
 	}
 
 	trimmedContentType := strings.TrimSpace(contentType)
@@ -95,13 +95,13 @@ func (s *Service) PresignVersionAsset(ctx context.Context, userID string, pageID
 
 func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, uploadSessionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil || s.storageObjectRepo == nil || s.objectStore == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	if versionID <= 0 {
-		return nil, fmt.Errorf("version_id must be greater than zero")
+		return nil, model.ErrValidation("version_id must be greater than zero")
 	}
 	if uploadSessionID <= 0 {
-		return nil, fmt.Errorf("upload_session_id must be greater than zero")
+		return nil, model.ErrValidation("upload_session_id must be greater than zero")
 	}
 
 	site, err := s.GetSite(ctx, userID, pageID)
@@ -113,7 +113,7 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageI
 		return nil, err
 	}
 	if !canAcceptVersionUpload(version.Status) {
-		return nil, fmt.Errorf("page version is not accepting uploads")
+		return nil, model.ErrValidation("page version is not accepting uploads")
 	}
 
 	session, err := s.uploadSessionRepo.GetByID(ctx, uploadSessionID)
@@ -121,24 +121,24 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageI
 		return nil, err
 	}
 	if session == nil || session.SpaceID != site.SpaceID {
-		return nil, fmt.Errorf("upload session not found")
+		return nil, model.ErrNotFound("upload session not found")
 	}
 	if session.TargetType != model.UploadTargetTypePage || session.TargetID != versionID {
-		return nil, fmt.Errorf("upload session does not match page version")
+		return nil, model.ErrValidation("upload session does not match page version")
 	}
 	if session.ExpiresAt.Before(s.now()) {
-		return nil, fmt.Errorf("upload session expired")
+		return nil, model.ErrValidation("upload session expired")
 	}
 	if session.Status == model.UploadSessionStatusCompleted {
 		return version, nil
 	}
 	if session.Status != model.UploadSessionStatusPending {
-		return nil, fmt.Errorf("upload session is not pending")
+		return nil, model.ErrValidation("upload session is not pending")
 	}
 
 	expectedPrefix := strings.TrimRight(version.AssetPrefix, "/") + "/"
 	if !strings.HasPrefix(session.ObjectKey, expectedPrefix) {
-		return nil, fmt.Errorf("upload session does not match page version")
+		return nil, model.ErrValidation("upload session does not match page version")
 	}
 
 	head, err := s.objectStore.HeadObject(ctx, session.ObjectKey)
@@ -146,7 +146,7 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageI
 		return nil, fmt.Errorf("head uploaded object: %w", err)
 	}
 	if head == nil {
-		return nil, fmt.Errorf("uploaded object not found")
+		return nil, model.ErrNotFound("uploaded object not found")
 	}
 
 	_, err = s.storageObjectRepo.Create(ctx, model.StorageObject{
@@ -168,12 +168,14 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageI
 	return version, nil
 }
 
+// Q4: Simplified FinalizeVersion -- skip intermediate "uploaded" state for new versions.
+// Go directly from draft -> verified. Keep "uploaded" as a valid input for backward compat.
 func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	if versionID <= 0 {
-		return nil, fmt.Errorf("version_id must be greater than zero")
+		return nil, model.ErrValidation("version_id must be greater than zero")
 	}
 
 	site, err := s.GetSite(ctx, userID, pageID)
@@ -189,9 +191,9 @@ func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int
 	case model.PageVersionStatusVerified:
 		return version, nil
 	case model.PageVersionStatusDraft, model.PageVersionStatusUploaded:
-		// Continue below.
+		// Continue below -- go directly to verified.
 	default:
-		return nil, fmt.Errorf("page version cannot be finalized from status %s", version.Status)
+		return nil, model.ErrValidation(fmt.Sprintf("page version cannot be finalized from status %s", version.Status))
 	}
 
 	completedCount, err := s.uploadSessionRepo.CountCompletedByTarget(ctx, model.UploadTargetTypePage, version.ID)
@@ -199,17 +201,7 @@ func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int
 		return nil, err
 	}
 	if completedCount <= 0 {
-		return nil, fmt.Errorf("page version has no completed uploads")
-	}
-
-	if version.Status == model.PageVersionStatusDraft {
-		version, err = s.versionRepo.UpdateStatus(ctx, version.ID, model.PageVersionStatusUploaded)
-		if err != nil {
-			return nil, err
-		}
-		if version == nil {
-			return nil, fmt.Errorf("page version not found")
-		}
+		return nil, model.ErrValidation("page version has no completed uploads")
 	}
 
 	version, err = s.versionRepo.UpdateStatus(ctx, version.ID, model.PageVersionStatusVerified)
@@ -217,21 +209,43 @@ func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int
 		return nil, err
 	}
 	if version == nil {
-		return nil, fmt.Errorf("page version not found")
+		return nil, model.ErrNotFound("page version not found")
 	}
 
 	return version, nil
 }
 
-func (s *Service) ListVersions(ctx context.Context, userID string, pageID int64) ([]model.PageVersion, error) {
+func (s *Service) ListVersions(ctx context.Context, userID string, pageID int64, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
 	if s == nil || s.versionRepo == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, 0, model.ErrNotConfigured("page version service is not configured")
+	}
+	site, err := s.GetSite(ctx, userID, pageID)
+	if err != nil {
+		return nil, 0, err
+	}
+	filter.PageID = site.ID
+	return s.versionRepo.ListByPageID(ctx, filter)
+}
+
+func (s *Service) GetVersionByNumber(ctx context.Context, userID string, pageID, versionNo int64) (*model.PageVersion, error) {
+	if s == nil || s.versionRepo == nil {
+		return nil, model.ErrNotConfigured("page version service is not configured")
+	}
+	if versionNo <= 0 {
+		return nil, model.ErrValidation("version number must be greater than zero")
 	}
 	site, err := s.GetSite(ctx, userID, pageID)
 	if err != nil {
 		return nil, err
 	}
-	return s.versionRepo.ListByPageID(ctx, site.ID)
+	version, err := s.versionRepo.GetByPageIDAndVersionNo(ctx, site.ID, versionNo)
+	if err != nil {
+		return nil, err
+	}
+	if version == nil {
+		return nil, model.ErrNotFound(fmt.Sprintf("version %d not found", versionNo))
+	}
+	return version, nil
 }
 
 func (s *Service) getVersionForPage(ctx context.Context, pageID int64, versionID int64) (*model.PageVersion, error) {
@@ -240,17 +254,17 @@ func (s *Service) getVersionForPage(ctx context.Context, pageID int64, versionID
 		return nil, err
 	}
 	if version == nil || version.PageID != pageID {
-		return nil, fmt.Errorf("page version not found")
+		return nil, model.ErrNotFound("page version not found")
 	}
 	return version, nil
 }
 
 func validatePageAssetUploadInput(contentLength int64) error {
 	if contentLength <= 0 {
-		return fmt.Errorf("content_length must be positive")
+		return model.ErrValidation("content_length must be positive")
 	}
 	if contentLength > maxPageAssetUploadSize {
-		return fmt.Errorf("content_length exceeds max upload size")
+		return model.ErrValidation("content_length exceeds max upload size")
 	}
 	return nil
 }
@@ -258,21 +272,21 @@ func validatePageAssetUploadInput(contentLength int64) error {
 func validatePageAssetPath(value string) (string, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
-		return "", fmt.Errorf("asset_path is required")
+		return "", model.ErrValidation("asset_path is required")
 	}
 	if strings.Contains(value, "\\") {
-		return "", fmt.Errorf("asset_path contains invalid characters")
+		return "", model.ErrValidation("asset_path contains invalid characters")
 	}
 	if strings.HasPrefix(value, "/") {
-		return "", fmt.Errorf("asset_path must be relative")
+		return "", model.ErrValidation("asset_path must be relative")
 	}
 
 	cleaned := path.Clean(value)
 	if cleaned == "." || cleaned == "" {
-		return "", fmt.Errorf("asset_path is required")
+		return "", model.ErrValidation("asset_path is required")
 	}
 	if strings.HasPrefix(cleaned, "../") || cleaned == ".." {
-		return "", fmt.Errorf("asset_path contains invalid characters")
+		return "", model.ErrValidation("asset_path contains invalid characters")
 	}
 	return cleaned, nil
 }

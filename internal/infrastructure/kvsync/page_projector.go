@@ -81,6 +81,7 @@ func (p *PageProjector) projectHostSync(ctx context.Context, job model.KVSyncJob
 		"current_version_id": *site.CurrentVersionID,
 		"asset_prefix":       version.AssetPrefix,
 		"spa_fallback":       site.SPAFallback,
+		"show_badge":         site.ShowBadge,
 		"access_mode":        site.AccessMode,
 		"password_hash":      site.PasswordHash,
 		"password_salt":      site.PasswordSalt,

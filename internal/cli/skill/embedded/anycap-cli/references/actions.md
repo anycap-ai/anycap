@@ -69,7 +69,7 @@ Exactly one of `--url` or `--file` is required.
 
 ## Parsing Responses
 
-All action responses share the same shape: `{"content": "...", "request_id": "req_..."}`.
+All action responses share the same shape: `{"status": "success", "content": "...", "request_id": "req_..."}`.
 
 ```bash
 # Extract content as plain text

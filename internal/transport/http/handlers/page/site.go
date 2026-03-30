@@ -3,6 +3,7 @@ package page
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
@@ -59,7 +60,20 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	items, err := h.service.ListSites(c, principal.UserID)
+	limit, offset := handlers.ParseLimitOffset(
+		string(ctx.Query("limit")),
+		string(ctx.Query("offset")),
+	)
+
+	filter := model.ListPageSitesFilter{
+		Limit:  limit,
+		Offset: offset,
+	}
+	if nameRaw := strings.TrimSpace(string(ctx.Query("name"))); nameRaw != "" {
+		filter.Name = &nameRaw
+	}
+
+	items, total, err := h.service.ListSites(c, principal.UserID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
 		return
@@ -72,7 +86,7 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 	}
 	handlers.WriteSuccess(ctx, map[string]any{
 		"items": presentedItems,
-		"total": len(presentedItems),
+		"total": total,
 	})
 }
 
@@ -162,6 +176,15 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 		input.SPAFallback = &spaFallback
 	}
 
+	if raw, exists := payload["show_badge"]; exists {
+		var showBadge bool
+		if err := json.Unmarshal(raw, &showBadge); err != nil {
+			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_show_badge", "show_badge must be boolean")
+			return
+		}
+		input.ShowBadge = &showBadge
+	}
+
 	if raw, exists := payload["password"]; exists {
 		var password *string
 		if err := json.Unmarshal(raw, &password); err != nil {
@@ -189,7 +212,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 		}
 	}
 
-	if input.Name == nil && input.AccessMode == nil && input.SPAFallback == nil && !input.UpdatePassword {
+	if input.Name == nil && input.AccessMode == nil && input.SPAFallback == nil && input.ShowBadge == nil && !input.UpdatePassword {
 		handlers.WriteError(ctx, consts.StatusBadRequest, "empty_update", "at least one field must be updated")
 		return
 	}
@@ -197,6 +220,38 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	site, err := h.service.UpdateSite(c, principal.UserID, input)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "update_page_site_failed", err.Error())
+		return
+	}
+
+	presented, err := h.presentPageSite(c, site)
+	if err != nil {
+		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(ctx, presented)
+}
+
+func (h *Handler) DeleteSite(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		return
+	}
+
+	site, err := h.service.DeleteSite(c, principal.UserID, siteID)
+	if err != nil {
+		handlers.WriteError(ctx, statusCodeForPageError(err), "delete_page_site_failed", err.Error())
 		return
 	}
 

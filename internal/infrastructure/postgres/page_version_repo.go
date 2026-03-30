@@ -79,6 +79,27 @@ func (r *PageVersionRepo) GetByID(ctx context.Context, id int64) (*model.PageVer
 	return version, nil
 }
 
+func (r *PageVersionRepo) GetByPageIDAndVersionNo(ctx context.Context, pageID, versionNo int64) (*model.PageVersion, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("page version repo db is not configured")
+	}
+
+	row := r.db.QueryRowContext(ctx, `
+		SELECT id, page_id, version_no, source_version_id, status, asset_prefix, created_by, created_at
+		FROM page_versions
+		WHERE page_id = $1 AND version_no = $2
+	`, pageID, versionNo)
+
+	version, err := scanPageVersion(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get page version by number: %w", err)
+	}
+	return version, nil
+}
+
 func (r *PageVersionRepo) UpdateStatus(ctx context.Context, id int64, status model.PageVersionStatus) (*model.PageVersion, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("page version repo db is not configured")
@@ -101,9 +122,16 @@ func (r *PageVersionRepo) UpdateStatus(ctx context.Context, id int64, status mod
 	return version, nil
 }
 
-func (r *PageVersionRepo) ListByPageID(ctx context.Context, pageID int64) ([]model.PageVersion, error) {
+func (r *PageVersionRepo) ListByPageID(ctx context.Context, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
 	if r == nil || r.db == nil {
-		return nil, fmt.Errorf("page version repo db is not configured")
+		return nil, 0, fmt.Errorf("page version repo db is not configured")
+	}
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM page_versions WHERE page_id = $1
+	`, filter.PageID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count page versions: %w", err)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
@@ -111,9 +139,10 @@ func (r *PageVersionRepo) ListByPageID(ctx context.Context, pageID int64) ([]mod
 		FROM page_versions
 		WHERE page_id = $1
 		ORDER BY version_no DESC, id DESC
-	`, pageID)
+		LIMIT $2 OFFSET $3
+	`, filter.PageID, filter.Limit, filter.Offset)
 	if err != nil {
-		return nil, fmt.Errorf("list page versions by page id: %w", err)
+		return nil, 0, fmt.Errorf("list page versions by page id: %w", err)
 	}
 	defer rows.Close()
 
@@ -121,14 +150,14 @@ func (r *PageVersionRepo) ListByPageID(ctx context.Context, pageID int64) ([]mod
 	for rows.Next() {
 		version, scanErr := scanPageVersion(rows)
 		if scanErr != nil {
-			return nil, fmt.Errorf("scan page version: %w", scanErr)
+			return nil, 0, fmt.Errorf("scan page version: %w", scanErr)
 		}
 		items = append(items, *version)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate page versions: %w", err)
+		return nil, 0, fmt.Errorf("iterate page versions: %w", err)
 	}
-	return items, nil
+	return items, total, nil
 }
 
 func scanPageVersion(row rowScanner) (*model.PageVersion, error) {

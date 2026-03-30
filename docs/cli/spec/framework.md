@@ -45,16 +45,20 @@ What is missing:
 Every config value follows the same precedence (highest to lowest):
 
 ```
-CLI flag  >  Environment variable  >  Config file  >  Default
+CLI flag  >  Environment variable  >  Project config (anycap.toml)  >  User config (~/.anycap/)  >  Default
 ```
 
-| Value | Flag | Env | Config file key | Default |
-|-------|------|-----|-----------------|---------|
-| Endpoint | `--endpoint` | `ANYCAP_API_ENDPOINT` | `endpoint` | `https://api.anycap.ai` (release) / `http://127.0.0.1:8080` (dev, see 3.4) |
-| API Key | (none) | `ANYCAP_API_KEY` | (from credentials file) | (none) |
-| Output format | `--json` / `--pretty` | (none) | (none) | auto-detect TTY |
+| Value | Flag | Env | Project config | User config | Default |
+|-------|------|-----|----------------|-------------|---------|
+| Endpoint | `--endpoint` | `ANYCAP_API_ENDPOINT` | -- | `endpoint` | `https://api.anycap.ai` (release) / `http://127.0.0.1:8080` (dev, see 3.4) |
+| API Key | (none) | `ANYCAP_API_KEY` | -- | (from credentials file) | (none) |
+| Output format | `--json` / `--pretty` | -- | -- | -- | auto-detect TTY |
+| Page site | `--site` / `--name` | -- | `[page].site_id` / `[page].name` | -- | create new |
+| Drive folder | `--parent` / `--parent-path` | -- | `[drive].folder_id` / `[drive].path` | -- | root folder |
 
 ### 3.2 File Locations
+
+User-level (global preferences and credentials):
 
 ```
 ~/.anycap/
@@ -64,6 +68,15 @@ CLI flag  >  Environment variable  >  Config file  >  Default
     models/            # Model list cache (TTL-based, per capability)
     run/               # Dynamic capability definition cache
 ```
+
+Project-level (committable, per-directory):
+
+```
+<project-root>/
+  anycap.toml          # Project config: site/folder bindings -- 0644
+```
+
+`anycap.toml` is discovered in the current working directory. It is safe to commit to version control -- it contains only external IDs (opaque, auth-gated) and human-readable names. No credentials or endpoint URLs. See Section 11 for full specification.
 
 ### 3.3 Config File Structure
 
@@ -289,12 +302,112 @@ Phase 2 (follow-up):
 4. Infra commands (drive, browser, sandbox)
 5. skill and feedback commands
 6. `run` dynamic extension command
-config set-key` commands
 
-Phase 3 (capabilities):
-1. Cache layer for models list
-2. `--pretty` human-readable formatting
-3. Remaining cap commands (video, music, tts, asr, search, crawl)
-4. Infra commands (drive, browser, sandbox)
-5. skill and feedback commands
-6. `run` dynamic extension command
+Phase 3 (project config):
+1. `anycap.toml` project config (see Section 11)
+2. Auto-read/write for page deploy, drive upload
+3. `drive push` / `drive pull` directory sync commands
+4. `anycap init` scaffolding command
+
+## 11. Project Config (`anycap.toml`)
+
+### 11.1 Purpose
+
+`anycap.toml` is a project-level config file that lives alongside the user's code. It binds a directory to AnyCap resources (page sites, drive folders) so that repeated commands don't require flags.
+
+Analogous to `wrangler.toml` (Cloudflare Workers), `fly.toml` (Fly.io), `vercel.json` (Vercel).
+
+### 11.2 File Format
+
+```toml
+# AnyCap project configuration
+# Safe to commit -- contains only external IDs and display names.
+
+[page]
+site_id = "pg_aBcDeFgHiJkLmNoP"
+name = "API Docs"
+
+[drive]
+folder_id = "dn_aBcDeFgHiJkLmNoP"
+path = "/project-assets"
+```
+
+All fields are optional. Sections are omitted when unused.
+
+### 11.3 Discovery
+
+Look for `anycap.toml` in the current working directory only. No upward traversal. This keeps behavior predictable for agents that control their CWD.
+
+### 11.4 Resolution Precedence
+
+CLI flags always override `anycap.toml` values:
+
+**Page deploy site resolution:**
+
+| Priority | Source | Behavior |
+|----------|--------|----------|
+| 1 | `--site <id>` flag | Use this site ID directly |
+| 2 | `--name <name>` flag | Find-or-create by name |
+| 3 | `[page].site_id` from anycap.toml | Use this site ID |
+| 4 | `[page].name` from anycap.toml | Find-or-create by name |
+| 5 | (none) | Create new site with random name |
+
+**Drive folder resolution:**
+
+| Priority | Source | Behavior |
+|----------|--------|----------|
+| 1 | `--parent <id>` flag | Use this folder ID |
+| 2 | `--parent-path <path>` flag | Resolve path to folder ID |
+| 3 | `[drive].folder_id` from anycap.toml | Use this folder ID |
+| 4 | `[drive].path` from anycap.toml | Resolve path to folder ID |
+| 5 | (none) | Root folder |
+
+### 11.5 Auto-Write
+
+After a successful operation, CLI writes back the resolved resource IDs to `anycap.toml`:
+
+| Command | Writes |
+|---------|--------|
+| `page deploy` | `[page].site_id`, `[page].name` |
+| `drive push` (future) | `[drive].folder_id`, `[drive].path` |
+
+This creates a zero-friction workflow:
+1. First deploy: `anycap page deploy ./dist --name "Docs"` -- creates site, writes anycap.toml
+2. Subsequent: `anycap page deploy ./dist` -- reads site_id from anycap.toml automatically
+
+### 11.6 Security
+
+Safe to commit to version control:
+- External IDs are opaque random strings (e.g., `pg_aBcDeFg`) -- not sequential, not guessable
+- IDs are auth-gated -- knowing an ID grants zero access without valid credentials
+- No credentials, endpoints, or secrets stored in this file
+
+### 11.7 Deploy Exclusion
+
+When `page deploy .` deploys from CWD, `anycap.toml` is automatically excluded from the uploaded file set (same as how `wrangler.toml` is not uploaded to Workers).
+
+### 11.8 Implementation
+
+New package `internal/cli/projectconfig/` with:
+
+```go
+type ProjectConfig struct {
+    Page  *PageConfig  `toml:"page,omitempty"`
+    Drive *DriveConfig `toml:"drive,omitempty"`
+}
+
+type PageConfig struct {
+    SiteID string `toml:"site_id,omitempty"`
+    Name   string `toml:"name,omitempty"`
+}
+
+type DriveConfig struct {
+    FolderID string `toml:"folder_id,omitempty"`
+    Path     string `toml:"path,omitempty"`
+}
+
+func Load() (*ProjectConfig, error)           // read ./anycap.toml
+func Save(cfg *ProjectConfig) error           // write ./anycap.toml
+```
+
+Commands use `projectconfig.Load()` after flag parsing but before HTTP calls. Currently only `page deploy` integrates with project config. `drive push`/`drive pull` (directory sync commands) will integrate when implemented.

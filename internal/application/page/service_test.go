@@ -54,15 +54,27 @@ func (r *fakePageSiteRepo) Create(_ context.Context, input model.CreatePageSiteI
 	return clonePageSite(site), nil
 }
 
-func (r *fakePageSiteRepo) ListBySpace(_ context.Context, spaceID int64) ([]model.PageSite, error) {
+func (r *fakePageSiteRepo) ListBySpace(_ context.Context, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
 	items := make([]model.PageSite, 0)
 	for _, site := range r.sites {
-		if site.SpaceID != spaceID || site.DeletedAt != nil {
+		if site.SpaceID != filter.SpaceID || site.DeletedAt != nil {
+			continue
+		}
+		if filter.Name != nil && site.Name != *filter.Name {
 			continue
 		}
 		items = append(items, *clonePageSite(site))
 	}
-	return items, nil
+	total := len(items)
+	// Apply offset/limit
+	if filter.Offset >= len(items) {
+		return []model.PageSite{}, total, nil
+	}
+	end := filter.Offset + filter.Limit
+	if end > len(items) {
+		end = len(items)
+	}
+	return items[filter.Offset:end], total, nil
 }
 
 func (r *fakePageSiteRepo) GetByID(_ context.Context, id int64) (*model.PageSite, error) {
@@ -87,6 +99,9 @@ func (r *fakePageSiteRepo) Update(_ context.Context, input model.UpdatePageSiteI
 	}
 	if input.SPAFallback != nil {
 		site.SPAFallback = *input.SPAFallback
+	}
+	if input.ShowBadge != nil {
+		site.ShowBadge = *input.ShowBadge
 	}
 	if input.UpdatePassword {
 		site.PasswordHash = input.PasswordHash
@@ -178,7 +193,11 @@ func (w *fakePageKVSyncWaiter) Wait(_ context.Context, jobIDs []int64) error {
 	return nil
 }
 
-var errDuplicate = &model.Error{Code: "DUPLICATE", Message: "duplicate value"}
+var errDuplicate = &duplicateError{}
+
+type duplicateError struct{}
+
+func (e *duplicateError) Error() string { return "duplicate value" }
 
 func TestCreateSite_GeneratesPageNameAndSlug(t *testing.T) {
 	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
@@ -307,14 +326,16 @@ func TestUpdateSite_PasswordModeRequiresPasswordWhenUnset(t *testing.T) {
 
 func TestUpdateSite_EnqueuePageHostSyncJob(t *testing.T) {
 	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	versionID := int64(10)
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
-				ID:         1,
-				SpaceID:    200,
-				Name:       "My Site",
-				PageName:   "my-site-abc12345",
-				AccessMode: model.PageAccessModePublic,
+				ID:               1,
+				SpaceID:          200,
+				Name:             "My Site",
+				PageName:         "my-site-abc12345",
+				AccessMode:       model.PageAccessModePublic,
+				CurrentVersionID: &versionID,
 			},
 		},
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
@@ -68,7 +69,17 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	items, err := h.service.ListNodes(c, principal.UserID, parentID)
+	limit, offset := handlers.ParseLimitOffset(
+		string(ctx.Query("limit")),
+		string(ctx.Query("offset")),
+	)
+
+	filter := model.ListDriveNodesFilter{
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	items, total, err := h.service.ListNodes(c, principal.UserID, parentID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
 		return
@@ -81,7 +92,7 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 	}
 	handlers.WriteSuccess(ctx, map[string]any{
 		"items": presentedItems,
-		"total": len(presentedItems),
+		"total": total,
 	})
 }
 

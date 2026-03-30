@@ -155,9 +155,10 @@ async function servePageAsset(
 			}
 			if (isHTML) {
 				const html = await new Response(object.body).text();
-				const injected = injectPageBadge(html);
-				headers.set("content-length", String(new TextEncoder().encode(injected).byteLength));
-				return new Response(injected, { status: 200, headers });
+				const shouldInjectBadge = host.show_badge !== false;
+				const finalHTML = shouldInjectBadge ? injectPageBadge(html) : html;
+				headers.set("content-length", String(new TextEncoder().encode(finalHTML).byteLength));
+				return new Response(finalHTML, { status: 200, headers });
 			}
 			if (object.size >= 0) {
 				headers.set("content-length", String(object.size));

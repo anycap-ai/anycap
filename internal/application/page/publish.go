@@ -11,10 +11,10 @@ import (
 
 func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.siteRepo == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	if versionID <= 0 {
-		return nil, fmt.Errorf("version_id must be greater than zero")
+		return nil, model.ErrValidation("version_id must be greater than zero")
 	}
 
 	site, targetVersion, err := s.loadSiteAndVersion(ctx, userID, pageID, versionID)
@@ -27,10 +27,10 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 		return nil, err
 	}
 	if currentVersion != nil && currentVersion.ID != targetVersion.ID && targetVersion.VersionNo <= currentVersion.VersionNo {
-		return nil, fmt.Errorf("page version must move forward")
+		return nil, model.ErrValidation("page version must move forward")
 	}
 	if targetVersion.Status != model.PageVersionStatusVerified && targetVersion.Status != model.PageVersionStatusPublished {
-		return nil, fmt.Errorf("page version must be verified before publish")
+		return nil, model.ErrValidation("page version must be verified before publish")
 	}
 
 	if currentVersion != nil && currentVersion.ID != targetVersion.ID && currentVersion.Status != model.PageVersionStatusArchived {
@@ -45,7 +45,7 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 			return nil, err
 		}
 		if targetVersion == nil {
-			return nil, fmt.Errorf("page version not found")
+			return nil, model.ErrNotFound("page version not found")
 		}
 	}
 
@@ -54,7 +54,7 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 		return nil, err
 	}
 	if updatedSite == nil {
-		return nil, fmt.Errorf("page site not found")
+		return nil, model.ErrNotFound("page site not found")
 	}
 
 	jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostSync, updatedSite.ID, updatedSite.EdgeVersion, nil)
@@ -70,7 +70,7 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 
 func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*model.PageSite, error) {
 	if s == nil || s.versionRepo == nil || s.siteRepo == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 
 	site, err := s.GetSite(ctx, userID, pageID)
@@ -96,7 +96,7 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 		return nil, err
 	}
 	if updatedSite == nil {
-		return nil, fmt.Errorf("page site not found")
+		return nil, model.ErrNotFound("page site not found")
 	}
 
 	jobID, err := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypePageHostDelete, updatedSite.ID, updatedSite.EdgeVersion, model.KVSyncPageHostDeletePayload{
@@ -115,10 +115,10 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 
 func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.storageObjectRepo == nil || s.objectStore == nil {
-		return nil, fmt.Errorf("page version service is not configured")
+		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
 	if versionID <= 0 {
-		return nil, fmt.Errorf("version_id must be greater than zero")
+		return nil, model.ErrValidation("version_id must be greater than zero")
 	}
 
 	site, sourceVersion, err := s.loadSiteAndVersion(ctx, userID, pageID, versionID)
@@ -126,10 +126,10 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 		return nil, err
 	}
 	if sourceVersion.Status == model.PageVersionStatusDraft {
-		return nil, fmt.Errorf("source version must be finalized")
+		return nil, model.ErrValidation("source version must be finalized")
 	}
 	if strings.TrimSpace(sourceVersion.AssetPrefix) == "" {
-		return nil, fmt.Errorf("source version asset prefix is empty")
+		return nil, model.ErrValidation("source version asset prefix is empty")
 	}
 
 	sourcePrefix := ensureTrailingSlash(sourceVersion.AssetPrefix)
@@ -138,7 +138,7 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 		return nil, err
 	}
 	if len(sourceObjects) == 0 {
-		return nil, fmt.Errorf("source version has no assets")
+		return nil, model.ErrValidation("source version has no assets")
 	}
 
 	assetPrefixBase := fmt.Sprintf("page/spaces/%d/sites/%d/versions", site.SpaceID, site.ID)
@@ -149,7 +149,7 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 
 	targetPrefix := ensureTrailingSlash(clonedVersion.AssetPrefix)
 	if strings.TrimSpace(targetPrefix) == "/" {
-		return nil, fmt.Errorf("cloned version asset prefix is empty")
+		return nil, model.ErrValidation("cloned version asset prefix is empty")
 	}
 	if err := s.cloneVersionObjects(ctx, site.SpaceID, sourcePrefix, targetPrefix, sourceObjects); err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 		return nil, err
 	}
 	if clonedVersion == nil {
-		return nil, fmt.Errorf("page version not found")
+		return nil, model.ErrNotFound("page version not found")
 	}
 	return clonedVersion, nil
 }
@@ -201,7 +201,7 @@ func (s *Service) cloneVersionObjects(ctx context.Context, spaceID int64, source
 			return fmt.Errorf("head cloned object: %w", err)
 		}
 		if head == nil {
-			return fmt.Errorf("cloned object not found")
+			return model.ErrNotFound("cloned object not found")
 		}
 
 		if _, err := s.storageObjectRepo.Create(ctx, model.StorageObject{
