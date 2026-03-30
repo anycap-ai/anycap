@@ -9,6 +9,7 @@ var (
 type GenerateVideoRequest struct {
 	RequestID          string   `json:"request_id,omitempty"`
 	UserID             string   `json:"user_id,omitempty"`
+	APIKeyID           string   `json:"api_key_id,omitempty"`
 	Prompt             string   `json:"prompt"`
 	Model              string   `json:"model"`
 	NegativePrompt     string   `json:"negative_prompt,omitempty"`

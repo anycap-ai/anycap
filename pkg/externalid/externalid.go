@@ -22,6 +22,8 @@ const (
 	PrefixLoginSession  = "lsn_"
 	PrefixAPIKeyID      = "akid_"
 	PrefixFeedback      = "fb_"
+	PrefixUsageEvent    = "uevt_"
+	PrefixProviderRun   = "prun_"
 )
 
 const randomCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

@@ -15,6 +15,7 @@ type Service struct {
 	runtime   string
 	buildInfo buildinfo.Info
 	apiKeys   port.APIKeyService
+	usage     port.UsageReader
 	users     port.UserReader
 	credit    port.CreditClient
 	callLogs  port.CallLogRepo
@@ -43,6 +44,10 @@ func (s *Service) Features() map[string]bool {
 
 func (s *Service) SetUserReader(users port.UserReader) {
 	s.users = users
+}
+
+func (s *Service) SetUsageReader(usage port.UsageReader) {
+	s.usage = usage
 }
 
 func (s *Service) SetCreditClient(credit port.CreditClient) {
@@ -97,6 +102,81 @@ func (s *Service) CreditBalance(ctx context.Context, principal *model.Principal)
 		return model.Balance{}, model.ErrInternal
 	}
 	return s.credit.GetBalance(ctx, principal.UserID)
+}
+
+func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (model.APIKeyListResult, error) {
+	if principal == nil || principal.UserID == "" {
+		return model.APIKeyListResult{}, model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		return model.APIKeyListResult{}, model.ErrInternal
+	}
+
+	keys, err := s.apiKeys.ListAPIKeys(ctx, principal.UserID)
+	if err != nil {
+		return model.APIKeyListResult{}, err
+	}
+
+	summaries := map[string]model.APIKeyUsageSummary{}
+	if s.usage != nil {
+		summaries, err = s.usage.SummarizeUsageByAPIKey(ctx, principal.UserID, model.UsageQuery{})
+		if err != nil {
+			return model.APIKeyListResult{}, err
+		}
+	}
+
+	items := make([]model.ManagedAPIKey, 0, len(keys))
+	for _, key := range keys {
+		items = append(items, model.ManagedAPIKey{
+			ID:           key.ID,
+			Name:         key.Name,
+			Status:       key.Status,
+			LastUsedAt:   key.LastUsedAt,
+			CreatedAt:    key.CreatedAt,
+			UsageSummary: summaries[key.ID],
+		})
+	}
+	return model.APIKeyListResult{Items: items}, nil
+}
+
+func (s *Service) DisableAPIKey(ctx context.Context, principal *model.Principal, keyID string) error {
+	if principal == nil || principal.UserID == "" || keyID == "" {
+		return model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		return model.ErrInternal
+	}
+	return s.apiKeys.DisableAPIKey(ctx, principal.UserID, keyID)
+}
+
+func (s *Service) DeleteAPIKey(ctx context.Context, principal *model.Principal, keyID string) error {
+	if principal == nil || principal.UserID == "" || keyID == "" {
+		return model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		return model.ErrInternal
+	}
+	return s.apiKeys.DeleteAPIKey(ctx, principal.UserID, keyID)
+}
+
+func (s *Service) UsageSummary(ctx context.Context, principal *model.Principal, query model.UsageQuery) (model.UsageSummaryResult, error) {
+	if principal == nil || principal.UserID == "" {
+		return model.UsageSummaryResult{}, model.ErrAuthInvalid
+	}
+	if s.usage == nil {
+		return model.UsageSummaryResult{}, model.ErrInternal
+	}
+	return s.usage.SummarizeUsageByUser(ctx, principal.UserID, query)
+}
+
+func (s *Service) UsageEvents(ctx context.Context, principal *model.Principal, query model.UsageQuery) (model.UsageEventListResult, error) {
+	if principal == nil || principal.UserID == "" {
+		return model.UsageEventListResult{}, model.ErrAuthInvalid
+	}
+	if s.usage == nil {
+		return model.UsageEventListResult{}, model.ErrInternal
+	}
+	return s.usage.ListUsageEventsByUser(ctx, principal.UserID, query)
 }
 
 func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit int) (model.LogsResult, error) {

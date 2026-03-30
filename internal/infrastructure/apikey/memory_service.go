@@ -121,3 +121,44 @@ func (s *MemoryService) RevokeAPIKey(_ context.Context, keyID string) error {
 	s.byID[keyID] = record
 	return nil
 }
+
+func (s *MemoryService) ListAPIKeys(_ context.Context, userID string) ([]model.APIKey, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	items := make([]model.APIKey, 0, len(s.byID))
+	for _, record := range s.byID {
+		if record.apiKey.UserID != userID || record.apiKey.DeletedAt != nil {
+			continue
+		}
+		items = append(items, record.apiKey)
+	}
+	return items, nil
+}
+
+func (s *MemoryService) DisableAPIKey(ctx context.Context, userID, keyID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, ok := s.byID[keyID]
+	if !ok || record.apiKey.UserID != userID || record.apiKey.DeletedAt != nil {
+		return model.ErrAuthInvalid
+	}
+	record.apiKey.Status = model.APIKeyStatusRevoked
+	s.byID[keyID] = record
+	return nil
+}
+
+func (s *MemoryService) DeleteAPIKey(_ context.Context, userID, keyID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, ok := s.byID[keyID]
+	if !ok || record.apiKey.UserID != userID || record.apiKey.DeletedAt != nil {
+		return model.ErrAuthInvalid
+	}
+	now := time.Now().UTC()
+	record.apiKey.DeletedAt = &now
+	s.byID[keyID] = record
+	return nil
+}

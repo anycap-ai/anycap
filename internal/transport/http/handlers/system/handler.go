@@ -41,6 +41,11 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/me", h.Me)
 	group.GET("/credits/balance", h.CreditBalance)
 	group.GET("/logs", h.Logs)
+	group.GET("/api-keys", h.APIKeys)
+	group.POST("/api-keys/:id/disable", h.DisableAPIKey)
+	group.DELETE("/api-keys/:id", h.DeleteAPIKey)
+	group.GET("/usage/summary", h.UsageSummary)
+	group.GET("/usage/events", h.UsageEvents)
 	group.POST("/auth/logout", h.Logout)
 }
 
@@ -195,4 +200,121 @@ func (h *Handler) DashboardSummary(c context.Context, ctx *app.RequestContext) {
 		"usage_summary":   result.UsageSummary,
 		"error_summary":   result.ErrorSummary,
 	}))
+}
+
+func (h *Handler) APIKeys(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	result, err := h.service.ListAPIKeys(c, principal)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *Handler) DisableAPIKey(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	keyID := ctx.Param("id")
+	if err := h.service.DisableAPIKey(c, principal, keyID); err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"id":       keyID,
+		"disabled": true,
+	}))
+}
+
+func (h *Handler) DeleteAPIKey(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	keyID := ctx.Param("id")
+	if err := h.service.DeleteAPIKey(c, principal, keyID); err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"id":      keyID,
+		"deleted": true,
+	}))
+}
+
+func (h *Handler) UsageSummary(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	result, err := h.service.UsageSummary(c, principal, usageQueryFromRequest(ctx))
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func (h *Handler) UsageEvents(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	result, err := h.service.UsageEvents(c, principal, usageQueryFromRequest(ctx))
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+}
+
+func usageQueryFromRequest(ctx *app.RequestContext) model.UsageQuery {
+	query := model.UsageQuery{
+		APIKeyID:    string(ctx.Query("api_key_id")),
+		ProductArea: string(ctx.Query("product_area")),
+		Action:      string(ctx.Query("action")),
+		Provider:    string(ctx.Query("provider")),
+		Status:      string(ctx.Query("status")),
+	}
+	if raw := string(ctx.Query("limit")); raw != "" {
+		if value, err := strconv.Atoi(raw); err == nil {
+			query.Limit = value
+		}
+	}
+	return query
 }

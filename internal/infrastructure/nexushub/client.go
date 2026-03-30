@@ -21,6 +21,7 @@ const (
 	defaultNexusHubBizID     = "anycap"
 	defaultNexusHubEnterFrom = "anycap_api"
 	submitAtomicProcessPath  = "/v1/submit_atomic_process"
+	getSubmitResultPath      = "/v1/get_submit_result/"
 	defaultImageGenerateAlgo = "txt_2_img"
 	defaultImageEditAlgo     = "img_2_img"
 )
@@ -412,6 +413,70 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	return result, nil
 }
 
+func (c *Client) GetSubmitResult(ctx context.Context, taskID string) (model.ProviderTaskResult, error) {
+	if c == nil || c.baseURL == "" || c.token == "" {
+		return model.ProviderTaskResult{}, model.ErrInternal
+	}
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+getSubmitResultPath+taskID, nil)
+	if err != nil {
+		return model.ProviderTaskResult{}, fmt.Errorf("build request: %w", err)
+	}
+	httpReq.Header.Set("X-Token", c.token)
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		httpReq.Header.Set("X-Request-Id", requestID)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return model.ProviderTaskResult{}, fmt.Errorf("get submit result: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var parsed submitAtomicProcessResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return model.ProviderTaskResult{}, fmt.Errorf("decode submit result response: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return model.ProviderTaskResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+	}
+
+	result := model.ProviderTaskResult{
+		TaskID:       parsed.TaskID,
+		Status:       normalizeNexusHubTaskStatus(parsed.Status),
+		Progress:     parsed.Progress,
+		AbilityKey:   parsed.AbilityKey,
+		Usage:        parsed.NexusUsage,
+		NexusCost:    parsed.NexusCost,
+		ErrorCode:    parsed.ErrCode,
+		ErrorMessage: parsed.ErrMsg,
+		RawResult: map[string]any{
+			"task_id":      parsed.TaskID,
+			"status":       parsed.Status,
+			"progress":     parsed.Progress,
+			"ability_key":  parsed.AbilityKey,
+			"nexus_usage":  parsed.NexusUsage,
+			"nexus_cost":   parsed.NexusCost,
+			"err_code":     parsed.ErrCode,
+			"err_msg":      parsed.ErrMsg,
+			"resp_payload": parsed.RespPayload,
+		},
+	}
+
+	if parsed.RespPayload != "" {
+		var respPayload atomicRespPayload
+		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
+			return model.ProviderTaskResult{}, fmt.Errorf("decode resp_payload: %w", err)
+		}
+		for _, resource := range respPayload.Resources {
+			if result.CreditCost == 0 && resource.CreditCost > 0 {
+				result.CreditCost = resource.CreditCost
+			}
+		}
+	}
+
+	return result, nil
+}
+
 func resolveVideoAlgoType(route model.RouteBinding, req model.GenerateVideoRequest) string {
 	if route.AlgoType != "" {
 		return route.AlgoType
@@ -483,6 +548,11 @@ type submitAtomicProcessResponse struct {
 	TaskID      string             `json:"task_id"`
 	RespPayload string             `json:"resp_payload,omitempty"`
 	Status      string             `json:"status,omitempty"`
+	Progress    float64            `json:"progress,omitempty"`
+	AbilityKey  string             `json:"ability_key,omitempty"`
+	ErrCode     int                `json:"err_code,omitempty"`
+	ErrMsg      string             `json:"err_msg,omitempty"`
+	NexusCost   float64            `json:"nexus_cost,omitempty"`
 	NexusUsage  map[string]any     `json:"nexus_usage,omitempty"`
 }
 
@@ -536,11 +606,21 @@ func resolveImageAlgoType(route model.RouteBinding, req model.GenerateImageReque
 }
 
 func normalizeNexusHubStatus(status string) string {
+	return normalizeNexusHubTaskStatus(status)
+}
+
+func normalizeNexusHubTaskStatus(status string) string {
 	switch strings.ToLower(status) {
 	case "succeeded", "success", "completed":
 		return "success"
+	case "failed", "failure", "error":
+		return "failed"
+	case "cancelled", "canceled":
+		return "canceled"
+	case "running", "pending", "queued":
+		return "processing"
 	default:
-		return status
+		return strings.ToLower(status)
 	}
 }
 

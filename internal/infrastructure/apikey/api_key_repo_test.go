@@ -13,6 +13,7 @@ type fakeAPIKeyDB struct {
 	query string
 	args  []any
 	row   sqlstore.Row
+	rows  sqlstore.Rows
 }
 
 func (f *fakeAPIKeyDB) ExecContext(_ context.Context, query string, args ...any) (sqlstore.Result, error) {
@@ -30,7 +31,10 @@ func (f *fakeAPIKeyDB) QueryRowContext(_ context.Context, query string, args ...
 func (f *fakeAPIKeyDB) QueryContext(_ context.Context, query string, args ...any) (sqlstore.Rows, error) {
 	f.query = query
 	f.args = args
-	return fakeRows{}, nil
+	if f.rows != nil {
+		return f.rows, nil
+	}
+	return &fakeRows{}, nil
 }
 
 type scanRow struct {
@@ -39,12 +43,42 @@ type scanRow struct {
 
 func (r scanRow) Scan(dest ...any) error { return r.scan(dest...) }
 
-type fakeRows struct{}
+type fakeRows struct {
+	items [][]any
+	index int
+}
 
-func (fakeRows) Next() bool        { return false }
-func (fakeRows) Scan(...any) error { return nil }
-func (fakeRows) Close() error      { return nil }
-func (fakeRows) Err() error        { return nil }
+func (r *fakeRows) Next() bool {
+	return r.index < len(r.items)
+}
+
+func (r *fakeRows) Scan(dest ...any) error {
+	row := r.items[r.index]
+	r.index++
+	for i := range dest {
+		switch target := dest[i].(type) {
+		case *string:
+			*target = row[i].(string)
+		case *int64:
+			*target = row[i].(int64)
+		case **time.Time:
+			if row[i] == nil {
+				*target = nil
+				continue
+			}
+			value := row[i].(time.Time)
+			*target = &value
+		case *time.Time:
+			*target = row[i].(time.Time)
+		default:
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *fakeRows) Close() error { return nil }
+func (r *fakeRows) Err() error   { return nil }
 
 type fakeResult struct {
 	rowsAffected int64
@@ -114,5 +148,48 @@ func TestAPIKeyRepo_Revoke(t *testing.T) {
 	}
 	if db.query == "" {
 		t.Fatal("expected revoke query to be executed")
+	}
+}
+
+func TestAPIKeyRepo_ListByUserID(t *testing.T) {
+	now := time.Date(2026, 3, 30, 12, 0, 0, 0, time.UTC)
+	db := &fakeAPIKeyDB{}
+	db.rows = &fakeRows{
+		items: [][]any{
+			{"key-1", int64(2000000001), "cli", "ak_test", "hash", model.APIKeyStatusActive, nil, nil, now, nil},
+		},
+	}
+	repo := NewAPIKeyRepo(db)
+
+	keys, err := repo.ListByUserID(context.Background(), "2000000001")
+	if err != nil {
+		t.Fatalf("ListByUserID() error = %v", err)
+	}
+	if len(keys) != 1 || keys[0].ID != "key-1" {
+		t.Fatalf("unexpected keys: %+v", keys)
+	}
+}
+
+func TestAPIKeyRepo_DisableByUserID(t *testing.T) {
+	db := &fakeAPIKeyDB{}
+	repo := NewAPIKeyRepo(db)
+
+	if err := repo.DisableByUserID(context.Background(), "2000000001", "key-1"); err != nil {
+		t.Fatalf("DisableByUserID() error = %v", err)
+	}
+	if db.query == "" {
+		t.Fatal("expected disable query to be executed")
+	}
+}
+
+func TestAPIKeyRepo_SoftDeleteByUserID(t *testing.T) {
+	db := &fakeAPIKeyDB{}
+	repo := NewAPIKeyRepo(db)
+
+	if err := repo.SoftDeleteByUserID(context.Background(), "2000000001", "key-1"); err != nil {
+		t.Fatalf("SoftDeleteByUserID() error = %v", err)
+	}
+	if db.query == "" {
+		t.Fatal("expected soft delete query to be executed")
 	}
 }

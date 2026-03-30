@@ -23,6 +23,7 @@ import (
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	spaceapp "gitlab.knoffice.tech/engineering/anycap/internal/application/space"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
+	usageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/usage"
 	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -42,6 +43,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/usage"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
@@ -105,6 +107,7 @@ type serverDependencies struct {
 	identityTokens      port.IdentityTokenAuthenticator
 	rateLimiter         port.RateLimiter
 	kvSyncWorker        *kvsync.Worker
+	usageSyncWorker     *usageapp.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
 }
@@ -125,6 +128,13 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		go func() {
 			if err := deps.kvSyncWorker.Run(context.Background()); err != nil {
 				log.Printf("kvsync worker stopped: %v", err)
+			}
+		}()
+	}
+	if deps.usageSyncWorker != nil {
+		go func() {
+			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
+				log.Printf("usage sync worker stopped: %v", err)
 			}
 		}()
 	}
@@ -239,21 +249,29 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	case "", "stub":
 		apiKeys := apikey.NewMemoryService()
 		callLogs := calllog.NewMemoryCallLogRepo()
+		usageRepo := usage.NewMemoryRepo()
 		loginSessions := loginsession.NewMemoryLoginSessionRepo()
 		users := userstore.NewMemoryProvisioner()
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetUsageReader(usageRepo)
+		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
+		imageService.SetUsageWriter(usageRepo)
+		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
+		videoService.SetUsageWriter(usageRepo)
+		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
+		musicService.SetUsageWriter(usageRepo)
 		capService := capapp.NewService(capProvider, cloudObjectStore, capapp.WithPresignGetExpiry(capGetExpiry))
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
 			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
-			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
-			musicService:        musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs),
+			imageService:        imageService,
+			videoService:        videoService,
+			musicService:        musicService,
 			spaceService:        nil,
 			driveService:        nil,
 			pageService:         nil,
@@ -264,6 +282,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:       apiKeys,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
+			usageSyncWorker:     nil,
 			idResolver:          idresolver.PassthroughIDResolver{},
 			idMapper:            presenter.PassthroughIDMapper{},
 		}, nil
@@ -314,12 +333,14 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
 		loginSessionRepo := loginsession.NewLoginSessionRepo(db)
 		callLogs := calllog.NewCallLogDBRepo(db)
+		usageRepo := usage.NewRepo(db)
 		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetUsageReader(usageRepo)
 		var externalIDMapper interface {
 			idresolver.IDResolver
 			presenter.IDMapper
@@ -340,14 +361,30 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			capapp.WithPresignGetExpiry(capGetExpiry),
 		)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
+		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
+		imageService.SetUsageWriter(usageRepo)
+		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
+		videoService.SetUsageWriter(usageRepo)
+		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
+		musicService.SetUsageWriter(usageRepo)
+		var usageSyncWorker *usageapp.Worker
+		if cfg.UsageSyncEnabled && hasImageExecutionProvider(cfg) {
+			usageSyncWorker = usageapp.NewWorker(
+				usageapp.NewService(usageRepo, imageExecutionClient),
+				usageapp.WorkerConfig{
+					PollInterval: cfg.UsageSyncPollInterval,
+					BatchSize:    cfg.UsageSyncBatchSize,
+				},
+			)
+		}
 		return serverDependencies{
 			config:        cfg,
 			buildInfo:     info,
 			systemService: systemService,
 			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
-			imageService:  imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
-			videoService:  videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
-			musicService:  musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs),
+			imageService:  imageService,
+			videoService:  videoService,
+			musicService:  musicService,
 			spaceService:  spaceService,
 			driveService: driveapp.NewService(
 				spaceService,
@@ -372,6 +409,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:       apiKeyService,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
+			usageSyncWorker:     usageSyncWorker,
 			idResolver:          externalIDMapper,
 			idMapper:            externalIDMapper,
 			kvSyncWorker: func() *kvsync.Worker {

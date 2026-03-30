@@ -78,3 +78,16 @@ func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicReq
 		Usage: map[string]any{"credits": 2},
 	}, nil
 }
+
+func (c *StubClient) GetSubmitResult(_ context.Context, taskID string) (model.ProviderTaskResult, error) {
+	return model.ProviderTaskResult{
+		TaskID:     taskID,
+		Status:     "success",
+		Usage:      map[string]any{"credits": 1},
+		CreditCost: 1,
+		RawResult: map[string]any{
+			"task_id": taskID,
+			"status":  "success",
+		},
+	}, nil
+}

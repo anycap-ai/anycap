@@ -14,6 +14,9 @@ type APIKeyRepository interface {
 	FindByPrefix(ctx context.Context, prefix string) (model.APIKey, error)
 	TouchLastUsedAt(ctx context.Context, keyID string, usedAt time.Time) error
 	Revoke(ctx context.Context, keyID string) error
+	ListByUserID(ctx context.Context, userID string) ([]model.APIKey, error)
+	DisableByUserID(ctx context.Context, userID, keyID string) error
+	SoftDeleteByUserID(ctx context.Context, userID, keyID string) error
 }
 
 type RepositoryAPIKeyService struct {
@@ -83,4 +86,16 @@ func (s *RepositoryAPIKeyService) createAPIKey(ctx context.Context, userID, name
 
 func (s *RepositoryAPIKeyService) RevokeAPIKey(ctx context.Context, keyID string) error {
 	return s.repo.Revoke(ctx, keyID)
+}
+
+func (s *RepositoryAPIKeyService) ListAPIKeys(ctx context.Context, userID string) ([]model.APIKey, error) {
+	return s.repo.ListByUserID(ctx, userID)
+}
+
+func (s *RepositoryAPIKeyService) DisableAPIKey(ctx context.Context, userID, keyID string) error {
+	return s.repo.DisableByUserID(ctx, userID, keyID)
+}
+
+func (s *RepositoryAPIKeyService) DeleteAPIKey(ctx context.Context, userID, keyID string) error {
+	return s.repo.SoftDeleteByUserID(ctx, userID, keyID)
 }

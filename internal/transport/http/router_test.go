@@ -31,6 +31,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/usage"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
@@ -459,6 +460,7 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 		t.Fatalf("seed sparse user: %v", err)
 	}
 	callLogs := calllog.NewMemoryCallLogRepo()
+	usageRepo := usage.NewMemoryRepo()
 	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 10})
 	_ = callLogs.Insert(context.Background(), model.CallLog{
 		RequestID:  "req_123",
@@ -473,12 +475,49 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	if err != nil {
 		t.Fatalf("CreateAPIKey() error = %v", err)
 	}
+	_ = usageRepo.InsertUsageEvent(context.Background(), model.UsageEventRecord{
+		ID:          "uevt_1",
+		UserID:      seededUser.ID,
+		APIKeyID:    created.APIKey.ID,
+		ProductArea: "capability",
+		Action:      "image.generate",
+		Provider:    "nexushub",
+		RequestID:   "req_1",
+		Status:      "success",
+		FinalCost:   5,
+		OccurredAt:  time.Date(2026, 3, 26, 10, 30, 0, 0, time.UTC),
+	})
+	_ = usageRepo.InsertUsageEvent(context.Background(), model.UsageEventRecord{
+		ID:          "uevt_2",
+		UserID:      seededUser.ID,
+		APIKeyID:    created.APIKey.ID,
+		ProductArea: "capability",
+		Action:      "video.generate",
+		Provider:    "nexushub",
+		RequestID:   "req_2",
+		Status:      "failed",
+		FinalCost:   3,
+		OccurredAt:  time.Date(2026, 3, 26, 10, 20, 0, 0, time.UTC),
+	})
+	_ = usageRepo.InsertUsageEvent(context.Background(), model.UsageEventRecord{
+		ID:          "uevt_3",
+		UserID:      seededUser.ID,
+		APIKeyID:    created.APIKey.ID,
+		ProductArea: "capability",
+		Action:      "music.generate",
+		Provider:    "nexushub",
+		RequestID:   "req_3",
+		Status:      "success",
+		FinalCost:   1,
+		OccurredAt:  time.Date(2026, 3, 26, 10, 10, 0, 0, time.UTC),
+	})
 
 	sessionSeq := 0
 	systemService := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev", Commit: "abc123", Date: "2026-03-24T00:00:00Z"}, apiKeys)
 	systemService.SetUserReader(users)
 	systemService.SetCreditClient(creditClient)
 	systemService.SetCallLogRepo(callLogs)
+	systemService.SetUsageReader(usageRepo)
 	passthroughMapper := presenter.PassthroughIDMapper{}
 	systemHandler := system.NewHandler(systemService, passthroughMapper)
 	loginHandler := login.NewHandler(loginapp.NewService(
@@ -637,11 +676,19 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 		},
 	})
 
-	return &serverHarness{engine: engine}, created.RawKey
+	return &serverHarness{
+		engine:   engine,
+		callLogs: callLogs,
+		userID:   seededUser.ID,
+		apiKeyID: created.APIKey.ID,
+	}, created.RawKey
 }
 
 type serverHarness struct {
-	engine *server.Hertz
+	engine   *server.Hertz
+	callLogs *calllog.MemoryCallLogRepo
+	userID   string
+	apiKeyID string
 }
 
 type staticCapabilityRateLimitResolver struct {
@@ -916,6 +963,97 @@ func TestRouter_DashboardReadAPIs(t *testing.T) {
 	}
 }
 
+func TestRouter_APIKeyManagementReadAPIs(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/api-keys", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/api-keys response: %v", err)
+	}
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	items, ok := data["items"].([]any)
+	if !ok || len(items) != 1 {
+		t.Fatalf("expected one api key item, got %#v", data)
+	}
+	first, ok := items[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected first api key object, got %#v", items[0])
+	}
+	if _, ok := first["usage_summary"].(map[string]any); !ok {
+		t.Fatalf("expected usage_summary in first item, got %#v", first)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/usage/summary", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/usage/summary response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if total, _ := data["total_events"].(float64); total != 3 {
+		t.Fatalf("expected total_events=3, got %#v", data)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/usage/events", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/usage/events response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	items, ok = data["items"].([]any)
+	if !ok || len(items) != 3 {
+		t.Fatalf("expected three usage events, got %#v", data)
+	}
+}
+
+func TestRouter_APIKeyManagementMutations(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	jwtAuthz := ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/api-keys", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/api-keys response: %v", err)
+	}
+	data := env["data"].(map[string]any)
+	items := data["items"].([]any)
+	keyID := items[0].(map[string]any)["id"].(string)
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/api-keys/"+keyID+"/disable", &ut.Body{Body: bytes.NewReader([]byte(`{}`)), Len: 2}, jwtAuthz, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodDelete, "/v1/api-keys/"+keyID, nil, jwtAuthz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
 func TestRouter_MeSupportsJWTBearer(t *testing.T) {
 	h, _ := newRouterForTest(t, 10)
 
@@ -1516,6 +1654,73 @@ func TestRouter_MusicRoutes(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/music/generate", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_GenerateRoutesPersistAPIKeyIDInCallLogs(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	tests := []struct {
+		name       string
+		method     string
+		path       string
+		body       string
+		capability string
+	}{
+		{
+			name:       "image",
+			method:     http.MethodPost,
+			path:       "/v1/image/generate",
+			body:       `{"prompt":"paper crane","model":"flux-dev"}`,
+			capability: "image.generate",
+		},
+		{
+			name:       "video",
+			method:     http.MethodPost,
+			path:       "/v1/video/generate",
+			body:       `{"prompt":"paper crane","model":"veo-mini"}`,
+			capability: "video.generate",
+		},
+		{
+			name:       "music",
+			method:     http.MethodPost,
+			path:       "/v1/music/generate",
+			body:       `{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`,
+			capability: "music.generate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := ut.PerformRequest(h.engine.Engine, tc.method, tc.path,
+				&ut.Body{Body: bytes.NewReader([]byte(tc.body)), Len: len(tc.body)},
+				authz,
+				ut.Header{Key: "Content-Type", Value: "application/json"},
+			)
+			if resp.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+			}
+
+			items, err := h.callLogs.ListByUserID(context.Background(), h.userID, 20)
+			if err != nil {
+				t.Fatalf("ListByUserID() error = %v", err)
+			}
+
+			found := false
+			for _, item := range items {
+				if item.Capability == tc.capability && item.RequestID != "" {
+					if item.APIKeyID != h.apiKeyID {
+						t.Fatalf("expected api_key_id %s for %s, got %#v", h.apiKeyID, tc.capability, item)
+					}
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatalf("expected call log for capability %s, got %#v", tc.capability, items)
+			}
+		})
 	}
 }
 

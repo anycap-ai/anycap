@@ -56,6 +56,18 @@ func (f *fakeLoginAPIKeyService) RevokeAPIKey(_ context.Context, _ string) error
 	return nil
 }
 
+func (f *fakeLoginAPIKeyService) ListAPIKeys(_ context.Context, _ string) ([]model.APIKey, error) {
+	return nil, nil
+}
+
+func (f *fakeLoginAPIKeyService) DisableAPIKey(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (f *fakeLoginAPIKeyService) DeleteAPIKey(_ context.Context, _, _ string) error {
+	return nil
+}
+
 func (f *fakeLoginCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
 	return model.Balance{}, nil
 }

@@ -217,6 +217,58 @@ func TestClient_GenerateMusic(t *testing.T) {
 	}
 }
 
+func TestClient_GetSubmitResult(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", r.Method)
+		}
+		if r.URL.Path != "/v1/get_submit_result/task-123" {
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		if got := r.Header.Get("X-Token"); got != "nexus-token" {
+			t.Fatalf("expected X-Token nexus-token, got %q", got)
+		}
+		if got := r.Header.Get("X-Request-Id"); got != "req-sync-1" {
+			t.Fatalf("expected request id header req-sync-1, got %q", got)
+		}
+
+		resp := submitAtomicProcessResponse{
+			Base:        submitBaseResponse{Code: 0, Message: "success"},
+			TaskID:      "task-123",
+			Status:      "failed",
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.png","credit_cost":4}]}`,
+			ErrCode:     5005,
+			ErrMsg:      "validation failed",
+			NexusUsage:  map[string]any{"images": 1},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{
+		BaseURL: srv.URL,
+		Token:   "nexus-token",
+	})
+
+	ctx := middleware.ContextWithRequestID(context.Background(), "req-sync-1")
+	result, err := client.GetSubmitResult(ctx, "task-123")
+	if err != nil {
+		t.Fatalf("GetSubmitResult() error = %v", err)
+	}
+	if result.TaskID != "task-123" || result.Status != "failed" {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	if result.CreditCost != 4 {
+		t.Fatalf("expected credit cost 4, got %d", result.CreditCost)
+	}
+	if result.ErrorCode != 5005 || result.ErrorMessage != "validation failed" {
+		t.Fatalf("unexpected error mapping: %+v", result)
+	}
+}
+
 // TestMapSubmitError_NexusHub500WithValidationCode reproduces the exact error
 // from production: NexusHub returns HTTP 500 with base.code=5005 for what is
 // actually a parameter validation error (unsupported video duration).

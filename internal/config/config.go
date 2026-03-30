@@ -15,25 +15,27 @@ import (
 )
 
 const (
-	defaultAppName              = "anycap-server"
-	defaultAppEnv               = "local"
-	defaultHTTPAddr             = ":18080"
-	defaultRuntimeMode          = "stub"
-	defaultRateLimitRPM         = 60
-	rateLimitEnvPrefix          = "ANYCAP_RATE_LIMIT_"
-	rateLimitEnvSuffix          = "_RPM"
-	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
-	defaultAgentPlatformTimeout = 120 * time.Second
-	defaultPresignExpiry        = 600   // seconds (10 minutes)
-	defaultPresignGetExpiry     = 3600  // seconds (1 hour)
-	maxPresignExpiry            = 3600  // seconds (1 hour hard cap)
-	maxPresignGetExpiry         = 86400 // seconds (24 hours hard cap)
-	legacyPGConfigEnvKey        = "ANYCAP_PG_CONFIG"
-	defaultDriveShareBaseURL    = "https://drive.anycap.cloud/s"
-	defaultKVSyncPollInterval   = 1 * time.Second
-	defaultKVSyncLockTTL        = 5 * time.Minute
-	defaultKVSyncWaitTimeout    = 5 * time.Second
-	defaultCloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
+	defaultAppName               = "anycap-server"
+	defaultAppEnv                = "local"
+	defaultHTTPAddr              = ":18080"
+	defaultRuntimeMode           = "stub"
+	defaultRateLimitRPM          = 60
+	rateLimitEnvPrefix           = "ANYCAP_RATE_LIMIT_"
+	rateLimitEnvSuffix           = "_RPM"
+	defaultLoginAPIKeyTTL        = 7 * 24 * time.Hour
+	defaultAgentPlatformTimeout  = 120 * time.Second
+	defaultPresignExpiry         = 600   // seconds (10 minutes)
+	defaultPresignGetExpiry      = 3600  // seconds (1 hour)
+	maxPresignExpiry             = 3600  // seconds (1 hour hard cap)
+	maxPresignGetExpiry          = 86400 // seconds (24 hours hard cap)
+	legacyPGConfigEnvKey         = "ANYCAP_PG_CONFIG"
+	defaultDriveShareBaseURL     = "https://drive.anycap.cloud/s"
+	defaultKVSyncPollInterval    = 1 * time.Second
+	defaultKVSyncLockTTL         = 5 * time.Minute
+	defaultKVSyncWaitTimeout     = 5 * time.Second
+	defaultUsageSyncPollInterval = 1 * time.Minute
+	defaultUsageSyncBatchSize    = 50
+	defaultCloudflareAPIBaseURL  = "https://api.cloudflare.com/client/v4"
 )
 
 type Config struct {
@@ -84,6 +86,9 @@ type Config struct {
 	KVSyncPollInterval      time.Duration
 	KVSyncLockTTL           time.Duration
 	KVSyncWaitTimeout       time.Duration
+	UsageSyncEnabled        bool
+	UsageSyncPollInterval   time.Duration
+	UsageSyncBatchSize      int
 }
 
 type CreditConfig struct {
@@ -207,11 +212,14 @@ func LoadFromEnv() (Config, error) {
 			APIToken:    getEnv("ANYCAP_CLOUDFLARE_API_TOKEN", ""),
 			APIBaseURL:  getEnv("ANYCAP_CLOUDFLARE_API_BASE_URL", defaultCloudflareAPIBaseURL),
 		},
-		KVSyncEnabled:      getEnvBool("ANYCAP_KVSYNC_ENABLED", false),
-		KVSyncWaitEnabled:  getEnvBool("ANYCAP_KVSYNC_WAIT_ENABLED", true),
-		KVSyncPollInterval: getEnvDuration("ANYCAP_KVSYNC_POLL_INTERVAL", defaultKVSyncPollInterval),
-		KVSyncLockTTL:      getEnvDuration("ANYCAP_KVSYNC_LOCK_TTL", defaultKVSyncLockTTL),
-		KVSyncWaitTimeout:  getEnvDuration("ANYCAP_KVSYNC_WAIT_TIMEOUT", defaultKVSyncWaitTimeout),
+		KVSyncEnabled:         getEnvBool("ANYCAP_KVSYNC_ENABLED", false),
+		KVSyncWaitEnabled:     getEnvBool("ANYCAP_KVSYNC_WAIT_ENABLED", true),
+		KVSyncPollInterval:    getEnvDuration("ANYCAP_KVSYNC_POLL_INTERVAL", defaultKVSyncPollInterval),
+		KVSyncLockTTL:         getEnvDuration("ANYCAP_KVSYNC_LOCK_TTL", defaultKVSyncLockTTL),
+		KVSyncWaitTimeout:     getEnvDuration("ANYCAP_KVSYNC_WAIT_TIMEOUT", defaultKVSyncWaitTimeout),
+		UsageSyncEnabled:      getEnvBool("ANYCAP_USAGE_SYNC_ENABLED", true),
+		UsageSyncPollInterval: getEnvDuration("ANYCAP_USAGE_SYNC_POLL_INTERVAL", defaultUsageSyncPollInterval),
+		UsageSyncBatchSize:    getEnvInt("ANYCAP_USAGE_SYNC_BATCH_SIZE", defaultUsageSyncBatchSize),
 	}
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {

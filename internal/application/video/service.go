@@ -7,6 +7,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
 
 type Service struct {
@@ -14,6 +15,7 @@ type Service struct {
 	nexusHub port.NexusHubClient
 	credit   port.CreditClient
 	callLogs port.CallLogRepo
+	usage    port.UsageWriter
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -23,6 +25,10 @@ func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, cr
 		credit:   credit,
 		callLogs: callLogs,
 	}
+}
+
+func (s *Service) SetUsageWriter(usage port.UsageWriter) {
+	s.usage = usage
 }
 
 func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) (model.GenerateVideoResult, error) {
@@ -66,6 +72,39 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	if cost <= 0 {
 		cost = 1
 	}
+	if s.usage != nil {
+		eventID := externalid.Generate(externalid.PrefixUsageEvent)
+		runID := externalid.Generate(externalid.PrefixProviderRun)
+		_ = s.usage.InsertUsageEvent(ctx, model.UsageEventRecord{
+			ID:            eventID,
+			UserID:        req.UserID,
+			APIKeyID:      req.APIKeyID,
+			ProductArea:   "capability",
+			Action:        "video.generate",
+			Provider:      "nexushub",
+			RequestID:     req.RequestID,
+			Status:        result.Status,
+			EstimatedCost: cost,
+			FinalCost:     cost,
+			OccurredAt:    startedAt.UTC(),
+		})
+		_ = s.usage.InsertProviderRun(ctx, model.ProviderRunRecord{
+			ID:             runID,
+			Provider:       "nexushub",
+			ProviderTaskID: result.ID,
+			UsageEventID:   eventID,
+			AuthMode:       "platform_token",
+			AbilityKey:     route.AbilityKey,
+			ProviderStatus: result.Status,
+			ProviderUsage:  result.Usage,
+			ProviderCost:   cost,
+			RawResult: map[string]any{
+				"model":   result.Model,
+				"outputs": result.Outputs,
+			},
+			SubmittedAt: startedAt.UTC(),
+		})
+	}
 	if err := s.credit.Deduct(ctx, req.UserID, cost, "video.generate", req.RequestID); err != nil {
 		return model.GenerateVideoResult{}, model.ErrBillingUncertain
 	}
@@ -74,6 +113,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		_ = s.callLogs.Insert(ctx, model.CallLog{
 			RequestID:  req.RequestID,
 			UserID:     req.UserID,
+			APIKeyID:   req.APIKeyID,
 			Capability: "video.generate",
 			Model:      req.Model,
 			Status:     result.Status,

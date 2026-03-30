@@ -10,7 +10,13 @@ import (
 )
 
 type fakeAPIKeyService struct {
-	revoked []string
+	revoked      []string
+	listUserIDs  []string
+	disabled     []string
+	deleted      []string
+	keys         []model.APIKey
+	disableUsers []string
+	deleteUsers  []string
 }
 
 type fakeUserReader struct {
@@ -57,6 +63,12 @@ type fakeCallLogRepo struct {
 	logs []model.CallLog
 }
 
+type fakeUsageReader struct {
+	summary    model.UsageSummaryResult
+	events     model.UsageEventListResult
+	apiKeyUsage map[string]model.APIKeyUsageSummary
+}
+
 func (f *fakeCallLogRepo) Insert(_ context.Context, entry model.CallLog) error {
 	f.logs = append(f.logs, entry)
 	return nil
@@ -92,6 +104,35 @@ func (f *fakeAPIKeyService) RevokeAPIKey(_ context.Context, keyID string) error 
 	return nil
 }
 
+func (f *fakeAPIKeyService) ListAPIKeys(_ context.Context, userID string) ([]model.APIKey, error) {
+	f.listUserIDs = append(f.listUserIDs, userID)
+	return append([]model.APIKey(nil), f.keys...), nil
+}
+
+func (f *fakeAPIKeyService) DisableAPIKey(_ context.Context, userID, keyID string) error {
+	f.disableUsers = append(f.disableUsers, userID)
+	f.disabled = append(f.disabled, keyID)
+	return nil
+}
+
+func (f *fakeAPIKeyService) DeleteAPIKey(_ context.Context, userID, keyID string) error {
+	f.deleteUsers = append(f.deleteUsers, userID)
+	f.deleted = append(f.deleted, keyID)
+	return nil
+}
+
+func (f *fakeUsageReader) SummarizeUsageByUser(_ context.Context, _ string, _ model.UsageQuery) (model.UsageSummaryResult, error) {
+	return f.summary, nil
+}
+
+func (f *fakeUsageReader) ListUsageEventsByUser(_ context.Context, _ string, _ model.UsageQuery) (model.UsageEventListResult, error) {
+	return f.events, nil
+}
+
+func (f *fakeUsageReader) SummarizeUsageByAPIKey(_ context.Context, _ string, _ model.UsageQuery) (map[string]model.APIKeyUsageSummary, error) {
+	return f.apiKeyUsage, nil
+}
+
 func TestService_Status(t *testing.T) {
 	service := NewService("anycap-server", "test", "stub", buildinfo.Info{
 		Version: "dev",
@@ -125,6 +166,130 @@ func TestService_LogoutRevokesCurrentAPIKey(t *testing.T) {
 	}
 	if len(apiKeys.revoked) != 1 || apiKeys.revoked[0] != "key-123" {
 		t.Fatalf("unexpected revoked keys: %+v", apiKeys.revoked)
+	}
+}
+
+func TestService_ListAPIKeysIncludesUsageSummary(t *testing.T) {
+	now := time.Date(2026, 3, 30, 9, 0, 0, 0, time.UTC)
+	lastUsed := now.Add(-time.Hour)
+	apiKeys := &fakeAPIKeyService{
+		keys: []model.APIKey{
+			{
+				ID:         "akid_1",
+				UserID:     "2000000001",
+				Name:       "cli",
+				Status:     model.APIKeyStatusActive,
+				LastUsedAt: &lastUsed,
+				CreatedAt:  now.Add(-24 * time.Hour),
+			},
+		},
+	}
+
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, apiKeys)
+	service.SetUsageReader(&fakeUsageReader{
+		apiKeyUsage: map[string]model.APIKeyUsageSummary{
+			"akid_1": {
+				UsageCount:   3,
+				SuccessCount: 2,
+				FailureCount: 1,
+				Cost:         7,
+				LastAction:   "image.generate",
+			},
+		},
+	})
+
+	result, err := service.ListAPIKeys(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"})
+	if err != nil {
+		t.Fatalf("ListAPIKeys() error = %v", err)
+	}
+	if len(apiKeys.listUserIDs) != 1 || apiKeys.listUserIDs[0] != "2000000001" {
+		t.Fatalf("expected ListAPIKeys to use current user, got %+v", apiKeys.listUserIDs)
+	}
+	if len(result.Items) != 1 {
+		t.Fatalf("expected 1 key, got %d", len(result.Items))
+	}
+	if result.Items[0].UsageSummary.UsageCount != 3 || result.Items[0].UsageSummary.LastAction != "image.generate" {
+		t.Fatalf("unexpected usage summary: %+v", result.Items[0].UsageSummary)
+	}
+}
+
+func TestService_DisableAPIKeyUsesCurrentUser(t *testing.T) {
+	apiKeys := &fakeAPIKeyService{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, apiKeys)
+
+	err := service.DisableAPIKey(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, "akid_1")
+	if err != nil {
+		t.Fatalf("DisableAPIKey() error = %v", err)
+	}
+	if len(apiKeys.disableUsers) != 1 || apiKeys.disableUsers[0] != "2000000001" {
+		t.Fatalf("unexpected disable users: %+v", apiKeys.disableUsers)
+	}
+	if len(apiKeys.disabled) != 1 || apiKeys.disabled[0] != "akid_1" {
+		t.Fatalf("unexpected disabled keys: %+v", apiKeys.disabled)
+	}
+}
+
+func TestService_DeleteAPIKeyUsesCurrentUser(t *testing.T) {
+	apiKeys := &fakeAPIKeyService{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, apiKeys)
+
+	err := service.DeleteAPIKey(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, "akid_1")
+	if err != nil {
+		t.Fatalf("DeleteAPIKey() error = %v", err)
+	}
+	if len(apiKeys.deleteUsers) != 1 || apiKeys.deleteUsers[0] != "2000000001" {
+		t.Fatalf("unexpected delete users: %+v", apiKeys.deleteUsers)
+	}
+	if len(apiKeys.deleted) != 1 || apiKeys.deleted[0] != "akid_1" {
+		t.Fatalf("unexpected deleted keys: %+v", apiKeys.deleted)
+	}
+}
+
+func TestService_UsageSummary(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetUsageReader(&fakeUsageReader{
+		summary: model.UsageSummaryResult{
+			TotalEvents:   4,
+			SuccessEvents: 3,
+			FailureEvents: 1,
+			TotalCost:     12,
+		},
+	})
+
+	result, err := service.UsageSummary(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, model.UsageQuery{})
+	if err != nil {
+		t.Fatalf("UsageSummary() error = %v", err)
+	}
+	if result.TotalEvents != 4 || result.TotalCost != 12 {
+		t.Fatalf("unexpected usage summary: %+v", result)
+	}
+}
+
+func TestService_UsageEvents(t *testing.T) {
+	now := time.Date(2026, 3, 30, 10, 0, 0, 0, time.UTC)
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetUsageReader(&fakeUsageReader{
+		events: model.UsageEventListResult{
+			Items: []model.UsageEvent{
+				{
+					ID:         "uevt_1",
+					APIKeyID:   "akid_1",
+					Action:     "image.generate",
+					Provider:   "nexushub",
+					Status:     "success",
+					FinalCost:  5,
+					OccurredAt: now,
+				},
+			},
+		},
+	})
+
+	result, err := service.UsageEvents(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, model.UsageQuery{})
+	if err != nil {
+		t.Fatalf("UsageEvents() error = %v", err)
+	}
+	if len(result.Items) != 1 || result.Items[0].Action != "image.generate" {
+		t.Fatalf("unexpected usage events: %+v", result.Items)
 	}
 }
 

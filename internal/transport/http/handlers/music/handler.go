@@ -42,6 +42,7 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	result, err := h.service.Generate(c, model.GenerateMusicRequest{
 		RequestID:        middleware.GetRequestID(ctx),
 		UserID:           principal.UserID,
+		APIKeyID:         principal.APIKeyID,
 		Prompt:           payload.Prompt,
 		Model:            payload.Model,
 		MakeInstrumental: payload.MakeInstrumental,
