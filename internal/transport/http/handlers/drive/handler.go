@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
@@ -21,15 +22,15 @@ func NewHandler(service *driveapp.Service, resolver idresolver.IDResolver, mappe
 }
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
-	group.POST("/drive/folders", h.CreateFolder)
-	group.POST("/drive/files/presign", h.PresignFile)
-	group.POST("/drive/files/complete", h.CompleteFile)
-	group.GET("/drive/nodes", h.ListNodes)
-	group.PATCH("/drive/nodes/:id", h.UpdateNode)
-	group.DELETE("/drive/nodes/:id", h.DeleteNode)
-	group.PUT("/drive/nodes/:id/share", h.UpsertShare)
-	group.POST("/drive/nodes/:id/share/rotate", h.RotateShare)
-	group.DELETE("/drive/nodes/:id/share", h.RevokeShare)
+	middleware.CapabilityPOST(group, "/drive/folders", "drive.folder.create", h.CreateFolder)
+	middleware.CapabilityPOST(group, "/drive/files/presign", "drive.file.upload.prepare", h.PresignFile)
+	middleware.CapabilityPOST(group, "/drive/files/complete", "drive.file.upload.complete", h.CompleteFile)
+	middleware.CapabilityGET(group, "/drive/nodes", "drive.browse", h.ListNodes)
+	middleware.CapabilityPATCH(group, "/drive/nodes/:id", "drive.item.update", h.UpdateNode)
+	middleware.CapabilityDELETE(group, "/drive/nodes/:id", "drive.item.delete", h.DeleteNode)
+	middleware.CapabilityPUT(group, "/drive/nodes/:id/share", "drive.share.update", h.UpsertShare)
+	middleware.CapabilityPOST(group, "/drive/nodes/:id/share/rotate", "drive.share.rotate", h.RotateShare)
+	middleware.CapabilityDELETE(group, "/drive/nodes/:id/share", "drive.share.revoke", h.RevokeShare)
 }
 
 type createFolderRequest struct {

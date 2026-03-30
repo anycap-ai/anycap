@@ -20,6 +20,8 @@ const (
 	defaultHTTPAddr             = ":18080"
 	defaultRuntimeMode          = "stub"
 	defaultRateLimitRPM         = 60
+	rateLimitEnvPrefix          = "ANYCAP_RATE_LIMIT_"
+	rateLimitEnvSuffix          = "_RPM"
 	defaultLoginAPIKeyTTL       = 7 * 24 * time.Hour
 	defaultAgentPlatformTimeout = 120 * time.Second
 	defaultPresignExpiry        = 600   // seconds (10 minutes)
@@ -55,6 +57,7 @@ type Config struct {
 	RedisPassword    string
 	RedisDB          int
 	RateLimitRPM     int
+	RateLimitOverrides map[string]int
 	LoginAPIKeyTTL   time.Duration
 	Auth0Enabled     bool
 	Auth0Issuer      string
@@ -175,6 +178,7 @@ func LoadFromEnv() (Config, error) {
 		RedisPassword:           os.Getenv("ANYCAP_REDIS_PASSWORD"),
 		RedisDB:                 getEnvInt("ANYCAP_REDIS_DB", 0),
 		RateLimitRPM:            getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
+		RateLimitOverrides:      loadRateLimitOverrides(),
 		LoginAPIKeyTTL:          getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
 		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
@@ -337,6 +341,36 @@ func loadCreditConfig() CreditConfig {
 	}
 }
 
+func loadRateLimitOverrides() map[string]int {
+	overrides := make(map[string]int)
+	for _, entry := range os.Environ() {
+		key, raw, ok := strings.Cut(entry, "=")
+		if !ok {
+			continue
+		}
+		if key == "ANYCAP_RATE_LIMIT_RPM" {
+			continue
+		}
+		if !strings.HasPrefix(key, rateLimitEnvPrefix) || !strings.HasSuffix(key, rateLimitEnvSuffix) {
+			continue
+		}
+
+		value, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err != nil || value <= 0 {
+			continue
+		}
+
+		name := strings.TrimSuffix(strings.TrimPrefix(key, rateLimitEnvPrefix), rateLimitEnvSuffix)
+		if name == "" {
+			continue
+		}
+
+		capability := strings.ToLower(strings.ReplaceAll(name, "_", "."))
+		overrides[capability] = value
+	}
+	return overrides
+}
+
 func loadAgentPlatformConfig() AgentPlatformConfig {
 	timeout := defaultAgentPlatformTimeout
 	if s := os.Getenv("AGENT_PLATFORM_TIMEOUT_SECONDS"); s != "" {
@@ -415,6 +449,16 @@ func (c Config) postgresDSN() string {
 	}
 	u.RawQuery = query.Encode()
 	return u.String()
+}
+
+func (c Config) ResolveCapabilityRateLimitRPM(capability string) int {
+	capability = strings.TrimSpace(strings.ToLower(capability))
+	if capability != "" {
+		if rpm, ok := c.RateLimitOverrides[capability]; ok && rpm > 0 {
+			return rpm
+		}
+	}
+	return c.RateLimitRPM
 }
 
 func (c Config) ResolvedNexusHubPlatformBaseURL() string {

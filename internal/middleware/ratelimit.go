@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -14,26 +13,36 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func RateLimit(limiter port.RateLimiter, rpm int) app.HandlerFunc {
+type CapabilityRateLimitResolver interface {
+	ResolveCapabilityRateLimitRPM(capability string) int
+}
+
+func RateLimit(limiter port.RateLimiter, resolver CapabilityRateLimitResolver) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-		if limiter == nil || rpm <= 0 {
+		if limiter == nil || resolver == nil {
 			c.Next(ctx)
 			return
 		}
 
-		key := ""
-		if principal, ok := GetPrincipal(c); ok && principal.APIKeyID != "" {
-			key = fmt.Sprintf("rl:apikey:%s", principal.APIKeyID)
-		} else {
-			header := string(c.Request.Header.Peek("Authorization"))
-			if strings.HasPrefix(strings.ToLower(header), "bearer ") {
-				key = "rl:token:" + strings.TrimSpace(header[len("Bearer "):])
-			}
-		}
-		if key == "" {
+		capability, ok := ResolveCapability(c)
+		if !ok {
 			c.Next(ctx)
 			return
 		}
+
+		principal, ok := GetPrincipal(c)
+		if !ok || principal == nil || principal.UserID == "" {
+			c.Next(ctx)
+			return
+		}
+
+		rpm := resolver.ResolveCapabilityRateLimitRPM(capability)
+		if rpm <= 0 {
+			c.Next(ctx)
+			return
+		}
+
+		key := fmt.Sprintf("rl:usercap:%s:%s", principal.UserID, capability)
 
 		allowed, remaining, resetAt, err := limiter.Allow(ctx, key, rpm, time.Minute)
 		if err != nil {

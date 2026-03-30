@@ -23,7 +23,7 @@ func NewHandler(service *feedbackapp.Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
-	group.POST("/feedback", h.Submit)
+	middleware.CapabilityPOST(group, "/feedback", "feedback.submit", h.Submit)
 }
 
 func (h *Handler) Submit(c context.Context, ctx *app.RequestContext) {

@@ -23,7 +23,7 @@ func NewHandler(service *videoapp.Service) *Handler {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/video")
-	g.POST("/generate", h.Generate)
+	middleware.CapabilityPOST(g, "/generate", "video.generate", h.Generate)
 }
 
 func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {

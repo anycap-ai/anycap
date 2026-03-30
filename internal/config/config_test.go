@@ -69,6 +69,51 @@ func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
 	}
 }
 
+func TestConfig_ResolveCapabilityRateLimitRPM_UsesOverride(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_RATE_LIMIT_RPM", "60")
+	t.Setenv("ANYCAP_RATE_LIMIT_IMAGE_GENERATE_RPM", "10")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if got := cfg.ResolveCapabilityRateLimitRPM("image.generate"); got != 10 {
+		t.Fatalf("expected image.generate override 10, got %d", got)
+	}
+}
+
+func TestConfig_ResolveCapabilityRateLimitRPM_FallsBackToDefault(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_RATE_LIMIT_RPM", "60")
+	t.Setenv("ANYCAP_RATE_LIMIT_IMAGE_GENERATE_RPM", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if got := cfg.ResolveCapabilityRateLimitRPM("video.generate"); got != 60 {
+		t.Fatalf("expected default rate limit 60, got %d", got)
+	}
+}
+
+func TestConfig_ResolveCapabilityRateLimitRPM_NormalizesCapabilityName(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_RATE_LIMIT_RPM", "60")
+	t.Setenv("ANYCAP_RATE_LIMIT_DRIVE_FILE_UPLOAD_PREPARE_RPM", "15")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if got := cfg.ResolveCapabilityRateLimitRPM("drive.file.upload.prepare"); got != 15 {
+		t.Fatalf("expected drive.file.upload.prepare override 15, got %d", got)
+	}
+}
+
 func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "PAGEDEV-%s.ANYCAP.CLOUD")

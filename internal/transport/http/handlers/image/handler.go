@@ -23,7 +23,7 @@ func NewHandler(service *imageapp.Service) *Handler {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/image")
-	g.POST("/generate", h.Generate)
+	middleware.CapabilityPOST(g, "/generate", "image.generate", h.Generate)
 }
 
 func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {

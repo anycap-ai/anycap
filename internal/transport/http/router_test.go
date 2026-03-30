@@ -19,6 +19,7 @@ import (
 	musicapp "gitlab.knoffice.tech/engineering/anycap/internal/application/music"
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
+	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
@@ -43,6 +44,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/music"
 	pagehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
@@ -432,6 +434,10 @@ func (r *fakePageSlugRepo) MarkTombstone(_ context.Context, _ string, _ int64) e
 }
 
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
+	return newRouterForTestWithOverrides(t, rpm, nil)
+}
+
+func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]int) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
@@ -453,7 +459,7 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		t.Fatalf("seed sparse user: %v", err)
 	}
 	callLogs := calllog.NewMemoryCallLogRepo()
-	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 3})
+	creditClient := credit.NewStubClient(map[string]int64{seededUser.ID: 10})
 	_ = callLogs.Insert(context.Background(), model.CallLog{
 		RequestID:  "req_123",
 		UserID:     seededUser.ID,
@@ -517,6 +523,25 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 			},
 		},
 		{
+			ModelID:     "veo-mini",
+			Capability:  model.CapabilityVideo,
+			DisplayName: "Veo Mini",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "veo-mini",
+						GenType:    string(model.CapabilityVideo),
+						AlgoType:   "txt_2_video",
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+		{
 			ModelID:     "mureka-v6",
 			Capability:  model.CapabilityMusic,
 			DisplayName: "Mureka V6",
@@ -536,9 +561,11 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		},
 	})
 	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	videoHandler := video.NewHandler(videoapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	musicHandler := music.NewHandler(musicapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
+	videoCatalog := catalog.NewHandler(catalogService, model.CapabilityVideo)
 	musicCatalog := catalog.NewHandler(catalogService, model.CapabilityMusic)
 	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
@@ -592,13 +619,15 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 			systemHandler,
 			loginHandler,
 			imageCatalog,
+			videoCatalog,
 			musicCatalog,
 			modelRouteHandler,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
+				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
@@ -613,6 +642,18 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 
 type serverHarness struct {
 	engine *server.Hertz
+}
+
+type staticCapabilityRateLimitResolver struct {
+	defaultRPM int
+	overrides  map[string]int
+}
+
+func (r staticCapabilityRateLimitResolver) ResolveCapabilityRateLimitRPM(capability string) int {
+	if rpm, ok := r.overrides[capability]; ok {
+		return rpm
+	}
+	return r.defaultRPM
 }
 
 func TestRouter_HealthAndLogin(t *testing.T) {
@@ -1275,6 +1316,186 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 after logout revoke, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_FunctionRoutes_UseCapabilityRateLimit(t *testing.T) {
+	tests := []struct {
+		name       string
+		capability string
+		method     string
+		path       string
+		body       string
+		authValue  string
+	}{
+		{
+			name:       "image generate",
+			capability: "image.generate",
+			method:     http.MethodPost,
+			path:       "/v1/image/generate",
+			body:       `{"prompt":"paper crane","model":"flux-dev"}`,
+		},
+		{
+			name:       "video generate",
+			capability: "video.generate",
+			method:     http.MethodPost,
+			path:       "/v1/video/generate",
+			body:       `{"prompt":"paper crane","model":"veo-mini"}`,
+		},
+		{
+			name:       "music generate",
+			capability: "music.generate",
+			method:     http.MethodPost,
+			path:       "/v1/music/generate",
+			body:       `{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`,
+		},
+		{
+			name:       "capabilities presign",
+			capability: "asset.upload.prepare",
+			method:     http.MethodPost,
+			path:       "/v1/capabilities/presign",
+			body:       `{"filename":"demo.png","content_type":"image/png","content_length":1024}`,
+		},
+		{
+			name:       "image read",
+			capability: "image.read",
+			method:     http.MethodPost,
+			path:       "/v1/capabilities/image/read",
+			body:       `{"url":"https://example.com/demo.png"}`,
+		},
+		{
+			name:       "video read",
+			capability: "video.read",
+			method:     http.MethodPost,
+			path:       "/v1/capabilities/video/read",
+			body:       `{"url":"https://example.com/demo.mp4"}`,
+		},
+		{
+			name:       "audio read",
+			capability: "audio.read",
+			method:     http.MethodPost,
+			path:       "/v1/capabilities/audio/read",
+			body:       `{"url":"https://example.com/demo.mp3"}`,
+		},
+		{
+			name:       "feedback submit",
+			capability: "feedback.submit",
+			method:     http.MethodPost,
+			path:       "/v1/feedback",
+			body:       `{"type":"bug","message":"image generate returned 500","metadata":{"cli_version":"0.1.0"}}`,
+		},
+		{
+			name:       "drive folder create",
+			capability: "drive.folder.create",
+			method:     http.MethodPost,
+			path:       "/v1/drive/folders",
+			body:       `{"name":"docs"}`,
+		},
+		{
+			name:       "drive browse",
+			capability: "drive.browse",
+			method:     http.MethodGet,
+			path:       "/v1/drive/nodes",
+			body:       ``,
+		},
+		{
+			name:       "page create",
+			capability: "page.create",
+			method:     http.MethodPost,
+			path:       "/v1/pages",
+			body:       `{"name":"My Portfolio"}`,
+		},
+		{
+			name:       "page list",
+			capability: "page.list",
+			method:     http.MethodGet,
+			path:       "/v1/pages",
+			body:       ``,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			h, rawKey := newRouterForTestWithOverrides(t, 100, map[string]int{
+				tc.capability: 1,
+			})
+			authValue := tc.authValue
+			if authValue == "" {
+				authValue = "Bearer " + rawKey
+			}
+
+			body := []byte(tc.body)
+			first := ut.PerformRequest(h.engine.Engine, tc.method, tc.path,
+				&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+				ut.Header{Key: "Authorization", Value: authValue},
+				ut.Header{Key: "Content-Type", Value: "application/json"},
+			)
+			if first.Code != http.StatusOK {
+				t.Fatalf("expected first request 200, got %d body=%s", first.Code, first.Body.String())
+			}
+
+			second := ut.PerformRequest(h.engine.Engine, tc.method, tc.path,
+				&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+				ut.Header{Key: "Authorization", Value: authValue},
+				ut.Header{Key: "Content-Type", Value: "application/json"},
+			)
+			if second.Code != http.StatusTooManyRequests {
+				t.Fatalf("expected second request 429, got %d body=%s", second.Code, second.Body.String())
+			}
+		})
+	}
+}
+
+func TestRouter_SystemRoutes_BypassCapabilityRateLimit(t *testing.T) {
+	h, rawKey := newRouterForTestWithOverrides(t, 1, nil)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+
+	tests := []struct {
+		name string
+		path string
+	}{
+		{name: "status", path: "/v1/status"},
+		{name: "dashboard summary", path: "/v1/dashboard/summary"},
+		{name: "me", path: "/v1/me"},
+		{name: "credits balance", path: "/v1/credits/balance"},
+		{name: "logs", path: "/v1/logs"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			first := ut.PerformRequest(h.engine.Engine, http.MethodGet, tc.path, nil, authz)
+			if first.Code != http.StatusOK {
+				t.Fatalf("expected first request 200, got %d body=%s", first.Code, first.Body.String())
+			}
+
+			second := ut.PerformRequest(h.engine.Engine, http.MethodGet, tc.path, nil, authz)
+			if second.Code != http.StatusOK {
+				t.Fatalf("expected second request 200, got %d body=%s", second.Code, second.Body.String())
+			}
+		})
+	}
+}
+
+func TestRouter_AuthHelperRoutes_BypassCapabilityRateLimit(t *testing.T) {
+	h, _ := newRouterForTestWithOverrides(t, 1, nil)
+	body := []byte(`{}`)
+
+	first := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/exchange",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if first.Code != http.StatusOK {
+		t.Fatalf("expected first request 200, got %d body=%s", first.Code, first.Body.String())
+	}
+
+	second := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/auth/exchange",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Authorization", Value: "Bearer jwt-demo-token"},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if second.Code != http.StatusOK {
+		t.Fatalf("expected second request 200, got %d body=%s", second.Code, second.Body.String())
 	}
 }
 

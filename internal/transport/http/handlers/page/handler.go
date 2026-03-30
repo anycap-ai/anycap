@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
@@ -21,20 +22,20 @@ func NewHandler(service *pageapp.Service, resolver idresolver.IDResolver, mapper
 }
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
-	group.POST("/pages", h.CreateSite)
-	group.GET("/pages", h.ListSites)
-	group.GET("/pages/:id", h.GetSite)
-	group.PATCH("/pages/:id", h.UpdateSite)
-	group.DELETE("/pages/:id", h.DeleteSite)
-	group.POST("/pages/:id/versions", h.CreateVersion)
-	group.POST("/pages/:id/versions/:vid/files/presign", h.PresignVersionAsset)
-	group.POST("/pages/:id/versions/:vid/files/complete", h.CompleteVersionAsset)
-	group.POST("/pages/:id/versions/:vid/finalize", h.FinalizeVersion)
-	group.POST("/pages/:id/versions/:vid/publish", h.PublishVersion)
-	group.POST("/pages/:id/versions/:vid/rollback-clone", h.RollbackCloneVersion)
-	group.POST("/pages/:id/unpublish", h.Unpublish)
-	group.GET("/pages/:id/versions", h.ListVersions)
-	group.GET("/pages/:id/versions/by-number/:no", h.GetVersionByNumber)
+	middleware.CapabilityPOST(group, "/pages", "page.create", h.CreateSite)
+	middleware.CapabilityGET(group, "/pages", "page.list", h.ListSites)
+	middleware.CapabilityGET(group, "/pages/:id", "page.read", h.GetSite)
+	middleware.CapabilityPATCH(group, "/pages/:id", "page.update", h.UpdateSite)
+	middleware.CapabilityDELETE(group, "/pages/:id", "page.delete", h.DeleteSite)
+	middleware.CapabilityPOST(group, "/pages/:id/versions", "page.version.create", h.CreateVersion)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/files/presign", "page.asset.upload.prepare", h.PresignVersionAsset)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/files/complete", "page.asset.upload.complete", h.CompleteVersionAsset)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/finalize", "page.version.finalize", h.FinalizeVersion)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/publish", "page.publish", h.PublishVersion)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/rollback-clone", "page.rollback", h.RollbackCloneVersion)
+	middleware.CapabilityPOST(group, "/pages/:id/unpublish", "page.unpublish", h.Unpublish)
+	middleware.CapabilityGET(group, "/pages/:id/versions", "page.version.list", h.ListVersions)
+	middleware.CapabilityGET(group, "/pages/:id/versions/by-number/:no", "page.version.read", h.GetVersionByNumber)
 }
 
 type createPageSiteRequest struct {

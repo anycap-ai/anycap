@@ -23,7 +23,7 @@ func NewHandler(service *musicapp.Service) *Handler {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/music")
-	g.POST("/generate", h.Generate)
+	middleware.CapabilityPOST(g, "/generate", "music.generate", h.Generate)
 }
 
 func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {

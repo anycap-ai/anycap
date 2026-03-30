@@ -26,10 +26,10 @@ func NewHandler(service *capapp.Service) *Handler {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/capabilities")
-	g.POST("/presign", h.Presign)
-	g.POST("/image/read", h.ImageRead)
-	g.POST("/video/read", h.VideoRead)
-	g.POST("/audio/read", h.AudioRead)
+	middleware.CapabilityPOST(g, "/presign", "asset.upload.prepare", h.Presign)
+	middleware.CapabilityPOST(g, "/image/read", "image.read", h.ImageRead)
+	middleware.CapabilityPOST(g, "/video/read", "video.read", h.VideoRead)
+	middleware.CapabilityPOST(g, "/audio/read", "audio.read", h.AudioRead)
 }
 
 // presignResponse is the public API shape for presign results.

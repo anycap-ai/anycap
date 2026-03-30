@@ -104,7 +104,6 @@ type serverDependencies struct {
 	apiKeyService       port.APIKeyService
 	identityTokens      port.IdentityTokenAuthenticator
 	rateLimiter         port.RateLimiter
-	protectedRPM        int
 	kvSyncWorker        *kvsync.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
@@ -168,7 +167,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			musicCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM), middleware.FeatureGate(serverFeatures))
+				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.config), middleware.FeatureGate(serverFeatures))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
@@ -265,7 +264,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:       apiKeys,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
-			protectedRPM:        cfg.RateLimitRPM,
 			idResolver:          idresolver.PassthroughIDResolver{},
 			idMapper:            presenter.PassthroughIDMapper{},
 		}, nil
@@ -374,7 +372,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:       apiKeyService,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
-			protectedRPM:        cfg.RateLimitRPM,
 			idResolver:          externalIDMapper,
 			idMapper:            externalIDMapper,
 			kvSyncWorker: func() *kvsync.Worker {
