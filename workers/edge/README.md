@@ -48,9 +48,9 @@ make secrets ENV=prod    # upload secrets from .secrets.prod
 The worker routes requests by hostname:
 - `cdn.*` → public asset serving
 - `drive.*` → shared file/folder access (with optional password protection)
-- `*.page.*` → hosted page serving (with optional password protection)
+- `page-<name>.*` → hosted page serving (with optional password protection)
 
-Bindings: `EDGE_KV` (metadata) + `ANYCAP_CLOUD_R2` (file storage). Read-only, no external API calls.
+Bindings: `EDGE_KV` (metadata + rate limit counters) + `ANYCAP_CLOUD_R2` (file storage) + CF Cache API (static asset caching). No external API calls.
 
 ## Notes
 
