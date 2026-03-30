@@ -29,9 +29,13 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 	)
 
 	cmd := &cobra.Command{
-		Use:   "deploy <dir>",
-		Short: "Deploy a local directory as a page version",
-		Args:  cobra.ExactArgs(1),
+		Use:   "deploy <path>",
+		Short: "Deploy a local HTML file or static site directory as a page version",
+		Long: `Deploy a local HTML file or static site directory as a page version.
+
+  anycap page deploy index.html          Deploy a single HTML file
+  anycap page deploy ./dist/             Deploy a directory containing static assets`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rootDir := args[0]
 			files, err := collectPageDeployFiles(rootDir)
@@ -131,7 +135,16 @@ func collectPageDeployFiles(rootDir string) ([]pageDeployFile, error) {
 		return nil, err
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("deploy target must be a directory: %s", rootDir)
+		ext := strings.ToLower(filepath.Ext(rootDir))
+		if ext != ".html" && ext != ".htm" {
+			return nil, fmt.Errorf("single file deploy only supports HTML files, got: %s", rootDir)
+		}
+		return []pageDeployFile{{
+			AbsolutePath: rootDir,
+			AssetPath:    filepath.Base(rootDir),
+			Size:         info.Size(),
+			ContentType:  "text/html",
+		}}, nil
 	}
 
 	files := make([]pageDeployFile, 0, 32)
@@ -176,6 +189,18 @@ func collectPageDeployFiles(rootDir string) ([]pageDeployFile, error) {
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].AssetPath < files[j].AssetPath
 	})
+
+	hasIndex := false
+	for _, f := range files {
+		if f.AssetPath == "index.html" {
+			hasIndex = true
+			break
+		}
+	}
+	if !hasIndex {
+		return nil, fmt.Errorf("directory %s must contain an index.html at the root", rootDir)
+	}
+
 	return files, nil
 }
 
