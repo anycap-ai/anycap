@@ -181,7 +181,7 @@ jobs:
               files: ['bin/'],
               optionalDependencies: optDeps,
               engines: { node: '>=16' },
-              keywords: ['anycap','ai','agent','cli','capability']
+              keywords: ['anycap','ai','agent','agent-skill','agent-skills','claude-code','coding-agent','cli','capability']
             }, null, 2) + '\n');
           "
 
