@@ -15,6 +15,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/selfupdate"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -84,11 +85,13 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewDownloadCmd(opts.Stdout),
 	)
 
-	// Infrastructure commands (always available).
-	rootCmd.AddCommand(
-		infra.NewDriveCmd(clientFactory, opts.Stdout),
-		infra.NewPageCmd(clientFactory, opts.Stdout),
-	)
+	// Infrastructure commands (gated by feature flags).
+	if feature.Enabled(feature.Drive) {
+		rootCmd.AddCommand(infra.NewDriveCmd(clientFactory, opts.Stdout))
+	}
+	if feature.Enabled(feature.Page) {
+		rootCmd.AddCommand(infra.NewPageCmd(clientFactory, opts.Stdout))
+	}
 
 	// Action commands (AI analysis: image-read, video-read, etc.).
 	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {

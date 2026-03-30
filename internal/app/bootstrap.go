@@ -130,7 +130,8 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		}()
 	}
 
-	deps.systemService.SetFeatures(buildServerFeatures(cfg))
+	serverFeatures := buildServerFeatures(cfg)
+	deps.systemService.SetFeatures(serverFeatures)
 	systemHandler := system.NewHandler(deps.systemService, deps.idMapper)
 	loginHandler := login.NewHandler(deps.loginService, deps.idMapper)
 	imageHandler := image.NewHandler(deps.imageService)
@@ -167,7 +168,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			musicCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
+				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM), middleware.FeatureGate(serverFeatures))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
@@ -185,8 +186,9 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 }
 
 func buildServerFeatures(cfg config.Config) map[string]bool {
-	return map[string]bool{
-		feature.Login:         cfg.Auth0Enabled,
+	// Defaults derived from infrastructure configuration.
+	// Each can be overridden by ANYCAP_FEATURE_<NAME>=true/false.
+	defaults := map[string]bool{
 		feature.ImageGenerate: hasImageExecutionProvider(cfg),
 		feature.ImageModels:   hasCatalogProvider(cfg),
 		feature.ImageRead:     cfg.AgentPlatform.Enabled(),
@@ -195,6 +197,29 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.VideoRead:     cfg.AgentPlatform.Enabled(),
 		feature.MusicGenerate: hasMusicExecutionProvider(cfg),
 		feature.MusicModels:   hasCatalogProvider(cfg),
+		feature.Drive:         true,
+		feature.Page:          true,
+	}
+
+	for name, defVal := range defaults {
+		defaults[name] = resolveFeatureEnv(name, defVal)
+	}
+	return defaults
+}
+
+// resolveFeatureEnv checks for an environment variable override for a feature.
+// Env var: ANYCAP_FEATURE_IMAGE_GENERATE for "image.generate".
+// "true"/"1" forces on, "false"/"0" forces off, unset keeps the default.
+func resolveFeatureEnv(name string, autoVal bool) bool {
+	envKey := "ANYCAP_FEATURE_" + strings.ToUpper(strings.ReplaceAll(name, ".", "_"))
+	v := os.Getenv(envKey)
+	switch strings.ToLower(v) {
+	case "true", "1":
+		return true
+	case "false", "0":
+		return false
+	default:
+		return autoVal
 	}
 }
 

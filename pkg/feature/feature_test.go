@@ -1,7 +1,6 @@
 package feature
 
 import (
-	"os"
 	"testing"
 )
 
@@ -17,7 +16,8 @@ func TestDefaults(t *testing.T) {
 		{"image.models defaults on", ImageModels, true},
 		{"image.read defaults on", ImageRead, true},
 		{"video.read defaults on", VideoRead, true},
-		{"login defaults on", Login, true},
+		{"drive defaults on", Drive, true},
+		{"page defaults on", Page, true},
 		{"unknown defaults off", "unknown.feature", false},
 	}
 
@@ -74,31 +74,20 @@ func TestSetAll(t *testing.T) {
 	}
 }
 
-func TestEnvOverride(t *testing.T) {
+func TestEnvVarsDoNotAffectEnabled(t *testing.T) {
 	Reset()
 	defer Reset()
 
-	// Env overrides default.
-	t.Setenv("ANYCAP_FEATURE_IMAGE_GENERATE", "1")
+	// CLI features come from preflight (SetAll), not env vars.
+	// Setting ANYCAP_FEATURE_* should have no effect on Enabled().
+	t.Setenv("ANYCAP_FEATURE_IMAGE_GENERATE", "false")
 	if !Enabled(ImageGenerate) {
-		t.Error("ImageGenerate should be on via env")
+		t.Error("env var should not disable ImageGenerate; CLI features come from server preflight only")
 	}
 
-	// Runtime overrides env.
-	Set(ImageGenerate, false)
-	if Enabled(ImageGenerate) {
-		t.Error("runtime override should beat env")
-	}
-}
-
-func TestEnvDisable(t *testing.T) {
-	Reset()
-	defer Reset()
-
-	// Env can disable a default-on feature.
 	t.Setenv("ANYCAP_FEATURE_VIDEO_READ", "false")
-	if Enabled(VideoRead) {
-		t.Error("VideoRead should be off via env=false")
+	if !Enabled(VideoRead) {
+		t.Error("env var should not disable VideoRead; CLI features come from server preflight only")
 	}
 }
 
@@ -115,29 +104,4 @@ func TestAll(t *testing.T) {
 	if _, ok := all[ImageGenerate]; !ok {
 		t.Error("All() should include default flags")
 	}
-}
-
-func TestEnvValues(t *testing.T) {
-	Reset()
-	defer Reset()
-
-	cases := []struct {
-		envVal string
-		want   bool
-	}{
-		{"true", true},
-		{"1", true},
-		{"false", false},
-		{"0", false},
-		{"yes", false}, // only "true" and "1" are truthy
-	}
-
-	for _, c := range cases {
-		os.Setenv("ANYCAP_FEATURE_IMAGE_GENERATE", c.envVal)
-		got := Enabled(ImageGenerate)
-		if got != c.want {
-			t.Errorf("env=%q: Enabled()=%v, want %v", c.envVal, got, c.want)
-		}
-	}
-	os.Unsetenv("ANYCAP_FEATURE_IMAGE_GENERATE")
 }
