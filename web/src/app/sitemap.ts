@@ -1,19 +1,15 @@
 import type { MetadataRoute } from "next";
-import { defaultLocale, getLocalizedPublicRoutes } from "@/lib/site";
-import { shouldAllowIndexing } from "@/lib/seo-metadata";
+import { getLocalizedSitemapRoutes } from "@/lib/sitemap-routes";
+
+export const runtime = "nodejs";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  if (!shouldAllowIndexing()) {
-    return [];
-  }
-
   try {
-    const lastModified = new Date();
-    const localizedRoutes = getLocalizedPublicRoutes(defaultLocale);
+    const localizedRoutes = getLocalizedSitemapRoutes();
 
     return localizedRoutes.map((route) => ({
       url: route.url,
-      lastModified,
+      lastModified: route.lastModified,
       changeFrequency: "weekly" as const,
       priority: route.priority,
     }));

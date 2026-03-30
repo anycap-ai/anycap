@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
@@ -23,23 +24,76 @@ type NavDropdownProps = {
 };
 
 export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const outerClass = hideBelow ? `hidden ${hideBelow}:block` : "";
 
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current) {
+        return;
+      }
+
+      if (event.target instanceof Node && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  function toggleOpen() {
+    setOpen((previousOpen) => !previousOpen);
+  }
+
   return (
-    <div className={`group/dropdown relative ${outerClass}`}>
+    <div
+      ref={containerRef}
+      className={`group/dropdown relative ${outerClass}`}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       {href ? (
-        <Link href={href} prefetch={false} className={triggerClass} style={mono}>
-          {label}
-          <Chevron />
-        </Link>
+        <div className="inline-flex items-center">
+          <Link
+            href={href}
+            prefetch={false}
+            className={`${triggerClass} rounded-r-none pr-2`}
+            style={mono}
+            onClick={() => setOpen(false)}
+          >
+            {label}
+          </Link>
+          <button
+            type="button"
+            aria-label={`Open ${label} menu`}
+            aria-expanded={open}
+            className={`${triggerClass} rounded-l-none px-2`}
+            style={mono}
+            onClick={toggleOpen}
+          >
+            <Chevron open={open} />
+          </button>
+        </div>
       ) : (
-        <span className={triggerClass} style={mono}>
+        <button
+          type="button"
+          aria-expanded={open}
+          className={triggerClass}
+          style={mono}
+          onClick={toggleOpen}
+        >
           {label}
-          <Chevron />
-        </span>
+          <Chevron open={open} />
+        </button>
       )}
 
-      <div className="invisible opacity-0 group-hover/dropdown:visible group-hover/dropdown:opacity-100 absolute right-0 top-full pt-2 transition-all duration-200 ease-out z-30">
+      <div
+        className={`absolute right-0 top-full z-30 pt-2 transition-all duration-200 ease-out ${
+          open ? "visible opacity-100" : "invisible opacity-0 pointer-events-none"
+        }`}
+      >
         <div className="min-w-[200px] rounded border border-[#d4dbb8] bg-[#f4f5f0] py-1.5 shadow-[0_14px_40px_rgba(28,31,23,0.08)]">
           {items.map(({ href: itemHref, label: itemLabel }) => (
             <Link
@@ -48,6 +102,7 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
               prefetch={false}
               className={dropdownLinkClass}
               style={mono}
+              onClick={() => setOpen(false)}
             >
               {itemLabel}
             </Link>
@@ -58,14 +113,14 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
   );
 }
 
-function Chevron() {
+function Chevron({ open }: { open: boolean }) {
   return (
     <svg
       width="10"
       height="10"
       viewBox="0 0 8 8"
       fill="none"
-      className="opacity-40 group-hover/dropdown:opacity-70 transition-opacity"
+      className={`opacity-40 transition-all ${open ? "rotate-180 opacity-70" : "group-hover/dropdown:opacity-70"}`}
     >
       <path d="M2 3L4 5L6 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>

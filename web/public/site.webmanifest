@@ -1,0 +1,22 @@
+{
+  "name": "AnyCap",
+  "short_name": "AnyCap",
+  "description": "AnyCap gives AI agents image, video, music, speech, search, and crawl capabilities through one command.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f0",
+  "theme_color": "#f4f5f0",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

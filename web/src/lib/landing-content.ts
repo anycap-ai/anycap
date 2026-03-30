@@ -129,7 +129,7 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
               "# Login",
               "anycap login",
               "",
-              "# Image read",
+              "# Image understanding",
               "anycap image read --url https://example.com/photo.jpg",
               "",
               "# Video analysis",
@@ -146,7 +146,7 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
             headers: ["Capability", "Command", "Description"],
             rows: [
               [
-                "Image Read",
+                "Image Understanding",
                 "`anycap image read`",
                 "Analyze images using vision models",
               ],
@@ -156,7 +156,7 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
           {
             type: "text",
             content:
-              "Today, the public landing page documents image read and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
+              "Today, the public landing page documents image understanding and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
           },
         ],
       },

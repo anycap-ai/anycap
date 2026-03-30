@@ -65,9 +65,10 @@ export default function ForHumanPage() {
               </span>
             </h1>
             <p className="mt-5 hidden max-w-[700px] text-base leading-7 text-[#4d5145] md:block md:text-lg">
-              Agents can think, but they can&apos;t act — no images, no video, no music,
-              no voice. Every capability they need is locked behind a different SDK and
-              a different API key. AnyCap makes it one command.
+              AnyCap gives teams a capability layer for their agents. Instead of wiring
+              a new SDK, provider account, and auth flow for every missing workflow, you
+              install one runtime and unlock image, video, vision, and more through the
+              same command surface.
             </p>
             <div className="mt-8 md:mt-8">
               <LazyEquipAgent style={mono} />
@@ -89,12 +90,12 @@ export default function ForHumanPage() {
       <FadeIn from="right" className="mt-16 flex justify-end px-8 md:mt-28 md:px-16 lg:px-24">
         <div className="max-w-[520px] border-r-[3px] border-[#1c1f17] pr-6 text-right md:pr-8">
           <p className="text-lg leading-[1.65] text-[#3a3e32] md:text-[22px]">
-            It reasons. It plans. It decides.
+            It already reasons. It already plans.
             <br />
-            It cannot paint, compose, or speak.
+            What it still needs is capability execution.
           </p>
           <p className="mt-5 text-xl text-[#1c1f17] md:text-[24px]" style={pixel}>
-            <ScrambleText text="We built the hands." speed={20} ticks={2} />
+            <ScrambleText text="AnyCap supplies the layer." speed={20} ticks={2} />
           </p>
         </div>
       </FadeIn>
@@ -124,14 +125,14 @@ export default function ForHumanPage() {
             className="mb-6 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(28px, 4.5vw, 60px)" }}
           >
-            We believe Agents deserve
+            One runtime for
             <br />
-            products built for them.
+            every missing capability.
           </p>
         </FadeIn>
         <FadeIn delay={200}>
           <p className="text-xl text-[#6b7d3a] md:text-2xl" style={mono}>
-            Not adapted. Not retrofitted. Built.
+            Image. Video. Vision. Search. Crawl. Voice.
           </p>
         </FadeIn>
       </section>
@@ -179,14 +180,15 @@ export default function ForHumanPage() {
               className="leading-[1.3] text-[#6b7d3a]"
               style={{ ...pixel, fontSize: "clamp(22px, 3.5vw, 40px)" }}
             >
-              The best infrastructure is the kind you forget exists.
+              The interface should stay the same even when the capability changes.
             </p>
           </div>
         </FadeIn>
         <FadeIn delay={200}>
           <p className="mt-12 max-w-[640px] text-xl leading-[1.7] text-[#3a3e32] md:mt-16 md:text-2xl">
-            No SDK to learn. No docs to read. No dashboard to check.
-            Your agent sends a command. It gets a result. That&apos;s the entire interface.
+            No provider-by-provider SDK maze. No per-capability auth sprawl. No dashboard-first
+            product pretending to be agent infrastructure. Your agent calls one runtime and keeps
+            moving.
           </p>
         </FadeIn>
       </section>
@@ -201,9 +203,9 @@ export default function ForHumanPage() {
             className="mb-14 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
           >
-            And we&apos;re just
+            Start with the first
             <br />
-            getting started.
+            missing capability.
           </p>
         </FadeIn>
         <FadeIn delay={300}>
