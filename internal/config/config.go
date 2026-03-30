@@ -37,34 +37,34 @@ const (
 )
 
 type Config struct {
-	AppName          string
-	AppEnv           string
-	HTTPAddr         string
-	RuntimeMode      string
-	PGDSN            string
-	PGHost           string
-	PGPort           int
-	PGUser           string
-	PGPassword       string
-	PGDatabase       string
-	PGSSLMode        string
-	PGTimezone       string
-	PGAutoMigrate    bool
-	RedisAddr        string
-	RedisHost        string
-	RedisPort        int
-	RedisUsername    string
-	RedisPassword    string
-	RedisDB          int
-	RateLimitRPM     int
+	AppName            string
+	AppEnv             string
+	HTTPAddr           string
+	RuntimeMode        string
+	PGDSN              string
+	PGHost             string
+	PGPort             int
+	PGUser             string
+	PGPassword         string
+	PGDatabase         string
+	PGSSLMode          string
+	PGTimezone         string
+	PGAutoMigrate      bool
+	RedisAddr          string
+	RedisHost          string
+	RedisPort          int
+	RedisUsername      string
+	RedisPassword      string
+	RedisDB            int
+	RateLimitRPM       int
 	RateLimitOverrides map[string]int
-	LoginAPIKeyTTL   time.Duration
-	Auth0Enabled     bool
-	Auth0Issuer      string
-	Auth0Audience    string
-	Auth0RedirectURL string
-	NexusHubBaseURL  string
-	NexusHubToken    string
+	LoginAPIKeyTTL     time.Duration
+	Auth0Enabled       bool
+	Auth0Issuer        string
+	Auth0Audience      string
+	Auth0RedirectURL   string
+	NexusHubBaseURL    string
+	NexusHubToken      string
 	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
 	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
 	NexusHubPlatformBaseURL string
