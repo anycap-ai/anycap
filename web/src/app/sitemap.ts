@@ -7,13 +7,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [];
   }
 
-  const lastModified = new Date();
-  const localizedRoutes = getLocalizedPublicRoutes(defaultLocale);
+  try {
+    const lastModified = new Date();
+    const localizedRoutes = getLocalizedPublicRoutes(defaultLocale);
 
-  return localizedRoutes.map((route) => ({
-    url: route.url,
-    lastModified,
-    changeFrequency: "weekly" as const,
-    priority: route.priority,
-  }));
+    return localizedRoutes.map((route) => ({
+      url: route.url,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: route.priority,
+    }));
+  } catch (error) {
+    console.error("Failed to generate sitemap", error);
+    return [];
+  }
 }

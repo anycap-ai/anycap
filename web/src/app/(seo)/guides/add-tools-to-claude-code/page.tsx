@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { FadeIn } from "@/components/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -26,23 +27,14 @@ export const metadata: Metadata = {
   },
 };
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Add tools to Claude Code with AnyCap",
+const guideJsonLd = createTechArticleJsonLd({
+  headline: "Add tools to Claude Code — Install agent capabilities",
   description:
-    "How to add image generation, video generation, image read, and video analysis tools to Claude Code.",
-  totalTime: "PT10M",
-  step: [
-    { "@type": "HowToStep", position: 1, name: "Install the AnyCap skill for Claude Code", text: "npx -y skills add anycap-ai/anycap -a claude-code -y" },
-    { "@type": "HowToStep", position: 2, name: "Install the AnyCap CLI", text: "curl -fsSL https://anycap.ai/install.sh | sh" },
-    { "@type": "HowToStep", position: 3, name: "Authenticate", text: "anycap login" },
-    { "@type": "HowToStep", position: 4, name: "Discover available models", text: "anycap image models" },
-    { "@type": "HowToStep", position: 5, name: "Generate your first image", text: "anycap image generate --model seedream_5 --prompt 'a product mockup'" },
-    { "@type": "HowToStep", position: 6, name: "Try image read", text: "anycap image read --url https://example.com/screenshot.png" },
-    { "@type": "HowToStep", position: 7, name: "Try video analysis", text: "anycap video read --url https://example.com/demo.mp4" },
-  ],
-};
+    "Guide to adding AnyCap-powered capabilities like image generation, video generation, image understanding, and video analysis to Claude Code.",
+  path: "/guides/add-tools-to-claude-code",
+  about: ["Claude Code", "AnyCap CLI", "Agent skills", "AI agent capabilities"],
+  keywords: ["claude code tools", "add tools to claude code", "anycap", "agent skills"],
+});
 
 export default function AddToolsToClaudeCodePage() {
   return (
@@ -51,7 +43,7 @@ export default function AddToolsToClaudeCodePage() {
         { name: "Home", href: "/" },
         { name: "Add Tools to Claude Code" },
       ]} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

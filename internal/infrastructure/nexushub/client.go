@@ -292,6 +292,126 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	return result, nil
 }
 
+func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicRequest, route model.RouteBinding) (model.GenerateMusicResult, error) {
+	if c == nil || c.baseURL == "" || c.token == "" {
+		return model.GenerateMusicResult{}, model.ErrMusicExecutionNotConfigured
+	}
+	if route.AbilityKey == "" {
+		return model.GenerateMusicResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+	}
+
+	uid, err := parseNexusHubUID(req.UserID)
+	if err != nil {
+		return model.GenerateMusicResult{}, err
+	}
+
+	payload := atomicProcessPayload{
+		GenType: route.GenType,
+		Prompt:  req.Prompt,
+		MusicOption: &atomicMusicOption{
+			MakeInstrumental: req.MakeInstrumental,
+			CustomMode:       req.CustomMode,
+			Tags:             req.Tags,
+			Title:            req.Title,
+			Lyrics:           req.Lyrics,
+			ContinueAt:       req.ContinueAt,
+			ContinueClipID:   req.ContinueClipID,
+			VocalGender:      req.VocalGender,
+		},
+		MetaOption: map[string]any{
+			"request_id": req.RequestID,
+			"model_id":   req.Model,
+		},
+	}
+
+	reqPayload, err := json.Marshal(payload)
+	if err != nil {
+		return model.GenerateMusicResult{}, fmt.Errorf("marshal req_payload: %w", err)
+	}
+
+	body := submitAtomicProcessRequest{
+		AbilityKey: route.AbilityKey,
+		ReqPayload: string(reqPayload),
+		Token:      c.token,
+		BizInfo: submitBizInfo{
+			BizID:     defaultNexusHubBizID,
+			EnterFrom: defaultNexusHubEnterFrom,
+		},
+		UserInfo: submitUserInfo{
+			UID: uid,
+		},
+		Extra: map[string]any{
+			"model_id":   req.Model,
+			"capability": string(model.CapabilityMusic),
+			"operation":  string(model.OperationGenerate),
+			"request_id": req.RequestID,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return model.GenerateMusicResult{}, fmt.Errorf("marshal submit request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return model.GenerateMusicResult{}, fmt.Errorf("build request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
+		httpReq.Header.Set("X-Request-Id", requestID)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return model.GenerateMusicResult{}, fmt.Errorf("submit atomic process: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var parsed submitAtomicProcessResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return model.GenerateMusicResult{}, fmt.Errorf("decode submit response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return model.GenerateMusicResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+	}
+
+	result := model.GenerateMusicResult{
+		ID:     parsed.TaskID,
+		Status: normalizeNexusHubStatus(parsed.Status),
+		Model:  req.Model,
+		Usage:  parsed.NexusUsage,
+	}
+
+	if parsed.RespPayload != "" {
+		var respPayload atomicRespPayload
+		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
+			return model.GenerateMusicResult{}, fmt.Errorf("decode resp_payload: %w", err)
+		}
+
+		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
+		for _, resource := range respPayload.Resources {
+			resourceURL := resource.URL
+			if resourceURL == "" {
+				resourceURL = resource.Path
+			}
+
+			outputs = append(outputs, model.Artifact{
+				Type:     "music",
+				URL:      resourceURL,
+				MIMEType: guessMIMEType(resourceURL),
+			})
+			if result.CreditCost == 0 && resource.CreditCost > 0 {
+				result.CreditCost = resource.CreditCost
+			}
+		}
+		result.Outputs = outputs
+	}
+
+	return result, nil
+}
+
 func resolveVideoAlgoType(route model.RouteBinding, req model.GenerateVideoRequest) string {
 	if route.AlgoType != "" {
 		return route.AlgoType
@@ -326,6 +446,7 @@ type atomicProcessPayload struct {
 	Prompt      string             `json:"prompt,omitempty"`
 	ImageOption *atomicImageOption `json:"image_option,omitempty"`
 	VideoOption *atomicVideoOption `json:"video_option,omitempty"`
+	MusicOption *atomicMusicOption `json:"music_option,omitempty"`
 	MetaOption  map[string]any     `json:"meta_option,omitempty"`
 }
 
@@ -344,6 +465,17 @@ type atomicVideoOption struct {
 	Duration       int      `json:"duration,omitempty"`
 	NegativePrompt string   `json:"negative_prompt,omitempty"`
 	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
+}
+
+type atomicMusicOption struct {
+	MakeInstrumental bool   `json:"make_instrumental,omitempty"`
+	CustomMode       bool   `json:"custom_mode,omitempty"`
+	Tags             string `json:"tags,omitempty"`
+	Title            string `json:"title,omitempty"`
+	Lyrics           string `json:"lyrics,omitempty"`
+	ContinueAt       int    `json:"continue_at,omitempty"`
+	ContinueClipID   string `json:"continue_clip_id,omitempty"`
+	VocalGender      string `json:"vocal_gender,omitempty"`
 }
 
 type submitAtomicProcessResponse struct {

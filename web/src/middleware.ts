@@ -15,7 +15,7 @@ const protectedPaths = ["/dashboard"];
 
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
-  redirectURL.pathname = buildLocalizedPath(defaultLocale, pathname);
+  redirectURL.pathname = pathname;
   return NextResponse.redirect(redirectURL);
 }
 
@@ -68,18 +68,26 @@ export async function middleware(req: NextRequest) {
         authResponse,
       );
     }
-
-    return applyAuthResponse(redirectToLocalizedPath(req, "/"), authResponse);
   }
 
-  const { locale } = stripLocalePrefix(normalizedPath);
+  const { locale, pathname } = stripLocalePrefix(normalizedPath);
+  if (locale === defaultLocale) {
+    const matchedLocalizedRoute = getPublicRouteByPath(pathname);
+    if (matchedLocalizedRoute) {
+      return applyAuthResponse(redirectToLocalizedPath(req, matchedLocalizedRoute.path), authResponse);
+    }
+  }
+
   if (!locale) {
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute) {
-      return applyAuthResponse(
-        redirectToLocalizedPath(req, matchedPublicRoute.path),
-        authResponse,
-      );
+      const canonicalPath = buildLocalizedPath(defaultLocale, matchedPublicRoute.path);
+      if (canonicalPath !== matchedPublicRoute.path) {
+        return applyAuthResponse(
+          redirectToLocalizedPath(req, canonicalPath),
+          authResponse,
+        );
+      }
     }
   }
 

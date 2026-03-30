@@ -73,24 +73,6 @@ const websiteJsonLd = {
   url: siteConfig.url,
 };
 
-const softwareJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "AnyCap CLI",
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "macOS, Linux, Windows",
-  url: siteConfig.url,
-  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
-  installUrl: `${siteConfig.url}/install.sh`,
-  description:
-    "Agent-native capability runtime and CLI that lets AI agents install and use capabilities through one interface.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-};
-
 export default async function RootLayout({
   children,
 }: {
@@ -111,12 +93,6 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(websiteJsonLd),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(softwareJsonLd),
           }}
         />
       </head>

@@ -45,6 +45,7 @@ export const publicRouteDefinitions = [
   { key: "home", kind: "home", path: ROOT_PATH, priority: 1 },
   { key: "for-human", kind: "human", path: "/for-human", priority: 0.8 },
   { key: "cli", kind: "seo", path: "/cli", priority: 0.9 },
+  { key: "skills", kind: "seo", path: "/skills", priority: 0.85 },
   { key: "capabilities", kind: "seo", path: "/capabilities", priority: 0.8 },
   { key: "models", kind: "seo", path: "/models", priority: 0.75 },
   {
@@ -97,6 +98,12 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/guides/agent-skills-for-developer-tools",
     priority: 0.7,
+  },
+  {
+    key: "guides-mcp-vs-a2a-for-ai-agents",
+    kind: "seo",
+    path: "/guides/mcp-vs-a2a-for-ai-agents",
+    priority: 0.65,
   },
   {
     key: "guides-workspace-context-engineering",
@@ -158,6 +165,12 @@ export const publicRouteDefinitions = [
     path: "/glossary/agent-capability-runtime",
     priority: 0.5,
   },
+  {
+    key: "glossary-agent-protocol",
+    kind: "seo",
+    path: "/glossary/agent-protocol",
+    priority: 0.5,
+  },
 ] as const;
 
 export type PublicRouteDefinition = (typeof publicRouteDefinitions)[number];
@@ -178,9 +191,6 @@ export const seoRoutes = seoRouteDefinitions.map(({ path, priority }) => ({
 
 export const blockedSiteRoutes = [
   "/dashboard",
-  "/billing",
-  "/usage",
-  "/logs",
 ] as const;
 
 const publicRouteByKey = Object.fromEntries(
@@ -219,6 +229,9 @@ export function normalizePublicPath(pathname: string): string {
 
 export function buildLocalizedPath(locale: SiteLocale, pathname: string): string {
   const normalizedPath = normalizePublicPath(pathname);
+  if (locale === defaultLocale) {
+    return normalizedPath;
+  }
   if (normalizedPath === ROOT_PATH) {
     return `/${locale}`;
   }

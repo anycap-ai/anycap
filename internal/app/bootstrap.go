@@ -19,6 +19,7 @@ import (
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	musicapp "gitlab.knoffice.tech/engineering/anycap/internal/application/music"
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	spaceapp "gitlab.knoffice.tech/engineering/anycap/internal/application/space"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
@@ -52,6 +53,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/music"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
@@ -91,6 +93,7 @@ type serverDependencies struct {
 	loginService        *loginapp.Service
 	imageService        *imageapp.Service
 	videoService        *videoapp.Service
+	musicService        *musicapp.Service
 	spaceService        *spaceapp.Service
 	driveService        *driveapp.Service
 	pageService         *pageapp.Service
@@ -132,12 +135,14 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	loginHandler := login.NewHandler(deps.loginService, deps.idMapper)
 	imageHandler := image.NewHandler(deps.imageService)
 	videoHandler := video.NewHandler(deps.videoService)
+	musicHandler := music.NewHandler(deps.musicService)
 	driveHandler := drive.NewHandler(deps.driveService, deps.idResolver, deps.idMapper)
 	pageHandler := page.NewHandler(deps.pageService, deps.idResolver, deps.idMapper)
 	capHandler := capabilities.NewHandler(deps.capabilitiesService)
 	imageCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityAudio)
+	musicCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityMusic)
 	modelRouteHandler := modelroute.NewHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
 	feedbackHandler := feedback.NewHandler(deps.feedbackService)
 
@@ -159,6 +164,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			imageCatalog,
 			videoCatalog,
 			audioCatalog,
+			musicCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.protectedRPM))
@@ -166,6 +172,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
+				musicHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -198,6 +205,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	capGetExpiry := time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second
 	imageExecutionClient := buildImageExecutionClient(cfg)
 	videoExecutionClient := buildVideoExecutionClient(cfg)
+	musicExecutionClient := buildMusicExecutionClient(cfg)
 	creditClient := buildCreditClient(cfg)
 
 	switch cfg.RuntimeMode {
@@ -218,6 +226,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:        imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			videoService:        videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
+			musicService:        musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs),
 			spaceService:        nil,
 			driveService:        nil,
 			pageService:         nil,
@@ -303,6 +312,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
 			imageService:  imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs),
 			videoService:  videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs),
+			musicService:  musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs),
 			spaceService:  spaceService,
 			driveService: driveapp.NewService(
 				spaceService,
@@ -496,6 +506,21 @@ func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, 
 					model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "gpt-image-1.5"}}},
 				},
 			},
+			{
+				ModelID:     "mureka-v6",
+				Capability:  model.CapabilityMusic,
+				DisplayName: "Mureka V6",
+				Status:      "active",
+				Operations: map[model.Operation]model.OperationSpec{
+					model.OperationGenerate: {RequestHints: map[string]any{
+						"prompt":            map[string]any{"type": "string"},
+						"model":             map[string]any{"type": "string", "default": "mureka-v6"},
+						"make_instrumental": map[string]any{"type": "boolean"},
+						"tags":              map[string]any{"type": "string"},
+						"lyrics":            map[string]any{"type": "string"},
+					}},
+				},
+			},
 		}), nil
 	}
 
@@ -539,11 +564,31 @@ func buildVideoExecutionClient(cfg config.Config) port.NexusHubClient {
 	return nexushub.NewStubClient()
 }
 
+func buildMusicExecutionClient(cfg config.Config) port.NexusHubClient {
+	coreBaseURL := cfg.ResolvedNexusHubCoreBaseURL()
+	coreToken := cfg.ResolvedNexusHubCoreToken()
+
+	if hasMusicExecutionProvider(cfg) {
+		log.Printf("music-execution: using nexushub client at %s", coreBaseURL)
+		return nexushub.NewClient(nexushub.ClientConfig{
+			BaseURL: coreBaseURL,
+			Token:   coreToken,
+		})
+	}
+
+	log.Println("music-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	return nexushub.NewStubClient()
+}
+
 func hasImageExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
 
 func hasVideoExecutionProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func hasMusicExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
 

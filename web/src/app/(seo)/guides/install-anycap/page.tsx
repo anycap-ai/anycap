@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { FadeIn } from "@/components/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -26,46 +27,14 @@ export const metadata: Metadata = {
   },
 };
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Install AnyCap",
+const guideJsonLd = createTechArticleJsonLd({
+  headline: "Install AnyCap — Setup guide for AI agents",
   description:
-    "Complete guide to installing the AnyCap CLI and skill files for AI agent capabilities.",
-  totalTime: "PT5M",
-  step: [
-    {
-      "@type": "HowToStep",
-      position: 1,
-      name: "Install the AnyCap CLI",
-      text: "Run: curl -fsSL https://anycap.ai/install.sh | sh — or install via npm: npm install -g @anycap/cli",
-    },
-    {
-      "@type": "HowToStep",
-      position: 2,
-      name: "Log in to AnyCap",
-      text: "Run: anycap login — this opens a browser for authentication.",
-    },
-    {
-      "@type": "HowToStep",
-      position: 3,
-      name: "Install the skill file for your agent",
-      text: "Run: npx -y skills add anycap-ai/anycap -a claude-code -y — replace claude-code with your agent product.",
-    },
-    {
-      "@type": "HowToStep",
-      position: 4,
-      name: "Verify the installation",
-      text: "Run: anycap status — confirms CLI version, auth state, and server connection.",
-    },
-    {
-      "@type": "HowToStep",
-      position: 5,
-      name: "Use your first capability",
-      text: "Run: anycap image read --url https://example.com/photo.jpg",
-    },
-  ],
-};
+    "Guide to installing the AnyCap CLI and skill files so AI agents can use capabilities through one install path and one auth flow.",
+  path: "/guides/install-anycap",
+  about: ["AnyCap CLI", "AI agents", "Agent skills", "Capability runtime"],
+  keywords: ["install anycap", "anycap cli", "agent skills", "ai agent setup"],
+});
 
 export default function InstallAnycapPage() {
   return (
@@ -76,7 +45,7 @@ export default function InstallAnycapPage() {
       ]} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">

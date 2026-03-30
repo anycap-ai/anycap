@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { FadeIn } from "@/components/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -51,18 +52,14 @@ const faqItems = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
+const comparisonArticleJsonLd = createTechArticleJsonLd({
+  headline: "AnyCap vs OpenAI Agent Builder — Runtime vs builder platform",
+  description:
+    "Comparison guide that explains how AnyCap differs from OpenAI Agent Builder, and where each one fits in the agent stack.",
+  path: "/compare/anycap-vs-openai-agent-builder",
+  about: ["AnyCap", "OpenAI Agent Builder", "Agent capability runtime", "Agent builder platform"],
+  keywords: ["anycap vs openai agent builder", "agent builder", "capability runtime", "agent stack"],
+});
 
 export const metadata: Metadata = {
   title: "AnyCap vs OpenAI Agent Builder — Runtime vs builder platform",
@@ -88,7 +85,7 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(comparisonArticleJsonLd) }}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

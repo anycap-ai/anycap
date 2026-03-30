@@ -7,6 +7,7 @@ const (
 	CapabilityImage Capability = "image"
 	CapabilityVideo Capability = "video"
 	CapabilityAudio Capability = "audio"
+	CapabilityMusic Capability = "music"
 )
 
 // Operation 表示对外暴露的能力动作。

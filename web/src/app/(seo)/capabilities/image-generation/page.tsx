@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/FadeIn";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -63,18 +64,14 @@ const faqItems = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
+const capabilityGuideJsonLd = createTechArticleJsonLd({
+  headline: "Image Generation — Generate images through AI agents",
+  description:
+    "Capability guide for using AnyCap image generation across AI agent workflows with models like Seedream 5 and Nano Banana Pro.",
+  path: "/capabilities/image-generation",
+  about: ["Image generation", "AnyCap", "Seedream 5", "Nano Banana Pro"],
+  keywords: ["image generation for ai agents", "anycap", "seedream 5", "nano banana pro"],
+});
 
 export default function ImageGenerationPage() {
   return (
@@ -86,7 +83,7 @@ export default function ImageGenerationPage() {
       ]} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
       />
       <article className="px-6 md:px-12 lg:px-20">
       <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/FadeIn";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";

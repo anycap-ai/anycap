@@ -16,6 +16,7 @@ import (
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	musicapp "gitlab.knoffice.tech/engineering/anycap/internal/application/music"
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -39,6 +40,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/login"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/modelroute"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/music"
 	pagehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
@@ -491,10 +493,50 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,
 	), passthroughMapper)
-	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{{ModelID: "flux-dev", Capability: model.CapabilityImage, DisplayName: "FLUX Dev", Status: "active", Operations: map[model.Operation]model.OperationSpec{model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}}, Routes: []model.RouteBinding{{RouteType: model.RouteTypeDirect, AbilityKey: "flux-dev", GenType: string(model.CapabilityImage), AlgoType: "txt_2_img", Priority: 100, Enabled: true}}}}}})
+	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{
+		{
+			ModelID:     "flux-dev",
+			Capability:  model.CapabilityImage,
+			DisplayName: "FLUX Dev",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "flux-dev",
+						GenType:    string(model.CapabilityImage),
+						AlgoType:   "txt_2_img",
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+		{
+			ModelID:     "mureka-v6",
+			Capability:  model.CapabilityMusic,
+			DisplayName: "Mureka V6",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "mureka-v6",
+						GenType:    string(model.CapabilityMusic),
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+	})
 	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	musicHandler := music.NewHandler(musicapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
+	musicCatalog := catalog.NewHandler(catalogService, model.CapabilityMusic)
 	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	passthroughResolver := idresolver.PassthroughIDResolver{}
@@ -547,12 +589,14 @@ func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
 			systemHandler,
 			loginHandler,
 			imageCatalog,
+			musicCatalog,
 			modelRouteHandler,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), rpm))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				musicHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -1228,6 +1272,26 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 after logout revoke, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_MusicRoutes(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/music/models", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/music/models/mureka-v6/schema?operation=generate", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	body := []byte(`{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/music/generate", &ut.Body{Body: bytes.NewReader(body), Len: len(body)}, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}, ut.Header{Key: "Content-Type", Value: "application/json"})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { FadeIn } from "@/components/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -69,18 +70,14 @@ const faqItems = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
+const modelGuideJsonLd = createTechArticleJsonLd({
+  headline: "Seedream 5 for AI agents — Image generation through AnyCap",
+  description:
+    "Guide to using Seedream 5 through AnyCap when AI agents need polished first-pass image generation in a capability runtime.",
+  path: "/models/seedream-5",
+  about: ["Seedream 5", "Image generation", "AnyCap", "AI agents"],
+  keywords: ["seedream 5", "image generation", "anycap", "ai agent model guide"],
+});
 
 export default function Seedream5Page() {
   return (
@@ -93,7 +90,7 @@ export default function Seedream5Page() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(modelGuideJsonLd) }}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

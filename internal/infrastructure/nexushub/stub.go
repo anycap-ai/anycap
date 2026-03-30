@@ -54,3 +54,27 @@ func (c *StubClient) GenerateVideo(_ context.Context, req model.GenerateVideoReq
 		Usage: map[string]any{"credits": 5},
 	}, nil
 }
+
+func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
+	safeInput := strings.TrimSpace(req.Prompt)
+	if safeInput == "" {
+		safeInput = strings.TrimSpace(req.Tags)
+	}
+	safeInput = url.PathEscape(strings.ReplaceAll(safeInput, " ", "-"))
+	if req.Model == "" {
+		req.Model = "mureka-v6"
+	}
+
+	return model.GenerateMusicResult{
+		ID:         fmt.Sprintf("mus_%s", req.RequestID),
+		Status:     "success",
+		Model:      req.Model,
+		CreditCost: 2,
+		Outputs: []model.Artifact{{
+			Type:     "music",
+			URL:      fmt.Sprintf("https://files.anycap.local/generated/%s/%s.mp3", req.Model, safeInput),
+			MIMEType: "audio/mpeg",
+		}},
+		Usage: map[string]any{"credits": 2},
+	}, nil
+}
