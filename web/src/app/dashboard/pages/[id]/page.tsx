@@ -14,6 +14,19 @@ import {
 import type { PageAccessMode } from "@/lib/api/types";
 
 
+/* ── Shared button styles ── */
+const btnPrimary =
+  "px-5 py-2.5 text-[13px] font-medium rounded-xl transition-all bg-[#6b7d3a] text-white hover:bg-[#5c6c31] active:bg-[#4f5d2a] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] disabled:bg-[#c5ccb8] disabled:text-white/70 disabled:shadow-none disabled:cursor-not-allowed";
+const btnSecondary =
+  "px-5 py-2.5 text-[13px] font-medium rounded-xl transition-all border border-[#ccd1c3] bg-[#fafbf8] text-[#3a3e32] hover:bg-[#f0f2eb] hover:border-[#b8bdaf] active:bg-[#e8ebe2] shadow-[0_1px_2px_rgba(0,0,0,0.06)] disabled:border-[#e5e8df] disabled:bg-[#f5f6f3] disabled:text-[#b0b4a8] disabled:shadow-none disabled:cursor-not-allowed";
+
+const cardClass =
+  "border border-[#d8dcd0] bg-white p-7 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]";
+
+const inputClass =
+  "w-full border border-[#ccd1c3] bg-[#fafbf8] px-4 py-2.5 text-[14px] text-[#1c1f17] rounded-xl shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:border-[#6b7d3a] focus:ring-2 focus:ring-[rgba(107,125,58,0.15)] outline-none transition-all";
+
+
 export default function PageDetailPage() {
   const params = useParams<{ id: string }>();
   const validPageID = params.id?.trim() ? params.id : undefined;
@@ -114,41 +127,72 @@ export default function PageDetailPage() {
 
   const versions = versionsData?.items ?? [];
   const currentVersion = versions.find((item) => item.id === data?.current_version_id);
+  const pageUrl = data?.page_url;
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="h-8 w-40 bg-[#e5e7e0] rounded-lg animate-pulse mb-9" />
+        <div className="space-y-7">
+          <div className={cardClass}>
+            <div className="h-4 w-24 bg-[#e5e7e0] rounded animate-pulse mb-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i}>
+                  <div className="h-3 w-16 bg-[#eceee7] rounded animate-pulse mb-2" />
+                  <div className="h-4 w-32 bg-[#e5e7e0] rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={cardClass}>
+            <div className="h-4 w-20 bg-[#e5e7e0] rounded animate-pulse mb-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="h-10 bg-[#eceee7] rounded-xl animate-pulse" />
+              <div className="h-10 bg-[#eceee7] rounded-xl animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <p className="text-[16px] font-medium text-[#1c1f17] mb-6">
+      <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
         Page Detail
-      </p>
+      </h1>
 
-      {isLoading ? (
-        <p className="text-[13px] text-[#707468]">Loading...</p>
-      ) : !data ? (
-        <p className="text-[13px] text-[#a83f32]">Page not found</p>
+      {!data ? (
+        <p className="text-[14px] text-[#c4442d]">Page not found</p>
       ) : (
-        <div className="space-y-6">
-          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
-            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4">
+        <div className="space-y-7">
+          <section className={cardClass}>
+            <p className="text-[14px] font-semibold text-[#4d5145] mb-5">
               Basic Info
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-[14px]">
               <div>
-                <p className="text-[#707468] mb-1">Name</p>
-                <p className="text-[#1c1f17]">{data.name}</p>
+                <p className="text-[#7a7e71] mb-1.5">Name</p>
+                <p className="text-[#1c1f17] font-medium">{data.name}</p>
               </div>
               <div>
-                <p className="text-[#707468] mb-1">URL</p>
-                <a href={`https://${data.page_name}.page.anycap.cloud`} className="text-[#1c1f17] hover:text-[#6b7d3a]" target="_blank" rel="noreferrer">
-                  https://{data.page_name}.page.anycap.cloud
-                </a>
+                <p className="text-[#7a7e71] mb-1.5">URL</p>
+                {pageUrl ? (
+                  <a href={pageUrl} className="text-[#1c1f17] hover:text-[#6b7d3a] underline underline-offset-2 decoration-[#ccd1c3] hover:decoration-[#6b7d3a] transition-colors" target="_blank" rel="noreferrer">
+                    {pageUrl}
+                  </a>
+                ) : (
+                  <span className="text-[#b0b4a8]">—</span>
+                )}
               </div>
               <div>
-                <p className="text-[#707468] mb-1">Access mode</p>
+                <p className="text-[#7a7e71] mb-1.5">Access mode</p>
                 <p className="text-[#1c1f17]">{data.access_mode}</p>
               </div>
               <div>
-                <p className="text-[#707468] mb-1">Status</p>
-                <p className={data.current_version_id ? "text-[#6b7d3a]" : "text-[#707468]"}>
+                <p className="text-[#7a7e71] mb-1.5">Status</p>
+                <p className={`font-medium ${data.current_version_id ? "text-[#6b7d3a]" : "text-[#7a7e71]"}`}>
                   {data.current_version_id
                     ? `live (v${currentVersion?.version_no ?? "?"})`
                     : "unpublished"}
@@ -157,27 +201,23 @@ export default function PageDetailPage() {
             </div>
           </section>
 
-          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
-            <p className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4">
+          <section className={cardClass}>
+            <p className="text-[14px] font-semibold text-[#4d5145] mb-5">
               Settings
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <label className="block">
-                <span className="block text-[12px] text-[#707468] mb-1.5">Name</span>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
-                />
+                <span className="block text-[13px] text-[#7a7e71] mb-2">Name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </label>
 
               <label className="block">
-                <span className="block text-[12px] text-[#707468] mb-1.5">Access Mode</span>
+                <span className="block text-[13px] text-[#7a7e71] mb-2">Access Mode</span>
                 <select
                   value={accessMode}
                   onChange={(e) => setAccessMode(e.target.value as PageAccessMode)}
-                  className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
+                  className={inputClass}
                 >
                   <option value="public">public</option>
                   <option value="password">password</option>
@@ -186,61 +226,45 @@ export default function PageDetailPage() {
               </label>
             </div>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2.5">
               <input
                 id="spa_fallback"
                 type="checkbox"
                 checked={spaFallback}
                 onChange={(e) => setSpaFallback(e.target.checked)}
-                className="accent-[#6b7d3a]"
+                className="accent-[#6b7d3a] w-4 h-4"
               />
-              <label htmlFor="spa_fallback" className="text-[12px] text-[#4d5145]">
+              <label htmlFor="spa_fallback" className="text-[13px] text-[#4d5145]">
                 Enable SPA fallback
               </label>
             </div>
 
             {accessMode === "password" && (
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                 <label className="block">
-                  <span className="block text-[12px] text-[#707468] mb-1.5">Password (leave empty to keep current)</span>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border border-[#d4dbb8]/70 bg-[#f4f5f0] px-3 py-2 text-[13px] text-[#1c1f17] rounded-lg"
-                  />
+                  <span className="block text-[13px] text-[#7a7e71] mb-2">Password (leave empty to keep current)</span>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
                 </label>
-                <button
-                  className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#707468] hover:text-[#6b7d3a] rounded-lg"
-                 
-                  onClick={onClearPassword}
-                  disabled={saving}
-                >
+                <button className={btnSecondary} onClick={onClearPassword} disabled={saving}>
                   Clear Password
                 </button>
               </div>
             )}
 
-            <div className="mt-5">
-              <button
-                className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-               
-                onClick={onSave}
-                disabled={saving}
-              >
-                Save Settings
+            <div className="mt-6">
+              <button className={btnPrimary} onClick={onSave} disabled={saving}>
+                {saving ? "Saving..." : "Save Settings"}
               </button>
             </div>
           </section>
 
-          <section className="border border-[#d4dbb8]/70 bg-[#f9faf5] p-5 rounded-xl">
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <p className="text-[12px] tracking-[0.3px] text-[#5f6358]">
+          <section className={cardClass}>
+            <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+              <p className="text-[14px] font-semibold text-[#4d5145]">
                 Versions
               </p>
               <button
-                className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f4f5f0] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-               
+                className={btnSecondary}
                 onClick={onUnpublish}
                 disabled={unpublishing || data.current_version_id == null}
               >
@@ -248,54 +272,42 @@ export default function PageDetailPage() {
               </button>
             </div>
 
-            <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f4f5f0] rounded-xl overflow-hidden">
+            <div className="overflow-x-auto border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-[#d4dbb8]">
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
-                      Version
-                    </th>
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
-                      Status
-                    </th>
-                    <th className="text-left py-3 px-3 text-[12px] text-[#626658] font-normal">
-                      Created
-                    </th>
-                    <th className="text-right py-3 px-3 text-[12px] text-[#626658] font-normal">
-                      Action
-                    </th>
+                  <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
+                    <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#6b7068]">Version</th>
+                    <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#6b7068]">Status</th>
+                    <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#6b7068]">Created</th>
+                    <th className="text-right py-3.5 px-5 text-[13px] font-medium text-[#6b7068]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {versionsLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]">
-                        Loading versions...
-                      </td>
+                      <td colSpan={4} className="py-10 text-center text-[14px] text-[#7a7e71]">Loading versions...</td>
                     </tr>
                   ) : versions.length > 0 ? (
                     versions.map((version) => {
                       const isLive = data.current_version_id === version.id;
                       const publishable = version.status === "verified";
+                      const canPublish = publishable && publishingVersionID == null;
                       return (
-                        <tr key={version.id} className="border-b border-[#d4dbb8]/60">
-                          <td className="py-3 px-3 text-[13px] text-[#1c1f17]">
-                            v{version.version_no}
-                          </td>
-                          <td className="py-3 px-3 text-[13px]">
-                            <span className={isLive ? "text-[#6b7d3a]" : "text-[#4d5145]"}>
+                        <tr key={version.id} className="border-b border-[#eceee7] hover:bg-[#f9faf7] transition-colors">
+                          <td className="py-[15px] px-5 text-[14px] text-[#1c1f17] font-medium">v{version.version_no}</td>
+                          <td className="py-[15px] px-5 text-[14px]">
+                            <span className={`font-medium ${isLive ? "text-[#6b7d3a]" : "text-[#4d5145]"}`}>
                               {isLive ? "published" : version.status}
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-[13px] text-[#4d5145]">
+                          <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
                             {new Date(version.created_at).toLocaleString()}
                           </td>
-                          <td className="py-3 px-3 text-right">
+                          <td className="py-[15px] px-5 text-right">
                             <button
-                              className="px-2.5 py-1.5 text-[11px] border border-[#d4dbb8]/70 text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-                             
+                              className={canPublish ? btnPrimary : `${btnSecondary} !shadow-none`}
                               onClick={() => onPublish(version.id)}
-                              disabled={!publishable || publishingVersionID != null}
+                              disabled={!canPublish}
                             >
                               {publishingVersionID === version.id ? "Publishing..." : "Publish"}
                             </button>
@@ -305,9 +317,7 @@ export default function PageDetailPage() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-[12px] text-[#707468]">
-                        No versions yet
-                      </td>
+                      <td colSpan={4} className="py-10 text-center text-[14px] text-[#7a7e71]">No versions yet</td>
                     </tr>
                   )}
                 </tbody>
@@ -315,11 +325,7 @@ export default function PageDetailPage() {
             </div>
           </section>
 
-          {error && (
-            <p className="text-[12px] text-[#a83f32]">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-[13px] text-[#c4442d]">{error}</p>}
         </div>
       )}
     </div>
