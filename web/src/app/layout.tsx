@@ -5,7 +5,6 @@ import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { siteConfig } from "@/lib/site";
-import { getRequestHtmlLang } from "@/lib/request-locale";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 
 export const runtime = "edge";
@@ -80,15 +79,13 @@ const websiteJsonLd = {
   url: siteConfig.url,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const htmlLang = await getRequestHtmlLang();
-
   return (
-    <html lang={htmlLang}>
+    <html lang={siteConfig.defaultLocale}>
       <head>
         <script
           type="application/ld+json"

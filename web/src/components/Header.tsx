@@ -157,7 +157,6 @@ const resourcesDropdown: NavDropdownDef = {
     { href: "/models", label: "Models" },
     { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
     { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-    { href: "/guides/mcp-vs-a2a-for-ai-agents", label: "MCP vs A2A" },
     { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
   ],
   hideBelow: "md",
