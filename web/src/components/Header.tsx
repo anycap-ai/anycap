@@ -50,7 +50,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
           <span className="block md:hidden"><AnycapLogo size={32} /></span>
           <span className="hidden md:block"><AnycapLogo size={42} /></span>
         </Link>
-        <nav className="ml-auto flex items-center gap-0.5 sm:gap-1 overflow-hidden">
+        <nav className="ml-auto flex items-center gap-0.5 sm:gap-1">
           {links.map((entry) => {
             if (isDropdown(entry)) {
               const localizedItems = entry.items.map((item) => ({
@@ -141,7 +141,6 @@ export const seoNavLinks: NavEntry[] = [
   integrationsDropdown,
   resourcesDropdown,
   { href: "/for-human", label: "About", hideBelow: "sm" },
-  { href: "/", label: "I'm Agent ->" },
 ];
 
 export const humanNavLinks: NavEntry[] = [
