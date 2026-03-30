@@ -20,13 +20,32 @@ System, login-helper, and admin routes that do not declare a capability are not 
 
 ## Config Rules
 
-Default RPM:
+Default env RPM:
 
 ```env
 ANYCAP_RATE_LIMIT_RPM=60
 ```
 
-Capability-specific override:
+Dconf override controls:
+
+```env
+ANYCAP_RATE_LIMIT_DCONF_ENABLED=false
+ANYCAP_RATE_LIMIT_DCONF_GROUP=anycap
+ANYCAP_RATE_LIMIT_DCONF_DATA_ID=rate_limit
+```
+
+When `ANYCAP_RATE_LIMIT_DCONF_ENABLED=true`, AnyCap initializes the shared `common-go/dconf` client and attempts to load JSON config from:
+
+- `group = ANYCAP_RATE_LIMIT_DCONF_GROUP`
+- `dataId = ANYCAP_RATE_LIMIT_DCONF_DATA_ID`
+
+The dconf client itself still relies on its standard environment variables, especially:
+
+- `DCONF_NACOS_HOST`
+- `DCONF_NACOS_NAMESPACE`
+- optional: `ENV`, `DCONF_NACOS_PORT`, `DCONF_NACOS_CONTEXT_PATH`, `DCONF_NACOS_TIMEOUT_MS`
+
+Capability-specific env override:
 
 ```env
 ANYCAP_RATE_LIMIT_IMAGE_GENERATE_RPM=10
@@ -37,9 +56,26 @@ ANYCAP_RATE_LIMIT_PAGE_PUBLISH_RPM=12
 
 Resolution order:
 
-1. Check `ANYCAP_RATE_LIMIT_<CAPABILITY>_RPM`
-2. If missing, invalid, or non-positive, fall back to `ANYCAP_RATE_LIMIT_RPM`
-3. If the final RPM is `<= 0`, capability rate limiting is skipped for that capability
+1. If dconf is enabled, check dconf `capabilities[<capability>]`
+2. If missing or invalid, check dconf `default_rpm`
+3. If dconf is disabled, unavailable, or still unresolved, check `ANYCAP_RATE_LIMIT_<CAPABILITY>_RPM`
+4. If missing, invalid, or non-positive, fall back to `ANYCAP_RATE_LIMIT_RPM`
+5. If the final RPM is `<= 0`, capability rate limiting is skipped for that capability
+
+Recommended dconf JSON shape:
+
+```json
+{
+  "default_rpm": 60,
+  "capabilities": {
+    "image.generate": 10,
+    "video.generate": 5,
+    "image.read": 30,
+    "drive.browse": 120,
+    "page.publish": 12
+  }
+}
+```
 
 Capability name mapping:
 

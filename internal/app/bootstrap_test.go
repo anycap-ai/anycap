@@ -28,6 +28,12 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	if deps.apiKeyService == nil || deps.imageService == nil || deps.loginService == nil {
 		t.Fatal("expected stub dependencies to be initialized")
 	}
+	if deps.rateLimitResolver == nil {
+		t.Fatal("expected rate limit resolver to be initialized")
+	}
+	if got := deps.rateLimitResolver.ResolveCapabilityRateLimitRPM("image.generate"); got != 60 {
+		t.Fatalf("expected default rate limit resolver value 60, got %d", got)
+	}
 }
 
 func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T) {

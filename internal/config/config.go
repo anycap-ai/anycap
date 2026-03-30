@@ -20,6 +20,8 @@ const (
 	defaultHTTPAddr              = ":18080"
 	defaultRuntimeMode           = "stub"
 	defaultRateLimitRPM          = 60
+	defaultRateLimitDConfGroup   = "anycap"
+	defaultRateLimitDConfDataID  = "rate_limit"
 	rateLimitEnvPrefix           = "ANYCAP_RATE_LIMIT_"
 	rateLimitEnvSuffix           = "_RPM"
 	defaultLoginAPIKeyTTL        = 7 * 24 * time.Hour
@@ -39,34 +41,37 @@ const (
 )
 
 type Config struct {
-	AppName            string
-	AppEnv             string
-	HTTPAddr           string
-	RuntimeMode        string
-	PGDSN              string
-	PGHost             string
-	PGPort             int
-	PGUser             string
-	PGPassword         string
-	PGDatabase         string
-	PGSSLMode          string
-	PGTimezone         string
-	PGAutoMigrate      bool
-	RedisAddr          string
-	RedisHost          string
-	RedisPort          int
-	RedisUsername      string
-	RedisPassword      string
-	RedisDB            int
-	RateLimitRPM       int
-	RateLimitOverrides map[string]int
-	LoginAPIKeyTTL     time.Duration
-	Auth0Enabled       bool
-	Auth0Issuer        string
-	Auth0Audience      string
-	Auth0RedirectURL   string
-	NexusHubBaseURL    string
-	NexusHubToken      string
+	AppName               string
+	AppEnv                string
+	HTTPAddr              string
+	RuntimeMode           string
+	PGDSN                 string
+	PGHost                string
+	PGPort                int
+	PGUser                string
+	PGPassword            string
+	PGDatabase            string
+	PGSSLMode             string
+	PGTimezone            string
+	PGAutoMigrate         bool
+	RedisAddr             string
+	RedisHost             string
+	RedisPort             int
+	RedisUsername         string
+	RedisPassword         string
+	RedisDB               int
+	RateLimitRPM          int
+	RateLimitOverrides    map[string]int
+	RateLimitDConfEnabled bool
+	RateLimitDConfGroup   string
+	RateLimitDConfDataID  string
+	LoginAPIKeyTTL        time.Duration
+	Auth0Enabled          bool
+	Auth0Issuer           string
+	Auth0Audience         string
+	Auth0RedirectURL      string
+	NexusHubBaseURL       string
+	NexusHubToken         string
 	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
 	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
 	NexusHubPlatformBaseURL string
@@ -184,6 +189,9 @@ func LoadFromEnv() (Config, error) {
 		RedisDB:                 getEnvInt("ANYCAP_REDIS_DB", 0),
 		RateLimitRPM:            getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
 		RateLimitOverrides:      loadRateLimitOverrides(),
+		RateLimitDConfEnabled:   getEnvBool("ANYCAP_RATE_LIMIT_DCONF_ENABLED", false),
+		RateLimitDConfGroup:     getEnv("ANYCAP_RATE_LIMIT_DCONF_GROUP", defaultRateLimitDConfGroup),
+		RateLimitDConfDataID:    getEnv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", defaultRateLimitDConfDataID),
 		LoginAPIKeyTTL:          getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
 		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),

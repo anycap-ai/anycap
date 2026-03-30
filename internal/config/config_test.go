@@ -114,6 +114,50 @@ func TestConfig_ResolveCapabilityRateLimitRPM_NormalizesCapabilityName(t *testin
 	}
 }
 
+func TestLoadFromEnv_LoadsRateLimitDConfConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_ENABLED", "true")
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_GROUP", "rl-group")
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", "rl-data")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if !cfg.RateLimitDConfEnabled {
+		t.Fatal("expected rate limit dconf enabled")
+	}
+	if cfg.RateLimitDConfGroup != "rl-group" {
+		t.Fatalf("expected rate limit dconf group rl-group, got %q", cfg.RateLimitDConfGroup)
+	}
+	if cfg.RateLimitDConfDataID != "rl-data" {
+		t.Fatalf("expected rate limit dconf data id rl-data, got %q", cfg.RateLimitDConfDataID)
+	}
+}
+
+func TestLoadFromEnv_UsesDefaultRateLimitDConfValues(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_ENABLED", "")
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_GROUP", "")
+	t.Setenv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if cfg.RateLimitDConfEnabled {
+		t.Fatal("expected rate limit dconf disabled by default")
+	}
+	if cfg.RateLimitDConfGroup != "anycap" {
+		t.Fatalf("expected default rate limit dconf group anycap, got %q", cfg.RateLimitDConfGroup)
+	}
+	if cfg.RateLimitDConfDataID != "rate_limit" {
+		t.Fatalf("expected default rate limit dconf data id rate_limit, got %q", cfg.RateLimitDConfDataID)
+	}
+}
+
 func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "PAGEDEV-%s.ANYCAP.CLOUD")
