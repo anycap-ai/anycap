@@ -20,7 +20,7 @@ const ROUTE_GROUP_SEGMENT_PATTERN = /^\(.*\)$/;
 const DYNAMIC_SEGMENT_PATTERN = /^\[.*\]$/;
 const DEFAULT_SITEMAP_PRIORITY = 0.6;
 
-const priorityByKnownPath = new Map(
+const priorityByKnownPath = new Map<string, number>(
   publicRouteDefinitions.map((route) => [route.path, route.priority]),
 );
 
