@@ -36,7 +36,9 @@ const columns: { title: string; links: FooterLink[] }[] = [
     title: "Resources",
     links: [
       { href: "/cli", label: "CLI" },
+      { href: "/skills", label: "Skills" },
       { href: "/guides/install-anycap", label: "Install AnyCap" },
+      { href: "/guides/mcp-vs-a2a-for-ai-agents", label: "MCP vs A2A" },
       { href: "/guides/add-tools-to-claude-code", label: "Add Tools to Claude Code" },
       { href: "/glossary/agent-capability-runtime", label: "What is ACR?" },
     ],

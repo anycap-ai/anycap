@@ -117,6 +117,7 @@ type atomicNodeDTO struct {
 type nodeCapabilitiesDTO struct {
 	Image *imageCapabilitiesDTO `json:"image,omitempty"`
 	Video *videoCapabilitiesDTO `json:"video,omitempty"`
+	Music *musicCapabilitiesDTO `json:"music,omitempty"`
 }
 
 type imageCapabilitiesDTO struct {
@@ -145,6 +146,14 @@ type videoCapabilitiesDTO struct {
 	SupportedResolutions       []string `json:"supported_resolutions"`
 	SupportedAspectRatios      []string `json:"supported_aspect_ratios"`
 	SupportedDurations         []int    `json:"supported_durations"`
+}
+
+type musicCapabilitiesDTO struct {
+	SupportsText2Music    bool     `json:"supports_text_2_music"`
+	SupportsCustomMusic   bool     `json:"supports_custom_music"`
+	SupportsContinueMusic bool     `json:"supports_continue_music"`
+	SupportedDurations    []int    `json:"supported_durations"`
+	SupportedFormats      []string `json:"supported_formats"`
 }
 
 func (c *PlatformClient) fetchAtomicNodes(ctx context.Context, category string) ([]atomicNodeDTO, error) {
@@ -327,6 +336,7 @@ func enrichHintsFromCapabilities(spec *model.OperationSpec, capability model.Cap
 		if _, exists := spec.RequestHints["resolution"]; !exists && len(vid.SupportedResolutions) > 0 {
 			spec.RequestHints["resolution"] = map[string]any{"type": "string", "enum": vid.SupportedResolutions}
 		}
+
 	}
 }
 
@@ -367,6 +377,15 @@ func deriveOperations(capability model.Capability, node *atomicNodeDTO) []model.
 
 	case model.CapabilityAudio:
 		ops = append(ops, model.OperationSpeak)
+
+	case model.CapabilityMusic:
+		if node.Capabilities.Music == nil {
+			return nil
+		}
+		music := node.Capabilities.Music
+		if music.SupportsText2Music || music.SupportsCustomMusic || music.SupportsContinueMusic {
+			ops = append(ops, model.OperationGenerate)
+		}
 	}
 
 	return ops

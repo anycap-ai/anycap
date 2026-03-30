@@ -121,6 +121,102 @@ func TestClient_GenerateImage(t *testing.T) {
 	}
 }
 
+func TestClient_GenerateMusic(t *testing.T) {
+	var captured submitAtomicProcessRequest
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+
+		resp := submitAtomicProcessResponse{
+			Base:        submitBaseResponse{Code: 0, Message: "success"},
+			TaskID:      "music-task-123",
+			Status:      "succeeded",
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp3","credit_cost":3}]}`,
+			NexusUsage:  map[string]any{"music": 1},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{
+		BaseURL: srv.URL,
+		Token:   "nexus-token",
+	})
+
+	ctx := middleware.ContextWithRequestID(context.Background(), "req-music-1")
+	result, err := client.GenerateMusic(ctx, model.GenerateMusicRequest{
+		RequestID:        "req-music-1",
+		UserID:           "user-123",
+		Prompt:           "lofi night drive",
+		Model:            "mureka-v6",
+		MakeInstrumental: true,
+		CustomMode:       true,
+		Tags:             "lofi chill",
+		Title:            "Night Drive",
+		Lyrics:           "city lights at midnight",
+		ContinueAt:       30,
+		ContinueClipID:   "clip_123",
+		VocalGender:      "female",
+	}, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: "mureka_v6",
+		GenType:    string(model.CapabilityMusic),
+		Priority:   100,
+		Enabled:    true,
+	})
+	if err != nil {
+		t.Fatalf("GenerateMusic() error = %v", err)
+	}
+
+	if captured.AbilityKey != "mureka_v6" {
+		t.Fatalf("expected ability key mureka_v6, got %q", captured.AbilityKey)
+	}
+	if captured.UserInfo.UID != 123 {
+		t.Fatalf("expected uid 123, got %d", captured.UserInfo.UID)
+	}
+	if captured.Extra["capability"] != string(model.CapabilityMusic) {
+		t.Fatalf("expected music capability extra, got %#v", captured.Extra["capability"])
+	}
+
+	var payload atomicProcessPayload
+	if err := json.Unmarshal([]byte(captured.ReqPayload), &payload); err != nil {
+		t.Fatalf("unmarshal req_payload: %v", err)
+	}
+	if payload.GenType != string(model.CapabilityMusic) {
+		t.Fatalf("expected gen_type music, got %q", payload.GenType)
+	}
+	if payload.MusicOption == nil {
+		t.Fatal("expected music_option")
+	}
+	if !payload.MusicOption.MakeInstrumental || !payload.MusicOption.CustomMode {
+		t.Fatalf("expected music flags to round trip, got %#v", payload.MusicOption)
+	}
+	if payload.MusicOption.Tags != "lofi chill" {
+		t.Fatalf("expected tags to round trip, got %q", payload.MusicOption.Tags)
+	}
+	if payload.MusicOption.ContinueClipID != "clip_123" {
+		t.Fatalf("expected continue clip id to round trip, got %q", payload.MusicOption.ContinueClipID)
+	}
+
+	if result.ID != "music-task-123" {
+		t.Fatalf("expected result id music-task-123, got %q", result.ID)
+	}
+	if result.Status != "success" {
+		t.Fatalf("expected success status, got %q", result.Status)
+	}
+	if len(result.Outputs) != 1 || result.Outputs[0].URL != "https://cdn.anycap.local/generated.mp3" {
+		t.Fatalf("unexpected outputs: %#v", result.Outputs)
+	}
+	if result.CreditCost != 3 {
+		t.Fatalf("expected credit cost 3, got %d", result.CreditCost)
+	}
+}
+
 // TestMapSubmitError_NexusHub500WithValidationCode reproduces the exact error
 // from production: NexusHub returns HTTP 500 with base.code=5005 for what is
 // actually a parameter validation error (unsupported video duration).

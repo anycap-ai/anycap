@@ -58,6 +58,27 @@ func newTestService() *Service {
 				},
 			},
 		},
+		{
+			ModelID:     "test-music-model",
+			Capability:  model.CapabilityMusic,
+			DisplayName: "Test Music Model",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{
+						"prompt": map[string]any{"type": "string"},
+						"tags":   map[string]any{"type": "string"},
+					},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "test_ability_key_music",
+						GenType:    "music",
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
 	}
 	return NewService(nexushub.NewCatalogStubWith(fixtures))
 }
@@ -89,6 +110,21 @@ func TestService_ListModels_Video(t *testing.T) {
 	}
 	if summaries[0].ModelID != "test-vid-model" {
 		t.Fatalf("expected test-vid-model, got %s", summaries[0].ModelID)
+	}
+}
+
+func TestService_ListModels_Music(t *testing.T) {
+	svc := newTestService()
+
+	summaries, err := svc.ListModels(context.Background(), model.CapabilityMusic)
+	if err != nil {
+		t.Fatalf("list models: %v", err)
+	}
+	if len(summaries) != 1 {
+		t.Fatalf("expected 1 music model, got %d", len(summaries))
+	}
+	if summaries[0].ModelID != "test-music-model" {
+		t.Fatalf("expected test-music-model, got %s", summaries[0].ModelID)
 	}
 }
 

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/FadeIn";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createSoftwareApplicationJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -65,6 +66,15 @@ const ecosystems = [
   { name: "OpenClaw", href: null },
 ];
 
+const softwareApplicationJsonLd = createSoftwareApplicationJsonLd({
+  name: "AnyCap CLI",
+  description:
+    "Agent-native CLI that gives AI agents one install path and one interface for capabilities like image generation, video generation, image understanding, and video analysis.",
+  path: "/cli",
+  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
+  installUrl: `${siteConfig.url}/install.sh`,
+});
+
 export default function CliPage() {
   return (
     <>
@@ -72,6 +82,10 @@ export default function CliPage() {
         { name: "Home", href: "/" },
         { name: "CLI" },
       ]} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationJsonLd) }}
+      />
       <article className="px-6 md:px-12 lg:px-20">
       <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
         {/* Hero */}

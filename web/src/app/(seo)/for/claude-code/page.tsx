@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/FadeIn";
 import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -26,39 +27,14 @@ export const metadata: Metadata = {
   },
 };
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Install AnyCap on Claude Code",
+const integrationGuideJsonLd = createTechArticleJsonLd({
+  headline: "AnyCap for Claude Code — Add capabilities to Claude Code",
   description:
-    "How to give Claude Code image generation, video generation, and other capabilities through AnyCap.",
-  step: [
-    {
-      "@type": "HowToStep",
-      position: 1,
-      name: "Install the AnyCap skill",
-      text: "Run: npx -y skills add anycap-ai/anycap -a claude-code -y",
-    },
-    {
-      "@type": "HowToStep",
-      position: 2,
-      name: "Install the AnyCap CLI",
-      text: "Run: curl -fsSL https://anycap.ai/install.sh | sh",
-    },
-    {
-      "@type": "HowToStep",
-      position: 3,
-      name: "Log in",
-      text: "Run: anycap login",
-    },
-    {
-      "@type": "HowToStep",
-      position: 4,
-      name: "Use a capability",
-      text: "Run: anycap image generate --model seedream_5 --prompt 'a sunset over mountains'",
-    },
-  ],
-};
+    "Guide to giving Claude Code a consistent capability layer with AnyCap, including install flow, CLI usage, and available capabilities.",
+  path: "/for/claude-code",
+  about: ["Claude Code", "AnyCap CLI", "Agent skills", "Capability runtime"],
+  keywords: ["anycap for claude code", "claude code tools", "claude code skills", "agent capabilities"],
+});
 
 const capabilities = [
   {
@@ -100,7 +76,7 @@ export default function ForClaudeCodePage() {
       ]} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(integrationGuideJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">
