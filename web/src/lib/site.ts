@@ -34,9 +34,9 @@ export const siteConfig = {
   defaultTitle: "AnyCap | Every capability your agent needs. One command.",
   defaultDescription:
     "AnyCap gives AI agents the capabilities they're missing — image, video, music, speech, search — through a single CLI and a single credential. Built for agents, not adapted from human tools.",
-  humanTitle: "Built for agents",
+  humanTitle: "Capability infrastructure for agents",
   humanDescription:
-    "Agents can think, but they can't act. AnyCap gives them every capability through one command — no SDKs, no dashboards, no friction.",
+    "See how AnyCap gives agents image, video, vision, and other capabilities through one install path, one auth flow, and one command surface.",
 } as const;
 
 export type PublicRouteKind = "home" | "human" | "seo";
@@ -44,49 +44,61 @@ export type PublicRouteKind = "home" | "human" | "seo";
 export const publicRouteDefinitions = [
   { key: "home", kind: "home", path: ROOT_PATH, priority: 1 },
   { key: "for-human", kind: "human", path: "/for-human", priority: 0.8 },
-  { key: "cli", kind: "seo", path: "/cli", priority: 0.9 },
-  { key: "skills", kind: "seo", path: "/skills", priority: 0.85 },
-  { key: "capabilities", kind: "seo", path: "/capabilities", priority: 0.8 },
-  { key: "models", kind: "seo", path: "/models", priority: 0.75 },
+  { key: "about", kind: "seo", path: "/about", priority: 0.72 },
+  { key: "start", kind: "seo", path: "/start", priority: 0.96 },
+  { key: "for-claude-code", kind: "seo", path: "/for/claude-code", priority: 0.95 },
   {
-    key: "capabilities-image-generation",
+    key: "for-claude-code-image-generation",
     kind: "seo",
-    path: "/capabilities/image-generation",
-    priority: 0.7,
+    path: "/for/claude-code/image-generation",
+    priority: 0.88,
   },
   {
-    key: "capabilities-video-generation",
+    key: "for-claude-code-video-generation",
     kind: "seo",
-    path: "/capabilities/video-generation",
-    priority: 0.7,
+    path: "/for/claude-code/video-generation",
+    priority: 0.86,
+  },
+  {
+    key: "learn-what-agents-cant-do",
+    kind: "seo",
+    path: "/learn/what-agents-cant-do",
+    priority: 0.84,
+  },
+  { key: "guides-add-tools-to-claude-code", kind: "seo", path: "/guides/add-tools-to-claude-code", priority: 0.84 },
+  {
+    key: "guides-install-anycap",
+    kind: "seo",
+    path: "/guides/install-anycap",
+    priority: 0.82,
+  },
+  { key: "for-cursor", kind: "seo", path: "/for/cursor", priority: 0.82 },
+  { key: "for-manus", kind: "seo", path: "/for/manus", priority: 0.8 },
+  { key: "capabilities", kind: "seo", path: "/capabilities", priority: 0.8 },
+  { key: "cli", kind: "seo", path: "/cli", priority: 0.78 },
+  { key: "for-codex", kind: "seo", path: "/for/codex", priority: 0.78 },
+  { key: "capabilities-image-generation", kind: "seo", path: "/capabilities/image-generation", priority: 0.78 },
+  { key: "capabilities-video-generation", kind: "seo", path: "/capabilities/video-generation", priority: 0.76 },
+  {
+    key: "capabilities-image-understanding",
+    kind: "seo",
+    path: "/capabilities/image-understanding",
+    priority: 0.74,
   },
   {
     key: "capabilities-image-read",
     kind: "seo",
     path: "/capabilities/image-read",
-    priority: 0.7,
+    priority: 0.45,
   },
   {
     key: "capabilities-video-analysis",
     kind: "seo",
     path: "/capabilities/video-analysis",
-    priority: 0.7,
+    priority: 0.74,
   },
-  { key: "for-claude-code", kind: "seo", path: "/for/claude-code", priority: 0.9 },
-  { key: "for-cursor", kind: "seo", path: "/for/cursor", priority: 0.8 },
-  { key: "for-codex", kind: "seo", path: "/for/codex", priority: 0.8 },
-  {
-    key: "guides-install-anycap",
-    kind: "seo",
-    path: "/guides/install-anycap",
-    priority: 0.7,
-  },
-  {
-    key: "guides-add-tools-to-claude-code",
-    kind: "seo",
-    path: "/guides/add-tools-to-claude-code",
-    priority: 0.6,
-  },
+  { key: "skills", kind: "seo", path: "/skills", priority: 0.72 },
+  { key: "models", kind: "seo", path: "/models", priority: 0.72 },
   {
     key: "guides-context-engineering-for-agents",
     kind: "seo",
@@ -98,12 +110,6 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/guides/agent-skills-for-developer-tools",
     priority: 0.7,
-  },
-  {
-    key: "guides-mcp-vs-a2a-for-ai-agents",
-    kind: "seo",
-    path: "/guides/mcp-vs-a2a-for-ai-agents",
-    priority: 0.65,
   },
   {
     key: "guides-workspace-context-engineering",
@@ -121,7 +127,7 @@ export const publicRouteDefinitions = [
     key: "compare-anycap-vs-composio",
     kind: "seo",
     path: "/compare/anycap-vs-composio",
-    priority: 0.6,
+    priority: 0.62,
   },
   {
     key: "compare-anycap-vs-openai-agent-builder",
@@ -163,12 +169,6 @@ export const publicRouteDefinitions = [
     key: "glossary-agent-capability-runtime",
     kind: "seo",
     path: "/glossary/agent-capability-runtime",
-    priority: 0.5,
-  },
-  {
-    key: "glossary-agent-protocol",
-    kind: "seo",
-    path: "/glossary/agent-protocol",
     priority: 0.5,
   },
 ] as const;
@@ -229,9 +229,6 @@ export function normalizePublicPath(pathname: string): string {
 
 export function buildLocalizedPath(locale: SiteLocale, pathname: string): string {
   const normalizedPath = normalizePublicPath(pathname);
-  if (locale === defaultLocale) {
-    return normalizedPath;
-  }
   if (normalizedPath === ROOT_PATH) {
     return `/${locale}`;
   }
@@ -306,4 +303,21 @@ export function getLocalizedPublicRoutes(locale: SiteLocale) {
     localizedPath: buildLocalizedPath(locale, route.path),
     url: getLocalizedRouteUrl(locale, route.path),
   }));
+}
+
+export function getAllLocalizedPublicRoutes() {
+  return supportedLocales.flatMap((locale) => getLocalizedPublicRoutes(locale));
+}
+
+export function getLocalizedAlternates(pathname: string): Record<string, string> {
+  const alternates = Object.fromEntries(
+    supportedLocales.map((locale) => [
+      getLocaleConfig(locale).htmlLang,
+      buildLocalizedPath(locale, pathname),
+    ])
+  ) as Record<string, string>;
+
+  alternates["x-default"] = buildLocalizedPath(defaultLocale, pathname);
+
+  return alternates;
 }

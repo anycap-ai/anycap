@@ -4,12 +4,8 @@ import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
-import {
-
-  defaultLocale,
-  getLocaleConfig,
-  siteConfig,
-} from "@/lib/site";
+import { siteConfig } from "@/lib/site";
+import { getRequestHtmlLang } from "@/lib/request-locale";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 
 export const runtime = "edge";
@@ -49,8 +45,19 @@ export const metadata: Metadata = {
     images: [defaultSocialImage.url],
   },
   robots: createRobotsMetadata(),
+  manifest: "/site.webmanifest",
   icons: {
-    icon: "/anycap-mark.svg",
+    icon: [
+      { url: "/anycap-mark.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -78,7 +85,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const htmlLang = getLocaleConfig(defaultLocale).htmlLang;
+  const htmlLang = await getRequestHtmlLang();
 
   return (
     <html lang={htmlLang}>

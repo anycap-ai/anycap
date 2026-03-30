@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   buildLocalizedPath,
   getLocaleConfig,
+  getLocalizedAlternates,
   getPublicRouteByKey,
   siteConfig,
   type PublicRouteKey,
@@ -38,6 +39,10 @@ export function createLocalizedMetadata(
   const localizedPath = buildLocalizedPath(locale, route.path);
   const localeDetails = getLocaleConfig(locale);
   const openGraph = cloneOpenGraph(baseMetadata.openGraph);
+  const languageAlternates = {
+    ...(baseMetadata.alternates?.languages ?? {}),
+    ...getLocalizedAlternates(route.path),
+  };
 
   return {
     ...baseMetadata,
@@ -45,6 +50,7 @@ export function createLocalizedMetadata(
     alternates: {
       ...baseMetadata.alternates,
       canonical: localizedPath,
+      languages: languageAlternates,
     },
     openGraph: openGraph
       ? {

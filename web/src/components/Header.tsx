@@ -6,13 +6,18 @@ import { localizePublicPath } from "@/lib/site";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-const linkClass =
-  "px-3 py-2 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
+const baseLinkClass =
+  "px-3 py-2 text-[15px] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
+
+const defaultLinkClass = `${baseLinkClass} text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97]`;
+const primaryLinkClass =
+  `${baseLinkClass} px-5 text-[#f4f5f0] bg-[#6b7d3a] border border-[#6b7d3a] hover:bg-[#1c1f17] hover:border-[#1c1f17] active:scale-[0.97]`;
 
 export type NavItem = {
   href: string;
   label: string;
   hideBelow?: "sm" | "md";
+  variant?: "default" | "primary";
 };
 
 export type NavDropdownDef = {
@@ -69,12 +74,13 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
             }
 
             const { href, label, hideBelow } = entry;
+            const linkVariantClass = entry.variant === "primary" ? primaryLinkClass : defaultLinkClass;
             return (
               <Link
                 key={href}
                 href={localize(href)}
                 prefetch={false}
-                className={`${hideBelow ? `hidden ${hideBelow}:inline-block` : ""} ${linkClass}`}
+                className={`${hideBelow ? `hidden ${hideBelow}:inline-block` : ""} ${linkVariantClass}`}
                 style={mono}
               >
                 {label}
@@ -98,14 +104,42 @@ const capabilitiesDropdown: NavDropdownDef = {
   items: [
     { href: "/capabilities/image-generation", label: "Image Generation" },
     { href: "/capabilities/video-generation", label: "Video Generation" },
-    { href: "/capabilities/image-read", label: "Image Read" },
+    { href: "/capabilities/image-understanding", label: "Image Understanding" },
     { href: "/capabilities/video-analysis", label: "Video Analysis" },
   ],
 };
 
-const integrationsDropdown: NavDropdownDef = {
+const equipYourAgentsDropdown: NavDropdownDef = {
   kind: "dropdown",
-  label: "Integrations",
+  label: "Equip Your Agents",
+  href: "/start",
+  items: [
+    { href: "/for/claude-code", label: "Claude Code" },
+    { href: "/for/cursor", label: "Cursor" },
+    { href: "/for/manus", label: "Manus" },
+    { href: "/for/codex", label: "Codex" },
+  ],
+  hideBelow: "md",
+};
+
+const learnDropdown: NavDropdownDef = {
+  kind: "dropdown",
+  label: "Learn",
+  href: "/learn/what-agents-cant-do",
+  items: [
+    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
+    { href: "/cli", label: "Why One CLI Matters" },
+    { href: "/skills", label: "How Skills Fit" },
+    { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
+    { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
+  ],
+  hideBelow: "md",
+};
+
+const forYourAgentDropdown: NavDropdownDef = {
+  kind: "dropdown",
+  label: "For Your Agent",
+  href: "/start",
   items: [
     { href: "/for/claude-code", label: "Claude Code" },
     { href: "/for/cursor", label: "Cursor" },
@@ -121,31 +155,24 @@ const resourcesDropdown: NavDropdownDef = {
     { href: "/cli", label: "CLI" },
     { href: "/skills", label: "Skills" },
     { href: "/models", label: "Models" },
-    { href: "/guides/install-anycap", label: "Install AnyCap" },
+    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
     { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-    { href: "/guides/workspace-context-engineering", label: "Workspace Context" },
-    { href: "/guides/agent-skills-for-developer-tools", label: "Agent Skills" },
     { href: "/guides/mcp-vs-a2a-for-ai-agents", label: "MCP vs A2A" },
-    { href: "/guides/what-is-agent-harness", label: "Agent Harness" },
-    { href: "/guides/add-tools-to-claude-code", label: "Add Tools to Claude Code" },
-    { href: "/compare/anycap-vs-openai-agent-builder", label: "AnyCap vs Agent Builder" },
     { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
-    { href: "/glossary/agent-capability-runtime", label: "What is ACR?" },
-    { href: "/glossary/agent-protocol", label: "Agent Protocol" },
   ],
   hideBelow: "md",
 };
 
 export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
-  integrationsDropdown,
+  forYourAgentDropdown,
   resourcesDropdown,
-  { href: "/for-human", label: "About", hideBelow: "sm" },
+  { href: "/about", label: "About", hideBelow: "sm" },
 ];
 
 export const humanNavLinks: NavEntry[] = [
   capabilitiesDropdown,
-  integrationsDropdown,
-  resourcesDropdown,
-  { href: "/for-human", label: "About", hideBelow: "sm" },
+  equipYourAgentsDropdown,
+  learnDropdown,
+  { href: "/about", label: "About", hideBelow: "sm" },
 ];

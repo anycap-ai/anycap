@@ -15,7 +15,7 @@ const protectedPaths = ["/dashboard"];
 
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
-  redirectURL.pathname = pathname;
+  redirectURL.pathname = buildLocalizedPath(defaultLocale, pathname);
   return NextResponse.redirect(redirectURL);
 }
 
@@ -71,24 +71,14 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const { locale, pathname } = stripLocalePrefix(normalizedPath);
-  if (locale === defaultLocale) {
-    const matchedLocalizedRoute = getPublicRouteByPath(pathname);
-    if (matchedLocalizedRoute) {
-      return applyAuthResponse(redirectToLocalizedPath(req, matchedLocalizedRoute.path), authResponse);
-    }
-  }
-
+  const { locale } = stripLocalePrefix(normalizedPath);
   if (!locale) {
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute) {
-      const canonicalPath = buildLocalizedPath(defaultLocale, matchedPublicRoute.path);
-      if (canonicalPath !== matchedPublicRoute.path) {
-        return applyAuthResponse(
-          redirectToLocalizedPath(req, canonicalPath),
-          authResponse,
-        );
-      }
+      return applyAuthResponse(
+        redirectToLocalizedPath(req, matchedPublicRoute.path),
+        authResponse,
+      );
     }
   }
 
@@ -107,11 +97,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/",
-    "/for-human/:path*",
-    "/dashboard/:path*",
-    "/auth/:path*",
+    "/((?!api|_next|.*\\..*).*)",
     "/api/auth/:path*",
-    "/:locale/:path*",
   ],
 };

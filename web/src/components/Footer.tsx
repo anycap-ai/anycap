@@ -20,27 +20,37 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/capabilities", label: "Overview" },
       { href: "/capabilities/image-generation", label: "Image Generation" },
       { href: "/capabilities/video-generation", label: "Video Generation" },
-      { href: "/capabilities/image-read", label: "Image Read" },
+      { href: "/capabilities/image-understanding", label: "Image Understanding" },
       { href: "/capabilities/video-analysis", label: "Video Analysis" },
     ],
   },
   {
-    title: "Integrations",
+    title: "Equip your agents",
     links: [
+      { href: "/start", label: "Start here" },
       { href: "/for/claude-code", label: "Claude Code" },
       { href: "/for/cursor", label: "Cursor" },
+      { href: "/for/manus", label: "Manus" },
+      { href: "/for/codex", label: "Codex" },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { href: "/learn/what-agents-cant-do", label: "What agents can't do" },
+      { href: "/cli", label: "Why one CLI matters" },
+      { href: "/skills", label: "How skills fit" },
+      { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
       { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
     ],
   },
   {
-    title: "Resources",
+    title: "Product",
     links: [
-      { href: "/cli", label: "CLI" },
-      { href: "/skills", label: "Skills" },
+      { href: "/for-human", label: "Product overview" },
+      { href: "/models", label: "Models" },
       { href: "/guides/install-anycap", label: "Install AnyCap" },
-      { href: "/guides/mcp-vs-a2a-for-ai-agents", label: "MCP vs A2A" },
       { href: "/guides/add-tools-to-claude-code", label: "Add Tools to Claude Code" },
-      { href: "/glossary/agent-capability-runtime", label: "What is ACR?" },
     ],
   },
 ];
@@ -52,7 +62,7 @@ export async function Footer() {
     <footer className="px-5 md:px-16 lg:px-24 pt-16 pb-10 border-t border-[#d4dbb8]">
       <div className="mx-auto max-w-[1280px]">
         {/* Column links */}
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 mb-12">
+        <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
           {columns.map(({ title, links }) => (
             <div key={title}>
               <p className={columnTitleClass} style={mono}>{title}</p>
@@ -77,7 +87,7 @@ export async function Footer() {
             <ul className="space-y-1">
               <li>
                 <Link
-                  href={localizePublicPath(locale, "/for-human")}
+                  href={localizePublicPath(locale, "/about")}
                   prefetch={false}
                   className={linkClass}
                   style={mono}

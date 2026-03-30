@@ -1,4 +1,4 @@
-import { siteConfig } from "@/lib/site";
+import { defaultLocale, localizePublicPath, siteConfig } from "@/lib/site";
 
 type ArticleSchemaInput = {
   headline: string;
@@ -25,7 +25,11 @@ const organizationReference = {
 } as const;
 
 function buildAbsoluteUrl(path: string) {
-  return `${siteConfig.url}${path}`;
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  return `${siteConfig.url}${localizePublicPath(defaultLocale, path)}`;
 }
 
 export function createTechArticleJsonLd({
