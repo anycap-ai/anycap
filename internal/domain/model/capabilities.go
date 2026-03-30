@@ -11,6 +11,7 @@ import (
 const (
 	MaxImageUploadSize int64 = 20 * 1024 * 1024  // 20 MB
 	MaxVideoUploadSize int64 = 200 * 1024 * 1024 // 200 MB
+	MaxAudioUploadSize int64 = 50 * 1024 * 1024  // 50 MB
 )
 
 // allowedContentTypes is the explicit set of MIME types accepted for upload.
@@ -23,6 +24,13 @@ var allowedContentTypes = map[string]bool{
 	"video/mp4":       true,
 	"video/webm":      true,
 	"video/quicktime": true,
+	"audio/mpeg":      true,
+	"audio/wav":       true,
+	"audio/ogg":       true,
+	"audio/flac":      true,
+	"audio/webm":      true,
+	"audio/mp4":       true,
+	"audio/x-wav":     true,
 }
 
 // MaxImagesPerRequest is the maximum number of images allowed in a single multi-image request.
@@ -134,6 +142,21 @@ func (r VideoReadRequest) Validate() error {
 	return nil
 }
 
+// AudioReadRequest represents a request to analyze audio.
+type AudioReadRequest struct {
+	URL         string `json:"url,omitempty"`
+	Instruction string `json:"instruction,omitempty"`
+	Model       string `json:"model,omitempty"`
+}
+
+func (r AudioReadRequest) Validate() error {
+	if r.URL == "" {
+		return ErrMissingInput
+	}
+
+	return nil
+}
+
 // Usage holds token usage information from the upstream LLM call.
 type Usage struct {
 	InputTokens      int `json:"input_tokens"`
@@ -195,6 +218,9 @@ func (r PresignRequest) Validate() error {
 func maxUploadSize(ct string) int64 {
 	if strings.HasPrefix(ct, "video/") {
 		return MaxVideoUploadSize
+	}
+	if strings.HasPrefix(ct, "audio/") {
+		return MaxAudioUploadSize
 	}
 	return MaxImageUploadSize
 }

@@ -28,6 +28,9 @@ func NewActionsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 	if feature.Enabled(feature.VideoRead) {
 		actionsCmd.AddCommand(newVideoReadAction(clientFactory, stdout))
 	}
+	if feature.Enabled(feature.AudioRead) {
+		actionsCmd.AddCommand(newAudioReadAction(clientFactory, stdout))
+	}
 
 	return actionsCmd
 }
@@ -158,6 +161,60 @@ Examples:
 	cmd.Flags().StringVar(&urlFlag, "url", "", "Video URL to analyze")
 	cmd.Flags().StringVar(&fileFlag, "file", "", "Local video file to upload and analyze")
 	cmd.Flags().StringVar(&instruction, "instruction", "", "What to look for or describe")
+	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
+	cmd.MarkFlagsOneRequired("url", "file")
+	cmd.MarkFlagsMutuallyExclusive("url", "file")
+
+	return cmd
+}
+
+func newAudioReadAction(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+	var urlFlag string
+	var fileFlag string
+	var instruction string
+	var modelFlag string
+
+	cmd := &cobra.Command{
+		Use:   "audio-read",
+		Short: "Analyze audio (transcribe, describe, answer questions)",
+		Long: `Analyze audio using multimodal models. Provide either a URL or a local file.
+
+Examples:
+  anycap actions audio-read --url https://example.com/recording.wav
+  anycap actions audio-read --url https://example.com/podcast.mp3 --instruction "Summarize the main topics"
+  anycap actions audio-read --file ./meeting.mp3`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := clientFactory()
+			targetURL := urlFlag
+
+			if fileFlag != "" {
+				result, err := uploadFile(cmd.Context(), client, fileFlag, verboseWriter(cmd))
+				if err != nil {
+					return err
+				}
+				targetURL = result.ObjectURL
+			}
+
+			body := map[string]any{"url": targetURL}
+			if instruction != "" {
+				body["instruction"] = instruction
+			}
+			if modelFlag != "" {
+				body["model"] = modelFlag
+			}
+
+			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/audio/read", body)
+			if err != nil {
+				return err
+			}
+
+			return output.WriteServerContent(stdout, resp.Body, resp.RequestID)
+		},
+	}
+
+	cmd.Flags().StringVar(&urlFlag, "url", "", "Audio URL to analyze")
+	cmd.Flags().StringVar(&fileFlag, "file", "", "Local audio file to upload and analyze")
+	cmd.Flags().StringVar(&instruction, "instruction", "", "What to listen for or describe")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
 	cmd.MarkFlagsOneRequired("url", "file")
 	cmd.MarkFlagsMutuallyExclusive("url", "file")

@@ -29,6 +29,7 @@ func FeatureGate(features map[string]bool) app.HandlerFunc {
 		{"/v1/music/models", "music.models"},
 		{"/v1/capabilities/image/read", "image.read"},
 		{"/v1/capabilities/video/read", "video.read"},
+		{"/v1/capabilities/audio/read", "audio.read"},
 		{"/v1/drive/", "drive"},
 		{"/v1/pages", "page"},
 	}

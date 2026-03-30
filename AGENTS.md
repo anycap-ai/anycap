@@ -128,6 +128,7 @@ ANYCAP_FEATURE_DRIVE=false
 | `ANYCAP_FEATURE_VIDEO_GENERATE` | true if NexusHub Core configured | `POST /v1/video/generate` |
 | `ANYCAP_FEATURE_VIDEO_MODELS` | true if catalog configured | `GET /v1/video/models` |
 | `ANYCAP_FEATURE_VIDEO_READ` | true if AgentPlatform configured | `POST /v1/capabilities/video/read` |
+| `ANYCAP_FEATURE_AUDIO_READ` | true if AgentPlatform configured | `POST /v1/capabilities/audio/read` |
 | `ANYCAP_FEATURE_MUSIC_GENERATE` | true if NexusHub Core configured | `POST /v1/music/generate` |
 | `ANYCAP_FEATURE_MUSIC_MODELS` | true if catalog configured | `GET /v1/music/models` |
 | `ANYCAP_FEATURE_DRIVE` | true | All `/v1/drive/*` endpoints |

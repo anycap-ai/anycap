@@ -126,6 +126,9 @@ func TestDisabledFeaturesHiddenFromHelp(t *testing.T) {
 	if !strings.Contains(output, "video-read") {
 		t.Fatalf("expected 'video-read' in actions help, got: %s", output)
 	}
+	if !strings.Contains(output, "audio-read") {
+		t.Fatalf("expected 'audio-read' in actions help, got: %s", output)
+	}
 }
 
 func TestEnabledFeaturesVisibleInHelp(t *testing.T) {

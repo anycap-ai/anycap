@@ -302,6 +302,75 @@ func TestVideoReadRequiresURLOrFile(t *testing.T) {
 	}
 }
 
+func TestAudioReadWithURL(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"actions", "audio-read", "--url", "https://example.com/recording.wav"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("audio read --url failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "mock audio analysis") {
+		t.Fatalf("expected mock audio analysis in output, got: %s", output)
+	}
+}
+
+func TestAudioReadWithInstruction(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"actions", "audio-read", "--url", "https://example.com/podcast.mp3", "--instruction", "Summarize the topics"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("audio read with instruction failed: %v", err)
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "Summarize the topics") {
+		t.Fatalf("expected instruction echoed in mock response, got: %s", output)
+	}
+}
+
+func TestAudioReadRequiresURLOrFile(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"actions", "audio-read"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when neither --url nor --file provided")
+	}
+}
+
 func TestHelpIncludesActionsCommand(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
