@@ -28,7 +28,7 @@ const agents: Agent[] = [
 
 function getInstallPrompt(agent: Agent): string {
   const agentFlag = agent.slug ? ` -a ${agent.slug}` : "";
-  return `Help me set up AnyCap — first install the skill with "npx -y skills add anycap-ai/anycap${agentFlag} -y", then install the CLI with "curl -fsSL https://anycap.ai/install.sh | sh", and run anycap login to connect my account. After that you'll have image, video, music, speech, search, and crawl capabilities ready to use.`;
+  return `Help me set up AnyCap — first install the skill with "npx -y skills add anycap-ai/anycap${agentFlag} -y", then install the CLI with "curl -fsSL https://anycap.ai/install.sh | sh", and run anycap login to connect my account. After that you'll have image generation, video generation, image understanding, and video analysis available in early access through one CLI. Music, speech, search, and crawl are on the roadmap.`;
 }
 
 function AgentIconSlot({ icon, size = 20 }: { icon: string | null; size?: number }) {

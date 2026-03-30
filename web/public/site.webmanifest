@@ -1,7 +1,7 @@
 {
   "name": "AnyCap",
   "short_name": "AnyCap",
-  "description": "AnyCap gives AI agents image, video, music, speech, search, and crawl capabilities through one command.",
+  "description": "AnyCap gives AI agents one CLI and one credential for image generation, video generation, image understanding, and video analysis in early access. Built for agents, not adapted from human tools.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

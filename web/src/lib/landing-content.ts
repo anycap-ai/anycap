@@ -1,4 +1,11 @@
-import { buildLocalizedPath, defaultLocale, siteConfig, type SiteLocale } from "@/lib/site";
+import {
+  buildLocalizedPath,
+  defaultLocale,
+  earlyAccessCapabilitySummary,
+  roadmapCapabilitySummary,
+  siteConfig,
+  type SiteLocale,
+} from "@/lib/site";
 
 export type Block =
   | { type: "text"; content: string }
@@ -29,9 +36,8 @@ const localizedInstallGuidePath = buildLocalizedPath(defaultLocale, "/guides/ins
 export const landingContents: Record<SiteLocale, LandingContent> = {
   en: {
     title: "AnyCap Agent CLI",
-    tagline: "Every capability your agent needs. One command.",
-    description:
-      "Agents can think, but they can't act — no images, no video, no music, no voice. AnyCap gives them every capability through a single CLI and a single credential. Built for agents, not adapted from human tools.",
+    tagline: "Image, video, and vision capabilities. One command.",
+    description: siteConfig.defaultDescription,
     sections: [
       {
         title: "What Is AnyCap?",
@@ -39,12 +45,12 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
           {
             type: "text",
             content:
-              "AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image read, video analysis, and other multimodal or web actions through one CLI and one interface.",
+              "AnyCap is an agent-native capability runtime that lets AI agents install and use image generation, video generation, image understanding, and video analysis through one CLI and one interface.",
           },
           {
             type: "text",
             content:
-              "If you are looking for an agent CLI, AnyCap is the installable entry point. If you are defining the category, AnyCap is a capability runtime for AI agents built from day one for agent workflows rather than adapted from human-first software.",
+              `If you are looking for an agent CLI, AnyCap is the installable entry point. If you are defining the category, AnyCap is a capability runtime for AI agents built from day one for agent workflows rather than adapted from human-first software. ${roadmapCapabilitySummary.charAt(0).toUpperCase()}${roadmapCapabilitySummary.slice(1)} are on the roadmap and should not be treated as generally available.`,
           },
         ],
       },
@@ -143,20 +149,38 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
         blocks: [
           {
             type: "table",
-            headers: ["Capability", "Command", "Description"],
+            headers: ["Capability", "Status", "Command", "Description"],
             rows: [
               [
+                "Image Generation",
+                "Early access",
+                "`anycap image generate`",
+                "Generate and edit images through supported image models",
+              ],
+              [
+                "Video Generation",
+                "Early access",
+                "`anycap video generate`",
+                "Generate videos through supported video models",
+              ],
+              [
                 "Image Understanding",
+                "Early access",
                 "`anycap image read`",
                 "Analyze images using vision models",
               ],
-              ["Video Analysis", "`anycap video read`", "Analyze videos"],
+              [
+                "Video Analysis",
+                "Early access",
+                "`anycap video read`",
+                "Analyze videos and inspect recordings",
+              ],
             ],
           },
           {
             type: "text",
             content:
-              "Today, the public landing page documents image understanding and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
+              `${earlyAccessCapabilitySummary.charAt(0).toUpperCase()}${earlyAccessCapabilitySummary.slice(1)} are currently available to early access users. ${roadmapCapabilitySummary.charAt(0).toUpperCase()}${roadmapCapabilitySummary.slice(1)} are on the roadmap and should not be treated as generally available.`,
           },
         ],
       },

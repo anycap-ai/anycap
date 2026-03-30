@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/FadeIn";
-import { siteConfig } from "@/lib/site";
+import { earlyAccessCapabilitySummary, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -12,7 +12,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "About AnyCap — Agent-native capability infrastructure",
   description:
-    "AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and the image, video, voice, search, and web capabilities it still needs.",
+    `AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and ${earlyAccessCapabilitySummary} in early access.`,
   alternates: { canonical: "/about" },
   openGraph: {
     type: "website",
@@ -30,7 +30,7 @@ const aboutPageJsonLd = {
   "@type": "AboutPage",
   name: "About AnyCap",
   description:
-    "About page for AnyCap, an agent-native capability runtime that adds image, video, voice, search, and web capabilities to AI agents.",
+    `About page for AnyCap, an agent-native capability runtime that adds ${earlyAccessCapabilitySummary} to AI agents through one interface.`,
   url: `${siteConfig.url}/about`,
   mainEntity: {
     "@type": "Organization",
@@ -47,7 +47,7 @@ const organizationJsonLd = {
   url: siteConfig.url,
   sameAs: ["https://github.com/anycap-ai/anycap"],
   description:
-    "AnyCap builds agent-native capability infrastructure that lets AI agents use image, video, voice, search, and web workflows through one runtime.",
+    `AnyCap builds agent-native capability infrastructure that lets AI agents use ${earlyAccessCapabilitySummary} through one runtime.`,
 };
 
 const whyCards = [
@@ -137,9 +137,9 @@ export default function AboutPage() {
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               We focus on the layer between a reasoning agent and the capabilities it still needs
-              to do real work: image generation, video generation, vision, voice, search, and web
-              actions. The idea is simple. Keep the agent you already use. Add the missing
-              capability runtime around it.
+              to do real work: image generation, video generation, image understanding, and video
+              analysis today. The idea is simple. Keep the agent you already use. Add the missing
+              capability runtime around it. Music, speech, search, and crawl remain on the roadmap.
             </p>
           </FadeIn>
 
@@ -161,8 +161,8 @@ export default function AboutPage() {
                 <p className="text-base leading-7 text-[#4d5145]">
                   We care about the capability layer because that is where real workflows usually
                   break. The agent can decide what to do, but it still cannot render the image,
-                  generate the video, inspect the screenshot, or search the web through one stable
-                  interface.
+                  generate the video, inspect the screenshot, or move between those workflows
+                  through one stable interface.
                 </p>
               </div>
             </section>

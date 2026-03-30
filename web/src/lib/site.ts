@@ -24,6 +24,17 @@ export const localeConfig = {
   }
 >;
 
+export const earlyAccessCapabilitySummary =
+  "image generation, video generation, image understanding, and video analysis";
+
+export const roadmapCapabilitySummary = "music, speech, search, and crawl";
+
+export const defaultSiteDescription =
+  `AnyCap gives AI agents one CLI and one credential for ${earlyAccessCapabilitySummary} in early access. Built for agents, not adapted from human tools.`;
+
+export const defaultSocialImageAlt =
+  `AnyCap gives AI agents ${earlyAccessCapabilitySummary} through one command.`;
+
 export const siteConfig = {
   name: "AnyCap",
   siteName: "AnyCap",
@@ -31,12 +42,11 @@ export const siteConfig = {
   locale: localeConfig[defaultLocale].ogLocale,
   defaultLocale,
   supportedLocales,
-  defaultTitle: "AnyCap | Every capability your agent needs. One command.",
-  defaultDescription:
-    "AnyCap gives AI agents the capabilities they're missing — image, video, music, speech, search — through a single CLI and a single credential. Built for agents, not adapted from human tools.",
+  defaultTitle: "Image, video, and vision capabilities for AI agents",
+  defaultDescription: defaultSiteDescription,
   humanTitle: "Capability infrastructure for agents",
   humanDescription:
-    "See how AnyCap gives agents image, video, vision, and other capabilities through one install path, one auth flow, and one command surface.",
+    `See how AnyCap gives agents ${earlyAccessCapabilitySummary} through one install path, one auth flow, and one command surface.`,
 } as const;
 
 export type PublicRouteKind = "home" | "human" | "seo";
@@ -84,12 +94,6 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/capabilities/image-understanding",
     priority: 0.74,
-  },
-  {
-    key: "capabilities-image-read",
-    kind: "seo",
-    path: "/capabilities/image-read",
-    priority: 0.45,
   },
   {
     key: "capabilities-video-analysis",
