@@ -96,6 +96,8 @@ func (s *Service) enqueueKVSyncJob(ctx context.Context, jobType string, targetID
 			return 0, fmt.Errorf("marshal kvsync payload: %w", err)
 		}
 		rawPayload = data
+	} else {
+		rawPayload = json.RawMessage(`{}`)
 	}
 
 	job, err := s.kvSyncJobRepo.Create(ctx, model.KVSyncJob{
