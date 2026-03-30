@@ -229,11 +229,11 @@ AnyCap 要建立新類別沒有問題，但不能只靠新類別詞。
 
 ### Live / Near-Live Friendly
 
-- `image understanding for ai agents`
+- `image read for ai agents`
 - `video analysis for ai agents`
-- `add image understanding to cursor`
+- `add image read to cursor`
 - `add video analysis to claude code`
-- `tools for coding agents image understanding`
+- `tools for coding agents image read`
 
 ### Future / Guarded
 
@@ -273,7 +273,7 @@ AnyCap 要建立新類別沒有問題，但不能只靠新類別詞。
 
 | Priority | Keyword | Why |
 | --- | --- | --- |
-| P2 | `image understanding for ai agents` | 和現有能力對齊，但搜尋語言還需驗證 |
+| P2 | `image read for ai agents` | 和現有能力對齊，但搜尋語言還需驗證 |
 | P2 | `video analysis for ai agents` | 和現有能力對齊，可做功能頁 |
 | P2 | `search tools for ai agents` | 有機會，但需等 capability 與內容更完整 |
 

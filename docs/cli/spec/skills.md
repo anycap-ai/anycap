@@ -60,7 +60,7 @@ YAACLI skills use a strict YAML front matter schema. Custom fields go under `met
 ```yaml
 ---
 name: anycap-cli
-description: AnyCap CLI for AI agents. Use when the agent needs image understanding, video analysis, or checking AnyCap service status.
+description: AnyCap CLI for AI agents. Use when the agent needs image read, video analysis, or checking AnyCap service status.
 metadata:
   version: 0.2.0
 ---

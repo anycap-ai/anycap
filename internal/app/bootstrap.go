@@ -179,13 +179,13 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 
 func buildServerFeatures(cfg config.Config) map[string]bool {
 	return map[string]bool{
-		feature.Login:           cfg.Auth0Enabled,
-		feature.ImageGenerate:   hasImageExecutionProvider(cfg),
-		feature.ImageModels:     hasCatalogProvider(cfg),
-		feature.ImageUnderstand: cfg.AgentPlatform.Enabled(),
-		feature.VideoGenerate:   hasVideoExecutionProvider(cfg),
-		feature.VideoModels:     hasCatalogProvider(cfg),
-		feature.VideoRead:       cfg.AgentPlatform.Enabled(),
+		feature.Login:         cfg.Auth0Enabled,
+		feature.ImageGenerate: hasImageExecutionProvider(cfg),
+		feature.ImageModels:   hasCatalogProvider(cfg),
+		feature.ImageRead:     cfg.AgentPlatform.Enabled(),
+		feature.VideoGenerate: hasVideoExecutionProvider(cfg),
+		feature.VideoModels:   hasCatalogProvider(cfg),
+		feature.VideoRead:     cfg.AgentPlatform.Enabled(),
 	}
 }
 
@@ -328,8 +328,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			protectedRPM:        cfg.RateLimitRPM,
-			idResolver: externalIDMapper,
-			idMapper:   externalIDMapper,
+			idResolver:          externalIDMapper,
+			idMapper:            externalIDMapper,
 			kvSyncWorker: func() *kvsync.Worker {
 				if cfg.KVSyncEnabled {
 					return kvSyncWorker

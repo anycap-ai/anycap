@@ -58,8 +58,8 @@ type upstreamError struct {
 	} `json:"detail"`
 }
 
-// ImageUnderstand calls POST /api/v1/capabilities/image/understand.
-func (c *Client) ImageUnderstand(ctx context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
+// ImageRead calls POST /api/v1/capabilities/image/read.
+func (c *Client) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
 	body := map[string]any{}
 
 	if len(req.Images) > 0 {
@@ -98,7 +98,7 @@ func (c *Client) ImageUnderstand(ctx context.Context, req model.ImageUnderstandR
 		body["model"] = req.Model
 	}
 
-	return c.doCapabilitiesRequest(ctx, "/api/v1/capabilities/image/understand", body)
+	return c.doCapabilitiesRequest(ctx, "/api/v1/capabilities/image/read", body)
 }
 
 // VideoRead calls POST /api/v1/capabilities/video/read.

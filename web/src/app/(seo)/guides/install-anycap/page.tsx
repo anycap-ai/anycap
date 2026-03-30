@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "Install AnyCap — Setup guide for AI agents",
   description:
-    "Install AnyCap CLI and skill files to give AI agents image generation, video generation, image understanding, and video analysis capabilities. Works with Claude Code, Cursor, Codex, and more.",
+    "Install AnyCap CLI and skill files to give AI agents image generation, video generation, image read, and video analysis capabilities. Works with Claude Code, Cursor, Codex, and more.",
   alternates: { canonical: "/guides/install-anycap" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "Install AnyCap — Setup guide for AI agents",
     description:
-      "Install AnyCap CLI and skill files to give AI agents image generation, video generation, image understanding, and video analysis capabilities. Works with Claude Code, Cursor, Codex, and more.",
+      "Install AnyCap CLI and skill files to give AI agents image generation, video generation, image read, and video analysis capabilities. Works with Claude Code, Cursor, Codex, and more.",
   },
 };
 
@@ -62,7 +62,7 @@ const howToJsonLd = {
       "@type": "HowToStep",
       position: 5,
       name: "Use your first capability",
-      text: "Run: anycap image understand --url https://example.com/photo.jpg",
+      text: "Run: anycap image read --url https://example.com/photo.jpg",
     },
   ],
 };
@@ -98,7 +98,7 @@ export default function InstallAnycapPage() {
             <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
               AnyCap installs in under five minutes and gives AI agents a consistent capability
               interface. After setup, agents running in Claude Code, Cursor, Codex, OpenCode,
-              or OpenClaw can access image generation, video generation, image understanding,
+              or OpenClaw can access image generation, video generation, image read,
               video analysis, and other capabilities through one CLI and one auth flow. This
               guide covers the full install path from CLI binary to first capability call.
             </p>
@@ -323,7 +323,7 @@ export default function InstallAnycapPage() {
                     # Understand an image
                   </p>
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                    anycap image understand --url https://example.com/photo.jpg
+                    anycap image read --url https://example.com/photo.jpg
                   </p>
                 </div>
                 <div className="bg-[#1c1f17] px-5 py-4">

@@ -58,14 +58,14 @@ The following server capabilities can use real infrastructure when configured:
 
 - `POST /v1/capabilities/presign`
   - backed by real S3-compatible object storage client
-- `POST /v1/capabilities/image/understand`
+- `POST /v1/capabilities/image/read`
 - `POST /v1/capabilities/video/read`
   - backed by real Agent Platform client
 
 This means:
 
-- `anycap image understand --url ...`
-- `anycap image understand --file ...`
+- `anycap image read --url ...`
+- `anycap image read --file ...`
 - `anycap video read --url ...`
 - `anycap video read --file ...`
 
@@ -265,7 +265,7 @@ Status: **integrated and likely MVP-capable**
 Implemented:
 
 - real HTTP client
-- image understand request mapping
+- image read request mapping
 - video read request mapping
 - upstream error translation
 
@@ -338,7 +338,7 @@ Limitation:
 
 - still returns stub generation output
 
-### 5.4 `anycap image understand`
+### 5.4 `anycap image read`
 
 Status: **closer to real MVP**
 
@@ -389,7 +389,7 @@ This is the single most important end-to-end blocker.
 Two realistic options:
 
 1. `Auth + models + image generate`
-2. `Auth + upload + image understand + video read`
+2. `Auth + upload + image read + video read`
 
 Recommendation:
 
@@ -422,7 +422,7 @@ If we define MVP very narrowly, the current repository can support:
 - API key-protected requests
 - real PostgreSQL/Redis wiring
 - real upload + presign
-- real image understand
+- real image read
 - real video read
 - real model catalog metadata
 
@@ -435,3 +435,4 @@ But it does **not yet** support the more user-facing promise of:
 That means the repository is best described as:
 
 > **Infrastructure-ready, partially integrated MVP foundation with one major auth contract gap and one major generation-backend gap.**
+jor generation-backend gap.**

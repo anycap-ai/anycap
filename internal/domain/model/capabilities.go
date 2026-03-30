@@ -69,10 +69,10 @@ func (m MediaInput) Validate() error {
 	return nil
 }
 
-// ImageUnderstandRequest represents a request to analyze one or more images.
+// ImageReadRequest represents a request to analyze one or more images.
 // Either the top-level url/data fields (single-image shorthand) or the images
 // list must be provided, but not both.
-type ImageUnderstandRequest struct {
+type ImageReadRequest struct {
 	URL         string       `json:"url,omitempty"`
 	Data        string       `json:"data,omitempty"`
 	MIMEType    string       `json:"mime_type,omitempty"`
@@ -81,7 +81,7 @@ type ImageUnderstandRequest struct {
 	Model       string       `json:"model,omitempty"`
 }
 
-func (r ImageUnderstandRequest) Validate() error {
+func (r ImageReadRequest) Validate() error {
 	hasSingle := r.URL != "" || r.Data != ""
 	hasMulti := len(r.Images) > 0
 
@@ -143,7 +143,7 @@ type Usage struct {
 	CacheWriteTokens int `json:"cache_write_tokens"`
 }
 
-// UnderstandResult is the response from image understand or video read.
+// UnderstandResult is the response from image read or video read.
 type UnderstandResult struct {
 	Content    string `json:"content"`
 	Model      string `json:"model"`

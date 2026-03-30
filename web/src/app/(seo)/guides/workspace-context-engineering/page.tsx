@@ -107,7 +107,7 @@ export default function WorkspaceContextEngineeringPage() {
               </h2>
               <p className="max-w-[780px] text-base leading-7 text-[#4d5145] mb-6">
                 If the workspace shows a screenshot, a design review note, and an existing image
-                asset, the agent should probably call an image understanding or editing
+                asset, the agent should probably call an image read or editing
                 capability. If the task history shows the team is preparing a product launch, an
                 image generation or video generation capability may be the right next step.
               </p>
@@ -133,11 +133,11 @@ export default function WorkspaceContextEngineeringPage() {
                   Context Engineering
                 </Link>
                 <Link
-                  href="/capabilities/image-understanding"
+                  href="/capabilities/image-read"
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg"
                   style={mono}
                 >
-                  Image Understanding
+                  Image Read
                 </Link>
                 <Link
                   href="/capabilities/video-analysis"

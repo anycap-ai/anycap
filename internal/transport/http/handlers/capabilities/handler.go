@@ -27,7 +27,7 @@ func NewHandler(service *capapp.Service) *Handler {
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/capabilities")
 	g.POST("/presign", h.Presign)
-	g.POST("/image/understand", h.ImageUnderstand)
+	g.POST("/image/read", h.ImageRead)
 	g.POST("/video/read", h.VideoRead)
 }
 
@@ -81,7 +81,7 @@ func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
 	})
 }
 
-func (h *Handler) ImageUnderstand(c context.Context, ctx *app.RequestContext) {
+func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
 		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
@@ -91,13 +91,13 @@ func (h *Handler) ImageUnderstand(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	var req model.ImageUnderstandRequest
+	var req model.ImageReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
-	result, err := h.service.ImageUnderstand(reqCtx, req)
+	result, err := h.service.ImageRead(reqCtx, req)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)

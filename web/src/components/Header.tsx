@@ -98,7 +98,7 @@ const capabilitiesDropdown: NavDropdownDef = {
   items: [
     { href: "/capabilities/image-generation", label: "Image Generation" },
     { href: "/capabilities/video-generation", label: "Video Generation" },
-    { href: "/capabilities/image-understanding", label: "Image Understanding" },
+    { href: "/capabilities/image-read", label: "Image Read" },
     { href: "/capabilities/video-analysis", label: "Video Analysis" },
   ],
 };

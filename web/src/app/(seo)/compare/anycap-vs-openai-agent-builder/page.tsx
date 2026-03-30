@@ -23,7 +23,7 @@ const comparisons = [
   },
   {
     dimension: "Multimodal execution",
-    anycap: "Expose image generation, video generation, image understanding, and video analysis through one runtime",
+    anycap: "Expose image generation, video generation, image read, and video analysis through one runtime",
     builder: "Depends on what the builder platform exposes and how it is configured",
   },
   {

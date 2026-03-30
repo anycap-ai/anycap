@@ -105,7 +105,7 @@ Current server state:
   "features": {
     "image.generate": false,
     "image.models": false,
-    "image.understand": true,
+    "image.read": true,
     "video.read": true,
     "login": false
   }

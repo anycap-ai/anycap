@@ -8,7 +8,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID string, req model.ImageUnderstandRequest) (model.ImageUnderstandRequest, []model.CapsTaskArtifact, error) {
+func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID string, req model.ImageReadRequest) (model.ImageReadRequest, []model.CapsTaskArtifact, error) {
 	resolvedReq := req
 	artifacts := make([]model.CapsTaskArtifact, 0)
 
@@ -21,7 +21,7 @@ func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID 
 			}
 			resolvedURL, artifact, err := s.resolveInputURL(ctx, spaceID, userID, item.URL)
 			if err != nil {
-				return model.ImageUnderstandRequest{}, nil, err
+				return model.ImageReadRequest{}, nil, err
 			}
 			resolvedReq.Images[idx].URL = resolvedURL
 			artifact.Role = model.CapsTaskArtifactRoleInput
@@ -34,7 +34,7 @@ func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID 
 	if strings.TrimSpace(req.URL) != "" {
 		resolvedURL, artifact, err := s.resolveInputURL(ctx, spaceID, userID, req.URL)
 		if err != nil {
-			return model.ImageUnderstandRequest{}, nil, err
+			return model.ImageReadRequest{}, nil, err
 		}
 		resolvedReq.URL = resolvedURL
 		artifact.Role = model.CapsTaskArtifactRoleInput

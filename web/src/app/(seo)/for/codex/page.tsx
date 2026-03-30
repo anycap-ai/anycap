@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "AnyCap for Codex — Add multimodal capabilities to Codex agents",
   description:
-    "Give Codex agents image generation, video generation, image understanding, and video analysis through AnyCap. Install one skill, use one CLI, and route every capability through a consistent agent-native interface.",
+    "Give Codex agents image generation, video generation, image read, and video analysis through AnyCap. Install one skill, use one CLI, and route every capability through a consistent agent-native interface.",
   alternates: { canonical: "/for/codex" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "AnyCap for Codex — Add multimodal capabilities to Codex agents",
     description:
-      "Give Codex agents image generation, video generation, image understanding, and video analysis through AnyCap.",
+      "Give Codex agents image generation, video generation, image read, and video analysis through AnyCap.",
   },
 };
 
@@ -40,10 +40,10 @@ const capabilities = [
     href: "/capabilities/video-generation",
   },
   {
-    name: "Image Understanding",
-    command: "anycap image understand",
+    name: "Image Read",
+    command: "anycap image read",
     description: "Analyze screenshots, product mockups, and design references.",
-    href: "/capabilities/image-understanding",
+    href: "/capabilities/image-read",
   },
   {
     name: "Video Analysis",
@@ -79,7 +79,7 @@ export default function ForCodexPage() {
             <p className="mt-6 max-w-[720px] text-base leading-7 text-[#4d5145] md:text-lg">
               AnyCap gives Codex one install path and one CLI for multimodal capabilities.
               Instead of wiring separate provider SDKs for image generation, video generation,
-              image understanding, and video analysis, teams can let Codex call one consistent
+              image read, and video analysis, teams can let Codex call one consistent
               capability runtime built for agent workflows.
             </p>
           </FadeIn>

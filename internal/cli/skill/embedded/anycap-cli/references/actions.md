@@ -4,25 +4,25 @@ Actions are AI-powered operations on existing content: understand images, read v
 
 All actions live under `anycap actions <action-name>`.
 
-## image-understand
+## image-read
 
 Analyze one or more images: describe content, extract text, answer questions, compare images.
 
 ```bash
 # Single image
-anycap actions image-understand --url https://example.com/photo.jpg
+anycap actions image-read --url https://example.com/photo.jpg
 
 # With instruction
-anycap actions image-understand --file ./screenshot.png --instruction "What text is in this image?"
+anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?"
 
 # Multiple images (up to 10)
-anycap actions image-understand \
+anycap actions image-read \
   --url https://example.com/before.jpg \
   --url https://example.com/after.jpg \
   --instruction "What changed between these two images?"
 
 # Mix URLs and local files
-anycap actions image-understand \
+anycap actions image-read \
   --url https://example.com/reference.jpg \
   --file ./draft.png \
   --instruction "How closely does the draft match the reference?"
@@ -44,7 +44,7 @@ The response `content` field contains the model's text output.
 Extract just the text:
 
 ```bash
-anycap actions image-understand --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
+anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
 ```
 
 ## video-read
@@ -76,11 +76,11 @@ All action responses share the same shape: `{"content": "...", "request_id": "re
 anycap actions video-read --file ./clip.mp4 | jq -r '.content'
 
 # Pipe content into another tool or file
-anycap actions image-understand --url https://example.com/chart.png \
+anycap actions image-read --url https://example.com/chart.png \
   --instruction "Extract the data as CSV" | jq -r '.content' > data.csv
 
 # Check for errors before using content
-result=$(anycap actions image-understand --file ./photo.jpg)
+result=$(anycap actions image-read --file ./photo.jpg)
 if echo "$result" | jq -e 'has("error")' > /dev/null 2>&1; then
   echo "$result" | jq -r '.message'
 else

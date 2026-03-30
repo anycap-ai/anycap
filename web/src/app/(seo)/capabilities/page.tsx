@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "Capabilities — Agent capabilities through one interface",
   description:
-    "AnyCap gives AI agents installable capabilities including image generation, video generation, image understanding, and video analysis. One CLI, one auth, every capability.",
+    "AnyCap gives AI agents installable capabilities including image generation, video generation, image read, and video analysis. One CLI, one auth, every capability.",
   alternates: { canonical: "/capabilities" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "Capabilities — Agent capabilities through one interface",
     description:
-      "AnyCap gives AI agents installable capabilities including image generation, video generation, image understanding, and video analysis. One CLI, one auth, every capability.",
+      "AnyCap gives AI agents installable capabilities including image generation, video generation, image read, and video analysis. One CLI, one auth, every capability.",
   },
 };
 
@@ -53,11 +53,11 @@ const capabilities: Capability[] = [
     href: "/capabilities/video-generation",
   },
   {
-    name: "Image Understanding",
+    name: "Image Read",
     category: "Image",
     status: "early_access",
     description: "Analyze and describe images using vision models.",
-    href: "/capabilities/image-understanding",
+    href: "/capabilities/image-read",
   },
   {
     name: "Video Analysis",

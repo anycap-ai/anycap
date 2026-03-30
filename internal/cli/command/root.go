@@ -90,7 +90,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		infra.NewPageCmd(clientFactory, opts.Stdout),
 	)
 
-	// Action commands (AI analysis: image-understand, video-read, etc.).
+	// Action commands (AI analysis: image-read, video-read, etc.).
 	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {
 		rootCmd.AddCommand(actionsCmd)
 	}

@@ -91,7 +91,7 @@ AnyCap 目前已具備品牌落地頁、基本 metadata、`robots.txt` 與 sitem
 
 #### Cluster B: Capability Intent
 
-- `image understanding for ai agents`
+- `image read for ai agents`
 - `video analysis for ai agents`
 - `web search for ai agents`
 - `web crawling for ai agents`
@@ -131,7 +131,7 @@ AnyCap 目前已具備品牌落地頁、基本 metadata、`robots.txt` 與 sitem
 /
 ├── /for-human
 ├── /capabilities
-│   ├── /image-understanding
+│   ├── /image-read
 │   ├── /video-analysis
 │   ├── /web-search
 │   ├── /web-crawl
@@ -144,7 +144,7 @@ AnyCap 目前已具備品牌落地頁、基本 metadata、`robots.txt` 與 sitem
 ├── /guides
 │   ├── /install-anycap
 │   ├── /install-anycap-on-cursor
-│   ├── /give-ai-agents-image-understanding
+│   ├── /give-ai-agents-image-read
 │   └── /give-ai-agents-video-analysis
 ├── /compare
 │   ├── /anycap-vs-composio
@@ -179,7 +179,7 @@ AnyCap 目前已具備品牌落地頁、基本 metadata、`robots.txt` 與 sitem
 優先不要做大量 blog，而是先補齊最有機會承接 intent 的 landing pages：
 
 1. `/capabilities`
-2. `/capabilities/image-understanding`
+2. `/capabilities/image-read`
 3. `/capabilities/video-analysis`
 4. `/for/cursor`
 5. `/for/claude-code`
@@ -188,7 +188,7 @@ AnyCap 目前已具備品牌落地頁、基本 metadata、`robots.txt` 與 sitem
 ### Phase 2 Content Set
 
 1. `/guides/install-anycap-on-cursor`
-2. `/guides/give-ai-agents-image-understanding`
+2. `/guides/give-ai-agents-image-read`
 3. `/compare/anycap-vs-composio`
 4. `/compare/anycap-vs-firecrawl`
 5. `/glossary/capability-runtime`
@@ -298,7 +298,7 @@ AnyCap 非常適合做 GEO，因為產品本身就服務 agent 與 developer wor
 2. 建立 SEO tracking baseline
 3. 統一 capability availability 說法
 4. 新增 `/capabilities`
-5. 新增 `/capabilities/image-understanding`
+5. 新增 `/capabilities/image-read`
 6. 新增 `/capabilities/video-analysis`
 7. 新增 `/for/cursor`
 8. 新增 `/guides/install-anycap`

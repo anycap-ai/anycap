@@ -6,7 +6,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
+func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
 	if err := req.Validate(); err != nil {
 		return model.UnderstandResult{}, err
 	}
@@ -15,7 +15,7 @@ func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstand
 	}
 
 	if !s.auditEnabled() {
-		return s.provider.ImageUnderstand(ctx, req)
+		return s.provider.ImageRead(ctx, req)
 	}
 
 	actor, err := s.resolveActor(ctx)
@@ -31,11 +31,11 @@ func (s *Service) ImageUnderstand(ctx context.Context, req model.ImageUnderstand
 	return s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      actor.UserID,
-		Capability:  capabilityImageUnderstand,
+		Capability:  capabilityImageRead,
 		RequestMeta: buildImageRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
-		return s.provider.ImageUnderstand(ctx, resolvedReq)
+		return s.provider.ImageRead(ctx, resolvedReq)
 	})
 }
 

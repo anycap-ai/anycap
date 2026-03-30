@@ -36,7 +36,7 @@ func secondsUntil(target, now time.Time) int {
 	return int(target.Sub(now).Seconds())
 }
 
-func buildImageRequestMeta(req model.ImageUnderstandRequest, inputCount int) map[string]any {
+func buildImageRequestMeta(req model.ImageReadRequest, inputCount int) map[string]any {
 	meta := map[string]any{
 		"input_count": inputCount,
 	}

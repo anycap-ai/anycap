@@ -184,7 +184,7 @@ capService := capapp.NewService(
 CREATE TABLE IF NOT EXISTS caps_tasks (
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     space_id     BIGINT NOT NULL REFERENCES spaces(id),
-    capability   TEXT NOT NULL,          -- 'image_generate', 'image_understand', 'video_read', ...
+    capability   TEXT NOT NULL,          -- 'image_generate', 'image_read', 'video_read', ...
     status       TEXT NOT NULL DEFAULT 'pending',  -- pending, running, succeeded, failed
     request_meta JSONB,                  -- 调用参数摘要（model, prompt 摘要等，不含完整 prompt）
     result_meta  JSONB,                  -- 结果摘要（output URLs, duration, usage 等）
@@ -241,7 +241,7 @@ CREATE INDEX idx_caps_task_artifacts_task_id ON caps_task_artifacts (task_id);
    f. 创建 caps_upload（status=pending）
    g. 返回 {upload_url, object_url=anycap://upload/{id}, expires_in, reused=false}
 3. CLI PUT 文件到 upload_url
-4. CLI 调用 capability（如 image understand / image generate），传入 URL（外部 URL 或 `anycap://upload/{id}`）
+4. CLI 调用 capability（如 image read / image generate），传入 URL（外部 URL 或 `anycap://upload/{id}`）
 5. Server:
    a. 解析输入 URL，区分 external_url 和 `anycap://upload/{id}`
    b. 校验内部 upload 引用属于当前用户/space

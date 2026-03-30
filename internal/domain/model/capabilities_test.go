@@ -5,40 +5,40 @@ import (
 	"testing"
 )
 
-func TestImageUnderstandRequest_Validate(t *testing.T) {
+func TestImageReadRequest_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		req     ImageUnderstandRequest
+		req     ImageReadRequest
 		wantErr error
 	}{
 		{
 			name:    "valid url",
-			req:     ImageUnderstandRequest{URL: "https://example.com/img.png"},
+			req:     ImageReadRequest{URL: "https://example.com/img.png"},
 			wantErr: nil,
 		},
 		{
 			name:    "valid base64 with mime",
-			req:     ImageUnderstandRequest{Data: "aGVsbG8=", MIMEType: "image/png"},
+			req:     ImageReadRequest{Data: "aGVsbG8=", MIMEType: "image/png"},
 			wantErr: nil,
 		},
 		{
 			name:    "missing input",
-			req:     ImageUnderstandRequest{},
+			req:     ImageReadRequest{},
 			wantErr: ErrMissingInput,
 		},
 		{
 			name:    "ambiguous input",
-			req:     ImageUnderstandRequest{URL: "https://example.com/img.png", Data: "aGVsbG8=", MIMEType: "image/png"},
+			req:     ImageReadRequest{URL: "https://example.com/img.png", Data: "aGVsbG8=", MIMEType: "image/png"},
 			wantErr: ErrAmbiguousInput,
 		},
 		{
 			name:    "base64 without mime",
-			req:     ImageUnderstandRequest{Data: "aGVsbG8="},
+			req:     ImageReadRequest{Data: "aGVsbG8="},
 			wantErr: ErrMissingMIME,
 		},
 		{
 			name: "valid multi-image",
-			req: ImageUnderstandRequest{
+			req: ImageReadRequest{
 				Images: []MediaInput{
 					{URL: "https://example.com/img1.png"},
 					{Data: "aGVsbG8=", MIMEType: "image/png"},
@@ -48,7 +48,7 @@ func TestImageUnderstandRequest_Validate(t *testing.T) {
 		},
 		{
 			name: "ambiguous single and multi",
-			req: ImageUnderstandRequest{
+			req: ImageReadRequest{
 				URL:    "https://example.com/img.png",
 				Images: []MediaInput{{URL: "https://example.com/img2.png"}},
 			},
@@ -56,7 +56,7 @@ func TestImageUnderstandRequest_Validate(t *testing.T) {
 		},
 		{
 			name: "too many images",
-			req: ImageUnderstandRequest{
+			req: ImageReadRequest{
 				Images: func() []MediaInput {
 					imgs := make([]MediaInput, MaxImagesPerRequest+1)
 					for i := range imgs {
@@ -69,7 +69,7 @@ func TestImageUnderstandRequest_Validate(t *testing.T) {
 		},
 		{
 			name: "multi-image with invalid item",
-			req: ImageUnderstandRequest{
+			req: ImageReadRequest{
 				Images: []MediaInput{
 					{URL: "https://example.com/img.png"},
 					{Data: "aGVsbG8="},

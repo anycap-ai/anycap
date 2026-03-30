@@ -1,3 +1,7 @@
+-- Create anycap_model_routes table for local development.
+-- This table is owned by an external service; we create it here
+-- so anycap-server can work locally without that service running.
+
 CREATE TABLE IF NOT EXISTS anycap_model_routes (
     id            BIGSERIAL PRIMARY KEY,
     model_id      VARCHAR(128) NOT NULL,
@@ -10,6 +14,7 @@ CREATE TABLE IF NOT EXISTS anycap_model_routes (
     extra         JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    external_id   TEXT NOT NULL DEFAULT '',
     UNIQUE (model_id, operation, algo_type)
 );
 
@@ -21,3 +26,6 @@ CREATE INDEX IF NOT EXISTS idx_anycap_model_routes_ability_key
 
 CREATE INDEX IF NOT EXISTS idx_anycap_model_routes_catalog
     ON anycap_model_routes (capability, status, model_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_anycap_model_routes_external_id_unique
+    ON anycap_model_routes (external_id) WHERE external_id <> '';

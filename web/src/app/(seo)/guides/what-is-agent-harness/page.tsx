@@ -88,7 +88,7 @@ export default function WhatIsAgentHarnessPage() {
                     <tr className="border-b border-[#d4dbb8]/50">
                       <td className="py-4 pr-6 text-sm font-medium text-[#6b7d3a] align-top">Capability runtime</td>
                       <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">Curated capability layer the harness can expose</td>
-                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">AnyCap provides image generation, video generation, image understanding, and video analysis through one interface</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">AnyCap provides image generation, video generation, image read, and video analysis through one interface</td>
                     </tr>
                   </tbody>
                 </table>

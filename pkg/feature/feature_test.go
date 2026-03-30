@@ -15,7 +15,7 @@ func TestDefaults(t *testing.T) {
 	}{
 		{"image.generate defaults on", ImageGenerate, true},
 		{"image.models defaults on", ImageModels, true},
-		{"image.understand defaults on", ImageUnderstand, true},
+		{"image.read defaults on", ImageRead, true},
 		{"video.read defaults on", VideoRead, true},
 		{"login defaults on", Login, true},
 		{"unknown defaults off", "unknown.feature", false},
@@ -69,8 +69,8 @@ func TestSetAll(t *testing.T) {
 		t.Error("VideoRead should be off")
 	}
 	// Untouched flag keeps default.
-	if !Enabled(ImageUnderstand) {
-		t.Error("ImageUnderstand should keep default (on)")
+	if !Enabled(ImageRead) {
+		t.Error("ImageRead should keep default (on)")
 	}
 }
 

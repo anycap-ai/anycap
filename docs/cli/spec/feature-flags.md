@@ -32,7 +32,7 @@ Runtime override  >  Environment variable  >  Compile-time ldflags  >  Code defa
 | Runtime | `feature.Set()` / `feature.SetAll()` | Server pushes config to CLI | Dynamic feature gating |
 | Env var | `ANYCAP_FEATURE_<NAME>=1` | `ANYCAP_FEATURE_IMAGE_GENERATE=1` | Local testing, CI |
 | ldflags | `-ldflags "-X .../pkg/feature.overrides=image.generate=true"` | Release build script | Bake features into a release |
-| Default | `defaults` map in `feature.go` | `ImageUnderstand: true` | Baseline behavior |
+| Default | `defaults` map in `feature.go` | `ImageRead: true` | Baseline behavior |
 
 ### 3.1 Environment Variable Naming
 
@@ -73,7 +73,7 @@ flowchart TD
 |-----------|---------|--------|
 | `image.generate` | `false` | NexusHub image provider is stub-only |
 | `image.models` | `false` | NexusHub image provider is stub-only |
-| `image.understand` | `true` | Agent-platform real implementation |
+| `image.read` | `true` | Agent-platform real implementation |
 | `video.read` | `true` | Agent-platform real implementation |
 | `login` | `true` | Auth flow expected soon |
 
@@ -86,7 +86,7 @@ Feature flags are checked at command construction time. Subcommands are conditio
 ```
 root
   +-- image
-  |     +-- understand   (if image.understand enabled)
+  |     +-- read         (if image.read enabled)
   |     +-- generate     (if image.generate enabled)
   |     +-- models       (if image.models enabled)
   +-- video
@@ -134,7 +134,7 @@ The server determines features based on which providers are actually configured 
       "version": "0.1.0",
       "status": "ok",
       "features": {
-        "image.understand": true,
+        "image.read": true,
         "video.read": true,
         "image.generate": false,
         "image.models": false,
@@ -151,7 +151,7 @@ The server determines features based on which providers are actually configured 
 In `bootstrap.go`, features are computed from config at startup:
 
 ```
-image.understand = cfg.AgentPlatform.Enabled()
+image.read = cfg.AgentPlatform.Enabled()
 video.read       = cfg.AgentPlatform.Enabled()
 image.generate   = false  (nexushub stub)
 image.models     = false  (nexushub stub)

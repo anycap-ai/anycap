@@ -60,9 +60,9 @@ export const publicRouteDefinitions = [
     priority: 0.7,
   },
   {
-    key: "capabilities-image-understanding",
+    key: "capabilities-image-read",
     kind: "seo",
-    path: "/capabilities/image-understanding",
+    path: "/capabilities/image-read",
     priority: 0.7,
   },
   {

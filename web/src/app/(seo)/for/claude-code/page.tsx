@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "AnyCap for Claude Code — Add capabilities to Claude Code",
   description:
-    "Give Claude Code image generation, video generation, image understanding, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
+    "Give Claude Code image generation, video generation, image read, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
   alternates: { canonical: "/for/claude-code" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "AnyCap for Claude Code — Add capabilities to Claude Code",
     description:
-      "Give Claude Code image generation, video generation, image understanding, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
+      "Give Claude Code image generation, video generation, image read, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
   },
 };
 
@@ -76,11 +76,11 @@ const capabilities = [
     href: "/capabilities/video-generation",
   },
   {
-    name: "Image Understanding",
-    command: "anycap image understand",
+    name: "Image Read",
+    command: "anycap image read",
     models: "Vision models",
     status: "Early Access",
-    href: "/capabilities/image-understanding",
+    href: "/capabilities/image-read",
   },
   {
     name: "Video Analysis",
@@ -269,9 +269,9 @@ export default function ForClaudeCodePage() {
                 <p className="text-[13px] text-[#d4e0a4] mb-4" style={mono}>
                   anycap image generate --model seedream_5 --prompt &quot;product mockup on white background&quot;
                 </p>
-                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Understand an image</p>
+                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Read an image</p>
                 <p className="text-[13px] text-[#d4e0a4] mb-4" style={mono}>
-                  anycap image understand --url https://example.com/screenshot.png
+                  anycap image read --url https://example.com/screenshot.png
                 </p>
                 <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Analyze a video</p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>

@@ -132,7 +132,6 @@ func (s *Service) waitKVSyncJobs(ctx context.Context, jobIDs ...int64) error {
 	return s.kvSyncWaiter.Wait(ctx, filtered)
 }
 
-
 func (s *Service) fillPageURL(site *model.PageSite) {
 	if site != nil {
 		site.PageURL = "https://" + model.FormatPageHostname(s.pageHostFormat, site.PageName)

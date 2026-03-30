@@ -3,7 +3,7 @@
 # Usage: ANYCAP_API_ENDPOINT=http://127.0.0.1:8080 ./smoke_test.sh
 #
 # Tests verify that the server responds with correctly shaped JSON envelopes.
-# Upstream-dependent endpoints (image/understand, video/read) may return 502
+# Upstream-dependent endpoints (image/read, video/read) may return 502
 # when the real provider is unavailable -- that is still a valid server response.
 set -euo pipefail
 
@@ -94,29 +94,29 @@ run_test "POST presign (bad content_type -> 400)" bash -c '
   [ "$code" = "400" ]
 '
 
-# ---------- Capabilities: Image Understand ----------
+# ---------- Capabilities: Image Read ----------
 
 echo ""
-echo "[Capabilities - Image Understand]"
+echo "[Capabilities - Image Read]"
 
 # Success test: accepts 200 (stub/real) or 502 (upstream unavailable).
 # Either way, the response must be a valid JSON envelope.
-run_test "POST image/understand (url, envelope ok)" bash -c '
-  body=$(curl -sS --max-time '"$CURL_TIMEOUT"' -X POST '"$ENDPOINT"'/v1/capabilities/image/understand \
+run_test "POST image/read (url, envelope ok)" bash -c '
+  body=$(curl -sS --max-time '"$CURL_TIMEOUT"' -X POST '"$ENDPOINT"'/v1/capabilities/image/read \
     -H "Content-Type: application/json" \
     -d "{\"url\":\"https://example.com/photo.jpg\",\"instruction\":\"Describe this\"}")
   echo "$body" | grep -q "\"status\""
 '
 
-run_test "POST image/understand (missing input -> 422)" bash -c '
-  code=$(curl -sS --max-time '"$CURL_TIMEOUT"' -o /dev/null -w "%{http_code}" -X POST '"$ENDPOINT"'/v1/capabilities/image/understand \
+run_test "POST image/read (missing input -> 422)" bash -c '
+  code=$(curl -sS --max-time '"$CURL_TIMEOUT"' -o /dev/null -w "%{http_code}" -X POST '"$ENDPOINT"'/v1/capabilities/image/read \
     -H "Content-Type: application/json" \
     -d "{}")
   [ "$code" = "422" ]
 '
 
-run_test "POST image/understand (ambiguous -> 422)" bash -c '
-  code=$(curl -sS --max-time '"$CURL_TIMEOUT"' -o /dev/null -w "%{http_code}" -X POST '"$ENDPOINT"'/v1/capabilities/image/understand \
+run_test "POST image/read (ambiguous -> 422)" bash -c '
+  code=$(curl -sS --max-time '"$CURL_TIMEOUT"' -o /dev/null -w "%{http_code}" -X POST '"$ENDPOINT"'/v1/capabilities/image/read \
     -H "Content-Type: application/json" \
     -d "{\"url\":\"https://example.com/i.jpg\",\"data\":\"abc\",\"mime_type\":\"image/png\"}")
   [ "$code" = "422" ]

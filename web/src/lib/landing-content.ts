@@ -39,7 +39,7 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
           {
             type: "text",
             content:
-              "AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image understanding, video analysis, and other multimodal or web actions through one CLI and one interface.",
+              "AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image read, video analysis, and other multimodal or web actions through one CLI and one interface.",
           },
           {
             type: "text",
@@ -129,8 +129,8 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
               "# Login",
               "anycap login",
               "",
-              "# Image understanding",
-              "anycap image understand --url https://example.com/photo.jpg",
+              "# Image read",
+              "anycap image read --url https://example.com/photo.jpg",
               "",
               "# Video analysis",
               "anycap video read --url https://example.com/clip.mp4",
@@ -146,8 +146,8 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
             headers: ["Capability", "Command", "Description"],
             rows: [
               [
-                "Image Understanding",
-                "`anycap image understand`",
+                "Image Read",
+                "`anycap image read`",
                 "Analyze images using vision models",
               ],
               ["Video Analysis", "`anycap video read`", "Analyze videos"],
@@ -156,7 +156,7 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
           {
             type: "text",
             content:
-              "Today, the public landing page documents image understanding and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
+              "Today, the public landing page documents image read and video analysis. Broader multimodal and web capabilities are part of the product direction, but should be treated separately from what is already documented here.",
           },
         ],
       },

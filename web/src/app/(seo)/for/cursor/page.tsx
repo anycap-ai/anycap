@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "AnyCap for Cursor — Add capabilities to Cursor agents",
   description:
-    "Give Cursor agents image generation, video generation, image understanding, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
+    "Give Cursor agents image generation, video generation, image read, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
   alternates: { canonical: "/for/cursor" },
   openGraph: {
     type: "website",
@@ -22,14 +22,14 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "AnyCap for Cursor — Add capabilities to Cursor agents",
     description:
-      "Give Cursor agents image generation, video generation, image understanding, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
+      "Give Cursor agents image generation, video generation, image read, and video analysis capabilities through AnyCap. Install once with a skill file and access every capability through one CLI.",
   },
 };
 
 const capabilities = [
   { name: "Image Generation", models: "Seedream 5, Nano Banana Pro, and more", status: "Available" },
   { name: "Video Generation", models: "Veo 3.1", status: "Available" },
-  { name: "Image Understanding", models: "Vision models", status: "Available" },
+  { name: "Image Read", models: "Vision models", status: "Available" },
   { name: "Video Analysis", models: "Vision models", status: "Available" },
 ];
 

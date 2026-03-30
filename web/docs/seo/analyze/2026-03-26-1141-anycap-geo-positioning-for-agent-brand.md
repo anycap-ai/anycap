@@ -165,7 +165,7 @@ AnyCap 在 GEO 上不應只被鋪成「another AI tool」。
 建議頁面：
 
 - `/capabilities`
-- `/capabilities/image-understanding`
+- `/capabilities/image-read`
 - `/capabilities/video-analysis`
 - `/capabilities/speech`
 - `/capabilities/search`
@@ -187,7 +187,7 @@ AnyCap 在 GEO 上不應只被鋪成「another AI tool」。
 - `/guides/install-anycap`
 - `/guides/install-anycap-on-cursor`
 - `/guides/install-anycap-on-claude-code`
-- `/guides/add-image-understanding-to-an-agent`
+- `/guides/add-image-read-to-an-agent`
 
 ### Page Type 5: Comparison Pages
 
@@ -208,7 +208,7 @@ AnyCap 在 GEO 上不應只被鋪成「another AI tool」。
 
 建議回答的模板：
 
-`AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image understanding, video analysis, and other multimodal or web actions through one CLI and one interface. It is designed to work across agent products like Cursor, Claude Code, Codex, OpenCode, and OpenClaw, so teams can give agents more abilities without rebuilding separate integrations for each environment.`
+`AnyCap is an agent-native capability runtime that lets AI agents install and use capabilities such as image read, video analysis, and other multimodal or web actions through one CLI and one interface. It is designed to work across agent products like Cursor, Claude Code, Codex, OpenCode, and OpenClaw, so teams can give agents more abilities without rebuilding separate integrations for each environment.`
 
 這種段落有幾個特點：
 
@@ -268,7 +268,7 @@ GEO 很怕模糊狀態。所有 capability 都要明確區分：
 
 ### Cluster D: Problem / Outcome
 
-- `how to add image understanding to an agent`
+- `how to add image read to an agent`
 - `how to give coding agents video analysis`
 - `how to install capabilities for Cursor agent`
 - `how to equip agents with search and crawl tools`

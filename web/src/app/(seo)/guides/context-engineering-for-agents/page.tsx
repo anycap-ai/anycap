@@ -145,7 +145,7 @@ export default function ContextEngineeringForAgentsPage() {
                   Need a new image? anycap image generate
                 </p>
                 <p className="text-[13px] text-[#d4e0a4] mb-3" style={mono}>
-                  Need to inspect a screenshot? anycap image understand
+                  Need to inspect a screenshot? anycap image read
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
                   Need to review a recording? anycap video read

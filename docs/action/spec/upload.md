@@ -4,7 +4,7 @@
 
 ## Overview
 
-AnyCap supports file upload for capabilities that need user-provided media (image understand, video read). Files are uploaded directly from CLI to Cloudflare R2 via presigned PUT URLs, bypassing the server for data transfer.
+AnyCap supports file upload for capabilities that need user-provided media (image read, video read). Files are uploaded directly from CLI to Cloudflare R2 via presigned PUT URLs, bypassing the server for data transfer.
 
 ## Upload Flow
 

@@ -41,7 +41,7 @@ Server response (with request_id injected):
 {"status":"success","data":{"name":"anycap-server"},"request_id":"req_1748123456789"}
 ```
 
-Content extraction (image understand, video read):
+Content extraction (image read, video read):
 
 ```json
 {"content":"A paper crane on a wooden table","request_id":"req_1748123456789"}

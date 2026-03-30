@@ -86,7 +86,7 @@ export default function ContextEngineeringGlossaryPage() {
                 </p>
                 <p className="text-base leading-7 text-[#4d5145]">
                   For AnyCap, context engineering matters because it determines when an agent
-                  should invoke image generation, video generation, image understanding, or video
+                  should invoke image generation, video generation, image read, or video
                   analysis through the capability runtime.
                 </p>
               </div>

@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "Add tools to Claude Code — Install agent capabilities",
   description:
-    "Step-by-step guide to adding image generation, video generation, image understanding, and video analysis tools to Claude Code using AnyCap skills and CLI.",
+    "Step-by-step guide to adding image generation, video generation, image read, and video analysis tools to Claude Code using AnyCap skills and CLI.",
   alternates: { canonical: "/guides/add-tools-to-claude-code" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "Add tools to Claude Code — Install agent capabilities",
     description:
-      "Step-by-step guide to adding image generation, video generation, image understanding, and video analysis tools to Claude Code using AnyCap skills and CLI.",
+      "Step-by-step guide to adding image generation, video generation, image read, and video analysis tools to Claude Code using AnyCap skills and CLI.",
   },
 };
 
@@ -31,7 +31,7 @@ const howToJsonLd = {
   "@type": "HowTo",
   name: "Add tools to Claude Code with AnyCap",
   description:
-    "How to add image generation, video generation, image understanding, and video analysis tools to Claude Code.",
+    "How to add image generation, video generation, image read, and video analysis tools to Claude Code.",
   totalTime: "PT10M",
   step: [
     { "@type": "HowToStep", position: 1, name: "Install the AnyCap skill for Claude Code", text: "npx -y skills add anycap-ai/anycap -a claude-code -y" },
@@ -39,7 +39,7 @@ const howToJsonLd = {
     { "@type": "HowToStep", position: 3, name: "Authenticate", text: "anycap login" },
     { "@type": "HowToStep", position: 4, name: "Discover available models", text: "anycap image models" },
     { "@type": "HowToStep", position: 5, name: "Generate your first image", text: "anycap image generate --model seedream_5 --prompt 'a product mockup'" },
-    { "@type": "HowToStep", position: 6, name: "Try image understanding", text: "anycap image understand --url https://example.com/screenshot.png" },
+    { "@type": "HowToStep", position: 6, name: "Try image read", text: "anycap image read --url https://example.com/screenshot.png" },
     { "@type": "HowToStep", position: 7, name: "Try video analysis", text: "anycap video read --url https://example.com/demo.mp4" },
   ],
 };
@@ -173,8 +173,8 @@ export default function AddToolsToClaudeCodePage() {
                 <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Try more capabilities</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4 mb-3">
-                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Image understanding</p>
-                <p className="text-[13px] text-[#d4e0a4] mb-3" style={mono}>anycap image understand --url https://example.com/screenshot.png</p>
+                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Image read</p>
+                <p className="text-[13px] text-[#d4e0a4] mb-3" style={mono}>anycap image read --url https://example.com/screenshot.png</p>
                 <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Video analysis</p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap video read --url https://example.com/demo.mp4</p>
               </div>

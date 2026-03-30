@@ -104,7 +104,7 @@ func TestDisabledFeaturesHiddenFromHelp(t *testing.T) {
 
 	// With defaults: image.generate and image.models are OFF, so the
 	// "image" parent has no subcommands and is omitted from root help.
-	// "actions" should be visible (image-understand and video-read are ON).
+	// "actions" should be visible (image-read and video-read are ON).
 
 	stdout := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
@@ -120,8 +120,8 @@ func TestDisabledFeaturesHiddenFromHelp(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, "image-understand") {
-		t.Fatalf("expected 'image-understand' in actions help, got: %s", output)
+	if !strings.Contains(output, "image-read") {
+		t.Fatalf("expected 'image-read' in actions help, got: %s", output)
 	}
 	if !strings.Contains(output, "video-read") {
 		t.Fatalf("expected 'video-read' in actions help, got: %s", output)

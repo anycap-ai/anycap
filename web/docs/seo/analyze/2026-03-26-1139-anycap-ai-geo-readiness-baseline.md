@@ -293,7 +293,7 @@ AnyCap 明顯與 Cursor、Claude Code、Codex 等生態有關，但目前缺少�
 
 - `What is AnyCap?`
 - `How do I give AI agents image and video capabilities?`
-- `What tools can Cursor or Claude Code use for image understanding?`
+- `What tools can Cursor or Claude Code use for image read?`
 - `What is a capability runtime for AI agents?`
 - `AnyCap vs Composio`
 

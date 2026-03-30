@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	capabilityImageUnderstand = "image_understand"
-	capabilityVideoRead       = "video_read"
+	capabilityImageRead = "image_read"
+	capabilityVideoRead = "video_read"
 )
 
 type Service struct {

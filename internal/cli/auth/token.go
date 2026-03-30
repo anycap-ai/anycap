@@ -18,7 +18,6 @@ import (
 // Legacy API key response:
 //
 //	{"data":{"credential_type":"api_key","access_token":"sk-...","user":{...}}}
-//
 type tokenResponse struct {
 	Data struct {
 		CredentialType string `json:"credential_type"`

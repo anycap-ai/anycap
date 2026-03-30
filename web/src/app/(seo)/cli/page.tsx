@@ -13,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "AnyCap Agent CLI — One CLI for agent capabilities",
   description:
-    "AnyCap CLI is an agent-native command-line interface that lets AI agents install and use image generation, video generation, image understanding, and other capabilities through one install path and one auth flow.",
+    "AnyCap CLI is an agent-native command-line interface that lets AI agents install and use image generation, video generation, image read, and other capabilities through one install path and one auth flow.",
   alternates: { canonical: "/cli" },
   openGraph: {
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "AnyCap Agent CLI — One CLI for agent capabilities",
     description:
-      "AnyCap CLI is an agent-native command-line interface that lets AI agents install and use image generation, video generation, image understanding, and other capabilities through one install path and one auth flow.",
+      "AnyCap CLI is an agent-native command-line interface that lets AI agents install and use image generation, video generation, image read, and other capabilities through one install path and one auth flow.",
   },
 };
 
@@ -42,10 +42,10 @@ const capabilities = [
     status: "Early Access",
   },
   {
-    name: "Image Understanding",
-    command: "anycap image understand",
+    name: "Image Read",
+    command: "anycap image read",
     description: "Analyze images using vision models",
-    href: "/capabilities/image-understanding",
+    href: "/capabilities/image-read",
     status: "Early Access",
   },
   {
@@ -84,7 +84,7 @@ export default function CliPage() {
           </h1>
           <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
             AnyCap CLI is an agent-native command-line interface that lets AI agents install
-            and use capabilities such as image generation, video generation, image understanding,
+            and use capabilities such as image generation, video generation, image read,
             and video analysis through one install path and one auth flow. It works across agent
             products like Claude Code, Cursor, Codex, OpenCode, and OpenClaw, so teams can give
             agents real-world capabilities without rebuilding separate integrations for each

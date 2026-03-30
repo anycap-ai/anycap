@@ -14,7 +14,7 @@ func NewStubClient() *StubClient {
 	return &StubClient{}
 }
 
-func (c *StubClient) ImageUnderstand(_ context.Context, req model.ImageUnderstandRequest) (model.UnderstandResult, error) {
+func (c *StubClient) ImageRead(_ context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
 	var source string
 	if len(req.Images) > 0 {
 		source = fmt.Sprintf("%d images", len(req.Images))

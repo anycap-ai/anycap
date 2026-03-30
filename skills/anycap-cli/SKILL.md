@@ -2,7 +2,7 @@
 name: anycap-cli
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
-  image understanding, video analysis, music composition, text-to-speech,
+  image read, video analysis, music composition, text-to-speech,
   web search, web crawling, file download, and more. Use when the agent needs
   to generate images, analyze images or video, produce audio/music, search or
   crawl the web, or download remote files. Also use when the agent needs to
@@ -175,7 +175,7 @@ anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.pn
 anycap video generate --prompt "..." --model wan-2.1 -o clip.mp4 | jq -r '.local_path'
 
 # Extract content from an action response
-anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.content'
+anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'
 
 # Get the error message on failure
 anycap ... | jq -r '.message // empty'
@@ -220,3 +220,4 @@ You can also check whether this skill file matches your CLI version:
 ```bash
 anycap skill check --target <path-to-this-file>
 ```
+``

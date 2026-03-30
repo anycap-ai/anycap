@@ -15,7 +15,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 )
 
-func TestImageUnderstandWithURL(t *testing.T) {
+func TestImageReadWithURL(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
@@ -29,10 +29,10 @@ func TestImageUnderstandWithURL(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"actions", "image-understand", "--url", "https://example.com/photo.jpg"})
+	cmd.SetArgs([]string{"actions", "image-read", "--url", "https://example.com/photo.jpg"})
 
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("image understand --url failed: %v\nstderr: %s", err, stderr.String())
+		t.Fatalf("image read --url failed: %v\nstderr: %s", err, stderr.String())
 	}
 
 	output := stdout.String()
@@ -45,7 +45,7 @@ func TestImageUnderstandWithURL(t *testing.T) {
 	}
 }
 
-func TestImageUnderstandWithInstruction(t *testing.T) {
+func TestImageReadWithInstruction(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
@@ -59,10 +59,10 @@ func TestImageUnderstandWithInstruction(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"actions", "image-understand", "--url", "https://example.com/photo.jpg", "--instruction", "What color is the car?"})
+	cmd.SetArgs([]string{"actions", "image-read", "--url", "https://example.com/photo.jpg", "--instruction", "What color is the car?"})
 
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("image understand with instruction failed: %v", err)
+		t.Fatalf("image read with instruction failed: %v", err)
 	}
 
 	output := stdout.String()
@@ -71,7 +71,7 @@ func TestImageUnderstandWithInstruction(t *testing.T) {
 	}
 }
 
-func TestImageUnderstandWithFile(t *testing.T) {
+func TestImageReadWithFile(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
@@ -92,10 +92,10 @@ func TestImageUnderstandWithFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"actions", "image-understand", "--file", imgPath})
+	cmd.SetArgs([]string{"actions", "image-read", "--file", imgPath})
 
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("image understand --file failed: %v\nstderr: %s", err, stderr.String())
+		t.Fatalf("image read --file failed: %v\nstderr: %s", err, stderr.String())
 	}
 
 	// Verify no intermediate progress messages leaked to stderr
@@ -114,7 +114,7 @@ func TestImageUnderstandWithFile(t *testing.T) {
 	}
 }
 
-func TestImageUnderstandRequiresURLOrFile(t *testing.T) {
+func TestImageReadRequiresURLOrFile(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
@@ -123,7 +123,7 @@ func TestImageUnderstandRequiresURLOrFile(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"actions", "image-understand"})
+	cmd.SetArgs([]string{"actions", "image-read"})
 
 	err := cmd.Execute()
 	if err == nil {
@@ -131,7 +131,7 @@ func TestImageUnderstandRequiresURLOrFile(t *testing.T) {
 	}
 }
 
-func TestImageUnderstandMultipleURLs(t *testing.T) {
+func TestImageReadMultipleURLs(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
@@ -146,14 +146,14 @@ func TestImageUnderstandMultipleURLs(t *testing.T) {
 		Stdin:     strings.NewReader(""),
 	})
 	cmd.SetArgs([]string{
-		"actions", "image-understand",
+		"actions", "image-read",
 		"--url", "https://example.com/img1.jpg",
 		"--url", "https://example.com/img2.jpg",
 		"--instruction", "Compare these images",
 	})
 
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("image understand multi-url failed: %v\nstderr: %s", err, stderr.String())
+		t.Fatalf("image read multi-url failed: %v\nstderr: %s", err, stderr.String())
 	}
 
 	output := stdout.String()
@@ -162,7 +162,7 @@ func TestImageUnderstandMultipleURLs(t *testing.T) {
 	}
 }
 
-func TestImageUnderstandTooManyImages(t *testing.T) {
+func TestImageReadTooManyImages(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	cmd := NewRootCmd(Options{
@@ -171,7 +171,7 @@ func TestImageUnderstandTooManyImages(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	args := []string{"actions", "image-understand"}
+	args := []string{"actions", "image-read"}
 	for i := 0; i < 11; i++ {
 		args = append(args, "--url", fmt.Sprintf("https://example.com/img%d.jpg", i))
 	}

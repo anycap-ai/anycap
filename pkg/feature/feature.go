@@ -22,25 +22,25 @@ var overrides string
 
 // Well-known feature flag names.
 const (
-	ImageGenerate   = "image.generate"
-	ImageModels     = "image.models"
-	ImageUnderstand = "image.understand"
-	VideoGenerate   = "video.generate"
-	VideoModels     = "video.models"
-	VideoRead       = "video.read"
-	Login           = "login"
+	ImageGenerate = "image.generate"
+	ImageModels   = "image.models"
+	ImageRead     = "image.read"
+	VideoGenerate = "video.generate"
+	VideoModels   = "video.models"
+	VideoRead     = "video.read"
+	Login         = "login"
 )
 
 // defaults defines the code-level default state for each feature.
 // Features not listed here default to false.
 var defaults = map[string]bool{
-	ImageGenerate:   true, // CLI exposes commands; server returns error if not ready
-	ImageModels:     true, // CLI exposes commands; server returns error if not ready
-	ImageUnderstand: true, // agent-platform real implementation
-	VideoGenerate:   true, // CLI exposes commands; server returns error if not ready
-	VideoModels:     true, // CLI exposes commands; server returns error if not ready
-	VideoRead:       true, // agent-platform real implementation
-	Login:           true, // auth flow (stub but expected soon)
+	ImageGenerate: true, // CLI exposes commands; server returns error if not ready
+	ImageModels:   true, // CLI exposes commands; server returns error if not ready
+	ImageRead:     true, // agent-platform real implementation
+	VideoGenerate: true, // CLI exposes commands; server returns error if not ready
+	VideoModels:   true, // CLI exposes commands; server returns error if not ready
+	VideoRead:     true, // agent-platform real implementation
+	Login:         true, // auth flow (stub but expected soon)
 }
 
 var (

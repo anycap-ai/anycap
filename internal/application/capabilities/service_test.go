@@ -13,19 +13,19 @@ func newTestService() *Service {
 	return NewService(agentplatform.NewStubClient(), s3store.NewStubClient())
 }
 
-func TestService_ImageUnderstand_ValidationError(t *testing.T) {
+func TestService_ImageRead_ValidationError(t *testing.T) {
 	svc := newTestService()
 
-	_, err := svc.ImageUnderstand(context.Background(), model.ImageUnderstandRequest{})
+	_, err := svc.ImageRead(context.Background(), model.ImageReadRequest{})
 	if err != model.ErrMissingInput {
 		t.Errorf("expected ErrMissingInput, got %v", err)
 	}
 }
 
-func TestService_ImageUnderstand_URL(t *testing.T) {
+func TestService_ImageRead_URL(t *testing.T) {
 	svc := newTestService()
 
-	result, err := svc.ImageUnderstand(context.Background(), model.ImageUnderstandRequest{
+	result, err := svc.ImageRead(context.Background(), model.ImageReadRequest{
 		URL:         "https://example.com/photo.jpg",
 		Instruction: "What is this?",
 	})
@@ -40,10 +40,10 @@ func TestService_ImageUnderstand_URL(t *testing.T) {
 	}
 }
 
-func TestService_ImageUnderstand_Base64(t *testing.T) {
+func TestService_ImageRead_Base64(t *testing.T) {
 	svc := newTestService()
 
-	result, err := svc.ImageUnderstand(context.Background(), model.ImageUnderstandRequest{
+	result, err := svc.ImageRead(context.Background(), model.ImageReadRequest{
 		Data:     "aGVsbG8=",
 		MIMEType: "image/png",
 	})
@@ -55,10 +55,10 @@ func TestService_ImageUnderstand_Base64(t *testing.T) {
 	}
 }
 
-func TestService_ImageUnderstand_AmbiguousInput(t *testing.T) {
+func TestService_ImageRead_AmbiguousInput(t *testing.T) {
 	svc := newTestService()
 
-	_, err := svc.ImageUnderstand(context.Background(), model.ImageUnderstandRequest{
+	_, err := svc.ImageRead(context.Background(), model.ImageReadRequest{
 		URL:      "https://example.com/photo.jpg",
 		Data:     "aGVsbG8=",
 		MIMEType: "image/png",

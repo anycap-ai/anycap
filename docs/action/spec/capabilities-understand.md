@@ -1,10 +1,10 @@
-# Capabilities: Image Understand and Video Read
+# Capabilities: Image Read and Video Read
 
 ## 1. Overview
 
 AnyCap exposes two action-type capability endpoints for multimodal understanding:
 
-- **Image Understand** -- Analyze an image and return a text description
+- **Image Read** -- Analyze an image and return a text description
 - **Video Read** -- Analyze a video and return a text description
 
 These are stateless request-response operations. The upstream provider is Agent Platform's capabilities API. Media files are stored via S3-compatible object storage (Cloudflare R2, AWS S3, MinIO, etc.).
@@ -26,8 +26,8 @@ sequenceDiagram
     S3-->>CLI: 200 OK
 
     Note over CLI,AP: Understand Flow
-    CLI->>Server: POST /v1/capabilities/image/understand<br/>{url: object_url, instruction}
-    Server->>AP: POST /api/v1/capabilities/image/understand<br/>{url, instruction}
+    CLI->>Server: POST /v1/capabilities/image/read<br/>{url: object_url, instruction}
+    Server->>AP: POST /api/v1/capabilities/image/read<br/>{url, instruction}
     AP-->>Server: {content, model, duration_ms}
     Server-->>CLI: {content, model, duration_ms}
 ```
@@ -76,10 +76,10 @@ Validation:
 
 Object key format: `caps/<date>/<uuid>/<filename>`.
 
-### 3.2 Image Understand
+### 3.2 Image Read
 
 ```
-POST /v1/capabilities/image/understand
+POST /v1/capabilities/image/read
 ```
 
 Request (URL mode):
@@ -164,7 +164,7 @@ The CLI wraps the multi-step flow into single commands. CLI design and implement
 ```mermaid
 flowchart TD
     A[CLI: --file or --url] --> B{Is URL?}
-    B -->|Yes| D[POST .../image/understand or .../video/read]
+    B -->|Yes| D[POST .../image/read or .../video/read]
     B -->|No, local file| C[POST .../presign]
     C --> E[PUT file to upload_url]
     E --> D
@@ -175,10 +175,10 @@ Example commands:
 
 ```bash
 # Direct URL
-anycap image understand --url https://example.com/photo.jpg --instruction "What is this?"
+anycap image read --url https://example.com/photo.jpg --instruction "What is this?"
 
 # Local file (presign + upload + understand in one step)
-anycap image understand --file ./screenshot.png --instruction "What is this?"
+anycap image read --file ./screenshot.png --instruction "What is this?"
 
 # Video
 anycap video read --url https://example.com/demo.mp4
@@ -243,7 +243,7 @@ S3_FORCE_PATH_STYLE=true
 
 | Layer | Component | Path |
 |---|---|---|
-| Domain Model | `PresignRequest`, `PresignResult`, `ImageUnderstandRequest`, `VideoReadRequest`, `UnderstandResult`, `Usage` | `internal/domain/model/capabilities.go` |
+| Domain Model | `PresignRequest`, `PresignResult`, `ImageReadRequest`, `VideoReadRequest`, `UnderstandResult`, `Usage` | `internal/domain/model/capabilities.go` |
 | Domain Port | `CapabilitiesProvider`, `ObjectStorage` | `internal/domain/port/capabilities.go` |
 | Infrastructure | `agentplatform.Client` (upstream understand/read) | `internal/infrastructure/agentplatform/` |
 | Infrastructure | `s3store.Client` (presigned URL generation) | `internal/infrastructure/s3store/` |

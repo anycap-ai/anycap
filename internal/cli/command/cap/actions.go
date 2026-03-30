@@ -14,7 +14,7 @@ import (
 const maxActionImages = 10
 
 // NewActionsCmd creates the "actions" command group that contains AI analysis
-// actions such as image-understand and video-read.
+// actions such as image-read and video-read.
 func NewActionsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	actionsCmd := &cobra.Command{
 		Use:   "actions",
@@ -22,8 +22,8 @@ func NewActionsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.ImageUnderstand) {
-		actionsCmd.AddCommand(newImageUnderstandAction(clientFactory, stdout))
+	if feature.Enabled(feature.ImageRead) {
+		actionsCmd.AddCommand(newImageReadAction(clientFactory, stdout))
 	}
 	if feature.Enabled(feature.VideoRead) {
 		actionsCmd.AddCommand(newVideoReadAction(clientFactory, stdout))
@@ -32,24 +32,24 @@ func NewActionsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 	return actionsCmd
 }
 
-func newImageUnderstandAction(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+func newImageReadAction(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var urls []string
 	var files []string
 	var instruction string
 	var modelFlag string
 
 	cmd := &cobra.Command{
-		Use:   "image-understand",
+		Use:   "image-read",
 		Short: "Analyze one or more images (describe, extract text, answer questions)",
 		Long: `Analyze images using vision models. Provide URLs, local files, or a mix of both.
 Up to 10 images can be analyzed in a single request.
 
 Examples:
-  anycap actions image-understand --url https://example.com/photo.jpg
-  anycap actions image-understand --url https://example.com/photo.jpg --instruction "What text is in this image?"
-  anycap actions image-understand --file ./screenshot.png
-  anycap actions image-understand --url https://example.com/p1.jpg --url https://example.com/p2.jpg --instruction "Compare these images"
-  anycap actions image-understand --url https://example.com/photo.jpg --file ./local.png --instruction "Describe each image"`,
+  anycap actions image-read --url https://example.com/photo.jpg
+  anycap actions image-read --url https://example.com/photo.jpg --instruction "What text is in this image?"
+  anycap actions image-read --file ./screenshot.png
+  anycap actions image-read --url https://example.com/p1.jpg --url https://example.com/p2.jpg --instruction "Compare these images"
+  anycap actions image-read --url https://example.com/photo.jpg --file ./local.png --instruction "Describe each image"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(urls) == 0 && len(files) == 0 {
 				return fmt.Errorf("at least one --url or --file is required")
@@ -94,7 +94,7 @@ Examples:
 				body["model"] = modelFlag
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/understand", body)
+			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/read", body)
 			if err != nil {
 				return err
 			}

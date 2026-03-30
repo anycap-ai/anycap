@@ -66,7 +66,7 @@ func New() *Server {
 	// Capabilities
 	s.mux.HandleFunc("POST /v1/capabilities/presign", s.handlePresign)
 	s.mux.HandleFunc("PUT /mock/upload/", s.handleMockUpload)
-	s.mux.HandleFunc("POST /v1/capabilities/image/understand", s.handleImageUnderstand)
+	s.mux.HandleFunc("POST /v1/capabilities/image/read", s.handleImageRead)
 	s.mux.HandleFunc("POST /v1/capabilities/video/read", s.handleVideoRead)
 
 	// Image generation
@@ -322,9 +322,9 @@ func (s *Server) handleMockUpload(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// --- Capabilities: Image Understand ---
+// --- Capabilities: Image Read ---
 
-func (s *Server) handleImageUnderstand(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleImageRead(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		URL         string           `json:"url"`
 		Images      []map[string]any `json:"images"`

@@ -11,7 +11,7 @@
 - https://anycap.ai/en/models
 - https://anycap.ai/en/capabilities/image-generation
 - https://anycap.ai/en/capabilities/video-generation
-- https://anycap.ai/en/capabilities/image-understanding
+- https://anycap.ai/en/capabilities/image-read
 - https://anycap.ai/en/capabilities/video-analysis
 - https://anycap.ai/en/for/claude-code
 - https://anycap.ai/en/for/cursor
@@ -47,7 +47,7 @@ AnyCap is currently in early access. The following capabilities are available to
 
 - Image Generation — generate and edit images through models such as Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2
 - Video Generation — generate videos through models such as Veo 3.1
-- Image Understanding — analyze images using vision models
+- Image Read — analyze images using vision models
 - Video Analysis — analyze video content
 
 ## Coming Soon

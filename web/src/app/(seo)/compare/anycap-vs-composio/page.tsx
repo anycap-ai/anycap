@@ -39,7 +39,7 @@ const comparisons = [
   },
   {
     dimension: "Multimodal capabilities",
-    anycap: "Built-in image generation (Seedream 5, Nano Banana Pro), video generation (Veo 3.1), image understanding, video analysis",
+    anycap: "Built-in image generation (Seedream 5, Nano Banana Pro), video generation (Veo 3.1), image read, video analysis",
     composio: "Connects to external multimodal APIs as tool integrations",
   },
   {
