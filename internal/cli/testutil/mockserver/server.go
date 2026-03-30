@@ -81,6 +81,12 @@ func New() *Server {
 	s.mux.HandleFunc("POST /v1/video/generate", s.handleVideoGenerate)
 	s.mux.HandleFunc("GET /videos/", s.handleMockVideo)
 
+	// Music generation
+	s.mux.HandleFunc("GET /v1/music/models", s.handleMusicModels)
+	s.mux.HandleFunc("GET /v1/music/models/{model}/schema", s.handleMusicModelSchema)
+	s.mux.HandleFunc("POST /v1/music/generate", s.handleMusicGenerate)
+	s.mux.HandleFunc("GET /audio/", s.handleMockAudio)
+
 	return s
 }
 
@@ -600,6 +606,107 @@ func (s *Server) handleVideoGenerate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMockVideo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Write([]byte("mock-video-data"))
+}
+
+// --- Music Generation Capabilities ---
+
+func (s *Server) handleMusicModels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"status":     "success",
+		"capability": "music",
+		"models": []map[string]any{
+			{
+				"model":        "mock-music-1",
+				"capability":   "music",
+				"display_name": "Mock Music 1",
+				"status":       "active",
+				"operations":   []string{"generate"},
+			},
+		},
+	})
+}
+
+func (s *Server) handleMusicModelSchema(w http.ResponseWriter, r *http.Request) {
+	model := r.PathValue("model")
+	operation := r.URL.Query().Get("operation")
+	if operation == "" {
+		operation = "generate"
+	}
+
+	writeSuccess(w, map[string]any{
+		"capability": "music",
+		"model":      model,
+		"operation":  operation,
+		"schema": map[string]any{
+			"model_params": map[string]any{
+				"prompt":            map[string]any{"type": "string"},
+				"tags":              map[string]any{"type": "string"},
+				"make_instrumental": map[string]any{"type": "boolean"},
+				"title":             map[string]any{"type": "string"},
+				"lyrics":            map[string]any{"type": "string"},
+			},
+		},
+	})
+}
+
+func (s *Server) handleMusicGenerate(w http.ResponseWriter, r *http.Request) {
+	var req map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	prompt, _ := req["prompt"].(string)
+	tags, _ := req["tags"].(string)
+	model, _ := req["model"].(string)
+
+	if prompt == "" && tags == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "prompt or tags is required")
+		return
+	}
+	if model == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_PARAM", "model is required")
+		return
+	}
+
+	reqID := "mus_req_" + randomHex(8)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	audioURL1 := fmt.Sprintf("%s://%s/audio/%s_1.mp3", scheme, r.Host, reqID)
+	audioURL2 := fmt.Sprintf("%s://%s/audio/%s_2.mp3", scheme, r.Host, reqID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"id":     "req_" + randomHex(8),
+		"status": "success",
+		"data": map[string]any{
+			"id":     reqID,
+			"status": "success",
+			"model":  model,
+			"outputs": []map[string]any{
+				{
+					"type":      "music",
+					"url":       audioURL1,
+					"mime_type": "audio/mpeg",
+				},
+				{
+					"type":      "music",
+					"url":       audioURL2,
+					"mime_type": "audio/mpeg",
+				},
+			},
+			"usage":       map[string]int{"credits": 2},
+			"credit_cost": 2,
+		},
+	})
+}
+
+// handleMockAudio serves fake audio data for download tests.
+func (s *Server) handleMockAudio(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "audio/mpeg")
+	w.Write([]byte("mock-audio-data"))
 }
 
 // --- Helpers ---

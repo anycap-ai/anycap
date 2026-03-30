@@ -95,13 +95,15 @@ AnyCap capabilities are organized into two groups:
 **Generation** -- create new content from prompts.
 Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 Read [references/video-generation.md](references/video-generation.md) when you need to generate videos. Videos are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o product-demo.mp4`). Supports text-to-video and image-to-video via `--reference-image`.
+Read [references/music-generation.md](references/music-generation.md) when you need to generate music or songs. Audio clips are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o lofi-study.mp3`). Supports vocal songs with lyrics and instrumental tracks. May return multiple clips -- use `.outputs[0].local_path` to extract paths.
+
+**Long-running commands:** Image generation typically takes 5-30 seconds, video generation 30-120 seconds, and music generation 30-90 seconds. If your runtime supports background or async execution (e.g., spawning subprocesses, background tasks, non-blocking tool calls), prefer running generation commands asynchronously so you can continue other work while waiting. Generation commands are self-contained -- they block until complete and write the result file locally, so they are safe to run in the background without supervision.
 
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
 
 **Coming soon:**
 
-- Music composition (text-to-music)
 - Text-to-speech / voice synthesis
 - Web search and web crawling
 
@@ -198,6 +200,9 @@ anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.pn
 
 # Generate a video and get its path
 anycap video generate --prompt "..." --model wan-2.1 -o clip.mp4 | jq -r '.local_path'
+
+# Generate music and get the first audio path
+anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
 
 # Extract content from an action response
 anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'

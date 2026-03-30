@@ -99,13 +99,11 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 
 		poll, err := DevicePoll(ctx, client, d.LoginSessionID)
 		if err != nil {
-			fmt.Fprint(stderr, ".")
 			continue
 		}
 
 		switch poll.Status {
 		case "complete", "completed":
-			fmt.Fprintln(stderr, " done!")
 			body, marshalErr := json.Marshal(map[string]any{
 				"data": poll,
 			})
@@ -121,9 +119,8 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":
 			interval *= 2
-			fmt.Fprint(stderr, ".")
 		default: // pending
-			fmt.Fprint(stderr, ".")
+			// keep polling silently
 		}
 	}
 }

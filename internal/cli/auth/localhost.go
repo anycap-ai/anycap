@@ -69,7 +69,6 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			"poll_token":       d.PollToken,
 		})
 		if err != nil {
-			fmt.Fprint(stderr, ".")
 			continue
 		}
 
@@ -79,13 +78,11 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			} `json:"data"`
 		}
 		if err := json.Unmarshal(pollResp.Body, &poll); err != nil {
-			fmt.Fprint(stderr, ".")
 			continue
 		}
 
 		switch poll.Data.Status {
 		case "complete", "completed":
-			fmt.Fprintln(stderr, " done!")
 			cred, email, err := parseTokenResponse(pollResp.Body)
 			if err != nil {
 				return nil, "", fmt.Errorf("authentication completed but no api key was returned; run 'anycap login' again")
@@ -95,9 +92,8 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			return nil, "", fmt.Errorf("authentication expired. Please try again")
 		case "slow_down":
 			interval *= 2
-			fmt.Fprint(stderr, ".")
 		default:
-			fmt.Fprint(stderr, ".")
+			// pending -- keep polling silently
 		}
 	}
 }
