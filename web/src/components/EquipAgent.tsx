@@ -92,9 +92,13 @@ export function EquipAgent({ label = "Equip your Agent" }: { label?: string }) {
     }, 1200);
   };
 
-  // Listen for custom event from terminal click
+  // Listen for custom event from terminal click (stopImmediatePropagation
+  // prevents other EquipAgent instances from also opening their modal)
   useEffect(() => {
-    const handler = () => openModal();
+    const handler = (e: Event) => {
+      e.stopImmediatePropagation();
+      openModal();
+    };
     window.addEventListener(EQUIP_MODAL_EVENT, handler);
     return () => window.removeEventListener(EQUIP_MODAL_EVENT, handler);
   }, [openModal]);

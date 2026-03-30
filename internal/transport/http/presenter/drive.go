@@ -27,7 +27,6 @@ type DriveFilePresignDTO struct {
 	FileID          string `json:"file_id"`
 	UploadURL       string `json:"upload_url"`
 	ObjectURL       string `json:"object_url"`
-	ObjectKey       string `json:"object_key"`
 	ExpiresIn       int    `json:"expires_in"`
 }
 
@@ -140,7 +139,6 @@ func PresentDrivePresign(ctx context.Context, mapper IDMapper, input *model.Driv
 		FileID:          fileID,
 		UploadURL:       input.UploadURL,
 		ObjectURL:       input.ObjectURL,
-		ObjectKey:       input.ObjectKey,
 		ExpiresIn:       input.ExpiresIn,
 	}, nil
 }

@@ -84,7 +84,6 @@ export type DriveFilePresignResult = {
   file_id: string;
   upload_url: string;
   object_url: string;
-  object_key: string;
   expires_in: number;
 };
 
@@ -133,7 +132,6 @@ export type PageVersion = {
   version_no: number;
   source_version_id?: string | null;
   status: PageVersionStatus;
-  asset_prefix: string;
   created_by: string;
   created_at: string;
 };
@@ -149,6 +147,5 @@ export type PageVersionPresignResult = {
   asset_path: string;
   upload_url: string;
   object_url: string;
-  object_key: string;
   expires_in: number;
 };

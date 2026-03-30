@@ -28,7 +28,6 @@ type PageVersionDTO struct {
 	VersionNo       int64   `json:"version_no"`
 	SourceVersionID *string `json:"source_version_id,omitempty"`
 	Status          string  `json:"status"`
-	AssetPrefix     string  `json:"asset_prefix"`
 	CreatedBy       string  `json:"created_by"`
 	CreatedAt       string  `json:"created_at"`
 }
@@ -39,7 +38,6 @@ type PageVersionPresignDTO struct {
 	AssetPath       string `json:"asset_path"`
 	UploadURL       string `json:"upload_url"`
 	ObjectURL       string `json:"object_url"`
-	ObjectKey       string `json:"object_key"`
 	ExpiresIn       int    `json:"expires_in"`
 }
 
@@ -187,7 +185,6 @@ func PresentPageVersions(ctx context.Context, mapper IDMapper, versions []model.
 			VersionNo:       version.VersionNo,
 			SourceVersionID: sourceVersionExternalID,
 			Status:          string(version.Status),
-			AssetPrefix:     version.AssetPrefix,
 			CreatedBy:       createdBy,
 			CreatedAt:       version.CreatedAt.UTC().Format(TimeLayout),
 		})
@@ -215,7 +212,6 @@ func PresentPageVersionPresign(ctx context.Context, mapper IDMapper, input *mode
 		AssetPath:       input.AssetPath,
 		UploadURL:       input.UploadURL,
 		ObjectURL:       input.ObjectURL,
-		ObjectKey:       input.ObjectKey,
 		ExpiresIn:       input.ExpiresIn,
 	}, nil
 }

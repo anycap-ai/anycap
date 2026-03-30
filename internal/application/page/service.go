@@ -96,6 +96,8 @@ func (s *Service) enqueueKVSyncJob(ctx context.Context, jobType string, targetID
 			return 0, fmt.Errorf("marshal kvsync payload: %w", err)
 		}
 		rawPayload = data
+	} else {
+		rawPayload = json.RawMessage(`{}`)
 	}
 
 	job, err := s.kvSyncJobRepo.Create(ctx, model.KVSyncJob{
@@ -147,6 +149,9 @@ func (s *Service) fillPageURLs(sites []model.PageSite) {
 func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
 		return nil, fmt.Errorf("page service is not configured")
+	}
+	if strings.TrimSpace(name) == "" {
+		return nil, fmt.Errorf("site name is required")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
@@ -322,13 +327,10 @@ func fallbackSiteName(name string) string {
 func generatePageName(name string) (string, error) {
 	base := normalizeSlug(name)
 	if base == "" {
-		base = "site"
+		return "", fmt.Errorf("site name must contain at least one alphanumeric character")
 	}
 	if len(base) > 30 {
 		base = strings.Trim(base[:30], "-")
-	}
-	if base == "" {
-		base = "site"
 	}
 
 	suffix, err := randomString(pageNameRandomLength)

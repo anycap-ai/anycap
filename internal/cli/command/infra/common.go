@@ -373,9 +373,9 @@ func pickLatestVerifiedVersionID(versions []pageVersionSummary) (string, error) 
 }
 
 func randomSiteName() (string, error) {
-	buf := make([]byte, 4)
+	buf := make([]byte, 3)
 	if _, err := rand.Read(buf); err != nil {
 		return "", err
 	}
-	return "site-" + hex.EncodeToString(buf), nil
+	return hex.EncodeToString(buf), nil
 }

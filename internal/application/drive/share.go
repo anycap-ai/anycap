@@ -3,8 +3,9 @@ package drive
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
+	"encoding/binary"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -258,10 +259,28 @@ func mergePassword(password *string, noPassword bool, existing *model.DriveShare
 	return nil, nil, nil
 }
 
+const base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
 func generateShareToken() (string, error) {
-	bytes := make([]byte, 24)
-	if _, err := rand.Read(bytes); err != nil {
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("generate share token: %w", err)
 	}
-	return strings.TrimRight(base64.RawURLEncoding.EncodeToString(bytes), "="), nil
+	n := new(big.Int).SetUint64(binary.BigEndian.Uint64(b))
+	base := big.NewInt(62)
+	var digits []byte
+	for n.Sign() > 0 {
+		mod := new(big.Int)
+		n.DivMod(n, base, mod)
+		digits = append(digits, base62Chars[mod.Int64()])
+	}
+	// pad to 11 chars (ceil(log62(2^64)) = 11)
+	for len(digits) < 11 {
+		digits = append(digits, base62Chars[0])
+	}
+	// reverse
+	for i, j := 0, len(digits)-1; i < j; i, j = i+1, j-1 {
+		digits[i], digits[j] = digits[j], digits[i]
+	}
+	return string(digits), nil
 }

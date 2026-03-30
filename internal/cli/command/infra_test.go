@@ -283,8 +283,8 @@ func TestPageDeployWithoutNameAndPublish(t *testing.T) {
 		t.Fatalf("execute page deploy: %v", err)
 	}
 
-	if !strings.HasPrefix(createdName, "site-") {
-		t.Fatalf("expected generated site name, got: %s", createdName)
+	if len(createdName) != 6 {
+		t.Fatalf("expected 6-char random site name, got: %s", createdName)
 	}
 	if atomic.LoadInt32(&presignCount) != 2 || atomic.LoadInt32(&completeCount) != 2 {
 		t.Fatalf("expected 2 files presign/complete, got presign=%d complete=%d", presignCount, completeCount)

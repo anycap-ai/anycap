@@ -138,6 +138,7 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 4. **NEVER write `result.User.ID = externalID`** (mutate-then-serialize) — always use a presenter function (`presenter.PresentUser`, `presenter.PresentLoginUser`, etc.) to produce a DTO.
 5. **NEVER accept numeric JSON values as IDs in request bodies** — `parseOptionalIDRaw` only accepts strings. Clients must send `"parent_id": "dn_abc123"`, not `"parent_id": 42`.
 6. **New resources** that are externally visible must: add a prefix in `pkg/externalid/`, add an `external_id` column via migration, add resolve methods to `PostgresExternalIDMapper`, add a presenter DTO + present function.
+7. **NEVER expose internal storage paths (object keys, asset prefixes) in API responses.** Storage paths like `page/spaces/{id}/sites/{id}/versions/{no}` and `drive/spaces/{id}/nodes/{id}/{uuid}` contain internal int64 IDs embedded in the path string. Even though the field itself is a `string`, returning it to the client leaks internal IDs. Presenter DTOs MUST NOT include `ObjectKey` or `AssetPrefix` fields. The client only needs `UploadURL` / `ObjectURL` — the server-side storage layout is an internal implementation detail that clients must never see.
 
 ### Prefixes
 
@@ -163,6 +164,7 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 - [ ] Response built via `presenter.PresentXxx(ctx, h.mapper, domainModel)` — returns a DTO
 - [ ] List endpoints return `[]SomeDTO`, never `[]model.SomeModel`
 - [ ] Delete endpoints resolve external ID for response via `h.mapper.ResolveXxxExternalIDs`
+- [ ] **No internal storage paths in responses** — DTO must NOT contain `ObjectKey`, `AssetPrefix`, or any field whose value embeds internal int64 IDs in a path string
 
 ## Coding Conventions
 

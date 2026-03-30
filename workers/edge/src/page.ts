@@ -8,6 +8,7 @@ import type { Env, PageHostRecord } from "./types";
 import { notFoundPage } from "./response";
 import { renderErrorPage, renderPasswordPage } from "./ui";
 import { guessContentType } from "./mime";
+import { injectPageBadge } from "./ui/badge";
 
 const PAGE_SESSION_COOKIE = "ac_page_auth";
 
@@ -136,17 +137,27 @@ async function servePageAsset(
 ): Promise<Response> {
 	const url = new URL(request.url);
 	const candidates = listCandidates(url.pathname, host.spa_fallback);
+	console.log("[page] asset_prefix=%s candidates=%s", host.asset_prefix, JSON.stringify(candidates));
 	return respondWithCache(request, config.pageAssetCacheTTLSeconds, async () => {
 		for (const relativePath of candidates) {
 			const objectKey = joinAssetKey(host.asset_prefix, relativePath);
 			const object = await env.ANYCAP_CLOUD_R2.get(objectKey);
+			console.log("[page] try r2 key=%s found=%s", objectKey, !!(object && object.body));
 			if (!object || !object.body) {
 				continue;
 			}
+			const contentType = object.httpMetadata?.contentType || guessContentType(relativePath);
+			const isHTML = contentType.startsWith("text/html");
 			const headers = new Headers();
-			headers.set("content-type", object.httpMetadata?.contentType || guessContentType(relativePath));
+			headers.set("content-type", contentType);
 			if (object.httpEtag) {
 				headers.set("etag", object.httpEtag);
+			}
+			if (isHTML) {
+				const html = await new Response(object.body).text();
+				const injected = injectPageBadge(html);
+				headers.set("content-length", String(new TextEncoder().encode(injected).byteLength));
+				return new Response(injected, { status: 200, headers });
 			}
 			if (object.size >= 0) {
 				headers.set("content-length", String(object.size));
@@ -160,10 +171,13 @@ async function servePageAsset(
 export async function handlePage(request: Request, env: Env, config: EdgeConfig, ctx?: ExecutionContext): Promise<Response> {
 	const url = new URL(request.url);
 	const hostname = url.hostname.toLowerCase();
+	console.log("[page] hostname=%s pathname=%s kv_key=%s", hostname, url.pathname, `page:host:${hostname}`);
 	const hostConfig = await fetchPageHost(env, hostname);
 	if (!hostConfig || !hostConfig.current_version_id) {
+		console.log("[page] host not found or no current_version_id, hostConfig=%s", JSON.stringify(hostConfig));
 		return renderErrorPage(404, "Not found", "This page is unpublished or does not exist.");
 	}
+	console.log("[page] hostConfig=%s", JSON.stringify(hostConfig));
 
 	if (hostConfig.access_mode === "private_reserved") {
 		return renderErrorPage(403, "Forbidden", "Private pages are not enabled yet.");
