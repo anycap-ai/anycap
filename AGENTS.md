@@ -103,6 +103,52 @@ make infra-down
 make infra-reset
 ```
 
+## Feature Flags
+
+Capability availability is controlled by feature flags. Each flag can be overridden via environment variable. Login is always enabled and is not a feature flag.
+
+### Server-side control
+
+Feature defaults are derived from infrastructure configuration (e.g., NexusHub, AgentPlatform, Postgres). Override any feature with an environment variable:
+
+```bash
+# Disable music generation
+ANYCAP_FEATURE_MUSIC_GENERATE=false
+ANYCAP_FEATURE_MUSIC_MODELS=false
+
+# Disable drive storage
+ANYCAP_FEATURE_DRIVE=false
+```
+
+| Env var | Default | Controls |
+|---|---|---|
+| `ANYCAP_FEATURE_IMAGE_GENERATE` | true if NexusHub Core configured | `POST /v1/image/generate` |
+| `ANYCAP_FEATURE_IMAGE_MODELS` | true if catalog configured | `GET /v1/image/models` |
+| `ANYCAP_FEATURE_IMAGE_READ` | true if AgentPlatform configured | `POST /v1/capabilities/image/read` |
+| `ANYCAP_FEATURE_VIDEO_GENERATE` | true if NexusHub Core configured | `POST /v1/video/generate` |
+| `ANYCAP_FEATURE_VIDEO_MODELS` | true if catalog configured | `GET /v1/video/models` |
+| `ANYCAP_FEATURE_VIDEO_READ` | true if AgentPlatform configured | `POST /v1/capabilities/video/read` |
+| `ANYCAP_FEATURE_MUSIC_GENERATE` | true if NexusHub Core configured | `POST /v1/music/generate` |
+| `ANYCAP_FEATURE_MUSIC_MODELS` | true if catalog configured | `GET /v1/music/models` |
+| `ANYCAP_FEATURE_DRIVE` | true | All `/v1/drive/*` endpoints |
+| `ANYCAP_FEATURE_PAGE` | true | All `/v1/pages*` endpoints |
+
+Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrastructure-derived default.
+
+### Three-layer enforcement
+
+1. **Server feature gate middleware** (`internal/middleware/feature_gate.go`): blocks requests to disabled features with `503 FEATURE_DISABLED`.
+2. **Public features endpoint** (`GET /v1/features`): returns the resolved feature map, no auth required.
+3. **CLI preflight** (`cmd/anycap/main.go`): fetches `/v1/features` before building the command tree. Disabled commands are hidden from help and unavailable. Falls back to all-enabled when the server is unreachable.
+
+### Adding a new feature flag
+
+1. Add constant in `pkg/feature/feature.go`.
+2. Add default in the `defaults` map (same file).
+3. Add to `buildServerFeatures()` in `internal/app/bootstrap.go` with the infra-derived default.
+4. Add path rule in `internal/middleware/feature_gate.go`.
+5. Gate the CLI command with `feature.Enabled()` in the appropriate command constructor.
+
 ## Web Design Guideline
 
 When developing any page under `web/`, always follow `web/docs/design-guideline.md`. It defines the full visual language — colors, typography, spacing, backgrounds, borders, effects, and component patterns. All web pages must be visually consistent with this guideline.

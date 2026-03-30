@@ -32,6 +32,7 @@ func (h *Handler) RegisterRootRoutes(group *route.RouterGroup) {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	group.GET("/healthz", h.Healthz)
+	group.GET("/features", h.Features)
 }
 
 func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
@@ -41,6 +42,12 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/credits/balance", h.CreditBalance)
 	group.GET("/logs", h.Logs)
 	group.POST("/auth/logout", h.Logout)
+}
+
+func (h *Handler) Features(_ context.Context, ctx *app.RequestContext) {
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"features": h.service.Features(),
+	}))
 }
 
 func (h *Handler) Ping(_ context.Context, ctx *app.RequestContext) {

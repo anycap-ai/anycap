@@ -6,6 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func requireSubcommand(_ *cobra.Command, _ []string) error {
-	return fmt.Errorf("please specify a subcommand")
+func requireSubcommand(cmd *cobra.Command, _ []string) error {
+	return fmt.Errorf("subcommand required, see '%s --help' for usage", cmd.CommandPath())
 }

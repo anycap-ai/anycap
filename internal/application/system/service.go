@@ -36,6 +36,11 @@ func (s *Service) SetFeatures(features map[string]bool) {
 	s.features = features
 }
 
+// Features returns the current feature flags.
+func (s *Service) Features() map[string]bool {
+	return s.features
+}
+
 func (s *Service) SetUserReader(users port.UserReader) {
 	s.users = users
 }

@@ -118,17 +118,13 @@ func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testin
 	}
 }
 
-func TestBuildServerFeatures_LoginEnabledWhenAuth0Configured(t *testing.T) {
-	features := buildServerFeatures(config.Config{Auth0Enabled: true})
-	if !features[feature.Login] {
-		t.Fatal("expected login feature enabled when Auth0 is enabled")
-	}
-}
-
-func TestBuildServerFeatures_LoginDisabledWhenAuth0NotConfigured(t *testing.T) {
+func TestBuildServerFeatures_DriveAndPageEnabledByDefault(t *testing.T) {
 	features := buildServerFeatures(config.Config{})
-	if features[feature.Login] {
-		t.Fatal("expected login feature disabled when Auth0 is not enabled")
+	if !features[feature.Drive] {
+		t.Fatal("expected drive feature enabled by default")
+	}
+	if !features[feature.Page] {
+		t.Fatal("expected page feature enabled by default")
 	}
 }
 

@@ -1,22 +1,31 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 )
 
 func main() {
+	endpointOverride := parseEndpointFromArgs()
+	syncServerFeatures(endpointOverride)
+
 	cmd := command.NewRootCmd(command.Options{
 		BuildInfo: buildinfo.Current(),
+		Endpoint:  endpointOverride,
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -52,7 +61,7 @@ func classifyError(err error) (code, message, hint, requestID string) {
 	msg := err.Error()
 
 	if strings.Contains(msg, "unknown command") {
-		return "unknown_command", msg, "run 'anycap --help' for available commands", ""
+		return "unknown_command", msg, "run 'anycap --help' for available commands, or 'anycap feedback' to request a feature", ""
 	}
 	if strings.Contains(msg, "required flag") ||
 		strings.Contains(msg, "flags in the group") ||
@@ -89,4 +98,71 @@ func feedbackHint(requestID string) string {
 		return fmt.Sprintf("server error; report with: anycap feedback --type bug -m '<describe>' --request-id '%s'", requestID)
 	}
 	return "server error; report with: anycap feedback --type bug -m '<describe>'"
+}
+
+// parseEndpointFromArgs scans os.Args for --endpoint before cobra runs.
+// Returns empty string if not found (ResolveEndpoint will use env/config/default).
+func parseEndpointFromArgs() string {
+	for i, arg := range os.Args {
+		if arg == "--endpoint" && i+1 < len(os.Args) {
+			return os.Args[i+1]
+		}
+		if strings.HasPrefix(arg, "--endpoint=") {
+			return strings.TrimPrefix(arg, "--endpoint=")
+		}
+	}
+	return ""
+}
+
+// localOnlyCommands are commands that never need server connectivity.
+// All other invocations (including --help) do preflight feature sync.
+var localOnlyCommands = map[string]bool{
+	"config":     true,
+	"credential": true,
+	"skill":      true,
+	"update":     true,
+}
+
+// shouldSkipPreflight returns true only for purely local operations
+// that never contact the server.
+func shouldSkipPreflight() bool {
+	for _, arg := range os.Args[1:] {
+		if arg == "--version" || arg == "-v" {
+			return true
+		}
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		return localOnlyCommands[arg]
+	}
+	return false
+}
+
+// syncServerFeatures fetches the server's feature flags and applies them
+// to the local feature registry before the command tree is built.
+// Fails silently on any error so offline usage is not blocked.
+func syncServerFeatures(endpointOverride string) {
+	if shouldSkipPreflight() {
+		return
+	}
+
+	endpoint := config.ResolveEndpoint(endpointOverride)
+	client := httpclient.New(endpoint)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	resp, err := client.Get(ctx, "/v1/features")
+	if err != nil {
+		return
+	}
+
+	var env struct {
+		Data struct {
+			Features map[string]bool `json:"features"`
+		} `json:"data"`
+	}
+	if json.Unmarshal(resp.Body, &env) == nil && env.Data.Features != nil {
+		feature.SetAll(env.Data.Features)
+	}
 }

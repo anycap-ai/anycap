@@ -9,7 +9,6 @@
 package feature
 
 import (
-	"os"
 	"strings"
 	"sync"
 )
@@ -30,21 +29,23 @@ const (
 	VideoRead     = "video.read"
 	MusicGenerate = "music.generate"
 	MusicModels   = "music.models"
-	Login         = "login"
+	Drive         = "drive"
+	Page          = "page"
 )
 
 // defaults defines the code-level default state for each feature.
 // Features not listed here default to false.
 var defaults = map[string]bool{
-	ImageGenerate: true, // CLI exposes commands; server returns error if not ready
-	ImageModels:   true, // CLI exposes commands; server returns error if not ready
-	ImageRead:     true, // agent-platform real implementation
-	VideoGenerate: true, // CLI exposes commands; server returns error if not ready
-	VideoModels:   true, // CLI exposes commands; server returns error if not ready
-	VideoRead:     true, // agent-platform real implementation
-	MusicGenerate: true, // CLI exposes commands; server returns error if not ready
-	MusicModels:   true, // CLI exposes commands; server returns error if not ready
-	Login:         true, // auth flow (stub but expected soon)
+	ImageGenerate: true,
+	ImageModels:   true,
+	ImageRead:     true,
+	VideoGenerate: true,
+	VideoModels:   true,
+	VideoRead:     true,
+	MusicGenerate: true,
+	MusicModels:   true,
+	Drive:         true,
+	Page:          true,
 }
 
 var (
@@ -76,11 +77,13 @@ func parseLDFlags() {
 
 // Enabled reports whether the named feature is enabled.
 //
-// Resolution order: runtime > env > ldflags > defaults.
+// Resolution order: runtime (server preflight) > ldflags > defaults.
+// Environment variables are NOT checked here -- feature availability
+// for the CLI is determined by the server via preflight, not local env.
 func Enabled(name string) bool {
 	ensureInit()
 
-	// 1. Runtime override (server-pushed config).
+	// 1. Runtime override (server-pushed config via preflight SetAll).
 	mu.RLock()
 	if v, ok := runtimeM[name]; ok {
 		mu.RUnlock()
@@ -88,13 +91,7 @@ func Enabled(name string) bool {
 	}
 	mu.RUnlock()
 
-	// 2. Environment variable: ANYCAP_FEATURE_IMAGE_GENERATE for "image.generate".
-	envKey := "ANYCAP_FEATURE_" + strings.ToUpper(strings.ReplaceAll(name, ".", "_"))
-	if v := os.Getenv(envKey); v != "" {
-		return v == "true" || v == "1"
-	}
-
-	// 3. Compile-time ldflags override.
+	// 2. Compile-time ldflags override.
 	if v, ok := ldflagsM[name]; ok {
 		return v
 	}
