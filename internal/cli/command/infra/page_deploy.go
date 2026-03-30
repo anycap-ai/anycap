@@ -141,7 +141,7 @@ func collectPageDeployFiles(rootDir string) ([]pageDeployFile, error) {
 		}
 		return []pageDeployFile{{
 			AbsolutePath: rootDir,
-			AssetPath:    filepath.Base(rootDir),
+			AssetPath:    "index.html",
 			Size:         info.Size(),
 			ContentType:  "text/html",
 		}}, nil
