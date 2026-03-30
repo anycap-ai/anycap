@@ -72,13 +72,13 @@ anycap skill check --target ~/.agents/skills/anycap-cli/SKILL.md
 
 ## Capabilities
 
-| Capability          | Command                           | Description                        |
-| ------------------- | --------------------------------- | ---------------------------------- |
-| Image Generation    | `anycap image generate`           | Generate images from text prompts  |
-| Video Generation    | `anycap video generate`           | Generate videos from text or image |
-| Image Understanding | `anycap actions image-understand` | Analyze images using vision models |
-| Video Analysis      | `anycap actions video-read`       | Analyze video content              |
-| File Download       | `anycap download`                 | Download any remote file locally   |
+| Capability       | Command                     | Description                        |
+| ---------------- | --------------------------- | ---------------------------------- |
+| Image Generation | `anycap image generate`     | Generate images from text prompts  |
+| Video Generation | `anycap video generate`     | Generate videos from text or image |
+| Image Read       | `anycap actions image-read` | Analyze images using vision models |
+| Video Analysis   | `anycap actions video-read` | Analyze video content              |
+| File Download    | `anycap download`           | Download any remote file locally   |
 
 More capabilities coming soon — music, TTS, web search, web crawling.
 

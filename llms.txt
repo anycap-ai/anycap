@@ -1,6 +1,6 @@
 # AnyCap — Capability Runtime for AI Agents
 
-One CLI. Any capability. Image generation, video generation, image understanding, video analysis, and more.
+One CLI. Any capability. Image generation, video generation, image read, video analysis, and more.
 
 ## Step 1: Install CLI
 
