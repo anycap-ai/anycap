@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Inter } from "next/font/google";
 import { Footer } from "@/components/Footer";
-import { Header, seoNavLinks } from "@/components/Header";
+import { Header, humanNavLinks } from "@/components/Header";
 import { AuthNav } from "@/components/AuthNav";
 import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
 
@@ -21,10 +21,10 @@ export function SeoShell({ children }: { children: React.ReactNode }) {
       <LazyGrainOverlay />
 
       <Header
-        links={seoNavLinks}
+        links={humanNavLinks}
         authSlot={
           <Suspense fallback={null}>
-            <AuthNav variant="seo" />
+            <AuthNav variant="human" />
           </Suspense>
         }
       />
