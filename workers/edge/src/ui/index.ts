@@ -5,3 +5,4 @@ export type { PasswordPageOptions } from "./password";
 export { renderErrorPage } from "./error";
 export { getRenderMode, formatFileSize } from "./helpers";
 export type { RenderMode } from "./helpers";
+export { injectPageBadge } from "./badge";
