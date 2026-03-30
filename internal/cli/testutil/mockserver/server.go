@@ -68,6 +68,7 @@ func New() *Server {
 	s.mux.HandleFunc("PUT /mock/upload/", s.handleMockUpload)
 	s.mux.HandleFunc("POST /v1/capabilities/image/read", s.handleImageRead)
 	s.mux.HandleFunc("POST /v1/capabilities/video/read", s.handleVideoRead)
+	s.mux.HandleFunc("POST /v1/capabilities/audio/read", s.handleAudioRead)
 
 	// Image generation
 	s.mux.HandleFunc("GET /v1/image/models", s.handleImageModels)
@@ -405,6 +406,40 @@ func (s *Server) handleVideoRead(w http.ResponseWriter, r *http.Request) {
 			"total_tokens":  5200,
 		},
 		"duration_ms": 500,
+	})
+}
+
+// --- Capabilities: Audio Read ---
+
+func (s *Server) handleAudioRead(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		URL         string `json:"url"`
+		Instruction string `json:"instruction"`
+		Model       string `json:"model"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+	if req.URL == "" {
+		writeError(w, http.StatusUnprocessableEntity, "MISSING_INPUT", "url is required")
+		return
+	}
+
+	content := "This is a mock audio analysis result."
+	if req.Instruction != "" {
+		content = fmt.Sprintf("Mock audio analysis for instruction: %s", req.Instruction)
+	}
+
+	writeSuccess(w, map[string]any{
+		"content": content,
+		"model":   "mock-audio-model",
+		"usage": map[string]int{
+			"input_tokens":  3000,
+			"output_tokens": 150,
+			"total_tokens":  3150,
+		},
+		"duration_ms": 300,
 	})
 }
 

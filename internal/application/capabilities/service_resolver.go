@@ -63,6 +63,24 @@ func (s *Service) resolveVideoInput(ctx context.Context, spaceID int64, userID s
 	return resolvedReq, artifacts, nil
 }
 
+func (s *Service) resolveAudioInput(ctx context.Context, spaceID int64, userID string, req model.AudioReadRequest) (model.AudioReadRequest, []model.CapsTaskArtifact, error) {
+	resolvedReq := req
+	artifacts := make([]model.CapsTaskArtifact, 0, 1)
+	if strings.TrimSpace(req.URL) == "" {
+		return resolvedReq, artifacts, nil
+	}
+
+	resolvedURL, artifact, err := s.resolveInputURL(ctx, spaceID, userID, req.URL)
+	if err != nil {
+		return model.AudioReadRequest{}, nil, err
+	}
+	resolvedReq.URL = resolvedURL
+	artifact.Role = model.CapsTaskArtifactRoleInput
+	artifact.Position = 0
+	artifacts = append(artifacts, artifact)
+	return resolvedReq, artifacts, nil
+}
+
 func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, rawURL string) (string, model.CapsTaskArtifact, error) {
 	trimmedURL := strings.TrimSpace(rawURL)
 	artifact := model.CapsTaskArtifact{

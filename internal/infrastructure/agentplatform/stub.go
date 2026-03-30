@@ -58,3 +58,21 @@ func (c *StubClient) VideoRead(_ context.Context, req model.VideoReadRequest) (m
 		DurationMs: 1,
 	}, nil
 }
+
+func (c *StubClient) AudioRead(_ context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+	instruction := req.Instruction
+	if instruction == "" {
+		instruction = "Describe this audio"
+	}
+
+	return model.UnderstandResult{
+		Content: fmt.Sprintf("[stub] Analyzed audio from %s. Instruction: %q. This is a placeholder response for local development.", req.URL, instruction),
+		Model:   "stub",
+		Usage: model.Usage{
+			InputTokens:  40,
+			OutputTokens: 25,
+			TotalTokens:  65,
+		},
+		DurationMs: 1,
+	}, nil
+}

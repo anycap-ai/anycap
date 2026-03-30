@@ -123,6 +123,34 @@ func TestVideoReadRequest_Validate(t *testing.T) {
 	}
 }
 
+func TestAudioReadRequest_Validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     AudioReadRequest
+		wantErr error
+	}{
+		{
+			name:    "valid url",
+			req:     AudioReadRequest{URL: "https://example.com/audio.mp3"},
+			wantErr: nil,
+		},
+		{
+			name:    "missing url",
+			req:     AudioReadRequest{},
+			wantErr: ErrMissingInput,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if err != tt.wantErr {
+				t.Errorf("Validate() = %v, want %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestPresignRequest_Validate(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -62,6 +62,19 @@ func buildVideoRequestMeta(req model.VideoReadRequest, inputCount int) map[strin
 	return meta
 }
 
+func buildAudioRequestMeta(req model.AudioReadRequest, inputCount int) map[string]any {
+	meta := map[string]any{
+		"input_count": inputCount,
+	}
+	if req.Model != "" {
+		meta["model"] = req.Model
+	}
+	if req.Instruction != "" {
+		meta["instruction_length"] = len(req.Instruction)
+	}
+	return meta
+}
+
 func buildUnderstandResultMeta(result model.UnderstandResult) map[string]any {
 	return map[string]any{
 		"model":       result.Model,

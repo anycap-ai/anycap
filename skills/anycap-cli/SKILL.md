@@ -2,10 +2,10 @@
 name: anycap-cli
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
-  image read, video analysis, music composition, text-to-speech,
+  image read, video analysis, audio analysis, music composition, text-to-speech,
   web search, web crawling, file download, static site hosting, and cloud
-  file storage. Use when the agent needs to generate images, analyze images
-  or video, produce audio/music, search or crawl the web, download remote
+  file storage. Use when the agent needs to generate images, analyze images,
+  video, or audio, produce audio/music, search or crawl the web, download remote
   files, deploy static sites, or store and share files. Also use when the
   agent needs to authenticate with AnyCap (login, API key, credentials),
   or when encountering errors from AnyCap to submit feedback via
@@ -100,7 +100,7 @@ Read [references/music-generation.md](references/music-generation.md) when you n
 **Long-running commands:** Image generation typically takes 5-30 seconds, video generation 30-120 seconds, and music generation 30-90 seconds. If your runtime supports background or async execution (e.g., spawning subprocesses, background tasks, non-blocking tool calls), prefer running generation commands asynchronously so you can continue other work while waiting. Generation commands are self-contained -- they block until complete and write the result file locally, so they are safe to run in the background without supervision.
 
 **Actions** -- AI-powered operations on existing content.
-Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
+Read [references/actions.md](references/actions.md) when you need to understand images, read videos, analyze audio, or perform other AI actions on existing files or URLs.
 
 **Coming soon:**
 

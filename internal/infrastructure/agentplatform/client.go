@@ -117,6 +117,22 @@ func (c *Client) VideoRead(ctx context.Context, req model.VideoReadRequest) (mod
 	return c.doCapabilitiesRequest(ctx, "/api/v1/capabilities/video/read", body)
 }
 
+// AudioRead calls POST /api/v1/capabilities/audio/read.
+func (c *Client) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+	body := map[string]any{}
+	if req.URL != "" {
+		body["url"] = req.URL
+	}
+	if req.Instruction != "" {
+		body["instruction"] = req.Instruction
+	}
+	if req.Model != "" {
+		body["model"] = req.Model
+	}
+
+	return c.doCapabilitiesRequest(ctx, "/api/v1/capabilities/audio/read", body)
+}
+
 func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body map[string]any) (model.UnderstandResult, error) {
 	payload, err := json.Marshal(body)
 	if err != nil {

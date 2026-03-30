@@ -29,6 +29,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g.POST("/presign", h.Presign)
 	g.POST("/image/read", h.ImageRead)
 	g.POST("/video/read", h.VideoRead)
+	g.POST("/audio/read", h.AudioRead)
 }
 
 // presignResponse is the public API shape for presign results.
@@ -125,6 +126,33 @@ func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.VideoRead(reqCtx, req)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		code, errCode, msg := classifyCapError(err)
+		handlers.WriteError(ctx, code, errCode, msg)
+		return
+	}
+
+	handlers.WriteSuccess(ctx, result)
+}
+
+func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		return
+	}
+	reqCtx, ok := userRequestContext(c, ctx)
+	if !ok {
+		return
+	}
+
+	var req model.AudioReadRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		return
+	}
+
+	result, err := h.service.AudioRead(reqCtx, req)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
