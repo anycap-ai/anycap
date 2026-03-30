@@ -8,6 +8,7 @@ import type { Env, PageHostRecord } from "./types";
 import { notFoundPage } from "./response";
 import { renderErrorPage, renderPasswordPage } from "./ui";
 import { guessContentType } from "./mime";
+import { injectPageBadge } from "./ui/badge";
 
 const PAGE_SESSION_COOKIE = "ac_page_auth";
 
@@ -145,10 +146,18 @@ async function servePageAsset(
 			if (!object || !object.body) {
 				continue;
 			}
+			const contentType = object.httpMetadata?.contentType || guessContentType(relativePath);
+			const isHTML = contentType.startsWith("text/html");
 			const headers = new Headers();
-			headers.set("content-type", object.httpMetadata?.contentType || guessContentType(relativePath));
+			headers.set("content-type", contentType);
 			if (object.httpEtag) {
 				headers.set("etag", object.httpEtag);
+			}
+			if (isHTML) {
+				const html = await new Response(object.body).text();
+				const injected = injectPageBadge(html);
+				headers.set("content-length", String(new TextEncoder().encode(injected).byteLength));
+				return new Response(injected, { status: 200, headers });
 			}
 			if (object.size >= 0) {
 				headers.set("content-length", String(object.size));
