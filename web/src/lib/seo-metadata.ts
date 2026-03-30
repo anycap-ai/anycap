@@ -12,18 +12,14 @@ export const defaultSocialImage = {
   alt: DEFAULT_SOCIAL_IMAGE_ALT,
 } as const;
 
-function isCloudflarePagesPreviewDeployment() {
-  return (process.env.CF_PAGES_URL || "").toLowerCase().includes(".pages.dev");
-}
-
-function isCloudflareProductionBranch() {
+function isCloudflarePreviewDeployment() {
   const branch = (process.env.CF_PAGES_BRANCH || "").toLowerCase();
-  return !branch || branch === "main";
+  return Boolean(branch && branch !== "main");
 }
 
-function isVercelProductionDeployment() {
+function isVercelPreviewDeployment() {
   const env = (process.env.VERCEL_ENV || "").toLowerCase();
-  return !env || env === "production";
+  return Boolean(env && env !== "production");
 }
 
 export function shouldAllowIndexing() {
@@ -31,15 +27,13 @@ export function shouldAllowIndexing() {
     return false;
   }
 
-  if (!isVercelProductionDeployment()) {
+  // Preview runtimes reliably expose branch/env markers, but Cloudflare production
+  // deployments can still report a `.pages.dev` URL alongside the custom domain.
+  if (isVercelPreviewDeployment()) {
     return false;
   }
 
-  if (!isCloudflareProductionBranch()) {
-    return false;
-  }
-
-  if (isCloudflarePagesPreviewDeployment()) {
+  if (isCloudflarePreviewDeployment()) {
     return false;
   }
 
