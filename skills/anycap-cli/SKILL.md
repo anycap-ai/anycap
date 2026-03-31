@@ -106,6 +106,15 @@ All generation capabilities (image, video, music) follow the same three-step pat
 
 Generated files are auto-downloaded to the current directory. Always use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 
+**Local file upload:** For parameters that accept files (e.g., reference images for image-to-image or image-to-video), you can pass a local file path directly. The CLI automatically uploads it and substitutes the URL. A single path for an array parameter is auto-wrapped into an array.
+
+```bash
+# Instead of constructing a JSON URL array:
+#   --param images='["https://example.com/photo.jpg"]'
+# Just pass the local path:
+  --param images=/path/to/photo.png
+```
+
 | Capability | Reference | Modes | Typical duration |
 |------------|-----------|-------|------------------|
 | Image | [generation.md](references/generation.md) | `text-to-image`, `image-to-image` | 5-30s |
@@ -221,8 +230,8 @@ anycap image generate --prompt "..." --model seedream-5 -o descriptive-name.png 
 # Generate a video (text-to-video, mode inferred) and get its path
 anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
 
-# Generate a video with explicit mode (image-to-video)
-anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images='["https://example.com/photo.jpg"]' -o animated.mp4 | jq -r '.local_path'
+# Generate a video with explicit mode (image-to-video, local file auto-uploaded)
+anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
 
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'

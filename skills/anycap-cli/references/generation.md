@@ -105,14 +105,24 @@ anycap image generate \
   --param aspect_ratio=16:9
 ```
 
-Image-to-image with explicit mode:
+Image-to-image with explicit mode (local file -- auto-uploaded):
 
 ```bash
 anycap image generate \
   --prompt "make it look like a watercolor painting" \
   --model seedream-5 \
   --mode image-to-image \
-  --param images='["https://example.com/photo.jpg"]'
+  --param images=/path/to/photo.png
+```
+
+Image-to-image with a remote URL:
+
+```bash
+anycap image generate \
+  --prompt "make it look like a watercolor painting" \
+  --model seedream-5 \
+  --mode image-to-image \
+  --param images=https://example.com/photo.jpg
 ```
 
 Save to a specific path:
@@ -145,6 +155,7 @@ Values are auto-parsed as JSON when possible:
 | `--param hd=true` | boolean `true` |
 | `--param negative_prompt="blurry"` | string `"blurry"` |
 | `--param images='["url1","url2"]'` | array `["url1","url2"]` |
+| `--param images=/path/to/file.png` | local file (auto-uploaded, wrapped to array) |
 
 ### Output Format
 
@@ -190,11 +201,11 @@ anycap image generate \
 # Check image-to-image parameters
 anycap image models seedream-5 schema --mode image-to-image
 
-# Generate image-to-image
+# Generate image-to-image (local file)
 anycap image generate \
   --prompt "colorize this sketch" \
   --model seedream-5 \
   --mode image-to-image \
-  --param images='["https://example.com/sketch.png"]' \
+  --param images=./sketch.png \
   -o colorized.png
 ```
