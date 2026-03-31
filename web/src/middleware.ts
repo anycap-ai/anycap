@@ -70,15 +70,12 @@ export async function middleware(req: NextRequest) {
     return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
   }
 
-  if (normalizedPath === "/") {
+  if (pathname === "/") {
     const accept = req.headers.get("accept") ?? "";
     if (!accept.includes("text/html")) {
-      return applyAuthResponse(
-        new NextResponse(markdown, {
-          headers: { "content-type": "text/plain; charset=utf-8" },
-        }),
-        authResponse,
-      );
+      return new Response(markdown, {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
     }
   }
 
