@@ -2,15 +2,17 @@
 name: anycap-cli
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
-  image understanding, video analysis, music composition, text-to-speech,
-  web search, web crawling, file download, and more. Use when the agent needs
-  to generate images, analyze images or video, produce audio/music, search or
-  crawl the web, or download remote files. Also use when the agent needs to
-  authenticate with AnyCap (login, API key, credentials), or when encountering
-  errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on
-  mentions of AnyCap, multimodal capabilities, or AI-generated media.
+  image read, video analysis, audio analysis, music composition, text-to-speech,
+  web search, web crawling, file download, static site hosting, and cloud
+  file storage. Use when the agent needs to generate images, analyze images,
+  video, or audio, produce audio/music, search or crawl the web, download remote
+  files, deploy static sites, or store and share files. Also use when the
+  agent needs to authenticate with AnyCap (login, API key, credentials),
+  or when encountering errors from AnyCap to submit feedback via
+  'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities,
+  AI-generated media, page hosting, or drive storage.
 metadata:
-  version: 0.0.3
+  version: 0.0.4
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -88,18 +90,48 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 
 ## Capabilities
 
-AnyCap capabilities are organized into two groups:
+AnyCap capabilities are organized into two groups: **generation** (create new content) and **actions** (AI operations on existing content).
 
-**Generation** -- create new content from prompts.
-Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
-Read [references/video-generation.md](references/video-generation.md) when you need to generate videos. Videos are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o product-demo.mp4`). Supports text-to-video and image-to-video via `--reference-image`.
+### Generation Workflow
+
+Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`, `edit`) as CLI subcommands:
+
+```
+1. Discover models    anycap {cap} models
+2. Check schema       anycap {cap} models <model> schema [--operation <op>] [--mode <mode>]
+3. Run operation      anycap {cap} {operation} --model <model> [--mode <mode>] --prompt "..."
+```
+
+**Operations** are the top-level actions (generate, edit, etc.). Which operations a model supports is defined in the catalog.
+
+**Modes** describe the input/output modality within an operation (e.g., `text-to-image`, `image-to-image`). When only one mode exists, it is inferred automatically.
+
+Generated files are auto-downloaded to the current directory. Always use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
+
+**Local file upload:** For parameters that accept files (e.g., reference images), pass a local file path directly. The CLI auto-uploads it. If a file does not exist, the CLI returns an error.
+
+```bash
+# Instead of constructing a JSON URL array:
+#   --param images='["https://example.com/photo.jpg"]'
+# Just pass the local path:
+  --param images=/path/to/photo.png
+```
+
+| Capability | Reference | Operations | Typical duration |
+|------------|-----------|------------|------------------|
+| Image | [generation.md](references/generation.md) | `generate`, `edit` | 5-30s |
+| Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
+| Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
+
+Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
+
+If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
 **Actions** -- AI-powered operations on existing content.
-Read [references/actions.md](references/actions.md) when you need to understand images, read videos, or perform other AI actions on existing files or URLs.
+Read [references/actions.md](references/actions.md) when you need to understand images, read videos, analyze audio, or perform other AI actions on existing files or URLs.
 
 **Coming soon:**
 
-- Music composition (text-to-music)
 - Text-to-speech / voice synthesis
 - Web search and web crawling
 
@@ -109,6 +141,29 @@ Use `anycap feedback --type feature` to request prioritization of upcoming capab
 
 ```bash
 anycap download <url> [-o path]
+```
+
+## Infrastructure
+
+AnyCap provides infrastructure services for agents to host content and store files.
+
+**Page Hosting** -- deploy static sites to AnyCap's edge network.
+Read [references/page.md](references/page.md) when you need to deploy HTML files, static sites, or generated reports. Sites get a unique URL and support versioning, rollback, and badge opt-out.
+
+```bash
+# Quick deploy (writes anycap.toml for future deploys)
+anycap page deploy ./dist --name "My Site" --publish
+
+# Subsequent deploys read site from anycap.toml
+anycap page deploy ./dist --publish
+```
+
+**Drive Storage** -- upload, organize, and share files.
+Read [references/drive.md](references/drive.md) when you need to upload files, create folders, or generate share links.
+
+```bash
+anycap drive upload result.pdf --parent-path /reports
+anycap drive share --src-path /reports/result.pdf
 ```
 
 ## Feedback
@@ -125,12 +180,12 @@ anycap feedback --type other -m "schema for model Y is missing aspect_ratio"
 
 Options:
 
-| Flag            | Required | Description                                               |
-| --------------- | -------- | --------------------------------------------------------- |
-| `--type`        | yes      | `bug`, `feature`, or `other`                              |
-| `-m, --message` | yes      | Description of the issue or idea                          |
-| `--request-id`  | no       | Request ID from a previous command (found in JSON output) |
-| `--context`     | no       | Additional context as JSON                                |
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--type` | yes | `bug`, `feature`, or `other` |
+| `-m, --message` | yes | Description of the issue or idea |
+| `--request-id` | no | Request ID from a previous command (found in JSON output) |
+| `--context` | no | Additional context as JSON |
 
 When to submit feedback:
 
@@ -168,32 +223,44 @@ anycap status | jq -r '.status'
 # List available model IDs
 anycap image models | jq -r '.models[].model'
 
-# Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.png | jq -r '.local_path'
+# List modes for a model
+anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
 
-# Generate a video and get its path
-anycap video generate --prompt "..." --model wan-2.1 -o clip.mp4 | jq -r '.local_path'
+# Get the local file path from a generate response (use -o for a descriptive name)
+anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
+
+# Edit an existing image
+anycap image edit --prompt "remove the background" --model seedream-5 --param images=./photo.png -o edited.png | jq -r '.local_path'
+
+# Generate a video (text-to-video, mode inferred) and get its path
+anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
+
+# Generate a video with explicit mode (image-to-video, local file auto-uploaded)
+anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
+
+# Generate music and get the first audio path
+anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
 
 # Extract content from an action response
-anycap actions image-understand --url https://example.com/photo.jpg | jq -r '.content'
+anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'
 
 # Get the error message on failure
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model flux-schnell | jq -r '.request_id')
+REQ_ID=$(anycap image generate --prompt "..." --model seedream-5 | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 
 Common jq patterns:
 
-| Pattern                        | Purpose                                 |
-| ------------------------------ | --------------------------------------- |
-| `jq -r '.field'`               | Extract a string field (raw, no quotes) |
-| `jq -r '.local_path'`          | Get downloaded file path from generate  |
-| `jq -r '.models[].model'`      | List all values of a field in an array  |
-| `jq -e '.status == "success"'` | Check condition (exit code 1 if false)  |
-| `jq -r '.message // empty'`    | Extract error message if present        |
+| Pattern | Purpose |
+|---------|----------|
+| `jq -r '.field'` | Extract a string field (raw, no quotes) |
+| `jq -r '.local_path'` | Get downloaded file path from generate |
+| `jq -r '.models[].model'` | List all values of a field in an array |
+| `jq -e '.status == "success"'` | Check condition (exit code 1 if false) |
+| `jq -r '.message // empty'` | Extract error message if present |
 
 ## Keeping Up to Date
 

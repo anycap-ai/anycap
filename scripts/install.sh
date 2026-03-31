@@ -148,7 +148,6 @@ download_and_install() {
     archive="anycap_${version}_${OS}_${ARCH}.tar.gz"
   fi
 
-  local tmpdir
   tmpdir=$(mktemp -d) || abort "Failed to create temp directory"
   trap 'rm -rf "$tmpdir"' EXIT
 
