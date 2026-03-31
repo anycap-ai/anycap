@@ -13,11 +13,11 @@ Complete reference for AnyCap CLI commands, authentication methods, configuratio
 
 These flags apply to all commands:
 
-| Flag | Description |
-|------|-------------|
+| Flag               | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
 | `--endpoint <url>` | Override the server endpoint (default: `https://api.anycap.ai`) |
-| `--verbose` | Enable verbose output (debug logs to stderr) |
-| `-v, --version` | Print CLI version |
+| `--verbose`        | Enable verbose output (debug logs to stderr)                    |
+| `-v, --version`    | Print CLI version                                               |
 
 The endpoint is resolved with this precedence: `--endpoint` flag > `ANYCAP_API_ENDPOINT` env > config file > built-in default.
 
@@ -126,11 +126,11 @@ Config file: `~/.anycap/config.toml`
 
 ### Available Keys
 
-| Key | Type | Default | Env Override | Description |
-|-----|------|---------|-------------|-------------|
-| `endpoint` | string | `https://api.anycap.ai` | `ANYCAP_API_ENDPOINT` | Server endpoint URL |
-| `auto_update` | bool | `true` | `ANYCAP_NO_UPDATE` (any value to disable) | Auto-update CLI from GitHub Releases |
-| `feedback` | bool | `true` | -- | Enable the `feedback` command |
+| Key           | Type   | Default                 | Env Override                              | Description                          |
+| ------------- | ------ | ----------------------- | ----------------------------------------- | ------------------------------------ |
+| `endpoint`    | string | `https://api.anycap.ai` | `ANYCAP_API_ENDPOINT`                     | Server endpoint URL                  |
+| `auto_update` | bool   | `true`                  | `ANYCAP_NO_UPDATE` (any value to disable) | Auto-update CLI from GitHub Releases |
+| `feedback`    | bool   | `true`                  | --                                        | Enable the `feedback` command        |
 
 ### Config Commands
 
@@ -203,9 +203,9 @@ anycap feedback --type feature -m "support batch generation"
 anycap feedback --type other -m "schema missing aspect_ratio for model X"
 ```
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--type` | yes | `bug`, `feature`, or `other` |
-| `-m, --message` | yes | Description |
-| `--request-id` | no | Request ID from a previous command |
-| `--context` | no | Additional context as JSON |
+| Flag            | Required | Description                        |
+| --------------- | -------- | ---------------------------------- |
+| `--type`        | yes      | `bug`, `feature`, or `other`       |
+| `-m, --message` | yes      | Description                        |
+| `--request-id`  | no       | Request ID from a previous command |
+| `--context`     | no       | Additional context as JSON         |
