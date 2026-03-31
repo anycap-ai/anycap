@@ -123,7 +123,7 @@ export default function ModelsPage() {
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg"
                   style={mono}
                 >
-                  All Capabilities
+                  Any Capability
                 </Link>
                 <Link
                   href="/guides/context-engineering-for-agents"

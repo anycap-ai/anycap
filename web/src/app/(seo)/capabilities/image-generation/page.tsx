@@ -352,7 +352,7 @@ export default function ImageGenerationPage() {
                 className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg"
                 style={mono}
               >
-                All Capabilities
+                Any Capability
               </Link>
               <Link
                 href="/for/claude-code"

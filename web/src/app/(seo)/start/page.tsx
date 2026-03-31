@@ -99,7 +99,7 @@ const gapEntrances = [
   },
   {
     eyebrow: "Capability hub",
-    title: "Browse all capabilities",
+    title: "Browse any capability",
     href: "/capabilities",
     summary: "Use this when you already know you want image, video, or vision APIs for your agent.",
   },
@@ -275,7 +275,7 @@ export default function StartPage() {
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                   style={mono}
                 >
-                  All Capabilities
+                  Any Capability
                 </Link>
                 <Link
                   href="/for/claude-code"
