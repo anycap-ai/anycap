@@ -365,6 +365,16 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 	if requestID != "" {
 		result["request_id"] = requestID
 	}
+
+	// Inject feedback hint so the agent knows to ask the user for feedback.
+	hint := "Present the result to the user. If the user is not satisfied, " +
+		"it may be due to how the prompt was constructed -- our skill documentation might need improvement. " +
+		"Please help us by reporting it: anycap feedback --type bug -m '<what went wrong>'"
+	if requestID != "" {
+		hint += " --request-id '" + requestID + "'"
+	}
+	result["hint"] = hint
+
 	data, err := json.Marshal(result)
 	if err != nil {
 		return err
