@@ -13,7 +13,7 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-const capabilities = ["Image", "Video", "Music", "Speech", "Search", "Crawl"];
+const capabilities = ["Image", "Video", "Music", "Voice", "Vision", "Pages"];
 
 export default function ForHumanPage() {
   return (
@@ -65,10 +65,9 @@ export default function ForHumanPage() {
               </span>
             </h1>
             <p className="mt-5 hidden max-w-[700px] text-base leading-7 text-[#4d5145] md:block md:text-lg">
-              AnyCap gives teams a capability layer for their agents. Instead of wiring
-              a new SDK, provider account, and auth flow for every missing workflow, you
-              install one runtime and unlock image, video, vision, and more through the
-              same command surface.
+              Your agent can reason and code, but it can&apos;t create images, produce
+              videos, or publish sites. AnyCap gives it any capability it&apos;s
+              missing&nbsp;&mdash; with one install.
             </p>
             <div className="mt-8 md:mt-8">
               <LazyEquipAgent style={mono} />
@@ -90,12 +89,12 @@ export default function ForHumanPage() {
       <FadeIn from="right" className="mt-16 flex justify-end px-8 md:mt-28 md:px-16 lg:px-24">
         <div className="max-w-[520px] border-r-[3px] border-[#1c1f17] pr-6 text-right md:pr-8">
           <p className="text-lg leading-[1.65] text-[#3a3e32] md:text-[22px]">
-            It already reasons. It already plans.
+            It reasons. It plans. It writes code.
             <br />
-            What it still needs is capability execution.
+            Then you ask it to generate an image&nbsp;&mdash; and it stops.
           </p>
           <p className="mt-5 text-xl text-[#1c1f17] md:text-[24px]" style={pixel}>
-            <ScrambleText text="AnyCap supplies the layer." speed={20} ticks={2} />
+            <ScrambleText text="AnyCap picks up where it left off." speed={20} ticks={2} />
           </p>
         </div>
       </FadeIn>
@@ -105,13 +104,13 @@ export default function ForHumanPage() {
           className="mb-4 tracking-[1px] text-[#c8d4a0] line-through md:tracking-[1px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
-          SDK&nbsp;&nbsp;&nbsp;DOCS&nbsp;&nbsp;&nbsp;DASHBOARD&nbsp;&nbsp;&nbsp;UI
+          CAN&apos;T&nbsp;SEE&nbsp;&nbsp;&nbsp;CAN&apos;T&nbsp;HEAR&nbsp;&nbsp;&nbsp;CAN&apos;T&nbsp;CREATE&nbsp;&nbsp;&nbsp;CAN&apos;T&nbsp;PUBLISH
         </p>
         <p
           className="tracking-[1px] text-[#1c1f17] md:tracking-[1px]"
           style={{ ...pixel, fontSize: "clamp(14px, 2.2vw, 24px)" }}
         >
-          <ScrambleText text="ONE COMMAND. ONE RESULT. DONE." speed={20} ticks={2} />
+          <ScrambleText text="NOW IT CAN." speed={20} ticks={2} />
         </p>
       </FadeIn>
 
@@ -125,14 +124,14 @@ export default function ForHumanPage() {
             className="mb-6 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(28px, 4.5vw, 60px)" }}
           >
-            One runtime for
+            Any capability
             <br />
-            every missing capability.
+            your agent was missing.
           </p>
         </FadeIn>
         <FadeIn delay={200}>
           <p className="text-xl text-[#6b7d3a] md:text-2xl" style={mono}>
-            Image. Video. Vision. Search. Crawl. Voice.
+            Image. Video. Music. Voice. Vision. Pages.
           </p>
         </FadeIn>
       </section>
@@ -162,9 +161,9 @@ export default function ForHumanPage() {
             className="text-right text-[11px] tracking-[0.8px] text-[#9a9e90]"
             style={mono}
           >
-            Same interface.
+            One install.
             <br />
-            Always.
+            All of this.
           </p>
         </div>
       </section>
@@ -180,15 +179,16 @@ export default function ForHumanPage() {
               className="leading-[1.3] text-[#6b7d3a]"
               style={{ ...pixel, fontSize: "clamp(22px, 3.5vw, 40px)" }}
             >
-              The interface should stay the same even when the capability changes.
+              We believe agents shouldn&apos;t stop at &ldquo;I can&apos;t do that.&rdquo;
             </p>
           </div>
         </FadeIn>
         <FadeIn delay={200}>
           <p className="mt-12 max-w-[640px] text-xl leading-[1.7] text-[#3a3e32] md:mt-16 md:text-2xl">
-            No provider-by-provider SDK maze. No per-capability auth sprawl. No dashboard-first
-            product pretending to be agent infrastructure. Your agent calls one runtime and keeps
-            moving.
+            Today&apos;s agents learned to think. But thinking is only part of getting
+            things done. They can&apos;t generate images, produce videos, store files, or
+            publish pages. These real-world capabilities are the last mile between what
+            your agent plans and what it actually delivers. We&apos;re building that last mile.
           </p>
         </FadeIn>
       </section>
@@ -203,9 +203,9 @@ export default function ForHumanPage() {
             className="mb-14 leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
             style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
           >
-            Start with the first
+            Let your agent finish
             <br />
-            missing capability.
+            what it started.
           </p>
         </FadeIn>
         <FadeIn delay={300}>
