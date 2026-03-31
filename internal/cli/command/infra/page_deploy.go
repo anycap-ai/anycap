@@ -31,6 +31,8 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 	var (
 		siteName     string
 		siteID       string
+		targetName   string
+		newSite      bool
 		publishAfter bool
 		concurrency  int
 	)
@@ -40,14 +42,21 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 		Short: "Deploy a local HTML file or static site directory as a page version",
 		Long: `Deploy a local HTML file or static site directory as a page version.
 
-  anycap page deploy index.html          Deploy a single HTML file
-  anycap page deploy ./dist/             Deploy a directory containing static assets
-  anycap page deploy ./dist --site pg_x  Deploy to an existing site by ID
-  anycap page deploy ./dist --name Docs  Deploy to a site by name (find or create)`,
+  anycap page deploy index.html                  Deploy a single HTML file
+  anycap page deploy ./dist/                     Deploy a directory containing static assets
+  anycap page deploy ./dist --page-id pg_x       Deploy to an existing site by ID
+  anycap page deploy ./dist --name Docs          Deploy to a site by name (find or create)
+  anycap page deploy ./dist --target preview     Deploy to a named target from anycap.toml
+  anycap page deploy ./dist --new --publish      Create a new site and deploy + publish
+  anycap page deploy ./dist --new --target beta  Create a new site saved as target "beta"`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Mutual exclusions
 			if siteID != "" && siteName != "" {
 				return fmt.Errorf("--site and --name cannot be used together")
+			}
+			if newSite && siteID != "" {
+				return fmt.Errorf("--new and --site cannot be used together")
 			}
 
 			rootDir := args[0]
@@ -65,47 +74,85 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 			projCfg, _ := projectconfig.Load()
 
 			var site pageSiteSummary
-			switch {
-			case siteID != "":
-				// --site flag: highest priority
-				resp, err := client.Get(cmd.Context(), "/v1/pages/"+siteID)
+			// saveTarget is the target name to persist; empty means save to default [page].
+			var saveTarget string
+
+			if newSite {
+				// --new: always create a new site
+				displayName := siteName
+				if displayName == "" {
+					displayName, err = randomSiteName()
+					if err != nil {
+						return err
+					}
+				}
+				site, err = createDeploySite(cmd.Context(), client, displayName)
 				if err != nil {
 					return err
 				}
-				site, err = decodeSuccessData[pageSiteSummary](resp)
-				if err != nil {
-					return err
+				// Determine target name for saving
+				if targetName != "" {
+					saveTarget = targetName
+				} else {
+					saveTarget = projectconfig.AutoTargetName()
 				}
-			case siteName != "":
-				// --name flag: second priority
-				site, err = ensureDeploySiteByName(cmd.Context(), client, siteName)
-				if err != nil {
-					return err
-				}
-			case projCfg.Page != nil && projCfg.Page.SiteID != "":
-				// anycap.toml [page].site_id
-				resp, err := client.Get(cmd.Context(), "/v1/pages/"+projCfg.Page.SiteID)
-				if err != nil {
-					return err
-				}
-				site, err = decodeSuccessData[pageSiteSummary](resp)
-				if err != nil {
-					return err
-				}
-			case projCfg.Page != nil && projCfg.Page.Name != "":
-				// anycap.toml [page].name
-				site, err = ensureDeploySiteByName(cmd.Context(), client, projCfg.Page.Name)
-				if err != nil {
-					return err
-				}
-			default:
-				randomName, err := randomSiteName()
-				if err != nil {
-					return err
-				}
-				site, err = createDeploySite(cmd.Context(), client, randomName)
-				if err != nil {
-					return err
+			} else {
+				switch {
+				case siteID != "":
+					// --site flag: highest priority
+					resp, err := client.Get(cmd.Context(), "/v1/pages/"+siteID)
+					if err != nil {
+						return err
+					}
+					site, err = decodeSuccessData[pageSiteSummary](resp)
+					if err != nil {
+						return err
+					}
+				case targetName != "":
+					// --target flag: lookup from config
+					resolvedID, _, err := projectconfig.ResolvePageTarget(projCfg, targetName)
+					if err != nil {
+						return err
+					}
+					resp, err := client.Get(cmd.Context(), "/v1/pages/"+resolvedID)
+					if err != nil {
+						return err
+					}
+					site, err = decodeSuccessData[pageSiteSummary](resp)
+					if err != nil {
+						return err
+					}
+				case siteName != "":
+					// --name flag
+					site, err = ensureDeploySiteByName(cmd.Context(), client, siteName)
+					if err != nil {
+						return err
+					}
+				case projCfg.Page != nil && projCfg.Page.SiteID != "":
+					// anycap.toml [page].site_id
+					resp, err := client.Get(cmd.Context(), "/v1/pages/"+projCfg.Page.SiteID)
+					if err != nil {
+						return err
+					}
+					site, err = decodeSuccessData[pageSiteSummary](resp)
+					if err != nil {
+						return err
+					}
+				case projCfg.Page != nil && projCfg.Page.Name != "":
+					// anycap.toml [page].name
+					site, err = ensureDeploySiteByName(cmd.Context(), client, projCfg.Page.Name)
+					if err != nil {
+						return err
+					}
+				default:
+					randomName, err := randomSiteName()
+					if err != nil {
+						return err
+					}
+					site, err = createDeploySite(cmd.Context(), client, randomName)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
@@ -168,17 +215,36 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 			// Auto-write anycap.toml with resolved site binding.
 			// Best-effort: deploy already succeeded, so a config write failure
 			// should not make the command appear to fail.
-			_ = projectconfig.SavePage(projectconfig.PageConfig{
-				SiteID: site.ID,
-				Name:   site.Name,
-			})
+			if saveTarget != "" {
+				// Save as named target (--new creates this path)
+				_ = projectconfig.SavePageTarget(saveTarget, projectconfig.PageTarget{
+					SiteID: site.ID,
+					Name:   site.Name,
+				})
+				payload["target"] = saveTarget
+			} else if targetName == "" {
+				// Save to default [page], preserving existing targets
+				var existingTargets map[string]projectconfig.PageTarget
+				if projCfg.Page != nil {
+					existingTargets = projCfg.Page.Targets
+				}
+				_ = projectconfig.SavePage(projectconfig.PageConfig{
+					SiteID:  site.ID,
+					Name:    site.Name,
+					Targets: existingTargets,
+				})
+			}
+			// When --target is used without --new, the target already has the
+			// correct site_id in config -- no save needed.
 
 			return writeFlatSuccess(stdout, requestID, payload)
 		},
 	}
 
 	cmd.Flags().StringVar(&siteName, "name", "", "Site display name (find or create)")
-	cmd.Flags().StringVar(&siteID, "site", "", "Existing site ID to deploy to")
+	cmd.Flags().StringVar(&siteID, "page-id", "", "Existing page site ID")
+	cmd.Flags().StringVar(&targetName, "target", "", "Named target from anycap.toml")
+	cmd.Flags().BoolVar(&newSite, "new", false, "Force create a new site")
 	cmd.Flags().BoolVar(&publishAfter, "publish", false, "Publish after deploy finalize")
 	cmd.Flags().IntVar(&concurrency, "concurrency", defaultDeployConcurrency, "Number of parallel upload workers (1-20)")
 
