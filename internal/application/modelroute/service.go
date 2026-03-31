@@ -38,10 +38,14 @@ func (s *Service) Create(ctx context.Context, input model.CreateModelRouteInput)
 	if s.repo == nil {
 		return nil, fmt.Errorf("model route repository is not configured")
 	}
-	if err := validateCreateInput(input); err != nil {
+	normalized, err := normalizeCreateInput(input)
+	if err != nil {
 		return nil, err
 	}
-	return s.repo.CreateModelRoute(ctx, normalizeCreateInput(input))
+	if err := validateCreateInput(normalized); err != nil {
+		return nil, err
+	}
+	return s.repo.CreateModelRoute(ctx, normalized)
 }
 
 func (s *Service) Update(ctx context.Context, id int64, input model.UpdateModelRouteInput) (*model.ModelRoute, error) {
@@ -51,10 +55,14 @@ func (s *Service) Update(ctx context.Context, id int64, input model.UpdateModelR
 	if id <= 0 {
 		return nil, fmt.Errorf("id must be greater than zero")
 	}
-	if err := validateUpdateInput(input); err != nil {
+	normalized, err := normalizeUpdateInput(input)
+	if err != nil {
 		return nil, err
 	}
-	return s.repo.UpdateModelRoute(ctx, id, normalizeUpdateInput(input))
+	if err := validateUpdateInput(normalized); err != nil {
+		return nil, err
+	}
+	return s.repo.UpdateModelRoute(ctx, id, normalized)
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {
@@ -96,6 +104,7 @@ func validateUpdateInput(input model.UpdateModelRouteInput) error {
 		Operation:   input.Operation,
 		AbilityKey:  input.AbilityKey,
 		AlgoType:    input.AlgoType,
+		Mode:        input.Mode,
 		DisplayName: input.DisplayName,
 		RouteType:   input.RouteType,
 		Region:      input.Region,
@@ -108,7 +117,14 @@ func validateUpdateInput(input model.UpdateModelRouteInput) error {
 	})
 }
 
-func normalizeCreateInput(input model.CreateModelRouteInput) model.CreateModelRouteInput {
+func normalizeCreateInput(input model.CreateModelRouteInput) (model.CreateModelRouteInput, error) {
+	normalizedMode, normalizedAlgoType, err := model.NormalizeModeAlgoTypePair(input.Mode, input.AlgoType)
+	if err != nil {
+		return model.CreateModelRouteInput{}, err
+	}
+	input.Mode = normalizedMode
+	input.AlgoType = normalizedAlgoType
+
 	if input.Status == "" {
 		input.Status = model.ModelRouteStatusActive
 	}
@@ -128,10 +144,17 @@ func normalizeCreateInput(input model.CreateModelRouteInput) model.CreateModelRo
 		enabled := true
 		input.Enabled = &enabled
 	}
-	return input
+	return input, nil
 }
 
-func normalizeUpdateInput(input model.UpdateModelRouteInput) model.UpdateModelRouteInput {
+func normalizeUpdateInput(input model.UpdateModelRouteInput) (model.UpdateModelRouteInput, error) {
+	normalizedMode, normalizedAlgoType, err := model.NormalizeModeAlgoTypePair(input.Mode, input.AlgoType)
+	if err != nil {
+		return model.UpdateModelRouteInput{}, err
+	}
+	input.Mode = normalizedMode
+	input.AlgoType = normalizedAlgoType
+
 	if input.Status == "" {
 		input.Status = model.ModelRouteStatusActive
 	}
@@ -151,7 +174,7 @@ func normalizeUpdateInput(input model.UpdateModelRouteInput) model.UpdateModelRo
 		enabled := true
 		input.Enabled = &enabled
 	}
-	return input
+	return input, nil
 }
 
 func isValidStatus(status string) bool {

@@ -45,5 +45,6 @@ next-env.d.ts
 /anycap-github
 /external
 
+.pnpm-store/
 # AnyCap
 anycap.toml
