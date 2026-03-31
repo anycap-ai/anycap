@@ -23,7 +23,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
+  return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;
 }
 
 function TransactionRow({ item }: { item: TimelineItem }) {
@@ -32,41 +32,34 @@ function TransactionRow({ item }: { item: TimelineItem }) {
   const positive = isCredit ? creditCentAmount >= 0 : false;
 
   return (
-    <tr className="border-b border-[#d4dbb8]/60">
-      <td className="py-3 px-3.5 text-[13px] text-[#4d5145]">
+    <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
+      <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
         {timeAgo(item.occurred_at)}
       </td>
-      <td className="py-3 px-3.5 text-[13px]">
+      <td className="py-[15px] px-5 text-[14px]">
         {isCredit ? (
-          <span
-            className="text-[12px] tracking-[0.3px] text-[#707468]"
-           
-          >
+          <span className="text-[13px] text-[#7a7e71]">
             {item.transaction_type || "credit"}
           </span>
         ) : (
-          <span
-            className="text-[12px] tracking-[0.3px] text-[#707468]"
-           
-          >
+          <span className="text-[13px] text-[#7a7e71]">
             usage
           </span>
         )}
       </td>
-      <td className="py-3 px-3.5 text-[13px] text-[#1c1f17]">
+      <td className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
         {isCredit
           ? item.description || "—"
           : `${item.capability || "—"} / ${item.model || "—"}`}
       </td>
       <td
-        className={`py-3 px-3.5 text-[13px] text-right font-bold ${
+        className={`py-[15px] px-5 text-[14px] text-right font-bold tabular-nums ${
           isCredit
             ? positive
               ? "text-[#6b7d3a]"
               : "text-[#1c1f17]"
             : "text-[#4d5145]"
         }`}
-       
       >
         {isCredit
           ? `${positive ? "+" : ""}${formatCreditCent(creditCentAmount)}`
@@ -86,72 +79,51 @@ export default function BillingPage() {
 
   return (
     <div>
-      <p
-        className="text-[16px] font-medium text-[#1c1f17] mb-6"
-       
-      >
+      <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
         Billing
-      </p>
+      </h1>
 
       {/* Balance card */}
       {balanceLoading || !balance ? (
-        <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-6 max-w-md rounded-xl">
-          <Skeleton className="h-3 w-24 mb-4" />
-          <Skeleton className="h-8 w-32 mb-2" />
+        <div className="border border-[#d8dcd0] bg-white px-7 py-6 max-w-md rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
+          <Skeleton className="h-3.5 w-24 mb-5" />
+          <Skeleton className="h-9 w-32 mb-2.5" />
           <Skeleton className="h-4 w-40" />
         </div>
       ) : (
-        <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-6 max-w-md rounded-xl">
-          <p
-            className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
-           
-          >
+        <div className="border border-[#d8dcd0] bg-white px-7 py-6 max-w-md rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
+          <p className="text-[13.5px] font-medium text-[#7a7e71] mb-4">
             Credit Balance
           </p>
-          <p className="text-3xl text-[#1c1f17] font-bold leading-none">
+          <p className="text-4xl text-[#1c1f17] font-bold leading-none tracking-tight">
             {formatCredit(balance.available)}
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-2">
+          <p className="text-[14px] text-[#4d5145] mt-2">
             credits remaining
           </p>
         </div>
       )}
 
       {/* Transactions */}
-      <div className="mt-11">
-        <p
-          className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4"
-         
-        >
+      <div className="mt-12">
+        <p className="text-[14px] font-medium text-[#7a7e71] mb-4">
           Transactions
         </p>
 
-        <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
+        <div className="overflow-x-auto border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-[#d4dbb8]">
-                <th
-                  className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                 
-                >
+              <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
+                <th className="text-left text-[13px] font-medium text-[#7a7e71] py-3.5 px-5">
                   Time
                 </th>
-                <th
-                  className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                 
-                >
+                <th className="text-left text-[13px] font-medium text-[#7a7e71] py-3.5 px-5">
                   Type
                 </th>
-                <th
-                  className="text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                 
-                >
+                <th className="text-left text-[13px] font-medium text-[#7a7e71] py-3.5 px-5">
                   Description
                 </th>
-                <th
-                  className="text-right text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal"
-                 
-                >
+                <th className="text-right text-[13px] font-medium text-[#7a7e71] py-3.5 px-5">
                   Amount
                 </th>
               </tr>
@@ -159,10 +131,10 @@ export default function BillingPage() {
             <tbody>
               {logsLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-[#d4dbb8]/60">
+                  <tr key={i} className="border-b border-[#eceee7]">
                     {[0, 1, 2, 3].map((j) => (
-                      <td key={j} className="py-3 px-3.5">
-                        <Skeleton className="h-4 w-full" />
+                      <td key={j} className="py-[15px] px-5">
+                        <Skeleton className="h-5 w-full" />
                       </td>
                     ))}
                   </tr>
@@ -176,8 +148,8 @@ export default function BillingPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center">
-                    <p className="text-[13px] text-[#707468]">
+                  <td colSpan={4} className="py-12 text-center">
+                    <p className="text-[14px] text-[#7a7e71]">
                       No transactions yet
                     </p>
                   </td>

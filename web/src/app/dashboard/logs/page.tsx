@@ -23,20 +23,20 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
+  return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;
 }
 
 const thClass =
-  "text-left text-[12px] tracking-[0.3px] text-[#626658] py-3 px-3.5 font-normal";
-const tdClass = "py-3 px-3.5 text-[13px]";
+  "text-left text-[13px] font-medium text-[#7a7e71] py-3.5 px-5";
+const tdClass = "py-[15px] px-5 text-[14px]";
 
 function LogRow({ item }: { item: TimelineItem }) {
   return (
-    <tr className="border-b border-[#d4dbb8]/60">
+    <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
       <td className={`${tdClass} text-[#4d5145]`}>
         {timeAgo(item.occurred_at)}
       </td>
-      <td className={`${tdClass} text-[#1c1f17]`}>
+      <td className={`${tdClass} text-[#1c1f17] font-medium`}>
         {item.capability || "—"}
       </td>
       <td className={`${tdClass} text-[#4d5145]`}>
@@ -44,24 +44,22 @@ function LogRow({ item }: { item: TimelineItem }) {
       </td>
       <td className={tdClass}>
         <span
-          className={
+          className={`font-medium ${
             item.status === "ok" || item.status === "success"
               ? "text-[#6b7d3a]"
-              : "text-[#a83f32]"
-          }
-         
+              : "text-[#c4442d]"
+          }`}
         >
           {item.status || "—"}
         </span>
       </td>
-      <td className={`${tdClass} text-right`}>
+      <td className={`${tdClass} text-right tabular-nums`}>
         <span className="text-[#4d5145]">
           {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
         </span>
       </td>
       <td
-        className={`${tdClass} text-[#707468] text-right hidden md:table-cell`}
-       
+        className={`${tdClass} text-[#7a7e71] text-right hidden md:table-cell`}
       >
         {item.request_id
           ? item.request_id.slice(0, 8)
@@ -77,18 +75,15 @@ export default function LogsPage() {
 
   return (
     <div>
-      <p
-        className="text-[16px] font-medium text-[#1c1f17] mb-6"
-       
-      >
+      <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
         Logs
-      </p>
+      </h1>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
+      <div className="overflow-x-auto border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#d4dbb8]">
+            <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
               <th className={thClass}>Time</th>
               <th className={thClass}>Capability</th>
               <th className={thClass}>Model</th>
@@ -96,7 +91,6 @@ export default function LogsPage() {
               <th className={`${thClass} text-right`}>Cost</th>
               <th
                 className={`${thClass} text-right hidden md:table-cell`}
-               
               >
                 ID
               </th>
@@ -105,10 +99,10 @@ export default function LogsPage() {
           <tbody>
             {isLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i} className="border-b border-[#d4dbb8]/60">
+                <tr key={i} className="border-b border-[#eceee7]">
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className={tdClass}>
-                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-5 w-full" />
                     </td>
                   ))}
                 </tr>
@@ -122,8 +116,8 @@ export default function LogsPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-10 text-center">
-                  <p className="text-[13px] text-[#707468]">
+                <td colSpan={6} className="py-12 text-center">
+                  <p className="text-[14px] text-[#7a7e71]">
                     No usage logs yet
                   </p>
                 </td>

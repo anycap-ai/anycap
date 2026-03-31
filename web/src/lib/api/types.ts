@@ -103,6 +103,7 @@ export type PageSite = {
   space_id: string;
   name: string;
   page_name: string;
+  page_url?: string;
   current_version_id?: string | null;
   access_mode: PageAccessMode;
   password_hash?: string | null;

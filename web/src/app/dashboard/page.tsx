@@ -23,7 +23,7 @@ function timeAgo(ts: string): string {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#d4dbb8]/30 animate-pulse rounded ${className}`} />;
+  return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;
 }
 
 function StatCard({
@@ -34,11 +34,8 @@ function StatCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-5 min-h-[122px] rounded-xl">
-      <p
-        className="text-[12px] tracking-[0.3px] text-[#626658] mb-3"
-       
-      >
+    <div className="border border-[#d8dcd0] bg-white px-8 py-7 min-h-[152px] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_12px_rgba(0,0,0,0.08)] transition-shadow">
+      <p className="text-[14px] font-medium text-[#7a7e71] mb-5">
         {label}
       </p>
       {children}
@@ -49,10 +46,10 @@ function StatCard({
 function BalanceCard({ balance }: { balance: Balance }) {
   return (
     <StatCard label="Balance">
-      <p className="text-2xl text-[#1c1f17] font-bold leading-none">
+      <p className="text-[40px] text-[#1c1f17] font-bold leading-none tracking-tight">
         {formatCredit(balance.available)}
       </p>
-      <p className="text-[13px] text-[#4d5145] mt-1.5">
+      <p className="text-[15px] text-[#4d5145] mt-2.5">
         credits
       </p>
     </StatCard>
@@ -72,17 +69,17 @@ function LastActivityCard({
     <StatCard label="Last Activity">
       {summary ? (
         <>
-          <p className="text-base text-[#1c1f17] leading-none">
+          <p className="text-[17px] text-[#1c1f17] leading-snug font-medium">
             {summary.last_capability}
-            <span className="text-[#9a9e90] mx-1.5">·</span>
-            <span className="text-[#3a3e32]">{summary.last_model}</span>
+            <span className="text-[#7a7e71] mx-1.5">·</span>
+            <span className="text-[#4d5145] font-normal">{summary.last_model}</span>
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-1.5">
+          <p className="text-[15px] text-[#4d5145] mt-2.5">
             {timeAgo(summary.last_occurred_at)}
           </p>
         </>
       ) : (
-        <p className="text-[13px] text-[#7a7e71]">
+        <p className="text-[14px] text-[#7a7e71]">
           No activity yet
         </p>
       )}
@@ -103,21 +100,21 @@ function ErrorCard({
     <StatCard label="Last Error">
       {summary ? (
         <>
-          <p className="text-base text-[#a83f32] leading-none">
+          <p className="text-[17px] text-[#c4442d] leading-snug font-medium">
             {summary.last_error_code || summary.last_error_capability}
             {summary.last_error_code && summary.last_error_capability && (
               <>
-                <span className="text-[#9a9e90] mx-1.5">·</span>
-                <span className="text-[#3a3e32]">{summary.last_error_capability}</span>
+                <span className="text-[#7a7e71] mx-1.5">·</span>
+                <span className="text-[#4d5145] font-normal">{summary.last_error_capability}</span>
               </>
             )}
           </p>
-          <p className="text-[13px] text-[#4d5145] mt-1.5">
+          <p className="text-[15px] text-[#4d5145] mt-2.5">
             {timeAgo(summary.last_error_occurred_at)}
           </p>
         </>
       ) : (
-        <p className="text-[13px] text-[#6b7d3a]">
+        <p className="text-[14px] text-[#6b7d3a] font-medium">
           No errors
         </p>
       )}
@@ -127,27 +124,27 @@ function ErrorCard({
 
 function ActivityRow({ item }: { item: TimelineItem }) {
   return (
-    <div className="flex items-center gap-4 px-3 py-3.5 border-b border-[#d4dbb8]/60 text-[13px]">
-      <span className="text-[#4d5145] w-24 shrink-0">
+    <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
+      <td className="py-4 px-6 text-[15px] text-[#4d5145]">
         {timeAgo(item.occurred_at)}
-      </span>
-      <span className="text-[#1c1f17] w-36 shrink-0">{item.capability || "—"}</span>
-      <span className="text-[#4d5145] flex-1 truncate">
+      </td>
+      <td className="py-4 px-6 text-[15px] text-[#1c1f17] font-medium">
+        {item.capability || "—"}
+      </td>
+      <td className="py-4 px-6 text-[15px] text-[#4d5145] truncate">
         {item.model || "—"}
-      </span>
-      <span
-        className={`w-16 shrink-0 text-right ${item.status === "ok" || item.status === "success"
-            ? "text-[#6b7d3a]"
-            : "text-[#a83f32]"
-          }`}
-       
-      >
+      </td>
+      <td className={`py-4 px-6 text-[15px] font-medium ${
+        item.status === "ok" || item.status === "success"
+          ? "text-[#6b7d3a]"
+          : "text-[#c4442d]"
+      }`}>
         {item.status || "—"}
-      </span>
-      <span className="text-[#4d5145] w-16 shrink-0 text-right">
+      </td>
+      <td className="py-4 px-6 text-[15px] text-[#4d5145] text-right tabular-nums">
         {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
-      </span>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -159,21 +156,18 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <p
-        className="text-[16px] font-medium text-[#1c1f17] mb-6"
-       
-      >
+      <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
         Overview
-      </p>
+      </h1>
 
       {/* Stats cards */}
       {isLoading || !data ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="border border-[#d4dbb8]/70 bg-[#f9faf5] px-6 py-5 rounded-xl">
-              <Skeleton className="h-3 w-16 mb-4" />
-              <Skeleton className="h-6 w-24 mb-2" />
-              <Skeleton className="h-3 w-20" />
+            <div key={i} className="border border-[#d8dcd0] bg-white px-8 py-7 rounded-2xl">
+              <Skeleton className="h-4 w-16 mb-6" />
+              <Skeleton className="h-10 w-24 mb-3" />
+              <Skeleton className="h-4 w-20" />
             </div>
           ))}
         </div>
@@ -186,31 +180,41 @@ export default function DashboardPage() {
       )}
 
       {/* Recent activity */}
-      <div className="mt-11">
-        <p
-          className="text-[12px] tracking-[0.3px] text-[#5f6358] mb-4"
-         
-        >
+      <div className="mt-14">
+        <p className="text-[15px] font-medium text-[#7a7e71] mb-5">
           Recent Activity
         </p>
 
         {isLoading ? (
-          <div className="space-y-3 border border-[#d4dbb8]/70 bg-[#f9faf5] px-3 py-2 rounded-xl">
+          <div className="space-y-3 border border-[#d8dcd0] bg-white px-6 py-4 rounded-2xl">
             {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-14 w-full" />
             ))}
           </div>
         ) : recentUsage?.length ? (
-          <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl overflow-hidden">
-            {recentUsage.map((item, i) => (
-              <ActivityRow
-                key={item.request_id || i}
-                item={item}
-              />
-            ))}
+          <div className="border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
+            <table className="w-full border-collapse text-[15px]">
+              <thead>
+                <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
+                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Time</th>
+                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Capability</th>
+                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Model</th>
+                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Status</th>
+                  <th className="text-right py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentUsage.map((item, i) => (
+                  <ActivityRow
+                    key={item.request_id || i}
+                    item={item}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
-          <p className="text-[13px] text-[#7a7e71] py-6">
+          <p className="text-[15px] text-[#7a7e71] py-10">
             No activity yet. Ask your agent to use anycap.
           </p>
         )}

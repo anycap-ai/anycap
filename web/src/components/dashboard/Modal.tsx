@@ -29,7 +29,7 @@ export function Modal({
       });
     } else {
       setAnimate(false);
-      const timer = setTimeout(() => setVisible(false), 200);
+      const timer = setTimeout(() => setVisible(false), 250);
       return () => clearTimeout(timer);
     }
   }, [open]);
@@ -39,7 +39,7 @@ export function Modal({
   return (
     <div
       ref={backdropRef}
-      className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-[250ms] ease-out ${
         animate ? "bg-[#1c1f17]/20 backdrop-blur-sm" : "bg-transparent backdrop-blur-0"
       }`}
       onClick={(e) => {
@@ -47,18 +47,18 @@ export function Modal({
       }}
     >
       <div
-        className={`w-full max-w-[420px] mx-4 max-h-[85vh] overflow-y-auto bg-[#f4f5f0] border border-[#c8cebb] rounded-xl shadow-xl transition-all duration-200 ${
+        className={`w-full max-w-[420px] mx-4 max-h-[85vh] overflow-y-auto bg-white border border-[#d8dcd0] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-[250ms] ease-out ${
           animate
             ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-95 translate-y-2"
+            : "opacity-0 scale-95 translate-y-3"
         }`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#c8cebb]">
-          <p className="text-[12px] tracking-[0.3px] text-[#5f6358]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#d8dcd0]">
+          <p className="text-[15px] font-semibold text-[#1c1f17]">
             {title}
           </p>
           <button
-            className="text-[#9a9e90] hover:text-[#1c1f17] transition-colors"
+            className="p-1 rounded-lg text-[#9a9e90] hover:text-[#1c1f17] hover:bg-[#eceee7] transition-colors"
             onClick={onClose}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -96,16 +96,16 @@ export function ModalButton({
 }) {
   const styles = {
     default:
-      "border border-[#d4dbb8]/70 text-[#707468] hover:text-[#3a3e32] hover:bg-[#edeee7]",
+      "border border-[#ccd1c3] bg-[#fafbf8] text-[#3a3e32] hover:bg-[#f0f2eb] hover:border-[#b8bdaf] shadow-[0_1px_2px_rgba(0,0,0,0.06)]",
     primary:
-      "border border-[#6b7d3a] bg-[#6b7d3a] text-white hover:bg-[#5a6c30]",
+      "bg-[#6b7d3a] text-white hover:bg-[#5c6c31] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)]",
     danger:
-      "border border-[#a83f32]/30 bg-[#a83f32] text-white hover:bg-[#932f23]",
+      "bg-[#c4442d] text-white hover:bg-[#a83a26] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)]",
   };
 
   return (
     <button
-      className={`px-4 py-2 text-[12px] tracking-[0.2px] rounded-lg transition-colors disabled:opacity-40 ${styles[variant]}`}
+      className={`px-5 py-2.5 text-[13px] font-medium rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${styles[variant]}`}
      
       onClick={onClick}
       disabled={disabled}

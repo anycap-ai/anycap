@@ -2,11 +2,10 @@
 
 export const runtime = "edge";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  completeDriveFile,
-  createDriveFolder,
-  presignDriveFile,
   useDriveNodes,
 } from "@/lib/api/hooks";
 import type { DriveNode } from "@/lib/api/types";
@@ -41,16 +40,30 @@ function MoreMenu({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (
+        btnRef.current?.contains(e.target as Node) ||
+        menuRef.current?.contains(e.target as Node)
+      ) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.right });
+    }
+    setOpen((v) => !v);
+  }
 
   function act(fn: () => void) {
     setOpen(false);
@@ -58,10 +71,11 @@ function MoreMenu({
   }
 
   return (
-    <div className="relative inline-block" ref={ref}>
+    <div className="inline-block">
       <button
-        className="p-1.5 rounded-md text-[#9a9e90] hover:text-[#3a3e32] hover:bg-[#d4dbb8]/40 transition-colors disabled:opacity-40"
-        onClick={() => setOpen((v) => !v)}
+        ref={btnRef}
+        className="p-1.5 rounded-lg text-[#7a7e71] hover:text-[#1c1f17] hover:bg-[#eceee7] transition-colors disabled:opacity-40"
+        onClick={toggle}
         disabled={disabled}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -70,11 +84,16 @@ function MoreMenu({
           <circle cx="12" cy="19" r="2" />
         </svg>
       </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 w-32 bg-white border border-[#d4dbb8] rounded-lg shadow-lg py-1">
-          <button className="w-full text-left px-3 py-2 text-[13px] text-[#3a3e32] hover:bg-[#f4f5f0] transition-colors" onClick={() => act(onRename)}>Rename</button>
-          <button className="w-full text-left px-3 py-2 text-[13px] text-[#3a3e32] hover:bg-[#f4f5f0] transition-colors" onClick={() => act(onMove)}>Move</button>
-        </div>
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-32 bg-white border border-[#d8dcd0] rounded-xl shadow-lg py-1"
+          style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
+        >
+          <button className="w-full text-left px-3.5 py-2.5 text-[13px] text-[#1c1f17] hover:bg-[#f7f8f5] transition-colors" onClick={() => act(onRename)}>Rename</button>
+          <button className="w-full text-left px-3.5 py-2.5 text-[13px] text-[#1c1f17] hover:bg-[#f7f8f5] transition-colors" onClick={() => act(onMove)}>Move</button>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -93,10 +112,10 @@ function ActionLink({
 }) {
   return (
     <button
-      className={`px-2 py-1 text-[12px] rounded-md transition-colors disabled:opacity-40 ${
+      className={`px-2.5 py-1.5 text-[13px] rounded-lg transition-colors disabled:opacity-40 ${
         variant === "danger"
-          ? "text-[#a83f32] hover:bg-[#a83f32]/10"
-          : "text-[#707468] hover:bg-[#d4dbb8]/40 hover:text-[#3a3e32]"
+          ? "text-[#c4442d] hover:bg-[#c4442d]/10"
+          : "text-[#7a7e71] hover:bg-[#eceee7] hover:text-[#1c1f17]"
       }`}
       onClick={onClick}
       disabled={disabled}
@@ -107,72 +126,45 @@ function ActionLink({
 }
 
 export default function DrivePage() {
-  const [path, setPath] = useState<Array<{ id: string; name: string }>>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const folderIds = useMemo<string[]>(() => {
+    const raw = searchParams.get("path");
+    if (!raw) return [];
+    return raw.split(",").filter(Boolean);
+  }, [searchParams]);
+
+  const [nameMap, setNameMap] = useState<Record<string, string>>({});
+
+  const navigateTo = useCallback((ids: string[]) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (ids.length === 0) {
+      params.delete("path");
+    } else {
+      params.set("path", ids.join(","));
+    }
+    const qs = params.toString();
+    router.push(`/dashboard/drive${qs ? `?${qs}` : ""}`);
+  }, [searchParams, router]);
+
+  const enterFolder = useCallback((id: string, name: string) => {
+    setNameMap((prev) => ({ ...prev, [id]: name }));
+    navigateTo([...folderIds, id]);
+  }, [folderIds, navigateTo]);
+
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [shareNode, setShareNode] = useState<DriveNode | null>(null);
   const [renameNode, setRenameNode] = useState<DriveNode | null>(null);
   const [moveNode, setMoveNode] = useState<DriveNode | null>(null);
   const [deleteNode, setDeleteNode] = useState<DriveNode | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const currentParentID = path.length > 0 ? path[path.length - 1].id : null;
+  const currentParentID = folderIds.length > 0 ? folderIds[folderIds.length - 1] : null;
   const { data, isLoading, mutate } = useDriveNodes(currentParentID);
 
   const rows = useMemo(() => data?.items ?? [], [data]);
-
-  async function onCreateFolder() {
-    const name = window.prompt("Folder name");
-    if (!name) return;
-
-    setBusy(true);
-    setError("");
-    try {
-      await createDriveFolder({
-        name,
-        parent_id: currentParentID,
-      });
-      await mutate();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to create folder");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onUploadFile(file: File) {
-    setUploading(true);
-    setError("");
-    try {
-      const contentType = file.type || "application/octet-stream";
-      const presign = await presignDriveFile({
-        parent_id: currentParentID,
-        name: file.name,
-        content_type: contentType,
-        content_length: file.size,
-      });
-
-      const uploadResp = await fetch(presign.upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: file,
-      });
-      if (!uploadResp.ok) {
-        throw new Error(`upload failed (${uploadResp.status})`);
-      }
-
-      await completeDriveFile({
-        upload_session_id: presign.upload_session_id,
-        file_id: presign.file_id,
-      });
-      await mutate();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to upload file");
-    } finally {
-      setUploading(false);
-    }
-  }
 
   function handleRenameClose() {
     setRenameNode(null);
@@ -182,120 +174,150 @@ export default function DrivePage() {
     await mutate();
     const renamed = renameNode;
     if (renamed) {
-      setPath((prev) => prev.map((item) => (item.id === renamed.id ? { ...item, name: renamed.name } : item)));
+      setNameMap((prev) => ({ ...prev, [renamed.id]: renamed.name }));
     }
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+      <div className="flex items-start justify-between mb-9 gap-4 flex-wrap">
         <div>
-          <p className="text-[16px] font-medium text-[#1c1f17]">
+          <h1 className="text-[28px] font-semibold text-[#1c1f17] tracking-tight">
             Drive
-          </p>
-          <div className="mt-2 flex items-center gap-2 text-[13px]">
+          </h1>
+          <div className="mt-2.5 flex items-center gap-2 text-[14px]">
             <button
               className="text-[#1c1f17] hover:text-[#6b7d3a]"
-              onClick={() => setPath([])}
+              onClick={() => navigateTo([])}
             >
               /
             </button>
-            {path.map((segment, idx) => (
-              <div key={segment.id} className="flex items-center gap-2">
-                <span className="text-[#9a9e90]">/</span>
+            {folderIds.map((id, idx) => (
+              <div key={id} className="flex items-center gap-2">
+                {idx > 0 && <span className="text-[#7a7e71]">/</span>}
                 <button
                   className="text-[#1c1f17] hover:text-[#6b7d3a]"
-                  onClick={() => setPath(path.slice(0, idx + 1))}
+                  onClick={() => navigateTo(folderIds.slice(0, idx + 1))}
                 >
-                  {segment.name}
+                  {nameMap[id] ?? id}
                 </button>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f9faf5] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={busy || uploading}
-          >
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
-          <button
-            className="px-3 py-2 text-[12px] border border-[#d4dbb8]/70 bg-[#f9faf5] text-[#1c1f17] hover:text-[#6b7d3a] disabled:opacity-45 rounded-lg"
-            onClick={onCreateFolder}
-            disabled={busy || uploading}
-          >
-            New Folder
-          </button>
-        </div>
+        <button
+          className="p-2 rounded-lg text-[#7a7e71] hover:text-[#1c1f17] hover:bg-[#eceee7] transition-colors disabled:opacity-40"
+          onClick={async () => {
+            setRefreshing(true);
+            await Promise.all([mutate(), new Promise((r) => setTimeout(r, 400))]);
+            setRefreshing(false);
+          }}
+          disabled={refreshing}
+          title="Refresh"
+        >
+          <svg className={refreshing ? "animate-spin" : ""} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 2v6h-6" />
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+            <path d="M3 22v-6h6" />
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+          </svg>
+        </button>
       </div>
 
       {error && (
-        <p className="mb-4 text-[12px] text-[#a83f32]">
+        <p className="mb-5 text-[13px] text-[#c4442d]">
           {error}
         </p>
       )}
 
-      <div className="border border-[#d4dbb8]/70 bg-[#f9faf5] rounded-xl">
+      <div className="border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#d4dbb8]">
-              <th className="text-left py-3 px-3.5 text-[12px] tracking-[0.3px] text-[#626658] font-normal">Name</th>
-              <th className="text-left py-3 px-3.5 text-[12px] tracking-[0.3px] text-[#626658] font-normal">Size</th>
-              <th className="text-left py-3 px-3.5 text-[12px] tracking-[0.3px] text-[#626658] font-normal">Modified</th>
-              <th className="text-right py-3 px-3.5 text-[12px] tracking-[0.3px] text-[#626658] font-normal">Actions</th>
+            <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
+              <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71] rounded-tl-2xl">Name</th>
+              <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Size</th>
+              <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Modified</th>
+              <th className="text-right py-3.5 px-5 text-[13px] font-medium text-[#7a7e71] rounded-tr-2xl">Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={4} className="py-10 text-center text-[13px] text-[#707468]">
-                  Loading...
-                </td>
-              </tr>
-            ) : rows.length > 0 ? (
-              rows.map((node) => (
-                <tr key={node.id} className="border-b border-[#d4dbb8]/60">
-                  <td className="py-3 px-3.5 text-[13px] text-[#1c1f17]">
+              Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-[#eceee7]">
+                  <td className="py-[15px] px-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-5 w-5 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                      <div className="h-5 w-32 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                    </div>
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-16 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-28 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-24 bg-[#d0d4c8]/40 animate-pulse rounded ml-auto" />
+                  </td>
+                </tr>
+              ))
+            ) : rows.length > 0 || folderIds.length > 0 ? (
+              <>
+              {folderIds.length > 0 && (
+                <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
+                  <td colSpan={4} className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
+                    <button
+                      className="flex items-center gap-2.5 hover:text-[#6b7d3a] transition-colors"
+                      onClick={() => navigateTo(folderIds.slice(0, -1))}
+                    >
+                      <FolderIcon className="text-[#7a7e71] shrink-0" />
+                      ..
+                    </button>
+                  </td>
+                </tr>
+              )}
+              {rows.map((node) => (
+                <tr key={node.id} className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
+                  <td className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
                     {node.kind === "folder" ? (
                       <button
-                        className="flex items-center gap-2 hover:text-[#6b7d3a] transition-colors"
-                        onClick={() => setPath((prev) => [...prev, { id: node.id, name: node.name }])}
+                        className="flex items-center gap-2.5 hover:text-[#6b7d3a] transition-colors"
+                        onClick={() => enterFolder(node.id, node.name)}
                       >
-                        <FolderIcon className="text-[#9a9e90] shrink-0" />
+                        <FolderIcon className="text-[#7a7e71] shrink-0" />
                         {node.name}
                       </button>
                     ) : (
-                      <span className="flex items-center gap-2">
-                        <FileIcon name={node.name} className="text-[#9a9e90] shrink-0" />
+                      <span className="flex items-center gap-2.5">
+                        <FileIcon name={node.name} className="text-[#7a7e71] shrink-0" />
                         {node.name}
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-3.5 text-[13px] text-[#4d5145]">{formatSize(node.size)}</td>
-                  <td className="py-3 px-3.5 text-[13px] text-[#4d5145]">{formatTime(node.updated_at)}</td>
-                  <td className="py-3 px-3.5 text-right">
+                  <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatSize(node.size)}</td>
+                  <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatTime(node.updated_at)}</td>
+                  <td className="py-[15px] px-5 text-right">
                     <div className="inline-flex items-center gap-1">
-                      <ActionLink onClick={() => setShareNode(node)} disabled={busy || uploading}>
+                      <ActionLink onClick={() => setShareNode(node)} disabled={busy}>
                         Share
                       </ActionLink>
-                      <ActionLink onClick={() => setDeleteNode(node)} disabled={busy || uploading} variant="danger">
+                      <ActionLink onClick={() => setDeleteNode(node)} disabled={busy} variant="danger">
                         Delete
                       </ActionLink>
                       <MoreMenu
                         onRename={() => setRenameNode(node)}
                         onMove={() => setMoveNode(node)}
-                        disabled={busy || uploading}
+                        disabled={busy}
                       />
                     </div>
                   </td>
                 </tr>
-              ))
+              ))}
+              </>
             ) : (
               <tr>
-                <td colSpan={4} className="py-10 text-center text-[13px] text-[#707468]">
+                <td colSpan={4} className="py-12 text-center text-[14px] text-[#7a7e71]">
                   Empty folder
                 </td>
               </tr>
@@ -303,19 +325,6 @@ export default function DrivePage() {
           </tbody>
         </table>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) {
-            void onUploadFile(file);
-          }
-          event.target.value = "";
-        }}
-      />
 
       <DriveSharePanel
         node={shareNode}

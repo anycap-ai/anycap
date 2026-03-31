@@ -40,12 +40,12 @@ export function DriveDeleteModal({
       title="Delete"
       onOpen={() => setError("")}
     >
-      <p className="text-[13px] text-[#4d5145]">
-        Are you sure you want to delete <span className="text-[#1c1f17]">{node?.name}</span>?
+      <p className="text-[14px] text-[#4d5145] leading-relaxed">
+        Are you sure you want to delete <span className="font-medium text-[#1c1f17]">{node?.name}</span>?
         {node?.kind === "folder" && " This will also delete all contents inside."}
       </p>
       {error && (
-        <p className="mt-3 text-[12px] text-[#a83f32]">{error}</p>
+        <p className="mt-3 text-[13px] text-[#c4442d]">{error}</p>
       )}
       <ModalActions>
         <ModalButton onClick={onClose} disabled={busy}>Cancel</ModalButton>
