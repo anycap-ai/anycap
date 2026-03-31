@@ -92,6 +92,10 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 
 AnyCap capabilities are organized into two groups: **generation** (create new content) and **actions** (AI operations on existing content).
 
+### Choose a Model First
+
+Before generating content, ask the user which model they want to use. Run `anycap {cap} models` to list available models, present the options, and let the user decide.
+
 ### Generation Workflow
 
 Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`, `edit`) as CLI subcommands:

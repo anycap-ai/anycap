@@ -124,9 +124,10 @@ func listCapModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writ
 		return err
 	}
 
-	// No filter: passthrough the full response.
+	// No filter: passthrough the full response with a model-picking hint.
 	if len(args) == 0 {
-		return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
+		body := injectModelsHint(resp.Body, capability)
+		return output.WriteServerJSON(stdout, body, resp.RequestID)
 	}
 
 	// Filter to a single model client-side.
@@ -304,6 +305,26 @@ func defaultImageFilename(imageURL string) string {
 		ext = ".png"
 	}
 	return "image_" + time.Now().Format("20060102_150405") + ext
+}
+
+// injectModelsHint adds a hint field to the models list response,
+// prompting the agent to present models to the user for selection.
+func injectModelsHint(payload []byte, capability string) []byte {
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &obj); err != nil {
+		return payload
+	}
+	hint := fmt.Sprintf(
+		"Multiple %s models available. Ask the user which model they prefer before proceeding.",
+		capability,
+	)
+	hintJSON, _ := json.Marshal(hint)
+	obj["hint"] = hintJSON
+	out, err := json.Marshal(obj)
+	if err != nil {
+		return payload
+	}
+	return out
 }
 
 // parseGenerateResponse extracts key fields from the server's generate response.
