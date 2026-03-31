@@ -112,6 +112,7 @@ type CreditConfig struct {
 	BaseURL                    string
 	BizToken                   string
 	Timeout                    time.Duration
+	SignupRewardEnabled        bool
 	SignupRewardPackageID      int64
 	SignupRewardPackageType    string
 	SignupRewardPackageSubtype string
@@ -379,6 +380,7 @@ func loadCreditConfig() CreditConfig {
 		BaseURL:                    getEnv("ANYCAP_CREDIT_BASE_URL", ""),
 		BizToken:                   getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
 		Timeout:                    timeout,
+		SignupRewardEnabled:        getEnvBool("ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED", false),
 		SignupRewardPackageID:      getEnvInt64("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_ID", 0),
 		SignupRewardPackageType:    getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", ""),
 		SignupRewardPackageSubtype: getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", ""),

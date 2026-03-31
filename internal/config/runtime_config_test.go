@@ -87,6 +87,7 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	t.Setenv("ANYCAP_CREDIT_BASE_URL", "https://credit.example.com")
 	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
 	t.Setenv("ANYCAP_CREDIT_TIMEOUT_SECONDS", "15")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED", "true")
 	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", "REWARD")
 	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", "SIGNUP_BONUS")
 
@@ -103,11 +104,30 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	if cfg.Credit.Timeout != 15*time.Second {
 		t.Fatalf("expected credit timeout 15s, got %v", cfg.Credit.Timeout)
 	}
+	if !cfg.Credit.SignupRewardEnabled {
+		t.Fatal("expected signup reward to be enabled")
+	}
 	if cfg.Credit.SignupRewardPackageType != "REWARD" {
 		t.Fatalf("expected signup reward package type, got %q", cfg.Credit.SignupRewardPackageType)
 	}
 	if cfg.Credit.SignupRewardPackageSubtype != "SIGNUP_BONUS" {
 		t.Fatalf("expected signup reward package subtype, got %q", cfg.Credit.SignupRewardPackageSubtype)
+	}
+}
+
+func TestLoadFromEnv_SignupRewardDisabledByDefault(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_CREDIT_BASE_URL", "https://credit.example.com")
+	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", "REWARD")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", "SIGNUP_BONUS")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.Credit.SignupRewardEnabled {
+		t.Fatal("expected signup reward to be disabled by default")
 	}
 }
 
