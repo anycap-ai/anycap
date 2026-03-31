@@ -117,11 +117,11 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
   --param images=/path/to/photo.png
 ```
 
-| Capability | Reference | Operations | Typical duration |
-|------------|-----------|------------|------------------|
-| Image | [generation.md](references/generation.md) | `generate`, `edit` | 5-30s |
-| Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
-| Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
+| Capability | Reference                                             | Operations         | Typical duration |
+| ---------- | ----------------------------------------------------- | ------------------ | ---------------- |
+| Image      | [generation.md](references/generation.md)             | `generate`, `edit` | 5-30s            |
+| Video      | [video-generation.md](references/video-generation.md) | `generate`         | 30-120s          |
+| Music      | [music-generation.md](references/music-generation.md) | `text-to-music`    | 30-90s           |
 
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
 
@@ -180,12 +180,12 @@ anycap feedback --type other -m "schema for model Y is missing aspect_ratio"
 
 Options:
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--type` | yes | `bug`, `feature`, or `other` |
-| `-m, --message` | yes | Description of the issue or idea |
-| `--request-id` | no | Request ID from a previous command (found in JSON output) |
-| `--context` | no | Additional context as JSON |
+| Flag            | Required | Description                                               |
+| --------------- | -------- | --------------------------------------------------------- |
+| `--type`        | yes      | `bug`, `feature`, or `other`                              |
+| `-m, --message` | yes      | Description of the issue or idea                          |
+| `--request-id`  | no       | Request ID from a previous command (found in JSON output) |
+| `--context`     | no       | Additional context as JSON                                |
 
 When to submit feedback:
 
@@ -254,13 +254,13 @@ anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 
 Common jq patterns:
 
-| Pattern | Purpose |
-|---------|----------|
-| `jq -r '.field'` | Extract a string field (raw, no quotes) |
-| `jq -r '.local_path'` | Get downloaded file path from generate |
-| `jq -r '.models[].model'` | List all values of a field in an array |
-| `jq -e '.status == "success"'` | Check condition (exit code 1 if false) |
-| `jq -r '.message // empty'` | Extract error message if present |
+| Pattern                        | Purpose                                 |
+| ------------------------------ | --------------------------------------- |
+| `jq -r '.field'`               | Extract a string field (raw, no quotes) |
+| `jq -r '.local_path'`          | Get downloaded file path from generate  |
+| `jq -r '.models[].model'`      | List all values of a field in an array  |
+| `jq -e '.status == "success"'` | Check condition (exit code 1 if false)  |
+| `jq -r '.message // empty'`    | Extract error message if present        |
 
 ## Keeping Up to Date
 
