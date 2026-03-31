@@ -69,6 +69,38 @@ type Balance struct {
 	CreditCentBalance int64  `json:"credit_cent_balance,omitempty"`
 }
 
+type CreditPack struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	PriceCent   int64  `json:"price_cent"`
+	Currency    string `json:"currency"`
+	Credits     int64  `json:"credits"`
+	Featured    bool   `json:"featured,omitempty"`
+	Badge       string `json:"badge,omitempty"`
+}
+
+type CreditPackSpec struct {
+	CreditPack
+	PriceID string `json:"-"`
+}
+
+type CreditPackListResult struct {
+	Packs []CreditPack `json:"packs"`
+}
+
+type CreateCheckoutInput struct {
+	PackID     string `json:"pack_id"`
+	Quantity   int    `json:"quantity,omitempty"`
+	SuccessURL string `json:"success_url,omitempty"`
+	CancelURL  string `json:"cancel_url,omitempty"`
+}
+
+type CreateCheckoutResult struct {
+	CheckoutURL string `json:"checkout_url"`
+	SessionType string `json:"session_type"`
+}
+
 type CreditTransaction struct {
 	ID               string         `json:"id"`
 	Type             string         `json:"type"`
@@ -131,6 +163,15 @@ type StatusResult struct {
 type CheckoutSession struct {
 	ID  string `json:"id"`
 	URL string `json:"url"`
+}
+
+type OrderCheckoutInput struct {
+	UserID         string `json:"user_id"`
+	PriceID        string `json:"price_id"`
+	Quantity       int    `json:"quantity"`
+	SuccessURL     string `json:"success_url,omitempty"`
+	CancelURL      string `json:"cancel_url,omitempty"`
+	IdempotencyKey string `json:"-"`
 }
 
 type PaymentEvent struct {

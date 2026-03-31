@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -69,6 +70,12 @@ type fakeUsageReader struct {
 	apiKeyUsage map[string]model.APIKeyUsageSummary
 }
 
+type fakePaymentClient struct {
+	lastInput      model.OrderCheckoutInput
+	checkoutResult model.CheckoutSession
+	checkoutErr    error
+}
+
 func (f *fakeCallLogRepo) Insert(_ context.Context, entry model.CallLog) error {
 	f.logs = append(f.logs, entry)
 	return nil
@@ -131,6 +138,18 @@ func (f *fakeUsageReader) ListUsageEventsByUser(_ context.Context, _ string, _ m
 
 func (f *fakeUsageReader) SummarizeUsageByAPIKey(_ context.Context, _ string, _ model.UsageQuery) (map[string]model.APIKeyUsageSummary, error) {
 	return f.apiKeyUsage, nil
+}
+
+func (f *fakePaymentClient) CreateOrderCheckout(_ context.Context, input model.OrderCheckoutInput) (model.CheckoutSession, error) {
+	f.lastInput = input
+	if f.checkoutErr != nil {
+		return model.CheckoutSession{}, f.checkoutErr
+	}
+	return f.checkoutResult, nil
+}
+
+func (f *fakePaymentClient) HandleWebhook(_ context.Context, _ []byte, _ string) (model.PaymentEvent, error) {
+	return model.PaymentEvent{}, nil
 }
 
 func TestService_Status(t *testing.T) {
@@ -450,5 +469,111 @@ func TestService_DashboardSummary(t *testing.T) {
 	}
 	if result.ErrorSummary == nil || result.ErrorSummary.LastErrorCode != "UPSTREAM_TIMEOUT" {
 		t.Fatalf("unexpected error summary: %+v", result.ErrorSummary)
+	}
+}
+
+func TestService_CreditPacks(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetCreditPacks([]model.CreditPackSpec{
+		{
+			CreditPack: model.CreditPack{
+				ID:          "credits_500",
+				Name:        "500 credits",
+				Description: "starter",
+				PriceCent:   500,
+				Currency:    "USD",
+				Credits:     500,
+			},
+			PriceID: "price_500",
+		},
+		{
+			CreditPack: model.CreditPack{
+				ID:          "credits_2000",
+				Name:        "2,000 credits",
+				Description: "best value",
+				PriceCent:   1800,
+				Currency:    "USD",
+				Credits:     2000,
+				Featured:    true,
+				Badge:       "Best value",
+			},
+			PriceID: "price_2000",
+		},
+	})
+
+	result, err := service.CreditPacks(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"})
+	if err != nil {
+		t.Fatalf("CreditPacks() error = %v", err)
+	}
+	if len(result.Packs) != 2 {
+		t.Fatalf("expected 2 packs, got %d", len(result.Packs))
+	}
+	if result.Packs[0].ID != "credits_500" || result.Packs[0].PriceCent != 500 {
+		t.Fatalf("unexpected first pack: %+v", result.Packs[0])
+	}
+	if result.Packs[1].ID != "credits_2000" || !result.Packs[1].Featured || result.Packs[1].Badge != "Best value" {
+		t.Fatalf("unexpected second pack: %+v", result.Packs[1])
+	}
+}
+
+func TestService_CreateCheckout(t *testing.T) {
+	payment := &fakePaymentClient{
+		checkoutResult: model.CheckoutSession{
+			ID:  "cs_123",
+			URL: "https://checkout.stripe.test/session/cs_123",
+		},
+	}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetPaymentClient(payment)
+	service.SetCreditPacks([]model.CreditPackSpec{
+		{
+			CreditPack: model.CreditPack{
+				ID:        "credits_2000",
+				Name:      "2,000 credits",
+				PriceCent: 1800,
+				Currency:  "USD",
+				Credits:   2000,
+			},
+			PriceID: "price_2000",
+		},
+	})
+
+	result, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, model.CreateCheckoutInput{
+		PackID:     "credits_2000",
+		Quantity:   2,
+		SuccessURL: "https://anycap.ai/dashboard/billing?checkout=success",
+		CancelURL:  "https://anycap.ai/dashboard/buy-credits?checkout=cancel",
+	})
+	if err != nil {
+		t.Fatalf("CreateCheckout() error = %v", err)
+	}
+	if result.CheckoutURL != "https://checkout.stripe.test/session/cs_123" || result.SessionType != "order" {
+		t.Fatalf("unexpected checkout result: %+v", result)
+	}
+	if payment.lastInput.UserID != "2000000001" || payment.lastInput.PriceID != "price_2000" || payment.lastInput.Quantity != 2 {
+		t.Fatalf("unexpected payment input: %+v", payment.lastInput)
+	}
+}
+
+func TestService_CreateCheckoutRejectsUnknownPack(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetPaymentClient(&fakePaymentClient{})
+	service.SetCreditPacks([]model.CreditPackSpec{{
+		CreditPack: model.CreditPack{
+			ID:   "credits_500",
+			Name: "500 credits",
+		},
+		PriceID: "price_500",
+	}})
+
+	_, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, model.CreateCheckoutInput{
+		PackID: "missing_pack",
+	})
+	if err == nil {
+		t.Fatal("expected error for unknown pack")
+	}
+	var domainErr *model.DomainError
+	if !errors.As(err, &domainErr) || domainErr.Code != "validation" {
+		t.Fatalf("expected validation error, got %v", err)
 	}
 }

@@ -16,6 +16,28 @@ export type Balance = {
   credit_cent_balance: number;
 };
 
+/** GET /v1/pricing/credit-packs */
+export type CreditPack = {
+  id: string;
+  name: string;
+  description?: string;
+  price_cent: number;
+  currency: string;
+  credits: number;
+  featured?: boolean;
+  badge?: string;
+};
+
+export type CreditPackListResult = {
+  packs: CreditPack[];
+};
+
+/** POST /v1/billing/checkout */
+export type BillingCheckoutResult = {
+  checkout_url: string;
+  session_type: "order";
+};
+
 /** Items inside GET /v1/logs */
 export type TimelineItem = {
   type: "capability_call" | "credit_transaction";

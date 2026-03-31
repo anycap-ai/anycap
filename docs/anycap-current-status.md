@@ -165,7 +165,8 @@ Distributed via GitHub. Agents install with `anycap skill install`.
 | Overview | Credit balance, recent activity, error summary |
 | Usage | Usage statistics |
 | Logs | Detailed call logs |
-| Billing | Credits management |
+| Billing | Credit balance, purchase history, payment result feedback |
+| Buy credits | Credit pack selection and one-time checkout entry |
 | API Keys | Create, disable, delete API keys |
 | Drive | Visual file browser |
 | Pages | Site management with version history, published Open, and verified version Preview |
@@ -210,6 +211,8 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 - **Balance check**: enforced before every execution
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID
 - **Usage reporting**: aggregated statistics available in dashboard and via API
+- **One-time credit purchase API**: authenticated users can list configured credit packs via `GET /v1/pricing/credit-packs` and create checkout sessions via `POST /v1/billing/checkout`
+- **Payment integration boundary**: AnyCap server maps internal `pack_id -> price_id` and calls the external Payment Service; web clients never talk to Payment directly
 - **Rate limiting**: per-user, per-capability
 
 ## 8. Feedback

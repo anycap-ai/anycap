@@ -2,7 +2,9 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"sort"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
@@ -18,7 +20,9 @@ type Service struct {
 	usage     port.UsageReader
 	users     port.UserReader
 	credit    port.CreditClient
+	payment   port.PaymentClient
 	callLogs  port.CallLogRepo
+	packs     []model.CreditPackSpec
 	features  map[string]bool
 	provider  featureProvider
 }
@@ -74,8 +78,16 @@ func (s *Service) SetCreditClient(credit port.CreditClient) {
 	s.credit = credit
 }
 
+func (s *Service) SetPaymentClient(payment port.PaymentClient) {
+	s.payment = payment
+}
+
 func (s *Service) SetCallLogRepo(callLogs port.CallLogRepo) {
 	s.callLogs = callLogs
+}
+
+func (s *Service) SetCreditPacks(packs []model.CreditPackSpec) {
+	s.packs = append([]model.CreditPackSpec(nil), packs...)
 }
 
 func (s *Service) Status(principal *model.Principal) model.StatusResult {
@@ -122,6 +134,56 @@ func (s *Service) CreditBalance(ctx context.Context, principal *model.Principal)
 		return model.Balance{}, model.ErrInternal
 	}
 	return s.credit.GetBalance(ctx, principal.UserID)
+}
+
+func (s *Service) CreditPacks(_ context.Context, principal *model.Principal) (model.CreditPackListResult, error) {
+	if principal == nil || principal.UserID == "" {
+		return model.CreditPackListResult{}, model.ErrAuthInvalid
+	}
+	result := make([]model.CreditPack, 0, len(s.packs))
+	for _, pack := range s.packs {
+		result = append(result, pack.CreditPack)
+	}
+	return model.CreditPackListResult{Packs: result}, nil
+}
+
+func (s *Service) CreateCheckout(ctx context.Context, principal *model.Principal, input model.CreateCheckoutInput) (model.CreateCheckoutResult, error) {
+	if principal == nil || principal.UserID == "" {
+		return model.CreateCheckoutResult{}, model.ErrAuthInvalid
+	}
+	if input.PackID == "" {
+		return model.CreateCheckoutResult{}, model.ErrValidation("pack_id is required")
+	}
+	if s.payment == nil {
+		return model.CreateCheckoutResult{}, model.ErrNotConfigured("payment service is not configured")
+	}
+
+	pack, ok := s.findCreditPack(input.PackID)
+	if !ok {
+		return model.CreateCheckoutResult{}, model.ErrValidation("invalid_pack_id")
+	}
+
+	quantity := input.Quantity
+	if quantity <= 0 {
+		quantity = 1
+	}
+
+	session, err := s.payment.CreateOrderCheckout(ctx, model.OrderCheckoutInput{
+		UserID:         principal.UserID,
+		PriceID:        pack.PriceID,
+		Quantity:       quantity,
+		SuccessURL:     input.SuccessURL,
+		CancelURL:      input.CancelURL,
+		IdempotencyKey: fmt.Sprintf("checkout-%s-%d", principal.UserID, time.Now().UTC().UnixNano()),
+	})
+	if err != nil {
+		return model.CreateCheckoutResult{}, err
+	}
+
+	return model.CreateCheckoutResult{
+		CheckoutURL: session.URL,
+		SessionType: "order",
+	}, nil
 }
 
 func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (model.APIKeyListResult, error) {
@@ -256,6 +318,15 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 	}
 
 	return model.LogsResult{Items: items}, nil
+}
+
+func (s *Service) findCreditPack(packID string) (model.CreditPackSpec, bool) {
+	for _, pack := range s.packs {
+		if pack.ID == packID {
+			return pack, true
+		}
+	}
+	return model.CreditPackSpec{}, false
 }
 
 func (s *Service) DashboardSummary(ctx context.Context, principal *model.Principal) (model.DashboardSummaryResult, error) {

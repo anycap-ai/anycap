@@ -41,6 +41,14 @@ func ErrorEnvelope(requestID, code, message string) Envelope {
 
 func MapDomainError(err error) (int, Envelope) {
 	switch {
+	case isDomainError(err, "validation"):
+		return consts.StatusBadRequest, ErrorEnvelope("", "validation", err.Error())
+	case isDomainError(err, "not_configured"):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", "not_configured", err.Error())
+	case isDomainError(err, "conflict"):
+		return consts.StatusConflict, ErrorEnvelope("", "conflict", err.Error())
+	case isDomainError(err, "not_found"):
+		return consts.StatusNotFound, ErrorEnvelope("", "not_found", err.Error())
 	case errors.Is(err, model.ErrAuthInvalid):
 		return consts.StatusUnauthorized, ErrorEnvelope("", model.ErrAuthInvalid.Code, model.ErrAuthInvalid.Message)
 	case errors.Is(err, model.ErrAuthExpired):
@@ -80,4 +88,9 @@ func MapDomainError(err error) (int, Envelope) {
 	default:
 		return consts.StatusInternalServerError, ErrorEnvelope("", model.ErrInternal.Code, model.ErrInternal.Message)
 	}
+}
+
+func isDomainError(err error, code string) bool {
+	var domainErr *model.DomainError
+	return errors.As(err, &domainErr) && domainErr.Code == code
 }

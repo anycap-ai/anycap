@@ -15,7 +15,10 @@
   "features": {
     "image.generate": {
       "enabled": true,
-      "rollout": "all"
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal"
+      ]
     },
     "image.models": {
       "enabled": true,

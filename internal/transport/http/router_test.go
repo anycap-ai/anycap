@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -63,12 +64,28 @@ type testIdentityTokenAuthenticator struct {
 	principals map[string]model.Principal
 }
 
+type fakeRouterPaymentClient struct {
+	checkout model.CheckoutSession
+	err      error
+}
+
 func (a *testIdentityTokenAuthenticator) AuthenticateIdentityToken(_ context.Context, rawToken string) (model.Principal, error) {
 	principal, ok := a.principals[rawToken]
 	if !ok {
 		return model.Principal{}, model.ErrAuthInvalid
 	}
 	return principal, nil
+}
+
+func (f *fakeRouterPaymentClient) CreateOrderCheckout(_ context.Context, _ model.OrderCheckoutInput) (model.CheckoutSession, error) {
+	if f.err != nil {
+		return model.CheckoutSession{}, f.err
+	}
+	return f.checkout, nil
+}
+
+func (f *fakeRouterPaymentClient) HandleWebhook(_ context.Context, _ []byte, _ string) (model.PaymentEvent, error) {
+	return model.PaymentEvent{}, nil
 }
 
 func (s *modelRouteRepoStub) ListModelRoutes(_ context.Context, _ model.ListModelRoutesFilter) ([]model.ModelRoute, error) {
@@ -518,6 +535,38 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	systemService.SetCreditClient(creditClient)
 	systemService.SetCallLogRepo(callLogs)
 	systemService.SetUsageReader(usageRepo)
+	systemService.SetPaymentClient(&fakeRouterPaymentClient{
+		checkout: model.CheckoutSession{
+			ID:  "cs_test_123",
+			URL: "https://checkout.stripe.test/session/cs_test_123",
+		},
+	})
+	systemService.SetCreditPacks([]model.CreditPackSpec{
+		{
+			CreditPack: model.CreditPack{
+				ID:          "credits_500",
+				Name:        "500 credits",
+				Description: "starter",
+				PriceCent:   500,
+				Currency:    "USD",
+				Credits:     500,
+			},
+			PriceID: "price_500",
+		},
+		{
+			CreditPack: model.CreditPack{
+				ID:          "credits_2000",
+				Name:        "2,000 credits",
+				Description: "best value",
+				PriceCent:   1800,
+				Currency:    "USD",
+				Credits:     2000,
+				Featured:    true,
+				Badge:       "Best value",
+			},
+			PriceID: "price_2000",
+		},
+	})
 	passthroughMapper := presenter.PassthroughIDMapper{}
 	systemHandler := system.NewHandler(systemService, passthroughMapper)
 	loginHandler := login.NewHandler(loginapp.NewService(
@@ -963,6 +1012,120 @@ func TestRouter_DashboardReadAPIs(t *testing.T) {
 	}
 	if _, ok := data["balance"].(map[string]any); !ok {
 		t.Fatalf("expected balance object in summary, got %#v", data)
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/pricing/credit-packs", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/pricing/credit-packs response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	packs, ok := data["packs"].([]any)
+	if !ok || len(packs) != 2 {
+		t.Fatalf("expected 2 packs in response, got %#v", data)
+	}
+
+	checkoutBody := []byte(`{"pack_id":"credits_2000","quantity":1,"success_url":"https://anycap.ai/dashboard/billing?checkout=success","cancel_url":"https://anycap.ai/dashboard/buy-credits?checkout=cancel"}`)
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/billing/checkout", &ut.Body{Body: bytes.NewReader(checkoutBody), Len: len(checkoutBody)},
+		authz,
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal /v1/billing/checkout response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected object data, got %#v", env["data"])
+	}
+	if checkoutURL, _ := data["checkout_url"].(string); checkoutURL == "" {
+		t.Fatalf("expected checkout_url, got %#v", data)
+	}
+}
+
+func TestRouter_BillingCheckoutRejectsUnknownPack(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	authz := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	body := []byte(`{"pack_id":"missing_pack"}`)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/billing/checkout", &ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		authz,
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal error response: %v", err)
+	}
+	if env["status"] != "error" {
+		t.Fatalf("expected error envelope, got %#v", env)
+	}
+	errorPayload, ok := env["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected error payload, got %#v", env["error"])
+	}
+	if code, _ := errorPayload["code"].(string); code != "validation" {
+		t.Fatalf("expected validation code, got %#v", errorPayload)
+	}
+}
+
+func TestRouter_BillingCheckoutReturnsUpstreamFailure(t *testing.T) {
+	// Build a minimal isolated service/router with payment failure to verify HTTP mapping.
+	apiKeys := apikey.NewMemoryService()
+	users := userstore.NewMemoryProvisioner()
+	created, err := apiKeys.CreateAPIKey(context.Background(), "2000000001", "cli")
+	if err != nil {
+		t.Fatalf("CreateAPIKey() error = %v", err)
+	}
+	_, _, err = users.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{UserID: "external-user", Email: "user@example.com"}, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	systemService := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, apiKeys)
+	systemService.SetUserReader(users)
+	systemService.SetCreditClient(credit.NewStubClient(nil))
+	systemService.SetCallLogRepo(calllog.NewMemoryCallLogRepo())
+	systemService.SetPaymentClient(&fakeRouterPaymentClient{err: errors.New("checkout create failed")})
+	systemService.SetCreditPacks([]model.CreditPackSpec{{
+		CreditPack: model.CreditPack{
+			ID:        "credits_500",
+			Name:      "500 credits",
+			PriceCent: 500,
+			Currency:  "USD",
+			Credits:   500,
+		},
+		PriceID: "price_500",
+	}})
+	systemHandler := system.NewHandler(systemService, presenter.PassthroughIDMapper{})
+	engine := NewRouter(RouterConfig{
+		Addr: ":0",
+		Middlewares: []app.HandlerFunc{middleware.Recover(), middleware.RequestID(), middleware.AccessLog()},
+		V1: []RouteRegistrar{
+			RouteRegistrarFunc(func(group *route.RouterGroup) {
+				protected := group.Group("", middleware.Auth(apiKeys, nil), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: 10}))
+				systemHandler.RegisterProtectedRoutes(protected)
+			}),
+		},
+	})
+	failAuthz := ut.Header{Key: "Authorization", Value: "Bearer " + created.RawKey}
+	body := []byte(`{"pack_id":"credits_500"}`)
+
+	resp := ut.PerformRequest(engine.Engine, http.MethodPost, "/v1/billing/checkout", &ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		failAuthz,
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusInternalServerError && resp.Code != http.StatusBadGateway && resp.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected mapped failure status, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

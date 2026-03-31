@@ -93,6 +93,9 @@ func (c *HTTPClient) Deduct(ctx context.Context, userID string, amount int64, re
 }
 
 func (c *HTTPClient) GrantSignupReward(ctx context.Context, userID string) error {
+	if !c.config.SignupRewardEnabled {
+		return nil
+	}
 	numericUserID, err := parseUserID(userID)
 	if err != nil {
 		return model.ErrInternal

@@ -88,6 +88,8 @@ type Config struct {
 	NexusHubCoreBaseURL     string
 	NexusHubCoreToken       string
 	Credit                  CreditConfig
+	Payment                 PaymentConfig
+	CreditPacks             []CreditPackConfig
 	AgentPlatform           AgentPlatformConfig
 	CloudS3                 S3Config
 	Lark                    LarkConfig
@@ -112,6 +114,7 @@ type CreditConfig struct {
 	BaseURL                    string
 	BizToken                   string
 	Timeout                    time.Duration
+	SignupRewardEnabled        bool
 	SignupRewardPackageID      int64
 	SignupRewardPackageType    string
 	SignupRewardPackageSubtype string
@@ -119,6 +122,28 @@ type CreditConfig struct {
 
 func (c CreditConfig) Enabled() bool {
 	return c.BaseURL != "" && c.BizToken != ""
+}
+
+type PaymentConfig struct {
+	BaseURL  string
+	BizToken string
+	Timeout  time.Duration
+}
+
+func (c PaymentConfig) Enabled() bool {
+	return c.BaseURL != "" && c.BizToken != ""
+}
+
+type CreditPackConfig struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	PriceCent   int64  `json:"price_cent"`
+	Currency    string `json:"currency"`
+	Credits     int64  `json:"credits"`
+	Featured    bool   `json:"featured,omitempty"`
+	Badge       string `json:"badge,omitempty"`
+	PriceID     string `json:"price_id"`
 }
 
 type AgentPlatformConfig struct {
@@ -225,6 +250,7 @@ func LoadFromEnv() (Config, error) {
 		NexusHubCoreBaseURL:     getEnv("NEXUSHUB_CORE_BASE_URL", ""),
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
 		Credit:                  loadCreditConfig(),
+		Payment:                 loadPaymentConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
 		CloudS3:                 loadCloudS3Config(),
 		Lark: LarkConfig{
@@ -257,6 +283,12 @@ func LoadFromEnv() (Config, error) {
 		UsageSyncPollInterval: getEnvDuration("ANYCAP_USAGE_SYNC_POLL_INTERVAL", defaultUsageSyncPollInterval),
 		UsageSyncBatchSize:    getEnvInt("ANYCAP_USAGE_SYNC_BATCH_SIZE", defaultUsageSyncBatchSize),
 	}
+
+	creditPacks, err := loadCreditPacksConfig()
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.CreditPacks = creditPacks
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {
 		legacyDSN, ok, err := loadLegacyPostgresDSNFromEnv()
@@ -379,10 +411,57 @@ func loadCreditConfig() CreditConfig {
 		BaseURL:                    getEnv("ANYCAP_CREDIT_BASE_URL", ""),
 		BizToken:                   getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
 		Timeout:                    timeout,
+		SignupRewardEnabled:        getEnvBool("ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED", false),
 		SignupRewardPackageID:      getEnvInt64("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_ID", 0),
 		SignupRewardPackageType:    getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", ""),
 		SignupRewardPackageSubtype: getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", ""),
 	}
+}
+
+func loadPaymentConfig() PaymentConfig {
+	timeout := 10 * time.Second
+	if s := os.Getenv("ANYCAP_PAYMENT_TIMEOUT_SECONDS"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			timeout = time.Duration(n) * time.Second
+		}
+	}
+
+	return PaymentConfig{
+		BaseURL:  getEnv("ANYCAP_PAYMENT_BASE_URL", ""),
+		BizToken: getEnv("ANYCAP_PAYMENT_BIZ_TOKEN", ""),
+		Timeout:  timeout,
+	}
+}
+
+func loadCreditPacksConfig() ([]CreditPackConfig, error) {
+	raw := strings.TrimSpace(os.Getenv("ANYCAP_CREDIT_PACKS_JSON"))
+	if raw == "" {
+		return nil, nil
+	}
+
+	var packs []CreditPackConfig
+	if err := json.Unmarshal([]byte(raw), &packs); err != nil {
+		return nil, fmt.Errorf("parse ANYCAP_CREDIT_PACKS_JSON: %w", err)
+	}
+	for i := range packs {
+		pack := &packs[i]
+		switch {
+		case strings.TrimSpace(pack.ID) == "":
+			return nil, fmt.Errorf("ANYCAP_CREDIT_PACKS_JSON pack id is required")
+		case strings.TrimSpace(pack.Name) == "":
+			return nil, fmt.Errorf("ANYCAP_CREDIT_PACKS_JSON pack name is required")
+		case strings.TrimSpace(pack.PriceID) == "":
+			return nil, fmt.Errorf("ANYCAP_CREDIT_PACKS_JSON price_id is required")
+		case pack.PriceCent <= 0:
+			return nil, fmt.Errorf("ANYCAP_CREDIT_PACKS_JSON price_cent must be positive")
+		case pack.Credits <= 0:
+			return nil, fmt.Errorf("ANYCAP_CREDIT_PACKS_JSON credits must be positive")
+		}
+		if strings.TrimSpace(pack.Currency) == "" {
+			pack.Currency = "USD"
+		}
+	}
+	return packs, nil
 }
 
 func loadRateLimitOverrides() map[string]int {

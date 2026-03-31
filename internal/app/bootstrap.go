@@ -40,6 +40,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	paymentinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/payment"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -248,6 +249,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	videoExecutionClient := buildVideoExecutionClient(cfg)
 	musicExecutionClient := buildMusicExecutionClient(cfg)
 	creditClient := buildCreditClient(cfg)
+	paymentClient := buildPaymentClient(cfg)
+	creditPacks := buildCreditPackSpecs(cfg.CreditPacks)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
@@ -259,7 +262,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
+		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetCreditPacks(creditPacks)
 		systemService.SetUsageReader(usageRepo)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
@@ -345,7 +350,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
+		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetCreditPacks(creditPacks)
 		systemService.SetUsageReader(usageRepo)
 		var externalIDMapper interface {
 			idresolver.IDResolver
@@ -503,6 +510,35 @@ func buildCreditClient(cfg config.Config) port.CreditClient {
 	}
 	log.Println("credit: using stub (set ANYCAP_CREDIT_* env vars for real credit)")
 	return credit.NewStubClient(nil)
+}
+
+func buildPaymentClient(cfg config.Config) port.PaymentClient {
+	if cfg.Payment.Enabled() {
+		log.Printf("payment: using payment service at %s", cfg.Payment.BaseURL)
+		return paymentinfra.NewHTTPClient(cfg.Payment, nil)
+	}
+	log.Println("payment: using stub (set ANYCAP_PAYMENT_* env vars for real payment)")
+	return paymentinfra.NewStubClient()
+}
+
+func buildCreditPackSpecs(configs []config.CreditPackConfig) []model.CreditPackSpec {
+	result := make([]model.CreditPackSpec, 0, len(configs))
+	for _, item := range configs {
+		result = append(result, model.CreditPackSpec{
+			CreditPack: model.CreditPack{
+				ID:          item.ID,
+				Name:        item.Name,
+				Description: item.Description,
+				PriceCent:   item.PriceCent,
+				Currency:    item.Currency,
+				Credits:     item.Credits,
+				Featured:    item.Featured,
+				Badge:       item.Badge,
+			},
+			PriceID: item.PriceID,
+		})
+	}
+	return result
 }
 
 func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {

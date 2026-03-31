@@ -255,6 +255,46 @@ func TestLoadFromEnv_ClampsEdgeGrantTTLs(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnv_LoadsPaymentConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAYMENT_BASE_URL", "https://payment.example.com")
+	t.Setenv("ANYCAP_PAYMENT_BIZ_TOKEN", "biz-token")
+	t.Setenv("ANYCAP_PAYMENT_TIMEOUT_SECONDS", "15")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.Payment.BaseURL != "https://payment.example.com" {
+		t.Fatalf("expected payment base url, got %q", cfg.Payment.BaseURL)
+	}
+	if cfg.Payment.BizToken != "biz-token" {
+		t.Fatalf("expected payment biz token, got %q", cfg.Payment.BizToken)
+	}
+	if cfg.Payment.Timeout != 15*time.Second {
+		t.Fatalf("expected payment timeout 15s, got %v", cfg.Payment.Timeout)
+	}
+}
+
+func TestLoadFromEnv_LoadsCreditPacks(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_CREDIT_PACKS_JSON", `[{"id":"credits_500","name":"500 credits","description":"starter","price_cent":500,"currency":"USD","credits":500,"price_id":"price_500"},{"id":"credits_2000","name":"2,000 credits","description":"best value","price_cent":1800,"currency":"USD","credits":2000,"featured":true,"badge":"Best value","price_id":"price_2000"}]`)
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if len(cfg.CreditPacks) != 2 {
+		t.Fatalf("expected 2 credit packs, got %d", len(cfg.CreditPacks))
+	}
+	if cfg.CreditPacks[0].ID != "credits_500" || cfg.CreditPacks[0].PriceID != "price_500" {
+		t.Fatalf("unexpected first pack: %+v", cfg.CreditPacks[0])
+	}
+	if !cfg.CreditPacks[1].Featured || cfg.CreditPacks[1].Badge != "Best value" {
+		t.Fatalf("unexpected second pack: %+v", cfg.CreditPacks[1])
+	}
+}
+
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "integration")
