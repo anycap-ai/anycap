@@ -308,7 +308,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | `release/cli-v<semver>` | goreleaser cross-compile, GitHub release |
 | `build/server` | Docker build server image only |
 | `deploy/server-dev` | Docker build + deploy to kntech-dev |
-| `deploy/server-prod` | Docker build + deploy to infra-prod |
+| `deploy/server-prod` | Docker build + deploy to anycap-prod |
 
 **CLI Release flow:**
 1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
