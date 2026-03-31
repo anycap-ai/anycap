@@ -193,6 +193,20 @@ func (w *fakePageKVSyncWaiter) Wait(_ context.Context, jobIDs []int64) error {
 	return nil
 }
 
+type fakePageEdgeGrantStore struct {
+	key        string
+	value      []byte
+	ttlSeconds int64
+	err        error
+}
+
+func (s *fakePageEdgeGrantStore) PutJSON(_ context.Context, key string, value []byte, ttlSeconds int64) error {
+	s.key = key
+	s.value = append([]byte(nil), value...)
+	s.ttlSeconds = ttlSeconds
+	return s.err
+}
+
 var errDuplicate = &duplicateError{}
 
 type duplicateError struct{}

@@ -57,14 +57,21 @@ func NewCloudflareKVClient(cfg CloudflareKVClientConfig) (*CloudflareKVClient, e
 }
 
 func (c *CloudflareKVClient) Put(ctx context.Context, key string, value []byte) error {
-	return c.request(ctx, http.MethodPut, key, value)
+	return c.request(ctx, http.MethodPut, key, value, 0)
+}
+
+func (c *CloudflareKVClient) PutWithTTL(ctx context.Context, key string, value []byte, ttlSeconds int64) error {
+	if ttlSeconds <= 0 {
+		return fmt.Errorf("kv ttl_seconds must be greater than zero")
+	}
+	return c.request(ctx, http.MethodPut, key, value, ttlSeconds)
 }
 
 func (c *CloudflareKVClient) Delete(ctx context.Context, key string) error {
-	return c.request(ctx, http.MethodDelete, key, nil)
+	return c.request(ctx, http.MethodDelete, key, nil, 0)
 }
 
-func (c *CloudflareKVClient) request(ctx context.Context, method string, key string, value []byte) error {
+func (c *CloudflareKVClient) request(ctx context.Context, method string, key string, value []byte, ttlSeconds int64) error {
 	if c == nil || c.httpClient == nil {
 		return fmt.Errorf("cloudflare kv client is not configured")
 	}
@@ -89,6 +96,11 @@ func (c *CloudflareKVClient) request(ctx context.Context, method string, key str
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
 	if err != nil {
 		return fmt.Errorf("build cloudflare kv request: %w", err)
+	}
+	if method == http.MethodPut && ttlSeconds > 0 {
+		query := req.URL.Query()
+		query.Set("expiration_ttl", fmt.Sprintf("%d", ttlSeconds))
+		req.URL.RawQuery = query.Encode()
 	}
 	req.Header.Set("Authorization", "Bearer "+c.apiToken)
 	if method == http.MethodPut {

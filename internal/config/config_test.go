@@ -54,6 +54,15 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.PageHostFormat != "page-%s.anycap.cloud" {
 		t.Fatalf("expected default page host format page-%%s.anycap.cloud, got %q", cfg.PageHostFormat)
 	}
+	if cfg.PagePreviewHostFormat != "preview-page-%s.anycap.cloud" {
+		t.Fatalf("expected default page preview host format preview-page-%%s.anycap.cloud, got %q", cfg.PagePreviewHostFormat)
+	}
+	if cfg.DriveAccessTTLSeconds != 300 {
+		t.Fatalf("expected default drive access ttl 300, got %d", cfg.DriveAccessTTLSeconds)
+	}
+	if cfg.PagePreviewTTLSeconds != 300 {
+		t.Fatalf("expected default page preview ttl 300, got %d", cfg.PagePreviewTTLSeconds)
+	}
 }
 
 func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
@@ -212,6 +221,37 @@ func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
 	}
 	if cfg.PageHostFormat != "pagedev-%s.anycap.cloud" {
 		t.Fatalf("expected normalized page host format, got %q", cfg.PageHostFormat)
+	}
+}
+
+func TestLoadFromEnv_DerivesPreviewHostFormatFromPageHostFormat(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "page-%s.anycap.dev")
+	t.Setenv("ANYCAP_PAGE_PREVIEW_HOST_FORMAT", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PagePreviewHostFormat != "preview-page-%s.anycap.dev" {
+		t.Fatalf("expected derived preview host format preview-page-%%s.anycap.dev, got %q", cfg.PagePreviewHostFormat)
+	}
+}
+
+func TestLoadFromEnv_ClampsEdgeGrantTTLs(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_DRIVE_ACCESS_TTL_SECONDS", "10")
+	t.Setenv("ANYCAP_PAGE_PREVIEW_TTL_SECONDS", "7200")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.DriveAccessTTLSeconds != 60 {
+		t.Fatalf("expected drive access ttl clamped to 60, got %d", cfg.DriveAccessTTLSeconds)
+	}
+	if cfg.PagePreviewTTLSeconds != 3600 {
+		t.Fatalf("expected page preview ttl clamped to 3600, got %d", cfg.PagePreviewTTLSeconds)
 	}
 }
 

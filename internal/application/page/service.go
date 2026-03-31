@@ -29,11 +29,14 @@ type Service struct {
 	uploadSessionRepo port.UploadSessionRepository
 	storageObjectRepo port.StorageObjectRepository
 	objectStore       port.CloudObjectStore
+	edgeGrantStore    port.EdgeGrantStore
 	kvSyncJobRepo     port.KVSyncJobRepository
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
 	passwordPepper    string
 	pageHostFormat    string
+	previewHostFormat string
+	previewTTLSeconds int64
 	now               func() time.Time
 }
 
@@ -41,11 +44,13 @@ type ServiceOption func(*Service)
 
 func NewService(spaceService port.SpaceService, siteRepo port.PageSiteRepository, slugRepo port.PageSlugRepository, passwordPepper string, options ...ServiceOption) *Service {
 	service := &Service{
-		spaceService:   spaceService,
-		siteRepo:       siteRepo,
-		slugRepo:       slugRepo,
-		passwordPepper: passwordPepper,
-		pageHostFormat: model.DefaultPageHostFormat,
+		spaceService:      spaceService,
+		siteRepo:          siteRepo,
+		slugRepo:          slugRepo,
+		passwordPepper:    passwordPepper,
+		pageHostFormat:    model.DefaultPageHostFormat,
+		previewHostFormat: "preview-page-%s.anycap.cloud",
+		previewTTLSeconds: 300,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
@@ -78,6 +83,18 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 func WithPageHostFormat(hostFormat string) ServiceOption {
 	return func(s *Service) {
 		s.pageHostFormat = model.NormalizePageHostFormat(hostFormat)
+	}
+}
+
+func WithPreviewHost(grantStore port.EdgeGrantStore, hostFormat string, ttlSeconds int64) ServiceOption {
+	return func(s *Service) {
+		s.edgeGrantStore = grantStore
+		if strings.TrimSpace(hostFormat) != "" {
+			s.previewHostFormat = model.NormalizePageHostFormat(hostFormat)
+		}
+		if ttlSeconds > 0 {
+			s.previewTTLSeconds = ttlSeconds
+		}
 	}
 }
 

@@ -29,13 +29,14 @@ export default function PagesPage() {
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">URL</th>
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Status</th>
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Updated</th>
+              <th className="text-right py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Action</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b border-[#eceee7]">
-                  {[0, 1, 2, 3].map((j) => (
+                  {[0, 1, 2, 3, 4].map((j) => (
                     <td key={j} className="py-[15px] px-5">
                       <div className="h-5 w-full bg-[#d0d4c8]/40 animate-pulse rounded" />
                     </td>
@@ -51,7 +52,7 @@ export default function PagesPage() {
                     </Link>
                   </td>
                   <td className="py-[15px] px-5 text-[14px]">
-                    {site.page_url ? (
+                    {site.current_version_id && site.page_url ? (
                       <a
                         href={site.page_url}
                         target="_blank"
@@ -72,11 +73,25 @@ export default function PagesPage() {
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
                     {formatTime(site.updated_at)}
                   </td>
+                  <td className="py-[15px] px-5 text-right">
+                    {site.current_version_id && site.page_url ? (
+                      <a
+                        href={site.page_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center px-2.5 py-1.5 text-[13px] rounded-lg text-[#7a7e71] hover:bg-[#eceee7] hover:text-[#1c1f17] transition-colors"
+                      >
+                        Open
+                      </a>
+                    ) : (
+                      <span className="text-[#b0b4a8] text-[13px]">—</span>
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-12 text-center text-[14px] text-[#7a7e71]">
+                <td colSpan={5} className="py-12 text-center text-[14px] text-[#7a7e71]">
                   No pages yet
                 </td>
               </tr>

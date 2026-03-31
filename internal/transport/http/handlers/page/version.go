@@ -299,6 +299,40 @@ func (h *Handler) PublishVersion(c context.Context, ctx *app.RequestContext) {
 	handlers.WriteSuccess(ctx, presented)
 }
 
+func (h *Handler) CreatePreviewHost(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		return
+	}
+	versionID, err := h.resolvePageVersionID(c, string(ctx.Param("vid")))
+	if err != nil {
+		idresolver.WriteIDResolveError(ctx, "invalid_page_version_id", err)
+		return
+	}
+
+	result, err := h.service.CreatePreviewHost(c, principal.UserID, siteID, versionID)
+	if err != nil {
+		handlers.WriteError(ctx, statusCodeForPageError(err), "create_page_preview_host_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(ctx, map[string]any{
+		"preview_url": result.PreviewURL,
+		"expires_at":  result.ExpiresAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+	})
+}
+
 func (h *Handler) RollbackCloneVersion(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
 		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")

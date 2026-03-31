@@ -8,6 +8,7 @@ function testConfig(): EdgeConfig {
 	return {
 		driveHost: "drive.anycap.cloud",
 		pageHostPrefix: "page-",
+		pagePreviewHostPrefix: "preview-page-",
 		driveAssetCacheTTLSeconds: 0,
 		pageAssetCacheTTLSeconds: 0,
 		drivePasswordRateLimitWindowSeconds: 300,
@@ -161,5 +162,63 @@ describe("handleDrive route", () => {
 
 		expect(response.status).toBe(410);
 		expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
+	});
+
+	it("renders preview for access token route", async () => {
+		const kv = createMockKV();
+		const r2 = createMockR2();
+		setKVJSON(kv.store, "drive:access:drvacc_token", {
+			node_id: 11,
+			space_id: 1,
+			name: "hello.txt",
+			object_key: "drive/file-11.txt",
+			mime: "text/plain; charset=utf-8",
+			size: 12,
+			expires_at: "2099-01-01T00:00:00Z",
+		});
+
+		const env = createEnv({
+			EDGE_KV: kv.namespace,
+			ANYCAP_CLOUD_R2: r2.bucket,
+		});
+		const response = await handleDrive(new Request("https://drive.anycap.cloud/o/drvacc_token"), env, testConfig());
+		const body = await response.text();
+
+		expect(response.status).toBe(200);
+		expect(body).toContain("hello.txt");
+		expect(body).toContain("/o/drvacc_token/raw");
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	});
+
+	it("serves raw content for access token route", async () => {
+		const kv = createMockKV();
+		const r2 = createMockR2({
+			"drive/file-11.txt": {
+				body: "hello world",
+				contentType: "text/plain; charset=utf-8",
+				etag: "etag-raw-11",
+			},
+		});
+		setKVJSON(kv.store, "drive:access:drvacc_token", {
+			node_id: 11,
+			space_id: 1,
+			name: "hello.txt",
+			object_key: "drive/file-11.txt",
+			mime: "text/plain; charset=utf-8",
+			size: 11,
+			expires_at: "2099-01-01T00:00:00Z",
+		});
+
+		const env = createEnv({
+			EDGE_KV: kv.namespace,
+			ANYCAP_CLOUD_R2: r2.bucket,
+		});
+		const response = await handleDrive(new Request("https://drive.anycap.cloud/o/drvacc_token/raw?download=1"), env, testConfig());
+		const body = await response.text();
+
+		expect(response.status).toBe(200);
+		expect(body).toBe("hello world");
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+		expect(response.headers.get("content-disposition")).toContain("attachment");
 	});
 });

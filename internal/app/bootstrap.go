@@ -33,6 +33,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
@@ -310,6 +311,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		pageVersionRepo := postgres.NewPageVersionRepo(db)
 		kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
 		kvClient := buildKVSyncClient(cfg)
+		edgeGrantStore := buildEdgeGrantStore(cfg)
 		driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
 		pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, cfg.PageHostFormat)
 		kvSyncWorker := kvsync.NewWorker(kvSyncJobRepo, map[string]kvsync.Projector{
@@ -395,6 +397,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				driveNodeRepo,
 				driveapp.WithUpload(uploadSessionRepo, storageObjectRepo, cloudObjectStore),
 				driveapp.WithShare(driveShareRepo, cfg.PasswordPepper, cfg.DriveShareBaseURL),
+				driveapp.WithEdgeAccess(edgeGrantStore, cfg.DriveAccessTTLSeconds, deriveDriveAccessBaseURL(cfg.DriveShareBaseURL)),
 				driveKVSyncOption,
 			),
 			pageService: pageapp.NewService(
@@ -404,6 +407,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				cfg.PasswordPepper,
 				pageapp.WithVersioning(pageVersionRepo, uploadSessionRepo, storageObjectRepo, cloudObjectStore),
 				pageapp.WithPageHostFormat(cfg.PageHostFormat),
+				pageapp.WithPreviewHost(edgeGrantStore, cfg.PagePreviewHostFormat, cfg.PagePreviewTTLSeconds),
 				pageKVSyncOption,
 			),
 			catalogService:      catalogService,
@@ -516,22 +520,52 @@ func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {
 }
 
 func buildKVSyncClient(cfg config.Config) kvsync.KVClient {
-	if cfg.CloudflareKV.Enabled() {
-		client, err := kvsync.NewCloudflareKVClient(kvsync.CloudflareKVClientConfig{
-			AccountID:   cfg.CloudflareKV.AccountID,
-			NamespaceID: cfg.CloudflareKV.NamespaceID,
-			APIToken:    cfg.CloudflareKV.APIToken,
-			APIBaseURL:  cfg.CloudflareKV.APIBaseURL,
-		})
-		if err != nil {
-			log.Printf("kvsync: failed to initialize cloudflare kv client, using noop client: %v", err)
-			return kvsync.NewNoopKVClient()
-		}
+	client, err := buildCloudflareKVClient(cfg)
+	if err == nil {
 		log.Printf("kvsync: using cloudflare kv namespace %s", cfg.CloudflareKV.NamespaceID)
 		return client
 	}
+	if cfg.CloudflareKV.Enabled() {
+		log.Printf("kvsync: failed to initialize cloudflare kv client, using noop client: %v", err)
+	}
 	log.Println("kvsync: using noop kv client (set ANYCAP_CLOUDFLARE_* env vars for real KV)")
 	return kvsync.NewNoopKVClient()
+}
+
+func buildEdgeGrantStore(cfg config.Config) port.EdgeGrantStore {
+	client, err := buildCloudflareKVClient(cfg)
+	if err == nil {
+		log.Printf("edge-grant: using cloudflare kv namespace %s", cfg.CloudflareKV.NamespaceID)
+		return edgegrant.NewKVStore(client)
+	}
+	if cfg.CloudflareKV.Enabled() {
+		log.Printf("edge-grant: failed to initialize cloudflare kv client, using unavailable store: %v", err)
+	} else {
+		log.Println("edge-grant: unavailable store (set ANYCAP_CLOUDFLARE_* env vars for preview/access grants)")
+	}
+	return edgegrant.NewUnavailableStore()
+}
+
+func buildCloudflareKVClient(cfg config.Config) (*kvsync.CloudflareKVClient, error) {
+	if !cfg.CloudflareKV.Enabled() {
+		return nil, fmt.Errorf("cloudflare kv is not configured")
+	}
+	return kvsync.NewCloudflareKVClient(kvsync.CloudflareKVClientConfig{
+		AccountID:   cfg.CloudflareKV.AccountID,
+		NamespaceID: cfg.CloudflareKV.NamespaceID,
+		APIToken:    cfg.CloudflareKV.APIToken,
+		APIBaseURL:  cfg.CloudflareKV.APIBaseURL,
+	})
+}
+
+func deriveDriveAccessBaseURL(shareBaseURL string) string {
+	const fallback = "https://drive.anycap.cloud"
+
+	parsed, err := url.Parse(strings.TrimSpace(shareBaseURL))
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return fallback
+	}
+	return parsed.Scheme + "://" + parsed.Host
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {

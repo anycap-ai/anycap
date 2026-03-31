@@ -29,8 +29,18 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 	if currentVersion != nil && currentVersion.ID != targetVersion.ID && targetVersion.VersionNo <= currentVersion.VersionNo {
 		return nil, model.ErrValidation("page version must move forward")
 	}
-	if targetVersion.Status != model.PageVersionStatusVerified && targetVersion.Status != model.PageVersionStatusPublished {
+	if targetVersion.Status != model.PageVersionStatusVerified && targetVersion.Status != model.PageVersionStatusPublished && targetVersion.Status != model.PageVersionStatusArchived {
 		return nil, model.ErrValidation("page version must be verified before publish")
+	}
+
+	// Archived versions are re-published by cloning into a new version first.
+	if targetVersion.Status == model.PageVersionStatusArchived {
+		cloned, err := s.RollbackCloneVersion(ctx, userID, pageID, versionID)
+		if err != nil {
+			return nil, err
+		}
+		targetVersion = cloned
+		versionID = cloned.ID
 	}
 
 	if currentVersion != nil && currentVersion.ID != targetVersion.ID && currentVersion.Status != model.PageVersionStatusArchived {

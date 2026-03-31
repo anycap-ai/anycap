@@ -44,4 +44,5 @@ type PageService interface {
 	RollbackCloneVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error)
 	ListVersions(ctx context.Context, userID string, pageID int64, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error)
 	GetVersionByNumber(ctx context.Context, userID string, pageID, versionNo int64) (*model.PageVersion, error)
+	CreatePreviewHost(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PagePreviewHost, error)
 }

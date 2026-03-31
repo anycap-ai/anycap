@@ -153,6 +153,20 @@ type fakeDriveShareRepo struct {
 	nextID int64
 }
 
+type fakeDriveEdgeGrantStore struct {
+	key        string
+	value      []byte
+	ttlSeconds int64
+	err        error
+}
+
+func (s *fakeDriveEdgeGrantStore) PutJSON(_ context.Context, key string, value []byte, ttlSeconds int64) error {
+	s.key = key
+	s.value = append([]byte(nil), value...)
+	s.ttlSeconds = ttlSeconds
+	return s.err
+}
+
 func (r *fakeDriveShareRepo) GetActiveByNodeID(_ context.Context, nodeID int64) (*model.DriveShareLink, error) {
 	link, ok := r.links[nodeID]
 	if !ok || link.Status != model.DriveShareStatusActive {
@@ -289,6 +303,78 @@ func TestDriveShareUpsertRotateRevoke(t *testing.T) {
 	active, _ := shareRepo.GetActiveByNodeID(context.Background(), 1)
 	if active != nil {
 		t.Fatalf("expected no active share after revoke, got %#v", active)
+	}
+}
+
+func TestCreateAccessLinks(t *testing.T) {
+	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	storageObjectID := int64(501)
+	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
+		1: {
+			ID:              1,
+			SpaceID:         100,
+			Kind:            model.DriveNodeKindFile,
+			Name:            "a.txt",
+			StorageObjectID: &storageObjectID,
+		},
+	}}
+	storageRepo := &fakeStorageObjectRepo{
+		objects: map[int64]*model.StorageObject{
+			storageObjectID: {
+				ID:        storageObjectID,
+				SpaceID:   100,
+				ObjectKey: "drive/spaces/100/nodes/1/uuid",
+				Size:      128,
+				MIME:      "text/plain; charset=utf-8",
+			},
+		},
+	}
+	grantStore := &fakeDriveEdgeGrantStore{}
+	svc := NewService(
+		&fakeSpaceService{space: space},
+		nodeRepo,
+		WithUpload(&fakeUploadSessionRepo{}, storageRepo, &fakeCloudObjectStore{}),
+		WithEdgeAccess(grantStore, 300, "https://drive.anycap.dev"),
+	)
+
+	result, err := svc.CreateAccessLinks(context.Background(), "u-1", 1)
+	if err != nil {
+		t.Fatalf("CreateAccessLinks() error = %v", err)
+	}
+	if !strings.HasPrefix(result.PreviewURL, "https://drive.anycap.dev/o/drvacc_") {
+		t.Fatalf("unexpected preview_url: %q", result.PreviewURL)
+	}
+	if !strings.Contains(result.DownloadURL, "/raw?download=1") {
+		t.Fatalf("unexpected download_url: %q", result.DownloadURL)
+	}
+	if grantStore.key == "" || !strings.HasPrefix(grantStore.key, "drive:access:drvacc_") {
+		t.Fatalf("unexpected grant key: %q", grantStore.key)
+	}
+	if grantStore.ttlSeconds != 300 {
+		t.Fatalf("expected ttl 300, got %d", grantStore.ttlSeconds)
+	}
+}
+
+func TestCreateAccessLinks_RejectsFolder(t *testing.T) {
+	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
+		1: {
+			ID:      1,
+			SpaceID: 100,
+			Kind:    model.DriveNodeKindFolder,
+			Name:    "docs",
+		},
+	}}
+	svc := NewService(
+		&fakeSpaceService{space: space},
+		nodeRepo,
+		WithUpload(&fakeUploadSessionRepo{}, &fakeStorageObjectRepo{}, &fakeCloudObjectStore{}),
+		WithEdgeAccess(&fakeDriveEdgeGrantStore{}, 300, "https://drive.anycap.dev"),
+	)
+
+	_, err := svc.CreateAccessLinks(context.Background(), "u-1", 1)
+	if err == nil || !strings.Contains(err.Error(), "must be a file") {
+		t.Fatalf("expected file validation error, got %v", err)
 	}
 }
 

@@ -10,6 +10,7 @@ describe("resolveConfig", () => {
 			cdnHost: "cdn.anycap.cloud",
 			driveHost: "drive.anycap.cloud",
 			pageHostPrefix: "page-",
+			pagePreviewHostPrefix: "preview-page-",
 			driveAssetCacheTTLSeconds: 60,
 			pageAssetCacheTTLSeconds: 60,
 			drivePasswordRateLimitWindowSeconds: 300,
@@ -27,6 +28,7 @@ describe("resolveConfig", () => {
 				CDN_HOST: " CDN.EXAMPLE.COM ",
 				DRIVE_HOST: " DRIVE.EXAMPLE.COM ",
 				PAGE_HOST_PREFIX: "pages",
+				PAGE_PREVIEW_HOST_PREFIX: "preview-pages",
 				DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS: "120",
 				PAGE_STATIC_ASSET_CACHE_TTL_SECONDS: "-1",
 				DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: "900",
@@ -41,6 +43,7 @@ describe("resolveConfig", () => {
 		expect(config.cdnHost).toBe("cdn.example.com");
 		expect(config.driveHost).toBe("drive.example.com");
 		expect(config.pageHostPrefix).toBe("pages-");
+		expect(config.pagePreviewHostPrefix).toBe("preview-pages-");
 		expect(config.driveAssetCacheTTLSeconds).toBe(120);
 		expect(config.pageAssetCacheTTLSeconds).toBe(60);
 		expect(config.drivePasswordRateLimitWindowSeconds).toBe(900);

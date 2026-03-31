@@ -96,6 +96,12 @@ export type DriveShareView = {
   status: "active" | "revoked";
 };
 
+export type DriveAccessLinksResult = {
+  preview_url: string;
+  download_url: string;
+  expires_at: string;
+};
+
 export type PageAccessMode = "public" | "password" | "private_reserved";
 
 export type PageSite = {
@@ -149,4 +155,9 @@ export type PageVersionPresignResult = {
   upload_url: string;
   object_url: string;
   expires_in: number;
+};
+
+export type PagePreviewHostResult = {
+  preview_url: string;
+  expires_at: string;
 };

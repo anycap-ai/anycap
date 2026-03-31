@@ -40,6 +40,10 @@ const (
 	defaultUsageSyncPollInterval = 1 * time.Minute
 	defaultUsageSyncBatchSize    = 50
 	defaultCloudflareAPIBaseURL  = "https://api.cloudflare.com/client/v4"
+	defaultDriveAccessTTLSeconds = int64(300)
+	defaultPagePreviewTTLSeconds = int64(300)
+	minEdgeGrantTTLSeconds       = int64(60)
+	maxEdgeGrantTTLSeconds       = int64(3600)
 )
 
 type Config struct {
@@ -89,7 +93,10 @@ type Config struct {
 	Lark                    LarkConfig
 	PasswordPepper          string
 	DriveShareBaseURL       string
+	DriveAccessTTLSeconds   int64
 	PageHostFormat          string
+	PagePreviewHostFormat   string
+	PagePreviewTTLSeconds   int64
 	CloudflareKV            CloudflareKVConfig
 	KVSyncEnabled           bool
 	KVSyncWaitEnabled       bool
@@ -172,6 +179,12 @@ func Load() Config {
 func LoadFromEnv() (Config, error) {
 	_ = godotenv.Load()
 
+	pageHostFormat := model.NormalizePageHostFormat(getEnv("ANYCAP_PAGE_HOST_FORMAT", ""))
+	pagePreviewHostFormat := resolvePagePreviewHostFormat(
+		pageHostFormat,
+		getEnv("ANYCAP_PAGE_PREVIEW_HOST_FORMAT", ""),
+	)
+
 	cfg := Config{
 		AppName:                 getEnv("ANYCAP_APP_NAME", defaultAppName),
 		AppEnv:                  getEnv("ANYCAP_APP_ENV", defaultAppEnv),
@@ -221,7 +234,14 @@ func LoadFromEnv() (Config, error) {
 		},
 		PasswordPepper:    os.Getenv("ANYCAP_PASSWORD_PEPPER"),
 		DriveShareBaseURL: getEnv("ANYCAP_DRIVE_SHARE_BASE_URL", defaultDriveShareBaseURL),
-		PageHostFormat:    model.NormalizePageHostFormat(getEnv("ANYCAP_PAGE_HOST_FORMAT", "")),
+		DriveAccessTTLSeconds: clampEdgeGrantTTLSeconds(
+			getEnvInt64("ANYCAP_DRIVE_ACCESS_TTL_SECONDS", defaultDriveAccessTTLSeconds),
+		),
+		PageHostFormat:        pageHostFormat,
+		PagePreviewHostFormat: pagePreviewHostFormat,
+		PagePreviewTTLSeconds: clampEdgeGrantTTLSeconds(
+			getEnvInt64("ANYCAP_PAGE_PREVIEW_TTL_SECONDS", defaultPagePreviewTTLSeconds),
+		),
 		CloudflareKV: CloudflareKVConfig{
 			AccountID:   getEnv("ANYCAP_CLOUDFLARE_ACCOUNT_ID", ""),
 			NamespaceID: getEnv("ANYCAP_CLOUDFLARE_KV_NAMESPACE_ID", ""),
@@ -567,4 +587,25 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return parsed
+}
+
+func clampEdgeGrantTTLSeconds(value int64) int64 {
+	if value < minEdgeGrantTTLSeconds {
+		return minEdgeGrantTTLSeconds
+	}
+	if value > maxEdgeGrantTTLSeconds {
+		return maxEdgeGrantTTLSeconds
+	}
+	return value
+}
+
+func resolvePagePreviewHostFormat(pageHostFormat string, rawPreviewHostFormat string) string {
+	if strings.TrimSpace(rawPreviewHostFormat) != "" {
+		return model.NormalizePageHostFormat(rawPreviewHostFormat)
+	}
+	base := strings.TrimSpace(pageHostFormat)
+	if base == "" {
+		base = model.DefaultPageHostFormat
+	}
+	return model.NormalizePageHostFormat("preview-" + base)
 }

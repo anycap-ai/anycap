@@ -31,6 +31,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityPUT(group, "/drive/nodes/:id/share", "drive.share.update", h.UpsertShare)
 	middleware.CapabilityPOST(group, "/drive/nodes/:id/share/rotate", "drive.share.rotate", h.RotateShare)
 	middleware.CapabilityDELETE(group, "/drive/nodes/:id/share", "drive.share.revoke", h.RevokeShare)
+	middleware.CapabilityPOST(group, "/drive/nodes/:id/access-links", "drive.file.access", h.CreateAccessLinks)
 }
 
 type createFolderRequest struct {

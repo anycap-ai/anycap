@@ -4,6 +4,7 @@ export type Env = {
 	CDN_HOST?: string;
 	DRIVE_HOST?: string;
 	PAGE_HOST_PREFIX?: string;
+	PAGE_PREVIEW_HOST_PREFIX?: string;
 	DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS?: string;
 	PAGE_STATIC_ASSET_CACHE_TTL_SECONDS?: string;
 	DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS?: string;
@@ -65,6 +66,16 @@ export type DriveFileRecord = {
 	updated_at?: string;
 };
 
+export type DriveAccessRecord = {
+	node_id: number;
+	space_id: number;
+	name: string;
+	object_key: string;
+	mime?: string | null;
+	size?: number | null;
+	expires_at?: string | null;
+};
+
 export type PageHostRecord = {
 	page_id: number;
 	space_id: number;
@@ -75,6 +86,8 @@ export type PageHostRecord = {
 	access_mode: "public" | "password" | "private_reserved";
 	password_hash?: string | null;
 	password_salt?: string | null;
+	preview?: boolean;
+	expires_at?: string | null;
 	edge_version?: number;
 	updated_at?: string;
 };

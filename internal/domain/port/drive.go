@@ -34,4 +34,5 @@ type DriveService interface {
 	UpsertShare(ctx context.Context, userID string, nodeID int64, expiresInSeconds *int64, noExpire bool, password *string, noPassword bool) (*model.DriveShareView, error)
 	RotateShare(ctx context.Context, userID string, nodeID int64) (*model.DriveShareView, error)
 	RevokeShare(ctx context.Context, userID string, nodeID int64) error
+	CreateAccessLinks(ctx context.Context, userID string, nodeID int64) (*model.DriveAccessLinks, error)
 }

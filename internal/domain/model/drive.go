@@ -101,3 +101,9 @@ type DriveShareView struct {
 	HasPassword bool
 	Status      string
 }
+
+type DriveAccessLinks struct {
+	PreviewURL  string
+	DownloadURL string
+	ExpiresAt   time.Time
+}

@@ -32,6 +32,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/files/complete", "page.asset.upload.complete", h.CompleteVersionAsset)
 	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/finalize", "page.version.finalize", h.FinalizeVersion)
 	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/publish", "page.publish", h.PublishVersion)
+	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/preview-host", "page.preview", h.CreatePreviewHost)
 	middleware.CapabilityPOST(group, "/pages/:id/versions/:vid/rollback-clone", "page.rollback", h.RollbackCloneVersion)
 	middleware.CapabilityPOST(group, "/pages/:id/unpublish", "page.unpublish", h.Unpublish)
 	middleware.CapabilityGET(group, "/pages/:id/versions", "page.version.list", h.ListVersions)
