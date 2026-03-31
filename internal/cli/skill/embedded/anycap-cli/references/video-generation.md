@@ -1,6 +1,6 @@
 # Video Generation
 
-Generate videos from text prompts. The generated video is automatically downloaded to the current directory.
+Generate videos from text prompts or animate reference images. The generated video is automatically downloaded to the current directory.
 
 ## Workflow
 
@@ -28,20 +28,61 @@ To inspect a specific model:
 anycap video models <model-id>
 ```
 
-### Step 2: Check parameter schema (important)
+Models support different **modes** -- each mode represents a distinct input/output modality:
 
-Each model accepts different parameters. Always fetch the schema before generating to discover available parameters:
+| Mode | Description |
+|------|-------------|
+| `text-to-video` | Generate video from text prompt |
+| `image-to-video` | Animate a reference image into video |
+
+Not all models support all modes. List modes for a model:
 
 ```bash
-anycap video models <model-id> schema
+anycap video models <model-id> | jq -r '.model.operations[].modes[].mode'
 ```
 
-The schema response describes all accepted parameters (ratio, resolution, duration, negative_prompt, etc.) with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
+### Step 2: Check parameter schema (important)
 
-List all parameter names and their types:
+Each model and mode accepts different parameters. Always fetch the schema before generating to discover available parameters:
 
 ```bash
-anycap video models <model-id> schema | jq -r '.data.schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
+# All schemas for a model (all operations and modes)
+anycap video models <model-id> schema
+
+# Filter by mode
+anycap video models <model-id> schema --mode text-to-video
+anycap video models <model-id> schema --mode image-to-video
+
+# Filter by operation and mode
+anycap video models <model-id> schema --operation generate --mode text-to-video
+```
+
+The schema response returns an array of schemas, each tagged with its operation and mode:
+
+```json
+{
+  "schemas": [
+    {
+      "operation": "generate",
+      "mode": "text-to-video",
+      "schema": {
+        "model_params": {
+          "prompt": {"type": "string", "required": true},
+          "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16", "1:1"]},
+          "duration": {"type": "integer", "enum": [4, 5, 6, 7, 8]},
+          "resolution": {"type": "string", "enum": ["720p", "1080p"]}
+        }
+      }
+    }
+  ]
+}
+```
+
+List parameter names and types for a specific mode:
+
+```bash
+anycap video models <model-id> schema --mode text-to-video \
+  | jq -r '.schemas[0].schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
 ```
 
 ### Step 3: Generate
@@ -50,7 +91,7 @@ The generated video is automatically saved to the current directory. Use `-o` to
 
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o ocean-waves.mp4`). Without `-o`, the file gets a generic timestamped name like `video_20260327_103000.mp4`.
 
-Basic generation:
+Basic text-to-video generation (mode is inferred):
 
 ```bash
 anycap video generate --prompt "a cat walking on the beach at sunset" --model <model-id>
@@ -62,18 +103,18 @@ With parameters discovered from the schema:
 anycap video generate \
   --prompt "ocean waves crashing on rocks" \
   --model <model-id> \
-  --param ratio=16:9 \
-  --param duration=5 \
-  --param negative_prompt="blurry, low quality"
+  --param aspect_ratio=16:9 \
+  --param duration=5
 ```
 
-Image-to-video (animate a reference image):
+Image-to-video with explicit mode:
 
 ```bash
 anycap video generate \
   --prompt "animate this scene with gentle wind" \
-  --model <model-id> \
-  --param reference_image_urls='["https://example.com/photo.jpg"]'
+  --model seedance-1.5-pro \
+  --mode image-to-video \
+  --param images='["https://example.com/photo.jpg"]'
 ```
 
 Save to a specific path:
@@ -91,6 +132,7 @@ anycap video generate \
 |------|----------|-------------|
 | `--prompt` | yes | Text description of the video to generate |
 | `--model` | yes | Model ID from `video models` |
+| `--mode` | no | Generation mode (e.g. `text-to-video`, `image-to-video`). Inferred if omitted |
 | `--param` | no | Parameter as `key=value` (repeatable); discover via `video models <model> schema` |
 | `-o, --output` | no | Custom output path (default: current directory) |
 
@@ -100,11 +142,10 @@ Values are auto-parsed as JSON when possible:
 
 | Example | Parsed as |
 |---------|-----------|
-| `--param ratio=16:9` | string `"16:9"` |
+| `--param aspect_ratio=16:9` | string `"16:9"` |
 | `--param duration=5` | number `5` |
 | `--param resolution=1080p` | string `"1080p"` |
-| `--param negative_prompt="blurry"` | string `"blurry"` |
-| `--param reference_image_urls='["url1","url2"]'` | array `["url1","url2"]` |
+| `--param images='["url1"]'` | array `["url1"]` |
 
 ### Output Format
 
@@ -131,17 +172,33 @@ anycap video generate --prompt "..." --model <model-id> | jq -r '.local_path'
 ## Complete Example
 
 ```bash
-# Find a model
+# Find available models
 anycap video models
 
-# Check what parameters it accepts
-anycap video models veo-3.1 schema
+# Check what modes seedance-1.5-pro supports
+anycap video models seedance-1.5-pro | jq '.model.operations[].modes[].mode'
+# -> "text-to-video", "image-to-video"
 
-# Generate with parameters from the schema
+# Check text-to-video parameters
+anycap video models seedance-1.5-pro schema --mode text-to-video
+
+# Generate text-to-video
 anycap video generate \
   --prompt "a watercolor animation of cherry blossoms falling" \
-  --model veo-3.1 \
-  --param ratio=16:9 \
+  --model seedance-1.5-pro \
+  --param aspect_ratio=16:9 \
   --param duration=5 \
   -o cherry-blossoms.mp4
+
+# Check image-to-video parameters
+anycap video models seedance-1.5-pro schema --mode image-to-video
+
+# Generate image-to-video
+anycap video generate \
+  --prompt "animate this landscape with clouds moving" \
+  --model seedance-1.5-pro \
+  --mode image-to-video \
+  --param images='["https://example.com/landscape.jpg"]' \
+  --param duration=8 \
+  -o animated-landscape.mp4
 ```

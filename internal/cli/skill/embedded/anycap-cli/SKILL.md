@@ -1,5 +1,7 @@
 ---
 name: anycap-cli
+metadata:
+  version: "dev"
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
   image read, video analysis, audio analysis, music composition, text-to-speech,
@@ -11,11 +13,7 @@ description: >
   or when encountering errors from AnyCap to submit feedback via
   'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities,
   AI-generated media, page hosting, or drive storage.
-metadata:
-  version: "dev"
-  website: https://anycap.ai
 license: MIT
-compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
 ---
 
 # AnyCap CLI
@@ -90,14 +88,31 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 
 ## Capabilities
 
-AnyCap capabilities are organized into two groups:
+AnyCap capabilities are organized into two groups: **generation** (create new content) and **actions** (AI operations on existing content).
 
-**Generation** -- create new content from prompts.
-Read [references/generation.md](references/generation.md) when you need to generate images. Images are auto-downloaded to the current directory; use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
-Read [references/video-generation.md](references/video-generation.md) when you need to generate videos. Videos are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o product-demo.mp4`). Supports text-to-video and image-to-video via `--reference-image`.
-Read [references/music-generation.md](references/music-generation.md) when you need to generate music or songs. Audio clips are auto-downloaded; use `-o` with a descriptive filename (e.g., `-o lofi-study.mp3`). Supports vocal songs with lyrics and instrumental tracks. May return multiple clips -- use `.outputs[0].local_path` to extract paths.
+### Generation Workflow
 
-**Long-running commands:** Image generation typically takes 5-30 seconds, video generation 30-120 seconds, and music generation 30-90 seconds. If your runtime supports background or async execution (e.g., spawning subprocesses, background tasks, non-blocking tool calls), prefer running generation commands asynchronously so you can continue other work while waiting. Generation commands are self-contained -- they block until complete and write the result file locally, so they are safe to run in the background without supervision.
+All generation capabilities (image, video, music) follow the same three-step pattern:
+
+```
+1. Discover models    anycap {cap} models
+2. Check schema       anycap {cap} models <model> schema [--mode <mode>]
+3. Generate           anycap {cap} generate --model <model> [--mode <mode>] --prompt "..."
+```
+
+**Modes** describe the input/output modality of a generation. A model may support multiple modes (e.g., `text-to-video` and `image-to-video`). When a model has only one mode, it is inferred automatically. When multiple modes exist, pass `--mode` explicitly or the server infers from request content.
+
+Generated files are auto-downloaded to the current directory. Always use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
+
+| Capability | Reference | Modes | Typical duration |
+|------------|-----------|-------|------------------|
+| Image | [generation.md](references/generation.md) | `text-to-image`, `image-to-image` | 5-30s |
+| Video | [video-generation.md](references/video-generation.md) | `text-to-video`, `image-to-video` | 30-120s |
+| Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
+
+Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
+
+If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, analyze audio, or perform other AI actions on existing files or URLs.
@@ -195,11 +210,17 @@ anycap status | jq -r '.status'
 # List available model IDs
 anycap image models | jq -r '.models[].model'
 
-# Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model flux-schnell -o descriptive-name.png | jq -r '.local_path'
+# List modes for a model
+anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
 
-# Generate a video and get its path
-anycap video generate --prompt "..." --model wan-2.1 -o clip.mp4 | jq -r '.local_path'
+# Get the local file path from a generate response (use -o for a descriptive name)
+anycap image generate --prompt "..." --model seedream-5 -o descriptive-name.png | jq -r '.local_path'
+
+# Generate a video (text-to-video, mode inferred) and get its path
+anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
+
+# Generate a video with explicit mode (image-to-video)
+anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images='["https://example.com/photo.jpg"]' -o animated.mp4 | jq -r '.local_path'
 
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
@@ -211,7 +232,7 @@ anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model flux-schnell | jq -r '.request_id')
+REQ_ID=$(anycap image generate --prompt "..." --model seedream-5 | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 
@@ -250,4 +271,3 @@ You can also check whether this skill file matches your CLI version:
 ```bash
 anycap skill check --target <path-to-this-file>
 ```
-``

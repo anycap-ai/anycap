@@ -1,5 +1,7 @@
 ---
 name: anycap-cli
+metadata:
+  version: "dev"
 description: >
   AnyCap CLI -- capability runtime for AI agents. One CLI for image generation,
   image read, video analysis, audio analysis, music composition, text-to-speech,

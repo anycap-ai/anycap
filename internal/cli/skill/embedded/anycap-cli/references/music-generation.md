@@ -28,20 +28,60 @@ To inspect a specific model:
 anycap music models <model-id>
 ```
 
+Models support different **modes** -- each mode represents a distinct input/output modality:
+
+| Mode | Description |
+|------|-------------|
+| `text-to-music` | Generate music from text description |
+
+List modes for a model:
+
+```bash
+anycap music models <model-id> | jq -r '.model.operations[].modes[].mode'
+```
+
 ### Step 2: Check parameter schema (important)
 
 Each model accepts different parameters. Always fetch the schema before generating to discover available parameters:
 
 ```bash
+# All schemas for a model
 anycap music models <model-id> schema
+
+# Filter by mode
+anycap music models <model-id> schema --mode text-to-music
+
+# Filter by operation and mode
+anycap music models <model-id> schema --operation generate --mode text-to-music
 ```
 
-The schema response describes all accepted parameters (tags, lyrics, title, make_instrumental, vocal_gender, etc.) with their types, defaults, and allowed values. Use this to construct valid flags and `--param` values.
+The schema response returns an array of schemas, each tagged with its operation and mode:
 
-List all parameter names and their types:
+```json
+{
+  "schemas": [
+    {
+      "operation": "generate",
+      "mode": "text-to-music",
+      "schema": {
+        "model_params": {
+          "prompt": {"type": "string", "required": true},
+          "tags": {"type": "string"},
+          "title": {"type": "string"},
+          "lyrics": {"type": "string"},
+          "make_instrumental": {"type": "boolean"}
+        }
+      }
+    }
+  ]
+}
+```
+
+List parameter names and types:
 
 ```bash
-anycap music models <model-id> schema | jq -r '.data.schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
+anycap music models <model-id> schema --mode text-to-music \
+  | jq -r '.schemas[0].schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
 ```
 
 ### Step 3: Generate
@@ -99,6 +139,7 @@ anycap music generate \
 | `--prompt` | one of prompt/tags | Text description of the music to generate |
 | `--tags` | one of prompt/tags | Comma-separated style tags (e.g. `"pop,upbeat,summer"`) |
 | `--model` | yes | Model ID from `music models` |
+| `--mode` | no | Generation mode (e.g. `text-to-music`). Inferred if omitted |
 | `--instrumental` | no | Generate instrumental only (no vocals) |
 | `--title` | no | Song title |
 | `--lyrics` | no | Song lyrics |
@@ -167,9 +208,11 @@ anycap music generate --prompt "..." --model <model-id> | jq -r '.outputs[].loca
 # Find available models
 anycap music models
 
-# Check what parameters a model accepts
-anycap music models suno-v5 schema
-anycap music models elevanlabs-music schema
+# Check what modes suno-v5 supports
+anycap music models suno-v5 | jq '.model.operations[].modes[].mode'
+
+# Check parameters for text-to-music
+anycap music models suno-v5 schema --mode text-to-music
 
 # --- Suno V5 ---
 # Generate with a descriptive prompt and tags
@@ -191,6 +234,9 @@ anycap music generate \
   -o endless-summer.mp3
 
 # --- ElevenLabs Music ---
+# Check ElevenLabs parameters
+anycap music models elevanlabs-music schema
+
 # Generate with duration control (music_length_ms)
 anycap music generate \
   --prompt "ambient electronic soundscape with ethereal pads" \

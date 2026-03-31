@@ -4,7 +4,7 @@
 # Branch strategy:
 #   main / MR              -> lint + test
 #   feat* / fix* / chore* -> lint + test
-#   dev/cli                -> lint + test + nightly CLI build + publish (skill + binary)
+#   dev/cli                -> nightly CLI build + publish (skill + binary)
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
@@ -75,7 +75,7 @@ workflow:
         APP_server_SAE_APP_NAMESPACE: "infra-prod"
 
 # ---------------------------------------------------------------------------
-# Lint (skip on release, build, deploy branches)
+# Lint (skip on release, build, deploy, nightly branches)
 # ---------------------------------------------------------------------------
 
 lint:
@@ -89,10 +89,12 @@ lint:
       when: never
     - if: $APPS
       when: never
+    - if: $NIGHTLY
+      when: never
     - when: on_success
 
 # ---------------------------------------------------------------------------
-# Test (skip on release, build, deploy branches)
+# Test (skip on release, build, deploy, nightly branches)
 # ---------------------------------------------------------------------------
 
 test:
@@ -105,6 +107,8 @@ test:
     - if: $RELEASE_CLI
       when: never
     - if: $APPS
+      when: never
+    - if: $NIGHTLY
       when: never
     - when: on_success
 
@@ -173,13 +177,12 @@ publish:nightly:
   stage: deploy
   tags:
     - docker
-  image: python:3.12-slim
+  image: python:3.13-slim
   needs:
     - job: build:cli:dev
       artifacts: true
   before_script:
-    - pip install --quiet nexushub-client
-        --extra-index-url "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.knoffice.tech/api/v4/projects/138/packages/pypi/simple"
+    - pip install --quiet nexushub-client --extra-index-url "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.knoffice.tech/api/v4/projects/138/packages/pypi/simple"
   script:
     - |
       # Bundle linux-amd64 binary into skill directory
