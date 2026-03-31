@@ -5,19 +5,25 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
 
 	"github.com/spf13/cobra"
 )
 
 func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var versionNo int64
+	var (
+		versionNo  int64
+		siteFlag   string
+		targetFlag string
+	)
 
 	cmd := &cobra.Command{
-		Use:   "publish <page-id>",
+		Use:   "publish [page-id]",
 		Short: "Publish a page version (default: latest verified)",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parseResourceID(args[0], "page-id")
+			projCfg, _ := projectconfig.Load()
+			pageID, err := resolvePageSiteID(args, siteFlag, targetFlag, projCfg)
 			if err != nil {
 				return err
 			}
@@ -53,6 +59,8 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 	}
 
 	cmd.Flags().Int64Var(&versionNo, "version", 0, "Version number to publish (default: latest verified)")
+	cmd.Flags().StringVar(&siteFlag, "page-id", "", "Page site ID")
+	cmd.Flags().StringVar(&targetFlag, "target", "", "Named target from anycap.toml")
 
 	return cmd
 }

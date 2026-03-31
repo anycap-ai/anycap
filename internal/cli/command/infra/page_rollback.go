@@ -5,19 +5,25 @@ import (
 	"io"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
 
 	"github.com/spf13/cobra"
 )
 
 func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var versionNo int64
+	var (
+		versionNo  int64
+		siteFlag   string
+		targetFlag string
+	)
 
 	cmd := &cobra.Command{
-		Use:   "rollback <page-id>",
+		Use:   "rollback [page-id]",
 		Short: "Clone a historical version into a new version (auto publish if site is currently published)",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parseResourceID(args[0], "page-id")
+			projCfg, _ := projectconfig.Load()
+			pageID, err := resolvePageSiteID(args, siteFlag, targetFlag, projCfg)
 			if err != nil {
 				return err
 			}
@@ -77,6 +83,8 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 
 	cmd.Flags().Int64Var(&versionNo, "version", 0, "Historical version number to clone")
 	_ = cmd.MarkFlagRequired("version")
+	cmd.Flags().StringVar(&siteFlag, "page-id", "", "Page site ID")
+	cmd.Flags().StringVar(&targetFlag, "target", "", "Named target from anycap.toml")
 
 	return cmd
 }

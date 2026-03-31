@@ -19,6 +19,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
 )
 
 type successEnvelope struct {
@@ -392,6 +393,28 @@ func pickLatestVerifiedVersionID(versions []pageVersionSummary) (string, error) 
 		return "", fmt.Errorf("no verified version available, run deploy/finalize first")
 	}
 	return best.ID, nil
+}
+
+// resolvePageSiteID resolves a page site ID from command arguments, flags, and project config.
+// Priority: positional arg > --site > --target > [page] default from config.
+func resolvePageSiteID(args []string, siteFlag, targetFlag string, cfg *projectconfig.Config) (string, error) {
+	if len(args) > 0 && strings.TrimSpace(args[0]) != "" {
+		return parseResourceID(args[0], "page-id")
+	}
+	if siteFlag != "" {
+		return siteFlag, nil
+	}
+	if targetFlag != "" {
+		siteID, _, err := projectconfig.ResolvePageTarget(cfg, targetFlag)
+		if err != nil {
+			return "", err
+		}
+		return siteID, nil
+	}
+	if cfg.Page != nil && cfg.Page.SiteID != "" {
+		return cfg.Page.SiteID, nil
+	}
+	return "", fmt.Errorf("page site not specified: provide <page-id>, --page-id, --target, or configure [page] in anycap.toml")
 }
 
 func randomSiteName() (string, error) {

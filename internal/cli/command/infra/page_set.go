@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
 
 	"github.com/spf13/cobra"
 )
@@ -20,14 +21,17 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		noSPAFallback bool
 		badge         bool
 		noBadge       bool
+		siteFlag      string
+		targetFlag    string
 	)
 
 	cmd := &cobra.Command{
-		Use:   "set <page-id>",
+		Use:   "set [page-id]",
 		Short: "Update page site settings",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pageID, err := parseResourceID(args[0], "page-id")
+			projCfg, _ := projectconfig.Load()
+			pageID, err := resolvePageSiteID(args, siteFlag, targetFlag, projCfg)
 			if err != nil {
 				return err
 			}
@@ -90,6 +94,8 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 	cmd.Flags().BoolVar(&noSPAFallback, "no-spa-fallback", false, "Disable SPA fallback")
 	cmd.Flags().BoolVar(&badge, "badge", false, "Enable AnyCap badge on pages")
 	cmd.Flags().BoolVar(&noBadge, "no-badge", false, "Disable AnyCap badge on pages")
+	cmd.Flags().StringVar(&siteFlag, "page-id", "", "Page site ID")
+	cmd.Flags().StringVar(&targetFlag, "target", "", "Named target from anycap.toml")
 
 	return cmd
 }
