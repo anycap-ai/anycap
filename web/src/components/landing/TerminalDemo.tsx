@@ -104,8 +104,8 @@ function ToolCall({ text, base }: { text: string; base: string }) {
   );
 }
 
-/** Lines 0 (header) through PINNED_END-1 are pinned above the scroll area */
-const PINNED_END = 4; // header(0) + prompt(1) + text(2) + load_skill(3)
+/** Only header (line 0) is pinned; everything else scrolls */
+const PINNED_END = 1; // header(0)
 
 function renderLine(line: Line, i: number, _isLast: boolean, showSpinner: boolean) {
   const nextLine = lines[i + 1];
