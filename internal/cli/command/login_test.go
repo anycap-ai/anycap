@@ -754,7 +754,11 @@ func TestCredentialShow(t *testing.T) {
 	if !strings.Contains(output, "endpoint") {
 		t.Fatalf("expected 'endpoint' in output, got: %s", output)
 	}
-	if !strings.Contains(output, `"authenticated": false`) {
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("expected valid json output, got error: %v output=%s", err, output)
+	}
+	if payload["authenticated"] != false {
 		t.Fatalf("expected authenticated=false, got: %s", output)
 	}
 }
@@ -780,7 +784,11 @@ func TestCredentialShowAuthenticated(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, `"authenticated": true`) {
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("expected valid json output, got error: %v output=%s", err, output)
+	}
+	if payload["authenticated"] != true {
 		t.Fatalf("expected authenticated=true, got: %s", output)
 	}
 	if !strings.Contains(output, "environment") {

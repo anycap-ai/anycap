@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command"
-	"gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
+	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -146,18 +146,39 @@ func syncServerFeatures(endpointOverride string) {
 		return
 	}
 
-	endpoint := config.ResolveEndpoint(endpointOverride)
+	endpoint := cliconfig.ResolveEndpoint(endpointOverride)
 	client := httpclient.New(endpoint)
+	credential := cliconfig.LoadCredential()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	resp, err := client.Get(ctx, "/v1/features")
-	if err != nil {
+	if credential != nil && credential.Token() != "" {
+		authClient := httpclient.New(endpoint, httpclient.WithCredential(credential))
+		if features, ok := fetchFeatures(ctx, authClient, "/v1/me/features"); ok {
+			feature.SetAll(features)
+			return
+		}
+	}
+
+	features, ok := fetchFeatures(ctx, client, "/v1/features")
+	if !ok {
 		// Server unreachable — disable all features so only local
 		// commands (config, credential, skill, login, etc.) are visible.
 		feature.DisableAll()
 		return
+	}
+	feature.SetAll(features)
+}
+
+func fetchFeatures(ctx context.Context, client *httpclient.Client, path string) (map[string]bool, bool) {
+	if client == nil {
+		return nil, false
+	}
+
+	resp, err := client.Get(ctx, path)
+	if err != nil {
+		return nil, false
 	}
 
 	var env struct {
@@ -166,6 +187,7 @@ func syncServerFeatures(endpointOverride string) {
 		} `json:"data"`
 	}
 	if json.Unmarshal(resp.Body, &env) == nil && env.Data.Features != nil {
-		feature.SetAll(env.Data.Features)
+		return env.Data.Features, true
 	}
+	return nil, false
 }

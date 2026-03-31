@@ -10,12 +10,12 @@ import (
 
 func main() {
 	cfg := config.Load()
-	if err := config.InitRateLimitDConf(cfg); err != nil {
-		log.Printf("rate-limit: dconf init failed, using env fallback: %v", err)
-	} else if cfg.RateLimitDConfEnabled {
+	if err := config.InitDConf(cfg); err != nil {
+		log.Printf("dconf: init failed, using env fallback: %v", err)
+	} else if config.DConfEnabled(cfg) {
 		defer func() {
-			if err := config.StopRateLimitDConf(cfg); err != nil {
-				log.Printf("rate-limit: dconf stop failed: %v", err)
+			if err := config.StopDConf(cfg); err != nil {
+				log.Printf("dconf: stop failed: %v", err)
 			}
 		}()
 	}

@@ -34,6 +34,11 @@ ANYCAP_RATE_LIMIT_DCONF_GROUP=anycap
 ANYCAP_RATE_LIMIT_DCONF_DATA_ID=rate_limit
 ```
 
+See also:
+
+- [`docs/config/server-dconf.md`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/docs/config/server-dconf.md)
+- [`configs/server/dconf/rate_limit.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/rate_limit.example.json)
+
 When `ANYCAP_RATE_LIMIT_DCONF_ENABLED=true`, AnyCap initializes the shared `common-go/dconf` client and attempts to load JSON config from:
 
 - `group = ANYCAP_RATE_LIMIT_DCONF_GROUP`

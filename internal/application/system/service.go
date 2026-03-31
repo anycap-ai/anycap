@@ -20,6 +20,12 @@ type Service struct {
 	credit    port.CreditClient
 	callLogs  port.CallLogRepo
 	features  map[string]bool
+	provider  featureProvider
+}
+
+type featureProvider interface {
+	GlobalFeatures() map[string]bool
+	UserFeatures(principal *model.Principal) map[string]bool
 }
 
 func NewService(name, env, runtime string, info buildinfo.Info, apiKeys port.APIKeyService) *Service {
@@ -37,9 +43,23 @@ func (s *Service) SetFeatures(features map[string]bool) {
 	s.features = features
 }
 
+func (s *Service) SetFeatureProvider(provider featureProvider) {
+	s.provider = provider
+}
+
 // Features returns the current feature flags.
 func (s *Service) Features() map[string]bool {
+	if s.provider != nil {
+		return s.provider.GlobalFeatures()
+	}
 	return s.features
+}
+
+func (s *Service) UserFeatures(principal *model.Principal) map[string]bool {
+	if s.provider != nil {
+		return s.provider.UserFeatures(principal)
+	}
+	return s.Features()
 }
 
 func (s *Service) SetUserReader(users port.UserReader) {
@@ -67,7 +87,7 @@ func (s *Service) Status(principal *model.Principal) model.StatusResult {
 			Commit:   s.buildInfo.Commit,
 			BuildAt:  s.buildInfo.Date,
 			Status:   "ok",
-			Features: s.features,
+			Features: s.Features(),
 		},
 		RuntimeMode: s.runtime,
 		User:        principal,

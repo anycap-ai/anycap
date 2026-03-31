@@ -1,0 +1,15 @@
+{
+  "default_rpm": 60,
+  "capabilities": {
+    "image.generate": 10,
+    "video.generate": 5,
+    "music.generate": 8,
+    "image.read": 30,
+    "video.read": 20,
+    "audio.read": 20,
+    "asset.upload.prepare": 60,
+    "feedback.submit": 20,
+    "drive.browse": 120,
+    "page.publish": 12
+  }
+}

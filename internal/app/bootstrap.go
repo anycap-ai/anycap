@@ -142,6 +142,8 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 
 	serverFeatures := buildServerFeatures(cfg)
 	deps.systemService.SetFeatures(serverFeatures)
+	featureProvider := config.NewFeatureProvider(cfg, serverFeatures)
+	deps.systemService.SetFeatureProvider(featureProvider)
 	systemHandler := system.NewHandler(deps.systemService, deps.idMapper)
 	loginHandler := login.NewHandler(deps.loginService, deps.idMapper)
 	imageHandler := image.NewHandler(deps.imageService)
@@ -178,7 +180,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			musicCatalog,
 			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(serverFeatures))
+				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(featureProvider))
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)

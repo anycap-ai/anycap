@@ -158,6 +158,50 @@ func TestLoadFromEnv_UsesDefaultRateLimitDConfValues(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnv_LoadsFeatureDConfConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_FEATURE_DCONF_ENABLED", "true")
+	t.Setenv("ANYCAP_FEATURE_DCONF_GROUP", "feature-group")
+	t.Setenv("ANYCAP_FEATURE_DCONF_DATA_ID", "feature-data")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if !cfg.FeatureDConfEnabled {
+		t.Fatal("expected feature dconf enabled")
+	}
+	if cfg.FeatureDConfGroup != "feature-group" {
+		t.Fatalf("expected feature dconf group feature-group, got %q", cfg.FeatureDConfGroup)
+	}
+	if cfg.FeatureDConfDataID != "feature-data" {
+		t.Fatalf("expected feature dconf data id feature-data, got %q", cfg.FeatureDConfDataID)
+	}
+}
+
+func TestLoadFromEnv_UsesDefaultFeatureDConfValues(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_FEATURE_DCONF_ENABLED", "")
+	t.Setenv("ANYCAP_FEATURE_DCONF_GROUP", "")
+	t.Setenv("ANYCAP_FEATURE_DCONF_DATA_ID", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if cfg.FeatureDConfEnabled {
+		t.Fatal("expected feature dconf disabled by default")
+	}
+	if cfg.FeatureDConfGroup != "anycap" {
+		t.Fatalf("expected default feature dconf group anycap, got %q", cfg.FeatureDConfGroup)
+	}
+	if cfg.FeatureDConfDataID != "feature_access" {
+		t.Fatalf("expected default feature dconf data id feature_access, got %q", cfg.FeatureDConfDataID)
+	}
+}
+
 func TestLoadFromEnv_ReadsPageHostFormat(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PAGE_HOST_FORMAT", "PAGEDEV-%s.ANYCAP.CLOUD")

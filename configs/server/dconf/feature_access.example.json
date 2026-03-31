@@ -1,0 +1,59 @@
+{
+  "feature_access_groups": {
+    "internal": {
+      "emails": [
+        "alice@gmail.com",
+        "bob@gmail.com"
+      ]
+    },
+    "beta_users": {
+      "emails": [
+        "partner1@gmail.com"
+      ]
+    }
+  },
+  "features": {
+    "image.generate": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "image.models": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "video.generate": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal"
+      ]
+    },
+    "video.models": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal"
+      ]
+    },
+    "music.generate": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal",
+        "beta_users"
+      ]
+    },
+    "music.models": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal",
+        "beta_users"
+      ]
+    },
+    "page": {
+      "enabled": false,
+      "rollout": "all"
+    }
+  }
+}

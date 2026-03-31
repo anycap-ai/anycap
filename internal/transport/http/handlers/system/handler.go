@@ -39,6 +39,7 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/status", h.Status)
 	group.GET("/dashboard/summary", h.DashboardSummary)
 	group.GET("/me", h.Me)
+	group.GET("/me/features", h.MeFeatures)
 	group.GET("/credits/balance", h.CreditBalance)
 	group.GET("/logs", h.Logs)
 	group.GET("/api-keys", h.APIKeys)
@@ -52,6 +53,20 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 func (h *Handler) Features(_ context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
 		"features": h.service.Features(),
+	}))
+}
+
+func (h *Handler) MeFeatures(_ context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = middleware.GetRequestID(ctx)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), map[string]any{
+		"features": h.service.UserFeatures(principal),
 	}))
 }
 

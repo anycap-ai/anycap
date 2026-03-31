@@ -22,6 +22,8 @@ const (
 	defaultRateLimitRPM          = 60
 	defaultRateLimitDConfGroup   = "anycap"
 	defaultRateLimitDConfDataID  = "rate_limit"
+	defaultFeatureDConfGroup     = "anycap"
+	defaultFeatureDConfDataID    = "feature_access"
 	rateLimitEnvPrefix           = "ANYCAP_RATE_LIMIT_"
 	rateLimitEnvSuffix           = "_RPM"
 	defaultLoginAPIKeyTTL        = 7 * 24 * time.Hour
@@ -65,6 +67,9 @@ type Config struct {
 	RateLimitDConfEnabled bool
 	RateLimitDConfGroup   string
 	RateLimitDConfDataID  string
+	FeatureDConfEnabled   bool
+	FeatureDConfGroup     string
+	FeatureDConfDataID    string
 	LoginAPIKeyTTL        time.Duration
 	Auth0Enabled          bool
 	Auth0Issuer           string
@@ -192,6 +197,9 @@ func LoadFromEnv() (Config, error) {
 		RateLimitDConfEnabled:   getEnvBool("ANYCAP_RATE_LIMIT_DCONF_ENABLED", false),
 		RateLimitDConfGroup:     getEnv("ANYCAP_RATE_LIMIT_DCONF_GROUP", defaultRateLimitDConfGroup),
 		RateLimitDConfDataID:    getEnv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", defaultRateLimitDConfDataID),
+		FeatureDConfEnabled:     getEnvBool("ANYCAP_FEATURE_DCONF_ENABLED", false),
+		FeatureDConfGroup:       getEnv("ANYCAP_FEATURE_DCONF_GROUP", defaultFeatureDConfGroup),
+		FeatureDConfDataID:      getEnv("ANYCAP_FEATURE_DCONF_DATA_ID", defaultFeatureDConfDataID),
 		LoginAPIKeyTTL:          getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
 		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
 		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
