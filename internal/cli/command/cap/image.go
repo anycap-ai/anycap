@@ -189,7 +189,14 @@ Examples:
 				body[k] = parseParamValue(v)
 			}
 
-			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/image/generate", body)
+			client := clientFactory()
+
+			// Resolve local file paths in params to uploaded URLs (schema-driven).
+			if err := resolveFileParams(cmd.Context(), client, "image", model, mode, body, verboseWriter(cmd)); err != nil {
+				return err
+			}
+
+			resp, err := client.PostJSON(cmd.Context(), "/v1/image/generate", body)
 			if err != nil {
 				return err
 			}
