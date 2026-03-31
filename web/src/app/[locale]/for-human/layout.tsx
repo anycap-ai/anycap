@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ForHumanShell } from "@/components/ForHumanShell";
+import { ForHumanShell } from "@/components/layout/ForHumanShell";
 import { createForHumanMetadata } from "@/lib/localized-metadata";
 import { isSupportedLocale } from "@/lib/site";
 

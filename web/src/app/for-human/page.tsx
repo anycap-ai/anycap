@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import { Footer } from "@/components/Footer";
-import { Header, humanNavLinks } from "@/components/Header";
-import { AuthNav } from "@/components/AuthNav";
-import { LazyEquipAgent } from "@/components/LazyEquipAgent";
-import { TerminalDemo } from "@/components/TerminalDemo";
-import { FadeIn } from "@/components/FadeIn";
-import { ScrambleText } from "@/components/ScrambleText";
-import { ParticleAgent } from "@/components/animation/ParticleAgent";
+import { Footer } from "@/components/layout/Footer";
+import { Header, humanNavLinks } from "@/components/layout/Header";
+import { AuthNav } from "@/components/layout/AuthNav";
+import { LazyEquipAgent } from "@/components/landing/LazyEquipAgent";
+import { TerminalDemo } from "@/components/landing/TerminalDemo";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { ScrambleText } from "@/components/ui/ScrambleText";
+import { ParticleAgent } from "@/components/landing/ParticleAgent";
 
 export const runtime = "edge";
 

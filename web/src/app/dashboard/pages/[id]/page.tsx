@@ -13,8 +13,8 @@ import {
   usePageVersions,
 } from "@/lib/api/hooks";
 import type { PageAccessMode } from "@/lib/api/types";
-import StatusBadge from "@/components/dashboard/StatusBadge";
-import { ConfirmModal } from "@/components/dashboard/ConfirmModal";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Spinner } from "@/components/ui/Spinner";
 import { toast } from "@/lib/toast";
 

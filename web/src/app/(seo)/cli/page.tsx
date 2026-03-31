@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/LocalizedLink";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { siteConfig } from "@/lib/site";
-import { FadeIn } from "@/components/FadeIn";
-import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
-import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
+import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { createSoftwareApplicationJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";

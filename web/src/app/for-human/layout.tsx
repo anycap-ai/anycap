@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createForHumanMetadata } from "@/lib/localized-metadata";
 import { defaultLocale } from "@/lib/site";
-import { ForHumanShell } from "@/components/ForHumanShell";
+import { ForHumanShell } from "@/components/layout/ForHumanShell";
 
 export const runtime = "edge";
 

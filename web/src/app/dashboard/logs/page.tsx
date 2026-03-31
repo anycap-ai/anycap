@@ -5,7 +5,7 @@ export const runtime = "edge";
 import { useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
-import StatusBadge from "@/components/dashboard/StatusBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 
 function timeAgo(ts: string): string {

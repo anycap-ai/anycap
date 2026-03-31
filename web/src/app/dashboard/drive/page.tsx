@@ -13,7 +13,7 @@ import type { DriveNode } from "@/lib/api/types";
 import { FolderIcon, FileIcon } from "@/components/dashboard/DriveIcons";
 import { Spinner } from "@/components/ui/Spinner";
 import { toast } from "@/lib/toast";
-import StatusBadge from "@/components/dashboard/StatusBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { DriveSharePanel } from "@/components/dashboard/DriveSharePanel";
 import { DriveRenameModal } from "@/components/dashboard/DriveRenameModal";
 import { DriveMoveModal } from "@/components/dashboard/DriveMoveModal";
