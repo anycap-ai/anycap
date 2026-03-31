@@ -237,7 +237,6 @@ export default function PageDetailPage() {
                 >
                   <option value="public">public</option>
                   <option value="password">password</option>
-                  <option value="private_reserved">private_reserved</option>
                 </select>
               </label>
             </div>
