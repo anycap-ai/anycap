@@ -82,7 +82,7 @@ func (r *CatalogRepo) GetModel(ctx context.Context, capability model.Capability,
 func (r *CatalogRepo) listActiveModelRoutes(ctx context.Context, capability model.Capability, modelID string) ([]model.ModelRoute, error) {
 	rows, err := r.pool.Query(
 		ctx,
-		`SELECT id, model_id, capability, operation, ability_key, algo_type, display_name, status, extra, created_at, updated_at
+		`SELECT id, model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra, created_at, updated_at
 		 FROM anycap_model_routes
 		 WHERE capability = $1
 		   AND status = 'active'
@@ -114,22 +114,48 @@ func aggregateModelSpecs(routes []model.ModelRoute) []model.ModelSpec {
 	byModel := make(map[string]*model.ModelSpec)
 	order := make([]string, 0)
 
+	// Track modes per (model, operation) to deduplicate
+	type opKey struct {
+		modelID   string
+		operation model.Operation
+	}
+	seenModes := make(map[opKey]map[model.Mode]bool)
+
 	for _, route := range routes {
 		spec, ok := byModel[route.ModelID]
 		if !ok {
 			spec = &model.ModelSpec{
-				ModelID:     route.ModelID,
-				Capability:  route.Capability,
-				DisplayName: displayNameOrFallback(route.DisplayName, route.ModelID),
-				Status:      route.Status,
-				Operations:  make(map[model.Operation]model.OperationSpec),
+				ModelID:          route.ModelID,
+				Capability:       route.Capability,
+				DisplayName:      displayNameOrFallback(route.DisplayName, route.ModelID),
+				ModelDescription: route.ModelDescription,
+				Status:           route.Status,
+				Operations:       make(map[model.Operation]model.OperationSpec),
 			}
 			byModel[route.ModelID] = spec
 			order = append(order, route.ModelID)
 		}
+		// Use latest non-empty model_description
+		if spec.ModelDescription == "" && route.ModelDescription != "" {
+			spec.ModelDescription = route.ModelDescription
+		}
 
 		opSpec := spec.Operations[route.Operation]
 		opSpec.Routes = append(opSpec.Routes, route.ToRouteBinding())
+
+		// Add mode if not already seen for this (model, operation)
+		ok2 := opKey{modelID: route.ModelID, operation: route.Operation}
+		if seenModes[ok2] == nil {
+			seenModes[ok2] = make(map[model.Mode]bool)
+		}
+		if route.Mode != "" && !seenModes[ok2][route.Mode] {
+			seenModes[ok2][route.Mode] = true
+			opSpec.Modes = append(opSpec.Modes, model.ModeSpec{
+				Mode:        route.Mode,
+				Description: route.ModeDescription,
+			})
+		}
+
 		spec.Operations[route.Operation] = opSpec
 	}
 

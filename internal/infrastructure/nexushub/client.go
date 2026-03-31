@@ -22,8 +22,6 @@ const (
 	defaultNexusHubEnterFrom = "anycap_api"
 	submitAtomicProcessPath  = "/v1/submit_atomic_process"
 	getSubmitResultPath      = "/v1/get_submit_result/"
-	defaultImageGenerateAlgo = "txt_2_img"
-	defaultImageEditAlgo     = "img_2_img"
 )
 
 type ClientConfig struct {
@@ -70,7 +68,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 		GenType: route.GenType,
 		Prompt:  req.Prompt,
 		ImageOption: &atomicImageOption{
-			Type:           resolveImageAlgoType(route, req),
+			Type:           route.AlgoType,
 			Ratio:          req.Ratio,
 			Resolution:     req.Resolution,
 			NegativePrompt: req.NegativePrompt,
@@ -170,11 +168,6 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	return result, nil
 }
 
-const (
-	defaultVideoGenerateAlgo = "txt_2_video"
-	defaultVideoEditAlgo     = "img_2_video"
-)
-
 func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoRequest, route model.RouteBinding) (model.GenerateVideoResult, error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
 		return model.GenerateVideoResult{}, model.ErrVideoExecutionNotConfigured
@@ -192,7 +185,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		GenType: route.GenType,
 		Prompt:  req.Prompt,
 		VideoOption: &atomicVideoOption{
-			Type:           resolveVideoAlgoType(route, req),
+			Type:           route.AlgoType,
 			Ratio:          req.Ratio,
 			Resolution:     req.Resolution,
 			Duration:       req.Duration,
@@ -477,16 +470,6 @@ func (c *Client) GetSubmitResult(ctx context.Context, taskID string) (model.Prov
 	return result, nil
 }
 
-func resolveVideoAlgoType(route model.RouteBinding, req model.GenerateVideoRequest) string {
-	if route.AlgoType != "" {
-		return route.AlgoType
-	}
-	if len(req.ReferenceImageURLs) > 0 {
-		return defaultVideoEditAlgo
-	}
-	return defaultVideoGenerateAlgo
-}
-
 type submitAtomicProcessRequest struct {
 	AbilityKey string         `json:"ability_key"`
 	ReqPayload string         `json:"req_payload"`
@@ -593,16 +576,6 @@ func parseNexusHubUID(userID string) (int64, error) {
 	}
 
 	return 0, fmt.Errorf("%w: nexushub requires a numeric user id, got %q", model.ErrInvalidParam, userID)
-}
-
-func resolveImageAlgoType(route model.RouteBinding, req model.GenerateImageRequest) string {
-	if route.AlgoType != "" {
-		return route.AlgoType
-	}
-	if len(req.ReferenceImageURLs) > 0 {
-		return defaultImageEditAlgo
-	}
-	return defaultImageGenerateAlgo
 }
 
 func normalizeNexusHubStatus(status string) string {

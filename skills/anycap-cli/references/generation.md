@@ -1,6 +1,6 @@
 # Image Generation
 
-Generate images from text prompts. The generated image is automatically downloaded to the current directory.
+Generate images from text prompts or transform existing images. The generated image is automatically downloaded to the current directory.
 
 ## Workflow
 
@@ -28,20 +28,60 @@ To inspect a specific model:
 anycap image models <model-id>
 ```
 
-### Step 2: Check parameter schema (important)
+Models support different **modes** -- each mode represents a distinct input/output modality:
 
-Each model accepts different parameters. Always fetch the schema before generating to discover available parameters:
+| Mode | Description |
+|------|-------------|
+| `text-to-image` | Generate image from text prompt |
+| `image-to-image` | Edit or transform a reference image |
+
+List all modes for a model:
 
 ```bash
-anycap image models <model-id> schema
+anycap image models <model-id> | jq -r '.model.operations[].modes[].mode'
 ```
 
-The schema response describes all accepted parameters with their types, defaults, and allowed values. Use this to construct valid `--param` flags.
+### Step 2: Check parameter schema (important)
 
-List all parameter names and their types:
+Each model and mode accepts different parameters. Always fetch the schema before generating to discover available parameters:
 
 ```bash
-anycap image models <model-id> schema | jq -r '.data.schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
+# All schemas for a model (all operations and modes)
+anycap image models <model-id> schema
+
+# Filter by mode
+anycap image models <model-id> schema --mode text-to-image
+anycap image models <model-id> schema --mode image-to-image
+
+# Filter by operation and mode
+anycap image models <model-id> schema --operation generate --mode text-to-image
+```
+
+The schema response returns an array of schemas, each tagged with its operation and mode:
+
+```json
+{
+  "schemas": [
+    {
+      "operation": "generate",
+      "mode": "text-to-image",
+      "schema": {
+        "model_params": {
+          "prompt": {"type": "string", "required": true},
+          "aspect_ratio": {"type": "string", "enum": ["1:1", "16:9", "9:16"]},
+          "resolution": {"type": "string", "enum": ["2k", "4k"]}
+        }
+      }
+    }
+  ]
+}
+```
+
+List parameter names and types for a specific mode:
+
+```bash
+anycap image models <model-id> schema --mode text-to-image \
+  | jq -r '.schemas[0].schema.model_params | to_entries[] | "\(.key): \(.value.type)"'
 ```
 
 ### Step 3: Generate
@@ -50,7 +90,7 @@ The generated image is automatically saved to the current directory. Use `-o` to
 
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o coffee-shop-logo.png`). Without `-o`, the file gets a generic timestamped name like `image_20260326_175540.png`.
 
-Basic generation:
+Basic text-to-image generation (mode is inferred):
 
 ```bash
 anycap image generate --prompt "a paper crane on a wooden table" --model <model-id>
@@ -62,17 +102,17 @@ With parameters discovered from the schema:
 anycap image generate \
   --prompt "a mountain landscape at sunset" \
   --model <model-id> \
-  --param aspect_ratio=16:9 \
-  --param negative_prompt="blurry, watermark"
+  --param aspect_ratio=16:9
 ```
 
-With a reference image (for editing operations):
+Image-to-image with explicit mode:
 
 ```bash
 anycap image generate \
   --prompt "make it look like a watercolor painting" \
-  --model <model-id> \
-  --param reference_image_urls='["https://example.com/photo.jpg"]'
+  --model seedream-5 \
+  --mode image-to-image \
+  --param images='["https://example.com/photo.jpg"]'
 ```
 
 Save to a specific path:
@@ -90,6 +130,7 @@ anycap image generate \
 |------|----------|-------------|
 | `--prompt` | yes | Text description of the image to generate |
 | `--model` | yes | Model ID from `image models` |
+| `--mode` | no | Generation mode (e.g. `text-to-image`, `image-to-image`). Inferred if omitted |
 | `--param` | no | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
 | `-o, --output` | no | Custom output path (default: current directory) |
 
@@ -103,7 +144,7 @@ Values are auto-parsed as JSON when possible:
 | `--param duration=5` | number `5` |
 | `--param hd=true` | boolean `true` |
 | `--param negative_prompt="blurry"` | string `"blurry"` |
-| `--param reference_image_urls='["url1","url2"]'` | array `["url1","url2"]` |
+| `--param images='["url1","url2"]'` | array `["url1","url2"]` |
 
 ### Output Format
 
@@ -133,13 +174,27 @@ anycap image generate --prompt "..." --model <model-id> | jq -r '.local_path'
 # Find a model
 anycap image models
 
-# Check what parameters it accepts
-anycap image models flux-schnell schema
+# Check what modes are available
+anycap image models seedream-5 | jq '.model.operations[].modes[].mode'
 
-# Generate with parameters from the schema
+# Check text-to-image parameters
+anycap image models seedream-5 schema --mode text-to-image
+
+# Generate text-to-image
 anycap image generate \
   --prompt "a watercolor painting of a Japanese garden" \
-  --model flux-schnell \
+  --model seedream-5 \
   --param aspect_ratio=16:9 \
   -o garden.png
+
+# Check image-to-image parameters
+anycap image models seedream-5 schema --mode image-to-image
+
+# Generate image-to-image
+anycap image generate \
+  --prompt "colorize this sketch" \
+  --model seedream-5 \
+  --mode image-to-image \
+  --param images='["https://example.com/sketch.png"]' \
+  -o colorized.png
 ```

@@ -41,6 +41,7 @@ func testCatalog() *nexushub.CatalogStub {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "mureka-v6",
 						GenType:    string(model.CapabilityMusic),
+						Mode:       model.ModeTextToMusic,
 						Priority:   100,
 						Enabled:    true,
 					}},

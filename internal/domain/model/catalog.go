@@ -21,6 +21,18 @@ const (
 	OperationSpeak     Operation = "speak"
 )
 
+// Mode 表示用户可见的生成模式（输入 -> 输出的模态）。
+// mode 是公开标识，algo_type 是 NexusHub 内部调度标识，二者共存于同一行。
+type Mode string
+
+const (
+	ModeTextToImage  Mode = "text-to-image"
+	ModeImageToImage Mode = "image-to-image"
+	ModeTextToVideo  Mode = "text-to-video"
+	ModeImageToVideo Mode = "image-to-video"
+	ModeTextToMusic  Mode = "text-to-music"
+)
+
 // RouteType 表示路由方式。
 type RouteType string
 
@@ -34,26 +46,39 @@ const DefaultRoutePriority = 100
 // ModelSpec 描述一个公开模型支持哪些 operation 及其路由绑定。
 // model_id 是对外稳定标识，ability_key 是对内执行标识，两者解耦。
 type ModelSpec struct {
-	ModelID     string                      `json:"model"`
-	Capability  Capability                  `json:"capability"`
-	DisplayName string                      `json:"display_name"`
-	Status      string                      `json:"status"`
-	Operations  map[Operation]OperationSpec `json:"operations,omitempty"`
+	ModelID          string                      `json:"model"`
+	Capability       Capability                  `json:"capability"`
+	DisplayName      string                      `json:"display_name"`
+	ModelDescription string                      `json:"description,omitempty"`
+	Status           string                      `json:"status"`
+	Operations       map[Operation]OperationSpec `json:"operations,omitempty"`
 }
 
 // OperationSpec 描述单个 operation 的 schema、提示和路由绑定。
 type OperationSpec struct {
 	SchemaRef    string         `json:"schema_ref,omitempty"`
 	RequestHints map[string]any `json:"request_hints,omitempty"`
+	Modes        []ModeSpec     `json:"modes,omitempty"`
 	Routes       []RouteBinding `json:"routes,omitempty"`
+	// ModeSchemas holds per-mode schemas resolved from the schema provider.
+	// Key is the mode (e.g., ModeTextToVideo), value is the schema map.
+	// Falls back to RequestHints if a mode has no entry here.
+	ModeSchemas map[Mode]map[string]any `json:"mode_schemas,omitempty"`
 }
 
-// RouteBinding 描述 model_id + operation 应如何路由到底层 ability_key。
+// ModeSpec 描述单个 mode 的元信息。
+type ModeSpec struct {
+	Mode        Mode   `json:"mode"`
+	Description string `json:"description,omitempty"`
+}
+
+// RouteBinding 描述 model_id + operation + mode 应如何路由到底层 ability_key。
 type RouteBinding struct {
 	RouteType  RouteType `json:"route_type"`
 	AbilityKey string    `json:"ability_key"`
 	GenType    string    `json:"gen_type"`
 	AlgoType   string    `json:"algo_type,omitempty"`
+	Mode       Mode      `json:"mode,omitempty"`
 	Region     string    `json:"region,omitempty"`
 	Tier       string    `json:"tier,omitempty"`
 	Env        string    `json:"env,omitempty"`
@@ -61,25 +86,36 @@ type RouteBinding struct {
 	Enabled    bool      `json:"enabled"`
 }
 
+// OperationSummary is the public view of an operation with its modes.
+type OperationSummary struct {
+	Operation string     `json:"operation"`
+	Modes     []ModeSpec `json:"modes,omitempty"`
+}
+
 // ModelSummary 是 ModelSpec 的公共只读视图，不暴露 RouteBinding 等内部细节。
 type ModelSummary struct {
-	ModelID     string     `json:"model"`
-	Capability  Capability `json:"capability"`
-	DisplayName string     `json:"display_name"`
-	Status      string     `json:"status"`
-	Operations  []string   `json:"operations"`
+	ModelID     string             `json:"model"`
+	Capability  Capability         `json:"capability"`
+	DisplayName string             `json:"display_name"`
+	Description string             `json:"description,omitempty"`
+	Status      string             `json:"status"`
+	Operations  []OperationSummary `json:"operations"`
 }
 
 // ToSummary 将完整 ModelSpec 转换为对外安全的 ModelSummary。
 func (m *ModelSpec) ToSummary() ModelSummary {
-	ops := make([]string, 0, len(m.Operations))
-	for op := range m.Operations {
-		ops = append(ops, string(op))
+	ops := make([]OperationSummary, 0, len(m.Operations))
+	for op, opSpec := range m.Operations {
+		ops = append(ops, OperationSummary{
+			Operation: string(op),
+			Modes:     opSpec.Modes,
+		})
 	}
 	return ModelSummary{
 		ModelID:     m.ModelID,
 		Capability:  m.Capability,
 		DisplayName: m.DisplayName,
+		Description: m.ModelDescription,
 		Status:      m.Status,
 		Operations:  ops,
 	}
@@ -90,6 +126,7 @@ type ModelSchema struct {
 	Capability   Capability     `json:"capability"`
 	ModelID      string         `json:"model"`
 	Operation    string         `json:"operation"`
+	Mode         string         `json:"mode,omitempty"`
 	Schema       map[string]any `json:"schema,omitempty"`
 	RequestHints map[string]any `json:"request_hints,omitempty"`
 	Capabilities map[string]any `json:"capabilities,omitempty"`

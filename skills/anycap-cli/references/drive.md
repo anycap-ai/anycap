@@ -94,7 +94,7 @@ anycap drive unshare <node-id>
 
 ```bash
 # Generate an image, upload it, share the link
-anycap image generate --prompt "product hero" --model flux-schnell -o hero.png
+anycap image generate --prompt "product hero" --model seedream-5 -o hero.png
 anycap drive mkdir --name "campaign-assets"
 anycap drive upload hero.png --parent-path /campaign-assets
 SHARE=$(anycap drive share --src-path /campaign-assets/hero.png | jq -r '.share_url')

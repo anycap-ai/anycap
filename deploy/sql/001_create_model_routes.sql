@@ -3,19 +3,22 @@
 -- so anycap-server can work locally without that service running.
 
 CREATE TABLE IF NOT EXISTS anycap_model_routes (
-    id            BIGSERIAL PRIMARY KEY,
-    model_id      VARCHAR(128) NOT NULL,
-    capability    VARCHAR(32) NOT NULL,
-    operation     VARCHAR(64) NOT NULL,
-    ability_key   VARCHAR(255) NOT NULL,
-    algo_type     VARCHAR(64) NOT NULL DEFAULT '',
-    display_name  VARCHAR(255) NOT NULL DEFAULT '',
-    status        VARCHAR(32) NOT NULL DEFAULT 'active',
-    extra         JSONB NOT NULL DEFAULT '{}'::jsonb,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    external_id   TEXT NOT NULL DEFAULT '',
-    UNIQUE (model_id, operation, algo_type)
+    id                BIGSERIAL PRIMARY KEY,
+    model_id          VARCHAR(128) NOT NULL,
+    capability        VARCHAR(32) NOT NULL,
+    operation         VARCHAR(64) NOT NULL,
+    ability_key       VARCHAR(255) NOT NULL,
+    algo_type         VARCHAR(64) NOT NULL DEFAULT '',
+    mode              VARCHAR(64) NOT NULL DEFAULT '',
+    display_name      VARCHAR(255) NOT NULL DEFAULT '',
+    mode_description  TEXT NOT NULL DEFAULT '',
+    model_description TEXT NOT NULL DEFAULT '',
+    status            VARCHAR(32) NOT NULL DEFAULT 'active',
+    extra             JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    external_id       TEXT NOT NULL DEFAULT '',
+    UNIQUE (model_id, operation, mode)
 );
 
 CREATE INDEX IF NOT EXISTS idx_anycap_model_routes_lookup

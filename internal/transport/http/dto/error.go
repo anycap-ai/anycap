@@ -61,6 +61,10 @@ func MapDomainError(err error) (int, Envelope) {
 		return consts.StatusBadGateway, ErrorEnvelope("", model.ErrBillingUncertain.Code, model.ErrBillingUncertain.Message)
 	case errors.Is(err, model.ErrModelRouteNotConfigured):
 		return consts.StatusServiceUnavailable, ErrorEnvelope("", model.ErrModelRouteNotConfigured.Code, err.Error())
+	case errors.Is(err, model.ErrModeRequired):
+		return consts.StatusBadRequest, ErrorEnvelope("", model.ErrModeRequired.Code, err.Error())
+	case errors.Is(err, model.ErrModeNotSupported):
+		return consts.StatusBadRequest, ErrorEnvelope("", model.ErrModeNotSupported.Code, err.Error())
 	case errors.Is(err, model.ErrPromptRequired), errors.Is(err, model.ErrModelRequired), errors.Is(err, model.ErrInvalidParam):
 		message := model.ErrInvalidParam.Message
 		if err != nil {

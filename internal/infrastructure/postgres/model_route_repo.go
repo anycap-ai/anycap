@@ -24,11 +24,11 @@ func (r *CatalogRepo) ListModelRoutes(ctx context.Context, filter model.ListMode
 
 	rows, err := r.pool.Query(
 		ctx,
-		`SELECT id, model_id, capability, operation, ability_key, algo_type, display_name, status, extra, created_at, updated_at
+		`SELECT id, model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra, created_at, updated_at
 		 FROM anycap_model_routes
 		 WHERE ($1 = '' OR capability = $1)
 		   AND ($2 = '' OR status = $2)
-		   AND ($3 = '' OR model_id ILIKE $4 OR display_name ILIKE $4 OR ability_key ILIKE $4 OR operation ILIKE $4 OR algo_type ILIKE $4)
+		   AND ($3 = '' OR model_id ILIKE $4 OR display_name ILIKE $4 OR ability_key ILIKE $4 OR operation ILIKE $4 OR algo_type ILIKE $4 OR mode ILIKE $4)
 		 ORDER BY updated_at DESC, id DESC`,
 		filter.Capability,
 		filter.Status,
@@ -57,7 +57,7 @@ func (r *CatalogRepo) ListModelRoutes(ctx context.Context, filter model.ListMode
 func (r *CatalogRepo) GetModelRoute(ctx context.Context, id int64) (*model.ModelRoute, error) {
 	row := r.pool.QueryRow(
 		ctx,
-		`SELECT id, model_id, capability, operation, ability_key, algo_type, display_name, status, extra, created_at, updated_at
+		`SELECT id, model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra, created_at, updated_at
 		 FROM anycap_model_routes
 		 WHERE id = $1`,
 		id,
@@ -90,15 +90,18 @@ func (r *CatalogRepo) CreateModelRoute(ctx context.Context, input model.CreateMo
 	row := r.pool.QueryRow(
 		ctx,
 		`INSERT INTO anycap_model_routes (
-			model_id, capability, operation, ability_key, algo_type, display_name, status, extra
-		 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		 RETURNING id, model_id, capability, operation, ability_key, algo_type, display_name, status, extra, created_at, updated_at`,
+			model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra
+		 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		 RETURNING id, model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra, created_at, updated_at`,
 		input.ModelID,
 		string(input.Capability),
 		string(input.Operation),
 		input.AbilityKey,
 		input.AlgoType,
+		string(input.Mode),
 		input.DisplayName,
+		input.ModeDescription,
+		input.ModelDescription,
 		input.Status,
 		extraBytes,
 	)
@@ -132,19 +135,25 @@ func (r *CatalogRepo) UpdateModelRoute(ctx context.Context, id int64, input mode
 		     operation = $4,
 		     ability_key = $5,
 		     algo_type = $6,
-		     display_name = $7,
-		     status = $8,
-		     extra = $9,
+		     mode = $7,
+		     display_name = $8,
+		     mode_description = $9,
+		     model_description = $10,
+		     status = $11,
+		     extra = $12,
 		     updated_at = now()
 		 WHERE id = $1
-		 RETURNING id, model_id, capability, operation, ability_key, algo_type, display_name, status, extra, created_at, updated_at`,
+		 RETURNING id, model_id, capability, operation, ability_key, algo_type, mode, display_name, mode_description, model_description, status, extra, created_at, updated_at`,
 		id,
 		input.ModelID,
 		string(input.Capability),
 		string(input.Operation),
 		input.AbilityKey,
 		input.AlgoType,
+		string(input.Mode),
 		input.DisplayName,
+		input.ModeDescription,
+		input.ModelDescription,
 		input.Status,
 		extraBytes,
 	)
@@ -179,6 +188,7 @@ func scanModelRoute(row rowScanner) (*model.ModelRoute, error) {
 		route      model.ModelRoute
 		capability string
 		operation  string
+		mode       string
 		extraBytes []byte
 	)
 
@@ -189,7 +199,10 @@ func scanModelRoute(row rowScanner) (*model.ModelRoute, error) {
 		&operation,
 		&route.AbilityKey,
 		&route.AlgoType,
+		&mode,
 		&route.DisplayName,
+		&route.ModeDescription,
+		&route.ModelDescription,
 		&route.Status,
 		&extraBytes,
 		&route.CreatedAt,
@@ -200,6 +213,7 @@ func scanModelRoute(row rowScanner) (*model.ModelRoute, error) {
 
 	route.Capability = model.Capability(capability)
 	route.Operation = model.Operation(operation)
+	route.Mode = model.Mode(mode)
 	if len(extraBytes) > 0 {
 		if err := json.Unmarshal(extraBytes, &route.Extra); err != nil {
 			return nil, fmt.Errorf("decode route extra: %w", err)
@@ -244,7 +258,7 @@ func marshalExtra(
 func translateWriteError(action string, err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
-		return fmt.Errorf("%s: duplicate model_id + operation + algo_type", action)
+		return fmt.Errorf("%s: duplicate model_id + operation + mode", action)
 	}
 	return fmt.Errorf("%s: %w", action, err)
 }

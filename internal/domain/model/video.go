@@ -12,6 +12,7 @@ type GenerateVideoRequest struct {
 	APIKeyID           string   `json:"api_key_id,omitempty"`
 	Prompt             string   `json:"prompt"`
 	Model              string   `json:"model"`
+	Mode               Mode     `json:"mode,omitempty"`
 	NegativePrompt     string   `json:"negative_prompt,omitempty"`
 	Ratio              string   `json:"ratio,omitempty"`
 	Resolution         string   `json:"resolution,omitempty"`

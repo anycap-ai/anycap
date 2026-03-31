@@ -39,7 +39,10 @@ func NewMusicCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 //	music models <model>               -> show one model (client-side filter)
 //	music models <model> schema        -> fetch model schema from server
 func newMusicModelsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var operation string
+	var (
+		operation string
+		mode      string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "models [model] [schema]",
@@ -49,9 +52,10 @@ or fetch the request schema for a model.
 
 Examples:
   anycap music models
-  anycap music models mureka-v6
-  anycap music models mureka-v6 schema
-  anycap music models mureka-v6 schema --operation generate`,
+  anycap music models suno-v5
+  anycap music models suno-v5 schema
+  anycap music models suno-v5 schema --mode text-to-music
+  anycap music models suno-v5 schema --operation generate`,
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := clientFactory()
@@ -61,7 +65,7 @@ Examples:
 				if args[1] != "schema" {
 					return fmt.Errorf("unknown argument %q; did you mean 'schema'?", args[1])
 				}
-				return fetchCapModelSchema(cmd, client, stdout, "music", args[0], operation)
+				return fetchCapModelSchema(cmd, client, stdout, "music", args[0], operation, mode)
 			}
 
 			// music models / music models <model>
@@ -69,7 +73,8 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringVar(&operation, "operation", "generate", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&operation, "operation", "", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&mode, "mode", "", "Mode to filter schema for (e.g. text-to-music)")
 
 	return cmd
 }
@@ -78,6 +83,7 @@ func newMusicGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	var (
 		prompt       string
 		model        string
+		mode         string
 		instrumental bool
 		tags         string
 		title        string
@@ -96,11 +102,11 @@ The generated audio is automatically downloaded to the current directory.
 Use -o to specify a custom output path.
 
 Examples:
-  anycap music generate --prompt "lofi night drive" --model mureka-v6
-  anycap music generate --prompt "epic orchestral" --model mureka-v6 --instrumental
-  anycap music generate --tags "pop,upbeat,summer" --model mureka-v6
-  anycap music generate --prompt "love song" --model mureka-v6 --title "My Song" --lyrics "verse text..."
-  anycap music generate --prompt "chill beats" --model mureka-v6 -o chill.mp3`,
+  anycap music generate --prompt "lofi night drive" --model suno-v5
+  anycap music generate --prompt "epic orchestral" --model suno-v5 --instrumental
+  anycap music generate --tags "pop,upbeat,summer" --model suno-v5
+  anycap music generate --prompt "love song" --model suno-v5 --title "My Song" --lyrics "verse text..."
+  anycap music generate --prompt "chill beats" --model suno-v5 -o chill.mp3`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if prompt == "" && tags == "" {
 				return fmt.Errorf("either --prompt or --tags is required")
@@ -108,6 +114,9 @@ Examples:
 
 			body := map[string]any{
 				"model": model,
+			}
+			if mode != "" {
+				body["mode"] = mode
 			}
 			if prompt != "" {
 				body["prompt"] = prompt
@@ -171,6 +180,7 @@ Examples:
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt describing the music to generate")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
+	cmd.Flags().StringVar(&mode, "mode", "", "Generation mode (e.g. text-to-music)")
 	cmd.Flags().BoolVar(&instrumental, "instrumental", false, "Generate instrumental only (no vocals)")
 	cmd.Flags().StringVar(&tags, "tags", "", "Comma-separated style tags (e.g. \"pop,upbeat,summer\")")
 	cmd.Flags().StringVar(&title, "title", "", "Song title")

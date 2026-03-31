@@ -228,11 +228,13 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 - **New capabilities:** add a use-case in `internal/application/`, define ports in `internal/domain/port/`, implement adapters in `internal/infrastructure/`.
 - **No business logic in transport or middleware.** Keep handlers thin.
 - **Domain layer has zero external dependencies.** Only standard library and internal models.
-- **Migrations:** current runner does not track `schema_migrations`; all new SQL migrations must be idempotent (`IF NOT EXISTS` / guard checks).
+- **Migrations:** current runner does not track `schema_migrations`; all SQL migrations must be idempotent (`IF NOT EXISTS` / guard checks).
+  - **Embedded migrations** (`internal/infrastructure/migration/migrations/`): once a file is deployed to any environment (dev/prod), **NEVER modify it**. Always create a new sequentially numbered file (e.g., `0022_xxx.sql`) for further changes.
+  - **Local seed SQL** (`deploy/sql/`): these are for local `make infra-reset` only. Can be rewritten in place to reflect the final correct schema — no incremental constraint.
 - **Stub first:** when a real adapter isn't ready, place a stub in the correct `internal/infrastructure/` sub-package.
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
-- **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/).
+- **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/). After CLI changes, **test and verify the CLI first**, then update skill files to match actual behavior.
 
 ## CI/CD
 

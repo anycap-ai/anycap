@@ -45,6 +45,7 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		APIKeyID:           principal.APIKeyID,
 		Prompt:             payload.Prompt,
 		Model:              payload.Model,
+		Mode:               model.Mode(payload.Mode),
 		NegativePrompt:     payload.NegativePrompt,
 		Ratio:              payload.Ratio,
 		Resolution:         payload.Resolution,

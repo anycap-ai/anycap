@@ -39,7 +39,10 @@ func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 //	image models <model>               -> show one model (client-side filter)
 //	image models <model> schema        -> fetch model schema from server
 func newImageModelsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var operation string
+	var (
+		operation string
+		mode      string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "models [model] [schema]",
@@ -51,6 +54,7 @@ Examples:
   anycap image models
   anycap image models nano-banana-2
   anycap image models nano-banana-2 schema
+  anycap image models nano-banana-2 schema --mode text-to-image
   anycap image models nano-banana-2 schema --operation edit`,
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,7 +65,7 @@ Examples:
 				if args[1] != "schema" {
 					return fmt.Errorf("unknown argument %q; did you mean 'schema'?", args[1])
 				}
-				return fetchModelSchema(cmd, client, stdout, args[0], operation)
+				return fetchCapModelSchema(cmd, client, stdout, "image", args[0], operation, mode)
 			}
 
 			// image models / image models <model>
@@ -69,7 +73,8 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringVar(&operation, "operation", "generate", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&operation, "operation", "", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&mode, "mode", "", "Mode to filter schema for (e.g. text-to-image, image-to-image)")
 
 	return cmd
 }
@@ -122,13 +127,21 @@ func listCapModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writ
 
 // fetchModelSchema fetches the request schema for a specific model and operation.
 func fetchModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, model, operation string) error {
-	return fetchCapModelSchema(cmd, client, stdout, "image", model, operation)
+	return fetchCapModelSchema(cmd, client, stdout, "image", model, operation, "")
 }
 
 // fetchCapModelSchema fetches the request schema for any capability.
-func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability, model, operation string) error {
-	path := fmt.Sprintf("/v1/%s/models/%s/schema?operation=%s", capability, model, operation)
-	resp, err := client.Get(cmd.Context(), path)
+func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability, modelName, operation, mode string) error {
+	qpath := fmt.Sprintf("/v1/%s/models/%s/schema", capability, modelName)
+	sep := '?'
+	if operation != "" {
+		qpath += fmt.Sprintf("%coperation=%s", sep, operation)
+		sep = '&'
+	}
+	if mode != "" {
+		qpath += fmt.Sprintf("%cmode=%s", sep, mode)
+	}
+	resp, err := client.Get(cmd.Context(), qpath)
 	if err != nil {
 		return err
 	}
@@ -139,6 +152,7 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	var (
 		prompt     string
 		model      string
+		mode       string
 		params     []string
 		outputPath string
 	)
@@ -156,11 +170,14 @@ Examples:
   anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
   anycap image generate --prompt "a landscape" --model nano-banana-2 -o landscape.png
   anycap image generate --prompt "a landscape" --model nano-banana-2 --param ratio=16:9
-  anycap image generate --prompt "a photo" --model nano-banana-2 --param negative_prompt="blurry"`,
+  anycap image generate --prompt "a photo" --model seedream-5 --mode image-to-image --param reference_image_urls='["https://example.com/photo.jpg"]'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"prompt": prompt,
 				"model":  model,
+			}
+			if mode != "" {
+				body["mode"] = mode
 			}
 
 			// Parse --param key=value pairs into the request body.
@@ -209,6 +226,7 @@ Examples:
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
+	cmd.Flags().StringVar(&mode, "mode", "", "Generation mode (e.g. text-to-image, image-to-image)")
 	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'image models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated image to this path (default: current directory)")
 	_ = cmd.MarkFlagRequired("prompt")

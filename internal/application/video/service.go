@@ -2,7 +2,6 @@ package video
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -57,7 +56,11 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	if err != nil {
 		return model.GenerateVideoResult{}, err
 	}
-	route, err := selectGenerateRoute(spec)
+	mode := req.Mode
+	if mode == "" {
+		mode = model.InferVideoMode(req)
+	}
+	route, err := model.SelectRoute(spec, model.OperationGenerate, mode)
 	if err != nil {
 		return model.GenerateVideoResult{}, err
 	}
@@ -123,36 +126,4 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	}
 
 	return result, nil
-}
-
-func selectGenerateRoute(spec *model.ModelSpec) (model.RouteBinding, error) {
-	if spec == nil {
-		return model.RouteBinding{}, fmt.Errorf("%w: model spec is nil", model.ErrModelRouteNotConfigured)
-	}
-
-	opSpec, ok := spec.Operations[model.OperationGenerate]
-	if !ok || len(opSpec.Routes) == 0 {
-		return model.RouteBinding{}, fmt.Errorf("%w: model=%s operation=%s", model.ErrModelRouteNotConfigured, spec.ModelID, model.OperationGenerate)
-	}
-
-	var (
-		selected model.RouteBinding
-		found    bool
-	)
-
-	for _, route := range opSpec.Routes {
-		if !route.Enabled || route.AbilityKey == "" || route.GenType == "" {
-			continue
-		}
-		if !found || route.Priority > selected.Priority {
-			selected = route
-			found = true
-		}
-	}
-
-	if !found {
-		return model.RouteBinding{}, fmt.Errorf("%w: model=%s operation=%s", model.ErrModelRouteNotConfigured, spec.ModelID, model.OperationGenerate)
-	}
-
-	return selected, nil
 }

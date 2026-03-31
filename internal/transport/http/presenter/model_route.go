@@ -8,23 +8,26 @@ import (
 )
 
 type ModelRouteDTO struct {
-	ID          string         `json:"id"`
-	ModelID     string         `json:"model_id"`
-	Capability  string         `json:"capability"`
-	Operation   string         `json:"operation"`
-	AbilityKey  string         `json:"ability_key"`
-	AlgoType    string         `json:"algo_type,omitempty"`
-	DisplayName string         `json:"display_name,omitempty"`
-	RouteType   string         `json:"route_type,omitempty"`
-	Region      string         `json:"region,omitempty"`
-	Tier        string         `json:"tier,omitempty"`
-	Env         string         `json:"env,omitempty"`
-	Priority    int            `json:"priority"`
-	Enabled     bool           `json:"enabled"`
-	Status      string         `json:"status"`
-	Extra       map[string]any `json:"extra,omitempty"`
-	CreatedAt   string         `json:"created_at"`
-	UpdatedAt   string         `json:"updated_at"`
+	ID               string         `json:"id"`
+	ModelID          string         `json:"model_id"`
+	Capability       string         `json:"capability"`
+	Operation        string         `json:"operation"`
+	AbilityKey       string         `json:"ability_key"`
+	AlgoType         string         `json:"algo_type,omitempty"`
+	Mode             string         `json:"mode,omitempty"`
+	DisplayName      string         `json:"display_name,omitempty"`
+	ModeDescription  string         `json:"mode_description,omitempty"`
+	ModelDescription string         `json:"model_description,omitempty"`
+	RouteType        string         `json:"route_type,omitempty"`
+	Region           string         `json:"region,omitempty"`
+	Tier             string         `json:"tier,omitempty"`
+	Env              string         `json:"env,omitempty"`
+	Priority         int            `json:"priority"`
+	Enabled          bool           `json:"enabled"`
+	Status           string         `json:"status"`
+	Extra            map[string]any `json:"extra,omitempty"`
+	CreatedAt        string         `json:"created_at"`
+	UpdatedAt        string         `json:"updated_at"`
 }
 
 func PresentModelRoute(ctx context.Context, mapper IDMapper, item *model.ModelRoute) (ModelRouteDTO, error) {
@@ -59,23 +62,26 @@ func PresentModelRoutes(ctx context.Context, mapper IDMapper, items []model.Mode
 			return nil, fmt.Errorf("failed to resolve model route id")
 		}
 		result = append(result, ModelRouteDTO{
-			ID:          externalID,
-			ModelID:     item.ModelID,
-			Capability:  string(item.Capability),
-			Operation:   string(item.Operation),
-			AbilityKey:  item.AbilityKey,
-			AlgoType:    item.AlgoType,
-			DisplayName: item.DisplayName,
-			RouteType:   string(item.RouteType),
-			Region:      item.Region,
-			Tier:        item.Tier,
-			Env:         item.Env,
-			Priority:    item.Priority,
-			Enabled:     item.Enabled,
-			Status:      item.Status,
-			Extra:       item.Extra,
-			CreatedAt:   item.CreatedAt.UTC().Format(TimeLayout),
-			UpdatedAt:   item.UpdatedAt.UTC().Format(TimeLayout),
+			ID:               externalID,
+			ModelID:          item.ModelID,
+			Capability:       string(item.Capability),
+			Operation:        string(item.Operation),
+			AbilityKey:       item.AbilityKey,
+			AlgoType:         item.AlgoType,
+			Mode:             string(item.Mode),
+			DisplayName:      item.DisplayName,
+			ModeDescription:  item.ModeDescription,
+			ModelDescription: item.ModelDescription,
+			RouteType:        string(item.RouteType),
+			Region:           item.Region,
+			Tier:             item.Tier,
+			Env:              item.Env,
+			Priority:         item.Priority,
+			Enabled:          item.Enabled,
+			Status:           item.Status,
+			Extra:            item.Extra,
+			CreatedAt:        item.CreatedAt.UTC().Format(TimeLayout),
+			UpdatedAt:        item.UpdatedAt.UTC().Format(TimeLayout),
 		})
 	}
 	return result, nil

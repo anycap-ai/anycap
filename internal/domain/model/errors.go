@@ -19,6 +19,8 @@ var (
 	ErrInsufficientCredit      = &Error{Code: "INSUFFICIENT_CREDIT", Message: "insufficient credit"}
 	ErrBillingUncertain        = &Error{Code: "BILLING_UNCERTAIN", Message: "billing status uncertain"}
 	ErrModelRouteNotConfigured = &Error{Code: "MODEL_ROUTE_NOT_CONFIGURED", Message: "model route is not configured"}
+	ErrModeRequired            = &Error{Code: "MODE_REQUIRED", Message: "mode is required when multiple modes are available"}
+	ErrModeNotSupported        = &Error{Code: "MODE_NOT_SUPPORTED", Message: "requested mode is not supported by this model"}
 	ErrInternal                = &Error{Code: "INTERNAL_ERROR", Message: "internal server error"}
 )
 

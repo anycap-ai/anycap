@@ -55,9 +55,10 @@ func (h *Handler) ListModels(c context.Context, ctx *app.RequestContext) {
 
 func (h *Handler) GetModelSchema(c context.Context, ctx *app.RequestContext) {
 	modelID := ctx.Param("model")
-	operation := ctx.DefaultQuery("operation", "generate")
+	operation := ctx.DefaultQuery("operation", "")
+	mode := ctx.DefaultQuery("mode", "")
 
-	schema, err := h.service.GetModelSchema(c, h.capability, modelID, operation)
+	schemas, err := h.service.GetModelSchemas(c, h.capability, modelID, operation, mode)
 	if err != nil {
 		ctx.JSON(consts.StatusNotFound, map[string]any{
 			"status": "error",
@@ -70,7 +71,9 @@ func (h *Handler) GetModelSchema(c context.Context, ctx *app.RequestContext) {
 	}
 
 	ctx.JSON(consts.StatusOK, map[string]any{
-		"status": "success",
-		"data":   schema,
+		"status":     "success",
+		"capability": h.capability,
+		"model":      modelID,
+		"schemas":    schemas,
 	})
 }

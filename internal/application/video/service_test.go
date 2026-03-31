@@ -40,6 +40,7 @@ func testCatalog() *nexushub.CatalogStub {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "veo-mini",
 						GenType:    string(model.CapabilityVideo),
+						Mode:       model.ModeTextToVideo,
 						AlgoType:   "txt_2_video",
 						Priority:   100,
 						Enabled:    true,

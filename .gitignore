@@ -32,6 +32,9 @@ next-env.d.ts
 .secrets.*
 !.secrets.example
 
+# Air (live reload)
+/tmp/
+
 # Go binaries (root only)
 /anycap-server
 /anycap

@@ -41,6 +41,7 @@ func testCatalog() *nexushub.CatalogStub {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "flux-dev",
 						GenType:    string(model.CapabilityImage),
+						Mode:       model.ModeTextToImage,
 						AlgoType:   "txt_2_img",
 						Priority:   100,
 						Enabled:    true,
@@ -184,7 +185,7 @@ func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 	}
 }
 
-func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
+func TestSelectRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
 	spec := &model.ModelSpec{
 		ModelID:    "flux-dev",
 		Capability: model.CapabilityImage,
@@ -195,6 +196,7 @@ func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "disabled-top",
 						GenType:    string(model.CapabilityImage),
+						Mode:       model.ModeTextToImage,
 						Priority:   300,
 						Enabled:    false,
 					},
@@ -202,6 +204,7 @@ func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "secondary",
 						GenType:    string(model.CapabilityImage),
+						Mode:       model.ModeTextToImage,
 						Priority:   100,
 						Enabled:    true,
 					},
@@ -209,6 +212,7 @@ func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
 						RouteType:  model.RouteTypeDirect,
 						AbilityKey: "primary",
 						GenType:    string(model.CapabilityImage),
+						Mode:       model.ModeTextToImage,
 						Priority:   200,
 						Enabled:    true,
 					},
@@ -217,9 +221,9 @@ func TestSelectGenerateRoute_PrefersHighestPriorityEnabledRoute(t *testing.T) {
 		},
 	}
 
-	route, err := selectGenerateRoute(spec)
+	route, err := model.SelectRoute(spec, model.OperationGenerate, model.ModeTextToImage)
 	if err != nil {
-		t.Fatalf("selectGenerateRoute() error = %v", err)
+		t.Fatalf("SelectRoute() error = %v", err)
 	}
 	if route.AbilityKey != "primary" {
 		t.Fatalf("expected primary route, got %s", route.AbilityKey)

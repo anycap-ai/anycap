@@ -44,6 +44,24 @@ func (r *CatalogSchemaEnricher) GetModel(ctx context.Context, capability model.C
 			continue
 		}
 
+		// Mode-aware: resolve a schema per mode using each mode's best route's algoType.
+		if len(opSpec.Modes) > 0 {
+			modeSchemas := r.resolveModeSchemas(ctx, operation, opSpec, schemaCache)
+			if len(modeSchemas) > 0 {
+				opSpec.ModeSchemas = modeSchemas
+				// Also set RequestHints to the first mode's schema as fallback.
+				for _, ms := range opSpec.Modes {
+					if s, ok := modeSchemas[ms.Mode]; ok && len(s) > 0 {
+						opSpec.RequestHints = cloneMap(s)
+						break
+					}
+				}
+				enriched.Operations[operation] = opSpec
+				continue
+			}
+		}
+
+		// Fallback: single schema for the entire operation (legacy / no modes).
 		resolvedSchema := r.resolveOperationSchema(ctx, operation, opSpec.Routes, schemaCache)
 		if len(resolvedSchema) == 0 {
 			continue
@@ -54,6 +72,40 @@ func (r *CatalogSchemaEnricher) GetModel(ctx context.Context, capability model.C
 	}
 
 	return enriched, nil
+}
+
+// resolveModeSchemas resolves a schema for each mode within an operation.
+// Groups routes by mode, picks the best route per mode, and uses its algoType
+// to look up the NexusHub schema.
+func (r *CatalogSchemaEnricher) resolveModeSchemas(
+	ctx context.Context,
+	operation model.Operation,
+	opSpec model.OperationSpec,
+	schemaCache map[string]map[string]any,
+) map[model.Mode]map[string]any {
+	// Group routes by mode, keeping only the highest-priority enabled route per mode.
+	bestRoutes := make(map[model.Mode]model.RouteBinding)
+	for _, route := range opSpec.Routes {
+		if !route.Enabled || route.AbilityKey == "" || route.Mode == "" {
+			continue
+		}
+		if existing, ok := bestRoutes[route.Mode]; !ok || route.Priority > existing.Priority {
+			bestRoutes[route.Mode] = route
+		}
+	}
+
+	result := make(map[model.Mode]map[string]any, len(bestRoutes))
+	for mode, route := range bestRoutes {
+		resolved := r.resolveOperationSchema(ctx, operation, []model.RouteBinding{route}, schemaCache)
+		if len(resolved) > 0 {
+			result[mode] = resolved
+		}
+	}
+
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func (r *CatalogSchemaEnricher) resolveOperationSchema(
@@ -139,7 +191,14 @@ func cloneModelSpec(spec *model.ModelSpec) *model.ModelSpec {
 	for operation, opSpec := range spec.Operations {
 		clonedOpSpec := opSpec
 		clonedOpSpec.Routes = append([]model.RouteBinding(nil), opSpec.Routes...)
+		clonedOpSpec.Modes = append([]model.ModeSpec(nil), opSpec.Modes...)
 		clonedOpSpec.RequestHints = cloneMap(opSpec.RequestHints)
+		if len(opSpec.ModeSchemas) > 0 {
+			clonedOpSpec.ModeSchemas = make(map[model.Mode]map[string]any, len(opSpec.ModeSchemas))
+			for m, s := range opSpec.ModeSchemas {
+				clonedOpSpec.ModeSchemas[m] = cloneMap(s)
+			}
+		}
 		cloned.Operations[operation] = clonedOpSpec
 	}
 

@@ -10,7 +10,7 @@ LDFLAGS  := -s -w \
 
 BINARIES := anycap anycap-server anycap-mock
 
-.PHONY: all build install install-bin clean test lint setup-hooks tools dev infra-up infra-down infra-reset sync-skills $(BINARIES)
+.PHONY: all build install install-bin clean test lint setup-hooks tools dev dev-no-watch infra-up infra-down infra-reset sync-skills $(BINARIES)
 
 all:
 	@echo "Usage: make <target>"
@@ -56,6 +56,9 @@ tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 dev:
+	$(shell go env GOPATH)/bin/air
+
+dev-no-watch:
 	go run -ldflags '$(LDFLAGS)' ./cmd/anycap-server
 
 clean:

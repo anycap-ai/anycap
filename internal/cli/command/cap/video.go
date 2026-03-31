@@ -38,7 +38,10 @@ func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 //	video models <model>               -> show one model (client-side filter)
 //	video models <model> schema        -> fetch model schema from server
 func newVideoModelsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
-	var operation string
+	var (
+		operation string
+		mode      string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "models [model] [schema]",
@@ -48,9 +51,10 @@ or fetch the request schema for a model.
 
 Examples:
   anycap video models
-  anycap video models wan-2.1
-  anycap video models wan-2.1 schema
-  anycap video models wan-2.1 schema --operation generate`,
+  anycap video models seedance-1.5-pro
+  anycap video models seedance-1.5-pro schema
+  anycap video models seedance-1.5-pro schema --mode image-to-video
+  anycap video models seedance-1.5-pro schema --operation generate`,
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := clientFactory()
@@ -60,7 +64,7 @@ Examples:
 				if args[1] != "schema" {
 					return fmt.Errorf("unknown argument %q; did you mean 'schema'?", args[1])
 				}
-				return fetchCapModelSchema(cmd, client, stdout, "video", args[0], operation)
+				return fetchCapModelSchema(cmd, client, stdout, "video", args[0], operation, mode)
 			}
 
 			// video models / video models <model>
@@ -68,7 +72,8 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringVar(&operation, "operation", "generate", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&operation, "operation", "", "Operation to get schema for (used with 'schema')")
+	cmd.Flags().StringVar(&mode, "mode", "", "Mode to filter schema for (e.g. text-to-video, image-to-video)")
 
 	return cmd
 }
@@ -77,6 +82,7 @@ func newVideoGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	var (
 		prompt     string
 		model      string
+		mode       string
 		params     []string
 		outputPath string
 	)
@@ -94,11 +100,14 @@ Examples:
   anycap video generate --prompt "a cat walking on the beach" --model veo-3.1
   anycap video generate --prompt "ocean waves" --model veo-3.1 --param ratio=16:9 --param duration=5
   anycap video generate --prompt "a landscape" --model veo-3.1 -o landscape.mp4
-  anycap video generate --prompt "animate this" --model veo-3.1 --param reference_image_urls='["https://example.com/photo.jpg"]'`,
+  anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls='["https://example.com/photo.jpg"]'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"prompt": prompt,
 				"model":  model,
+			}
+			if mode != "" {
+				body["mode"] = mode
 			}
 
 			// Parse --param key=value pairs into the request body.
@@ -144,6 +153,7 @@ Examples:
 
 	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for video generation")
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
+	cmd.Flags().StringVar(&mode, "mode", "", "Generation mode (e.g. text-to-video, image-to-video)")
 	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'video models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated video to this path (default: current directory)")
 	_ = cmd.MarkFlagRequired("prompt")

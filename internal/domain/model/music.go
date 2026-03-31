@@ -16,6 +16,7 @@ type GenerateMusicRequest struct {
 	APIKeyID         string `json:"api_key_id,omitempty"`
 	Prompt           string `json:"prompt,omitempty"`
 	Model            string `json:"model"`
+	Mode             Mode   `json:"mode,omitempty"`
 	MakeInstrumental bool   `json:"make_instrumental,omitempty"`
 	CustomMode       bool   `json:"custom_mode,omitempty"`
 	Tags             string `json:"tags,omitempty"`

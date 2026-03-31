@@ -1,0 +1,16 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -ldflags '-s -w' -o ./tmp/anycap-server ./cmd/anycap-server"
+  bin = "./tmp/anycap-server"
+  include_ext = ["go", "toml", "sql"]
+  exclude_dir = ["tmp", "dist", "web", "npm", "anycap-github", "external", "node_modules", "workers"]
+  exclude_regex = ["_test\\.go$"]
+  delay = 1000
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true
