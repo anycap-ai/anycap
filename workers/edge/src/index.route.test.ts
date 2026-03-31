@@ -71,6 +71,33 @@ describe("worker host routing", () => {
 		expect(response.status).toBe(200);
 	});
 
+	it("routes preview-page subdomain to page handler", async () => {
+		const kv = createMockKV();
+		const r2 = createMockR2({
+			"page/spaces/1/sites/9/versions/2/index.html": {
+				body: "<h1>preview</h1>",
+				contentType: "text/html; charset=utf-8",
+			},
+		});
+		setKVJSON(kv.store, "page:host:preview-page-pprv-abc.anycap.cloud", {
+			page_id: 9,
+			space_id: 1,
+			current_version_id: 2,
+			asset_prefix: "page/spaces/1/sites/9/versions/2",
+			spa_fallback: false,
+			access_mode: "public",
+			preview: true,
+			expires_at: "2099-01-01T00:00:00Z",
+		});
+
+		const env = createEnv({
+			EDGE_KV: kv.namespace,
+			ANYCAP_CLOUD_R2: r2.bucket,
+		});
+		const response = await worker.fetch(new Request("https://preview-page-pprv-abc.anycap.cloud/"), env);
+		expect(response.status).toBe(200);
+	});
+
 	it("returns 404 for unknown host", async () => {
 		const env = createEnv();
 		const response = await worker.fetch(new Request("https://unknown.anycap.cloud/"), env);

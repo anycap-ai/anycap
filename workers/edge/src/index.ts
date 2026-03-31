@@ -17,7 +17,7 @@ export default {
 			if (hostname === config.driveHost) {
 				return await handleDrive(request, env, config, ctx);
 			}
-			if (hostname.startsWith(config.pageHostPrefix)) {
+			if (hostname.startsWith(config.pageHostPrefix) || hostname.startsWith(config.pagePreviewHostPrefix)) {
 				return await handlePage(request, env, config, ctx);
 			}
 			return notFoundPage("Unknown host");

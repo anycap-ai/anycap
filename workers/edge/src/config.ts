@@ -4,6 +4,7 @@ export type EdgeConfig = {
 	cdnHost: string;
 	driveHost: string;
 	pageHostPrefix: string;
+	pagePreviewHostPrefix: string;
 	driveAssetCacheTTLSeconds: number;
 	pageAssetCacheTTLSeconds: number;
 	drivePasswordRateLimitWindowSeconds: number;
@@ -27,10 +28,12 @@ function parsePositiveInt(raw: string | undefined, fallback: number): number {
 
 export function resolveConfig(env: Env): EdgeConfig {
 	const prefix = (env.PAGE_HOST_PREFIX || "page-").trim().toLowerCase();
+	const previewPrefix = (env.PAGE_PREVIEW_HOST_PREFIX || "preview-page-").trim().toLowerCase();
 	return {
 		cdnHost: (env.CDN_HOST || "cdn.anycap.cloud").trim().toLowerCase(),
 		driveHost: (env.DRIVE_HOST || "drive.anycap.cloud").trim().toLowerCase(),
 		pageHostPrefix: prefix.endsWith("-") ? prefix : `${prefix}-`,
+		pagePreviewHostPrefix: previewPrefix.endsWith("-") ? previewPrefix : `${previewPrefix}-`,
 		driveAssetCacheTTLSeconds: parsePositiveInt(env.DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS, 60),
 		pageAssetCacheTTLSeconds: parsePositiveInt(env.PAGE_STATIC_ASSET_CACHE_TTL_SECONDS, 60),
 		drivePasswordRateLimitWindowSeconds: parsePositiveInt(env.DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS, 300),

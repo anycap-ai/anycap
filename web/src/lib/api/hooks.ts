@@ -6,6 +6,7 @@ import { anycapDelete, anycapGet, anycapPatch, anycapPost, anycapPut } from "./c
 import type {
   Balance,
   DashboardSummary,
+  DriveAccessLinksResult,
   DriveFilePresignResult,
   DriveNode,
   DriveNodeListResult,
@@ -13,6 +14,7 @@ import type {
   LogsResult,
   PageVersion,
   PageVersionListResult,
+  PagePreviewHostResult,
   PageVersionPresignResult,
   PageSite,
   PageSiteListResult,
@@ -125,6 +127,10 @@ export async function revokeDriveShare(nodeID: string) {
   return deleteWithAccessToken<{ id: string; revoked: boolean }>(`/v1/drive/nodes/${nodeID}/share`);
 }
 
+export async function createDriveAccessLinks(nodeID: string) {
+  return postWithAccessToken<DriveAccessLinksResult>(`/v1/drive/nodes/${nodeID}/access-links`, {});
+}
+
 export function usePageSites() {
   return useSWR<PageSiteListResult>("/v1/pages", fetchWithAccessToken);
 }
@@ -185,6 +191,13 @@ export async function finalizePageVersion(pageID: string, versionID: string) {
 
 export async function publishPageVersion(pageID: string, versionID: string) {
   return postWithAccessToken<PageVersion>(`/v1/pages/${pageID}/versions/${versionID}/publish`, {});
+}
+
+export async function createPagePreviewHost(pageID: string, versionID: string) {
+  return postWithAccessToken<PagePreviewHostResult>(
+    `/v1/pages/${pageID}/versions/${versionID}/preview-host`,
+    {},
+  );
 }
 
 export async function rollbackClonePageVersion(pageID: string, sourceVersionID: string) {

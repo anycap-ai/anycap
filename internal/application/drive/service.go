@@ -12,6 +12,7 @@ import (
 )
 
 const defaultDriveShareBaseURL = "https://drive.anycap.cloud/s"
+const defaultDriveAccessBaseURL = "https://drive.anycap.cloud"
 
 type ServiceOption func(*Service)
 
@@ -22,19 +23,24 @@ type Service struct {
 	uploadSessionRepo port.UploadSessionRepository
 	storageObjectRepo port.StorageObjectRepository
 	objectStore       port.CloudObjectStore
+	edgeGrantStore    port.EdgeGrantStore
 	kvSyncJobRepo     port.KVSyncJobRepository
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
 	passwordPepper    string
 	shareBaseURL      string
+	accessBaseURL     string
+	accessTTLSeconds  int64
 	now               func() time.Time
 }
 
 func NewService(spaceService port.SpaceService, nodeRepo port.DriveNodeRepository, options ...ServiceOption) *Service {
 	svc := &Service{
-		spaceService: spaceService,
-		nodeRepo:     nodeRepo,
-		shareBaseURL: defaultDriveShareBaseURL,
+		spaceService:     spaceService,
+		nodeRepo:         nodeRepo,
+		shareBaseURL:     defaultDriveShareBaseURL,
+		accessBaseURL:    defaultDriveAccessBaseURL,
+		accessTTLSeconds: 300,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
@@ -70,6 +76,18 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 		s.kvSyncJobRepo = jobRepo
 		s.kvSyncWaiter = waiter
 		s.waitForKVSync = waitForKVSync
+	}
+}
+
+func WithEdgeAccess(grantStore port.EdgeGrantStore, ttlSeconds int64, accessBaseURL string) ServiceOption {
+	return func(s *Service) {
+		s.edgeGrantStore = grantStore
+		if ttlSeconds > 0 {
+			s.accessTTLSeconds = ttlSeconds
+		}
+		if strings.TrimSpace(accessBaseURL) != "" {
+			s.accessBaseURL = strings.TrimRight(strings.TrimSpace(accessBaseURL), "/")
+		}
 	}
 }
 

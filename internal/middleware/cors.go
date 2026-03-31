@@ -25,7 +25,7 @@ func CORS(allowedOrigins []string) app.HandlerFunc {
 				c.Response.Header.Set("Access-Control-Allow-Origin", origin)
 				c.Response.Header.Set("Vary", "Origin")
 				c.Response.Header.Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				c.Response.Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				c.Response.Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 				c.Response.Header.Set("Access-Control-Max-Age", "600")
 			}
 		}

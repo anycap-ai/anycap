@@ -41,8 +41,8 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 			if badge && noBadge {
 				return fmt.Errorf("--badge and --no-badge cannot be used together")
 			}
-			if accessMode != "" && accessMode != "public" && accessMode != "password" && accessMode != "private_reserved" {
-				return fmt.Errorf("--access must be one of: public, password, private_reserved")
+			if accessMode != "" && accessMode != "public" && accessMode != "password" {
+				return fmt.Errorf("--access must be one of: public, password")
 			}
 
 			payload := map[string]any{}
@@ -83,7 +83,7 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 	}
 
 	cmd.Flags().StringVar(&name, "name", "", "New site display name")
-	cmd.Flags().StringVar(&accessMode, "access", "", "Access mode: public|password|private_reserved")
+	cmd.Flags().StringVar(&accessMode, "access", "", "Access mode: public|password")
 	cmd.Flags().StringVar(&password, "password", "", "Site password when access mode is password")
 	cmd.Flags().BoolVar(&noPassword, "no-password", false, "Remove site password")
 	cmd.Flags().BoolVar(&spaFallback, "spa-fallback", false, "Enable SPA fallback")

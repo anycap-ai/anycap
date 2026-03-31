@@ -440,6 +440,41 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 	}
 }
 
+func TestPublishArchivedVersion_ClonesAndPublishes(t *testing.T) {
+	service, _, _, _, _, _ := newVersionServiceFor3C()
+
+	v1 := createAndFinalizeVersion(t, service, 1, "index.html")
+	if _, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID); err != nil {
+		t.Fatalf("PublishVersion(v1) error = %v", err)
+	}
+
+	site, err := service.Unpublish(context.Background(), "u-1", 1)
+	if err != nil {
+		t.Fatalf("Unpublish() error = %v", err)
+	}
+	if site.CurrentVersionID != nil {
+		t.Fatalf("expected current_version_id nil after unpublish, got %v", *site.CurrentVersionID)
+	}
+
+	// Re-publish the archived version: should clone into a new version.
+	republished, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
+	if err != nil {
+		t.Fatalf("PublishVersion(archived v1) error = %v", err)
+	}
+	if republished.Status != model.PageVersionStatusPublished {
+		t.Fatalf("expected published, got %s", republished.Status)
+	}
+	if republished.ID == v1.ID {
+		t.Fatalf("expected new version ID, got same as v1 (%d)", v1.ID)
+	}
+	if republished.VersionNo <= v1.VersionNo {
+		t.Fatalf("expected higher version_no than %d, got %d", v1.VersionNo, republished.VersionNo)
+	}
+	if republished.SourceVersionID == nil || *republished.SourceVersionID != v1.ID {
+		t.Fatalf("expected source_version_id=%d, got %+v", v1.ID, republished.SourceVersionID)
+	}
+}
+
 func TestRollbackCloneVersion_CopiesAssetsAndMarksVerified(t *testing.T) {
 	service, _, _, storageRepo, _, objectStore := newVersionServiceFor3C()
 
@@ -489,6 +524,59 @@ func TestRollbackCloneVersion_RequiresSourceAssets(t *testing.T) {
 	_, err = service.RollbackCloneVersion(context.Background(), "u-1", 1, sourceVersion.ID)
 	if err == nil || !strings.Contains(err.Error(), "no assets") {
 		t.Fatalf("expected no assets error, got %v", err)
+	}
+}
+
+func TestCreatePreviewHost(t *testing.T) {
+	service, _, _, _, _, _ := newVersionServiceFor3C()
+	grantStore := &fakePageEdgeGrantStore{}
+	service = NewService(
+		service.spaceService,
+		service.siteRepo,
+		service.slugRepo,
+		"pepper-xyz",
+		WithVersioning(service.versionRepo, service.uploadSessionRepo, service.storageObjectRepo, service.objectStore),
+		WithPreviewHost(grantStore, "preview-page-%s.anycap.dev", 300),
+	)
+
+	version := createAndFinalizeVersion(t, service, 1, "index.html")
+	result, err := service.CreatePreviewHost(context.Background(), "u-1", 1, version.ID)
+	if err != nil {
+		t.Fatalf("CreatePreviewHost() error = %v", err)
+	}
+	if !strings.HasPrefix(result.PreviewURL, "https://preview-page-pprv-") {
+		t.Fatalf("unexpected preview_url: %q", result.PreviewURL)
+	}
+	if !strings.Contains(result.PreviewURL, ".anycap.dev/") {
+		t.Fatalf("unexpected preview_url domain: %q", result.PreviewURL)
+	}
+	if grantStore.key == "" || !strings.HasPrefix(grantStore.key, "page:host:preview-page-pprv-") {
+		t.Fatalf("unexpected grant key: %q", grantStore.key)
+	}
+	if grantStore.ttlSeconds != 300 {
+		t.Fatalf("expected ttl 300, got %d", grantStore.ttlSeconds)
+	}
+}
+
+func TestCreatePreviewHost_RejectsDraftVersion(t *testing.T) {
+	service, _, versionRepo, _, _, _ := newVersionServiceFor3C()
+	grantStore := &fakePageEdgeGrantStore{}
+	service = NewService(
+		service.spaceService,
+		service.siteRepo,
+		service.slugRepo,
+		"pepper-xyz",
+		WithVersioning(versionRepo, service.uploadSessionRepo, service.storageObjectRepo, service.objectStore),
+		WithPreviewHost(grantStore, "preview-page-%s.anycap.dev", 300),
+	)
+
+	draft, err := versionRepo.CreateDraft(context.Background(), 1, "u-1", "page/spaces/200/sites/1/versions")
+	if err != nil {
+		t.Fatalf("CreateDraft() error = %v", err)
+	}
+	_, err = service.CreatePreviewHost(context.Background(), "u-1", 1, draft.ID)
+	if err == nil || !strings.Contains(err.Error(), "verified, published, or archived") {
+		t.Fatalf("expected status validation error, got %v", err)
 	}
 }
 

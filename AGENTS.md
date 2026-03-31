@@ -235,6 +235,7 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 - **Tests:** place unit tests alongside source (`_test.go`). Integration tests go in `test/integration/`.
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
 - **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/). After CLI changes, **test and verify the CLI first**, then update skill files to match actual behavior.
+- **Product status:** after shipping any product feature (new capability, CLI command, dashboard page, etc.), update `docs/anycap-current-status.md` to reflect the current state. This file is a snapshot, not a changelog — overwrite the relevant section with what exists now, do not append "added X" or explain what changed.
 
 ## CI/CD
 

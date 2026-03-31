@@ -5,6 +5,7 @@ export const runtime = "edge";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  createPagePreviewHost,
   publishPageVersion,
   unpublishPageSite,
   updatePageSite,
@@ -43,6 +44,7 @@ export default function PageDetailPage() {
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishingVersionID, setPublishingVersionID] = useState<string | null>(null);
+  const [previewingVersionID, setPreviewingVersionID] = useState<string | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
   const [error, setError] = useState("");
 
@@ -122,6 +124,20 @@ export default function PageDetailPage() {
       setError(err instanceof Error ? err.message : "failed to unpublish");
     } finally {
       setUnpublishing(false);
+    }
+  }
+
+  async function onPreview(versionID: string) {
+    if (!data) return;
+    setPreviewingVersionID(versionID);
+    setError("");
+    try {
+      const result = await createPagePreviewHost(data.id, versionID);
+      window.open(result.preview_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to preview version");
+    } finally {
+      setPreviewingVersionID(null);
     }
   }
 
@@ -221,7 +237,6 @@ export default function PageDetailPage() {
                 >
                   <option value="public">public</option>
                   <option value="password">password</option>
-                  <option value="private_reserved">private_reserved</option>
                 </select>
               </label>
             </div>
@@ -296,8 +311,10 @@ export default function PageDetailPage() {
                   ) : versions.length > 0 ? (
                     versions.map((version) => {
                       const isLive = data.current_version_id === version.id;
-                      const publishable = version.status === "verified";
+                      const publishable = version.status === "verified" || version.status === "archived";
                       const canPublish = publishable && publishingVersionID == null;
+                      const canOpen = isLive && !!pageUrl;
+                      const canPreview = version.status === "verified" || version.status === "published" || version.status === "archived" || isLive;
                       return (
                         <tr key={version.id} className="border-b border-[#eceee7] hover:bg-[#f9faf7] transition-colors">
                           <td className="py-[15px] px-5 text-[14px] text-[#1c1f17] font-medium">v{version.version_no}</td>
@@ -310,13 +327,34 @@ export default function PageDetailPage() {
                             {new Date(version.created_at).toLocaleString()}
                           </td>
                           <td className="py-[15px] px-5 text-right">
-                            <button
-                              className={canPublish ? btnPrimary : `${btnSecondary} !shadow-none`}
-                              onClick={() => onPublish(version.id)}
-                              disabled={!canPublish}
-                            >
-                              {publishingVersionID === version.id ? "Publishing..." : "Publish"}
-                            </button>
+                            <div className="inline-flex items-center gap-2">
+                              {canOpen && (
+                                <a
+                                  href={pageUrl!}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={btnSecondary}
+                                >
+                                  Open
+                                </a>
+                              )}
+                              {canPreview && (
+                                <button
+                                  className={btnSecondary}
+                                  onClick={() => onPreview(version.id)}
+                                  disabled={previewingVersionID != null}
+                                >
+                                  {previewingVersionID === version.id ? "Opening..." : "Preview"}
+                                </button>
+                              )}
+                              <button
+                                className={canPublish ? btnPrimary : `${btnSecondary} !shadow-none`}
+                                onClick={() => onPublish(version.id)}
+                                disabled={!canPublish}
+                              >
+                                {publishingVersionID === version.id ? "Publishing..." : "Publish"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

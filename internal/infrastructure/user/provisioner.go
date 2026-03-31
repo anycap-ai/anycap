@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -54,6 +55,11 @@ func (p *Provisioner) FindOrCreateByAuthIdentity(ctx context.Context, provider s
 
 	user, err = insertUserAndIdentity(ctx, tx, provider, authUser, now.UTC())
 	if err != nil {
+		// Concurrent request already created this identity — retry lookup.
+		if isDuplicateKey(err) {
+			_ = tx.Rollback()
+			return p.FindOrCreateByAuthIdentity(ctx, provider, authUser, now)
+		}
 		return model.User{}, false, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -169,6 +175,10 @@ func insertUserAndIdentity(ctx context.Context, db sqlstore.DBTX, provider strin
 	}
 	user.ID = strconv.FormatInt(numericID, 10)
 	return user, nil
+}
+
+func isDuplicateKey(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "SQLSTATE 23505")
 }
 
 func emptyStringToNil(value string) any {

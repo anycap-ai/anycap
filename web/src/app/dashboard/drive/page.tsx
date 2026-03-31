@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  createDriveAccessLinks,
   useDriveNodes,
 } from "@/lib/api/hooks";
 import type { DriveNode } from "@/lib/api/types";
@@ -178,6 +179,34 @@ export default function DrivePage() {
     }
   }
 
+  async function openDrivePreview(node: DriveNode) {
+    if (node.kind !== "file") return;
+    setBusy(true);
+    setError("");
+    try {
+      const links = await createDriveAccessLinks(node.id);
+      window.open(links.preview_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to open preview");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function downloadDriveFile(node: DriveNode) {
+    if (node.kind !== "file") return;
+    setBusy(true);
+    setError("");
+    try {
+      const links = await createDriveAccessLinks(node.id);
+      window.open(links.download_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to download file");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div>
       <div className="flex items-start justify-between mb-9 gap-4 flex-wrap">
@@ -289,16 +318,25 @@ export default function DrivePage() {
                         {node.name}
                       </button>
                     ) : (
-                      <span className="flex items-center gap-2.5">
+                      <button
+                        className="flex items-center gap-2.5 hover:text-[#6b7d3a] transition-colors"
+                        onClick={() => { void openDrivePreview(node); }}
+                        disabled={busy}
+                      >
                         <FileIcon name={node.name} className="text-[#7a7e71] shrink-0" />
                         {node.name}
-                      </span>
+                      </button>
                     )}
                   </td>
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatSize(node.size)}</td>
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatTime(node.updated_at)}</td>
                   <td className="py-[15px] px-5 text-right">
                     <div className="inline-flex items-center gap-1">
+                      {node.kind === "file" && (
+                        <ActionLink onClick={() => { void downloadDriveFile(node); }} disabled={busy}>
+                          Download
+                        </ActionLink>
+                      )}
                       <ActionLink onClick={() => setShareNode(node)} disabled={busy}>
                         Share
                       </ActionLink>

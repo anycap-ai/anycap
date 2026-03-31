@@ -2,15 +2,15 @@ import { respondWithCache } from "./cache";
 import type { EdgeConfig } from "./config";
 import { getKVJSON } from "./kv";
 import { verifyPBKDF2Password } from "./password";
-import { forbiddenPage, notFoundPage } from "./response";
+import { forbiddenPage, gonePage, notFoundPage } from "./response";
 import { hitRateLimit } from "./rate_limit";
 import { clearSessionCookie, createSessionCookie, isSessionValid } from "./session";
-import type { DriveDirChildrenRecord, DriveDirMetaRecord, DriveFileRecord, DriveShareRecord, Env } from "./types";
+import type { DriveAccessRecord, DriveDirChildrenRecord, DriveDirMetaRecord, DriveFileRecord, DriveShareRecord, Env } from "./types";
 import { renderDriveDirectoryPage, renderErrorPage, renderFilePreviewPage, renderPasswordPage } from "./ui";
 
 const DRIVE_SESSION_COOKIE = "ac_drive_auth";
 
-function parseDriveRoute(pathname: string): { token: string; rest: string } | null {
+function parseDriveShareRoute(pathname: string): { token: string; rest: string } | null {
 	const parts = pathname.split("/").filter((item) => item !== "");
 	if (parts.length < 2 || parts[0] !== "s") {
 		return null;
@@ -26,6 +26,30 @@ function parseDriveRoute(pathname: string): { token: string; rest: string } | nu
 	}
 	const rest = parts.slice(2).join("/");
 	return { token, rest };
+}
+
+function parseDriveAccessRoute(pathname: string): { token: string; raw: boolean } | null {
+	const parts = pathname.split("/").filter((item) => item !== "");
+	if (parts.length < 2 || parts[0] !== "o") {
+		return null;
+	}
+
+	let token = "";
+	try {
+		token = decodeURIComponent(parts[1] || "").trim();
+	} catch {
+		return null;
+	}
+	if (!token) {
+		return null;
+	}
+	if (parts.length === 2) {
+		return { token, raw: false };
+	}
+	if (parts.length === 3 && parts[2] === "raw") {
+		return { token, raw: true };
+	}
+	return null;
 }
 
 function parsePositiveInt(value: string): number | null {
@@ -44,10 +68,14 @@ function getClientIP(req: Request): string {
 }
 
 function isExpired(share: DriveShareRecord): boolean {
-	if (!share.expires_at) {
+	return isExpiredAt(share.expires_at);
+}
+
+function isExpiredAt(expiresAtRaw?: string | null): boolean {
+	if (!expiresAtRaw) {
 		return false;
 	}
-	const expiresAt = Date.parse(share.expires_at);
+	const expiresAt = Date.parse(expiresAtRaw);
 	if (Number.isNaN(expiresAt)) {
 		return false;
 	}
@@ -213,6 +241,67 @@ async function serveFileRaw(
 	}, ctx);
 }
 
+function applyPrivateNoStore(response: Response): Response {
+	const wrapped = new Response(response.body, response);
+	wrapped.headers.set("cache-control", "private, no-store");
+	return wrapped;
+}
+
+async function serveAccessRaw(
+	request: Request,
+	env: Env,
+	record: DriveAccessRecord,
+): Promise<Response> {
+	const object = await env.ANYCAP_CLOUD_R2.get(record.object_key);
+	if (!object || !object.body) {
+		return notFoundPage("File object not found");
+	}
+
+	const mime = object.httpMetadata?.contentType || record.mime || guessMimeFromFilename(record.name);
+	const headers = new Headers();
+	headers.set("content-type", mime);
+	if (object.httpEtag) {
+		headers.set("etag", object.httpEtag);
+	}
+	if (object.size >= 0) {
+		headers.set("content-length", String(object.size));
+	}
+	const download = new URL(request.url).searchParams.get("download") === "1";
+	const contentDisposition = download
+		? `attachment; filename*=UTF-8''${encodeURIComponent(record.name)}`
+		: shouldInline(mime)
+			? "inline"
+			: `attachment; filename*=UTF-8''${encodeURIComponent(record.name)}`;
+	headers.set("content-disposition", contentDisposition);
+	return new Response(object.body, { status: 200, headers });
+}
+
+async function handleDriveAccessRoute(request: Request, env: Env, token: string, raw: boolean): Promise<Response> {
+	if (request.method !== "GET") {
+		return applyPrivateNoStore(renderErrorPage(405, "Method not allowed", "Only GET is supported for this route."));
+	}
+
+	const record = await getKVJSON<DriveAccessRecord>(env, `drive:access:${token}`);
+	if (!record) {
+		return applyPrivateNoStore(notFoundPage("Access link not found"));
+	}
+	if (isExpiredAt(record.expires_at)) {
+		return applyPrivateNoStore(gonePage("Access link expired"));
+	}
+
+	if (raw) {
+		return applyPrivateNoStore(await serveAccessRaw(request, env, record));
+	}
+
+	const rawUrl = `/o/${encodeURIComponent(token)}/raw`;
+	return applyPrivateNoStore(renderFilePreviewPage({
+		fileName: record.name,
+		fileSize: record.size ?? undefined,
+		rawUrl,
+		mime: record.mime || guessMimeFromFilename(record.name),
+	}));
+}
+
 async function serveFile(
 	request: Request,
 	env: Env,
@@ -303,7 +392,11 @@ async function handleDrivePasswordSubmit(
 export async function handleDrive(request: Request, env: Env, config: EdgeConfig, ctx?: ExecutionContext): Promise<Response> {
 	const t0 = Date.now();
 	const url = new URL(request.url);
-	const route = parseDriveRoute(url.pathname);
+	const accessRoute = parseDriveAccessRoute(url.pathname);
+	if (accessRoute) {
+		return handleDriveAccessRoute(request, env, accessRoute.token, accessRoute.raw);
+	}
+	const route = parseDriveShareRoute(url.pathname);
 	if (!route) {
 		return notFoundPage("Drive route not found");
 	}

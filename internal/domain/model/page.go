@@ -132,3 +132,8 @@ type ListPageVersionsFilter struct {
 	Limit  int
 	Offset int
 }
+
+type PagePreviewHost struct {
+	PreviewURL string
+	ExpiresAt  time.Time
+}
