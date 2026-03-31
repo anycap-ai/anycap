@@ -10,7 +10,7 @@ const DURATION_MS = 5000;
 export function DashboardToast() {
   const [current, setCurrent] = useState<ToastMessage | null>(null);
   const [visible, setVisible] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => onToast((msg) => {
     // Clear previous timer
