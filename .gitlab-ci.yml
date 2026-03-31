@@ -8,7 +8,7 @@
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
-#   deploy/server-prod     -> docker build + deploy (infra-prod)
+#   deploy/server-prod     -> docker build + deploy (anycap-prod)
 # ---------------------------------------------------------------------------
 
 include:
@@ -72,7 +72,7 @@ workflow:
         DEPLOY_ENABLED: "true"
         DEPLOY_ENV: "prod"
         APP_server_SAE_APP_NAME: "anycap-server"
-        APP_server_SAE_APP_NAMESPACE: "infra-prod"
+        APP_server_SAE_APP_NAMESPACE: "anycap-prod"
 
 # ---------------------------------------------------------------------------
 # Lint (skip on release, build, deploy, nightly branches)
