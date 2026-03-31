@@ -1,0 +1,231 @@
+# AnyCap — Current Product Status
+
+> Last updated: 2026-03-31
+
+## 1. Capabilities (Cap)
+
+### Media Generation
+
+| Capability | CLI Command | Description |
+|------------|-------------|-------------|
+| Image generation | `anycap image generate` | Text-to-image with model selection, negative prompt, aspect ratio, resolution, reference images |
+| Video generation | `anycap video generate` | Text-to-video and image-to-video with duration, aspect ratio, resolution, reference images |
+| Music generation | `anycap music generate` | Instrumental and custom modes, vocal synthesis (gender selection), tags/title/lyrics, continuation from existing clip |
+
+### Media Understanding
+
+| Capability | CLI Command | Description |
+|------------|-------------|-------------|
+| Image read | `anycap actions image-read` | Analyze up to 10 images (URL or local file), custom instructions, model selection |
+| Video read | `anycap actions video-read` | Analyze video (URL or local file), custom instructions, model selection |
+| Audio read | `anycap actions audio-read` | Analyze audio (URL or local file), custom instructions, model selection |
+
+### Model Catalog
+
+Each capability has a dynamic model catalog. Agents can:
+
+- **List models**: `anycap {image,video,music} models` — see all available models with their supported operations
+- **Inspect a model**: `anycap {image,video,music} models <model>` — view model details
+- **Discover parameters**: `anycap {image,video,music} models <model> schema --operation <op>` — get the request schema for a specific operation
+
+### Operation Types
+
+Models advertise which operations they support. Schema discovery works for all, but only `generate` has a full execution flow today.
+
+| Operation | Description | Execution |
+|-----------|-------------|-----------|
+| `generate` | Create new media from prompt | Full (server + CLI) |
+| `edit` | Edit existing image (inpaint, etc.) | Schema only, no execution |
+| `upscale` | Upscale image resolution | Schema only, no execution |
+| `from_image` | Generate video from a reference image | Handled via reference images in `generate` |
+| `speak` | Text-to-speech | Schema only, no execution |
+
+### File Upload
+
+Local files can be used directly in CLI commands (`--file`). The CLI handles upload automatically via presigned URLs. Upload limits: images 20 MB, audio 50 MB, video 200 MB.
+
+## 2. Infrastructure (Infra)
+
+### Drive — Cloud File Storage
+
+| Feature | CLI Command | Description |
+|---------|-------------|-------------|
+| List files | `anycap drive ls` | Browse by ID or path |
+| Create folder | `anycap drive mkdir` | Create folder by name, supports nested paths |
+| Upload file | `anycap drive upload` | Upload local file to drive |
+| Move / rename | `anycap drive mv` | Move to different folder or rename |
+| Delete | `anycap drive rm` | Delete file or folder (recursive) |
+| Share | `anycap drive share` | Create share link with optional password and expiry |
+| Dashboard preview/download | Dashboard Drive UI | File preview and direct download via short-lived edge access links (`/v1/drive/nodes/:id/access-links`) |
+
+Supports both ID-based (`--parent dn_xxx`) and path-based (`--parent-path /folder/sub`) addressing.
+
+### Page — Static Site Hosting
+
+| Feature | CLI Command | Description |
+|---------|-------------|-------------|
+| Deploy | `anycap page deploy` | Deploy HTML/static files as a new version |
+| List sites | `anycap page list` | List all hosted sites |
+| Site info | `anycap page info` | View site details |
+| Update settings | `anycap page set` | Name, access mode (public/password), SPA fallback, badge |
+| Delete site | `anycap page delete` | Remove site entirely |
+| Publish | `anycap page publish` | Publish a specific version |
+| Unpublish | `anycap page unpublish` | Take site offline |
+| Version history | `anycap page versions` | List all versions |
+| Rollback | `anycap page rollback` | Clone a historical version |
+| Unpublished preview | Dashboard Pages UI | Verified/unpublished versions can open temporary preview host (`/v1/pages/:id/versions/:vid/preview-host`) |
+
+Deploy supports concurrent asset uploads. Sites support password-protected access and SPA mode.
+
+## 3. CLI
+
+### Full Command Tree
+
+```
+anycap
+├── image
+│   ├── generate              Generate image from prompt
+│   └── models                List models / show detail / fetch schema
+├── video
+│   ├── generate              Generate video from prompt
+│   └── models                List models / show detail / fetch schema
+├── music
+│   ├── generate              Generate music from prompt
+│   └── models                List models / show detail / fetch schema
+├── actions
+│   ├── image-read            Analyze images
+│   ├── video-read            Analyze video
+│   └── audio-read            Analyze audio
+├── drive
+│   ├── ls / mkdir / upload / mv / rm / share
+├── page
+│   ├── list / info / set / deploy / delete
+│   ├── publish / unpublish / versions / rollback
+├── login                     Auth (browser OAuth + device code)
+├── logout                    Remove credentials
+├── status                    Check server status
+├── credentials
+│   ├── show                  Show current credential
+│   └── set-key               Set API key directly
+├── config
+│   ├── show / keys / get / set / unset
+├── feedback                  Submit bug report / feature request
+├── skill
+│   ├── check / install / update
+├── update                    Self-update CLI binary
+└── download                  Download file from URL
+```
+
+### Authentication
+
+Three methods supported:
+
+1. **Browser OAuth**: `anycap login` — opens browser, receives callback
+2. **Device code**: `anycap login --headless` — prints a code, user approves in browser
+3. **API key**: `anycap credentials set-key <key>` — direct key input, or `ANYCAP_API_KEY` env var
+
+Credentials stored in system keychain (file fallback at `~/.anycap/credentials`).
+
+### Output
+
+- JSON to stdout by default (non-TTY), human-readable in TTY
+- `--json` / `--pretty` to override
+- All responses include `request_id` for debugging and feedback
+
+### Feature Gating
+
+CLI fetches available features from the server at startup. Disabled capabilities are hidden from help and unavailable. Falls back to all-enabled when server is unreachable.
+
+## 4. Skill Files
+
+Agent-facing skill documentation, following the entry skill + on-demand loading pattern.
+
+**Entry point**: `SKILL.md` — global overview, installation guide, authentication, capability index.
+
+**On-demand references** (agent loads only what it needs):
+
+| Reference | Covers |
+|-----------|--------|
+| CLI reference | Full command reference, auth methods, config |
+| Image generation | Prompting, model selection, parameters |
+| Video generation | Text-to-video, image-to-video workflows |
+| Music generation | Instrumental, custom mode, vocal synthesis |
+| Media analysis | Image/video/audio understanding |
+| Drive | File storage and sharing |
+| Page | Static site deployment and management |
+
+Distributed via GitHub. Agents install with `anycap skill install`.
+
+## 5. Dashboard
+
+### User Dashboard
+
+| Page | Function |
+|------|----------|
+| Overview | Credit balance, recent activity, error summary |
+| Usage | Usage statistics |
+| Logs | Detailed call logs |
+| Billing | Credits management |
+| API Keys | Create, disable, delete API keys |
+| Drive | Visual file browser |
+| Pages | Site management with version history, published Open, and verified version Preview |
+| Playground | Interactive capability testing |
+| Settings | User preferences |
+
+### Auth Flows
+
+- Browser OAuth login
+- CLI-initiated login (redirect flow)
+- Device code flow (for headless environments)
+
+## 6. Website
+
+### Landing
+
+Localized landing page with a separate `/for-human` variant. Supports i18n routing.
+
+### SEO Content (32 pages)
+
+| Category | Pages |
+|----------|-------|
+| Capabilities | Overview, image generation, image understanding, video generation, video analysis |
+| For agents | Claude Code (+ image-generation, video-generation sub-pages), Cursor, Codex, Manus |
+| Guides | Install AnyCap, agent skills, context engineering, workspace context, agent harness, add tools to Claude Code |
+| Glossary | Agent capability runtime, agent harness, context engineering |
+| Compare | AnyCap vs Composio, AnyCap vs OpenAI Agent Builder |
+| Models | Overview, Seedream 5, Nano Banana Pro, Veo 3.1 |
+| Learn | What agents can't do |
+| Top-level | Start, CLI, Skills, About |
+
+### AI Discoverability
+
+- `llms.txt` for AI crawlers (GPTBot, ClaudeBot, PerplexityBot, etc.)
+- `robots.ts` with explicit AI bot allow rules
+- Auto-discovery sitemap
+- Dynamic OG image generation
+
+## 7. Billing & Usage
+
+- **Credit-based billing**: each capability call has a credit cost
+- **Balance check**: enforced before every execution
+- **Call logging**: every invocation logged with user, model, cost, duration, request ID
+- **Usage reporting**: aggregated statistics available in dashboard and via API
+- **Rate limiting**: per-user, per-capability
+
+## 8. Feedback
+
+Built-in feedback loop via `anycap feedback`:
+
+- **Types**: bug report, feature request, general
+- **Context**: can attach request ID from a previous call
+- **Notifications**: feedback forwarded to team via Lark webhook
+
+## 9. Distribution
+
+| Channel | What |
+|---------|------|
+| GitHub Releases | CLI binaries (linux/darwin/windows, amd64/arm64) |
+| npm | `@anycap/cli` with platform-specific packages (auto-selects binary) |
+| GitHub repo | Skill files (latest `main`) |
+| anycap.ai | Website (Cloudflare Pages) |
+| `curl \| sh` | One-line install (guided in skill files) |

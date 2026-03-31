@@ -2,27 +2,29 @@
 
 ## 1. 项目背景
 
-AI Agent 正在成为软件的主要消费者。但当前的 AI 能力生态是为人类开发者设计的——每个服务都有自己的 SDK、文档、Dashboard 和认证体系。Agent 需要的不是这些，而是：
+Coding Agent（Claude Code、Cursor、Codex）让 AI 学会了思考和写代码。但写代码只是做事的一部分——Agent 不能生成图片、不能制作视频和音乐、不能持久化存储文件、不能发布网页。这些真实世界的能力，是现有 Agent 平台的盲区。
 
-- 一条命令就能调用能力
-- 机器可读的接口契约（Skill File），而不是人类文档
-- 统一的认证和计费，而不是管理十几个 API Key
+AnyCap 补上这些缺失的能力。而且是以 Agent 原生的方式：
 
-AnyCap 要解决的核心问题是：**让 Agent 用一个入口获得所有能力，零摩擦。**
+- 一条命令就能调用能力，不需要 SDK 或人类文档
+- 机器可读的接口契约（Skill File），Agent 读完即可自主使用
+- 统一的认证和计费，一个账号覆盖所有能力
 
 ## 2. 产品定位
 
-> **Agent 的能力运行时（Capability Runtime for AI Agents）**
+> **Any capability your agent is missing.**
 
-AnyCap 不是 API 网关，不是开发者工具，而是一个完整的 Agent 运行时平台。它为 Agent 提供做事所需的一切：能力、基础设施、接口、知识和人类监管窗口。
+你的 Agent 能思考、能写代码，但不能生图、不能做视频、不能存文件、不能发网页。AnyCap 补上这些缺失的能力——不管 Agent 缺什么，一个入口全补齐。
 
-核心设计哲学：**No SDK. No docs. No UI.**
+### 设计哲学：No SDK. No docs. No UI.
+
+AnyCap 为 Agent 而生，不是为人类开发者：
 
 - Agent 不需要 SDK —— 它需要一条命令（CLI）
 - Agent 不需要文档 —— 它需要 Skill File（机器可读的接口契约）
 - Agent 不需要 UI —— 它需要结构化的输入输出
 
-这是一个刻意的极端定位。未来会开放 API/SDK 供开发者集成，但当前阶段的故事是**纯粹为 Agent 而生**。
+未来会开放 API/SDK 供开发者集成，但当前阶段的核心故事是：**补全 Agent 缺失的能力，零摩擦。**
 
 ## 3. 产品架构
 
@@ -168,22 +170,21 @@ Dashboard 是为人类管理者（Agent 的拥有者）提供的监管界面。
 
 ## 4. 优先级排序
 
-### 第一阶段：Cap 先行
+### 第一阶段：补全最缺失的能力
 
-以原子能力（Direct）为核心，快速提供 Agent 最缺失的多模态能力。
+优先补上现有 coding agent 完全不具备的能力，按缺失程度排序：
 
-对 Agent 价值排序（从高到低）：
+1. **image / video / music / tts** — 多模态创作能力，coding agent 完全没有，刚需
+2. **drive / page** — Agent 生成了内容但没地方存、没地方发布，是能力闭环的关键一环
+3. **asr** — 音频理解能力缺失
+4. **crawl** — 现有 Agent 的抓取能力有限，结构化爬取是增量
+5. **search** — 部分 Agent 已有内置搜索，增量价值较低
+6. **llm** — Agent 自身即 LLM，仅特定场景需要（模型对比、特定模型路由等）
 
-1. **image / video / music / tts** — Agent 完全不具备的能力，刚需
-2. **asr** — 音频处理能力缺失
-3. **crawl** — 现有 Agent 的抓取能力有限
-4. **search** — 部分 Agent 已有内置搜索，增量价值较低
-5. **llm** — Agent 自身即 LLM，需求场景有限（特定模型对比等）
+### 第二阶段：扩展基础设施
 
-### 第二阶段：Infra 补充
-
-- **drive 先行**（相对简单，且 Agent 生成内容后立即需要持久化存储）
-- database、sandbox、page、browser 逐步跟进
+- database、sandbox、browser 逐步跟进
+- 让 Agent 不仅有能力调用，还有完整的资源环境
 
 ### 第三阶段：生态开放
 
@@ -202,7 +203,7 @@ Dashboard 是为人类管理者（Agent 的拥有者）提供的监管界面。
 
 ### 目标用户
 
-Agent 平台的使用者——使用 Claude Code、Cursor、Codex、OpenCode 等工具的开发者和 Agent。
+正在用 Claude Code、Cursor、Codex、OpenCode 等 coding agent 的开发者。他们已经体验到 agent 的强大，但也撞到了能力天花板——想让 agent 生张图、做个视频、存个文件，却发现做不到。
 
 ### 分发渠道
 
@@ -245,12 +246,12 @@ CLI 内置 feedback 功能，Agent 可以：
 
 ## 7. 竞争护城河
 
-AnyCap 面临的核心风险是 Agent 平台的原生集成（如 Claude Code 可能直接内置图片生成）。应对策略：
+大平台（Anthropic、OpenAI、Cursor）可能会原生集成部分能力（如图片生成）。但这恰恰验证了需求的真实性——平台补得越多，说明 Agent 能力缺失越是真问题。AnyCap 的护城河在于：
 
 | 护城河 | 说明 |
 |--------|------|
-| 能力广度 | 大平台会集成几个常用能力，但不会覆盖 music、tts、asr、video 等长尾能力。AnyCap 一次接入，全部覆盖 |
+| 能力完整度 | 大平台会补少数高频能力，但不会覆盖 music、tts、asr、drive、page 等长尾。AnyCap 做的是完整的能力补全层，永远覆盖更广 |
 | Action 编排智慧 | 预编排的 workflow 包含最佳实践和 know-how，直接调 API 无法获得 |
 | Skill 最佳实践 | Skill File 中嵌入使用建议，Agent 通过 AnyCap 调用的效果优于直接调 API |
-| Infra 粘性 | 数据存入 drive/database 后迁移成本高 |
+| Infra 粘性 | 数据存入 drive/page 后迁移成本高，形成自然锁定 |
 | Feedback 数据飞轮 | 持续优化能力路由和质量，形成正向循环 |
