@@ -615,7 +615,7 @@ func guessMIMEType(resourceURL string) string {
 //	  0 = success
 //	400 = invalid request (ResponseCodeInvalidRequest)
 //	422 = validation failed (ResponseCodeValidationFailed)
-//	429 = rate limit (ResponseCodeRateLimit)
+//	429 = rate limit / provider quota exhausted (ResponseCodeRateLimit)
 //	500 = internal error (ResponseCodeInternalError)
 //	5003 = rate limit (TaskErrCodeRateLimit)
 //	5005 = invalid request params (TaskErrCodeInvalidRequest)
@@ -625,17 +625,23 @@ func mapSubmitError(httpStatus, baseCode int, message string) error {
 		message = "nexushub request failed"
 	}
 
-	// 1. HTTP 4xx is always a client error.
+	// 1. Provider 429 means the upstream is temporarily unavailable due to
+	// quota/rate exhaustion, not that the caller hit AnyCap's local limiter.
+	if httpStatus == http.StatusTooManyRequests {
+		return fmt.Errorf("%w: %s", model.ErrUpstreamUnavailable, message)
+	}
+
+	// 2. Remaining HTTP 4xx are client errors.
 	if httpStatus >= http.StatusBadRequest && httpStatus < http.StatusInternalServerError {
 		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
 	}
 
-	// 2. Map by NexusHub base.code (responseCode / TaskErrCode).
+	// 3. Map by NexusHub base.code (responseCode / TaskErrCode).
 	switch baseCode {
 	case 400, 422, 5005: // invalid request / validation failed / TaskErrCodeInvalidRequest
 		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
-	case 429, 5003: // rate limit / TaskErrCodeRateLimit
-		return fmt.Errorf("%w: %s", model.ErrRateLimited, message)
+	case 429, 5003: // provider-side rate limit / TaskErrCodeRateLimit
+		return fmt.Errorf("%w: %s", model.ErrUpstreamUnavailable, message)
 	case 5001: // TaskErrCodeReview (content moderation)
 		return fmt.Errorf("%w: %s", model.ErrInvalidParam, message)
 	}

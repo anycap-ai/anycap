@@ -85,6 +85,8 @@ func hintForAPIError(e *httpclient.APIError) string {
 		return "rate limited, retry after a short delay"
 	case e.Code == "credit_insufficient":
 		return "top up credits at https://anycap.ai/dashboard/billing"
+	case e.Code == "UPSTREAM_UNAVAILABLE":
+		return "upstream provider unavailable, retry later or check provider quota/configuration"
 	case e.StatusCode >= 500:
 		return feedbackHint(e.RequestID)
 	default:

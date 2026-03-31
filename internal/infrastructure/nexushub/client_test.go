@@ -295,11 +295,18 @@ func TestMapSubmitError_NexusHub500WithValidationCode(t *testing.T) {
 			wantErr:    model.ErrInvalidParam,
 		},
 		{
-			name:       "HTTP 500 + base.code 5003 (rate limit) maps to ErrRateLimited",
+			name:       "HTTP 500 + base.code 5003 (rate limit) maps to ErrUpstreamUnavailable",
 			httpStatus: 500,
 			baseCode:   5003,
-			message:    "too many requests",
-			wantErr:    model.ErrRateLimited,
+			message:    "Resource has been exhausted (e.g. check quota).",
+			wantErr:    model.ErrUpstreamUnavailable,
+		},
+		{
+			name:       "HTTP 429 + base.code 429 (provider quota) maps to ErrUpstreamUnavailable",
+			httpStatus: 429,
+			baseCode:   429,
+			message:    "Resource has been exhausted (e.g. check quota).",
+			wantErr:    model.ErrUpstreamUnavailable,
 		},
 		{
 			name:       "HTTP 500 + base.code 500 (true internal error) remains untyped",
@@ -330,7 +337,8 @@ func TestMapSubmitError_NexusHub500WithValidationCode(t *testing.T) {
 			} else {
 				// Should NOT wrap a sentinel error
 				if strings.Contains(err.Error(), model.ErrInvalidParam.Error()) ||
-					strings.Contains(err.Error(), model.ErrRateLimited.Error()) {
+					strings.Contains(err.Error(), model.ErrRateLimited.Error()) ||
+					strings.Contains(err.Error(), model.ErrUpstreamUnavailable.Error()) {
 					t.Fatalf("expected untyped error, got: %v", err)
 				}
 			}

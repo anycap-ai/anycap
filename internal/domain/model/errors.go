@@ -16,6 +16,7 @@ var (
 	ErrAuthInvalid             = &Error{Code: "AUTH_INVALID", Message: "invalid api key"}
 	ErrAuthExpired             = &Error{Code: "AUTH_EXPIRED", Message: "login session expired"}
 	ErrRateLimited             = &Error{Code: "RATE_LIMITED", Message: "rate limit exceeded"}
+	ErrUpstreamUnavailable     = &Error{Code: "UPSTREAM_UNAVAILABLE", Message: "upstream service unavailable"}
 	ErrInsufficientCredit      = &Error{Code: "INSUFFICIENT_CREDIT", Message: "insufficient credit"}
 	ErrBillingUncertain        = &Error{Code: "BILLING_UNCERTAIN", Message: "billing status uncertain"}
 	ErrModelRouteNotConfigured = &Error{Code: "MODEL_ROUTE_NOT_CONFIGURED", Message: "model route is not configured"}
