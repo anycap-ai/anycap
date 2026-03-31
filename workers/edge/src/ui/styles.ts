@@ -31,7 +31,8 @@ export const FILE_PREVIEW_STYLES = `
 .audio-card audio{width:100%}
 .audio-card .audio-name{font-size:15px;color:var(--text-primary);font-weight:500}
 .text-content{width:100%;background:var(--surface-card);border:1px solid var(--border-card);border-radius:16px;padding:24px;font-size:13px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;word-break:break-word;tab-size:4;box-shadow:var(--shadow-card)}
-.md-content{width:100%;background:var(--surface-card);border:1px solid var(--border-card);border-radius:16px;padding:28px 32px;color:var(--text-body);font-size:16px;line-height:1.7;box-shadow:var(--shadow-card)}
+.md-content{width:100%;background:var(--surface-card);border:1px solid var(--border-card);border-radius:16px;padding:28px 32px;color:var(--text-body);font-size:16px;line-height:1.7;box-shadow:var(--shadow-card);overflow-wrap:break-word;word-break:break-word;min-width:0}
+@media(max-width:767px){.md-content{padding:20px 16px;font-size:15px}}
 .md-content h1,.md-content h2,.md-content h3,.md-content h4{color:var(--text-primary);margin:1.2em 0 .4em;line-height:1.3}
 .md-content h1{font-size:1.6em;border-bottom:1px solid var(--border-header);padding-bottom:.3em}
 .md-content h2{font-size:1.3em;border-bottom:1px solid var(--border-header);padding-bottom:.2em}
@@ -45,7 +46,8 @@ export const FILE_PREVIEW_STYLES = `
 .md-content blockquote{border-left:3px solid var(--olive);padding-left:16px;color:var(--text-label);margin:.8em 0}
 .md-content a{color:var(--olive);text-decoration:underline}
 .md-content img{max-width:100%;border-radius:10px}
-.md-content table{border-collapse:collapse;width:100%;margin:.8em 0}
+.md-content .table-wrap{overflow-x:auto;margin:.8em 0;-webkit-overflow-scrolling:touch}
+.md-content table{border-collapse:collapse;width:100%;margin:0}
 .md-content th,.md-content td{border:1px solid var(--border-header);padding:10px 14px;text-align:left}
 .md-content th{background:var(--surface-header);font-weight:600}
 .md-content hr{border:none;border-top:1px solid var(--border-header);margin:1.5em 0}

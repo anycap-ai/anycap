@@ -46,6 +46,7 @@ const md=markdownit({html:false,linkify:true,typographer:true,highlight(str,lang
 }});
 const r=await fetch(\`${safe}\`);
 document.getElementById("md").innerHTML=md.render(await r.text());
+document.querySelectorAll(".md-content table").forEach(t=>{const w=document.createElement("div");w.className="table-wrap";t.parentNode.insertBefore(w,t);w.appendChild(t)});
 await mermaid.run({nodes:document.querySelectorAll(".mermaid")});
 </script>`;
 	}
