@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { HoverDropdown, dropdownItemClass, dropdownDisabledClass, dropdownDividerClass } from "@/components/ui/HoverDropdown";
 import { useUser } from "@/lib/api/hooks";
 
 
@@ -20,10 +21,6 @@ const navSections: NavItem[][] = [
   [
     { label: "Drive", href: "/dashboard/drive" },
     { label: "Pages", href: "/dashboard/pages" },
-  ],
-  [
-    { label: "API Keys", href: "/dashboard/api-keys", disabled: true },
-    { label: "Settings", href: "/dashboard/settings", disabled: true },
   ],
 ];
 
@@ -103,11 +100,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-[13px] whitespace-nowrap transition-colors ${
-                  isActive(item.href)
+                className={`text-[13px] whitespace-nowrap transition-colors ${isActive(item.href)
                     ? "text-[#1c1f17] font-medium"
                     : "text-[#6b7068] hover:text-[#3a3e32]"
-                }`}
+                  }`}
               >
                 {item.label}
               </Link>
@@ -148,11 +144,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`relative block px-4 py-3 rounded-[10px] text-[15px] transition-all duration-150 mb-0.5 ${
-                        isActive(item.href)
+                      className={`relative block px-4 py-3 rounded-[10px] text-[15px] transition-all duration-150 mb-0.5 ${isActive(item.href)
                           ? "text-[#1c1f17] font-medium bg-[rgba(107,125,58,0.10)]"
                           : "text-[#6b7068] hover:text-[#3a3e32] hover:bg-[rgba(107,125,58,0.07)]"
-                      }`}
+                        }`}
                     >
                       {isActive(item.href) && (
                         <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] bg-[#6b7d3a] rounded-r-sm" />
@@ -165,17 +160,32 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          {/* User + logout */}
+          {/* User area with hover dropdown */}
           <div className="px-7 py-6 border-t border-[#dce0d2]">
-            <div className="flex items-center gap-3 mb-4">
-              <UserAvatar user={user} size={36} />
-              <span className="text-[15px] text-[#4d5145] font-medium truncate">
-                {displayName}
+            <HoverDropdown
+              positionClass="absolute left-full bottom-0 ml-2 z-30 origin-bottom-left"
+              trigger={() => (
+                <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 hover:bg-[rgba(107,125,58,0.07)]">
+                  <UserAvatar user={user} size={36} />
+                  <span className="text-[15px] text-[#4d5145] font-medium truncate">
+                    {displayName}
+                  </span>
+                </div>
+              )}
+            >
+              <span className={dropdownDisabledClass}>
+                API keys
+                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
               </span>
-            </div>
-            <LogoutButton
-              className="text-[14px] text-[#6b7068] hover:text-[#1c1f17] transition-colors"
-            />
+              <span className={dropdownDisabledClass}>
+                Settings
+                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+              </span>
+              <hr className={dropdownDividerClass} />
+              <LogoutButton className={`w-full text-left ${dropdownItemClass}`}>
+                Log out
+              </LogoutButton>
+            </HoverDropdown>
           </div>
         </aside>
 

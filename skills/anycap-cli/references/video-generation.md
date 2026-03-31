@@ -107,14 +107,24 @@ anycap video generate \
   --param duration=5
 ```
 
-Image-to-video with explicit mode:
+Image-to-video with explicit mode (local file -- auto-uploaded):
 
 ```bash
 anycap video generate \
   --prompt "animate this scene with gentle wind" \
   --model seedance-1.5-pro \
   --mode image-to-video \
-  --param images='["https://example.com/photo.jpg"]'
+  --param images=/path/to/photo.png
+```
+
+Image-to-video with a remote URL:
+
+```bash
+anycap video generate \
+  --prompt "animate this scene with gentle wind" \
+  --model seedance-1.5-pro \
+  --mode image-to-video \
+  --param images=https://example.com/photo.jpg
 ```
 
 Save to a specific path:
@@ -146,6 +156,7 @@ Values are auto-parsed as JSON when possible:
 | `--param duration=5` | number `5` |
 | `--param resolution=1080p` | string `"1080p"` |
 | `--param images='["url1"]'` | array `["url1"]` |
+| `--param images=/path/to/file.png` | local file (auto-uploaded, wrapped to array) |
 
 ### Output Format
 
@@ -193,12 +204,12 @@ anycap video generate \
 # Check image-to-video parameters
 anycap video models seedance-1.5-pro schema --mode image-to-video
 
-# Generate image-to-video
+# Generate image-to-video (local file)
 anycap video generate \
   --prompt "animate this landscape with clouds moving" \
   --model seedance-1.5-pro \
   --mode image-to-video \
-  --param images='["https://example.com/landscape.jpg"]' \
+  --param images=./landscape.jpg \
   --param duration=8 \
   -o animated-landscape.mp4
 ```

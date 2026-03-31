@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
@@ -97,7 +98,7 @@ Examples:
 				body["model"] = modelFlag
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/image/read", body)
+			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("image"), body)
 			if err != nil {
 				return err
 			}
@@ -149,7 +150,7 @@ Examples:
 				body["model"] = modelFlag
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/video/read", body)
+			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("video"), body)
 			if err != nil {
 				return err
 			}
@@ -203,7 +204,7 @@ Examples:
 				body["model"] = modelFlag
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/capabilities/audio/read", body)
+			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("audio"), body)
 			if err != nil {
 				return err
 			}

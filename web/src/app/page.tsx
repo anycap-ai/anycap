@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getLandingContent, type Block } from "@/lib/landing-content";
-import { HumanRedirectDialog } from "@/components/HumanRedirectDialog";
+import { HumanRedirectDialog } from "@/components/landing/HumanRedirectDialog";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 

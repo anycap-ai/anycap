@@ -11,6 +11,9 @@ import {
 } from "@/lib/api/hooks";
 import type { DriveNode } from "@/lib/api/types";
 import { FolderIcon, FileIcon } from "@/components/dashboard/DriveIcons";
+import { Spinner } from "@/components/ui/Spinner";
+import { toast } from "@/lib/toast";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { DriveSharePanel } from "@/components/dashboard/DriveSharePanel";
 import { DriveRenameModal } from "@/components/dashboard/DriveRenameModal";
 import { DriveMoveModal } from "@/components/dashboard/DriveMoveModal";
@@ -103,24 +106,27 @@ function MoreMenu({
 function ActionLink({
   onClick,
   disabled,
+  busy,
   variant = "default",
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
+  busy?: boolean;
   variant?: "default" | "danger";
   children: React.ReactNode;
 }) {
   return (
     <button
-      className={`px-2.5 py-1.5 text-[13px] rounded-lg transition-colors disabled:opacity-40 ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] rounded-lg transition-colors disabled:opacity-40 ${
         variant === "danger"
           ? "text-[#c4442d] hover:bg-[#c4442d]/10"
           : "text-[#7a7e71] hover:bg-[#eceee7] hover:text-[#1c1f17]"
       }`}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || busy}
     >
+      {busy && <Spinner size={13} />}
       {children}
     </button>
   );
@@ -154,9 +160,8 @@ export default function DrivePage() {
     navigateTo([...folderIds, id]);
   }, [folderIds, navigateTo]);
 
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<{ nodeId: string; type: "preview" | "download" } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
   const [shareNode, setShareNode] = useState<DriveNode | null>(null);
   const [renameNode, setRenameNode] = useState<DriveNode | null>(null);
   const [moveNode, setMoveNode] = useState<DriveNode | null>(null);
@@ -181,29 +186,27 @@ export default function DrivePage() {
 
   async function openDrivePreview(node: DriveNode) {
     if (node.kind !== "file") return;
-    setBusy(true);
-    setError("");
+    setBusyAction({ nodeId: node.id, type: "preview" });
     try {
       const links = await createDriveAccessLinks(node.id);
       window.open(links.preview_url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to open preview");
+      toast.error(err instanceof Error ? err.message : "Failed to open preview");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function downloadDriveFile(node: DriveNode) {
     if (node.kind !== "file") return;
-    setBusy(true);
-    setError("");
+    setBusyAction({ nodeId: node.id, type: "download" });
     try {
       const links = await createDriveAccessLinks(node.id);
       window.open(links.download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to download file");
+      toast.error(err instanceof Error ? err.message : "Failed to download file");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -254,17 +257,12 @@ export default function DrivePage() {
         </button>
       </div>
 
-      {error && (
-        <p className="mb-5 text-[13px] text-[#c4442d]">
-          {error}
-        </p>
-      )}
-
       <div className="border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71] rounded-tl-2xl">Name</th>
+              <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Status</th>
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Size</th>
               <th className="text-left py-3.5 px-5 text-[13px] font-medium text-[#7a7e71]">Modified</th>
               <th className="text-right py-3.5 px-5 text-[13px] font-medium text-[#7a7e71] rounded-tr-2xl">Actions</th>
@@ -281,6 +279,9 @@ export default function DrivePage() {
                     </div>
                   </td>
                   <td className="py-[15px] px-5">
+                    <div className="h-5 w-14 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                  </td>
+                  <td className="py-[15px] px-5">
                     <div className="h-5 w-16 bg-[#d0d4c8]/40 animate-pulse rounded" />
                   </td>
                   <td className="py-[15px] px-5">
@@ -295,7 +296,7 @@ export default function DrivePage() {
               <>
               {folderIds.length > 0 && (
                 <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
-                  <td colSpan={4} className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
+                  <td colSpan={5} className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
                     <button
                       className="flex items-center gap-2.5 hover:text-[#6b7d3a] transition-colors"
                       onClick={() => navigateTo(folderIds.slice(0, -1))}
@@ -306,8 +307,10 @@ export default function DrivePage() {
                   </td>
                 </tr>
               )}
-              {rows.map((node) => (
-                <tr key={node.id} className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
+              {rows.map((node) => {
+                const nodeBusy = busyAction?.nodeId === node.id ? busyAction.type : null;
+                return (
+                <tr key={node.id} className={`border-b border-[#eceee7] transition-colors ${nodeBusy ? "bg-[#f5f7f0]" : "hover:bg-[#fafbf8]"}`}>
                   <td className="py-[15px] px-5 text-[14px] text-[#1c1f17]">
                     {node.kind === "folder" ? (
                       <button
@@ -321,41 +324,49 @@ export default function DrivePage() {
                       <button
                         className="flex items-center gap-2.5 hover:text-[#6b7d3a] transition-colors"
                         onClick={() => { void openDrivePreview(node); }}
-                        disabled={busy}
+                        disabled={busyAction != null}
                       >
-                        <FileIcon name={node.name} className="text-[#7a7e71] shrink-0" />
+                        {nodeBusy === "preview" ? (
+                          <Spinner size={16} className="text-[#6b7d3a]" />
+                        ) : (
+                          <FileIcon name={node.name} className="text-[#7a7e71] shrink-0" />
+                        )}
                         {node.name}
                       </button>
                     )}
+                  </td>
+                  <td className="py-[15px] px-5 text-[14px]">
+                    <StatusBadge status={node.has_share ? "Shared" : "Private"} />
                   </td>
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatSize(node.size)}</td>
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">{formatTime(node.updated_at)}</td>
                   <td className="py-[15px] px-5 text-right">
                     <div className="inline-flex items-center gap-1">
                       {node.kind === "file" && (
-                        <ActionLink onClick={() => { void downloadDriveFile(node); }} disabled={busy}>
+                        <ActionLink onClick={() => { void downloadDriveFile(node); }} disabled={busyAction != null} busy={nodeBusy === "download"}>
                           Download
                         </ActionLink>
                       )}
-                      <ActionLink onClick={() => setShareNode(node)} disabled={busy}>
+                      <ActionLink onClick={() => setShareNode(node)} disabled={busyAction != null}>
                         Share
                       </ActionLink>
-                      <ActionLink onClick={() => setDeleteNode(node)} disabled={busy} variant="danger">
+                      <ActionLink onClick={() => setDeleteNode(node)} disabled={busyAction != null} variant="danger">
                         Delete
                       </ActionLink>
                       <MoreMenu
                         onRename={() => setRenameNode(node)}
                         onMove={() => setMoveNode(node)}
-                        disabled={busy}
+                        disabled={busyAction != null}
                       />
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               </>
             ) : (
               <tr>
-                <td colSpan={4} className="py-12 text-center text-[14px] text-[#7a7e71]">
+                <td colSpan={5} className="py-12 text-center text-[14px] text-[#7a7e71]">
                   Empty folder
                 </td>
               </tr>

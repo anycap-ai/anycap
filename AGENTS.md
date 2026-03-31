@@ -71,7 +71,14 @@ web/
     (seo)/           # SEO pages (non-localized fallback)
     [locale]/(seo)/  # SEO pages (localized, primary)
   src/lib/           # SEO infrastructure (site.ts, seo-metadata.ts, sitemap-routes.ts)
-  src/components/    # Shared components (SeoShell.tsx, Header, Footer)
+  src/components/
+    ui/              # Generic UI primitives — no business logic (HoverDropdown, Modal, FadeIn, Spinner, …)
+    layout/          # Page shells, header, footer, navigation (Header, Footer, SeoShell, NavDropdown, …)
+    landing/         # Landing/marketing page components (EquipAgent, TerminalDemo, CapabilityGapTable, …)
+    auth/            # Auth components (LoginButton, LogoutButton)
+    brand/           # Brand assets (AnycapLogo, AnycapMark, AnycapWordmark)
+    dashboard/       # Dashboard-specific components (DashboardShell, Drive modals, …)
+    providers/       # Context providers (SWRProvider)
   public/            # Static assets (llms.txt, robots, manifests)
   docs/              # Web docs (design guideline, SEO workspace)
     seo/             # SEO documentation system (analyze/, todo/, change-log/)
@@ -130,12 +137,14 @@ ANYCAP_FEATURE_DRIVE=false
 | Env var | Default | Controls |
 |---|---|---|
 | `ANYCAP_FEATURE_IMAGE_GENERATE` | true if NexusHub Core configured | `POST /v1/image/generate` |
+| `ANYCAP_FEATURE_IMAGE_EDIT` | true if NexusHub Core configured | `POST /v1/image/edit` |
 | `ANYCAP_FEATURE_IMAGE_MODELS` | true if catalog configured | `GET /v1/image/models` |
 | `ANYCAP_FEATURE_IMAGE_READ` | true if AgentPlatform configured | `POST /v1/capabilities/image/read` |
 | `ANYCAP_FEATURE_VIDEO_GENERATE` | true if NexusHub Core configured | `POST /v1/video/generate` |
 | `ANYCAP_FEATURE_VIDEO_MODELS` | true if catalog configured | `GET /v1/video/models` |
 | `ANYCAP_FEATURE_VIDEO_READ` | true if AgentPlatform configured | `POST /v1/capabilities/video/read` |
 | `ANYCAP_FEATURE_AUDIO_READ` | true if AgentPlatform configured | `POST /v1/capabilities/audio/read` |
+| `ANYCAP_FEATURE_AUDIO_MODELS` | true if catalog configured | `GET /v1/audio/models` |
 | `ANYCAP_FEATURE_MUSIC_GENERATE` | true if NexusHub Core configured | `POST /v1/music/generate` |
 | `ANYCAP_FEATURE_MUSIC_MODELS` | true if catalog configured | `GET /v1/music/models` |
 | `ANYCAP_FEATURE_DRIVE` | true | All `/v1/drive/*` endpoints |
@@ -154,8 +163,29 @@ Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrast
 1. Add constant in `pkg/feature/feature.go`.
 2. Add default in the `defaults` map (same file).
 3. Add to `buildServerFeatures()` in `internal/app/bootstrap.go` with the infra-derived default.
-4. Add path rule in `internal/middleware/feature_gate.go`.
+4. The feature gate middleware resolves features dynamically from URL paths (`/v1/{cap}/{operation}` -> `{cap}.{operation}`), so no code change is needed in `feature_gate.go` for new capability operations.
 5. Gate the CLI command with `feature.Enabled()` in the appropriate command constructor.
+
+### Adding a new capability operation
+
+Capability operations (generate, edit, upscale, etc.) are data-driven. The server handler uses a parameterized route (`/v1/{cap}/:operation`), and the service delegates to the model catalog for route selection. To add a new operation:
+
+1. Add seed data to the catalog DB with the new operation name.
+2. Add a feature flag constant and default (see "Adding a new feature flag" above).
+3. Add a CLI subcommand using the `newImageOperationCmd` factory (one line in `NewImageCmd`).
+4. **Before going live**, configure dconf:
+   - `feature_access` JSON: add `{cap}.{operation}` with rollout rules.
+   - `rate_limit` JSON: add `{cap}.{operation}` with RPM (otherwise falls back to `default_rpm`).
+
+### Pre-launch checklist for new operations
+
+Before enabling a new operation in production:
+
+- [ ] Seed data deployed to catalog DB
+- [ ] Feature flag added to `feature_access` dconf with appropriate rollout (start with `groups` for internal testing, then `all`)
+- [ ] Rate limit configured in `rate_limit` dconf (unconfigured operations fall back to `default_rpm`)
+- [ ] CLI subcommand added and tested
+- [ ] Skill files updated to document the new command
 
 ## Web Design Guideline
 
@@ -237,6 +267,26 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 - **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/). After CLI changes, **test and verify the CLI first**, then update skill files to match actual behavior.
 - **Product status:** after shipping any product feature (new capability, CLI command, dashboard page, etc.), update `docs/anycap-current-status.md` to reflect the current state. This file is a snapshot, not a changelog — overwrite the relevant section with what exists now, do not append "added X" or explain what changed.
 
+### Frontend Component Organization (`web/src/components/`)
+
+Components are organized by role, not by page. **No loose files in `components/` root** — every component belongs in a subdirectory.
+
+| Directory | What goes here | Rule of thumb |
+|---|---|---|
+| `ui/` | Generic UI primitives with zero business logic | Could be copy-pasted into any project and still work (Modal, FadeIn, Spinner, HoverDropdown, LocalizedLink) |
+| `layout/` | Page shells, header, footer, navigation | Structural components that define page chrome (Header, Footer, SeoShell, ForHumanShell, AuthNav, NavDropdown, BreadcrumbJsonLd) |
+| `landing/` | Landing/marketing page-specific components | Feature content tied to the public site (EquipAgent, TerminalDemo, CapabilityGapTable, EarlyAccessBanner, ParticleAgent) |
+| `auth/` | Authentication UI | LoginButton, LogoutButton |
+| `brand/` | Brand assets | Logo, mark, wordmark |
+| `dashboard/` | Dashboard-specific components | Components only used within `/dashboard` routes (DashboardShell, Drive modals, DashboardToast) |
+| `providers/` | React context providers | SWRProvider |
+
+**Placement rules:**
+- If a component has no business logic and could work in any context → `ui/`.
+- If it's only used in dashboard pages → `dashboard/`. If it becomes reused elsewhere, promote it to `ui/`.
+- New animations/motion utilities → `ui/` (not a separate `animation/` directory).
+- New page-specific marketing components → `landing/`.
+
 ## CI/CD
 
 ### Source Repositories
@@ -253,7 +303,8 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | Branch pattern | Action |
 |---|---|
 | `main` / MR to main | lint + test |
-| `main` | + CLI dev build (goreleaser snapshot, GitLab artifacts only) |
+| `feat*` / `fix*` / `chore*` | lint + test |
+| `dev/cli` | nightly CLI build (goreleaser snapshot) + publish `anycap-cli-nightly` to NexusHub |
 | `release/cli-v<semver>` | goreleaser cross-compile, GitHub release |
 | `build/server` | Docker build server image only |
 | `deploy/server-dev` | Docker build + deploy to kntech-dev |

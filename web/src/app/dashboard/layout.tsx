@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SWRProvider } from "@/components/providers/SWRProvider";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { DashboardToast } from "@/components/dashboard/DashboardToast";
 
 export const runtime = "edge";
 
@@ -20,6 +21,7 @@ export default async function DashboardLayout({
   return (
     <SWRProvider>
       <DashboardShell>{children}</DashboardShell>
+      <DashboardToast />
     </SWRProvider>
   );
 }

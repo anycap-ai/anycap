@@ -34,7 +34,7 @@ func TestNilCredentialToken(t *testing.T) {
 
 func TestSaveAndLoadCredential_APIKey(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	cred := NewAPIKeyCredential("sk-test-123")
 	if err := SaveCredential(cred); err != nil {
@@ -60,7 +60,7 @@ func TestSaveAndLoadCredential_APIKey(t *testing.T) {
 
 func TestDeleteCredential(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	_ = SaveCredential(NewAPIKeyCredential("sk-to-delete"))
 
@@ -75,7 +75,7 @@ func TestDeleteCredential(t *testing.T) {
 
 func TestLoadCredential_EnvOverridesKeyring(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	_ = SaveCredential(NewAPIKeyCredential("sk-keyring"))
 	t.Setenv("ANYCAP_API_KEY", "sk-from-env")
@@ -94,7 +94,7 @@ func TestLoadCredential_EnvOverridesKeyring(t *testing.T) {
 
 func TestLoadCredential_AutoMigrateFileToKeyring(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	cred := NewAPIKeyCredential("sk-file-key")
 	data, _ := json.Marshal(cred)
@@ -178,7 +178,7 @@ func TestSaveAndLoadCredential_KeychainUnavailable_RoundTrip(t *testing.T) {
 
 func TestDeleteCredential_NothingStored(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	_ = keyring.Delete(keyringService, keyringAccount)
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	if err := DeleteCredential(); err != nil {
 		t.Fatalf("DeleteCredential on empty: %v", err)

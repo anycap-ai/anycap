@@ -13,6 +13,37 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
+func (s *Service) GetShare(ctx context.Context, userID string, nodeID int64) (*model.DriveShareView, error) {
+	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
+		return nil, fmt.Errorf("drive share service is not configured")
+	}
+	if nodeID <= 0 {
+		return nil, fmt.Errorf("id must be greater than zero")
+	}
+
+	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := s.nodeRepo.GetByID(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil || node.SpaceID != space.ID {
+		return nil, fmt.Errorf("drive node not found")
+	}
+
+	existing, err := s.shareRepo.GetActiveByNodeID(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, nil
+	}
+	return s.toShareView(existing), nil
+}
+
 func (s *Service) UpsertShare(ctx context.Context, userID string, nodeID int64, expiresInSeconds *int64, noExpire bool, password *string, noPassword bool) (*model.DriveShareView, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
 		return nil, fmt.Errorf("drive share service is not configured")

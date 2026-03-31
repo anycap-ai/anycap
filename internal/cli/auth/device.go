@@ -9,6 +9,7 @@ import (
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 )
 
 type DeviceInitResult struct {
@@ -30,7 +31,7 @@ type DevicePollResult struct {
 }
 
 func DeviceInit(ctx context.Context, client *httpclient.Client) (DeviceInitResult, error) {
-	resp, err := client.PostJSON(ctx, "/v1/auth/device-code", map[string]any{})
+	resp, err := client.PostJSON(ctx, api.AuthDeviceCodePath, map[string]any{})
 	if err != nil {
 		return DeviceInitResult{}, fmt.Errorf("failed to init device code flow: %w", err)
 	}
@@ -46,7 +47,7 @@ func DeviceInit(ctx context.Context, client *httpclient.Client) (DeviceInitResul
 }
 
 func DevicePoll(ctx context.Context, client *httpclient.Client, loginSessionID string) (DevicePollResult, error) {
-	resp, err := client.PostJSON(ctx, "/v1/auth/device-poll", map[string]any{
+	resp, err := client.PostJSON(ctx, api.AuthDevicePollPath, map[string]any{
 		"login_session_id": loginSessionID,
 	})
 	if err != nil {

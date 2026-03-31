@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -45,7 +46,7 @@ func newDriveMkdirCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				resolvedParentID = id
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/drive/folders", map[string]any{
+			resp, err := client.PostJSON(cmd.Context(), api.DriveFoldersPath, map[string]any{
 				"parent_id": resolvedParentID,
 				"name":      folderName,
 			})

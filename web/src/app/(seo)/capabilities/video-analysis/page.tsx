@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/LocalizedLink";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { siteConfig } from "@/lib/site";
-import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
-import { FadeIn } from "@/components/FadeIn";
-import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 
 export const runtime = "edge";
 
@@ -129,7 +129,7 @@ export default function VideoAnalysisPage() {
               >
                 Request Early Access
               </a>
-              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>All Capabilities</Link>
+              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Any Capability</Link>
             </div>
           </section>
         </FadeIn>

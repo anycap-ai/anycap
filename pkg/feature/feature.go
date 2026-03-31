@@ -22,12 +22,14 @@ var overrides string
 // Well-known feature flag names.
 const (
 	ImageGenerate = "image.generate"
+	ImageEdit     = "image.edit"
 	ImageModels   = "image.models"
 	ImageRead     = "image.read"
 	VideoGenerate = "video.generate"
 	VideoModels   = "video.models"
 	VideoRead     = "video.read"
 	AudioRead     = "audio.read"
+	AudioModels   = "audio.models"
 	MusicGenerate = "music.generate"
 	MusicModels   = "music.models"
 	Drive         = "drive"
@@ -38,12 +40,14 @@ const (
 // Features not listed here default to false.
 var defaults = map[string]bool{
 	ImageGenerate: true,
+	ImageEdit:     true,
 	ImageModels:   true,
 	ImageRead:     true,
 	VideoGenerate: true,
 	VideoModels:   true,
 	VideoRead:     true,
 	AudioRead:     true,
+	AudioModels:   true,
 	MusicGenerate: true,
 	MusicModels:   true,
 	Drive:         true,

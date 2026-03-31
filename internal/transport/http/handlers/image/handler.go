@@ -23,10 +23,20 @@ func NewHandler(service *imageapp.Service) *Handler {
 
 func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g := group.Group("/image")
-	middleware.CapabilityPOST(g, "/generate", "image.generate", h.Generate)
+	// Dynamic operation route: /image/:operation (generate, edit, upscale, …)
+	// The operation is validated by the model catalog — unsupported operations
+	// return ErrModelRouteNotConfigured.
+	g.POST("/:operation", h.Execute)
 }
 
-func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
+// Execute handles any image operation (generate, edit, upscale, etc.).
+// The operation is extracted from the URL path and passed to the service,
+// which selects the appropriate route from the model catalog.
+func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
+	operation := ctx.Param("operation")
+	capability := "image." + operation
+	middleware.SetCapability(ctx, capability)
+
 	var payload dto.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
 		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
@@ -39,7 +49,11 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	result, err := h.service.Generate(c, model.GenerateImageRequest{
+	// Merge schema field names with legacy field names.
+	images := payload.EffectiveImages()
+	aspectRatio := payload.EffectiveAspectRatio()
+
+	result, err := h.service.Execute(c, model.GenerateImageRequest{
 		RequestID:          middleware.GetRequestID(ctx),
 		UserID:             principal.UserID,
 		APIKeyID:           principal.APIKeyID,
@@ -47,10 +61,10 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Model:              payload.Model,
 		Mode:               model.Mode(payload.Mode),
 		NegativePrompt:     payload.NegativePrompt,
-		Ratio:              payload.Ratio,
+		Ratio:              aspectRatio,
 		Resolution:         payload.Resolution,
-		ReferenceImageURLs: append([]string(nil), payload.ReferenceImageURLs...),
-	})
+		ReferenceImageURLs: images,
+	}, model.Operation(operation))
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, response := dto.MapDomainError(err)

@@ -582,6 +582,68 @@ func TestImageGenerate(t *testing.T) {
 	}
 }
 
+func TestImageEdit(t *testing.T) {
+	ms := mockserver.New()
+	ts := httptest.NewServer(ms)
+	defer ts.Close()
+
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	os.Chdir(tmpDir)
+	defer os.Chdir(origDir)
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{
+		"image", "edit",
+		"--prompt", "make it a watercolor painting",
+		"--model", "mock-model-1",
+		"--param", "images=[\"https://example.com/photo.png\"]",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("image edit failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, `"success"`) {
+		t.Fatalf("expected success status in output, got: %s", output)
+	}
+	if !strings.Contains(output, "local_path") {
+		t.Fatalf("expected local_path in output (auto-download), got: %s", output)
+	}
+	if !strings.Contains(output, "credits_used") {
+		t.Fatalf("expected credits_used in flat output, got: %s", output)
+	}
+}
+
+func TestImageEditRequiresPromptAndModel(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"image", "edit", "--model", "m"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when --prompt missing")
+	}
+	if !strings.Contains(err.Error(), "prompt") {
+		t.Fatalf("expected prompt-related error, got: %v", err)
+	}
+}
+
 func TestImageGenerateWithParams(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)

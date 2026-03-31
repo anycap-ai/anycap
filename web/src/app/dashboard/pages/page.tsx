@@ -4,6 +4,7 @@ export const runtime = "edge";
 
 import Link from "next/link";
 import { usePageSites } from "@/lib/api/hooks";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 
 function formatTime(value: string) {
@@ -66,9 +67,7 @@ export default function PagesPage() {
                     )}
                   </td>
                   <td className="py-[15px] px-5 text-[14px]">
-                    <span className={`font-medium ${site.current_version_id ? "text-[#6b7d3a]" : "text-[#7a7e71]"}`}>
-                      {site.current_version_id ? "live" : "unpublished"}
-                    </span>
+                    <StatusBadge status={site.current_version_id ? "live" : "unpublished"} />
                   </td>
                   <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
                     {formatTime(site.updated_at)}

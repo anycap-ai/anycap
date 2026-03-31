@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { SeoShell } from "@/components/SeoShell";
+import { SeoShell } from "@/components/layout/SeoShell";
 import { isSupportedLocale } from "@/lib/site";
 
 export const runtime = "edge";

@@ -5,6 +5,7 @@ export const runtime = "edge";
 import { useDashboardSummary } from "@/lib/api/hooks";
 import type { TimelineItem, Balance } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 
 function timeAgo(ts: string): string {
@@ -87,40 +88,6 @@ function LastActivityCard({
   );
 }
 
-function ErrorCard({
-  summary,
-}: {
-  summary?: {
-    last_error_capability: string;
-    last_error_code: string;
-    last_error_occurred_at: string;
-  };
-}) {
-  return (
-    <StatCard label="Last Error">
-      {summary ? (
-        <>
-          <p className="text-[17px] text-[#c4442d] leading-snug font-medium">
-            {summary.last_error_code || summary.last_error_capability}
-            {summary.last_error_code && summary.last_error_capability && (
-              <>
-                <span className="text-[#7a7e71] mx-1.5">·</span>
-                <span className="text-[#4d5145] font-normal">{summary.last_error_capability}</span>
-              </>
-            )}
-          </p>
-          <p className="text-[15px] text-[#4d5145] mt-2.5">
-            {timeAgo(summary.last_error_occurred_at)}
-          </p>
-        </>
-      ) : (
-        <p className="text-[14px] text-[#6b7d3a] font-medium">
-          No errors
-        </p>
-      )}
-    </StatCard>
-  );
-}
 
 function ActivityRow({ item }: { item: TimelineItem }) {
   return (
@@ -134,12 +101,8 @@ function ActivityRow({ item }: { item: TimelineItem }) {
       <td className="py-4 px-6 text-[15px] text-[#4d5145] truncate">
         {item.model || "—"}
       </td>
-      <td className={`py-4 px-6 text-[15px] font-medium ${
-        item.status === "ok" || item.status === "success"
-          ? "text-[#6b7d3a]"
-          : "text-[#c4442d]"
-      }`}>
-        {item.status || "—"}
+      <td className="py-4 px-6">
+        {item.status ? <StatusBadge status={item.status} /> : <span className="text-[15px] text-[#4d5145]">—</span>}
       </td>
       <td className="py-4 px-6 text-[15px] text-[#4d5145] text-right tabular-nums">
         {item.credit_cost != null ? `-${formatCredit(item.credit_cost)}` : "—"}
@@ -162,8 +125,8 @@ export default function DashboardPage() {
 
       {/* Stats cards */}
       {isLoading || !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[0, 1, 2].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[0, 1].map((i) => (
             <div key={i} className="border border-[#d8dcd0] bg-white px-8 py-7 rounded-2xl">
               <Skeleton className="h-4 w-16 mb-6" />
               <Skeleton className="h-10 w-24 mb-3" />
@@ -172,10 +135,9 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <BalanceCard balance={data.balance} />
           <LastActivityCard summary={data.usage_summary} />
-          <ErrorCard summary={data.error_summary} />
         </div>
       )}
 

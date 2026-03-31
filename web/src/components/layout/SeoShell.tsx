@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Inter } from "next/font/google";
-import { Footer } from "@/components/Footer";
-import { Header, humanNavLinks } from "@/components/Header";
-import { AuthNav } from "@/components/AuthNav";
+import { Footer } from "@/components/layout/Footer";
+import { Header, humanNavLinks } from "@/components/layout/Header";
+import { AuthNav } from "@/components/layout/AuthNav";
 import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
 
 const inter = Inter({

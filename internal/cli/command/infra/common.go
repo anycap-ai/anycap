@@ -19,6 +19,8 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 )
 
 type successEnvelope struct {
@@ -195,7 +197,7 @@ func normalizeAbsolutePath(rawPath string) (string, error) {
 }
 
 func listDriveNodes(ctx context.Context, client *httpclient.Client, parentID *string) ([]driveNodeSummary, error) {
-	endpoint := "/v1/drive/nodes"
+	endpoint := api.DriveNodesPath
 	if parentID != nil {
 		endpoint += "?parent_id=" + url.QueryEscape(*parentID)
 	}
@@ -316,7 +318,7 @@ func resolveDriveNodeID(client *httpclient.Client, ctx context.Context, args []s
 }
 
 func listPageSites(ctx context.Context, client *httpclient.Client) ([]pageSiteSummary, error) {
-	resp, err := client.Get(ctx, "/v1/pages")
+	resp, err := client.Get(ctx, api.PagesPath)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +332,7 @@ func listPageSites(ctx context.Context, client *httpclient.Client) ([]pageSiteSu
 }
 
 func listPageSitesByName(ctx context.Context, client *httpclient.Client, name string) ([]pageSiteSummary, error) {
-	resp, err := client.Get(ctx, "/v1/pages?name="+url.QueryEscape(name)+"&limit=1")
+	resp, err := client.Get(ctx, api.PagesPath+"?name="+url.QueryEscape(name)+"&limit=1")
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +346,7 @@ func listPageSitesByName(ctx context.Context, client *httpclient.Client, name st
 }
 
 func listPageVersions(ctx context.Context, client *httpclient.Client, pageID string) ([]pageVersionSummary, error) {
-	resp, err := client.Get(ctx, "/v1/pages/"+url.PathEscape(pageID)+"/versions")
+	resp, err := client.Get(ctx, api.PageVersionsPath(pageID))
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +360,7 @@ func listPageVersions(ctx context.Context, client *httpclient.Client, pageID str
 }
 
 func getPageVersionByNumber(ctx context.Context, client *httpclient.Client, pageID string, versionNo int64) (pageVersionSummary, error) {
-	resp, err := client.Get(ctx, fmt.Sprintf("/v1/pages/%s/versions/by-number/%d", url.PathEscape(pageID), versionNo))
+	resp, err := client.Get(ctx, api.PageVersionByNumberPath(pageID, int(versionNo)))
 	if err != nil {
 		return pageVersionSummary{}, err
 	}
@@ -392,6 +394,28 @@ func pickLatestVerifiedVersionID(versions []pageVersionSummary) (string, error) 
 		return "", fmt.Errorf("no verified version available, run deploy/finalize first")
 	}
 	return best.ID, nil
+}
+
+// resolvePageSiteID resolves a page site ID from command arguments, flags, and project config.
+// Priority: positional arg > --site > --target > [page] default from config.
+func resolvePageSiteID(args []string, siteFlag, targetFlag string, cfg *projectconfig.Config) (string, error) {
+	if len(args) > 0 && strings.TrimSpace(args[0]) != "" {
+		return parseResourceID(args[0], "page-id")
+	}
+	if siteFlag != "" {
+		return siteFlag, nil
+	}
+	if targetFlag != "" {
+		siteID, _, err := projectconfig.ResolvePageTarget(cfg, targetFlag)
+		if err != nil {
+			return "", err
+		}
+		return siteID, nil
+	}
+	if cfg.Page != nil && cfg.Page.SiteID != "" {
+		return cfg.Page.SiteID, nil
+	}
+	return "", fmt.Errorf("page site not specified: provide <page-id>, --page-id, --target, or configure [page] in anycap.toml")
 }
 
 func randomSiteName() (string, error) {

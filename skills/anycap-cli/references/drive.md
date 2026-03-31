@@ -2,7 +2,19 @@
 
 Cloud file storage for agents. Upload, organize, and share files via AnyCap's drive.
 
-## Upload
+## Do You Need Multiple Targets?
+
+Most tasks need only one folder tree. If you are uploading files to a single project folder, just use the commands directly -- the drive works with paths (`--parent-path`) and does not require any config.
+
+Use **named targets** only when you need to switch between different drive folder bindings from the same directory (e.g., a production folder and an archive folder). This is an advanced pattern.
+
+---
+
+## Quick Start (No Config Needed)
+
+Drive commands work immediately with paths. No `anycap.toml` setup required.
+
+### Upload
 
 ```bash
 # Upload a file to root
@@ -15,7 +27,7 @@ anycap drive upload data.csv --parent-path /results
 anycap drive upload data.csv --parent dn_aBcDeFg
 ```
 
-### Output
+Output:
 
 ```json
 {
@@ -27,20 +39,17 @@ anycap drive upload data.csv --parent dn_aBcDeFg
 }
 ```
 
-## Folder Management
+### Folder Management
 
 ```bash
 # Create a folder at root
 anycap drive mkdir --name "results"
 
-# Create a folder under a parent path
+# Create nested folders
 anycap drive mkdir --name "images" --parent-path /results
-
-# Create a folder under a parent ID
-anycap drive mkdir --name "images" --parent dn_aBcDeFg
 ```
 
-## List Files
+### List Files
 
 ```bash
 # List root contents
@@ -48,27 +57,24 @@ anycap drive ls
 
 # List a folder by path
 anycap drive ls --parent-path /results
-
-# List by folder ID
-anycap drive ls --parent dn_aBcDeFg
 ```
 
-## Move and Delete
+### Move and Delete
 
 ```bash
-# Move/rename a file or folder (by ID)
+# Move/rename by ID
 anycap drive mv <node-id> --name "new-name.pdf"
-anycap drive mv <node-id> --to dn_newParent
+anycap drive mv <node-id> --dst-parent dn_newParent
 
 # Move by path
 anycap drive mv --src-path /old/file.txt --name "renamed.txt"
 
-# Delete a file or folder
+# Delete
 anycap drive rm <node-id>
 anycap drive rm --src-path /results/old-data.csv
 ```
 
-## Sharing
+### Sharing
 
 ```bash
 # Create a public share link (default: 7 days)
@@ -79,7 +85,7 @@ anycap drive share --src-path /results/report.pdf --expires 30d
 anycap drive unshare <node-id>
 ```
 
-### Share Output
+Output:
 
 ```json
 {
@@ -89,6 +95,26 @@ anycap drive unshare <node-id>
   "request_id": "req_abc123"
 }
 ```
+
+---
+
+## Named Targets (Multiple Folder Bindings)
+
+When you need to manage multiple folder contexts from the same directory, bind them in `anycap.toml`:
+
+```toml
+[drive]
+folder_id = "dn_xxx"
+path = "/project-files"
+
+[drive.targets.archive]
+folder_id = "dn_yyy"
+path = "/archive"
+```
+
+This is an advanced pattern. For most workflows, path-based access (`--parent-path`) is sufficient and simpler.
+
+---
 
 ## Typical Agent Workflow
 

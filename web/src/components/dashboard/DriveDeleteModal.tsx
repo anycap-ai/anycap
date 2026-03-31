@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { DriveNode } from "@/lib/api/types";
 import { deleteDriveNode } from "@/lib/api/hooks";
-import { Modal, ModalActions, ModalButton } from "./Modal";
+import { toast } from "@/lib/toast";
+import { Modal, ModalActions, ModalButton } from "@/components/ui/Modal";
 
 
 export function DriveDeleteModal({
@@ -16,18 +17,16 @@ export function DriveDeleteModal({
   onChanged?: () => void | Promise<unknown>;
 }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
 
   async function onConfirm() {
     if (!node) return;
     setBusy(true);
-    setError("");
     try {
       await deleteDriveNode(node.id);
       await onChanged?.();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to delete");
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
     } finally {
       setBusy(false);
     }
@@ -38,18 +37,14 @@ export function DriveDeleteModal({
       open={!!node}
       onClose={onClose}
       title="Delete"
-      onOpen={() => setError("")}
     >
       <p className="text-[14px] text-[#4d5145] leading-relaxed">
         Are you sure you want to delete <span className="font-medium text-[#1c1f17]">{node?.name}</span>?
         {node?.kind === "folder" && " This will also delete all contents inside."}
       </p>
-      {error && (
-        <p className="mt-3 text-[13px] text-[#c4442d]">{error}</p>
-      )}
       <ModalActions>
         <ModalButton onClick={onClose} disabled={busy}>Cancel</ModalButton>
-        <ModalButton onClick={onConfirm} disabled={busy} variant="danger">
+        <ModalButton onClick={onConfirm} busy={busy} variant="danger">
           Delete
         </ModalButton>
       </ModalActions>

@@ -30,6 +30,7 @@ type DriveNode struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       *time.Time
+	HasShare        bool
 }
 
 type DriveShareLink struct {

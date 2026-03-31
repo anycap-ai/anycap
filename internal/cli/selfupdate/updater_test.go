@@ -6,23 +6,24 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
 
-// fakeRelease builds a GitHub-style release JSON with a tar.gz asset
-// containing a fake binary, plus a checksums.txt asset.
-func fakeRelease(t *testing.T, version string) (releaseJSON []byte, assets map[string][]byte) {
+// fakeRelease builds a tar.gz asset containing a fake binary and a
+// checksums.txt file, keyed by filename. The archive name matches the
+// current OS/arch so FindAsset() finds it.
+func fakeRelease(t *testing.T, version string) map[string][]byte {
 	t.Helper()
 
 	binaryContent := []byte("#!/bin/sh\necho fake-anycap-" + version)
-	archiveName := fmt.Sprintf("anycap_%s_darwin_arm64.tar.gz", version)
+	archiveName := fmt.Sprintf("anycap_%s_%s_%s.tar.gz", version, runtime.GOOS, runtime.GOARCH)
 
 	// Build tar.gz archive containing the binary.
 	var archiveBuf bytes.Buffer
@@ -46,38 +47,41 @@ func fakeRelease(t *testing.T, version string) (releaseJSON []byte, assets map[s
 	hash := sha256.Sum256(archiveData)
 	checksumLine := fmt.Sprintf("%x  %s\n", hash, archiveName)
 
-	assets = map[string][]byte{
+	return map[string][]byte{
 		archiveName:     archiveData,
 		"checksums.txt": []byte(checksumLine),
 	}
-
-	rel := githubRelease{
-		TagName: "v" + version,
-		Assets: []Asset{
-			{Name: archiveName, DownloadURL: "PLACEHOLDER/" + archiveName},
-			{Name: "checksums.txt", DownloadURL: "PLACEHOLDER/checksums.txt"},
-		},
-	}
-	releaseJSON, _ = json.Marshal(rel)
-	return releaseJSON, assets
 }
 
-func TestCheckLatest(t *testing.T) {
-	relJSON, _ := fakeRelease(t, "1.2.3")
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fmt.Sprintf("/repos/%s/%s/releases/latest", GitHubOwner, GitHubRepo) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(relJSON)
+// newRedirectServer creates a test server that returns a 302 redirect for
+// /releases/latest and serves asset files from the assets map.
+func newRedirectServer(t *testing.T, tag string, assets map[string][]byte) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		latestPath := fmt.Sprintf("/%s/%s/releases/latest", GitHubOwner, GitHubRepo)
+		if r.URL.Path == latestPath {
+			tagURL := fmt.Sprintf("http://%s/%s/%s/releases/tag/%s",
+				r.Host, GitHubOwner, GitHubRepo, tag)
+			http.Redirect(w, r, tagURL, http.StatusFound)
+			return
+		}
+		// Serve asset downloads by filename.
+		name := filepath.Base(r.URL.Path)
+		if data, ok := assets[name]; ok {
+			w.Write(data)
 			return
 		}
 		http.NotFound(w, r)
 	}))
+}
+
+func TestCheckLatest(t *testing.T) {
+	srv := newRedirectServer(t, "v1.2.3", nil)
 	defer srv.Close()
 
 	u := &Updater{
-		GitHubAPIBase: srv.URL,
-		ConfigDir:     t.TempDir(),
+		GitHubBase: srv.URL,
+		ConfigDir:  t.TempDir(),
 	}
 
 	rel, err := u.CheckLatest(context.Background())
@@ -102,8 +106,8 @@ func TestCheckLatest_NotFound(t *testing.T) {
 	defer srv.Close()
 
 	u := &Updater{
-		GitHubAPIBase: srv.URL,
-		ConfigDir:     t.TempDir(),
+		GitHubBase: srv.URL,
+		ConfigDir:  t.TempDir(),
 	}
 
 	_, err := u.CheckLatest(context.Background())
@@ -220,54 +224,34 @@ func TestExtractFromTarGz_NotFound(t *testing.T) {
 }
 
 func TestUpdate_FullFlow(t *testing.T) {
-	relJSON, assets := fakeRelease(t, "2.0.0")
+	if runtime.GOOS == "windows" {
+		t.Skip("full flow test uses tar.gz; skipping on Windows")
+	}
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Serve release API.
-		if r.URL.Path == fmt.Sprintf("/repos/%s/%s/releases/latest", GitHubOwner, GitHubRepo) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(relJSON)
-			return
-		}
-		// Serve asset downloads.
-		name := filepath.Base(r.URL.Path)
-		if data, ok := assets[name]; ok {
-			w.Write(data)
-			return
-		}
-		http.NotFound(w, r)
-	}))
+	version := "2.0.0"
+	tag := "v" + version
+	assets := fakeRelease(t, version)
+
+	srv := newRedirectServer(t, tag, assets)
 	defer srv.Close()
 
-	// Patch asset download URLs to point to our test server.
-	var rel githubRelease
-	json.Unmarshal(relJSON, &rel)
-	for i := range rel.Assets {
-		rel.Assets[i].DownloadURL = srv.URL + "/" + rel.Assets[i].Name
-	}
-
-	// Create a fake "current" binary to replace.
-	tmpDir := t.TempDir()
-	fakeBin := filepath.Join(tmpDir, "anycap")
-	if err := os.WriteFile(fakeBin, []byte("old-binary"), 0755); err != nil {
-		t.Fatal(err)
-	}
-
 	u := &Updater{
-		GitHubAPIBase: srv.URL,
-		ConfigDir:     t.TempDir(),
+		GitHubBase: srv.URL,
+		ConfigDir:  t.TempDir(),
 	}
 
-	release := &Release{
-		Version: "2.0.0",
-		TagName: "v2.0.0",
-		Assets:  rel.Assets,
+	// Resolve latest release via redirect.
+	rel, err := u.CheckLatest(context.Background())
+	if err != nil {
+		t.Fatalf("CheckLatest: %v", err)
+	}
+	if rel.Version != version {
+		t.Fatalf("expected version %s, got %s", version, rel.Version)
 	}
 
 	// We can't call u.Update directly because it uses ExecutablePath().
 	// Instead, test the lower-level components.
-	// Download the asset.
-	asset, ok := release.FindAsset()
+	asset, ok := rel.FindAsset()
 	if !ok {
 		t.Skip("no matching asset for current OS/arch in test fixture")
 	}
@@ -278,7 +262,7 @@ func TestUpdate_FullFlow(t *testing.T) {
 	}
 
 	// Verify checksum.
-	checksumAsset, _ := release.FindChecksumAsset()
+	checksumAsset, _ := rel.FindChecksumAsset()
 	checksumData, err := u.download(context.Background(), checksumAsset.DownloadURL)
 	if err != nil {
 		t.Fatalf("download checksums: %v", err)
@@ -292,6 +276,13 @@ func TestUpdate_FullFlow(t *testing.T) {
 	binaryData, err := extractBinary(archiveData, asset.Name)
 	if err != nil {
 		t.Fatalf("extract: %v", err)
+	}
+
+	// Create a fake "current" binary to replace.
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "anycap")
+	if err := os.WriteFile(fakeBin, []byte("old-binary"), 0755); err != nil {
+		t.Fatal(err)
 	}
 
 	// Replace binary.

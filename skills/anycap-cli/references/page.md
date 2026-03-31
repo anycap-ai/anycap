@@ -1,26 +1,146 @@
 # Page Hosting
 
-Deploy static sites and single HTML files to AnyCap's edge network. Each site gets a unique URL.
+Deploy static sites and single HTML files to AnyCap's edge network. Each site gets a unique URL with versioning, rollback, and access control.
 
-## Deploy
+## Do You Need Multiple Targets?
+
+Most tasks need only one site. If you are deploying a single project (docs, dashboard, report), use the **default target** flow below -- it is the fastest path. The CLI auto-saves the site binding to `anycap.toml`, so subsequent deploys need zero flags.
+
+Use **named targets** only when you explicitly need to manage multiple sites from the same directory (e.g., preview + release environments, or a series of independent reports).
+
+---
+
+## Default Target (Single Site -- Fast Path)
+
+### First deploy
 
 ```bash
-# Deploy a directory (must contain index.html)
 anycap page deploy ./dist --name "My Docs" --publish
-
-# Deploy a single HTML file (auto-renamed to index.html)
-anycap page deploy report.html --publish
-
-# Deploy to an existing site by ID
-anycap page deploy ./dist --site pg_aBcDeFg --publish
 ```
+
+This creates a site, deploys, publishes, and saves the binding to `anycap.toml`:
+
+```toml
+[page]
+site_id = "pg_aBcDeFg"
+name = "My Docs"
+```
+
+### Every subsequent deploy
+
+```bash
+anycap page deploy ./dist --publish
+```
+
+No flags needed -- reads `site_id` from `anycap.toml`.
+
+### One-shot deploy (disposable URL)
+
+When you just need a URL fast and do not plan to redeploy:
+
+```bash
+anycap page deploy report.html --new --publish
+```
+
+Returns `page_url` immediately. The `--new` flag always creates a fresh site.
+
+### Manage the default site
+
+```bash
+anycap page info                    # site details (reads from anycap.toml)
+anycap page versions                # version history
+anycap page publish --version 3     # publish a specific version
+anycap page unpublish               # take offline
+anycap page rollback --version 1    # clone + publish a historical version
+anycap page set --name "New Name"   # update settings
+anycap page delete                  # delete the site
+```
+
+All commands auto-resolve the site from `anycap.toml` when no `<page-id>`, `--page-id`, or `--target` is given.
+
+---
+
+## Named Targets (Multiple Sites)
+
+When you need multiple sites from the same directory, use `--target` to create and reference named bindings.
+
+### Setup targets
+
+```bash
+anycap page create --name "App Preview" --target preview
+anycap page create --name "App Release" --target release
+```
+
+This writes to `anycap.toml`:
+
+```toml
+[page]
+site_id = "pg_aBcDeFg"
+name = "My Docs"
+
+[page.targets.preview]
+site_id = "pg_xYzAbC"
+name = "App Preview"
+
+[page.targets.release]
+site_id = "pg_dEfGhI"
+name = "App Release"
+```
+
+### Deploy to a target
+
+```bash
+anycap page deploy ./dist --target preview --publish
+anycap page deploy ./dist --target release --publish
+```
+
+### One-shot with auto-target
+
+```bash
+anycap page deploy ./report-q1.html --new --name "Q1 Report" --publish
+anycap page deploy ./report-q2.html --new --name "Q2 Report" --publish
+```
+
+Each `--new` deploy auto-generates a target name (`deploy-YYYYMMDD-HHMM`) and saves it.
+
+### Manage a specific target
+
+```bash
+anycap page info --target preview
+anycap page versions --target release
+anycap page publish --target release --version 3
+anycap page rollback --target release --version 1
+anycap page delete --target preview
+```
+
+### List local targets
+
+```bash
+anycap page list --local
+```
+
+---
+
+## Site Resolution Priority
+
+When multiple identification methods are available, the CLI resolves in this order:
+
+1. `<page-id>` positional argument
+2. `--page-id pg_xxx` flag
+3. `--target <name>` flag (lookup from `anycap.toml`)
+4. `[page]` default section in `anycap.toml`
+5. Auto-create (deploy only)
+
+## Deploy Details
 
 ### Flags
 
 | Flag | Description |
 |------|-------------|
 | `--name` | Site display name (find existing or create new) |
-| `--site` | Existing site ID to deploy to (mutually exclusive with `--name`) |
+| `--page-id` | Existing page site ID |
+| `--target` | Named target from `anycap.toml` |
+| `--new` | Force create a new site (cannot combine with `--page-id`) |
 | `--publish` | Publish the version immediately after upload |
 | `--concurrency N` | Parallel upload workers, 1-20 (default: 6) |
 
@@ -40,60 +160,17 @@ anycap page deploy ./dist --site pg_aBcDeFg --publish
 }
 ```
 
-### Project Config (anycap.toml)
-
-After a successful deploy, the CLI writes `anycap.toml` in the current directory:
-
-```toml
-[page]
-site_id = "pg_aBcDeFg"
-name = "My Docs"
-```
-
-Subsequent deploys from the same directory automatically target the same site -- no flags needed:
+## Site Settings
 
 ```bash
-# First time
-anycap page deploy ./dist --name "My Docs" --publish
-
-# Every time after (reads site_id from anycap.toml)
-anycap page deploy ./dist --publish
-```
-
-The file is safe to commit to git. It contains only opaque external IDs.
-
-## Manage Sites
-
-```bash
-# List all sites
-anycap page list
-
-# Get site details
-anycap page info <page-id>
-
-# Update site settings
-anycap page set <page-id> --name "New Name"
-anycap page set <page-id> --badge         # enable badge (default)
-anycap page set <page-id> --no-badge      # disable badge
-
-# Delete a site
-anycap page delete <page-id>
-```
-
-## Version Management
-
-```bash
-# List versions
-anycap page versions <page-id>
-
-# Publish a specific version
-anycap page publish <page-id> --version 3
-
-# Unpublish (take offline)
-anycap page unpublish <page-id>
-
-# Rollback to a previous version
-anycap page rollback <page-id> --version 1
+anycap page set [page-id] --name "New Name"
+anycap page set [page-id] --access public|password
+anycap page set [page-id] --password "secret"
+anycap page set [page-id] --no-password
+anycap page set [page-id] --spa-fallback        # enable SPA mode
+anycap page set [page-id] --no-spa-fallback
+anycap page set [page-id] --badge               # show AnyCap badge
+anycap page set [page-id] --no-badge            # hide badge
 ```
 
 ## Typical Agent Workflow
@@ -101,6 +178,6 @@ anycap page rollback <page-id> --version 1
 ```bash
 # Generate a report, deploy it, get the URL
 echo "<html><body><h1>Report</h1></body></html>" > report.html
-URL=$(anycap page deploy report.html --name "Status Report" --publish | jq -r '.page_url')
+URL=$(anycap page deploy report.html --publish | jq -r '.page_url')
 echo "Published at: $URL"
 ```

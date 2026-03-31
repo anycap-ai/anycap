@@ -280,6 +280,74 @@ func TestConfigPath(t *testing.T) {
 	}
 }
 
+func TestConfigPath_WithEnvironment(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	// Set environment via env var.
+	t.Setenv("ANYCAP_APP_ENV", "local")
+
+	p := ConfigPath()
+	expected := filepath.Join(tmpHome, ".anycap", "config.local.toml")
+	if p != expected {
+		t.Fatalf("expected %q, got %q", expected, p)
+	}
+}
+
+func TestResolvedEnvironment(t *testing.T) {
+	// Default: empty.
+	old := Environment
+	Environment = ""
+	defer func() { Environment = old }()
+
+	if got := ResolvedEnvironment(); got != "" {
+		t.Fatalf("expected empty, got %q", got)
+	}
+
+	// ldflags value.
+	Environment = "staging"
+	if got := ResolvedEnvironment(); got != "staging" {
+		t.Fatalf("expected staging, got %q", got)
+	}
+
+	// ANYCAP_APP_ENV overrides ldflags.
+	t.Setenv("ANYCAP_APP_ENV", "dev")
+	if got := ResolvedEnvironment(); got != "dev" {
+		t.Fatalf("expected dev (env override), got %q", got)
+	}
+}
+
+func TestCredentialFilePath_WithEnvironment(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_APP_ENV", "local")
+
+	path, err := credentialFilePath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := filepath.Join(tmpHome, ".anycap", "credentials.local")
+	if path != expected {
+		t.Fatalf("expected %q, got %q", expected, path)
+	}
+}
+
+func TestKeyringService_WithEnvironment(t *testing.T) {
+	old := Environment
+	defer func() { Environment = old }()
+
+	Environment = ""
+	t.Setenv("ANYCAP_APP_ENV", "")
+	if got := resolvedKeyringService(); got != "anycap" {
+		t.Fatalf("expected anycap, got %q", got)
+	}
+
+	t.Setenv("ANYCAP_APP_ENV", "local")
+	if got := resolvedKeyringService(); got != "anycap-local" {
+		t.Fatalf("expected anycap-local, got %q", got)
+	}
+}
+
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && searchString(s, substr)
 }

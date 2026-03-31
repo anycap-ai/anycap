@@ -103,42 +103,48 @@ func (s *modelRouteRepoStub) GetModelRoute(_ context.Context, id int64) (*model.
 
 func (s *modelRouteRepoStub) CreateModelRoute(_ context.Context, input model.CreateModelRouteInput) (*model.ModelRoute, error) {
 	item := model.ModelRoute{
-		ID:          1,
-		ModelID:     input.ModelID,
-		Capability:  input.Capability,
-		Operation:   input.Operation,
-		AbilityKey:  input.AbilityKey,
-		AlgoType:    input.AlgoType,
-		DisplayName: input.DisplayName,
-		RouteType:   input.RouteType,
-		Region:      input.Region,
-		Tier:        input.Tier,
-		Env:         input.Env,
-		Priority:    input.Priority,
-		Enabled:     routeInputEnabled(input.Enabled),
-		Status:      input.Status,
-		Extra:       input.Extra,
+		ID:               1,
+		ModelID:          input.ModelID,
+		Capability:       input.Capability,
+		Operation:        input.Operation,
+		AbilityKey:       input.AbilityKey,
+		AlgoType:         input.AlgoType,
+		Mode:             input.Mode,
+		DisplayName:      input.DisplayName,
+		ModeDescription:  input.ModeDescription,
+		ModelDescription: input.ModelDescription,
+		RouteType:        input.RouteType,
+		Region:           input.Region,
+		Tier:             input.Tier,
+		Env:              input.Env,
+		Priority:         input.Priority,
+		Enabled:          routeInputEnabled(input.Enabled),
+		Status:           input.Status,
+		Extra:            input.Extra,
 	}
 	return &item, nil
 }
 
 func (s *modelRouteRepoStub) UpdateModelRoute(_ context.Context, id int64, input model.UpdateModelRouteInput) (*model.ModelRoute, error) {
 	item := model.ModelRoute{
-		ID:          id,
-		ModelID:     input.ModelID,
-		Capability:  input.Capability,
-		Operation:   input.Operation,
-		AbilityKey:  input.AbilityKey,
-		AlgoType:    input.AlgoType,
-		DisplayName: input.DisplayName,
-		RouteType:   input.RouteType,
-		Region:      input.Region,
-		Tier:        input.Tier,
-		Env:         input.Env,
-		Priority:    input.Priority,
-		Enabled:     routeInputEnabled(input.Enabled),
-		Status:      input.Status,
-		Extra:       input.Extra,
+		ID:               id,
+		ModelID:          input.ModelID,
+		Capability:       input.Capability,
+		Operation:        input.Operation,
+		AbilityKey:       input.AbilityKey,
+		AlgoType:         input.AlgoType,
+		Mode:             input.Mode,
+		DisplayName:      input.DisplayName,
+		ModeDescription:  input.ModeDescription,
+		ModelDescription: input.ModelDescription,
+		RouteType:        input.RouteType,
+		Region:           input.Region,
+		Tier:             input.Tier,
+		Env:              input.Env,
+		Priority:         input.Priority,
+		Enabled:          routeInputEnabled(input.Enabled),
+		Status:           input.Status,
+		Extra:            input.Extra,
 	}
 	return &item, nil
 }
@@ -669,13 +675,17 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	modelRouteHandler := modelroute.NewHandler(modelrouteapp.NewService(&modelRouteRepoStub{
 		items: []model.ModelRoute{
 			{
-				ID:         1,
-				ModelID:    "nano-banana-2",
-				Capability: model.CapabilityImage,
-				Operation:  model.OperationEdit,
-				AbilityKey: "google_nano_banana_2",
-				AlgoType:   "img_2_img",
-				Status:     model.ModelRouteStatusActive,
+				ID:               1,
+				ModelID:          "nano-banana-2",
+				Capability:       model.CapabilityImage,
+				Operation:        model.OperationEdit,
+				AbilityKey:       "google_nano_banana_2",
+				AlgoType:         "img_2_img",
+				Mode:             model.ModeImageToImage,
+				DisplayName:      "Nano Banana 2",
+				ModeDescription:  "Edit from an input image",
+				ModelDescription: "Gemini image model for guided edits",
+				Status:           model.ModelRouteStatusActive,
 			},
 		},
 	}), passthroughResolver, passthroughMapper)
@@ -1904,6 +1914,43 @@ func TestRouter_ModelRoutesDoNotRequireAuth(t *testing.T) {
 	}
 	if env["status"] != "success" {
 		t.Fatalf("expected success status, got %#v", env["status"])
+	}
+}
+
+func TestRouter_ModelRoutesExposeModeMetadata(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	var env map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected data object, got %#v", env["data"])
+	}
+	items, ok := data["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("expected items, got %#v", data["items"])
+	}
+	first, ok := items[0].(map[string]any)
+	if !ok {
+		t.Fatalf("expected first item object, got %#v", items[0])
+	}
+
+	if first["mode"] != string(model.ModeImageToImage) {
+		t.Fatalf("expected mode %q, got %#v", model.ModeImageToImage, first["mode"])
+	}
+	if first["mode_description"] != "Edit from an input image" {
+		t.Fatalf("unexpected mode_description: %#v", first["mode_description"])
+	}
+	if first["model_description"] != "Gemini image model for guided edits" {
+		t.Fatalf("unexpected model_description: %#v", first["model_description"])
 	}
 }
 

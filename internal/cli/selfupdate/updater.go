@@ -10,7 +10,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -52,20 +51,15 @@ type Release struct {
 
 // Asset is a single downloadable file attached to a release.
 type Asset struct {
-	Name        string `json:"name"`
-	DownloadURL string `json:"browser_download_url"`
-}
-
-// githubRelease is the subset of the GitHub API response we care about.
-type githubRelease struct {
-	TagName string  `json:"tag_name"`
-	Assets  []Asset `json:"assets"`
+	Name        string
+	DownloadURL string
 }
 
 // Updater performs update checks and binary replacement.
 type Updater struct {
-	// GitHubAPIBase can be overridden for testing (default: https://api.github.com).
-	GitHubAPIBase string
+	// GitHubBase can be overridden for testing (default: https://github.com).
+	// Used for resolving latest tag via redirect and constructing download URLs.
+	GitHubBase string
 	// ConfigDir is ~/.anycap (override for testing).
 	ConfigDir string
 	// Verbose enables debug logging to Logger.
@@ -77,9 +71,9 @@ type Updater struct {
 // NewUpdater returns an Updater with production defaults.
 func NewUpdater() *Updater {
 	return &Updater{
-		GitHubAPIBase: "https://api.github.com",
-		ConfigDir:     defaultConfigDir(),
-		Logger:        io.Discard,
+		GitHubBase: "https://github.com",
+		ConfigDir:  defaultConfigDir(),
+		Logger:     io.Discard,
 	}
 }
 
@@ -133,40 +127,78 @@ func (u *Updater) RecordCheck() {
 	_ = os.WriteFile(path, []byte(time.Now().UTC().Format(time.RFC3339)), 0644)
 }
 
-// CheckLatest queries GitHub for the latest release.
+// resolveLatestTag discovers the latest release tag by following the
+// GitHub releases/latest redirect. This avoids the API rate limit
+// (60 req/hr for unauthenticated requests).
+func (u *Updater) resolveLatestTag(ctx context.Context) (string, error) {
+	url := fmt.Sprintf("%s/%s/%s/releases/latest", u.GitHubBase, GitHubOwner, GitHubRepo)
+	u.logf("resolving latest tag via redirect: HEAD %s", url)
+
+	// Use a client that does not follow redirects so we can read the Location header.
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusMovedPermanently {
+		return "", fmt.Errorf("github: unexpected status %d (expected redirect)", resp.StatusCode)
+	}
+
+	location := resp.Header.Get("Location")
+	// Location looks like: https://github.com/anycap-ai/anycap/releases/tag/v0.0.4
+	idx := strings.LastIndex(location, "/tag/")
+	if idx == -1 || idx+5 >= len(location) {
+		return "", fmt.Errorf("github: cannot parse tag from redirect: %s", location)
+	}
+
+	tag := location[idx+5:]
+	u.logf("resolved latest tag: %s", tag)
+	return tag, nil
+}
+
+// CheckLatest resolves the latest release tag and constructs the expected
+// asset URLs from the goreleaser naming convention. No GitHub API calls
+// are made, avoiding the unauthenticated rate limit.
 func (u *Updater) CheckLatest(ctx context.Context) (*Release, error) {
 	ctx, cancel := context.WithTimeout(ctx, checkTimeout)
 	defer cancel()
 
-	url := fmt.Sprintf("%s/repos/%s/%s/releases/latest", u.GitHubAPIBase, GitHubOwner, GitHubRepo)
-	u.logf("checking latest release: GET %s", url)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	tagName, err := u.resolveLatestTag(ctx)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/vnd.github+json")
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	version := strings.TrimPrefix(tagName, "v")
+	baseURL := fmt.Sprintf("%s/%s/%s/releases/download/%s",
+		u.GitHubBase, GitHubOwner, GitHubRepo, tagName)
+
+	// Construct asset list from goreleaser naming convention.
+	ext := ".tar.gz"
+	if runtime.GOOS == "windows" {
+		ext = ".zip"
 	}
-	defer resp.Body.Close()
+	archiveName := fmt.Sprintf("anycap_%s_%s_%s%s", version, runtime.GOOS, runtime.GOARCH, ext)
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("github: unexpected status %d", resp.StatusCode)
-	}
-
-	var gh githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&gh); err != nil {
-		return nil, fmt.Errorf("github: decode response: %w", err)
-	}
-
-	version := strings.TrimPrefix(gh.TagName, "v")
-	u.logf("latest release: %s (%d assets)", gh.TagName, len(gh.Assets))
+	u.logf("latest release: %s (archive: %s)", tagName, archiveName)
 	return &Release{
 		Version: version,
-		TagName: gh.TagName,
-		Assets:  gh.Assets,
+		TagName: tagName,
+		Assets: []Asset{
+			{Name: archiveName, DownloadURL: baseURL + "/" + archiveName},
+			{Name: "checksums.txt", DownloadURL: baseURL + "/checksums.txt"},
+		},
 	}, nil
 }
 

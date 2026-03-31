@@ -9,30 +9,34 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
+type FeatureAccessProvider interface {
+	EnabledFor(principal *model.Principal, feature string) (allowed bool, globallyEnabled bool)
+}
+
+// capabilityPrefixes lists capabilities that follow the /v1/{cap}/{operation} pattern.
+// Adding a new capability here automatically enables dynamic feature gating
+// for all its operations (generate, edit, upscale, etc.).
+var capabilityPrefixes = []string{"image", "video", "music"}
+
 // featureRule maps a URL path prefix to a feature flag name.
+// Used only for non-standard paths that don't follow the /v1/{cap}/{op} pattern.
 type featureRule struct {
 	prefix  string
 	feature string
-}
-
-type FeatureAccessProvider interface {
-	EnabledFor(principal *model.Principal, feature string) (allowed bool, globallyEnabled bool)
 }
 
 // FeatureGate returns a Hertz middleware that blocks requests to disabled
 // capability endpoints. When a request matches a disabled feature, it
 // responds with 503 and a structured FEATURE_DISABLED error.
 //
-// The features map is typically the same map passed to the system service
-// at bootstrap time. It is read-only after server startup.
+// Feature names are resolved dynamically from the URL path:
+//   - /v1/{cap}/{operation}[/...]  -> {cap}.{operation}  (e.g. image.generate, image.edit)
+//   - /v1/capabilities/{cap}/read  -> {cap}.read
+//   - /v1/drive/...                -> drive
+//   - /v1/pages...                 -> page
 func FeatureGate(provider FeatureAccessProvider) app.HandlerFunc {
-	rules := []featureRule{
-		{"/v1/image/generate", "image.generate"},
-		{"/v1/image/models", "image.models"},
-		{"/v1/video/generate", "video.generate"},
-		{"/v1/video/models", "video.models"},
-		{"/v1/music/generate", "music.generate"},
-		{"/v1/music/models", "music.models"},
+	// Static rules for paths that don't follow the /v1/{cap}/{op} pattern.
+	staticRules := []featureRule{
 		{"/v1/capabilities/image/read", "image.read"},
 		{"/v1/capabilities/video/read", "video.read"},
 		{"/v1/capabilities/audio/read", "audio.read"},
@@ -42,42 +46,86 @@ func FeatureGate(provider FeatureAccessProvider) app.HandlerFunc {
 
 	return func(c context.Context, ctx *app.RequestContext) {
 		path := string(ctx.Path())
-		for _, r := range rules {
+
+		// 1. Try dynamic capability operation pattern: /v1/{cap}/{op}[/...]
+		if feat := resolveCapabilityFeature(path); feat != "" {
+			checkFeatureAccess(c, ctx, provider, feat)
+			return
+		}
+
+		// 2. Fall back to static rules for non-standard paths.
+		for _, r := range staticRules {
 			if strings.HasPrefix(path, r.prefix) {
-				principal, _ := GetPrincipal(ctx)
-				allowed, enabled := provider.EnabledFor(principal, r.feature)
-				if !enabled {
-					requestID := GetRequestID(ctx)
-					ctx.JSON(503, map[string]any{
-						"id":         requestID,
-						"request_id": requestID,
-						"status":     "error",
-						"error": map[string]any{
-							"code":    "FEATURE_DISABLED",
-							"message": r.feature + " is not available on this server",
-						},
-						"hint": "run 'anycap status' to see available features",
-					})
-					ctx.Abort()
-					return
-				}
-				if !allowed {
-					requestID := GetRequestID(ctx)
-					ctx.JSON(403, map[string]any{
-						"id":         requestID,
-						"request_id": requestID,
-						"status":     "error",
-						"error": map[string]any{
-							"code":    "FEATURE_NOT_ALLOWED",
-							"message": r.feature + " is not allowed for the current user",
-						},
-					})
-					ctx.Abort()
-					return
-				}
-				break
+				checkFeatureAccess(c, ctx, provider, r.feature)
+				return
 			}
 		}
+
 		ctx.Next(c)
 	}
+}
+
+// resolveCapabilityFeature extracts a feature name from paths matching
+// /v1/{cap}/{operation}[/...] for known capability prefixes.
+// Returns empty string if the path doesn't match.
+func resolveCapabilityFeature(path string) string {
+	for _, cap := range capabilityPrefixes {
+		prefix := "/v1/" + cap + "/"
+		if !strings.HasPrefix(path, prefix) {
+			continue
+		}
+		rest := path[len(prefix):]
+		if rest == "" {
+			continue
+		}
+		// Extract the first path segment as the operation.
+		// /v1/image/generate       -> "generate"
+		// /v1/image/edit           -> "edit"
+		// /v1/image/models         -> "models"
+		// /v1/image/models/x/schema -> "models"
+		op := rest
+		if idx := strings.IndexByte(rest, '/'); idx >= 0 {
+			op = rest[:idx]
+		}
+		return cap + "." + op
+	}
+	return ""
+}
+
+// checkFeatureAccess checks if the feature is enabled and allowed for the
+// current user. Responds with 503 (disabled) or 403 (not allowed) and
+// aborts the request chain if access is denied. Otherwise calls ctx.Next.
+func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider FeatureAccessProvider, feat string) {
+	principal, _ := GetPrincipal(ctx)
+	allowed, enabled := provider.EnabledFor(principal, feat)
+	if !enabled {
+		requestID := GetRequestID(ctx)
+		ctx.JSON(503, map[string]any{
+			"id":         requestID,
+			"request_id": requestID,
+			"status":     "error",
+			"error": map[string]any{
+				"code":    "FEATURE_DISABLED",
+				"message": feat + " is not available on this server",
+			},
+			"hint": "run 'anycap status' to see available features",
+		})
+		ctx.Abort()
+		return
+	}
+	if !allowed {
+		requestID := GetRequestID(ctx)
+		ctx.JSON(403, map[string]any{
+			"id":         requestID,
+			"request_id": requestID,
+			"status":     "error",
+			"error": map[string]any{
+				"code":    "FEATURE_NOT_ALLOWED",
+				"message": feat + " is not allowed for the current user",
+			},
+		})
+		ctx.Abort()
+		return
+	}
+	ctx.Next(c)
 }

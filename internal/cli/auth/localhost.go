@@ -9,6 +9,7 @@ import (
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 )
 
 const callbackTimeout = 5 * time.Minute
@@ -16,7 +17,7 @@ const callbackTimeout = 5 * time.Minute
 // BrowserPollFlow runs the browser login flow backed by a frontend-domain callback
 // and server-side polling for the final API key.
 func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer) (cred *cliconfig.Credential, email string, err error) {
-	resp, err := client.PostJSON(ctx, "/v1/auth/login", map[string]any{
+	resp, err := client.PostJSON(ctx, api.AuthLoginPath, map[string]any{
 		"method": "browser_poll",
 	})
 	if err != nil {
@@ -64,7 +65,7 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 			return nil, "", fmt.Errorf("authentication timed out after %v. Try 'anycap login --headless' instead", callbackTimeout)
 		}
 
-		pollResp, err := client.PostJSON(ctx, "/v1/auth/poll", map[string]any{
+		pollResp, err := client.PostJSON(ctx, api.AuthPollPath, map[string]any{
 			"login_session_id": d.LoginSessionID,
 			"poll_token":       d.PollToken,
 		})

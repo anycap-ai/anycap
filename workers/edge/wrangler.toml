@@ -63,7 +63,7 @@ zone_name = "anycap.cloud"
 
 [[env.prod.kv_namespaces]]
 binding = "EDGE_KV"
-id = "REPLACE_WITH_PROD_KV_NAMESPACE_ID"
+id = "eee564ae46854e3799ea1da680cb7b7e"
 
 [[env.prod.r2_buckets]]
 binding = "ANYCAP_CLOUD_R2"

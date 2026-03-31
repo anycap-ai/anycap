@@ -20,6 +20,25 @@ func init() {
 //	-ldflags "-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.DefaultEndpoint=https://api.anycap.ai"
 var DefaultEndpoint = "http://127.0.0.1:8080"
 
+// Environment identifies the build environment. Empty string means production.
+// When set, config/credential files and keyring entries are suffixed to isolate
+// environments (e.g. config.local.toml, credentials.local, keyring "anycap-local").
+// Override via ldflags:
+//
+//	-ldflags "-X gitlab.knoffice.tech/engineering/anycap/internal/cli/config.Environment=local"
+//
+// Can also be overridden at runtime via ANYCAP_APP_ENV environment variable.
+var Environment = ""
+
+// ResolvedEnvironment returns the effective environment, checking ANYCAP_APP_ENV
+// first, then falling back to the ldflags-injected Environment value.
+func ResolvedEnvironment() string {
+	if v := os.Getenv("ANYCAP_APP_ENV"); v != "" {
+		return v
+	}
+	return Environment
+}
+
 // Config holds user preferences loaded from ~/.anycap/config.toml.
 type Config struct {
 	Endpoint   string `toml:"endpoint,omitempty"`
@@ -65,7 +84,11 @@ func configDir() (string, error) {
 }
 
 // ConfigPath returns the full path to the config file.
+// When Environment is set, returns config.{env}.toml (e.g. config.local.toml).
 func ConfigPath() string {
+	if env := ResolvedEnvironment(); env != "" {
+		return filepath.Join(ConfigDir(), "config."+env+".toml")
+	}
 	return filepath.Join(ConfigDir(), "config.toml")
 }
 

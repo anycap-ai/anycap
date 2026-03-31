@@ -17,12 +17,25 @@ import (
 //  3. Plain-text fallback file (~/.anycap/credentials, mode 0600) -- used only when
 //     no keychain backend is available (headless Linux, Docker, etc.).
 //
+// When Environment is set (e.g. "local", "dev"), credentials are isolated:
+//   - Keyring service: "anycap-{env}"
+//   - Fallback file: ~/.anycap/credentials.{env}
+//
 // Credentials are stored as JSON.
 
 const (
-	keyringService = "anycap"
-	keyringAccount = "credential"
+	keyringBaseService = "anycap"
+	keyringAccount     = "credential"
 )
+
+// resolvedKeyringService returns the keyring service name, suffixed with
+// the environment when set.
+func resolvedKeyringService() string {
+	if env := ResolvedEnvironment(); env != "" {
+		return keyringBaseService + "-" + env
+	}
+	return keyringBaseService
+}
 
 // CredentialType distinguishes credential storage variants.
 type CredentialType string
@@ -67,7 +80,7 @@ func LoadCredential() *Credential {
 	}
 
 	// 2. OS keychain (primary persistent store).
-	if secret, err := keyring.Get(keyringService, keyringAccount); err == nil && secret != "" {
+	if secret, err := keyring.Get(resolvedKeyringService(), keyringAccount); err == nil && secret != "" {
 		if cred := parseCredential(secret); cred != nil {
 			return cred
 		}
@@ -86,7 +99,7 @@ func LoadCredential() *Credential {
 
 	// Auto-migrate: promote file credential to keychain, then remove the file.
 	if data, err := json.Marshal(cred); err == nil {
-		if err := keyring.Set(keyringService, keyringAccount, string(data)); err == nil {
+		if err := keyring.Set(resolvedKeyringService(), keyringAccount, string(data)); err == nil {
 			_ = deleteCredentialFile()
 		}
 	}
@@ -104,7 +117,7 @@ func SaveCredential(cred *Credential) error {
 	}
 	raw := string(data)
 
-	if err := keyring.Set(keyringService, keyringAccount, raw); err == nil {
+	if err := keyring.Set(resolvedKeyringService(), keyringAccount, raw); err == nil {
 		_ = deleteCredentialFile() // clean up fallback file if it exists
 		return nil
 	}
@@ -116,7 +129,7 @@ func SaveCredential(cred *Credential) error {
 // fallback file. Returns nil if at least one backend succeeds or reports
 // "not found". Only returns an error if both backends fail.
 func DeleteCredential() error {
-	keyringErr := keyring.Delete(keyringService, keyringAccount)
+	keyringErr := keyring.Delete(resolvedKeyringService(), keyringAccount)
 	if keyringErr == keyring.ErrNotFound {
 		keyringErr = nil
 	}
@@ -153,7 +166,11 @@ func credentialFilePath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "credentials"), nil
+	name := "credentials"
+	if env := ResolvedEnvironment(); env != "" {
+		name = "credentials." + env
+	}
+	return filepath.Join(dir, name), nil
 }
 
 func loadFromFile() string {

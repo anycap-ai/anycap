@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import { Footer } from "@/components/Footer";
-import { Header, humanNavLinks } from "@/components/Header";
-import { AuthNav } from "@/components/AuthNav";
-import { LazyEquipAgent } from "@/components/LazyEquipAgent";
-import { TerminalDemo } from "@/components/TerminalDemo";
-import { FadeIn } from "@/components/FadeIn";
-import { ScrambleText } from "@/components/ScrambleText";
-import { ParticleAgent } from "@/components/animation/ParticleAgent";
+import { Footer } from "@/components/layout/Footer";
+import { Header, humanNavLinks } from "@/components/layout/Header";
+import { AuthNav } from "@/components/layout/AuthNav";
+import { LazyEquipAgent } from "@/components/landing/LazyEquipAgent";
+import { TerminalDemo } from "@/components/landing/TerminalDemo";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { ScrambleText } from "@/components/ui/ScrambleText";
+import { ParticleAgent } from "@/components/landing/ParticleAgent";
 
 export const runtime = "edge";
 
@@ -74,8 +74,8 @@ export default function ForHumanPage() {
             </div>
           </div>
 
-          <div className="w-full shrink-0 lg:flex lg:w-[50%] lg:items-center">
-            <div className="w-full overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
+          <div className="w-full shrink-0 lg:flex lg:flex-col lg:w-[50%] lg:self-stretch lg:justify-center lg:min-h-0">
+            <div className="flex h-[50vh] w-full flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:h-[calc((100dvh-8rem)*0.8)] lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
               <TerminalDemo
                 headerRight={
                   <ParticleAgent scale={0.35} />

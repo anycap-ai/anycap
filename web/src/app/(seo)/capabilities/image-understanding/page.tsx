@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/LocalizedLink";
-import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
-import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
-import { FadeIn } from "@/components/FadeIn";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
+import { FadeIn } from "@/components/ui/FadeIn";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -223,7 +223,7 @@ export default function ImageUnderstandingPage() {
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
                   style={mono}
                 >
-                  All Capabilities
+                  Any Capability
                 </Link>
                 <Link
                   href="/start"

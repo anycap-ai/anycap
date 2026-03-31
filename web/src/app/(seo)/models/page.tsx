@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/LocalizedLink";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { siteConfig } from "@/lib/site";
-import { EarlyAccessBanner } from "@/components/EarlyAccessBanner";
-import { FadeIn } from "@/components/FadeIn";
-import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 
 export const runtime = "edge";
 
@@ -123,7 +123,7 @@ export default function ModelsPage() {
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg"
                   style={mono}
                 >
-                  All Capabilities
+                  Any Capability
                 </Link>
                 <Link
                   href="/guides/context-engineering-for-agents"

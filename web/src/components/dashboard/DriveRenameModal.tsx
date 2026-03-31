@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { DriveNode } from "@/lib/api/types";
 import { updateDriveNode } from "@/lib/api/hooks";
-import { Modal, ModalActions, ModalButton } from "./Modal";
+import { toast } from "@/lib/toast";
+import { Modal, ModalActions, ModalButton } from "@/components/ui/Modal";
 
 
 const inputClass =
@@ -20,25 +21,22 @@ export function DriveRenameModal({
 }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
 
   function handleOpen() {
     if (node) {
       setName(node.name);
-      setError("");
     }
   }
 
   async function onSubmit() {
     if (!node || !name.trim() || name === node.name) return;
     setBusy(true);
-    setError("");
     try {
       await updateDriveNode(node.id, { name: name.trim() });
       await onChanged?.();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to rename");
+      toast.error(err instanceof Error ? err.message : "Failed to rename");
     } finally {
       setBusy(false);
     }
@@ -64,12 +62,9 @@ export function DriveRenameModal({
           className={inputClass}
         />
       </label>
-      {error && (
-        <p className="mt-3 text-[13px] text-[#c4442d]">{error}</p>
-      )}
       <ModalActions>
         <ModalButton onClick={onClose} disabled={busy}>Cancel</ModalButton>
-        <ModalButton onClick={onSubmit} disabled={busy || !name.trim()} variant="primary">
+        <ModalButton onClick={onSubmit} disabled={!name.trim()} busy={busy} variant="primary">
           Rename
         </ModalButton>
       </ModalActions>

@@ -15,6 +15,7 @@ import (
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 )
@@ -157,13 +158,13 @@ func syncServerFeatures(endpointOverride string) {
 
 	if credential != nil && credential.Token() != "" {
 		authClient := httpclient.New(endpoint, httpclient.WithCredential(credential))
-		if features, ok := fetchFeatures(ctx, authClient, "/v1/me/features"); ok {
+		if features, ok := fetchFeatures(ctx, authClient, api.MeFeaturesPath); ok {
 			feature.SetAll(features)
 			return
 		}
 	}
 
-	features, ok := fetchFeatures(ctx, client, "/v1/features")
+	features, ok := fetchFeatures(ctx, client, api.FeaturesPath)
 	if !ok {
 		// Server unreachable — disable all features so only local
 		// commands (config, credential, skill, login, etc.) are visible.

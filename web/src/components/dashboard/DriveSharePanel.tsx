@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { revokeDriveShare, rotateDriveShare, upsertDriveShare } from "@/lib/api/hooks";
+import { useState, useEffect } from "react";
+import { getDriveShare, revokeDriveShare, rotateDriveShare, upsertDriveShare } from "@/lib/api/hooks";
 import type { DriveNode } from "@/lib/api/types";
-import { Modal, ModalActions, ModalButton } from "./Modal";
+import { Spinner } from "@/components/ui/Spinner";
+import { toast } from "@/lib/toast";
+import { Modal, ModalActions, ModalButton } from "@/components/ui/Modal";
 
 
 export function DriveSharePanel({
@@ -22,8 +24,10 @@ export function DriveSharePanel({
   const [noExpire, setNoExpire] = useState(false);
   const [password, setPassword] = useState("");
   const [noPassword, setNoPassword] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const busy = busyAction != null;
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   function handleOpen() {
     setShareURL("");
@@ -33,9 +37,33 @@ export function DriveSharePanel({
     setNoExpire(false);
     setPassword("");
     setNoPassword(false);
-    setBusy(false);
-    setError("");
+    setBusyAction(null);
+    setLoading(false);
+    setCopied(false);
   }
+
+  // Auto-load existing share link when modal opens
+  useEffect(() => {
+    if (!node) return;
+    let cancelled = false;
+    setLoading(true);
+    getDriveShare(node.id)
+      .then((result) => {
+        if (cancelled) return;
+        if (result) {
+          setShareURL(result.url);
+          setHasPassword(result.has_password);
+          setExpiresAt(result.expires_at ?? null);
+        }
+      })
+      .catch(() => {
+        // ignore — no existing share
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [node]);
 
   function parseExpiresToSeconds(input: string): number {
     const value = input.trim().toLowerCase();
@@ -57,10 +85,9 @@ export function DriveSharePanel({
     throw new Error("expiry must end with d or h (example: 7d or 24h)");
   }
 
-  async function onCreateOrLoad() {
+  async function onCreate() {
     if (!node) return;
-    setBusy(true);
-    setError("");
+    setBusyAction("create");
     try {
       const result = await upsertDriveShare(node.id, {});
       setShareURL(result.url);
@@ -68,19 +95,18 @@ export function DriveSharePanel({
       setExpiresAt(result.expires_at ?? null);
       await onChanged?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to create share");
+      toast.error(err instanceof Error ? err.message : "Failed to create share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onSaveSettings() {
     if (!node) return;
-    setBusy(true);
-    setError("");
+    setBusyAction("save");
     try {
       if (password.trim() !== "" && noPassword) {
-        throw new Error("password and remove password cannot be used together");
+        throw new Error("Password and remove password cannot be used together");
       }
       const payload: Record<string, unknown> = {};
       if (noExpire) {
@@ -102,16 +128,15 @@ export function DriveSharePanel({
       setNoPassword(false);
       await onChanged?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to update share");
+      toast.error(err instanceof Error ? err.message : "Failed to update share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onRotate() {
     if (!node) return;
-    setBusy(true);
-    setError("");
+    setBusyAction("rotate");
     try {
       const result = await rotateDriveShare(node.id);
       setShareURL(result.url);
@@ -119,16 +144,15 @@ export function DriveSharePanel({
       setExpiresAt(result.expires_at ?? null);
       await onChanged?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to rotate share");
+      toast.error(err instanceof Error ? err.message : "Failed to rotate share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onRevoke() {
     if (!node) return;
-    setBusy(true);
-    setError("");
+    setBusyAction("revoke");
     try {
       await revokeDriveShare(node.id);
       setShareURL("");
@@ -138,9 +162,9 @@ export function DriveSharePanel({
       setNoPassword(false);
       await onChanged?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to revoke share");
+      toast.error(err instanceof Error ? err.message : "Failed to revoke share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -148,125 +172,160 @@ export function DriveSharePanel({
     if (!shareURL) return;
     try {
       await navigator.clipboard.writeText(shareURL);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       // silent
     }
   }
 
+  const inputClass =
+    "w-full border border-[#ccd1c3] bg-[#fafbf8] px-4 py-2.5 text-[14px] text-[#1c1f17] rounded-xl shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] disabled:opacity-45 disabled:cursor-not-allowed outline-none focus:border-[#6b7d3a] focus:ring-2 focus:ring-[rgba(107,125,58,0.15)] transition-all placeholder:text-[#9a9e90]";
+
   return (
     <Modal open={!!node} onClose={onClose} title="Share" onOpen={handleOpen}>
-      {/* File info — inline, no box */}
-      <p className="text-[13px] text-[#1c1f17] font-medium">{node?.name}</p>
-      <p className="text-[12px] text-[#707468] mt-0.5">{node?.kind}</p>
+      {/* File info */}
+      <p className="text-[14px] text-[#1c1f17] font-medium">{node?.name}</p>
+      <p className="text-[13px] text-[#7a7e71] mt-1">{node?.kind}</p>
 
-      <hr className="my-4 border-[#d4dbb8]" />
+      <hr className="my-5 border-[#dce0d2]" />
 
-      {/* Share link */}
-      <p className="text-[11px] text-[#707468] uppercase tracking-[0.5px] mb-3">
+      {/* Share link section */}
+      <p className="text-[13px] font-medium text-[#4d5145] mb-3">
         Share link
       </p>
 
-      {shareURL ? (
-        <div className="space-y-2.5">
-          <a
-            href={shareURL}
-            target="_blank"
-            rel="noreferrer"
-            className="block text-[12px] text-[#6b7d3a] break-all hover:underline"
-           
-          >
-            {shareURL}
-          </a>
-          <div className="flex gap-4 text-[12px] text-[#4d5145]">
-            <span>password: {hasPassword ? "enabled" : "none"}</span>
-            <span>expires: {expiresAt ? new Date(expiresAt).toLocaleString() : "never"}</span>
+      {loading ? (
+        <div className="flex items-center gap-2.5 py-2">
+          <Spinner size={16} className="text-[#7a7e71]" />
+          <p className="text-[14px] text-[#7a7e71]">Loading...</p>
+        </div>
+      ) : shareURL ? (
+        <div className="space-y-3">
+          {/* Link display card */}
+          <div className="rounded-xl border border-[#d8dcd0] bg-[#fafbf8] px-4 py-3">
+            <a
+              href={shareURL}
+              target="_blank"
+              rel="noreferrer"
+              className="block text-[13px] text-[#6b7d3a] break-all hover:underline transition-colors"
+            >
+              {shareURL}
+            </a>
           </div>
-          <ModalButton onClick={onCopyLink} disabled={busy}>
-            Copy link
-          </ModalButton>
+
+          {/* Meta info */}
+          <div className="flex gap-5 text-[13px] text-[#7a7e71]">
+            <span>Password: {hasPassword ? "enabled" : "none"}</span>
+            <span>Expires: {expiresAt ? new Date(expiresAt).toLocaleString() : "never"}</span>
+          </div>
+
+          {/* Copy button with feedback */}
+          <button
+            onClick={onCopyLink}
+            disabled={busy}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-[13px] font-medium rounded-xl border border-[#ccd1c3] bg-[#fafbf8] text-[#3a3e32] hover:bg-[#f0f2eb] hover:border-[#b8bdaf] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {copied ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7d3a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span className="text-[#6b7d3a]">Copied</span>
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+                Copy link
+              </>
+            )}
+          </button>
         </div>
       ) : (
-        <ModalButton onClick={onCreateOrLoad} disabled={busy} variant="primary">
-          Create / Load link
+        <ModalButton onClick={onCreate} busy={busyAction === "create"} disabled={busy} variant="primary">
+          Create share link
         </ModalButton>
       )}
 
-      <hr className="my-4 border-[#d4dbb8]" />
+      {/* Settings & actions — only shown when a share link exists */}
+      {shareURL && (
+        <>
+          <hr className="my-5 border-[#dce0d2]" />
 
-      {/* Settings */}
-      <p className="text-[11px] text-[#707468] uppercase tracking-[0.5px] mb-3">
-        Settings
-      </p>
+          <p className="text-[13px] font-medium text-[#4d5145] mb-3">
+            Settings
+          </p>
 
-      <div className="space-y-3.5">
-        <label className="block">
-          <span className="block text-[11px] text-[#5f6358] mb-1.5">
-            Expiry (7d / 24h)
-          </span>
-          <input
-            value={expiresInput}
-            onChange={(e) => setExpiresInput(e.target.value)}
-            placeholder="7d"
-            disabled={busy || noExpire}
-            className="w-full border border-[#c8cebb] bg-white px-3 py-2 text-[12px] text-[#1c1f17] rounded-lg disabled:opacity-45 outline-none focus:border-[#6b7d3a] focus:ring-1 focus:ring-[#6b7d3a]/20 transition-all placeholder:text-[#b5b8ad]"
-           
-          />
-        </label>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="block text-[13px] text-[#7a7e71] mb-2">
+                Expiry (7d / 24h)
+              </span>
+              <input
+                value={expiresInput}
+                onChange={(e) => setExpiresInput(e.target.value)}
+                placeholder="7d"
+                disabled={busy || noExpire}
+                className={inputClass}
+              />
+            </label>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            className="accent-[#6b7d3a]"
-            checked={noExpire}
-            onChange={(e) => setNoExpire(e.target.checked)}
-            disabled={busy}
-          />
-          <span className="text-[11px] text-[#4d5145]">No expiry</span>
-        </label>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-[#6b7d3a] cursor-pointer"
+                checked={noExpire}
+                onChange={(e) => setNoExpire(e.target.checked)}
+                disabled={busy}
+              />
+              <span className="text-[13px] text-[#3a3e32]">No expiry</span>
+            </label>
 
-        <label className="block">
-          <span className="block text-[11px] text-[#5f6358] mb-1.5">
-            Password
-          </span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={busy || noPassword}
-            className="w-full border border-[#c8cebb] bg-white px-3 py-2 text-[12px] text-[#1c1f17] rounded-lg disabled:opacity-45 outline-none focus:border-[#6b7d3a] focus:ring-1 focus:ring-[#6b7d3a]/20 transition-all"
-          />
-        </label>
+            <label className="block">
+              <span className="block text-[13px] text-[#7a7e71] mb-2">
+                Password
+              </span>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={busy || noPassword}
+                className={inputClass}
+              />
+            </label>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            className="accent-[#6b7d3a]"
-            checked={noPassword}
-            onChange={(e) => setNoPassword(e.target.checked)}
-            disabled={busy}
-          />
-          <span className="text-[11px] text-[#4d5145]">Remove password</span>
-        </label>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-[#6b7d3a] cursor-pointer"
+                checked={noPassword}
+                onChange={(e) => setNoPassword(e.target.checked)}
+                disabled={busy}
+              />
+              <span className="text-[13px] text-[#3a3e32]">Remove password</span>
+            </label>
 
-        <ModalButton onClick={onSaveSettings} disabled={busy} variant="primary">
-          Save settings
-        </ModalButton>
-      </div>
+            <ModalButton onClick={onSaveSettings} busy={busyAction === "save"} disabled={busy} variant="primary">
+              Save settings
+            </ModalButton>
+          </div>
 
-      <hr className="my-4 border-[#d4dbb8]" />
+          <hr className="my-5 border-[#dce0d2]" />
 
-      <ModalActions>
-        <ModalButton onClick={onRotate} disabled={busy || !shareURL}>
-          Rotate link
-        </ModalButton>
-        <ModalButton onClick={onRevoke} disabled={busy || !shareURL} variant="danger">
-          Revoke
-        </ModalButton>
-      </ModalActions>
-
-      {error && (
-        <p className="mt-3 text-[12px] text-[#a83f32]">{error}</p>
+          <ModalActions>
+            <ModalButton onClick={onRotate} busy={busyAction === "rotate"} disabled={busy}>
+              Rotate link
+            </ModalButton>
+            <ModalButton onClick={onRevoke} busy={busyAction === "revoke"} disabled={busy} variant="danger">
+              Revoke
+            </ModalButton>
+          </ModalActions>
+        </>
       )}
+
     </Modal>
   );
 }
