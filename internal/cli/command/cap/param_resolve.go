@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 )
 
 // resolveFileParams inspects the request body and uploads local file paths for
@@ -70,10 +71,9 @@ func fetchFileFields(
 	capability, model, mode string,
 	verboseLog io.Writer,
 ) (map[string]fileField, error) {
-	// Build schema URL: GET /v1/{cap}/models/{model}/schema?operation=generate&mode={mode}
-	qpath := fmt.Sprintf("/v1/%s/models/%s/schema?operation=generate", capability, model)
+	qpath := api.ModelSchemaPath(capability, model)
 	if mode != "" {
-		qpath += "&mode=" + mode
+		qpath += "?mode=" + mode
 	}
 
 	resp, err := client.Get(ctx, qpath)
@@ -190,9 +190,10 @@ func resolveFieldValue(
 	}
 }
 
-// maybeUploadPath checks if a string value looks like a local file path
-// (not an HTTP URL) and the file exists. If so, uploads it and returns
-// the object URL. Otherwise returns the value unchanged.
+// maybeUploadPath checks if a string value is a URL or a local file path.
+// URLs (http:// or https://) are passed through as-is.
+// Anything else is treated as a local file path: the file must exist, and
+// it will be uploaded via presign. Returns an error if the file doesn't exist.
 func maybeUploadPath(
 	ctx context.Context,
 	client *httpclient.Client,
@@ -203,10 +204,9 @@ func maybeUploadPath(
 		return val, nil
 	}
 
-	// Check if file exists on disk.
+	// Not a URL -- must be a local file path. Validate existence.
 	if _, err := os.Stat(val); err != nil {
-		// Not a valid file path -- return as-is (could be a remote ID or other value).
-		return val, nil
+		return "", fmt.Errorf("file not found: %s (file-or-url fields require an http/https URL or a valid local file path)", val)
 	}
 
 	if verboseLog != nil {

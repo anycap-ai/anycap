@@ -17,6 +17,10 @@
       "enabled": true,
       "rollout": "all"
     },
+    "image.edit": {
+      "enabled": true,
+      "rollout": "all"
+    },
     "image.models": {
       "enabled": true,
       "rollout": "all"

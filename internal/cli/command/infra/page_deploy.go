@@ -14,6 +14,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -100,7 +101,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				switch {
 				case siteID != "":
 					// --site flag: highest priority
-					resp, err := client.Get(cmd.Context(), "/v1/pages/"+siteID)
+					resp, err := client.Get(cmd.Context(), api.PagePath(siteID))
 					if err != nil {
 						return err
 					}
@@ -114,7 +115,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 					if err != nil {
 						return err
 					}
-					resp, err := client.Get(cmd.Context(), "/v1/pages/"+resolvedID)
+					resp, err := client.Get(cmd.Context(), api.PagePath(resolvedID))
 					if err != nil {
 						return err
 					}
@@ -130,7 +131,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 					}
 				case projCfg.Page != nil && projCfg.Page.SiteID != "":
 					// anycap.toml [page].site_id
-					resp, err := client.Get(cmd.Context(), "/v1/pages/"+projCfg.Page.SiteID)
+					resp, err := client.Get(cmd.Context(), api.PagePath(projCfg.Page.SiteID))
 					if err != nil {
 						return err
 					}
@@ -156,7 +157,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				}
 			}
 
-			createVersionResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions", map[string]any{})
+			createVersionResp, err := client.PostJSON(cmd.Context(), api.PageVersionsPath(site.ID), map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -178,7 +179,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 
 			requestID := createVersionResp.RequestID
 
-			finalizeResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+version.ID+"/finalize", map[string]any{})
+			finalizeResp, err := client.PostJSON(cmd.Context(), api.PageVersionActionPath(site.ID, version.ID, "finalize"), map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -190,7 +191,7 @@ func newPageDeployCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 
 			published := false
 			if publishAfter {
-				publishResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+site.ID+"/versions/"+finalVersion.ID+"/publish", map[string]any{})
+				publishResp, err := client.PostJSON(cmd.Context(), api.PageVersionActionPath(site.ID, finalVersion.ID, "publish"), map[string]any{})
 				if err != nil {
 					return err
 				}
@@ -301,7 +302,7 @@ func parallelUploadFiles(ctx context.Context, client *httpclient.Client, siteID,
 }
 
 func uploadSingleFile(ctx context.Context, client *httpclient.Client, siteID, versionID string, item pageDeployFile) error {
-	presignResp, err := client.PostJSON(ctx, "/v1/pages/"+siteID+"/versions/"+versionID+"/files/presign", map[string]any{
+	presignResp, err := client.PostJSON(ctx, api.PageVersionFilePresignPath(siteID, versionID), map[string]any{
 		"asset_path":     item.AssetPath,
 		"content_type":   item.ContentType,
 		"content_length": item.Size,
@@ -321,7 +322,7 @@ func uploadSingleFile(ctx context.Context, client *httpclient.Client, siteID, ve
 		return err
 	}
 
-	_, err = client.PostJSON(ctx, "/v1/pages/"+siteID+"/versions/"+versionID+"/files/complete", map[string]any{
+	_, err = client.PostJSON(ctx, api.PageVersionFileCompletePath(siteID, versionID), map[string]any{
 		"upload_session_id": presignData.UploadSessionID,
 	})
 	return err
@@ -485,7 +486,7 @@ func ensureDeploySiteByName(ctx context.Context, client *httpclient.Client, name
 }
 
 func createDeploySite(ctx context.Context, client *httpclient.Client, name string) (pageSiteSummary, error) {
-	resp, err := client.PostJSON(ctx, "/v1/pages", map[string]any{"name": name})
+	resp, err := client.PostJSON(ctx, api.PagesPath, map[string]any{"name": name})
 	if err != nil {
 		return pageSiteSummary{}, err
 	}

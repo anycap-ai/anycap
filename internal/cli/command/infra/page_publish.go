@@ -6,6 +6,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,7 @@ func newPagePublishCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				}
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+versionID+"/publish", map[string]any{})
+			resp, err := client.PostJSON(cmd.Context(), api.PageVersionActionPath(pageID, versionID, "publish"), map[string]any{})
 			if err != nil {
 				return err
 			}

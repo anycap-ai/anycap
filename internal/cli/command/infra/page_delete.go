@@ -6,6 +6,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ func newPageDeleteCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				return err
 			}
 
-			resp, err := clientFactory().Delete(cmd.Context(), "/v1/pages/"+pageID)
+			resp, err := clientFactory().Delete(cmd.Context(), api.PagePath(pageID))
 			if err != nil {
 				return err
 			}

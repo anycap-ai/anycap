@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 			}
 
 			client := clientFactory()
-			siteResp, err := client.Get(cmd.Context(), "/v1/pages/"+pageID)
+			siteResp, err := client.Get(cmd.Context(), api.PagePath(pageID))
 			if err != nil {
 				return err
 			}
@@ -47,7 +48,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				return err
 			}
 
-			rollbackResp, err := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+sourceVersion.ID+"/rollback-clone", map[string]any{})
+			rollbackResp, err := client.PostJSON(cmd.Context(), api.PageVersionActionPath(pageID, sourceVersion.ID, "rollback-clone"), map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -59,7 +60,7 @@ func newPageRollbackCmd(clientFactory func() *httpclient.Client, stdout io.Write
 			requestID := rollbackResp.RequestID
 			published := false
 			if site.CurrentVersionID != nil {
-				publishResp, publishErr := client.PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/versions/"+newVersion.ID+"/publish", map[string]any{})
+				publishResp, publishErr := client.PostJSON(cmd.Context(), api.PageVersionActionPath(pageID, newVersion.ID, "publish"), map[string]any{})
 				if publishErr != nil {
 					return publishErr
 				}

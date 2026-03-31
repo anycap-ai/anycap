@@ -2,6 +2,7 @@
   "default_rpm": 60,
   "capabilities": {
     "image.generate": 10,
+    "image.edit": 10,
     "video.generate": 5,
     "music.generate": 8,
     "image.read": 30,

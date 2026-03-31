@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
@@ -349,13 +350,11 @@ func TestResolveFileParams_NonexistentFilePath(t *testing.T) {
 	}
 
 	err := resolveFileParams(context.Background(), client, "image", "test-model", "", body, nil)
-	if err != nil {
-		t.Fatalf("nonexistent path should be passed through, got: %v", err)
+	if err == nil {
+		t.Fatal("expected error for nonexistent file path, got nil")
 	}
-
-	// Value should remain unchanged -- not a real file, not a URL, just pass through.
-	if body["reference_image"] != "/nonexistent/path/image.png" {
-		t.Fatalf("nonexistent path should pass through, got %v", body["reference_image"])
+	if !strings.Contains(err.Error(), "file not found") {
+		t.Fatalf("expected 'file not found' error, got: %v", err)
 	}
 }
 

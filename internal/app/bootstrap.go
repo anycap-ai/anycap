@@ -203,6 +203,7 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 	// Each can be overridden by ANYCAP_FEATURE_<NAME>=true/false.
 	defaults := map[string]bool{
 		feature.ImageGenerate: hasImageExecutionProvider(cfg),
+		feature.ImageEdit:     hasImageExecutionProvider(cfg),
 		feature.ImageModels:   hasCatalogProvider(cfg),
 		feature.ImageRead:     cfg.AgentPlatform.Enabled(),
 		feature.VideoGenerate: hasVideoExecutionProvider(cfg),

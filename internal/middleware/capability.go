@@ -47,7 +47,18 @@ func ResolveCapability(ctx *app.RequestContext) (string, bool) {
 		return capability, true
 	}
 
-	return capabilityRoutes.lookup(string(ctx.Method()), ctx.FullPath())
+	if cap, ok := capabilityRoutes.lookup(string(ctx.Method()), ctx.FullPath()); ok {
+		return cap, true
+	}
+
+	// Dynamic resolution for parameterized routes like /v1/{cap}/:operation.
+	// Uses the same extraction logic as the feature gate.
+	if feat := resolveCapabilityFeature(string(ctx.Path())); feat != "" {
+		SetCapability(ctx, feat) // Cache for subsequent middleware/handler calls.
+		return feat, true
+	}
+
+	return "", false
 }
 
 func WithCapability(name string) app.HandlerFunc {

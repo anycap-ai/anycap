@@ -9,6 +9,7 @@ import (
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 
 	"github.com/spf13/cobra"
@@ -67,7 +68,7 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 				payload["request_id"] = requestID
 			}
 
-			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/feedback", payload)
+			resp, err := clientFactory().PostJSON(cmd.Context(), api.FeedbackPath, payload)
 			if err != nil {
 				return err
 			}

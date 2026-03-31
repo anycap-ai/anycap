@@ -137,6 +137,7 @@ ANYCAP_FEATURE_DRIVE=false
 | Env var | Default | Controls |
 |---|---|---|
 | `ANYCAP_FEATURE_IMAGE_GENERATE` | true if NexusHub Core configured | `POST /v1/image/generate` |
+| `ANYCAP_FEATURE_IMAGE_EDIT` | true if NexusHub Core configured | `POST /v1/image/edit` |
 | `ANYCAP_FEATURE_IMAGE_MODELS` | true if catalog configured | `GET /v1/image/models` |
 | `ANYCAP_FEATURE_IMAGE_READ` | true if AgentPlatform configured | `POST /v1/capabilities/image/read` |
 | `ANYCAP_FEATURE_VIDEO_GENERATE` | true if NexusHub Core configured | `POST /v1/video/generate` |
@@ -161,8 +162,29 @@ Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrast
 1. Add constant in `pkg/feature/feature.go`.
 2. Add default in the `defaults` map (same file).
 3. Add to `buildServerFeatures()` in `internal/app/bootstrap.go` with the infra-derived default.
-4. Add path rule in `internal/middleware/feature_gate.go`.
+4. The feature gate middleware resolves features dynamically from URL paths (`/v1/{cap}/{operation}` -> `{cap}.{operation}`), so no code change is needed in `feature_gate.go` for new capability operations.
 5. Gate the CLI command with `feature.Enabled()` in the appropriate command constructor.
+
+### Adding a new capability operation
+
+Capability operations (generate, edit, upscale, etc.) are data-driven. The server handler uses a parameterized route (`/v1/{cap}/:operation`), and the service delegates to the model catalog for route selection. To add a new operation:
+
+1. Add seed data to the catalog DB with the new operation name.
+2. Add a feature flag constant and default (see "Adding a new feature flag" above).
+3. Add a CLI subcommand using the `newImageOperationCmd` factory (one line in `NewImageCmd`).
+4. **Before going live**, configure dconf:
+   - `feature_access` JSON: add `{cap}.{operation}` with rollout rules.
+   - `rate_limit` JSON: add `{cap}.{operation}` with RPM (otherwise falls back to `default_rpm`).
+
+### Pre-launch checklist for new operations
+
+Before enabling a new operation in production:
+
+- [ ] Seed data deployed to catalog DB
+- [ ] Feature flag added to `feature_access` dconf with appropriate rollout (start with `groups` for internal testing, then `all`)
+- [ ] Rate limit configured in `rate_limit` dconf (unconfigured operations fall back to `default_rpm`)
+- [ ] CLI subcommand added and tested
+- [ ] Skill files updated to document the new command
 
 ## Web Design Guideline
 

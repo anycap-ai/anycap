@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -55,7 +56,7 @@ func newDriveMvCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				payload["parent_id"] = resolvedParentID
 			}
 
-			resp, err := client.PatchJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID, payload)
+			resp, err := client.PatchJSON(cmd.Context(), api.DriveNodePath(nodeID), payload)
 			if err != nil {
 				return err
 			}

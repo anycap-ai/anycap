@@ -7,6 +7,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -78,7 +79,7 @@ func newPageSetCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				return fmt.Errorf("no update fields provided")
 			}
 
-			resp, err := clientFactory().PatchJSON(cmd.Context(), "/v1/pages/"+pageID, payload)
+			resp, err := clientFactory().PatchJSON(cmd.Context(), api.PagePath(pageID), payload)
 			if err != nil {
 				return err
 			}

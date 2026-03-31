@@ -11,6 +11,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/fileutil"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
@@ -27,7 +28,39 @@ func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		imageCmd.AddCommand(newImageModelsCmd(clientFactory, stdout))
 	}
 	if feature.Enabled(feature.ImageGenerate) {
-		imageCmd.AddCommand(newImageGenerateCmd(clientFactory, stdout))
+		imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
+			Operation: "generate",
+			Short:     "Generate an image from a prompt",
+			Long: `Generate an image using a text prompt. Use --param to pass parameters
+discovered from 'image models <model> schema'.
+
+The generated image is automatically downloaded to the current directory.
+Use -o to specify a custom output path.
+
+Examples:
+  anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
+  anycap image generate --prompt "a landscape" --model nano-banana-2 -o landscape.png
+  anycap image generate --prompt "a landscape" --model nano-banana-2 --param ratio=16:9
+  anycap image generate --prompt "a photo" --model nano-banana-2 --mode image-to-image --param reference_image_urls='["https://example.com/photo.jpg"]'`,
+			PromptDesc: "Text prompt for image generation",
+		}))
+	}
+	if feature.Enabled(feature.ImageEdit) {
+		imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
+			Operation: "edit",
+			Short:     "Edit an image using a prompt",
+			Long: `Edit an existing image using a text prompt. Requires a reference image
+via --param or --mode image-to-image.
+
+The edited image is automatically downloaded to the current directory.
+Use -o to specify a custom output path.
+
+Examples:
+  anycap image edit --prompt "remove the background" --model seedream-5 --param reference_image_urls='["https://example.com/photo.jpg"]'
+  anycap image edit --prompt "make it look like a painting" --model seedream-5 --param reference_image_urls='["./photo.jpg"]'
+  anycap image edit --prompt "change hair color to red" --model seedream-5 -o edited.png --param reference_image_urls='["./portrait.jpg"]'`,
+			PromptDesc: "Text prompt describing the edit to apply",
+		}))
 	}
 
 	return imageCmd
@@ -86,7 +119,7 @@ func listModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer,
 
 // listCapModels fetches models for a given capability and optionally filters to one.
 func listCapModels(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability string, args []string) error {
-	resp, err := client.Get(cmd.Context(), fmt.Sprintf("/v1/%s/models", capability))
+	resp, err := client.Get(cmd.Context(), api.ModelsPath(capability))
 	if err != nil {
 		return err
 	}
@@ -132,7 +165,7 @@ func fetchModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.W
 
 // fetchCapModelSchema fetches the request schema for any capability.
 func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout io.Writer, capability, modelName, operation, mode string) error {
-	qpath := fmt.Sprintf("/v1/%s/models/%s/schema", capability, modelName)
+	qpath := api.ModelSchemaPath(capability, modelName)
 	sep := '?'
 	if operation != "" {
 		qpath += fmt.Sprintf("%coperation=%s", sep, operation)
@@ -148,7 +181,17 @@ func fetchCapModelSchema(cmd *cobra.Command, client *httpclient.Client, stdout i
 	return output.WriteServerJSON(stdout, resp.Body, resp.RequestID)
 }
 
-func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+// imageOperationConfig defines how a specific image operation subcommand behaves.
+type imageOperationConfig struct {
+	Operation  string // CLI subcommand name and API operation (e.g. "generate", "edit")
+	Short      string
+	Long       string
+	PromptDesc string // Description for the --prompt flag
+}
+
+// newImageOperationCmd creates a CLI subcommand for any image operation.
+// The operation name determines the server endpoint: POST /v1/image/{operation}.
+func newImageOperationCmd(clientFactory func() *httpclient.Client, stdout io.Writer, cfg imageOperationConfig) *cobra.Command {
 	var (
 		prompt     string
 		model      string
@@ -158,23 +201,15 @@ func newImageGenerateCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	)
 
 	cmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate an image from a prompt",
-		Long: `Generate an image using a text prompt. Use --param to pass parameters
-discovered from 'image models <model> schema'.
-
-The generated image is automatically downloaded to the current directory.
-Use -o to specify a custom output path.
-
-Examples:
-  anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
-  anycap image generate --prompt "a landscape" --model nano-banana-2 -o landscape.png
-  anycap image generate --prompt "a landscape" --model nano-banana-2 --param ratio=16:9
-  anycap image generate --prompt "a photo" --model seedream-5 --mode image-to-image --param reference_image_urls='["https://example.com/photo.jpg"]'`,
+		Use:   cfg.Operation,
+		Short: cfg.Short,
+		Long:  cfg.Long,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
-				"prompt": prompt,
-				"model":  model,
+				"model": model,
+			}
+			if prompt != "" {
+				body["prompt"] = prompt
 			}
 			if mode != "" {
 				body["mode"] = mode
@@ -196,7 +231,7 @@ Examples:
 				return err
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/image/generate", body)
+			resp, err := client.PostJSON(cmd.Context(), api.OperationPath("image", cfg.Operation), body)
 			if err != nil {
 				return err
 			}
@@ -221,7 +256,7 @@ Examples:
 				}
 				absPath, dlErr := fileutil.DownloadFile(genResult.OutputURL, savePath)
 				if dlErr != nil {
-					return fmt.Errorf("generation succeeded but download failed: %w", dlErr)
+					return fmt.Errorf("operation succeeded but download failed: %w", dlErr)
 				}
 				genResult.LocalPath = absPath
 			}
@@ -231,12 +266,11 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringVar(&prompt, "prompt", "", "Text prompt for image generation")
+	cmd.Flags().StringVar(&prompt, "prompt", "", cfg.PromptDesc)
 	cmd.Flags().StringVar(&model, "model", "", "Model ID to use")
 	cmd.Flags().StringVar(&mode, "mode", "", "Generation mode (e.g. text-to-image, image-to-image)")
 	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'image models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated image to this path (default: current directory)")
-	_ = cmd.MarkFlagRequired("prompt")
 	_ = cmd.MarkFlagRequired("model")
 
 	return cmd

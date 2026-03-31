@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -57,7 +58,7 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				resolvedParentID = id
 			}
 
-			presignResp, err := client.PostJSON(cmd.Context(), "/v1/drive/files/presign", map[string]any{
+			presignResp, err := client.PostJSON(cmd.Context(), api.DriveFilesPresign, map[string]any{
 				"parent_id":      resolvedParentID,
 				"name":           filepath.Base(filePath),
 				"content_type":   contentType,
@@ -80,7 +81,7 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				return err
 			}
 
-			completeResp, err := client.PostJSON(cmd.Context(), "/v1/drive/files/complete", map[string]any{
+			completeResp, err := client.PostJSON(cmd.Context(), api.DriveFilesComplete, map[string]any{
 				"upload_session_id": presignData.UploadSessionID,
 				"file_id":           presignData.FileID,
 			})

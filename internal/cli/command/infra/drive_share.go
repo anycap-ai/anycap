@@ -6,6 +6,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -54,7 +55,7 @@ func newDriveShareCmd(clientFactory func() *httpclient.Client, stdout io.Writer)
 				payload["no_password"] = true
 			}
 
-			resp, err := client.PutJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share", payload)
+			resp, err := client.PutJSON(cmd.Context(), api.DriveNodeSharePath(nodeID), payload)
 			if err != nil {
 				return err
 			}
@@ -86,7 +87,7 @@ func newDriveShareRotateCmd(clientFactory func() *httpclient.Client, stdout io.W
 				return err
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share/rotate", map[string]any{})
+			resp, err := client.PostJSON(cmd.Context(), api.DriveNodeShareRotatePath(nodeID), map[string]any{})
 			if err != nil {
 				return err
 			}
@@ -111,7 +112,7 @@ func newDriveUnshareCmd(clientFactory func() *httpclient.Client, stdout io.Write
 				return err
 			}
 
-			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+nodeID+"/share")
+			resp, err := client.Delete(cmd.Context(), api.DriveNodeSharePath(nodeID))
 			if err != nil {
 				return err
 			}

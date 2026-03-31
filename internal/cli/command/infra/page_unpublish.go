@@ -6,6 +6,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,7 @@ func newPageUnpublishCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 			if err != nil {
 				return err
 			}
-			resp, err := clientFactory().PostJSON(cmd.Context(), "/v1/pages/"+pageID+"/unpublish", map[string]any{})
+			resp, err := clientFactory().PostJSON(cmd.Context(), api.PagePath(pageID)+"/unpublish", map[string]any{})
 			if err != nil {
 				return err
 			}

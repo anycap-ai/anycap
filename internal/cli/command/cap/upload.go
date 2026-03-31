@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -53,7 +54,7 @@ func uploadFile(ctx context.Context, client *httpclient.Client, filePath string,
 	}
 
 	// Step 1: Get presigned upload URL from AnyCap server
-	resp, err := client.PostJSON(ctx, "/v1/capabilities/presign", map[string]any{
+	resp, err := client.PostJSON(ctx, api.PresignPath, map[string]any{
 		"filename":       filename,
 		"content_type":   contentType,
 		"content_length": stat.Size(),

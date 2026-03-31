@@ -5,6 +5,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,7 @@ func newDriveRmCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 				return err
 			}
 
-			resp, err := client.Delete(cmd.Context(), "/v1/drive/nodes/"+nodeID)
+			resp, err := client.Delete(cmd.Context(), api.DriveNodePath(nodeID))
 			if err != nil {
 				return err
 			}

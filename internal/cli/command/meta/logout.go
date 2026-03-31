@@ -6,6 +6,7 @@ import (
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +18,7 @@ func NewLogoutCmd(clientFactory func() *httpclient.Client, stderr io.Writer) *co
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if clientFactory != nil {
 				if cred := cliconfig.LoadCredential(); cred != nil && cred.Token() != "" {
-					_, _ = clientFactory().PostJSON(cmd.Context(), "/v1/auth/logout", map[string]any{})
+					_, _ = clientFactory().PostJSON(cmd.Context(), api.AuthLogoutPath, map[string]any{})
 				}
 			}
 			if err := cliconfig.DeleteCredential(); err != nil {

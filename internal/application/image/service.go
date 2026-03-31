@@ -30,7 +30,16 @@ func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 	s.usage = usage
 }
 
+// Generate is a convenience wrapper for Execute with OperationGenerate.
 func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) (model.GenerateImageResult, error) {
+	return s.Execute(ctx, req, model.OperationGenerate)
+}
+
+// Execute runs an image operation (generate, edit, upscale, etc.).
+// The operation determines which route is selected from the model catalog.
+func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, operation model.Operation) (model.GenerateImageResult, error) {
+	action := "image." + string(operation)
+
 	if err := req.Validate(); err != nil {
 		return model.GenerateImageResult{}, err
 	}
@@ -60,7 +69,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 	if mode == "" {
 		mode = model.InferImageMode(req)
 	}
-	route, err := model.SelectRoute(spec, model.OperationGenerate, mode)
+	route, err := model.SelectRoute(spec, operation, mode)
 	if err != nil {
 		return model.GenerateImageResult{}, err
 	}
@@ -83,7 +92,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 			UserID:        req.UserID,
 			APIKeyID:      req.APIKeyID,
 			ProductArea:   "capability",
-			Action:        "image.generate",
+			Action:        action,
 			Provider:      "nexushub",
 			RequestID:     req.RequestID,
 			Status:        result.Status,
@@ -108,7 +117,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 			SubmittedAt: startedAt.UTC(),
 		})
 	}
-	if err := s.credit.Deduct(ctx, req.UserID, cost, "image.generate", req.RequestID); err != nil {
+	if err := s.credit.Deduct(ctx, req.UserID, cost, action, req.RequestID); err != nil {
 		return model.GenerateImageResult{}, model.ErrBillingUncertain
 	}
 
@@ -117,7 +126,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) 
 			RequestID:  req.RequestID,
 			UserID:     req.UserID,
 			APIKeyID:   req.APIKeyID,
-			Capability: "image.generate",
+			Capability: action,
 			Model:      req.Model,
 			Status:     result.Status,
 			LatencyMS:  time.Since(startedAt).Milliseconds(),

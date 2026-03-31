@@ -74,6 +74,7 @@ func New() *Server {
 	s.mux.HandleFunc("GET /v1/image/models", s.handleImageModels)
 	s.mux.HandleFunc("GET /v1/image/models/{model}/schema", s.handleImageModelSchema)
 	s.mux.HandleFunc("POST /v1/image/generate", s.handleImageGenerate)
+	s.mux.HandleFunc("POST /v1/image/edit", s.handleImageGenerate) // edit uses same response format
 	s.mux.HandleFunc("GET /images/", s.handleMockImage)
 
 	// Video generation

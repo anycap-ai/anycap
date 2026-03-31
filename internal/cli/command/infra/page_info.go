@@ -6,6 +6,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/projectconfig"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,7 @@ func newPageInfoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 			if err != nil {
 				return err
 			}
-			resp, err := clientFactory().Get(cmd.Context(), "/v1/pages/"+pageID)
+			resp, err := clientFactory().Get(cmd.Context(), api.PagePath(pageID))
 			if err != nil {
 				return err
 			}

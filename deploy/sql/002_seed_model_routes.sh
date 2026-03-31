@@ -23,4 +23,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-S
     SELECT setval('anycap_model_routes_id_seq', (SELECT COALESCE(MAX(id), 1) FROM anycap_model_routes));
 SQL
 
-echo "seed: done ($(wc -l < "$CSV_FILE") rows)"
+ROW_COUNT=$(psql -t -A --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "SELECT count(*) FROM anycap_model_routes;")
+echo "seed: done ($ROW_COUNT rows imported)"

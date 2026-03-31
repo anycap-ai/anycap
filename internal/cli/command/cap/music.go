@@ -11,6 +11,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/fileutil"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
@@ -150,7 +151,7 @@ Examples:
 				return err
 			}
 
-			resp, err := client.PostJSON(cmd.Context(), "/v1/music/generate", body)
+			resp, err := client.PostJSON(cmd.Context(), api.GeneratePath("music"), body)
 			if err != nil {
 				return err
 			}
