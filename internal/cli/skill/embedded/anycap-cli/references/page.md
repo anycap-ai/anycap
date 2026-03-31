@@ -164,7 +164,7 @@ When multiple identification methods are available, the CLI resolves in this ord
 
 ```bash
 anycap page set [page-id] --name "New Name"
-anycap page set [page-id] --access public|password|private_reserved
+anycap page set [page-id] --access public|password
 anycap page set [page-id] --password "secret"
 anycap page set [page-id] --no-password
 anycap page set [page-id] --spa-fallback        # enable SPA mode

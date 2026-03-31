@@ -81,8 +81,28 @@ Example:
       "rollout": "groups",
       "feature_access_groups": ["internal", "beta_users"]
     },
+    "image.read": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "video.read": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "audio.read": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "audio.models": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "drive": {
+      "enabled": true,
+      "rollout": "all"
+    },
     "page": {
-      "enabled": false,
+      "enabled": true,
       "rollout": "all"
     }
   }

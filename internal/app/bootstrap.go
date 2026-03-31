@@ -210,6 +210,7 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.VideoModels:   hasCatalogProvider(cfg),
 		feature.VideoRead:     cfg.AgentPlatform.Enabled(),
 		feature.AudioRead:     cfg.AgentPlatform.Enabled(),
+		feature.AudioModels:   hasCatalogProvider(cfg),
 		feature.MusicGenerate: hasMusicExecutionProvider(cfg),
 		feature.MusicModels:   hasCatalogProvider(cfg),
 		feature.Drive:         true,
