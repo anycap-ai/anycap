@@ -3,6 +3,7 @@ package drive
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
@@ -13,38 +14,49 @@ import (
 )
 
 func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
+	log.Printf("[DEBUG GetShare] entered handler, id_param=%s", string(ctx.Param("id")))
+
 	if h.service == nil {
+		log.Printf("[DEBUG GetShare] service is nil")
 		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
+		log.Printf("[DEBUG GetShare] missing principal")
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
+	log.Printf("[DEBUG GetShare] principal user_id=%s", principal.UserID)
 
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
+		log.Printf("[DEBUG GetShare] resolveDriveNodeID failed: %v", err)
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
 	}
+	log.Printf("[DEBUG GetShare] resolved node_id=%d", nodeID)
 
 	view, err := h.service.GetShare(c, principal.UserID, nodeID)
 	if err != nil {
+		log.Printf("[DEBUG GetShare] service.GetShare failed: %v", err)
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "get_drive_share_failed", err.Error())
 		return
 	}
 	if view == nil {
+		log.Printf("[DEBUG GetShare] no active share found")
 		handlers.WriteSuccess(ctx, nil)
 		return
 	}
 
 	presented, err := h.presentDriveShareView(c, view)
 	if err != nil {
+		log.Printf("[DEBUG GetShare] present failed: %v", err)
 		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_share_failed", err.Error())
 		return
 	}
+	log.Printf("[DEBUG GetShare] success")
 	handlers.WriteSuccess(ctx, presented)
 }
 
