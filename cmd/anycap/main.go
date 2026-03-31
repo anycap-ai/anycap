@@ -154,6 +154,9 @@ func syncServerFeatures(endpointOverride string) {
 
 	resp, err := client.Get(ctx, "/v1/features")
 	if err != nil {
+		// Server unreachable — disable all features so only local
+		// commands (config, credential, skill, login, etc.) are visible.
+		feature.DisableAll()
 		return
 	}
 

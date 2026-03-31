@@ -186,7 +186,9 @@ publish:nightly:
       mkdir -p skills/anycap-cli/bin
       cp anycap-linux-amd64 skills/anycap-cli/bin/anycap
       chmod +x skills/anycap-cli/bin/anycap
-      # Publish as nightly (separate key, does NOT affect production anycap-cli)
+      # Delete existing skill to force fresh commit hash, then re-publish.
+      # Agent platform caches by commit hash; delete+recreate guarantees a new hash.
+      nexushub-cli delete anycap-cli-nightly -y || true
       nexushub-cli upload skills/anycap-cli -k anycap-cli-nightly --author "AnyCap Nightly"
   rules:
     - if: '$NIGHTLY == "true"'

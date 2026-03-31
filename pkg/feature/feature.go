@@ -145,6 +145,17 @@ func All() map[string]bool {
 	return result
 }
 
+// DisableAll sets all known features to disabled at runtime.
+// Called when the server is unreachable during preflight so that
+// only local commands (config, credential, skill, login, etc.) remain visible.
+func DisableAll() {
+	mu.Lock()
+	defer mu.Unlock()
+	for k := range defaults {
+		runtimeM[k] = false
+	}
+}
+
 // Reset clears all runtime overrides. Intended for testing only.
 func Reset() {
 	mu.Lock()

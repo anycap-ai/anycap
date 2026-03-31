@@ -147,7 +147,7 @@ Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrast
 
 1. **Server feature gate middleware** (`internal/middleware/feature_gate.go`): blocks requests to disabled features with `503 FEATURE_DISABLED`.
 2. **Public features endpoint** (`GET /v1/features`): returns the resolved feature map, no auth required.
-3. **CLI preflight** (`cmd/anycap/main.go`): fetches `/v1/features` before building the command tree. Disabled commands are hidden from help and unavailable. Falls back to all-enabled when the server is unreachable.
+3. **CLI preflight** (`cmd/anycap/main.go`): fetches `/v1/features` before building the command tree. Disabled commands are hidden from help and unavailable. When the server is unreachable, all features are disabled so only local commands (config, credential, skill, login, update, feedback) remain visible.
 
 ### Adding a new feature flag
 

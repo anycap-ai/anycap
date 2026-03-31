@@ -92,6 +92,40 @@ func TestEnvVarsDoNotAffectEnabled(t *testing.T) {
 	}
 }
 
+func TestDisableAll(t *testing.T) {
+	Reset()
+	defer Reset()
+
+	// Defaults are all on.
+	if !Enabled(ImageGenerate) {
+		t.Fatal("ImageGenerate should be on by default")
+	}
+
+	DisableAll()
+
+	// Every known feature should now be off.
+	for name := range defaults {
+		if Enabled(name) {
+			t.Errorf("Enabled(%q) = true after DisableAll, want false", name)
+		}
+	}
+
+	// Unknown features are unaffected (still false by default).
+	if Enabled("unknown.feature") {
+		t.Error("unknown feature should remain false")
+	}
+
+	// SetAll can re-enable features after DisableAll.
+	SetAll(map[string]bool{ImageGenerate: true})
+	if !Enabled(ImageGenerate) {
+		t.Error("ImageGenerate should be re-enabled after SetAll")
+	}
+	// Others remain disabled.
+	if Enabled(Drive) {
+		t.Error("Drive should still be disabled")
+	}
+}
+
 func TestAll(t *testing.T) {
 	Reset()
 	defer Reset()

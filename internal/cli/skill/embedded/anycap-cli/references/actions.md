@@ -49,10 +49,11 @@ anycap actions image-read --file ./screenshot.png --instruction "What text is in
 
 ## video-read
 
-Analyze a video: describe content, summarize events, extract information.
+Analyze a video: describe content, summarize events, extract information. Supports direct video URLs and YouTube links.
 
 ```bash
 anycap actions video-read --url https://example.com/clip.mp4
+anycap actions video-read --url https://www.youtube.com/watch?v=dQw4w9WgXcQ --instruction "Summarize this video"
 anycap actions video-read --file ./recording.mp4 --instruction "List all on-screen text"
 ```
 
@@ -60,9 +61,30 @@ Options:
 
 | Flag | Required | Description |
 |------|----------|-------------|
-| `--url` | one of url/file | Video URL |
+| `--url` | one of url/file | Video URL (direct link or YouTube URL) |
 | `--file` | one of url/file | Local video file (auto-uploaded) |
 | `--instruction` | no | What to look for or describe |
+| `--model` | no | Specific model ID |
+
+Exactly one of `--url` or `--file` is required.
+
+## audio-read
+
+Analyze audio: transcribe speech, describe sounds, answer questions about audio content. Supports direct audio URLs and YouTube links (audio is extracted automatically).
+
+```bash
+anycap actions audio-read --url https://example.com/recording.wav
+anycap actions audio-read --url https://www.youtube.com/watch?v=dQw4w9WgXcQ --instruction "Transcribe the lyrics"
+anycap actions audio-read --file ./meeting.mp3 --instruction "Summarize the main topics discussed"
+```
+
+Options:
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--url` | one of url/file | Audio URL (direct link or YouTube URL) |
+| `--file` | one of url/file | Local audio file (auto-uploaded) |
+| `--instruction` | no | What to listen for or describe |
 | `--model` | no | Specific model ID |
 
 Exactly one of `--url` or `--file` is required.
@@ -90,6 +112,6 @@ fi
 
 ## Tips
 
-- Without `--instruction`, models default to a general description. Specific instructions yield better results (e.g., "extract all text", "count the people", "describe the color palette").
+- Without `--instruction`, models default to a general description. Specific instructions yield better results (e.g., "extract all text", "count the people", "describe the color palette", "transcribe the speech").
 - Local files are automatically uploaded before processing. Large files may take longer.
 - Use `--model` only if you need a specific model. The default is generally the best available.

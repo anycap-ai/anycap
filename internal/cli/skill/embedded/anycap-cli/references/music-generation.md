@@ -113,6 +113,7 @@ Values are auto-parsed as JSON when possible:
 |---------|-----------|
 | `--param vocal_gender=f` | string `"f"` |
 | `--param make_instrumental=true` | boolean `true` |
+| `--param music_length_ms=30000` | integer `30000` |
 | `--param tags="rock,blues"` | string `"rock,blues"` |
 
 Note: `--instrumental`, `--tags`, `--title`, and `--lyrics` are convenience flags. The same values can be passed via `--param make_instrumental=true`, `--param tags=...`, etc.
@@ -163,12 +164,14 @@ anycap music generate --prompt "..." --model <model-id> | jq -r '.outputs[].loca
 ## Complete Example
 
 ```bash
-# Find a model
+# Find available models
 anycap music models
 
-# Check what parameters it accepts
+# Check what parameters a model accepts
 anycap music models suno-v5 schema
+anycap music models elevanlabs-music schema
 
+# --- Suno V5 ---
 # Generate with a descriptive prompt and tags
 anycap music generate \
   --prompt "chill lo-fi hip hop beat for studying" \
@@ -186,4 +189,18 @@ anycap music generate \
   --tags "pop,summer,upbeat" \
   --param vocal_gender=f \
   -o endless-summer.mp3
+
+# --- ElevenLabs Music ---
+# Generate with duration control (music_length_ms)
+anycap music generate \
+  --prompt "ambient electronic soundscape with ethereal pads" \
+  --model elevanlabs-music \
+  -o ambient-soundscape.mp3
+
+# Generate a 60-second clip
+anycap music generate \
+  --prompt "upbeat jazz piano trio" \
+  --model elevanlabs-music \
+  --param music_length_ms=60000 \
+  -o jazz-trio.mp3
 ```
