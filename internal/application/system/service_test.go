@@ -64,8 +64,8 @@ type fakeCallLogRepo struct {
 }
 
 type fakeUsageReader struct {
-	summary    model.UsageSummaryResult
-	events     model.UsageEventListResult
+	summary     model.UsageSummaryResult
+	events      model.UsageEventListResult
 	apiKeyUsage map[string]model.APIKeyUsageSummary
 }
 

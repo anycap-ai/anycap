@@ -45,5 +45,5 @@ changelog:
   disable: true
 
 snapshot:
-  version_template: "{{ .Tag }}-dev.{{ .ShortCommit }}"
+  version_template: "nightly"
 

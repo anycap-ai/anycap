@@ -14,10 +14,10 @@ type fakeAPIKeyRepo struct {
 	inserted []model.APIKey
 	found    model.APIKey
 	revoked  []string
-	listed    []string
-	disabled  []string
-	deleted   []string
-	keys      []model.APIKey
+	listed   []string
+	disabled []string
+	deleted  []string
+	keys     []model.APIKey
 }
 
 func (f *fakeAPIKeyRepo) Insert(_ context.Context, key model.APIKey) error {

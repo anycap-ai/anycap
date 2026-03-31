@@ -3,8 +3,8 @@
 #
 # Branch strategy:
 #   main / MR              -> lint + test
-#   main                   -> + CLI dev build (goreleaser snapshot, artifacts only)
 #   feat* / fix* / chore* -> lint + test
+#   dev/cli                -> lint + test + nightly CLI build + publish (skill + binary)
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
@@ -61,6 +61,10 @@ workflow:
         DEPLOY_ENV: "dev"
         APP_server_SAE_APP_NAME: "anycap-server"
         APP_server_SAE_APP_NAMESPACE: "kntech-dev"
+    # Dev CLI: nightly CLI build + skill/binary publish
+    - if: $CI_COMMIT_BRANCH == "dev/cli"
+      variables:
+        NIGHTLY: "true"
     # Deploy server to prod
     - if: $CI_COMMIT_BRANCH == "deploy/server-prod"
       variables:
@@ -123,7 +127,7 @@ deploy:dev:
   image: $CI_IMAGE
 
 # ---------------------------------------------------------------------------
-# Build: CLI dev binaries (goreleaser snapshot, on main)
+# Build: CLI dev binaries (goreleaser snapshot, on dev/cli)
 #
 # Produces cross-compiled binaries with DefaultEndpoint pointing to dev server.
 # ---------------------------------------------------------------------------
@@ -142,12 +146,50 @@ build:cli:dev:
     - |
       git config --global --add safe.directory "$CI_PROJECT_DIR"
       goreleaser release --clean --snapshot
+      # Flatten: keep macOS + linux binaries
+      find dist -name "anycap" -path "*darwin_amd64*" -exec cp {} anycap-darwin-amd64 \;
+      find dist -name "anycap" -path "*darwin_arm64*" -exec cp {} anycap-darwin-arm64 \;
+      find dist -name "anycap" -path "*linux_amd64*" -exec cp {} anycap-linux-amd64 \;
   artifacts:
     paths:
-      - dist/
-    expire_in: 7 days
+      - anycap-darwin-amd64
+      - anycap-darwin-arm64
+      - anycap-linux-amd64
+    expire_in: 1 day
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: '$NIGHTLY == "true"'
+
+# ---------------------------------------------------------------------------
+# Publish: Nightly CLI + skill to NexusHub (on dev/cli)
+#
+# Bundles linux-amd64 binary into skill directory and publishes as
+# anycap-cli-nightly. Production skill (anycap-cli) is NOT affected.
+# Requires CI variables: NEXUSHUB_BASE_URL, NEXUSHUB_API_TOKEN
+# Requires: project 138 allows CI_JOB_TOKEN from this project
+#           (Settings > CI/CD > Job token permissions)
+# ---------------------------------------------------------------------------
+
+publish:nightly:
+  stage: deploy
+  tags:
+    - docker
+  image: python:3.12-slim
+  needs:
+    - job: build:cli:dev
+      artifacts: true
+  before_script:
+    - pip install --quiet nexushub-client
+        --extra-index-url "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.knoffice.tech/api/v4/projects/138/packages/pypi/simple"
+  script:
+    - |
+      # Bundle linux-amd64 binary into skill directory
+      mkdir -p skills/anycap-cli/bin
+      cp anycap-linux-amd64 skills/anycap-cli/bin/anycap
+      chmod +x skills/anycap-cli/bin/anycap
+      # Publish as nightly (separate key, does NOT affect production anycap-cli)
+      nexushub-cli upload skills/anycap-cli -k anycap-cli-nightly --author "AnyCap Nightly"
+  rules:
+    - if: '$NIGHTLY == "true"'
 
 # ---------------------------------------------------------------------------
 # Build: CLI binaries (goreleaser, no publish)

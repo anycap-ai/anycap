@@ -40,20 +40,20 @@ type UsageSummaryResult struct {
 }
 
 type UsageEvent struct {
-	ID           string     `json:"id"`
-	APIKeyID     string     `json:"api_key_id,omitempty"`
-	ProductArea  string     `json:"product_area,omitempty"`
-	Action       string     `json:"action"`
-	Provider     string     `json:"provider,omitempty"`
-	ProviderRunID string    `json:"provider_run_id,omitempty"`
-	RequestID    string     `json:"request_id,omitempty"`
-	Status       string     `json:"status"`
-	EstimatedCost int64     `json:"estimated_cost,omitempty"`
-	FinalCost    int64      `json:"final_cost,omitempty"`
-	Quantity     int64      `json:"quantity,omitempty"`
-	Unit         string     `json:"unit,omitempty"`
-	OccurredAt   time.Time  `json:"occurred_at"`
-	CompletedAt  *time.Time `json:"completed_at,omitempty"`
+	ID            string     `json:"id"`
+	APIKeyID      string     `json:"api_key_id,omitempty"`
+	ProductArea   string     `json:"product_area,omitempty"`
+	Action        string     `json:"action"`
+	Provider      string     `json:"provider,omitempty"`
+	ProviderRunID string     `json:"provider_run_id,omitempty"`
+	RequestID     string     `json:"request_id,omitempty"`
+	Status        string     `json:"status"`
+	EstimatedCost int64      `json:"estimated_cost,omitempty"`
+	FinalCost     int64      `json:"final_cost,omitempty"`
+	Quantity      int64      `json:"quantity,omitempty"`
+	Unit          string     `json:"unit,omitempty"`
+	OccurredAt    time.Time  `json:"occurred_at"`
+	CompletedAt   *time.Time `json:"completed_at,omitempty"`
 }
 
 type UsageEventListResult struct {
