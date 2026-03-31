@@ -29,6 +29,7 @@ next-env.d.ts
 .env.local
 .env.preview
 .env.production
+.env.production.local
 .secrets.*
 !.secrets.example
 
@@ -43,3 +44,6 @@ next-env.d.ts
 # Public repo
 /anycap-github
 /external
+
+# AnyCap
+anycap.toml

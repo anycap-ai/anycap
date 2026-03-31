@@ -12,6 +12,42 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
+func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
+		return
+	}
+
+	view, err := h.service.GetShare(c, principal.UserID, nodeID)
+	if err != nil {
+		handlers.WriteError(ctx, statusCodeForDriveError(err), "get_drive_share_failed", err.Error())
+		return
+	}
+	if view == nil {
+		handlers.WriteSuccess(ctx, nil)
+		return
+	}
+
+	presented, err := h.presentDriveShareView(c, view)
+	if err != nil {
+		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_share_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(ctx, presented)
+}
+
 func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
 		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")

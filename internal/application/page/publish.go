@@ -26,7 +26,8 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 	if err != nil {
 		return nil, err
 	}
-	if currentVersion != nil && currentVersion.ID != targetVersion.ID && targetVersion.VersionNo <= currentVersion.VersionNo {
+	// Archived versions are cloned into a new (higher) version, so skip the forward check for them.
+	if currentVersion != nil && currentVersion.ID != targetVersion.ID && targetVersion.Status != model.PageVersionStatusArchived && targetVersion.VersionNo <= currentVersion.VersionNo {
 		return nil, model.ErrValidation("page version must move forward")
 	}
 	if targetVersion.Status != model.PageVersionStatusVerified && targetVersion.Status != model.PageVersionStatusPublished && targetVersion.Status != model.PageVersionStatusArchived {

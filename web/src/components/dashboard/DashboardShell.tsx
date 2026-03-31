@@ -20,10 +20,6 @@ const navSections: NavItem[][] = [
     { label: "Drive", href: "/dashboard/drive" },
     { label: "Pages", href: "/dashboard/pages" },
   ],
-  [
-    { label: "API Keys", href: "/dashboard/api-keys", disabled: true },
-    { label: "Settings", href: "/dashboard/settings", disabled: true },
-  ],
 ];
 
 const allItems = navSections.flat();
@@ -102,11 +98,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-[13px] whitespace-nowrap transition-colors ${
-                  isActive(item.href)
+                className={`text-[13px] whitespace-nowrap transition-colors ${isActive(item.href)
                     ? "text-[#1c1f17] font-medium"
                     : "text-[#6b7068] hover:text-[#3a3e32]"
-                }`}
+                  }`}
               >
                 {item.label}
               </Link>
@@ -147,11 +142,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`relative block px-4 py-3 rounded-[10px] text-[15px] transition-all duration-150 mb-0.5 ${
-                        isActive(item.href)
+                      className={`relative block px-4 py-3 rounded-[10px] text-[15px] transition-all duration-150 mb-0.5 ${isActive(item.href)
                           ? "text-[#1c1f17] font-medium bg-[rgba(107,125,58,0.10)]"
                           : "text-[#6b7068] hover:text-[#3a3e32] hover:bg-[rgba(107,125,58,0.07)]"
-                      }`}
+                        }`}
                     >
                       {isActive(item.href) && (
                         <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] bg-[#6b7d3a] rounded-r-sm" />
@@ -164,17 +158,37 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          {/* User + logout */}
+          {/* User area with hover dropdown */}
           <div className="px-7 py-6 border-t border-[#dce0d2]">
-            <div className="flex items-center gap-3 mb-4">
-              <UserAvatar user={user} size={36} />
-              <span className="text-[15px] text-[#4d5145] font-medium truncate">
-                {displayName}
-              </span>
+            <div className="relative group/user">
+              <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 group-hover/user:bg-[rgba(107,125,58,0.07)]">
+                <UserAvatar user={user} size={36} />
+                <span className="text-[15px] text-[#4d5145] font-medium truncate">
+                  {displayName}
+                </span>
+              </div>
+
+              {/* Dropdown */}
+              <div className="absolute left-full bottom-0 ml-2 z-30 opacity-0 scale-95 pointer-events-none group-hover/user:opacity-100 group-hover/user:scale-100 group-hover/user:pointer-events-auto transition-all duration-150 origin-bottom-left">
+                <div
+                  className="bg-white border border-[#d8dcd0] rounded-xl py-1.5 min-w-[160px]"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.08)" }}
+                >
+                  <span className="flex items-center justify-between px-4 py-2.5 text-[14px] text-[#b0b4a8] cursor-not-allowed">
+                    API keys
+                    <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+                  </span>
+                  <span className="flex items-center justify-between px-4 py-2.5 text-[14px] text-[#b0b4a8] cursor-not-allowed">
+                    Settings
+                    <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+                  </span>
+                  <hr className="my-1.5 border-[#eceee7] mx-3" />
+                  <LogoutButton className="w-full text-left px-4 py-2.5 text-[14px] text-[#6b7068] hover:text-[#1c1f17] hover:bg-[#f0f2eb] transition-colors duration-150 rounded-lg mx-auto block">
+                    Log out
+                  </LogoutButton>
+                </div>
+              </div>
             </div>
-            <LogoutButton
-              className="text-[14px] text-[#6b7068] hover:text-[#1c1f17] transition-colors"
-            />
           </div>
         </aside>
 

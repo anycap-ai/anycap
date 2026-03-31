@@ -107,6 +107,10 @@ export async function completeDriveFile(input: {
   return postWithAccessToken<DriveNode>("/v1/drive/files/complete", input);
 }
 
+export async function getDriveShare(nodeID: string) {
+  return fetchWithAccessToken<DriveShareView | null>(`/v1/drive/nodes/${nodeID}/share`);
+}
+
 export async function upsertDriveShare(
   nodeID: string,
   input: {

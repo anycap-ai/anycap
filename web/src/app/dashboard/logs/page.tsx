@@ -5,6 +5,7 @@ export const runtime = "edge";
 import { useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
+import StatusBadge from "@/components/dashboard/StatusBadge";
 
 
 function timeAgo(ts: string): string {
@@ -43,15 +44,7 @@ function LogRow({ item }: { item: TimelineItem }) {
         {item.model || "—"}
       </td>
       <td className={tdClass}>
-        <span
-          className={`font-medium ${
-            item.status === "ok" || item.status === "success"
-              ? "text-[#6b7d3a]"
-              : "text-[#c4442d]"
-          }`}
-        >
-          {item.status || "—"}
-        </span>
+        {item.status ? <StatusBadge status={item.status} /> : <span className="text-[#4d5145]">—</span>}
       </td>
       <td className={`${tdClass} text-right tabular-nums`}>
         <span className="text-[#4d5145]">
