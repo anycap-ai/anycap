@@ -426,9 +426,16 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 		t.Fatalf("expected v2 status published, got %s", publishedV2.Status)
 	}
 
-	_, err = service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
-	if err == nil || !strings.Contains(err.Error(), "move forward") {
-		t.Fatalf("expected move forward error, got %v", err)
+	// Archived v1 should be re-publishable via clone (new higher version).
+	republished, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
+	if err != nil {
+		t.Fatalf("PublishVersion(archived v1) error = %v", err)
+	}
+	if republished.ID == v1.ID {
+		t.Fatalf("expected cloned version, got same ID as v1")
+	}
+	if republished.VersionNo <= publishedV2.VersionNo {
+		t.Fatalf("expected version_no > %d, got %d", publishedV2.VersionNo, republished.VersionNo)
 	}
 
 	site, err := service.Unpublish(context.Background(), "u-1", 1)

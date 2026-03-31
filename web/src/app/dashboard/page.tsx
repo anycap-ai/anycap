@@ -88,37 +88,6 @@ function LastActivityCard({
   );
 }
 
-function ErrorCard({
-  summary,
-}: {
-  summary?: {
-    last_error_capability: string;
-    last_error_code: string;
-    last_error_occurred_at: string;
-  };
-}) {
-  return (
-    <StatCard label="Last Error">
-      {summary ? (
-        <>
-          <div className="flex items-center gap-2 flex-wrap">
-            <StatusBadge status={summary.last_error_code || summary.last_error_capability} variant="error" />
-            {summary.last_error_code && summary.last_error_capability && (
-              <span className="text-[15px] text-[#4d5145]">{summary.last_error_capability}</span>
-            )}
-          </div>
-          <p className="text-[15px] text-[#4d5145] mt-2.5">
-            {timeAgo(summary.last_error_occurred_at)}
-          </p>
-        </>
-      ) : (
-        <p className="text-[14px] text-[#6b7d3a] font-medium">
-          No errors
-        </p>
-      )}
-    </StatCard>
-  );
-}
 
 function ActivityRow({ item }: { item: TimelineItem }) {
   return (
@@ -156,8 +125,8 @@ export default function DashboardPage() {
 
       {/* Stats cards */}
       {isLoading || !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[0, 1, 2].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[0, 1].map((i) => (
             <div key={i} className="border border-[#d8dcd0] bg-white px-8 py-7 rounded-2xl">
               <Skeleton className="h-4 w-16 mb-6" />
               <Skeleton className="h-10 w-24 mb-3" />
@@ -166,10 +135,9 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <BalanceCard balance={data.balance} />
           <LastActivityCard summary={data.usage_summary} />
-          <ErrorCard summary={data.error_summary} />
         </div>
       )}
 
