@@ -33,11 +33,15 @@ export default function PagesPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={4} className="py-12 text-center text-[14px] text-[#7a7e71]">
-                  Loading...
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b border-[#eceee7]">
+                  {[0, 1, 2, 3].map((j) => (
+                    <td key={j} className="py-[15px] px-5">
+                      <div className="h-5 w-full bg-[#d0d4c8]/40 animate-pulse rounded" />
+                    </td>
+                  ))}
+                </tr>
+              ))
             ) : (data?.items?.length ?? 0) > 0 ? (
               data!.items.map((site) => (
                 <tr key={site.id} className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">

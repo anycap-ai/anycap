@@ -243,11 +243,25 @@ export default function DrivePage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={4} className="py-12 text-center text-[14px] text-[#7a7e71]">
-                  Loading...
-                </td>
-              </tr>
+              Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-[#eceee7]">
+                  <td className="py-[15px] px-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-5 w-5 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                      <div className="h-5 w-32 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                    </div>
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-16 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-28 bg-[#d0d4c8]/40 animate-pulse rounded" />
+                  </td>
+                  <td className="py-[15px] px-5">
+                    <div className="h-5 w-24 bg-[#d0d4c8]/40 animate-pulse rounded ml-auto" />
+                  </td>
+                </tr>
+              ))
             ) : rows.length > 0 || folderIds.length > 0 ? (
               <>
               {folderIds.length > 0 && (
