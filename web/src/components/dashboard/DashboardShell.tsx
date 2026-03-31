@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { HoverDropdown, dropdownItemClass, dropdownDisabledClass, dropdownDividerClass } from "@/components/HoverDropdown";
 import { useUser } from "@/lib/api/hooks";
 
 
@@ -160,35 +161,30 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {/* User area with hover dropdown */}
           <div className="px-7 py-6 border-t border-[#dce0d2]">
-            <div className="relative group/user">
-              <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 group-hover/user:bg-[rgba(107,125,58,0.07)]">
-                <UserAvatar user={user} size={36} />
-                <span className="text-[15px] text-[#4d5145] font-medium truncate">
-                  {displayName}
-                </span>
-              </div>
-
-              {/* Dropdown */}
-              <div className="absolute left-full bottom-0 ml-2 z-30 opacity-0 scale-95 pointer-events-none group-hover/user:opacity-100 group-hover/user:scale-100 group-hover/user:pointer-events-auto transition-all duration-150 origin-bottom-left">
-                <div
-                  className="bg-white border border-[#d8dcd0] rounded-xl py-1.5 min-w-[160px]"
-                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.08)" }}
-                >
-                  <span className="flex items-center justify-between px-4 py-2.5 text-[14px] text-[#b0b4a8] cursor-not-allowed">
-                    API keys
-                    <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+            <HoverDropdown
+              positionClass="absolute left-full bottom-0 ml-2 z-30 origin-bottom-left"
+              trigger={() => (
+                <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 hover:bg-[rgba(107,125,58,0.07)]">
+                  <UserAvatar user={user} size={36} />
+                  <span className="text-[15px] text-[#4d5145] font-medium truncate">
+                    {displayName}
                   </span>
-                  <span className="flex items-center justify-between px-4 py-2.5 text-[14px] text-[#b0b4a8] cursor-not-allowed">
-                    Settings
-                    <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
-                  </span>
-                  <hr className="my-1.5 border-[#eceee7] mx-3" />
-                  <LogoutButton className="w-full text-left px-4 py-2.5 text-[14px] text-[#6b7068] hover:text-[#1c1f17] hover:bg-[#f0f2eb] transition-colors duration-150 rounded-lg mx-auto block">
-                    Log out
-                  </LogoutButton>
                 </div>
-              </div>
-            </div>
+              )}
+            >
+              <span className={dropdownDisabledClass}>
+                API keys
+                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+              </span>
+              <span className={dropdownDisabledClass}>
+                Settings
+                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
+              </span>
+              <hr className={dropdownDividerClass} />
+              <LogoutButton className={`w-full text-left ${dropdownItemClass}`}>
+                Log out
+              </LogoutButton>
+            </HoverDropdown>
           </div>
         </aside>
 
