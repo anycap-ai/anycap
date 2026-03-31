@@ -233,7 +233,7 @@ export default function CliPage() {
                   className="text-[11px] tracking-[0.5px] text-[#6b7d3a] transition-colors hover:text-[#1c1f17]"
                   style={mono}
                 >
-                  View all capabilities →
+                  View any capability →
                 </Link>
               </div>
             </section>

@@ -49,7 +49,7 @@ const comparisons = [
   },
   {
     dimension: "Auth model",
-    anycap: "Single login for all capabilities",
+    anycap: "Single login for any capability",
     composio: "Per-tool OAuth and API key management",
   },
   {
@@ -135,7 +135,7 @@ export default function AnycapVsComposioPage() {
               </li>
               <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                You use Claude Code, Cursor, or similar agent products and want one install for all capabilities
+                You use Claude Code, Cursor, or similar agent products and want one install for any capability
               </li>
               <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
@@ -143,7 +143,7 @@ export default function AnycapVsComposioPage() {
               </li>
               <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                You want single auth for all capabilities instead of per-tool OAuth
+                You want single auth for any capability instead of per-tool OAuth
               </li>
             </ul>
           </section>
@@ -203,7 +203,7 @@ export default function AnycapVsComposioPage() {
               >
                 Request Early Access
               </a>
-              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>All Capabilities</Link>
+              <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Any Capability</Link>
             </div>
           </section>
         </FadeIn>
