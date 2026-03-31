@@ -46,7 +46,8 @@ export default function PageDetailPage() {
   const [accessMode, setAccessMode] = useState<PageAccessMode>("public");
   const [spaFallback, setSpaFallback] = useState(false);
   const [password, setPassword] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<string | null>(null);
+  const saving = savingAction != null;
   const [previewingVersionID, setPreviewingVersionID] = useState<string | null>(null);
   const [confirmPublishVersionID, setConfirmPublishVersionID] = useState<string | null>(null);
   const [confirmUnpublish, setConfirmUnpublish] = useState(false);
@@ -61,7 +62,7 @@ export default function PageDetailPage() {
 
   async function onSave() {
     if (!data) return;
-    setSaving(true);
+    setSavingAction("save");
     try {
       const patch: Record<string, unknown> = {
         name,
@@ -81,13 +82,13 @@ export default function PageDetailPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
-      setSaving(false);
+      setSavingAction(null);
     }
   }
 
   async function onClearPassword() {
     if (!data) return;
-    setSaving(true);
+    setSavingAction("clearPassword");
     try {
       await updatePageSite(data.id, { no_password: true });
       setPassword("");
@@ -95,7 +96,7 @@ export default function PageDetailPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear password");
     } finally {
-      setSaving(false);
+      setSavingAction(null);
     }
   }
 
@@ -252,8 +253,8 @@ export default function PageDetailPage() {
 
             <div className="mt-6">
               <button className={`${btnPrimary} inline-flex items-center gap-2`} onClick={onSave} disabled={saving}>
-                {saving && <Spinner size={14} />}
-                {saving ? "Saving..." : "Save Settings"}
+                {savingAction === "save" && <Spinner size={14} />}
+                {savingAction === "save" ? "Saving..." : "Save Settings"}
               </button>
             </div>
           </section>
