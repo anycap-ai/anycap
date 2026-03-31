@@ -256,44 +256,23 @@ func nodeToModelSpec(node *atomicNodeDTO, capability model.Capability) *model.Mo
 	}
 
 	modelID := resolveModelID(node)
-	ops := deriveOperations(capability, node)
-	if len(ops) == 0 {
+	operationSpecs := deriveOperationSpecs(capability, node)
+	if len(operationSpecs) == 0 {
 		return nil
 	}
 
-	routes := []model.RouteBinding{{
-		RouteType:  model.RouteTypeDirect,
-		AbilityKey: node.AbilityKey,
-		GenType:    string(capability),
-		Region:     node.Region,
-		Priority:   100,
-		Enabled:    true,
-	}}
-
-	operationSpecs := make(map[model.Operation]model.OperationSpec, len(ops))
-	for _, op := range ops {
-		spec := model.OperationSpec{
-			Routes: routes,
-		}
-		if node.OperationSchemas != nil {
-			if s, ok := node.OperationSchemas[string(op)]; ok {
-				if m, ok := s.(map[string]any); ok {
-					spec.RequestHints = m
-				}
-			}
-		}
-		// Enrich RequestHints with capability-level constraints that may
-		// not be present in operation_schemas (e.g. supported_durations).
-		enrichHintsFromCapabilities(&spec, capability, node)
-		operationSpecs[op] = spec
+	displayName := node.Name
+	if displayName == "" {
+		displayName = modelID
 	}
 
 	return &model.ModelSpec{
-		ModelID:     modelID,
-		Capability:  capability,
-		DisplayName: node.Name,
-		Status:      node.State,
-		Operations:  operationSpecs,
+		ModelID:          modelID,
+		Capability:       capability,
+		DisplayName:      displayName,
+		ModelDescription: node.Description,
+		Status:           node.State,
+		Operations:       operationSpecs,
 	}
 }
 
@@ -340,12 +319,12 @@ func enrichHintsFromCapabilities(spec *model.OperationSpec, capability model.Cap
 	}
 }
 
-func deriveOperations(capability model.Capability, node *atomicNodeDTO) []model.Operation {
+func deriveOperationSpecs(capability model.Capability, node *atomicNodeDTO) map[model.Operation]model.OperationSpec {
 	if node.Capabilities == nil {
 		return nil
 	}
 
-	var ops []model.Operation
+	operationSpecs := make(map[model.Operation]model.OperationSpec)
 
 	switch capability {
 	case model.CapabilityImage:
@@ -353,14 +332,23 @@ func deriveOperations(capability model.Capability, node *atomicNodeDTO) []model.
 			return nil
 		}
 		img := node.Capabilities.Image
+		generateSpec := newOperationSpec(node, model.OperationGenerate)
 		if img.SupportsText2Img {
-			ops = append(ops, model.OperationGenerate)
+			addModeRoute(&generateSpec, node, capability, model.ModeTextToImage, "Text to Image", "txt_2_img")
 		}
-		if img.SupportsImg2Img || img.SupportsImageEdit {
-			ops = append(ops, model.OperationEdit)
+		if algoType := preferredImageToImageAlgoType(img); algoType != "" {
+			addModeRoute(&generateSpec, node, capability, model.ModeImageToImage, "Image to Image", algoType)
 		}
+		if len(generateSpec.Routes) > 0 {
+			enrichHintsFromCapabilities(&generateSpec, capability, node)
+			operationSpecs[model.OperationGenerate] = generateSpec
+		}
+
 		if img.SupportsUltraImg {
-			ops = append(ops, model.OperationUpscale)
+			upscaleSpec := newOperationSpec(node, model.OperationUpscale)
+			addRoute(&upscaleSpec, node, capability, "", "ultra_img")
+			enrichHintsFromCapabilities(&upscaleSpec, capability, node)
+			operationSpecs[model.OperationUpscale] = upscaleSpec
 		}
 
 	case model.CapabilityVideo:
@@ -368,25 +356,123 @@ func deriveOperations(capability model.Capability, node *atomicNodeDTO) []model.
 			return nil
 		}
 		vid := node.Capabilities.Video
+		generateSpec := newOperationSpec(node, model.OperationGenerate)
 		if vid.SupportsText2Video {
-			ops = append(ops, model.OperationGenerate)
+			addModeRoute(&generateSpec, node, capability, model.ModeTextToVideo, "Text to Video", "txt_2_video")
 		}
-		if vid.SupportsImg2Video {
-			ops = append(ops, model.OperationFromImage)
+		if algoType := preferredImageToVideoAlgoType(vid); algoType != "" {
+			addModeRoute(&generateSpec, node, capability, model.ModeImageToVideo, "Image to Video", algoType)
+		}
+		if len(generateSpec.Routes) > 0 {
+			enrichHintsFromCapabilities(&generateSpec, capability, node)
+			operationSpecs[model.OperationGenerate] = generateSpec
+		}
+
+		if vid.SupportsUltraVideo {
+			upscaleSpec := newOperationSpec(node, model.OperationUpscale)
+			addRoute(&upscaleSpec, node, capability, "", "ultra_video")
+			enrichHintsFromCapabilities(&upscaleSpec, capability, node)
+			operationSpecs[model.OperationUpscale] = upscaleSpec
 		}
 
 	case model.CapabilityAudio:
-		ops = append(ops, model.OperationSpeak)
+		speakSpec := newOperationSpec(node, model.OperationSpeak)
+		addRoute(&speakSpec, node, capability, "", "speak")
+		operationSpecs[model.OperationSpeak] = speakSpec
 
 	case model.CapabilityMusic:
 		if node.Capabilities.Music == nil {
 			return nil
 		}
 		music := node.Capabilities.Music
+		generateSpec := newOperationSpec(node, model.OperationGenerate)
 		if music.SupportsText2Music || music.SupportsCustomMusic || music.SupportsContinueMusic {
-			ops = append(ops, model.OperationGenerate)
+			addModeRoute(&generateSpec, node, capability, model.ModeTextToMusic, "Text to Music", "text_2_music")
+		}
+		if len(generateSpec.Routes) > 0 {
+			operationSpecs[model.OperationGenerate] = generateSpec
 		}
 	}
 
-	return ops
+	if len(operationSpecs) == 0 {
+		return nil
+	}
+	return operationSpecs
+}
+
+func newOperationSpec(node *atomicNodeDTO, operation model.Operation) model.OperationSpec {
+	spec := model.OperationSpec{}
+	if node == nil || node.OperationSchemas == nil {
+		return spec
+	}
+	if schema, ok := node.OperationSchemas[string(operation)]; ok {
+		if hints, ok := schema.(map[string]any); ok {
+			spec.RequestHints = hints
+		}
+	}
+	return spec
+}
+
+func addModeRoute(spec *model.OperationSpec, node *atomicNodeDTO, capability model.Capability, mode model.Mode, description, algoType string) {
+	if spec == nil {
+		return
+	}
+	addRoute(spec, node, capability, mode, algoType)
+	for _, existing := range spec.Modes {
+		if existing.Mode == mode {
+			return
+		}
+	}
+	spec.Modes = append(spec.Modes, model.ModeSpec{
+		Mode:        mode,
+		Description: description,
+	})
+}
+
+func addRoute(spec *model.OperationSpec, node *atomicNodeDTO, capability model.Capability, mode model.Mode, algoType string) {
+	if spec == nil || node == nil {
+		return
+	}
+	spec.Routes = append(spec.Routes, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: node.AbilityKey,
+		GenType:    string(capability),
+		AlgoType:   algoType,
+		Mode:       mode,
+		Region:     node.Region,
+		Priority:   100,
+		Enabled:    true,
+	})
+}
+
+func preferredImageToImageAlgoType(img *imageCapabilitiesDTO) string {
+	switch {
+	case img == nil:
+		return ""
+	case img.SupportsImg2Img:
+		return "img_2_img"
+	case img.SupportsImageEdit:
+		return "img_edit"
+	case img.SupportsMultiRef2Img:
+		return "multi_ref_2_img"
+	case img.SupportsGroupImgGen:
+		return "group_img_gen"
+	default:
+		return ""
+	}
+}
+
+func preferredImageToVideoAlgoType(vid *videoCapabilitiesDTO) string {
+	switch {
+	case vid == nil:
+		return ""
+	case vid.SupportsImg2Video:
+		return "img_2_video"
+	case vid.SupportsRef2Video:
+		return "ref_2_video"
+	case vid.SupportsFirstLast2Video:
+		return "first_last_2_video"
+	default:
+		return ""
+	}
 }

@@ -26,42 +26,48 @@ func (s *stubRepo) GetModelRoute(_ context.Context, id int64) (*model.ModelRoute
 
 func (s *stubRepo) CreateModelRoute(_ context.Context, input model.CreateModelRouteInput) (*model.ModelRoute, error) {
 	item := model.ModelRoute{
-		ID:          1,
-		ModelID:     input.ModelID,
-		Capability:  input.Capability,
-		Operation:   input.Operation,
-		AbilityKey:  input.AbilityKey,
-		AlgoType:    input.AlgoType,
-		DisplayName: input.DisplayName,
-		RouteType:   input.RouteType,
-		Region:      input.Region,
-		Tier:        input.Tier,
-		Env:         input.Env,
-		Priority:    input.Priority,
-		Enabled:     boolValue(input.Enabled),
-		Status:      input.Status,
-		Extra:       input.Extra,
+		ID:               1,
+		ModelID:          input.ModelID,
+		Capability:       input.Capability,
+		Operation:        input.Operation,
+		AbilityKey:       input.AbilityKey,
+		AlgoType:         input.AlgoType,
+		Mode:             input.Mode,
+		DisplayName:      input.DisplayName,
+		ModeDescription:  input.ModeDescription,
+		ModelDescription: input.ModelDescription,
+		RouteType:        input.RouteType,
+		Region:           input.Region,
+		Tier:             input.Tier,
+		Env:              input.Env,
+		Priority:         input.Priority,
+		Enabled:          boolValue(input.Enabled),
+		Status:           input.Status,
+		Extra:            input.Extra,
 	}
 	return &item, nil
 }
 
 func (s *stubRepo) UpdateModelRoute(_ context.Context, id int64, input model.UpdateModelRouteInput) (*model.ModelRoute, error) {
 	item := model.ModelRoute{
-		ID:          id,
-		ModelID:     input.ModelID,
-		Capability:  input.Capability,
-		Operation:   input.Operation,
-		AbilityKey:  input.AbilityKey,
-		AlgoType:    input.AlgoType,
-		DisplayName: input.DisplayName,
-		RouteType:   input.RouteType,
-		Region:      input.Region,
-		Tier:        input.Tier,
-		Env:         input.Env,
-		Priority:    input.Priority,
-		Enabled:     boolValue(input.Enabled),
-		Status:      input.Status,
-		Extra:       input.Extra,
+		ID:               id,
+		ModelID:          input.ModelID,
+		Capability:       input.Capability,
+		Operation:        input.Operation,
+		AbilityKey:       input.AbilityKey,
+		AlgoType:         input.AlgoType,
+		Mode:             input.Mode,
+		DisplayName:      input.DisplayName,
+		ModeDescription:  input.ModeDescription,
+		ModelDescription: input.ModelDescription,
+		RouteType:        input.RouteType,
+		Region:           input.Region,
+		Tier:             input.Tier,
+		Env:              input.Env,
+		Priority:         input.Priority,
+		Enabled:          boolValue(input.Enabled),
+		Status:           input.Status,
+		Extra:            input.Extra,
 	}
 	return &item, nil
 }
@@ -98,6 +104,9 @@ func TestServiceCreateDefaults(t *testing.T) {
 	}
 	if !route.Enabled {
 		t.Fatal("expected enabled to default true")
+	}
+	if route.Mode != model.ModeTextToImage {
+		t.Fatalf("expected mode to backfill from algo_type, got %s", route.Mode)
 	}
 }
 
@@ -145,6 +154,41 @@ func TestServiceCreatePreservesExplicitRouteSettings(t *testing.T) {
 	}
 	if route.Enabled {
 		t.Fatal("expected route to remain disabled")
+	}
+}
+
+func TestServiceCreateBackfillsAlgoTypeFromMode(t *testing.T) {
+	service := NewService(&stubRepo{})
+
+	route, err := service.Create(context.Background(), model.CreateModelRouteInput{
+		ModelID:    "veo-3.1",
+		Capability: model.CapabilityVideo,
+		Operation:  model.OperationGenerate,
+		AbilityKey: "google_veo_3_1",
+		Mode:       model.ModeImageToVideo,
+	})
+	if err != nil {
+		t.Fatalf("create route: %v", err)
+	}
+
+	if route.AlgoType != "img_2_video" {
+		t.Fatalf("expected algo_type to backfill from mode, got %s", route.AlgoType)
+	}
+}
+
+func TestServiceCreateRejectsMismatchedModeAndAlgoType(t *testing.T) {
+	service := NewService(&stubRepo{})
+
+	_, err := service.Create(context.Background(), model.CreateModelRouteInput{
+		ModelID:    "veo-3.1",
+		Capability: model.CapabilityVideo,
+		Operation:  model.OperationGenerate,
+		AbilityKey: "google_veo_3_1",
+		Mode:       model.ModeImageToVideo,
+		AlgoType:   "txt_2_video",
+	})
+	if err == nil {
+		t.Fatal("expected validation error")
 	}
 }
 
