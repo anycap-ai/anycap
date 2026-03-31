@@ -2,10 +2,10 @@
 
 Generate images from text prompts or edit existing images. Models support different **operations** -- each operation is a distinct CLI subcommand:
 
-| Operation  | Command                 | Description                                                |
-| ---------- | ----------------------- | ---------------------------------------------------------- |
+| Operation | Command | Description |
+|-----------|---------|-------------|
 | `generate` | `anycap image generate` | Create images from text or transform with reference images |
-| `edit`     | `anycap image edit`     | Edit existing images using text prompts                    |
+| `edit` | `anycap image edit` | Edit existing images using text prompts |
 
 Which operations a model supports is defined in the model catalog. Use `image models` to discover available operations per model.
 
@@ -42,9 +42,9 @@ Models support different **operations** and **modes**:
 anycap image models <model-id> | jq -r '.model.operations[] | "\(.operation): \(.modes[].mode)"'
 ```
 
-| Mode             | Description                         |
-| ---------------- | ----------------------------------- |
-| `text-to-image`  | Generate image from text prompt     |
+| Mode | Description |
+|------|-------------|
+| `text-to-image` | Generate image from text prompt |
 | `image-to-image` | Edit or transform a reference image |
 
 ### Step 2: Check parameter schema (important)
@@ -148,25 +148,25 @@ anycap image edit \
 
 ### Flags (shared by generate and edit)
 
-| Flag           | Required | Description                                                                       |
-| -------------- | -------- | --------------------------------------------------------------------------------- |
-| `--prompt`     | yes      | Text description of what to generate or how to edit                               |
-| `--model`      | yes      | Model ID from `image models`                                                      |
-| `--mode`       | no       | Mode (e.g. `text-to-image`, `image-to-image`). Inferred if omitted                |
-| `--param`      | no       | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
-| `-o, --output` | no       | Custom output path (default: current directory)                                   |
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--prompt` | yes | Text description of what to generate or how to edit |
+| `--model` | yes | Model ID from `image models` |
+| `--mode` | no | Mode (e.g. `text-to-image`, `image-to-image`). Inferred if omitted |
+| `--param` | no | Parameter as `key=value` (repeatable); discover via `image models <model> schema` |
+| `-o, --output` | no | Custom output path (default: current directory) |
 
 ### --param value types
 
 Values are auto-parsed as JSON when possible:
 
-| Example                            | Parsed as                                    |
-| ---------------------------------- | -------------------------------------------- |
-| `--param aspect_ratio=16:9`        | string `"16:9"`                              |
-| `--param duration=5`               | number `5`                                   |
-| `--param hd=true`                  | boolean `true`                               |
-| `--param negative_prompt="blurry"` | string `"blurry"`                            |
-| `--param images='["url1","url2"]'` | array `["url1","url2"]`                      |
+| Example | Parsed as |
+|---------|-----------|
+| `--param aspect_ratio=16:9` | string `"16:9"` |
+| `--param duration=5` | number `5` |
+| `--param hd=true` | boolean `true` |
+| `--param negative_prompt="blurry"` | string `"blurry"` |
+| `--param images='["url1","url2"]'` | array `["url1","url2"]` |
 | `--param images=/path/to/file.png` | local file (auto-uploaded, wrapped to array) |
 
 File-or-url parameters (like `images`) accept local file paths or HTTP URLs. Local files are auto-uploaded. If a local path does not exist, the CLI returns an error.
@@ -179,13 +179,13 @@ The output is a flat JSON object optimized for agent consumption:
 {"status":"success","local_path":"/absolute/path/to/img.png","model":"seedream-5","credits_used":1,"request_id":"req_abc123"}
 ```
 
-| Field          | Description                                |
-| -------------- | ------------------------------------------ |
-| `status`       | `"success"` or `"error"`                   |
-| `local_path`   | Absolute path to the downloaded image file |
-| `model`        | Model ID used                              |
-| `credits_used` | Number of credits consumed                 |
-| `request_id`   | Server request ID for debugging            |
+| Field | Description |
+|-------|-------------|
+| `status` | `"success"` or `"error"` |
+| `local_path` | Absolute path to the downloaded image file |
+| `model` | Model ID used |
+| `credits_used` | Number of credits consumed |
+| `request_id` | Server request ID for debugging |
 
 Extract the local file path:
 

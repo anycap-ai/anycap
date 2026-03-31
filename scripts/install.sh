@@ -99,11 +99,18 @@ resolve_version() {
   fi
 
   info "Resolving latest version..."
-  local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
-  local response
-  response=$(fetch_stdout "$api_url") || abort "Failed to fetch release info from GitHub"
+  # Use the GitHub releases/latest redirect to resolve the tag.
+  # This avoids the API rate limit (60 req/hr for unauthenticated requests).
+  local redirect_url
+  if has_cmd curl; then
+    redirect_url=$(curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/${GITHUB_REPO}/releases/latest" 2>/dev/null)
+  elif has_cmd wget; then
+    redirect_url=$(wget --max-redirect=10 -qS -O /dev/null "https://github.com/${GITHUB_REPO}/releases/latest" 2>&1 | grep -i '^  Location:' | tail -1 | awk '{print $2}' | tr -d '\r')
+  else
+    abort "curl or wget is required"
+  fi
 
-  TAG=$(printf '%s' "$response" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name" *: *"\([^"]*\)".*/\1/')
+  TAG=$(printf '%s' "$redirect_url" | sed 's|.*/tag/||')
 
   if [ -z "$TAG" ]; then
     abort "Failed to determine latest version. Set ANYCAP_VERSION to install a specific version."

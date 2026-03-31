@@ -8,7 +8,7 @@ Most tasks need only one folder tree. If you are uploading files to a single pro
 
 Use **named targets** only when you need to switch between different drive folder bindings from the same directory (e.g., a production folder and an archive folder). This is an advanced pattern.
 
-______________________________________________________________________
+---
 
 ## Quick Start (No Config Needed)
 
@@ -96,7 +96,7 @@ Output:
 }
 ```
 
-______________________________________________________________________
+---
 
 ## Named Targets (Multiple Folder Bindings)
 
@@ -114,7 +114,7 @@ path = "/archive"
 
 This is an advanced pattern. For most workflows, path-based access (`--parent-path`) is sufficient and simpler.
 
-______________________________________________________________________
+---
 
 ## Typical Agent Workflow
 
