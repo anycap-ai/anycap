@@ -39,6 +39,10 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	// Merge schema field names with legacy field names.
+	images := payload.EffectiveImages()
+	aspectRatio := payload.EffectiveAspectRatio()
+
 	result, err := h.service.Generate(c, model.GenerateImageRequest{
 		RequestID:          middleware.GetRequestID(ctx),
 		UserID:             principal.UserID,
@@ -47,9 +51,9 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Model:              payload.Model,
 		Mode:               model.Mode(payload.Mode),
 		NegativePrompt:     payload.NegativePrompt,
-		Ratio:              payload.Ratio,
+		Ratio:              aspectRatio,
 		Resolution:         payload.Resolution,
-		ReferenceImageURLs: append([]string(nil), payload.ReferenceImageURLs...),
+		ReferenceImageURLs: images,
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
