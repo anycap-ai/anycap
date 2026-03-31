@@ -271,6 +271,7 @@ func newImageOperationCmd(clientFactory func() *httpclient.Client, stdout io.Wri
 	cmd.Flags().StringVar(&mode, "mode", "", "Generation mode (e.g. text-to-image, image-to-image)")
 	cmd.Flags().StringArrayVar(&params, "param", nil, "Parameter as key=value (repeatable); discover params via 'image models <model> schema'")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save generated image to this path (default: current directory)")
+	_ = cmd.MarkFlagRequired("prompt")
 	_ = cmd.MarkFlagRequired("model")
 
 	return cmd

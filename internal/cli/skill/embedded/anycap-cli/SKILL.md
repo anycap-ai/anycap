@@ -94,19 +94,21 @@ AnyCap capabilities are organized into two groups: **generation** (create new co
 
 ### Generation Workflow
 
-All generation capabilities (image, video, music) follow the same three-step pattern:
+Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`, `edit`) as CLI subcommands:
 
 ```
 1. Discover models    anycap {cap} models
-2. Check schema       anycap {cap} models <model> schema [--mode <mode>]
-3. Generate           anycap {cap} generate --model <model> [--mode <mode>] --prompt "..."
+2. Check schema       anycap {cap} models <model> schema [--operation <op>] [--mode <mode>]
+3. Run operation      anycap {cap} {operation} --model <model> [--mode <mode>] --prompt "..."
 ```
 
-**Modes** describe the input/output modality of a generation. A model may support multiple modes (e.g., `text-to-video` and `image-to-video`). When a model has only one mode, it is inferred automatically. When multiple modes exist, pass `--mode` explicitly or the server infers from request content.
+**Operations** are the top-level actions (generate, edit, etc.). Which operations a model supports is defined in the catalog.
+
+**Modes** describe the input/output modality within an operation (e.g., `text-to-image`, `image-to-image`). When only one mode exists, it is inferred automatically.
 
 Generated files are auto-downloaded to the current directory. Always use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 
-**Local file upload:** For parameters that accept files (e.g., reference images for image-to-image or image-to-video), you can pass a local file path directly. The CLI automatically uploads it and substitutes the URL. A single path for an array parameter is auto-wrapped into an array.
+**Local file upload:** For parameters that accept files (e.g., reference images), pass a local file path directly. The CLI auto-uploads it. If a file does not exist, the CLI returns an error.
 
 ```bash
 # Instead of constructing a JSON URL array:
@@ -115,10 +117,10 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
   --param images=/path/to/photo.png
 ```
 
-| Capability | Reference | Modes | Typical duration |
-|------------|-----------|-------|------------------|
-| Image | [generation.md](references/generation.md) | `text-to-image`, `image-to-image` | 5-30s |
-| Video | [video-generation.md](references/video-generation.md) | `text-to-video`, `image-to-video` | 30-120s |
+| Capability | Reference | Operations | Typical duration |
+|------------|-----------|------------|------------------|
+| Image | [generation.md](references/generation.md) | `generate`, `edit` | 5-30s |
+| Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
 
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
@@ -225,7 +227,10 @@ anycap image models | jq -r '.models[].model'
 anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
 
 # Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model seedream-5 -o descriptive-name.png | jq -r '.local_path'
+anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
+
+# Edit an existing image
+anycap image edit --prompt "remove the background" --model seedream-5 --param images=./photo.png -o edited.png | jq -r '.local_path'
 
 # Generate a video (text-to-video, mode inferred) and get its path
 anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
