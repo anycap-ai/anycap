@@ -24,7 +24,8 @@ export function DriveSharePanel({
   const [noExpire, setNoExpire] = useState(false);
   const [password, setPassword] = useState("");
   const [noPassword, setNoPassword] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const busy = busyAction != null;
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +37,7 @@ export function DriveSharePanel({
     setNoExpire(false);
     setPassword("");
     setNoPassword(false);
-    setBusy(false);
+    setBusyAction(null);
     setLoading(false);
     setCopied(false);
   }
@@ -86,7 +87,7 @@ export function DriveSharePanel({
 
   async function onCreate() {
     if (!node) return;
-    setBusy(true);
+    setBusyAction("create");
     try {
       const result = await upsertDriveShare(node.id, {});
       setShareURL(result.url);
@@ -96,13 +97,13 @@ export function DriveSharePanel({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onSaveSettings() {
     if (!node) return;
-    setBusy(true);
+    setBusyAction("save");
     try {
       if (password.trim() !== "" && noPassword) {
         throw new Error("Password and remove password cannot be used together");
@@ -129,13 +130,13 @@ export function DriveSharePanel({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onRotate() {
     if (!node) return;
-    setBusy(true);
+    setBusyAction("rotate");
     try {
       const result = await rotateDriveShare(node.id);
       setShareURL(result.url);
@@ -145,13 +146,13 @@ export function DriveSharePanel({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to rotate share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function onRevoke() {
     if (!node) return;
-    setBusy(true);
+    setBusyAction("revoke");
     try {
       await revokeDriveShare(node.id);
       setShareURL("");
@@ -163,7 +164,7 @@ export function DriveSharePanel({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to revoke share");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -244,7 +245,7 @@ export function DriveSharePanel({
           </button>
         </div>
       ) : (
-        <ModalButton onClick={onCreate} busy={busy} variant="primary">
+        <ModalButton onClick={onCreate} busy={busyAction === "create"} disabled={busy} variant="primary">
           Create share link
         </ModalButton>
       )}
@@ -307,7 +308,7 @@ export function DriveSharePanel({
               <span className="text-[13px] text-[#3a3e32]">Remove password</span>
             </label>
 
-            <ModalButton onClick={onSaveSettings} busy={busy} variant="primary">
+            <ModalButton onClick={onSaveSettings} busy={busyAction === "save"} disabled={busy} variant="primary">
               Save settings
             </ModalButton>
           </div>
@@ -315,10 +316,10 @@ export function DriveSharePanel({
           <hr className="my-5 border-[#dce0d2]" />
 
           <ModalActions>
-            <ModalButton onClick={onRotate} busy={busy}>
+            <ModalButton onClick={onRotate} busy={busyAction === "rotate"} disabled={busy}>
               Rotate link
             </ModalButton>
-            <ModalButton onClick={onRevoke} busy={busy} variant="danger">
+            <ModalButton onClick={onRevoke} busy={busyAction === "revoke"} disabled={busy} variant="danger">
               Revoke
             </ModalButton>
           </ModalActions>
