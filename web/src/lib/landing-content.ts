@@ -1,8 +1,6 @@
 import {
   buildLocalizedPath,
   defaultLocale,
-  earlyAccessCapabilitySummary,
-  roadmapCapabilitySummary,
   siteConfig,
   type SiteLocale,
 } from "@/lib/site";
@@ -11,6 +9,7 @@ export type Block =
   | { type: "text"; content: string }
   | { type: "code"; content: string }
   | { type: "h3"; content: string }
+  | { type: "list"; items: string[] }
   | { type: "table"; headers: string[]; rows: string[][] }
   | { type: "links"; items: { label: string; url: string; note?: string }[] };
 
@@ -26,197 +25,144 @@ export interface LandingContent {
   sections: Section[];
 }
 
-const localizedHomePath = buildLocalizedPath(defaultLocale, "/");
 const localizedForHumanPath = buildLocalizedPath(defaultLocale, "/for-human");
-const localizedCliPath = buildLocalizedPath(defaultLocale, "/cli");
-const localizedCapabilitiesPath = buildLocalizedPath(defaultLocale, "/capabilities");
-const localizedForClaudeCodePath = buildLocalizedPath(defaultLocale, "/for/claude-code");
-const localizedInstallGuidePath = buildLocalizedPath(defaultLocale, "/guides/install-anycap");
 
 export const landingContents: Record<SiteLocale, LandingContent> = {
   en: {
-    title: "AnyCap Agent CLI",
-    tagline: "Image, video, and vision capabilities. One command.",
+    title: "AnyCap",
+    tagline: "One CLI. Any capability you're missing.",
     description: siteConfig.defaultDescription,
     sections: [
       {
-        title: "What Is AnyCap?",
+        title: "What Is AnyCap",
         blocks: [
           {
             type: "text",
             content:
-              "AnyCap is an agent-native capability runtime that lets AI agents install and use image generation, video generation, image understanding, and video analysis through one CLI and one interface.",
-          },
-          {
-            type: "text",
-            content:
-              `If you are looking for an agent CLI, AnyCap is the installable entry point. If you are defining the category, AnyCap is a capability runtime for AI agents built from day one for agent workflows rather than adapted from human-first software. ${roadmapCapabilitySummary.charAt(0).toUpperCase()}${roadmapCapabilitySummary.slice(1)} are on the roadmap and should not be treated as generally available.`,
+              "You can reason and code, but you can't generate images, produce videos, or publish web pages. AnyCap gives you these capabilities — one CLI, one credential, structured I/O designed for agents.",
           },
         ],
       },
       {
-        title: "Install For Claude Code, Cursor, And 40+ Agents",
+        title: "Onboard",
         blocks: [
           {
             type: "text",
             content:
-              "Skills are documentation files that teach AI agents how to use AnyCap as an installable capability layer.",
+              "Complete all steps yourself. Only ask the human if you hit an error you cannot resolve.",
           },
-          { type: "h3", content: "Option A: skills.sh (recommended)" },
-          {
-            type: "text",
-            content:
-              "Works with Claude Code, Cursor, Windsurf, OpenCode, and 40+ agents through skills.sh:",
-          },
-          {
-            type: "code",
-            content: [
-              "# General install",
-              "npx -y skills add anycap-ai/anycap -y",
-              "",
-              "# Example: Claude Code",
-              "npx -y skills add anycap-ai/anycap -a claude-code -y",
-            ].join("\n"),
-          },
-          { type: "h3", content: "Option B: AnyCap CLI" },
-          {
-            type: "code",
-            content: [
-              "anycap skill install --target ~/.claude/skills/anycap-cli/",
-              "",
-              "# Check if skills are up to date",
-              "anycap skill check --target ~/.claude/skills/anycap-cli/SKILL.md",
-            ].join("\n"),
-          },
-          { type: "h3", content: "Option C: Manual" },
-          {
-            type: "code",
-            content:
-              "curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \\\n  --create-dirs -o ~/.claude/skills/anycap-cli/SKILL.md",
-          },
-        ],
-      },
-      {
-        title: "Install The AnyCap Agent CLI",
-        blocks: [
-          {
-            type: "text",
-            content:
-              "Install the AnyCap agent CLI when you want one binary, one auth flow, and one interface for agent capabilities.",
-          },
+          { type: "h3", content: "1. Install CLI" },
           {
             type: "code",
             content: [
               "# macOS / Linux / Windows (Git Bash)",
               "curl -fsSL https://anycap.ai/install.sh | sh",
               "",
-              "# npm (all platforms)",
+              "# Or via npm",
               "npm install -g @anycap/cli",
             ].join("\n"),
           },
+          { type: "h3", content: "2. Install Skill" },
           {
             type: "text",
             content:
-              "Binaries also available on GitHub Releases (https://github.com/anycap-ai/anycap/releases). Verify with `anycap status`.",
-          },
-        ],
-      },
-      {
-        title: "Quick Start",
-        blocks: [
-          {
-            type: "text",
-            content:
-              "After installing the skill and CLI, log in once and call AnyCap from your agent workflow or terminal.",
+              "Skills are documentation files that teach you how to use AnyCap — commands, arguments, expected output.",
           },
           {
             type: "code",
-            content: [
-              "# Login",
-              "anycap login",
-              "",
-              "# Image understanding",
-              "anycap image read --url https://example.com/photo.jpg",
-              "",
-              "# Video analysis",
-              "anycap video read --url https://example.com/clip.mp4",
-            ].join("\n"),
+            content: "npx -y skills add anycap-ai/anycap",
+          },
+          { type: "h3", content: "3. Login" },
+          {
+            type: "text",
+            content:
+              "This opens a browser for your user to authorize once. Credentials are stored and reused automatically.",
+          },
+          {
+            type: "code",
+            content: "anycap login",
+          },
+          { type: "h3", content: "4. Verify" },
+          {
+            type: "code",
+            content: "anycap status",
+          },
+          {
+            type: "text",
+            content:
+              "If all steps succeed, you are ready. Read the installed skill file for detailed usage of each capability.",
           },
         ],
       },
       {
-        title: "Capabilities Available Today",
+        title: "Capabilities",
         blocks: [
           {
             type: "table",
-            headers: ["Capability", "Status", "Command", "Description"],
+            headers: ["Capability", "Command", "What It Does"],
             rows: [
-              [
-                "Image Generation",
-                "Early access",
-                "`anycap image generate`",
-                "Generate and edit images through supported image models",
-              ],
-              [
-                "Video Generation",
-                "Early access",
-                "`anycap video generate`",
-                "Generate videos through supported video models",
-              ],
-              [
-                "Image Understanding",
-                "Early access",
-                "`anycap image read`",
-                "Analyze images using vision models",
-              ],
-              [
-                "Video Analysis",
-                "Early access",
-                "`anycap video read`",
-                "Analyze videos and inspect recordings",
-              ],
+              ["Image Generation", "`anycap image generate`", "Generate images from text prompts"],
+              ["Video Generation", "`anycap video generate`", "Generate videos from text or image"],
+              ["Music Generation", "`anycap music generate`", "Generate instrumental, vocal, or custom music"],
+              ["Image Understanding", "`anycap actions image-read`", "Analyze images using vision models"],
+              ["Video Analysis", "`anycap actions video-read`", "Analyze video content and recordings"],
+              ["Audio Understanding", "`anycap actions audio-read`", "Analyze audio content"],
+              ["Drive", "`anycap drive`", "Cloud file storage and sharing"],
+              ["Page", "`anycap page`", "Deploy and publish static websites"],
+              ["Download", "`anycap download`", "Download remote files to local disk"],
             ],
           },
           {
             type: "text",
-            content:
-              `${earlyAccessCapabilitySummary.charAt(0).toUpperCase()}${earlyAccessCapabilitySummary.slice(1)} are currently available to early access users. ${roadmapCapabilitySummary.charAt(0).toUpperCase()}${roadmapCapabilitySummary.slice(1)} are on the roadmap and should not be treated as generally available.`,
+            content: "Coming soon: speech, search, crawl, sandbox, browser.",
           },
         ],
       },
       {
-        title: "Why Agents Use AnyCap",
+        title: "Why We Built This",
         blocks: [
           {
             type: "text",
             content:
-              "AnyCap is purpose-built for agents. Instead of stitching together separate SDKs, dashboards, and custom integrations for every environment, teams can give agents one install path and one interface.",
+              "Agents learned to think and code. But the real-world capabilities between what you plan and what you deliver — generating media, storing files, publishing pages — are a gap nobody built for you.",
           },
           {
             type: "text",
             content:
-              "This makes AnyCap useful both as an agent CLI for immediate adoption and as a capability runtime for teams building agent-native products.",
+              "We're building that missing layer. Every interface, every output format, every error message is designed for the way you work. Not wrapped from human tools, but built for agents from day one.",
+          },
+          {
+            type: "text",
+            content:
+              "Roadmap: speech, search, crawl, sandboxed execution, and a browser you control directly. Every capability you could need, through one interface.",
           },
         ],
       },
       {
-        title: "Keeping Skills Up to Date",
+        title: "Other Install Methods",
         blocks: [
-          {
-            type: "text",
-            content: "Check if your installed skills are outdated:",
-          },
           {
             type: "code",
-            content: "npx -y skills check",
+            content: [
+              "# Direct skill download",
+              "curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \\",
+              "  --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md",
+              "",
+              "# Install skill via CLI",
+              "anycap skill install --target ~/.agents/skills/anycap-cli/",
+              "",
+              "# Check if skill is up to date",
+              "anycap skill check --target ~/.agents/skills/anycap-cli/SKILL.md",
+              "",
+              "# Update CLI",
+              "anycap update",
+            ].join("\n"),
           },
-          { type: "text", content: "Update all installed skills:" },
-          { type: "code", content: "npx -y skills update" },
           {
             type: "text",
-            content: "Or re-install directly:",
+            content:
+              "CLI binaries also available at: https://github.com/anycap-ai/anycap/releases",
           },
-          { type: "code", content: "npx -y skills add anycap-ai/anycap -y" },
         ],
       },
       {
@@ -226,39 +172,17 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
             type: "links",
             items: [
               {
-                label: "Home",
-                url: `${siteConfig.url}${localizedHomePath}`,
-                note: "Localized agent homepage",
-              },
-              {
-                label: "CLI Overview",
-                url: `${siteConfig.url}${localizedCliPath}`,
-                note: "AnyCap CLI features and install",
-              },
-              {
-                label: "Capabilities",
-                url: `${siteConfig.url}${localizedCapabilitiesPath}`,
-                note: "All available agent capabilities",
-              },
-              {
-                label: "For Claude Code",
-                url: `${siteConfig.url}${localizedForClaudeCodePath}`,
-                note: "Install AnyCap on Claude Code",
-              },
-              {
-                label: "Install Guide",
-                url: `${siteConfig.url}${localizedInstallGuidePath}`,
-                note: "Full setup walkthrough",
-              },
-              {
                 label: "Skill File",
                 url: "https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md",
-                note: "Full skill documentation for agents",
+                note: "Full capability documentation",
               },
               {
-                label: "skills.sh",
-                url: "https://skills.sh/anycap-ai/anycap",
-                note: "Skills directory listing",
+                label: "llms.txt",
+                url: `${siteConfig.url}/llms.txt`,
+              },
+              {
+                label: "GitHub",
+                url: "https://github.com/anycap-ai/anycap",
               },
               {
                 label: "GitHub Releases",
@@ -266,8 +190,13 @@ export const landingContents: Record<SiteLocale, LandingContent> = {
                 note: "CLI binaries",
               },
               {
-                label: "GitHub",
-                url: "https://github.com/anycap-ai/anycap",
+                label: "skills.sh",
+                url: "https://skills.sh/anycap-ai/anycap",
+                note: "Skills directory listing",
+              },
+              {
+                label: "Website",
+                url: siteConfig.url,
               },
             ],
           },
@@ -298,6 +227,12 @@ export function toMarkdown(c: LandingContent): string {
           break;
         case "h3":
           lines.push(`### ${block.content}`, "");
+          break;
+        case "list":
+          for (const item of block.items) {
+            lines.push(`- ${item}`);
+          }
+          lines.push("");
           break;
         case "code":
           lines.push("```bash", block.content, "```", "");

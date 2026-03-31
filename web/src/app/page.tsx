@@ -63,6 +63,14 @@ function BlockRenderer({ block }: { block: Block }) {
           {block.content}
         </h3>
       );
+    case "list":
+      return (
+        <ul className="list-disc list-inside space-y-1 text-sm text-[#888] mb-3">
+          {block.items.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      );
     case "code":
       return (
         <pre className="bg-[#111] rounded px-4 py-3 overflow-x-auto text-sm leading-relaxed mb-3">
