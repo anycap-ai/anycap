@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { HoverDropdown, dropdownItemClass } from "@/components/HoverDropdown";
+import { HoverDropdown, dropdownItemClass } from "@/components/ui/HoverDropdown";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 

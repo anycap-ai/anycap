@@ -4,7 +4,7 @@ export const runtime = "edge";
 
 import Link from "next/link";
 import { usePageSites } from "@/lib/api/hooks";
-import StatusBadge from "@/components/dashboard/StatusBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 
 function formatTime(value: string) {

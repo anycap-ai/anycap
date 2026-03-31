@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
-import { NavDropdown, type DropdownItem } from "@/components/NavDropdown";
+import { NavDropdown, type DropdownItem } from "@/components/layout/NavDropdown";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 

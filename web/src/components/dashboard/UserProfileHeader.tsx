@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useUser } from "@/lib/api/hooks";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { HoverDropdown, dropdownItemClass } from "@/components/HoverDropdown";
+import { HoverDropdown, dropdownItemClass } from "@/components/ui/HoverDropdown";
 
 export function UserProfileHeader() {
   const { data: user } = useUser();

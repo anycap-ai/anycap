@@ -1,4 +1,4 @@
-import { SeoShell } from "@/components/SeoShell";
+import { SeoShell } from "@/components/layout/SeoShell";
 
 export const runtime = "edge";
 

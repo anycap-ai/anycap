@@ -71,7 +71,14 @@ web/
     (seo)/           # SEO pages (non-localized fallback)
     [locale]/(seo)/  # SEO pages (localized, primary)
   src/lib/           # SEO infrastructure (site.ts, seo-metadata.ts, sitemap-routes.ts)
-  src/components/    # Shared components (SeoShell.tsx, Header, Footer)
+  src/components/
+    ui/              # Generic UI primitives — no business logic (HoverDropdown, Modal, FadeIn, Spinner, …)
+    layout/          # Page shells, header, footer, navigation (Header, Footer, SeoShell, NavDropdown, …)
+    landing/         # Landing/marketing page components (EquipAgent, TerminalDemo, CapabilityGapTable, …)
+    auth/            # Auth components (LoginButton, LogoutButton)
+    brand/           # Brand assets (AnycapLogo, AnycapMark, AnycapWordmark)
+    dashboard/       # Dashboard-specific components (DashboardShell, Drive modals, …)
+    providers/       # Context providers (SWRProvider)
   public/            # Static assets (llms.txt, robots, manifests)
   docs/              # Web docs (design guideline, SEO workspace)
     seo/             # SEO documentation system (analyze/, todo/, change-log/)
@@ -236,6 +243,26 @@ Outbound (server → client): internal int64       →  IDMapper    →  externa
 - **Docs:** significant design decisions go in `docs/plans/` as dated markdown files.
 - **Skill files:** CLI skill in `skills/anycap-cli/` (SKILL.md + references/). After CLI changes, **test and verify the CLI first**, then update skill files to match actual behavior.
 - **Product status:** after shipping any product feature (new capability, CLI command, dashboard page, etc.), update `docs/anycap-current-status.md` to reflect the current state. This file is a snapshot, not a changelog — overwrite the relevant section with what exists now, do not append "added X" or explain what changed.
+
+### Frontend Component Organization (`web/src/components/`)
+
+Components are organized by role, not by page. **No loose files in `components/` root** — every component belongs in a subdirectory.
+
+| Directory | What goes here | Rule of thumb |
+|---|---|---|
+| `ui/` | Generic UI primitives with zero business logic | Could be copy-pasted into any project and still work (Modal, FadeIn, Spinner, HoverDropdown, LocalizedLink) |
+| `layout/` | Page shells, header, footer, navigation | Structural components that define page chrome (Header, Footer, SeoShell, ForHumanShell, AuthNav, NavDropdown, BreadcrumbJsonLd) |
+| `landing/` | Landing/marketing page-specific components | Feature content tied to the public site (EquipAgent, TerminalDemo, CapabilityGapTable, EarlyAccessBanner, ParticleAgent) |
+| `auth/` | Authentication UI | LoginButton, LogoutButton |
+| `brand/` | Brand assets | Logo, mark, wordmark |
+| `dashboard/` | Dashboard-specific components | Components only used within `/dashboard` routes (DashboardShell, Drive modals, DashboardToast) |
+| `providers/` | React context providers | SWRProvider |
+
+**Placement rules:**
+- If a component has no business logic and could work in any context → `ui/`.
+- If it's only used in dashboard pages → `dashboard/`. If it becomes reused elsewhere, promote it to `ui/`.
+- New animations/motion utilities → `ui/` (not a separate `animation/` directory).
+- New page-specific marketing components → `landing/`.
 
 ## CI/CD
 

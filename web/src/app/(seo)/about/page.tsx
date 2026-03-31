@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/LocalizedLink";
-import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
-import { FadeIn } from "@/components/FadeIn";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { FadeIn } from "@/components/ui/FadeIn";
 import { earlyAccessCapabilitySummary, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";

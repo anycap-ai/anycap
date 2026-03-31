@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { HoverDropdown, dropdownItemClass, dropdownDisabledClass, dropdownDividerClass } from "@/components/HoverDropdown";
+import { HoverDropdown, dropdownItemClass, dropdownDisabledClass, dropdownDividerClass } from "@/components/ui/HoverDropdown";
 import { useUser } from "@/lib/api/hooks";
 
 

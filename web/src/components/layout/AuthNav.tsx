@@ -3,7 +3,7 @@
 import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { useState } from "react";
-import { HoverDropdown, dropdownItemClass, dropdownDividerClass } from "@/components/HoverDropdown";
+import { HoverDropdown, dropdownItemClass, dropdownDividerClass } from "@/components/ui/HoverDropdown";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 

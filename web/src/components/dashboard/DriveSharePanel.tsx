@@ -5,7 +5,7 @@ import { getDriveShare, revokeDriveShare, rotateDriveShare, upsertDriveShare } f
 import type { DriveNode } from "@/lib/api/types";
 import { Spinner } from "@/components/ui/Spinner";
 import { toast } from "@/lib/toast";
-import { Modal, ModalActions, ModalButton } from "./Modal";
+import { Modal, ModalActions, ModalButton } from "@/components/ui/Modal";
 
 
 export function DriveSharePanel({
