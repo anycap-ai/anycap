@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -37,6 +38,7 @@ func NewRateLimitProvider(cfg Config) *RateLimitProvider {
 	}
 
 	log.Printf("rate-limit: using dconf config group=%s data_id=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID)
+	logRateLimitDConfSnapshot(cfg, container)
 	return &RateLimitProvider{
 		fallback:  cfg,
 		container: container,
@@ -88,4 +90,24 @@ func (p *RateLimitProvider) resolveFromDConf(capability string) (int, bool) {
 
 func normalizeCapabilityName(capability string) string {
 	return strings.TrimSpace(strings.ToLower(capability))
+}
+
+func logRateLimitDConfSnapshot(cfg Config, container RateLimitConfigContainer) {
+	if container == nil {
+		return
+	}
+
+	current := container.Get()
+	if current == nil {
+		log.Printf("rate-limit: dconf snapshot unavailable group=%s data_id=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID)
+		return
+	}
+
+	payload, err := json.Marshal(current)
+	if err != nil {
+		log.Printf("rate-limit: failed to marshal dconf snapshot group=%s data_id=%s: %v", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID, err)
+		return
+	}
+
+	log.Printf("rate-limit: dconf snapshot group=%s data_id=%s payload=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID, payload)
 }
