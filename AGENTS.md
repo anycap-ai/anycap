@@ -68,7 +68,14 @@ test/
 
 web/
   src/app/           # Next.js App Router pages (dashboard, landing, auth, i18n)
-  docs/              # Web docs (including design guideline)
+    (seo)/           # SEO pages (non-localized fallback)
+    [locale]/(seo)/  # SEO pages (localized, primary)
+  src/lib/           # SEO infrastructure (site.ts, seo-metadata.ts, sitemap-routes.ts)
+  src/components/    # Shared components (SeoShell.tsx, Header, Footer)
+  public/            # Static assets (llms.txt, robots, manifests)
+  docs/              # Web docs (design guideline, SEO workspace)
+    seo/             # SEO documentation system (analyze/, todo/, change-log/)
+  .agents/skills/    # SEO agent skills (18 specialized skills)
 ```
 
 ## Architecture Layers (server)
@@ -299,6 +306,119 @@ Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-d
 ### Skills
 
 The CLI skill lives in `skills/anycap-cli/`. `SKILL.md` is the main entry point; detailed capability docs are in `references/` and loaded on demand. Distributed via the GitHub repo from the latest `main` branch.
+
+## SEO
+
+### Architecture
+
+SEO pages live under the `(seo)` route group with dual routing for i18n:
+
+```
+web/src/app/(seo)/                    # Non-localized SEO pages (fallback)
+web/src/app/[locale]/(seo)/           # Localized SEO pages (primary)
+```
+
+Both share `SeoShell` (`web/src/components/SeoShell.tsx`) as the layout shell.
+
+### Page Categories
+
+| Category | Path pattern | Examples |
+|---|---|---|
+| Capabilities | `/capabilities/{slug}` | image-generation, video-generation, image-understanding, video-analysis |
+| Agent-specific | `/for/{agent}` | claude-code, cursor, codex, manus |
+| Guides | `/guides/{slug}` | install-anycap, context-engineering-for-agents, add-tools-to-claude-code |
+| Glossary | `/glossary/{slug}` | context-engineering, agent-harness, agent-capability-runtime |
+| Compare | `/compare/{slug}` | anycap-vs-composio, anycap-vs-openai-agent-builder |
+| Models | `/models/{slug}` | seedream-5, nano-banana-pro, veo-3-1 |
+| Learn | `/learn/{slug}` | what-agents-cant-do |
+| Top-level | `/{slug}` | start, cli, skills, about, capabilities, models |
+
+### Key Infrastructure Files
+
+| File | Responsibility |
+|---|---|
+| `web/src/lib/site.ts` | Route definitions (`publicRouteDefinitions`) with priorities, locale config, capability descriptions |
+| `web/src/lib/seo-metadata.ts` | Robots metadata, preview deployment no-index logic |
+| `web/src/lib/sitemap-routes.ts` | Auto-discovery sitemap generation (walks `(seo)` directory for `page.tsx` files) |
+| `web/src/lib/localized-metadata.ts` | Per-locale metadata generation |
+| `web/src/lib/landing-content.ts` | Landing page copy with SEO-aligned messaging |
+| `web/public/llms.txt` | AI-friendly route guide for LLM crawlers (GPTBot, ClaudeBot, PerplexityBot, etc.) |
+| `web/src/app/robots.ts` | robots.txt with explicit AI crawler allow rules |
+| `web/src/middleware.ts` | Legacy route redirects (e.g. `image-read` → `image-understanding`) |
+| `web/src/app/opengraph-image.tsx` | Dynamic OG image generation |
+
+### Adding a New SEO Page
+
+1. Create `page.tsx` under `web/src/app/[locale]/(seo)/{category}/{slug}/` (localized) and optionally under `web/src/app/(seo)/{category}/{slug}/` (non-localized fallback).
+2. Add the route to `publicRouteDefinitions` in `web/src/lib/site.ts` with an appropriate priority (0–1).
+3. The sitemap auto-discovers `page.tsx` files — no manual sitemap entry needed.
+4. If the page introduces a new capability claim, update `llms.txt` and the capability summary constants in `site.ts`.
+5. If replacing a legacy route, add a redirect in `web/src/middleware.ts`.
+
+### Landing Page Copy — Do Not Touch
+
+The agent landing page (`web/src/app/[locale]/page.tsx` / `web/src/app/page.tsx`) and its content source (`web/src/lib/landing-content.ts`) are **off-limits for SEO-driven copy changes**. Landing page copy is maintained separately and must not be rewritten, reordered, or partially updated during SEO work. Other SEO pages (capabilities, guides, glossary, compare, models, learn, for/, etc.) can be freely modified.
+
+### Capability-Availability Language
+
+Site-wide capability descriptions are centralized in `web/src/lib/site.ts`:
+
+- **Early access (now):** image generation, video generation, image understanding, video analysis
+- **Roadmap:** music, speech, search, crawl
+
+All pages, metadata, `llms.txt`, and agent-facing copy must use these canonical lists. Never describe roadmap capabilities as available.
+
+### GEO (Generative Engine Optimization)
+
+The site is optimized for AI search surfaces (AI Overviews, ChatGPT search, Perplexity):
+
+- `llms.txt` provides a structured entry point for AI systems with best-entry pages, capability status, and usage notes.
+- `robots.ts` explicitly allows GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, and PerplexityBot.
+- Content is written for passage-level citability with clear claims, definitions, and structured data.
+
+### SEO Documentation System
+
+All SEO research, decisions, and changes are tracked in `web/docs/seo/`:
+
+```
+web/docs/seo/
+├── index.md       # Rules, naming conventions, workflow
+├── analyze/       # Research, diagnostics, hypotheses, evidence
+├── todo/          # Prioritized actionable tasks (deduplicated)
+└── change-log/    # Actual code/config/content changes with verification
+```
+
+**Rules:**
+- `analyze/` records judgment and reasoning — not a changelog.
+- `todo/` collects actionable items from multiple analyses — no copy-paste of analysis content.
+- `change-log/` only records real changes (code, config, metadata, pages, sitemap, robots, `llms.txt`) with verification results.
+- File naming: `YYYY-MM-DD-HHMM-topic-slug.md`
+- Node ID: `SEO-YYYYMMDD-HHMM`
+
+### SEO Agent Skills
+
+Specialized agent skills for SEO work live in `web/.agents/skills/`:
+
+| Skill | Purpose |
+|---|---|
+| keyword-research | Keyword discovery, intent taxonomy, topic clustering |
+| seo-content-writer | SEO-optimized content with E-E-A-T checklist |
+| schema-markup-generator | JSON-LD structured data generation and validation |
+| technical-seo-checker | Technical audit across crawlability, security, Core Web Vitals |
+| on-page-seo-auditor | Single-page scoring rubric and audit |
+| meta-tags-optimizer | Title/description/OG formulas and CTR optimization |
+| internal-linking-optimizer | Link architecture patterns and linking templates |
+| geo-content-optimizer | AI citation readiness, quotable content patterns |
+| entity-optimizer | Knowledge Graph, Wikidata, entity signal optimization |
+| rank-tracker | Keyword ranking analysis and tracking setup |
+| serp-analysis | SERP feature taxonomy and competitive SERP analysis |
+| competitor-analysis | Positioning frameworks, battlecard templates |
+| content-gap-analysis | Gap analysis frameworks and report templates |
+| backlink-analyzer | Link quality rubric and outreach templates |
+| domain-authority-auditor | Domain authority scoring and reporting |
+| content-refresher | Content decay detection and refresh workflows |
+| content-quality-auditor | Content quality scoring |
+| performance-reporter | SEO KPI definitions and report templates |
 
 ## CLI Design and Implementation
 
