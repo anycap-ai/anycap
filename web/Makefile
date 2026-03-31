@@ -67,7 +67,7 @@ cf-deploy:
 		fi; \
 	fi
 	@echo "Building and deploying to $(ENV) (branch: $(BRANCH))..."
-	pnpm build
-	npx @cloudflare/next-on-pages
+	@cp $(ENV_FILE) .env.production.local
+	@pnpm build && npx @cloudflare/next-on-pages; rc=$$?; rm -f .env.production.local; exit $$rc
 	pnpm exec wrangler pages deploy .vercel/output/static --branch $(BRANCH)
 	@echo "Deployed to $(ENV)!"

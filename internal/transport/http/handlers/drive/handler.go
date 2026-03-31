@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityGET(group, "/drive/nodes", "drive.browse", h.ListNodes)
 	middleware.CapabilityPATCH(group, "/drive/nodes/:id", "drive.item.update", h.UpdateNode)
 	middleware.CapabilityDELETE(group, "/drive/nodes/:id", "drive.item.delete", h.DeleteNode)
+	middleware.CapabilityGET(group, "/drive/nodes/:id/share", "drive.share.get", h.GetShare)
 	middleware.CapabilityPUT(group, "/drive/nodes/:id/share", "drive.share.update", h.UpsertShare)
 	middleware.CapabilityPOST(group, "/drive/nodes/:id/share/rotate", "drive.share.rotate", h.RotateShare)
 	middleware.CapabilityDELETE(group, "/drive/nodes/:id/share", "drive.share.revoke", h.RevokeShare)

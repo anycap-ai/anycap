@@ -20,6 +20,7 @@ type DriveNodeDTO struct {
 	CreatedAt   string  `json:"created_at"`
 	UpdatedAt   string  `json:"updated_at"`
 	DeletedAt   *string `json:"deleted_at,omitempty"`
+	HasShare    bool    `json:"has_share"`
 }
 
 type DriveFilePresignDTO struct {
@@ -110,6 +111,7 @@ func PresentDriveNodes(ctx context.Context, mapper IDMapper, nodes []model.Drive
 			CreatedBy:   createdBy,
 			CreatedAt:   item.CreatedAt.UTC().Format(TimeLayout),
 			UpdatedAt:   item.UpdatedAt.UTC().Format(TimeLayout),
+			HasShare:    item.HasShare,
 		}
 		if item.DeletedAt != nil {
 			value := item.DeletedAt.UTC().Format(TimeLayout)

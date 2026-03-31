@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Spinner } from "@/components/ui/Spinner";
 
 
 export function Modal({
@@ -86,11 +87,13 @@ export function ModalActions({ children }: { children: React.ReactNode }) {
 export function ModalButton({
   onClick,
   disabled,
+  busy,
   variant = "default",
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
+  busy?: boolean;
   variant?: "default" | "primary" | "danger";
   children: React.ReactNode;
 }) {
@@ -105,11 +108,11 @@ export function ModalButton({
 
   return (
     <button
-      className={`px-5 py-2.5 text-[13px] font-medium rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${styles[variant]}`}
-     
+      className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 text-[13px] font-medium rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${styles[variant]}`}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || busy}
     >
+      {busy && <Spinner size={14} />}
       {children}
     </button>
   );

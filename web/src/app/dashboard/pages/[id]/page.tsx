@@ -13,6 +13,10 @@ import {
   usePageVersions,
 } from "@/lib/api/hooks";
 import type { PageAccessMode } from "@/lib/api/types";
+import StatusBadge from "@/components/dashboard/StatusBadge";
+import { ConfirmModal } from "@/components/dashboard/ConfirmModal";
+import { Spinner } from "@/components/ui/Spinner";
+import { toast } from "@/lib/toast";
 
 
 /* ── Shared button styles ── */
@@ -43,10 +47,9 @@ export default function PageDetailPage() {
   const [spaFallback, setSpaFallback] = useState(false);
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
-  const [publishingVersionID, setPublishingVersionID] = useState<string | null>(null);
   const [previewingVersionID, setPreviewingVersionID] = useState<string | null>(null);
-  const [unpublishing, setUnpublishing] = useState(false);
-  const [error, setError] = useState("");
+  const [confirmPublishVersionID, setConfirmPublishVersionID] = useState<string | null>(null);
+  const [confirmUnpublish, setConfirmUnpublish] = useState(false);
 
   useEffect(() => {
     if (!data) return;
@@ -59,7 +62,6 @@ export default function PageDetailPage() {
   async function onSave() {
     if (!data) return;
     setSaving(true);
-    setError("");
     try {
       const patch: Record<string, unknown> = {
         name,
@@ -77,7 +79,7 @@ export default function PageDetailPage() {
       setPassword("");
       await mutate();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to save settings");
+      toast.error(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
       setSaving(false);
     }
@@ -86,56 +88,37 @@ export default function PageDetailPage() {
   async function onClearPassword() {
     if (!data) return;
     setSaving(true);
-    setError("");
     try {
       await updatePageSite(data.id, { no_password: true });
       setPassword("");
       await mutate();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to clear password");
+      toast.error(err instanceof Error ? err.message : "Failed to clear password");
     } finally {
       setSaving(false);
     }
   }
 
-  async function onPublish(versionID: string) {
+  async function doPublish(versionID: string) {
     if (!data) return;
-    setPublishingVersionID(versionID);
-    setError("");
-    try {
-      await publishPageVersion(data.id, versionID);
-      await Promise.all([mutate(), mutateVersions()]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to publish version");
-    } finally {
-      setPublishingVersionID(null);
-    }
+    await publishPageVersion(data.id, versionID);
+    await Promise.all([mutate(), mutateVersions()]);
   }
 
-  async function onUnpublish() {
-    if (!data || data.current_version_id == null) return;
-    if (!window.confirm("Unpublish current live version?")) return;
-    setUnpublishing(true);
-    setError("");
-    try {
-      await unpublishPageSite(data.id);
-      await Promise.all([mutate(), mutateVersions()]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to unpublish");
-    } finally {
-      setUnpublishing(false);
-    }
+  async function doUnpublish() {
+    if (!data) return;
+    await unpublishPageSite(data.id);
+    await Promise.all([mutate(), mutateVersions()]);
   }
 
   async function onPreview(versionID: string) {
     if (!data) return;
     setPreviewingVersionID(versionID);
-    setError("");
     try {
       const result = await createPagePreviewHost(data.id, versionID);
       window.open(result.preview_url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to preview version");
+      toast.error(err instanceof Error ? err.message : "Failed to preview version");
     } finally {
       setPreviewingVersionID(null);
     }
@@ -204,15 +187,16 @@ export default function PageDetailPage() {
               </div>
               <div>
                 <p className="text-[#7a7e71] mb-1.5">Access mode</p>
-                <p className="text-[#1c1f17]">{data.access_mode}</p>
+                <StatusBadge status={data.access_mode} />
               </div>
               <div>
                 <p className="text-[#7a7e71] mb-1.5">Status</p>
-                <p className={`font-medium ${data.current_version_id ? "text-[#6b7d3a]" : "text-[#7a7e71]"}`}>
-                  {data.current_version_id
+                <StatusBadge
+                  status={data.current_version_id
                     ? `live (v${currentVersion?.version_no ?? "?"})`
                     : "unpublished"}
-                </p>
+                  variant={data.current_version_id ? "success" : undefined}
+                />
               </div>
             </div>
           </section>
@@ -267,7 +251,8 @@ export default function PageDetailPage() {
             )}
 
             <div className="mt-6">
-              <button className={btnPrimary} onClick={onSave} disabled={saving}>
+              <button className={`${btnPrimary} inline-flex items-center gap-2`} onClick={onSave} disabled={saving}>
+                {saving && <Spinner size={14} />}
                 {saving ? "Saving..." : "Save Settings"}
               </button>
             </div>
@@ -280,10 +265,10 @@ export default function PageDetailPage() {
               </p>
               <button
                 className={btnSecondary}
-                onClick={onUnpublish}
-                disabled={unpublishing || data.current_version_id == null}
+                onClick={() => setConfirmUnpublish(true)}
+                disabled={data.current_version_id == null}
               >
-                {unpublishing ? "Unpublishing..." : "Unpublish"}
+                Unpublish
               </button>
             </div>
 
@@ -311,17 +296,14 @@ export default function PageDetailPage() {
                   ) : versions.length > 0 ? (
                     versions.map((version) => {
                       const isLive = data.current_version_id === version.id;
-                      const publishable = version.status === "verified" || version.status === "archived";
-                      const canPublish = publishable && publishingVersionID == null;
+                      const canPublish = version.status === "verified" || version.status === "archived";
                       const canOpen = isLive && !!pageUrl;
                       const canPreview = version.status === "verified" || version.status === "published" || version.status === "archived" || isLive;
                       return (
                         <tr key={version.id} className="border-b border-[#eceee7] hover:bg-[#f9faf7] transition-colors">
                           <td className="py-[15px] px-5 text-[14px] text-[#1c1f17] font-medium">v{version.version_no}</td>
                           <td className="py-[15px] px-5 text-[14px]">
-                            <span className={`font-medium ${isLive ? "text-[#6b7d3a]" : "text-[#4d5145]"}`}>
-                              {isLive ? "published" : version.status}
-                            </span>
+                            <StatusBadge status={isLive ? "published" : version.status} />
                           </td>
                           <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
                             {new Date(version.created_at).toLocaleString()}
@@ -340,19 +322,20 @@ export default function PageDetailPage() {
                               )}
                               {canPreview && (
                                 <button
-                                  className={btnSecondary}
+                                  className={`${btnSecondary} inline-flex items-center gap-2`}
                                   onClick={() => onPreview(version.id)}
                                   disabled={previewingVersionID != null}
                                 >
+                                  {previewingVersionID === version.id && <Spinner size={14} />}
                                   {previewingVersionID === version.id ? "Opening..." : "Preview"}
                                 </button>
                               )}
                               <button
                                 className={canPublish ? btnPrimary : `${btnSecondary} !shadow-none`}
-                                onClick={() => onPublish(version.id)}
+                                onClick={() => setConfirmPublishVersionID(version.id)}
                                 disabled={!canPublish}
                               >
-                                {publishingVersionID === version.id ? "Publishing..." : "Publish"}
+                                Publish
                               </button>
                             </div>
                           </td>
@@ -369,9 +352,32 @@ export default function PageDetailPage() {
             </div>
           </section>
 
-          {error && <p className="text-[13px] text-[#c4442d]">{error}</p>}
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmPublishVersionID != null}
+        onClose={() => setConfirmPublishVersionID(null)}
+        onConfirm={() => doPublish(confirmPublishVersionID!)}
+        title="Publish Version"
+        message={(() => {
+          const v = versions.find((item) => item.id === confirmPublishVersionID);
+          if (v?.status === "archived")
+            return `Publish archived v${v.version_no}? A new version will be cloned from it and set as live.`;
+          return `Publish v${v?.version_no ?? "?"}? It will become the live version.`;
+        })()}
+        confirmLabel="Publish"
+      />
+
+      <ConfirmModal
+        open={confirmUnpublish}
+        onClose={() => setConfirmUnpublish(false)}
+        onConfirm={doUnpublish}
+        title="Unpublish Page"
+        message="Unpublish the current live version? The page will no longer be accessible."
+        confirmLabel="Unpublish"
+        variant="danger"
+      />
     </div>
   );
 }

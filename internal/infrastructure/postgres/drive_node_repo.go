@@ -91,7 +91,8 @@ func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDrive
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, space_id, parent_id, kind, name, storage_object_id, size, mime, edge_version, created_by, created_at, updated_at, deleted_at
+		SELECT id, space_id, parent_id, kind, name, storage_object_id, size, mime, edge_version, created_by, created_at, updated_at, deleted_at,
+			EXISTS(SELECT 1 FROM drive_share_links dsl WHERE dsl.node_id = drive_nodes.id AND dsl.status = 'active') AS has_share
 		FROM drive_nodes
 		WHERE %s
 		ORDER BY kind DESC, name ASC, id ASC
@@ -106,7 +107,7 @@ func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDrive
 
 	items := make([]model.DriveNode, 0)
 	for rows.Next() {
-		node, scanErr := scanDriveNode(rows)
+		node, scanErr := scanDriveNodeWithShare(rows)
 		if scanErr != nil {
 			return nil, 0, fmt.Errorf("scan drive node: %w", scanErr)
 		}
@@ -258,6 +259,56 @@ func (r *DriveNodeRepo) getByIDInSpace(ctx context.Context, id, spaceID int64) (
 		return nil, fmt.Errorf("get drive node in space: %w", err)
 	}
 	return node, nil
+}
+
+func scanDriveNodeWithShare(row rowScanner) (*model.DriveNode, error) {
+	var (
+		node            model.DriveNode
+		parentID        sql.NullInt64
+		storageObjectID sql.NullInt64
+		size            sql.NullInt64
+		mime            sql.NullString
+		deletedAt       sql.NullTime
+		kind            string
+	)
+
+	if err := row.Scan(
+		&node.ID,
+		&node.SpaceID,
+		&parentID,
+		&kind,
+		&node.Name,
+		&storageObjectID,
+		&size,
+		&mime,
+		&node.EdgeVersion,
+		&node.CreatedBy,
+		&node.CreatedAt,
+		&node.UpdatedAt,
+		&deletedAt,
+		&node.HasShare,
+	); err != nil {
+		return nil, err
+	}
+
+	node.Kind = model.DriveNodeKind(kind)
+	if parentID.Valid {
+		node.ParentID = &parentID.Int64
+	}
+	if storageObjectID.Valid {
+		node.StorageObjectID = &storageObjectID.Int64
+	}
+	if size.Valid {
+		node.Size = &size.Int64
+	}
+	if mime.Valid {
+		node.MIME = &mime.String
+	}
+	if deletedAt.Valid {
+		node.DeletedAt = &deletedAt.Time
+	}
+
+	return &node, nil
 }
 
 func scanDriveNode(row rowScanner) (*model.DriveNode, error) {

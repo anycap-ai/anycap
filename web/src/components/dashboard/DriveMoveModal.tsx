@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DriveNode } from "@/lib/api/types";
 import { updateDriveNode } from "@/lib/api/hooks";
+import { toast } from "@/lib/toast";
 import { Modal, ModalActions, ModalButton } from "./Modal";
 
 
@@ -20,20 +21,18 @@ export function DriveMoveModal({
 }) {
   const [parentInput, setParentInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
 
   async function onSubmit() {
     if (!node) return;
     const trimmed = parentInput.trim();
     const parentID = trimmed === "" ? null : trimmed;
     setBusy(true);
-    setError("");
     try {
       await updateDriveNode(node.id, { parent_id: parentID });
       await onChanged?.();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to move");
+      toast.error(err instanceof Error ? err.message : "Failed to move");
     } finally {
       setBusy(false);
     }
@@ -44,7 +43,7 @@ export function DriveMoveModal({
       open={!!node}
       onClose={onClose}
       title="Move"
-      onOpen={() => { setParentInput(""); setError(""); }}
+      onOpen={() => { setParentInput(""); }}
     >
       <p className="text-[14px] text-[#4d5145] mb-4">
         Moving <span className="font-medium text-[#1c1f17]">{node?.name}</span>
@@ -63,12 +62,9 @@ export function DriveMoveModal({
           className={inputClass}
         />
       </label>
-      {error && (
-        <p className="mt-3 text-[13px] text-[#c4442d]">{error}</p>
-      )}
       <ModalActions>
         <ModalButton onClick={onClose} disabled={busy}>Cancel</ModalButton>
-        <ModalButton onClick={onSubmit} disabled={busy} variant="primary">
+        <ModalButton onClick={onSubmit} busy={busy} variant="primary">
           Move
         </ModalButton>
       </ModalActions>
