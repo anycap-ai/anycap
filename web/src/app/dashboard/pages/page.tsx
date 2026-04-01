@@ -5,13 +5,7 @@ export const runtime = "edge";
 import Link from "next/link";
 import { usePageSites } from "@/lib/api/hooks";
 import StatusBadge from "@/components/ui/StatusBadge";
-
-
-function formatTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString();
-}
+import { formatTime } from "@/lib/date";
 
 export default function PagesPage() {
   const { data, isLoading } = usePageSites();

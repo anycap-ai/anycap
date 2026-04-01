@@ -77,6 +77,12 @@ func MapDomainError(err error) (int, Envelope) {
 			message = err.Error()
 		}
 		return consts.StatusBadRequest, ErrorEnvelope("", model.ErrInvalidParam.Code, message)
+	case errors.Is(err, model.ErrUploadReferenceInvalid):
+		return consts.StatusBadRequest, ErrorEnvelope("", "INVALID_PARAM", model.ErrUploadReferenceInvalid.Error())
+	case errors.Is(err, model.ErrUploadReferenceForbidden):
+		return consts.StatusForbidden, ErrorEnvelope("", "FORBIDDEN", model.ErrUploadReferenceForbidden.Error())
+	case errors.Is(err, model.ErrUploadReferenceNotFound), errors.Is(err, model.ErrUploadObjectNotFound):
+		return consts.StatusNotFound, ErrorEnvelope("", "NOT_FOUND", err.Error())
 	default:
 		return consts.StatusInternalServerError, ErrorEnvelope("", model.ErrInternal.Code, model.ErrInternal.Message)
 	}
