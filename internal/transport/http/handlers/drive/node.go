@@ -25,6 +25,11 @@ func (h *Handler) CreateFolder(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	var req createFolderRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
@@ -37,7 +42,7 @@ func (h *Handler) CreateFolder(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	node, err := h.service.CreateFolder(c, principal.UserID, parentID, req.Name)
+	node, err := h.service.CreateFolder(c, userID, parentID, req.Name)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "create_drive_folder_failed", err.Error())
 		return
@@ -63,6 +68,11 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	parentID, err := h.resolveOptionalDriveNodeIDFromQuery(c, string(ctx.Query("parent_id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_parent_id", err)
@@ -79,7 +89,7 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		Offset: offset,
 	}
 
-	items, total, err := h.service.ListNodes(c, principal.UserID, parentID, filter)
+	items, total, err := h.service.ListNodes(c, userID, parentID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
 		return
@@ -105,6 +115,11 @@ func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
 		return
 	}
 
@@ -141,7 +156,7 @@ func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 		}
 	}
 
-	node, err := h.service.UpdateNode(c, principal.UserID, nodeID, name, parentID, updateParent)
+	node, err := h.service.UpdateNode(c, userID, nodeID, name, parentID, updateParent)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "update_drive_node_failed", err.Error())
 		return
@@ -167,6 +182,11 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	rawID := string(ctx.Param("id"))
 	nodeID, err := h.resolver.ResolveDriveNodeID(c, rawID)
 	if err != nil {
@@ -174,7 +194,7 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	deletedCount, err := h.service.DeleteNode(c, principal.UserID, nodeID)
+	deletedCount, err := h.service.DeleteNode(c, userID, nodeID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "delete_drive_node_failed", err.Error())
 		return

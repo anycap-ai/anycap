@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 const maxPageAssetUploadSize int64 = 1024 * 1024 * 1024 // 1GB
 
-func (s *Service) CreateVersion(ctx context.Context, userID string, pageID int64) (*model.PageVersion, error) {
+func (s *Service) CreateVersion(ctx context.Context, userID int64, pageID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -22,10 +23,10 @@ func (s *Service) CreateVersion(ctx context.Context, userID string, pageID int64
 	}
 
 	assetPrefixBase := fmt.Sprintf("page/spaces/%d/sites/%d/versions", site.SpaceID, site.ID)
-	return s.versionRepo.CreateDraft(ctx, site.ID, userID, assetPrefixBase)
+	return s.versionRepo.CreateDraft(ctx, site.ID, strconv.FormatInt(userID, 10), assetPrefixBase)
 }
 
-func (s *Service) PresignVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, assetPath string, contentType string, contentLength int64) (*model.PageVersionPresignResult, error) {
+func (s *Service) PresignVersionAsset(ctx context.Context, userID int64, pageID int64, versionID int64, assetPath string, contentType string, contentLength int64) (*model.PageVersionPresignResult, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil || s.objectStore == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -93,7 +94,7 @@ func (s *Service) PresignVersionAsset(ctx context.Context, userID string, pageID
 	}, nil
 }
 
-func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageID int64, versionID int64, uploadSessionID int64) (*model.PageVersion, error) {
+func (s *Service) CompleteVersionAsset(ctx context.Context, userID int64, pageID int64, versionID int64, uploadSessionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil || s.storageObjectRepo == nil || s.objectStore == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -170,7 +171,7 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID string, pageI
 
 // Q4: Simplified FinalizeVersion -- skip intermediate "uploaded" state for new versions.
 // Go directly from draft -> verified. Keep "uploaded" as a valid input for backward compat.
-func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
+func (s *Service) FinalizeVersion(ctx context.Context, userID int64, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.uploadSessionRepo == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -215,7 +216,7 @@ func (s *Service) FinalizeVersion(ctx context.Context, userID string, pageID int
 	return version, nil
 }
 
-func (s *Service) ListVersions(ctx context.Context, userID string, pageID int64, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
+func (s *Service) ListVersions(ctx context.Context, userID int64, pageID int64, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error) {
 	if s == nil || s.versionRepo == nil {
 		return nil, 0, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -227,7 +228,7 @@ func (s *Service) ListVersions(ctx context.Context, userID string, pageID int64,
 	return s.versionRepo.ListByPageID(ctx, filter)
 }
 
-func (s *Service) GetVersionByNumber(ctx context.Context, userID string, pageID, versionNo int64) (*model.PageVersion, error) {
+func (s *Service) GetVersionByNumber(ctx context.Context, userID int64, pageID, versionNo int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}

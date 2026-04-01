@@ -23,13 +23,18 @@ func (h *Handler) CreateAccessLinks(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
 	}
 
-	result, err := h.service.CreateAccessLinks(c, principal.UserID, nodeID)
+	result, err := h.service.CreateAccessLinks(c, userID, nodeID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "create_drive_access_links_failed", err.Error())
 		return

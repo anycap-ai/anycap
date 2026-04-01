@@ -26,13 +26,18 @@ func (h *Handler) CreateVersion(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
 		return
 	}
 
-	version, err := h.service.CreateVersion(c, principal.UserID, siteID)
+	version, err := h.service.CreateVersion(c, userID, siteID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "create_page_version_failed", err.Error())
 		return
@@ -58,6 +63,11 @@ func (h *Handler) PresignVersionAsset(c context.Context, ctx *app.RequestContext
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -75,7 +85,7 @@ func (h *Handler) PresignVersionAsset(c context.Context, ctx *app.RequestContext
 		return
 	}
 
-	result, err := h.service.PresignVersionAsset(c, principal.UserID, siteID, versionID, req.AssetPath, req.ContentType, req.ContentLength)
+	result, err := h.service.PresignVersionAsset(c, userID, siteID, versionID, req.AssetPath, req.ContentType, req.ContentLength)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "presign_page_version_asset_failed", err.Error())
 		return
@@ -98,6 +108,11 @@ func (h *Handler) CompleteVersionAsset(c context.Context, ctx *app.RequestContex
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
 		return
 	}
 
@@ -128,7 +143,7 @@ func (h *Handler) CompleteVersionAsset(c context.Context, ctx *app.RequestContex
 		return
 	}
 
-	version, err := h.service.CompleteVersionAsset(c, principal.UserID, siteID, versionID, uploadSessionID)
+	version, err := h.service.CompleteVersionAsset(c, userID, siteID, versionID, uploadSessionID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "complete_page_version_asset_failed", err.Error())
 		return
@@ -154,6 +169,11 @@ func (h *Handler) FinalizeVersion(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -165,7 +185,7 @@ func (h *Handler) FinalizeVersion(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	version, err := h.service.FinalizeVersion(c, principal.UserID, siteID, versionID)
+	version, err := h.service.FinalizeVersion(c, userID, siteID, versionID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "finalize_page_version_failed", err.Error())
 		return
@@ -191,6 +211,11 @@ func (h *Handler) ListVersions(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -207,7 +232,7 @@ func (h *Handler) ListVersions(c context.Context, ctx *app.RequestContext) {
 		Offset: offset,
 	}
 
-	versions, total, err := h.service.ListVersions(c, principal.UserID, siteID, filter)
+	versions, total, err := h.service.ListVersions(c, userID, siteID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "list_page_versions_failed", err.Error())
 		return
@@ -236,6 +261,11 @@ func (h *Handler) GetVersionByNumber(c context.Context, ctx *app.RequestContext)
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -248,7 +278,7 @@ func (h *Handler) GetVersionByNumber(c context.Context, ctx *app.RequestContext)
 		return
 	}
 
-	version, err := h.service.GetVersionByNumber(c, principal.UserID, siteID, versionNo)
+	version, err := h.service.GetVersionByNumber(c, userID, siteID, versionNo)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "get_page_version_by_number_failed", err.Error())
 		return
@@ -274,6 +304,11 @@ func (h *Handler) PublishVersion(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -285,7 +320,7 @@ func (h *Handler) PublishVersion(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	version, err := h.service.PublishVersion(c, principal.UserID, siteID, versionID)
+	version, err := h.service.PublishVersion(c, userID, siteID, versionID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "publish_page_version_failed", err.Error())
 		return
@@ -311,6 +346,11 @@ func (h *Handler) CreatePreviewHost(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -322,7 +362,7 @@ func (h *Handler) CreatePreviewHost(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 
-	result, err := h.service.CreatePreviewHost(c, principal.UserID, siteID, versionID)
+	result, err := h.service.CreatePreviewHost(c, userID, siteID, versionID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "create_page_preview_host_failed", err.Error())
 		return
@@ -345,6 +385,11 @@ func (h *Handler) RollbackCloneVersion(c context.Context, ctx *app.RequestContex
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
@@ -356,7 +401,7 @@ func (h *Handler) RollbackCloneVersion(c context.Context, ctx *app.RequestContex
 		return
 	}
 
-	version, err := h.service.RollbackCloneVersion(c, principal.UserID, siteID, versionID)
+	version, err := h.service.RollbackCloneVersion(c, userID, siteID, versionID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "rollback_clone_page_version_failed", err.Error())
 		return

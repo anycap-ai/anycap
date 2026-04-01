@@ -260,7 +260,7 @@ var _ port.StorageObjectRepository = (*fakeVersionStorageObjectRepo)(nil)
 var _ port.CloudObjectStore = (*fakeVersionCloudObjectStore)(nil)
 
 func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -286,7 +286,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		WithVersioning(versionRepo, uploadRepo, storageRepo, objectStore),
 	)
 
-	version, err := service.CreateVersion(context.Background(), "u-1", 1)
+	version, err := service.CreateVersion(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("CreateVersion() error = %v", err)
 	}
@@ -297,7 +297,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		t.Fatalf("unexpected asset prefix %q", version.AssetPrefix)
 	}
 
-	presign, err := service.PresignVersionAsset(context.Background(), "u-1", 1, version.ID, "assets/index.html", "text/html", 42)
+	presign, err := service.PresignVersionAsset(context.Background(), 1, 1, version.ID, "assets/index.html", "text/html", 42)
 	if err != nil {
 		t.Fatalf("PresignVersionAsset() error = %v", err)
 	}
@@ -308,7 +308,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		t.Fatalf("expected object key suffix /assets/index.html, got %q", presign.ObjectKey)
 	}
 
-	completed, err := service.CompleteVersionAsset(context.Background(), "u-1", 1, version.ID, presign.UploadSessionID)
+	completed, err := service.CompleteVersionAsset(context.Background(), 1, 1, version.ID, presign.UploadSessionID)
 	if err != nil {
 		t.Fatalf("CompleteVersionAsset() error = %v", err)
 	}
@@ -319,7 +319,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		t.Fatalf("expected 1 storage object, got %d", len(storageRepo.objects))
 	}
 
-	finalized, err := service.FinalizeVersion(context.Background(), "u-1", 1, version.ID)
+	finalized, err := service.FinalizeVersion(context.Background(), 1, 1, version.ID)
 	if err != nil {
 		t.Fatalf("FinalizeVersion() error = %v", err)
 	}
@@ -327,7 +327,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 		t.Fatalf("expected verified status, got %s", finalized.Status)
 	}
 
-	versions, _, err := service.ListVersions(context.Background(), "u-1", 1, model.ListPageVersionsFilter{Limit: 50})
+	versions, _, err := service.ListVersions(context.Background(), 1, 1, model.ListPageVersionsFilter{Limit: 50})
 	if err != nil {
 		t.Fatalf("ListVersions() error = %v", err)
 	}
@@ -340,7 +340,7 @@ func TestVersionFlow_PresignCompleteFinalize(t *testing.T) {
 }
 
 func TestFinalizeVersion_RequiresCompletedUploads(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -361,19 +361,19 @@ func TestFinalizeVersion_RequiresCompletedUploads(t *testing.T) {
 		WithVersioning(&fakeVersionRepo{}, &fakeVersionUploadSessionRepo{}, &fakeVersionStorageObjectRepo{}, &fakeVersionCloudObjectStore{}),
 	)
 
-	version, err := service.CreateVersion(context.Background(), "u-1", 1)
+	version, err := service.CreateVersion(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("CreateVersion() error = %v", err)
 	}
 
-	_, err = service.FinalizeVersion(context.Background(), "u-1", 1, version.ID)
+	_, err = service.FinalizeVersion(context.Background(), 1, 1, version.ID)
 	if err == nil || !strings.Contains(err.Error(), "no completed uploads") {
 		t.Fatalf("expected no completed uploads error, got %v", err)
 	}
 }
 
 func TestPresignVersionAsset_InvalidAssetPath(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -394,12 +394,12 @@ func TestPresignVersionAsset_InvalidAssetPath(t *testing.T) {
 		WithVersioning(&fakeVersionRepo{}, &fakeVersionUploadSessionRepo{}, &fakeVersionStorageObjectRepo{}, &fakeVersionCloudObjectStore{}),
 	)
 
-	version, err := service.CreateVersion(context.Background(), "u-1", 1)
+	version, err := service.CreateVersion(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("CreateVersion() error = %v", err)
 	}
 
-	_, err = service.PresignVersionAsset(context.Background(), "u-1", 1, version.ID, "../index.html", "text/html", 42)
+	_, err = service.PresignVersionAsset(context.Background(), 1, 1, version.ID, "../index.html", "text/html", 42)
 	if err == nil || !strings.Contains(err.Error(), "invalid characters") {
 		t.Fatalf("expected invalid asset path error, got %v", err)
 	}
@@ -409,7 +409,7 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 	service, _, _, _, _, _ := newVersionServiceFor3C()
 
 	v1 := createAndFinalizeVersion(t, service, 1, "index.html")
-	publishedV1, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
+	publishedV1, err := service.PublishVersion(context.Background(), 1, 1, v1.ID)
 	if err != nil {
 		t.Fatalf("PublishVersion(v1) error = %v", err)
 	}
@@ -418,7 +418,7 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 	}
 
 	v2 := createAndFinalizeVersion(t, service, 1, "about.html")
-	publishedV2, err := service.PublishVersion(context.Background(), "u-1", 1, v2.ID)
+	publishedV2, err := service.PublishVersion(context.Background(), 1, 1, v2.ID)
 	if err != nil {
 		t.Fatalf("PublishVersion(v2) error = %v", err)
 	}
@@ -427,7 +427,7 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 	}
 
 	// Archived v1 should be re-publishable via clone (new higher version).
-	republished, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
+	republished, err := service.PublishVersion(context.Background(), 1, 1, v1.ID)
 	if err != nil {
 		t.Fatalf("PublishVersion(archived v1) error = %v", err)
 	}
@@ -438,7 +438,7 @@ func TestPublishAndUnpublishVersion(t *testing.T) {
 		t.Fatalf("expected version_no > %d, got %d", publishedV2.VersionNo, republished.VersionNo)
 	}
 
-	site, err := service.Unpublish(context.Background(), "u-1", 1)
+	site, err := service.Unpublish(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("Unpublish() error = %v", err)
 	}
@@ -451,11 +451,11 @@ func TestPublishArchivedVersion_ClonesAndPublishes(t *testing.T) {
 	service, _, _, _, _, _ := newVersionServiceFor3C()
 
 	v1 := createAndFinalizeVersion(t, service, 1, "index.html")
-	if _, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID); err != nil {
+	if _, err := service.PublishVersion(context.Background(), 1, 1, v1.ID); err != nil {
 		t.Fatalf("PublishVersion(v1) error = %v", err)
 	}
 
-	site, err := service.Unpublish(context.Background(), "u-1", 1)
+	site, err := service.Unpublish(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("Unpublish() error = %v", err)
 	}
@@ -464,7 +464,7 @@ func TestPublishArchivedVersion_ClonesAndPublishes(t *testing.T) {
 	}
 
 	// Re-publish the archived version: should clone into a new version.
-	republished, err := service.PublishVersion(context.Background(), "u-1", 1, v1.ID)
+	republished, err := service.PublishVersion(context.Background(), 1, 1, v1.ID)
 	if err != nil {
 		t.Fatalf("PublishVersion(archived v1) error = %v", err)
 	}
@@ -486,7 +486,7 @@ func TestRollbackCloneVersion_CopiesAssetsAndMarksVerified(t *testing.T) {
 	service, _, _, storageRepo, _, objectStore := newVersionServiceFor3C()
 
 	sourceVersion := createAndFinalizeVersion(t, service, 1, "assets/main.js")
-	publishedSource, err := service.PublishVersion(context.Background(), "u-1", 1, sourceVersion.ID)
+	publishedSource, err := service.PublishVersion(context.Background(), 1, 1, sourceVersion.ID)
 	if err != nil {
 		t.Fatalf("PublishVersion(source) error = %v", err)
 	}
@@ -494,7 +494,7 @@ func TestRollbackCloneVersion_CopiesAssetsAndMarksVerified(t *testing.T) {
 		t.Fatalf("expected source status published, got %s", publishedSource.Status)
 	}
 
-	clonedVersion, err := service.RollbackCloneVersion(context.Background(), "u-1", 1, sourceVersion.ID)
+	clonedVersion, err := service.RollbackCloneVersion(context.Background(), 1, 1, sourceVersion.ID)
 	if err != nil {
 		t.Fatalf("RollbackCloneVersion() error = %v", err)
 	}
@@ -528,7 +528,7 @@ func TestRollbackCloneVersion_RequiresSourceAssets(t *testing.T) {
 		t.Fatalf("UpdateStatus(verified) error = %v", err)
 	}
 
-	_, err = service.RollbackCloneVersion(context.Background(), "u-1", 1, sourceVersion.ID)
+	_, err = service.RollbackCloneVersion(context.Background(), 1, 1, sourceVersion.ID)
 	if err == nil || !strings.Contains(err.Error(), "no assets") {
 		t.Fatalf("expected no assets error, got %v", err)
 	}
@@ -547,7 +547,7 @@ func TestCreatePreviewHost(t *testing.T) {
 	)
 
 	version := createAndFinalizeVersion(t, service, 1, "index.html")
-	result, err := service.CreatePreviewHost(context.Background(), "u-1", 1, version.ID)
+	result, err := service.CreatePreviewHost(context.Background(), 1, 1, version.ID)
 	if err != nil {
 		t.Fatalf("CreatePreviewHost() error = %v", err)
 	}
@@ -581,14 +581,14 @@ func TestCreatePreviewHost_RejectsDraftVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateDraft() error = %v", err)
 	}
-	_, err = service.CreatePreviewHost(context.Background(), "u-1", 1, draft.ID)
+	_, err = service.CreatePreviewHost(context.Background(), 1, 1, draft.ID)
 	if err == nil || !strings.Contains(err.Error(), "verified, published, or archived") {
 		t.Fatalf("expected status validation error, got %v", err)
 	}
 }
 
 func newVersionServiceFor3C() (*Service, *fakePageSiteRepo, *fakeVersionRepo, *fakeVersionStorageObjectRepo, *fakeVersionUploadSessionRepo, *fakeVersionCloudObjectStore) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -617,18 +617,18 @@ func newVersionServiceFor3C() (*Service, *fakePageSiteRepo, *fakeVersionRepo, *f
 func createAndFinalizeVersion(t *testing.T, service *Service, pageID int64, assetPath string) *model.PageVersion {
 	t.Helper()
 
-	version, err := service.CreateVersion(context.Background(), "u-1", pageID)
+	version, err := service.CreateVersion(context.Background(), 1, pageID)
 	if err != nil {
 		t.Fatalf("CreateVersion() error = %v", err)
 	}
-	presign, err := service.PresignVersionAsset(context.Background(), "u-1", pageID, version.ID, assetPath, "text/plain", 32)
+	presign, err := service.PresignVersionAsset(context.Background(), 1, pageID, version.ID, assetPath, "text/plain", 32)
 	if err != nil {
 		t.Fatalf("PresignVersionAsset() error = %v", err)
 	}
-	if _, err := service.CompleteVersionAsset(context.Background(), "u-1", pageID, version.ID, presign.UploadSessionID); err != nil {
+	if _, err := service.CompleteVersionAsset(context.Background(), 1, pageID, version.ID, presign.UploadSessionID); err != nil {
 		t.Fatalf("CompleteVersionAsset() error = %v", err)
 	}
-	finalized, err := service.FinalizeVersion(context.Background(), "u-1", pageID, version.ID)
+	finalized, err := service.FinalizeVersion(context.Background(), 1, pageID, version.ID)
 	if err != nil {
 		t.Fatalf("FinalizeVersion() error = %v", err)
 	}

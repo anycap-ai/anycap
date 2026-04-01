@@ -17,11 +17,11 @@ func NewService(repo port.SpaceRepository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) GetOrCreatePersonalSpace(ctx context.Context, userID string) (*model.Space, error) {
+func (s *Service) GetOrCreatePersonalSpace(ctx context.Context, userID int64) (*model.Space, error) {
 	if s == nil || s.repo == nil {
 		return nil, fmt.Errorf("space repository is not configured")
 	}
-	if strings.TrimSpace(userID) == "" {
+	if userID == 0 {
 		return nil, fmt.Errorf("user_id is required")
 	}
 

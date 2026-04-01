@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -142,7 +143,7 @@ func (s *Service) waitKVSyncJobs(ctx context.Context, jobIDs ...int64) error {
 	return s.kvSyncWaiter.Wait(ctx, filtered)
 }
 
-func (s *Service) CreateFolder(ctx context.Context, userID string, parentID *int64, name string) (*model.DriveNode, error) {
+func (s *Service) CreateFolder(ctx context.Context, userID int64, parentID *int64, name string) (*model.DriveNode, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
 		return nil, fmt.Errorf("drive service is not configured")
 	}
@@ -163,7 +164,7 @@ func (s *Service) CreateFolder(ctx context.Context, userID string, parentID *int
 		SpaceID:   space.ID,
 		ParentID:  parentID,
 		Name:      name,
-		CreatedBy: userID,
+		CreatedBy: strconv.FormatInt(userID, 10),
 	})
 	if err != nil {
 		return nil, err
@@ -187,7 +188,7 @@ func (s *Service) CreateFolder(ctx context.Context, userID string, parentID *int
 	return created, nil
 }
 
-func (s *Service) ListNodes(ctx context.Context, userID string, parentID *int64, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
+func (s *Service) ListNodes(ctx context.Context, userID int64, parentID *int64, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
 		return nil, 0, fmt.Errorf("drive service is not configured")
 	}
@@ -206,7 +207,7 @@ func (s *Service) ListNodes(ctx context.Context, userID string, parentID *int64,
 	return s.nodeRepo.ListByParent(ctx, filter)
 }
 
-func (s *Service) UpdateNode(ctx context.Context, userID string, nodeID int64, name *string, parentID *int64, updateParent bool) (*model.DriveNode, error) {
+func (s *Service) UpdateNode(ctx context.Context, userID int64, nodeID int64, name *string, parentID *int64, updateParent bool) (*model.DriveNode, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
 		return nil, fmt.Errorf("drive service is not configured")
 	}
@@ -300,7 +301,7 @@ func (s *Service) UpdateNode(ctx context.Context, userID string, nodeID int64, n
 	return updated, nil
 }
 
-func (s *Service) DeleteNode(ctx context.Context, userID string, nodeID int64) (int64, error) {
+func (s *Service) DeleteNode(ctx context.Context, userID int64, nodeID int64) (int64, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
 		return 0, fmt.Errorf("drive service is not configured")
 	}

@@ -2,6 +2,7 @@ package capabilities
 
 import (
 	"context"
+	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
@@ -28,9 +29,10 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 		return model.UnderstandResult{}, err
 	}
 
+	userIDStr := strconv.FormatInt(actor.UserID, 10)
 	return s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
-		UserID:      actor.UserID,
+		UserID:      userIDStr,
 		Capability:  capabilityImageRead,
 		RequestMeta: buildImageRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
@@ -61,9 +63,10 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 		return model.UnderstandResult{}, err
 	}
 
+	userIDStr := strconv.FormatInt(actor.UserID, 10)
 	return s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
-		UserID:      actor.UserID,
+		UserID:      userIDStr,
 		Capability:  capabilityVideoRead,
 		RequestMeta: buildVideoRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
@@ -94,9 +97,10 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 		return model.UnderstandResult{}, err
 	}
 
+	userIDStr := strconv.FormatInt(actor.UserID, 10)
 	return s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
-		UserID:      actor.UserID,
+		UserID:      userIDStr,
 		Capability:  capabilityAudioRead,
 		RequestMeta: buildAudioRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,

@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
+func (s *Service) PublishVersion(ctx context.Context, userID int64, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.siteRepo == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -79,7 +80,7 @@ func (s *Service) PublishVersion(ctx context.Context, userID string, pageID int6
 	return targetVersion, nil
 }
 
-func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*model.PageSite, error) {
+func (s *Service) Unpublish(ctx context.Context, userID int64, pageID int64) (*model.PageSite, error) {
 	if s == nil || s.versionRepo == nil || s.siteRepo == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -124,7 +125,7 @@ func (s *Service) Unpublish(ctx context.Context, userID string, pageID int64) (*
 	return updatedSite, nil
 }
 
-func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageVersion, error) {
+func (s *Service) RollbackCloneVersion(ctx context.Context, userID int64, pageID int64, versionID int64) (*model.PageVersion, error) {
 	if s == nil || s.versionRepo == nil || s.storageObjectRepo == nil || s.objectStore == nil {
 		return nil, model.ErrNotConfigured("page version service is not configured")
 	}
@@ -153,7 +154,7 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 	}
 
 	assetPrefixBase := fmt.Sprintf("page/spaces/%d/sites/%d/versions", site.SpaceID, site.ID)
-	clonedVersion, err := s.versionRepo.CreateDraftFromSource(ctx, site.ID, userID, assetPrefixBase, sourceVersion.ID)
+	clonedVersion, err := s.versionRepo.CreateDraftFromSource(ctx, site.ID, strconv.FormatInt(userID, 10), assetPrefixBase, sourceVersion.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +177,7 @@ func (s *Service) RollbackCloneVersion(ctx context.Context, userID string, pageI
 	return clonedVersion, nil
 }
 
-func (s *Service) loadSiteAndVersion(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PageSite, *model.PageVersion, error) {
+func (s *Service) loadSiteAndVersion(ctx context.Context, userID int64, pageID int64, versionID int64) (*model.PageSite, *model.PageVersion, error) {
 	site, err := s.GetSite(ctx, userID, pageID)
 	if err != nil {
 		return nil, nil, err

@@ -24,6 +24,11 @@ func (h *Handler) PresignFile(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	var req presignFileRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
@@ -36,7 +41,7 @@ func (h *Handler) PresignFile(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	result, err := h.service.PresignFileUpload(c, principal.UserID, parentID, req.Name, req.ContentType, req.ContentLength)
+	result, err := h.service.PresignFileUpload(c, userID, parentID, req.Name, req.ContentType, req.ContentLength)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "presign_drive_file_failed", err.Error())
 		return
@@ -62,6 +67,11 @@ func (h *Handler) CompleteFile(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	var req completeFileRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
@@ -79,7 +89,7 @@ func (h *Handler) CompleteFile(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	node, err := h.service.CompleteFileUpload(c, principal.UserID, uploadSessionID, fileID)
+	node, err := h.service.CompleteFileUpload(c, userID, uploadSessionID, fileID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "complete_drive_file_failed", err.Error())
 		return

@@ -30,6 +30,11 @@ func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
 	}
 	log.Printf("[DEBUG GetShare] principal user_id=%s", principal.UserID)
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		log.Printf("[DEBUG GetShare] resolveDriveNodeID failed: %v", err)
@@ -38,7 +43,7 @@ func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
 	}
 	log.Printf("[DEBUG GetShare] resolved node_id=%d", nodeID)
 
-	view, err := h.service.GetShare(c, principal.UserID, nodeID)
+	view, err := h.service.GetShare(c, userID, nodeID)
 	if err != nil {
 		log.Printf("[DEBUG GetShare] service.GetShare failed: %v", err)
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "get_drive_share_failed", err.Error())
@@ -72,6 +77,11 @@ func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
@@ -86,7 +96,7 @@ func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 		}
 	}
 
-	view, err := h.service.UpsertShare(c, principal.UserID, nodeID, req.ExpiresInSeconds, req.NoExpire, req.Password, req.NoPassword)
+	view, err := h.service.UpsertShare(c, userID, nodeID, req.ExpiresInSeconds, req.NoExpire, req.Password, req.NoPassword)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "upsert_drive_share_failed", err.Error())
 		return
@@ -112,13 +122,18 @@ func (h *Handler) RotateShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
 	}
 
-	view, err := h.service.RotateShare(c, principal.UserID, nodeID)
+	view, err := h.service.RotateShare(c, userID, nodeID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "rotate_drive_share_failed", err.Error())
 		return
@@ -144,6 +159,11 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
@@ -152,7 +172,7 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 
 	rawID := string(ctx.Param("id"))
 
-	if err := h.service.RevokeShare(c, principal.UserID, nodeID); err != nil {
+	if err := h.service.RevokeShare(c, userID, nodeID); err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "revoke_drive_share_failed", err.Error())
 		return
 	}
