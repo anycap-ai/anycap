@@ -187,6 +187,18 @@ Before enabling a new operation in production:
 - [ ] CLI subcommand added and tested
 - [ ] Skill files updated to document the new command
 
+## Upload Ref Resolution — MUST READ
+
+> **Any service that forwards user-supplied URLs to an upstream provider MUST resolve `anycap://upload/` references first.** Failure to do so causes upstream errors (invalid base64 / invalid URL).
+
+In production, presign returns `anycap://upload/cu_xxx` (not HTTP URLs). Call `UploadRefResolver.ResolveReferenceURLs()` to convert them to presigned HTTP URLs before sending to NexusHub or any other provider.
+
+- Resolution impl: `internal/application/capabilities/service_upload_resolver.go`
+- Port: `port.UploadRefResolver` (`internal/domain/port/capabilities.go`)
+- Wired in `bootstrap.go` full-mode only (stub mode returns direct URLs, no resolution needed)
+
+When adding a new generate/edit flow that accepts reference URLs, ask the user whether it needs upload ref resolution — don't assume.
+
 ## Web Design Guideline
 
 When developing any page under `web/`, always follow `web/docs/design-guideline.md`. It defines the full visual language — colors, typography, spacing, backgrounds, borders, effects, and component patterns. All web pages must be visually consistent with this guideline.
