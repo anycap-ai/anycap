@@ -144,6 +144,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			}
 		}()
 	}
+	log.Printf("payment events: %s", describePaymentEventsConfig(cfg.PaymentEvents))
 	if deps.paymentEventsWorker != nil {
 		go func() {
 			if err := deps.paymentEventsWorker.Run(context.Background()); err != nil {
@@ -248,6 +249,29 @@ func resolveFeatureEnv(name string, autoVal bool) bool {
 	default:
 		return autoVal
 	}
+}
+
+func describePaymentEventsConfig(cfg config.PaymentEventsConfig) string {
+	tags := strings.Join(cfg.Tags, ",")
+	if tags == "" {
+		tags = "*"
+	}
+	return fmt.Sprintf(
+		"enabled=%t topic=%s group=%s biz_id=%s tags=%s",
+		cfg.Enabled,
+		fallbackLogValue(cfg.Topic),
+		fallbackLogValue(cfg.ConsumerGroup),
+		fallbackLogValue(cfg.BizID),
+		tags,
+	)
+}
+
+func fallbackLogValue(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "-"
+	}
+	return trimmed
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {

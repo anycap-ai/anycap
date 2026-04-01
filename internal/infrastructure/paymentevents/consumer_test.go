@@ -70,6 +70,33 @@ func TestMessageHandler_HandleMessage_ProcessesEvent(t *testing.T) {
 	}
 }
 
+func TestMessageHandler_HandleMessage_ProcessesPaymentFailed(t *testing.T) {
+	processor := &fakeEventProcessor{
+		result: billingevents.ProcessResult{
+			EventKey: "payment_failed:biz:anycap:session:cs_test_123",
+			Status:   model.PaymentEventReceiptStatusProcessed,
+		},
+	}
+	handler := NewMessageHandler(processor)
+
+	result, err := handler.HandleMessage(context.Background(), []byte(`{
+		"type":"payment_failed",
+		"user_id":456,
+		"biz_id":"anycap",
+		"timestamp":"2026-04-01T10:00:00Z",
+		"data":{"session_id":"cs_test_123"}
+	}`))
+	if err != nil {
+		t.Fatalf("HandleMessage() error = %v", err)
+	}
+	if result.EventKey != "payment_failed:biz:anycap:session:cs_test_123" {
+		t.Fatalf("unexpected process result: %+v", result)
+	}
+	if processor.lastEvent.Type != model.PaymentEventTypePaymentFailed {
+		t.Fatalf("unexpected processor event: %+v", processor.lastEvent)
+	}
+}
+
 func TestBuildSubscriptionExpression_DefaultsToAll(t *testing.T) {
 	expr := buildSubscriptionExpression(nil)
 	if expr != rmq.SUB_ALL {

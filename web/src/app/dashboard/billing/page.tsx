@@ -5,6 +5,7 @@ export const runtime = "edge";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { Spinner } from "@/components/ui/Spinner";
 import { createBillingCheckout, useBalance, useCreditPacks, useLogs } from "@/lib/api/hooks";
 import type { CreditPack, TimelineItem } from "@/lib/api/types";
 import { formatCredit, formatCreditCent } from "@/lib/credit";
@@ -64,10 +65,12 @@ function PackOption({
   pack,
   selected,
   onSelect,
+  disabled = false,
 }: {
   pack: CreditPack;
   selected: boolean;
   onSelect: (pack: CreditPack) => void;
+  disabled?: boolean;
 }) {
   const featured = !!pack.featured;
 
@@ -75,13 +78,14 @@ function PackOption({
     <button
       type="button"
       onClick={() => onSelect(pack)}
+      disabled={disabled}
       className={`w-full rounded-2xl border px-4 py-4 text-left transition-all ${
         selected
           ? "border-[#6b7d3a] bg-[rgba(107,125,58,0.09)] shadow-[0_1px_3px_rgba(0,0,0,0.05)]"
           : featured
             ? "border-[#bfcaa2] bg-[rgba(107,125,58,0.05)]"
             : "border-[#d8dcd0] bg-[#fafbf8] hover:bg-[#f4f6f0]"
-      }`}
+      } ${disabled ? "cursor-wait opacity-75" : ""}`}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
@@ -387,6 +391,7 @@ export default function BillingPage() {
                   key={pack.id}
                   pack={pack}
                   selected={selectedPack?.id === pack.id}
+                  disabled={submittingPackID != null}
                   onSelect={(nextPack) => setSelectedPackID(nextPack.id)}
                 />
               ))}
@@ -399,9 +404,14 @@ export default function BillingPage() {
                   disabled={submittingPackID != null}
                   className="inline-flex items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] disabled:cursor-wait disabled:opacity-70"
                 >
-                  {submittingPackID === selectedPack.id
-                    ? "Redirecting..."
-                    : `Buy ${formatCredit(selectedPack.credits)} for ${formatMoney(selectedPack.price_cent, selectedPack.currency)}`}
+                  {submittingPackID === selectedPack.id ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner size={14} />
+                      Redirecting to secure checkout...
+                    </span>
+                  ) : (
+                    `Buy ${formatCredit(selectedPack.credits)} for ${formatMoney(selectedPack.price_cent, selectedPack.currency)}`
+                  )}
                 </button>
               </div>
             ) : null}
