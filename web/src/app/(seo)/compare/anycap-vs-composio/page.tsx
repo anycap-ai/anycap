@@ -64,6 +64,7 @@ export default function AnycapVsComposioPage() {
     <>
       <BreadcrumbJsonLd items={[
         { name: "Home", href: "/" },
+        { name: "Compare", href: "/compare", unlinkable: true },
         { name: "AnyCap vs Composio" },
       ]} />
       <article className="px-6 md:px-12 lg:px-20">
@@ -201,7 +202,7 @@ export default function AnycapVsComposioPage() {
                 className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg"
                 style={mono}
               >
-                Request Early Access
+                View on GitHub
               </a>
               <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Any Capability</Link>
             </div>

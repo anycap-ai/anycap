@@ -81,7 +81,7 @@ export default function AnycapVsOpenAIAgentBuilderPage() {
   return (
     <>
       <BreadcrumbJsonLd
-        items={[{ name: "Home", href: "/" }, { name: "AnyCap vs OpenAI Agent Builder" }]}
+        items={[{ name: "Home", href: "/" }, { name: "Compare", href: "/compare", unlinkable: true }, { name: "AnyCap vs OpenAI Agent Builder" }]}
       />
       <script
         type="application/ld+json"

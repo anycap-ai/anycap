@@ -47,6 +47,7 @@ export default function ContextEngineeringForAgentsPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Guides", href: "/guides", unlinkable: true },
           { name: "Context Engineering for Agents" },
         ]}
       />

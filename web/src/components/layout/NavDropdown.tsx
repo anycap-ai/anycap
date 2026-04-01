@@ -17,7 +17,7 @@ type NavDropdownProps = {
   label: string;
   href?: string;
   items: DropdownItem[];
-  hideBelow?: "sm" | "md";
+  hideBelow?: "sm" | "md" | "lg";
 };
 
 export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps) {

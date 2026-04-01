@@ -25,7 +25,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    title: "Equip your agents",
+    title: "Equip Agents",
     links: [
       { href: "/start", label: "Start here" },
       { href: "/for/claude-code", label: "Claude Code" },
@@ -37,11 +37,11 @@ const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "Learn",
     links: [
-      { href: "/learn/what-agents-cant-do", label: "What agents can't do" },
-      { href: "/cli", label: "Why one CLI matters" },
-      { href: "/skills", label: "How skills fit" },
+      { href: "/cli", label: "CLI" },
+      { href: "/skills", label: "Skills" },
+      { href: "/guides/install-anycap", label: "Install AnyCap" },
       { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-      { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
+      { href: "/learn/what-agents-cant-do", label: "What agents can't do" },
     ],
   },
   {

@@ -183,7 +183,8 @@ export default function ForCursorPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
-          { name: "AnyCap for Cursor" },
+          { name: "Equip Agents", href: "/for", unlinkable: true },
+          { name: "Cursor" },
         ]}
       />
       <script

@@ -85,6 +85,7 @@ export default function Seedream5Page() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Models", href: "/models" },
           { name: "Seedream 5" },
         ]}
       />

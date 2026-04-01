@@ -183,7 +183,8 @@ export default function ForManusPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
-          { name: "AnyCap for Manus" },
+          { name: "Equip Agents", href: "/for", unlinkable: true },
+          { name: "Manus" },
         ]}
       />
       <script

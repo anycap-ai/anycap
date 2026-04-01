@@ -34,6 +34,7 @@ export default function AgentSkillsForDeveloperToolsPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Guides", href: "/guides", unlinkable: true },
           { name: "Agent Skills for Developer Tools" },
         ]}
       />
