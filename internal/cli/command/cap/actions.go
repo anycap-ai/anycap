@@ -114,6 +114,10 @@ Examples:
 	cmd.Flags().StringVar(&instruction, "instruction", "", "Custom instruction for image analysis")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
 
+	// Alias --prompt to --instruction so agents using generation-style flags don't break.
+	cmd.Flags().StringVar(&instruction, "prompt", "", "Alias for --instruction")
+	_ = cmd.Flags().MarkHidden("prompt")
+
 	return cmd
 }
 
@@ -176,6 +180,11 @@ Examples:
 	cmd.Flags().StringVar(&fileFlag, "file", "", "Local video file to upload and analyze (max 100 MB)")
 	cmd.Flags().StringVar(&instruction, "instruction", "", "What to look for or describe")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
+
+	// Alias --prompt to --instruction so agents using generation-style flags don't break.
+	cmd.Flags().StringVar(&instruction, "prompt", "", "Alias for --instruction")
+	_ = cmd.Flags().MarkHidden("prompt")
+
 	cmd.MarkFlagsOneRequired("url", "file")
 	cmd.MarkFlagsMutuallyExclusive("url", "file")
 
@@ -241,6 +250,11 @@ Examples:
 	cmd.Flags().StringVar(&fileFlag, "file", "", "Local audio file to upload and analyze (max 100 MB)")
 	cmd.Flags().StringVar(&instruction, "instruction", "", "What to listen for or describe")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
+
+	// Alias --prompt to --instruction so agents using generation-style flags don't break.
+	cmd.Flags().StringVar(&instruction, "prompt", "", "Alias for --instruction")
+	_ = cmd.Flags().MarkHidden("prompt")
+
 	cmd.MarkFlagsOneRequired("url", "file")
 	cmd.MarkFlagsMutuallyExclusive("url", "file")
 
