@@ -152,11 +152,11 @@ ANYCAP_FEATURE_DRIVE=false
 
 Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrastructure-derived default.
 
-### Three-layer enforcement
+### Enforcement
 
-1. **Server feature gate middleware** (`internal/middleware/feature_gate.go`): blocks requests to disabled features with `503 FEATURE_DISABLED`.
+1. **Server feature gate middleware** (`internal/middleware/feature_gate.go`): blocks requests to disabled features with `503 FEATURE_DISABLED` or per-user access denial with `403 FEATURE_NOT_ALLOWED`. Both responses include a `hint` field guiding the user to submit a feature request via `anycap feedback`.
 2. **Public features endpoint** (`GET /v1/features`): returns the resolved feature map, no auth required.
-3. **CLI preflight** (`cmd/anycap/main.go`): fetches `/v1/features` before building the command tree. Disabled commands are hidden from help and unavailable. When the server is unreachable, all features are disabled so only local commands (config, credential, skill, login, update, feedback) remain visible.
+3. **CLI always shows all commands.** The CLI does not perform preflight feature checks. All capability commands (image, video, music, actions, drive, page) are unconditionally registered. When the server rejects a request due to feature gating, the CLI surfaces the server's error code and hint, directing the user to `anycap feedback --type feature` to request access.
 
 ### Adding a new feature flag
 
@@ -164,7 +164,7 @@ Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrast
 2. Add default in the `defaults` map (same file).
 3. Add to `buildServerFeatures()` in `internal/app/bootstrap.go` with the infra-derived default.
 4. The feature gate middleware resolves features dynamically from URL paths (`/v1/{cap}/{operation}` -> `{cap}.{operation}`), so no code change is needed in `feature_gate.go` for new capability operations.
-5. Gate the CLI command with `feature.Enabled()` in the appropriate command constructor.
+5. Add the CLI subcommand unconditionally (no feature gating on the CLI side).
 
 ### Adding a new capability operation
 

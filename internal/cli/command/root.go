@@ -15,7 +15,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/selfupdate"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -85,29 +84,17 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewDownloadCmd(opts.Stdout),
 	)
 
-	// Infrastructure commands (gated by feature flags).
-	if feature.Enabled(feature.Drive) {
-		rootCmd.AddCommand(infra.NewDriveCmd(clientFactory, opts.Stdout))
-	}
-	if feature.Enabled(feature.Page) {
-		rootCmd.AddCommand(infra.NewPageCmd(clientFactory, opts.Stdout))
-	}
+	// Infrastructure commands.
+	rootCmd.AddCommand(infra.NewDriveCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(infra.NewPageCmd(clientFactory, opts.Stdout))
 
 	// Action commands (AI analysis: image-read, video-read, etc.).
-	if actionsCmd := cap.NewActionsCmd(clientFactory, opts.Stdout); actionsCmd.HasSubCommands() {
-		rootCmd.AddCommand(actionsCmd)
-	}
+	rootCmd.AddCommand(cap.NewActionsCmd(clientFactory, opts.Stdout))
 
-	// Capability commands (gated by feature flags; skip parent if no subcommands).
-	if imageCmd := cap.NewImageCmd(clientFactory, opts.Stdout); imageCmd.HasSubCommands() {
-		rootCmd.AddCommand(imageCmd)
-	}
-	if videoCmd := cap.NewVideoCmd(clientFactory, opts.Stdout); videoCmd.HasSubCommands() {
-		rootCmd.AddCommand(videoCmd)
-	}
-	if musicCmd := cap.NewMusicCmd(clientFactory, opts.Stdout); musicCmd.HasSubCommands() {
-		rootCmd.AddCommand(musicCmd)
-	}
+	// Capability commands.
+	rootCmd.AddCommand(cap.NewImageCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(cap.NewVideoCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(cap.NewMusicCmd(clientFactory, opts.Stdout))
 
 	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr, &verbose)
 
