@@ -12,7 +12,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -24,14 +23,11 @@ func NewImageCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.ImageModels) {
-		imageCmd.AddCommand(newImageModelsCmd(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.ImageGenerate) {
-		imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
-			Operation: "generate",
-			Short:     "Generate an image from a prompt",
-			Long: `Generate an image using a text prompt. Use --param to pass parameters
+	imageCmd.AddCommand(newImageModelsCmd(clientFactory, stdout))
+	imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
+		Operation: "generate",
+		Short:     "Generate an image from a prompt",
+		Long: `Generate an image using a text prompt. Use --param to pass parameters
 discovered from 'image models <model> schema'.
 
 The generated image is automatically downloaded to the current directory.
@@ -42,14 +38,12 @@ Examples:
   anycap image generate --prompt "a landscape" --model nano-banana-2 -o landscape.png
   anycap image generate --prompt "a landscape" --model nano-banana-2 --param ratio=16:9
   anycap image generate --prompt "a photo" --model nano-banana-2 --mode image-to-image --param reference_image_urls='["https://example.com/photo.jpg"]'`,
-			PromptDesc: "Text prompt for image generation",
-		}))
-	}
-	if feature.Enabled(feature.ImageEdit) {
-		imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
-			Operation: "edit",
-			Short:     "Edit an image using a prompt",
-			Long: `Edit an existing image using a text prompt. Requires a reference image
+		PromptDesc: "Text prompt for image generation",
+	}))
+	imageCmd.AddCommand(newImageOperationCmd(clientFactory, stdout, imageOperationConfig{
+		Operation: "edit",
+		Short:     "Edit an image using a prompt",
+		Long: `Edit an existing image using a text prompt. Requires a reference image
 via --param or --mode image-to-image.
 
 The edited image is automatically downloaded to the current directory.
@@ -59,9 +53,8 @@ Examples:
   anycap image edit --prompt "remove the background" --model seedream-5 --param reference_image_urls='["https://example.com/photo.jpg"]'
   anycap image edit --prompt "make it look like a painting" --model seedream-5 --param reference_image_urls='["./photo.jpg"]'
   anycap image edit --prompt "change hair color to red" --model seedream-5 -o edited.png --param reference_image_urls='["./portrait.jpg"]'`,
-			PromptDesc: "Text prompt describing the edit to apply",
-		}))
-	}
+		PromptDesc: "Text prompt describing the edit to apply",
+	}))
 
 	return imageCmd
 }

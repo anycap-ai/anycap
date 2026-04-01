@@ -11,7 +11,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -23,12 +22,8 @@ func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.VideoModels) {
-		videoCmd.AddCommand(newVideoModelsCmd(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.VideoGenerate) {
-		videoCmd.AddCommand(newVideoGenerateCmd(clientFactory, stdout))
-	}
+	videoCmd.AddCommand(newVideoModelsCmd(clientFactory, stdout))
+	videoCmd.AddCommand(newVideoGenerateCmd(clientFactory, stdout))
 
 	return videoCmd
 }

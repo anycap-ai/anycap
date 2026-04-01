@@ -108,7 +108,7 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 				"code":    "FEATURE_DISABLED",
 				"message": feat + " is not available on this server",
 			},
-			"hint": "run 'anycap status' to see available features",
+			"hint": "this feature is not yet available; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access",
 		})
 		ctx.Abort()
 		return
@@ -123,6 +123,7 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 				"code":    "FEATURE_NOT_ALLOWED",
 				"message": feat + " is not allowed for the current user",
 			},
+			"hint": "you don't have access to this feature; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access",
 		})
 		ctx.Abort()
 		return

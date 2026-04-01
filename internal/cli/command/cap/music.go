@@ -12,7 +12,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -24,12 +23,8 @@ func NewMusicCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.MusicModels) {
-		musicCmd.AddCommand(newMusicModelsCmd(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.MusicGenerate) {
-		musicCmd.AddCommand(newMusicGenerateCmd(clientFactory, stdout))
-	}
+	musicCmd.AddCommand(newMusicModelsCmd(clientFactory, stdout))
+	musicCmd.AddCommand(newMusicGenerateCmd(clientFactory, stdout))
 
 	return musicCmd
 }
