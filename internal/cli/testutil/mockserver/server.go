@@ -575,19 +575,33 @@ func (s *Server) handleVideoModelSchema(w http.ResponseWriter, r *http.Request) 
 	if operation == "" {
 		operation = "generate"
 	}
+	mode := r.URL.Query().Get("mode")
+
+	modelParams := map[string]any{
+		"prompt":          map[string]any{"type": "string", "required": true},
+		"negative_prompt": map[string]any{"type": "string"},
+		"aspect_ratio":    map[string]any{"type": "string", "enum": []string{"1:1", "16:9", "9:16"}},
+		"resolution":      map[string]any{"type": "string", "enum": []string{"720p", "1080p"}},
+		"duration":        map[string]any{"type": "integer", "min": 2, "max": 10},
+	}
+	if mode == "image-to-video" {
+		modelParams["images"] = map[string]any{
+			"type":     "array",
+			"min_items": 1,
+			"max_items": 1,
+			"items": map[string]any{
+				"type":   "string",
+				"format": "file-or-url",
+			},
+		}
+	}
 
 	writeSuccess(w, map[string]any{
 		"capability": "video",
 		"model":      model,
 		"operation":  operation,
 		"schema": map[string]any{
-			"model_params": map[string]any{
-				"prompt":          map[string]any{"type": "string", "required": true},
-				"negative_prompt": map[string]any{"type": "string"},
-				"ratio":           map[string]any{"type": "string", "enum": []string{"1:1", "16:9", "9:16"}},
-				"resolution":      map[string]any{"type": "string", "enum": []string{"720p", "1080p"}},
-				"duration":        map[string]any{"type": "integer", "min": 2, "max": 10},
-			},
+			"model_params": modelParams,
 		},
 	})
 }

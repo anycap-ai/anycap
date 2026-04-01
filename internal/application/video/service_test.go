@@ -16,6 +16,10 @@ type fakeUsageWriter struct {
 	runs   []model.ProviderRunRecord
 }
 
+type fakeUploadResolver struct {
+	calledWith []string
+}
+
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
 	return nil
@@ -24,6 +28,11 @@ func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageE
 func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.ProviderRunRecord) error {
 	f.runs = append(f.runs, run)
 	return nil
+}
+
+func (f *fakeUploadResolver) ResolveReferenceURLs(_ context.Context, urls []string) ([]string, error) {
+	f.calledWith = append([]string(nil), urls...)
+	return []string{"https://cdn.anycap.local/resolved-frame.png"}, nil
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -43,6 +52,14 @@ func testCatalog() *nexushub.CatalogStub {
 						Mode:       model.ModeTextToVideo,
 						AlgoType:   "txt_2_video",
 						Priority:   100,
+						Enabled:    true,
+					}, {
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "veo-mini",
+						GenType:    string(model.CapabilityVideo),
+						Mode:       model.ModeImageToVideo,
+						AlgoType:   "img_2_video",
+						Priority:   90,
 						Enabled:    true,
 					}},
 				},
@@ -111,5 +128,29 @@ func TestGenerateVideo_SuccessPersistsUsageLedger(t *testing.T) {
 	}
 	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
+	}
+}
+
+func TestGenerateVideo_ResolvesResourceURL(t *testing.T) {
+	logs := calllog.NewMemoryCallLogRepo()
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 10}), logs)
+	resolver := &fakeUploadResolver{}
+	service.SetUploadRefResolver(resolver)
+
+	_, err := service.Generate(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-1",
+		APIKeyID:           "akid_1",
+		RequestID:          "req-1",
+		Prompt:             "paper crane",
+		Model:              "veo-mini",
+		Mode:               model.ModeImageToVideo,
+		ReferenceImageURLs: []string{"https://example.com/frame.png"},
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+
+	if len(resolver.calledWith) != 1 || resolver.calledWith[0] != "https://example.com/frame.png" {
+		t.Fatalf("expected resolver to receive single resource url, got %#v", resolver.calledWith)
 	}
 }
