@@ -343,7 +343,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		callLogs := calllog.NewCallLogDBRepo(db)
 		usageRepo := usage.NewRepo(db)
 		users := userstore.NewProvisioner(db)
-		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
+		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, users, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)

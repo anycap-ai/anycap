@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
 )
@@ -26,7 +27,7 @@ type RepositoryAPIKeyService struct {
 	rawKeyGen     func() (string, error)
 }
 
-func NewRepositoryAPIKeyService(repo APIKeyRepository, now func() time.Time, rawKeyGen func() (string, error)) *RepositoryAPIKeyService {
+func NewRepositoryAPIKeyService(repo APIKeyRepository, users port.UserReader, now func() time.Time, rawKeyGen func() (string, error)) *RepositoryAPIKeyService {
 	if now == nil {
 		now = time.Now
 	}
@@ -36,7 +37,7 @@ func NewRepositoryAPIKeyService(repo APIKeyRepository, now func() time.Time, raw
 
 	return &RepositoryAPIKeyService{
 		repo:          repo,
-		authenticator: NewAPIKeyAuthenticator(repo, now),
+		authenticator: NewAPIKeyAuthenticator(repo, users, now),
 		now:           now,
 		rawKeyGen:     rawKeyGen,
 	}

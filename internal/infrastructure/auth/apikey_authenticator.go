@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikeycodec"
 )
 
@@ -14,16 +15,17 @@ type APIKeyLookup interface {
 }
 
 type APIKeyAuthenticator struct {
-	repo APIKeyLookup
-	now  func() time.Time
+	repo  APIKeyLookup
+	users port.UserReader
+	now   func() time.Time
 }
 
-func NewAPIKeyAuthenticator(repo APIKeyLookup, now func() time.Time) *APIKeyAuthenticator {
+func NewAPIKeyAuthenticator(repo APIKeyLookup, users port.UserReader, now func() time.Time) *APIKeyAuthenticator {
 	if now == nil {
 		now = time.Now
 	}
 
-	return &APIKeyAuthenticator{repo: repo, now: now}
+	return &APIKeyAuthenticator{repo: repo, users: users, now: now}
 }
 
 func (a *APIKeyAuthenticator) AuthenticateAPIKey(ctx context.Context, rawKey string) (model.Principal, error) {
@@ -44,10 +46,21 @@ func (a *APIKeyAuthenticator) AuthenticateAPIKey(ctx context.Context, rawKey str
 		return model.Principal{}, err
 	}
 
-	return model.Principal{
+	principal := model.Principal{
 		UserID:   key.UserID,
 		APIKeyID: key.ID,
 		AuthType: "api_key",
 		Scopes:   []string{"image.generate", "image.read", "system.read"},
-	}, nil
+	}
+	if a.users != nil {
+		user, err := a.users.GetUserByID(ctx, key.UserID)
+		if err != nil {
+			return model.Principal{}, err
+		}
+		principal.Email = user.Email
+		principal.Name = user.Name
+		principal.Picture = user.AvatarURL
+	}
+
+	return principal, nil
 }
