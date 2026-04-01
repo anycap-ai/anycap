@@ -10,11 +10,12 @@ import (
 )
 
 type Service struct {
-	catalog  port.CatalogRepository
-	nexusHub port.NexusHubClient
-	credit   port.CreditClient
-	callLogs port.CallLogRepo
-	usage    port.UsageWriter
+	catalog        port.CatalogRepository
+	nexusHub       port.NexusHubClient
+	credit         port.CreditClient
+	callLogs       port.CallLogRepo
+	usage          port.UsageWriter
+	uploadResolver port.UploadRefResolver
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -28,6 +29,10 @@ func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, cr
 
 func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 	s.usage = usage
+}
+
+func (s *Service) SetUploadRefResolver(r port.UploadRefResolver) {
+	s.uploadResolver = r
 }
 
 func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) (model.GenerateVideoResult, error) {
@@ -63,6 +68,14 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	route, err := model.SelectRoute(spec, model.OperationGenerate, mode)
 	if err != nil {
 		return model.GenerateVideoResult{}, err
+	}
+
+	if len(req.ReferenceImageURLs) > 0 && s.uploadResolver != nil {
+		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, req.ReferenceImageURLs)
+		if resolveErr != nil {
+			return model.GenerateVideoResult{}, resolveErr
+		}
+		req.ReferenceImageURLs = resolved
 	}
 
 	startedAt := time.Now()
