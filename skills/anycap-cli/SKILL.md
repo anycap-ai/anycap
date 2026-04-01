@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- capability runtime for AI agents. One CLI for image generation, image read, video analysis, audio analysis, music composition, text-to-speech, web search, web crawling, file download, static site hosting, and cloud file storage. Use when the agent needs to generate images, analyze images, video, or audio, produce audio/music, search or crawl the web, download remote files, deploy static sites, or store and share files. Also use when the agent needs to authenticate with AnyCap (login, API key, credentials), or when encountering errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities, AI-generated media, page hosting, or drive storage."
 metadata:
-  version: 0.0.7
+  version: 0.0.8
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -152,8 +152,9 @@ anycap page deploy ./dist --name "My Site" --publish
 anycap page deploy ./dist --publish
 ```
 
-**Drive Storage** -- upload, organize, and share files.
-Read [references/drive.md](references/drive.md) when you need to upload files, create folders, or generate share links.
+**Drive Storage** -- share files with humans via cloud storage.
+Read [references/drive.md](references/drive.md) when you need to give the human a shareable link to view or download a file.
+Do NOT use drive to get URLs for other AnyCap commands -- actions and generation commands accept `--file` directly.
 
 ```bash
 anycap drive upload result.pdf --parent-path /reports
@@ -235,8 +236,17 @@ anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode im
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
 
-# Extract content from an action response
+# Analyze a local image file (auto-uploaded, no drive needed)
+anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
+
+# Analyze a remote image by URL
 anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'
+
+# Analyze a local video file
+anycap actions video-read --file ./demo.mp4 --instruction "Summarize the key events" | jq -r '.content'
+
+# Analyze a local audio file
+anycap actions audio-read --file ./meeting.mp3 --instruction "Transcribe this" | jq -r '.content'
 
 # Get the error message on failure
 anycap ... | jq -r '.message // empty'

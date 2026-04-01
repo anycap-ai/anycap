@@ -1,6 +1,8 @@
 # Drive Storage
 
-Cloud file storage for agents. Upload, organize, and share files via AnyCap's drive.
+Cloud file storage for sharing files with humans. Upload, organize, and generate share links that people can open in a browser.
+
+**Drive is NOT for passing files between commands.** If you need to feed a local file into an action (image-read, video-read, audio-read) or a generation command (image edit, video i2v), use `--file` or `--param` directly -- those commands auto-upload internally. Drive is for when the human needs a link to view or download a result.
 
 ## Do You Need Multiple Targets?
 
@@ -118,11 +120,22 @@ This is an advanced pattern. For most workflows, path-based access (`--parent-pa
 
 ## Typical Agent Workflow
 
+Use drive when the human needs a shareable link to view or download a file:
+
 ```bash
-# Generate an image, upload it, share the link
+# Generate an image, upload to drive, share with the human
 anycap image generate --prompt "product hero" --model seedream-5 -o hero.png
-anycap drive mkdir --name "campaign-assets"
 anycap drive upload hero.png --parent-path /campaign-assets
 SHARE=$(anycap drive share --src-path /campaign-assets/hero.png | jq -r '.share_url')
 echo "Shareable link: $SHARE"
+```
+
+Do NOT use drive to get a URL for other AnyCap commands. For example, to analyze a local image:
+
+```bash
+# WRONG: upload to drive, then pass URL to image-read
+# anycap drive upload photo.png && anycap actions image-read --url <drive-url>
+
+# RIGHT: pass the file directly
+anycap actions image-read --file ./photo.png
 ```

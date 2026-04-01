@@ -62,11 +62,17 @@ Options:
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--url` | one of url/file | Video URL (direct link or YouTube URL) |
-| `--file` | one of url/file | Local video file (auto-uploaded) |
+| `--file` | one of url/file | Local video file (auto-uploaded, max 100 MB) |
 | `--instruction` | no | What to look for or describe |
 | `--model` | no | Specific model ID |
 
 Exactly one of `--url` or `--file` is required.
+
+Local video files must be under 100 MB. For larger files, compress first:
+
+```bash
+ffmpeg -i input.mp4 -vcodec libx264 -crf 28 output.mp4
+```
 
 ## audio-read
 
@@ -112,6 +118,7 @@ fi
 
 ## Tips
 
+- **Prefer `--file` for local files.** All actions auto-upload local files internally. Do NOT upload to drive first to get a URL -- just pass the file path directly with `--file`.
 - Without `--instruction`, models default to a general description. Specific instructions yield better results (e.g., "extract all text", "count the people", "describe the color palette", "transcribe the speech").
-- Local files are automatically uploaded before processing. Large files may take longer.
+- Video files are limited to 100 MB when using `--file`. Compress oversized videos with ffmpeg before uploading.
 - Use `--model` only if you need a specific model. The default is generally the best available.
