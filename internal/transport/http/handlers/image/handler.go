@@ -8,6 +8,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/route"
@@ -36,16 +38,22 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 	operation := ctx.Param("operation")
 	capability := "image." + operation
 	middleware.SetCapability(ctx, capability)
+	logger := logging.WithContext(c).WithFields(logging.Fields{
+		"capability": capability,
+		"operation":  operation,
+	})
 
 	var payload dto.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid image request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
-		ctx.JSON(401, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "AUTH_INVALID", "invalid api key"))
+		logger.Warn("missing principal for image request")
+		ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
 		return
 	}
 
@@ -54,7 +62,7 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 	aspectRatio := payload.EffectiveAspectRatio()
 
 	result, err := h.service.Execute(c, model.GenerateImageRequest{
-		RequestID:          middleware.GetRequestID(ctx),
+		RequestID:          trace.GetTraceID(c),
 		UserID:             principal.UserID,
 		APIKeyID:           principal.APIKeyID,
 		Prompt:             payload.Prompt,
@@ -68,10 +76,14 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, response := dto.MapDomainError(err)
-		response.ID = middleware.GetRequestID(ctx)
+		logger.WithError(err).WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  response.Error.Code,
+		}).Error("image request failed")
+		response.ID = trace.GetTraceID(c)
 		ctx.JSON(status, response)
 		return
 	}
 
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }

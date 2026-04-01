@@ -11,6 +11,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
@@ -34,7 +35,7 @@ var _ port.IdentityTokenAuthenticator = (*fakeIdentityTokenAuthenticator)(nil)
 
 func TestAuthMiddleware_RejectMissingBearer(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	h.GET("/protected", Auth(apikey.NewMemoryService(), nil), func(ctx context.Context, c *app.RequestContext) { c.String(200, "ok") })
 
 	resp := ut.PerformRequest(h.Engine, http.MethodGet, "/protected", nil)
@@ -45,7 +46,7 @@ func TestAuthMiddleware_RejectMissingBearer(t *testing.T) {
 
 func TestAuthMiddleware_UsesJWTAuthenticatorForNonAPIKeyBearer(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID())
+	h.Use(commonmw.TraceMiddleware())
 
 	identityAuth := &fakeIdentityTokenAuthenticator{
 		principal: model.Principal{
@@ -82,7 +83,7 @@ func TestAuthMiddleware_UsesJWTAuthenticatorForNonAPIKeyBearer(t *testing.T) {
 
 func TestAuthMiddleware_RejectsJWTBearerWhenIdentityAuthenticatorDisabled(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	h.GET("/protected", Auth(apikey.NewMemoryService(), nil), func(ctx context.Context, c *app.RequestContext) {
 		c.String(http.StatusOK, "ok")
 	})
@@ -98,7 +99,7 @@ func TestAuthMiddleware_RejectsJWTBearerWhenIdentityAuthenticatorDisabled(t *tes
 
 func TestLocalBypassAuth_SetsPrincipal(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	h.GET("/protected", LocalBypassAuth(model.Principal{
 		UserID:   "123",
 		AuthType: "local_bypass",

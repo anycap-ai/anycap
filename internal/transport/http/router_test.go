@@ -48,6 +48,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -661,7 +662,10 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
 		Middlewares: []app.HandlerFunc{
-			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
+			middleware.Recover(),
+			commonmw.TraceMiddleware(),
+			commonmw.AccessMiddleware("/ping", "/healthz"),
+			commonmw.MetricsMiddleware(),
 		},
 		Root: []RouteRegistrar{
 			RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
@@ -1812,8 +1816,8 @@ func TestRouter_Healthz(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.Code)
 	}
-	if resp.Header().Get("X-Request-Id") == "" {
-		t.Fatal("expected X-Request-Id header")
+	if resp.Header().Get("X-Trace-ID") == "" {
+		t.Fatal("expected X-Trace-ID header")
 	}
 }
 

@@ -1,6 +1,7 @@
 package login
 
 import (
+	"bytes"
 	"context"
 	"net/url"
 	"strings"
@@ -8,6 +9,10 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+
+	"github.com/sirupsen/logrus"
 )
 
 type fakeLoginAPIKeyService struct {
@@ -125,6 +130,28 @@ func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (mod
 
 type fakeLoginSessionRepo struct {
 	sessions map[string]model.LoginSession
+}
+
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	logger := logging.GetLogger()
+	originalOut := logger.Out
+	originalFormatter := logger.Formatter
+	originalLevel := logger.GetLevel()
+
+	var buf bytes.Buffer
+	logger.SetOutput(&buf)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.DebugLevel)
+
+	t.Cleanup(func() {
+		logger.SetOutput(originalOut)
+		logger.SetFormatter(originalFormatter)
+		logger.SetLevel(originalLevel)
+	})
+
+	return &buf
 }
 
 func newFakeLoginSessionRepo() *fakeLoginSessionRepo {
@@ -264,6 +291,29 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 	}
 	if !strings.HasPrefix(result.LoginSessionID, "lsn_") {
 		t.Fatalf("expected login session id with lsn_ prefix, got %q", result.LoginSessionID)
+	}
+}
+
+func TestService_Init_LogsMissingSessionRepoWithTraceID(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	service := newServiceForTest(now, apiKeys, users, newFakeLoginSessionRepo())
+	service.sessions = nil
+	logBuf := captureLogs(t)
+
+	ctx := trace.SetTraceID(context.Background(), "trace-login-init-1")
+	_, err := service.Init(ctx, model.LoginFlowBrowserPoll)
+	if err != model.ErrInternal {
+		t.Fatalf("expected ErrInternal, got %v", err)
+	}
+
+	output := logBuf.String()
+	if !strings.Contains(output, `"trace_id":"trace-login-init-1"`) {
+		t.Fatalf("expected trace_id in logs, got %q", output)
+	}
+	if !strings.Contains(output, "login session repo not configured") {
+		t.Fatalf("expected missing session repo log, got %q", output)
 	}
 }
 

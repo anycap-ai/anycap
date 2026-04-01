@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -23,7 +24,7 @@ func (f fakeFeatureProvider) EnabledFor(principal *model.Principal, feature stri
 
 func TestFeatureGate_AllowsEnabledFeature(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID(), FeatureGate(fakeFeatureProvider{
+	h.Use(commonmw.TraceMiddleware(), FeatureGate(fakeFeatureProvider{
 		enabledFor: func(_ *model.Principal, feature string) (bool, bool) {
 			return feature == "image.generate", true
 		},
@@ -40,7 +41,7 @@ func TestFeatureGate_AllowsEnabledFeature(t *testing.T) {
 
 func TestFeatureGate_BlocksDisabledFeature(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID(), FeatureGate(fakeFeatureProvider{
+	h.Use(commonmw.TraceMiddleware(), FeatureGate(fakeFeatureProvider{
 		enabledFor: func(_ *model.Principal, feature string) (bool, bool) {
 			if feature == "music.generate" {
 				return false, false
@@ -76,7 +77,7 @@ func TestFeatureGate_BlocksDisabledFeature(t *testing.T) {
 func TestFeatureGate_Returns403WhenUserNotAllowed(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
 	h.Use(
-		RequestID(),
+		commonmw.TraceMiddleware(),
 		LocalBypassAuth(model.Principal{UserID: "u_1", Email: "external@gmail.com", AuthType: "local_bypass"}),
 		FeatureGate(fakeFeatureProvider{
 			enabledFor: func(principal *model.Principal, feature string) (bool, bool) {
@@ -108,7 +109,7 @@ func TestFeatureGate_Returns403WhenUserNotAllowed(t *testing.T) {
 
 func TestFeatureGate_IgnoresUnmappedRoutes(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID(), FeatureGate(fakeFeatureProvider{
+	h.Use(commonmw.TraceMiddleware(), FeatureGate(fakeFeatureProvider{
 		enabledFor: func(_ *model.Principal, _ string) (bool, bool) {
 			return false, false
 		},

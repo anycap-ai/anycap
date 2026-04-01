@@ -12,6 +12,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 // Client calls Agent Platform's capabilities API for image/video understanding.
@@ -134,14 +135,20 @@ func (c *Client) AudioRead(ctx context.Context, req model.AudioReadRequest) (mod
 }
 
 func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body map[string]any) (model.UnderstandResult, error) {
+	logger := logging.WithContext(ctx).WithFields(logging.Fields{
+		"provider": "agentplatform",
+		"path":     path,
+	})
 	payload, err := json.Marshal(body)
 	if err != nil {
+		logger.WithError(err).Error("marshal agentplatform request failed")
 		return model.UnderstandResult{}, fmt.Errorf("marshal request: %w", err)
 	}
 
 	url := c.baseURL + path
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
+		logger.WithError(err).Error("build agentplatform request failed")
 		return model.UnderstandResult{}, fmt.Errorf("create request: %w", err)
 	}
 
@@ -153,25 +160,28 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	if userID := middleware.UserIDFromContext(ctx); userID != "" {
 		httpReq.Header.Set("X-User-ID", userID)
 	}
-	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
-		httpReq.Header.Set("X-Request-ID", requestID)
-	}
 
 	start := time.Now()
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
+		logger.WithError(err).Error("agentplatform request failed")
 		return model.UnderstandResult{}, fmt.Errorf("capabilities request to %s failed: %w", path, err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
+		logger.WithError(err).Error("read agentplatform response body failed")
 		return model.UnderstandResult{}, fmt.Errorf("read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		var ue upstreamError
 		if json.Unmarshal(respBody, &ue) == nil && ue.Detail.Error != "" {
+			logger.WithFields(logging.Fields{
+				"status_code": resp.StatusCode,
+				"error_code":  ue.Detail.Error,
+			}).Error("agentplatform returned non-200")
 			return model.UnderstandResult{}, &UpstreamError{
 				StatusCode: resp.StatusCode,
 				Code:       ue.Detail.Error,
@@ -179,6 +189,7 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 			}
 		}
 
+		logger.WithField("status_code", resp.StatusCode).Error("agentplatform returned unexpected non-200")
 		return model.UnderstandResult{}, &UpstreamError{
 			StatusCode: resp.StatusCode,
 			Code:       "upstream_error",
@@ -188,6 +199,7 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 
 	var result upstreamResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
+		logger.WithError(err).Error("decode agentplatform response failed")
 		return model.UnderstandResult{}, fmt.Errorf("decode response: %w", err)
 	}
 

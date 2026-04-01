@@ -36,7 +36,7 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 
 func (h *Handler) List(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
 		return
 	}
 
@@ -46,17 +46,17 @@ func (h *Handler) List(c context.Context, ctx *app.RequestContext) {
 		Search:     ctx.DefaultQuery("search", ""),
 	})
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "list_model_routes_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "list_model_routes_failed", err.Error())
 		return
 	}
 
 	presentedItems, err := presenter.PresentModelRoutes(c, h.mapper, items)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_model_routes_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_model_routes_failed", err.Error())
 		return
 	}
 
-	handlers.WriteSuccess(ctx, map[string]any{
+	handlers.WriteSuccess(c, ctx, map[string]any{
 		"items": presentedItems,
 		"total": len(presentedItems),
 	})
@@ -64,102 +64,102 @@ func (h *Handler) List(c context.Context, ctx *app.RequestContext) {
 
 func (h *Handler) Get(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
 		return
 	}
 
 	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_model_route_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_model_route_id", err)
 		return
 	}
 
 	item, err := h.service.Get(c, id)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusNotFound, "model_route_not_found", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusNotFound, "model_route_not_found", err.Error())
 		return
 	}
 	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) Create(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
 		return
 	}
 
 	var req model.CreateModelRouteInput
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
 	item, err := h.service.Create(c, req)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForModelRouteError(err), "create_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForModelRouteError(err), "create_model_route_failed", err.Error())
 		return
 	}
 	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) Update(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
 		return
 	}
 
 	id, err := h.resolver.ResolveModelRouteID(c, strings.TrimSpace(string(ctx.Param("id"))))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_model_route_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_model_route_id", err)
 		return
 	}
 
 	var req model.UpdateModelRouteInput
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
 	item, err := h.service.Update(c, id, req)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForModelRouteError(err), "update_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForModelRouteError(err), "update_model_route_failed", err.Error())
 		return
 	}
 	presented, err := presenter.PresentModelRoute(c, h.mapper, item)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_model_route_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) Delete(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "model_route_service_unavailable", "model route service is not configured")
 		return
 	}
 
 	rawID := strings.TrimSpace(string(ctx.Param("id")))
 	id, err := h.resolver.ResolveModelRouteID(c, rawID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_model_route_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_model_route_id", err)
 		return
 	}
 
 	if err := h.service.Delete(c, id); err != nil {
-		handlers.WriteError(ctx, statusCodeForModelRouteError(err), "delete_model_route_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForModelRouteError(err), "delete_model_route_failed", err.Error())
 		return
 	}
 
-	handlers.WriteSuccess(ctx, map[string]any{"id": rawID, "deleted": true})
+	handlers.WriteSuccess(c, ctx, map[string]any{"id": rawID, "deleted": true})
 }

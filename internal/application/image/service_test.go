@@ -1,8 +1,10 @@
 package image
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,12 +12,18 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+
+	"github.com/sirupsen/logrus"
 )
 
 type fakeUsageWriter struct {
 	events []model.UsageEventRecord
 	runs   []model.ProviderRunRecord
 }
+
+type failingUsageWriter struct{}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -25,6 +33,36 @@ func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageE
 func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.ProviderRunRecord) error {
 	f.runs = append(f.runs, run)
 	return nil
+}
+
+func (f *failingUsageWriter) InsertUsageEvent(_ context.Context, _ model.UsageEventRecord) error {
+	return errors.New("usage writer down")
+}
+
+func (f *failingUsageWriter) InsertProviderRun(_ context.Context, _ model.ProviderRunRecord) error {
+	return nil
+}
+
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	logger := logging.GetLogger()
+	originalOut := logger.Out
+	originalFormatter := logger.Formatter
+	originalLevel := logger.GetLevel()
+
+	var buf bytes.Buffer
+	logger.SetOutput(&buf)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.DebugLevel)
+
+	t.Cleanup(func() {
+		logger.SetOutput(originalOut)
+		logger.SetFormatter(originalFormatter)
+		logger.SetLevel(originalLevel)
+	})
+
+	return &buf
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -157,6 +195,36 @@ func TestGenerateImage_SuccessPersistsUsageLedger(t *testing.T) {
 	}
 	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
+	}
+}
+
+func TestGenerateImage_LogsUsagePersistenceFailureWithTraceID(t *testing.T) {
+	logBuf := captureLogs(t)
+	logs := calllog.NewMemoryCallLogRepo()
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), logs)
+	service.SetUsageWriter(&failingUsageWriter{})
+
+	ctx := trace.SetTraceID(context.Background(), "trace-image-usage-1")
+	_, err := service.Generate(ctx, model.GenerateImageRequest{
+		UserID:    "user-1",
+		APIKeyID:  "akid_1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+
+	output := logBuf.String()
+	if !strings.Contains(output, `"trace_id":"trace-image-usage-1"`) {
+		t.Fatalf("expected trace_id in logs, got %q", output)
+	}
+	if !strings.Contains(output, "usage event persistence failed") {
+		t.Fatalf("expected usage persistence warning, got %q", output)
+	}
+	if !strings.Contains(output, `"capability":"image.generate"`) {
+		t.Fatalf("expected capability field in logs, got %q", output)
 	}
 }
 

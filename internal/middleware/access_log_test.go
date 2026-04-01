@@ -1,55 +1,44 @@
 package middleware
 
 import (
-	"bytes"
-	"context"
 	"errors"
-	"log"
-	"net/http"
-	"strings"
 	"testing"
-
-	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
-
-	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/cloudwego/hertz/pkg/common/ut"
 )
 
-func TestAccessLog_IncludesErrorDetails(t *testing.T) {
-	var buf bytes.Buffer
-	originalWriter := log.Writer()
-	originalFlags := log.Flags()
-	log.SetOutput(&buf)
-	log.SetFlags(0)
-	t.Cleanup(func() {
-		log.SetOutput(originalWriter)
-		log.SetFlags(originalFlags)
-	})
-
-	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID(), AccessLog())
-	h.POST("/boom", func(ctx context.Context, c *app.RequestContext) {
-		ReportError(c, errors.New("credit service timeout"))
-		c.JSON(http.StatusInternalServerError, dto.ErrorEnvelope(GetRequestID(c), "INTERNAL_ERROR", "internal error"))
-	})
-
-	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/boom", nil)
-	if resp.Code != http.StatusInternalServerError {
-		t.Fatalf("expected 500, got %d body=%s", resp.Code, resp.Body.String())
+func TestReportError_StoresMessage(t *testing.T) {
+	store := &fakeRequestErrorStore{}
+	ReportError(store, errors.New("boom"))
+	if got := getReportedError(store); got != "boom" {
+		t.Fatalf("expected stored error boom, got %q", got)
 	}
+}
 
-	logLine := buf.String()
-	for _, want := range []string{
-		"method=POST",
-		"path=/boom",
-		"status=500",
-		"error_code=INTERNAL_ERROR",
-		`error_message="internal error"`,
-		`internal_error="credit service timeout"`,
-	} {
-		if !strings.Contains(logLine, want) {
-			t.Fatalf("expected log to contain %q, got: %s", want, logLine)
-		}
+func TestExtractResponseError_ParsesEnvelope(t *testing.T) {
+	code, message := extractResponseError([]byte(`{"error":{"code":"INTERNAL_ERROR","message":"boom"}}`))
+	if code != "INTERNAL_ERROR" || message != "boom" {
+		t.Fatalf("expected INTERNAL_ERROR/boom, got %q/%q", code, message)
 	}
+}
+
+func TestExtractResponseError_IgnoresInvalidPayload(t *testing.T) {
+	code, message := extractResponseError([]byte(`{"status":"ok"}`))
+	if code != "" || message != "" {
+		t.Fatalf("expected empty error details, got %q/%q", code, message)
+	}
+}
+
+type fakeRequestErrorStore struct {
+	values map[string]any
+}
+
+func (s *fakeRequestErrorStore) Set(key string, value any) {
+	if s.values == nil {
+		s.values = map[string]any{}
+	}
+	s.values[key] = value
+}
+
+func (s *fakeRequestErrorStore) Get(key string) (any, bool) {
+	value, ok := s.values[key]
+	return value, ok
 }

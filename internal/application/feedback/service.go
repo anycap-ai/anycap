@@ -3,12 +3,12 @@ package feedback
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 // Service orchestrates feedback submission: persist then notify.
@@ -45,7 +45,7 @@ func (s *Service) Submit(ctx context.Context, fb model.Feedback) (string, error)
 	}
 
 	if err := s.repo.Insert(ctx, fb); err != nil {
-		log.Printf("feedback: failed to persist fb=%s: %v", fb.ID, err)
+		logging.WithError(err).WithField("feedback_id", fb.ID).Error("feedback failed to persist")
 		return "", model.ErrInternal
 	}
 
@@ -53,7 +53,7 @@ func (s *Service) Submit(ctx context.Context, fb model.Feedback) (string, error)
 	if s.notifier != nil {
 		go func() {
 			if err := s.notifier.Notify(context.Background(), fb); err != nil {
-				log.Printf("feedback: notification failed for fb=%s: %v", fb.ID, err)
+				logging.WithError(err).WithField("feedback_id", fb.ID).Warn("feedback notification failed")
 			}
 		}()
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 type understandTaskInput struct {
@@ -19,22 +20,31 @@ func (s *Service) runUnderstandTask(
 	input understandTaskInput,
 	invoke func(context.Context) (model.UnderstandResult, error),
 ) (model.UnderstandResult, error) {
+	logger := logging.WithContext(ctx).WithField("capability", input.Capability)
 	task, err := s.createTask(ctx, input.SpaceID, input.UserID, input.Capability, input.RequestMeta)
 	if err != nil {
+		logger.WithError(err).Error("create capabilities task failed")
 		return model.UnderstandResult{}, err
 	}
 	if err := s.writeTaskArtifacts(ctx, task.ID, input.Artifacts); err != nil {
+		logger.WithFields(logging.Fields{"task_id": task.ID}).WithError(err).Error("write capabilities task artifacts failed")
 		return model.UnderstandResult{}, err
 	}
-	_ = s.startTask(ctx, task.ID)
+	if err := s.startTask(ctx, task.ID); err != nil {
+		logger.WithFields(logging.Fields{"task_id": task.ID}).WithError(err).Warn("start capabilities task failed")
+	}
 
 	result, err := invoke(ctx)
 	if err != nil {
-		_ = s.finishTask(ctx, task.ID, model.CapsTaskStatusFailed, map[string]any{"error": err.Error()})
+		if finishErr := s.finishTask(ctx, task.ID, model.CapsTaskStatusFailed, map[string]any{"error": err.Error()}); finishErr != nil {
+			logger.WithFields(logging.Fields{"task_id": task.ID}).WithError(finishErr).Warn("finish failed capabilities task failed")
+		}
 		return model.UnderstandResult{}, err
 	}
 
-	_ = s.finishTask(ctx, task.ID, model.CapsTaskStatusSucceeded, buildUnderstandResultMeta(result))
+	if err := s.finishTask(ctx, task.ID, model.CapsTaskStatusSucceeded, buildUnderstandResultMeta(result)); err != nil {
+		logger.WithFields(logging.Fields{"task_id": task.ID}).WithError(err).Warn("finish successful capabilities task failed")
+	}
 	return result, nil
 }
 

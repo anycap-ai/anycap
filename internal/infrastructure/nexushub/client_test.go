@@ -1,6 +1,7 @@
 package nexushub
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -9,8 +10,37 @@ import (
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+
+	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	trace.Setup()
+}
+
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	logger := logging.GetLogger()
+	originalOut := logger.Out
+	originalFormatter := logger.Formatter
+	originalLevel := logger.GetLevel()
+
+	var buf bytes.Buffer
+	logger.SetOutput(&buf)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.DebugLevel)
+
+	t.Cleanup(func() {
+		logger.SetOutput(originalOut)
+		logger.SetFormatter(originalFormatter)
+		logger.SetLevel(originalLevel)
+	})
+
+	return &buf
+}
 
 func TestClient_GenerateImage(t *testing.T) {
 	var captured submitAtomicProcessRequest
@@ -22,8 +52,8 @@ func TestClient_GenerateImage(t *testing.T) {
 		if r.URL.Path != submitAtomicProcessPath {
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
-		if got := r.Header.Get("X-Request-Id"); got != "req-1" {
-			t.Fatalf("expected request id header req-1, got %q", got)
+		if got := r.Header.Get("X-Trace-ID"); got != "req-1" {
+			t.Fatalf("expected trace id header req-1, got %q", got)
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
@@ -49,7 +79,7 @@ func TestClient_GenerateImage(t *testing.T) {
 		Token:   "nexus-token",
 	})
 
-	ctx := middleware.ContextWithRequestID(context.Background(), "req-1")
+	ctx := trace.SetTraceID(context.Background(), "req-1")
 	result, err := client.GenerateImage(ctx, model.GenerateImageRequest{
 		RequestID:          "req-1",
 		UserID:             "user-123",
@@ -148,7 +178,7 @@ func TestClient_GenerateMusic(t *testing.T) {
 		Token:   "nexus-token",
 	})
 
-	ctx := middleware.ContextWithRequestID(context.Background(), "req-music-1")
+	ctx := trace.SetTraceID(context.Background(), "req-music-1")
 	result, err := client.GenerateMusic(ctx, model.GenerateMusicRequest{
 		RequestID:        "req-music-1",
 		UserID:           "user-123",
@@ -244,7 +274,7 @@ func TestClient_GenerateVideo(t *testing.T) {
 		Token:   "nexus-token",
 	})
 
-	ctx := middleware.ContextWithRequestID(context.Background(), "req-video-1")
+	ctx := trace.SetTraceID(context.Background(), "req-video-1")
 	result, err := client.GenerateVideo(ctx, model.GenerateVideoRequest{
 		RequestID:          "req-video-1",
 		UserID:             "user-123",
@@ -308,8 +338,8 @@ func TestClient_GetSubmitResult(t *testing.T) {
 		if got := r.Header.Get("X-Token"); got != "nexus-token" {
 			t.Fatalf("expected X-Token nexus-token, got %q", got)
 		}
-		if got := r.Header.Get("X-Request-Id"); got != "req-sync-1" {
-			t.Fatalf("expected request id header req-sync-1, got %q", got)
+		if got := r.Header.Get("X-Trace-ID"); got != "req-sync-1" {
+			t.Fatalf("expected trace id header req-sync-1, got %q", got)
 		}
 
 		resp := submitAtomicProcessResponse{
@@ -333,7 +363,7 @@ func TestClient_GetSubmitResult(t *testing.T) {
 		Token:   "nexus-token",
 	})
 
-	ctx := middleware.ContextWithRequestID(context.Background(), "req-sync-1")
+	ctx := trace.SetTraceID(context.Background(), "req-sync-1")
 	result, err := client.GetSubmitResult(ctx, "task-123")
 	if err != nil {
 		t.Fatalf("GetSubmitResult() error = %v", err)
@@ -454,7 +484,7 @@ func TestClient_GenerateVideo_NexusHub500ValidationError(t *testing.T) {
 		Token:   "nexus-token",
 	})
 
-	ctx := middleware.ContextWithRequestID(context.Background(), "req-test-duration")
+	ctx := trace.SetTraceID(context.Background(), "req-test-duration")
 
 	_, err := client.GenerateVideo(ctx, model.GenerateVideoRequest{
 		RequestID: "req-test-duration",
@@ -484,12 +514,14 @@ func TestClient_GenerateVideo_NexusHub500ValidationError(t *testing.T) {
 }
 
 func TestClient_GenerateImageRequiresNumericUserID(t *testing.T) {
+	logBuf := captureLogs(t)
 	client := NewClient(ClientConfig{
 		BaseURL: "https://example.com",
 		Token:   "nexus-token",
 	})
 
-	_, err := client.GenerateImage(context.Background(), model.GenerateImageRequest{
+	ctx := trace.SetTraceID(context.Background(), "trace-invalid-user-1")
+	_, err := client.GenerateImage(ctx, model.GenerateImageRequest{
 		UserID: "user-demo",
 		Prompt: "paper crane",
 		Model:  "flux-dev",
@@ -503,5 +535,12 @@ func TestClient_GenerateImageRequiresNumericUserID(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "numeric user id") {
 		t.Fatalf("expected numeric user id error, got %v", err)
+	}
+	output := logBuf.String()
+	if !strings.Contains(output, `"trace_id":"trace-invalid-user-1"`) {
+		t.Fatalf("expected trace_id in logs, got %q", output)
+	}
+	if !strings.Contains(output, "invalid nexushub user id") {
+		t.Fatalf("expected invalid user log, got %q", output)
 	}
 }

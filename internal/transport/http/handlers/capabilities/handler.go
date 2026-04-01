@@ -10,6 +10,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
+	"gitlab.knoffice.tech/open/common-go/logging"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -44,15 +45,19 @@ type presignResponse struct {
 func userRequestContext(c context.Context, ctx *app.RequestContext) (context.Context, bool) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		capability, _ := middleware.GetCapability(ctx)
+		logging.WithContext(c).WithField("capability", capability).Warn("missing principal for capabilities request")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return nil, false
 	}
 	return middleware.ContextWithUserID(c, principal.UserID), true
 }
 
 func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("capability", "asset.upload.prepare")
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		logger.Error("capabilities presign service unavailable")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
 	}
 	reqCtx, ok := userRequestContext(c, ctx)
@@ -62,7 +67,8 @@ func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
 
 	var req model.PresignRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		logger.WithError(err).Warn("invalid capabilities presign request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
@@ -70,11 +76,15 @@ func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
-		handlers.WriteError(ctx, code, errCode, msg)
+		logger.WithFields(logging.Fields{
+			"status_code": code,
+			"error_code":  errCode,
+		}).WithError(err).Error("capabilities presign failed")
+		handlers.WriteError(c, ctx, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(ctx, presignResponse{
+	handlers.WriteSuccess(c, ctx, presignResponse{
 		UploadURL: result.UploadURL,
 		ObjectURL: result.ObjectURL,
 		ExpiresIn: result.ExpiresIn,
@@ -83,8 +93,10 @@ func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
 }
 
 func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("capability", "image.read")
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		logger.Error("capabilities image read service unavailable")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
 	}
 	reqCtx, ok := userRequestContext(c, ctx)
@@ -94,7 +106,8 @@ func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 
 	var req model.ImageReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		logger.WithError(err).Warn("invalid image read request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
@@ -102,16 +115,22 @@ func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
-		handlers.WriteError(ctx, code, errCode, msg)
+		logger.WithFields(logging.Fields{
+			"status_code": code,
+			"error_code":  errCode,
+		}).WithError(err).Error("image read failed")
+		handlers.WriteError(c, ctx, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(ctx, result)
+	handlers.WriteSuccess(c, ctx, result)
 }
 
 func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("capability", "video.read")
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		logger.Error("capabilities video read service unavailable")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
 	}
 	reqCtx, ok := userRequestContext(c, ctx)
@@ -121,7 +140,8 @@ func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 
 	var req model.VideoReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		logger.WithError(err).Warn("invalid video read request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
@@ -129,16 +149,22 @@ func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
-		handlers.WriteError(ctx, code, errCode, msg)
+		logger.WithFields(logging.Fields{
+			"status_code": code,
+			"error_code":  errCode,
+		}).WithError(err).Error("video read failed")
+		handlers.WriteError(c, ctx, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(ctx, result)
+	handlers.WriteSuccess(c, ctx, result)
 }
 
 func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("capability", "audio.read")
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		logger.Error("capabilities audio read service unavailable")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
 		return
 	}
 	reqCtx, ok := userRequestContext(c, ctx)
@@ -148,7 +174,8 @@ func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
 
 	var req model.AudioReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		logger.WithError(err).Warn("invalid audio read request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
 		return
 	}
 
@@ -156,11 +183,15 @@ func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		code, errCode, msg := classifyCapError(err)
-		handlers.WriteError(ctx, code, errCode, msg)
+		logger.WithFields(logging.Fields{
+			"status_code": code,
+			"error_code":  errCode,
+		}).WithError(err).Error("audio read failed")
+		handlers.WriteError(c, ctx, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(ctx, result)
+	handlers.WriteSuccess(c, ctx, result)
 }
 
 func classifyCapError(err error) (httpStatus int, code string, message string) {
