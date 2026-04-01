@@ -7,7 +7,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
@@ -76,7 +75,7 @@ func TestBrowserPollFlow_OpensBrowserURLAndPollsForCredential(t *testing.T) {
 	}
 }
 
-func TestBrowserPollFlow_PrintsBrowserURLWhenOpenFails(t *testing.T) {
+func TestBrowserPollFlow_ReturnsErrBrowserUnavailableWhenOpenFails(t *testing.T) {
 	oldLauncher := BrowserLauncher
 	BrowserLauncher = func(string) error { return errors.New("open failed") }
 	defer func() { BrowserLauncher = oldLauncher }()
@@ -90,10 +89,6 @@ func TestBrowserPollFlow_PrintsBrowserURLWhenOpenFails(t *testing.T) {
 				"interval":         0,
 				"expires_in":       1,
 			}})
-		case "/v1/auth/poll":
-			_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
-				"status": "expired",
-			}})
 		default:
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
@@ -105,9 +100,9 @@ func TestBrowserPollFlow_PrintsBrowserURLWhenOpenFails(t *testing.T) {
 
 	_, _, err := BrowserPollFlow(context.Background(), client, stderr)
 	if err == nil {
-		t.Fatal("expected error when poll expires")
+		t.Fatal("expected ErrBrowserUnavailable")
 	}
-	if !strings.Contains(stderr.String(), "https://anycap.ai/auth/cli-login?browser_token=bt-1&cli=1") {
-		t.Fatalf("expected browser url in stderr, got %q", stderr.String())
+	if !errors.Is(err, ErrBrowserUnavailable) {
+		t.Fatalf("expected ErrBrowserUnavailable, got %v", err)
 	}
 }

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -13,6 +14,10 @@ import (
 )
 
 const callbackTimeout = 5 * time.Minute
+
+// ErrBrowserUnavailable is returned when the browser cannot be opened.
+// AutoFlow uses this to fall back to device code flow.
+var ErrBrowserUnavailable = errors.New("browser unavailable")
 
 // BrowserPollFlow runs the browser login flow backed by a frontend-domain callback
 // and server-side polling for the final API key.
@@ -44,7 +49,7 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 
 	fmt.Fprintln(stderr, "Opening browser to authenticate...")
 	if err := OpenBrowser(d.BrowserURL); err != nil {
-		fmt.Fprintf(stderr, "Could not open browser. Visit this URL manually:\n  %s\n", d.BrowserURL)
+		return nil, "", fmt.Errorf("%w: %v", ErrBrowserUnavailable, err)
 	}
 	fmt.Fprintln(stderr, "Waiting for authentication...")
 
