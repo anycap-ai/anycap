@@ -13,6 +13,7 @@ import {
   usePageVersions,
 } from "@/lib/api/hooks";
 import type { PageAccessMode } from "@/lib/api/types";
+import { formatTime } from "@/lib/date";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Spinner } from "@/components/ui/Spinner";
@@ -307,7 +308,7 @@ export default function PageDetailPage() {
                             <StatusBadge status={isLive ? "published" : version.status} />
                           </td>
                           <td className="py-[15px] px-5 text-[14px] text-[#4d5145]">
-                            {new Date(version.created_at).toLocaleString()}
+                            {formatTime(version.created_at)}
                           </td>
                           <td className="py-[15px] px-5 text-right">
                             <div className="inline-flex items-center gap-2">
