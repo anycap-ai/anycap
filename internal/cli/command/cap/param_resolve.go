@@ -12,14 +12,17 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 )
 
-// resolveFileParams inspects the request body and uploads local file paths for
-// any parameter whose schema declares format "file-or-url". This allows agents
-// to pass local paths (e.g. --param images=/tmp/photo.png) without knowing
-// about the upload flow -- the CLI handles it transparently.
+// resolveFileParams inspects the request body and performs schema-driven
+// parameter coercion:
 //
-// The function fetches the model schema, identifies file-typed parameters, and
-// for each matching key in body whose value is a local file path (not an HTTP
-// URL), uploads the file via presign and replaces the value with the object URL.
+//  1. File upload: for parameters whose schema declares format "file-or-url",
+//     local file paths are uploaded and replaced with object URLs.
+//  2. Array wrapping: for parameters whose schema declares type "array", a
+//     single value is automatically wrapped into a one-element array.
+//
+// This allows agents to pass local paths (e.g. --param images=/tmp/photo.png)
+// or single values for array fields (e.g. --param images=https://...) without
+// knowing about upload flows or JSON array syntax.
 //
 // Schema fetch failure is non-fatal: the function logs a warning (if verbose)
 // and returns nil so the request proceeds with raw values.
@@ -30,27 +33,27 @@ func resolveFileParams(
 	body map[string]any,
 	verboseLog io.Writer,
 ) error {
-	fileFields, err := fetchFileFields(ctx, client, capability, model, mode, verboseLog)
+	schemaFields, err := fetchSchemaFields(ctx, client, capability, model, mode, verboseLog)
 	if err != nil {
 		// Schema fetch failed -- non-fatal, proceed without resolution.
 		if verboseLog != nil {
-			fmt.Fprintf(verboseLog, "[param-resolve] schema fetch failed, skipping file resolution: %v\n", err)
+			fmt.Fprintf(verboseLog, "[param-resolve] schema fetch failed, skipping param resolution: %v\n", err)
 		}
 		return nil
 	}
-	if len(fileFields) == 0 {
+	if len(schemaFields) == 0 {
 		return nil
 	}
 
-	for paramName, ff := range fileFields {
+	for paramName, sf := range schemaFields {
 		val, ok := body[paramName]
 		if !ok {
 			continue
 		}
 
-		resolved, err := resolveFieldValue(ctx, client, val, ff, verboseLog)
+		resolved, err := resolveFieldValue(ctx, client, val, sf, verboseLog)
 		if err != nil {
-			return fmt.Errorf("failed to resolve file param %q: %w", paramName, err)
+			return fmt.Errorf("failed to resolve param %q: %w", paramName, err)
 		}
 		body[paramName] = resolved
 	}
@@ -58,19 +61,21 @@ func resolveFileParams(
 	return nil
 }
 
-// fileField describes a schema field that accepts file-or-url values.
-type fileField struct {
-	isArray bool // true when schema type is "array" with file-or-url items
+// schemaField describes a schema parameter that may need auto-coercion.
+type schemaField struct {
+	isArray     bool // true when schema type is "array"
+	isFileOrURL bool // true when format is "file-or-url" (direct or via items)
 }
 
-// fetchFileFields fetches the model schema and returns a map of param names
-// that have format "file-or-url" (directly or via items).
-func fetchFileFields(
+// fetchSchemaFields fetches the model schema and returns a map of param names
+// that need auto-coercion: file-or-url fields (for upload) and/or array fields
+// (for single-value-to-array wrapping).
+func fetchSchemaFields(
 	ctx context.Context,
 	client *httpclient.Client,
 	capability, model, mode string,
 	verboseLog io.Writer,
-) (map[string]fileField, error) {
+) (map[string]schemaField, error) {
 	qpath := api.ModelSchemaPath(capability, model)
 	if mode != "" {
 		qpath += "?mode=" + mode
@@ -90,8 +95,8 @@ func fetchFileFields(
 		fmt.Fprintf(verboseLog, "[param-resolve] found %d schema(s) for %s/%s\n", len(schemas), capability, model)
 	}
 
-	// Collect file-or-url fields from all matching schemas.
-	result := make(map[string]fileField)
+	// Collect fields that need coercion from all matching schemas.
+	result := make(map[string]schemaField)
 	for _, s := range schemas {
 		modelParams, ok := s.schema["model_params"]
 		if !ok {
@@ -107,10 +112,10 @@ func fetchFileFields(
 			if !ok {
 				continue
 			}
-			if ff, ok := extractFileField(def); ok {
-				result[paramName] = ff
+			if sf, ok := extractSchemaField(def); ok {
+				result[paramName] = sf
 				if verboseLog != nil {
-					fmt.Fprintf(verboseLog, "[param-resolve] file field: %s (array=%t)\n", paramName, ff.isArray)
+					fmt.Fprintf(verboseLog, "[param-resolve] schema field: %s (array=%t, fileOrURL=%t)\n", paramName, sf.isArray, sf.isFileOrURL)
 				}
 			}
 		}
@@ -119,56 +124,66 @@ func fetchFileFields(
 	return result, nil
 }
 
-// extractFileField checks if a param definition has format "file-or-url".
-// Supports both direct string fields and array fields with file-or-url items.
-func extractFileField(def map[string]any) (fileField, bool) {
+// extractSchemaField checks if a param definition needs auto-coercion.
+// Detects file-or-url fields (for upload) and array fields (for auto-wrapping).
+func extractSchemaField(def map[string]any) (schemaField, bool) {
 	typ, _ := def["type"].(string)
 
 	// Direct: {"type": "string", "format": "file-or-url"}
 	if typ == "string" {
 		if fmt, ok := def["format"].(string); ok && fmt == "file-or-url" {
-			return fileField{isArray: false}, true
+			return schemaField{isArray: false, isFileOrURL: true}, true
 		}
 	}
 
-	// Array: {"type": "array", "items": {"type": "string", "format": "file-or-url"}}
+	// Array types: detect both file-or-url arrays and plain arrays.
 	if typ == "array" {
 		items, ok := def["items"].(map[string]any)
-		if !ok {
-			return fileField{}, false
+		if ok {
+			if fmt, ok := items["format"].(string); ok && fmt == "file-or-url" {
+				return schemaField{isArray: true, isFileOrURL: true}, true
+			}
 		}
-		if fmt, ok := items["format"].(string); ok && fmt == "file-or-url" {
-			return fileField{isArray: true}, true
-		}
+		// Plain array (no file-or-url format) -- still needs single-to-array coercion.
+		return schemaField{isArray: true, isFileOrURL: false}, true
 	}
 
-	return fileField{}, false
+	return schemaField{}, false
 }
 
-// resolveFieldValue resolves a body value for a file-or-url field.
-// It uploads local file paths and returns URLs. Handles both single values
-// and arrays. If the schema expects an array but a single path is given,
-// the result is wrapped into an array.
+// resolveFieldValue resolves a body value based on its schema field descriptor.
+// For file-or-url fields, it uploads local file paths and returns URLs.
+// For any array field, if a single value is given, it wraps into an array.
 func resolveFieldValue(
 	ctx context.Context,
 	client *httpclient.Client,
 	val any,
-	ff fileField,
+	sf schemaField,
 	verboseLog io.Writer,
 ) (any, error) {
 	switch v := val.(type) {
 	case string:
-		resolved, err := maybeUploadPath(ctx, client, v, verboseLog)
-		if err != nil {
-			return nil, err
+		if sf.isFileOrURL {
+			resolved, err := maybeUploadPath(ctx, client, v, verboseLog)
+			if err != nil {
+				return nil, err
+			}
+			if sf.isArray {
+				return []any{resolved}, nil
+			}
+			return resolved, nil
 		}
-		// Schema expects array but got single value -> wrap.
-		if ff.isArray {
-			return []any{resolved}, nil
+		// Non-file-or-url: just wrap to array if schema expects it.
+		if sf.isArray {
+			return []any{v}, nil
 		}
-		return resolved, nil
+		return v, nil
 
 	case []any:
+		if !sf.isFileOrURL {
+			// Plain array -- no file resolution needed, pass through.
+			return v, nil
+		}
 		result := make([]any, len(v))
 		for i, elem := range v {
 			s, ok := elem.(string)

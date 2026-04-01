@@ -3,6 +3,7 @@ package cap
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
@@ -12,6 +13,14 @@ import (
 )
 
 const maxActionImages = 10
+
+// maxVideoFileSize is the maximum local video file size (100 MB).
+// Larger files must be compressed before uploading.
+const maxVideoFileSize = 100 * 1024 * 1024
+
+// maxAudioFileSize is the maximum local audio file size (100 MB).
+// Larger files must be trimmed or compressed before uploading.
+const maxAudioFileSize = 100 * 1024 * 1024
 
 // NewActionsCmd creates the "actions" command group that contains AI analysis
 // actions such as image-read and video-read.
@@ -128,6 +137,17 @@ Examples:
 			targetURL := urlFlag
 
 			if fileFlag != "" {
+				fi, err := os.Stat(fileFlag)
+				if err != nil {
+					return fmt.Errorf("failed to stat file: %w", err)
+				}
+				if fi.Size() > maxVideoFileSize {
+					return fmt.Errorf(
+						"video file is too large: %d MB (maximum %d MB). "+
+							"Please compress the video before uploading (e.g. ffmpeg -i input.mp4 -vcodec libx264 -crf 28 output.mp4)",
+						fi.Size()/(1024*1024), maxVideoFileSize/(1024*1024))
+				}
+
 				result, err := uploadFile(cmd.Context(), client, fileFlag, verboseWriter(cmd))
 				if err != nil {
 					return err
@@ -153,7 +173,7 @@ Examples:
 	}
 
 	cmd.Flags().StringVar(&urlFlag, "url", "", "Video URL to analyze")
-	cmd.Flags().StringVar(&fileFlag, "file", "", "Local video file to upload and analyze")
+	cmd.Flags().StringVar(&fileFlag, "file", "", "Local video file to upload and analyze (max 100 MB)")
 	cmd.Flags().StringVar(&instruction, "instruction", "", "What to look for or describe")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
 	cmd.MarkFlagsOneRequired("url", "file")
@@ -182,6 +202,17 @@ Examples:
 			targetURL := urlFlag
 
 			if fileFlag != "" {
+				fi, err := os.Stat(fileFlag)
+				if err != nil {
+					return fmt.Errorf("failed to stat file: %w", err)
+				}
+				if fi.Size() > maxAudioFileSize {
+					return fmt.Errorf(
+						"audio file is too large: %d MB (maximum %d MB). "+
+							"Please trim or compress the audio before uploading (e.g. ffmpeg -i input.mp3 -b:a 128k output.mp3)",
+						fi.Size()/(1024*1024), maxAudioFileSize/(1024*1024))
+				}
+
 				result, err := uploadFile(cmd.Context(), client, fileFlag, verboseWriter(cmd))
 				if err != nil {
 					return err
@@ -207,7 +238,7 @@ Examples:
 	}
 
 	cmd.Flags().StringVar(&urlFlag, "url", "", "Audio URL to analyze")
-	cmd.Flags().StringVar(&fileFlag, "file", "", "Local audio file to upload and analyze")
+	cmd.Flags().StringVar(&fileFlag, "file", "", "Local audio file to upload and analyze (max 100 MB)")
 	cmd.Flags().StringVar(&instruction, "instruction", "", "What to listen for or describe")
 	cmd.Flags().StringVar(&modelFlag, "model", "", "Model ID to use")
 	cmd.MarkFlagsOneRequired("url", "file")

@@ -22,6 +22,7 @@ import (
 type Options struct {
 	BuildInfo buildinfo.Info
 	Endpoint  string
+	TraceID   string
 	Stdout    io.Writer
 	Stderr    io.Writer
 	Stdin     io.Reader
@@ -58,6 +59,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		cred := cliconfig.LoadCredential()
 		clientOpts := []httpclient.Option{
 			httpclient.WithVersion(opts.BuildInfo.Version),
+			httpclient.WithTraceID(opts.TraceID),
 		}
 		if cred != nil {
 			clientOpts = append(clientOpts,

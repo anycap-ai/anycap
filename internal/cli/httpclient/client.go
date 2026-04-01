@@ -44,6 +44,7 @@ type Client struct {
 	credential      *cliconfig.Credential
 	credentialSaver func(*cliconfig.Credential) error
 	version         string
+	traceID         string
 	httpClient      *http.Client
 }
 
@@ -63,6 +64,11 @@ func WithCredentialSaver(fn func(*cliconfig.Credential) error) Option {
 // WithVersion sets the User-Agent version string.
 func WithVersion(v string) Option {
 	return func(c *Client) { c.version = v }
+}
+
+// WithTraceID sets the trace ID sent as X-Trace-Id header on every request.
+func WithTraceID(id string) Option {
+	return func(c *Client) { c.traceID = id }
 }
 
 // New creates a Client for the given base URL.
@@ -134,6 +140,9 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 	}
 
 	req.Header.Set("User-Agent", "anycap-cli/"+c.version)
+	if c.traceID != "" {
+		req.Header.Set("X-Trace-Id", c.traceID)
+	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
