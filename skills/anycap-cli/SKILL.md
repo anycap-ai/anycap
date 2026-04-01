@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- capability runtime for AI agents. One CLI for image generation, image read, video analysis, audio analysis, music composition, text-to-speech, web search, web crawling, file download, static site hosting, and cloud file storage. Use when the agent needs to generate images, analyze images, video, or audio, produce audio/music, search or crawl the web, download remote files, deploy static sites, or store and share files. Also use when the agent needs to authenticate with AnyCap (login, API key, credentials), or when encountering errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities, AI-generated media, page hosting, or drive storage."
 metadata:
-  version: 0.0.6
+  version: 0.0.7
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
