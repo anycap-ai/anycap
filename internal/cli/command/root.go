@@ -133,12 +133,6 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) fu
 			return nil
 		}
 
-		// Skip for npm-installed binaries.
-		if selfupdate.IsNPMInstall() {
-			logf("skip: npm-installed binary (use 'npm update @anycap/cli' instead)")
-			return nil
-		}
-
 		// Skip for commands that should not trigger auto-update.
 		if skipAutoUpdateCmds[cmd.Name()] {
 			logf("skip: command %q excluded from auto-update", cmd.Name())
@@ -179,7 +173,15 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) fu
 			return nil
 		}
 
-		// New version available -- download and replace.
+		// New version available.
+		if selfupdate.IsNPMInstall() {
+			// npm-installed: hint only, do not replace binary.
+			fmt.Fprintf(stderr, "New version available: %s -> %s. Run: npm install -g @anycap/cli@latest\n",
+				currentVersion, rel.Version)
+			return nil
+		}
+
+		// curl/direct install: download and replace.
 		fmt.Fprintf(stderr, "Updating anycap %s -> %s ...\n", currentVersion, rel.Version)
 		if err := updater.Update(context.Background(), rel); err != nil {
 			fmt.Fprintf(stderr, "Auto-update failed: %v\n", err)

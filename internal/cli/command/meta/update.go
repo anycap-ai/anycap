@@ -22,9 +22,30 @@ func NewUpdateCmd(stdout, stderr io.Writer) *cobra.Command {
 			verbose, _ := cmd.Flags().GetBool("verbose")
 
 			// Block updates for npm-installed binaries.
+			// Still check for the latest version so the hint includes it.
 			if selfupdate.IsNPMInstall() {
-				fmt.Fprintf(stderr, "This binary was installed via npm.\n")
-				fmt.Fprintf(stderr, "Run 'npm update -g @anycap/cli' to update.\n")
+				updater := selfupdate.NewUpdater()
+				updater.Verbose = verbose
+				updater.Logger = stderr
+
+				fmt.Fprintf(stderr, "This binary was installed via npm (current: %s).\n", current)
+				fmt.Fprintf(stderr, "Checking for updates...\n")
+
+				rel, err := updater.CheckLatest(cmd.Context())
+				if err != nil {
+					fmt.Fprintf(stderr, "Failed to check for updates: %v\n", err)
+					fmt.Fprintf(stderr, "Run: npm install -g @anycap/cli@latest\n")
+					return nil
+				}
+				updater.RecordCheck()
+
+				if !isNewer(rel.Version, current) {
+					fmt.Fprintf(stderr, "Already up to date.\n")
+					return nil
+				}
+
+				fmt.Fprintf(stderr, "New version available: %s\n", rel.Version)
+				fmt.Fprintf(stderr, "Run: npm install -g @anycap/cli@latest\n")
 				return nil
 			}
 
