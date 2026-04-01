@@ -152,8 +152,9 @@ anycap page deploy ./dist --name "My Site" --publish
 anycap page deploy ./dist --publish
 ```
 
-**Drive Storage** -- upload, organize, and share files.
-Read [references/drive.md](references/drive.md) when you need to upload files, create folders, or generate share links.
+**Drive Storage** -- share files with humans via cloud storage.
+Read [references/drive.md](references/drive.md) when you need to give the human a shareable link to view or download a file.
+Do NOT use drive to get URLs for other AnyCap commands -- actions and generation commands accept `--file` directly.
 
 ```bash
 anycap drive upload result.pdf --parent-path /reports
@@ -235,8 +236,17 @@ anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode im
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
 
-# Extract content from an action response
+# Analyze a local image file (auto-uploaded, no drive needed)
+anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
+
+# Analyze a remote image by URL
 anycap actions image-read --url https://example.com/photo.jpg | jq -r '.content'
+
+# Analyze a local video file
+anycap actions video-read --file ./demo.mp4 --instruction "Summarize the key events" | jq -r '.content'
+
+# Analyze a local audio file
+anycap actions audio-read --file ./meeting.mp3 --instruction "Transcribe this" | jq -r '.content'
 
 # Get the error message on failure
 anycap ... | jq -r '.message // empty'
