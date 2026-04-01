@@ -179,7 +179,6 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			videoCatalog,
 			audioCatalog,
 			musicCatalog,
-			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(featureProvider))
 				systemHandler.RegisterProtectedRoutes(protected)
@@ -187,6 +186,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				modelRouteHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
