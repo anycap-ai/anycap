@@ -87,7 +87,6 @@ jobs:
               repository: { type: 'git', url: 'https://github.com/${{ github.repository }}' },
               os: ['${{ matrix.npm_os }}'],
               cpu: ['${{ matrix.npm_cpu }}'],
-              bin: { anycap: 'bin/${BIN_NAME}' },
               files: ['bin/']
             }, null, 2) + '\n');
           "
