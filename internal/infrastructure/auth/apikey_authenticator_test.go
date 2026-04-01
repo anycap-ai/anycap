@@ -59,6 +59,9 @@ func TestAPIKeyAuthenticator_AuthenticateActiveKey(t *testing.T) {
 	if principal.UserID != "user-123" {
 		t.Fatalf("expected user-123, got %q", principal.UserID)
 	}
+	if len(principal.Scopes) != 1 || principal.Scopes[0] != "system.read" {
+		t.Fatalf("expected only system.read scope, got %#v", principal.Scopes)
+	}
 	if repo.touchedKey != created.APIKey.ID {
 		t.Fatalf("expected touched key %q, got %q", created.APIKey.ID, repo.touchedKey)
 	}

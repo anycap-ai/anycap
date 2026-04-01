@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"sort"
 	"strconv"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
@@ -82,8 +83,9 @@ func (h *Handler) Healthz(_ context.Context, ctx *app.RequestContext) {
 func (h *Handler) Status(c context.Context, ctx *app.RequestContext) {
 	principal, _ := middleware.GetPrincipal(ctx)
 	result := h.service.Status(principal)
+	effectiveScopes := statusScopes(principal, h.service.UserFeatures(principal))
 
-	userDTO, err := presenter.PresentStatusUser(c, h.mapper, result.User)
+	userDTO, err := presenter.PresentStatusUser(c, h.mapper, result.User, effectiveScopes)
 	if err != nil {
 		handlers.WriteError(ctx, consts.StatusInternalServerError, "resolve_user_id_failed", err.Error())
 		return
@@ -94,6 +96,36 @@ func (h *Handler) Status(c context.Context, ctx *app.RequestContext) {
 		"runtime_mode": result.RuntimeMode,
 		"user":         userDTO,
 	}))
+}
+
+func statusScopes(principal *model.Principal, features map[string]bool) []string {
+	if principal == nil {
+		return nil
+	}
+
+	merged := make(map[string]struct{}, len(principal.Scopes)+len(features))
+	for feature, allowed := range features {
+		if allowed {
+			merged[feature] = struct{}{}
+		}
+	}
+	for _, scope := range principal.Scopes {
+		allowed, tracked := features[scope]
+		if tracked && !allowed {
+			continue
+		}
+		merged[scope] = struct{}{}
+	}
+	if len(merged) == 0 {
+		return nil
+	}
+
+	scopes := make([]string, 0, len(merged))
+	for scope := range merged {
+		scopes = append(scopes, scope)
+	}
+	sort.Strings(scopes)
+	return scopes
 }
 
 func (h *Handler) Logout(c context.Context, ctx *app.RequestContext) {

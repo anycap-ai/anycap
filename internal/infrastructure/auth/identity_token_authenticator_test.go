@@ -50,6 +50,9 @@ func TestIdentityTokenAuthenticator_AuthenticateIdentityToken(t *testing.T) {
 	if principal.UserID == "" || principal.AuthType != "auth0_jwt" {
 		t.Fatalf("unexpected principal: %#v", principal)
 	}
+	if len(principal.Scopes) != 1 || principal.Scopes[0] != "system.read" {
+		t.Fatalf("expected only system.read scope, got %#v", principal.Scopes)
+	}
 	if principal.ExternalUserID != "auth0|demo-user" || principal.Email != "demo@example.com" || principal.Name != "Demo User" {
 		t.Fatalf("expected hydrated profile in principal, got %#v", principal)
 	}

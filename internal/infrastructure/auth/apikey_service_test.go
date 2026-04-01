@@ -128,6 +128,9 @@ func TestRepositoryAPIKeyService_AuthenticateAPIKey(t *testing.T) {
 	if principal.APIKeyID == "" || principal.UserID != "user-123" {
 		t.Fatalf("unexpected principal: %+v", principal)
 	}
+	if len(principal.Scopes) != 1 || principal.Scopes[0] != "system.read" {
+		t.Fatalf("expected only system.read scope, got %#v", principal.Scopes)
+	}
 }
 
 func TestRepositoryAPIKeyService_RevokeAPIKey(t *testing.T) {

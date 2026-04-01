@@ -58,7 +58,7 @@ func (s *MemoryService) AuthenticateAPIKey(_ context.Context, rawKey string) (mo
 		UserID:   record.apiKey.UserID,
 		APIKeyID: record.apiKey.ID,
 		AuthType: "api_key",
-		Scopes:   []string{"image.generate", "image.read", "system.read"},
+		Scopes:   []string{"system.read"},
 	}, nil
 }
 

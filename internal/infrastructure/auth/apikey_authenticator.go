@@ -50,7 +50,7 @@ func (a *APIKeyAuthenticator) AuthenticateAPIKey(ctx context.Context, rawKey str
 		UserID:   key.UserID,
 		APIKeyID: key.ID,
 		AuthType: "api_key",
-		Scopes:   []string{"image.generate", "image.read", "system.read"},
+		Scopes:   []string{"system.read"},
 	}
 	if a.users != nil {
 		user, err := a.users.GetUserByID(ctx, key.UserID)
