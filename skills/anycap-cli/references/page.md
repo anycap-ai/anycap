@@ -8,7 +8,7 @@ Most tasks need only one site. If you are deploying a single project (docs, dash
 
 Use **named targets** only when you explicitly need to manage multiple sites from the same directory (e.g., preview + release environments, or a series of independent reports).
 
-______________________________________________________________________
+---
 
 ## Default Target (Single Site -- Fast Path)
 
@@ -58,7 +58,7 @@ anycap page delete                  # delete the site
 
 All commands auto-resolve the site from `anycap.toml` when no `<page-id>`, `--page-id`, or `--target` is given.
 
-______________________________________________________________________
+---
 
 ## Named Targets (Multiple Sites)
 
@@ -119,7 +119,7 @@ anycap page delete --target preview
 anycap page list --local
 ```
 
-______________________________________________________________________
+---
 
 ## Site Resolution Priority
 
@@ -135,14 +135,14 @@ When multiple identification methods are available, the CLI resolves in this ord
 
 ### Flags
 
-| Flag              | Description                                               |
-| ----------------- | --------------------------------------------------------- |
-| `--name`          | Site display name (find existing or create new)           |
-| `--page-id`       | Existing page site ID                                     |
-| `--target`        | Named target from `anycap.toml`                           |
-| `--new`           | Force create a new site (cannot combine with `--page-id`) |
-| `--publish`       | Publish the version immediately after upload              |
-| `--concurrency N` | Parallel upload workers, 1-20 (default: 6)                |
+| Flag | Description |
+|------|-------------|
+| `--name` | Site display name (find existing or create new) |
+| `--page-id` | Existing page site ID |
+| `--target` | Named target from `anycap.toml` |
+| `--new` | Force create a new site (cannot combine with `--page-id`) |
+| `--publish` | Publish the version immediately after upload |
+| `--concurrency N` | Parallel upload workers, 1-20 (default: 6) |
 
 ### Output
 

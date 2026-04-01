@@ -30,8 +30,8 @@ anycap music models <model-id>
 
 Models support different **modes** -- each mode represents a distinct input/output modality:
 
-| Mode            | Description                          |
-| --------------- | ------------------------------------ |
+| Mode | Description |
+|------|-------------|
 | `text-to-music` | Generate music from text description |
 
 List modes for a model:
@@ -134,28 +134,28 @@ anycap music generate \
 
 ### Flags
 
-| Flag             | Required           | Description                                                                       |
-| ---------------- | ------------------ | --------------------------------------------------------------------------------- |
-| `--prompt`       | one of prompt/tags | Text description of the music to generate                                         |
-| `--tags`         | one of prompt/tags | Comma-separated style tags (e.g. `"pop,upbeat,summer"`)                           |
-| `--model`        | yes                | Model ID from `music models`                                                      |
-| `--mode`         | no                 | Generation mode (e.g. `text-to-music`). Inferred if omitted                       |
-| `--instrumental` | no                 | Generate instrumental only (no vocals)                                            |
-| `--title`        | no                 | Song title                                                                        |
-| `--lyrics`       | no                 | Song lyrics                                                                       |
-| `--param`        | no                 | Parameter as `key=value` (repeatable); discover via `music models <model> schema` |
-| `-o, --output`   | no                 | Custom output path (default: current directory)                                   |
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--prompt` | one of prompt/tags | Text description of the music to generate |
+| `--tags` | one of prompt/tags | Comma-separated style tags (e.g. `"pop,upbeat,summer"`) |
+| `--model` | yes | Model ID from `music models` |
+| `--mode` | no | Generation mode (e.g. `text-to-music`). Inferred if omitted |
+| `--instrumental` | no | Generate instrumental only (no vocals) |
+| `--title` | no | Song title |
+| `--lyrics` | no | Song lyrics |
+| `--param` | no | Parameter as `key=value` (repeatable); discover via `music models <model> schema` |
+| `-o, --output` | no | Custom output path (default: current directory) |
 
 ### --param value types
 
 Values are auto-parsed as JSON when possible:
 
-| Example                          | Parsed as             |
-| -------------------------------- | --------------------- |
-| `--param vocal_gender=f`         | string `"f"`          |
-| `--param make_instrumental=true` | boolean `true`        |
-| `--param music_length_ms=30000`  | integer `30000`       |
-| `--param tags="rock,blues"`      | string `"rock,blues"` |
+| Example | Parsed as |
+|---------|-----------|
+| `--param vocal_gender=f` | string `"f"` |
+| `--param make_instrumental=true` | boolean `true` |
+| `--param music_length_ms=30000` | integer `30000` |
+| `--param tags="rock,blues"` | string `"rock,blues"` |
 
 Note: `--instrumental`, `--tags`, `--title`, and `--lyrics` are convenience flags. The same values can be passed via `--param make_instrumental=true`, `--param tags=...`, etc.
 
@@ -176,18 +176,17 @@ Music generation can produce multiple audio clips. The output is a JSON object w
 }
 ```
 
-| Field                  | Description                                |
-| ---------------------- | ------------------------------------------ |
-| `status`               | `"success"` or `"error"`                   |
-| `model`                | Model ID used for generation               |
-| `credits_used`         | Number of credits consumed                 |
-| `outputs`              | Array of generated audio clips             |
+| Field | Description |
+|-------|-------------|
+| `status` | `"success"` or `"error"` |
+| `model` | Model ID used for generation |
+| `credits_used` | Number of credits consumed |
+| `outputs` | Array of generated audio clips |
 | `outputs[].local_path` | Absolute path to the downloaded audio file |
-| `outputs[].url`        | Remote URL of the generated audio          |
-| `request_id`           | Server request ID for debugging            |
+| `outputs[].url` | Remote URL of the generated audio |
+| `request_id` | Server request ID for debugging |
 
 When multiple clips are generated:
-
 - With `-o chill.mp3` and 2 outputs: `chill.mp3`, `chill_2.mp3`
 - Without `-o` and 2 outputs: `music_20260330_150000_1.mp3`, `music_20260330_150000_2.mp3`
 

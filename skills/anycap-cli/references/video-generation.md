@@ -30,9 +30,9 @@ anycap video models <model-id>
 
 Models support different **modes** -- each mode represents a distinct input/output modality:
 
-| Mode             | Description                          |
-| ---------------- | ------------------------------------ |
-| `text-to-video`  | Generate video from text prompt      |
+| Mode | Description |
+|------|-------------|
+| `text-to-video` | Generate video from text prompt |
 | `image-to-video` | Animate a reference image into video |
 
 Not all models support all modes. List modes for a model:
@@ -138,24 +138,24 @@ anycap video generate \
 
 ### Flags
 
-| Flag           | Required | Description                                                                       |
-| -------------- | -------- | --------------------------------------------------------------------------------- |
-| `--prompt`     | yes      | Text description of the video to generate                                         |
-| `--model`      | yes      | Model ID from `video models`                                                      |
-| `--mode`       | no       | Generation mode (e.g. `text-to-video`, `image-to-video`). Inferred if omitted     |
-| `--param`      | no       | Parameter as `key=value` (repeatable); discover via `video models <model> schema` |
-| `-o, --output` | no       | Custom output path (default: current directory)                                   |
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--prompt` | yes | Text description of the video to generate |
+| `--model` | yes | Model ID from `video models` |
+| `--mode` | no | Generation mode (e.g. `text-to-video`, `image-to-video`). Inferred if omitted |
+| `--param` | no | Parameter as `key=value` (repeatable); discover via `video models <model> schema` |
+| `-o, --output` | no | Custom output path (default: current directory) |
 
 ### --param value types
 
 Values are auto-parsed as JSON when possible:
 
-| Example                            | Parsed as                                    |
-| ---------------------------------- | -------------------------------------------- |
-| `--param aspect_ratio=16:9`        | string `"16:9"`                              |
-| `--param duration=5`               | number `5`                                   |
-| `--param resolution=1080p`         | string `"1080p"`                             |
-| `--param images='["url1"]'`        | array `["url1"]`                             |
+| Example | Parsed as |
+|---------|-----------|
+| `--param aspect_ratio=16:9` | string `"16:9"` |
+| `--param duration=5` | number `5` |
+| `--param resolution=1080p` | string `"1080p"` |
+| `--param images='["url1"]'` | array `["url1"]` |
 | `--param images=/path/to/file.png` | local file (auto-uploaded, wrapped to array) |
 
 ### Output Format
@@ -166,13 +166,13 @@ The output is a flat JSON object optimized for agent consumption:
 {"status":"success","local_path":"/absolute/path/to/video.mp4","model":"veo-3.1","credits_used":5,"request_id":"req_abc123"}
 ```
 
-| Field          | Description                                |
-| -------------- | ------------------------------------------ |
-| `status`       | `"success"` or `"error"`                   |
-| `local_path`   | Absolute path to the downloaded video file |
-| `model`        | Model ID used for generation               |
-| `credits_used` | Number of credits consumed                 |
-| `request_id`   | Server request ID for debugging            |
+| Field | Description |
+|-------|-------------|
+| `status` | `"success"` or `"error"` |
+| `local_path` | Absolute path to the downloaded video file |
+| `model` | Model ID used for generation |
+| `credits_used` | Number of credits consumed |
+| `request_id` | Server request ID for debugging |
 
 Extract the local file path:
 
