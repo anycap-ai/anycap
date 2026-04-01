@@ -314,6 +314,9 @@ main() {
   printf '\n'
   info "  npx -y skills add anycap-ai/anycap -y"
   printf '\n'
+  warn "After installing skills, restart or reload your IDE / agent environment"
+  warn "(e.g. Claude Code, Cursor, Codex) for the new skill to take effect."
+  printf '\n'
   info "Learn more: https://anycap.ai"
   printf '\n'
 }

@@ -1,28 +1,21 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command"
-	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 )
 
 func main() {
 	endpointOverride := parseEndpointFromArgs()
-	syncServerFeatures(endpointOverride)
 
 	cmd := command.NewRootCmd(command.Options{
 		BuildInfo: buildinfo.Current(),
@@ -86,6 +79,10 @@ func hintForAPIError(e *httpclient.APIError) string {
 		return "rate limited, retry after a short delay"
 	case e.Code == "credit_insufficient":
 		return "top up credits at https://anycap.ai/dashboard/billing"
+	case e.Code == "FEATURE_DISABLED":
+		return "this feature is not yet available; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access"
+	case e.Code == "FEATURE_NOT_ALLOWED":
+		return "you don't have access to this feature; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access"
 	case e.Code == "UPSTREAM_UNAVAILABLE":
 		return "upstream provider unavailable, retry later or check provider quota/configuration"
 	case e.StatusCode >= 500:
@@ -115,82 +112,4 @@ func parseEndpointFromArgs() string {
 		}
 	}
 	return ""
-}
-
-// localOnlyCommands are commands that never need server connectivity.
-// All other invocations (including --help) do preflight feature sync.
-var localOnlyCommands = map[string]bool{
-	"config":     true,
-	"credential": true,
-	"skill":      true,
-	"update":     true,
-}
-
-// shouldSkipPreflight returns true only for purely local operations
-// that never contact the server.
-func shouldSkipPreflight() bool {
-	for _, arg := range os.Args[1:] {
-		if arg == "--version" || arg == "-v" {
-			return true
-		}
-		if strings.HasPrefix(arg, "-") {
-			continue
-		}
-		return localOnlyCommands[arg]
-	}
-	return false
-}
-
-// syncServerFeatures fetches the server's feature flags and applies them
-// to the local feature registry before the command tree is built.
-// Fails silently on any error so offline usage is not blocked.
-func syncServerFeatures(endpointOverride string) {
-	if shouldSkipPreflight() {
-		return
-	}
-
-	endpoint := cliconfig.ResolveEndpoint(endpointOverride)
-	client := httpclient.New(endpoint)
-	credential := cliconfig.LoadCredential()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	if credential != nil && credential.Token() != "" {
-		authClient := httpclient.New(endpoint, httpclient.WithCredential(credential))
-		if features, ok := fetchFeatures(ctx, authClient, api.MeFeaturesPath); ok {
-			feature.SetAll(features)
-			return
-		}
-	}
-
-	features, ok := fetchFeatures(ctx, client, api.FeaturesPath)
-	if !ok {
-		// Server unreachable — disable all features so only local
-		// commands (config, credential, skill, login, etc.) are visible.
-		feature.DisableAll()
-		return
-	}
-	feature.SetAll(features)
-}
-
-func fetchFeatures(ctx context.Context, client *httpclient.Client, path string) (map[string]bool, bool) {
-	if client == nil {
-		return nil, false
-	}
-
-	resp, err := client.Get(ctx, path)
-	if err != nil {
-		return nil, false
-	}
-
-	var env struct {
-		Data struct {
-			Features map[string]bool `json:"features"`
-		} `json:"data"`
-	}
-	if json.Unmarshal(resp.Body, &env) == nil && env.Data.Features != nil {
-		return env.Data.Features, true
-	}
-	return nil, false
 }

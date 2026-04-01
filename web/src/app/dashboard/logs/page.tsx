@@ -6,22 +6,7 @@ import { useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
 import StatusBadge from "@/components/ui/StatusBadge";
-
-
-function timeAgo(ts: string): string {
-  const d = new Date(ts);
-  if (isNaN(d.getTime())) return "—";
-  const diff = Date.now() - d.getTime();
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "just now";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  if (day < 30) return `${day}d ago`;
-  return d.toLocaleDateString();
-}
+import { timeAgo } from "@/lib/date";
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;

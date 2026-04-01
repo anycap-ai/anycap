@@ -214,7 +214,7 @@ func (r *fakeDriveShareRepo) RevokeActiveByNodeID(_ context.Context, nodeID int6
 }
 
 func TestPresignAndCompleteFileUpload(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	parentID := int64(1)
 	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
@@ -234,7 +234,7 @@ func TestPresignAndCompleteFileUpload(t *testing.T) {
 		WithUpload(uploadRepo, storageRepo, objectStore),
 	)
 
-	presign, err := svc.PresignFileUpload(context.Background(), "u-1", &parentID, "a.txt", "text/plain", 123)
+	presign, err := svc.PresignFileUpload(context.Background(), 1, &parentID, "a.txt", "text/plain", 123)
 	if err != nil {
 		t.Fatalf("PresignFileUpload() error = %v", err)
 	}
@@ -242,7 +242,7 @@ func TestPresignAndCompleteFileUpload(t *testing.T) {
 		t.Fatalf("expected allocated file and upload session ids, got file=%d session=%d", presign.FileID, presign.UploadSessionID)
 	}
 
-	node, err := svc.CompleteFileUpload(context.Background(), "u-1", presign.UploadSessionID, presign.FileID)
+	node, err := svc.CompleteFileUpload(context.Background(), 1, presign.UploadSessionID, presign.FileID)
 	if err != nil {
 		t.Fatalf("CompleteFileUpload() error = %v", err)
 	}
@@ -260,7 +260,7 @@ func TestPresignAndCompleteFileUpload(t *testing.T) {
 }
 
 func TestDriveShareUpsertRotateRevoke(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
 			ID:      1,
@@ -278,7 +278,7 @@ func TestDriveShareUpsertRotateRevoke(t *testing.T) {
 
 	expiresIn := int64(3600)
 	password := "secret-123"
-	view, err := svc.UpsertShare(context.Background(), "u-1", 1, &expiresIn, false, &password, false)
+	view, err := svc.UpsertShare(context.Background(), 1, 1, &expiresIn, false, &password, false)
 	if err != nil {
 		t.Fatalf("UpsertShare(create) error = %v", err)
 	}
@@ -289,7 +289,7 @@ func TestDriveShareUpsertRotateRevoke(t *testing.T) {
 		t.Fatal("expected has_password=true")
 	}
 
-	rotated, err := svc.RotateShare(context.Background(), "u-1", 1)
+	rotated, err := svc.RotateShare(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("RotateShare() error = %v", err)
 	}
@@ -297,7 +297,7 @@ func TestDriveShareUpsertRotateRevoke(t *testing.T) {
 		t.Fatalf("expected rotated token different, got %q", rotated.Token)
 	}
 
-	if err := svc.RevokeShare(context.Background(), "u-1", 1); err != nil {
+	if err := svc.RevokeShare(context.Background(), 1, 1); err != nil {
 		t.Fatalf("RevokeShare() error = %v", err)
 	}
 	active, _ := shareRepo.GetActiveByNodeID(context.Background(), 1)
@@ -307,7 +307,7 @@ func TestDriveShareUpsertRotateRevoke(t *testing.T) {
 }
 
 func TestCreateAccessLinks(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	storageObjectID := int64(501)
 	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
@@ -337,7 +337,7 @@ func TestCreateAccessLinks(t *testing.T) {
 		WithEdgeAccess(grantStore, 300, "https://drive.anycap.dev"),
 	)
 
-	result, err := svc.CreateAccessLinks(context.Background(), "u-1", 1)
+	result, err := svc.CreateAccessLinks(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("CreateAccessLinks() error = %v", err)
 	}
@@ -356,7 +356,7 @@ func TestCreateAccessLinks(t *testing.T) {
 }
 
 func TestCreateAccessLinks_RejectsFolder(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	nodeRepo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
 			ID:      1,
@@ -372,7 +372,7 @@ func TestCreateAccessLinks_RejectsFolder(t *testing.T) {
 		WithEdgeAccess(&fakeDriveEdgeGrantStore{}, 300, "https://drive.anycap.dev"),
 	)
 
-	_, err := svc.CreateAccessLinks(context.Background(), "u-1", 1)
+	_, err := svc.CreateAccessLinks(context.Background(), 1, 1)
 	if err == nil || !strings.Contains(err.Error(), "must be a file") {
 		t.Fatalf("expected file validation error, got %v", err)
 	}

@@ -17,7 +17,7 @@ func NewSpaceRepo(db sqlstore.DBTX) *SpaceRepo {
 	return &SpaceRepo{db: db}
 }
 
-func (r *SpaceRepo) GetByOwnerUserID(ctx context.Context, ownerUserID string) (*model.Space, error) {
+func (r *SpaceRepo) GetByOwnerUserID(ctx context.Context, ownerUserID int64) (*model.Space, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("space repo db is not configured")
 	}
@@ -38,7 +38,7 @@ func (r *SpaceRepo) GetByOwnerUserID(ctx context.Context, ownerUserID string) (*
 	return space, nil
 }
 
-func (r *SpaceRepo) CreatePersonalSpace(ctx context.Context, ownerUserID, name string) (*model.Space, error) {
+func (r *SpaceRepo) CreatePersonalSpace(ctx context.Context, ownerUserID int64, name string) (*model.Space, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("space repo db is not configured")
 	}

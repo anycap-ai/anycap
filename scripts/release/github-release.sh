@@ -37,7 +37,7 @@ fi
 RELEASE_BODY=$(jq -n \
   --arg tag "$TAG" \
   --arg body "$BODY" \
-  '{tag_name: $tag, name: $tag, body: $body, draft: false, prerelease: false}')
+  '{tag_name: $tag, name: $tag, body: $body, draft: true, prerelease: false}')
 
 HTTP_CODE=$(curl -s -o /tmp/release_resp.json -w "%{http_code}" \
   -X POST "${API}/releases" \
@@ -47,9 +47,19 @@ HTTP_CODE=$(curl -s -o /tmp/release_resp.json -w "%{http_code}" \
 
 if [ "$HTTP_CODE" = "422" ]; then
   echo "Release ${TAG} already exists, fetching ..."
-  curl -sf -o /tmp/release_resp.json \
+  # Draft releases are NOT returned by /releases/tags/{tag}, so we must search
+  # through all releases (including drafts) to find the matching one.
+  HTTP_CODE=$(curl -s -o /tmp/release_resp.json -w "%{http_code}" \
     -H "${AUTH}" \
-    "${API}/releases/tags/${TAG}"
+    "${API}/releases/tags/${TAG}")
+  if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+    echo "Published release not found by tag, searching drafts ..."
+    curl -sf -o /tmp/releases_list.json \
+      -H "${AUTH}" \
+      "${API}/releases?per_page=10"
+    jq -e --arg tag "$TAG" '[.[] | select(.tag_name == $tag)] | first' \
+      /tmp/releases_list.json > /tmp/release_resp.json
+  fi
 elif [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
   echo "ERROR: Failed to create release (HTTP ${HTTP_CODE}):" >&2
   cat /tmp/release_resp.json >&2
@@ -72,13 +82,41 @@ for asset in dist/anycap_*.tar.gz dist/anycap_*.zip dist/checksums.txt; do
   esac
 
   echo "Uploading ${filename} ..."
-  curl -sf -o /dev/null \
+  UPLOAD_CODE=$(curl -s -o /tmp/upload_resp.json -w "%{http_code}" \
     -X POST "${UPLOAD_URL}?name=${filename}" \
     -H "${AUTH}" \
     -H "Content-Type: ${ctype}" \
-    --data-binary "@${asset}"
+    --data-binary "@${asset}")
 
-  echo "  done."
+  if [ "$UPLOAD_CODE" = "422" ]; then
+    echo "  already exists, skipping."
+  elif [ "$UPLOAD_CODE" -lt 200 ] || [ "$UPLOAD_CODE" -ge 300 ]; then
+    echo "ERROR: Failed to upload ${filename} (HTTP ${UPLOAD_CODE}):" >&2
+    cat /tmp/upload_resp.json >&2
+    exit 1
+  else
+    echo "  done."
+  fi
 done
+
+# ── Publish (draft -> published) ──────────────────────────────────────────
+# Publishing the release triggers downstream workflows (npm publish, post-release
+# verification). By deferring publish until all assets are uploaded, we avoid a
+# race condition where downstream jobs try to download assets that haven't been
+# uploaded yet.
+RELEASE_ID=$(jq -r '.id' /tmp/release_resp.json)
+echo "Publishing release ${TAG} (id=${RELEASE_ID}) ..."
+
+HTTP_CODE=$(curl -s -o /tmp/publish_resp.json -w "%{http_code}" \
+  -X PATCH "${API}/releases/${RELEASE_ID}" \
+  -H "${AUTH}" \
+  -H "Content-Type: application/json" \
+  -d '{"draft": false}')
+
+if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+  echo "ERROR: Failed to publish release (HTTP ${HTTP_CODE}):" >&2
+  cat /tmp/publish_resp.json >&2
+  exit 1
+fi
 
 echo "GitHub release ${TAG} published at https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tag/${TAG}"

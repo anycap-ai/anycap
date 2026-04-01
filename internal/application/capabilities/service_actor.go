@@ -3,6 +3,7 @@ package capabilities
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -10,14 +11,19 @@ import (
 )
 
 type actorContext struct {
-	UserID string
+	UserID int64
 	Space  *model.Space
 }
 
 func (s *Service) resolveActor(ctx context.Context) (actorContext, error) {
-	userID := strings.TrimSpace(middleware.UserIDFromContext(ctx))
-	if userID == "" {
+	raw := strings.TrimSpace(middleware.UserIDFromContext(ctx))
+	if raw == "" {
 		return actorContext{}, fmt.Errorf("user_id is required")
+	}
+
+	userID, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || userID <= 0 {
+		return actorContext{}, fmt.Errorf("invalid user_id")
 	}
 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)

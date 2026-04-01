@@ -6,6 +6,7 @@ import type { DriveNode } from "@/lib/api/types";
 import { Spinner } from "@/components/ui/Spinner";
 import { toast } from "@/lib/toast";
 import { Modal, ModalActions, ModalButton } from "@/components/ui/Modal";
+import { formatTime } from "@/lib/date";
 
 
 export function DriveSharePanel({
@@ -217,7 +218,7 @@ export function DriveSharePanel({
           {/* Meta info */}
           <div className="flex gap-5 text-[13px] text-[#7a7e71]">
             <span>Password: {hasPassword ? "enabled" : "none"}</span>
-            <span>Expires: {expiresAt ? new Date(expiresAt).toLocaleString() : "never"}</span>
+            <span>Expires: {expiresAt ? formatTime(expiresAt) : "never"}</span>
           </div>
 
           {/* Copy button with feedback */}

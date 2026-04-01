@@ -7,7 +7,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -23,15 +22,9 @@ func NewActionsCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *c
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.ImageRead) {
-		actionsCmd.AddCommand(newImageReadAction(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.VideoRead) {
-		actionsCmd.AddCommand(newVideoReadAction(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.AudioRead) {
-		actionsCmd.AddCommand(newAudioReadAction(clientFactory, stdout))
-	}
+	actionsCmd.AddCommand(newImageReadAction(clientFactory, stdout))
+	actionsCmd.AddCommand(newVideoReadAction(clientFactory, stdout))
+	actionsCmd.AddCommand(newAudioReadAction(clientFactory, stdout))
 
 	return actionsCmd
 }

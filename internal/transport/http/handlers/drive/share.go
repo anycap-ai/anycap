@@ -3,6 +3,7 @@ package drive
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
@@ -13,38 +14,54 @@ import (
 )
 
 func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
+	log.Printf("[DEBUG GetShare] entered handler, id_param=%s", string(ctx.Param("id")))
+
 	if h.service == nil {
+		log.Printf("[DEBUG GetShare] service is nil")
 		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
+		log.Printf("[DEBUG GetShare] missing principal")
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+	log.Printf("[DEBUG GetShare] principal user_id=%s", principal.UserID)
+
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
 		return
 	}
 
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
+		log.Printf("[DEBUG GetShare] resolveDriveNodeID failed: %v", err)
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
 	}
+	log.Printf("[DEBUG GetShare] resolved node_id=%d", nodeID)
 
-	view, err := h.service.GetShare(c, principal.UserID, nodeID)
+	view, err := h.service.GetShare(c, userID, nodeID)
 	if err != nil {
+		log.Printf("[DEBUG GetShare] service.GetShare failed: %v", err)
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "get_drive_share_failed", err.Error())
 		return
 	}
 	if view == nil {
+		log.Printf("[DEBUG GetShare] no active share found")
 		handlers.WriteSuccess(ctx, nil)
 		return
 	}
 
 	presented, err := h.presentDriveShareView(c, view)
 	if err != nil {
+		log.Printf("[DEBUG GetShare] present failed: %v", err)
 		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_share_failed", err.Error())
 		return
 	}
+	log.Printf("[DEBUG GetShare] success")
 	handlers.WriteSuccess(ctx, presented)
 }
 
@@ -57,6 +74,11 @@ func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
 		return
 	}
 
@@ -74,7 +96,7 @@ func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 		}
 	}
 
-	view, err := h.service.UpsertShare(c, principal.UserID, nodeID, req.ExpiresInSeconds, req.NoExpire, req.Password, req.NoPassword)
+	view, err := h.service.UpsertShare(c, userID, nodeID, req.ExpiresInSeconds, req.NoExpire, req.Password, req.NoPassword)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "upsert_drive_share_failed", err.Error())
 		return
@@ -100,13 +122,18 @@ func (h *Handler) RotateShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
 		return
 	}
 
-	view, err := h.service.RotateShare(c, principal.UserID, nodeID)
+	view, err := h.service.RotateShare(c, userID, nodeID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "rotate_drive_share_failed", err.Error())
 		return
@@ -132,6 +159,11 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
@@ -140,7 +172,7 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 
 	rawID := string(ctx.Param("id"))
 
-	if err := h.service.RevokeShare(c, principal.UserID, nodeID); err != nil {
+	if err := h.service.RevokeShare(c, userID, nodeID); err != nil {
 		handlers.WriteError(ctx, statusCodeForDriveError(err), "revoke_drive_share_failed", err.Error())
 		return
 	}

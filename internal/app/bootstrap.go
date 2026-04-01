@@ -378,8 +378,10 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
+		imageService.SetUploadRefResolver(capService)
 		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
 		videoService.SetUsageWriter(usageRepo)
+		videoService.SetUploadRefResolver(capService)
 		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
 		musicService.SetUsageWriter(usageRepo)
 		var usageSyncWorker *usageapp.Worker

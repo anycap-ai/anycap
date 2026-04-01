@@ -13,7 +13,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func (s *Service) GetShare(ctx context.Context, userID string, nodeID int64) (*model.DriveShareView, error) {
+func (s *Service) GetShare(ctx context.Context, userID int64, nodeID int64) (*model.DriveShareView, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
 		return nil, fmt.Errorf("drive share service is not configured")
 	}
@@ -44,7 +44,7 @@ func (s *Service) GetShare(ctx context.Context, userID string, nodeID int64) (*m
 	return s.toShareView(existing), nil
 }
 
-func (s *Service) UpsertShare(ctx context.Context, userID string, nodeID int64, expiresInSeconds *int64, noExpire bool, password *string, noPassword bool) (*model.DriveShareView, error) {
+func (s *Service) UpsertShare(ctx context.Context, userID int64, nodeID int64, expiresInSeconds *int64, noExpire bool, password *string, noPassword bool) (*model.DriveShareView, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
 		return nil, fmt.Errorf("drive share service is not configured")
 	}
@@ -129,7 +129,7 @@ func (s *Service) UpsertShare(ctx context.Context, userID string, nodeID int64, 
 	return s.toShareView(updated), nil
 }
 
-func (s *Service) RotateShare(ctx context.Context, userID string, nodeID int64) (*model.DriveShareView, error) {
+func (s *Service) RotateShare(ctx context.Context, userID int64, nodeID int64) (*model.DriveShareView, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
 		return nil, fmt.Errorf("drive share service is not configured")
 	}
@@ -195,7 +195,7 @@ func (s *Service) RotateShare(ctx context.Context, userID string, nodeID int64) 
 	return s.toShareView(created), nil
 }
 
-func (s *Service) RevokeShare(ctx context.Context, userID string, nodeID int64) error {
+func (s *Service) RevokeShare(ctx context.Context, userID int64, nodeID int64) error {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.shareRepo == nil {
 		return fmt.Errorf("drive share service is not configured")
 	}

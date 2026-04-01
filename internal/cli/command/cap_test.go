@@ -1220,10 +1220,10 @@ func TestVideoGenerateWithVideoParams(t *testing.T) {
 		"--prompt", "ocean waves",
 		"--model", "mock-video-1",
 		"--param", "negative_prompt=blurry",
-		"--param", "ratio=16:9",
+		"--param", "aspect_ratio=16:9",
 		"--param", "resolution=1080p",
 		"--param", "duration=5",
-		"--param", `reference_image_urls=["https://example.com/ref.jpg"]`,
+		"--param", `images=["https://example.com/ref.jpg"]`,
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -1234,8 +1234,8 @@ func TestVideoGenerateWithVideoParams(t *testing.T) {
 	if receivedBody["negative_prompt"] != "blurry" {
 		t.Fatalf("expected negative_prompt=blurry, got: %v", receivedBody["negative_prompt"])
 	}
-	if receivedBody["ratio"] != "16:9" {
-		t.Fatalf("expected ratio=16:9, got: %v", receivedBody["ratio"])
+	if receivedBody["aspect_ratio"] != "16:9" {
+		t.Fatalf("expected aspect_ratio=16:9, got: %v", receivedBody["aspect_ratio"])
 	}
 	if receivedBody["resolution"] != "1080p" {
 		t.Fatalf("expected resolution=1080p, got: %v", receivedBody["resolution"])
@@ -1244,9 +1244,9 @@ func TestVideoGenerateWithVideoParams(t *testing.T) {
 	if dur != 5 {
 		t.Fatalf("expected duration=5, got: %v", receivedBody["duration"])
 	}
-	refs, ok := receivedBody["reference_image_urls"].([]any)
-	if !ok || len(refs) != 1 || refs[0] != "https://example.com/ref.jpg" {
-		t.Fatalf("expected reference_image_urls=[https://example.com/ref.jpg], got: %v", receivedBody["reference_image_urls"])
+	images, ok := receivedBody["images"].([]any)
+	if !ok || len(images) != 1 || images[0] != "https://example.com/ref.jpg" {
+		t.Fatalf("expected images=[https://example.com/ref.jpg], got: %v", receivedBody["images"])
 	}
 }
 

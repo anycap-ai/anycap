@@ -10,11 +10,12 @@ import (
 )
 
 type Service struct {
-	catalog  port.CatalogRepository
-	nexusHub port.NexusHubClient
-	credit   port.CreditClient
-	callLogs port.CallLogRepo
-	usage    port.UsageWriter
+	catalog        port.CatalogRepository
+	nexusHub       port.NexusHubClient
+	credit         port.CreditClient
+	callLogs       port.CallLogRepo
+	usage          port.UsageWriter
+	uploadResolver port.UploadRefResolver
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -28,6 +29,10 @@ func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, cr
 
 func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 	s.usage = usage
+}
+
+func (s *Service) SetUploadRefResolver(r port.UploadRefResolver) {
+	s.uploadResolver = r
 }
 
 // Generate is a convenience wrapper for Execute with OperationGenerate.
@@ -72,6 +77,14 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 	route, err := model.SelectRoute(spec, operation, mode)
 	if err != nil {
 		return model.GenerateImageResult{}, err
+	}
+
+	if len(req.ReferenceImageURLs) > 0 && s.uploadResolver != nil {
+		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, req.ReferenceImageURLs)
+		if resolveErr != nil {
+			return model.GenerateImageResult{}, resolveErr
+		}
+		req.ReferenceImageURLs = resolved
 	}
 
 	startedAt := time.Now()

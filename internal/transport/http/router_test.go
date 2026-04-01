@@ -166,7 +166,7 @@ type fakeSpaceService struct {
 	space *model.Space
 }
 
-func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ string) (*model.Space, error) {
+func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ int64) (*model.Space, error) {
 	return s.space, nil
 }
 
@@ -667,7 +667,7 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	passthroughResolver := idresolver.PassthroughIDResolver{}
-	testSpace := &model.Space{ID: 100, OwnerUserID: seededUser.ID}
+	testSpace := &model.Space{ID: 100, OwnerUserID: 1}
 	driveService := driveapp.NewService(&fakeSpaceService{space: testSpace}, &fakeDriveNodeRepo{})
 	driveHandler := drivehandler.NewHandler(driveService, passthroughResolver, passthroughMapper)
 	pageService := pageapp.NewService(&fakeSpaceService{space: testSpace}, &fakePageSiteRepo{}, &fakePageSlugRepo{}, "test-pepper")

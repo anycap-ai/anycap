@@ -2,6 +2,7 @@ package capabilities
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -61,7 +62,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 		SHA256:    sha256Ptr,
 		Status:    model.CapsUploadStatusPending,
 		ExpiresAt: s.now().Add(time.Duration(presignResult.ExpiresIn) * time.Second),
-		CreatedBy: actor.UserID,
+		CreatedBy: strconv.FormatInt(actor.UserID, 10),
 	})
 	if err != nil {
 		return model.PresignResult{}, err

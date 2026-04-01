@@ -20,3 +20,10 @@ type CapabilitiesService interface {
 	VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error)
 	AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error)
 }
+
+// UploadRefResolver resolves anycap://upload/ references to presigned HTTP URLs.
+// Used by generate services to convert CLI-uploaded file references before
+// forwarding to upstream providers.
+type UploadRefResolver interface {
+	ResolveReferenceURLs(ctx context.Context, urls []string) ([]string, error)
+}

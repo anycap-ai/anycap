@@ -119,7 +119,6 @@ func statusScopes(principal *model.Principal, features map[string]bool) []string
 		}
 		merged[scope] = struct{}{}
 	}
-
 	if len(merged) == 0 {
 		return nil
 	}

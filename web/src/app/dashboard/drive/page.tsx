@@ -28,11 +28,7 @@ function formatSize(size?: number | null) {
   return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`;
 }
 
-function formatTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString();
-}
+import { formatTime } from "@/lib/date";
 
 function MoreMenu({
   onRename,

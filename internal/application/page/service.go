@@ -163,7 +163,7 @@ func (s *Service) fillPageURLs(sites []model.PageSite) {
 	}
 }
 
-func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.PageSite, error) {
+func (s *Service) CreateSite(ctx context.Context, userID int64, name string) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
 		return nil, model.ErrNotConfigured("page service is not configured")
 	}
@@ -211,7 +211,7 @@ func (s *Service) CreateSite(ctx context.Context, userID, name string) (*model.P
 	return nil, model.ErrConflict("failed to allocate unique page name")
 }
 
-func (s *Service) ListSites(ctx context.Context, userID string, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
+func (s *Service) ListSites(ctx context.Context, userID int64, filter model.ListPageSitesFilter) ([]model.PageSite, int, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
 		return nil, 0, model.ErrNotConfigured("page service is not configured")
 	}
@@ -230,7 +230,7 @@ func (s *Service) ListSites(ctx context.Context, userID string, filter model.Lis
 	return sites, total, nil
 }
 
-func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error) {
+func (s *Service) GetSite(ctx context.Context, userID int64, siteID int64) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
 		return nil, model.ErrNotConfigured("page service is not configured")
 	}
@@ -255,7 +255,7 @@ func (s *Service) GetSite(ctx context.Context, userID string, siteID int64) (*mo
 	return site, nil
 }
 
-func (s *Service) UpdateSite(ctx context.Context, userID string, input model.UpdatePageSiteInput) (*model.PageSite, error) {
+func (s *Service) UpdateSite(ctx context.Context, userID int64, input model.UpdatePageSiteInput) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil {
 		return nil, model.ErrNotConfigured("page service is not configured")
 	}
@@ -339,7 +339,7 @@ func (s *Service) UpdateSite(ctx context.Context, userID string, input model.Upd
 	return updatedSite, nil
 }
 
-func (s *Service) DeleteSite(ctx context.Context, userID string, siteID int64) (*model.PageSite, error) {
+func (s *Service) DeleteSite(ctx context.Context, userID int64, siteID int64) (*model.PageSite, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.slugRepo == nil {
 		return nil, model.ErrNotConfigured("page service is not configured")
 	}

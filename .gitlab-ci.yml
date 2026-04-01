@@ -120,6 +120,10 @@ test:
 build:image:
   image: $CI_IMAGE
   rules:
+    # Main branch: run the server image build after merge.
+    - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        APPS: "server"
     - if: $APPS
 
 # ---------------------------------------------------------------------------

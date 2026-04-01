@@ -11,7 +11,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 
 	"github.com/spf13/cobra"
 )
@@ -23,12 +22,8 @@ func NewVideoCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 		RunE:  requireSubcommand,
 	}
 
-	if feature.Enabled(feature.VideoModels) {
-		videoCmd.AddCommand(newVideoModelsCmd(clientFactory, stdout))
-	}
-	if feature.Enabled(feature.VideoGenerate) {
-		videoCmd.AddCommand(newVideoGenerateCmd(clientFactory, stdout))
-	}
+	videoCmd.AddCommand(newVideoModelsCmd(clientFactory, stdout))
+	videoCmd.AddCommand(newVideoGenerateCmd(clientFactory, stdout))
 
 	return videoCmd
 }
@@ -101,7 +96,7 @@ Examples:
   anycap video generate --prompt "a cat walking on the beach" --model veo-3.1
   anycap video generate --prompt "ocean waves" --model veo-3.1 --param ratio=16:9 --param duration=5
   anycap video generate --prompt "a landscape" --model veo-3.1 -o landscape.mp4
-  anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls='["https://example.com/photo.jpg"]'`,
+  anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images='["https://example.com/photo.jpg"]' --param aspect_ratio=16:9`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"prompt": prompt,
