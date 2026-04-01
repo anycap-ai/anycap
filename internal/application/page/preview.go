@@ -25,7 +25,7 @@ type pagePreviewHostRecord struct {
 	ExpiresAt        time.Time            `json:"expires_at"`
 }
 
-func (s *Service) CreatePreviewHost(ctx context.Context, userID string, pageID int64, versionID int64) (*model.PagePreviewHost, error) {
+func (s *Service) CreatePreviewHost(ctx context.Context, userID int64, pageID int64, versionID int64) (*model.PagePreviewHost, error) {
 	if s == nil || s.spaceService == nil || s.siteRepo == nil || s.versionRepo == nil || s.edgeGrantStore == nil {
 		return nil, model.ErrNotConfigured("page preview-host service is not configured")
 	}

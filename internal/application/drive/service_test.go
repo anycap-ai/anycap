@@ -13,7 +13,7 @@ type fakeSpaceService struct {
 	space *model.Space
 }
 
-func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ string) (*model.Space, error) {
+func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ int64) (*model.Space, error) {
 	return s.space, nil
 }
 
@@ -184,7 +184,7 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 }
 
 func TestCreateFolder_RejectsFileParent(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	parentID := int64(1)
 	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
@@ -196,14 +196,14 @@ func TestCreateFolder_RejectsFileParent(t *testing.T) {
 	}}
 	service := NewService(&fakeSpaceService{space: space}, repo)
 
-	_, err := service.CreateFolder(context.Background(), "u-1", &parentID, "docs")
+	_, err := service.CreateFolder(context.Background(), 1, &parentID, "docs")
 	if err == nil || !strings.Contains(err.Error(), "parent node must be a folder") {
 		t.Fatalf("expected parent folder validation error, got %v", err)
 	}
 }
 
 func TestListNodes_RejectsFileParent(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	parentID := int64(1)
 	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
@@ -215,14 +215,14 @@ func TestListNodes_RejectsFileParent(t *testing.T) {
 	}}
 	service := NewService(&fakeSpaceService{space: space}, repo)
 
-	_, _, err := service.ListNodes(context.Background(), "u-1", &parentID, model.ListDriveNodesFilter{Limit: 50})
+	_, _, err := service.ListNodes(context.Background(), 1, &parentID, model.ListDriveNodesFilter{Limit: 50})
 	if err == nil || !strings.Contains(err.Error(), "parent node must be a folder") {
 		t.Fatalf("expected parent folder validation error, got %v", err)
 	}
 }
 
 func TestUpdateNode_RejectsMoveFolderIntoSubtree(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	childParentID := int64(1)
 	dstParentID := int64(2)
 	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
@@ -242,14 +242,14 @@ func TestUpdateNode_RejectsMoveFolderIntoSubtree(t *testing.T) {
 	}}
 	service := NewService(&fakeSpaceService{space: space}, repo)
 
-	_, err := service.UpdateNode(context.Background(), "u-1", 1, nil, &dstParentID, true)
+	_, err := service.UpdateNode(context.Background(), 1, 1, nil, &dstParentID, true)
 	if err == nil || !strings.Contains(err.Error(), "cannot move folder into its subtree") {
 		t.Fatalf("expected subtree validation error, got %v", err)
 	}
 }
 
 func TestDeleteNode_DeletesSubtree(t *testing.T) {
-	space := &model.Space{ID: 100, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 100, OwnerUserID: 1}
 	childParentID := int64(1)
 	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
 		1: {
@@ -268,7 +268,7 @@ func TestDeleteNode_DeletesSubtree(t *testing.T) {
 	}}
 	service := NewService(&fakeSpaceService{space: space}, repo)
 
-	deletedCount, err := service.DeleteNode(context.Background(), "u-1", 1)
+	deletedCount, err := service.DeleteNode(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("DeleteNode() error = %v", err)
 	}

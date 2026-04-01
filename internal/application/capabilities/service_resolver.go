@@ -3,12 +3,13 @@ package capabilities
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
-func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID string, req model.ImageReadRequest) (model.ImageReadRequest, []model.CapsTaskArtifact, error) {
+func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID int64, req model.ImageReadRequest) (model.ImageReadRequest, []model.CapsTaskArtifact, error) {
 	resolvedReq := req
 	artifacts := make([]model.CapsTaskArtifact, 0)
 
@@ -45,7 +46,7 @@ func (s *Service) resolveImageInputs(ctx context.Context, spaceID int64, userID 
 	return resolvedReq, artifacts, nil
 }
 
-func (s *Service) resolveVideoInput(ctx context.Context, spaceID int64, userID string, req model.VideoReadRequest) (model.VideoReadRequest, []model.CapsTaskArtifact, error) {
+func (s *Service) resolveVideoInput(ctx context.Context, spaceID int64, userID int64, req model.VideoReadRequest) (model.VideoReadRequest, []model.CapsTaskArtifact, error) {
 	resolvedReq := req
 	artifacts := make([]model.CapsTaskArtifact, 0, 1)
 	if strings.TrimSpace(req.URL) == "" {
@@ -63,7 +64,7 @@ func (s *Service) resolveVideoInput(ctx context.Context, spaceID int64, userID s
 	return resolvedReq, artifacts, nil
 }
 
-func (s *Service) resolveAudioInput(ctx context.Context, spaceID int64, userID string, req model.AudioReadRequest) (model.AudioReadRequest, []model.CapsTaskArtifact, error) {
+func (s *Service) resolveAudioInput(ctx context.Context, spaceID int64, userID int64, req model.AudioReadRequest) (model.AudioReadRequest, []model.CapsTaskArtifact, error) {
 	resolvedReq := req
 	artifacts := make([]model.CapsTaskArtifact, 0, 1)
 	if strings.TrimSpace(req.URL) == "" {
@@ -81,7 +82,7 @@ func (s *Service) resolveAudioInput(ctx context.Context, spaceID int64, userID s
 	return resolvedReq, artifacts, nil
 }
 
-func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, rawURL string) (string, model.CapsTaskArtifact, error) {
+func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID int64, rawURL string) (string, model.CapsTaskArtifact, error) {
 	trimmedURL := strings.TrimSpace(rawURL)
 	artifact := model.CapsTaskArtifact{
 		SourceKind: model.CapsTaskArtifactSourceKindExternalURL,
@@ -107,7 +108,7 @@ func (s *Service) resolveInputURL(ctx context.Context, spaceID int64, userID, ra
 	if upload == nil {
 		return "", artifact, model.ErrUploadReferenceNotFound
 	}
-	if upload.SpaceID != spaceID || strings.TrimSpace(upload.CreatedBy) != strings.TrimSpace(userID) {
+	if upload.SpaceID != spaceID || strings.TrimSpace(upload.CreatedBy) != strconv.FormatInt(userID, 10) {
 		return "", artifact, model.ErrUploadReferenceForbidden
 	}
 	if upload.Status == model.CapsUploadStatusExpired || upload.ExpiresAt.Before(s.now()) {

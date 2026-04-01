@@ -26,6 +26,11 @@ func (h *Handler) CreateSite(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	var req createPageSiteRequest
 	if len(ctx.Request.Body()) > 0 {
 		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -34,7 +39,7 @@ func (h *Handler) CreateSite(c context.Context, ctx *app.RequestContext) {
 		}
 	}
 
-	site, err := h.service.CreateSite(c, principal.UserID, req.Name)
+	site, err := h.service.CreateSite(c, userID, req.Name)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "create_page_site_failed", err.Error())
 		return
@@ -60,6 +65,11 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	limit, offset := handlers.ParseLimitOffset(
 		string(ctx.Query("limit")),
 		string(ctx.Query("offset")),
@@ -73,7 +83,7 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 		filter.Name = &nameRaw
 	}
 
-	items, total, err := h.service.ListSites(c, principal.UserID, filter)
+	items, total, err := h.service.ListSites(c, userID, filter)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
 		return
@@ -102,13 +112,18 @@ func (h *Handler) GetSite(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
 		return
 	}
 
-	site, err := h.service.GetSite(c, principal.UserID, siteID)
+	site, err := h.service.GetSite(c, userID, siteID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "get_page_site_failed", err.Error())
 		return
@@ -131,6 +146,11 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
 		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
 		return
 	}
 
@@ -217,7 +237,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	site, err := h.service.UpdateSite(c, principal.UserID, input)
+	site, err := h.service.UpdateSite(c, userID, input)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "update_page_site_failed", err.Error())
 		return
@@ -243,13 +263,18 @@ func (h *Handler) DeleteSite(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
 		return
 	}
 
-	site, err := h.service.DeleteSite(c, principal.UserID, siteID)
+	site, err := h.service.DeleteSite(c, userID, siteID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "delete_page_site_failed", err.Error())
 		return
@@ -275,13 +300,18 @@ func (h *Handler) Unpublish(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
 		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
 		return
 	}
 
-	site, err := h.service.Unpublish(c, principal.UserID, siteID)
+	site, err := h.service.Unpublish(c, userID, siteID)
 	if err != nil {
 		handlers.WriteError(ctx, statusCodeForPageError(err), "unpublish_page_site_failed", err.Error())
 		return

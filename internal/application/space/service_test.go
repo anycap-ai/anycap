@@ -9,20 +9,20 @@ import (
 )
 
 type fakeSpaceRepo struct {
-	spaces map[string]*model.Space
+	spaces map[int64]*model.Space
 	nextID int64
 }
 
-func (r *fakeSpaceRepo) GetByOwnerUserID(_ context.Context, ownerUserID string) (*model.Space, error) {
+func (r *fakeSpaceRepo) GetByOwnerUserID(_ context.Context, ownerUserID int64) (*model.Space, error) {
 	if r.spaces == nil {
 		return nil, nil
 	}
 	return r.spaces[ownerUserID], nil
 }
 
-func (r *fakeSpaceRepo) CreatePersonalSpace(_ context.Context, ownerUserID, name string) (*model.Space, error) {
+func (r *fakeSpaceRepo) CreatePersonalSpace(_ context.Context, ownerUserID int64, name string) (*model.Space, error) {
 	if r.spaces == nil {
-		r.spaces = map[string]*model.Space{}
+		r.spaces = map[int64]*model.Space{}
 	}
 	if _, exists := r.spaces[ownerUserID]; exists {
 		return nil, fmt.Errorf("duplicate key")
@@ -37,11 +37,11 @@ func TestGetOrCreatePersonalSpace_Idempotent(t *testing.T) {
 	repo := &fakeSpaceRepo{}
 	svc := NewService(repo)
 
-	first, err := svc.GetOrCreatePersonalSpace(context.Background(), "u-1")
+	first, err := svc.GetOrCreatePersonalSpace(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("first call failed: %v", err)
 	}
-	second, err := svc.GetOrCreatePersonalSpace(context.Background(), "u-1")
+	second, err := svc.GetOrCreatePersonalSpace(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("second call failed: %v", err)
 	}

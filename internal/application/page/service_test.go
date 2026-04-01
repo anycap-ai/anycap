@@ -13,7 +13,7 @@ type fakePageSpaceService struct {
 	space *model.Space
 }
 
-func (s *fakePageSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ string) (*model.Space, error) {
+func (s *fakePageSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ int64) (*model.Space, error) {
 	return s.space, nil
 }
 
@@ -214,12 +214,12 @@ type duplicateError struct{}
 func (e *duplicateError) Error() string { return "duplicate value" }
 
 func TestCreateSite_GeneratesPageNameAndSlug(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{}
 	slugRepo := &fakePageSlugRepo{}
 	service := NewService(&fakePageSpaceService{space: space}, siteRepo, slugRepo, "")
 
-	site, err := service.CreateSite(context.Background(), "u-1", "Docs Center")
+	site, err := service.CreateSite(context.Background(), 1, "Docs Center")
 	if err != nil {
 		t.Fatalf("CreateSite() error = %v", err)
 	}
@@ -236,7 +236,7 @@ func TestCreateSite_GeneratesPageNameAndSlug(t *testing.T) {
 }
 
 func TestUpdateSite_SetPasswordHashesWithPepper(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -253,7 +253,7 @@ func TestUpdateSite_SetPasswordHashesWithPepper(t *testing.T) {
 
 	mode := model.PageAccessModePassword
 	password := "secret-123"
-	updated, err := service.UpdateSite(context.Background(), "u-1", model.UpdatePageSiteInput{
+	updated, err := service.UpdateSite(context.Background(), 1, model.UpdatePageSiteInput{
 		ID:             1,
 		AccessMode:     &mode,
 		UpdatePassword: true,
@@ -277,7 +277,7 @@ func TestUpdateSite_SetPasswordHashesWithPepper(t *testing.T) {
 }
 
 func TestUpdateSite_PublicModeClearsPassword(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	hash := "pbkdf2_sha256$100000$v1$abc"
 	salt := "salt"
 	siteRepo := &fakePageSiteRepo{
@@ -297,7 +297,7 @@ func TestUpdateSite_PublicModeClearsPassword(t *testing.T) {
 	service := NewService(&fakePageSpaceService{space: space}, siteRepo, slugRepo, "pepper-xyz")
 
 	mode := model.PageAccessModePublic
-	updated, err := service.UpdateSite(context.Background(), "u-1", model.UpdatePageSiteInput{
+	updated, err := service.UpdateSite(context.Background(), 1, model.UpdatePageSiteInput{
 		ID:         1,
 		AccessMode: &mode,
 	})
@@ -313,7 +313,7 @@ func TestUpdateSite_PublicModeClearsPassword(t *testing.T) {
 }
 
 func TestUpdateSite_PasswordModeRequiresPasswordWhenUnset(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
 			1: {
@@ -329,7 +329,7 @@ func TestUpdateSite_PasswordModeRequiresPasswordWhenUnset(t *testing.T) {
 	service := NewService(&fakePageSpaceService{space: space}, siteRepo, slugRepo, "pepper-xyz")
 
 	mode := model.PageAccessModePassword
-	_, err := service.UpdateSite(context.Background(), "u-1", model.UpdatePageSiteInput{
+	_, err := service.UpdateSite(context.Background(), 1, model.UpdatePageSiteInput{
 		ID:         1,
 		AccessMode: &mode,
 	})
@@ -339,7 +339,7 @@ func TestUpdateSite_PasswordModeRequiresPasswordWhenUnset(t *testing.T) {
 }
 
 func TestUpdateSite_EnqueuePageHostSyncJob(t *testing.T) {
-	space := &model.Space{ID: 200, OwnerUserID: "u-1"}
+	space := &model.Space{ID: 200, OwnerUserID: 1}
 	versionID := int64(10)
 	siteRepo := &fakePageSiteRepo{
 		sites: map[int64]*model.PageSite{
@@ -364,7 +364,7 @@ func TestUpdateSite_EnqueuePageHostSyncJob(t *testing.T) {
 	)
 
 	spaFallback := true
-	updated, err := service.UpdateSite(context.Background(), "u-1", model.UpdatePageSiteInput{
+	updated, err := service.UpdateSite(context.Background(), 1, model.UpdatePageSiteInput{
 		ID:          1,
 		SPAFallback: &spaFallback,
 	})

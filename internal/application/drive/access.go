@@ -24,7 +24,7 @@ type driveAccessRecord struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-func (s *Service) CreateAccessLinks(ctx context.Context, userID string, nodeID int64) (*model.DriveAccessLinks, error) {
+func (s *Service) CreateAccessLinks(ctx context.Context, userID int64, nodeID int64) (*model.DriveAccessLinks, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.storageObjectRepo == nil || s.edgeGrantStore == nil {
 		return nil, model.ErrNotConfigured("drive access-links service is not configured")
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 const maxDriveUploadSize int64 = 1024 * 1024 * 1024 // 1GB
 
-func (s *Service) PresignFileUpload(ctx context.Context, userID string, parentID *int64, name, contentType string, contentLength int64) (*model.DriveFilePresignResult, error) {
+func (s *Service) PresignFileUpload(ctx context.Context, userID int64, parentID *int64, name, contentType string, contentLength int64) (*model.DriveFilePresignResult, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.uploadSessionRepo == nil || s.objectStore == nil {
 		return nil, fmt.Errorf("drive upload service is not configured")
 	}
@@ -41,7 +42,7 @@ func (s *Service) PresignFileUpload(ctx context.Context, userID string, parentID
 		SpaceID:   space.ID,
 		ParentID:  parentID,
 		Name:      trimmedName,
-		CreatedBy: userID,
+		CreatedBy: strconv.FormatInt(userID, 10),
 	})
 	if err != nil {
 		return nil, err
@@ -78,7 +79,7 @@ func (s *Service) PresignFileUpload(ctx context.Context, userID string, parentID
 	}, nil
 }
 
-func (s *Service) CompleteFileUpload(ctx context.Context, userID string, uploadSessionID int64, fileID int64) (*model.DriveNode, error) {
+func (s *Service) CompleteFileUpload(ctx context.Context, userID int64, uploadSessionID int64, fileID int64) (*model.DriveNode, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.uploadSessionRepo == nil || s.storageObjectRepo == nil || s.objectStore == nil {
 		return nil, fmt.Errorf("drive upload service is not configured")
 	}

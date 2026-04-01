@@ -14,12 +14,13 @@ interface Agent {
 }
 
 const agents: Agent[] = [
-  { name: "Cursor", icon: "cursor.svg", slug: "cursor" },
-  { name: "Claude Code", icon: "claudecode-color.svg", slug: "claude-code" },
+  { name: "OpenClaw", icon: "openclaw-color.svg", slug: "openclaw" },
   { name: "Codex", icon: "codex-color.svg", slug: "codex" },
+  { name: "Claude Code", icon: "claudecode-color.svg", slug: "claude-code" },
+  { name: "Cursor", icon: "cursor.svg", slug: "cursor" },
+  { name: "Manus", icon: "manus.svg", slug: "manus" },
   { name: "Antigravity", icon: "antigravity-color.svg", slug: "antigravity" },
   { name: "OpenCode", icon: "opencode.svg", slug: "opencode" },
-  { name: "OpenClaw", icon: "openclaw-color.svg", slug: "openclaw" },
   { name: "V0", icon: "v0.svg", slug: "v0" },
   { name: "Lovable", icon: "lovable-color.svg", slug: "lovable" },
   { name: "Replit", icon: "replit-color.svg", slug: "replit" },
@@ -27,8 +28,7 @@ const agents: Agent[] = [
 ];
 
 function getInstallPrompt(agent: Agent): string {
-  const agentFlag = agent.slug ? ` -a ${agent.slug}` : "";
-  return `Help me set up AnyCap — first install the skill with "npx -y skills add anycap-ai/anycap${agentFlag} -y", then install the CLI with "curl -fsSL https://anycap.ai/install.sh | sh", and run anycap login to connect my account. After that you'll have image generation, video generation, image understanding, and video analysis available in early access through one CLI. Music, speech, search, and crawl are on the roadmap.`;
+  return `Follow the onboarding flow at https://anycap.ai to set up AnyCap. Hope you enjoy using it!`;
 }
 
 function AgentIconSlot({ icon, size = 20 }: { icon: string | null; size?: number }) {
@@ -201,9 +201,8 @@ export function EquipAgent({ label = "Equip your Agent" }: { label?: string }) {
                   </div>
                   {/* Scroll hint arrow */}
                   <div
-                    className={`pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col items-center pb-1 pt-6 bg-gradient-to-t from-white via-white/80 to-transparent rounded-b-xl transition-opacity duration-200 ${
-                      atBottom ? "opacity-0" : "opacity-100"
-                    }`}
+                    className={`pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col items-center pb-1 pt-6 bg-gradient-to-t from-white via-white/80 to-transparent rounded-b-xl transition-opacity duration-200 ${atBottom ? "opacity-0" : "opacity-100"
+                      }`}
                   >
                     <svg width="16" height="10" viewBox="0 0 16 10" className="text-[#9a9e90] animate-bounce">
                       <path
