@@ -64,6 +64,24 @@ html:hover ::-webkit-scrollbar-thumb:hover {
   background: rgba(154, 158, 144, 0.55);
 }
 
+/* ── Agent landing markdown ── */
+
+.landing-md h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.landing-md h2 { font-size: 0.875rem; font-weight: 700; color: #888; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+.landing-md h3 { font-size: 0.75rem; color: #666; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+.landing-md p { font-size: 0.875rem; color: #888; margin-bottom: 0.75rem; }
+.landing-md hr { border-color: #222; margin-bottom: 2.5rem; }
+.landing-md ul { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; margin-bottom: 0.75rem; }
+.landing-md ul a { text-decoration: underline; }
+.landing-md pre { background: #111; border-radius: 0.25rem; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.625; margin-bottom: 0.75rem; }
+.landing-md pre code { background: none; padding: 0; }
+.landing-md code { font-size: 0.875rem; }
+.landing-md table { width: 100%; font-size: 0.875rem; margin-bottom: 0.75rem; }
+.landing-md thead tr { text-align: left; color: #666; border-bottom: 1px solid #222; }
+.landing-md th, .landing-md td { padding: 0.5rem 1rem 0.5rem 0; }
+.landing-md td { color: #888; }
+.landing-md tbody tr { border-bottom: 1px solid #111; }
+
 /* Always-visible scrollbar for specific containers */
 .scrollbar-visible {
   scrollbar-color: rgba(154, 158, 144, 0.4) transparent;

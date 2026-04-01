@@ -33,28 +33,28 @@ const capabilities = [
     command: "anycap image generate",
     description: "Generate and edit visuals with Seedream 5, Nano Banana Pro, and more.",
     href: "/capabilities/image-generation",
-    status: "Early Access",
+    status: "Available",
   },
   {
     name: "Video Generation",
     command: "anycap video generate",
     description: "Generate walkthroughs, clips, and motion output with Veo 3.1.",
     href: "/capabilities/video-generation",
-    status: "Early Access",
+    status: "Available",
   },
   {
     name: "Image Understanding",
-    command: "anycap image read",
-    description: "Analyze screenshots, diagrams, and visual references through one runtime.",
+    command: "anycap actions image-read",
+    description: "Analyze screenshots, diagrams, OCR, and visual references through one runtime.",
     href: "/capabilities/image-understanding",
-    status: "Early Access",
+    status: "Available",
   },
   {
     name: "Video Analysis",
-    command: "anycap video read",
-    description: "Inspect recordings and extract structured detail from video content.",
+    command: "anycap actions video-read",
+    description: "Inspect recordings, summarize scenes, and extract structured video intelligence.",
     href: "/capabilities/video-analysis",
-    status: "Early Access",
+    status: "Available",
   },
 ];
 
@@ -85,6 +85,18 @@ const reasons = [
 ];
 
 const nextPages = [
+  {
+    eyebrow: "Capability",
+    title: "Image Generation",
+    href: "/capabilities/image-generation",
+    summary: "Go deeper on text-to-image, image editing, supported models, and the real CLI workflow.",
+  },
+  {
+    eyebrow: "Capability",
+    title: "Video Generation",
+    href: "/capabilities/video-generation",
+    summary: "See how text-to-video and image-to-video fit into the same agent command surface.",
+  },
   {
     eyebrow: "Learn",
     title: "What agents can't do",
@@ -331,7 +343,7 @@ export default function CliPage() {
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
                   style={mono}
                 >
-                  Request Early Access
+                  View on GitHub
                 </a>
                 <Link
                   href="/start"
@@ -346,6 +358,13 @@ export default function CliPage() {
                   style={mono}
                 >
                   See Capability Gaps
+                </Link>
+                <Link
+                  href="/for/claude-code"
+                  className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                  style={mono}
+                >
+                  For Claude Code
                 </Link>
               </div>
             </section>

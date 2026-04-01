@@ -21,8 +21,6 @@ const agents: Agent[] = [
   { name: "Manus", icon: "manus.svg", slug: "manus" },
   { name: "Antigravity", icon: "antigravity-color.svg", slug: "antigravity" },
   { name: "OpenCode", icon: "opencode.svg", slug: "opencode" },
-  { name: "V0", icon: "v0.svg", slug: "v0" },
-  { name: "Lovable", icon: "lovable-color.svg", slug: "lovable" },
   { name: "Replit", icon: "replit-color.svg", slug: "replit" },
   { name: "Other Agent", icon: null, slug: null },
 ];

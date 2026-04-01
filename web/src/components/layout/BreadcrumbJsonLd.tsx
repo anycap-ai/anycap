@@ -7,7 +7,14 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 
 export interface BreadcrumbItem {
   name: string;
+  /** URL path used for both JSON-LD `item` and visual link. */
   href?: string;
+  /**
+   * When true, the item is rendered as plain text in the visual breadcrumb
+   * even if `href` is provided. The `href` is still emitted in JSON-LD so
+   * Google receives a valid `item` URL (required for all non-last items).
+   */
+  unlinkable?: boolean;
 }
 
 export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
@@ -41,6 +48,7 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
         <ol className="mx-auto max-w-[1280px] flex flex-wrap items-center gap-2">
           {localizedItems.map((item, i) => {
             const isLast = i === items.length - 1;
+            const showLink = item.href && !isLast && !item.unlinkable;
             return (
               <li key={i} className="flex items-center gap-2">
                 {i > 0 && (
@@ -52,9 +60,9 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
                     ›
                   </span>
                 )}
-                {item.href && !isLast ? (
+                {showLink ? (
                   <Link
-                    href={item.href}
+                    href={item.href!}
                     className="text-[11px] tracking-[0.5px] text-[#5a5e52] hover:text-[#1c1f17] transition-colors"
                     style={mono}
                   >

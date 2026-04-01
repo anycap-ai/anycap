@@ -24,16 +24,16 @@ export const localeConfig = {
   }
 >;
 
-export const earlyAccessCapabilitySummary =
-  "image generation, video generation, image understanding, and video analysis";
+export const capabilitySummary =
+  "image generation, video generation, music generation, image understanding, video analysis, and audio understanding";
 
-export const roadmapCapabilitySummary = "music, speech, search, and crawl";
+export const roadmapCapabilitySummary = "speech, search, crawl, and sandbox";
 
 export const defaultSiteDescription =
-  `AnyCap gives AI agents one CLI and one credential for ${earlyAccessCapabilitySummary} in early access. Built for agents, not adapted from human tools.`;
+  `AnyCap gives AI agents one CLI and one credential for ${capabilitySummary} — plus cloud storage and web publishing. Built for agents, not adapted from human tools.`;
 
 export const defaultSocialImageAlt =
-  `AnyCap gives AI agents ${earlyAccessCapabilitySummary} through one command.`;
+  `AnyCap gives AI agents ${capabilitySummary} through one command.`;
 
 export const siteConfig = {
   name: "AnyCap",
@@ -42,11 +42,11 @@ export const siteConfig = {
   locale: localeConfig[defaultLocale].ogLocale,
   defaultLocale,
   supportedLocales,
-  defaultTitle: "Image, video, and vision capabilities for AI agents",
+  defaultTitle: "Any Capability, Instantly",
   defaultDescription: defaultSiteDescription,
-  humanTitle: "Capability infrastructure for agents",
+  humanTitle: "Any Capability, Instantly",
   humanDescription:
-    `See how AnyCap gives agents ${earlyAccessCapabilitySummary} through one install path, one auth flow, and one command surface.`,
+    `See how AnyCap gives agents ${capabilitySummary} through one install path, one auth flow, and one command surface.`,
 } as const;
 
 export type PublicRouteKind = "home" | "human" | "seo";

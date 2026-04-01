@@ -39,6 +39,8 @@ func newSkillCheckCmd(stdout io.Writer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliVersion := buildinfo.Version
 			path := skill.ResolveSkillPath(target)
+			// Install target is the skills root (parent of the individual skill directory).
+			installTarget := filepath.Dir(filepath.Dir(path))
 
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				return writeCheckResult(stdout, map[string]any{
@@ -46,7 +48,7 @@ func newSkillCheckCmd(stdout io.Writer) *cobra.Command {
 					"cli_version": cliVersion,
 					"action":      "install_skill",
 					"commands": []string{
-						fmt.Sprintf("anycap skill install --target %s", filepath.Dir(path)),
+						fmt.Sprintf("anycap skill install --target %s", installTarget),
 					},
 				})
 			}
@@ -72,7 +74,7 @@ func newSkillCheckCmd(stdout io.Writer) *cobra.Command {
 					"skill_version": skillVersion,
 					"action":        "update_skill",
 					"commands": []string{
-						fmt.Sprintf("anycap skill install --target %s", filepath.Dir(path)),
+						fmt.Sprintf("anycap skill install --target %s", installTarget),
 					},
 				})
 			default:
@@ -109,10 +111,9 @@ func newSkillInstallCmd(stdout, stderr io.Writer) *cobra.Command {
 				return fmt.Errorf("install failed: %w", err)
 			}
 
-			// Read installed version.
-			installed := skill.ResolveSkillPath(target)
+			// Read installed version from primary skill.
 			ver := buildinfo.Version
-			if v, err := skill.ParseVersion(installed); err == nil {
+			if v, err := skill.ParseVersion(filepath.Join(target, "anycap-cli", "SKILL.md")); err == nil {
 				ver = v
 			}
 
@@ -147,9 +148,9 @@ func newSkillUpdateCmd(stdout, stderr io.Writer) *cobra.Command {
 				return fmt.Errorf("update failed: %w", err)
 			}
 
-			installed := skill.ResolveSkillPath(target)
+			// Read installed version from primary skill.
 			ver := buildinfo.Version
-			if v, err := skill.ParseVersion(installed); err == nil {
+			if v, err := skill.ParseVersion(filepath.Join(target, "anycap-cli", "SKILL.md")); err == nil {
 				ver = v
 			}
 

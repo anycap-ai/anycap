@@ -9,6 +9,7 @@ import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 
 export const runtime = "edge";
+const githubHref = "https://github.com/anycap-ai/anycap";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
@@ -69,8 +70,26 @@ export default function ForHumanPage() {
               videos, or publish sites. AnyCap gives it any capability it&apos;s
               missing&nbsp;&mdash; with one install.
             </p>
-            <div className="mt-8 md:mt-8">
+            <div className="mt-8 flex flex-wrap items-center gap-3 md:mt-8">
               <LazyEquipAgent style={mono} />
+              <a
+                href={githubHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#ccd1c3] bg-[#fafbf8] px-6 py-4 text-[13px] text-[#3a3e32] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17]"
+                style={mono}
+              >
+                View on GitHub
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-60">
+                  <path
+                    d="M3 9L9 3M4 3h5v5"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
 

@@ -38,7 +38,7 @@ const definitionJsonLd = {
 export default function ContextEngineeringGlossaryPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Context Engineering" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Context Engineering" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">

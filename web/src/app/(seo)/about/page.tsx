@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { earlyAccessCapabilitySummary, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
+import { capabilitySummary, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -12,7 +12,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "About AnyCap — Agent-native capability infrastructure",
   description:
-    `AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and ${earlyAccessCapabilitySummary} in early access.`,
+    `AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and ${capabilitySummary}.`,
   alternates: { canonical: "/about" },
   openGraph: {
     type: "website",
@@ -30,7 +30,7 @@ const aboutPageJsonLd = {
   "@type": "AboutPage",
   name: "About AnyCap",
   description:
-    `About page for AnyCap, an agent-native capability runtime that adds ${earlyAccessCapabilitySummary} to AI agents through one interface.`,
+    `About page for AnyCap, an agent-native capability runtime that adds ${capabilitySummary} to AI agents through one interface.`,
   url: `${siteConfig.url}/about`,
   mainEntity: {
     "@type": "Organization",
@@ -47,7 +47,7 @@ const organizationJsonLd = {
   url: siteConfig.url,
   sameAs: ["https://github.com/anycap-ai/anycap"],
   description:
-    `AnyCap builds agent-native capability infrastructure that lets AI agents use ${earlyAccessCapabilitySummary} through one runtime.`,
+    `AnyCap builds agent-native capability infrastructure that lets AI agents use ${capabilitySummary} through one runtime.`,
 };
 
 const whyCards = [

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth/auth0";
-import { getLandingContent, toMarkdown } from "@/lib/landing-content";
+import { landingMarkdown } from "@/lib/landing-content";
 import {
   buildLocalizedPath,
   defaultLocale,
@@ -10,7 +10,6 @@ import {
   stripLocalePrefix,
 } from "@/lib/site";
 
-const markdown = toMarkdown(getLandingContent());
 const protectedPaths = ["/dashboard"];
 const legacyRouteRedirects = new Map<string, string>([
   ["/capabilities/image-read", "/capabilities/image-understanding"],
@@ -73,7 +72,7 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/") {
     const accept = req.headers.get("accept") ?? "";
     if (!accept.includes("text/html")) {
-      return new Response(markdown, {
+      return new Response(landingMarkdown, {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }

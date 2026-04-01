@@ -139,6 +139,7 @@ export default function WhatAgentsCantDoPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Learn", href: "/learn", unlinkable: true },
           { name: "What agents can't do" },
         ]}
       />

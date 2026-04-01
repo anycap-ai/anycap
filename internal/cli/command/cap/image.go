@@ -366,6 +366,9 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 	if requestID != "" {
 		hint += " --request-id '" + requestID + "'"
 	}
+	if traceID := output.TraceID(); traceID != "" {
+		hint += " --trace-id '" + traceID + "'"
+	}
 	result["hint"] = hint
 
 	data, err := json.Marshal(result)

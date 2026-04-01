@@ -26,6 +26,7 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 		message      string
 		context      string
 		requestID    string
+		traceID      string
 	)
 
 	cmd := &cobra.Command{
@@ -67,6 +68,9 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 			if requestID != "" {
 				payload["request_id"] = requestID
 			}
+			if traceID != "" {
+				payload["trace_id"] = traceID
+			}
 
 			resp, err := clientFactory().PostJSON(cmd.Context(), api.FeedbackPath, payload)
 			if err != nil {
@@ -81,6 +85,7 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 	cmd.Flags().StringVarP(&message, "message", "m", "", "Feedback message")
 	cmd.Flags().StringVar(&context, "context", "", "Additional context as JSON")
 	cmd.Flags().StringVar(&requestID, "request-id", "", "Related request ID from a previous command")
+	cmd.Flags().StringVar(&traceID, "trace-id", "", "Related trace ID from a previous command invocation")
 	_ = cmd.MarkFlagRequired("type")
 	_ = cmd.MarkFlagRequired("message")
 

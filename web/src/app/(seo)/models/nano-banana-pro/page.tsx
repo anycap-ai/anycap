@@ -39,6 +39,7 @@ export default function NanoBananaProPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Models", href: "/models" },
           { name: "Nano Banana Pro" },
         ]}
       />

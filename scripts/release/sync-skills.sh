@@ -9,8 +9,8 @@
 # This script:
 #   1. Authenticates via GitHub App or token
 #   2. Clones the GitHub repo (shallow)
-#   3. Copies skills/anycap-cli/ -> skills/anycap-cli/
-#   4. Updates metadata.version in SKILL.md to match the release
+#   3. Copies the entire skills/ directory
+#   4. Updates metadata.version in all SKILL.md files to match the release
 #   5. Commits and pushes to main
 set -eu
 
@@ -34,25 +34,20 @@ git clone --depth 1 \
 
 # -- Copy skill files -------------------------------------------------------
 echo "Syncing skill files ..."
-rm -rf "${CLONE_DIR}/skills/anycap-cli"
-mkdir -p "${CLONE_DIR}/skills/anycap-cli"
-cp -r skills/anycap-cli/* "${CLONE_DIR}/skills/anycap-cli/"
-
-cp skills/LICENSE "${CLONE_DIR}/skills/LICENSE" 2>/dev/null || true
+rm -rf "${CLONE_DIR}/skills"
+cp -r skills "${CLONE_DIR}/skills"
 
 # -- Copy install script ----------------------------------------------------
 echo "Syncing install.sh ..."
 mkdir -p "${CLONE_DIR}/scripts"
 cp web/public/install.sh "${CLONE_DIR}/scripts/install.sh"
 
-# -- Update version in SKILL.md ---------------------------------------------
-SKILL_FILE="${CLONE_DIR}/skills/anycap-cli/SKILL.md"
-if [ -f "$SKILL_FILE" ]; then
-  echo "Updating SKILL.md version to ${VERSION} ..."
-  # Keep version style consistent with mdformat-frontmatter in anycap-github.
-  sed -i.bak "s/^  version: .*/  version: ${VERSION}/" "$SKILL_FILE"
-  rm -f "${SKILL_FILE}.bak"
-fi
+# -- Update version in all SKILL.md files ------------------------------------
+echo "Updating SKILL.md versions to ${VERSION} ..."
+find "${CLONE_DIR}/skills" -name "SKILL.md" -type f | while read -r skill_file; do
+  sed -i.bak "s/^  version: .*/  version: ${VERSION}/" "$skill_file"
+  rm -f "${skill_file}.bak"
+done
 
 # -- Commit and push ---------------------------------------------------------
 cd "$CLONE_DIR"

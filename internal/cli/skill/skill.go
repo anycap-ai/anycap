@@ -12,12 +12,11 @@ import (
 	"strings"
 )
 
-//go:embed embedded/anycap-cli/*
-//go:embed embedded/anycap-cli/references/*
+//go:embed all:embedded
 var embeddedSkills embed.FS
 
-// SkillsRepo is the public GitHub repository for AnyCap skill files.
-const SkillsRepo = "https://github.com/anycap-ai/anycap-skills.git"
+// SkillsRepo is the public GitHub repository that contains skill files.
+const SkillsRepo = "https://github.com/anycap-ai/anycap.git"
 
 // ParseVersion reads a skill file and extracts metadata.version from YAML front matter.
 func ParseVersion(path string) (string, error) {
@@ -129,7 +128,7 @@ func ResolveSkillPath(path string) string {
 	return path
 }
 
-// Install clones the skills repo from GitHub and copies files to target.
+// Install clones the skills repo from GitHub and copies the skills/ directory to target.
 // Falls back to writing embedded content if git is unavailable or clone fails.
 func Install(target string) (source string, err error) {
 	tmpDir, err := os.MkdirTemp("", "anycap-skills-*")
@@ -148,7 +147,14 @@ func Install(target string) (source string, err error) {
 		return "embedded", installEmbedded(target)
 	}
 
-	return "github", copyRepoFiles(tmpDir, target)
+	// Copy only the skills/ subdirectory from the cloned repo.
+	skillsDir := filepath.Join(tmpDir, "skills")
+	if info, err := os.Stat(skillsDir); err == nil && info.IsDir() {
+		return "github", copyDir(skillsDir, target)
+	}
+
+	// Fallback: repo has no skills/ directory, use embedded.
+	return "embedded", installEmbedded(target)
 }
 
 func installEmbedded(target string) error {
@@ -156,12 +162,12 @@ func installEmbedded(target string) error {
 		return fmt.Errorf("create directory %s: %w", target, err)
 	}
 
-	return fs.WalkDir(embeddedSkills, "embedded/anycap-cli", func(path string, d fs.DirEntry, err error) error {
+	return fs.WalkDir(embeddedSkills, "embedded", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		rel, err := filepath.Rel("embedded/anycap-cli", path)
+		rel, err := filepath.Rel("embedded", path)
 		if err != nil {
 			return err
 		}
@@ -182,38 +188,34 @@ func installEmbedded(target string) error {
 	})
 }
 
-func copyRepoFiles(repoDir, target string) error {
-	if err := os.MkdirAll(target, 0755); err != nil {
+// copyDir copies all files from src to dst recursively.
+func copyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
 		return fmt.Errorf("create target directory: %w", err)
 	}
 
-	return filepath.WalkDir(repoDir, func(path string, d fs.DirEntry, err error) error {
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		rel, err := filepath.Rel(repoDir, path)
+		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
 		}
-
-		// Skip .git directory.
-		if rel == ".git" || strings.HasPrefix(rel, ".git/") {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
+		if rel == "." {
 			return nil
 		}
 
-		dst := filepath.Join(target, rel)
+		to := filepath.Join(dst, rel)
 		if d.IsDir() {
-			return os.MkdirAll(dst, 0755)
+			return os.MkdirAll(to, 0755)
 		}
 
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(dst, data, 0644)
+		return os.WriteFile(to, data, 0644)
 	})
 }

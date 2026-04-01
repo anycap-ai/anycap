@@ -41,6 +41,7 @@ export default function AddToolsToClaudeCodePage() {
     <>
       <BreadcrumbJsonLd items={[
         { name: "Home", href: "/" },
+        { name: "Guides", href: "/guides", unlinkable: true },
         { name: "Add Tools to Claude Code" },
       ]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
