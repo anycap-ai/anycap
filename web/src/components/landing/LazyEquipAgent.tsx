@@ -16,7 +16,7 @@ export function LazyEquipAgent({
   label?: string;
 }) {
   return (
-    <div className="min-h-14">
+    <div className="flex items-center justify-center min-h-14">
       <EquipAgent label={label} />
       <noscript>
         <div

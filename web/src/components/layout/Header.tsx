@@ -11,6 +11,12 @@ const baseLinkClass =
   "px-3 py-2 text-[15px] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
 
 const defaultLinkClass = `${baseLinkClass} text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97]`;
+
+const hideBelowInlineClass: Record<string, string> = {
+  sm: "hidden sm:inline-block",
+  md: "hidden md:inline-block",
+  lg: "hidden lg:inline-block",
+};
 const primaryLinkClass =
   `${baseLinkClass} px-5 text-[#f4f5f0] bg-[#6b7d3a] border border-[#6b7d3a] hover:bg-[#1c1f17] hover:border-[#1c1f17] active:scale-[0.97]`;
 
@@ -74,7 +80,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
     const { href, label, hideBelow } = entry;
     const external = entry.external ?? isExternalHref(href);
     const linkVariantClass = entry.variant === "primary" ? primaryLinkClass : defaultLinkClass;
-    const responsiveClass = hideBelow ? `hidden ${hideBelow}:inline-block` : "";
+    const responsiveClass = hideBelow ? hideBelowInlineClass[hideBelow] ?? "" : "";
 
     if (external) {
       return (

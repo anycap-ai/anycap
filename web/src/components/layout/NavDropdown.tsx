@@ -20,8 +20,14 @@ type NavDropdownProps = {
   hideBelow?: "sm" | "md" | "lg";
 };
 
+const hideBelowBlockClass: Record<string, string> = {
+  sm: "hidden sm:block",
+  md: "hidden md:block",
+  lg: "hidden lg:block",
+};
+
 export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps) {
-  const outerClass = hideBelow ? `hidden ${hideBelow}:block` : "";
+  const outerClass = hideBelow ? hideBelowBlockClass[hideBelow] ?? "" : "";
 
   return (
     <HoverDropdown
