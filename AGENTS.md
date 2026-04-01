@@ -386,6 +386,23 @@ web/src/app/[locale]/(seo)/           # Localized SEO pages (primary)
 
 Both share `SeoShell` (`web/src/components/SeoShell.tsx`) as the layout shell.
 
+### Public Navigation Standard
+
+For the public web navigation (`web/src/components/layout/Header.tsx` and `Footer.tsx`), use this default top-level IA unless there is a deliberate product or SEO decision to change it:
+
+- `Capabilities`
+- `Equip Agents`
+- `Learn`
+- `About`
+
+Rules:
+
+- Keep `Capabilities` as the product and SEO term. Do not rename it to generic SaaS wording like `Features`.
+- The `Capabilities` dropdown should point to the existing capability hub and current capability detail pages under `/capabilities/*`.
+- `Equip Agents` is the ecosystem-entry label for agent-specific pages under `/for/*`.
+- `Learn` is the navigation label for documentation and understanding pages such as `CLI`, `Skills`, `Guides`, and `Learn` content. Do not rename existing SEO route slugs just to match the nav label.
+- Keep header and footer terminology aligned so the same content layer is not described with different labels in different navigation surfaces.
+
 ### Page Categories
 
 | Category | Path pattern | Examples |

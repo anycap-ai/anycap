@@ -38,7 +38,7 @@ const definitionJsonLd = {
 export default function AgentHarnessGlossaryPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Agent Harness" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Agent Harness" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">

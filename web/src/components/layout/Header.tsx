@@ -17,7 +17,7 @@ const primaryLinkClass =
 export type NavItem = {
   href: string;
   label: string;
-  hideBelow?: "sm" | "md";
+  hideBelow?: "sm" | "md" | "lg";
   variant?: "default" | "primary";
   external?: boolean;
 };
@@ -27,7 +27,7 @@ export type NavDropdownDef = {
   label: string;
   href?: string;
   items: DropdownItem[];
-  hideBelow?: "sm" | "md";
+  hideBelow?: "sm" | "md" | "lg";
 };
 
 export type NavEntry = NavItem | NavDropdownDef;
@@ -54,6 +54,56 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
     return localizePublicPath(locale, href);
   }
 
+  function renderEntry(entry: NavEntry) {
+    if (isDropdown(entry)) {
+      const localizedItems = entry.items.map((item) => ({
+        ...item,
+        href: localize(item.href),
+      }));
+      return (
+        <NavDropdown
+          key={entry.label}
+          label={entry.label}
+          href={entry.href ? localize(entry.href) : undefined}
+          items={localizedItems}
+          hideBelow={entry.hideBelow}
+        />
+      );
+    }
+
+    const { href, label, hideBelow } = entry;
+    const external = entry.external ?? isExternalHref(href);
+    const linkVariantClass = entry.variant === "primary" ? primaryLinkClass : defaultLinkClass;
+    const responsiveClass = hideBelow ? `hidden ${hideBelow}:inline-block` : "";
+
+    if (external) {
+      return (
+        <a
+          key={href}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${responsiveClass} ${linkVariantClass}`}
+          style={mono}
+        >
+          {label}
+        </a>
+      );
+    }
+
+    return (
+      <Link
+        key={href}
+        href={localize(href)}
+        prefetch={false}
+        className={`${responsiveClass} ${linkVariantClass}`}
+        style={mono}
+      >
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-5 py-4 md:px-16 md:py-6 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
       <div className="flex items-center gap-3">
@@ -61,58 +111,12 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
           <span className="block md:hidden"><AnycapLogo size={32} /></span>
           <span className="hidden md:block"><AnycapLogo size={42} /></span>
         </Link>
-        <nav className="ml-auto flex items-center gap-0.5 sm:gap-1">
-          {links.map((entry) => {
-            if (isDropdown(entry)) {
-              const localizedItems = entry.items.map((item) => ({
-                ...item,
-                href: localize(item.href),
-              }));
-              return (
-                <NavDropdown
-                  key={entry.label}
-                  label={entry.label}
-                  href={entry.href ? localize(entry.href) : undefined}
-                  items={localizedItems}
-                  hideBelow={entry.hideBelow}
-                />
-              );
-            }
-
-            const { href, label, hideBelow } = entry;
-            const external = entry.external ?? isExternalHref(href);
-            const linkVariantClass = entry.variant === "primary" ? primaryLinkClass : defaultLinkClass;
-            const responsiveClass = hideBelow ? `hidden ${hideBelow}:inline-block` : "";
-
-            if (external) {
-              return (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${responsiveClass} ${linkVariantClass}`}
-                  style={mono}
-                >
-                  {label}
-                </a>
-              );
-            }
-
-            return (
-              <Link
-                key={href}
-                href={localize(href)}
-                prefetch={false}
-                className={`${responsiveClass} ${linkVariantClass}`}
-                style={mono}
-              >
-                {label}
-              </Link>
-            );
-          })}
-          {authSlot}
-        </nav>
+        <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
+          <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
+            {links.map(renderEntry)}
+          </nav>
+          <div className="flex shrink-0 items-center gap-2">{authSlot}</div>
+        </div>
       </div>
     </header>
   );
@@ -133,9 +137,9 @@ const capabilitiesDropdown: NavDropdownDef = {
   ],
 };
 
-const equipYourAgentsDropdown: NavDropdownDef = {
+const equipAgentsDropdown: NavDropdownDef = {
   kind: "dropdown",
-  label: "Equip Your Agents",
+  label: "Equip Agents",
   href: "/start",
   items: [
     { href: "/for/claude-code", label: "Claude Code" },
@@ -149,39 +153,12 @@ const equipYourAgentsDropdown: NavDropdownDef = {
 const learnDropdown: NavDropdownDef = {
   kind: "dropdown",
   label: "Learn",
-  href: "/learn/what-agents-cant-do",
-  items: [
-    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
-    { href: "/cli", label: "Why One CLI Matters" },
-    { href: "/skills", label: "How Skills Fit" },
-    { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-    { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
-  ],
-  hideBelow: "md",
-};
-
-const forYourAgentDropdown: NavDropdownDef = {
-  kind: "dropdown",
-  label: "For Your Agent",
-  href: "/start",
-  items: [
-    { href: "/for/claude-code", label: "Claude Code" },
-    { href: "/for/cursor", label: "Cursor" },
-    { href: "/for/codex", label: "Codex" },
-  ],
-  hideBelow: "md",
-};
-
-const resourcesDropdown: NavDropdownDef = {
-  kind: "dropdown",
-  label: "Resources",
   items: [
     { href: "/cli", label: "CLI" },
     { href: "/skills", label: "Skills" },
-    { href: "/models", label: "Models" },
-    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
+    { href: "/guides/install-anycap", label: "Install AnyCap" },
     { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-    { href: "/compare/anycap-vs-composio", label: "AnyCap vs Composio" },
+    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
   ],
   hideBelow: "md",
 };
@@ -195,16 +172,16 @@ const githubNavLink: NavItem = {
 
 export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
-  forYourAgentDropdown,
-  resourcesDropdown,
-  { href: "/about", label: "About", hideBelow: "sm" },
+  equipAgentsDropdown,
+  learnDropdown,
+  { href: "/about", label: "About", hideBelow: "lg" },
   githubNavLink,
 ];
 
 export const humanNavLinks: NavEntry[] = [
   capabilitiesDropdown,
-  equipYourAgentsDropdown,
+  equipAgentsDropdown,
   learnDropdown,
-  { href: "/about", label: "About", hideBelow: "sm" },
+  { href: "/about", label: "About", hideBelow: "lg" },
   githubNavLink,
 ];

@@ -98,8 +98,9 @@ export default function ClaudeCodeImageGenerationPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
-          { name: "AnyCap for Claude Code", href: "/for/claude-code" },
-          { name: "Claude Code image generation" },
+          { name: "Equip Agents", href: "/for", unlinkable: true },
+          { name: "Claude Code", href: "/for/claude-code" },
+          { name: "Image Generation" },
         ]}
       />
       <script

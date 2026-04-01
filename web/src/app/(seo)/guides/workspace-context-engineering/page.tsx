@@ -30,7 +30,7 @@ export default function WorkspaceContextEngineeringPage() {
   return (
     <>
       <BreadcrumbJsonLd
-        items={[{ name: "Home", href: "/" }, { name: "Workspace Context Engineering" }]}
+        items={[{ name: "Home", href: "/" }, { name: "Guides", href: "/guides", unlinkable: true }, { name: "Workspace Context Engineering" }]}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

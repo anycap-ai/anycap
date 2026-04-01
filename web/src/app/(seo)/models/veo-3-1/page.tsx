@@ -39,6 +39,7 @@ export default function Veo31Page() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
+          { name: "Models", href: "/models" },
           { name: "Veo 3.1" },
         ]}
       />

@@ -183,7 +183,8 @@ export default function ForCodexPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
-          { name: "AnyCap for Codex" },
+          { name: "Equip Agents", href: "/for", unlinkable: true },
+          { name: "Codex" },
         ]}
       />
       <script

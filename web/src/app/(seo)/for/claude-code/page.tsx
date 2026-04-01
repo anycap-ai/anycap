@@ -18,7 +18,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "Claude Code tools and capabilities — Add image, video, and vision with AnyCap",
   description:
-    "Claude Code can code, but it still needs image generation, video generation, image understanding, and video analysis. AnyCap adds those capabilities through one install, one login, and one CLI.",
+    "Claude Code can code, but it still needs image generation, video generation, image understanding, and video analysis. AnyCap adds those capabilities through one install, one login, one CLI, and one set of capability pages.",
   alternates: { canonical: "/for/claude-code" },
   openGraph: {
     type: "website",
@@ -103,7 +103,7 @@ const gapRows: CapabilityGapRow[] = [
     capability: "Image understanding",
     cells: [
       { label: "No consistent agent runtime", tone: "muted" },
-      { label: "Use anycap image read for screenshots and diagrams", tone: "accent" },
+      { label: "Use anycap actions image-read for screenshots and diagrams", tone: "accent" },
       "Image Understanding page",
     ],
   },
@@ -111,7 +111,7 @@ const gapRows: CapabilityGapRow[] = [
     capability: "Video analysis",
     cells: [
       { label: "Separate provider work", tone: "muted" },
-      { label: "Inspect recordings through the same CLI", tone: "accent" },
+      { label: "Inspect recordings through anycap actions video-read", tone: "accent" },
       "Video Analysis page",
     ],
   },
@@ -166,14 +166,14 @@ const capabilityCards = [
     title: "Image Understanding",
     href: "/capabilities/image-understanding",
     summary: "Use this when the workflow starts from screenshots, diagrams, OCR, or visual QA.",
-    command: "anycap image read",
+    command: "anycap actions image-read",
   },
   {
     eyebrow: "Analysis",
     title: "Video Analysis",
     href: "/capabilities/video-analysis",
     summary: "Use this when the agent needs to inspect recordings and extract structured details.",
-    command: "anycap video read",
+    command: "anycap actions video-read",
   },
 ];
 
@@ -183,7 +183,8 @@ export default function ForClaudeCodePage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Home", href: "/" },
-          { name: "AnyCap for Claude Code" },
+          { name: "Equip Agents", href: "/for", unlinkable: true },
+          { name: "Claude Code" },
         ]}
       />
       <script
@@ -240,6 +241,13 @@ export default function ForClaudeCodePage() {
                 style={mono}
               >
                 Claude Code video generation
+              </Link>
+              <Link
+                href="/cli"
+                className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                style={mono}
+              >
+                AnyCap CLI
               </Link>
             </div>
           </FadeIn>
@@ -328,6 +336,22 @@ export default function ForClaudeCodePage() {
                   </Link>
                 ))}
               </div>
+              <div className="mt-6 flex flex-wrap gap-4">
+                <Link
+                  href="/capabilities/image-generation"
+                  className="text-[11px] tracking-[0.5px] text-[#6b7d3a] transition-colors hover:text-[#1c1f17]"
+                  style={mono}
+                >
+                  See the full image generation page →
+                </Link>
+                <Link
+                  href="/capabilities/video-generation"
+                  className="text-[11px] tracking-[0.5px] text-[#6b7d3a] transition-colors hover:text-[#1c1f17]"
+                  style={mono}
+                >
+                  See the full video generation page →
+                </Link>
+              </div>
             </section>
           </FadeIn>
 
@@ -380,6 +404,13 @@ export default function ForClaudeCodePage() {
                   style={mono}
                 >
                   Any Capability
+                </Link>
+                <Link
+                  href="/cli"
+                  className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                  style={mono}
+                >
+                  AnyCap CLI
                 </Link>
               </div>
             </section>
