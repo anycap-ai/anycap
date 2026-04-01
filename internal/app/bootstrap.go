@@ -180,7 +180,6 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			videoCatalog,
 			audioCatalog,
 			musicCatalog,
-			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(featureProvider))
 				systemHandler.RegisterProtectedRoutes(protected)
@@ -188,6 +187,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				modelRouteHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -348,7 +348,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		callLogs := calllog.NewCallLogDBRepo(db)
 		usageRepo := usage.NewRepo(db)
 		users := userstore.NewProvisioner(db)
-		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, nil, nil)
+		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, users, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)

@@ -55,7 +55,7 @@ func (f *fakeAPIKeyRepo) SoftDeleteByUserID(_ context.Context, userID, keyID str
 
 func TestRepositoryAPIKeyService_CreateAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, func() time.Time {
+	service := NewRepositoryAPIKeyService(repo, nil, func() time.Time {
 		return time.Date(2026, 3, 24, 12, 0, 0, 0, time.UTC)
 	}, func() (string, error) {
 		return "ak_test_raw_key_123456", nil
@@ -85,7 +85,7 @@ func TestRepositoryAPIKeyService_CreateAPIKey(t *testing.T) {
 func TestRepositoryAPIKeyService_CreateAPIKeyWithTTL(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
 	now := time.Date(2026, 3, 24, 12, 0, 0, 0, time.UTC)
-	service := NewRepositoryAPIKeyService(repo, func() time.Time {
+	service := NewRepositoryAPIKeyService(repo, nil, func() time.Time {
 		return now
 	}, func() (string, error) {
 		return "ak_test_raw_key_123456", nil
@@ -109,7 +109,7 @@ func TestRepositoryAPIKeyService_CreateAPIKeyWithTTL(t *testing.T) {
 
 func TestRepositoryAPIKeyService_AuthenticateAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, func() time.Time {
+	service := NewRepositoryAPIKeyService(repo, nil, func() time.Time {
 		return time.Date(2026, 3, 24, 12, 0, 0, 0, time.UTC)
 	}, func() (string, error) {
 		return "ak_test_raw_key_123456", nil
@@ -128,11 +128,14 @@ func TestRepositoryAPIKeyService_AuthenticateAPIKey(t *testing.T) {
 	if principal.APIKeyID == "" || principal.UserID != "user-123" {
 		t.Fatalf("unexpected principal: %+v", principal)
 	}
+	if len(principal.Scopes) != 1 || principal.Scopes[0] != "system.read" {
+		t.Fatalf("expected only system.read scope, got %#v", principal.Scopes)
+	}
 }
 
 func TestRepositoryAPIKeyService_RevokeAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, time.Now, apikeycodec.GenerateRawKey)
+	service := NewRepositoryAPIKeyService(repo, nil, time.Now, apikeycodec.GenerateRawKey)
 
 	if err := service.RevokeAPIKey(context.Background(), "key-123"); err != nil {
 		t.Fatalf("RevokeAPIKey() error = %v", err)
@@ -146,7 +149,7 @@ func TestRepositoryAPIKeyService_ListAPIKeys(t *testing.T) {
 	repo := &fakeAPIKeyRepo{
 		keys: []model.APIKey{{ID: "key-123", UserID: "user-123", Name: "cli"}},
 	}
-	service := NewRepositoryAPIKeyService(repo, time.Now, apikeycodec.GenerateRawKey)
+	service := NewRepositoryAPIKeyService(repo, nil, time.Now, apikeycodec.GenerateRawKey)
 
 	keys, err := service.ListAPIKeys(context.Background(), "user-123")
 	if err != nil {
@@ -159,7 +162,7 @@ func TestRepositoryAPIKeyService_ListAPIKeys(t *testing.T) {
 
 func TestRepositoryAPIKeyService_DisableAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, time.Now, apikeycodec.GenerateRawKey)
+	service := NewRepositoryAPIKeyService(repo, nil, time.Now, apikeycodec.GenerateRawKey)
 
 	if err := service.DisableAPIKey(context.Background(), "user-123", "key-123"); err != nil {
 		t.Fatalf("DisableAPIKey() error = %v", err)
@@ -171,7 +174,7 @@ func TestRepositoryAPIKeyService_DisableAPIKey(t *testing.T) {
 
 func TestRepositoryAPIKeyService_DeleteAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
-	service := NewRepositoryAPIKeyService(repo, time.Now, apikeycodec.GenerateRawKey)
+	service := NewRepositoryAPIKeyService(repo, nil, time.Now, apikeycodec.GenerateRawKey)
 
 	if err := service.DeleteAPIKey(context.Background(), "user-123", "key-123"); err != nil {
 		t.Fatalf("DeleteAPIKey() error = %v", err)

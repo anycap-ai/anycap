@@ -61,7 +61,7 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 	return model.Principal{
 		UserID:         user.ID,
 		AuthType:       "auth0_jwt",
-		Scopes:         []string{"image.generate", "image.read", "system.read"},
+		Scopes:         []string{"system.read"},
 		ExternalUserID: authUser.UserID,
 		Email:          user.Email,
 		Name:           user.Name,

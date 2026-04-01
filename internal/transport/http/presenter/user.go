@@ -47,7 +47,7 @@ func PresentUser(ctx context.Context, mapper IDMapper, user model.User) (UserDTO
 	return dto, nil
 }
 
-func PresentStatusUser(ctx context.Context, mapper IDMapper, principal *model.Principal) (*StatusUserDTO, error) {
+func PresentStatusUser(ctx context.Context, mapper IDMapper, principal *model.Principal, scopes []string) (*StatusUserDTO, error) {
 	if principal == nil {
 		return nil, nil
 	}
@@ -59,7 +59,7 @@ func PresentStatusUser(ctx context.Context, mapper IDMapper, principal *model.Pr
 		UserID:   externalUserID,
 		APIKeyID: principal.APIKeyID,
 		AuthType: principal.AuthType,
-		Scopes:   principal.Scopes,
+		Scopes:   scopes,
 		Email:    principal.Email,
 		Name:     principal.Name,
 	}, nil
