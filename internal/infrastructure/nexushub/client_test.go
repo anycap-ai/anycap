@@ -217,6 +217,86 @@ func TestClient_GenerateMusic(t *testing.T) {
 	}
 }
 
+func TestClient_GenerateVideo(t *testing.T) {
+	var captured submitAtomicProcessRequest
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+
+		resp := submitAtomicProcessResponse{
+			Base:        submitBaseResponse{Code: 0, Message: "success"},
+			TaskID:      "video-task-123",
+			Status:      "succeeded",
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp4","credit_cost":5}]}`,
+			NexusUsage:  map[string]any{"videos": 1},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{
+		BaseURL: srv.URL,
+		Token:   "nexus-token",
+	})
+
+	ctx := middleware.ContextWithRequestID(context.Background(), "req-video-1")
+	result, err := client.GenerateVideo(ctx, model.GenerateVideoRequest{
+		RequestID:          "req-video-1",
+		UserID:             "user-123",
+		Prompt:             "paper crane",
+		Model:              "veo-mini",
+		Mode:               model.ModeImageToVideo,
+		ReferenceImageURLs: []string{"https://cdn.anycap.local/frame.png"},
+	}, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: "veo-mini",
+		GenType:    string(model.CapabilityVideo),
+		AlgoType:   "img_2_video",
+		Mode:       model.ModeImageToVideo,
+		Priority:   100,
+		Enabled:    true,
+	})
+	if err != nil {
+		t.Fatalf("GenerateVideo() error = %v", err)
+	}
+
+	if captured.AbilityKey != "veo-mini" {
+		t.Fatalf("expected ability key veo-mini, got %q", captured.AbilityKey)
+	}
+
+	var payload atomicProcessPayload
+	if err := json.Unmarshal([]byte(captured.ReqPayload), &payload); err != nil {
+		t.Fatalf("unmarshal req_payload: %v", err)
+	}
+	if payload.VideoOption == nil {
+		t.Fatal("expected video_option")
+	}
+	if payload.VideoOption.Type != "img_2_video" {
+		t.Fatalf("expected algo type img_2_video, got %q", payload.VideoOption.Type)
+	}
+	if payload.ResourceURL != "https://cdn.anycap.local/frame.png" {
+		t.Fatalf("expected resource url to round trip, got %q", payload.ResourceURL)
+	}
+
+	if result.ID != "video-task-123" {
+		t.Fatalf("expected result id video-task-123, got %q", result.ID)
+	}
+	if result.Status != "success" {
+		t.Fatalf("expected success status, got %q", result.Status)
+	}
+	if len(result.Outputs) != 1 || result.Outputs[0].URL != "https://cdn.anycap.local/generated.mp4" {
+		t.Fatalf("unexpected outputs: %#v", result.Outputs)
+	}
+	if result.CreditCost != 5 {
+		t.Fatalf("expected credit cost 5, got %d", result.CreditCost)
+	}
+}
+
 func TestClient_GetSubmitResult(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

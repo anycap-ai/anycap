@@ -47,10 +47,10 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Model:              payload.Model,
 		Mode:               model.Mode(payload.Mode),
 		NegativePrompt:     payload.NegativePrompt,
-		Ratio:              payload.Ratio,
+		Ratio:              payload.AspectRatio,
 		Resolution:         payload.Resolution,
 		Duration:           payload.Duration,
-		ReferenceImageURLs: append([]string(nil), payload.ReferenceImageURLs...),
+		ReferenceImageURLs: append([]string(nil), payload.Images...),
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)

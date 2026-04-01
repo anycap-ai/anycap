@@ -182,15 +182,15 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	}
 
 	payload := atomicProcessPayload{
-		GenType: route.GenType,
-		Prompt:  req.Prompt,
+		GenType:     route.GenType,
+		Prompt:      req.Prompt,
+		ResourceURL: firstString(req.ReferenceImageURLs),
 		VideoOption: &atomicVideoOption{
 			Type:           route.AlgoType,
 			Ratio:          req.Ratio,
 			Resolution:     req.Resolution,
 			Duration:       req.Duration,
 			NegativePrompt: req.NegativePrompt,
-			ReferImageURLs: append([]string(nil), req.ReferenceImageURLs...),
 		},
 		MetaOption: map[string]any{
 			"request_id": req.RequestID,
@@ -492,6 +492,7 @@ type submitUserInfo struct {
 type atomicProcessPayload struct {
 	GenType     string             `json:"gen_type"`
 	Prompt      string             `json:"prompt,omitempty"`
+	ResourceURL string             `json:"resource_url,omitempty"`
 	ImageOption *atomicImageOption `json:"image_option,omitempty"`
 	VideoOption *atomicVideoOption `json:"video_option,omitempty"`
 	MusicOption *atomicMusicOption `json:"music_option,omitempty"`
@@ -507,12 +508,11 @@ type atomicImageOption struct {
 }
 
 type atomicVideoOption struct {
-	Type           string   `json:"type,omitempty"`
-	Ratio          string   `json:"ratio,omitempty"`
-	Resolution     string   `json:"resolution,omitempty"`
-	Duration       int      `json:"duration,omitempty"`
-	NegativePrompt string   `json:"negative_prompt,omitempty"`
-	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
+	Type           string `json:"type,omitempty"`
+	Ratio          string `json:"ratio,omitempty"`
+	Resolution     string `json:"resolution,omitempty"`
+	Duration       int    `json:"duration,omitempty"`
+	NegativePrompt string `json:"negative_prompt,omitempty"`
 }
 
 type atomicMusicOption struct {
@@ -602,6 +602,13 @@ func guessMIMEType(resourceURL string) string {
 		return ""
 	}
 	return mime.TypeByExtension(filepath.Ext(resourceURL))
+}
+
+func firstString(values []string) string {
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
 }
 
 // mapSubmitError maps NexusHub submit_atomic_process errors to domain errors.
