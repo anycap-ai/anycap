@@ -62,6 +62,12 @@ func (h *Handler) Submit(c context.Context, ctx *app.RequestContext) {
 		RequestID: payload.RequestID,
 		Metadata:  payload.Metadata,
 	}
+	if payload.TraceID != "" {
+		if fb.Metadata == nil {
+			fb.Metadata = make(map[string]any)
+		}
+		fb.Metadata["trace_id"] = payload.TraceID
+	}
 
 	id, err := h.service.Submit(c, fb)
 	if err != nil {

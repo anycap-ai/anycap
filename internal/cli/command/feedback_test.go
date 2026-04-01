@@ -89,6 +89,7 @@ func TestFeedbackCommand_WithContext(t *testing.T) {
 		"feedback", "--type", "feature", "-m", "need batch gen",
 		"--context", `{"max_batch":10}`,
 		"--request-id", "req_original_789",
+		"--trace-id", "trc_original_789",
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -107,6 +108,9 @@ func TestFeedbackCommand_WithContext(t *testing.T) {
 	// Verify request_id was forwarded
 	if receivedBody["request_id"] != "req_original_789" {
 		t.Errorf("expected request_id, got %v", receivedBody["request_id"])
+	}
+	if receivedBody["trace_id"] != "trc_original_789" {
+		t.Errorf("expected trace_id, got %v", receivedBody["trace_id"])
 	}
 }
 
@@ -186,7 +190,7 @@ func TestFeedbackCommand_DisabledViaConfig(t *testing.T) {
 
 func TestStatusCommand_IncludesRequestID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Request-Id", "req_status_abc")
+		w.Header().Set("X-Trace-ID", "trace_status_abc")
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"success","data":{"name":"anycap-server"}}`))
 	}))
@@ -210,7 +214,7 @@ func TestStatusCommand_IncludesRequestID(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &output); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
-	if output["request_id"] != "req_status_abc" {
-		t.Errorf("expected request_id=req_status_abc, got %v", output["request_id"])
+	if output["request_id"] != "trace_status_abc" {
+		t.Errorf("expected request_id=trace_status_abc, got %v", output["request_id"])
 	}
 }

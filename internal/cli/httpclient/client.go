@@ -66,7 +66,7 @@ func WithVersion(v string) Option {
 	return func(c *Client) { c.version = v }
 }
 
-// WithTraceID sets the trace ID sent as X-Trace-Id header on every request.
+// WithTraceID sets the trace ID sent as X-Trace-ID header on every request.
 func WithTraceID(id string) Option {
 	return func(c *Client) { c.traceID = id }
 }
@@ -89,7 +89,7 @@ func New(baseURL string, opts ...Option) *Client {
 // Response wraps the server HTTP response body and metadata.
 type Response struct {
 	Body      []byte // Raw JSON response body
-	RequestID string // X-Request-Id from server
+	RequestID string // X-Trace-ID from server, falling back to legacy X-Request-Id
 }
 
 func (c *Client) Get(ctx context.Context, path string) (*Response, error) {
@@ -141,7 +141,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 
 	req.Header.Set("User-Agent", "anycap-cli/"+c.version)
 	if c.traceID != "" {
-		req.Header.Set("X-Trace-Id", c.traceID)
+		req.Header.Set("X-Trace-ID", c.traceID)
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -161,7 +161,10 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 		return nil, err
 	}
 
-	requestID := httpResp.Header.Get("X-Request-Id")
+	requestID := httpResp.Header.Get("X-Trace-ID")
+	if requestID == "" {
+		requestID = httpResp.Header.Get("X-Request-Id")
+	}
 
 	if httpResp.StatusCode == http.StatusUnauthorized {
 		return nil, &AuthError{Body: strings.TrimSpace(string(data))}
