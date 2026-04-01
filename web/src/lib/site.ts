@@ -42,9 +42,9 @@ export const siteConfig = {
   locale: localeConfig[defaultLocale].ogLocale,
   defaultLocale,
   supportedLocales,
-  defaultTitle: "Image, video, and vision capabilities for AI agents",
+  defaultTitle: "Any Capability, Instantly",
   defaultDescription: defaultSiteDescription,
-  humanTitle: "Capability infrastructure for agents",
+  humanTitle: "Any Capability, Instantly",
   humanDescription:
     `See how AnyCap gives agents ${earlyAccessCapabilitySummary} through one install path, one auth flow, and one command surface.`,
 } as const;

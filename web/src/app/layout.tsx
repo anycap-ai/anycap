@@ -26,20 +26,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
     default: siteConfig.defaultTitle,
-    template: `%s | ${siteConfig.name}`,
+    template: "%s",
   },
   description: siteConfig.defaultDescription,
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     siteName: siteConfig.siteName,
-    title: `${siteConfig.defaultTitle} | ${siteConfig.name}`,
+    title: siteConfig.defaultTitle,
     description: siteConfig.defaultDescription,
     images: [defaultSocialImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteConfig.defaultTitle} | ${siteConfig.name}`,
+    title: siteConfig.defaultTitle,
     description: siteConfig.defaultDescription,
     images: [defaultSocialImage.url],
   },

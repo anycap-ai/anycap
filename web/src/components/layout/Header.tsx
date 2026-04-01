@@ -5,6 +5,7 @@ import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const githubHref = "https://github.com/anycap-ai/anycap";
 
 const baseLinkClass =
   "px-3 py-2 text-[15px] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
@@ -18,6 +19,7 @@ export type NavItem = {
   label: string;
   hideBelow?: "sm" | "md";
   variant?: "default" | "primary";
+  external?: boolean;
 };
 
 export type NavDropdownDef = {
@@ -32,6 +34,10 @@ export type NavEntry = NavItem | NavDropdownDef;
 
 function isDropdown(entry: NavEntry): entry is NavDropdownDef {
   return "kind" in entry && entry.kind === "dropdown";
+}
+
+function isExternalHref(href: string) {
+  return /^https?:\/\//.test(href);
 }
 
 type HeaderProps = {
@@ -74,13 +80,31 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
             }
 
             const { href, label, hideBelow } = entry;
+            const external = entry.external ?? isExternalHref(href);
             const linkVariantClass = entry.variant === "primary" ? primaryLinkClass : defaultLinkClass;
+            const responsiveClass = hideBelow ? `hidden ${hideBelow}:inline-block` : "";
+
+            if (external) {
+              return (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${responsiveClass} ${linkVariantClass}`}
+                  style={mono}
+                >
+                  {label}
+                </a>
+              );
+            }
+
             return (
               <Link
                 key={href}
                 href={localize(href)}
                 prefetch={false}
-                className={`${hideBelow ? `hidden ${hideBelow}:inline-block` : ""} ${linkVariantClass}`}
+                className={`${responsiveClass} ${linkVariantClass}`}
                 style={mono}
               >
                 {label}
@@ -162,11 +186,19 @@ const resourcesDropdown: NavDropdownDef = {
   hideBelow: "md",
 };
 
+const githubNavLink: NavItem = {
+  href: githubHref,
+  label: "GitHub",
+  hideBelow: "md",
+  external: true,
+};
+
 export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   forYourAgentDropdown,
   resourcesDropdown,
   { href: "/about", label: "About", hideBelow: "sm" },
+  githubNavLink,
 ];
 
 export const humanNavLinks: NavEntry[] = [
@@ -174,4 +206,5 @@ export const humanNavLinks: NavEntry[] = [
   equipYourAgentsDropdown,
   learnDropdown,
   { href: "/about", label: "About", hideBelow: "sm" },
+  githubNavLink,
 ];
