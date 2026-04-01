@@ -69,7 +69,7 @@ export function createRootMetadata(locale: SiteLocale): Metadata {
   return createLocalizedMetadata(locale, "home", {
     title: {
       default: siteConfig.defaultTitle,
-      template: `%s | ${siteConfig.name}`,
+      template: "%s",
     },
     description: siteConfig.defaultDescription,
     openGraph: {
@@ -77,13 +77,13 @@ export function createRootMetadata(locale: SiteLocale): Metadata {
       locale: getLocaleConfig(locale).ogLocale,
       url: buildLocalizedPath(locale, "/"),
       siteName: siteConfig.siteName,
-      title: `${siteConfig.defaultTitle} | ${siteConfig.name}`,
+      title: siteConfig.defaultTitle,
       description: siteConfig.defaultDescription,
       images: [defaultSocialImage],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${siteConfig.defaultTitle} | ${siteConfig.name}`,
+      title: siteConfig.defaultTitle,
       description: siteConfig.defaultDescription,
       images: [defaultSocialImage.url],
     },
@@ -100,13 +100,13 @@ export function createForHumanMetadata(locale: SiteLocale): Metadata {
       locale: getLocaleConfig(locale).ogLocale,
       url: buildLocalizedPath(locale, "/for-human"),
       siteName: siteConfig.siteName,
-      title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
+      title: siteConfig.humanTitle,
       description: siteConfig.humanDescription,
       images: [defaultSocialImage],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${siteConfig.humanTitle} | ${siteConfig.name}`,
+      title: siteConfig.humanTitle,
       description: siteConfig.humanDescription,
       images: [defaultSocialImage.url],
     },

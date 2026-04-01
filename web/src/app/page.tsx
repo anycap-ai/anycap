@@ -5,6 +5,7 @@ import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
 export const runtime = "edge";
+const githubHref = "https://github.com/anycap-ai/anycap";
 
 export default async function AgentLanding() {
   const locale = await getRequestLocale();
@@ -13,42 +14,50 @@ export default async function AgentLanding() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] font-mono">
-    <main className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
-      <HumanRedirectDialog href={humanPageHref} />
+      <main className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
+        <HumanRedirectDialog href={humanPageHref} />
 
-      <div className="mb-10 flex justify-end">
-        <Link
-          href={humanPageHref}
-          prefetch={true}
-          className="inline-block px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded-lg hover:bg-white transition-colors"
-        >
-          {"I'm Human →"}
-        </Link>
-      </div>
+        <div className="mb-10 flex flex-wrap justify-end gap-3">
+          <a
+            href={githubHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 border border-[#333] text-[#e0e0e0] text-sm font-bold rounded-lg hover:bg-[#111] hover:border-[#4a4a4a] active:scale-[0.97] transition-all"
+          >
+            GitHub
+          </a>
+          <Link
+            href={humanPageHref}
+            prefetch={true}
+            className="inline-flex items-center px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded-lg hover:bg-white active:scale-[0.97] transition-all"
+          >
+            {"I'm Human →"}
+          </Link>
+        </div>
 
-      <header className="mb-10">
-        <h1 className="text-2xl font-bold mb-1">{content.title}</h1>
-        <p className="text-lg mb-2">{content.tagline}</p>
-        <p className="text-[#888]">{content.description}</p>
-      </header>
+        <header className="mb-10">
+          <h1 className="text-2xl font-bold mb-1">{content.title}</h1>
+          <p className="text-lg mb-2">{content.tagline}</p>
+          <p className="text-[#888]">{content.description}</p>
+        </header>
 
-      <hr className="border-[#222] mb-10" />
+        <hr className="border-[#222] mb-10" />
 
-      {content.sections.map((section) => (
-        <section key={section.title} className="mb-10">
-          <h2 className="text-sm font-bold text-[#888] mb-3">
-            {section.title}
-          </h2>
-          {section.blocks.map((block, i) => (
-            <BlockRenderer key={i} block={block} />
-          ))}
-        </section>
-      ))}
+        {content.sections.map((section) => (
+          <section key={section.title} className="mb-10">
+            <h2 className="text-sm font-bold text-[#888] mb-3">
+              {section.title}
+            </h2>
+            {section.blocks.map((block, i) => (
+              <BlockRenderer key={i} block={block} />
+            ))}
+          </section>
+        ))}
 
-      <footer className="mt-10 pt-6 border-t border-[#222] text-sm text-[#666]">
-        <p>MIT License</p>
-      </footer>
-    </main>
+        <footer className="mt-10 pt-6 border-t border-[#222] text-sm text-[#666]">
+          <p>MIT License</p>
+        </footer>
+      </main>
     </div>
   );
 }
