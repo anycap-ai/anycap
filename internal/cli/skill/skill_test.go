@@ -210,20 +210,26 @@ func TestEmbeddedSkillReferences(t *testing.T) {
 
 func TestInstallEmbeddedFallback(t *testing.T) {
 	dir := t.TempDir()
-	target := filepath.Join(dir, "skills", "anycap-cli")
+	target := filepath.Join(dir, "skills")
 
 	source, err := Install(target)
 	if err != nil {
 		t.Fatalf("Install failed: %v", err)
 	}
 
-	skillPath := filepath.Join(target, "SKILL.md")
+	skillPath := filepath.Join(target, "anycap-cli", "SKILL.md")
 	data, err := os.ReadFile(skillPath)
 	if err != nil {
-		t.Fatalf("SKILL.md not found: %v", err)
+		t.Fatalf("SKILL.md not found at %s: %v", skillPath, err)
 	}
 	if len(data) == 0 {
 		t.Fatal("SKILL.md is empty")
+	}
+
+	// LICENSE should also be installed.
+	licensePath := filepath.Join(target, "LICENSE")
+	if _, err := os.Stat(licensePath); os.IsNotExist(err) {
+		t.Error("LICENSE not found")
 	}
 
 	if source != "github" && source != "embedded" {
