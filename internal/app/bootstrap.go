@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	billingeventsapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billingevents"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
@@ -41,6 +42,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	paymentinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/payment"
+	paymenteventsinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/paymentevents"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -111,6 +113,7 @@ type serverDependencies struct {
 	rateLimitResolver   middleware.CapabilityRateLimitResolver
 	kvSyncWorker        *kvsync.Worker
 	usageSyncWorker     *usageapp.Worker
+	paymentEventsWorker *paymenteventsinfra.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
 }
@@ -138,6 +141,13 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		go func() {
 			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
 				log.Printf("usage sync worker stopped: %v", err)
+			}
+		}()
+	}
+	if deps.paymentEventsWorker != nil {
+		go func() {
+			if err := deps.paymentEventsWorker.Run(context.Background()); err != nil {
+				log.Printf("payment events worker stopped: %v", err)
 			}
 		}()
 	}
@@ -294,6 +304,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			usageSyncWorker:     nil,
+			paymentEventsWorker: nil,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          idresolver.PassthroughIDResolver{},
 			idMapper:            presenter.PassthroughIDMapper{},
@@ -394,6 +405,22 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				},
 			)
 		}
+		var paymentEventsWorker *paymenteventsinfra.Worker
+		if cfg.PaymentEvents.Enabled {
+			if !cfg.PaymentEvents.Configured() {
+				return serverDependencies{}, fmt.Errorf("payment events mq is enabled but not fully configured")
+			}
+			receiptRepo := paymenteventsinfra.NewRepo(db)
+			billingEventsService := billingeventsapp.NewService(receiptRepo, billingeventsapp.Config{
+				BizID: cfg.PaymentEvents.BizID,
+			})
+			handler := paymenteventsinfra.NewMessageHandler(billingEventsService)
+			worker, err := paymenteventsinfra.NewWorker(paymenteventsinfra.NewWorkerConfig(cfg.PaymentEvents), handler)
+			if err != nil {
+				return serverDependencies{}, err
+			}
+			paymentEventsWorker = worker
+		}
 		return serverDependencies{
 			config:        cfg,
 			buildInfo:     info,
@@ -429,6 +456,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			usageSyncWorker:     usageSyncWorker,
+			paymentEventsWorker: paymentEventsWorker,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          externalIDMapper,
 			idMapper:            externalIDMapper,

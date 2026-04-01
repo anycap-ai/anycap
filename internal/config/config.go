@@ -89,6 +89,7 @@ type Config struct {
 	NexusHubCoreToken       string
 	Credit                  CreditConfig
 	Payment                 PaymentConfig
+	PaymentEvents           PaymentEventsConfig
 	CreditPacks             []CreditPackConfig
 	AgentPlatform           AgentPlatformConfig
 	CloudS3                 S3Config
@@ -132,6 +133,26 @@ type PaymentConfig struct {
 
 func (c PaymentConfig) Enabled() bool {
 	return c.BaseURL != "" && c.BizToken != ""
+}
+
+type PaymentEventsConfig struct {
+	Enabled       bool
+	Endpoint      string
+	Topic         string
+	AccessKey     string
+	SecretKey     string
+	ConsumerGroup string
+	BizID         string
+	Tags          []string
+}
+
+func (c PaymentEventsConfig) Configured() bool {
+	return strings.TrimSpace(c.Endpoint) != "" &&
+		strings.TrimSpace(c.Topic) != "" &&
+		strings.TrimSpace(c.AccessKey) != "" &&
+		strings.TrimSpace(c.SecretKey) != "" &&
+		strings.TrimSpace(c.ConsumerGroup) != "" &&
+		strings.TrimSpace(c.BizID) != ""
 }
 
 type CreditPackConfig struct {
@@ -251,6 +272,7 @@ func LoadFromEnv() (Config, error) {
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
 		Credit:                  loadCreditConfig(),
 		Payment:                 loadPaymentConfig(),
+		PaymentEvents:           loadPaymentEventsConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
 		CloudS3:                 loadCloudS3Config(),
 		Lark: LarkConfig{
@@ -433,6 +455,19 @@ func loadPaymentConfig() PaymentConfig {
 	}
 }
 
+func loadPaymentEventsConfig() PaymentEventsConfig {
+	return PaymentEventsConfig{
+		Enabled:       getEnvBool("ANYCAP_PAYMENT_EVENTS_ENABLED", false),
+		Endpoint:      getEnv("ANYCAP_PAYMENT_EVENTS_ENDPOINT", ""),
+		Topic:         getEnv("ANYCAP_PAYMENT_EVENTS_TOPIC", ""),
+		AccessKey:     getEnv("ANYCAP_PAYMENT_EVENTS_ACCESS_KEY", ""),
+		SecretKey:     getEnv("ANYCAP_PAYMENT_EVENTS_SECRET_KEY", ""),
+		ConsumerGroup: getEnv("ANYCAP_PAYMENT_EVENTS_CONSUMER_GROUP", ""),
+		BizID:         getEnv("ANYCAP_PAYMENT_EVENTS_BIZ_ID", ""),
+		Tags:          splitCSVEnv("ANYCAP_PAYMENT_EVENTS_TAGS"),
+	}
+}
+
 func loadCreditPacksConfig() ([]CreditPackConfig, error) {
 	raw := strings.TrimSpace(os.Getenv("ANYCAP_CREDIT_PACKS_JSON"))
 	if raw == "" {
@@ -492,6 +527,26 @@ func loadRateLimitOverrides() map[string]int {
 		overrides[capability] = value
 	}
 	return overrides
+}
+
+func splitCSVEnv(key string) []string {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+		values = append(values, trimmed)
+	}
+	if len(values) == 0 {
+		return nil
+	}
+	return values
 }
 
 func loadAgentPlatformConfig() AgentPlatformConfig {

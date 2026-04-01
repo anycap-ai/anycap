@@ -54,6 +54,25 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	}
 }
 
+func TestBuildServerDependencies_PaymentEventsEnabledRequiresCompleteConfig(t *testing.T) {
+	_, err := buildServerDependencies(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "integration",
+		PGDSN:        "postgres://demo",
+		RedisAddr:    "127.0.0.1:6379",
+		RateLimitRPM: 60,
+		PaymentEvents: config.PaymentEventsConfig{
+			Enabled: true,
+			Topic:   "payment-events",
+		},
+	}, buildinfo.Info{Version: "dev"})
+	if err == nil {
+		t.Fatal("expected error when payment events config is incomplete")
+	}
+}
+
 func TestNewServer_UsesSingleSharedPostgresRepoForCatalogAndModelRoutes(t *testing.T) {
 	original := newCatalogRepoFromDSN
 	callCount := 0

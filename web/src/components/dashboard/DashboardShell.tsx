@@ -15,7 +15,6 @@ const navSections: NavItem[][] = [
   [
     { label: "Overview", href: "/dashboard" },
     { label: "Logs", href: "/dashboard/logs" },
-    { label: "Buy credits", href: "/dashboard/buy-credits" },
     { label: "Billing", href: "/dashboard/billing" },
   ],
   [
