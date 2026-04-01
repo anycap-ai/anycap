@@ -586,7 +586,7 @@ func (s *Server) handleVideoModelSchema(w http.ResponseWriter, r *http.Request) 
 	}
 	if mode == "image-to-video" {
 		modelParams["images"] = map[string]any{
-			"type":     "array",
+			"type":      "array",
 			"min_items": 1,
 			"max_items": 1,
 			"items": map[string]any{

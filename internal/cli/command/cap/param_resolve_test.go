@@ -457,14 +457,14 @@ func TestResolveFileParams_Verbose(t *testing.T) {
 		t.Fatal("expected verbose output")
 	}
 	// Should mention schema discovery and file upload.
-	for _, want := range []string{"[param-resolve]", "file field", "uploading local file"} {
+	for _, want := range []string{"[param-resolve]", "schema field", "uploading local file"} {
 		if !contains(logOutput, want) {
 			t.Errorf("verbose log missing %q, got: %s", want, logOutput)
 		}
 	}
 }
 
-func TestExtractFileField(t *testing.T) {
+func TestExtractSchemaField(t *testing.T) {
 	tests := []struct {
 		name    string
 		def     map[string]any
@@ -494,9 +494,10 @@ func TestExtractFileField(t *testing.T) {
 			wantOK: false,
 		},
 		{
-			name:   "array without file-or-url items",
-			def:    map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
-			wantOK: false,
+			name:    "array without file-or-url items",
+			def:     map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+			wantOK:  true,
+			wantArr: true,
 		},
 		{
 			name:   "number type",
@@ -507,9 +508,9 @@ func TestExtractFileField(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ff, ok := extractFileField(tt.def)
+			ff, ok := extractSchemaField(tt.def)
 			if ok != tt.wantOK {
-				t.Fatalf("extractFileField ok=%t, want %t", ok, tt.wantOK)
+				t.Fatalf("extractSchemaField ok=%t, want %t", ok, tt.wantOK)
 			}
 			if ok && ff.isArray != tt.wantArr {
 				t.Fatalf("isArray=%t, want %t", ff.isArray, tt.wantArr)

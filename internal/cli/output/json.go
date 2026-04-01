@@ -4,12 +4,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 )
+
+// --- Trace ID (per-invocation, set once at CLI startup) ---
+
+var (
+	traceIDMu     sync.Mutex
+	globalTraceID string
+)
+
+// SetTraceID sets the global trace ID for this CLI invocation.
+// Call once at startup; the value is injected into all JSON output.
+func SetTraceID(id string) {
+	traceIDMu.Lock()
+	globalTraceID = id
+	traceIDMu.Unlock()
+}
+
+// TraceID returns the current global trace ID.
+func TraceID() string {
+	traceIDMu.Lock()
+	defer traceIDMu.Unlock()
+	return globalTraceID
+}
 
 // WriteJSON writes raw JSON payload to the writer.
 // Used for local commands that don't have a server request_id.
-// Automatically injects _system_reminder if one is set.
+// Automatically injects trace_id and _system_reminder if set.
 func WriteJSON(w io.Writer, payload []byte) error {
+	payload = injectTraceID(payload)
 	payload = injectReminder(payload)
 	_, err := fmt.Fprintln(w, string(payload))
 	return err
@@ -56,6 +80,7 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 
 // WriteError writes a structured JSON error to the writer.
 // When hint or requestID are non-empty, they are included in the output.
+// trace_id is injected automatically by WriteJSON.
 func WriteError(w io.Writer, code, message, hint, requestID string) error {
 	obj := map[string]string{"error": code, "message": message}
 	if hint != "" {
@@ -66,6 +91,26 @@ func WriteError(w io.Writer, code, message, hint, requestID string) error {
 	}
 	data, _ := json.Marshal(obj)
 	return WriteJSON(w, data)
+}
+
+// injectTraceID adds a trace_id field to a JSON object payload using the global trace ID.
+// Returns the original payload unchanged if trace ID is empty or payload is not a JSON object.
+func injectTraceID(payload []byte) []byte {
+	tid := TraceID()
+	if tid == "" {
+		return payload
+	}
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &obj); err != nil {
+		return payload
+	}
+	enc, _ := json.Marshal(tid)
+	obj["trace_id"] = enc
+	out, err := json.Marshal(obj)
+	if err != nil {
+		return payload
+	}
+	return out
 }
 
 // injectRequestID adds a request_id field to a JSON object payload.

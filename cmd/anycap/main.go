@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -16,10 +18,13 @@ import (
 
 func main() {
 	endpointOverride := parseEndpointFromArgs()
+	traceID := generateTraceID()
+	output.SetTraceID(traceID)
 
 	cmd := command.NewRootCmd(command.Options{
 		BuildInfo: buildinfo.Current(),
 		Endpoint:  endpointOverride,
+		TraceID:   traceID,
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -94,10 +99,21 @@ func hintForAPIError(e *httpclient.APIError) string {
 
 // feedbackHint builds a hint suggesting the agent report the error via feedback.
 func feedbackHint(requestID string) string {
+	parts := "anycap feedback --type bug -m '<describe>'"
 	if requestID != "" {
-		return fmt.Sprintf("server error; report with: anycap feedback --type bug -m '<describe>' --request-id '%s'", requestID)
+		parts += fmt.Sprintf(" --request-id '%s'", requestID)
 	}
-	return "server error; report with: anycap feedback --type bug -m '<describe>'"
+	if tid := output.TraceID(); tid != "" {
+		parts += fmt.Sprintf(" --trace-id '%s'", tid)
+	}
+	return "server error; report with: " + parts
+}
+
+// generateTraceID creates a unique trace ID for this CLI invocation.
+func generateTraceID() string {
+	b := make([]byte, 8)
+	_, _ = rand.Read(b)
+	return "trc_" + hex.EncodeToString(b)
 }
 
 // parseEndpointFromArgs scans os.Args for --endpoint before cobra runs.

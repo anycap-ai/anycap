@@ -302,6 +302,44 @@ func TestVideoReadRequiresURLOrFile(t *testing.T) {
 	}
 }
 
+func TestVideoReadFileTooLarge(t *testing.T) {
+	tmpDir := t.TempDir()
+	vidPath := filepath.Join(tmpDir, "huge.mp4")
+
+	// Create a sparse file that reports >100 MB without writing all the bytes.
+	f, err := os.Create(vidPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const size = 101 * 1024 * 1024 // 101 MB
+	if err := f.Truncate(size); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	f.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"actions", "video-read", "--file", vidPath})
+
+	err = cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error for oversized video file")
+	}
+	if !strings.Contains(err.Error(), "too large") {
+		t.Fatalf("expected 'too large' error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "compress") {
+		t.Fatalf("expected compression hint in error, got: %v", err)
+	}
+}
+
 func TestAudioReadWithURL(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
