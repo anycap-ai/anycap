@@ -120,71 +120,72 @@ jobs:
           mkdir -p "${PKG}/bin"
 
           # -- JS wrapper (bin/anycap) --
-          node -e "
-            const fs = require('fs');
-            const wrapper = [
-              '#!/usr/bin/env node',
-              '"use strict";',
-              '',
-              'const { platform, arch } = require("os");',
-              'const { spawnSync } = require("child_process");',
-              '',
-              'const PLATFORM_PACKAGES = {',
-              '  "darwin-arm64": "@anycap/cli-darwin-arm64",',
-              '  "darwin-x64": "@anycap/cli-darwin-x64",',
-              '  "linux-arm64": "@anycap/cli-linux-arm64",',
-              '  "linux-x64": "@anycap/cli-linux-x64",',
-              '  "win32-arm64": "@anycap/cli-win32-arm64",',
-              '  "win32-x64": "@anycap/cli-win32-x64",',
-              '};',
-              '',
-              'function getBinaryPath() {',
-              '  const key = \`\${platform()}-\${arch()}\`;',
-              '  const pkg = PLATFORM_PACKAGES[key];',
-              '  if (!pkg) {',
-              '    console.error(\`Error: Unsupported platform \${key}.\\nAnyCap CLI supports: \${Object.keys(PLATFORM_PACKAGES).join(\", \")}\`);',
-              '    process.exit(1);',
-              '  }',
-              '  const binName = platform() === "win32" ? "anycap.exe" : "anycap";',
-              '  try {',
-              '    return require.resolve(\`\${pkg}/bin/\${binName}\`);',
-              '  } catch (e) {',
-              '    console.error(\`Error: Could not find the AnyCap binary for \${key}.\\nThe platform package \"\${pkg}\" does not appear to be installed.\\nTry reinstalling: npm install -g @anycap/cli\`);',
-              '    process.exit(1);',
-              '  }',
-              '}',
-              '',
-              'const binary = getBinaryPath();',
-              'const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });',
-              'if (result.error) {',
-              '  console.error(\`Error: Failed to execute AnyCap CLI: \${result.error.message}\`);',
-              '  process.exit(1);',
-              '}',
-              'process.exit(result.status !== null ? result.status : 1);',
-            ].join('\n') + '\n';
-            fs.writeFileSync('${PKG}/bin/anycap', wrapper, { mode: 0o755 });
-          "
+          # Use heredoc with quoted delimiter to avoid shell expansion
+          cat > "${PKG}/bin/anycap" << 'WRAPPER'
+          #!/usr/bin/env node
+          "use strict";
+
+          const { platform, arch } = require("os");
+          const { spawnSync } = require("child_process");
+
+          const PLATFORM_PACKAGES = {
+            "darwin-arm64": "@anycap/cli-darwin-arm64",
+            "darwin-x64": "@anycap/cli-darwin-x64",
+            "linux-arm64": "@anycap/cli-linux-arm64",
+            "linux-x64": "@anycap/cli-linux-x64",
+            "win32-arm64": "@anycap/cli-win32-arm64",
+            "win32-x64": "@anycap/cli-win32-x64",
+          };
+
+          function getBinaryPath() {
+            const key = `${platform()}-${arch()}`;
+            const pkg = PLATFORM_PACKAGES[key];
+            if (!pkg) {
+              console.error(`Error: Unsupported platform ${key}.\nAnyCap CLI supports: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`);
+              process.exit(1);
+            }
+            const binName = platform() === "win32" ? "anycap.exe" : "anycap";
+            try {
+              return require.resolve(`${pkg}/bin/${binName}`);
+            } catch (e) {
+              console.error(`Error: Could not find the AnyCap binary for ${key}.\nThe platform package "${pkg}" does not appear to be installed.\nTry reinstalling: npm install -g @anycap/cli`);
+              process.exit(1);
+            }
+          }
+
+          const binary = getBinaryPath();
+          const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });
+          if (result.error) {
+            console.error(`Error: Failed to execute AnyCap CLI: ${result.error.message}`);
+            process.exit(1);
+          }
+          process.exit(result.status !== null ? result.status : 1);
+          WRAPPER
+          chmod 755 "${PKG}/bin/anycap"
 
           # -- package.json --
-          node -e "
-            const fs = require('fs');
-            const platforms = ['darwin-arm64','darwin-x64','linux-arm64','linux-x64','win32-arm64','win32-x64'];
+          # Use single-quoted node -e with args to avoid shell quoting issues
+          node -e '
+            const fs = require("fs");
+            const VERSION = process.argv[1];
+            const REPO = process.argv[2];
+            const platforms = ["darwin-arm64","darwin-x64","linux-arm64","linux-x64","win32-arm64","win32-x64"];
             const optDeps = {};
-            platforms.forEach(p => optDeps['@anycap/cli-' + p] = '${VERSION}');
-            fs.writeFileSync('${PKG}/package.json', JSON.stringify({
-              name: '@anycap/cli',
-              version: '${VERSION}',
-              description: 'AnyCap CLI - AI Agent capability runtime',
-              license: 'MIT',
-              repository: { type: 'git', url: 'https://github.com/${{ github.repository }}' },
-              homepage: 'https://anycap.ai',
-              bin: { anycap: 'bin/anycap' },
-              files: ['bin/'],
+            platforms.forEach(p => optDeps["@anycap/cli-" + p] = VERSION);
+            fs.writeFileSync("pkg/package.json", JSON.stringify({
+              name: "@anycap/cli",
+              version: VERSION,
+              description: "AnyCap CLI - AI Agent capability runtime",
+              license: "MIT",
+              repository: { type: "git", url: "https://github.com/" + REPO },
+              homepage: "https://anycap.ai",
+              bin: { anycap: "bin/anycap" },
+              files: ["bin/"],
               optionalDependencies: optDeps,
-              engines: { node: '>=16' },
-              keywords: ['anycap','ai','agent','agent-skill','agent-skills','claude-code','coding-agent','cli','capability']
-            }, null, 2) + '\n');
-          "
+              engines: { node: ">=16" },
+              keywords: ["anycap","ai","agent","agent-skill","agent-skills","claude-code","coding-agent","cli","capability"]
+            }, null, 2) + "\n");
+          ' "${VERSION}" "${{ github.repository }}"
 
           echo "Package to publish:"
           cat "${PKG}/package.json"
