@@ -173,6 +173,19 @@ func detectContentType(path string) string {
 		return "video/x-msvideo"
 	case ".mkv":
 		return "video/x-matroska"
+	// Audio
+	case ".mp3":
+		return "audio/mpeg"
+	case ".wav":
+		return "audio/wav"
+	case ".ogg":
+		return "audio/ogg"
+	case ".flac":
+		return "audio/flac"
+	case ".m4a", ".aac":
+		return "audio/mp4"
+	case ".weba":
+		return "audio/webm"
 	default:
 		return "application/octet-stream"
 	}
