@@ -21,6 +21,7 @@ const (
 	defaultRuntimeMode           = "stub"
 	defaultLogLevel              = "info"
 	defaultLogFormat             = "json"
+	defaultLogOutput             = "stdout"
 	defaultRateLimitRPM          = 60
 	defaultRateLimitDConfGroup   = "anycap"
 	defaultRateLimitDConfDataID  = "rate_limit"
@@ -55,6 +56,7 @@ type Config struct {
 	RuntimeMode           string
 	LogLevel              string
 	LogFormat             string
+	LogOutput             string
 	PGDSN                 string
 	PGHost                string
 	PGPort                int
@@ -197,6 +199,7 @@ func LoadFromEnv() (Config, error) {
 		RuntimeMode:             getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
 		LogLevel:                getEnv("ANYCAP_LOG_LEVEL", defaultLogLevel),
 		LogFormat:               getEnv("ANYCAP_LOG_FORMAT", defaultLogFormat),
+		LogOutput:               getEnv("ANYCAP_LOG_OUTPUT", defaultLogOutput),
 		PGDSN:                   os.Getenv("ANYCAP_PG_DSN"),
 		PGHost:                  os.Getenv("ANYCAP_PG_HOST"),
 		PGPort:                  getEnvInt("ANYCAP_PG_PORT", 5432),

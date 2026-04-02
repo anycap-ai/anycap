@@ -14,7 +14,7 @@ func main() {
 	logging.Init(&logging.Config{
 		Level:  cfg.LogLevel,
 		Format: cfg.LogFormat,
-		Output: "stdout",
+		Output: cfg.LogOutput,
 	})
 	trace.Setup()
 	metrics.Init(cfg.AppName, buildinfo.Current().Version, cfg.AppEnv)
