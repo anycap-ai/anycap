@@ -54,6 +54,7 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		ContinueAt:       payload.ContinueAt,
 		ContinueClipID:   payload.ContinueClipID,
 		VocalGender:      payload.VocalGender,
+		Duration:         payload.Duration,
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
