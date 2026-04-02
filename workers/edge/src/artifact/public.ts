@@ -4,7 +4,8 @@ import { gonePage, notFoundPage } from "../response";
 import type { Env } from "../types";
 import { guessContentType } from "../mime";
 
-const ARTIFACT_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const artifactBrowserCacheSeconds = 15;
+const ARTIFACT_CACHE_CONTROL = `private, max-age=${artifactBrowserCacheSeconds}, must-revalidate`;
 
 type ByteRange = {
 	start: number;

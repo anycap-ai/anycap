@@ -24,12 +24,12 @@ describe("artifact public route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handleArtifactPublic(new Request("https://artifact.anycap.cloud/a/art_demo"), env);
-		expect(response.status).toBe(200);
-		expect(response.headers.get("content-type")).toContain("image/png");
-		expect(response.headers.get("accept-ranges")).toBe("bytes");
-		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-	});
+			const response = await handleArtifactPublic(new Request("https://artifact.anycap.cloud/a/art_demo"), env);
+			expect(response.status).toBe(200);
+			expect(response.headers.get("content-type")).toContain("image/png");
+			expect(response.headers.get("accept-ranges")).toBe("bytes");
+			expect(response.headers.get("cache-control")).toBe("private, max-age=15, must-revalidate");
+		});
 
 	it("supports range requests", async () => {
 		const kv = createMockKV();
@@ -84,16 +84,16 @@ describe("artifact public route", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await handleArtifactPublic(
-			new Request("https://artifact.anycap.cloud/a/art_etag", {
-				headers: {
-					"if-none-match": "etag-3",
-				},
-			}),
-			env,
-		);
-		expect(response.status).toBe(304);
-	});
+			const response = await handleArtifactPublic(
+				new Request("https://artifact.anycap.cloud/a/art_etag", {
+					headers: {
+						"if-none-match": "etag-3",
+					},
+				}),
+				env,
+			);
+			expect(response.status).toBe(304);
+		});
 
 	it("returns 416 for invalid range", async () => {
 		const kv = createMockKV();

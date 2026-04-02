@@ -66,10 +66,10 @@ describe("worker host routing", () => {
 			EDGE_KV: kv.namespace,
 			ANYCAP_CLOUD_R2: r2.bucket,
 		});
-		const response = await worker.fetch(new Request("https://artifact.anycap.cloud/a/art_demo"), env);
-		expect(response.status).toBe(200);
-		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-	});
+			const response = await worker.fetch(new Request("https://artifact.anycap.cloud/a/art_demo"), env);
+			expect(response.status).toBe(200);
+			expect(response.headers.get("cache-control")).toBe("private, max-age=15, must-revalidate");
+		});
 
 	it("routes artifact ingest host to ingest handler", async () => {
 		const env = createEnv({

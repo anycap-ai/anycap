@@ -60,6 +60,10 @@ The worker routes requests by hostname:
 - `artifact-ingest.*` → internal provider-to-R2 ingest endpoint
 - `page-<name>.*` → hosted page serving (with optional password protection)
 
+Artifact short-link cache policy:
+- `artifact.*` responses are sent with `Cache-Control: private, max-age=15, must-revalidate`.
+- This keeps browser cache very short while still re-checking token validity/expiry quickly.
+
 Bindings: `EDGE_KV` (metadata + rate limit counters) + `ANYCAP_CLOUD_R2` (file storage) + CF Cache API (static asset caching). No external API calls.
 
 ## Notes
