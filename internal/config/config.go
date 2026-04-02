@@ -437,7 +437,7 @@ func loadAgentPlatformConfig() AgentPlatformConfig {
 	return AgentPlatformConfig{
 		BaseURL:  getEnv("AGENT_PLATFORM_BASE_URL", ""),
 		APIKey:   getEnv("AGENT_PLATFORM_API_KEY", ""),
-		TenantID: getEnv("AGENT_PLATFORM_TENANT_ID", ""),
+		TenantID: getEnv("AGENT_PLATFORM_TENANT_ID", "anycap"),
 		Timeout:  timeout,
 	}
 }
