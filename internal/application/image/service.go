@@ -136,9 +136,6 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 	}
 
 	cost := result.CreditCost
-	if cost <= 0 {
-		cost = 1
-	}
 	if s.usage != nil {
 		eventID := externalid.Generate(externalid.PrefixUsageEvent)
 		runID := externalid.Generate(externalid.PrefixProviderRun)

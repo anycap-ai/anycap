@@ -5,6 +5,8 @@ import useSWR from "swr";
 import { anycapDelete, anycapGet, anycapPatch, anycapPost, anycapPut } from "./client";
 import type {
   Balance,
+  BillingCheckoutResult,
+  CreditPackListResult,
   DashboardSummary,
   DriveAccessLinksResult,
   DriveFilePresignResult,
@@ -60,6 +62,35 @@ export function useLogs(limit = 20) {
 
 export function useBalance() {
   return useSWR<Balance>("/v1/credits/balance", fetchWithAccessToken);
+}
+
+export function useCreditPacks() {
+  return useSWR<CreditPackListResult>("/v1/pricing/credit-packs", fetchWithAccessToken, {
+    shouldRetryOnError: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+  });
+}
+
+export async function createBillingCheckout(input: {
+  pack_id: string;
+  quantity?: number;
+  success_url?: string;
+  cancel_url?: string;
+}) {
+  const body: Record<string, unknown> = {
+    pack_id: input.pack_id,
+  };
+  if (input.quantity !== undefined) {
+    body.quantity = input.quantity;
+  }
+  if (input.success_url !== undefined) {
+    body.success_url = input.success_url;
+  }
+  if (input.cancel_url !== undefined) {
+    body.cancel_url = input.cancel_url;
+  }
+  return postWithAccessToken<BillingCheckoutResult>("/v1/billing/checkout", body);
 }
 
 export function useDriveNodes(parentID?: string | null) {

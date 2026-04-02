@@ -48,6 +48,10 @@ func (c *StubClient) Deduct(_ context.Context, userID string, amount int64, _ st
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if amount <= 0 {
+		return nil
+	}
+
 	if _, ok := c.deductions[requestID]; ok {
 		return nil
 	}

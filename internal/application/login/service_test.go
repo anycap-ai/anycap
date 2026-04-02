@@ -212,9 +212,13 @@ func (r *fakeLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, p
 }
 
 func newServiceForTest(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, sessions *fakeLoginSessionRepo) *Service {
+	return newServiceForTestWithCredit(now, apiKeys, users, &fakeLoginCreditClient{}, sessions, time.Time{})
+}
+
+func newServiceForTestWithCredit(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, credit *fakeLoginCreditClient, sessions *fakeLoginSessionRepo, signupRewardDeadline time.Time) *Service {
 	return NewService(
 		users,
-		&fakeLoginCreditClient{},
+		credit,
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -223,6 +227,7 @@ func newServiceForTest(now func() time.Time, apiKeys *fakeLoginAPIKeyService, us
 		func() string { return "CODE-TEST" },
 		now,
 		7*24*time.Hour,
+		signupRewardDeadline,
 	)
 }
 
@@ -283,6 +288,7 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 		nil,
 		now,
 		7*24*time.Hour,
+		time.Time{},
 	)
 
 	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
@@ -416,5 +422,50 @@ func TestService_ExchangeIssuesAPIKeyForJWTPrincipal(t *testing.T) {
 	}
 	if result.APIKey != "ak-test-3" || result.APIKeyID != "key-3" {
 		t.Fatalf("unexpected exchange result: %#v", result)
+	}
+}
+
+func TestService_GrantSignupRewardBeforeDeadline(t *testing.T) {
+	credit := &fakeLoginCreditClient{}
+	service := &Service{
+		credit:               credit,
+		now:                  func() time.Time { return time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC) },
+		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
+	}
+
+	service.grantSignupReward(context.Background(), "user-before-deadline", true)
+
+	if len(credit.grants) != 1 {
+		t.Fatalf("expected one signup reward grant, got %d", len(credit.grants))
+	}
+}
+
+func TestService_GrantSignupRewardSkipsAfterDeadline(t *testing.T) {
+	credit := &fakeLoginCreditClient{}
+	service := &Service{
+		credit:               credit,
+		now:                  func() time.Time { return time.Date(2026, 4, 11, 0, 0, 0, 0, time.UTC) },
+		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
+	}
+
+	service.grantSignupReward(context.Background(), "user-after-deadline", true)
+
+	if len(credit.grants) != 0 {
+		t.Fatalf("expected no signup reward grant after deadline, got %d", len(credit.grants))
+	}
+}
+
+func TestService_GrantSignupRewardSkipsExistingUser(t *testing.T) {
+	credit := &fakeLoginCreditClient{}
+	service := &Service{
+		credit:               credit,
+		now:                  func() time.Time { return time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC) },
+		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
+	}
+
+	service.grantSignupReward(context.Background(), "existing-user", false)
+
+	if len(credit.grants) != 0 {
+		t.Fatalf("expected no signup reward grant for existing user, got %d", len(credit.grants))
 	}
 }

@@ -88,6 +88,7 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	t.Setenv("ANYCAP_CREDIT_BIZ_TOKEN", "biz-token-123")
 	t.Setenv("ANYCAP_CREDIT_TIMEOUT_SECONDS", "15")
 	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED", "true")
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_DEADLINE", "2026-04-10T23:59:59Z")
 	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", "REWARD")
 	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", "SIGNUP_BONUS")
 
@@ -107,11 +108,24 @@ func TestLoadFromEnv_ReadsCreditConfig(t *testing.T) {
 	if !cfg.Credit.SignupRewardEnabled {
 		t.Fatal("expected signup reward to be enabled")
 	}
+	if got := cfg.Credit.SignupRewardDeadline; !got.Equal(time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC)) {
+		t.Fatalf("expected signup reward deadline to be parsed, got %v", got)
+	}
 	if cfg.Credit.SignupRewardPackageType != "REWARD" {
 		t.Fatalf("expected signup reward package type, got %q", cfg.Credit.SignupRewardPackageType)
 	}
 	if cfg.Credit.SignupRewardPackageSubtype != "SIGNUP_BONUS" {
 		t.Fatalf("expected signup reward package subtype, got %q", cfg.Credit.SignupRewardPackageSubtype)
+	}
+}
+
+func TestLoadFromEnv_InvalidSignupRewardDeadline(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_CREDIT_SIGNUP_REWARD_DEADLINE", "2026/04/10")
+
+	_, err := LoadFromEnv()
+	if err == nil {
+		t.Fatal("expected invalid signup reward deadline to fail")
 	}
 }
 

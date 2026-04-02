@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -54,6 +55,8 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/me/features", h.MeFeatures)
 	group.GET("/me/storage", h.MeStorage)
 	group.GET("/credits/balance", h.CreditBalance)
+	group.GET("/pricing/credit-packs", h.CreditPacks)
+	group.POST("/billing/checkout", h.BillingCheckout)
 	group.GET("/logs", h.Logs)
 	group.GET("/api-keys", h.APIKeys)
 	group.POST("/api-keys/:id/disable", h.DisableAPIKey)
@@ -336,6 +339,65 @@ func (h *Handler) CreditBalance(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), balance))
+}
+
+func (h *Handler) CreditPacks(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	result, err := h.service.CreditPacks(c, principal)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
+}
+
+type billingCheckoutRequest struct {
+	PackID     string `json:"pack_id"`
+	Quantity   int    `json:"quantity,omitempty"`
+	SuccessURL string `json:"success_url,omitempty"`
+	CancelURL  string `json:"cancel_url,omitempty"`
+}
+
+func (h *Handler) BillingCheckout(c context.Context, ctx *app.RequestContext) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	var req billingCheckoutRequest
+	if len(ctx.Request.Body()) > 0 {
+		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+			return
+		}
+	}
+
+	result, err := h.service.CreateCheckout(c, principal, model.CreateCheckoutInput{
+		PackID:     req.PackID,
+		Quantity:   req.Quantity,
+		SuccessURL: req.SuccessURL,
+		CancelURL:  req.CancelURL,
+	})
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) Logs(c context.Context, ctx *app.RequestContext) {

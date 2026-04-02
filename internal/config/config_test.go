@@ -303,6 +303,128 @@ func TestLoadFromEnv_ClampsEdgeGrantTTLs(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnv_LoadsPaymentConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAYMENT_BASE_URL", "https://payment.example.com")
+	t.Setenv("ANYCAP_PAYMENT_BIZ_TOKEN", "biz-token")
+	t.Setenv("ANYCAP_PAYMENT_TIMEOUT_SECONDS", "15")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.Payment.BaseURL != "https://payment.example.com" {
+		t.Fatalf("expected payment base url, got %q", cfg.Payment.BaseURL)
+	}
+	if cfg.Payment.BizToken != "biz-token" {
+		t.Fatalf("expected payment biz token, got %q", cfg.Payment.BizToken)
+	}
+	if cfg.Payment.Timeout != 15*time.Second {
+		t.Fatalf("expected payment timeout 15s, got %v", cfg.Payment.Timeout)
+	}
+}
+
+func TestLoadFromEnv_LoadsPaymentEventsConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ENABLED", "true")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ENDPOINT", "mq.ap-southeast-1.aliyuncs.com:8080")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_TOPIC", "payment-events")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ACCESS_KEY", "mq-access-key")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_SECRET_KEY", "mq-secret-key")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_CONSUMER_GROUP", "GID-anycap-payment-events")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_BIZ_ID", "anycap")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_TAGS", "credits_granted,payment_failed")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if !cfg.PaymentEvents.Enabled {
+		t.Fatal("expected payment events enabled")
+	}
+	if cfg.PaymentEvents.Endpoint != "mq.ap-southeast-1.aliyuncs.com:8080" {
+		t.Fatalf("expected payment events endpoint, got %q", cfg.PaymentEvents.Endpoint)
+	}
+	if cfg.PaymentEvents.Topic != "payment-events" {
+		t.Fatalf("expected payment events topic, got %q", cfg.PaymentEvents.Topic)
+	}
+	if cfg.PaymentEvents.AccessKey != "mq-access-key" {
+		t.Fatalf("expected payment events access key, got %q", cfg.PaymentEvents.AccessKey)
+	}
+	if cfg.PaymentEvents.SecretKey != "mq-secret-key" {
+		t.Fatalf("expected payment events secret key, got %q", cfg.PaymentEvents.SecretKey)
+	}
+	if cfg.PaymentEvents.ConsumerGroup != "GID-anycap-payment-events" {
+		t.Fatalf("expected payment events consumer group, got %q", cfg.PaymentEvents.ConsumerGroup)
+	}
+	if cfg.PaymentEvents.BizID != "anycap" {
+		t.Fatalf("expected payment events biz id, got %q", cfg.PaymentEvents.BizID)
+	}
+	if len(cfg.PaymentEvents.Tags) != 2 || cfg.PaymentEvents.Tags[0] != "credits_granted" || cfg.PaymentEvents.Tags[1] != "payment_failed" {
+		t.Fatalf("unexpected payment events tags: %#v", cfg.PaymentEvents.Tags)
+	}
+}
+
+func TestLoadFromEnv_UsesDefaultPaymentEventsConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ENABLED", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ENDPOINT", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_TOPIC", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_ACCESS_KEY", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_SECRET_KEY", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_CONSUMER_GROUP", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_BIZ_ID", "")
+	t.Setenv("ANYCAP_PAYMENT_EVENTS_TAGS", "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.PaymentEvents.Enabled {
+		t.Fatal("expected payment events disabled by default")
+	}
+	if cfg.PaymentEvents.Endpoint != "" {
+		t.Fatalf("expected empty payment events endpoint by default, got %q", cfg.PaymentEvents.Endpoint)
+	}
+	if cfg.PaymentEvents.Topic != "" {
+		t.Fatalf("expected empty payment events topic by default, got %q", cfg.PaymentEvents.Topic)
+	}
+	if cfg.PaymentEvents.AccessKey != "" {
+		t.Fatalf("expected empty payment events access key by default, got %q", cfg.PaymentEvents.AccessKey)
+	}
+	if cfg.PaymentEvents.SecretKey != "" {
+		t.Fatalf("expected empty payment events secret key by default, got %q", cfg.PaymentEvents.SecretKey)
+	}
+	if cfg.PaymentEvents.ConsumerGroup != "" {
+		t.Fatalf("expected empty payment events consumer group by default, got %q", cfg.PaymentEvents.ConsumerGroup)
+	}
+	if cfg.PaymentEvents.BizID != "" {
+		t.Fatalf("expected empty payment events biz id by default, got %q", cfg.PaymentEvents.BizID)
+	}
+	if len(cfg.PaymentEvents.Tags) != 0 {
+		t.Fatalf("expected empty payment events tags by default, got %#v", cfg.PaymentEvents.Tags)
+	}
+}
+
+func TestLoadFromEnv_LoadsCreditPacks(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_CREDIT_PACKS_JSON", `[{"id":"credits_500","name":"500 credits","description":"starter","price_cent":500,"currency":"USD","credits":500,"price_id":"price_500"},{"id":"credits_2000","name":"2,000 credits","description":"best value","price_cent":1800,"currency":"USD","credits":2000,"featured":true,"badge":"Best value","price_id":"price_2000"}]`)
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if len(cfg.CreditPacks) != 2 {
+		t.Fatalf("expected 2 credit packs, got %d", len(cfg.CreditPacks))
+	}
+	if cfg.CreditPacks[0].ID != "credits_500" || cfg.CreditPacks[0].PriceID != "price_500" {
+		t.Fatalf("unexpected first pack: %+v", cfg.CreditPacks[0])
+	}
+	if !cfg.CreditPacks[1].Featured || cfg.CreditPacks[1].Badge != "Best value" {
+		t.Fatalf("unexpected second pack: %+v", cfg.CreditPacks[1])
+	}
+}
+
 func TestLoadFromEnv_IntegrationRequiresInfra(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_RUNTIME_MODE", "integration")

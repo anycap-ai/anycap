@@ -12,6 +12,7 @@ import (
 	"time"
 
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
+	billingeventsapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billingevents"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
@@ -41,6 +42,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	paymentinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/payment"
+	paymenteventsinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/paymentevents"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
@@ -114,6 +117,7 @@ type serverDependencies struct {
 	rateLimitResolver   middleware.CapabilityRateLimitResolver
 	kvSyncWorker        *kvsync.Worker
 	usageSyncWorker     *usageapp.Worker
+	paymentEventsWorker *paymenteventsinfra.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
 	quotaProvider       port.StorageQuotaProvider
@@ -142,6 +146,14 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		go func() {
 			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
 				logging.WithError(err).Error("usage sync worker stopped")
+			}
+		}()
+	}
+	logging.WithField("config", describePaymentEventsConfig(cfg.PaymentEvents)).Info("payment events")
+	if deps.paymentEventsWorker != nil {
+		go func() {
+			if err := deps.paymentEventsWorker.Run(context.Background()); err != nil {
+				logging.WithError(err).Error("payment events worker stopped")
 			}
 		}()
 	}
@@ -250,6 +262,29 @@ func resolveFeatureEnv(name string, autoVal bool) bool {
 	}
 }
 
+func describePaymentEventsConfig(cfg config.PaymentEventsConfig) string {
+	tags := strings.Join(cfg.Tags, ",")
+	if tags == "" {
+		tags = "*"
+	}
+	return fmt.Sprintf(
+		"enabled=%t topic=%s group=%s biz_id=%s tags=%s",
+		cfg.Enabled,
+		fallbackLogValue(cfg.Topic),
+		fallbackLogValue(cfg.ConsumerGroup),
+		fallbackLogValue(cfg.BizID),
+		tags,
+	)
+}
+
+func fallbackLogValue(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "-"
+	}
+	return trimmed
+}
+
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {
 	catalogRepo, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
 	catalogService := catalogapp.NewService(catalogRepo)
@@ -262,6 +297,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	videoExecutionClient := buildVideoExecutionClient(cfg)
 	musicExecutionClient := buildMusicExecutionClient(cfg)
 	creditClient := buildCreditClient(cfg)
+	paymentClient := buildPaymentClient(cfg)
+	creditPacks := buildCreditPackSpecs(cfg.CreditPacks)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
@@ -273,7 +310,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
+		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetCreditPacks(creditPacks)
 		systemService.SetUsageReader(usageRepo)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
@@ -286,7 +325,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL, cfg.Credit.SignupRewardDeadline),
 			imageService:        imageService,
 			videoService:        videoService,
 			musicService:        musicService,
@@ -301,6 +340,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			usageSyncWorker:     nil,
+			paymentEventsWorker: nil,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          idresolver.PassthroughIDResolver{},
 			idMapper:            presenter.PassthroughIDMapper{},
@@ -360,7 +400,9 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
 		systemService.SetUserReader(users)
 		systemService.SetCreditClient(creditClient)
+		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
+		systemService.SetCreditPacks(creditPacks)
 		systemService.SetUsageReader(usageRepo)
 		var externalIDMapper interface {
 			idresolver.IDResolver
@@ -415,11 +457,27 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				},
 			)
 		}
+		var paymentEventsWorker *paymenteventsinfra.Worker
+		if cfg.PaymentEvents.Enabled {
+			if !cfg.PaymentEvents.Configured() {
+				return serverDependencies{}, fmt.Errorf("payment events mq is enabled but not fully configured")
+			}
+			receiptRepo := paymenteventsinfra.NewRepo(db)
+			billingEventsService := billingeventsapp.NewService(receiptRepo, billingeventsapp.Config{
+				BizID: cfg.PaymentEvents.BizID,
+			})
+			handler := paymenteventsinfra.NewMessageHandler(billingEventsService)
+			worker, err := paymenteventsinfra.NewWorker(paymenteventsinfra.NewWorkerConfig(cfg.PaymentEvents), handler)
+			if err != nil {
+				return serverDependencies{}, err
+			}
+			paymentEventsWorker = worker
+		}
 		return serverDependencies{
 			config:        cfg,
 			buildInfo:     info,
 			systemService: systemService,
-			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL),
+			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL, cfg.Credit.SignupRewardDeadline),
 			imageService:  imageService,
 			videoService:  videoService,
 			musicService:  musicService,
@@ -452,6 +510,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			usageSyncWorker:     usageSyncWorker,
+			paymentEventsWorker: paymentEventsWorker,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          externalIDMapper,
 			idMapper:            externalIDMapper,
@@ -538,6 +597,35 @@ func buildCreditClient(cfg config.Config) port.CreditClient {
 	}
 	logging.GetLogger().Info("credit using stub client")
 	return credit.NewStubClient(nil)
+}
+
+func buildPaymentClient(cfg config.Config) port.PaymentClient {
+	if cfg.Payment.Enabled() {
+		logging.WithField("base_url", cfg.Payment.BaseURL).Info("payment using payment service")
+		return paymentinfra.NewHTTPClient(cfg.Payment, nil)
+	}
+	logging.GetLogger().Info("payment using stub client")
+	return paymentinfra.NewStubClient()
+}
+
+func buildCreditPackSpecs(configs []config.CreditPackConfig) []model.CreditPackSpec {
+	result := make([]model.CreditPackSpec, 0, len(configs))
+	for _, item := range configs {
+		result = append(result, model.CreditPackSpec{
+			CreditPack: model.CreditPack{
+				ID:          item.ID,
+				Name:        item.Name,
+				Description: item.Description,
+				PriceCent:   item.PriceCent,
+				Currency:    item.Currency,
+				Credits:     item.Credits,
+				Featured:    item.Featured,
+				Badge:       item.Badge,
+			},
+			PriceID: item.PriceID,
+		})
+	}
+	return result
 }
 
 func buildArtifactIngestClient(cfg config.Config) port.ArtifactIngestClient {

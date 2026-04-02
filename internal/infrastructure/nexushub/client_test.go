@@ -64,7 +64,8 @@ func TestClient_GenerateImage(t *testing.T) {
 			Base:        submitBaseResponse{Code: 0, Message: "success"},
 			TaskID:      "task-123",
 			Status:      "succeeded",
-			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.png","credit_cost":2}]}`,
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.png","credit_cost":99}]}`,
+			NexusCost:   0.021,
 			NexusUsage:  map[string]any{"images": 1},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -147,7 +148,7 @@ func TestClient_GenerateImage(t *testing.T) {
 		t.Fatalf("unexpected outputs: %#v", result.Outputs)
 	}
 	if result.CreditCost != 2 {
-		t.Fatalf("expected credit cost 2, got %d", result.CreditCost)
+		t.Fatalf("expected credit cost 2 from nexus_cost, got %d", result.CreditCost)
 	}
 }
 
@@ -163,7 +164,8 @@ func TestClient_GenerateMusic(t *testing.T) {
 			Base:        submitBaseResponse{Code: 0, Message: "success"},
 			TaskID:      "music-task-123",
 			Status:      "succeeded",
-			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp3","credit_cost":3}]}`,
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp3","credit_cost":99}]}`,
+			NexusCost:   0.041,
 			NexusUsage:  map[string]any{"music": 1},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -243,7 +245,7 @@ func TestClient_GenerateMusic(t *testing.T) {
 		t.Fatalf("unexpected outputs: %#v", result.Outputs)
 	}
 	if result.CreditCost != 3 {
-		t.Fatalf("expected credit cost 3, got %d", result.CreditCost)
+		t.Fatalf("expected credit cost 3 from nexus_cost, got %d", result.CreditCost)
 	}
 }
 
@@ -259,7 +261,8 @@ func TestClient_GenerateVideo(t *testing.T) {
 			Base:        submitBaseResponse{Code: 0, Message: "success"},
 			TaskID:      "video-task-123",
 			Status:      "succeeded",
-			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp4","credit_cost":5}]}`,
+			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.mp4","credit_cost":99}]}`,
+			NexusCost:   0.081,
 			NexusUsage:  map[string]any{"videos": 1},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -323,7 +326,7 @@ func TestClient_GenerateVideo(t *testing.T) {
 		t.Fatalf("unexpected outputs: %#v", result.Outputs)
 	}
 	if result.CreditCost != 5 {
-		t.Fatalf("expected credit cost 5, got %d", result.CreditCost)
+		t.Fatalf("expected credit cost 5 from nexus_cost, got %d", result.CreditCost)
 	}
 }
 
@@ -347,6 +350,7 @@ func TestClient_GetSubmitResult(t *testing.T) {
 			TaskID:      "task-123",
 			Status:      "failed",
 			RespPayload: `{"resources":[{"url":"https://cdn.anycap.local/generated.png","credit_cost":4}]}`,
+			NexusCost:   0.039,
 			ErrCode:     5005,
 			ErrMsg:      "validation failed",
 			NexusUsage:  map[string]any{"images": 1},
@@ -371,8 +375,8 @@ func TestClient_GetSubmitResult(t *testing.T) {
 	if result.TaskID != "task-123" || result.Status != "failed" {
 		t.Fatalf("unexpected result: %+v", result)
 	}
-	if result.CreditCost != 4 {
-		t.Fatalf("expected credit cost 4, got %d", result.CreditCost)
+	if result.CreditCost != 2 {
+		t.Fatalf("expected credit cost 2 from nexus_cost, got %d", result.CreditCost)
 	}
 	if result.ErrorCode != 5005 || result.ErrorMessage != "validation failed" {
 		t.Fatalf("unexpected error mapping: %+v", result)

@@ -50,9 +50,10 @@ type HeaderProps = {
   logoHref?: string;
   links: NavEntry[];
   authSlot?: React.ReactNode;
+  topOffset?: string;
 };
 
-export async function Header({ logoHref = "/for-human", links, authSlot }: HeaderProps) {
+export async function Header({ logoHref = "/for-human", links, authSlot, topOffset = "0px" }: HeaderProps) {
   const locale = await getRequestLocale();
   const localizedLogoHref = localizePublicPath(locale, logoHref);
 
@@ -111,7 +112,10 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 px-5 py-4 md:px-16 md:py-6 lg:px-24 bg-[#f4f5f0]/80 backdrop-blur-sm">
+    <header
+      className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-5 py-4 backdrop-blur-sm md:px-16 md:py-6 lg:px-24"
+      style={{ top: topOffset }}
+    >
       <div className="flex items-center gap-3">
         <Link href={localizedLogoHref} className="shrink-0">
           <span className="block md:hidden"><AnycapLogo size={32} /></span>

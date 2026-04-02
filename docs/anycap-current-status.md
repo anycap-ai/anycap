@@ -167,7 +167,7 @@ Distributed via GitHub. Agents install with `anycap skill install`.
 | Overview | Credit balance, recent activity, error summary |
 | Usage | Usage statistics |
 | Logs | Detailed call logs |
-| Billing | Credits management |
+| Billing | Credit balance, modal-based credit pack purchase, transactions, payment result feedback |
 | API Keys | Create, disable, delete API keys |
 | Drive | Visual file browser |
 | Pages | Site management with version history, published Open, and verified version Preview |
@@ -209,9 +209,15 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 ## 7. Billing & Usage
 
 - **Credit-based billing**: each capability call has a credit cost
+- **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
 - **Balance check**: enforced before every execution
+- **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID
 - **Usage reporting**: aggregated statistics available in dashboard and via API
+- **One-time credit purchase API**: authenticated users can list configured credit packs via `GET /v1/pricing/credit-packs` and create checkout sessions via `POST /v1/billing/checkout`
+- **Payment integration boundary**: AnyCap server maps internal `pack_id -> price_id` and calls the external Payment Service; web clients never talk to Payment directly
+- **Payment callback foundation**: AnyCap now has a configurable RocketMQ consumer foundation for Payment callback events, with idempotent `payment_event_receipts` storage for `credits_granted` and `payment_failed`
+- **Credit authority**: Payment remains the source of truth for post-payment credit grants; AnyCap does not grant credits again on callback
 - **Rate limiting**: per-user, per-capability
 
 ## 8. Feedback

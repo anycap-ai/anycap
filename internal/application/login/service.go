@@ -30,6 +30,7 @@ type Service struct {
 	sessionIDGenerator    func() string
 	userCodeGenerator     func() string
 	now                   func() time.Time
+	signupRewardDeadline  time.Time
 }
 
 func NewService(
@@ -46,6 +47,7 @@ func NewService(
 	userCodeGenerator func() string,
 	now func() time.Time,
 	loginAPIKeyTTL time.Duration,
+	signupRewardDeadline time.Time,
 ) *Service {
 	if stateGenerator == nil {
 		stateGenerator = func() string {
@@ -80,6 +82,7 @@ func NewService(
 		sessionIDGenerator:    sessionIDGenerator,
 		userCodeGenerator:     userCodeGenerator,
 		now:                   now,
+		signupRewardDeadline:  signupRewardDeadline,
 	}
 }
 
@@ -384,6 +387,9 @@ func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.C
 
 func (s *Service) grantSignupReward(ctx context.Context, userID string, createdUser bool) {
 	if !createdUser || s.credit == nil || userID == "" {
+		return
+	}
+	if !s.signupRewardDeadline.IsZero() && s.now().UTC().After(s.signupRewardDeadline.UTC()) {
 		return
 	}
 	if err := s.credit.GrantSignupReward(ctx, userID); err != nil {
