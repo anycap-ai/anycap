@@ -14,12 +14,16 @@ import (
 //  1. ANYCAP_API_KEY env var -- creates an API Key credential at runtime.
 //  2. OS keychain -- primary persistent store (macOS Keychain, Linux Secret Service,
 //     Windows Credential Manager) via github.com/zalando/go-keyring.
-//  3. Plain-text fallback file (~/.anycap/credentials, mode 0600) -- used only when
-//     no keychain backend is available (headless Linux, Docker, etc.).
+//  3. Plain-text fallback file (credentials in config dir, mode 0600) -- used only
+//     when no keychain backend is available (headless Linux, Docker, etc.).
+//
+// Set ANYCAP_NO_KEYRING=1 to skip the OS keychain entirely and always use the
+// fallback file. This is useful in sandboxed/containerized environments where
+// the keychain is ephemeral but the config directory is persistent.
 //
 // When Environment is set (e.g. "local", "dev"), credentials are isolated:
 //   - Keyring service: "anycap-{env}"
-//   - Fallback file: ~/.anycap/credentials.{env}
+//   - Fallback file: credentials.{env} in config dir
 //
 // Credentials are stored as JSON.
 
@@ -27,6 +31,14 @@ const (
 	keyringBaseService = "anycap"
 	keyringAccount     = "credential"
 )
+
+// keyringDisabled returns true when ANYCAP_NO_KEYRING is set to a truthy
+// value ("1", "true", "yes"). When disabled, credentials are always stored
+// in the fallback file.
+func keyringDisabled() bool {
+	v := strings.ToLower(os.Getenv("ANYCAP_NO_KEYRING"))
+	return v == "1" || v == "true" || v == "yes"
+}
 
 // resolvedKeyringService returns the keyring service name, suffixed with
 // the environment when set.
@@ -70,8 +82,9 @@ func (c *Credential) Token() string {
 // LoadCredential returns the stored credential.
 //
 // Resolution order: ANYCAP_API_KEY env > OS keychain > fallback file.
-// If found in the fallback file and the keychain is available, auto-migrates
-// the credential to the keychain and removes the file.
+// When ANYCAP_NO_KEYRING=1 is set, the keychain step is skipped entirely.
+// If found in the fallback file and the keychain is available (and not disabled),
+// auto-migrates the credential to the keychain and removes the file.
 // Returns nil if no credential is found.
 func LoadCredential() *Credential {
 	// 1. Environment variable -> API Key credential (runtime only, never persisted).
@@ -79,14 +92,16 @@ func LoadCredential() *Credential {
 		return NewAPIKeyCredential(v)
 	}
 
-	// 2. OS keychain (primary persistent store).
-	if secret, err := keyring.Get(resolvedKeyringService(), keyringAccount); err == nil && secret != "" {
-		if cred := parseCredential(secret); cred != nil {
-			return cred
+	// 2. OS keychain (primary persistent store, skipped when disabled).
+	if !keyringDisabled() {
+		if secret, err := keyring.Get(resolvedKeyringService(), keyringAccount); err == nil && secret != "" {
+			if cred := parseCredential(secret); cred != nil {
+				return cred
+			}
 		}
 	}
 
-	// 3. Fallback file (only when keychain is unavailable).
+	// 3. Fallback file.
 	raw := loadFromFile()
 	if raw == "" {
 		return nil
@@ -98,9 +113,12 @@ func LoadCredential() *Credential {
 	}
 
 	// Auto-migrate: promote file credential to keychain, then remove the file.
-	if data, err := json.Marshal(cred); err == nil {
-		if err := keyring.Set(resolvedKeyringService(), keyringAccount, string(data)); err == nil {
-			_ = deleteCredentialFile()
+	// Skipped when keyring is disabled -- the file IS the primary store.
+	if !keyringDisabled() {
+		if data, err := json.Marshal(cred); err == nil {
+			if err := keyring.Set(resolvedKeyringService(), keyringAccount, string(data)); err == nil {
+				_ = deleteCredentialFile()
+			}
 		}
 	}
 
@@ -110,6 +128,7 @@ func LoadCredential() *Credential {
 // SaveCredential stores the credential. It tries the OS keychain first; on
 // success it removes any existing fallback file. Falls back to writing a
 // plain-text file with mode 0600 only if the keychain is unavailable.
+// When ANYCAP_NO_KEYRING=1 is set, always writes to the fallback file.
 func SaveCredential(cred *Credential) error {
 	data, err := json.Marshal(cred)
 	if err != nil {
@@ -117,23 +136,33 @@ func SaveCredential(cred *Credential) error {
 	}
 	raw := string(data)
 
-	if err := keyring.Set(resolvedKeyringService(), keyringAccount, raw); err == nil {
-		_ = deleteCredentialFile() // clean up fallback file if it exists
-		return nil
+	if !keyringDisabled() {
+		if err := keyring.Set(resolvedKeyringService(), keyringAccount, raw); err == nil {
+			_ = deleteCredentialFile() // clean up fallback file if it exists
+			return nil
+		}
 	}
-	// Keychain unavailable -- fall back to file.
+	// Keychain disabled or unavailable -- write to file.
 	return saveToFile(raw)
 }
 
 // DeleteCredential removes the credential from both the OS keychain and the
 // fallback file. Returns nil if at least one backend succeeds or reports
 // "not found". Only returns an error if both backends fail.
+// When ANYCAP_NO_KEYRING=1 is set, only removes the fallback file and
+// returns its error directly.
 func DeleteCredential() error {
+	fileErr := deleteCredentialFile()
+
+	if keyringDisabled() {
+		// File is the sole backend -- its result is authoritative.
+		return fileErr
+	}
+
 	keyringErr := keyring.Delete(resolvedKeyringService(), keyringAccount)
 	if keyringErr == keyring.ErrNotFound {
 		keyringErr = nil
 	}
-	fileErr := deleteCredentialFile()
 
 	// If either backend succeeded, consider the delete successful.
 	if keyringErr == nil || fileErr == nil {

@@ -448,6 +448,11 @@ func ExecutablePath() (string, error) {
 }
 
 func defaultConfigDir() string {
+	if v := os.Getenv("ANYCAP_CONFIG_DIR"); v != "" {
+		if abs, err := filepath.Abs(v); err == nil {
+			return abs
+		}
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""

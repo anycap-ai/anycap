@@ -184,3 +184,99 @@ func TestDeleteCredential_NothingStored(t *testing.T) {
 		t.Fatalf("DeleteCredential on empty: %v", err)
 	}
 }
+
+func TestNoKeyring_SaveToFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
+
+	cred := NewAPIKeyCredential("sk-no-kr")
+	if err := SaveCredential(cred); err != nil {
+		t.Fatalf("SaveCredential: %v", err)
+	}
+
+	// Credential should be in the file, not in the keychain.
+	path, _ := credentialFilePath()
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("expected fallback file to exist: %v", err)
+	}
+
+	// Keyring should be empty (we didn't write to it).
+	if _, err := keyring.Get(resolvedKeyringService(), keyringAccount); err == nil {
+		t.Fatal("expected keyring to be empty when ANYCAP_NO_KEYRING=1")
+	}
+}
+
+func TestNoKeyring_LoadFromFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
+
+	// Save via file (keyring disabled).
+	cred := NewAPIKeyCredential("sk-load-nr")
+	if err := SaveCredential(cred); err != nil {
+		t.Fatalf("SaveCredential: %v", err)
+	}
+
+	got := LoadCredential()
+	if got == nil || got.Token() != "sk-load-nr" {
+		t.Fatalf("expected sk-load-nr, got %+v", got)
+	}
+
+	// File should NOT be auto-migrated to keychain.
+	path, _ := credentialFilePath()
+	if _, err := os.Stat(path); err != nil {
+		t.Fatal("file should still exist (no auto-migration when keyring disabled)")
+	}
+}
+
+func TestNoKeyring_DeleteOnlyFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+
+	_ = SaveCredential(NewAPIKeyCredential("sk-del-nr"))
+
+	if err := DeleteCredential(); err != nil {
+		t.Fatalf("DeleteCredential: %v", err)
+	}
+	if got := LoadCredential(); got != nil {
+		t.Fatalf("expected nil after delete, got %+v", got)
+	}
+}
+
+func TestNoKeyring_WithConfigDir(t *testing.T) {
+	customDir := t.TempDir()
+	t.Setenv("ANYCAP_CONFIG_DIR", customDir)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+
+	cred := NewAPIKeyCredential("sk-sandbox")
+	if err := SaveCredential(cred); err != nil {
+		t.Fatalf("SaveCredential: %v", err)
+	}
+
+	// Verify file is in custom dir.
+	path, _ := credentialFilePath()
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("expected credential file in custom dir: %v", err)
+	}
+
+	got := LoadCredential()
+	if got == nil || got.Token() != "sk-sandbox" {
+		t.Fatalf("expected sk-sandbox, got %+v", got)
+	}
+}
+
+func TestKeyringDisabled_TruthyValues(t *testing.T) {
+	for _, val := range []string{"1", "true", "TRUE", "yes", "YES"} {
+		t.Setenv("ANYCAP_NO_KEYRING", val)
+		if !keyringDisabled() {
+			t.Errorf("expected keyringDisabled()=true for %q", val)
+		}
+	}
+	for _, val := range []string{"", "0", "false", "no"} {
+		t.Setenv("ANYCAP_NO_KEYRING", val)
+		if keyringDisabled() {
+			t.Errorf("expected keyringDisabled()=false for %q", val)
+		}
+	}
+}

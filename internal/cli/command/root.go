@@ -202,25 +202,25 @@ func autoUpdatePreRun(currentVersion string, stderr io.Writer, verbose *bool) fu
 
 const skillReminderFile = ".skill_reminder"
 
-// writeSkillReminderMarker creates a marker file in ~/.anycap/ so the
+// writeSkillReminderMarker creates a marker file in the config directory so the
 // re-exec'd process knows to show a skill update reminder.
 func writeSkillReminderMarker() {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	dir := cliconfig.ConfigDir()
+	if dir == "" {
 		return
 	}
-	path := filepath.Join(home, ".anycap", skillReminderFile)
+	path := filepath.Join(dir, skillReminderFile)
 	_ = os.WriteFile(path, []byte("1"), 0644)
 }
 
 // consumeSkillReminder checks for the skill reminder marker. If present,
 // it sets the global system reminder and removes the marker.
 func consumeSkillReminder() {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	dir := cliconfig.ConfigDir()
+	if dir == "" {
 		return
 	}
-	path := filepath.Join(home, ".anycap", skillReminderFile)
+	path := filepath.Join(dir, skillReminderFile)
 	if _, err := os.Stat(path); err != nil {
 		return
 	}
