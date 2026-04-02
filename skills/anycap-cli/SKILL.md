@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- capability runtime for AI agents. One CLI for image generation, image read, video analysis, audio analysis, music composition, text-to-speech, web search, web crawling, file download, static site hosting, and cloud file storage. Use when the agent needs to generate images, analyze images, video, or audio, produce audio/music, search or crawl the web, download remote files, deploy static sites, or store and share files. Also use when the agent needs to authenticate with AnyCap (login, API key, credentials), or when encountering errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities, AI-generated media, page hosting, or drive storage."
 metadata:
-  version: 0.0.8
+  version: 0.0.9
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -75,6 +75,18 @@ anycap config unset <key>      # reset to default
 ```
 
 Key settings: `endpoint` (server URL), `auto_update` (default true), `feedback` (default true).
+
+### Custom config directory
+
+By default the CLI stores config and credentials in `~/.anycap/`. In sandboxed or containerized environments where the home directory is not persistent, set these environment variables to keep credentials across restarts:
+
+```bash
+export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
+export ANYCAP_NO_KEYRING=1           # disable OS keychain, use file storage
+```
+
+- `ANYCAP_CONFIG_DIR` redirects all CLI state (config, credentials, update markers) to the specified path. Relative paths are resolved to absolute paths automatically.
+- `ANYCAP_NO_KEYRING=1` disables OS keychain and forces credential storage to a file (`credentials` in the config directory). Without this, an ephemeral keychain may accept credentials but lose them on restart.
 
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
 
