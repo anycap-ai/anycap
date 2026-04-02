@@ -207,7 +207,9 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 ## 7. Billing & Usage
 
 - **Credit-based billing**: each capability call has a credit cost
+- **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
 - **Balance check**: enforced before every execution
+- **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID
 - **Usage reporting**: aggregated statistics available in dashboard and via API
 - **One-time credit purchase API**: authenticated users can list configured credit packs via `GET /v1/pricing/credit-packs` and create checkout sessions via `POST /v1/billing/checkout`

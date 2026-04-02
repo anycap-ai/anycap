@@ -139,6 +139,9 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 		Model:  req.Model,
 		Usage:  parsed.NexusUsage,
 	}
+	if parsed.NexusCost > 0 {
+		result.CreditCost = model.CreditsFromUSD(parsed.NexusCost)
+	}
 
 	if parsed.RespPayload != "" {
 		var respPayload atomicRespPayload
@@ -256,6 +259,9 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		Status: normalizeNexusHubStatus(parsed.Status),
 		Model:  req.Model,
 		Usage:  parsed.NexusUsage,
+	}
+	if parsed.NexusCost > 0 {
+		result.CreditCost = model.CreditsFromUSD(parsed.NexusCost)
 	}
 
 	if parsed.RespPayload != "" {
@@ -377,6 +383,9 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 		Model:  req.Model,
 		Usage:  parsed.NexusUsage,
 	}
+	if parsed.NexusCost > 0 {
+		result.CreditCost = model.CreditsFromUSD(parsed.NexusCost)
+	}
 
 	if parsed.RespPayload != "" {
 		var respPayload atomicRespPayload
@@ -453,6 +462,9 @@ func (c *Client) GetSubmitResult(ctx context.Context, taskID string) (model.Prov
 			"err_msg":      parsed.ErrMsg,
 			"resp_payload": parsed.RespPayload,
 		},
+	}
+	if parsed.NexusCost > 0 {
+		result.CreditCost = model.CreditsFromUSD(parsed.NexusCost)
 	}
 
 	if parsed.RespPayload != "" {

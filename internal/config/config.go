@@ -116,6 +116,7 @@ type CreditConfig struct {
 	BizToken                   string
 	Timeout                    time.Duration
 	SignupRewardEnabled        bool
+	SignupRewardDeadline       time.Time
 	SignupRewardPackageID      int64
 	SignupRewardPackageType    string
 	SignupRewardPackageSubtype string
@@ -270,7 +271,6 @@ func LoadFromEnv() (Config, error) {
 		NexusHubPlatformToken:   getEnv("NEXUSHUB_PLATFORM_TOKEN", ""),
 		NexusHubCoreBaseURL:     getEnv("NEXUSHUB_CORE_BASE_URL", ""),
 		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
-		Credit:                  loadCreditConfig(),
 		Payment:                 loadPaymentConfig(),
 		PaymentEvents:           loadPaymentEventsConfig(),
 		AgentPlatform:           loadAgentPlatformConfig(),
@@ -305,6 +305,12 @@ func LoadFromEnv() (Config, error) {
 		UsageSyncPollInterval: getEnvDuration("ANYCAP_USAGE_SYNC_POLL_INTERVAL", defaultUsageSyncPollInterval),
 		UsageSyncBatchSize:    getEnvInt("ANYCAP_USAGE_SYNC_BATCH_SIZE", defaultUsageSyncBatchSize),
 	}
+
+	creditCfg, err := loadCreditConfig()
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.Credit = creditCfg
 
 	creditPacks, err := loadCreditPacksConfig()
 	if err != nil {
@@ -421,7 +427,7 @@ func (c Config) validateInfraConfigExclusivity() error {
 	return nil
 }
 
-func loadCreditConfig() CreditConfig {
+func loadCreditConfig() (CreditConfig, error) {
 	timeout := 10 * time.Second
 	if s := os.Getenv("ANYCAP_CREDIT_TIMEOUT_SECONDS"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil && n > 0 {
@@ -429,15 +435,25 @@ func loadCreditConfig() CreditConfig {
 		}
 	}
 
+	var deadline time.Time
+	if raw := strings.TrimSpace(os.Getenv("ANYCAP_CREDIT_SIGNUP_REWARD_DEADLINE")); raw != "" {
+		parsed, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			return CreditConfig{}, fmt.Errorf("invalid ANYCAP_CREDIT_SIGNUP_REWARD_DEADLINE: %w", err)
+		}
+		deadline = parsed.UTC()
+	}
+
 	return CreditConfig{
 		BaseURL:                    getEnv("ANYCAP_CREDIT_BASE_URL", ""),
 		BizToken:                   getEnv("ANYCAP_CREDIT_BIZ_TOKEN", ""),
 		Timeout:                    timeout,
 		SignupRewardEnabled:        getEnvBool("ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED", false),
+		SignupRewardDeadline:       deadline,
 		SignupRewardPackageID:      getEnvInt64("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_ID", 0),
 		SignupRewardPackageType:    getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_TYPE", ""),
 		SignupRewardPackageSubtype: getEnv("ANYCAP_CREDIT_SIGNUP_REWARD_PACKAGE_SUBTYPE", ""),
-	}
+	}, nil
 }
 
 func loadPaymentConfig() PaymentConfig {

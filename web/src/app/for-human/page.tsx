@@ -29,7 +29,10 @@ export default function ForHumanPage() {
         }
       />
 
-      <section className="flex flex-col px-5 pt-24 md:px-16 md:pt-28 lg:h-dvh lg:px-24 lg:pb-8 lg:pt-24">
+      <section
+        className="flex flex-col px-5 md:px-16 lg:h-dvh lg:px-24 lg:pb-8"
+        style={{ paddingTop: "84px" }}
+      >
         <div className="flex flex-col gap-8 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
           <div className="min-w-0 flex-1">
             <h1
@@ -93,7 +96,16 @@ export default function ForHumanPage() {
             </div>
           </div>
 
-          <div className="w-full shrink-0 lg:flex lg:flex-col lg:w-[50%] lg:self-stretch lg:justify-center lg:min-h-0">
+          <div className="relative w-full shrink-0 lg:flex lg:flex-col lg:w-[50%] lg:self-stretch lg:justify-center lg:min-h-0">
+            <div className="absolute right-[168px] top-3 z-10 hidden max-w-[320px] rounded-[24px] bg-[linear-gradient(180deg,#fbfcf6_0%,#eef4e2_100%)] px-5 py-4 text-[#23281d] shadow-[0_18px_40px_rgba(10,12,9,0.18),0_1px_0_rgba(255,255,255,0.7)_inset] lg:block">
+              <p className="text-[15px] font-semibold leading-[1.35] text-[#182012]">
+                Start me with <span className="text-[#5f7a29]">250 bonus credits</span>.
+              </p>
+              <p className="mt-2 text-[12px] leading-[1.55] text-[#495240]">
+                Sign up before <span className="font-semibold text-[#1f2619]">Apr 10</span> and
+                give me about <span className="font-semibold text-[#1f2619]">USD 5</span> in starter fuel.
+              </p>
+            </div>
             <div className="flex h-[50vh] w-full flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:h-[calc((100dvh-8rem)*0.8)] lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
               <TerminalDemo
                 headerRight={
