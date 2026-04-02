@@ -316,6 +316,15 @@ func enrichHintsFromCapabilities(spec *model.OperationSpec, capability model.Cap
 			spec.RequestHints["resolution"] = map[string]any{"type": "string", "enum": vid.SupportedResolutions}
 		}
 
+	case model.CapabilityMusic:
+		mus := node.Capabilities.Music
+		if mus == nil {
+			return
+		}
+		if _, exists := spec.RequestHints["duration"]; !exists && len(mus.SupportedDurations) > 0 {
+			spec.RequestHints["duration"] = map[string]any{"type": "integer", "enum": mus.SupportedDurations}
+		}
+
 	}
 }
 
@@ -386,6 +395,7 @@ func deriveOperationSpecs(capability model.Capability, node *atomicNodeDTO) map[
 		}
 		music := node.Capabilities.Music
 		generateSpec := newOperationSpec(node, model.OperationGenerate)
+		enrichHintsFromCapabilities(&generateSpec, capability, node)
 		if music.SupportsText2Music || music.SupportsCustomMusic || music.SupportsContinueMusic {
 			addModeRoute(&generateSpec, node, capability, model.ModeTextToMusic, "Text to Music", "text_2_music")
 		}

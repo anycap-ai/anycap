@@ -22,6 +22,12 @@ const (
 	defaultNexusHubEnterFrom = "anycap_api"
 	submitAtomicProcessPath  = "/v1/submit_atomic_process"
 	getSubmitResultPath      = "/v1/get_submit_result/"
+
+	// NexusHub provider option keys within music_option.
+	musicProviderKeyElevenLabs = "elevenlabs_option"
+
+	// ElevenLabs music parameter keys.
+	elevenLabsKeyMusicLengthMs = "music_length_ms"
 )
 
 type ClientConfig struct {
@@ -300,18 +306,9 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	}
 
 	payload := atomicProcessPayload{
-		GenType: route.GenType,
-		Prompt:  req.Prompt,
-		MusicOption: &atomicMusicOption{
-			MakeInstrumental: req.MakeInstrumental,
-			CustomMode:       req.CustomMode,
-			Tags:             req.Tags,
-			Title:            req.Title,
-			Lyrics:           req.Lyrics,
-			ContinueAt:       req.ContinueAt,
-			ContinueClipID:   req.ContinueClipID,
-			VocalGender:      req.VocalGender,
-		},
+		GenType:     route.GenType,
+		Prompt:      req.Prompt,
+		MusicOption: buildMusicOption(req, route),
 		MetaOption: map[string]any{
 			"request_id": req.RequestID,
 			"model_id":   req.Model,
@@ -404,6 +401,37 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	}
 
 	return result, nil
+}
+
+// buildMusicOption constructs the NexusHub music_option payload from the
+// domain request, including provider-specific nested options when needed.
+func buildMusicOption(req model.GenerateMusicRequest, route model.RouteBinding) *atomicMusicOption {
+	opt := &atomicMusicOption{
+		MakeInstrumental: req.MakeInstrumental,
+		CustomMode:       req.CustomMode,
+		Tags:             req.Tags,
+		Title:            req.Title,
+		Lyrics:           req.Lyrics,
+		ContinueAt:       req.ContinueAt,
+		ContinueClipID:   req.ContinueClipID,
+		VocalGender:      req.VocalGender,
+	}
+	switch {
+	case strings.Contains(route.AbilityKey, "elevenlab"):
+		opt.Extra = buildElevenLabsMusicExtra(req)
+	}
+	return opt
+}
+
+func buildElevenLabsMusicExtra(req model.GenerateMusicRequest) map[string]any {
+	el := map[string]any{}
+	if req.Duration > 0 {
+		el[elevenLabsKeyMusicLengthMs] = req.Duration * 1000
+	}
+	if len(el) == 0 {
+		return nil
+	}
+	return map[string]any{musicProviderKeyElevenLabs: el}
 }
 
 func (c *Client) GetSubmitResult(ctx context.Context, taskID string) (model.ProviderTaskResult, error) {
@@ -524,6 +552,33 @@ type atomicMusicOption struct {
 	ContinueAt       int    `json:"continue_at,omitempty"`
 	ContinueClipID   string `json:"continue_clip_id,omitempty"`
 	VocalGender      string `json:"vocal_gender,omitempty"`
+
+	// Extra holds provider-specific nested options (e.g. "elevenlabs_option").
+	// Merged into top-level JSON via MarshalJSON.
+	Extra map[string]any `json:"-"`
+}
+
+func (o atomicMusicOption) MarshalJSON() ([]byte, error) {
+	type plain atomicMusicOption
+	base, err := json.Marshal(plain(o))
+	if err != nil {
+		return nil, err
+	}
+	if len(o.Extra) == 0 {
+		return base, nil
+	}
+	extra, err := json.Marshal(o.Extra)
+	if err != nil {
+		return nil, err
+	}
+	if len(base) <= 2 { // "{}" — no common fields set
+		return extra, nil
+	}
+	merged := make([]byte, 0, len(base)+len(extra))
+	merged = append(merged, base[:len(base)-1]...)
+	merged = append(merged, ',')
+	merged = append(merged, extra[1:]...)
+	return merged, nil
 }
 
 type submitAtomicProcessResponse struct {

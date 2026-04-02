@@ -12,4 +12,5 @@ type GenerateMusicRequest struct {
 	ContinueAt       int    `json:"continue_at,omitempty"`
 	ContinueClipID   string `json:"continue_clip_id,omitempty"`
 	VocalGender      string `json:"vocal_gender,omitempty"`
+	Duration         int    `json:"duration,omitempty"`
 }
