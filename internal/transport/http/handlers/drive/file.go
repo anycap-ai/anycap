@@ -43,7 +43,7 @@ func (h *Handler) PresignFile(c context.Context, ctx *app.RequestContext) {
 
 	result, err := h.service.PresignFileUpload(c, userID, parentID, req.Name, req.ContentType, req.ContentLength)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "presign_drive_file_failed", err.Error())
+		writeDriveError(c, ctx, err, "presign_drive_file_failed")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *Handler) CompleteFile(c context.Context, ctx *app.RequestContext) {
 
 	node, err := h.service.CompleteFileUpload(c, userID, uploadSessionID, fileID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "complete_drive_file_failed", err.Error())
+		writeDriveError(c, ctx, err, "complete_drive_file_failed")
 		return
 	}
 

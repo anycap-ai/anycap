@@ -44,7 +44,7 @@ func (h *Handler) CreateFolder(c context.Context, ctx *app.RequestContext) {
 
 	node, err := h.service.CreateFolder(c, userID, parentID, req.Name)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "create_drive_folder_failed", err.Error())
+		writeDriveError(c, ctx, err, "create_drive_folder_failed")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 
 	items, total, err := h.service.ListNodes(c, userID, parentID, filter)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
+		writeDriveError(c, ctx, err, "list_drive_nodes_failed")
 		return
 	}
 
@@ -158,7 +158,7 @@ func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 
 	node, err := h.service.UpdateNode(c, userID, nodeID, name, parentID, updateParent)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "update_drive_node_failed", err.Error())
+		writeDriveError(c, ctx, err, "update_drive_node_failed")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 
 	deletedCount, err := h.service.DeleteNode(c, userID, nodeID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "delete_drive_node_failed", err.Error())
+		writeDriveError(c, ctx, err, "delete_drive_node_failed")
 		return
 	}
 

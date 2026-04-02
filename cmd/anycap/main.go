@@ -99,6 +99,14 @@ func hintForAPIError(e *httpclient.APIError) string {
 		return "run 'anycap login' to authenticate (use 'anycap login --headless' in environments without a browser)"
 	case e.StatusCode == 429:
 		return "rate limited, retry after a short delay"
+	case e.Code == "quota_exceeded":
+		return "storage quota exceeded; delete unused files with 'anycap drive rm' or check usage with 'anycap status'"
+	case e.Code == "payload_too_large":
+		return "file exceeds the maximum size limit; check limits with 'anycap status'"
+	case e.Code == "limit_reached":
+		return "resource limit reached; delete unused items or check limits with 'anycap status'"
+	case e.Code == "too_many_requests":
+		return "too many pending uploads; complete or wait for existing uploads to expire"
 	case e.Code == "credit_insufficient":
 		return "top up credits at https://anycap.ai/dashboard/billing"
 	case e.Code == "FEATURE_DISABLED":

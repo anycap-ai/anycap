@@ -2,11 +2,13 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
 
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
@@ -20,12 +22,19 @@ import (
 )
 
 type Handler struct {
-	service *systemapp.Service
-	mapper  presenter.IDMapper
+	service       *systemapp.Service
+	mapper        presenter.IDMapper
+	spaceService  port.SpaceService
+	quotaProvider port.StorageQuotaProvider
 }
 
 func NewHandler(service *systemapp.Service, mapper presenter.IDMapper) *Handler {
 	return &Handler{service: service, mapper: mapper}
+}
+
+func (h *Handler) SetStorageQuota(spaceService port.SpaceService, quotaProvider port.StorageQuotaProvider) {
+	h.spaceService = spaceService
+	h.quotaProvider = quotaProvider
 }
 
 func (h *Handler) RegisterRootRoutes(group *route.RouterGroup) {
@@ -43,6 +52,7 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.GET("/dashboard/summary", h.DashboardSummary)
 	group.GET("/me", h.Me)
 	group.GET("/me/features", h.MeFeatures)
+	group.GET("/me/storage", h.MeStorage)
 	group.GET("/credits/balance", h.CreditBalance)
 	group.GET("/logs", h.Logs)
 	group.GET("/api-keys", h.APIKeys)
@@ -75,6 +85,55 @@ func (h *Handler) MeFeatures(c context.Context, ctx *app.RequestContext) {
 	}))
 }
 
+func (h *Handler) MeStorage(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "system.me_storage")
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		logger.Warn("missing principal for storage query")
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	if h.spaceService == nil || h.quotaProvider == nil {
+		ctx.JSON(consts.StatusServiceUnavailable, dto.ErrorEnvelope(trace.GetTraceID(c), "SERVICE_UNAVAILABLE", "storage quota service is not configured"))
+		return
+	}
+
+	userID, err := strconv.ParseInt(principal.UserID, 10, 64)
+	if err != nil {
+		logger.WithError(err).Error("invalid user id in principal")
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	space, err := h.spaceService.GetOrCreatePersonalSpace(c, userID)
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		logger.WithError(err).Error("get space for storage query failed")
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+
+	quota := h.quotaProvider.ResolveQuota(principal)
+
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
+		"storage_used_bytes":    space.StorageUsedBytes,
+		"storage_used_display":  formatBytes(space.StorageUsedBytes),
+		"storage_quota_bytes":   quota.StorageQuotaBytes,
+		"storage_quota_display": formatBytes(quota.StorageQuotaBytes),
+		"drive_node_count":      space.DriveNodeCount,
+		"drive_node_limit":      quota.MaxDriveNodes,
+		"page_site_count":       space.PageSiteCount,
+		"page_site_limit":       quota.MaxPageSites,
+	}))
+}
+
 func (h *Handler) Ping(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]string{"message": "pong"}))
 }
@@ -97,11 +156,75 @@ func (h *Handler) Status(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
+	data := map[string]any{
 		"service":      result.Service,
 		"runtime_mode": result.RuntimeMode,
 		"user":         userDTO,
-	}))
+	}
+
+	// Attach storage info when available (requires full mode with Postgres).
+	if storage := h.resolveStorage(c, principal); storage != nil {
+		data["storage"] = storage
+	}
+
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), data))
+}
+
+// resolveStorage builds the storage summary for the status response.
+// Returns nil when storage services are not configured (stub mode) or on any error.
+func (h *Handler) resolveStorage(c context.Context, principal *model.Principal) map[string]any {
+	if h.spaceService == nil || h.quotaProvider == nil || principal == nil {
+		return nil
+	}
+	logger := logging.WithContext(c).WithField("flow", "system.status.storage")
+	userID, err := strconv.ParseInt(principal.UserID, 10, 64)
+	if err != nil {
+		logger.WithError(err).Warn("skip storage in status: invalid user id")
+		return nil
+	}
+	space, err := h.spaceService.GetOrCreatePersonalSpace(c, userID)
+	if err != nil {
+		logger.WithError(err).Warn("skip storage in status: space lookup failed")
+		return nil
+	}
+	quota := h.quotaProvider.ResolveQuota(principal)
+	return map[string]any{
+		"storage_used_bytes":    space.StorageUsedBytes,
+		"storage_used_display":  formatBytes(space.StorageUsedBytes),
+		"storage_quota_bytes":   quota.StorageQuotaBytes,
+		"storage_quota_display": formatBytes(quota.StorageQuotaBytes),
+		"drive_node_count":      space.DriveNodeCount,
+		"drive_node_limit":      quota.MaxDriveNodes,
+		"page_site_count":       space.PageSiteCount,
+		"page_site_limit":       quota.MaxPageSites,
+	}
+}
+
+// formatBytes formats bytes as a human-readable string (e.g. "10 GB", "512 MB").
+func formatBytes(b int64) string {
+	const (
+		kb = 1024
+		mb = 1024 * kb
+		gb = 1024 * mb
+	)
+	switch {
+	case b >= gb:
+		val := float64(b) / float64(gb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d GB", int64(val))
+		}
+		return fmt.Sprintf("%.1f GB", val)
+	case b >= mb:
+		val := float64(b) / float64(mb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d MB", int64(val))
+		}
+		return fmt.Sprintf("%.1f MB", val)
+	case b >= kb:
+		return fmt.Sprintf("%d KB", b/kb)
+	default:
+		return fmt.Sprintf("%d bytes", b)
+	}
 }
 
 func statusScopes(principal *model.Principal, features map[string]bool) []string {

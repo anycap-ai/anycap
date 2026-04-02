@@ -41,7 +41,7 @@ func (h *Handler) CreateSite(c context.Context, ctx *app.RequestContext) {
 
 	site, err := h.service.CreateSite(c, userID, req.Name)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "create_page_site_failed", err.Error())
+		writePageError(c, ctx, err, "create_page_site_failed")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 
 	items, total, err := h.service.ListSites(c, userID, filter)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
+		writePageError(c, ctx, err, "list_page_sites_failed")
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *Handler) GetSite(c context.Context, ctx *app.RequestContext) {
 
 	site, err := h.service.GetSite(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "get_page_site_failed", err.Error())
+		writePageError(c, ctx, err, "get_page_site_failed")
 		return
 	}
 
@@ -239,7 +239,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 
 	site, err := h.service.UpdateSite(c, userID, input)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "update_page_site_failed", err.Error())
+		writePageError(c, ctx, err, "update_page_site_failed")
 		return
 	}
 
@@ -276,7 +276,7 @@ func (h *Handler) DeleteSite(c context.Context, ctx *app.RequestContext) {
 
 	site, err := h.service.DeleteSite(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "delete_page_site_failed", err.Error())
+		writePageError(c, ctx, err, "delete_page_site_failed")
 		return
 	}
 
@@ -313,7 +313,7 @@ func (h *Handler) Unpublish(c context.Context, ctx *app.RequestContext) {
 
 	site, err := h.service.Unpublish(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "unpublish_page_site_failed", err.Error())
+		writePageError(c, ctx, err, "unpublish_page_site_failed")
 		return
 	}
 

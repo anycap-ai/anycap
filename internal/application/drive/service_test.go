@@ -18,8 +18,9 @@ func (s *fakeSpaceService) GetOrCreatePersonalSpace(_ context.Context, _ int64) 
 }
 
 type fakeDriveNodeRepo struct {
-	nodes  map[int64]*model.DriveNode
-	nextID int64
+	nodes             map[int64]*model.DriveNode
+	nextID            int64
+	spaceForDecrement *model.Space // optional: set to simulate atomic counter decrement
 }
 
 func (r *fakeDriveNodeRepo) CreateFolder(_ context.Context, input model.CreateDriveFolderInput) (*model.DriveNode, error) {
@@ -151,9 +152,9 @@ func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, 
 	return false, nil
 }
 
-func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
 	toDelete := []int64{rootID}
-	deletedCount := int64(0)
+	result := &model.SoftDeleteResult{}
 
 	for len(toDelete) > 0 {
 		current := toDelete[0]
@@ -168,7 +169,20 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		node.DeletedAt = &now
 		node.UpdatedAt = now
 		node.EdgeVersion++
-		deletedCount++
+		result.DeletedCount++
+
+		if node.Kind == model.DriveNodeKindFolder {
+			result.DirIDs = append(result.DirIDs, node.ID)
+			result.RealNodeCount++
+		} else {
+			result.FileIDs = append(result.FileIDs, node.ID)
+			if node.StorageObjectID != nil {
+				if node.Size != nil {
+					result.TotalBytes += *node.Size
+				}
+				result.RealNodeCount++
+			}
+		}
 
 		for _, child := range r.nodes {
 			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
@@ -180,7 +194,40 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		}
 	}
 
-	return deletedCount, nil
+	return result, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteSubtreeWithStorageDecrement(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
+	result, err := r.SoftDeleteSubtree(ctx, spaceID, rootID)
+	if err != nil {
+		return nil, err
+	}
+	// Simulate atomic counter decrement if space is wired
+	if r.spaceForDecrement != nil {
+		r.spaceForDecrement.StorageUsedBytes -= result.TotalBytes
+		if r.spaceForDecrement.StorageUsedBytes < 0 {
+			r.spaceForDecrement.StorageUsedBytes = 0
+		}
+		r.spaceForDecrement.DriveNodeCount -= result.RealNodeCount
+		if r.spaceForDecrement.DriveNodeCount < 0 {
+			r.spaceForDecrement.DriveNodeCount = 0
+		}
+	}
+	return result, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteOrphanFileNodes(_ context.Context, spaceID int64, nodeIDs []int64) (int64, error) {
+	var count int64
+	for _, id := range nodeIDs {
+		node, ok := r.nodes[id]
+		if !ok || node.DeletedAt != nil || node.SpaceID != spaceID || node.StorageObjectID != nil {
+			continue
+		}
+		now := time.Now().UTC()
+		node.DeletedAt = &now
+		count++
+	}
+	return count, nil
 }
 
 func TestCreateFolder_RejectsFileParent(t *testing.T) {

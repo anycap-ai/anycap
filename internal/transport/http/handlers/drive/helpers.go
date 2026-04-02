@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
@@ -83,7 +85,7 @@ func statusCodeForDriveError(err error) int {
 	var domainErr *model.DomainError
 	if errors.As(err, &domainErr) {
 		switch domainErr.Code {
-		case "validation":
+		case "validation", "quota_exceeded", "limit_reached":
 			return consts.StatusBadRequest
 		case "not_found":
 			return consts.StatusNotFound
@@ -91,7 +93,23 @@ func statusCodeForDriveError(err error) int {
 			return consts.StatusConflict
 		case "not_configured":
 			return consts.StatusServiceUnavailable
+		case "payload_too_large":
+			return consts.StatusRequestEntityTooLarge
+		case "too_many_requests":
+			return consts.StatusTooManyRequests
 		}
 	}
 	return consts.StatusInternalServerError
+}
+
+// writeDriveError writes a structured error response, using the DomainError code
+// when available (e.g. "quota_exceeded", "payload_too_large") for precise client-side matching,
+// falling back to the handler-level operation code otherwise.
+func writeDriveError(c context.Context, ctx *app.RequestContext, err error, fallbackCode string) {
+	code := fallbackCode
+	var domainErr *model.DomainError
+	if errors.As(err, &domainErr) {
+		code = domainErr.Code
+	}
+	handlers.WriteError(c, ctx, statusCodeForDriveError(err), code, err.Error())
 }
