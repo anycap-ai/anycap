@@ -9,14 +9,17 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/command"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/internal/cli/telemetry"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 )
 
 func main() {
+	start := time.Now()
 	endpointOverride := parseEndpointFromArgs()
 	traceID := generateTraceID()
 	output.SetTraceID(traceID)
@@ -29,6 +32,20 @@ func main() {
 
 	if err := cmd.Execute(); err != nil {
 		code, message, hint, requestID := classifyError(err)
+		sent := telemetry.ReportError(telemetry.ErrorReport{
+			Command:    extractCommand(),
+			Args:       os.Args[1:],
+			Err:        err,
+			ErrorCode:  code,
+			RequestID:  requestID,
+			TraceID:    traceID,
+			DurationMs: time.Since(start).Milliseconds(),
+			Endpoint:   endpointOverride,
+		})
+		if sent {
+			// Brief sleep to allow the background telemetry goroutine to fire.
+			time.Sleep(100 * time.Millisecond)
+		}
 		_ = output.WriteError(os.Stdout, code, message, hint, requestID)
 		os.Exit(1)
 	}
@@ -128,4 +145,21 @@ func parseEndpointFromArgs() string {
 		}
 	}
 	return ""
+}
+
+// extractCommand extracts the subcommand from os.Args, skipping the binary name
+// and any flags. For example: ["anycap", "image", "generate", "--model", "x"]
+// returns "image generate".
+func extractCommand() string {
+	var parts []string
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "-") {
+			break
+		}
+		parts = append(parts, arg)
+	}
+	if len(parts) == 0 {
+		return "anycap"
+	}
+	return strings.Join(parts, " ")
 }

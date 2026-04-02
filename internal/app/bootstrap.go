@@ -58,6 +58,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/music"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/telemetry"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
@@ -160,6 +161,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	musicCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityMusic)
 	modelRouteHandler := modelroute.NewHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
 	feedbackHandler := feedback.NewHandler(deps.feedbackService)
+	telemetryHandler := telemetry.NewHandler()
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr: deps.config.HTTPAddr,
@@ -177,6 +179,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		V1: []transporthttp.RouteRegistrar{
 			systemHandler,
 			loginHandler,
+			telemetryHandler,
 			imageCatalog,
 			videoCatalog,
 			audioCatalog,

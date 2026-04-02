@@ -24,6 +24,7 @@ func NewLogoutCmd(clientFactory func() *httpclient.Client, stderr io.Writer) *co
 			if err := cliconfig.DeleteCredential(); err != nil {
 				return fmt.Errorf("failed to remove credentials: %w", err)
 			}
+			cliconfig.ResetDeviceID()
 			fmt.Fprintln(stderr, "Logged out. Credentials removed.")
 			return nil
 		},

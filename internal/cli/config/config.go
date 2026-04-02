@@ -44,6 +44,7 @@ type Config struct {
 	Endpoint   string `toml:"endpoint,omitempty"`
 	AutoUpdate *bool  `toml:"auto_update,omitempty"`
 	Feedback   *bool  `toml:"feedback,omitempty"`
+	Telemetry  *bool  `toml:"telemetry,omitempty"`
 }
 
 // IsAutoUpdateEnabled returns whether auto-update is enabled.
@@ -62,6 +63,15 @@ func (c Config) IsFeedbackEnabled() bool {
 		return true
 	}
 	return *c.Feedback
+}
+
+// IsTelemetryEnabled returns whether anonymous telemetry is enabled.
+// Defaults to true when the field is not set.
+func (c Config) IsTelemetryEnabled() bool {
+	if c.Telemetry == nil {
+		return true
+	}
+	return *c.Telemetry
 }
 
 // ConfigDir returns the AnyCap config directory, creating it if needed.

@@ -168,13 +168,14 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 					if err != nil {
 						return err
 					}
-					cred, _, err := auth.ParseTokenResponseForCLI(body)
-					if err != nil {
-						return err
+					parsed, parseErr := auth.ParseTokenResponseFull(body)
+					if parseErr != nil {
+						return parseErr
 					}
-					if err := cliconfig.SaveCredential(cred); err != nil {
+					if err := cliconfig.SaveCredential(parsed.Credential); err != nil {
 						return fmt.Errorf("failed to save credential: %w", err)
 					}
+					cliconfig.SetDeviceUserID(parsed.UserID)
 				}
 			}
 

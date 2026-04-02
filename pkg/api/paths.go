@@ -134,3 +134,7 @@ const (
 // --- Feedback ---
 
 const FeedbackPath = "/v1/feedback"
+
+// --- Telemetry ---
+
+const TelemetryPath = "/v1/telemetry"
