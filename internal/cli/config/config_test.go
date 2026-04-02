@@ -152,6 +152,61 @@ func TestLoad_FeedbackFromFile(t *testing.T) {
 	}
 }
 
+func TestConfigDir_EnvOverride(t *testing.T) {
+	customDir := filepath.Join(t.TempDir(), "custom-anycap")
+	t.Setenv("ANYCAP_CONFIG_DIR", customDir)
+
+	got := ConfigDir()
+	if got != customDir {
+		t.Fatalf("expected %q, got %q", customDir, got)
+	}
+
+	// Directory should be auto-created.
+	info, err := os.Stat(customDir)
+	if err != nil {
+		t.Fatalf("config dir not created: %v", err)
+	}
+	if !info.IsDir() {
+		t.Fatal("config dir is not a directory")
+	}
+}
+
+func TestConfigDir_RelativePath(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("ANYCAP_CONFIG_DIR", ".anycap")
+	// Run from a known directory so the relative path is predictable.
+	origDir, _ := os.Getwd()
+	defer os.Chdir(origDir)
+	os.Chdir(tmpDir)
+
+	got := ConfigDir()
+	// Resolve symlinks for comparison (macOS /var -> /private/var).
+	expected, _ := filepath.EvalSymlinks(filepath.Join(tmpDir, ".anycap"))
+	gotResolved, _ := filepath.EvalSymlinks(got)
+	if gotResolved != expected {
+		t.Fatalf("expected absolute path %q, got %q", expected, gotResolved)
+	}
+}
+
+func TestSaveAndLoad_WithConfigDirEnv(t *testing.T) {
+	customDir := filepath.Join(t.TempDir(), "sandbox-anycap")
+	t.Setenv("ANYCAP_CONFIG_DIR", customDir)
+
+	tr := true
+	cfg := Config{Endpoint: "http://sandbox:9090", AutoUpdate: &tr}
+	if err := Save(cfg); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if loaded.Endpoint != "http://sandbox:9090" {
+		t.Fatalf("expected http://sandbox:9090, got %q", loaded.Endpoint)
+	}
+}
+
 func TestLoad_ValidConfigFile(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

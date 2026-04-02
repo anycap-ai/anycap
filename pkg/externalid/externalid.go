@@ -18,6 +18,7 @@ const (
 	PrefixPageSite      = "pg_"
 	PrefixPageVersion   = "pv_"
 	PrefixCapsUpload    = "cu_"
+	PrefixCapsArtifact  = "ca_"
 	PrefixModelRoute    = "mr_"
 	PrefixLoginSession  = "lsn_"
 	PrefixAPIKeyID      = "akid_"

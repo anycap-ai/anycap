@@ -2,10 +2,10 @@ package config
 
 import (
 	"encoding/json"
-	"log"
 	"strings"
 
 	"gitlab.knoffice.tech/open/common-go/dconf"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 type RateLimitConfig struct {
@@ -33,11 +33,11 @@ func NewRateLimitProvider(cfg Config) *RateLimitProvider {
 
 	container, err := loadRateLimitConfigContainer(cfg)
 	if err != nil {
-		log.Printf("rate-limit: failed to load dconf config group=%s data_id=%s, using env fallback: %v", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID, err)
+		logging.WithError(err).WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID}).Warn("rate-limit failed to load dconf config; using env fallback")
 		return &RateLimitProvider{fallback: cfg}
 	}
 
-	log.Printf("rate-limit: using dconf config group=%s data_id=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID)
+	logging.WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID}).Info("rate-limit using dconf config")
 	logRateLimitDConfSnapshot(cfg, container)
 	return &RateLimitProvider{
 		fallback:  cfg,
@@ -99,15 +99,15 @@ func logRateLimitDConfSnapshot(cfg Config, container RateLimitConfigContainer) {
 
 	current := container.Get()
 	if current == nil {
-		log.Printf("rate-limit: dconf snapshot unavailable group=%s data_id=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID)
+		logging.WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID}).Warn("rate-limit dconf snapshot unavailable")
 		return
 	}
 
 	payload, err := json.Marshal(current)
 	if err != nil {
-		log.Printf("rate-limit: failed to marshal dconf snapshot group=%s data_id=%s: %v", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID, err)
+		logging.WithError(err).WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID}).Warn("rate-limit failed to marshal dconf snapshot")
 		return
 	}
 
-	log.Printf("rate-limit: dconf snapshot group=%s data_id=%s payload=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID, payload)
+	logging.WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID, "payload": string(payload)}).Info("rate-limit dconf snapshot")
 }

@@ -1,8 +1,10 @@
 package image
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,6 +12,10 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+
+	"github.com/sirupsen/logrus"
 )
 
 type fakeUsageWriter struct {
@@ -18,6 +24,12 @@ type fakeUsageWriter struct {
 }
 
 type zeroCostNexusClient struct{}
+type failingUsageWriter struct{}
+type fakeArtifactPublisher struct {
+	result model.ArtifactPublishResult
+	err    error
+	called bool
+}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -48,6 +60,44 @@ func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusi
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
 	panic("unexpected GetSubmitResult call")
+}
+
+func (f *failingUsageWriter) InsertUsageEvent(_ context.Context, _ model.UsageEventRecord) error {
+	return errors.New("usage writer down")
+}
+
+func (f *failingUsageWriter) InsertProviderRun(_ context.Context, _ model.ProviderRunRecord) error {
+	return nil
+}
+
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	logger := logging.GetLogger()
+	originalOut := logger.Out
+	originalFormatter := logger.Formatter
+	originalLevel := logger.GetLevel()
+
+	var buf bytes.Buffer
+	logger.SetOutput(&buf)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.DebugLevel)
+
+	t.Cleanup(func() {
+		logger.SetOutput(originalOut)
+		logger.SetFormatter(originalFormatter)
+		logger.SetLevel(originalLevel)
+	})
+
+	return &buf
+}
+
+func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPublishRequest) (model.ArtifactPublishResult, error) {
+	f.called = true
+	if f.err != nil {
+		return model.ArtifactPublishResult{}, f.err
+	}
+	return f.result, nil
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -236,6 +286,36 @@ func TestGenerateImage_DoesNotDeductWhenProviderCostMissing(t *testing.T) {
 	}
 }
 
+func TestGenerateImage_LogsUsagePersistenceFailureWithTraceID(t *testing.T) {
+	logBuf := captureLogs(t)
+	logs := calllog.NewMemoryCallLogRepo()
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 2}), logs)
+	service.SetUsageWriter(&failingUsageWriter{})
+
+	ctx := trace.SetTraceID(context.Background(), "trace-image-usage-1")
+	_, err := service.Generate(ctx, model.GenerateImageRequest{
+		UserID:    "user-1",
+		APIKeyID:  "akid_1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+
+	output := logBuf.String()
+	if !strings.Contains(output, `"trace_id":"trace-image-usage-1"`) {
+		t.Fatalf("expected trace_id in logs, got %q", output)
+	}
+	if !strings.Contains(output, "usage event persistence failed") {
+		t.Fatalf("expected usage persistence warning, got %q", output)
+	}
+	if !strings.Contains(output, `"capability":"image.generate"`) {
+		t.Fatalf("expected capability field in logs, got %q", output)
+	}
+}
+
 func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 	catalog := nexushub.NewCatalogStubWith([]model.ModelSpec{
 		{
@@ -258,6 +338,30 @@ func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 	})
 	if !errors.Is(err, model.ErrModelRouteNotConfigured) {
 		t.Fatalf("expected ErrModelRouteNotConfigured, got %v", err)
+	}
+}
+
+func TestGenerateImage_PublishFailureDoesNotDeductCredit(t *testing.T) {
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 2})
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())
+	service.SetArtifactPublisher(&fakeArtifactPublisher{err: model.ErrUpstreamUnavailable})
+
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
+		UserID:    "user-1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if !errors.Is(err, model.ErrUpstreamUnavailable) {
+		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
+	}
+
+	balance, err := creditClient.GetBalance(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("GetBalance() error = %v", err)
+	}
+	if balance.Available != 2 {
+		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
 	}
 }
 

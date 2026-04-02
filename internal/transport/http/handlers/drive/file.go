@@ -14,91 +14,91 @@ import (
 
 func (h *Handler) PresignFile(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	var req presignFileRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
 	parentID, err := h.resolveOptionalDriveNodeIDFromRaw(c, req.ParentID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_parent_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_parent_id", err)
 		return
 	}
 
 	result, err := h.service.PresignFileUpload(c, userID, parentID, req.Name, req.ContentType, req.ContentLength)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "presign_drive_file_failed", err.Error())
+		writeDriveError(c, ctx, err, "presign_drive_file_failed")
 		return
 	}
 
 	presented, err := h.presentDrivePresign(c, result)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_presign_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_presign_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) CompleteFile(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	var req completeFileRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
 	uploadSessionID, err := h.resolveRequiredUploadSessionIDFromRaw(c, req.UploadSessionID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_upload_session_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_upload_session_id", err)
 		return
 	}
 	fileID, err := h.resolveRequiredDriveNodeIDFromRaw(c, req.FileID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_file_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_file_id", err)
 		return
 	}
 
 	node, err := h.service.CompleteFileUpload(c, userID, uploadSessionID, fileID)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "complete_drive_file_failed", err.Error())
+		writeDriveError(c, ctx, err, "complete_drive_file_failed")
 		return
 	}
 
 	presented, err := h.presentDriveNode(c, node)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }

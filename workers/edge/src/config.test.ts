@@ -9,6 +9,8 @@ describe("resolveConfig", () => {
 		expect(config).toEqual({
 			cdnHost: "cdn.anycap.cloud",
 			driveHost: "drive.anycap.cloud",
+			artifactHost: "artifact.anycap.cloud",
+			artifactIngestHost: "artifact-ingest.anycap.cloud",
 			pageHostPrefix: "page-",
 			pagePreviewHostPrefix: "preview-page-",
 			driveAssetCacheTTLSeconds: 60,
@@ -27,6 +29,8 @@ describe("resolveConfig", () => {
 			createEnv({
 				CDN_HOST: " CDN.EXAMPLE.COM ",
 				DRIVE_HOST: " DRIVE.EXAMPLE.COM ",
+				ARTIFACT_HOST: " ARTIFACT.EXAMPLE.COM ",
+				ARTIFACT_INGEST_HOST: " INGEST.EXAMPLE.COM ",
 				PAGE_HOST_PREFIX: "pages",
 				PAGE_PREVIEW_HOST_PREFIX: "preview-pages",
 				DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS: "120",
@@ -42,6 +46,8 @@ describe("resolveConfig", () => {
 
 		expect(config.cdnHost).toBe("cdn.example.com");
 		expect(config.driveHost).toBe("drive.example.com");
+		expect(config.artifactHost).toBe("artifact.example.com");
+		expect(config.artifactIngestHost).toBe("ingest.example.com");
 		expect(config.pageHostPrefix).toBe("pages-");
 		expect(config.pagePreviewHostPrefix).toBe("preview-pages-");
 		expect(config.driveAssetCacheTTLSeconds).toBe(120);

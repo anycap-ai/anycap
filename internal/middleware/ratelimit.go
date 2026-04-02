@@ -9,6 +9,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -47,7 +48,7 @@ func RateLimit(limiter port.RateLimiter, resolver CapabilityRateLimitResolver) a
 		allowed, remaining, resetAt, err := limiter.Allow(ctx, key, rpm, time.Minute)
 		if err != nil {
 			status, payload := dto.MapDomainError(err)
-			payload.ID = GetRequestID(c)
+			payload.ID = trace.GetTraceID(ctx)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}
@@ -58,7 +59,7 @@ func RateLimit(limiter port.RateLimiter, resolver CapabilityRateLimitResolver) a
 
 		if !allowed {
 			status, payload := dto.MapDomainError(model.ErrRateLimited)
-			payload.ID = GetRequestID(c)
+			payload.ID = trace.GetTraceID(ctx)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}

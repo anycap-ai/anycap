@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 const (
@@ -52,6 +52,11 @@ func NewPlatformClient(cfg PlatformClientConfig) *PlatformClient {
 func (c *PlatformClient) ListModels(ctx context.Context, capability model.Capability) ([]model.ModelSpec, error) {
 	nodes, err := c.fetchAtomicNodes(ctx, string(capability))
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": capability,
+			"stage":      "list_models",
+		}).WithError(err).Error("fetch nexushub atomic nodes failed")
 		return nil, fmt.Errorf("fetch atomic nodes for %s: %w", capability, err)
 	}
 
@@ -68,6 +73,12 @@ func (c *PlatformClient) ListModels(ctx context.Context, capability model.Capabi
 func (c *PlatformClient) GetModel(ctx context.Context, capability model.Capability, modelID string) (*model.ModelSpec, error) {
 	nodes, err := c.fetchAtomicNodes(ctx, string(capability))
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": capability,
+			"model":      modelID,
+			"stage":      "get_model",
+		}).WithError(err).Error("fetch nexushub atomic nodes failed")
 		return nil, fmt.Errorf("fetch atomic nodes for %s: %w", capability, err)
 	}
 
@@ -78,6 +89,12 @@ func (c *PlatformClient) GetModel(ctx context.Context, capability model.Capabili
 		}
 	}
 
+	logging.WithContext(ctx).WithFields(logging.Fields{
+		"provider":   "nexushub",
+		"capability": capability,
+		"model":      modelID,
+		"stage":      "get_model",
+	}).Warn("nexushub model not found")
 	return nil, fmt.Errorf("model %q not found in capability %s", modelID, capability)
 }
 
@@ -159,6 +176,11 @@ type musicCapabilitiesDTO struct {
 func (c *PlatformClient) fetchAtomicNodes(ctx context.Context, category string) ([]atomicNodeDTO, error) {
 	u, err := url.Parse(c.baseURL + "/v1/atomic_nodes")
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": category,
+			"stage":      "parse_url",
+		}).WithError(err).Error("parse nexushub atomic nodes url failed")
 		return nil, fmt.Errorf("parse url: %w", err)
 	}
 
@@ -170,27 +192,45 @@ func (c *PlatformClient) fetchAtomicNodes(ctx context.Context, category string) 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": category,
+			"stage":      "build_request",
+		}).WithError(err).Error("build nexushub atomic nodes request failed")
 		return nil, fmt.Errorf("build request: %w", err)
 	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
-	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
-		req.Header.Set("X-Request-Id", requestID)
-	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": category,
+			"stage":      "http_request",
+		}).WithError(err).Error("request nexushub atomic nodes failed")
 		return nil, fmt.Errorf("http request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":    "nexushub",
+			"capability":  category,
+			"stage":       "unexpected_status",
+			"status_code": resp.StatusCode,
+		}).Error("nexushub atomic nodes returned non-200")
 		return nil, fmt.Errorf("unexpected status %d from NexusHub", resp.StatusCode)
 	}
 
 	var result atomicNodeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":   "nexushub",
+			"capability": category,
+			"stage":      "decode_response",
+		}).WithError(err).Error("decode nexushub atomic nodes response failed")
 		return nil, fmt.Errorf("decode response: %w", err)
 	}
 
@@ -209,27 +249,45 @@ func (c *PlatformClient) getAtomicNode(ctx context.Context, abilityKey string) (
 	endpoint := fmt.Sprintf("%s/v1/atomic_node/%s", c.baseURL, url.PathEscape(abilityKey))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":    "nexushub",
+			"ability_key": abilityKey,
+			"stage":       "build_request",
+		}).WithError(err).Error("build nexushub atomic node request failed")
 		return nil, fmt.Errorf("build request: %w", err)
 	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
-	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
-		req.Header.Set("X-Request-Id", requestID)
-	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":    "nexushub",
+			"ability_key": abilityKey,
+			"stage":       "http_request",
+		}).WithError(err).Error("request nexushub atomic node failed")
 		return nil, fmt.Errorf("http request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":    "nexushub",
+			"ability_key": abilityKey,
+			"stage":       "unexpected_status",
+			"status_code": resp.StatusCode,
+		}).Error("nexushub atomic node returned non-200")
 		return nil, fmt.Errorf("unexpected status %d from NexusHub", resp.StatusCode)
 	}
 
 	var node atomicNodeDTO
 	if err := json.NewDecoder(resp.Body).Decode(&node); err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider":    "nexushub",
+			"ability_key": abilityKey,
+			"stage":       "decode_response",
+		}).WithError(err).Error("decode nexushub atomic node response failed")
 		return nil, fmt.Errorf("decode response: %w", err)
 	}
 
@@ -316,6 +374,15 @@ func enrichHintsFromCapabilities(spec *model.OperationSpec, capability model.Cap
 			spec.RequestHints["resolution"] = map[string]any{"type": "string", "enum": vid.SupportedResolutions}
 		}
 
+	case model.CapabilityMusic:
+		mus := node.Capabilities.Music
+		if mus == nil {
+			return
+		}
+		if _, exists := spec.RequestHints["duration"]; !exists && len(mus.SupportedDurations) > 0 {
+			spec.RequestHints["duration"] = map[string]any{"type": "integer", "enum": mus.SupportedDurations}
+		}
+
 	}
 }
 
@@ -386,6 +453,7 @@ func deriveOperationSpecs(capability model.Capability, node *atomicNodeDTO) map[
 		}
 		music := node.Capabilities.Music
 		generateSpec := newOperationSpec(node, model.OperationGenerate)
+		enrichHintsFromCapabilities(&generateSpec, capability, node)
 		if music.SupportsText2Music || music.SupportsCustomMusic || music.SupportsContinueMusic {
 			addModeRoute(&generateSpec, node, capability, model.ModeTextToMusic, "Text to Music", "text_2_music")
 		}

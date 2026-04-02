@@ -19,6 +19,9 @@ const (
 	defaultAppEnv                = "local"
 	defaultHTTPAddr              = ":18080"
 	defaultRuntimeMode           = "stub"
+	defaultLogLevel              = "info"
+	defaultLogFormat             = "json"
+	defaultLogOutput             = "stdout"
 	defaultRateLimitRPM          = 60
 	defaultRateLimitDConfGroup   = "anycap"
 	defaultRateLimitDConfDataID  = "rate_limit"
@@ -42,6 +45,7 @@ const (
 	defaultCloudflareAPIBaseURL  = "https://api.cloudflare.com/client/v4"
 	defaultDriveAccessTTLSeconds = int64(300)
 	defaultPagePreviewTTLSeconds = int64(300)
+	defaultArtifactLinkTTL       = int64(600)
 	minEdgeGrantTTLSeconds       = int64(60)
 	maxEdgeGrantTTLSeconds       = int64(3600)
 )
@@ -51,6 +55,9 @@ type Config struct {
 	AppEnv                string
 	HTTPAddr              string
 	RuntimeMode           string
+	LogLevel              string
+	LogFormat             string
+	LogOutput             string
 	PGDSN                 string
 	PGHost                string
 	PGPort                int
@@ -109,6 +116,20 @@ type Config struct {
 	UsageSyncEnabled        bool
 	UsageSyncPollInterval   time.Duration
 	UsageSyncBatchSize      int
+	Artifact                ArtifactConfig
+	// Storage quota
+	StorageQuotaDConfEnabled bool
+	StorageQuotaDConfGroup   string
+	StorageQuotaDConfDataID  string
+	StorageQuotaBytes        int64
+	MaxDriveFileSizeBytes    int64
+	MaxDriveNodes            int
+	MaxPageAssetSizeBytes    int64
+	MaxPageSites             int
+	MaxPageVersionsPerSite   int
+	MaxFilesPerPageVersion   int
+	MaxPendingDriveSessions  int
+	MaxPendingPageSessions   int
 }
 
 type CreditConfig struct {
@@ -207,6 +228,17 @@ type CloudflareKVConfig struct {
 	APIBaseURL  string
 }
 
+type ArtifactConfig struct {
+	PublicBaseURL  string
+	IngestBaseURL  string
+	IngestToken    string
+	LinkTTLSeconds int64
+}
+
+func (c ArtifactConfig) Enabled() bool {
+	return c.PublicBaseURL != "" && c.IngestBaseURL != "" && c.IngestToken != ""
+}
+
 func (c CloudflareKVConfig) Enabled() bool {
 	return c.AccountID != "" && c.NamespaceID != "" && c.APIToken != ""
 }
@@ -237,6 +269,9 @@ func LoadFromEnv() (Config, error) {
 		AppEnv:                  getEnv("ANYCAP_APP_ENV", defaultAppEnv),
 		HTTPAddr:                getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
 		RuntimeMode:             getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
+		LogLevel:                getEnv("ANYCAP_LOG_LEVEL", defaultLogLevel),
+		LogFormat:               getEnv("ANYCAP_LOG_FORMAT", defaultLogFormat),
+		LogOutput:               getEnv("ANYCAP_LOG_OUTPUT", defaultLogOutput),
 		PGDSN:                   os.Getenv("ANYCAP_PG_DSN"),
 		PGHost:                  os.Getenv("ANYCAP_PG_HOST"),
 		PGPort:                  getEnvInt("ANYCAP_PG_PORT", 5432),
@@ -304,6 +339,25 @@ func LoadFromEnv() (Config, error) {
 		UsageSyncEnabled:      getEnvBool("ANYCAP_USAGE_SYNC_ENABLED", true),
 		UsageSyncPollInterval: getEnvDuration("ANYCAP_USAGE_SYNC_POLL_INTERVAL", defaultUsageSyncPollInterval),
 		UsageSyncBatchSize:    getEnvInt("ANYCAP_USAGE_SYNC_BATCH_SIZE", defaultUsageSyncBatchSize),
+		Artifact: ArtifactConfig{
+			PublicBaseURL:  getEnv("ANYCAP_ARTIFACT_PUBLIC_BASE_URL", ""),
+			IngestBaseURL:  getEnv("ANYCAP_ARTIFACT_INGEST_BASE_URL", ""),
+			IngestToken:    getEnv("ANYCAP_ARTIFACT_INGEST_TOKEN", ""),
+			LinkTTLSeconds: getEnvInt64("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", defaultArtifactLinkTTL),
+		},
+		// Storage quota
+		StorageQuotaDConfEnabled: getEnvBool("ANYCAP_STORAGE_QUOTA_DCONF_ENABLED", false),
+		StorageQuotaDConfGroup:   getEnv("ANYCAP_STORAGE_QUOTA_DCONF_GROUP", defaultStorageQuotaDConfGroup),
+		StorageQuotaDConfDataID:  getEnv("ANYCAP_STORAGE_QUOTA_DCONF_DATA_ID", defaultStorageQuotaDConfDataID),
+		StorageQuotaBytes:        getEnvInt64("ANYCAP_STORAGE_QUOTA_BYTES", 0),
+		MaxDriveFileSizeBytes:    getEnvInt64("ANYCAP_MAX_DRIVE_FILE_SIZE_BYTES", 0),
+		MaxDriveNodes:            getEnvInt("ANYCAP_MAX_DRIVE_NODES", 0),
+		MaxPageAssetSizeBytes:    getEnvInt64("ANYCAP_MAX_PAGE_ASSET_SIZE_BYTES", 0),
+		MaxPageSites:             getEnvInt("ANYCAP_MAX_PAGE_SITES", 0),
+		MaxPageVersionsPerSite:   getEnvInt("ANYCAP_MAX_PAGE_VERSIONS_PER_SITE", 0),
+		MaxFilesPerPageVersion:   getEnvInt("ANYCAP_MAX_FILES_PER_PAGE_VERSION", 0),
+		MaxPendingDriveSessions:  getEnvInt("ANYCAP_MAX_PENDING_DRIVE_SESSIONS", 0),
+		MaxPendingPageSessions:   getEnvInt("ANYCAP_MAX_PENDING_PAGE_SESSIONS", 0),
 	}
 
 	creditCfg, err := loadCreditConfig()
@@ -330,6 +384,9 @@ func LoadFromEnv() (Config, error) {
 
 	if err := cfg.validateInfraConfigExclusivity(); err != nil {
 		return Config{}, err
+	}
+	if cfg.Artifact.LinkTTLSeconds <= 0 {
+		cfg.Artifact.LinkTTLSeconds = defaultArtifactLinkTTL
 	}
 
 	if cfg.requiresExternalInfra() {
@@ -576,7 +633,7 @@ func loadAgentPlatformConfig() AgentPlatformConfig {
 	return AgentPlatformConfig{
 		BaseURL:  getEnv("AGENT_PLATFORM_BASE_URL", ""),
 		APIKey:   getEnv("AGENT_PLATFORM_API_KEY", ""),
-		TenantID: getEnv("AGENT_PLATFORM_TENANT_ID", ""),
+		TenantID: getEnv("AGENT_PLATFORM_TENANT_ID", "anycap"),
 		Timeout:  timeout,
 	}
 }

@@ -25,6 +25,7 @@ type DevicePollResult struct {
 	APIKey   string `json:"api_key"`
 	APIKeyID string `json:"api_key_id"`
 	User     *struct {
+		ID    string `json:"id"`
 		Email string `json:"email"`
 		Name  string `json:"name"`
 	} `json:"user"`
@@ -111,11 +112,12 @@ func DeviceFlow(ctx context.Context, client *httpclient.Client, stderr io.Writer
 			if marshalErr != nil {
 				return nil, "", fmt.Errorf("failed to re-encode device poll response: %w", marshalErr)
 			}
-			cred, email, err := parseTokenResponse(body)
-			if err != nil {
+			result, parseErr := parseTokenResponseFull(body)
+			if parseErr != nil {
 				return nil, "", fmt.Errorf("authentication completed but no api key was returned; run 'anycap login' again")
 			}
-			return cred, email, nil
+			cliconfig.SetDeviceUserID(result.UserID)
+			return result.Credential, result.Email, nil
 		case "expired":
 			return nil, "", fmt.Errorf("\ndevice code expired. Please try again")
 		case "slow_down":

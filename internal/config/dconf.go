@@ -1,9 +1,8 @@
 package config
 
 import (
-	"log"
-
 	"gitlab.knoffice.tech/open/common-go/dconf"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 var (
@@ -29,10 +28,13 @@ func InitDConf(cfg Config) error {
 	}
 
 	if cfg.RateLimitDConfEnabled {
-		log.Printf("rate-limit: initialized dconf client group=%s data_id=%s", cfg.RateLimitDConfGroup, cfg.RateLimitDConfDataID)
+		logging.WithFields(logging.Fields{"group": cfg.RateLimitDConfGroup, "data_id": cfg.RateLimitDConfDataID}).Info("rate-limit initialized dconf client")
 	}
 	if cfg.FeatureDConfEnabled {
-		log.Printf("feature-access: initialized dconf client group=%s data_id=%s", cfg.FeatureDConfGroup, cfg.FeatureDConfDataID)
+		logging.WithFields(logging.Fields{"group": cfg.FeatureDConfGroup, "data_id": cfg.FeatureDConfDataID}).Info("feature-access initialized dconf client")
+	}
+	if cfg.StorageQuotaDConfEnabled {
+		logging.WithFields(logging.Fields{"group": cfg.StorageQuotaDConfGroup, "data_id": cfg.StorageQuotaDConfDataID}).Info("storage-quota initialized dconf client")
 	}
 	return nil
 }

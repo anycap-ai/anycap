@@ -39,11 +39,12 @@ func ResolvedEnvironment() string {
 	return Environment
 }
 
-// Config holds user preferences loaded from ~/.anycap/config.toml.
+// Config holds user preferences loaded from config.toml in the config directory.
 type Config struct {
 	Endpoint   string `toml:"endpoint,omitempty"`
 	AutoUpdate *bool  `toml:"auto_update,omitempty"`
 	Feedback   *bool  `toml:"feedback,omitempty"`
+	Telemetry  *bool  `toml:"telemetry,omitempty"`
 }
 
 // IsAutoUpdateEnabled returns whether auto-update is enabled.
@@ -64,19 +65,44 @@ func (c Config) IsFeedbackEnabled() bool {
 	return *c.Feedback
 }
 
-// ConfigDir returns ~/.anycap, creating it if needed.
+// IsTelemetryEnabled returns whether anonymous telemetry is enabled.
+// Defaults to true when the field is not set.
+func (c Config) IsTelemetryEnabled() bool {
+	if c.Telemetry == nil {
+		return true
+	}
+	return *c.Telemetry
+}
+
+// ConfigDir returns the AnyCap config directory, creating it if needed.
+//
+// Resolution order: ANYCAP_CONFIG_DIR env > ~/.anycap.
+// Setting ANYCAP_CONFIG_DIR is useful in sandboxed environments where the
+// home directory is not persistent (e.g. agent containers). Point it at the
+// working directory to keep config and credentials across restarts:
+//
+//	export ANYCAP_CONFIG_DIR=./.anycap
 func ConfigDir() string {
 	dir, _ := configDir()
 	return dir
 }
 
-// configDir returns ~/.anycap, creating it if needed.
+// configDir returns the AnyCap config directory, creating it if needed.
 func configDir() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
+	var dir string
+	if v := os.Getenv("ANYCAP_CONFIG_DIR"); v != "" {
+		var err error
+		dir, err = filepath.Abs(v)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		dir = filepath.Join(home, ".anycap")
 	}
-	dir := filepath.Join(home, ".anycap")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
@@ -92,7 +118,7 @@ func ConfigPath() string {
 	return filepath.Join(ConfigDir(), "config.toml")
 }
 
-// Save writes the config to ~/.anycap/config.toml.
+// Save writes the config to config.toml in the config directory.
 // Fields with zero/nil values are omitted (omitempty).
 func Save(cfg Config) error {
 	dir, err := configDir()
@@ -108,7 +134,7 @@ func Save(cfg Config) error {
 	return toml.NewEncoder(f).Encode(cfg)
 }
 
-// Load reads ~/.anycap/config.toml. Returns zero Config if the file doesn't exist.
+// Load reads config.toml from the config directory. Returns zero Config if the file doesn't exist.
 func Load() (Config, error) {
 	dir, err := configDir()
 	if err != nil {

@@ -18,6 +18,9 @@ type fakeUsageWriter struct {
 }
 
 type zeroCostNexusClient struct{}
+type fakeArtifactPublisher struct {
+	err error
+}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -48,6 +51,13 @@ func (zeroCostNexusClient) GenerateMusic(_ context.Context, req model.GenerateMu
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
 	panic("unexpected GetSubmitResult call")
+}
+
+func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPublishRequest) (model.ArtifactPublishResult, error) {
+	if f.err != nil {
+		return model.ArtifactPublishResult{}, f.err
+	}
+	return model.ArtifactPublishResult{}, nil
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -257,5 +267,29 @@ func TestGenerateMusic_RouteNotConfigured(t *testing.T) {
 	})
 	if !errors.Is(err, model.ErrModelRouteNotConfigured) {
 		t.Fatalf("expected ErrModelRouteNotConfigured, got %v", err)
+	}
+}
+
+func TestGenerateMusic_PublishFailureDoesNotDeductCredit(t *testing.T) {
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 3})
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())
+	service.SetArtifactPublisher(&fakeArtifactPublisher{err: model.ErrUpstreamUnavailable})
+
+	_, err := service.Generate(context.Background(), model.GenerateMusicRequest{
+		UserID:    "user-1",
+		RequestID: "req-1",
+		Prompt:    "lofi night drive",
+		Model:     "mureka-v6",
+	})
+	if !errors.Is(err, model.ErrUpstreamUnavailable) {
+		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
+	}
+
+	balance, err := creditClient.GetBalance(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("GetBalance() error = %v", err)
+	}
+	if balance.Available != 3 {
+		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
 	}
 }

@@ -1,10 +1,7 @@
 package config
 
 import (
-	"bytes"
 	"errors"
-	"log"
-	"strings"
 	"testing"
 )
 
@@ -60,19 +57,12 @@ func TestNewRateLimitProvider_LoadsDConfContainerWhenEnabled(t *testing.T) {
 	}
 }
 
-func TestNewRateLimitProvider_LogsDConfSnapshotWhenEnabled(t *testing.T) {
+func TestNewRateLimitProvider_LoadsDConfSnapshotWhenEnabled(t *testing.T) {
 	originalLoader := loadRateLimitConfigContainer
-	originalWriter := log.Writer()
-	originalFlags := log.Flags()
 	t.Cleanup(func() {
 		loadRateLimitConfigContainer = originalLoader
-		log.SetOutput(originalWriter)
-		log.SetFlags(originalFlags)
 	})
 
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	log.SetFlags(0)
 	loadRateLimitConfigContainer = func(cfg Config) (RateLimitConfigContainer, error) {
 		return fakeRateLimitContainer{
 			current: &RateLimitConfig{
@@ -85,22 +75,21 @@ func TestNewRateLimitProvider_LogsDConfSnapshotWhenEnabled(t *testing.T) {
 		}, nil
 	}
 
-	_ = NewRateLimitProvider(Config{
+	provider := NewRateLimitProvider(Config{
 		RateLimitRPM:          60,
 		RateLimitDConfEnabled: true,
 		RateLimitDConfGroup:   "anycap",
 		RateLimitDConfDataID:  "rate_limit",
 	})
 
-	output := buf.String()
-	if !strings.Contains(output, "rate-limit: dconf snapshot group=anycap data_id=rate_limit payload=") {
-		t.Fatalf("expected dconf snapshot log, got %q", output)
+	if provider.container == nil {
+		t.Fatal("expected provider to retain loaded dconf container")
 	}
-	if !strings.Contains(output, `"default_rpm":88`) {
-		t.Fatalf("expected default_rpm in log, got %q", output)
+	if got := provider.ResolveCapabilityRateLimitRPM("image.generate"); got != 9 {
+		t.Fatalf("expected dconf capability override 9, got %d", got)
 	}
-	if !strings.Contains(output, `"image.generate":9`) {
-		t.Fatalf("expected image.generate capability in log, got %q", output)
+	if got := provider.ResolveCapabilityRateLimitRPM("music.generate"); got != 88 {
+		t.Fatalf("expected dconf default rpm 88, got %d", got)
 	}
 }
 

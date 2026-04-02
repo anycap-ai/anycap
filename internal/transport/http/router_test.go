@@ -49,6 +49,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -293,9 +294,9 @@ func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, 
 	return false, nil
 }
 
-func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
 	toDelete := []int64{rootID}
-	deletedCount := int64(0)
+	result := &model.SoftDeleteResult{}
 	for len(toDelete) > 0 {
 		current := toDelete[0]
 		toDelete = toDelete[1:]
@@ -307,7 +308,7 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		node.DeletedAt = &now
 		node.UpdatedAt = now
 		node.EdgeVersion++
-		deletedCount++
+		result.DeletedCount++
 		for _, child := range r.nodes {
 			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
 				continue
@@ -317,7 +318,15 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 			}
 		}
 	}
-	return deletedCount, nil
+	return result, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteSubtreeWithStorageDecrement(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
+	return r.SoftDeleteSubtree(ctx, spaceID, rootID)
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteOrphanFileNodes(_ context.Context, _ int64, _ []int64) (int64, error) {
+	return 0, nil
 }
 
 func cloneDriveNode(n *model.DriveNode) *model.DriveNode {
@@ -424,6 +433,13 @@ func (r *fakePageSiteRepo) SetCurrentVersion(_ context.Context, spaceID, id int6
 	return clonePageSite(site), nil
 }
 
+func (r *fakePageSiteRepo) SoftDeleteWithStorageDecrement(ctx context.Context, spaceID, siteID int64) (int64, error) {
+	if err := r.SoftDelete(ctx, spaceID, siteID); err != nil {
+		return 0, err
+	}
+	return 0, nil
+}
+
 func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) error {
 	site, ok := r.sites[id]
 	if !ok || site.SpaceID != spaceID || site.DeletedAt != nil {
@@ -434,6 +450,10 @@ func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) erro
 	site.UpdatedAt = now
 	site.EdgeVersion++
 	return nil
+}
+
+func (r *fakePageSiteRepo) SumCompletedStorageByPageID(_ context.Context, _, _ int64) (int64, error) {
+	return 0, nil
 }
 
 func clonePageSite(s *model.PageSite) *model.PageSite {
@@ -595,6 +615,7 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 		},
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,
+		time.Time{},
 	), passthroughMapper)
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{
 		{
@@ -710,7 +731,10 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
 		Middlewares: []app.HandlerFunc{
-			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
+			middleware.Recover(),
+			commonmw.TraceMiddleware(),
+			commonmw.AccessMiddleware("/ping", "/healthz"),
+			commonmw.MetricsMiddleware(),
 		},
 		Root: []RouteRegistrar{
 			RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
@@ -1119,7 +1143,12 @@ func TestRouter_BillingCheckoutReturnsUpstreamFailure(t *testing.T) {
 	systemHandler := system.NewHandler(systemService, presenter.PassthroughIDMapper{})
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
-		Middlewares: []app.HandlerFunc{middleware.Recover(), middleware.RequestID(), middleware.AccessLog()},
+		Middlewares: []app.HandlerFunc{
+			middleware.Recover(),
+			commonmw.TraceMiddleware(),
+			commonmw.AccessMiddleware("/ping", "/healthz"),
+			commonmw.MetricsMiddleware(),
+		},
 		V1: []RouteRegistrar{
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(apiKeys, nil), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: 10}))
@@ -1975,8 +2004,8 @@ func TestRouter_Healthz(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.Code)
 	}
-	if resp.Header().Get("X-Request-Id") == "" {
-		t.Fatal("expected X-Request-Id header")
+	if resp.Header().Get("X-Trace-ID") == "" {
+		t.Fatal("expected X-Trace-ID header")
 	}
 }
 

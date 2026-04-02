@@ -8,6 +8,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/route"
@@ -27,20 +29,26 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 }
 
 func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithFields(logging.Fields{
+		"capability": "music.generate",
+	})
+
 	var payload dto.GenerateMusicRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid music request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
-		ctx.JSON(401, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "AUTH_INVALID", "invalid api key"))
+		logger.Warn("missing principal for music request")
+		ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
 		return
 	}
 
 	result, err := h.service.Generate(c, model.GenerateMusicRequest{
-		RequestID:        middleware.GetRequestID(ctx),
+		RequestID:        trace.GetTraceID(c),
 		UserID:           principal.UserID,
 		APIKeyID:         principal.APIKeyID,
 		Prompt:           payload.Prompt,
@@ -54,14 +62,19 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		ContinueAt:       payload.ContinueAt,
 		ContinueClipID:   payload.ContinueClipID,
 		VocalGender:      payload.VocalGender,
+		Duration:         payload.Duration,
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, response := dto.MapDomainError(err)
-		response.ID = middleware.GetRequestID(ctx)
+		logger.WithError(err).WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  response.Error.Code,
+		}).Error("music request failed")
+		response.ID = trace.GetTraceID(c)
 		ctx.JSON(status, response)
 		return
 	}
 
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
