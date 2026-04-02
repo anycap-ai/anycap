@@ -6,14 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 )
 
 const (
@@ -80,21 +80,19 @@ func (c *Client) Ingest(ctx context.Context, req model.ArtifactIngestRequest) (m
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
-	if requestID := middleware.RequestIDFromContext(ctx); requestID != "" {
-		httpReq.Header.Set("X-Request-Id", requestID)
+	if traceID := trace.GetTraceID(ctx); traceID != "" {
+		httpReq.Header.Set("X-Request-Id", traceID)
 	}
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		log.Printf(
-			"artifact-ingest: call failed request_id=%s endpoint=%s source_url=%q object_key=%s media_type=%s err=%q",
-			middleware.RequestIDFromContext(ctx),
-			c.baseURL+ingestPath,
-			sanitizeURLForLog(req.SourceURL),
-			strings.TrimSpace(req.ObjectKey),
-			string(req.MediaType),
-			err.Error(),
-		)
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":       "artifact.ingest",
+			"endpoint":   c.baseURL + ingestPath,
+			"source_url": sanitizeURLForLog(req.SourceURL),
+			"object_key": strings.TrimSpace(req.ObjectKey),
+			"media_type": string(req.MediaType),
+		}).WithError(err).Error("call failed")
 		return model.ArtifactIngestResult{}, fmt.Errorf("call artifact ingest: %w", err)
 	}
 	defer resp.Body.Close()
@@ -109,16 +107,15 @@ func (c *Client) Ingest(ctx context.Context, req model.ArtifactIngestRequest) (m
 		if msg == "" {
 			msg = "artifact ingest upstream error"
 		}
-		log.Printf(
-			"artifact-ingest: upstream rejected request request_id=%s endpoint=%s status=%d source_url=%q object_key=%s media_type=%s response_body=%q",
-			middleware.RequestIDFromContext(ctx),
-			c.baseURL+ingestPath,
-			resp.StatusCode,
-			sanitizeURLForLog(req.SourceURL),
-			strings.TrimSpace(req.ObjectKey),
-			string(req.MediaType),
-			limitForLog(msg, 1024),
-		)
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":          "artifact.ingest",
+			"endpoint":      c.baseURL + ingestPath,
+			"status":        resp.StatusCode,
+			"source_url":    sanitizeURLForLog(req.SourceURL),
+			"object_key":    strings.TrimSpace(req.ObjectKey),
+			"media_type":    string(req.MediaType),
+			"response_body": limitForLog(msg, 1024),
+		}).Error("upstream rejected request")
 		return model.ArtifactIngestResult{}, fmt.Errorf("%w: %s", model.ErrUpstreamUnavailable, msg)
 	}
 

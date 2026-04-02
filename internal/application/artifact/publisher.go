@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"path"
 	"strconv"
@@ -13,8 +12,8 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
-	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 const (
@@ -151,24 +150,21 @@ func (p *Publisher) publishOne(ctx context.Context, req model.ArtifactPublishReq
 		MaxBytes:        p.ingestMaxBytes,
 	})
 	if err != nil {
-		requestID := middleware.RequestIDFromContext(ctx)
-		log.Printf(
-			"artifact-publish: ingest failed request_id=%s capability=%s media_type=%s provider=%s provider_task_id=%s user_id=%s artifact_id=%d artifact_external_id=%s output_position=%d object_key=%s source_url=%q source_mime=%q max_bytes=%d ingest_error=%q",
-			requestID,
-			strings.TrimSpace(req.Capability),
-			string(req.MediaType),
-			strings.TrimSpace(req.Provider),
-			strings.TrimSpace(req.ProviderTaskID),
-			strings.TrimSpace(req.UserID),
-			artifactRecord.ID,
-			strings.TrimSpace(artifactRecord.ExternalID),
-			position,
-			objectKey,
-			sanitizeURLForLog(sourceURL),
-			strings.TrimSpace(output.MIMEType),
-			p.ingestMaxBytes,
-			err.Error(),
-		)
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":                 "artifact.publish",
+			"capability":           strings.TrimSpace(req.Capability),
+			"media_type":           string(req.MediaType),
+			"provider":             strings.TrimSpace(req.Provider),
+			"provider_task_id":     strings.TrimSpace(req.ProviderTaskID),
+			"user_id":              strings.TrimSpace(req.UserID),
+			"artifact_id":          artifactRecord.ID,
+			"artifact_external_id": strings.TrimSpace(artifactRecord.ExternalID),
+			"output_position":      position,
+			"object_key":           objectKey,
+			"source_url":           sanitizeURLForLog(sourceURL),
+			"source_mime":          strings.TrimSpace(output.MIMEType),
+			"max_bytes":            p.ingestMaxBytes,
+		}).WithError(err).Error("ingest failed")
 		p.markArtifactFailed(ctx, artifactRecord.ID, "INGEST_FAILED", "artifact ingest failed")
 		return model.Artifact{}, p.failUpstream("artifact ingest failed")
 	}
@@ -295,13 +291,11 @@ func (p *Publisher) markArtifactFailed(ctx context.Context, artifactID int64, co
 		return
 	}
 	if _, err := p.capsArtifactRepo.MarkFailed(ctx, artifactID, code, message); err != nil {
-		log.Printf(
-			"artifact-publish: mark failed update failed request_id=%s artifact_id=%d code=%s err=%q",
-			middleware.RequestIDFromContext(ctx),
-			artifactID,
-			strings.TrimSpace(code),
-			err.Error(),
-		)
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":        "artifact.publish",
+			"artifact_id": artifactID,
+			"code":        strings.TrimSpace(code),
+		}).WithError(err).Error("mark failed update failed")
 	}
 }
 

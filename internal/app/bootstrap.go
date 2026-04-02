@@ -534,7 +534,7 @@ func buildCreditClient(cfg config.Config) port.CreditClient {
 
 func buildArtifactIngestClient(cfg config.Config) port.ArtifactIngestClient {
 	if !cfg.Artifact.Enabled() {
-		log.Println("artifact-ingest: disabled (set ANYCAP_ARTIFACT_PUBLIC_BASE_URL / ANYCAP_ARTIFACT_INGEST_BASE_URL / ANYCAP_ARTIFACT_INGEST_TOKEN)")
+		logging.GetLogger().Info("artifact-ingest: disabled (set ANYCAP_ARTIFACT_PUBLIC_BASE_URL / ANYCAP_ARTIFACT_INGEST_BASE_URL / ANYCAP_ARTIFACT_INGEST_TOKEN)")
 		return nil
 	}
 
@@ -543,7 +543,7 @@ func buildArtifactIngestClient(cfg config.Config) port.ArtifactIngestClient {
 		Token:   cfg.Artifact.IngestToken,
 	})
 	if err != nil {
-		log.Printf("artifact-ingest: failed to initialize client: %v", err)
+		logging.GetLogger().WithError(err).Error("artifact-ingest: failed to initialize client")
 		return nil
 	}
 	return client
@@ -562,11 +562,11 @@ func buildArtifactPublisher(
 		return nil
 	}
 	if ingestClient == nil || capsArtifactRepo == nil || storageRepo == nil || linkStore == nil || spaceService == nil || objectStore == nil {
-		log.Println("artifact-publisher: disabled due to incomplete dependencies")
+		logging.GetLogger().Info("artifact-publisher: disabled due to incomplete dependencies")
 		return nil
 	}
 	if _, unavailable := linkStore.(*edgegrant.UnavailableStore); unavailable {
-		log.Println("artifact-publisher: disabled because cloudflare kv edge grant store is unavailable")
+		logging.GetLogger().Info("artifact-publisher: disabled because cloudflare kv edge grant store is unavailable")
 		return nil
 	}
 
@@ -583,10 +583,13 @@ func buildArtifactPublisher(
 		objectStore,
 	)
 	if err != nil {
-		log.Printf("artifact-publisher: failed to initialize: %v", err)
+		logging.GetLogger().WithError(err).Error("artifact-publisher: failed to initialize")
 		return nil
 	}
-	log.Printf("artifact-publisher: enabled (public_base=%s, ttl=%ds)", cfg.Artifact.PublicBaseURL, cfg.Artifact.LinkTTLSeconds)
+	logging.GetLogger().WithFields(logging.Fields{
+		"public_base": cfg.Artifact.PublicBaseURL,
+		"ttl_seconds": cfg.Artifact.LinkTTLSeconds,
+	}).Info("artifact-publisher: enabled")
 	return publisher
 }
 
