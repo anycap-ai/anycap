@@ -232,6 +232,78 @@ func (r *PageSiteRepo) SoftDelete(ctx context.Context, spaceID, id int64) error 
 	return nil
 }
 
+// SoftDeleteWithStorageDecrement atomically soft-deletes a page site,
+// sums completed storage, and decrements the space's storage counters.
+// Returns total bytes decremented. If the site was not found, returns an error.
+func (r *PageSiteRepo) SoftDeleteWithStorageDecrement(ctx context.Context, spaceID, siteID int64) (int64, error) {
+	if r == nil || r.db == nil {
+		return 0, fmt.Errorf("page site repo db is not configured")
+	}
+
+	var deleted, totalBytes int64
+	err := r.db.QueryRowContext(ctx, `
+		WITH site_delete AS (
+			UPDATE page_sites
+			SET deleted_at = NOW(),
+				updated_at = NOW(),
+				edge_version = edge_version + 1
+			WHERE id = $2 AND space_id = $1 AND deleted_at IS NULL
+			RETURNING id
+		),
+		completed_storage AS (
+			SELECT COALESCE(SUM(so.size), 0) AS total_bytes
+			FROM storage_objects so
+			JOIN upload_sessions us ON us.object_key = so.object_key AND us.space_id = so.space_id
+			WHERE us.target_type = 'page'
+			  AND us.target_id IN (SELECT id FROM page_versions WHERE page_id = $2)
+			  AND us.status = 'completed'
+			  AND us.space_id = $1
+			  AND EXISTS (SELECT 1 FROM site_delete)
+		),
+		space_decrement AS (
+			UPDATE spaces
+			SET storage_used_bytes = GREATEST(0, storage_used_bytes - (SELECT total_bytes FROM completed_storage)),
+				page_site_count = GREATEST(0, page_site_count - 1)
+			WHERE id = $1
+			  AND EXISTS (SELECT 1 FROM site_delete)
+			RETURNING id
+		)
+		SELECT
+			(SELECT COUNT(*) FROM site_delete),
+			(SELECT total_bytes FROM completed_storage)
+	`, spaceID, siteID).Scan(&deleted, &totalBytes)
+	if err != nil {
+		return 0, fmt.Errorf("soft delete page site with storage decrement: %w", err)
+	}
+	if deleted == 0 {
+		return 0, fmt.Errorf("page site not found")
+	}
+	return totalBytes, nil
+}
+
+// SumCompletedStorageByPageID returns total bytes of completed uploads for all versions of a page site.
+// Used by DeleteSite to know how many bytes to decrement from the space's storage_used_bytes.
+func (r *PageSiteRepo) SumCompletedStorageByPageID(ctx context.Context, spaceID, pageID int64) (int64, error) {
+	if r == nil || r.db == nil {
+		return 0, fmt.Errorf("page site repo db is not configured")
+	}
+
+	var totalBytes int64
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COALESCE(SUM(so.size), 0)
+		FROM storage_objects so
+		JOIN upload_sessions us ON us.object_key = so.object_key AND us.space_id = so.space_id
+		WHERE us.target_type = 'page'
+		  AND us.target_id IN (SELECT id FROM page_versions WHERE page_id = $2)
+		  AND us.status = 'completed'
+		  AND us.space_id = $1
+	`, spaceID, pageID).Scan(&totalBytes)
+	if err != nil {
+		return 0, fmt.Errorf("sum completed storage by page id: %w", err)
+	}
+	return totalBytes, nil
+}
+
 func (r *PageSiteRepo) getByIDInSpace(ctx context.Context, id, spaceID int64) (*model.PageSite, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, space_id, name, page_name, current_version_id, access_mode, password_hash, password_salt, spa_fallback, show_badge, edge_version, created_at, updated_at, deleted_at

@@ -111,6 +111,10 @@ func (r *fakeVersionRepo) GetByPageIDAndVersionNo(_ context.Context, pageID, ver
 	return nil, nil
 }
 
+func (r *fakeVersionRepo) CountByPageID(_ context.Context, pageID int64) (int64, error) {
+	return int64(len(r.byPage[pageID])), nil
+}
+
 type fakeVersionUploadSessionRepo struct {
 	sessions map[int64]*model.UploadSession
 	nextID   int64
@@ -151,6 +155,28 @@ func (r *fakeVersionUploadSessionRepo) CountCompletedByTarget(_ context.Context,
 	var count int64
 	for _, session := range r.sessions {
 		if session.TargetType == targetType && session.TargetID == targetID && session.Status == model.UploadSessionStatusCompleted {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *fakeVersionUploadSessionRepo) ExpireStaleBySpace(_ context.Context, _ int64, _ model.UploadTargetType, _ time.Time) ([]model.ExpiredSessionInfo, error) {
+	return nil, nil
+}
+
+func (r *fakeVersionUploadSessionRepo) CountPendingBySpaceAndType(_ context.Context, _ int64, _ model.UploadTargetType) (int64, error) {
+	return 0, nil
+}
+
+func (r *fakeVersionUploadSessionRepo) CountByTargetAndStatuses(_ context.Context, targetType model.UploadTargetType, targetID int64, statuses []model.UploadSessionStatus) (int64, error) {
+	statusSet := make(map[model.UploadSessionStatus]bool, len(statuses))
+	for _, s := range statuses {
+		statusSet[s] = true
+	}
+	var count int64
+	for _, session := range r.sessions {
+		if session.TargetType == targetType && session.TargetID == targetID && statusSet[session.Status] {
 			count++
 		}
 	}

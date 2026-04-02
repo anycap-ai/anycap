@@ -33,6 +33,8 @@ type Service struct {
 	kvSyncJobRepo     port.KVSyncJobRepository
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
+	quotaProvider     port.StorageQuotaProvider
+	spaceRepo         port.SpaceRepository
 	passwordPepper    string
 	pageHostFormat    string
 	previewHostFormat string
@@ -83,6 +85,13 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 func WithPageHostFormat(hostFormat string) ServiceOption {
 	return func(s *Service) {
 		s.pageHostFormat = model.NormalizePageHostFormat(hostFormat)
+	}
+}
+
+func WithQuota(quotaProvider port.StorageQuotaProvider, spaceRepo port.SpaceRepository) ServiceOption {
+	return func(s *Service) {
+		s.quotaProvider = quotaProvider
+		s.spaceRepo = spaceRepo
 	}
 }
 
@@ -176,6 +185,15 @@ func (s *Service) CreateSite(ctx context.Context, userID int64, name string) (*m
 		return nil, err
 	}
 
+	// Quota: optimistic fast-fail (read-only check from cached space)
+	if s.quotaProvider != nil && s.spaceRepo != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		if space.PageSiteCount >= quota.MaxPageSites {
+			return nil, model.ErrLimitReached(fmt.Sprintf("page_site_limit_reached: page site limit reached (%d/%d sites). Delete unused sites to free up space",
+				space.PageSiteCount, quota.MaxPageSites))
+		}
+	}
+
 	for i := 0; i < 8; i++ {
 		pageName, generateErr := generatePageName(name)
 		if generateErr != nil {
@@ -205,6 +223,23 @@ func (s *Service) CreateSite(ctx context.Context, userID int64, name string) (*m
 		}
 
 		s.fillPageURL(site)
+
+		// Quota: atomically increment page_site_count after successful creation
+		if s.quotaProvider != nil && s.spaceRepo != nil {
+			quota := s.quotaProvider.ResolveQuota(nil)
+			ok, qErr := s.spaceRepo.IncrementPageSiteCount(ctx, space.ID, quota.MaxPageSites)
+			if qErr != nil {
+				// Rollback: soft-delete the site we just created
+				_ = s.siteRepo.SoftDelete(ctx, space.ID, site.ID)
+				return nil, qErr
+			}
+			if !ok {
+				_ = s.siteRepo.SoftDelete(ctx, space.ID, site.ID)
+				return nil, model.ErrLimitReached(fmt.Sprintf("page_site_limit_reached: page site limit reached (%d/%d sites). Delete unused sites to free up space",
+					space.PageSiteCount, quota.MaxPageSites))
+			}
+		}
+
 		return site, nil
 	}
 
@@ -352,17 +387,38 @@ func (s *Service) DeleteSite(ctx context.Context, userID int64, siteID int64) (*
 		return nil, err
 	}
 
-	// Soft delete and mark slug tombstone.
-	// Note: these two operations are not transactional. If MarkTombstone fails
-	// after SoftDelete succeeds, the slug remains unreserved. This is acceptable:
-	// tombstone failure is low-probability, the site is already deleted, and a
-	// retry of DeleteSite will hit "not found" (idempotent). The slug could
-	// theoretically be reused, which is a minor cosmetic issue, not data loss.
-	if err := s.siteRepo.SoftDelete(ctx, site.SpaceID, site.ID); err != nil {
-		return nil, err
+	// Collect R2 object keys before delete (for cleanup after atomic DB operation)
+	var objectKeysToDelete []string
+	if s.storageObjectRepo != nil {
+		prefix := fmt.Sprintf("page/spaces/%d/sites/%d/", site.SpaceID, site.ID)
+		objects, listErr := s.storageObjectRepo.ListByPrefix(ctx, site.SpaceID, prefix)
+		if listErr == nil {
+			for _, obj := range objects {
+				objectKeysToDelete = append(objectKeysToDelete, obj.ObjectKey)
+			}
+		}
+	}
+
+	// Atomically: soft-delete site + sum completed storage + decrement space counters
+	if s.spaceRepo != nil && s.quotaProvider != nil {
+		if _, err := s.siteRepo.SoftDeleteWithStorageDecrement(ctx, site.SpaceID, site.ID); err != nil {
+			return nil, err
+		}
+	} else {
+		// Fallback for stub mode: soft-delete only (no quota tracking)
+		if err := s.siteRepo.SoftDelete(ctx, site.SpaceID, site.ID); err != nil {
+			return nil, err
+		}
 	}
 	if err := s.slugRepo.MarkTombstone(ctx, site.PageName, site.ID); err != nil {
 		return nil, err
+	}
+
+	// Best-effort R2 cleanup -- DB is already committed
+	if s.objectStore != nil {
+		for _, objectKey := range objectKeysToDelete {
+			_ = s.objectStore.DeleteObject(ctx, objectKey)
+		}
 	}
 
 	// If site was published, enqueue KV delete job

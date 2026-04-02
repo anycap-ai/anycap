@@ -210,12 +210,12 @@ func (r *DriveNodeRepo) ExistsInSubtree(ctx context.Context, spaceID, rootID, ta
 	return exists, nil
 }
 
-func (r *DriveNodeRepo) SoftDeleteSubtree(ctx context.Context, spaceID, rootID int64) (int64, error) {
+func (r *DriveNodeRepo) SoftDeleteSubtree(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
 	if r == nil || r.db == nil {
-		return 0, fmt.Errorf("drive node repo db is not configured")
+		return nil, fmt.Errorf("drive node repo db is not configured")
 	}
 
-	result, err := r.db.ExecContext(ctx, `
+	rows, err := r.db.QueryContext(ctx, `
 		WITH RECURSIVE subtree AS (
 			SELECT id
 			FROM drive_nodes
@@ -225,21 +225,180 @@ func (r *DriveNodeRepo) SoftDeleteSubtree(ctx context.Context, spaceID, rootID i
 			FROM drive_nodes n
 			INNER JOIN subtree s ON n.parent_id = s.id
 			WHERE n.space_id = $1 AND n.deleted_at IS NULL
+		),
+		deleted AS (
+			UPDATE drive_nodes
+			SET deleted_at = NOW(),
+				updated_at = NOW(),
+				edge_version = edge_version + 1
+			WHERE id IN (SELECT id FROM subtree)
+			  AND deleted_at IS NULL
+			RETURNING id, kind, storage_object_id, COALESCE(size, 0) AS size
 		)
-		UPDATE drive_nodes
-		SET deleted_at = NOW(),
-			updated_at = NOW(),
-			edge_version = edge_version + 1
-		WHERE id IN (SELECT id FROM subtree)
-		  AND deleted_at IS NULL
+		SELECT id, kind, storage_object_id IS NOT NULL AS has_storage, size
+		FROM deleted
 	`, spaceID, rootID)
 	if err != nil {
-		return 0, fmt.Errorf("soft delete drive subtree: %w", err)
+		return nil, fmt.Errorf("soft delete drive subtree: %w", err)
+	}
+	defer rows.Close()
+
+	result := &model.SoftDeleteResult{}
+	for rows.Next() {
+		var (
+			id         int64
+			kind       string
+			hasStorage bool
+			size       int64
+		)
+		if err := rows.Scan(&id, &kind, &hasStorage, &size); err != nil {
+			return nil, fmt.Errorf("scan soft delete result row: %w", err)
+		}
+		result.DeletedCount++
+		if kind == string(model.DriveNodeKindFolder) {
+			result.DirIDs = append(result.DirIDs, id)
+			result.RealNodeCount++ // folders are always "real"
+		} else {
+			result.FileIDs = append(result.FileIDs, id)
+			if hasStorage {
+				result.TotalBytes += size
+				result.RealNodeCount++
+			}
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate soft delete result rows: %w", err)
 	}
 
+	return result, nil
+}
+
+// SoftDeleteSubtreeWithStorageDecrement atomically soft-deletes a drive subtree,
+// decrements the space's storage counters, and returns R2 object keys for cleanup.
+// This replaces the non-atomic sequence of SoftDeleteSubtree + DecrementDriveStorage.
+func (r *DriveNodeRepo) SoftDeleteSubtreeWithStorageDecrement(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("drive node repo db is not configured")
+	}
+
+	rows, err := r.db.QueryContext(ctx, `
+		WITH RECURSIVE subtree AS (
+			SELECT id
+			FROM drive_nodes
+			WHERE space_id = $1 AND id = $2 AND deleted_at IS NULL
+			UNION ALL
+			SELECT n.id
+			FROM drive_nodes n
+			INNER JOIN subtree s ON n.parent_id = s.id
+			WHERE n.space_id = $1 AND n.deleted_at IS NULL
+		),
+		deleted AS (
+			UPDATE drive_nodes
+			SET deleted_at = NOW(),
+				updated_at = NOW(),
+				edge_version = edge_version + 1
+			WHERE id IN (SELECT id FROM subtree)
+			  AND deleted_at IS NULL
+			RETURNING id, kind, storage_object_id, COALESCE(size, 0) AS size
+		),
+		deleted_with_keys AS (
+			SELECT d.id, d.kind,
+				d.storage_object_id IS NOT NULL AS has_storage,
+				d.size,
+				so.object_key
+			FROM deleted d
+			LEFT JOIN storage_objects so ON d.storage_object_id = so.id
+		),
+		aggregated AS (
+			SELECT
+				COALESCE(SUM(CASE WHEN has_storage THEN size ELSE 0 END), 0) AS total_bytes,
+				COALESCE(COUNT(*) FILTER (WHERE kind = 'folder' OR has_storage), 0) AS real_node_count
+			FROM deleted_with_keys
+		),
+		space_decrement AS (
+			UPDATE spaces
+			SET storage_used_bytes = GREATEST(0, storage_used_bytes - (SELECT total_bytes FROM aggregated)),
+				drive_node_count = GREATEST(0, drive_node_count - (SELECT real_node_count FROM aggregated))
+			WHERE id = $1
+			RETURNING id
+		)
+		SELECT dwk.id, dwk.kind, dwk.has_storage, dwk.size, dwk.object_key
+		FROM deleted_with_keys dwk
+	`, spaceID, rootID)
+	if err != nil {
+		return nil, fmt.Errorf("soft delete drive subtree with storage decrement: %w", err)
+	}
+	defer rows.Close()
+
+	result := &model.SoftDeleteResult{}
+	for rows.Next() {
+		var (
+			id         int64
+			kind       string
+			hasStorage bool
+			size       int64
+			objectKey  *string
+		)
+		if err := rows.Scan(&id, &kind, &hasStorage, &size, &objectKey); err != nil {
+			return nil, fmt.Errorf("scan soft delete with decrement result row: %w", err)
+		}
+		result.DeletedCount++
+		if kind == string(model.DriveNodeKindFolder) {
+			result.DirIDs = append(result.DirIDs, id)
+			result.RealNodeCount++
+		} else {
+			result.FileIDs = append(result.FileIDs, id)
+			if hasStorage {
+				result.TotalBytes += size
+				result.RealNodeCount++
+			}
+		}
+		if objectKey != nil {
+			result.ObjectKeys = append(result.ObjectKeys, *objectKey)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate soft delete with decrement result rows: %w", err)
+	}
+
+	return result, nil
+}
+
+// SoftDeleteOrphanFileNodes soft-deletes file nodes that never completed upload.
+// These are identified by storage_object_id IS NULL. No counter decrement needed.
+func (r *DriveNodeRepo) SoftDeleteOrphanFileNodes(ctx context.Context, spaceID int64, nodeIDs []int64) (int64, error) {
+	if r == nil || r.db == nil {
+		return 0, fmt.Errorf("drive node repo db is not configured")
+	}
+	if len(nodeIDs) == 0 {
+		return 0, nil
+	}
+
+	// Build IN clause with positional args ($2, $3, ...)
+	placeholders := make([]string, len(nodeIDs))
+	args := make([]any, 0, len(nodeIDs)+1)
+	args = append(args, spaceID)
+	for i, id := range nodeIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE drive_nodes
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE space_id = $1
+		  AND id IN (%s)
+		  AND storage_object_id IS NULL
+		  AND deleted_at IS NULL
+	`, strings.Join(placeholders, ", "))
+
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("soft delete orphan file nodes: %w", err)
+	}
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return 0, fmt.Errorf("rows affected for soft delete drive subtree: %w", err)
+		return 0, fmt.Errorf("rows affected for soft delete orphan file nodes: %w", err)
 	}
 	return affected, nil
 }

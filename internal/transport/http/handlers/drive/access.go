@@ -36,7 +36,7 @@ func (h *Handler) CreateAccessLinks(c context.Context, ctx *app.RequestContext) 
 
 	result, err := h.service.CreateAccessLinks(c, userID, nodeID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "create_drive_access_links_failed", err.Error())
+		writeDriveError(c, ctx, err, "create_drive_access_links_failed")
 		return
 	}
 	handlers.WriteSuccess(c, ctx, map[string]any{

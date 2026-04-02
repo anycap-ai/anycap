@@ -46,7 +46,7 @@ func (h *Handler) GetShare(c context.Context, ctx *app.RequestContext) {
 	view, err := h.service.GetShare(c, userID, nodeID)
 	if err != nil {
 		logging.WithError(err).Warn("drive get-share service call failed")
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "get_drive_share_failed", err.Error())
+		writeDriveError(c, ctx, err, "get_drive_share_failed")
 		return
 	}
 	if view == nil {
@@ -98,7 +98,7 @@ func (h *Handler) UpsertShare(c context.Context, ctx *app.RequestContext) {
 
 	view, err := h.service.UpsertShare(c, userID, nodeID, req.ExpiresInSeconds, req.NoExpire, req.Password, req.NoPassword)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "upsert_drive_share_failed", err.Error())
+		writeDriveError(c, ctx, err, "upsert_drive_share_failed")
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h *Handler) RotateShare(c context.Context, ctx *app.RequestContext) {
 
 	view, err := h.service.RotateShare(c, userID, nodeID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "rotate_drive_share_failed", err.Error())
+		writeDriveError(c, ctx, err, "rotate_drive_share_failed")
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *Handler) RevokeShare(c context.Context, ctx *app.RequestContext) {
 	rawID := string(ctx.Param("id"))
 
 	if err := h.service.RevokeShare(c, userID, nodeID); err != nil {
-		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "revoke_drive_share_failed", err.Error())
+		writeDriveError(c, ctx, err, "revoke_drive_share_failed")
 		return
 	}
 

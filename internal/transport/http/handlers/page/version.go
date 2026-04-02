@@ -39,7 +39,7 @@ func (h *Handler) CreateVersion(c context.Context, ctx *app.RequestContext) {
 
 	version, err := h.service.CreateVersion(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "create_page_version_failed", err.Error())
+		writePageError(c, ctx, err, "create_page_version_failed")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) PresignVersionAsset(c context.Context, ctx *app.RequestContext
 
 	result, err := h.service.PresignVersionAsset(c, userID, siteID, versionID, req.AssetPath, req.ContentType, req.ContentLength)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "presign_page_version_asset_failed", err.Error())
+		writePageError(c, ctx, err, "presign_page_version_asset_failed")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (h *Handler) CompleteVersionAsset(c context.Context, ctx *app.RequestContex
 
 	version, err := h.service.CompleteVersionAsset(c, userID, siteID, versionID, uploadSessionID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "complete_page_version_asset_failed", err.Error())
+		writePageError(c, ctx, err, "complete_page_version_asset_failed")
 		return
 	}
 
@@ -187,7 +187,7 @@ func (h *Handler) FinalizeVersion(c context.Context, ctx *app.RequestContext) {
 
 	version, err := h.service.FinalizeVersion(c, userID, siteID, versionID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "finalize_page_version_failed", err.Error())
+		writePageError(c, ctx, err, "finalize_page_version_failed")
 		return
 	}
 
@@ -234,7 +234,7 @@ func (h *Handler) ListVersions(c context.Context, ctx *app.RequestContext) {
 
 	versions, total, err := h.service.ListVersions(c, userID, siteID, filter)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "list_page_versions_failed", err.Error())
+		writePageError(c, ctx, err, "list_page_versions_failed")
 		return
 	}
 
@@ -280,7 +280,7 @@ func (h *Handler) GetVersionByNumber(c context.Context, ctx *app.RequestContext)
 
 	version, err := h.service.GetVersionByNumber(c, userID, siteID, versionNo)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "get_page_version_by_number_failed", err.Error())
+		writePageError(c, ctx, err, "get_page_version_by_number_failed")
 		return
 	}
 
@@ -322,7 +322,7 @@ func (h *Handler) PublishVersion(c context.Context, ctx *app.RequestContext) {
 
 	version, err := h.service.PublishVersion(c, userID, siteID, versionID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "publish_page_version_failed", err.Error())
+		writePageError(c, ctx, err, "publish_page_version_failed")
 		return
 	}
 
@@ -364,7 +364,7 @@ func (h *Handler) CreatePreviewHost(c context.Context, ctx *app.RequestContext) 
 
 	result, err := h.service.CreatePreviewHost(c, userID, siteID, versionID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "create_page_preview_host_failed", err.Error())
+		writePageError(c, ctx, err, "create_page_preview_host_failed")
 		return
 	}
 	handlers.WriteSuccess(c, ctx, map[string]any{
@@ -403,7 +403,7 @@ func (h *Handler) RollbackCloneVersion(c context.Context, ctx *app.RequestContex
 
 	version, err := h.service.RollbackCloneVersion(c, userID, siteID, versionID)
 	if err != nil {
-		handlers.WriteError(c, ctx, statusCodeForPageError(err), "rollback_clone_page_version_failed", err.Error())
+		writePageError(c, ctx, err, "rollback_clone_page_version_failed")
 		return
 	}
 
