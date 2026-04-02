@@ -76,6 +76,13 @@ type fakePaymentClient struct {
 	checkoutErr    error
 }
 
+type fakeCheckoutIdempotencyClaimer struct {
+	claimed  map[string]bool
+	calls    []string
+	releases []string
+	err      error
+}
+
 func (f *fakeCallLogRepo) Insert(_ context.Context, entry model.CallLog) error {
 	f.logs = append(f.logs, entry)
 	return nil
@@ -150,6 +157,29 @@ func (f *fakePaymentClient) CreateOrderCheckout(_ context.Context, input model.O
 
 func (f *fakePaymentClient) HandleWebhook(_ context.Context, _ []byte, _ string) (model.PaymentEvent, error) {
 	return model.PaymentEvent{}, nil
+}
+
+func (f *fakeCheckoutIdempotencyClaimer) Claim(_ context.Context, scope, key string) (bool, error) {
+	f.calls = append(f.calls, scope+":"+key)
+	if f.err != nil {
+		return false, f.err
+	}
+	if f.claimed == nil {
+		f.claimed = make(map[string]bool)
+	}
+	if f.claimed[key] {
+		return false, nil
+	}
+	f.claimed[key] = true
+	return true, nil
+}
+
+func (f *fakeCheckoutIdempotencyClaimer) Release(_ context.Context, scope, key string) error {
+	f.releases = append(f.releases, scope+":"+key)
+	if f.claimed != nil {
+		delete(f.claimed, key)
+	}
+	return nil
 }
 
 func TestService_Status(t *testing.T) {
@@ -568,6 +598,7 @@ func TestService_CreateCheckout(t *testing.T) {
 	}
 	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	service.SetPaymentClient(payment)
+	service.SetAllowedCheckoutReturnOrigins([]string{"https://anycap.ai"})
 	service.SetCreditPacks([]model.CreditPackSpec{
 		{
 			CreditPack: model.CreditPack{
@@ -595,6 +626,122 @@ func TestService_CreateCheckout(t *testing.T) {
 	}
 	if payment.lastInput.UserID != "2000000001" || payment.lastInput.PriceID != "price_2000" || payment.lastInput.Quantity != 2 {
 		t.Fatalf("unexpected payment input: %+v", payment.lastInput)
+	}
+}
+
+func TestService_CreateCheckoutRejectsDisallowedReturnURL(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetPaymentClient(&fakePaymentClient{})
+	service.SetAllowedCheckoutReturnOrigins([]string{"https://anycap.ai"})
+	service.SetCreditPacks([]model.CreditPackSpec{{
+		CreditPack: model.CreditPack{
+			ID:        "credits_2000",
+			Name:      "2,000 credits",
+			PriceCent: 1800,
+			Currency:  "USD",
+			Credits:   2000,
+		},
+		PriceID: "price_2000",
+	}})
+
+	_, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, model.CreateCheckoutInput{
+		PackID:     "credits_2000",
+		SuccessURL: "https://evil.example.com/checkout/success",
+	})
+	if err == nil {
+		t.Fatal("expected validation error for disallowed success_url")
+	}
+	var domainErr *model.DomainError
+	if !errors.As(err, &domainErr) || domainErr.Code != "validation" {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestService_CreateCheckoutRejectsDuplicateIdempotencyKey(t *testing.T) {
+	payment := &fakePaymentClient{
+		checkoutResult: model.CheckoutSession{
+			ID:  "cs_123",
+			URL: "https://checkout.stripe.test/session/cs_123",
+		},
+	}
+	claimer := &fakeCheckoutIdempotencyClaimer{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetPaymentClient(payment)
+	service.SetCheckoutIdempotencyClaimer(claimer)
+	service.SetAllowedCheckoutReturnOrigins([]string{"https://anycap.ai"})
+	service.SetCreditPacks([]model.CreditPackSpec{{
+		CreditPack: model.CreditPack{
+			ID:        "credits_2000",
+			Name:      "2,000 credits",
+			PriceCent: 1800,
+			Currency:  "USD",
+			Credits:   2000,
+		},
+		PriceID: "price_2000",
+	}})
+
+	input := model.CreateCheckoutInput{
+		PackID:         "credits_2000",
+		SuccessURL:     "https://anycap.ai/dashboard/billing?checkout=success",
+		IdempotencyKey: "checkout-attempt-1",
+	}
+	if _, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, input); err != nil {
+		t.Fatalf("first CreateCheckout() error = %v", err)
+	}
+
+	_, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, input)
+	if err == nil {
+		t.Fatal("expected conflict error for duplicate checkout idempotency key")
+	}
+	var domainErr *model.DomainError
+	if !errors.As(err, &domainErr) || domainErr.Code != "conflict" {
+		t.Fatalf("expected conflict error, got %v", err)
+	}
+	if len(claimer.calls) != 2 {
+		t.Fatalf("expected claimer to be called twice, got %+v", claimer.calls)
+	}
+}
+
+func TestService_CreateCheckoutReleasesIdempotencyKeyAfterPaymentFailure(t *testing.T) {
+	payment := &fakePaymentClient{
+		checkoutErr: model.ErrBillingUncertain,
+	}
+	claimer := &fakeCheckoutIdempotencyClaimer{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetPaymentClient(payment)
+	service.SetCheckoutIdempotencyClaimer(claimer)
+	service.SetAllowedCheckoutReturnOrigins([]string{"https://anycap.ai"})
+	service.SetCreditPacks([]model.CreditPackSpec{{
+		CreditPack: model.CreditPack{
+			ID:        "credits_2000",
+			Name:      "2,000 credits",
+			PriceCent: 1800,
+			Currency:  "USD",
+			Credits:   2000,
+		},
+		PriceID: "price_2000",
+	}})
+
+	input := model.CreateCheckoutInput{
+		PackID:         "credits_2000",
+		SuccessURL:     "https://anycap.ai/dashboard/billing?checkout=success",
+		IdempotencyKey: "checkout-attempt-1",
+	}
+	_, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, input)
+	if !errors.Is(err, model.ErrBillingUncertain) {
+		t.Fatalf("expected billing uncertain error, got %v", err)
+	}
+	if len(claimer.releases) != 1 || claimer.releases[0] != "billing.checkout:checkout-attempt-1" {
+		t.Fatalf("expected release to be called once, got %+v", claimer.releases)
+	}
+
+	payment.checkoutErr = nil
+	payment.checkoutResult = model.CheckoutSession{
+		ID:  "cs_123",
+		URL: "https://checkout.stripe.test/session/cs_123",
+	}
+	if _, err := service.CreateCheckout(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, input); err != nil {
+		t.Fatalf("expected retry after payment failure to succeed, got %v", err)
 	}
 }
 

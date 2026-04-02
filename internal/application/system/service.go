@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -14,24 +15,31 @@ import (
 )
 
 type Service struct {
-	name      string
-	env       string
-	runtime   string
-	buildInfo buildinfo.Info
-	apiKeys   port.APIKeyService
-	usage     port.UsageReader
-	users     port.UserReader
-	credit    port.CreditClient
-	payment   port.PaymentClient
-	callLogs  port.CallLogRepo
-	packs     []model.CreditPackSpec
-	features  map[string]bool
-	provider  featureProvider
+	name                       string
+	env                        string
+	runtime                    string
+	buildInfo                  buildinfo.Info
+	apiKeys                    port.APIKeyService
+	usage                      port.UsageReader
+	users                      port.UserReader
+	credit                     port.CreditClient
+	payment                    port.PaymentClient
+	callLogs                   port.CallLogRepo
+	packs                      []model.CreditPackSpec
+	features                   map[string]bool
+	provider                   featureProvider
+	checkoutReturnOriginAllow  map[string]struct{}
+	checkoutIdempotencyClaimer checkoutIdempotencyClaimer
 }
 
 type featureProvider interface {
 	GlobalFeatures() map[string]bool
 	UserFeatures(principal *model.Principal) map[string]bool
+}
+
+type checkoutIdempotencyClaimer interface {
+	Claim(ctx context.Context, scope, key string) (bool, error)
+	Release(ctx context.Context, scope, key string) error
 }
 
 func NewService(name, env, runtime string, info buildinfo.Info, apiKeys port.APIKeyService) *Service {
@@ -90,6 +98,30 @@ func (s *Service) SetCallLogRepo(callLogs port.CallLogRepo) {
 
 func (s *Service) SetCreditPacks(packs []model.CreditPackSpec) {
 	s.packs = append([]model.CreditPackSpec(nil), packs...)
+}
+
+func (s *Service) SetAllowedCheckoutReturnOrigins(origins []string) {
+	if len(origins) == 0 {
+		s.checkoutReturnOriginAllow = nil
+		return
+	}
+	allowed := make(map[string]struct{}, len(origins))
+	for _, origin := range origins {
+		origin = strings.TrimSpace(origin)
+		if origin == "" {
+			continue
+		}
+		allowed[origin] = struct{}{}
+	}
+	if len(allowed) == 0 {
+		s.checkoutReturnOriginAllow = nil
+		return
+	}
+	s.checkoutReturnOriginAllow = allowed
+}
+
+func (s *Service) SetCheckoutIdempotencyClaimer(claimer checkoutIdempotencyClaimer) {
+	s.checkoutIdempotencyClaimer = claimer
 }
 
 func (s *Service) Status(principal *model.Principal) model.StatusResult {
@@ -187,10 +219,26 @@ func (s *Service) CreateCheckout(ctx context.Context, principal *model.Principal
 	if !ok {
 		return model.CreateCheckoutResult{}, model.ErrValidation("invalid_pack_id")
 	}
+	if err := s.validateCheckoutReturnURL("success_url", input.SuccessURL); err != nil {
+		return model.CreateCheckoutResult{}, err
+	}
+	if err := s.validateCheckoutReturnURL("cancel_url", input.CancelURL); err != nil {
+		return model.CreateCheckoutResult{}, err
+	}
 
 	quantity := input.Quantity
 	if quantity <= 0 {
 		quantity = 1
+	}
+	idempotencyKey := strings.TrimSpace(input.IdempotencyKey)
+	if key := idempotencyKey; key != "" && s.checkoutIdempotencyClaimer != nil {
+		claimed, err := s.checkoutIdempotencyClaimer.Claim(ctx, "billing.checkout", key)
+		if err != nil {
+			return model.CreateCheckoutResult{}, model.ErrInternal
+		}
+		if !claimed {
+			return model.CreateCheckoutResult{}, model.ErrConflict("duplicate checkout request")
+		}
 	}
 
 	session, err := s.payment.CreateOrderCheckout(ctx, model.OrderCheckoutInput{
@@ -202,6 +250,11 @@ func (s *Service) CreateCheckout(ctx context.Context, principal *model.Principal
 		IdempotencyKey: fmt.Sprintf("checkout-%s-%d", principal.UserID, time.Now().UTC().UnixNano()),
 	})
 	if err != nil {
+		if idempotencyKey != "" && s.checkoutIdempotencyClaimer != nil {
+			if releaseErr := s.checkoutIdempotencyClaimer.Release(ctx, "billing.checkout", idempotencyKey); releaseErr != nil {
+				logging.WithContext(ctx).WithField("flow", "system.create_checkout").WithError(releaseErr).Warn("release checkout idempotency key failed")
+			}
+		}
 		return model.CreateCheckoutResult{}, err
 	}
 
@@ -209,6 +262,28 @@ func (s *Service) CreateCheckout(ctx context.Context, principal *model.Principal
 		CheckoutURL: session.URL,
 		SessionType: "order",
 	}, nil
+}
+
+func (s *Service) validateCheckoutReturnURL(fieldName, raw string) error {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return model.ErrValidation(fieldName + " must be an absolute http(s) URL")
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return model.ErrValidation(fieldName + " must use http or https")
+	}
+	if len(s.checkoutReturnOriginAllow) == 0 {
+		return nil
+	}
+	origin := parsed.Scheme + "://" + parsed.Host
+	if _, ok := s.checkoutReturnOriginAllow[origin]; !ok {
+		return model.ErrValidation(fieldName + " origin is not allowed")
+	}
+	return nil
 }
 
 func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (model.APIKeyListResult, error) {

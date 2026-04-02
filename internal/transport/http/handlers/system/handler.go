@@ -361,10 +361,11 @@ func (h *Handler) CreditPacks(c context.Context, ctx *app.RequestContext) {
 }
 
 type billingCheckoutRequest struct {
-	PackID     string `json:"pack_id"`
-	Quantity   int    `json:"quantity,omitempty"`
-	SuccessURL string `json:"success_url,omitempty"`
-	CancelURL  string `json:"cancel_url,omitempty"`
+	PackID         string `json:"pack_id"`
+	Quantity       int    `json:"quantity,omitempty"`
+	SuccessURL     string `json:"success_url,omitempty"`
+	CancelURL      string `json:"cancel_url,omitempty"`
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
 }
 
 func (h *Handler) BillingCheckout(c context.Context, ctx *app.RequestContext) {
@@ -385,10 +386,11 @@ func (h *Handler) BillingCheckout(c context.Context, ctx *app.RequestContext) {
 	}
 
 	result, err := h.service.CreateCheckout(c, principal, model.CreateCheckoutInput{
-		PackID:     req.PackID,
-		Quantity:   req.Quantity,
-		SuccessURL: req.SuccessURL,
-		CancelURL:  req.CancelURL,
+		PackID:         req.PackID,
+		Quantity:       req.Quantity,
+		SuccessURL:     req.SuccessURL,
+		CancelURL:      req.CancelURL,
+		IdempotencyKey: req.IdempotencyKey,
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
