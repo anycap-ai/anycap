@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { NavDropdown, type DropdownItem } from "@/components/layout/NavDropdown";
+import { GitHubStarButton } from "@/components/ui/GitHubStarButton";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const githubHref = "https://github.com/anycap-ai/anycap";
 
 const baseLinkClass =
   "px-3 py-2 text-[15px] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
@@ -121,7 +121,10 @@ export async function Header({ logoHref = "/for-human", links, authSlot }: Heade
           <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
             {links.map(renderEntry)}
           </nav>
-          <div className="flex shrink-0 items-center gap-2">{authSlot}</div>
+          <div className="flex shrink-0 items-center gap-2">
+            <GitHubStarButton />
+            {authSlot}
+          </div>
         </div>
       </div>
     </header>
@@ -169,19 +172,11 @@ const learnDropdown: NavDropdownDef = {
   hideBelow: "md",
 };
 
-const githubNavLink: NavItem = {
-  href: githubHref,
-  label: "GitHub",
-  hideBelow: "md",
-  external: true,
-};
-
 export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   equipAgentsDropdown,
   learnDropdown,
   { href: "/about", label: "About", hideBelow: "lg" },
-  githubNavLink,
 ];
 
 export const humanNavLinks: NavEntry[] = [
@@ -189,5 +184,4 @@ export const humanNavLinks: NavEntry[] = [
   equipAgentsDropdown,
   learnDropdown,
   { href: "/about", label: "About", hideBelow: "lg" },
-  githubNavLink,
 ];

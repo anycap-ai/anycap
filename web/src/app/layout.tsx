@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Inter, Space_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { siteConfig } from "@/lib/site";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
+
+const GA_MEASUREMENT_ID = "G-7Y48BMMHL6";
 
 export const runtime = "edge";
 
@@ -108,6 +111,7 @@ export default function RootLayout({
         {children}
         <GrainOverlay />
       </body>
+      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </html>
   );
 }
