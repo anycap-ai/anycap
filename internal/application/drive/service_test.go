@@ -151,9 +151,9 @@ func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, 
 	return false, nil
 }
 
-func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
 	toDelete := []int64{rootID}
-	result := &model.SoftDeleteResult{}
+	deletedCount := int64(0)
 
 	for len(toDelete) > 0 {
 		current := toDelete[0]
@@ -168,20 +168,7 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		node.DeletedAt = &now
 		node.UpdatedAt = now
 		node.EdgeVersion++
-		result.DeletedCount++
-
-		if node.Kind == model.DriveNodeKindFolder {
-			result.DirIDs = append(result.DirIDs, node.ID)
-			result.RealNodeCount++
-		} else {
-			result.FileIDs = append(result.FileIDs, node.ID)
-			if node.StorageObjectID != nil {
-				if node.Size != nil {
-					result.TotalBytes += *node.Size
-				}
-				result.RealNodeCount++
-			}
-		}
+		deletedCount++
 
 		for _, child := range r.nodes {
 			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
@@ -193,21 +180,7 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		}
 	}
 
-	return result, nil
-}
-
-func (r *fakeDriveNodeRepo) SoftDeleteOrphanFileNodes(_ context.Context, spaceID int64, nodeIDs []int64) (int64, error) {
-	var count int64
-	for _, id := range nodeIDs {
-		node, ok := r.nodes[id]
-		if !ok || node.DeletedAt != nil || node.SpaceID != spaceID || node.StorageObjectID != nil {
-			continue
-		}
-		now := time.Now().UTC()
-		node.DeletedAt = &now
-		count++
-	}
-	return count, nil
+	return deletedCount, nil
 }
 
 func TestCreateFolder_RejectsFileParent(t *testing.T) {

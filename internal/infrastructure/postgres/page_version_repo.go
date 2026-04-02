@@ -160,17 +160,6 @@ func (r *PageVersionRepo) ListByPageID(ctx context.Context, filter model.ListPag
 	return items, total, nil
 }
 
-func (r *PageVersionRepo) CountByPageID(ctx context.Context, pageID int64) (int64, error) {
-	if r == nil || r.db == nil {
-		return 0, fmt.Errorf("page version repo db is not configured")
-	}
-	var count int64
-	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM page_versions WHERE page_id = $1`, pageID).Scan(&count); err != nil {
-		return 0, fmt.Errorf("count page versions: %w", err)
-	}
-	return count, nil
-}
-
 func scanPageVersion(row rowScanner) (*model.PageVersion, error) {
 	var (
 		version         model.PageVersion

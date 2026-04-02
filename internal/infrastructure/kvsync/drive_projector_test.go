@@ -40,10 +40,7 @@ func (r *fakeProjectorDriveNodeRepo) AttachStorageObject(context.Context, model.
 func (r *fakeProjectorDriveNodeRepo) ExistsInSubtree(context.Context, int64, int64, int64) (bool, error) {
 	return false, fmt.Errorf("not implemented")
 }
-func (r *fakeProjectorDriveNodeRepo) SoftDeleteSubtree(context.Context, int64, int64) (*model.SoftDeleteResult, error) {
-	return &model.SoftDeleteResult{}, fmt.Errorf("not implemented")
-}
-func (r *fakeProjectorDriveNodeRepo) SoftDeleteOrphanFileNodes(context.Context, int64, []int64) (int64, error) {
+func (r *fakeProjectorDriveNodeRepo) SoftDeleteSubtree(context.Context, int64, int64) (int64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
 

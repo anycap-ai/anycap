@@ -28,8 +28,6 @@ type Service struct {
 	kvSyncJobRepo     port.KVSyncJobRepository
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
-	quotaProvider     port.StorageQuotaProvider
-	spaceRepo         port.SpaceRepository
 	passwordPepper    string
 	shareBaseURL      string
 	accessBaseURL     string
@@ -91,13 +89,6 @@ func WithEdgeAccess(grantStore port.EdgeGrantStore, ttlSeconds int64, accessBase
 		if strings.TrimSpace(accessBaseURL) != "" {
 			s.accessBaseURL = strings.TrimRight(strings.TrimSpace(accessBaseURL), "/")
 		}
-	}
-}
-
-func WithQuota(quotaProvider port.StorageQuotaProvider, spaceRepo port.SpaceRepository) ServiceOption {
-	return func(s *Service) {
-		s.quotaProvider = quotaProvider
-		s.spaceRepo = spaceRepo
 	}
 }
 
@@ -167,19 +158,6 @@ func (s *Service) CreateFolder(ctx context.Context, userID int64, parentID *int6
 
 	if err := s.ensureValidParent(ctx, space.ID, parentID, false); err != nil {
 		return nil, err
-	}
-
-	// Quota: check drive node count
-	if s.quotaProvider != nil && s.spaceRepo != nil {
-		quota := s.quotaProvider.ResolveQuota(nil)
-		ok, qErr := s.spaceRepo.IncrementDriveNodeCount(ctx, space.ID, quota.MaxDriveNodes)
-		if qErr != nil {
-			return nil, qErr
-		}
-		if !ok {
-			return nil, fmt.Errorf("drive_node_limit_reached: drive node limit reached (%d/%d files and folders). Delete unused items to free up space",
-				space.DriveNodeCount, quota.MaxDriveNodes)
-		}
 	}
 
 	created, err := s.nodeRepo.CreateFolder(ctx, model.CreateDriveFolderInput{
@@ -344,24 +322,28 @@ func (s *Service) DeleteNode(ctx context.Context, userID int64, nodeID int64) (i
 		return 0, fmt.Errorf("drive node not found")
 	}
 
-	deleteResult, err := s.nodeRepo.SoftDeleteSubtree(ctx, space.ID, nodeID)
-	if err != nil {
-		return 0, err
+	var (
+		dirIDs  []int64
+		fileIDs []int64
+	)
+	if node.Kind == model.DriveNodeKindFolder {
+		dirIDs, fileIDs, err = s.collectDriveSubtreeNodeIDs(ctx, space.ID, node.ID)
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	// Decrement storage counters atomically
-	if s.spaceRepo != nil && deleteResult.RealNodeCount > 0 {
-		if dErr := s.spaceRepo.DecrementDriveStorage(ctx, space.ID, deleteResult.TotalBytes, deleteResult.RealNodeCount); dErr != nil {
-			return 0, dErr
-		}
+	deletedCount, err := s.nodeRepo.SoftDeleteSubtree(ctx, space.ID, nodeID)
+	if err != nil {
+		return 0, err
 	}
 
 	jobIDs := make([]int64, 0, 3)
 	if node.Kind == model.DriveNodeKindFolder {
 		jobID, syncErr := s.enqueueKVSyncJob(ctx, model.KVSyncJobTypeDriveDirTreeDelete, node.ID, node.EdgeVersion+1, model.KVSyncDriveDirTreeDeletePayload{
 			RootID:  node.ID,
-			DirIDs:  deleteResult.DirIDs,
-			FileIDs: deleteResult.FileIDs,
+			DirIDs:  dirIDs,
+			FileIDs: fileIDs,
 		})
 		if syncErr != nil {
 			return 0, syncErr
@@ -391,7 +373,7 @@ func (s *Service) DeleteNode(ctx context.Context, userID int64, nodeID int64) (i
 		return 0, err
 	}
 
-	return deleteResult.DeletedCount, nil
+	return deletedCount, nil
 }
 
 func (s *Service) ensureValidParent(ctx context.Context, spaceID int64, parentID *int64, destination bool) error {

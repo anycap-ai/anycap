@@ -56,9 +56,6 @@ func (r *fakeProjectorPageSiteRepo) SetCurrentVersion(context.Context, int64, in
 func (r *fakeProjectorPageSiteRepo) SoftDelete(context.Context, int64, int64) error {
 	return fmt.Errorf("not implemented")
 }
-func (r *fakeProjectorPageSiteRepo) SumCompletedStorageByPageID(context.Context, int64, int64) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
-}
 
 type fakeProjectorPageVersionRepo struct {
 	version *model.PageVersion
@@ -85,9 +82,6 @@ func (r *fakeProjectorPageVersionRepo) ListByPageID(context.Context, model.ListP
 }
 func (r *fakeProjectorPageVersionRepo) GetByPageIDAndVersionNo(context.Context, int64, int64) (*model.PageVersion, error) {
 	return nil, fmt.Errorf("not implemented")
-}
-func (r *fakeProjectorPageVersionRepo) CountByPageID(context.Context, int64) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
 }
 
 func TestPageProjector_HostSync(t *testing.T) {

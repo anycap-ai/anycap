@@ -33,9 +33,6 @@ func InitDConf(cfg Config) error {
 	if cfg.FeatureDConfEnabled {
 		logging.WithFields(logging.Fields{"group": cfg.FeatureDConfGroup, "data_id": cfg.FeatureDConfDataID}).Info("feature-access initialized dconf client")
 	}
-	if cfg.StorageQuotaDConfEnabled {
-		logging.WithFields(logging.Fields{"group": cfg.StorageQuotaDConfGroup, "data_id": cfg.StorageQuotaDConfDataID}).Info("storage-quota initialized dconf client")
-	}
 	return nil
 }
 

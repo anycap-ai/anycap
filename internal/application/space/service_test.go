@@ -33,22 +33,6 @@ func (r *fakeSpaceRepo) CreatePersonalSpace(_ context.Context, ownerUserID int64
 	return space, nil
 }
 
-func (r *fakeSpaceRepo) IncrementStorageAndMarkSessionCompleted(context.Context, int64, int64, int64, int, int64) (bool, error) {
-	return true, nil
-}
-func (r *fakeSpaceRepo) IncrementDriveNodeCount(context.Context, int64, int) (bool, error) {
-	return true, nil
-}
-func (r *fakeSpaceRepo) DecrementDriveStorage(context.Context, int64, int64, int) error {
-	return nil
-}
-func (r *fakeSpaceRepo) IncrementPageSiteCount(context.Context, int64, int) (bool, error) {
-	return true, nil
-}
-func (r *fakeSpaceRepo) DecrementPageSiteStorage(context.Context, int64, int64) error {
-	return nil
-}
-
 func TestGetOrCreatePersonalSpace_Idempotent(t *testing.T) {
 	repo := &fakeSpaceRepo{}
 	svc := NewService(repo)

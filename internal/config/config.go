@@ -114,19 +114,6 @@ type Config struct {
 	UsageSyncPollInterval   time.Duration
 	UsageSyncBatchSize      int
 	Artifact                ArtifactConfig
-	// Storage quota
-	StorageQuotaDConfEnabled bool
-	StorageQuotaDConfGroup   string
-	StorageQuotaDConfDataID  string
-	StorageQuotaBytes        int64
-	MaxDriveFileSizeBytes    int64
-	MaxDriveNodes            int
-	MaxPageAssetSizeBytes    int64
-	MaxPageSites             int
-	MaxPageVersionsPerSite   int
-	MaxFilesPerPageVersion   int
-	MaxPendingDriveSessions  int
-	MaxPendingPageSessions   int
 }
 
 type CreditConfig struct {
@@ -298,19 +285,6 @@ func LoadFromEnv() (Config, error) {
 			IngestToken:    getEnv("ANYCAP_ARTIFACT_INGEST_TOKEN", ""),
 			LinkTTLSeconds: getEnvInt64("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", defaultArtifactLinkTTL),
 		},
-		// Storage quota
-		StorageQuotaDConfEnabled: getEnvBool("ANYCAP_STORAGE_QUOTA_DCONF_ENABLED", false),
-		StorageQuotaDConfGroup:   getEnv("ANYCAP_STORAGE_QUOTA_DCONF_GROUP", defaultStorageQuotaDConfGroup),
-		StorageQuotaDConfDataID:  getEnv("ANYCAP_STORAGE_QUOTA_DCONF_DATA_ID", defaultStorageQuotaDConfDataID),
-		StorageQuotaBytes:        getEnvInt64("ANYCAP_STORAGE_QUOTA_BYTES", 0),
-		MaxDriveFileSizeBytes:    getEnvInt64("ANYCAP_MAX_DRIVE_FILE_SIZE_BYTES", 0),
-		MaxDriveNodes:            getEnvInt("ANYCAP_MAX_DRIVE_NODES", 0),
-		MaxPageAssetSizeBytes:    getEnvInt64("ANYCAP_MAX_PAGE_ASSET_SIZE_BYTES", 0),
-		MaxPageSites:             getEnvInt("ANYCAP_MAX_PAGE_SITES", 0),
-		MaxPageVersionsPerSite:   getEnvInt("ANYCAP_MAX_PAGE_VERSIONS_PER_SITE", 0),
-		MaxFilesPerPageVersion:   getEnvInt("ANYCAP_MAX_FILES_PER_PAGE_VERSION", 0),
-		MaxPendingDriveSessions:  getEnvInt("ANYCAP_MAX_PENDING_DRIVE_SESSIONS", 0),
-		MaxPendingPageSessions:   getEnvInt("ANYCAP_MAX_PENDING_PAGE_SESSIONS", 0),
 	}
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {

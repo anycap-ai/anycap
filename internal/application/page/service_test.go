@@ -140,10 +140,6 @@ func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) erro
 	return nil
 }
 
-func (r *fakePageSiteRepo) SumCompletedStorageByPageID(_ context.Context, _, _ int64) (int64, error) {
-	return 0, nil
-}
-
 type fakePageSlugRepo struct {
 	slugs map[string]int64
 }

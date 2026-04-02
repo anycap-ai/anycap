@@ -13,8 +13,6 @@ type PageSiteRepository interface {
 	Update(ctx context.Context, input model.UpdatePageSiteInput) (*model.PageSite, error)
 	SetCurrentVersion(ctx context.Context, spaceID, id int64, versionID *int64) (*model.PageSite, error)
 	SoftDelete(ctx context.Context, spaceID, id int64) error
-	// SumCompletedStorageByPageID returns total bytes of completed uploads for a page site.
-	SumCompletedStorageByPageID(ctx context.Context, spaceID, pageID int64) (int64, error)
 }
 
 type PageVersionRepository interface {
@@ -24,9 +22,6 @@ type PageVersionRepository interface {
 	GetByPageIDAndVersionNo(ctx context.Context, pageID, versionNo int64) (*model.PageVersion, error)
 	UpdateStatus(ctx context.Context, id int64, status model.PageVersionStatus) (*model.PageVersion, error)
 	ListByPageID(ctx context.Context, filter model.ListPageVersionsFilter) ([]model.PageVersion, int, error)
-	// CountByPageID returns the total number of versions for a page site.
-	// Used by CreateVersion for quota enforcement (MaxPageVersionsPerSite).
-	CountByPageID(ctx context.Context, pageID int64) (int64, error)
 }
 
 type PageSlugRepository interface {

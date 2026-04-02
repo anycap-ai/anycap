@@ -12,16 +12,6 @@ type UploadSessionRepository interface {
 	GetByID(ctx context.Context, id int64) (*model.UploadSession, error)
 	MarkCompleted(ctx context.Context, id int64) error
 	CountCompletedByTarget(ctx context.Context, targetType model.UploadTargetType, targetID int64) (int64, error)
-
-	// ExpireStaleBySpace marks pending sessions as expired and returns their target IDs for orphan cleanup.
-	ExpireStaleBySpace(ctx context.Context, spaceID int64, targetType model.UploadTargetType, now time.Time) ([]model.ExpiredSessionInfo, error)
-
-	// CountPendingBySpaceAndType counts pending (non-expired) upload sessions for quota enforcement.
-	CountPendingBySpaceAndType(ctx context.Context, spaceID int64, targetType model.UploadTargetType) (int64, error)
-
-	// CountByTargetAndStatuses counts sessions matching any of the given statuses for a target.
-	// Used by PresignVersionAsset to count completed + pending sessions for file-count enforcement.
-	CountByTargetAndStatuses(ctx context.Context, targetType model.UploadTargetType, targetID int64, statuses []model.UploadSessionStatus) (int64, error)
 }
 
 type StorageObjectRepository interface {

@@ -10,9 +10,7 @@ Drive and Page currently have no storage limits. A single authenticated user can
 - Create unlimited Page sites with unlimited versions (each asset up to 1GB)
 - Generate unlimited presigned URLs, creating orphan DB records even without completing uploads
 
-Caps Upload already has content type and per-file size limits. Drive and Page objects have **no lifecycle rules** and persist indefinitely.
-
-**Note:** The R2 lifecycle rule in `deploy/r2-lifecycle.json` targets the legacy `user_upload/` prefix. Current caps uploads use `caps/inputs/` prefix, which is **not covered** by the lifecycle rule. Caps upload R2 objects also persist indefinitely. DB records are lightweight and low-risk for the preview period, but a `caps/inputs/` lifecycle rule should be added separately.
+Caps Upload already has content type and per-file size limits, plus R2 lifecycle auto-expires objects after 7 days. Drive and Page objects have **no lifecycle rules** and persist indefinitely.
 
 ### R2 Cost Model
 
@@ -29,7 +27,7 @@ Worst-case without limits: 1 user uploads 10,000 x 1GB files = 10 TB = **$150/mo
 
 | Feature | Prefix | Lifecycle |
 |---------|--------|-----------|
-| Caps Upload | `caps/inputs/spaces/{spaceID}/{date}/{uuid}/{filename}` | **None** -- legacy `user_upload/` lifecycle rule does not cover this prefix |
+| Caps Upload | `caps/spaces/{spaceID}/...` | 7-day expiry via R2 rule on `user_upload/` (legacy prefix) |
 | Drive | `drive/spaces/{spaceID}/nodes/{nodeID}/{uuid}` | **None** -- persists forever |
 | Page | `page/spaces/{spaceID}/sites/{siteID}/versions/{no}/{path}` | **None** -- persists forever |
 
@@ -264,69 +262,47 @@ The atomic `WHERE` clause provides race-condition-safe enforcement even under co
 
 #### 3c. Delete-time Decrements (transactional)
 
-Delete operations decrement counters after soft-deleting. The service calls two repo methods sequentially:
-
-1. `SoftDeleteSubtree` (existing) -- returns `SoftDeleteResult` with total bytes and real node count
-2. `DecrementDriveStorage` / `DecrementPageSiteStorage` -- decrements space counters
-
-These are **not** in a single atomic statement. If the decrement call fails after soft-delete succeeds, counters will overcount until the next backfill repair. This is acceptable for the preview period:
-- `GREATEST(0, ...)` guards prevent negative counters
-- DB CHECK constraints provide a safety net
-- The backfill migration (section 11) can repair counters if needed
-
-#### Drive: SoftDeleteSubtree returns SoftDeleteResult
-
-The existing `SoftDeleteSubtree` is extended to return aggregated info:
-
-```go
-// SoftDeleteResult contains aggregated data from a subtree soft-delete.
-type SoftDeleteResult struct {
-    DeletedCount  int64   // total nodes soft-deleted
-    TotalBytes    int64   // sum of size for nodes with storage_object_id IS NOT NULL
-    RealNodeCount int     // folders + files with storage_object_id IS NOT NULL
-    DirIDs        []int64 // for KV sync
-    FileIDs       []int64 // for KV sync
-}
-```
-
-The SQL collects this in the RETURNING clause:
+Delete operations use a CTE to SUM and decrement atomically within a single statement, preventing race conditions between concurrent deletes and uploads.
 
 ```sql
+-- Drive: DeleteNode subtree (single atomic statement)
 WITH deleted_nodes AS (
   UPDATE drive_nodes SET deleted_at = now()
   WHERE space_id = $1
     AND (id = $2 OR /* recursive subtree CTE */)
     AND deleted_at IS NULL
-  RETURNING id, COALESCE(size, 0) AS size, kind, storage_object_id
+  RETURNING COALESCE(size, 0) AS size, kind, storage_object_id
 )
-SELECT
-  COUNT(*) AS deleted_count,
-  COALESCE(SUM(CASE WHEN storage_object_id IS NOT NULL THEN size ELSE 0 END), 0) AS total_bytes,
-  COUNT(*) FILTER (WHERE kind = 'folder' OR storage_object_id IS NOT NULL) AS real_node_count
-FROM deleted_nodes;
+UPDATE spaces
+SET storage_used_bytes = GREATEST(0, storage_used_bytes - (
+      SELECT COALESCE(SUM(size), 0) FROM deleted_nodes WHERE storage_object_id IS NOT NULL
+    )),
+    drive_node_count = GREATEST(0, drive_node_count - (
+      SELECT COUNT(*) FROM deleted_nodes
+      WHERE kind = 'folder' OR storage_object_id IS NOT NULL
+    ))
+WHERE id = $1;
 ```
 
-`drive_node_count` only decrements for "real" nodes -- folders (always counted at creation) and files with `storage_object_id IS NOT NULL` (counted at complete time). Orphan file nodes (presigned but never completed, `storage_object_id IS NULL`, `kind = 'file'`) were never counted, so they must not be decremented.
+Important: `drive_node_count` only decrements for "real" nodes -- folders (always counted at creation) and files with `storage_object_id IS NOT NULL` (counted at complete time). Orphan file nodes (presigned but never completed, `storage_object_id IS NULL`, `kind = 'file'`) were never counted, so they must not be decremented.
 
 `storage_used_bytes` only decrements for nodes with `storage_object_id IS NOT NULL` (nodes that have actual R2 objects and were counted during complete).
 
-The caller then calls `DecrementDriveStorage(ctx, spaceID, result.TotalBytes, result.RealNodeCount)`.
-
-#### Page: DeleteSite
-
-The service first computes total page storage for the site, then soft-deletes, then decrements:
-
 ```sql
--- Compute total page storage for site
-SELECT COALESCE(SUM(so.size), 0) AS total_size
-FROM storage_objects so
-JOIN upload_sessions us ON us.object_key = so.object_key AND us.space_id = so.space_id
-WHERE us.target_type = 'page'
-  AND us.target_id IN (SELECT id FROM page_versions WHERE page_id = $1)
-  AND us.status = 'completed';
+-- Page: DeleteSite (single atomic statement)
+WITH site_storage AS (
+  SELECT COALESCE(SUM(so.size), 0) AS total_size
+  FROM storage_objects so
+  JOIN upload_sessions us ON us.object_key = so.object_key AND us.space_id = so.space_id
+  WHERE us.target_type = 'page'
+    AND us.target_id IN (SELECT id FROM page_versions WHERE page_id = $2)
+    AND us.status = 'completed'
+)
+UPDATE spaces
+SET storage_used_bytes = GREATEST(0, storage_used_bytes - (SELECT total_size FROM site_storage)),
+    page_site_count = GREATEST(0, page_site_count - 1)
+WHERE id = $1;
 ```
-
-Then `DecrementPageSiteStorage(ctx, spaceID, totalBytes)` decrements both `storage_used_bytes` and `page_site_count`.
 
 The `GREATEST(0, ...)` guard prevents counters from going negative if SUM data is inconsistent. The DB-level CHECK constraint provides a safety net.
 
@@ -336,7 +312,7 @@ Drive `node_count` requires tracking both creates and deletes:
 
 - **CreateFolder**: increment `drive_node_count` immediately (no presign flow). Atomically: `UPDATE spaces SET drive_node_count = drive_node_count + 1 WHERE id = spaceID AND drive_node_count < quota.MaxDriveNodes`. Returns false if limit reached.
 - **CompleteFileUpload**: increment `drive_node_count` (as shown in 3b, same transaction as storage increment + mark completed)
-- **DeleteNode/SoftDeleteSubtree**: decrement by count of "real" deleted nodes (section 3c). Service calls `SoftDeleteSubtree` (returns `SoftDeleteResult`), then `DecrementDriveStorage`.
+- **DeleteNode/SoftDeleteSubtree**: decrement by count of "real" deleted nodes (atomic CTE, section 3c)
 
 At Presign time we check `drive_node_count` for the fast-fail, but don't increment it yet. The file node is created in DB at presign time (current behavior), but it has no storage object. The `drive_node_count` only tracks "real" nodes -- increment happens at complete time for files, and at create time for folders (since folders are immediately real).
 
@@ -359,30 +335,6 @@ type Space struct {
     DriveNodeCount   int
     PageSiteCount    int
     CreatedAt        time.Time
-}
-
-// model/drive.go -- add SoftDeleteResult
-// SoftDeleteResult contains aggregated data from a subtree soft-delete.
-type SoftDeleteResult struct {
-    DeletedCount  int64   // total nodes soft-deleted
-    TotalBytes    int64   // sum of size for nodes with storage_object_id IS NOT NULL
-    RealNodeCount int     // folders + files with storage_object_id IS NOT NULL
-    DirIDs        []int64 // for KV sync
-    FileIDs       []int64 // for KV sync
-}
-
-// port/drive.go -- update SoftDeleteSubtree return type
-type DriveNodeRepository interface {
-    // ... existing methods ...
-    // Changed: returns SoftDeleteResult instead of (int64, error)
-    SoftDeleteSubtree(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error)
-}
-
-// port/page.go -- add storage query
-type PageSiteRepository interface {
-    // ... existing methods ...
-    // SumCompletedStorageByPageID returns total bytes of completed uploads for a page site.
-    SumCompletedStorageByPageID(ctx context.Context, spaceID, pageID int64) (int64, error)
 }
 
 // port/space.go -- add methods
@@ -458,7 +410,7 @@ Orphan cleanup is handled inline via the **expire-then-count** pattern in sectio
 
 #### Caps Upload records
 
-Caps uploads use a **separate table** (`caps_uploads`) and repository (`CapsUploadRepository`), not the `upload_sessions` table. They are not affected by this design. Caps upload records are lightweight (no storage quota tracking). Note: caps upload R2 objects use `caps/inputs/` prefix which is **not** covered by the legacy `user_upload/` lifecycle rule (see Background section). DB record and object accumulation is low-risk for the preview period. Adding a `caps/inputs/` lifecycle rule is tracked as a separate follow-up.
+Caps uploads use a **separate table** (`caps_uploads`) and repository (`CapsUploadRepository`), not the `upload_sessions` table. They are not affected by this design. Caps upload records are lightweight (no storage quota tracking) and their R2 objects are auto-expired by the 7-day lifecycle rule. DB record accumulation is low-risk for the preview period. If needed, caps cleanup can be added to the lazy pattern later (expire caps_uploads records where `expires_at < now()` on each caps presign call).
 
 #### Implementation
 
@@ -552,7 +504,7 @@ CLI: `anycap status` already exists and shows account info. Extend it to include
 
 ### 11. Migration File
 
-New migration: `internal/infrastructure/migration/migrations/0024_space_storage_quota.sql`
+New migration: `internal/infrastructure/migration/migrations/0023_space_storage_quota.sql`
 
 ```sql
 -- Add storage tracking columns to spaces table
@@ -685,7 +637,7 @@ graph TD
 | `internal/application/page/version.go` | Inject `StorageQuotaProvider`; add quota + file count + pending checks to `PresignVersionAsset`; update `CompleteVersionAsset` to use `IncrementStorageAndMarkSessionCompleted` |
 | `internal/transport/http/handlers/` | Add handler for `GET /v1/me/storage` |
 | `internal/app/bootstrap.go` | Wire `StorageQuotaProvider` from config, inject into Drive/Page services |
-| `internal/infrastructure/migration/migrations/0024_space_storage_quota.sql` | New migration with columns + constraints + backfill |
+| `internal/infrastructure/migration/migrations/0023_space_storage_quota.sql` | New migration with columns + constraints + backfill |
 | `configs/server/dconf/storage_quota.example.json` | **New file.** Example dconf payload |
 | `docs/config/server-dconf.md` | Add storage quota dconf section |
 
