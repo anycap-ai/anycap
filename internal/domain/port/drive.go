@@ -14,7 +14,12 @@ type DriveNodeRepository interface {
 	Update(ctx context.Context, input model.UpdateDriveNodeInput) (*model.DriveNode, error)
 	AttachStorageObject(ctx context.Context, input model.AttachDriveNodeStorageInput) (*model.DriveNode, error)
 	ExistsInSubtree(ctx context.Context, spaceID, rootID, targetID int64) (bool, error)
-	SoftDeleteSubtree(ctx context.Context, spaceID, rootID int64) (int64, error)
+	SoftDeleteSubtree(ctx context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error)
+
+	// SoftDeleteOrphanFileNodes soft-deletes file nodes that have no storage object (never completed upload).
+	// Used by lazy cleanup after expiring pending upload sessions.
+	// These nodes were never counted in drive_node_count, so no counter decrement is needed.
+	SoftDeleteOrphanFileNodes(ctx context.Context, spaceID int64, nodeIDs []int64) (int64, error)
 }
 
 type DriveShareRepository interface {

@@ -2,7 +2,6 @@ package drive
 
 import (
 	"context"
-	"fmt"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
@@ -73,42 +72,4 @@ func (s *Service) enqueueDriveShareSync(ctx context.Context, node *model.DriveNo
 		PasswordSalt: link.PasswordSalt,
 	}
 	return s.enqueueKVSyncJob(ctx, model.KVSyncJobTypeDriveShareSync, node.ID, link.EdgeVersion, payload)
-}
-
-func (s *Service) collectDriveSubtreeNodeIDs(ctx context.Context, spaceID int64, rootID int64) ([]int64, []int64, error) {
-	if s == nil || s.nodeRepo == nil {
-		return nil, nil, fmt.Errorf("drive service is not configured")
-	}
-	if spaceID <= 0 || rootID <= 0 {
-		return nil, nil, fmt.Errorf("invalid subtree root")
-	}
-
-	dirIDs := []int64{rootID}
-	fileIDs := make([]int64, 0)
-
-	queue := []int64{rootID}
-	for len(queue) > 0 {
-		currentDirID := queue[0]
-		queue = queue[1:]
-
-		parentID := currentDirID
-		children, _, err := s.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
-			SpaceID:  spaceID,
-			ParentID: &parentID,
-			Limit:    10000,
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-		for _, child := range children {
-			if child.Kind == model.DriveNodeKindFolder {
-				dirIDs = append(dirIDs, child.ID)
-				queue = append(queue, child.ID)
-				continue
-			}
-			fileIDs = append(fileIDs, child.ID)
-		}
-	}
-
-	return dirIDs, fileIDs, nil
 }

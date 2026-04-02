@@ -54,6 +54,18 @@ func (r *fakeUploadSessionRepo) CountCompletedByTarget(_ context.Context, target
 	return count, nil
 }
 
+func (r *fakeUploadSessionRepo) ExpireStaleBySpace(_ context.Context, _ int64, _ model.UploadTargetType, _ time.Time) ([]model.ExpiredSessionInfo, error) {
+	return nil, nil
+}
+
+func (r *fakeUploadSessionRepo) CountPendingBySpaceAndType(_ context.Context, _ int64, _ model.UploadTargetType) (int64, error) {
+	return 0, nil
+}
+
+func (r *fakeUploadSessionRepo) CountByTargetAndStatuses(_ context.Context, _ model.UploadTargetType, _ int64, _ []model.UploadSessionStatus) (int64, error) {
+	return 0, nil
+}
+
 type fakeStorageObjectRepo struct {
 	objects map[int64]*model.StorageObject
 	nextID  int64

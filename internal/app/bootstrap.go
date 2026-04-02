@@ -116,6 +116,7 @@ type serverDependencies struct {
 	usageSyncWorker     *usageapp.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
+	quotaProvider       port.StorageQuotaProvider
 }
 
 type Server struct {
@@ -150,6 +151,9 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	featureProvider := config.NewFeatureProvider(cfg, serverFeatures)
 	deps.systemService.SetFeatureProvider(featureProvider)
 	systemHandler := system.NewHandler(deps.systemService, deps.idMapper)
+	if deps.quotaProvider != nil && deps.spaceService != nil {
+		systemHandler.SetStorageQuota(deps.spaceService, deps.quotaProvider)
+	}
 	loginHandler := login.NewHandler(deps.loginService, deps.idMapper)
 	imageHandler := image.NewHandler(deps.imageService)
 	videoHandler := video.NewHandler(deps.videoService)
@@ -312,6 +316,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		}
 		spaceRepo := postgres.NewSpaceRepo(db)
 		spaceService := spaceapp.NewService(spaceRepo)
+		quotaProvider := config.NewStorageQuotaProvider(cfg)
 		driveNodeRepo := postgres.NewDriveNodeRepo(db)
 		driveShareRepo := postgres.NewDriveShareRepo(db)
 		uploadSessionRepo := postgres.NewUploadSessionRepo(db)
@@ -426,6 +431,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				driveapp.WithShare(driveShareRepo, cfg.PasswordPepper, cfg.DriveShareBaseURL),
 				driveapp.WithEdgeAccess(edgeGrantStore, cfg.DriveAccessTTLSeconds, deriveDriveAccessBaseURL(cfg.DriveShareBaseURL)),
 				driveKVSyncOption,
+				driveapp.WithQuota(quotaProvider, spaceRepo),
 			),
 			pageService: pageapp.NewService(
 				spaceService,
@@ -436,6 +442,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				pageapp.WithPageHostFormat(cfg.PageHostFormat),
 				pageapp.WithPreviewHost(edgeGrantStore, cfg.PagePreviewHostFormat, cfg.PagePreviewTTLSeconds),
 				pageKVSyncOption,
+				pageapp.WithQuota(quotaProvider, spaceRepo),
 			),
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
@@ -454,6 +461,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 				}
 				return nil
 			}(),
+			quotaProvider: quotaProvider,
 		}, nil
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)

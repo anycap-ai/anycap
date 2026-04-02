@@ -277,9 +277,9 @@ func (r *fakeDriveNodeRepo) ExistsInSubtree(_ context.Context, spaceID, rootID, 
 	return false, nil
 }
 
-func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (int64, error) {
+func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID int64) (*model.SoftDeleteResult, error) {
 	toDelete := []int64{rootID}
-	deletedCount := int64(0)
+	result := &model.SoftDeleteResult{}
 	for len(toDelete) > 0 {
 		current := toDelete[0]
 		toDelete = toDelete[1:]
@@ -291,7 +291,7 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 		node.DeletedAt = &now
 		node.UpdatedAt = now
 		node.EdgeVersion++
-		deletedCount++
+		result.DeletedCount++
 		for _, child := range r.nodes {
 			if child.DeletedAt != nil || child.SpaceID != spaceID || child.ParentID == nil {
 				continue
@@ -301,7 +301,11 @@ func (r *fakeDriveNodeRepo) SoftDeleteSubtree(_ context.Context, spaceID, rootID
 			}
 		}
 	}
-	return deletedCount, nil
+	return result, nil
+}
+
+func (r *fakeDriveNodeRepo) SoftDeleteOrphanFileNodes(_ context.Context, _ int64, _ []int64) (int64, error) {
+	return 0, nil
 }
 
 func cloneDriveNode(n *model.DriveNode) *model.DriveNode {
@@ -418,6 +422,10 @@ func (r *fakePageSiteRepo) SoftDelete(_ context.Context, spaceID, id int64) erro
 	site.UpdatedAt = now
 	site.EdgeVersion++
 	return nil
+}
+
+func (r *fakePageSiteRepo) SumCompletedStorageByPageID(_ context.Context, _, _ int64) (int64, error) {
+	return 0, nil
 }
 
 func clonePageSite(s *model.PageSite) *model.PageSite {

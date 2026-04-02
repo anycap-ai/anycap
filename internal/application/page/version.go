@@ -22,6 +22,19 @@ func (s *Service) CreateVersion(ctx context.Context, userID int64, pageID int64)
 		return nil, err
 	}
 
+	// Quota check: version count per site
+	if s.quotaProvider != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		versionCount, cErr := s.versionRepo.CountByPageID(ctx, site.ID)
+		if cErr != nil {
+			return nil, cErr
+		}
+		if versionCount >= int64(quota.MaxPageVersionsPerSite) {
+			return nil, fmt.Errorf("page_version_limit_reached: version limit reached (%d/%d versions). Delete old versions or create a new site",
+				versionCount, quota.MaxPageVersionsPerSite)
+		}
+	}
+
 	assetPrefixBase := fmt.Sprintf("page/spaces/%d/sites/%d/versions", site.SpaceID, site.ID)
 	return s.versionRepo.CreateDraft(ctx, site.ID, strconv.FormatInt(userID, 10), assetPrefixBase)
 }
@@ -46,6 +59,52 @@ func (s *Service) PresignVersionAsset(ctx context.Context, userID int64, pageID 
 	if err != nil {
 		return nil, err
 	}
+
+	// Quota checks (if quota provider is wired)
+	if s.quotaProvider != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		space, spaceErr := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
+		if spaceErr != nil {
+			return nil, spaceErr
+		}
+
+		// 1. Check asset size limit
+		if contentLength > quota.MaxPageAssetSizeBytes {
+			return nil, fmt.Errorf("page_asset_too_large: asset size exceeds %s limit", formatBytes(quota.MaxPageAssetSizeBytes))
+		}
+
+		// 2. Check total storage quota (optimistic fast-fail)
+		if space.StorageUsedBytes+contentLength > quota.StorageQuotaBytes {
+			return nil, fmt.Errorf("storage_quota_exceeded: storage quota exceeded (%s/%s). Delete files to free up storage",
+				formatBytes(space.StorageUsedBytes), formatBytes(quota.StorageQuotaBytes))
+		}
+
+		// 3. Lazy cleanup: expire stale pending page sessions
+		_, _ = s.uploadSessionRepo.ExpireStaleBySpace(ctx, space.ID, model.UploadTargetTypePage, s.now())
+
+		// 4. Check files per version (completed + pending)
+		fileCount, fcErr := s.uploadSessionRepo.CountByTargetAndStatuses(ctx, model.UploadTargetTypePage, versionID, []model.UploadSessionStatus{
+			model.UploadSessionStatusCompleted,
+			model.UploadSessionStatusPending,
+		})
+		if fcErr != nil {
+			return nil, fcErr
+		}
+		if fileCount >= int64(quota.MaxFilesPerPageVersion) {
+			return nil, fmt.Errorf("page_version_file_limit_reached: file limit reached (%d/%d files per version)",
+				fileCount, quota.MaxFilesPerPageVersion)
+		}
+
+		// 5. Check pending session count per space
+		pendingCount, pErr := s.uploadSessionRepo.CountPendingBySpaceAndType(ctx, space.ID, model.UploadTargetTypePage)
+		if pErr != nil {
+			return nil, pErr
+		}
+		if pendingCount >= int64(quota.MaxPendingPageSessions) {
+			return nil, fmt.Errorf("too_many_pending_uploads: too many pending page uploads, complete existing uploads or wait for expiry")
+		}
+	}
+
 	version, err := s.getVersionForPage(ctx, site.ID, versionID)
 	if err != nil {
 		return nil, err
@@ -162,8 +221,21 @@ func (s *Service) CompleteVersionAsset(ctx context.Context, userID int64, pageID
 		return nil, err
 	}
 
-	if err := s.uploadSessionRepo.MarkCompleted(ctx, session.ID); err != nil {
-		return nil, err
+	// Atomically increment storage + mark session completed
+	if s.spaceRepo != nil && s.quotaProvider != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		ok, qErr := s.spaceRepo.IncrementStorageAndMarkSessionCompleted(ctx, site.SpaceID, session.ID, head.Size, 0, quota.StorageQuotaBytes)
+		if qErr != nil {
+			return nil, qErr
+		}
+		if !ok {
+			return nil, fmt.Errorf("storage_quota_exceeded: storage quota exceeded. Delete files to free up storage")
+		}
+	} else {
+		// Fallback: mark completed without quota tracking (stub mode)
+		if err := s.uploadSessionRepo.MarkCompleted(ctx, session.ID); err != nil {
+			return nil, err
+		}
 	}
 
 	return version, nil
@@ -307,4 +379,31 @@ func fallbackPageMIME(mime string) string {
 		return "application/octet-stream"
 	}
 	return mime
+}
+
+// formatBytes formats bytes as a human-readable string for error messages.
+func formatBytes(b int64) string {
+	const (
+		kb = 1024
+		mb = 1024 * kb
+		gb = 1024 * mb
+	)
+	switch {
+	case b >= gb:
+		val := float64(b) / float64(gb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d GB", int64(val))
+		}
+		return fmt.Sprintf("%.1f GB", val)
+	case b >= mb:
+		val := float64(b) / float64(mb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d MB", int64(val))
+		}
+		return fmt.Sprintf("%.1f MB", val)
+	case b >= kb:
+		return fmt.Sprintf("%d KB", b/kb)
+	default:
+		return fmt.Sprintf("%d bytes", b)
+	}
 }

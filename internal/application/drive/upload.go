@@ -13,8 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const maxDriveUploadSize int64 = 1024 * 1024 * 1024 // 1GB
-
 func (s *Service) PresignFileUpload(ctx context.Context, userID int64, parentID *int64, name, contentType string, contentLength int64) (*model.DriveFilePresignResult, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil || s.uploadSessionRepo == nil || s.objectStore == nil {
 		return nil, fmt.Errorf("drive upload service is not configured")
@@ -26,6 +24,55 @@ func (s *Service) PresignFileUpload(ctx context.Context, userID int64, parentID 
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Quota checks (if quota provider is wired)
+	if s.quotaProvider != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+
+		// 1. Check file size limit
+		if contentLength > quota.MaxDriveFileSizeBytes {
+			return nil, fmt.Errorf("drive_file_too_large: file size exceeds %s limit", formatBytes(quota.MaxDriveFileSizeBytes))
+		}
+
+		// 2. Check total storage quota (optimistic fast-fail)
+		if space.StorageUsedBytes+contentLength > quota.StorageQuotaBytes {
+			return nil, fmt.Errorf("storage_quota_exceeded: storage quota exceeded (%s/%s). Delete files to free up storage",
+				formatBytes(space.StorageUsedBytes), formatBytes(quota.StorageQuotaBytes))
+		}
+
+		// 3. Check drive node count (optimistic fast-fail)
+		if space.DriveNodeCount >= quota.MaxDriveNodes {
+			return nil, fmt.Errorf("drive_node_limit_reached: drive node limit reached (%d/%d files and folders). Delete unused items to free up space",
+				space.DriveNodeCount, quota.MaxDriveNodes)
+		}
+
+		// 4. Lazy cleanup: expire stale pending sessions
+		if s.uploadSessionRepo != nil {
+			expired, expErr := s.uploadSessionRepo.ExpireStaleBySpace(ctx, space.ID, model.UploadTargetTypeDrive, s.now())
+			if expErr != nil {
+				return nil, expErr
+			}
+			// Soft-delete orphan file nodes from expired sessions
+			if len(expired) > 0 {
+				orphanIDs := make([]int64, len(expired))
+				for i, e := range expired {
+					orphanIDs[i] = e.TargetID
+				}
+				_, _ = s.nodeRepo.SoftDeleteOrphanFileNodes(ctx, space.ID, orphanIDs)
+			}
+		}
+
+		// 5. Check pending session count
+		if s.uploadSessionRepo != nil {
+			pendingCount, pErr := s.uploadSessionRepo.CountPendingBySpaceAndType(ctx, space.ID, model.UploadTargetTypeDrive)
+			if pErr != nil {
+				return nil, pErr
+			}
+			if pendingCount >= int64(quota.MaxPendingDriveSessions) {
+				return nil, fmt.Errorf("too_many_pending_uploads: too many pending uploads, complete existing uploads or wait for expiry")
+			}
+		}
 	}
 
 	if err := s.ensureValidParent(ctx, space.ID, parentID, false); err != nil {
@@ -125,6 +172,7 @@ func (s *Service) CompleteFileUpload(ctx context.Context, userID int64, uploadSe
 		return nil, fmt.Errorf("upload session expired")
 	}
 
+	// Idempotency: already completed
 	if session.Status == model.UploadSessionStatusCompleted {
 		return fileNode, nil
 	}
@@ -166,8 +214,21 @@ func (s *Service) CompleteFileUpload(ctx context.Context, userID int64, uploadSe
 		return nil, fmt.Errorf("drive file not found")
 	}
 
-	if err := s.uploadSessionRepo.MarkCompleted(ctx, session.ID); err != nil {
-		return nil, err
+	// Atomically increment storage + mark session completed
+	if s.spaceRepo != nil && s.quotaProvider != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		ok, qErr := s.spaceRepo.IncrementStorageAndMarkSessionCompleted(ctx, space.ID, session.ID, head.Size, 1, quota.StorageQuotaBytes)
+		if qErr != nil {
+			return nil, qErr
+		}
+		if !ok {
+			return nil, fmt.Errorf("storage_quota_exceeded: storage quota exceeded. Delete files to free up storage")
+		}
+	} else {
+		// Fallback: mark completed without quota tracking (stub mode)
+		if err := s.uploadSessionRepo.MarkCompleted(ctx, session.ID); err != nil {
+			return nil, err
+		}
 	}
 
 	jobIDs := make([]int64, 0, 2)
@@ -205,9 +266,6 @@ func validateUploadInput(name string, contentLength int64) error {
 	if contentLength <= 0 {
 		return fmt.Errorf("content_length must be positive")
 	}
-	if contentLength > maxDriveUploadSize {
-		return fmt.Errorf("content_length exceeds max upload size")
-	}
 	return nil
 }
 
@@ -217,4 +275,31 @@ func fallbackMIME(mime string) string {
 		return "application/octet-stream"
 	}
 	return mime
+}
+
+// formatBytes formats bytes as a human-readable string for error messages.
+func formatBytes(b int64) string {
+	const (
+		kb = 1024
+		mb = 1024 * kb
+		gb = 1024 * mb
+	)
+	switch {
+	case b >= gb:
+		val := float64(b) / float64(gb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d GB", int64(val))
+		}
+		return fmt.Sprintf("%.1f GB", val)
+	case b >= mb:
+		val := float64(b) / float64(mb)
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d MB", int64(val))
+		}
+		return fmt.Sprintf("%.1f MB", val)
+	case b >= kb:
+		return fmt.Sprintf("%d KB", b/kb)
+	default:
+		return fmt.Sprintf("%d bytes", b)
+	}
 }

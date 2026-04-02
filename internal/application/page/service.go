@@ -33,6 +33,8 @@ type Service struct {
 	kvSyncJobRepo     port.KVSyncJobRepository
 	kvSyncWaiter      port.KVSyncWaiter
 	waitForKVSync     bool
+	quotaProvider     port.StorageQuotaProvider
+	spaceRepo         port.SpaceRepository
 	passwordPepper    string
 	pageHostFormat    string
 	previewHostFormat string
@@ -83,6 +85,13 @@ func WithKVSync(jobRepo port.KVSyncJobRepository, waiter port.KVSyncWaiter, wait
 func WithPageHostFormat(hostFormat string) ServiceOption {
 	return func(s *Service) {
 		s.pageHostFormat = model.NormalizePageHostFormat(hostFormat)
+	}
+}
+
+func WithQuota(quotaProvider port.StorageQuotaProvider, spaceRepo port.SpaceRepository) ServiceOption {
+	return func(s *Service) {
+		s.quotaProvider = quotaProvider
+		s.spaceRepo = spaceRepo
 	}
 }
 
@@ -174,6 +183,19 @@ func (s *Service) CreateSite(ctx context.Context, userID int64, name string) (*m
 	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Quota check: page site count
+	if s.quotaProvider != nil && s.spaceRepo != nil {
+		quota := s.quotaProvider.ResolveQuota(nil)
+		ok, qErr := s.spaceRepo.IncrementPageSiteCount(ctx, space.ID, quota.MaxPageSites)
+		if qErr != nil {
+			return nil, qErr
+		}
+		if !ok {
+			return nil, fmt.Errorf("page_site_limit_reached: page site limit reached (%d/%d sites). Delete unused sites to free up space",
+				space.PageSiteCount, quota.MaxPageSites)
+		}
 	}
 
 	for i := 0; i < 8; i++ {
@@ -363,6 +385,17 @@ func (s *Service) DeleteSite(ctx context.Context, userID int64, siteID int64) (*
 	}
 	if err := s.slugRepo.MarkTombstone(ctx, site.PageName, site.ID); err != nil {
 		return nil, err
+	}
+
+	// Decrement storage counters
+	if s.spaceRepo != nil && s.quotaProvider != nil {
+		totalBytes, sumErr := s.siteRepo.SumCompletedStorageByPageID(ctx, site.SpaceID, site.ID)
+		if sumErr != nil {
+			return nil, sumErr
+		}
+		if err := s.spaceRepo.DecrementPageSiteStorage(ctx, site.SpaceID, totalBytes); err != nil {
+			return nil, err
+		}
 	}
 
 	// If site was published, enqueue KV delete job
