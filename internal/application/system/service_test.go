@@ -397,6 +397,49 @@ func TestService_LogsMergesTimeline(t *testing.T) {
 	}
 }
 
+func TestService_LogsUsesLedgerAmountForMatchedCapabilityCall(t *testing.T) {
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetCreditClient(&fakeSystemCreditClient{
+		transactions: []model.CreditTransaction{
+			{
+				ID:               "txn-1",
+				Type:             "CONSUMPTION",
+				CreditCentAmount: -500,
+				SourceID:         "anycap-image-generate-req_123",
+				Description:      "image.generate",
+				CreatedAt:        time.Date(2026, 3, 26, 10, 29, 30, 0, time.UTC),
+			},
+		},
+	})
+	service.SetCallLogRepo(&fakeCallLogRepo{
+		logs: []model.CallLog{
+			{
+				RequestID:  "req_123",
+				UserID:     "2000000001",
+				Capability: "image.generate",
+				Model:      "flux-1.1-pro",
+				Status:     "success",
+				CreditCost: 4,
+				CreatedAt:  time.Date(2026, 3, 26, 10, 30, 0, 0, time.UTC),
+			},
+		},
+	})
+
+	result, err := service.Logs(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, 20)
+	if err != nil {
+		t.Fatalf("Logs() error = %v", err)
+	}
+	if len(result.Items) != 1 {
+		t.Fatalf("expected matched consumption transaction to merge into capability call, got %d items", len(result.Items))
+	}
+	if result.Items[0].Type != "capability_call" {
+		t.Fatalf("expected first item capability_call, got %+v", result.Items[0])
+	}
+	if result.Items[0].CreditCost != 5 {
+		t.Fatalf("expected merged capability call to use ledger credit cost 5, got %+v", result.Items[0])
+	}
+}
+
 func TestService_DashboardSummary(t *testing.T) {
 	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	service.SetUserReader(&fakeUserReader{

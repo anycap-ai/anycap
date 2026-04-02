@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -284,20 +285,46 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 		return model.LogsResult{}, err
 	}
 
+	matchedTransactions := make(map[string]model.CreditTransaction, len(callLogs))
+	consumedTransactionIDs := make(map[string]struct{}, len(transactions))
+	for _, entry := range callLogs {
+		for _, txn := range transactions {
+			if !matchesCapabilityConsumption(entry, txn) {
+				continue
+			}
+			matchedTransactions[entry.RequestID] = txn
+			consumedTransactionIDs[txn.ID] = struct{}{}
+			break
+		}
+	}
+
 	items := make([]model.TimelineItem, 0, len(callLogs)+len(transactions))
 	for _, entry := range callLogs {
+		occurredAt := entry.CreatedAt
+		creditCost := entry.CreditCost
+		if txn, ok := matchedTransactions[entry.RequestID]; ok {
+			if cost := creditCostFromTransaction(txn); cost > 0 {
+				creditCost = cost
+			}
+			if txn.CreatedAt.After(occurredAt) {
+				occurredAt = txn.CreatedAt
+			}
+		}
 		items = append(items, model.TimelineItem{
 			Type:       "capability_call",
-			OccurredAt: entry.CreatedAt,
+			OccurredAt: occurredAt,
 			RequestID:  entry.RequestID,
 			Capability: entry.Capability,
 			Model:      entry.Model,
 			Status:     entry.Status,
-			CreditCost: entry.CreditCost,
+			CreditCost: creditCost,
 			ErrorCode:  entry.ErrorCode,
 		})
 	}
 	for _, txn := range transactions {
+		if _, ok := consumedTransactionIDs[txn.ID]; ok {
+			continue
+		}
 		items = append(items, model.TimelineItem{
 			Type:             "credit_transaction",
 			OccurredAt:       txn.CreatedAt,
@@ -318,6 +345,41 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 	}
 
 	return model.LogsResult{Items: items}, nil
+}
+
+const creditCentPerCredit int64 = 100
+
+func matchesCapabilityConsumption(entry model.CallLog, txn model.CreditTransaction) bool {
+	if entry.RequestID == "" || entry.Capability == "" {
+		return false
+	}
+	if txn.Type != "CONSUMPTION" || txn.CreditCentAmount >= 0 {
+		return false
+	}
+	prefix := "anycap-" + sanitizeSourceToken(entry.Capability) + "-"
+	return strings.HasPrefix(txn.SourceID, prefix) && strings.HasSuffix(txn.SourceID, entry.RequestID)
+}
+
+func creditCostFromTransaction(txn model.CreditTransaction) int64 {
+	amount := txn.CreditCentAmount
+	if amount < 0 {
+		amount = -amount
+	}
+	if amount <= 0 {
+		return 0
+	}
+	return amount / creditCentPerCredit
+}
+
+func sanitizeSourceToken(value string) string {
+	value = strings.TrimSpace(strings.ToLower(value))
+	value = strings.ReplaceAll(value, " ", "-")
+	value = strings.ReplaceAll(value, ".", "-")
+	value = strings.ReplaceAll(value, "/", "-")
+	if value == "" {
+		return "credit"
+	}
+	return value
 }
 
 func (s *Service) findCreditPack(packID string) (model.CreditPackSpec, bool) {

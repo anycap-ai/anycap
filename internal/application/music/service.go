@@ -72,9 +72,6 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 	}
 
 	cost := result.CreditCost
-	if cost <= 0 {
-		cost = 1
-	}
 	if s.usage != nil {
 		eventID := externalid.Generate(externalid.PrefixUsageEvent)
 		runID := externalid.Generate(externalid.PrefixProviderRun)

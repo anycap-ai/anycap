@@ -17,6 +17,8 @@ type fakeUsageWriter struct {
 	runs   []model.ProviderRunRecord
 }
 
+type zeroCostNexusClient struct{}
+
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
 	return nil
@@ -25,6 +27,27 @@ func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageE
 func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.ProviderRunRecord) error {
 	f.runs = append(f.runs, run)
 	return nil
+}
+
+func (zeroCostNexusClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.GenerateImageResult, error) {
+	return model.GenerateImageResult{
+		ID:      "img-zero-cost",
+		Status:  "success",
+		Model:   req.Model,
+		Outputs: []model.Artifact{{Type: "image", URL: "https://cdn.anycap.local/generated.png", MIMEType: "image/png"}},
+	}, nil
+}
+
+func (zeroCostNexusClient) GenerateVideo(_ context.Context, _ model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
+	panic("unexpected GenerateVideo call")
+}
+
+func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
+	panic("unexpected GenerateMusic call")
+}
+
+func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
+	panic("unexpected GetSubmitResult call")
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -157,6 +180,59 @@ func TestGenerateImage_SuccessPersistsUsageLedger(t *testing.T) {
 	}
 	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
+	}
+}
+
+func TestGenerateImage_DoesNotDeductWhenProviderCostMissing(t *testing.T) {
+	logs := calllog.NewMemoryCallLogRepo()
+	writer := &fakeUsageWriter{}
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 2})
+	service := NewService(testCatalog(), zeroCostNexusClient{}, creditClient, logs)
+	service.SetUsageWriter(writer)
+
+	result, err := service.Generate(context.Background(), model.GenerateImageRequest{
+		UserID:    "user-1",
+		APIKeyID:  "akid_1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if result.CreditCost != 0 {
+		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.CreditCost)
+	}
+
+	balance, err := creditClient.GetBalance(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("GetBalance() error = %v", err)
+	}
+	if balance.Available != 2 {
+		t.Fatalf("expected balance to remain 2 when provider cost missing, got %d", balance.Available)
+	}
+
+	transactions, _, err := creditClient.ListTransactions(context.Background(), "user-1", 10, 0)
+	if err != nil {
+		t.Fatalf("ListTransactions() error = %v", err)
+	}
+	if len(transactions) != 0 {
+		t.Fatalf("expected no credit transactions when provider cost missing, got %#v", transactions)
+	}
+
+	items, err := logs.ListByUserID(context.Background(), "user-1", 10)
+	if err != nil {
+		t.Fatalf("ListByUserID() error = %v", err)
+	}
+	if len(items) != 1 || items[0].CreditCost != 0 {
+		t.Fatalf("expected call log with zero cost, got %#v", items)
+	}
+
+	if len(writer.events) != 1 || writer.events[0].FinalCost != 0 || writer.events[0].EstimatedCost != 0 {
+		t.Fatalf("expected zero-cost usage event, got %#v", writer.events)
+	}
+	if len(writer.runs) != 1 || writer.runs[0].ProviderCost != 0 {
+		t.Fatalf("expected zero-cost provider run, got %#v", writer.runs)
 	}
 }
 
