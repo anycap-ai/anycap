@@ -6,6 +6,7 @@ import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { siteConfig } from "@/lib/site";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
+import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 
 export const runtime = "edge";
 
@@ -104,6 +105,7 @@ export default function RootLayout({
         className={`${GeistPixelSquare.variable} ${inter.variable} ${logoFont.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
         style={{ fontFamily: "sans-serif" }}
       >
+        <GoogleAnalytics />
         <LazyGlobalTipToast />
         {children}
         <GrainOverlay />
