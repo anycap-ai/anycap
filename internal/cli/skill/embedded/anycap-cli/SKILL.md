@@ -76,6 +76,18 @@ anycap config unset <key>      # reset to default
 
 Key settings: `endpoint` (server URL), `auto_update` (default true), `feedback` (default true).
 
+### Custom config directory
+
+By default the CLI stores config and credentials in `~/.anycap/`. In sandboxed or containerized environments where the home directory is not persistent, set these environment variables to keep credentials across restarts:
+
+```bash
+export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
+export ANYCAP_NO_KEYRING=1           # disable OS keychain, use file storage
+```
+
+- `ANYCAP_CONFIG_DIR` redirects all CLI state (config, credentials, update markers) to the specified path. Relative paths are resolved to absolute paths automatically.
+- `ANYCAP_NO_KEYRING=1` disables OS keychain and forces credential storage to a file (`credentials` in the config directory). Without this, an ephemeral keychain may accept credentials but lose them on restart.
+
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
 
 ## Capabilities
