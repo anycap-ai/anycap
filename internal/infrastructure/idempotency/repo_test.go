@@ -71,3 +71,18 @@ func TestIdempotencyRepo_DuplicateClaim(t *testing.T) {
 		t.Fatal("expected duplicate claim to be rejected")
 	}
 }
+
+func TestIdempotencyRepo_Release(t *testing.T) {
+	db := &fakeExecDB{}
+	repo := NewIdempotencyRepo(db)
+
+	if err := repo.Release(context.Background(), "credit", "req-1"); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	if db.query == "" {
+		t.Fatal("expected release query to be executed")
+	}
+	if len(db.args) != 2 || db.args[0] != "credit" || db.args[1] != "req-1" {
+		t.Fatalf("unexpected release args: %#v", db.args)
+	}
+}

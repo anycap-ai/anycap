@@ -77,6 +77,7 @@ export async function createBillingCheckout(input: {
   quantity?: number;
   success_url?: string;
   cancel_url?: string;
+  idempotency_key?: string;
 }) {
   const body: Record<string, unknown> = {
     pack_id: input.pack_id,
@@ -89,6 +90,9 @@ export async function createBillingCheckout(input: {
   }
   if (input.cancel_url !== undefined) {
     body.cancel_url = input.cancel_url;
+  }
+  if (input.idempotency_key !== undefined) {
+    body.idempotency_key = input.idempotency_key;
   }
   return postWithAccessToken<BillingCheckoutResult>("/v1/billing/checkout", body);
 }

@@ -18,9 +18,9 @@ Generation outputs are published as AnyCap short links on `artifact.anycap.{dev,
 
 | Capability | CLI Command | Description |
 |------------|-------------|-------------|
-| Image read | `anycap actions image-read` | Analyze up to 10 images (URL or local file), custom instructions, model selection |
-| Video read | `anycap actions video-read` | Analyze video (URL or local file), custom instructions, model selection |
-| Audio read | `anycap actions audio-read` | Analyze audio (URL or local file), custom instructions, model selection |
+| Image read | `anycap actions image-read` | Analyze up to 10 images (URL or local file), custom instructions, model selection, fixed price 5 credits on success |
+| Video read | `anycap actions video-read` | Analyze video (URL or local file), custom instructions, model selection, fixed price 10 credits on success |
+| Audio read | `anycap actions audio-read` | Analyze audio (URL or local file), custom instructions, model selection, fixed price 10 credits on success |
 
 ### Model Catalog
 
@@ -210,6 +210,7 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 
 - **Credit-based billing**: each capability call has a credit cost
 - **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
+- **Action read pricing**: `image.read` costs 5 credits on success, `video.read` costs 10 credits on success, and `audio.read` costs 10 credits on success
 - **Balance check**: enforced before every execution
 - **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID

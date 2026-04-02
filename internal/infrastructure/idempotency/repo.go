@@ -31,3 +31,11 @@ func (r *IdempotencyRepo) Claim(ctx context.Context, scope, key string) (bool, e
 
 	return rowsAffected == 1, nil
 }
+
+func (r *IdempotencyRepo) Release(ctx context.Context, scope, key string) error {
+	_, err := r.db.ExecContext(ctx, `
+		DELETE FROM idempotency_keys
+		WHERE scope = $1 AND idempotency_key = $2
+	`, scope, key)
+	return err
+}

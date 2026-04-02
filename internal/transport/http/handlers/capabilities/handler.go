@@ -208,6 +208,15 @@ func classifyCapError(err error) (httpStatus int, code string, message string) {
 	if errors.Is(err, model.ErrCapabilitiesProviderNotConfigured) {
 		return consts.StatusServiceUnavailable, "capabilities_service_unavailable", err.Error()
 	}
+	if errors.Is(err, model.ErrAuthInvalid) {
+		return consts.StatusUnauthorized, model.ErrAuthInvalid.Code, model.ErrAuthInvalid.Message
+	}
+	if errors.Is(err, model.ErrInsufficientCredit) {
+		return consts.StatusPaymentRequired, model.ErrInsufficientCredit.Code, model.ErrInsufficientCredit.Message
+	}
+	if errors.Is(err, model.ErrBillingUncertain) {
+		return consts.StatusBadGateway, model.ErrBillingUncertain.Code, model.ErrBillingUncertain.Message
+	}
 	if errors.Is(err, model.ErrTooManyImages) {
 		return consts.StatusUnprocessableEntity, "too_many_images", err.Error()
 	}

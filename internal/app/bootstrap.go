@@ -37,6 +37,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/idempotency"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
@@ -313,6 +314,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
 		systemService.SetCreditPacks(creditPacks)
+		systemService.SetAllowedCheckoutReturnOrigins(buildCORSAllowedOrigins(cfg))
 		systemService.SetUsageReader(usageRepo)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
@@ -321,6 +323,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
 		musicService.SetUsageWriter(usageRepo)
 		capService := capapp.NewService(capProvider, cloudObjectStore, capapp.WithPresignGetExpiry(capGetExpiry))
+		capService.SetCreditClient(creditClient)
+		capService.SetCallLogRepo(callLogs)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
@@ -392,6 +396,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			pageKVSyncOption = pageapp.WithKVSync(kvSyncJobRepo, kvSyncWaiter, cfg.KVSyncWaitEnabled)
 		}
 		apiKeyRepo := apikey.NewAPIKeyRepo(db)
+		checkoutIdempotencyRepo := idempotency.NewIdempotencyRepo(db)
 		loginSessionRepo := loginsession.NewLoginSessionRepo(db)
 		callLogs := calllog.NewCallLogDBRepo(db)
 		usageRepo := usage.NewRepo(db)
@@ -403,6 +408,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetPaymentClient(paymentClient)
 		systemService.SetCallLogRepo(callLogs)
 		systemService.SetCreditPacks(creditPacks)
+		systemService.SetAllowedCheckoutReturnOrigins(buildCORSAllowedOrigins(cfg))
+		systemService.SetCheckoutIdempotencyClaimer(checkoutIdempotencyRepo)
 		systemService.SetUsageReader(usageRepo)
 		var externalIDMapper interface {
 			idresolver.IDResolver
@@ -424,6 +431,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			capapp.WithAudit(spaceService, capsUploadRepo, storageObjectRepo, capsTaskRepo, capsTaskArtifactRepo),
 			capapp.WithPresignGetExpiry(capGetExpiry),
 		)
+		capService.SetCreditClient(creditClient)
+		capService.SetCallLogRepo(callLogs)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)

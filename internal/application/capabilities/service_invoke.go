@@ -3,9 +3,18 @@ package capabilities
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+)
+
+const (
+	imageReadCreditCost int64 = 5
+	videoReadCreditCost int64 = 10
+	audioReadCreditCost int64 = 10
 )
 
 func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
@@ -18,9 +27,22 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 		logger.Error("image read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
+	userID := middleware.UserIDFromContext(ctx)
+	if err := s.ensureReadBalance(ctx, userID, imageReadCreditCost, "image.read"); err != nil {
+		return model.UnderstandResult{}, err
+	}
 
+	startedAt := time.Now()
+	requestID := readRequestID(ctx, "image.read")
 	if !s.auditEnabled() {
-		return s.provider.ImageRead(ctx, req)
+		result, err := s.provider.ImageRead(ctx, req)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
@@ -36,7 +58,7 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
-	return s.runUnderstandTask(ctx, understandTaskInput{
+	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
 		Capability:  capabilityImageRead,
@@ -45,6 +67,13 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
 		return s.provider.ImageRead(ctx, resolvedReq)
 	})
+	if err != nil {
+		return model.UnderstandResult{}, err
+	}
+	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
+		return model.UnderstandResult{}, err
+	}
+	return result, nil
 }
 
 func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
@@ -57,9 +86,22 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 		logger.Error("video read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
+	userID := middleware.UserIDFromContext(ctx)
+	if err := s.ensureReadBalance(ctx, userID, videoReadCreditCost, "video.read"); err != nil {
+		return model.UnderstandResult{}, err
+	}
 
+	startedAt := time.Now()
+	requestID := readRequestID(ctx, "video.read")
 	if !s.auditEnabled() {
-		return s.provider.VideoRead(ctx, req)
+		result, err := s.provider.VideoRead(ctx, req)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
@@ -75,7 +117,7 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
-	return s.runUnderstandTask(ctx, understandTaskInput{
+	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
 		Capability:  capabilityVideoRead,
@@ -84,6 +126,13 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
 		return s.provider.VideoRead(ctx, resolvedReq)
 	})
+	if err != nil {
+		return model.UnderstandResult{}, err
+	}
+	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
+		return model.UnderstandResult{}, err
+	}
+	return result, nil
 }
 
 func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
@@ -96,9 +145,22 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 		logger.Error("audio read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
+	userID := middleware.UserIDFromContext(ctx)
+	if err := s.ensureReadBalance(ctx, userID, audioReadCreditCost, "audio.read"); err != nil {
+		return model.UnderstandResult{}, err
+	}
 
+	startedAt := time.Now()
+	requestID := readRequestID(ctx, "audio.read")
 	if !s.auditEnabled() {
-		return s.provider.AudioRead(ctx, req)
+		result, err := s.provider.AudioRead(ctx, req)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
@@ -114,7 +176,7 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
-	return s.runUnderstandTask(ctx, understandTaskInput{
+	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
 		Capability:  capabilityAudioRead,
@@ -123,4 +185,70 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
 		return s.provider.AudioRead(ctx, resolvedReq)
 	})
+	if err != nil {
+		return model.UnderstandResult{}, err
+	}
+	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
+		return model.UnderstandResult{}, err
+	}
+	return result, nil
+}
+
+func (s *Service) ensureReadBalance(ctx context.Context, userID string, cost int64, capability string) error {
+	logger := logging.WithContext(ctx).WithField("capability", capability)
+	if cost <= 0 || s.credit == nil {
+		return nil
+	}
+	if userID == "" {
+		logger.Warn("missing user id for billed capabilities request")
+		return model.ErrAuthInvalid
+	}
+	balance, err := s.credit.GetBalance(ctx, userID)
+	if err != nil {
+		logger.WithError(err).Error("capabilities credit balance lookup failed")
+		return err
+	}
+	if balance.Available < cost {
+		logger.WithFields(logging.Fields{
+			"available_credit": balance.Available,
+			"required_credit":  cost,
+		}).Warn("insufficient credit for capabilities request")
+		return model.ErrInsufficientCredit
+	}
+	return nil
+}
+
+func (s *Service) finalizeSuccessfulRead(ctx context.Context, userID, apiKeyID, requestID, capability, modelName string, cost int64, startedAt time.Time) error {
+	logger := logging.WithContext(ctx).WithField("capability", capability)
+	if s.credit != nil {
+		if err := s.credit.Deduct(ctx, userID, cost, capability, requestID); err != nil {
+			logger.WithField("credit_cost", cost).WithError(err).Error("capabilities credit deduction failed")
+			return model.ErrBillingUncertain
+		}
+	}
+	if s.callLogs != nil {
+		if err := s.callLogs.Insert(ctx, model.CallLog{
+			RequestID:  requestID,
+			UserID:     userID,
+			APIKeyID:   apiKeyID,
+			Capability: capability,
+			Model:      modelName,
+			Status:     "success",
+			LatencyMS:  time.Since(startedAt).Milliseconds(),
+			CreditCost: cost,
+		}); err != nil {
+			logger.WithFields(logging.Fields{
+				"credit_cost": cost,
+				"latency_ms":  time.Since(startedAt).Milliseconds(),
+			}).WithError(err).Warn("capabilities call log persistence failed")
+		}
+	}
+	return nil
+}
+
+func readRequestID(ctx context.Context, capability string) string {
+	if requestID := trace.GetTraceID(ctx); requestID != "" {
+		return requestID
+	}
+	return capability + "-" + strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
 }

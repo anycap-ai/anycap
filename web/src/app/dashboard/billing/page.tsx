@@ -23,6 +23,13 @@ function formatMoney(priceCent: number, currency: string) {
   }).format(priceCent / 100);
 }
 
+function createCheckoutAttemptBase(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function activityLabel(item: TimelineItem): "Top-up" | "Usage" {
   if (item.type === "credit_transaction" && (item.credit_cent_amount ?? 0) > 0) {
     return "Top-up";
@@ -156,14 +163,15 @@ function TransactionRow({ item }: { item: TimelineItem }) {
 
 export default function BillingPage() {
   const searchParams = useSearchParams();
-  const { data: balance, isLoading: balanceLoading } = useBalance();
-  const { data: logs, isLoading: logsLoading } = useLogs(50);
+  const { data: balance, isLoading: balanceLoading, error: balanceError } = useBalance();
+  const { data: logs, isLoading: logsLoading, error: logsError } = useLogs(50);
   const { data: packData, isLoading: packsLoading, error: packsError } = useCreditPacks();
 
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [submittingPackID, setSubmittingPackID] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [selectedPackID, setSelectedPackID] = useState<string | null>(null);
+  const [checkoutAttemptBase, setCheckoutAttemptBase] = useState<string | null>(null);
 
   const checkoutState = searchParams.get("checkout");
   const packs = useMemo(() => packData?.packs ?? [], [packData?.packs]);
@@ -171,6 +179,8 @@ export default function BillingPage() {
     ? Number((packsError as { status?: unknown }).status)
     : null;
   const packErrorMessage = packsError instanceof Error ? packsError.message : "Unable to load credit packs";
+  const balanceErrorMessage = balanceError instanceof Error ? balanceError.message : "Unable to load credit balance";
+  const logsErrorMessage = logsError instanceof Error ? logsError.message : "Unable to load transactions";
   const selectedPack = packs.find((pack) => pack.id === selectedPackID) ?? null;
 
   const transactionItems = useMemo(
@@ -194,23 +204,35 @@ export default function BillingPage() {
     setSelectedPackID(recommended.id);
   }, [buyModalOpen, packs, selectedPackID]);
 
+  useEffect(() => {
+    if (!buyModalOpen) {
+      setCheckoutAttemptBase(null);
+      return;
+    }
+    setCheckoutAttemptBase((current) => current ?? createCheckoutAttemptBase());
+  }, [buyModalOpen]);
+
   async function handleBuy(pack: CreditPack) {
     setCheckoutError(null);
     setSubmittingPackID(pack.id);
     try {
       const origin = window.location.origin;
+      const attemptBase = checkoutAttemptBase ?? createCheckoutAttemptBase();
+      if (!checkoutAttemptBase) {
+        setCheckoutAttemptBase(attemptBase);
+      }
       const result = await createBillingCheckout({
         pack_id: pack.id,
         quantity: 1,
         success_url: `${origin}/dashboard/billing?checkout=success`,
         cancel_url: `${origin}/dashboard/billing?checkout=cancel`,
+        idempotency_key: `${attemptBase}:${pack.id}`,
       });
       window.location.assign(result.checkout_url);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create checkout";
       setCheckoutError(message);
       setSubmittingPackID(null);
-      setBuyModalOpen(false);
     }
   }
 
@@ -246,6 +268,22 @@ export default function BillingPage() {
         />
       ) : null}
 
+      {balanceError ? (
+        <Banner
+          tone="red"
+          title="Unable to load balance"
+          body={balanceErrorMessage}
+        />
+      ) : null}
+
+      {logsError ? (
+        <Banner
+          tone="red"
+          title="Unable to load transactions"
+          body={logsErrorMessage}
+        />
+      ) : null}
+
       <section className="max-w-[760px]">
         <div className="border border-[#d8dcd0] bg-white px-7 py-6 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -253,12 +291,12 @@ export default function BillingPage() {
               <p className="text-[13.5px] font-medium text-[#7a7e71] mb-4">
                 Credit Balance
               </p>
-              {balanceLoading || !balance ? (
+              {balanceLoading && !balance && !balanceError ? (
                 <>
                   <Skeleton className="h-10 w-32 mb-3" />
                   <Skeleton className="h-4 w-36" />
                 </>
-              ) : (
+              ) : balance ? (
                 <>
                   <p className="text-4xl text-[#1c1f17] font-bold leading-none tracking-tight">
                     {formatCredit(balance.available)}
@@ -267,26 +305,31 @@ export default function BillingPage() {
                     credits remaining
                   </p>
                 </>
+              ) : (
+                <p className="text-[14px] leading-[1.6] text-[#8d3425]">
+                  Balance is temporarily unavailable.
+                </p>
               )}
             </div>
 
             <div className="sm:shrink-0">
-              {balanceLoading || !balance ? (
+              {balanceLoading && !balance && !balanceError ? (
                 <Skeleton className="h-11 w-32" />
-              ) : (
+              ) : balance ? (
                 <button
                   type="button"
                   onClick={() => {
                     setCheckoutError(null);
                     const recommended = packs.find((pack) => pack.featured) ?? packs[0] ?? null;
                     setSelectedPackID(recommended?.id ?? null);
+                    setCheckoutAttemptBase(createCheckoutAttemptBase());
                     setBuyModalOpen(true);
                   }}
                   className="inline-flex items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235]"
                 >
                   Buy credits
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -316,7 +359,7 @@ export default function BillingPage() {
               </tr>
             </thead>
             <tbody>
-              {logsLoading ? (
+              {logsLoading && !logsError ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-[#eceee7]">
                     {[0, 1, 2, 3].map((j) => (
@@ -326,6 +369,14 @@ export default function BillingPage() {
                     ))}
                   </tr>
                 ))
+              ) : logsError ? (
+                <tr>
+                  <td colSpan={4} className="py-12 text-center">
+                    <p className="text-[14px] text-[#8d3425]">
+                      Transactions are temporarily unavailable.
+                    </p>
+                  </td>
+                </tr>
               ) : transactionItems.length ? (
                 transactionItems.map((item, i) => (
                   <TransactionRow
@@ -352,6 +403,7 @@ export default function BillingPage() {
         onClose={() => {
           if (!submittingPackID) {
             setBuyModalOpen(false);
+            setCheckoutAttemptBase(null);
           }
         }}
         title="Buy credits"

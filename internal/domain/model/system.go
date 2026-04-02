@@ -90,10 +90,11 @@ type CreditPackListResult struct {
 }
 
 type CreateCheckoutInput struct {
-	PackID     string `json:"pack_id"`
-	Quantity   int    `json:"quantity,omitempty"`
-	SuccessURL string `json:"success_url,omitempty"`
-	CancelURL  string `json:"cancel_url,omitempty"`
+	PackID         string `json:"pack_id"`
+	Quantity       int    `json:"quantity,omitempty"`
+	SuccessURL     string `json:"success_url,omitempty"`
+	CancelURL      string `json:"cancel_url,omitempty"`
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
 }
 
 type CreateCheckoutResult struct {

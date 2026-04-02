@@ -15,6 +15,8 @@ const (
 type Service struct {
 	provider             port.CapabilitiesProvider
 	objectStore          port.CloudObjectStore
+	credit               port.CreditClient
+	callLogs             port.CallLogRepo
 	spaceService         port.SpaceService
 	capsUploadRepo       port.CapsUploadRepository
 	storageObjectRepo    port.StorageObjectRepository
@@ -63,6 +65,14 @@ func NewService(provider port.CapabilitiesProvider, objectStore port.CloudObject
 		}
 	}
 	return svc
+}
+
+func (s *Service) SetCreditClient(credit port.CreditClient) {
+	s.credit = credit
+}
+
+func (s *Service) SetCallLogRepo(callLogs port.CallLogRepo) {
+	s.callLogs = callLogs
 }
 
 func (s *Service) auditEnabled() bool {
