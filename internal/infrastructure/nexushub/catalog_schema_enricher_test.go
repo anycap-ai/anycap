@@ -142,3 +142,65 @@ func TestCatalogSchemaEnricher_PreservesExistingHints(t *testing.T) {
 		t.Fatalf("expected existing hints to be preserved, got %#v", got)
 	}
 }
+
+func TestCatalogSchemaEnricher_NormalizesMusicSchema(t *testing.T) {
+	baseRepo := &staticCatalogRepo{
+		spec: &model.ModelSpec{
+			ModelID:    "elevanlabs-music",
+			Capability: model.CapabilityMusic,
+			Status:     "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					Modes: []model.ModeSpec{{Mode: model.ModeTextToMusic}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "302ai_elevenlab_music",
+						GenType:    "music",
+						AlgoType:   "text_2_music",
+						Mode:       model.ModeTextToMusic,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+	}
+
+	provider := &staticSchemaProvider{
+		schemasByAbilityKey: map[string]map[string]any{
+			"302ai_elevenlab_music": {
+				"text_2_music": map[string]any{
+					"model_params": map[string]any{
+						"music_length_ms": map[string]any{"type": "int"},
+						"prompt":          map[string]any{"required": true, "type": "string"},
+					},
+				},
+			},
+		},
+	}
+
+	repo := NewCatalogSchemaEnricher(baseRepo, provider)
+	spec, err := repo.GetModel(context.Background(), model.CapabilityMusic, "elevanlabs-music")
+	if err != nil {
+		t.Fatalf("GetModel() error = %v", err)
+	}
+
+	hints := spec.Operations[model.OperationGenerate].RequestHints
+	params, ok := hints["model_params"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected model_params in hints, got %#v", hints)
+	}
+	if _, exists := params["music_length_ms"]; exists {
+		t.Fatal("music_length_ms should have been normalized away")
+	}
+	dur, exists := params["duration"]
+	if !exists {
+		t.Fatal("expected duration in model_params after normalization")
+	}
+	durMap, _ := dur.(map[string]any)
+	if durMap["description"] != "Duration in seconds" {
+		t.Fatalf("expected duration description, got %#v", durMap)
+	}
+	if _, exists := params["prompt"]; !exists {
+		t.Fatal("expected prompt to be preserved")
+	}
+}

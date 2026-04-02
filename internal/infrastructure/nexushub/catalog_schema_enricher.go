@@ -71,7 +71,34 @@ func (r *CatalogSchemaEnricher) GetModel(ctx context.Context, capability model.C
 		enriched.Operations[operation] = opSpec
 	}
 
+	// Normalize provider-specific param names to AnyCap names in schemas.
+	if enriched.Capability == model.CapabilityMusic {
+		for op, opSpec := range enriched.Operations {
+			normalizeMusicSchema(opSpec.RequestHints)
+			for _, s := range opSpec.ModeSchemas {
+				normalizeMusicSchema(s)
+			}
+			enriched.Operations[op] = opSpec
+		}
+	}
+
 	return enriched, nil
+}
+
+// normalizeMusicSchema replaces provider-specific param names with AnyCap
+// normalized names. e.g. ElevenLabs "music_length_ms" → "duration".
+func normalizeMusicSchema(schema map[string]any) {
+	if len(schema) == 0 {
+		return
+	}
+	target := schema
+	if params, ok := schema["model_params"].(map[string]any); ok {
+		target = params
+	}
+	if _, exists := target[elevenLabsKeyMusicLengthMs]; exists {
+		delete(target, elevenLabsKeyMusicLengthMs)
+		target["duration"] = map[string]any{"type": "int", "description": "Duration in seconds"}
+	}
 }
 
 // resolveModeSchemas resolves a schema for each mode within an operation.
