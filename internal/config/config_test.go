@@ -67,6 +67,37 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	if cfg.PagePreviewTTLSeconds != 300 {
 		t.Fatalf("expected default page preview ttl 300, got %d", cfg.PagePreviewTTLSeconds)
 	}
+	if cfg.Artifact.LinkTTLSeconds != 600 {
+		t.Fatalf("expected default artifact link ttl 600, got %d", cfg.Artifact.LinkTTLSeconds)
+	}
+}
+
+func TestLoadFromEnv_ReadsArtifactConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_ARTIFACT_PUBLIC_BASE_URL", "https://artifact.anycap.dev")
+	t.Setenv("ANYCAP_ARTIFACT_INGEST_BASE_URL", "https://artifact-ingest.anycap.dev")
+	t.Setenv("ANYCAP_ARTIFACT_INGEST_TOKEN", "artifact-token")
+	t.Setenv("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", "300")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.Artifact.PublicBaseURL != "https://artifact.anycap.dev" {
+		t.Fatalf("expected artifact public base url, got %q", cfg.Artifact.PublicBaseURL)
+	}
+	if cfg.Artifact.IngestBaseURL != "https://artifact-ingest.anycap.dev" {
+		t.Fatalf("expected artifact ingest base url, got %q", cfg.Artifact.IngestBaseURL)
+	}
+	if cfg.Artifact.IngestToken != "artifact-token" {
+		t.Fatalf("expected artifact ingest token, got %q", cfg.Artifact.IngestToken)
+	}
+	if cfg.Artifact.LinkTTLSeconds != 300 {
+		t.Fatalf("expected artifact link ttl 300, got %d", cfg.Artifact.LinkTTLSeconds)
+	}
+	if !cfg.Artifact.Enabled() {
+		t.Fatal("expected artifact config to be enabled")
+	}
 }
 
 func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {

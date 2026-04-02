@@ -6,6 +6,7 @@ account_id = "3ad0d55d5adf982237e3d8ea0f2d9842"
 # Secrets to set per environment via `wrangler secret put --env <env>`:
 # - ANYCAP_PASSWORD_PEPPER
 # - EDGE_SESSION_SECRET
+# - ANYCAP_ARTIFACT_INGEST_TOKEN
 
 # ─── Dev ────────────────────────────────────────────────────────────
 [env.dev]
@@ -17,6 +18,14 @@ zone_name = "anycap.dev"
 
 [[env.dev.routes]]
 pattern = "drive.anycap.dev/*"
+zone_name = "anycap.dev"
+
+[[env.dev.routes]]
+pattern = "artifact.anycap.dev/*"
+zone_name = "anycap.dev"
+
+[[env.dev.routes]]
+pattern = "artifact-ingest.anycap.dev/*"
 zone_name = "anycap.dev"
 
 [[env.dev.routes]]
@@ -34,8 +43,12 @@ bucket_name = "anycap-cloud-dev"
 [env.dev.vars]
 CDN_HOST = "cdn.anycap.dev"
 DRIVE_HOST = "drive.anycap.dev"
+ARTIFACT_HOST = "artifact.anycap.dev"
+ARTIFACT_INGEST_HOST = "artifact-ingest.anycap.dev"
 PAGE_HOST_PREFIX = "page-"
 PAGE_PREVIEW_HOST_PREFIX = "preview-page-"
+ARTIFACT_LINK_TTL_SECONDS = "600"
+ARTIFACT_SOURCE_HOST_ALLOWLIST = ""
 DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
 PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "10"
 DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"
@@ -58,6 +71,14 @@ pattern = "drive.anycap.cloud/*"
 zone_name = "anycap.cloud"
 
 [[env.prod.routes]]
+pattern = "artifact.anycap.cloud/*"
+zone_name = "anycap.cloud"
+
+[[env.prod.routes]]
+pattern = "artifact-ingest.anycap.cloud/*"
+zone_name = "anycap.cloud"
+
+[[env.prod.routes]]
 pattern = "*.anycap.cloud/*"
 zone_name = "anycap.cloud"
 
@@ -72,8 +93,12 @@ bucket_name = "anycap-cloud"
 [env.prod.vars]
 CDN_HOST = "cdn.anycap.cloud"
 DRIVE_HOST = "drive.anycap.cloud"
+ARTIFACT_HOST = "artifact.anycap.cloud"
+ARTIFACT_INGEST_HOST = "artifact-ingest.anycap.cloud"
 PAGE_HOST_PREFIX = "page-"
 PAGE_PREVIEW_HOST_PREFIX = "preview-page-"
+ARTIFACT_LINK_TTL_SECONDS = "600"
+ARTIFACT_SOURCE_HOST_ALLOWLIST = ""
 DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
 PAGE_STATIC_ASSET_CACHE_TTL_SECONDS = "60"
 DRIVE_PASSWORD_RATE_LIMIT_WINDOW_SECONDS = "300"

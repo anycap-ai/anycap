@@ -24,6 +24,11 @@ type fakeUsageWriter struct {
 }
 
 type failingUsageWriter struct{}
+type fakeArtifactPublisher struct {
+	result model.ArtifactPublishResult
+	err    error
+	called bool
+}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -63,6 +68,14 @@ func captureLogs(t *testing.T) *bytes.Buffer {
 	})
 
 	return &buf
+}
+
+func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPublishRequest) (model.ArtifactPublishResult, error) {
+	f.called = true
+	if f.err != nil {
+		return model.ArtifactPublishResult{}, f.err
+	}
+	return f.result, nil
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -250,6 +263,30 @@ func TestGenerateImage_RouteNotConfigured(t *testing.T) {
 	})
 	if !errors.Is(err, model.ErrModelRouteNotConfigured) {
 		t.Fatalf("expected ErrModelRouteNotConfigured, got %v", err)
+	}
+}
+
+func TestGenerateImage_PublishFailureDoesNotDeductCredit(t *testing.T) {
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 2})
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())
+	service.SetArtifactPublisher(&fakeArtifactPublisher{err: model.ErrUpstreamUnavailable})
+
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
+		UserID:    "user-1",
+		RequestID: "req-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if !errors.Is(err, model.ErrUpstreamUnavailable) {
+		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
+	}
+
+	balance, err := creditClient.GetBalance(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("GetBalance() error = %v", err)
+	}
+	if balance.Available != 2 {
+		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
 	}
 }
 

@@ -17,6 +17,7 @@ type Service struct {
 	callLogs       port.CallLogRepo
 	usage          port.UsageWriter
 	uploadResolver port.UploadRefResolver
+	artifactPub    port.ArtifactPublisher
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -34,6 +35,10 @@ func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 
 func (s *Service) SetUploadRefResolver(r port.UploadRefResolver) {
 	s.uploadResolver = r
+}
+
+func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
+	s.artifactPub = publisher
 }
 
 func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) (model.GenerateVideoResult, error) {
@@ -103,6 +108,20 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			"mode":        mode,
 		}).WithError(err).Error("video generation failed")
 		return model.GenerateVideoResult{}, err
+	}
+	if s.artifactPub != nil {
+		published, publishErr := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
+			UserID:         req.UserID,
+			Capability:     "video.generate",
+			MediaType:      model.CapsArtifactMediaTypeVideo,
+			Provider:       "nexushub",
+			ProviderTaskID: result.ID,
+			Outputs:        result.Outputs,
+		})
+		if publishErr != nil {
+			return model.GenerateVideoResult{}, publishErr
+		}
+		result.Outputs = published.Outputs
 	}
 
 	cost := result.CreditCost

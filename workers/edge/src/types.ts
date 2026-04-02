@@ -3,6 +3,11 @@ export type Env = {
 	ANYCAP_CLOUD_R2: R2Bucket;
 	CDN_HOST?: string;
 	DRIVE_HOST?: string;
+	ARTIFACT_HOST?: string;
+	ARTIFACT_INGEST_HOST?: string;
+	ANYCAP_ARTIFACT_INGEST_TOKEN?: string;
+	ARTIFACT_LINK_TTL_SECONDS?: string;
+	ARTIFACT_SOURCE_HOST_ALLOWLIST?: string;
 	PAGE_HOST_PREFIX?: string;
 	PAGE_PREVIEW_HOST_PREFIX?: string;
 	DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS?: string;
@@ -90,4 +95,13 @@ export type PageHostRecord = {
 	expires_at?: string | null;
 	edge_version?: number;
 	updated_at?: string;
+};
+
+export type ArtifactLinkRecord = {
+	object_key: string;
+	mime?: string;
+	size?: number;
+	etag?: string;
+	artifact_external_id?: string;
+	expires_at?: string;
 };

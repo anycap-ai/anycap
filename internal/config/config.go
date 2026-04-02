@@ -45,6 +45,7 @@ const (
 	defaultCloudflareAPIBaseURL  = "https://api.cloudflare.com/client/v4"
 	defaultDriveAccessTTLSeconds = int64(300)
 	defaultPagePreviewTTLSeconds = int64(300)
+	defaultArtifactLinkTTL       = int64(600)
 	minEdgeGrantTTLSeconds       = int64(60)
 	maxEdgeGrantTTLSeconds       = int64(3600)
 )
@@ -112,6 +113,7 @@ type Config struct {
 	UsageSyncEnabled        bool
 	UsageSyncPollInterval   time.Duration
 	UsageSyncBatchSize      int
+	Artifact                ArtifactConfig
 }
 
 type CreditConfig struct {
@@ -165,6 +167,17 @@ type CloudflareKVConfig struct {
 	NamespaceID string
 	APIToken    string
 	APIBaseURL  string
+}
+
+type ArtifactConfig struct {
+	PublicBaseURL  string
+	IngestBaseURL  string
+	IngestToken    string
+	LinkTTLSeconds int64
+}
+
+func (c ArtifactConfig) Enabled() bool {
+	return c.PublicBaseURL != "" && c.IngestBaseURL != "" && c.IngestToken != ""
 }
 
 func (c CloudflareKVConfig) Enabled() bool {
@@ -266,6 +279,12 @@ func LoadFromEnv() (Config, error) {
 		UsageSyncEnabled:      getEnvBool("ANYCAP_USAGE_SYNC_ENABLED", true),
 		UsageSyncPollInterval: getEnvDuration("ANYCAP_USAGE_SYNC_POLL_INTERVAL", defaultUsageSyncPollInterval),
 		UsageSyncBatchSize:    getEnvInt("ANYCAP_USAGE_SYNC_BATCH_SIZE", defaultUsageSyncBatchSize),
+		Artifact: ArtifactConfig{
+			PublicBaseURL:  getEnv("ANYCAP_ARTIFACT_PUBLIC_BASE_URL", ""),
+			IngestBaseURL:  getEnv("ANYCAP_ARTIFACT_INGEST_BASE_URL", ""),
+			IngestToken:    getEnv("ANYCAP_ARTIFACT_INGEST_TOKEN", ""),
+			LinkTTLSeconds: getEnvInt64("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", defaultArtifactLinkTTL),
+		},
 	}
 
 	if cfg.PGDSN == "" && !hasDiscretePostgresEnv() {
@@ -280,6 +299,9 @@ func LoadFromEnv() (Config, error) {
 
 	if err := cfg.validateInfraConfigExclusivity(); err != nil {
 		return Config{}, err
+	}
+	if cfg.Artifact.LinkTTLSeconds <= 0 {
+		cfg.Artifact.LinkTTLSeconds = defaultArtifactLinkTTL
 	}
 
 	if cfg.requiresExternalInfra() {

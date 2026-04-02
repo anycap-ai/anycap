@@ -9,6 +9,8 @@ Cloudflare Worker that serves Drive, Page, and CDN public access.
 | Worker | `anycap-edge-dev` | `anycap-edge` |
 | CDN | `cdn.anycap.dev` | `cdn.anycap.cloud` |
 | Drive | `drive.anycap.dev` | `drive.anycap.cloud` |
+| Artifact public | `artifact.anycap.dev` | `artifact.anycap.cloud` |
+| Artifact ingest (internal) | `artifact-ingest.anycap.dev` | `artifact-ingest.anycap.cloud` |
 | Page | `page-<name>.anycap.dev` | `page-<name>.anycap.cloud` |
 | R2 bucket | `anycap-cloud-dev` | `anycap-cloud` |
 
@@ -25,6 +27,12 @@ cp .secrets.example .secrets.prod
 Secrets:
 - `ANYCAP_PASSWORD_PEPPER` — salt for password hashing
 - `EDGE_SESSION_SECRET` — HMAC key for session cookies
+- `ANYCAP_ARTIFACT_INGEST_TOKEN` — bearer token for ingest endpoint
+
+Artifact ingest source policy:
+- `ARTIFACT_SOURCE_HOST_ALLOWLIST` can be empty (default) to allow any public HTTPS host.
+- If configured, only listed hosts (supports `*.example.com`) are allowed.
+- In all cases, localhost/private-network/IP-literal sources are blocked.
 
 ## Development
 
@@ -48,6 +56,8 @@ make secrets ENV=prod    # upload secrets from .secrets.prod
 The worker routes requests by hostname:
 - `cdn.*` → public asset serving
 - `drive.*` → shared file/folder access (with optional password protection)
+- `artifact.*` → capability artifact short-link download (`/a/{token}`)
+- `artifact-ingest.*` → internal provider-to-R2 ingest endpoint
 - `page-<name>.*` → hosted page serving (with optional password protection)
 
 Bindings: `EDGE_KV` (metadata + rate limit counters) + `ANYCAP_CLOUD_R2` (file storage) + CF Cache API (static asset caching). No external API calls.

@@ -11,11 +11,12 @@ import (
 )
 
 type Service struct {
-	catalog  port.CatalogRepository
-	nexusHub port.NexusHubClient
-	credit   port.CreditClient
-	callLogs port.CallLogRepo
-	usage    port.UsageWriter
+	catalog     port.CatalogRepository
+	nexusHub    port.NexusHubClient
+	credit      port.CreditClient
+	callLogs    port.CallLogRepo
+	usage       port.UsageWriter
+	artifactPub port.ArtifactPublisher
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -29,6 +30,10 @@ func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, cr
 
 func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 	s.usage = usage
+}
+
+func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
+	s.artifactPub = publisher
 }
 
 func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) (model.GenerateMusicResult, error) {
@@ -87,6 +92,20 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 			"mode":        mode,
 		}).WithError(err).Error("music generation failed")
 		return model.GenerateMusicResult{}, err
+	}
+	if s.artifactPub != nil {
+		published, publishErr := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
+			UserID:         req.UserID,
+			Capability:     "music.generate",
+			MediaType:      model.CapsArtifactMediaTypeMusic,
+			Provider:       "nexushub",
+			ProviderTaskID: result.ID,
+			Outputs:        result.Outputs,
+		})
+		if publishErr != nil {
+			return model.GenerateMusicResult{}, publishErr
+		}
+		result.Outputs = published.Outputs
 	}
 
 	cost := result.CreditCost

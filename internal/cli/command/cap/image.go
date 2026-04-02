@@ -355,6 +355,9 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 		"model":        r.Model,
 		"credits_used": r.CreditsUsed,
 	}
+	if r.OutputURL != "" {
+		result["url"] = r.OutputURL
+	}
 	if requestID != "" {
 		result["request_id"] = requestID
 	}

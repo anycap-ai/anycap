@@ -3,6 +3,8 @@ import type { Env } from "./types";
 export type EdgeConfig = {
 	cdnHost: string;
 	driveHost: string;
+	artifactHost: string;
+	artifactIngestHost: string;
 	pageHostPrefix: string;
 	pagePreviewHostPrefix: string;
 	driveAssetCacheTTLSeconds: number;
@@ -32,6 +34,8 @@ export function resolveConfig(env: Env): EdgeConfig {
 	return {
 		cdnHost: (env.CDN_HOST || "cdn.anycap.cloud").trim().toLowerCase(),
 		driveHost: (env.DRIVE_HOST || "drive.anycap.cloud").trim().toLowerCase(),
+		artifactHost: (env.ARTIFACT_HOST || "artifact.anycap.cloud").trim().toLowerCase(),
+		artifactIngestHost: (env.ARTIFACT_INGEST_HOST || "artifact-ingest.anycap.cloud").trim().toLowerCase(),
 		pageHostPrefix: prefix.endsWith("-") ? prefix : `${prefix}-`,
 		pagePreviewHostPrefix: previewPrefix.endsWith("-") ? previewPrefix : `${previewPrefix}-`,
 		driveAssetCacheTTLSeconds: parsePositiveInt(env.DRIVE_STATIC_ASSET_CACHE_TTL_SECONDS, 60),

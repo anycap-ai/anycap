@@ -46,6 +46,39 @@ describe("worker host routing", () => {
 		expect(response.status).toBe(200);
 	});
 
+	it("routes artifact host to artifact public handler", async () => {
+		const kv = createMockKV();
+		const r2 = createMockR2({
+			"caps/outputs/o/ca_demo": {
+				body: "artifact-bytes",
+				contentType: "image/png",
+				etag: "etag-a",
+			},
+		});
+		setKVJSON(kv.store, "artifact:link:art_demo", {
+			object_key: "caps/outputs/o/ca_demo",
+			mime: "image/png",
+			size: 14,
+			etag: "etag-a",
+		});
+
+		const env = createEnv({
+			EDGE_KV: kv.namespace,
+			ANYCAP_CLOUD_R2: r2.bucket,
+		});
+		const response = await worker.fetch(new Request("https://artifact.anycap.cloud/a/art_demo"), env);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+	});
+
+	it("routes artifact ingest host to ingest handler", async () => {
+		const env = createEnv({
+			ANYCAP_ARTIFACT_INGEST_TOKEN: "ingest-token",
+		});
+		const response = await worker.fetch(new Request("https://artifact-ingest.anycap.cloud/v1/internal/artifacts/ingest", { method: "POST" }), env);
+		expect(response.status).toBe(401);
+	});
+
 	it("routes page subdomain to page handler", async () => {
 		const kv = createMockKV();
 		const r2 = createMockR2({

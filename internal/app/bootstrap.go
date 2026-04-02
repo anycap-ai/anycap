@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
@@ -29,6 +30,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
@@ -251,6 +253,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 	capProvider := buildCapabilitiesProvider(cfg)
 	cloudObjectStore := buildCloudObjectStorage(cfg)
 	capGetExpiry := time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second
+	artifactIngestClient := buildArtifactIngestClient(cfg)
 	imageExecutionClient := buildImageExecutionClient(cfg)
 	videoExecutionClient := buildVideoExecutionClient(cfg)
 	musicExecutionClient := buildMusicExecutionClient(cfg)
@@ -367,6 +370,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		capsUploadRepo := postgres.NewCapsUploadRepo(db)
 		capsTaskRepo := postgres.NewCapsTaskRepo(db)
 		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)
+		capsArtifactRepo := postgres.NewCapsArtifactRepo(db)
 		capService := capapp.NewService(
 			capProvider,
 			cloudObjectStore,
@@ -382,6 +386,20 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		videoService.SetUploadRefResolver(capService)
 		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
 		musicService.SetUsageWriter(usageRepo)
+		artifactPublisher := buildArtifactPublisher(
+			cfg,
+			artifactIngestClient,
+			capsArtifactRepo,
+			storageObjectRepo,
+			edgeGrantStore,
+			spaceService,
+			cloudObjectStore,
+		)
+		if artifactPublisher != nil {
+			imageService.SetArtifactPublisher(artifactPublisher)
+			videoService.SetArtifactPublisher(artifactPublisher)
+			musicService.SetArtifactPublisher(artifactPublisher)
+		}
 		var usageSyncWorker *usageapp.Worker
 		if cfg.UsageSyncEnabled && hasImageExecutionProvider(cfg) {
 			usageSyncWorker = usageapp.NewWorker(
@@ -512,6 +530,64 @@ func buildCreditClient(cfg config.Config) port.CreditClient {
 	}
 	logging.GetLogger().Info("credit using stub client")
 	return credit.NewStubClient(nil)
+}
+
+func buildArtifactIngestClient(cfg config.Config) port.ArtifactIngestClient {
+	if !cfg.Artifact.Enabled() {
+		log.Println("artifact-ingest: disabled (set ANYCAP_ARTIFACT_PUBLIC_BASE_URL / ANYCAP_ARTIFACT_INGEST_BASE_URL / ANYCAP_ARTIFACT_INGEST_TOKEN)")
+		return nil
+	}
+
+	client, err := artifactingest.NewClient(artifactingest.ClientConfig{
+		BaseURL: cfg.Artifact.IngestBaseURL,
+		Token:   cfg.Artifact.IngestToken,
+	})
+	if err != nil {
+		log.Printf("artifact-ingest: failed to initialize client: %v", err)
+		return nil
+	}
+	return client
+}
+
+func buildArtifactPublisher(
+	cfg config.Config,
+	ingestClient port.ArtifactIngestClient,
+	capsArtifactRepo port.CapsArtifactRepository,
+	storageRepo port.StorageObjectRepository,
+	linkStore port.EdgeGrantStore,
+	spaceService port.SpaceService,
+	objectStore port.CloudObjectStore,
+) port.ArtifactPublisher {
+	if !cfg.Artifact.Enabled() {
+		return nil
+	}
+	if ingestClient == nil || capsArtifactRepo == nil || storageRepo == nil || linkStore == nil || spaceService == nil || objectStore == nil {
+		log.Println("artifact-publisher: disabled due to incomplete dependencies")
+		return nil
+	}
+	if _, unavailable := linkStore.(*edgegrant.UnavailableStore); unavailable {
+		log.Println("artifact-publisher: disabled because cloudflare kv edge grant store is unavailable")
+		return nil
+	}
+
+	publisher, err := artifactapp.NewPublisher(
+		artifactapp.PublisherConfig{
+			PublicBaseURL:  cfg.Artifact.PublicBaseURL,
+			LinkTTLSeconds: cfg.Artifact.LinkTTLSeconds,
+		},
+		ingestClient,
+		capsArtifactRepo,
+		storageRepo,
+		linkStore,
+		spaceService,
+		objectStore,
+	)
+	if err != nil {
+		log.Printf("artifact-publisher: failed to initialize: %v", err)
+		return nil
+	}
+	log.Printf("artifact-publisher: enabled (public_base=%s, ttl=%ds)", cfg.Artifact.PublicBaseURL, cfg.Artifact.LinkTTLSeconds)
+	return publisher
 }
 
 func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {
