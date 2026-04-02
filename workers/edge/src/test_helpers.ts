@@ -20,6 +20,11 @@ export type MockR2 = {
 	bucket: R2Bucket;
 	objects: Map<string, MockR2Object>;
 	getCalls: string[];
+	putCalls: Array<{
+		key: string;
+		contentType?: string;
+		size: number;
+	}>;
 };
 
 export function createMockKV(initial?: Record<string, string>): MockKV {
@@ -65,19 +70,69 @@ export function createMockR2(initial?: Record<string, { body: string | Uint8Arra
 	}
 
 	const getCalls: string[] = [];
+	const putCalls: Array<{ key: string; contentType?: string; size: number }> = [];
 	const bucket = {
-		async get(key: string): Promise<R2ObjectBody | null> {
+		async get(key: string, options?: unknown): Promise<R2ObjectBody | null> {
 			getCalls.push(key);
 			const obj = objects.get(key);
 			if (!obj) {
 				return null;
 			}
+
+			let body = obj.body;
+			const range = (options as { range?: { offset?: number; length?: number; suffix?: number } } | undefined)?.range;
+			if (range) {
+				if (Number.isInteger(range.suffix) && (range.suffix || 0) > 0) {
+					const suffix = Math.min(range.suffix || 0, body.byteLength);
+					body = body.slice(body.byteLength - suffix);
+				} else {
+					const offset = Math.max(0, range.offset || 0);
+					const length = Math.max(0, range.length || 0);
+					body = body.slice(offset, offset + length);
+				}
+			}
+
 			return {
-				body: new Response(obj.body).body,
-				size: obj.body.byteLength,
+				body: new Response(body).body,
+				size: body.byteLength,
 				httpEtag: obj.etag,
 				httpMetadata: obj.contentType ? { contentType: obj.contentType } : undefined,
 			} as unknown as R2ObjectBody;
+		},
+		async put(key: string, value: string | ArrayBuffer | ArrayBufferView | ReadableStream, options?: unknown): Promise<R2Object> {
+			let bytes: Uint8Array;
+			if (typeof value === "string") {
+				bytes = new TextEncoder().encode(value);
+			} else if (value instanceof ReadableStream) {
+				const buffer = await new Response(value).arrayBuffer();
+				bytes = new Uint8Array(buffer);
+			} else if (value instanceof ArrayBuffer) {
+				bytes = new Uint8Array(value);
+			} else {
+				const view = value as ArrayBufferView;
+				bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+			}
+
+			const contentType = (options as { httpMetadata?: { contentType?: string } } | undefined)?.httpMetadata?.contentType;
+			const etag = `etag-${objects.size + 1}`;
+			objects.set(key, {
+				body: bytes,
+				contentType,
+				etag,
+			});
+			putCalls.push({
+				key,
+				contentType,
+				size: bytes.byteLength,
+			});
+			return {
+				key,
+				etag,
+				httpEtag: etag,
+				size: bytes.byteLength,
+				version: "v1",
+				uploaded: new Date(),
+			} as unknown as R2Object;
 		},
 	} as unknown as R2Bucket;
 
@@ -85,6 +140,7 @@ export function createMockR2(initial?: Record<string, { body: string | Uint8Arra
 		bucket,
 		objects,
 		getCalls,
+		putCalls,
 	};
 }
 

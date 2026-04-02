@@ -17,6 +17,7 @@ type Service struct {
 	callLogs       port.CallLogRepo
 	usage          port.UsageWriter
 	uploadResolver port.UploadRefResolver
+	artifactPub    port.ArtifactPublisher
 }
 
 func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, credit port.CreditClient, callLogs port.CallLogRepo) *Service {
@@ -34,6 +35,10 @@ func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 
 func (s *Service) SetUploadRefResolver(r port.UploadRefResolver) {
 	s.uploadResolver = r
+}
+
+func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
+	s.artifactPub = publisher
 }
 
 // Generate is a convenience wrapper for Execute with OperationGenerate.
@@ -114,6 +119,20 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 			"mode":        mode,
 		}).WithError(err).Error("image generation failed")
 		return model.GenerateImageResult{}, err
+	}
+	if s.artifactPub != nil {
+		published, publishErr := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
+			UserID:         req.UserID,
+			Capability:     action,
+			MediaType:      model.CapsArtifactMediaTypeImage,
+			Provider:       "nexushub",
+			ProviderTaskID: result.ID,
+			Outputs:        result.Outputs,
+		})
+		if publishErr != nil {
+			return model.GenerateImageResult{}, publishErr
+		}
+		result.Outputs = published.Outputs
 	}
 
 	cost := result.CreditCost

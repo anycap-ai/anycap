@@ -80,7 +80,7 @@ Response:
     "status": "success",
     "model": "nano-banana-2",
     "outputs": [
-      {"type": "image", "url": "https://files.anycap.ai/.../output.png", "mime_type": "image/png"}
+      {"type": "image", "url": "https://artifact.anycap.cloud/a/art_xxx", "mime_type": "image/png"}
     ],
     "usage": {"credits": 1},
     "credit_cost": 1
@@ -89,6 +89,8 @@ Response:
 ```
 
 Note: The request body currently accepts top-level `prompt` and `model`. Schema-discovered parameters (`aspect_ratio`, `resolution`) are not yet supported by the server in the generate endpoint. The CLI should be ready to pass them once the server adds support.
+
+Output URL semantics: generate returns AnyCap short-link URLs (`artifact.anycap.*`) instead of provider origin URLs. The short link token is temporary and resolves to an internal object.
 
 ### 2.4 Feature Flags (from status)
 

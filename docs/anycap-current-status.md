@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-03-31
+> Last updated: 2026-04-02
 
 ## 1. Capabilities (Cap)
 
@@ -11,6 +11,8 @@
 | Image generation | `anycap image generate` | Text-to-image with model selection, negative prompt, aspect ratio, resolution, reference images |
 | Video generation | `anycap video generate` | Text-to-video and image-to-video with duration, aspect ratio, resolution, reference images |
 | Music generation | `anycap music generate` | Instrumental and custom modes, vocal synthesis (gender selection), tags/title/lyrics, continuation from existing clip |
+
+Generation outputs are published as AnyCap short links on `artifact.anycap.{dev,cloud}`. Provider origin URLs are not exposed in API responses. Link tokens are short-lived and resolve to internally managed R2 objects.
 
 ### Media Understanding
 
