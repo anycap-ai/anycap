@@ -5,13 +5,17 @@ import (
 	"strconv"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
+	logger := logging.WithContext(ctx).WithField("capability", "image.read")
 	if err := req.Validate(); err != nil {
+		logger.WithError(err).Warn("image read validation failed")
 		return model.UnderstandResult{}, err
 	}
 	if s == nil || s.provider == nil {
+		logger.Error("image read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 
@@ -21,11 +25,13 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
+		logger.WithError(err).Error("resolve image read actor failed")
 		return model.UnderstandResult{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveImageInputs(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
+		logger.WithError(err).Error("resolve image read inputs failed")
 		return model.UnderstandResult{}, err
 	}
 
@@ -42,10 +48,13 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 }
 
 func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
+	logger := logging.WithContext(ctx).WithField("capability", "video.read")
 	if err := req.Validate(); err != nil {
+		logger.WithError(err).Warn("video read validation failed")
 		return model.UnderstandResult{}, err
 	}
 	if s == nil || s.provider == nil {
+		logger.Error("video read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 
@@ -55,11 +64,13 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
+		logger.WithError(err).Error("resolve video read actor failed")
 		return model.UnderstandResult{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveVideoInput(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
+		logger.WithError(err).Error("resolve video read input failed")
 		return model.UnderstandResult{}, err
 	}
 
@@ -76,10 +87,13 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 }
 
 func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+	logger := logging.WithContext(ctx).WithField("capability", "audio.read")
 	if err := req.Validate(); err != nil {
+		logger.WithError(err).Warn("audio read validation failed")
 		return model.UnderstandResult{}, err
 	}
 	if s == nil || s.provider == nil {
+		logger.Error("audio read provider not configured")
 		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 
@@ -89,11 +103,13 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
+		logger.WithError(err).Error("resolve audio read actor failed")
 		return model.UnderstandResult{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveAudioInput(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
+		logger.WithError(err).Error("resolve audio read input failed")
 		return model.UnderstandResult{}, err
 	}
 

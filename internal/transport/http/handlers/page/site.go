@@ -16,17 +16,17 @@ import (
 
 func (h *Handler) CreateSite(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
@@ -34,38 +34,38 @@ func (h *Handler) CreateSite(c context.Context, ctx *app.RequestContext) {
 	var req createPageSiteRequest
 	if len(ctx.Request.Body()) > 0 {
 		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 			return
 		}
 	}
 
 	site, err := h.service.CreateSite(c, userID, req.Name)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "create_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "create_page_site_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentPageSite(c, site)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
@@ -85,16 +85,16 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 
 	items, total, err := h.service.ListSites(c, userID, filter)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "list_page_sites_failed", err.Error())
 		return
 	}
 
 	presentedItems, err := h.presentPageSites(c, items)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_sites_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_sites_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, map[string]any{
+	handlers.WriteSuccess(c, ctx, map[string]any{
 		"items": presentedItems,
 		"total": total,
 	})
@@ -102,67 +102,67 @@ func (h *Handler) ListSites(c context.Context, ctx *app.RequestContext) {
 
 func (h *Handler) GetSite(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_page_site_id", err)
 		return
 	}
 
 	site, err := h.service.GetSite(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "get_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "get_page_site_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentPageSite(c, site)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_page_site_id", err)
 		return
 	}
 
 	var payload map[string]json.RawMessage
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
@@ -171,7 +171,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["name"]; exists {
 		var name *string
 		if err := json.Unmarshal(raw, &name); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_name", "name must be string")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_name", "name must be string")
 			return
 		}
 		input.Name = name
@@ -180,7 +180,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["access_mode"]; exists {
 		var accessMode string
 		if err := json.Unmarshal(raw, &accessMode); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_access_mode", "access_mode must be string")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_access_mode", "access_mode must be string")
 			return
 		}
 		mode := model.PageAccessMode(accessMode)
@@ -190,7 +190,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["spa_fallback"]; exists {
 		var spaFallback bool
 		if err := json.Unmarshal(raw, &spaFallback); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_spa_fallback", "spa_fallback must be boolean")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_spa_fallback", "spa_fallback must be boolean")
 			return
 		}
 		input.SPAFallback = &spaFallback
@@ -199,7 +199,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["show_badge"]; exists {
 		var showBadge bool
 		if err := json.Unmarshal(raw, &showBadge); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_show_badge", "show_badge must be boolean")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_show_badge", "show_badge must be boolean")
 			return
 		}
 		input.ShowBadge = &showBadge
@@ -208,7 +208,7 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["password"]; exists {
 		var password *string
 		if err := json.Unmarshal(raw, &password); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_password", "password must be string")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_password", "password must be string")
 			return
 		}
 		input.UpdatePassword = true
@@ -218,12 +218,12 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	if raw, exists := payload["no_password"]; exists {
 		var noPassword bool
 		if err := json.Unmarshal(raw, &noPassword); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_no_password", "no_password must be boolean")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_no_password", "no_password must be boolean")
 			return
 		}
 		if noPassword {
 			if input.UpdatePassword {
-				handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_password_flags", "password and no_password cannot be set together")
+				handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_password_flags", "password and no_password cannot be set together")
 				return
 			}
 			input.UpdatePassword = true
@@ -233,94 +233,94 @@ func (h *Handler) UpdateSite(c context.Context, ctx *app.RequestContext) {
 	}
 
 	if input.Name == nil && input.AccessMode == nil && input.SPAFallback == nil && input.ShowBadge == nil && !input.UpdatePassword {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "empty_update", "at least one field must be updated")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "empty_update", "at least one field must be updated")
 		return
 	}
 
 	site, err := h.service.UpdateSite(c, userID, input)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "update_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "update_page_site_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentPageSite(c, site)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) DeleteSite(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_page_site_id", err)
 		return
 	}
 
 	site, err := h.service.DeleteSite(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "delete_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "delete_page_site_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentPageSite(c, site)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) Unpublish(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "page_service_unavailable", "page service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	siteID, err := h.resolvePageSiteID(c, string(ctx.Param("id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_page_site_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_page_site_id", err)
 		return
 	}
 
 	site, err := h.service.Unpublish(c, userID, siteID)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForPageError(err), "unpublish_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForPageError(err), "unpublish_page_site_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentPageSite(c, site)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_page_site_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -43,10 +44,12 @@ func NewJWTVerifier(cfg JWTVerifierConfig, httpClient *http.Client) *JWTVerifier
 
 func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) (model.AuthUser, error) {
 	if v == nil {
+		logging.WithContext(ctx).WithField("flow", "auth.verify_identity_token").Error("jwt verifier is nil")
 		return model.AuthUser{}, model.ErrInternal
 	}
 	issuer, err := v.normalizedIssuer()
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.verify_identity_token").WithError(err).Error("normalize auth issuer failed")
 		return model.AuthUser{}, err
 	}
 
@@ -59,11 +62,13 @@ func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) 
 		return v.signingKey(ctx, kid)
 	})
 	if err != nil || token == nil || !token.Valid {
+		logging.WithContext(ctx).WithField("flow", "auth.verify_identity_token").WithError(err).Warn("jwt identity token validation failed")
 		return model.AuthUser{}, model.ErrAuthInvalid
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
+		logging.WithContext(ctx).WithField("flow", "auth.verify_identity_token").Warn("jwt claims type invalid")
 		return model.AuthUser{}, model.ErrAuthInvalid
 	}
 	if !sameIssuer(stringClaim(claims, "iss"), issuer) {
@@ -75,6 +80,7 @@ func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) 
 
 	sub, _ := claims["sub"].(string)
 	if sub == "" {
+		logging.WithContext(ctx).WithField("flow", "auth.verify_identity_token").Warn("jwt subject missing")
 		return model.AuthUser{}, model.ErrAuthInvalid
 	}
 
@@ -88,11 +94,13 @@ func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) 
 
 func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string) (model.AuthUser, error) {
 	if v == nil || strings.TrimSpace(rawToken) == "" {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").Warn("invalid input for identity profile fetch")
 		return model.AuthUser{}, model.ErrInternal
 	}
 
 	issuerURL, err := normalizeIssuerURL(v.cfg.Issuer)
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").WithError(err).Error("normalize auth issuer failed")
 		return model.AuthUser{}, err
 	}
 	issuerURL.Path = joinURLPath(issuerURL.Path, "userinfo")
@@ -101,17 +109,23 @@ func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, issuerURL.String(), nil)
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").WithError(err).Error("build identity profile request failed")
 		return model.AuthUser{}, model.ErrInternal
 	}
 	req.Header.Set("Authorization", "Bearer "+rawToken)
 
 	resp, err := v.httpClient.Do(req)
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").WithError(err).Error("identity profile request failed")
 		return model.AuthUser{}, model.ErrInternal
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusBadRequest {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":        "auth.fetch_identity_profile",
+			"status_code": resp.StatusCode,
+		}).Warn("identity profile returned non-200")
 		_, _ = io.Copy(io.Discard, resp.Body)
 		return model.AuthUser{}, mapAuthError(resp)
 	}
@@ -123,9 +137,11 @@ func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string)
 		Picture string `json:"picture"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").WithError(err).Error("decode identity profile failed")
 		return model.AuthUser{}, model.ErrInternal
 	}
 	if profile.Sub == "" {
+		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").Warn("identity profile subject missing")
 		return model.AuthUser{}, model.ErrAuthInvalid
 	}
 
@@ -159,18 +175,25 @@ func (v *JWTVerifier) signingKey(ctx context.Context, kid string) (*rsa.PublicKe
 func (v *JWTVerifier) refreshKeys(ctx context.Context) error {
 	jwksURL, err := v.jwksURL()
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.refresh_jwks").WithError(err).Error("build jwks url failed")
 		return err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, jwksURL, nil)
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.refresh_jwks").WithError(err).Error("build jwks request failed")
 		return model.ErrInternal
 	}
 	resp, err := v.httpClient.Do(req)
 	if err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.refresh_jwks").WithError(err).Error("jwks request failed")
 		return model.ErrInternal
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= http.StatusBadRequest {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":        "auth.refresh_jwks",
+			"status_code": resp.StatusCode,
+		}).Error("jwks returned non-200")
 		return model.ErrInternal
 	}
 
@@ -183,6 +206,7 @@ func (v *JWTVerifier) refreshKeys(ctx context.Context) error {
 		} `json:"keys"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		logging.WithContext(ctx).WithField("flow", "auth.refresh_jwks").WithError(err).Error("decode jwks failed")
 		return model.ErrInternal
 	}
 
@@ -193,6 +217,7 @@ func (v *JWTVerifier) refreshKeys(ctx context.Context) error {
 		}
 		publicKey, err := decodeRSAPublicKey(key.N, key.E)
 		if err != nil {
+			logging.WithContext(ctx).WithField("flow", "auth.refresh_jwks").WithError(err).Error("decode rsa public key failed")
 			return model.ErrInternal
 		}
 		decoded[key.Kid] = publicKey

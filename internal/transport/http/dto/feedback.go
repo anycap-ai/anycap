@@ -8,5 +8,6 @@ type SubmitFeedbackRequest struct {
 	Message   string          `json:"message"`
 	Context   json.RawMessage `json:"context,omitempty"`
 	RequestID string          `json:"request_id,omitempty"`
+	TraceID   string          `json:"trace_id,omitempty"`
 	Metadata  map[string]any  `json:"metadata"`
 }

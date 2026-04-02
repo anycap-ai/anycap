@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path"
@@ -59,10 +58,13 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/music"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/telemetry"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
+	"gitlab.knoffice.tech/open/common-go/logging"
 
 	hertzapp "github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -129,14 +131,14 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	if deps.kvSyncWorker != nil {
 		go func() {
 			if err := deps.kvSyncWorker.Run(context.Background()); err != nil {
-				log.Printf("kvsync worker stopped: %v", err)
+				logging.WithError(err).Error("kvsync worker stopped")
 			}
 		}()
 	}
 	if deps.usageSyncWorker != nil {
 		go func() {
 			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
-				log.Printf("usage sync worker stopped: %v", err)
+				logging.WithError(err).Error("usage sync worker stopped")
 			}
 		}()
 	}
@@ -159,13 +161,15 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	musicCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityMusic)
 	modelRouteHandler := modelroute.NewHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
 	feedbackHandler := feedback.NewHandler(deps.feedbackService)
+	telemetryHandler := telemetry.NewHandler()
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr: deps.config.HTTPAddr,
 		Middlewares: []hertzapp.HandlerFunc{
 			middleware.Recover(),
-			middleware.RequestID(),
-			middleware.AccessLog(),
+			commonmw.TraceMiddleware(),
+			commonmw.AccessMiddleware("/ping", "/healthz"),
+			commonmw.MetricsMiddleware(),
 			middleware.CORS(buildCORSAllowedOrigins(cfg)),
 		},
 		Root: []transporthttp.RouteRegistrar{
@@ -175,11 +179,11 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		V1: []transporthttp.RouteRegistrar{
 			systemHandler,
 			loginHandler,
+			telemetryHandler,
 			imageCatalog,
 			videoCatalog,
 			audioCatalog,
 			musicCatalog,
-			modelRouteHandler,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(featureProvider))
 				systemHandler.RegisterProtectedRoutes(protected)
@@ -187,6 +191,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				modelRouteHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -354,7 +359,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			presenter.IDMapper
 		}
 		if shouldBypassAuthForLocalTest(cfg) {
-			log.Println("external-id: using passthrough mapper (bypass auth enabled)")
+			logging.GetLogger().Warn("external-id using passthrough mapper because bypass auth is enabled")
 			externalIDMapper = passthroughIDMapperResolver{}
 		} else {
 			externalIDMapper = idresolver.NewPostgresExternalIDMapper(db)
@@ -480,32 +485,32 @@ func buildCORSAllowedOrigins(cfg config.Config) []string {
 
 func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {
 	if cfg.AgentPlatform.Enabled() {
-		log.Printf("capabilities: using agent-platform at %s", cfg.AgentPlatform.BaseURL)
+		logging.WithField("base_url", cfg.AgentPlatform.BaseURL).Info("capabilities using agent-platform")
 		return agentplatform.NewClient(cfg.AgentPlatform)
 	}
-	log.Println("capabilities: using stub provider (set AGENT_PLATFORM_* env vars for real provider)")
+	logging.GetLogger().Info("capabilities using stub provider")
 	return agentplatform.NewStubClient()
 }
 
 func buildFeedbackNotifier(cfg config.Config) port.FeedbackNotifier {
 	if cfg.Lark.Enabled() {
-		log.Printf("feedback: using lark webhook notifier via %s", cfg.Lark.MsgAPI)
+		logging.WithField("msg_api", cfg.Lark.MsgAPI).Info("feedback using lark webhook notifier")
 		return lark.NewWebhookNotifier(cfg.Lark.MsgAPI, cfg.Lark.WebhookURL, cfg.Lark.WebhookSecret)
 	}
-	log.Println("feedback: using stub notifier (set ANYCAP_LARK_WEBHOOK_URL and ANYCAP_LARK_WEBHOOK_SECRET for Lark notifications)")
+	logging.GetLogger().Info("feedback using stub notifier")
 	return lark.NewStubNotifier()
 }
 
 func buildCreditClient(cfg config.Config) port.CreditClient {
 	if shouldBypassAuthForLocalTest(cfg) {
-		log.Println("credit: using stub (bypass auth enabled, skipping real billing)")
+		logging.GetLogger().Warn("credit using stub because bypass auth is enabled")
 		return credit.NewStubClient(nil)
 	}
 	if cfg.Credit.Enabled() {
-		log.Printf("credit: using credit service at %s", cfg.Credit.BaseURL)
+		logging.WithField("base_url", cfg.Credit.BaseURL).Info("credit using credit service")
 		return credit.NewHTTPClient(cfg.Credit, nil)
 	}
-	log.Println("credit: using stub (set ANYCAP_CREDIT_* env vars for real credit)")
+	logging.GetLogger().Info("credit using stub client")
 	return credit.NewStubClient(nil)
 }
 
@@ -513,39 +518,42 @@ func buildCloudObjectStorage(cfg config.Config) port.CloudObjectStore {
 	if cfg.CloudS3.Enabled() {
 		s3Client, err := s3store.NewClient(context.Background(), cfg.CloudS3)
 		if err != nil {
-			log.Printf("cloud-storage: failed to initialize S3 client, falling back to stub: %v", err)
+			logging.WithError(err).Warn("cloud-storage failed to initialize S3 client; falling back to stub")
 			return s3store.NewStubClient()
 		}
-		log.Printf("cloud-storage: using S3 at %s (bucket=%s)", cfg.CloudS3.Endpoint, cfg.CloudS3.Bucket)
+		logging.WithFields(logging.Fields{
+			"endpoint": cfg.CloudS3.Endpoint,
+			"bucket":   cfg.CloudS3.Bucket,
+		}).Info("cloud-storage using S3")
 		return s3Client
 	}
-	log.Println("cloud-storage: using stub (set ANYCAP_CLOUD_S3_* env vars for real storage)")
+	logging.GetLogger().Info("cloud-storage using stub client")
 	return s3store.NewStubClient()
 }
 
 func buildKVSyncClient(cfg config.Config) kvsync.KVClient {
 	client, err := buildCloudflareKVClient(cfg)
 	if err == nil {
-		log.Printf("kvsync: using cloudflare kv namespace %s", cfg.CloudflareKV.NamespaceID)
+		logging.WithField("namespace_id", cfg.CloudflareKV.NamespaceID).Info("kvsync using cloudflare kv")
 		return client
 	}
 	if cfg.CloudflareKV.Enabled() {
-		log.Printf("kvsync: failed to initialize cloudflare kv client, using noop client: %v", err)
+		logging.WithError(err).Warn("kvsync failed to initialize cloudflare kv client; using noop client")
 	}
-	log.Println("kvsync: using noop kv client (set ANYCAP_CLOUDFLARE_* env vars for real KV)")
+	logging.GetLogger().Info("kvsync using noop kv client")
 	return kvsync.NewNoopKVClient()
 }
 
 func buildEdgeGrantStore(cfg config.Config) port.EdgeGrantStore {
 	client, err := buildCloudflareKVClient(cfg)
 	if err == nil {
-		log.Printf("edge-grant: using cloudflare kv namespace %s", cfg.CloudflareKV.NamespaceID)
+		logging.WithField("namespace_id", cfg.CloudflareKV.NamespaceID).Info("edge-grant using cloudflare kv")
 		return edgegrant.NewKVStore(client)
 	}
 	if cfg.CloudflareKV.Enabled() {
-		log.Printf("edge-grant: failed to initialize cloudflare kv client, using unavailable store: %v", err)
+		logging.WithError(err).Warn("edge-grant failed to initialize cloudflare kv client; using unavailable store")
 	} else {
-		log.Println("edge-grant: unavailable store (set ANYCAP_CLOUDFLARE_* env vars for preview/access grants)")
+		logging.GetLogger().Info("edge-grant using unavailable store")
 	}
 	return edgegrant.NewUnavailableStore()
 }
@@ -584,11 +592,11 @@ func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, 
 	if cfg.PGDSN != "" {
 		repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 		if err != nil {
-			log.Printf("catalog: failed to initialize postgres repo, falling back: %v", err)
+			logging.WithError(err).Warn("catalog failed to initialize postgres repo; falling back")
 			modelRouteUnavailableMessage = "model-routes: postgres repo unavailable; admin CRUD endpoints will be unavailable"
 		} else {
 			if platformBaseURL != "" {
-				log.Printf("catalog: using postgres anycap_model_routes table with nexushub schema enrichment via %s", platformBaseURL)
+				logging.WithField("platform_base_url", platformBaseURL).Info("catalog using postgres model routes with nexushub schema enrichment")
 				return nexushub.NewCatalogSchemaEnricher(
 					repo,
 					nexushub.NewPlatformClient(nexushub.PlatformClientConfig{
@@ -598,14 +606,14 @@ func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, 
 				), repo
 			}
 
-			log.Println("catalog: using postgres anycap_model_routes table without schema enrichment")
+			logging.GetLogger().Info("catalog using postgres model routes without schema enrichment")
 			return repo, repo
 		}
 	}
 
-	log.Println(modelRouteUnavailableMessage)
+	logging.WithField("message", modelRouteUnavailableMessage).Warn("catalog model-route repository unavailable")
 	if platformBaseURL == "" {
-		log.Println("catalog: using stub (set NEXUSHUB_PLATFORM_BASE_URL or NEXUSHUB_BASE_URL for real catalog)")
+		logging.GetLogger().Info("catalog using stub provider")
 		return nexushub.NewCatalogStubWith([]model.ModelSpec{
 			{
 				ModelID:     "flux-dev",
@@ -643,7 +651,7 @@ func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, 
 		}), nil
 	}
 
-	log.Printf("catalog: using nexushub platform at %s", platformBaseURL)
+	logging.WithField("platform_base_url", platformBaseURL).Info("catalog using nexushub platform")
 	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: platformBaseURL, Token: platformToken}), nil
 }
 
@@ -652,14 +660,14 @@ func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
 	coreToken := cfg.ResolvedNexusHubCoreToken()
 
 	if hasImageExecutionProvider(cfg) {
-		log.Printf("image-execution: using nexushub client at %s", coreBaseURL)
+		logging.WithField("base_url", coreBaseURL).Info("image-execution using nexushub client")
 		return nexushub.NewClient(nexushub.ClientConfig{
 			BaseURL: coreBaseURL,
 			Token:   coreToken,
 		})
 	}
 
-	log.Println("image-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	logging.GetLogger().Info("image-execution using stub client")
 	return nexushub.NewStubClient()
 }
 
@@ -672,14 +680,14 @@ func buildVideoExecutionClient(cfg config.Config) port.NexusHubClient {
 	coreToken := cfg.ResolvedNexusHubCoreToken()
 
 	if hasVideoExecutionProvider(cfg) {
-		log.Printf("video-execution: using nexushub client at %s", coreBaseURL)
+		logging.WithField("base_url", coreBaseURL).Info("video-execution using nexushub client")
 		return nexushub.NewClient(nexushub.ClientConfig{
 			BaseURL: coreBaseURL,
 			Token:   coreToken,
 		})
 	}
 
-	log.Println("video-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	logging.GetLogger().Info("video-execution using stub client")
 	return nexushub.NewStubClient()
 }
 
@@ -688,14 +696,14 @@ func buildMusicExecutionClient(cfg config.Config) port.NexusHubClient {
 	coreToken := cfg.ResolvedNexusHubCoreToken()
 
 	if hasMusicExecutionProvider(cfg) {
-		log.Printf("music-execution: using nexushub client at %s", coreBaseURL)
+		logging.WithField("base_url", coreBaseURL).Info("music-execution using nexushub client")
 		return nexushub.NewClient(nexushub.ClientConfig{
 			BaseURL: coreBaseURL,
 			Token:   coreToken,
 		})
 	}
 
-	log.Println("music-execution: using stub client (set NEXUSHUB_CORE_BASE_URL/NEXUSHUB_CORE_TOKEN or legacy NEXUSHUB_BASE_URL/NEXUSHUB_TOKEN for real generation)")
+	logging.GetLogger().Info("music-execution using stub client")
 	return nexushub.NewStubClient()
 }
 
@@ -714,7 +722,7 @@ func hasMusicExecutionProvider(cfg config.Config) bool {
 func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthenticator) hertzapp.HandlerFunc {
 	if shouldBypassAuthForLocalTest(cfg) {
 		principal := buildBypassPrincipal()
-		log.Printf("auth: bypass enabled for local testing with user_id=%s", principal.UserID)
+		logging.WithField("user_id", principal.UserID).Warn("auth bypass enabled for local testing")
 		return middleware.LocalBypassAuth(principal)
 	}
 	return middleware.Auth(apiKeys, identityTokens)
@@ -765,7 +773,12 @@ func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*sqlstore.SQLDB, error) {
 }
 
 func (s *Server) Run() {
-	log.Printf("%s listening on %s (env=%s version=%s)", s.config.AppName, s.config.HTTPAddr, s.config.AppEnv, s.buildInfo.Version)
+	logging.WithFields(logging.Fields{
+		"app":     s.config.AppName,
+		"addr":    s.config.HTTPAddr,
+		"env":     s.config.AppEnv,
+		"version": s.buildInfo.Version,
+	}).Info("server listening")
 	s.httpServer.Spin()
 }
 

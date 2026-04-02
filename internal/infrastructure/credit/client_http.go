@@ -13,6 +13,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/userid"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 const creditCentPerCredit int64 = 100
@@ -39,6 +40,10 @@ func NewHTTPClient(cfg config.CreditConfig, httpClient *http.Client) *HTTPClient
 func (c *HTTPClient) GetBalance(ctx context.Context, userID string) (model.Balance, error) {
 	numericUserID, err := parseUserID(userID)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider": "credit",
+			"stage":    "parse_user_id",
+		}).WithError(err).Error("parse credit balance user id failed")
 		return model.Balance{}, model.ErrInternal
 	}
 
@@ -66,6 +71,10 @@ func (c *HTTPClient) GetBalance(ctx context.Context, userID string) (model.Balan
 func (c *HTTPClient) Deduct(ctx context.Context, userID string, amount int64, reason, requestID string) error {
 	numericUserID, err := parseUserID(userID)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider": "credit",
+			"stage":    "parse_user_id",
+		}).WithError(err).Error("parse credit deduct user id failed")
 		return model.ErrInternal
 	}
 	if amount <= 0 {
@@ -98,6 +107,10 @@ func (c *HTTPClient) GrantSignupReward(ctx context.Context, userID string) error
 	}
 	numericUserID, err := parseUserID(userID)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider": "credit",
+			"stage":    "parse_user_id",
+		}).WithError(err).Error("parse signup reward user id failed")
 		return model.ErrInternal
 	}
 	if c.config.SignupRewardPackageID <= 0 && (c.config.SignupRewardPackageType == "" || c.config.SignupRewardPackageSubtype == "") {
@@ -131,6 +144,10 @@ func (c *HTTPClient) GrantSignupReward(ctx context.Context, userID string) error
 func (c *HTTPClient) ListTransactions(ctx context.Context, userID string, limit, offset int) ([]model.CreditTransaction, int, error) {
 	numericUserID, err := parseUserID(userID)
 	if err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"provider": "credit",
+			"stage":    "parse_user_id",
+		}).WithError(err).Error("parse credit transactions user id failed")
 		return nil, 0, model.ErrInternal
 	}
 	if limit <= 0 {
@@ -194,13 +211,19 @@ type transactionData struct {
 }
 
 func (c *HTTPClient) post(ctx context.Context, path string, payload any, dest any) error {
+	logger := logging.WithContext(ctx).WithFields(logging.Fields{
+		"provider": "credit",
+		"path":     path,
+	})
 	body, err := json.Marshal(payload)
 	if err != nil {
+		logger.WithError(err).Error("marshal credit request failed")
 		return model.ErrInternal
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(body))
 	if err != nil {
+		logger.WithError(err).Error("build credit request failed")
 		return model.ErrInternal
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -208,11 +231,13 @@ func (c *HTTPClient) post(ctx context.Context, path string, payload any, dest an
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		logger.WithError(err).Error("credit request failed")
 		return model.ErrBillingUncertain
 	}
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(dest); err != nil {
+		logger.WithError(err).Error("decode credit response failed")
 		return model.ErrBillingUncertain
 	}
 	return nil

@@ -89,11 +89,12 @@ func BrowserPollFlow(ctx context.Context, client *httpclient.Client, stderr io.W
 
 		switch poll.Data.Status {
 		case "complete", "completed":
-			cred, email, err := parseTokenResponse(pollResp.Body)
-			if err != nil {
+			result, parseErr := parseTokenResponseFull(pollResp.Body)
+			if parseErr != nil {
 				return nil, "", fmt.Errorf("authentication completed but no api key was returned; run 'anycap login' again")
 			}
-			return cred, email, nil
+			cliconfig.SetDeviceUserID(result.UserID)
+			return result.Credential, result.Email, nil
 		case "expired":
 			return nil, "", fmt.Errorf("authentication expired. Please try again")
 		case "slow_down":

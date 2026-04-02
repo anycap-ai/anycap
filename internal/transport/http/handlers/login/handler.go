@@ -10,6 +10,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/route"
@@ -48,10 +50,12 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 }
 
 func (h *Handler) Init(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.init")
 	var req dto.LoginInitRequest
 	if len(ctx.Request.Body()) != 0 {
 		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-			ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+			logger.WithError(err).Warn("invalid login init request body")
+			ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 			return
 		}
 	}
@@ -59,29 +63,41 @@ func (h *Handler) Init(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"method":      req.Method,
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("login init failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) DeviceCode(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.device_code")
 	result, err := h.service.Init(c, "device")
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("device code init failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) DeviceCodeCheck(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.device_code_check")
 	var req dto.DeviceCodeCheckRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid device code check request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
@@ -89,17 +105,23 @@ func (h *Handler) DeviceCodeCheck(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("device code check failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) Poll(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.poll")
 	var req dto.LoginPollRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid login poll request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
@@ -107,25 +129,35 @@ func (h *Handler) Poll(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code":      status,
+			"error_code":       payload.Error.Code,
+			"login_session_id": req.LoginSessionID,
+		}).WithError(err).Error("login poll failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
 
 	presentedUser, resolveErr := presenter.PresentLoginUser(c, h.mapper, result.User)
 	if resolveErr != nil {
-		ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+		logger.WithFields(logging.Fields{
+			"login_session_id": req.LoginSessionID,
+		}).WithError(resolveErr).Error("present login user failed")
+		ctx.JSON(500, dto.ErrorEnvelope(trace.GetTraceID(c), "INTERNAL_ERROR", resolveErr.Error()))
 		return
 	}
 	result.User = presentedUser
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) Exchange(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.exchange")
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
+		logger.Warn("missing principal for login exchange")
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
-		payload.ID = middleware.GetRequestID(ctx)
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
@@ -134,32 +166,40 @@ func (h *Handler) Exchange(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("login exchange failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
 
 	presentedUser, resolveErr := presenter.PresentLoginUser(c, h.mapper, result.User)
 	if resolveErr != nil {
-		ctx.JSON(500, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INTERNAL_ERROR", resolveErr.Error()))
+		logger.WithError(resolveErr).Error("present exchanged login user failed")
+		ctx.JSON(500, dto.ErrorEnvelope(trace.GetTraceID(c), "INTERNAL_ERROR", resolveErr.Error()))
 		return
 	}
 	result.User = presentedUser
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) DeviceVerify(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.device_verify")
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
+		logger.Warn("missing principal for device verify")
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
-		payload.ID = middleware.GetRequestID(ctx)
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
 
 	var req dto.DeviceVerifyRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid device verify request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
@@ -172,25 +212,32 @@ func (h *Handler) DeviceVerify(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("device verify failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func (h *Handler) BrowserVerify(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "login.browser_verify")
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
+		logger.Warn("missing principal for browser verify")
 		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
-		payload.ID = middleware.GetRequestID(ctx)
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
 
 	var req dto.BrowserVerifyRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		ctx.JSON(400, dto.ErrorEnvelope(middleware.GetRequestID(ctx), "INVALID_PARAM", "invalid json request body"))
+		logger.WithError(err).Warn("invalid browser verify request body")
+		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
 		return
 	}
 
@@ -203,11 +250,15 @@ func (h *Handler) BrowserVerify(c context.Context, ctx *app.RequestContext) {
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)
-		payload.ID = middleware.GetRequestID(ctx)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("browser verify failed")
+		payload.ID = trace.GetTraceID(c)
 		ctx.JSON(status, payload)
 		return
 	}
-	ctx.JSON(200, dto.SuccessEnvelope(middleware.GetRequestID(ctx), result))
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
 }
 
 func profileField(user *dto.AuthUserProfile, pick func(*dto.AuthUserProfile) string) string {

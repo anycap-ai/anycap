@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 // WebhookNotifier sends feedback notifications via a Lark message proxy service.
@@ -122,6 +122,10 @@ func NewStubNotifier() *StubNotifier {
 }
 
 func (n *StubNotifier) Notify(_ context.Context, fb model.Feedback) error {
-	log.Printf("feedback notification (stub): id=%s type=%s message=%s", fb.ID, fb.Type, fb.Message)
+	logging.WithFields(logging.Fields{
+		"feedback_id": fb.ID,
+		"type":        fb.Type,
+		"message":     fb.Message,
+	}).Info("feedback notification stub")
 	return nil
 }

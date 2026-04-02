@@ -64,7 +64,7 @@ func TestDevicePoll_ReturnsStructuredResult(t *testing.T) {
 			"status":     "complete",
 			"api_key":    "ak-test",
 			"api_key_id": "key-test",
-			"user":       map[string]any{"email": "dev@anycap.ai", "name": "Dev User"},
+			"user":       map[string]any{"id": "u_abc123", "email": "dev@anycap.ai", "name": "Dev User"},
 		}})
 	}))
 	defer ts.Close()
@@ -83,6 +83,41 @@ func TestDevicePoll_ReturnsStructuredResult(t *testing.T) {
 	}
 	if result.User == nil || result.User.Email != "dev@anycap.ai" {
 		t.Fatalf("expected user email dev@anycap.ai, got %+v", result.User)
+	}
+	if result.User.ID != "u_abc123" {
+		t.Fatalf("expected user id u_abc123, got %q", result.User.ID)
+	}
+}
+
+func TestDevicePoll_UserIDPreservedThroughRemarshal(t *testing.T) {
+	// Verify that DevicePollResult preserves user ID through the
+	// marshal -> parseTokenResponseFull round-trip used in DeviceFlow.
+	poll := DevicePollResult{
+		Status:   "complete",
+		APIKey:   "ak-test",
+		APIKeyID: "key-test",
+		User: &struct {
+			ID    string `json:"id"`
+			Email string `json:"email"`
+			Name  string `json:"name"`
+		}{
+			ID:    "u_abc123",
+			Email: "dev@anycap.ai",
+			Name:  "Dev User",
+		},
+	}
+
+	body, err := json.Marshal(map[string]any{"data": poll})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	result, err := ParseTokenResponseFull(body)
+	if err != nil {
+		t.Fatalf("parseTokenResponseFull: %v", err)
+	}
+	if result.UserID != "u_abc123" {
+		t.Fatalf("expected UserID u_abc123 after re-marshal, got %q", result.UserID)
 	}
 }
 

@@ -16,9 +16,9 @@ You can reason, plan, and decide -- but you cannot generate images, produce vide
 
 ## Install
 
-```bash
-curl -fsSL https://anycap.ai/install.sh | sh
-```
+If `anycap` is not installed (`command -v anycap` fails), install it before proceeding.
+
+Read the latest installation guide at https://anycap.ai/ to get the install command. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
 
 The CLI auto-updates on each run. To update manually: `anycap update`.
 

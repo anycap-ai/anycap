@@ -7,6 +7,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 type Service struct {
@@ -95,45 +96,72 @@ func (s *Service) Status(principal *model.Principal) model.StatusResult {
 }
 
 func (s *Service) Logout(ctx context.Context, principal *model.Principal) error {
+	logger := logging.WithContext(ctx).WithField("flow", "system.logout")
 	if principal == nil || principal.APIKeyID == "" {
+		logger.Warn("invalid principal for logout")
 		return model.ErrAuthInvalid
 	}
 	if s.apiKeys == nil {
+		logger.Error("api key service not configured for logout")
 		return model.ErrInternal
 	}
-	return s.apiKeys.RevokeAPIKey(ctx, principal.APIKeyID)
+	if err := s.apiKeys.RevokeAPIKey(ctx, principal.APIKeyID); err != nil {
+		logger.WithError(err).Error("revoke api key failed")
+		return err
+	}
+	return nil
 }
 
 func (s *Service) CurrentUser(ctx context.Context, principal *model.Principal) (model.User, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.current_user")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for current user")
 		return model.User{}, model.ErrAuthInvalid
 	}
 	if s.users == nil {
+		logger.Error("user reader not configured")
 		return model.User{}, model.ErrInternal
 	}
-	return s.users.GetUserByID(ctx, principal.UserID)
+	user, err := s.users.GetUserByID(ctx, principal.UserID)
+	if err != nil {
+		logger.WithError(err).Error("load current user failed")
+		return model.User{}, err
+	}
+	return user, nil
 }
 
 func (s *Service) CreditBalance(ctx context.Context, principal *model.Principal) (model.Balance, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.credit_balance")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for credit balance")
 		return model.Balance{}, model.ErrAuthInvalid
 	}
 	if s.credit == nil {
+		logger.Error("credit client not configured")
 		return model.Balance{}, model.ErrInternal
 	}
-	return s.credit.GetBalance(ctx, principal.UserID)
+	balance, err := s.credit.GetBalance(ctx, principal.UserID)
+	if err != nil {
+		logger.WithError(err).Error("load credit balance failed")
+		return model.Balance{}, err
+	}
+	return balance, nil
 }
 
 func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (model.APIKeyListResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.list_api_keys")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for list api keys")
 		return model.APIKeyListResult{}, model.ErrAuthInvalid
 	}
 	if s.apiKeys == nil {
+		logger.Error("api key service not configured")
 		return model.APIKeyListResult{}, model.ErrInternal
 	}
 
 	keys, err := s.apiKeys.ListAPIKeys(ctx, principal.UserID)
 	if err != nil {
+		logger.WithError(err).Error("list api keys failed")
 		return model.APIKeyListResult{}, err
 	}
 
@@ -141,6 +169,7 @@ func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (
 	if s.usage != nil {
 		summaries, err = s.usage.SummarizeUsageByAPIKey(ctx, principal.UserID, model.UsageQuery{})
 		if err != nil {
+			logger.WithError(err).Error("summarize api key usage failed")
 			return model.APIKeyListResult{}, err
 		}
 	}
@@ -160,47 +189,79 @@ func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (
 }
 
 func (s *Service) DisableAPIKey(ctx context.Context, principal *model.Principal, keyID string) error {
+	logger := logging.WithContext(ctx).WithField("flow", "system.disable_api_key")
 	if principal == nil || principal.UserID == "" || keyID == "" {
+		logger.Warn("invalid input for disable api key")
 		return model.ErrAuthInvalid
 	}
 	if s.apiKeys == nil {
+		logger.Error("api key service not configured")
 		return model.ErrInternal
 	}
-	return s.apiKeys.DisableAPIKey(ctx, principal.UserID, keyID)
+	if err := s.apiKeys.DisableAPIKey(ctx, principal.UserID, keyID); err != nil {
+		logger.WithField("key_id", keyID).WithError(err).Error("disable api key failed")
+		return err
+	}
+	return nil
 }
 
 func (s *Service) DeleteAPIKey(ctx context.Context, principal *model.Principal, keyID string) error {
+	logger := logging.WithContext(ctx).WithField("flow", "system.delete_api_key")
 	if principal == nil || principal.UserID == "" || keyID == "" {
+		logger.Warn("invalid input for delete api key")
 		return model.ErrAuthInvalid
 	}
 	if s.apiKeys == nil {
+		logger.Error("api key service not configured")
 		return model.ErrInternal
 	}
-	return s.apiKeys.DeleteAPIKey(ctx, principal.UserID, keyID)
+	if err := s.apiKeys.DeleteAPIKey(ctx, principal.UserID, keyID); err != nil {
+		logger.WithField("key_id", keyID).WithError(err).Error("delete api key failed")
+		return err
+	}
+	return nil
 }
 
 func (s *Service) UsageSummary(ctx context.Context, principal *model.Principal, query model.UsageQuery) (model.UsageSummaryResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.usage_summary")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for usage summary")
 		return model.UsageSummaryResult{}, model.ErrAuthInvalid
 	}
 	if s.usage == nil {
+		logger.Error("usage reader not configured")
 		return model.UsageSummaryResult{}, model.ErrInternal
 	}
-	return s.usage.SummarizeUsageByUser(ctx, principal.UserID, query)
+	result, err := s.usage.SummarizeUsageByUser(ctx, principal.UserID, query)
+	if err != nil {
+		logger.WithError(err).Error("load usage summary failed")
+		return model.UsageSummaryResult{}, err
+	}
+	return result, nil
 }
 
 func (s *Service) UsageEvents(ctx context.Context, principal *model.Principal, query model.UsageQuery) (model.UsageEventListResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.usage_events")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for usage events")
 		return model.UsageEventListResult{}, model.ErrAuthInvalid
 	}
 	if s.usage == nil {
+		logger.Error("usage reader not configured")
 		return model.UsageEventListResult{}, model.ErrInternal
 	}
-	return s.usage.ListUsageEventsByUser(ctx, principal.UserID, query)
+	result, err := s.usage.ListUsageEventsByUser(ctx, principal.UserID, query)
+	if err != nil {
+		logger.WithError(err).Error("load usage events failed")
+		return model.UsageEventListResult{}, err
+	}
+	return result, nil
 }
 
 func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit int) (model.LogsResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.logs")
 	if principal == nil || principal.UserID == "" {
+		logger.Warn("invalid principal for logs")
 		return model.LogsResult{}, model.ErrAuthInvalid
 	}
 	if limit <= 0 {
@@ -210,15 +271,18 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 		limit = 100
 	}
 	if s.callLogs == nil || s.credit == nil {
+		logger.Error("logs dependencies not configured")
 		return model.LogsResult{}, model.ErrInternal
 	}
 
 	callLogs, err := s.callLogs.ListByUserID(ctx, principal.UserID, limit)
 	if err != nil {
+		logger.WithError(err).Error("list call logs failed")
 		return model.LogsResult{}, err
 	}
 	transactions, _, err := s.credit.ListTransactions(ctx, principal.UserID, limit, 0)
 	if err != nil {
+		logger.WithError(err).Error("list credit transactions failed")
 		return model.LogsResult{}, err
 	}
 
@@ -259,16 +323,20 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 }
 
 func (s *Service) DashboardSummary(ctx context.Context, principal *model.Principal) (model.DashboardSummaryResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.dashboard_summary")
 	user, err := s.CurrentUser(ctx, principal)
 	if err != nil {
+		logger.WithError(err).Error("load dashboard user failed")
 		return model.DashboardSummaryResult{}, err
 	}
 	balance, err := s.CreditBalance(ctx, principal)
 	if err != nil {
+		logger.WithError(err).Error("load dashboard balance failed")
 		return model.DashboardSummaryResult{}, err
 	}
 	logs, err := s.Logs(ctx, principal, 5)
 	if err != nil {
+		logger.WithError(err).Error("load dashboard logs failed")
 		return model.DashboardSummaryResult{}, err
 	}
 

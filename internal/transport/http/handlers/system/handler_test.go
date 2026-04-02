@@ -11,6 +11,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	commonconsts "gitlab.knoffice.tech/open/common-go/consts"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -39,7 +41,7 @@ func TestHandler_Features_ReturnsGlobalFeatureView(t *testing.T) {
 
 	handler := NewHandler(service, nil)
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(middleware.RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	h.GET("/v1/features", handler.Features)
 
 	w := ut.PerformRequest(h.Engine, http.MethodGet, "/v1/features", nil)
@@ -58,6 +60,40 @@ func TestHandler_Features_ReturnsGlobalFeatureView(t *testing.T) {
 	}
 }
 
+func TestHandler_Features_UsesTraceIDFromCommonMiddleware(t *testing.T) {
+	service := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetFeatureProvider(fakeSystemFeatureProvider{
+		global: map[string]bool{"image.generate": true},
+	})
+
+	handler := NewHandler(service, nil)
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(commonmw.TraceMiddleware())
+	h.GET("/v1/features", handler.Features)
+
+	w := ut.PerformRequest(
+		h.Engine,
+		http.MethodGet,
+		"/v1/features",
+		nil,
+		ut.Header{Key: commonconsts.Header_TraceID, Value: "trace-common-1"},
+	)
+	if w.Code != 200 {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if got := w.Header().Get(commonconsts.Header_TraceID); got != "trace-common-1" {
+		t.Fatalf("expected X-Trace-ID header trace-common-1, got %q", got)
+	}
+
+	var body map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("failed to parse body: %v", err)
+	}
+	if body["id"] != "trace-common-1" {
+		t.Fatalf("expected response id trace-common-1, got %#v", body["id"])
+	}
+}
+
 func TestHandler_MeFeatures_ReturnsUserFeatureView(t *testing.T) {
 	service := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	service.SetFeatureProvider(fakeSystemFeatureProvider{
@@ -68,7 +104,7 @@ func TestHandler_MeFeatures_ReturnsUserFeatureView(t *testing.T) {
 	handler := NewHandler(service, nil)
 	h := server.Default(server.WithHostPorts(":0"))
 	h.Use(
-		middleware.RequestID(),
+		commonmw.TraceMiddleware(),
 		middleware.LocalBypassAuth(model.Principal{UserID: "u_1", Email: "external@gmail.com", AuthType: "local_bypass"}),
 	)
 	h.GET("/v1/me/features", handler.MeFeatures)
@@ -93,7 +129,7 @@ func TestHandler_MeFeatures_RequiresPrincipal(t *testing.T) {
 	service := systemapp.NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	handler := NewHandler(service, nil)
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(middleware.RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	h.GET("/v1/me/features", func(ctx context.Context, c *app.RequestContext) {
 		handler.MeFeatures(ctx, c)
 	})
@@ -122,7 +158,7 @@ func TestHandler_Status_UsesUserFeaturesForScopes(t *testing.T) {
 	handler := NewHandler(service, presenter.PassthroughIDMapper{})
 	h := server.Default(server.WithHostPorts(":0"))
 	h.Use(
-		middleware.RequestID(),
+		commonmw.TraceMiddleware(),
 		middleware.LocalBypassAuth(model.Principal{
 			UserID:   "user-1",
 			APIKeyID: "akid_1",

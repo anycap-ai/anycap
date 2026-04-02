@@ -7,6 +7,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -15,7 +16,7 @@ func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthentic
 	return func(ctx context.Context, c *app.RequestContext) {
 		header := string(c.Request.Header.Peek("Authorization"))
 		if !strings.HasPrefix(strings.ToLower(header), "bearer ") {
-			c.AbortWithStatusJSON(401, dto.ErrorEnvelope(GetRequestID(c), "AUTH_INVALID", "missing or invalid bearer token"))
+			c.AbortWithStatusJSON(401, dto.ErrorEnvelope(trace.GetTraceID(ctx), "AUTH_INVALID", "missing or invalid bearer token"))
 			return
 		}
 
@@ -36,7 +37,7 @@ func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthentic
 		if err != nil {
 			ReportError(c, err)
 			status, payload := dto.MapDomainError(err)
-			payload.ID = GetRequestID(c)
+			payload.ID = trace.GetTraceID(ctx)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}

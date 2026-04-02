@@ -15,67 +15,67 @@ import (
 
 func (h *Handler) CreateFolder(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	var req createFolderRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
 	parentID, err := h.resolveOptionalDriveNodeIDFromRaw(c, req.ParentID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_parent_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_parent_id", err)
 		return
 	}
 
 	node, err := h.service.CreateFolder(c, userID, parentID, req.Name)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "create_drive_folder_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "create_drive_folder_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentDriveNode(c, node)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	parentID, err := h.resolveOptionalDriveNodeIDFromQuery(c, string(ctx.Query("parent_id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_parent_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_parent_id", err)
 		return
 	}
 
@@ -91,16 +91,16 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 
 	items, total, err := h.service.ListNodes(c, userID, parentID, filter)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "list_drive_nodes_failed", err.Error())
 		return
 	}
 
 	presentedItems, err := h.presentDriveNodes(c, items)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_nodes_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_nodes_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, map[string]any{
+	handlers.WriteSuccess(c, ctx, map[string]any{
 		"items": presentedItems,
 		"total": total,
 	})
@@ -108,30 +108,30 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 
 func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
 
 	nodeID, err := h.resolver.ResolveDriveNodeID(c, string(ctx.Param("id")))
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_drive_node_id", err)
 		return
 	}
 
 	var payload map[string]json.RawMessage
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
-		handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 
 	if raw, exists := payload["name"]; exists {
 		if err := json.Unmarshal(raw, &name); err != nil {
-			handlers.WriteError(ctx, consts.StatusBadRequest, "invalid_name", "name must be string")
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_name", "name must be string")
 			return
 		}
 	}
@@ -151,38 +151,38 @@ func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {
 		updateParent = true
 		parentID, err = h.resolveOptionalDriveNodeIDFromRaw(c, raw)
 		if err != nil {
-			idresolver.WriteIDResolveError(ctx, "invalid_parent_id", err)
+			idresolver.WriteIDResolveError(c, ctx, "invalid_parent_id", err)
 			return
 		}
 	}
 
 	node, err := h.service.UpdateNode(c, userID, nodeID, name, parentID, updateParent)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "update_drive_node_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "update_drive_node_failed", err.Error())
 		return
 	}
 
 	presented, err := h.presentDriveNode(c, node)
 	if err != nil {
-		handlers.WriteError(ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
 		return
 	}
-	handlers.WriteSuccess(ctx, presented)
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 	if h.service == nil {
-		handlers.WriteError(ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
 
-	userID, ok := handlers.ParseUserID(ctx, principal.UserID)
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
 	if !ok {
 		return
 	}
@@ -190,17 +190,17 @@ func (h *Handler) DeleteNode(c context.Context, ctx *app.RequestContext) {
 	rawID := string(ctx.Param("id"))
 	nodeID, err := h.resolver.ResolveDriveNodeID(c, rawID)
 	if err != nil {
-		idresolver.WriteIDResolveError(ctx, "invalid_drive_node_id", err)
+		idresolver.WriteIDResolveError(c, ctx, "invalid_drive_node_id", err)
 		return
 	}
 
 	deletedCount, err := h.service.DeleteNode(c, userID, nodeID)
 	if err != nil {
-		handlers.WriteError(ctx, statusCodeForDriveError(err), "delete_drive_node_failed", err.Error())
+		handlers.WriteError(c, ctx, statusCodeForDriveError(err), "delete_drive_node_failed", err.Error())
 		return
 	}
 
-	handlers.WriteSuccess(ctx, map[string]any{
+	handlers.WriteSuccess(c, ctx, map[string]any{
 		"id":            rawID,
 		"deleted":       true,
 		"deleted_count": deletedCount,

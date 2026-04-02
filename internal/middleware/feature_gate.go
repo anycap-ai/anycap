@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/trace"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -99,11 +100,10 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 	principal, _ := GetPrincipal(ctx)
 	allowed, enabled := provider.EnabledFor(principal, feat)
 	if !enabled {
-		requestID := GetRequestID(ctx)
+		requestID := trace.GetTraceID(c)
 		ctx.JSON(503, map[string]any{
-			"id":         requestID,
-			"request_id": requestID,
-			"status":     "error",
+			"id":     requestID,
+			"status": "error",
 			"error": map[string]any{
 				"code":    "FEATURE_DISABLED",
 				"message": feat + " is not available on this server",
@@ -114,11 +114,10 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 		return
 	}
 	if !allowed {
-		requestID := GetRequestID(ctx)
+		requestID := trace.GetTraceID(c)
 		ctx.JSON(403, map[string]any{
-			"id":         requestID,
-			"request_id": requestID,
-			"status":     "error",
+			"id":     requestID,
+			"status": "error",
 			"error": map[string]any{
 				"code":    "FEATURE_NOT_ALLOWED",
 				"message": feat + " is not allowed for the current user",

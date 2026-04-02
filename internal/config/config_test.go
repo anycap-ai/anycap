@@ -17,6 +17,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	t.Setenv("ANYCAP_APP_ENV", "")
 	t.Setenv("ANYCAP_HTTP_ADDR", "")
 	t.Setenv("ANYCAP_RUNTIME_MODE", "")
+	t.Setenv("ANYCAP_LOG_OUTPUT", "")
 	t.Setenv("ANYCAP_RATE_LIMIT_RPM", "")
 	t.Setenv("NEXUSHUB_BASE_URL", "")
 	t.Setenv("NEXUSHUB_TOKEN", "")
@@ -38,6 +39,9 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.RuntimeMode != "stub" {
 		t.Fatalf("expected runtime mode stub, got %q", cfg.RuntimeMode)
+	}
+	if cfg.LogOutput != "stdout" {
+		t.Fatalf("expected default log output stdout, got %q", cfg.LogOutput)
 	}
 	if cfg.RateLimitRPM != 60 {
 		t.Fatalf("expected default rate limit 60, got %d", cfg.RateLimitRPM)
@@ -75,6 +79,19 @@ func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
 	}
 	if cfg.PasswordPepper != "pepper-value" {
 		t.Fatalf("expected password pepper from env, got %q", cfg.PasswordPepper)
+	}
+}
+
+func TestLoadFromEnv_ReadsLogOutput(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_LOG_OUTPUT", "stdout,/var/log/kntech/anycap/app.log")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.LogOutput != "stdout,/var/log/kntech/anycap/app.log" {
+		t.Fatalf("expected log output from env, got %q", cfg.LogOutput)
 	}
 }
 

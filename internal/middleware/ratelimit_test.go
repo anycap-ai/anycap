@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	infraratelimit "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -221,7 +222,7 @@ func TestRateLimit_UsesRegisteredRouteCapabilityBeforeHandlerMiddleware(t *testi
 
 func newRateLimitTestServer() *server.Hertz {
 	h := server.Default(server.WithHostPorts(":0"))
-	h.Use(RequestID())
+	h.Use(commonmw.TraceMiddleware())
 	return h
 }
 

@@ -11,42 +11,10 @@ import (
 type contextKey struct{ name string }
 
 var (
-	ctxRequestIDKey = &contextKey{"request_id"}
-	ctxUserIDKey    = &contextKey{"user_id"}
+	ctxUserIDKey = &contextKey{"user_id"}
 )
 
-const (
-	requestIDKey = "request_id"
-	principalKey = "principal"
-)
-
-func SetRequestID(ctx *app.RequestContext, requestID string) {
-	ctx.Set(requestIDKey, requestID)
-}
-
-func GetRequestID(ctx *app.RequestContext) string {
-	value, ok := ctx.Get(requestIDKey)
-	if !ok {
-		return ""
-	}
-
-	requestID, _ := value.(string)
-	return requestID
-}
-
-// ContextWithRequestID injects the request ID into a context.Context
-// so downstream code (infrastructure clients, etc.) can access it.
-func ContextWithRequestID(ctx context.Context, requestID string) context.Context {
-	return context.WithValue(ctx, ctxRequestIDKey, requestID)
-}
-
-// RequestIDFromContext extracts the request ID from a context.Context.
-func RequestIDFromContext(ctx context.Context) string {
-	if v, ok := ctx.Value(ctxRequestIDKey).(string); ok {
-		return v
-	}
-	return ""
-}
+const principalKey = "principal"
 
 // ContextWithUserID injects the user ID into a context.Context
 // so downstream infrastructure clients can forward it as X-User-ID.

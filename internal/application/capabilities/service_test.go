@@ -1,16 +1,44 @@
 package capabilities
 
 import (
+	"bytes"
 	"context"
+	"strings"
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
+	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
+
+	"github.com/sirupsen/logrus"
 )
 
 func newTestService() *Service {
 	return NewService(agentplatform.NewStubClient(), s3store.NewStubClient())
+}
+
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	logger := logging.GetLogger()
+	originalOut := logger.Out
+	originalFormatter := logger.Formatter
+	originalLevel := logger.GetLevel()
+
+	var buf bytes.Buffer
+	logger.SetOutput(&buf)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.DebugLevel)
+
+	t.Cleanup(func() {
+		logger.SetOutput(originalOut)
+		logger.SetFormatter(originalFormatter)
+		logger.SetLevel(originalLevel)
+	})
+
+	return &buf
 }
 
 func TestService_ImageRead_ValidationError(t *testing.T) {
@@ -124,6 +152,29 @@ func TestService_Presign_NoStorage(t *testing.T) {
 	})
 	if err != model.ErrStorageNotConfigured {
 		t.Errorf("expected ErrStorageNotConfigured, got %v", err)
+	}
+}
+
+func TestService_Presign_LogsMissingStorageWithTraceID(t *testing.T) {
+	svc := NewService(agentplatform.NewStubClient(), nil)
+	logBuf := captureLogs(t)
+
+	ctx := trace.SetTraceID(context.Background(), "trace-cap-presign-1")
+	_, err := svc.Presign(ctx, model.PresignRequest{
+		Filename:      "test.png",
+		ContentType:   "image/png",
+		ContentLength: 1024,
+	})
+	if err != model.ErrStorageNotConfigured {
+		t.Fatalf("expected ErrStorageNotConfigured, got %v", err)
+	}
+
+	output := logBuf.String()
+	if !strings.Contains(output, `"trace_id":"trace-cap-presign-1"`) {
+		t.Fatalf("expected trace_id in logs, got %q", output)
+	}
+	if !strings.Contains(output, "capabilities object store not configured") {
+		t.Fatalf("expected missing storage log, got %q", output)
 	}
 }
 

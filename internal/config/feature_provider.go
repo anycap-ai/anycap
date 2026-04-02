@@ -1,11 +1,11 @@
 package config
 
 import (
-	"log"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/open/common-go/dconf"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 type FeatureConfig struct {
@@ -44,11 +44,11 @@ func NewFeatureProvider(cfg Config, fallback map[string]bool) *DConfFeatureProvi
 
 	container, err := loadFeatureConfigContainer(cfg)
 	if err != nil {
-		log.Printf("feature-access: failed to load dconf config group=%s data_id=%s, using fallback: %v", cfg.FeatureDConfGroup, cfg.FeatureDConfDataID, err)
+		logging.WithError(err).WithFields(logging.Fields{"group": cfg.FeatureDConfGroup, "data_id": cfg.FeatureDConfDataID}).Warn("feature-access failed to load dconf config; using fallback")
 		return provider
 	}
 
-	log.Printf("feature-access: using dconf config group=%s data_id=%s", cfg.FeatureDConfGroup, cfg.FeatureDConfDataID)
+	logging.WithFields(logging.Fields{"group": cfg.FeatureDConfGroup, "data_id": cfg.FeatureDConfDataID}).Info("feature-access using dconf config")
 	provider.container = container
 	return provider
 }

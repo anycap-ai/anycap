@@ -48,6 +48,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
+	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -661,7 +662,10 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
 		Middlewares: []app.HandlerFunc{
-			middleware.Recover(), middleware.RequestID(), middleware.AccessLog(),
+			middleware.Recover(),
+			commonmw.TraceMiddleware(),
+			commonmw.AccessMiddleware("/ping", "/healthz"),
+			commonmw.MetricsMiddleware(),
 		},
 		Root: []RouteRegistrar{
 			RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
@@ -673,7 +677,6 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 			imageCatalog,
 			videoCatalog,
 			musicCatalog,
-			modelRouteHandler,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}))
 				systemHandler.RegisterProtectedRoutes(protected)
@@ -681,6 +684,7 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				modelRouteHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -1737,27 +1741,24 @@ func TestRouter_GenerateRoutesPersistAPIKeyIDInCallLogs(t *testing.T) {
 	}
 }
 
-func TestRouter_ModelRoutesDoNotRequireAuth(t *testing.T) {
-	h, _ := newRouterForTest(t, 10)
+func TestRouter_ModelRoutesRequireAuth(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
 
 	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil)
-	if resp.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
 	}
 
-	var env map[string]any
-	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
-		t.Fatalf("unmarshal response: %v", err)
-	}
-	if env["status"] != "success" {
-		t.Fatalf("expected success status, got %#v", env["status"])
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 
 func TestRouter_ModelRoutesExposeModeMetadata(t *testing.T) {
-	h, _ := newRouterForTest(t, 10)
+	h, rawKey := newRouterForTest(t, 10)
 
-	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
@@ -1815,8 +1816,8 @@ func TestRouter_Healthz(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.Code)
 	}
-	if resp.Header().Get("X-Request-Id") == "" {
-		t.Fatal("expected X-Request-Id header")
+	if resp.Header().Get("X-Trace-ID") == "" {
+		t.Fatal("expected X-Trace-ID header")
 	}
 }
 

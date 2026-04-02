@@ -168,10 +168,11 @@ build:cli:dev:
     - if: '$NIGHTLY == "true"'
 
 # ---------------------------------------------------------------------------
-# Publish: Nightly CLI + skill to NexusHub (on dev/cli)
+# Publish: Nightly CLI + skills to NexusHub (on dev/cli)
 #
-# Bundles linux-amd64 binary into skill directory and publishes as
-# anycap-cli-nightly. Production skill (anycap-cli) is NOT affected.
+# Bundles linux-amd64 binary into anycap-cli skill, then publishes ALL
+# skill directories under skills/ as {dirname}-nightly to NexusHub.
+# Production skills are NOT affected.
 # Requires CI variables: NEXUSHUB_BASE_URL, NEXUSHUB_API_TOKEN
 # Requires: project 138 allows CI_JOB_TOKEN from this project
 #           (Settings > CI/CD > Job token permissions)
@@ -189,14 +190,21 @@ publish:nightly:
     - pip install --quiet nexushub-client --extra-index-url "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.knoffice.tech/api/v4/projects/138/packages/pypi/simple"
   script:
     - |
-      # Bundle linux-amd64 binary into skill directory
+      # Bundle linux-amd64 binary into anycap-cli skill (shipped with binary)
       mkdir -p skills/anycap-cli/bin
       cp anycap-linux-amd64 skills/anycap-cli/bin/anycap
       chmod +x skills/anycap-cli/bin/anycap
-      # Delete existing skill to force fresh commit hash, then re-publish.
-      # Agent platform caches by commit hash; delete+recreate guarantees a new hash.
-      nexushub-cli delete anycap-cli-nightly -y || true
-      nexushub-cli upload skills/anycap-cli -k anycap-cli-nightly --author "AnyCap Nightly"
+      # Upload all skill directories under skills/
+      # Each folder becomes {dirname}-nightly on NexusHub.
+      # Delete existing skill first to force fresh commit hash —
+      # agent platform caches by commit hash; delete+recreate guarantees a new hash.
+      for skill_dir in skills/*/; do
+        skill_name=$(basename "$skill_dir")
+        nightly_key="${skill_name}-nightly"
+        echo "Publishing ${nightly_key} from ${skill_dir} ..."
+        nexushub-cli delete "$nightly_key" -y || true
+        nexushub-cli upload "$skill_dir" -k "$nightly_key" --author "AnyCap Nightly"
+      done
   rules:
     - if: '$NIGHTLY == "true"'
 

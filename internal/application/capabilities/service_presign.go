@@ -6,14 +6,18 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.PresignResult, error) {
+	logger := logging.WithContext(ctx).WithField("capability", "asset.upload.prepare")
 	if err := req.Validate(); err != nil {
+		logger.WithError(err).Warn("capabilities presign validation failed")
 		return model.PresignResult{}, err
 	}
 
 	if s == nil || s.objectStore == nil {
+		logger.Error("capabilities object store not configured")
 		return model.PresignResult{}, model.ErrStorageNotConfigured
 	}
 
@@ -24,6 +28,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
+		logger.WithError(err).Error("resolve capabilities actor failed")
 		return model.PresignResult{}, err
 	}
 
@@ -31,6 +36,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 	if normalizedSHA != "" {
 		existing, findErr := s.capsUploadRepo.FindReusable(ctx, actor.Space.ID, normalizedSHA, req.ContentLength, req.ContentType)
 		if findErr != nil {
+			logger.WithError(findErr).Error("find reusable caps upload failed")
 			return model.PresignResult{}, findErr
 		}
 		if existing != nil {
@@ -46,6 +52,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 	objectKey := buildCapsInputObjectKey(actor.Space.ID, req.Filename, s.now().UTC())
 	presignResult, err := s.objectStore.PresignPutObject(ctx, objectKey, req.ContentType, req.ContentLength)
 	if err != nil {
+		logger.WithError(err).Error("presign capabilities object upload failed")
 		return model.PresignResult{}, err
 	}
 
@@ -65,6 +72,7 @@ func (s *Service) Presign(ctx context.Context, req model.PresignRequest) (model.
 		CreatedBy: strconv.FormatInt(actor.UserID, 10),
 	})
 	if err != nil {
+		logger.WithError(err).Error("create caps upload record failed")
 		return model.PresignResult{}, err
 	}
 
