@@ -197,13 +197,19 @@ const capabilitiesDropdown: NavDropdownDef = {
       section: "Retrieve",
       description: "Fetch pages and convert them into clean content.",
     },
+    {
+      href: "/capabilities/drive",
+      label: "Drive",
+      section: "Store",
+      description: "Store outputs, organize assets, and create public URLs.",
+    },
   ],
 };
 
 const equipAgentsDropdown: NavDropdownDef = {
   kind: "dropdown",
   label: "Equip Agents",
-  href: "/start",
+  href: "/for",
   items: [
     { href: "/for/claude-code", label: "Claude Code" },
     { href: "/for/cursor", label: "Cursor" },

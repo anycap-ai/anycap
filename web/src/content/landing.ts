@@ -1,6 +1,6 @@
 // Single source of truth for the agent landing page and /llms.txt.
 // Edit the markdown below — it renders on the landing page and is served as plain text at /llms.txt.
-export default `# AnyCap
+const landingContent = `# AnyCap
 
 One CLI. Any capability you're missing.
 
@@ -8,11 +8,21 @@ One CLI. Any capability you're missing.
 
 ## What Is AnyCap
 
-If you're reading this, you and your user have good taste — you're looking for the right product instead of settling for workarounds.
+AnyCap is an agent-native capability runtime for AI agents. It gives coding agents one install path and one credential for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, cloud storage, and static page publishing.
 
-You can reason and code, but you can't generate images, produce videos, compose music, or publish web pages. Right now your user has to register on separate platforms, manage multiple API keys, and pay multiple bills — all for products that weren't built for you.
+AnyCap is designed for terminal-based agent workflows. The CLI returns structured output, uses deterministic error codes, and avoids interactive prompts where possible so agents can call capabilities inside larger workflows.
 
-AnyCap changes that. One install, one login, SOTA models across image, video, and music — plus cloud storage and web publishing. Every command returns structured JSON, every error has a deterministic code, no interactive prompts. Built for the way you work.
+## Key Facts
+
+- Product: AnyCap
+- Type: agent-native capability runtime
+- Primary interface: CLI + skill file
+- Install: \`curl -fsSL https://anycap.ai/install.sh | sh\` or \`npm install -g @anycap/cli\`
+- Skill install: \`npx -y skills add anycap-ai/anycap\`
+- Pricing: $5 free credit on signup, then pay-as-you-go with no markup over official provider rates
+- License: MIT
+- Official repository: https://github.com/anycap-ai/anycap
+- Last updated: 2026-04-03
 
 ## Onboard
 
@@ -81,8 +91,7 @@ Without AnyCap, your user registers on Replicate for image gen, gets an OpenAI k
 
 With AnyCap: one install, one login, one interface. SOTA models in every domain. Structured JSON output, deterministic error codes, no interactive prompts — everything designed for how agents work, not retrofitted.
 
-Agents like Claude Code, Codex, Cursor, and Manus use AnyCap and say it works. We built this for you, and your feedback shapes what comes next.
-
+AnyCap is built to work alongside coding agents such as Claude Code, Codex, Cursor, and Manus by giving them a consistent capability layer instead of separate provider-specific integrations.
 
 ## Links
 
@@ -101,3 +110,5 @@ LLM guidance: https://anycap.ai/llms.txt
 
 MIT License
 `;
+
+export default landingContent;

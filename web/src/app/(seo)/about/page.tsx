@@ -108,6 +108,15 @@ const trustSignals = [
   },
 ];
 
+const companyFacts = [
+  { label: "Company", value: "AnyCap" },
+  { label: "Product", value: "Agent-native capability runtime" },
+  { label: "Primary interface", value: "CLI + skill files" },
+  { label: "Official repository", value: "github.com/anycap-ai/anycap" },
+  { label: "License", value: "MIT" },
+  { label: "Last updated", value: "2026-04-03" },
+] as const;
+
 export default function AboutPage() {
   return (
     <>
@@ -141,6 +150,31 @@ export default function AboutPage() {
               use. Add the missing capability runtime around it. {roadmapCapabilitySummary} remain
               on the roadmap.
             </p>
+            <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
+              Last updated 2026-04-03
+            </p>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Company facts
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {companyFacts.map((fact) => (
+                  <div key={fact.label} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {fact.label}
+                    </p>
+                    <p className="text-sm leading-6 text-[#4d5145]">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

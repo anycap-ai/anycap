@@ -6,7 +6,7 @@ const panelShadow = "0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04), 0 8
 
 type HoverDropdownProps = {
   trigger: (open: boolean, close: () => void, toggle: () => void) => ReactNode;
-  children: ReactNode;
+  children: ReactNode | ((close: () => void) => ReactNode);
   align?: "left" | "right";
   /** Override default panel positioning (defaults to below trigger) */
   positionClass?: string;
@@ -48,7 +48,7 @@ export function HoverDropdown({ trigger, children, align = "right", positionClas
           className="bg-white border border-[#d8dcd0] rounded-xl py-1.5 min-w-[160px]"
           style={{ boxShadow: panelShadow }}
         >
-          {children}
+          {typeof children === "function" ? children(close) : children}
         </div>
       </div>
     </div>

@@ -121,7 +121,7 @@ const videoObjectJsonLd = {
   name: "Install and use AnyCap with Claude Code",
   description:
     "Watch Claude Code install AnyCap from a natural-language prompt — skill discovery, CLI setup, authentication, and first image generation in one uninterrupted flow.",
-  contentUrl: `${CDN_BASE}/for_claude_code.mp4`,
+  contentUrl: `${CDN_BASE}/for_claude_code2.mp4`,
   uploadDate: "2026-04-03",
   duration: "PT48S",
   thumbnailUrl: `${CDN_BASE}/for_claude_code_thumb.jpg`,
@@ -234,7 +234,8 @@ export default function ForClaudeCodePage() {
 
             <div className="mt-8">
               <DemoVideo
-                src={`${CDN_BASE}/for_claude_code.mp4`}
+                src={`${CDN_BASE}/for_claude_code2.mp4`}
+                poster={`${CDN_BASE}/for_claude_code_thumb.jpg`}
                 title="Install and use AnyCap with Claude Code"
                 autoLoop
               />

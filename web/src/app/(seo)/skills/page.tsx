@@ -85,7 +85,7 @@ const nextPages = [
     summary: "Use this when you want the capability-gap narrative before choosing the next product or capability page.",
   },
   {
-    eyebrow: "Guide",
+    eyebrow: "Guides",
     title: "Install AnyCap",
     href: "/guides/install-anycap",
     summary: "Use this when you want the shortest install path after you understand how the instruction layer works.",

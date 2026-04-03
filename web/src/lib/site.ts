@@ -57,6 +57,7 @@ export const publicRouteDefinitions = [
   { key: "about", kind: "seo", path: "/about", priority: 0.72 },
   { key: "pricing", kind: "seo", path: "/pricing", priority: 0.9 },
   { key: "start", kind: "seo", path: "/start", priority: 0.96 },
+  { key: "for", kind: "seo", path: "/for", priority: 0.84 },
   { key: "guides", kind: "seo", path: "/guides", priority: 0.68 },
   { key: "glossary", kind: "seo", path: "/glossary", priority: 0.58 },
   { key: "compare", kind: "seo", path: "/compare", priority: 0.66 },
@@ -121,6 +122,7 @@ export const publicRouteDefinitions = [
     priority: 0.7,
   },
   { key: "capabilities-web-crawl", kind: "seo", path: "/capabilities/web-crawl", priority: 0.72 },
+  { key: "capabilities-drive", kind: "seo", path: "/capabilities/drive", priority: 0.7 },
   { key: "skills", kind: "seo", path: "/skills", priority: 0.72 },
   { key: "models", kind: "seo", path: "/models", priority: 0.72 },
   {

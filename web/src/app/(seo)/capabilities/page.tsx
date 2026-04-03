@@ -15,18 +15,18 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
+  title: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
   description:
-    "Your agent can reason, but it still needs capabilities for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, and web crawl. AnyCap provides those capabilities through one CLI, one auth flow, and one install path.",
+    "Your agent can reason, but it still needs capabilities for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, web crawl, and drive storage. AnyCap provides those capabilities through one CLI, one auth flow, and one install path.",
   alternates: { canonical: "/capabilities" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/capabilities",
     siteName: siteConfig.siteName,
-    title: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
+    title: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
     description:
-      "Browse the capability layer that adds generation, analysis, search, and crawl workflows to modern coding agents.",
+      "Browse the capability layer that adds generation, analysis, retrieval, and storage workflows to modern coding agents.",
   },
 };
 
@@ -111,6 +111,13 @@ const capabilities: Capability[] = [
     href: "/capabilities/web-crawl",
   },
   {
+    name: "Drive",
+    category: "Storage",
+    status: "available",
+    description: "Store outputs, organize assets, and share public URLs through AnyCap Drive.",
+    href: "/capabilities/drive",
+  },
+  {
     name: "Speech",
     category: "Audio",
     status: "coming_soon",
@@ -120,11 +127,11 @@ const capabilities: Capability[] = [
 ];
 
 const hubArticleJsonLd = createTechArticleJsonLd({
-  headline: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
+  headline: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
   description:
-    "Hub page for the capabilities agents use across generation, analysis, search, and crawl workflows.",
+    "Hub page for the capabilities agents use across generation, analysis, retrieval, and storage workflows.",
   path: "/capabilities",
-  about: ["AI agent capabilities", "Generation", "Analysis", "Web search", "Web crawl"],
+  about: ["AI agent capabilities", "Generation", "Analysis", "Web search", "Drive storage"],
   keywords: [
     "ai agent capabilities",
     "image generation for ai agents",
@@ -132,6 +139,7 @@ const hubArticleJsonLd = createTechArticleJsonLd({
     "vision api for agents",
     "web search api for ai agents",
     "web crawl for ai agents",
+    "drive for ai agents",
   ],
 });
 
@@ -139,7 +147,7 @@ const itemListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "AnyCap Capabilities",
-  description: "Agent capabilities across generation, analysis, search, and crawl through the AnyCap CLI and capability runtime.",
+  description: "Agent capabilities across generation, analysis, retrieval, and storage through the AnyCap CLI and capability runtime.",
   numberOfItems: capabilities.filter((capability) => capability.status === "available").length,
   itemListElement: capabilities
     .filter((capability) => capability.status === "available")
@@ -244,6 +252,15 @@ const gapRows: CapabilityGapRow[] = [
     ],
   },
   {
+    capability: "Drive storage",
+    cells: [
+      { label: "No shared asset layer", tone: "muted" },
+      { label: "No shared asset layer", tone: "muted" },
+      { label: "No shared asset layer", tone: "muted" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
     capability: "Speech",
     cells: [
       { label: "Not built in", tone: "muted" },
@@ -307,10 +324,10 @@ export default function CapabilitiesPage() {
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               The missing layer is usually not planning or code generation. It is access to
-              generation, analysis, search, and crawl workflows through a consistent runtime.
-              AnyCap gives agents image, video, music, vision, audio, and web capabilities through
-              one interface, one auth flow, and one install path across Claude Code, Cursor, Codex,
-              and the rest of your agent stack.
+              generation, analysis, retrieval, and storage workflows through a consistent runtime.
+              AnyCap gives agents image, video, music, vision, audio, web, and drive capabilities
+              through one interface, one auth flow, and one install path across Claude Code,
+              Cursor, Codex, and the rest of your agent stack.
             </p>
           </FadeIn>
 

@@ -5,11 +5,12 @@ import React, { useEffect, useRef, useState } from "react";
 const mono = { fontFamily: "var(--font-logo), monospace" } as const;
 
 export interface DemoLine {
-  type: "header" | "prompt" | "text" | "tool" | "image" | "video" | "music" | "analysis" | "cursor";
+  type: "header" | "prompt" | "text" | "tool" | "image" | "video" | "music" | "analysis" | "drive" | "cursor";
   content?: string;
   sub?: string;
   delay: number;
   analysisLines?: string[];
+  driveFiles?: { name: string; size: string; date: string; shared?: boolean }[];
 }
 
 function ProcessingDot() {
@@ -93,7 +94,7 @@ function RevealBlock({ children }: { children: React.ReactNode }) {
 function GeneratedImage() {
   return (
     <RevealBlock>
-      <div className="my-3 relative aspect-square max-h-[260px] w-full max-w-[260px] overflow-hidden rounded-lg">
+      <div className="my-3 relative aspect-square max-h-[300px] w-full max-w-[300px] overflow-hidden rounded-lg">
         <div
           className="absolute inset-0"
           style={{
@@ -140,7 +141,7 @@ function GeneratedImage() {
 function GeneratedVideo() {
   return (
     <RevealBlock>
-      <div className="my-3 relative h-[160px] w-full max-w-[320px] overflow-hidden rounded-lg">
+      <div className="my-3 relative h-[180px] w-full max-w-[380px] overflow-hidden rounded-lg">
         <div
           className="absolute inset-0"
           style={{
@@ -201,7 +202,7 @@ function GeneratedVideo() {
 function GeneratedMusic() {
   return (
     <RevealBlock>
-      <div className="my-3 relative h-[80px] w-full max-w-[320px] overflow-hidden rounded-lg bg-[#141712] px-4 py-3">
+      <div className="my-3 relative h-[80px] w-full max-w-[380px] overflow-hidden rounded-lg bg-[#141712] px-4 py-3">
         <div className="flex h-full items-end gap-[3px]">
           {Array.from({ length: 40 }).map((_, i) => {
             const h = 20 + Math.sin(i * 0.7) * 30 + Math.cos(i * 1.3) * 20 + (i % 3 === 0 ? 15 : 0);
@@ -233,11 +234,44 @@ function GeneratedMusic() {
 function AnalysisResult({ lines: resultLines }: { lines: string[] }) {
   return (
     <RevealBlock>
-      <div className="my-3 max-w-[480px] rounded-lg border border-[#2a2e22] bg-[#141712] px-4 py-3">
+      <div className="my-3 max-w-[560px] rounded-lg border border-[#2a2e22] bg-[#141712] px-4 py-3">
         {resultLines.map((line, i) => (
           <p key={i} className="text-[13px] leading-6 text-[#b8cc6e]">
             {line}
           </p>
+        ))}
+      </div>
+    </RevealBlock>
+  );
+}
+
+function DriveFileList({ files }: { files: { name: string; size: string; date: string; shared?: boolean }[] }) {
+  return (
+    <RevealBlock>
+      <div className="my-3 max-w-[560px] overflow-hidden rounded-lg border border-[#2a2e22] bg-[#141712]">
+        <div className="flex gap-4 border-b border-[#2a2e22] px-4 py-2 text-[11px] text-[#6b7d3a]" style={mono}>
+          <span className="w-[200px]">Name</span>
+          <span className="w-[60px] text-right">Size</span>
+          <span className="w-[80px] text-right">Date</span>
+          <span className="w-[50px] text-right">Link</span>
+        </div>
+        {files.map((file, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 border-b border-[#1e221a] px-4 py-2 text-[12px] last:border-b-0"
+            style={mono}
+          >
+            <span className="w-[200px] truncate text-[#d4e0a4]">{file.name}</span>
+            <span className="w-[60px] text-right text-[#808080]">{file.size}</span>
+            <span className="w-[80px] text-right text-[#808080]">{file.date}</span>
+            <span className="w-[50px] text-right">
+              {file.shared ? (
+                <span className="text-[#8fa34e]">●</span>
+              ) : (
+                <span className="text-[#3a3e32]">—</span>
+              )}
+            </span>
+          </div>
         ))}
       </div>
     </RevealBlock>
@@ -280,7 +314,7 @@ export function CapabilityDemo({ lines }: { lines: DemoLine[] }) {
   return (
     <div
       ref={ref}
-      className="flex max-w-[600px] flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pb-5 pt-0 text-sm leading-loose md:px-6 md:pb-6"
+      className="flex max-w-[720px] flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pb-5 pt-0 text-sm leading-loose md:px-6 md:pb-6"
       style={mono}
     >
       {visibleCount > 0 && (
@@ -343,6 +377,8 @@ export function CapabilityDemo({ lines }: { lines: DemoLine[] }) {
               return <GeneratedMusic key={i} />;
             case "analysis":
               return <AnalysisResult key={i} lines={line.analysisLines ?? []} />;
+            case "drive":
+              return <DriveFileList key={i} files={line.driveFiles ?? []} />;
             case "cursor":
               return (
                 <div key={i} className="flex items-center gap-2">

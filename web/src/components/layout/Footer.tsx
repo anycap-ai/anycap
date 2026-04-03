@@ -27,11 +27,13 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/capabilities/web-search", label: "Web Search" },
       { href: "/capabilities/grounded-web-search", label: "Grounded Web Search" },
       { href: "/capabilities/web-crawl", label: "Web Crawl" },
+      { href: "/capabilities/drive", label: "Drive" },
     ],
   },
   {
     title: "Equip Agents",
     links: [
+      { href: "/for", label: "Overview" },
       { href: "/start", label: "Start here" },
       { href: "/for/claude-code", label: "Claude Code" },
       { href: "/for/cursor", label: "Cursor" },
