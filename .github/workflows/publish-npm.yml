@@ -43,9 +43,6 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Ensure latest npm
-        run: npm install -g npm@latest
-
       - name: Download release asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -120,9 +117,6 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Ensure latest npm
-        run: npm install -g npm@latest
 
       - name: Verify all platform packages exist
         run: |
