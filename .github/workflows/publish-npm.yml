@@ -94,13 +94,26 @@ jobs:
           echo "Generated package.json:"
           cat pkg/package.json
 
-      - name: Publish
-        run: npm publish pkg/ --provenance --access public
+      - name: Publish (with retry)
+        run: |
+          MAX_RETRIES=3
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Publish attempt ${i}/${MAX_RETRIES}..."
+            if npm publish pkg/ --provenance --access public; then
+              echo "Published successfully."
+              exit 0
+            fi
+            if [ "$i" -lt "$MAX_RETRIES" ]; then
+              echo "Publish failed, retrying in 15s..."
+              sleep 15
+            fi
+          done
+          echo "ERROR: Failed to publish after ${MAX_RETRIES} attempts."
+          exit 1
 
   publish-main:
     name: "npm: @anycap/cli"
     needs: [publish-platform]
-    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v4
@@ -110,6 +123,31 @@ jobs:
 
       - name: Ensure latest npm
         run: npm install -g npm@latest
+
+      - name: Verify all platform packages exist
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG#v}"
+          PLATFORMS=(darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-arm64 win32-x64)
+          MISSING=0
+
+          for p in "${PLATFORMS[@]}"; do
+            PKG="@anycap/cli-${p}@${VERSION}"
+            echo -n "Checking ${PKG} ... "
+            if npm view "${PKG}" version 2>/dev/null | grep -q "${VERSION}"; then
+              echo "OK"
+            else
+              echo "MISSING"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          if [ "$MISSING" -gt 0 ]; then
+            echo "ERROR: ${MISSING} platform package(s) missing from npm. Aborting main package publish."
+            exit 1
+          fi
+
+          echo "All platform packages verified."
 
       - name: Generate package
         run: |
