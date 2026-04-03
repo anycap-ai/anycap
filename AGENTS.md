@@ -324,7 +324,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | `deploy/server-prod` | Docker build + deploy to anycap-prod |
 
 **CLI Release flow:**
-1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only).
+1. Write release notes in `releases/v<semver>.md` (hand-written, CLI-facing changes only). These are user-facing Markdown shown on the GitHub Release page -- use headers, code blocks, and formatting as needed.
 2. **Review gate:** present the release notes to the user and get explicit approval before proceeding. Do NOT push the release branch until confirmed.
 3. Push branch `release/cli-v0.1.0` (version extracted from branch name).
 4. CI runs goreleaser to cross-compile and archive CLI binaries.
@@ -332,10 +332,12 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 6. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
 
 **Skills Release flow:**
-1. Push branch `release/skills-v0.1.0` (version extracted from branch name).
-2. CI syncs `skills/` directory and `install.sh` to the GitHub repo.
-3. CI updates `metadata.version` in all `SKILL.md` files to match the release version.
-4. Skills releases are independent of CLI releases but share the same version scheme. This allows updating skills after a CLI release without rebuilding the CLI.
+1. Write release notes in `releases/skills-v<semver>.md` (hand-written, skill-facing changes only). **This file is the entire commit message** -- the sync script uses it verbatim as `git commit -m`. Write in conventional commit format: subject line first, blank line, then body. No markdown headers or code blocks.
+2. Push branch `release/skills-v0.1.0` (version extracted from branch name).
+3. CI syncs `skills/` directory and `install.sh` to the GitHub repo.
+4. CI updates `metadata.version` in all `SKILL.md` files to match the release version.
+5. Commit message includes the release notes from step 1.
+6. Skills and CLI share the same version scheme and **must stay in sync**. When releasing a new CLI version, always release a matching skills version. To incrementally update skills without rebuilding the CLI, modify `releases/skills-v<semver>.md` with the new commit message and push the `release/skills-v<semver>` branch again -- the sync script picks up the updated file as the commit message, enabling incremental skill updates under the same version.
 
 **GitHub authentication (GitLab CI -> GitHub):**
 - Primary: GitHub App (`GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` as File-type variable)

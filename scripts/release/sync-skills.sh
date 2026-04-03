@@ -60,7 +60,17 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-git commit -m "sync: update skills to ${TAG}"
+# Use hand-written release notes as the full commit message if available
+NOTES_FILE="${CI_PROJECT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}/releases/skills-${TAG}.md"
+if [ -f "$NOTES_FILE" ]; then
+  COMMIT_MSG="$(cat "$NOTES_FILE")"
+  echo "Using release notes from ${NOTES_FILE}"
+else
+  COMMIT_MSG="sync: update skills to ${TAG}"
+  echo "No release notes found at ${NOTES_FILE}, using default message."
+fi
+
+git commit -m "$COMMIT_MSG"
 git push origin main
 
 echo "Skills synced to github.com/${GITHUB_OWNER}/${GITHUB_REPO} (${TAG})"
