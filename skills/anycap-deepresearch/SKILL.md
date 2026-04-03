@@ -1,6 +1,6 @@
 ---
 name: anycap-deepresearch
-description: "AnyCap Deep Research -- conduct thorough, multi-source research powered by AnyCap's web search, AI Grounded search, web crawl, AI image generation, cloud storage, and one-click web publishing. Produces comprehensive, well-sourced research reports with illustrations, delivered as Markdown, a shareable Drive link, or a published web page. Use when the user asks for deep research, competitive analysis, market research, technical deep dive, literature review, or any task requiring multi-source information gathering and synthesis."
+description: "Guide for conducting thorough, multi-source research and producing comprehensive, well-sourced reports. Powered by AnyCap -- the capability runtime that equips AI agents with web search (including AI Grounded citations), web crawl, image generation, cloud storage, and one-click web publishing through a single CLI. Use when the user asks for deep research, competitive analysis, market research, technical deep dive, literature review, technology comparison, or any task requiring multi-source information gathering and synthesis. Also use when users say \"investigate\", \"survey the landscape\", \"compare X vs Y\", \"state of the art\", \"write a report on\", \"look into\", \"find out about\", \"analyze the market\", or any inquiry that needs more than a single search. Trigger on mentions of research, analysis, investigation, comparison, report, survey, or deep dive."
 metadata:
   version: 0.1.0
   website: https://anycap.ai

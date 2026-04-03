@@ -1,6 +1,6 @@
 ---
 name: anycap-cli
-description: "AnyCap CLI -- capability runtime for AI agents. One CLI for image generation, image editing, video generation, image understanding, video analysis, audio analysis, music composition, web crawling, web search, file download, static site hosting, and cloud file storage. Use when the agent needs to generate images, edit images, generate video, analyze images, video, or audio, compose music, crawl web pages, search the web, download remote files, deploy static sites, or store and share files. Also use when the agent needs to authenticate with AnyCap (login, API key, credentials), or when encountering errors from AnyCap to submit feedback via 'anycap feedback'. Trigger on mentions of AnyCap, multimodal capabilities, AI-generated media, web crawling, web search, page hosting, or drive storage."
+description: "AnyCap CLI reference -- command syntax, flags, and usage for AnyCap, the capability runtime that equips AI agents with multimodal powers through a single CLI. Covers image generation, image editing, video generation, image understanding, video analysis, audio analysis, music composition, web search, web crawl, file download, static site hosting, and cloud file storage. Use when the agent needs to run anycap commands: generate/edit images, generate video, analyze images/video/audio, compose music, search the web, crawl pages, download files, deploy sites, or manage drive storage. Also use for AnyCap authentication (login, API key, credentials), troubleshooting, or submitting feedback via 'anycap feedback'. Trigger on mentions of AnyCap, anycap commands, multimodal capabilities, AI-generated media, web search, web crawl, page hosting, or drive storage."
 metadata:
   version: 0.1.0
   website: https://anycap.ai
@@ -367,7 +367,7 @@ npx -y skills update
 Or re-install this skill directly:
 
 ```bash
-npx -y skills add anycap-ai/anycap -y
+npx -y skills add anycap-ai/anycap -s '*' -g -y
 ```
 
 You can also check whether this skill file matches your CLI version:
