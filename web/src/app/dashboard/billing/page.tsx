@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
@@ -162,6 +162,8 @@ function TransactionRow({ item }: { item: TimelineItem }) {
 }
 
 export default function BillingPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: balance, isLoading: balanceLoading, error: balanceError } = useBalance();
   const { data: logs, isLoading: logsLoading, error: logsError } = useLogs(50);
@@ -174,6 +176,7 @@ export default function BillingPage() {
   const [checkoutAttemptBase, setCheckoutAttemptBase] = useState<string | null>(null);
 
   const checkoutState = searchParams.get("checkout");
+  const buyIntent = searchParams.get("buy");
   const packs = useMemo(() => packData?.packs ?? [], [packData?.packs]);
   const packStatus = typeof (packsError as { status?: unknown } | undefined)?.status === "number"
     ? Number((packsError as { status?: unknown }).status)
@@ -211,6 +214,23 @@ export default function BillingPage() {
     }
     setCheckoutAttemptBase((current) => current ?? createCheckoutAttemptBase());
   }, [buyModalOpen]);
+
+  useEffect(() => {
+    if (buyIntent !== "1") {
+      return;
+    }
+
+    setCheckoutError(null);
+    const recommended = packs.find((pack) => pack.featured) ?? packs[0] ?? null;
+    setSelectedPackID(recommended?.id ?? null);
+    setCheckoutAttemptBase(createCheckoutAttemptBase());
+    setBuyModalOpen(true);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("buy");
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [buyIntent, packs, pathname, router, searchParams]);
 
   async function handleBuy(pack: CreditPack) {
     setCheckoutError(null);
