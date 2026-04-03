@@ -4,6 +4,7 @@ type Principal struct {
 	UserID         string   `json:"user_id"`
 	APIKeyID       string   `json:"api_key_id,omitempty"`
 	AuthType       string   `json:"auth_type"`
+	CreatedUser    bool     `json:"created_user,omitempty"`
 	Scopes         []string `json:"scopes,omitempty"`
 	ExternalUserID string   `json:"external_user_id,omitempty"`
 	Email          string   `json:"email,omitempty"`
