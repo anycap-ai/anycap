@@ -234,6 +234,7 @@ export default function ForCursorPage() {
             <div className="mt-8">
               <DemoVideo
                 src={`${CDN_BASE}/for_cursor.mp4`}
+                poster={`${CDN_BASE}/for_cursor_thumb.jpg`}
                 title="Install and use AnyCap with Cursor"
                 autoLoop
               />

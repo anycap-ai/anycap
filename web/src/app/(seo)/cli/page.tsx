@@ -86,13 +86,13 @@ const reasons = [
 
 const nextPages = [
   {
-    eyebrow: "Capability",
+    eyebrow: "Capabilities",
     title: "Image Generation",
     href: "/capabilities/image-generation",
     summary: "Go deeper on text-to-image, image editing, supported models, and the real CLI workflow.",
   },
   {
-    eyebrow: "Capability",
+    eyebrow: "Capabilities",
     title: "Video Generation",
     href: "/capabilities/video-generation",
     summary: "See how text-to-video and image-to-video fit into the same agent command surface.",
@@ -110,7 +110,7 @@ const nextPages = [
     summary: "Use this when you want to understand how the instruction layer connects the agent to the CLI and runtime.",
   },
   {
-    eyebrow: "Guide",
+    eyebrow: "Guides",
     title: "Context Engineering",
     href: "/guides/context-engineering-for-agents",
     summary: "Use this when you want to understand when the agent should call a capability instead of staying inside the prompt.",

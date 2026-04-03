@@ -235,6 +235,7 @@ export default function ForCodexPage() {
             <div className="mt-8">
               <DemoVideo
                 src={`${CDN_BASE}/for_codex.mp4`}
+                poster={`${CDN_BASE}/for_codex_thumb.jpg`}
                 title="Install and use AnyCap with Codex"
                 autoLoop
               />

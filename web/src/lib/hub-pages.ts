@@ -1,6 +1,6 @@
 export type HubPageDefinition = {
-  key: "guides" | "glossary" | "compare" | "learn";
-  path: "/guides" | "/glossary" | "/compare" | "/learn";
+  key: "for" | "guides" | "glossary" | "compare" | "learn";
+  path: "/for" | "/guides" | "/glossary" | "/compare" | "/learn";
   title: string;
   description: string;
   eyebrow: string;
@@ -14,6 +14,39 @@ export type HubPageDefinition = {
 };
 
 export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
+  for: {
+    key: "for",
+    path: "/for",
+    title: "Equip Agents — Add missing capabilities to Claude Code, Cursor, Codex, and Manus",
+    description:
+      "Choose your agent and add the capability layer it does not ship with. Equip Claude Code, Cursor, Codex, and Manus with image, video, vision, and retrieval workflows through AnyCap.",
+    eyebrow: "Equip Agents",
+    heroLines: ["Keep the agent you use.", "Add the capabilities it lacks."],
+    intro:
+      "These pages show the shortest path to equip Claude Code, Cursor, Codex, and Manus with image generation, video generation, image understanding, video analysis, and related capability workflows through one runtime.",
+    items: [
+      {
+        title: "Claude Code",
+        href: "/for/claude-code",
+        description: "Add image, video, and vision workflows to Claude Code through one install path.",
+      },
+      {
+        title: "Cursor",
+        href: "/for/cursor",
+        description: "Equip Cursor with image generation, video generation, and visual analysis capabilities.",
+      },
+      {
+        title: "Codex",
+        href: "/for/codex",
+        description: "Add multimodal capabilities to Codex without wiring separate provider SDKs.",
+      },
+      {
+        title: "Manus",
+        href: "/for/manus",
+        description: "Give Manus a unified capability runtime for image, video, and vision tasks.",
+      },
+    ],
+  },
   guides: {
     key: "guides",
     path: "/guides",

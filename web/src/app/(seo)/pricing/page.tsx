@@ -107,6 +107,8 @@ const pageQuotas = [
   { label: "Versions per site", value: "500" },
 ] as const;
 
+const lastUpdated = "2026-04-03";
+
 function ModelTable({
   models,
   unitLabel,
@@ -196,6 +198,20 @@ export default function PricingPage() {
               official rates, no subscription. Pay-as-you-go with credits. Every new account starts
               with $5 free credit — no payment required.
             </p>
+            <div className="mt-8 max-w-[860px] rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6 md:p-7">
+              <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
+                Pricing facts
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
+                AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that,
+                supported capabilities are billed at the same rate as the official model provider,
+                with no subscription fee and no platform markup. Credit packages are one-time
+                purchases, and larger packages include bonus credits.
+              </p>
+              <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
+                Last updated {lastUpdated}
+              </p>
+            </div>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">
