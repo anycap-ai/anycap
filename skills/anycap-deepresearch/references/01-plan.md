@@ -1,21 +1,42 @@
 # Phase 1: Plan
 
-Before running any command, clarify the research scope with the user.
+This phase has three steps: preliminary search (optional), user clarification (mandatory), and search strategy design.
 
-## Clarify with the User
+## Step 1: Preliminary Search (Optional)
 
-Present your initial understanding and ask the user to refine it. A brief conversation here significantly improves research quality.
+If the topic is unfamiliar or complex, run a few quick searches first to build context. This helps you ask better clarification questions:
 
-**Ask the user:**
+```bash
+# Quick scan to understand the landscape
+anycap search --query "topic" --no-crawl --max-results 5
+
+# Or get a grounded overview
+anycap search --prompt "What is [topic] and what are the key aspects?"
+```
+
+Skip this step if the topic is straightforward or you already have enough context to ask good questions.
+
+## Step 2: Clarify with the User (Mandatory)
+
+This step is **not optional**. Do not assume you understand the user's intent -- ask.
+
+Present your understanding of the topic (informed by the preliminary search if you did one) and ask the user to refine it:
 
 1. **Scope and focus** -- "Here are the sub-questions I plan to investigate: [list]. Are there angles you want me to add, remove, or prioritize?"
 2. **Delivery format** -- "How would you like the report delivered? Options: local Markdown file, shareable Drive link, published web page, or a combination."
 3. **Image generation** -- "May I generate illustrations (diagrams, comparisons) where they would aid understanding? Or should I only use original images from sources?"
 4. **Depth vs breadth** -- If the topic is large, ask whether the user wants broad coverage or a deep dive on specific aspects.
 
-Do not skip this step. The user's input on sub-questions often surfaces important angles you would not have considered.
+Wait for the user's response. You may need multiple rounds of clarification -- use your judgment to decide when you have enough information to proceed. If the user's initial request is already very specific and detailed, one round may suffice. If the topic is broad or ambiguous, ask follow-up questions until the scope is clear.
 
-## Decompose the Question
+**Exit clarification when:**
+- You have a clear, confirmed list of sub-questions to investigate
+- You know the user's preferred delivery format (or have a reasonable default)
+- Any ambiguity in the original request has been resolved
+
+Do not over-clarify. Once the research direction is clear, start working.
+
+## Step 3: Decompose and Plan
 
 Break the user's request into sub-questions. A good decomposition produces 3-10 sub-questions that, when answered together, form a comprehensive response.
 

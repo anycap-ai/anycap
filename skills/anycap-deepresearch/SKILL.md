@@ -44,20 +44,24 @@ For detailed CLI command usage (flags, output formats, jq patterns), refer to th
 
 ## Research Process
 
-Follow five phases. Save intermediate results at every step.
+Follow the research process below. User clarification is **mandatory** -- do not skip it.
 
 ```mermaid
 graph LR
-    A[Plan] --> B[Gather]
-    B --> C[Analyze]
-    C --> D[Synthesize]
-    D --> E[Deliver]
-    C -->|gaps found| B
+    A["Preliminary Search<br/>(optional)"] --> B[Clarify with User]
+    B --> C[Plan]
+    C --> D[Gather]
+    D --> E[Analyze]
+    E --> F[Synthesize]
+    F --> G[Deliver]
+    E -->|gaps found| D
 ```
+
+The process starts with an optional preliminary search to build context, followed by a **mandatory** clarification with the user, then autonomous execution.
 
 Each phase has detailed guidance in the references:
 
-1. **[Plan](references/01-plan.md)** -- Decompose the question, design search strategy, set up workspace
+1. **[Plan](references/01-plan.md)** -- Preliminary search (optional), clarify with user (mandatory), design search strategy, set up workspace
 2. **[Gather](references/02-gather.md)** -- Execute searches, crawl pages, download and save all raw material
 3. **[Analyze](references/03-analyze.md)** -- Cross-verify claims, assess source quality, identify gaps
 4. **[Synthesize](references/04-synthesize.md)** -- Write the report with proper sourcing and illustrations
