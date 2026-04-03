@@ -454,7 +454,7 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 			OccurredAt: occurredAt,
 			RequestID:  entry.RequestID,
 			Capability: entry.Capability,
-			Model:      entry.Model,
+			Model:      sanitizeModelForDisplay(entry.Capability, entry.Model),
 			Status:     entry.Status,
 			CreditCost: creditCost,
 			ErrorCode:  entry.ErrorCode,
@@ -484,6 +484,23 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 	}
 
 	return model.LogsResult{Items: items}, nil
+}
+
+// sanitizeModelForDisplay replaces internal upstream model names with
+// user-friendly labels. Internal model identifiers (e.g. provider-specific
+// model keys) must never be exposed to external interfaces.
+func sanitizeModelForDisplay(capability, rawModel string) string {
+	switch {
+	case strings.HasPrefix(capability, "web.search"):
+		if rawModel != "" {
+			return "AI Grounded"
+		}
+		return "General"
+	case strings.HasPrefix(capability, "web.crawl"):
+		return "-"
+	default:
+		return rawModel
+	}
 }
 
 const creditCentPerCredit int64 = 100
