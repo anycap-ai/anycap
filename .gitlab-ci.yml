@@ -6,6 +6,7 @@
 #   feat* / fix* / chore* -> lint + test
 #   dev/cli                -> nightly CLI build + publish (skill + binary)
 #   release/cli-v*         -> goreleaser release (GitLab + GitHub)
+#   release/skills-v*      -> sync skills + install.sh to GitHub
 #   build/server           -> docker build server only
 #   deploy/server-dev      -> docker build + deploy (kntech-dev)
 #   deploy/server-prod     -> docker build + deploy (anycap-prod)
@@ -49,6 +50,10 @@ workflow:
     - if: $CI_COMMIT_BRANCH =~ /^release\/cli-v[0-9]+\.[0-9]+/
       variables:
         RELEASE_CLI: "true"
+    # Skills release branches: sync skills to GitHub
+    - if: $CI_COMMIT_BRANCH =~ /^release\/skills-v[0-9]+\.[0-9]+/
+      variables:
+        RELEASE_SKILLS: "true"
     # Build server image only (no deploy)
     - if: $CI_COMMIT_BRANCH == "build/server"
       variables:
@@ -87,6 +92,8 @@ lint:
   rules:
     - if: $RELEASE_CLI
       when: never
+    - if: $RELEASE_SKILLS
+      when: never
     - if: $APPS
       when: never
     - if: $NIGHTLY
@@ -105,6 +112,8 @@ test:
     - go test ./...
   rules:
     - if: $RELEASE_CLI
+      when: never
+    - if: $RELEASE_SKILLS
       when: never
     - if: $APPS
       when: never
@@ -239,28 +248,7 @@ build:cli:
     - if: '$RELEASE_CLI == "true"'
 
 # ---------------------------------------------------------------------------
-# Sync: Skills + install.sh to GitHub repo (runs BEFORE release)
-# ---------------------------------------------------------------------------
-
-sync:skills:
-  stage: deploy
-  tags:
-    - docker
-  image: alpine:3.20
-  needs:
-    - job: build:cli
-  before_script:
-    - apk add --no-cache git sed curl jq openssl
-  script:
-    - |
-      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/cli-||')
-      export RELEASE_TAG="${TAG}"
-      sh scripts/release/sync-skills.sh
-  rules:
-    - if: '$RELEASE_CLI == "true"'
-
-# ---------------------------------------------------------------------------
-# Release: GitHub (runs AFTER sync so install.sh is available)
+# Release: GitHub (upload CLI artifacts as GitHub Release)
 # ---------------------------------------------------------------------------
 
 release:github:
@@ -271,7 +259,6 @@ release:github:
   needs:
     - job: build:cli
       artifacts: true
-    - job: sync:skills
   before_script:
     - apk add --no-cache curl jq openssl
   script:
@@ -281,3 +268,30 @@ release:github:
       sh scripts/release/github-release.sh
   rules:
     - if: '$RELEASE_CLI == "true"'
+
+# ---------------------------------------------------------------------------
+# Sync: Skills + install.sh to GitHub repo (independent of CLI release)
+#
+# Trigger: push branch release/skills-v<semver>
+# Example: release/skills-v0.1.0
+#
+# Syncs skills/ directory and install.sh to the GitHub repo, updating
+# the version in all SKILL.md files. Can be re-pushed after a CLI release
+# to update skills without rebuilding the CLI.
+# ---------------------------------------------------------------------------
+
+sync:skills:
+  stage: deploy
+  tags:
+    - docker
+  image: alpine:3.20
+  needs: []
+  before_script:
+    - apk add --no-cache git sed curl jq openssl
+  script:
+    - |
+      TAG=$(echo "$CI_COMMIT_BRANCH" | sed 's|^release/skills-||')
+      export RELEASE_TAG="${TAG}"
+      sh scripts/release/sync-skills.sh
+  rules:
+    - if: '$RELEASE_SKILLS == "true"'

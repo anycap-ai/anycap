@@ -318,6 +318,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 | `feat*` / `fix*` / `chore*` | lint + test |
 | `dev/cli` | nightly CLI build (goreleaser snapshot) + publish `anycap-cli-nightly` to NexusHub |
 | `release/cli-v<semver>` | goreleaser cross-compile, GitHub release |
+| `release/skills-v<semver>` | sync skills + install.sh to GitHub |
 | `build/server` | Docker build server image only |
 | `deploy/server-dev` | Docker build + deploy to kntech-dev |
 | `deploy/server-prod` | Docker build + deploy to anycap-prod |
@@ -329,6 +330,12 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 4. CI runs goreleaser to cross-compile and archive CLI binaries.
 5. CI creates GitHub release with the release notes and uploads artifacts.
 6. GitHub Actions auto-triggers: publishes npm packages via OIDC, runs post-release verification.
+
+**Skills Release flow:**
+1. Push branch `release/skills-v0.1.0` (version extracted from branch name).
+2. CI syncs `skills/` directory and `install.sh` to the GitHub repo.
+3. CI updates `metadata.version` in all `SKILL.md` files to match the release version.
+4. Skills releases are independent of CLI releases but share the same version scheme. This allows updating skills after a CLI release without rebuilding the CLI.
 
 **GitHub authentication (GitLab CI -> GitHub):**
 - Primary: GitHub App (`GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` as File-type variable)
