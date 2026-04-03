@@ -192,6 +192,9 @@ func TestService_ImageRead_DeductsFixedCreditOnSuccess(t *testing.T) {
 	if result.Content == "" {
 		t.Fatal("expected non-empty result")
 	}
+	if result.CreditCost != 5 {
+		t.Fatalf("expected CreditCost 5, got %d", result.CreditCost)
+	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
 	if err != nil {

@@ -172,6 +172,7 @@ type UnderstandResult struct {
 	Model      string `json:"model"`
 	Usage      Usage  `json:"usage"`
 	DurationMs int64  `json:"duration_ms"`
+	CreditCost int64  `json:"credit_cost"`
 }
 
 // PresignRequest asks the server to generate a presigned PUT URL.

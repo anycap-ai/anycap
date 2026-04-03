@@ -42,6 +42,7 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
 			return model.UnderstandResult{}, err
 		}
+		result.CreditCost = imageReadCreditCost
 		return result, nil
 	}
 
@@ -73,6 +74,7 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
 		return model.UnderstandResult{}, err
 	}
+	result.CreditCost = imageReadCreditCost
 	return result, nil
 }
 
@@ -101,6 +103,7 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
 			return model.UnderstandResult{}, err
 		}
+		result.CreditCost = videoReadCreditCost
 		return result, nil
 	}
 
@@ -132,6 +135,7 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
 		return model.UnderstandResult{}, err
 	}
+	result.CreditCost = videoReadCreditCost
 	return result, nil
 }
 
@@ -160,6 +164,7 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
 			return model.UnderstandResult{}, err
 		}
+		result.CreditCost = audioReadCreditCost
 		return result, nil
 	}
 
@@ -191,6 +196,7 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
 		return model.UnderstandResult{}, err
 	}
+	result.CreditCost = audioReadCreditCost
 	return result, nil
 }
 
