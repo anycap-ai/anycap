@@ -91,22 +91,23 @@ jobs:
           echo "Generated package.json:"
           cat pkg/package.json
 
-      - name: Publish (with retry)
+      - name: Publish (with retry and provenance fallback)
         run: |
           MAX_RETRIES=3
           for i in $(seq 1 $MAX_RETRIES); do
-            echo "Publish attempt ${i}/${MAX_RETRIES}..."
+            echo "Publish attempt ${i}/${MAX_RETRIES} (with provenance)..."
             if npm publish pkg/ --provenance --access public; then
-              echo "Published successfully."
+              echo "Published successfully with provenance."
               exit 0
             fi
+            echo "Provenance publish failed."
             if [ "$i" -lt "$MAX_RETRIES" ]; then
-              echo "Publish failed, retrying in 15s..."
               sleep 15
             fi
           done
-          echo "ERROR: Failed to publish after ${MAX_RETRIES} attempts."
-          exit 1
+
+          echo "All provenance attempts failed. Publishing without provenance..."
+          npm publish pkg/ --access public
 
   publish-main:
     name: "npm: @anycap/cli"
