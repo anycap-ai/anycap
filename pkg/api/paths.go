@@ -135,6 +135,13 @@ const (
 
 const FeedbackPath = "/v1/feedback"
 
+// --- Web search and crawl ---
+
+const (
+	WebSearchPath = "/v1/web/search"
+	WebCrawlPath  = "/v1/web/crawl"
+)
+
 // --- Telemetry ---
 
 const TelemetryPath = "/v1/telemetry"

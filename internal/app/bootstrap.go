@@ -27,10 +27,12 @@ import (
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	usageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/usage"
 	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
+	webapp "gitlab.knoffice.tech/engineering/anycap/internal/application/web"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/api302"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
@@ -68,6 +70,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/telemetry"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
+	web "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/web"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
@@ -113,6 +116,7 @@ type serverDependencies struct {
 	catalogService      *catalogapp.Service
 	modelRouteService   *modelrouteapp.Service
 	capabilitiesService *capapp.Service
+	webService          *webapp.Service
 	feedbackService     *feedbackapp.Service
 	apiKeyService       port.APIKeyService
 	identityTokens      port.IdentityTokenAuthenticator
@@ -184,6 +188,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	driveHandler := drive.NewHandler(deps.driveService, deps.idResolver, deps.idMapper)
 	pageHandler := page.NewHandler(deps.pageService, deps.idResolver, deps.idMapper)
 	capHandler := capabilities.NewHandler(deps.capabilitiesService)
+	webHandler := web.NewHandler(deps.webService)
 	imageCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityImage)
 	videoCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityVideo)
 	audioCatalog := catalog.NewHandler(deps.catalogService, model.CapabilityAudio)
@@ -224,6 +229,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
+				webHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 			}),
 		},
@@ -249,6 +255,8 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.MusicModels:   hasCatalogProvider(cfg),
 		feature.Drive:         true,
 		feature.Page:          true,
+		feature.WebSearch:     cfg.Api302.Enabled() || cfg.AgentPlatform.Enabled(),
+		feature.WebCrawl:      cfg.Api302.Enabled(),
 	}
 
 	for name, defVal := range defaults {
@@ -355,6 +363,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
+			webService:          buildWebService(cfg, creditClient, callLogs),
 			feedbackService:     feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
@@ -556,6 +565,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			catalogService:      catalogService,
 			modelRouteService:   modelRouteService,
 			capabilitiesService: capService,
+			webService:          buildWebService(cfg, creditClient, callLogs),
 			feedbackService:     feedbackapp.NewService(feedbackstore.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
@@ -627,6 +637,49 @@ func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {
 	}
 	logging.GetLogger().Info("capabilities using stub provider")
 	return agentplatform.NewStubClient()
+}
+
+func buildWebCrawler(cfg config.Config) port.WebCrawler {
+	if cfg.Api302.Enabled() {
+		logging.WithField("base_url", cfg.Api302.BaseURL).Info("web crawler using 302 AI")
+		return api302.NewClient(api302.ClientConfig{
+			APIKey:  cfg.Api302.APIKey,
+			BaseURL: cfg.Api302.BaseURL,
+		})
+	}
+	logging.GetLogger().Info("web crawler not configured (API_302_API_KEY not set)")
+	return nil
+}
+
+func buildWebSearchProvider(cfg config.Config) port.WebSearchProvider {
+	if cfg.AgentPlatform.Enabled() {
+		logging.WithField("base_url", cfg.AgentPlatform.BaseURL).Info("web search grounding using agent-platform")
+		return agentplatform.NewClient(cfg.AgentPlatform)
+	}
+	logging.GetLogger().Info("web search grounding not configured (AGENT_PLATFORM not set)")
+	return nil
+}
+
+func buildWebGeneralSearchProvider(cfg config.Config) port.WebGeneralSearchProvider {
+	if cfg.Api302.Enabled() {
+		logging.WithField("base_url", cfg.Api302.BaseURL).Info("web general search using 302 AI")
+		return api302.NewClient(api302.ClientConfig{
+			APIKey:  cfg.Api302.APIKey,
+			BaseURL: cfg.Api302.BaseURL,
+		})
+	}
+	logging.GetLogger().Info("web general search not configured (API_302_API_KEY not set)")
+	return nil
+}
+
+func buildWebService(cfg config.Config, creditClient port.CreditClient, callLogs port.CallLogRepo) *webapp.Service {
+	crawler := buildWebCrawler(cfg)
+	svc := webapp.NewService(crawler)
+	svc.SetSearchProvider(buildWebSearchProvider(cfg))
+	svc.SetGeneralSearchProvider(buildWebGeneralSearchProvider(cfg))
+	svc.SetCreditClient(creditClient)
+	svc.SetCallLogRepo(callLogs)
+	return svc
 }
 
 func buildFeedbackNotifier(cfg config.Config) port.FeedbackNotifier {

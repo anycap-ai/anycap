@@ -45,15 +45,16 @@ func WriteServerJSON(w io.Writer, payload []byte, requestID string) error {
 }
 
 // WriteServerContent extracts the "content" field from the server envelope
-// and writes a clean JSON object with request_id.
+// and writes a clean JSON object with request_id and credit_cost.
 //
-// Server response shape: {"status":"success","data":{"content":"...","model":"...","usage":{...}}}
-// CLI output:            {"content":"...","request_id":"req_..."}
+// Server response shape: {"status":"success","data":{"content":"...","model":"...","usage":{...},"credit_cost":5}}
+// CLI output:            {"content":"...","credit_cost":5,"request_id":"req_..."}
 func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 	var env struct {
 		Status string `json:"status"`
 		Data   struct {
-			Content string `json:"content"`
+			Content    string `json:"content"`
+			CreditCost int64  `json:"credit_cost"`
 		} `json:"data"`
 		Error json.RawMessage `json:"error,omitempty"`
 	}
@@ -66,7 +67,10 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 		return WriteServerJSON(w, payload, requestID)
 	}
 
-	out := map[string]string{"status": "success", "content": env.Data.Content}
+	out := map[string]any{"status": "success", "content": env.Data.Content}
+	if env.Data.CreditCost > 0 {
+		out["credit_cost"] = env.Data.CreditCost
+	}
 	if requestID != "" {
 		out["request_id"] = requestID
 	}

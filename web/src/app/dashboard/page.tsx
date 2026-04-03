@@ -2,6 +2,7 @@
 
 export const runtime = "edge";
 
+import Link from "next/link";
 import { useDashboardSummary } from "@/lib/api/hooks";
 import type { TimelineItem, Balance } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
@@ -32,12 +33,23 @@ function StatCard({
 function BalanceCard({ balance }: { balance: Balance }) {
   return (
     <StatCard label="Balance">
-      <p className="text-[40px] text-[#1c1f17] font-bold leading-none tracking-tight">
-        {formatCredit(balance.available)}
-      </p>
-      <p className="text-[15px] text-[#4d5145] mt-2.5">
-        credits
-      </p>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[40px] text-[#1c1f17] font-bold leading-none tracking-tight">
+            {formatCredit(balance.available)}
+          </p>
+          <p className="text-[15px] text-[#4d5145] mt-2.5">
+            credits
+          </p>
+        </div>
+
+        <Link
+          href="/dashboard/billing?buy=1"
+          className="inline-flex items-center justify-center self-start rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:mt-5"
+        >
+          Buy credits
+        </Link>
+      </div>
     </StatCard>
   );
 }

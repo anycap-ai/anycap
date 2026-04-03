@@ -55,6 +55,7 @@ export const publicRouteDefinitions = [
   { key: "home", kind: "home", path: ROOT_PATH, priority: 1 },
   { key: "for-human", kind: "human", path: "/for-human", priority: 0.8 },
   { key: "about", kind: "seo", path: "/about", priority: 0.72 },
+  { key: "pricing", kind: "seo", path: "/pricing", priority: 0.9 },
   { key: "start", kind: "seo", path: "/start", priority: 0.96 },
   { key: "for-claude-code", kind: "seo", path: "/for/claude-code", priority: 0.95 },
   {

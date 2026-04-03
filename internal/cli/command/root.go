@@ -93,6 +93,10 @@ func NewRootCmd(opts Options) *cobra.Command {
 	// Action commands (AI analysis: image-read, video-read, etc.).
 	rootCmd.AddCommand(cap.NewActionsCmd(clientFactory, opts.Stdout))
 
+	// Web commands.
+	rootCmd.AddCommand(cap.NewSearchCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(cap.NewCrawlCmd(clientFactory, opts.Stdout))
+
 	// Capability commands.
 	rootCmd.AddCommand(cap.NewImageCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(cap.NewVideoCmd(clientFactory, opts.Stdout))

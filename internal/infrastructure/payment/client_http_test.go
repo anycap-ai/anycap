@@ -38,8 +38,8 @@ func TestHTTPClient_CreateOrderCheckout(t *testing.T) {
 			capturedBody = string(body)
 			return &http.Response{
 				StatusCode: http.StatusOK,
-				Body: io.NopCloser(strings.NewReader(`{"code":0,"message":"success","data":{"url":"https://checkout.stripe.test/session/cs_123","id":"cs_123"}}`)),
-				Header: make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(`{"code":0,"message":"success","data":{"url":"https://checkout.stripe.test/session/cs_123","id":"cs_123"}}`)),
+				Header:     make(http.Header),
 			}, nil
 		}),
 		Timeout: 5 * time.Second,
@@ -52,12 +52,12 @@ func TestHTTPClient_CreateOrderCheckout(t *testing.T) {
 	}, httpClient)
 
 	result, err := client.CreateOrderCheckout(context.Background(), model.OrderCheckoutInput{
-		UserID:          "2000000001",
-		PriceID:         "price_2000",
-		Quantity:        2,
-		SuccessURL:      "https://anycap.ai/dashboard/billing?checkout=success",
-		CancelURL:       "https://anycap.ai/dashboard/buy-credits?checkout=cancel",
-		IdempotencyKey:  "checkout-123",
+		UserID:         "2000000001",
+		PriceID:        "price_2000",
+		Quantity:       2,
+		SuccessURL:     "https://anycap.ai/dashboard/billing?checkout=success",
+		CancelURL:      "https://anycap.ai/dashboard/buy-credits?checkout=cancel",
+		IdempotencyKey: "checkout-123",
 	})
 	if err != nil {
 		t.Fatalf("CreateOrderCheckout() error = %v", err)
