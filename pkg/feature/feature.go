@@ -34,6 +34,8 @@ const (
 	MusicModels   = "music.models"
 	Drive         = "drive"
 	Page          = "page"
+	WebSearch     = "web.search"
+	WebCrawl      = "web.crawl"
 )
 
 // defaults defines the code-level default state for each feature.
@@ -52,6 +54,8 @@ var defaults = map[string]bool{
 	MusicModels:   true,
 	Drive:         true,
 	Page:          true,
+	WebSearch:     true,
+	WebCrawl:      true,
 }
 
 var (
