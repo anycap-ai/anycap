@@ -11,6 +11,7 @@ import {
 } from "@/lib/site";
 
 const protectedPaths = ["/dashboard"];
+const passthroughPrefixes = ["/auth", "/dashboard"];
 const legacyRouteRedirects = new Map<string, string>([
   ["/capabilities/image-read", "/capabilities/image-understanding"],
 ]);
@@ -83,6 +84,21 @@ export async function middleware(req: NextRequest) {
     if (matchedPublicRoute) {
       return applyAuthResponse(
         redirectToLocalizedPath(req, matchedPublicRoute.path),
+        authResponse,
+      );
+    }
+
+    if (
+      normalizedPath !== "/" &&
+      !passthroughPrefixes.some(
+        (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
+      )
+    ) {
+      return applyAuthResponse(
+        new NextResponse("Not Found", {
+          status: 404,
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        }),
         authResponse,
       );
     }

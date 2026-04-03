@@ -20,8 +20,13 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/capabilities", label: "Overview" },
       { href: "/capabilities/image-generation", label: "Image Generation" },
       { href: "/capabilities/video-generation", label: "Video Generation" },
+      { href: "/capabilities/music-generation", label: "Music Generation" },
       { href: "/capabilities/image-understanding", label: "Image Understanding" },
       { href: "/capabilities/video-analysis", label: "Video Analysis" },
+      { href: "/capabilities/audio-understanding", label: "Audio Understanding" },
+      { href: "/capabilities/web-search", label: "Web Search" },
+      { href: "/capabilities/grounded-web-search", label: "Grounded Web Search" },
+      { href: "/capabilities/web-crawl", label: "Web Crawl" },
     ],
   },
   {
@@ -30,8 +35,8 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/start", label: "Start here" },
       { href: "/for/claude-code", label: "Claude Code" },
       { href: "/for/cursor", label: "Cursor" },
-      { href: "/for/manus", label: "Manus" },
       { href: "/for/codex", label: "Codex" },
+      { href: "/for/manus", label: "Manus" },
     ],
   },
   {

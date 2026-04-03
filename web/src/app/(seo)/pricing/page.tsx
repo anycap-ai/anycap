@@ -3,6 +3,12 @@ import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LoginButton } from "@/components/auth/LoginButton";
+import {
+  pricingActionRows,
+  pricingCapabilitySummary,
+  pricingGenerationGroups,
+  type GenerationModel,
+} from "@/lib/capability-inventory";
 import { siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -91,32 +97,6 @@ const creditPackages = [
   },
 ] as const;
 
-type GenerationModel = {
-  model: string;
-  capability: string;
-  modes: string[];
-  credits: string;
-  unit: "per call" | "per second";
-};
-
-const generationModels: GenerationModel[] = [
-  { model: "Nano Banana Pro", capability: "Image", modes: ["text-to-image", "image-to-image"], credits: "~7", unit: "per call" },
-  { model: "Nano Banana 2", capability: "Image", modes: ["text-to-image", "image-to-image"], credits: "~4", unit: "per call" },
-  { model: "Seedream 5", capability: "Image", modes: ["text-to-image", "image-to-image"], credits: "~2", unit: "per call" },
-  { model: "Veo 3.1", capability: "Video", modes: ["text-to-video", "image-to-video"], credits: "~20", unit: "per second" },
-  { model: "Kling 3.0", capability: "Video", modes: ["text-to-video", "image-to-video"], credits: "~9", unit: "per second" },
-  { model: "Seedance 1.5 Pro", capability: "Video", modes: ["text-to-video", "image-to-video"], credits: "~14", unit: "per second" },
-  { model: "ElevenLabs Music", capability: "Music", modes: ["text-to-music"], credits: "~1", unit: "per second" },
-];
-
-const actionsModels = [
-  { action: "Image read", unit: "per request", credits: 5 },
-  { action: "Video read", unit: "per request", credits: 10 },
-  { action: "Audio read", unit: "per request", credits: 10 },
-  { action: "Web search", unit: "per request", credits: 1 },
-  { action: "Web crawl", unit: "per request", credits: 1 },
-] as const;
-
 const driveQuotas = [
   { label: "Files per account", value: "5,000" },
   { label: "Max file size", value: "1 GB" },
@@ -127,11 +107,64 @@ const pageQuotas = [
   { label: "Versions per site", value: "500" },
 ] as const;
 
-const capabilityColor: Record<string, string> = {
-  Image: "bg-[#6b7d3a]/10 text-[#6b7d3a]",
-  Video: "bg-[#4d5145]/10 text-[#4d5145]",
-  Music: "bg-[#8b6914]/10 text-[#8b6914]",
-};
+function ModelTable({
+  models,
+  unitLabel,
+  headers,
+}: {
+  models: GenerationModel[];
+  unitLabel: string;
+  headers: [string, string, string];
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[#d4dbb8] bg-[#f9faf5]/80">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-[#d4dbb8]">
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"
+                style={mono}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {models.map((row, idx) => (
+            <tr
+              key={row.model}
+              className={`border-b border-[#d4dbb8]/60 last:border-b-0 ${
+                idx % 2 === 0 ? "bg-[#fffffc]/70" : "bg-[#f9faf5]/50"
+              }`}
+            >
+              <td className="px-5 py-4 text-sm font-medium text-[#1c1f17]">{row.model}</td>
+              <td className="px-5 py-4">
+                <div className="flex flex-wrap gap-1.5">
+                  {row.modes.map((mode) => (
+                    <span
+                      key={mode}
+                      className="inline-block rounded-md bg-[#f4f5f0] px-2 py-0.5 text-[12px] text-[#4d5145]"
+                      style={mono}
+                    >
+                      {mode}
+                    </span>
+                  ))}
+                </div>
+              </td>
+              <td className="px-5 py-4 text-sm text-[#1c1f17]" style={mono}>
+                {row.credits}
+                <span className="ml-1 text-[11px] text-[#8a8e82]">{unitLabel}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function PricingPage() {
   return (
@@ -233,75 +266,31 @@ export default function PricingPage() {
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
                 Generation models
               </h2>
-              <p className="mb-8 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Credit rates for each generation model. Image models are charged per call; video
-                and music models are charged per second of output. We pass through the official
-                provider rate with no markup.
+              <p className="mb-10 max-w-[700px] text-sm leading-6 text-[#4d5145]">
+                Credit rates for each generation model. We pass through the official provider rate
+                with no markup.
               </p>
-              <div className="overflow-x-auto rounded-xl border border-[#d4dbb8] bg-[#f9faf5]/80">
-                <table className="min-w-[700px] w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[#d4dbb8]">
-                      {["Model", "Capability", "Modes", "Credits"].map((header) => (
-                        <th
-                          key={header}
-                          className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"
-                          style={mono}
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {generationModels.map((row, idx) => (
-                      <tr
-                        key={row.model}
-                        className={`border-b border-[#d4dbb8]/60 last:border-b-0 ${
-                          idx % 2 === 0 ? "bg-[#fffffc]/70" : "bg-[#f9faf5]/50"
-                        }`}
-                      >
-                        <td className="px-5 py-4 text-sm font-medium text-[#1c1f17]">
-                          {row.model}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] tracking-[0.3px] ${
-                              capabilityColor[row.capability] ?? "text-[#4d5145]"
-                            }`}
-                            style={mono}
-                          >
-                            {row.capability}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            {row.modes.map((mode) => (
-                              <span
-                                key={mode}
-                                className="inline-block rounded-md bg-[#f4f5f0] px-2 py-0.5 text-[12px] text-[#4d5145]"
-                                style={mono}
-                              >
-                                {mode}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 text-sm text-[#1c1f17]" style={mono}>
-                          {row.credits}
-                          <span className="ml-1 text-[11px] text-[#8a8e82]">
-                            /{row.unit === "per second" ? "sec" : "call"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-4 text-sm leading-6 text-[#5a5e52]">
-                Credits shown are approximate. Image models are charged per call; video and music
-                models are charged per second of generated output. Actual cost may vary based on
-                resolution, duration, or quality settings.
+
+              {pricingGenerationGroups.map((group, index) => (
+                <div
+                  key={group.title}
+                  className={index === pricingGenerationGroups.length - 1 ? "" : "mb-12"}
+                >
+                  <h3 className="mb-2 text-base text-[#1c1f17]" style={pixel}>
+                    {group.title}
+                  </h3>
+                  <p className="mb-5 text-sm leading-6 text-[#4d5145]">{group.description}</p>
+                  <ModelTable
+                    models={group.models}
+                    unitLabel={group.unitLabel}
+                    headers={group.headers}
+                  />
+                </div>
+              ))}
+
+              <p className="mt-6 text-sm leading-6 text-[#5a5e52]">
+                Credits shown are approximate. Actual cost may vary based on resolution, duration,
+                or quality settings.
               </p>
             </section>
           </FadeIn>
@@ -317,7 +306,7 @@ export default function PricingPage() {
                 Actions
               </h2>
               <p className="mb-8 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Analyze images, videos, and audio, search the web, and crawl pages — all at a flat per-request rate.
+                Analyze images, videos, and audio, search the web, crawl pages, and run AI-grounded web search — all at a flat per-request rate.
               </p>
               <div className="overflow-x-auto rounded-xl border border-[#d4dbb8] bg-[#f9faf5]/80">
                 <table className="w-full text-left">
@@ -335,7 +324,7 @@ export default function PricingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {actionsModels.map((row) => (
+                    {pricingActionRows.map((row) => (
                       <tr
                         key={row.action}
                         className="border-b border-[#d4dbb8]/60 last:border-b-0 bg-[#fffffc]/70"
@@ -457,9 +446,8 @@ export default function PricingPage() {
                     What capabilities are included?
                   </p>
                   <p className="text-sm leading-6 text-[#4d5145]">
-                    Image generation, video generation, music generation, image understanding,
-                    video analysis, audio understanding, web search, and web crawl. Drive storage
-                    and Page hosting are included at no additional credit cost.
+                    {pricingCapabilitySummary.join(", ")}. Drive storage and Page hosting are
+                    included at no additional credit cost.
                   </p>
                 </div>
               </div>

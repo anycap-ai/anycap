@@ -1,6 +1,7 @@
 import AgentLanding from "@/app/page";
 import { createRootMetadata } from "@/lib/localized-metadata";
 import { isSupportedLocale } from "@/lib/site";
+import { notFound } from "next/navigation";
 
 export const runtime = "edge";
 
@@ -17,6 +18,13 @@ export async function generateMetadata({ params }: LocalizedHomePageProps) {
   return createRootMetadata(locale);
 }
 
-export default function LocalizedHomePage() {
+export default async function LocalizedHomePage({
+  params,
+}: LocalizedHomePageProps) {
+  const { locale } = await params;
+  if (!isSupportedLocale(locale)) {
+    notFound();
+  }
+
   return <AgentLanding />;
 }

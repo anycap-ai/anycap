@@ -11,6 +11,8 @@ const triggerClass =
 export type DropdownItem = {
   href: string;
   label: string;
+  section?: string;
+  description?: string;
 };
 
 type NavDropdownProps = {
@@ -28,6 +30,14 @@ const hideBelowBlockClass: Record<string, string> = {
 
 export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps) {
   const outerClass = hideBelow ? hideBelowBlockClass[hideBelow] ?? "" : "";
+  const hasRichItems = items.some((item) => item.description || item.section);
+  const groupedItems = items.reduce<Record<string, DropdownItem[]>>((acc, item) => {
+    const key = item.section ?? "More";
+    acc[key] ??= [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+  const groupEntries = Object.entries(groupedItems);
 
   return (
     <HoverDropdown
@@ -69,17 +79,56 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
         )
       }
     >
-      {items.map(({ href: itemHref, label: itemLabel }) => (
-        <Link
-          key={itemHref}
-          href={itemHref}
-          prefetch={false}
-          className={dropdownItemClass}
-          style={mono}
-        >
-          {itemLabel}
-        </Link>
-      ))}
+      {hasRichItems ? (
+        <div className="w-[min(92vw,38rem)] p-3">
+          <div className="grid gap-3 md:grid-cols-2">
+            {groupEntries.map(([section, sectionItems]) => (
+              <div
+                key={section}
+                className="rounded-xl border border-[#e7eadf] bg-[#fbfcf8]/90 p-2.5"
+              >
+                <p
+                  className="px-2 py-1 text-[10px] uppercase tracking-[0.9px] text-[#7d846f]"
+                  style={mono}
+                >
+                  {section}
+                </p>
+                <div className="mt-1 space-y-1">
+                  {sectionItems.map(({ href: itemHref, label: itemLabel, description }) => (
+                    <Link
+                      key={itemHref}
+                      href={itemHref}
+                      prefetch={false}
+                      className="block rounded-lg px-3 py-3 transition-colors duration-150 hover:bg-[#eef2e5]"
+                    >
+                      <span className="block text-[14px] text-[#28301f]" style={mono}>
+                        {itemLabel}
+                      </span>
+                      {description ? (
+                        <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">
+                          {description}
+                        </span>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        items.map(({ href: itemHref, label: itemLabel }) => (
+          <Link
+            key={itemHref}
+            href={itemHref}
+            prefetch={false}
+            className={dropdownItemClass}
+            style={mono}
+          >
+            {itemLabel}
+          </Link>
+        ))
+      )}
     </HoverDropdown>
   );
 }

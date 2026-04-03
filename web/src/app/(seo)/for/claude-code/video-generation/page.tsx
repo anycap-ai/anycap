@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
@@ -14,7 +13,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "Claude Code video generation — Add video generation to Claude Code",
   description:
-    "Claude Code does not ship with video generation. AnyCap adds video generation through one skill, one CLI, and Veo 3.1 as the current early access model.",
+    "Claude Code does not ship with video generation. AnyCap adds video generation through one skill, one CLI, and current video models including Veo 3.1.",
   alternates: { canonical: "/for/claude-code/video-generation" },
   openGraph: {
     type: "website",
@@ -44,7 +43,7 @@ const faqItems = [
   },
   {
     question: "Which video model is available today?",
-    answer: "The current early access video generation page is built around Veo 3.1.",
+    answer: "The current video generation page highlights Veo 3.1, and AnyCap pricing also lists Seedance 1.5 Pro and Kling 3.0.",
   },
   {
     question: "Why route video generation through AnyCap instead of a separate SDK?",
@@ -136,14 +135,6 @@ export default function ClaudeCodeVideoGenerationPage() {
               </Link>
             </div>
           </FadeIn>
-
-          <FadeIn className="mt-8">
-            <EarlyAccessBanner />
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
 
           <FadeIn>
             <section className="mt-16 md:mt-24">

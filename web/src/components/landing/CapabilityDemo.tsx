@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 const mono = { fontFamily: "var(--font-logo), monospace" } as const;
 
 export interface DemoLine {
-  type: "header" | "prompt" | "text" | "tool" | "image" | "video" | "analysis" | "cursor";
+  type: "header" | "prompt" | "text" | "tool" | "image" | "video" | "music" | "analysis" | "cursor";
   content?: string;
   sub?: string;
   delay: number;
@@ -198,6 +198,38 @@ function GeneratedVideo() {
   );
 }
 
+function GeneratedMusic() {
+  return (
+    <RevealBlock>
+      <div className="my-3 relative h-[80px] w-full max-w-[320px] overflow-hidden rounded-lg bg-[#141712] px-4 py-3">
+        <div className="flex h-full items-end gap-[3px]">
+          {Array.from({ length: 40 }).map((_, i) => {
+            const h = 20 + Math.sin(i * 0.7) * 30 + Math.cos(i * 1.3) * 20 + (i % 3 === 0 ? 15 : 0);
+            return (
+              <div
+                key={i}
+                className="flex-1 rounded-t-[1px]"
+                style={{
+                  height: `${Math.max(8, Math.min(h, 90))}%`,
+                  background: `linear-gradient(to top, #6b7d3a, #8fa34e)`,
+                  opacity: 0.6 + Math.sin(i * 0.5) * 0.4,
+                  animation: `pulse ${1.5 + (i % 4) * 0.3}s ease-in-out ${i * 0.05}s infinite alternate`,
+                }}
+              />
+            );
+          })}
+        </div>
+        <div
+          className="absolute bottom-2 right-3 rounded px-2 py-0.5 text-[10px] text-[#e0e0dc]"
+          style={{ background: "rgba(0,0,0,0.5)", ...mono }}
+        >
+          0:32
+        </div>
+      </div>
+    </RevealBlock>
+  );
+}
+
 function AnalysisResult({ lines: resultLines }: { lines: string[] }) {
   return (
     <RevealBlock>
@@ -307,6 +339,8 @@ export function CapabilityDemo({ lines }: { lines: DemoLine[] }) {
               return <GeneratedImage key={i} />;
             case "video":
               return <GeneratedVideo key={i} />;
+            case "music":
+              return <GeneratedMusic key={i} />;
             case "analysis":
               return <AnalysisResult key={i} lines={line.analysisLines ?? []} />;
             case "cursor":

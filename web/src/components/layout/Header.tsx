@@ -143,10 +143,60 @@ const capabilitiesDropdown: NavDropdownDef = {
   href: "/capabilities",
   hideBelow: "sm",
   items: [
-    { href: "/capabilities/image-generation", label: "Image Generation" },
-    { href: "/capabilities/video-generation", label: "Video Generation" },
-    { href: "/capabilities/image-understanding", label: "Image Understanding" },
-    { href: "/capabilities/video-analysis", label: "Video Analysis" },
+    {
+      href: "/capabilities/image-generation",
+      label: "Image Generation",
+      section: "Generate",
+      description: "Create and edit images from prompts or references.",
+    },
+    {
+      href: "/capabilities/video-generation",
+      label: "Video Generation",
+      section: "Generate",
+      description: "Create motion outputs from text and image inputs.",
+    },
+    {
+      href: "/capabilities/music-generation",
+      label: "Music Generation",
+      section: "Generate",
+      description: "Produce music tracks through one runtime.",
+    },
+    {
+      href: "/capabilities/image-understanding",
+      label: "Image Understanding",
+      section: "Understand",
+      description: "Read screenshots, diagrams, and visual references.",
+    },
+    {
+      href: "/capabilities/video-analysis",
+      label: "Video Analysis",
+      section: "Understand",
+      description: "Inspect recordings and extract structured details.",
+    },
+    {
+      href: "/capabilities/audio-understanding",
+      label: "Audio Understanding",
+      section: "Understand",
+      description: "Transcribe and analyze voice and audio files.",
+    },
+    {
+      href: "/capabilities/web-search",
+      label: "Web Search",
+      section: "Retrieve",
+      description: "Search the web from the same agent workflow.",
+    },
+    {
+      href: "/capabilities/grounded-web-search",
+      label: "Grounded Web Search",
+      section: "Retrieve",
+      description: "Return synthesized answers with live citations.",
+    },
+    {
+      href: "/capabilities/web-crawl",
+      label: "Web Crawl",
+      section: "Retrieve",
+      description: "Fetch pages and convert them into clean content.",
+    },
   ],
 };
 
@@ -157,8 +207,8 @@ const equipAgentsDropdown: NavDropdownDef = {
   items: [
     { href: "/for/claude-code", label: "Claude Code" },
     { href: "/for/cursor", label: "Cursor" },
-    { href: "/for/manus", label: "Manus" },
     { href: "/for/codex", label: "Codex" },
+    { href: "/for/manus", label: "Manus" },
   ],
   hideBelow: "md",
 };

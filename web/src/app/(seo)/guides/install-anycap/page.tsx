@@ -116,8 +116,7 @@ export default function InstallAnycapPage() {
           <div className="mt-16 md:mt-24 space-y-12 max-w-[800px]">
             <FadeIn>
               <p className="text-sm text-[#4d5145] leading-6 border border-[#d4dbb8] bg-[#f4f5f0]/50 px-5 py-4 max-w-[800px]">
-                The following install steps will be available when AnyCap launches publicly.
-                Request early access to get started today.
+                The following install steps reflect the current AnyCap setup flow.
               </p>
             </FadeIn>
             {/* Step 1 */}

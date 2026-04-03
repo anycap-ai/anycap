@@ -5,7 +5,6 @@ import {
   CapabilityGapTable,
   type CapabilityGapRow,
 } from "@/components/landing/CapabilityGapTable";
-import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
@@ -16,25 +15,25 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AI agent capabilities — image, video, and vision through one interface",
+  title: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
   description:
-    "Your agent can reason, but it still needs capabilities for image generation, video generation, image understanding, and video analysis. AnyCap provides those capabilities through one CLI, one auth flow, and one install path.",
+    "Your agent can reason, but it still needs capabilities for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, and web crawl. AnyCap provides those capabilities through one CLI, one auth flow, and one install path.",
   alternates: { canonical: "/capabilities" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/capabilities",
     siteName: siteConfig.siteName,
-    title: "AI agent capabilities — image, video, and vision through one interface",
+    title: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
     description:
-      "Browse the capability layer that adds image, video, and vision workflows to modern coding agents.",
+      "Browse the capability layer that adds generation, analysis, search, and crawl workflows to modern coding agents.",
   },
 };
 
 interface Capability {
   name: string;
   category: string;
-  status: "early_access" | "coming_soon";
+  status: "available" | "coming_soon";
   description: string;
   models?: string;
   href: string | null;
@@ -44,7 +43,7 @@ const capabilities: Capability[] = [
   {
     name: "Image Generation",
     category: "Image",
-    status: "early_access",
+    status: "available",
     description:
       "Generate and edit images through Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2.",
     models: "Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2",
@@ -53,15 +52,23 @@ const capabilities: Capability[] = [
   {
     name: "Video Generation",
     category: "Video",
-    status: "early_access",
-    description: "Generate videos from text prompts through Veo 3.1.",
-    models: "Veo 3.1",
+    status: "available",
+    description: "Generate videos from text prompts and images through Veo 3.1, Seedance 1.5 Pro, and Kling 3.0.",
+    models: "Veo 3.1, Seedance 1.5 Pro, Kling 3.0",
     href: "/capabilities/video-generation",
+  },
+  {
+    name: "Music Generation",
+    category: "Audio",
+    status: "available",
+    description: "Generate music tracks and instrumental audio through one music runtime.",
+    models: "ElevenLabs Music",
+    href: "/capabilities/music-generation",
   },
   {
     name: "Image Understanding",
     category: "Vision",
-    status: "early_access",
+    status: "available",
     description: "Analyze screenshots, diagrams, photos, and charts through one vision runtime.",
     models: "Vision models",
     href: "/capabilities/image-understanding",
@@ -69,17 +76,39 @@ const capabilities: Capability[] = [
   {
     name: "Video Analysis",
     category: "Video",
-    status: "early_access",
+    status: "available",
     description: "Inspect recordings and extract structured information from video content.",
     models: "Vision models",
     href: "/capabilities/video-analysis",
   },
   {
-    name: "Music",
+    name: "Audio Understanding",
     category: "Audio",
-    status: "coming_soon",
-    description: "Generate music and audio compositions.",
-    href: null,
+    status: "available",
+    description: "Transcribe and analyze meetings, podcasts, and voice clips through one runtime.",
+    models: "Audio models",
+    href: "/capabilities/audio-understanding",
+  },
+  {
+    name: "Web Search",
+    category: "Web",
+    status: "available",
+    description: "Search the web for structured results with optional full-page content.",
+    href: "/capabilities/web-search",
+  },
+  {
+    name: "Grounded Web Search",
+    category: "Web",
+    status: "available",
+    description: "Get synthesized answers with citations grounded in live web search.",
+    href: "/capabilities/grounded-web-search",
+  },
+  {
+    name: "Web Crawl",
+    category: "Web",
+    status: "available",
+    description: "Convert web pages into clean Markdown for downstream agent workflows.",
+    href: "/capabilities/web-crawl",
   },
   {
     name: "Speech",
@@ -88,39 +117,32 @@ const capabilities: Capability[] = [
     description: "Text-to-speech and voice generation.",
     href: null,
   },
-  {
-    name: "Search",
-    category: "Web",
-    status: "coming_soon",
-    description: "Web search capabilities for agents.",
-    href: null,
-  },
-  {
-    name: "Crawl",
-    category: "Web",
-    status: "coming_soon",
-    description: "Web crawling and content extraction.",
-    href: null,
-  },
 ];
 
 const hubArticleJsonLd = createTechArticleJsonLd({
-  headline: "AI agent capabilities — image, video, and vision through one interface",
+  headline: "AI agent capabilities — generation, analysis, search, and crawl through one interface",
   description:
-    "Hub page for the capabilities agents usually need first: image generation, video generation, image understanding, and video analysis.",
+    "Hub page for the capabilities agents use across generation, analysis, search, and crawl workflows.",
   path: "/capabilities",
-  about: ["AI agent capabilities", "Image generation", "Video generation", "Vision"],
-  keywords: ["ai agent capabilities", "image generation for ai agents", "video generation for ai agents", "vision api for agents"],
+  about: ["AI agent capabilities", "Generation", "Analysis", "Web search", "Web crawl"],
+  keywords: [
+    "ai agent capabilities",
+    "image generation for ai agents",
+    "video generation for ai agents",
+    "vision api for agents",
+    "web search api for ai agents",
+    "web crawl for ai agents",
+  ],
 });
 
 const itemListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "AnyCap Capabilities",
-  description: "Agent capabilities in early access through the AnyCap CLI and capability runtime.",
-  numberOfItems: capabilities.filter((capability) => capability.status === "early_access").length,
+  description: "Agent capabilities across generation, analysis, search, and crawl through the AnyCap CLI and capability runtime.",
+  numberOfItems: capabilities.filter((capability) => capability.status === "available").length,
   itemListElement: capabilities
-    .filter((capability) => capability.status === "early_access")
+    .filter((capability) => capability.status === "available")
     .map((capability, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -146,7 +168,7 @@ const gapRows: CapabilityGapRow[] = [
       { label: "Not built in", tone: "muted" },
       { label: "Not built in", tone: "muted" },
       { label: "Not built in", tone: "muted" },
-      { label: "Early access", tone: "accent" },
+      { label: "Available", tone: "accent" },
     ],
   },
   {
@@ -155,7 +177,16 @@ const gapRows: CapabilityGapRow[] = [
       { label: "Not built in", tone: "muted" },
       { label: "Not built in", tone: "muted" },
       { label: "Not built in", tone: "muted" },
-      { label: "Early access", tone: "accent" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
+    capability: "Music generation",
+    cells: [
+      { label: "Not built in", tone: "muted" },
+      { label: "Not built in", tone: "muted" },
+      { label: "Not built in", tone: "muted" },
+      { label: "Available", tone: "accent" },
     ],
   },
   {
@@ -164,7 +195,7 @@ const gapRows: CapabilityGapRow[] = [
       { label: "No unified runtime", tone: "muted" },
       { label: "No unified runtime", tone: "muted" },
       { label: "No unified runtime", tone: "muted" },
-      { label: "Early access", tone: "accent" },
+      { label: "Available", tone: "accent" },
     ],
   },
   {
@@ -173,11 +204,47 @@ const gapRows: CapabilityGapRow[] = [
       { label: "No unified runtime", tone: "muted" },
       { label: "No unified runtime", tone: "muted" },
       { label: "No unified runtime", tone: "muted" },
-      { label: "Early access", tone: "accent" },
+      { label: "Available", tone: "accent" },
     ],
   },
   {
-    capability: "Music, speech, search, crawl",
+    capability: "Audio understanding",
+    cells: [
+      { label: "No unified audio runtime", tone: "muted" },
+      { label: "No unified audio runtime", tone: "muted" },
+      { label: "No unified audio runtime", tone: "muted" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
+    capability: "Web search",
+    cells: [
+      { label: "External tooling", tone: "muted" },
+      { label: "External tooling", tone: "muted" },
+      { label: "External tooling", tone: "muted" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
+    capability: "Grounded web search",
+    cells: [
+      { label: "No grounded flow", tone: "muted" },
+      { label: "No grounded flow", tone: "muted" },
+      { label: "No grounded flow", tone: "muted" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
+    capability: "Web crawl",
+    cells: [
+      { label: "No reusable crawl runtime", tone: "muted" },
+      { label: "No reusable crawl runtime", tone: "muted" },
+      { label: "No reusable crawl runtime", tone: "muted" },
+      { label: "Available", tone: "accent" },
+    ],
+  },
+  {
+    capability: "Speech",
     cells: [
       { label: "Not built in", tone: "muted" },
       { label: "Not built in", tone: "muted" },
@@ -209,7 +276,7 @@ const relatedCards = [
 ];
 
 export default function CapabilitiesPage() {
-  const earlyAccess = capabilities.filter((capability) => capability.status === "early_access");
+  const availableCapabilities = capabilities.filter((capability) => capability.status === "available");
   const comingSoon = capabilities.filter((capability) => capability.status === "coming_soon");
 
   return (
@@ -239,20 +306,13 @@ export default function CapabilitiesPage() {
               It still needs capabilities.
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              The missing layer is usually not planning or code generation. It is access to image
-              generation, video generation, image understanding, and video analysis through a
-              consistent runtime. AnyCap gives those capabilities one interface, one auth flow, and
-              one install path across Claude Code, Cursor, Codex, and the rest of your agent stack.
+              The missing layer is usually not planning or code generation. It is access to
+              generation, analysis, search, and crawl workflows through a consistent runtime.
+              AnyCap gives agents image, video, music, vision, audio, and web capabilities through
+              one interface, one auth flow, and one install path across Claude Code, Cursor, Codex,
+              and the rest of your agent stack.
             </p>
           </FadeIn>
-
-          <FadeIn className="mt-8">
-            <EarlyAccessBanner />
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
 
           <FadeIn>
             <div className="mt-16 md:mt-24">
@@ -279,10 +339,10 @@ export default function CapabilitiesPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Start with the capability gap you need to close
+                Start with the capability you need right now
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {earlyAccess.map((capability) => {
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {availableCapabilities.map((capability) => {
                   const inner = (
                     <div className="h-full rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-6 transition-colors hover:border-[#6b7d3a]">
                       <div className="mb-3 flex items-center gap-2">
