@@ -32,16 +32,16 @@ Skills teach AI agents how to discover and invoke AnyCap capabilities. Choose yo
 
 ```bash
 # Claude Code
-npx -y skills add anycap-ai/anycap -a claude-code -y
+npx -y skills add anycap-ai/anycap -a claude-code -g -y
 
 # Cursor
-npx -y skills add anycap-ai/anycap -a cursor -y
+npx -y skills add anycap-ai/anycap -a cursor -g -y
 
 # Codex
-npx -y skills add anycap-ai/anycap -a codex -y
+npx -y skills add anycap-ai/anycap -a codex -g -y
 
 # Universal (any agent, all skills, auto-detect agents)
-npx -y skills add anycap-ai/anycap -s '*' -y
+npx -y skills add anycap-ai/anycap -s '*' -g -y
 ```
 
 Or install manually:
