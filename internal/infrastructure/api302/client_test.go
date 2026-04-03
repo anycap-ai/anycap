@@ -31,11 +31,11 @@ func TestSearch_Success(t *testing.T) {
 		if body.Query != "hello world" {
 			t.Errorf("expected query 'hello world', got %q", body.Query)
 		}
-		if body.Provider != searchProvider {
-			t.Errorf("expected provider %q, got %q", searchProvider, body.Provider)
+		if body.Provider != defaultSearchProvider {
+			t.Errorf("expected provider %q, got %q", defaultSearchProvider, body.Provider)
 		}
-		if body.Category != searchCategory {
-			t.Errorf("expected category %q, got %q", searchCategory, body.Category)
+		if body.Category != defaultSearchCategory {
+			t.Errorf("expected category %q, got %q", defaultSearchCategory, body.Category)
 		}
 		if body.MaxResults != 2 {
 			t.Errorf("expected max_results 2, got %d", body.MaxResults)
@@ -96,6 +96,97 @@ func TestSearch_WithFilters(t *testing.T) {
 	}
 	if len(captured.ExcludeDomains) != 1 || captured.ExcludeDomains[0] != "pinterest.com" {
 		t.Errorf("expected exclude_domains [pinterest.com], got %v", captured.ExcludeDomains)
+	}
+}
+
+func TestSearch_ExaProviderRouting(t *testing.T) {
+	var captured unifiedSearchRequest
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&captured)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(unifiedSearchResponse{
+			SearchResults: []unifiedSearchResultItem{
+				{Title: "Exa Result", URL: "https://example.com/exa", Description: "From exa"},
+			},
+		})
+	}))
+	defer srv.Close()
+
+	c := NewClient(ClientConfig{BaseURL: srv.URL, APIKey: "test-key"})
+
+	// With After set, should route to exa provider.
+	res, err := c.Search(context.Background(), SearchParams{
+		Query:      "AI agent news",
+		MaxResults: 5,
+		After:      "2025-06-01",
+		TimeRange:  "week", // should be ignored when exa is used
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if captured.Provider != exaSearchProvider {
+		t.Errorf("expected provider %q, got %q", exaSearchProvider, captured.Provider)
+	}
+	if captured.Category != "" {
+		t.Errorf("expected empty category for exa, got %q", captured.Category)
+	}
+	if captured.StartPublishedDate != "2025-06-01T00:00:00.000Z" {
+		t.Errorf("expected startPublishedDate '2025-06-01T00:00:00.000Z', got %q", captured.StartPublishedDate)
+	}
+	if captured.EndPublishedDate != "" {
+		t.Errorf("expected empty endPublishedDate, got %q", captured.EndPublishedDate)
+	}
+	if captured.TimeRange != "" {
+		t.Errorf("expected empty time_range for exa, got %q", captured.TimeRange)
+	}
+	if len(res.Results) != 1 || res.Results[0].Title != "Exa Result" {
+		t.Errorf("unexpected results: %+v", res.Results)
+	}
+
+	// With both After and Before set.
+	c.Search(context.Background(), SearchParams{
+		Query:  "AI papers",
+		After:  "2025-01-01",
+		Before: "2025-06-30",
+	})
+	if captured.Provider != exaSearchProvider {
+		t.Errorf("expected exa provider, got %q", captured.Provider)
+	}
+	if captured.StartPublishedDate != "2025-01-01T00:00:00.000Z" {
+		t.Errorf("expected startPublishedDate '2025-01-01T00:00:00.000Z', got %q", captured.StartPublishedDate)
+	}
+	if captured.EndPublishedDate != "2025-06-30T00:00:00.000Z" {
+		t.Errorf("expected endPublishedDate '2025-06-30T00:00:00.000Z', got %q", captured.EndPublishedDate)
+	}
+}
+
+func TestSearch_DefaultGoogleWithoutDates(t *testing.T) {
+	var captured unifiedSearchRequest
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&captured)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(unifiedSearchResponse{})
+	}))
+	defer srv.Close()
+
+	c := NewClient(ClientConfig{BaseURL: srv.URL, APIKey: "test-key"})
+
+	// Without date params, should use Google.
+	c.Search(context.Background(), SearchParams{
+		Query:     "test query",
+		TimeRange: "month",
+	})
+	if captured.Provider != defaultSearchProvider {
+		t.Errorf("expected provider %q, got %q", defaultSearchProvider, captured.Provider)
+	}
+	if captured.Category != defaultSearchCategory {
+		t.Errorf("expected category %q, got %q", defaultSearchCategory, captured.Category)
+	}
+	if captured.TimeRange != "month" {
+		t.Errorf("expected time_range 'month', got %q", captured.TimeRange)
+	}
+	if captured.StartPublishedDate != "" {
+		t.Errorf("expected empty startPublishedDate, got %q", captured.StartPublishedDate)
 	}
 }
 

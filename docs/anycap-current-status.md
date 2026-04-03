@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-02
+> Last updated: 2026-04-03
 
 ## 1. Capabilities (Cap)
 
@@ -41,6 +41,18 @@ Models advertise which operations they support. Schema discovery works for all, 
 | `upscale` | Upscale image resolution | Schema only, no execution |
 | `from_image` | Generate video from a reference image | Handled via reference images in `generate` |
 | `speak` | Text-to-speech | Schema only, no execution |
+
+### Web Search and Crawl
+
+| Capability | CLI Command | Description |
+|------------|-------------|-------------|
+| Web search (general) | `anycap search` | General web search returning results with title, URL, description, and full page content. Supports domain filtering, time range, crawl control. 1 credit |
+| Web search (grounding) | `anycap search --grounding` | LLM-powered search with real-time web grounding, returns synthesized answer with citations, 5 credits |
+| Web crawl | `anycap crawl` | Convert any web page to clean Markdown, 1 credit |
+
+Search has two modes:
+- **General** (default) -- returns a list of results with titles, URLs, descriptions, and full page content.
+- **Grounding** -- LLM synthesizes an answer with per-segment source attribution using Google Search grounding via Gemini. Response excludes model and usage details (internal implementation details).
 
 ### File Upload
 
@@ -98,6 +110,8 @@ anycap
 │   ├── image-read            Analyze images
 │   ├── video-read            Analyze video
 │   └── audio-read            Analyze audio
+├── search                    Web search (--grounding for LLM mode)
+├── crawl                     Convert web page to Markdown
 ├── drive
 │   ├── ls / mkdir / upload / mv / rm / share
 ├── page
@@ -155,6 +169,7 @@ Agent-facing skill documentation, following the entry skill + on-demand loading 
 | Media analysis | Image/video/audio understanding |
 | Drive | File storage and sharing |
 | Page | Static site deployment and management |
+| Web | Web search (grounding) and crawl |
 
 Distributed via GitHub. Agents install with `anycap skill install`.
 
@@ -211,6 +226,7 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 - **Credit-based billing**: each capability call has a credit cost
 - **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
 - **Action read pricing**: `image.read` costs 5 credits on success, `video.read` costs 10 credits on success, and `audio.read` costs 10 credits on success
+- **Web pricing**: `web.search` (grounding) costs 5 credits, `web.crawl` costs 1 credit
 - **Balance check**: enforced before every execution
 - **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID

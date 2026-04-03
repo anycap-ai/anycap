@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 )
 
 const (
@@ -19,9 +22,12 @@ const (
 	searchPath = "/302/general/search"
 	scrapePath = "/firecrawl/v1/scrape"
 
-	// Fixed search provider and category.
-	searchProvider = "search1_search"
-	searchCategory = "google"
+	// Default search provider and category (Google via search1).
+	defaultSearchProvider = "search1_search"
+	defaultSearchCategory = "google"
+
+	// Exa provider for precise date-range searches.
+	exaSearchProvider = "exa"
 )
 
 // ClientConfig holds configuration for the 302 AI API client.
@@ -69,7 +75,8 @@ type SearchParams struct {
 	Query string
 	// MaxResults is the maximum number of results to return (default: 5, max: 20).
 	MaxResults int
-	// TimeRange filters results by recency. Values: "day", "month", "year". Empty means no filter.
+	// TimeRange filters results by recency. Values: "day", "week", "month", "year". Empty means no filter.
+	// Google provider only; ignored when After/Before are set (exa provider used instead).
 	TimeRange string
 	// IncludeDomains limits search to these domains. e.g. ["github.com", "stackoverflow.com"]
 	IncludeDomains []string
@@ -79,6 +86,10 @@ type SearchParams struct {
 	// Default (nil/unset): crawl all results (= MaxResults). Set to ptr(0) to skip crawling.
 	// Note: crawling incurs additional cost.
 	CrawlResults *int
+	// After filters results published after this date (YYYY-MM-DD). Routes to exa provider.
+	After string
+	// Before filters results published before this date (YYYY-MM-DD). Routes to exa provider.
+	Before string
 }
 
 // SearchResult represents a single search result entry.
@@ -95,7 +106,9 @@ type SearchResponse struct {
 	Results []SearchResult `json:"results"`
 }
 
-// Search performs a web search using 302 AI Unified Search API (Google via search1).
+// Search performs a web search using 302 AI Unified Search API.
+// When After or Before date params are set, it routes to the exa provider for
+// precise date filtering. Otherwise it uses Google (search1) as the default.
 func (c *Client) Search(ctx context.Context, params SearchParams) (*SearchResponse, error) {
 	if params.Query == "" {
 		return nil, fmt.Errorf("api302: search query must not be empty")
@@ -116,17 +129,37 @@ func (c *Client) Search(ctx context.Context, params SearchParams) (*SearchRespon
 		}
 	}
 
+	// Route to exa provider when precise date filtering is requested.
+	useExa := params.After != "" || params.Before != ""
+
+	provider := defaultSearchProvider
+	category := defaultSearchCategory
+	if useExa {
+		provider = exaSearchProvider
+		category = "" // exa has no category
+	}
+
 	// Build request payload.
 	payload := unifiedSearchRequest{
 		Query:        params.Query,
-		Provider:     searchProvider,
-		Category:     searchCategory,
+		Provider:     provider,
+		Category:     category,
 		MaxResults:   params.MaxResults,
 		CrawlResults: crawlResults,
 	}
-	if params.TimeRange != "" {
+
+	if useExa {
+		// Exa uses ISO 8601 date-time for precise date filtering.
+		if params.After != "" {
+			payload.StartPublishedDate = params.After + "T00:00:00.000Z"
+		}
+		if params.Before != "" {
+			payload.EndPublishedDate = params.Before + "T00:00:00.000Z"
+		}
+	} else if params.TimeRange != "" {
 		payload.TimeRange = params.TimeRange
 	}
+
 	if len(params.IncludeDomains) > 0 {
 		payload.IncludeDomains = params.IncludeDomains
 	}
@@ -189,14 +222,16 @@ func (c *Client) Search(ctx context.Context, params SearchParams) (*SearchRespon
 
 // unifiedSearchRequest is the 302 AI Unified Search API request body.
 type unifiedSearchRequest struct {
-	Query          string   `json:"query"`
-	Provider       string   `json:"provider"`
-	Category       string   `json:"category,omitempty"`
-	MaxResults     int      `json:"max_results"`
-	CrawlResults   int      `json:"crawl_results"`
-	TimeRange      string   `json:"time_range,omitempty"`
-	IncludeDomains []string `json:"include_domains,omitempty"`
-	ExcludeDomains []string `json:"exclude_domains,omitempty"`
+	Query              string   `json:"query"`
+	Provider           string   `json:"provider"`
+	Category           string   `json:"category,omitempty"`
+	MaxResults         int      `json:"max_results"`
+	CrawlResults       int      `json:"crawl_results"`
+	TimeRange          string   `json:"time_range,omitempty"`
+	IncludeDomains     []string `json:"include_domains,omitempty"`
+	ExcludeDomains     []string `json:"exclude_domains,omitempty"`
+	StartPublishedDate string   `json:"startPublishedDate,omitempty"` // exa provider: ISO 8601
+	EndPublishedDate   string   `json:"endPublishedDate,omitempty"`   // exa provider: ISO 8601
 }
 
 // unifiedSearchResponse is the 302 AI Unified Search API response.
@@ -217,6 +252,8 @@ type unifiedSearchResultItem struct {
 
 // ScrapeResponse is the response from the Scrape method.
 type ScrapeResponse struct {
+	// Title is the page title extracted from metadata.
+	Title string `json:"title"`
 	// Markdown is the scraped page content in Markdown format.
 	Markdown string `json:"markdown"`
 }
@@ -275,7 +312,10 @@ func (c *Client) Scrape(ctx context.Context, targetURL string) (*ScrapeResponse,
 		return nil, fmt.Errorf("api302: scrape returned empty markdown")
 	}
 
-	return &ScrapeResponse{Markdown: raw.Data.Markdown}, nil
+	return &ScrapeResponse{
+		Title:    raw.Data.Metadata.Title,
+		Markdown: raw.Data.Markdown,
+	}, nil
 }
 
 // firecrawlScrapeRequest is the Firecrawl v1 scrape request body.
@@ -290,6 +330,9 @@ type firecrawlScrapeResponse struct {
 	Success bool `json:"success"`
 	Data    struct {
 		Markdown string `json:"markdown"`
+		Metadata struct {
+			Title string `json:"title"`
+		} `json:"metadata"`
 	} `json:"data"`
 }
 
@@ -299,4 +342,55 @@ func truncateBody(body []byte, maxLen int) string {
 		return string(body)
 	}
 	return string(body[:maxLen]) + "..."
+}
+
+// ---- WebCrawler port adapter ----
+
+// Crawl implements port.WebCrawler by delegating to Scrape.
+func (c *Client) Crawl(ctx context.Context, url string) (port.CrawlOutput, error) {
+	resp, err := c.Scrape(ctx, url)
+	if err != nil {
+		return port.CrawlOutput{}, err
+	}
+	return port.CrawlOutput{
+		Title:    resp.Title,
+		Markdown: resp.Markdown,
+	}, nil
+}
+
+// ---- WebGeneralSearchProvider port adapter ----
+
+// SearchGeneral implements port.WebGeneralSearchProvider by delegating to Search.
+func (c *Client) SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error) {
+	params := SearchParams{
+		Query:          req.Query,
+		MaxResults:     req.MaxResults,
+		TimeRange:      req.TimeRange,
+		IncludeDomains: req.IncludeDomains,
+		ExcludeDomains: req.ExcludeDomains,
+		CrawlResults:   req.CrawlResults,
+		After:          req.After,
+		Before:         req.Before,
+	}
+
+	resp, err := c.Search(ctx, params)
+	if err != nil {
+		return model.WebSearchGeneralResult{}, err
+	}
+
+	results := make([]model.WebSearchResult, 0, len(resp.Results))
+	for _, r := range resp.Results {
+		results = append(results, model.WebSearchResult{
+			Title:       r.Title,
+			URL:         r.URL,
+			Description: r.Description,
+			Content:     r.Content,
+			PublishedAt: r.PublishedAt,
+		})
+	}
+
+	return model.WebSearchGeneralResult{
+		Mode:    "general",
+		Results: results,
+	}, nil
 }

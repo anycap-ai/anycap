@@ -117,6 +117,7 @@ type Config struct {
 	UsageSyncPollInterval   time.Duration
 	UsageSyncBatchSize      int
 	Artifact                ArtifactConfig
+	Api302                  Api302Config
 	// Storage quota
 	StorageQuotaDConfEnabled bool
 	StorageQuotaDConfGroup   string
@@ -226,6 +227,15 @@ type CloudflareKVConfig struct {
 	NamespaceID string
 	APIToken    string
 	APIBaseURL  string
+}
+
+type Api302Config struct {
+	APIKey  string
+	BaseURL string
+}
+
+func (c Api302Config) Enabled() bool {
+	return c.APIKey != ""
 }
 
 type ArtifactConfig struct {
@@ -344,6 +354,10 @@ func LoadFromEnv() (Config, error) {
 			IngestBaseURL:  getEnv("ANYCAP_ARTIFACT_INGEST_BASE_URL", ""),
 			IngestToken:    getEnv("ANYCAP_ARTIFACT_INGEST_TOKEN", ""),
 			LinkTTLSeconds: getEnvInt64("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", defaultArtifactLinkTTL),
+		},
+		Api302: Api302Config{
+			APIKey:  getEnv("API_302_API_KEY", ""),
+			BaseURL: getEnv("API_302_BASE_URL", ""),
 		},
 		// Storage quota
 		StorageQuotaDConfEnabled: getEnvBool("ANYCAP_STORAGE_QUOTA_DCONF_ENABLED", false),
