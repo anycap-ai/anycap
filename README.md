@@ -9,7 +9,7 @@ Copy this to your agent:
 ```text
 Read https://raw.githubusercontent.com/anycap-ai/anycap/main/llms.txt and follow the instructions to install AnyCap CLI and skill. If you can't access the URL, run these commands instead:
 1. curl -fsSL https://anycap.ai/install.sh | sh
-2. npx -y skills add anycap-ai/anycap
+2. npx -y skills add anycap-ai/anycap -s '*' -y
 3. anycap login
 4. anycap status
 Learn more at https://anycap.ai
@@ -40,7 +40,7 @@ Or grab a binary from [GitHub Releases](https://github.com/anycap-ai/anycap/rele
 Works with Claude Code, Cursor, Windsurf, OpenCode, and [40+ agents](https://skills.sh):
 
 ```bash
-npx -y skills add anycap-ai/anycap
+npx -y skills add anycap-ai/anycap -s '*' -y
 ```
 
 ## Quick Start

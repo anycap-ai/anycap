@@ -40,8 +40,8 @@ npx -y skills add anycap-ai/anycap -a cursor -y
 # Codex
 npx -y skills add anycap-ai/anycap -a codex -y
 
-# Universal (any agent)
-npx -y skills add anycap-ai/anycap
+# Universal (any agent, all skills, auto-detect agents)
+npx -y skills add anycap-ai/anycap -s '*' -y
 ```
 
 Or install manually:
