@@ -163,6 +163,7 @@ func (s *Service) CurrentUser(ctx context.Context, principal *model.Principal) (
 		logger.Warn("invalid principal for current user")
 		return model.User{}, model.ErrAuthInvalid
 	}
+	s.ensureSignupReward(ctx, principal)
 	if s.users == nil {
 		logger.Error("user reader not configured")
 		return model.User{}, model.ErrInternal
@@ -173,6 +174,18 @@ func (s *Service) CurrentUser(ctx context.Context, principal *model.Principal) (
 		return model.User{}, err
 	}
 	return user, nil
+}
+
+func (s *Service) ensureSignupReward(ctx context.Context, principal *model.Principal) {
+	if s == nil || principal == nil || !principal.CreatedUser || principal.UserID == "" || s.credit == nil {
+		return
+	}
+	if err := s.credit.GrantSignupReward(ctx, principal.UserID); err != nil {
+		logging.WithContext(ctx).WithFields(logging.Fields{
+			"flow":    "system.grant_signup_reward",
+			"user_id": principal.UserID,
+		}).WithError(err).Warn("grant signup reward failed")
+	}
 }
 
 func (s *Service) CreditBalance(ctx context.Context, principal *model.Principal) (model.Balance, error) {
