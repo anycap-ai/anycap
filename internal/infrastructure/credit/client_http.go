@@ -249,6 +249,9 @@ func parseUserID(userID string) (int64, error) {
 
 func buildSourceID(reason, requestID string) string {
 	if requestID != "" {
+		if strings.HasPrefix(requestID, "anycap-") {
+			return requestID
+		}
 		return fmt.Sprintf("anycap-%s-%s", sanitize(reason), requestID)
 	}
 	return fmt.Sprintf("anycap-%s-%d", sanitize(reason), time.Now().UTC().UnixNano())

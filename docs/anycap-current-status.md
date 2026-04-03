@@ -228,6 +228,14 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 - **Action read pricing**: `image.read` costs 5 credits on success, `video.read` costs 10 credits on success, and `audio.read` costs 10 credits on success
 - **Web pricing**: `web.search` (grounding) costs 5 credits, `web.crawl` costs 1 credit
 - **Balance check**: enforced before every execution
+- **Billing truth source**: `billing_intents` is the local source of truth for whether a capability call should be charged and whether credit consume has finalized
+- **Synchronous request behavior**: CLI/server request flow remains synchronous; successful calls still return inline instead of switching to async polling UX
+- **Intent-first billing flow**: billed generate/read requests now create a local billing intent before upstream execution, record provider success before deduct, then finalize to `deducted` after Credit Service consume succeeds
+- **Idempotent consume key**: billing consume uses a persisted `deduct_source_id` built from `anycap-<capability>-<trace_id>`
+- **Recovery worker**: uncertain billing intents are retried in the background on a fixed `1 / 3 / 5 / 10 / 20 / 30` minute schedule, with a `30` minute recovery window
+- **Recoverable states**: if AnyCap already persisted provider success and cost, the worker can complete delayed credit consume without re-calling the provider
+- **NexusHub trace propagation**: generate requests send `trace_id` plus `biz_id=anycap` in `X-Nexus-Extra` for future task reverse lookup and offline reconciliation
+- **Current recovery limitation**: the concrete NexusHub reverse-lookup HTTP path for `trace_id + biz_id -> task_id` is not wired yet, so requests that lose the local `provider_task_id` before persistence still fall back to the existing degraded path instead of full automatic lookup recovery
 - **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID
 - **Usage reporting**: aggregated statistics available in dashboard and via API

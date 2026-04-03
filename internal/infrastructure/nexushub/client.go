@@ -14,6 +14,7 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 )
 
 const (
@@ -126,6 +127,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 		return model.GenerateImageResult{}, fmt.Errorf("build request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	setNexusExtraHeader(ctx, httpReq)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -257,6 +259,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		return model.GenerateVideoResult{}, fmt.Errorf("build request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	setNexusExtraHeader(ctx, httpReq)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -381,6 +384,7 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 		return model.GenerateMusicResult{}, fmt.Errorf("build request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	setNexusExtraHeader(ctx, httpReq)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -569,6 +573,22 @@ func (c *Client) GetSubmitResult(ctx context.Context, taskID string) (model.Prov
 	return result, nil
 }
 
+func (c *Client) GetTaskIDByTrace(ctx context.Context, traceID, bizID string) (string, error) {
+	if strings.TrimSpace(traceID) == "" {
+		return "", model.ErrNotFound("nexushub trace lookup not found")
+	}
+	if strings.TrimSpace(bizID) == "" {
+		bizID = defaultNexusHubBizID
+	}
+	logging.WithContext(ctx).WithFields(logging.Fields{
+		"provider": "nexushub",
+		"trace_id": traceID,
+		"biz_id":   bizID,
+		"stage":    "trace_lookup_not_configured",
+	}).Warn("nexushub trace lookup path is not configured")
+	return "", model.ErrNotConfigured("nexushub trace lookup is not configured")
+}
+
 func logNexusHubCapabilityError(ctx context.Context, capability, modelID, abilityKey, stage string, err error, message string, extra ...logging.Fields) {
 	fields := logging.Fields{
 		"provider":    "nexushub",
@@ -749,6 +769,24 @@ func guessMIMEType(resourceURL string) string {
 		return ""
 	}
 	return mime.TypeByExtension(filepath.Ext(resourceURL))
+}
+
+func setNexusExtraHeader(ctx context.Context, req *http.Request) {
+	if req == nil {
+		return
+	}
+	traceID := trace.GetTraceID(ctx)
+	if strings.TrimSpace(traceID) == "" {
+		return
+	}
+	extra, err := json.Marshal(map[string]any{
+		"trace_id": traceID,
+		"biz_id":   defaultNexusHubBizID,
+	})
+	if err != nil {
+		return
+	}
+	req.Header.Set("X-Nexus-Extra", string(extra))
 }
 
 func firstString(values []string) string {

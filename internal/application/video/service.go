@@ -14,6 +14,7 @@ type Service struct {
 	catalog        port.CatalogRepository
 	nexusHub       port.NexusHubClient
 	credit         port.CreditClient
+	billing        port.BillingCoordinator
 	callLogs       port.CallLogRepo
 	usage          port.UsageWriter
 	uploadResolver port.UploadRefResolver
@@ -31,6 +32,10 @@ func NewService(catalog port.CatalogRepository, nexusHub port.NexusHubClient, cr
 
 func (s *Service) SetUsageWriter(usage port.UsageWriter) {
 	s.usage = usage
+}
+
+func (s *Service) SetBillingCoordinator(billing port.BillingCoordinator) {
+	s.billing = billing
 }
 
 func (s *Service) SetUploadRefResolver(r port.UploadRefResolver) {
@@ -101,8 +106,26 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	}
 
 	startedAt := time.Now()
+	deductKey := req.RequestID
+	if s.billing != nil {
+		intent, billingErr := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
+			UserID:     req.UserID,
+			APIKeyID:   req.APIKeyID,
+			Provider:   model.BillingProviderNexusHub,
+			Capability: "video.generate",
+			TraceID:    req.RequestID,
+		})
+		if billingErr != nil {
+			logger.WithError(billingErr).Error("create billing intent failed")
+			return model.GenerateVideoResult{}, billingErr
+		}
+		deductKey = intent.DeductSourceID
+	}
 	result, err := s.nexusHub.GenerateVideo(ctx, req, route)
 	if err != nil {
+		if s.billing != nil {
+			_ = s.billing.MarkUncertain(ctx, model.BillingProviderNexusHub, req.RequestID, err.Error())
+		}
 		logger.WithFields(logging.Fields{
 			"ability_key": route.AbilityKey,
 			"mode":        mode,
@@ -125,6 +148,21 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	}
 
 	cost := result.CreditCost
+	if s.billing != nil {
+		if billingErr := s.billing.RecordProviderSuccess(ctx, model.RecordBillingProviderSuccessInput{
+			Provider:       model.BillingProviderNexusHub,
+			TraceID:        req.RequestID,
+			ProviderTaskID: result.ID,
+			ProviderStatus: result.Status,
+			CreditCost:     cost,
+		}); billingErr != nil {
+			logger.WithFields(logging.Fields{
+				"provider_task": result.ID,
+				"credit_cost":   cost,
+			}).WithError(billingErr).Error("record billing provider success failed")
+			return model.GenerateVideoResult{}, model.ErrBillingUncertain
+		}
+	}
 	if s.usage != nil {
 		eventID := externalid.Generate(externalid.PrefixUsageEvent)
 		runID := externalid.Generate(externalid.PrefixProviderRun)
@@ -170,9 +208,18 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			}).WithError(runErr).Warn("provider run persistence failed")
 		}
 	}
-	if err := s.credit.Deduct(ctx, req.UserID, cost, "video.generate", req.RequestID); err != nil {
+	if err := s.credit.Deduct(ctx, req.UserID, cost, "video.generate", deductKey); err != nil {
+		if s.billing != nil {
+			_ = s.billing.MarkUncertain(ctx, model.BillingProviderNexusHub, req.RequestID, err.Error())
+		}
 		logger.WithField("credit_cost", cost).WithError(err).Error("video credit deduction failed")
 		return model.GenerateVideoResult{}, model.ErrBillingUncertain
+	}
+	if s.billing != nil {
+		if billingErr := s.billing.MarkDeducted(ctx, model.BillingProviderNexusHub, req.RequestID); billingErr != nil {
+			logger.WithError(billingErr).Error("finalize billing intent failed")
+			return model.GenerateVideoResult{}, model.ErrBillingUncertain
+		}
 	}
 
 	if s.callLogs != nil {

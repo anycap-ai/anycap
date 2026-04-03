@@ -53,6 +53,10 @@ func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.P
 	panic("unexpected GetSubmitResult call")
 }
 
+func (zeroCostNexusClient) GetTaskIDByTrace(_ context.Context, _ string, _ string) (string, error) {
+	panic("unexpected GetTaskIDByTrace call")
+}
+
 func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPublishRequest) (model.ArtifactPublishResult, error) {
 	if f.err != nil {
 		return model.ArtifactPublishResult{}, f.err

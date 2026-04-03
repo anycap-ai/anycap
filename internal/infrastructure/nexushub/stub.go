@@ -91,3 +91,10 @@ func (c *StubClient) GetSubmitResult(_ context.Context, taskID string) (model.Pr
 		},
 	}, nil
 }
+
+func (c *StubClient) GetTaskIDByTrace(_ context.Context, traceID, _ string) (string, error) {
+	if strings.TrimSpace(traceID) == "" {
+		return "", model.ErrNotFound("nexushub trace lookup not found")
+	}
+	return "trace_" + traceID, nil
+}

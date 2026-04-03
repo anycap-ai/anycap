@@ -12,6 +12,7 @@ import (
 	"time"
 
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
+	billingapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billing"
 	billingeventsapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billingevents"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
@@ -35,6 +36,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
+	billinginfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/billing"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
@@ -122,6 +124,7 @@ type serverDependencies struct {
 	rateLimitResolver   middleware.CapabilityRateLimitResolver
 	kvSyncWorker        *kvsync.Worker
 	usageSyncWorker     *usageapp.Worker
+	billingWorker       *billingapp.Worker
 	paymentEventsWorker *paymenteventsinfra.Worker
 	idResolver          idresolver.IDResolver
 	idMapper            presenter.IDMapper
@@ -151,6 +154,13 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		go func() {
 			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
 				logging.WithError(err).Error("usage sync worker stopped")
+			}
+		}()
+	}
+	if deps.billingWorker != nil {
+		go func() {
+			if err := deps.billingWorker.Run(context.Background()); err != nil {
+				logging.WithError(err).Error("billing worker stopped")
 			}
 		}()
 	}
@@ -314,6 +324,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		apiKeys := apikey.NewMemoryService()
 		callLogs := calllog.NewMemoryCallLogRepo()
 		usageRepo := usage.NewMemoryRepo()
+		billingRepo := billinginfra.NewMemoryRepo()
+		billingService := billingapp.NewService(billingRepo)
 		loginSessions := loginsession.NewMemoryLoginSessionRepo()
 		users := userstore.NewMemoryProvisioner()
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
@@ -326,13 +338,17 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUsageReader(usageRepo)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
+		imageService.SetBillingCoordinator(billingService)
 		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
 		videoService.SetUsageWriter(usageRepo)
+		videoService.SetBillingCoordinator(billingService)
 		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
 		musicService.SetUsageWriter(usageRepo)
+		musicService.SetBillingCoordinator(billingService)
 		capService := capapp.NewService(capProvider, cloudObjectStore, capapp.WithPresignGetExpiry(capGetExpiry))
 		capService.SetCreditClient(creditClient)
 		capService.SetCallLogRepo(callLogs)
+		capService.SetBillingCoordinator(billingService)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
@@ -353,6 +369,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			usageSyncWorker:     nil,
+			billingWorker:       nil,
 			paymentEventsWorker: nil,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          idresolver.PassthroughIDResolver{},
@@ -409,6 +426,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		loginSessionRepo := loginsession.NewLoginSessionRepo(db)
 		callLogs := calllog.NewCallLogDBRepo(db)
 		usageRepo := usage.NewRepo(db)
+		billingRepo := billinginfra.NewRepo(db)
+		billingService := billingapp.NewService(billingRepo)
 		users := userstore.NewProvisioner(db)
 		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, users, nil, nil)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
@@ -442,15 +461,19 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		)
 		capService.SetCreditClient(creditClient)
 		capService.SetCallLogRepo(callLogs)
+		capService.SetBillingCoordinator(billingService)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
 		imageService.SetUsageWriter(usageRepo)
+		imageService.SetBillingCoordinator(billingService)
 		imageService.SetUploadRefResolver(capService)
 		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
 		videoService.SetUsageWriter(usageRepo)
+		videoService.SetBillingCoordinator(billingService)
 		videoService.SetUploadRefResolver(capService)
 		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
 		musicService.SetUsageWriter(usageRepo)
+		musicService.SetBillingCoordinator(billingService)
 		artifactPublisher := buildArtifactPublisher(
 			cfg,
 			artifactIngestClient,
@@ -473,6 +496,25 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 					PollInterval: cfg.UsageSyncPollInterval,
 					BatchSize:    cfg.UsageSyncBatchSize,
 				},
+			)
+		}
+		var billingWorker *billingapp.Worker
+		if creditClient != nil {
+			billingNexusClient := imageExecutionClient
+			switch {
+			case hasImageExecutionProvider(cfg):
+				billingNexusClient = imageExecutionClient
+			case hasVideoExecutionProvider(cfg):
+				billingNexusClient = videoExecutionClient
+			case hasMusicExecutionProvider(cfg):
+				billingNexusClient = musicExecutionClient
+			}
+			billingWorker = billingapp.NewWorker(
+				billingRepo,
+				billingService,
+				billingNexusClient,
+				creditClient,
+				billingapp.WorkerConfig{},
 			)
 		}
 		var paymentEventsWorker *paymenteventsinfra.Worker
@@ -529,6 +571,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			usageSyncWorker:     usageSyncWorker,
+			billingWorker:       billingWorker,
 			paymentEventsWorker: paymentEventsWorker,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
 			idResolver:          externalIDMapper,

@@ -58,6 +58,10 @@ func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.P
 	panic("unexpected GetSubmitResult call")
 }
 
+func (zeroCostNexusClient) GetTaskIDByTrace(_ context.Context, _ string, _ string) (string, error) {
+	panic("unexpected GetTaskIDByTrace call")
+}
+
 func (f *fakeUploadResolver) ResolveReferenceURLs(_ context.Context, urls []string) ([]string, error) {
 	f.calledWith = append([]string(nil), urls...)
 	return []string{"https://cdn.anycap.local/resolved-frame.png"}, nil

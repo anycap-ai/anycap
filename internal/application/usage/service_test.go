@@ -65,6 +65,10 @@ func (f *fakeNexusHubClient) GenerateMusic(context.Context, model.GenerateMusicR
 	panic("unexpected GenerateMusic call")
 }
 
+func (f *fakeNexusHubClient) GetTaskIDByTrace(context.Context, string, string) (string, error) {
+	panic("unexpected GetTaskIDByTrace call")
+}
+
 func TestService_SyncProviderRunByTaskID(t *testing.T) {
 	repo := &fakeUsageSyncRepo{
 		runs: map[string]model.ProviderRunRecord{
