@@ -180,6 +180,7 @@ export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   equipAgentsDropdown,
   learnDropdown,
+  { href: "/pricing", label: "Pricing", hideBelow: "lg" },
   { href: "/about", label: "About", hideBelow: "lg" },
 ];
 
@@ -187,5 +188,6 @@ export const humanNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   equipAgentsDropdown,
   learnDropdown,
+  { href: "/pricing", label: "Pricing", hideBelow: "lg" },
   { href: "/about", label: "About", hideBelow: "lg" },
 ];
