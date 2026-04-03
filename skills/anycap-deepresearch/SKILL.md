@@ -90,7 +90,7 @@ Do not skip the initial clarification. A 2-minute conversation with the user can
 
 **Prefer AI Grounded search for complex questions.** Grounding search (`--prompt`) synthesizes across multiple sources and provides citations. Use it generously for questions that benefit from multi-source synthesis. Use general search (`--query`) for finding specific pages and data points.
 
-**Use mermaid for diagrams.** When the report needs architecture diagrams, flow charts, timelines, or comparisons, use mermaid syntax in markdown. Both Drive and Page render mermaid natively.
+**Use mermaid for diagrams.** When the report needs architecture diagrams, flow charts, timelines, or comparisons, use mermaid syntax in markdown. Both Drive and Page render mermaid natively. Always verify mermaid diagrams render correctly before including them in the final report (see [04-synthesize.md](references/04-synthesize.md)).
 
 **Prefer original images.** When a source provides relevant images, diagrams, or screenshots, download and use the originals. Only generate images when you need to explain a concept, aggregate data into a visualization, or express information more clearly than the source material. Generated images must not misrepresent or deviate from the source material.
 

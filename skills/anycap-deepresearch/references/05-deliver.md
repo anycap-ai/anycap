@@ -13,25 +13,21 @@ Write the report to a local file. This is the simplest path and always appropria
 
 Present the file path to the user.
 
-## Option B: Drive Upload (Shareable Link)
+## Option B: Drive Upload (Single-File Sharing)
 
-Upload the report and any assets to Drive for sharing:
+Drive is best for sharing **standalone files** -- a single PDF, a data export, or individual images. Upload and share:
 
 ```bash
-# Create a folder for the research
-anycap drive mkdir --name "research-topic-name"
-
 # Upload the report
-anycap drive upload research-topic/report.md --parent-path /research-topic-name
-
-# Upload any images used in the report
-anycap drive upload research-topic/assets/diagram.png --parent-path /research-topic-name
+anycap drive upload research-topic/report.pdf --parent-path /research
 
 # Generate a shareable link
-anycap drive share --src-path /research-topic-name/report.md --expires 30d
+anycap drive share --src-path /research/report.pdf --expires 30d
 ```
 
 Present the share URL to the user.
+
+**Drive limitation: do not embed Drive share links inside Drive-shared markdown.** When a Drive-hosted markdown file references images via other Drive share URLs, the nested links may fail to load (especially with access controls). For reports with embedded images, diagrams, or mermaid charts, use Page (Option C) instead.
 
 ## Option C: Published Web Page (Polished Presentation)
 
@@ -88,31 +84,33 @@ When publishing as a page, wrap the report in a clean HTML template:
 
 ## Option D: Both Drive and Page
 
-Upload the raw Markdown to Drive (for reference and reuse) and publish an HTML version as a Page (for reading and sharing).
+Upload the raw Markdown to Drive (for download and reference) and publish the full report directory as a Page (for reading and sharing).
 
 ```bash
-# Drive: raw files
-anycap drive mkdir --name "research-topic-name"
-anycap drive upload research-topic/report.md --parent-path /research-topic-name
-anycap drive share --src-path /research-topic-name/report.md --expires 30d
+# Drive: raw markdown for reference/download
+anycap drive upload research-topic/report.md --parent-path /research
+anycap drive share --src-path /research/report.md --expires 30d
 
-# Page: polished HTML
-anycap page deploy research-topic/report.html --new --name "Research: Topic Name" --publish
+# Page: full report with images and mermaid rendering
+anycap page deploy research-topic/ --new --name "Research: Topic Name" --publish
 ```
 
-Present both the Drive link (for download/reference) and the Page URL (for reading) to the user.
+Present both the Drive link (for downloading the raw markdown) and the Page URL (for reading the rendered report with images and diagrams) to the user.
 
 ## Choosing a Delivery Format
 
 | User need | Recommended format |
 |-----------|-------------------|
 | Just needs the content | Local file (Option A) |
-| Wants to share with others | Drive link (Option B) |
-| Report is rich (diagrams, images, long) | Published page (Option C) |
+| Single file to share (PDF, data export) | Drive link (Option B) |
+| Report with images, diagrams, or mermaid | Published page (Option C) |
 | Wants both raw and polished | Drive + Page (Option D) |
 
 If the user does not specify, use this rule of thumb:
-- **Short reports** (under ~200 lines, no images) -- local file + offer Drive
-- **Rich reports** (mermaid diagrams, images, tables, 200+ lines) -- **recommend Page hosting**. A published web page with clean typography and rendered mermaid diagrams is significantly more readable than a raw markdown file. Upload the raw markdown to Drive as a backup.
+- **Short, text-only reports** (under ~200 lines, no images or mermaid) -- local file + offer Drive for the single markdown file
+- **Reports with any visual content** (mermaid diagrams, images, tables with images, 200+ lines) -- **recommend Page hosting**. Deploy the report directory (markdown + assets) as a Page. A published web page renders mermaid diagrams, displays images inline, and provides clean typography. Optionally upload the raw markdown to Drive as a backup.
+- **Multiple files to deliver** (report + data files + images) -- **use Page for the rendered report**, Drive for supplementary raw files (datasets, source code, etc.)
 
 When recommending Page, frame it as: "This report has enough visual content that it would look much better as a web page. I can publish it to a URL you can share with anyone."
+
+**Key rule: never embed Drive share links as images inside other Drive-shared files.** For anything with embedded images or linked assets, always use Page.

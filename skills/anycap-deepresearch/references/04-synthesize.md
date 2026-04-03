@@ -43,14 +43,28 @@ Write the report from your verified findings. This is where raw research becomes
 
 ## Sources
 
-1. [Title](URL) -- [what this source contributed to the report]
-2. [Title](URL) -- [what this source contributed]
+1. [Title](URL) -- what this source contributed to the report
+2. [Title](URL) -- what this source contributed
 ...
 ```
 
+For long reports, always include the Sources section -- it gives readers a consolidated bibliography to browse. When using footnote-style references in the body (e.g., `[[1]](URL)`), the Sources section maps each number to its full title and URL.
+
 ## Writing Guidelines
 
-**Source everything.** Every major claim should reference a numbered source from the Sources section. Use inline references like [1], [2, 3] when citing.
+**Source everything with hyperlinks.** Every claim must be traceable to its source via a clickable link. Two styles are acceptable and can be mixed:
+
+**Inline links** -- link the relevant phrase directly to the source:
+
+> Cloudflare Workers uses [V8 isolates rather than traditional containers](https://blog.cloudflare.com/workers-architecture) for workload isolation.
+
+**Footnote links** -- use numbered references with hyperlinks. Each footnote number in the body must be a clickable link to the source URL:
+
+> Cloudflare Workers uses V8 isolates rather than traditional containers [[1]](https://blog.cloudflare.com/workers-architecture) for workload isolation.
+
+For long reports, use footnotes with a Sources section at the end so readers can browse all references in one place. For shorter pieces, inline links are cleaner. Both styles can coexist in the same report.
+
+**Never use plain-text footnote numbers** like `[1]` without a hyperlink -- every reference must be clickable where it appears.
 
 **Present multiple perspectives.** When sources disagree and the conflict could not be resolved, present both views and explain the disagreement. Do not silently pick a side.
 
@@ -58,7 +72,7 @@ Write the report from your verified findings. This is where raw research becomes
 
 **Use tables and lists for comparisons.** Structured data is easier to scan than prose. Use tables for feature comparisons, timelines, or multi-source data.
 
-**Include specific data.** Numbers, dates, version numbers, quotes -- specifics make a report credible. Vague claims ("many companies use X") are weak; specific claims ("as of 2026, Cloudflare Workers, Fastly Compute, and Vercel Edge Functions support WASM runtimes [3, 5]") are strong.
+**Include specific data.** Numbers, dates, version numbers, quotes -- specifics make a report credible. Vague claims ("many companies use X") are weak; specific claims ("as of 2026, [Cloudflare Workers](https://workers.cloudflare.com/), [Fastly Compute](https://www.fastly.com/products/edge-compute), and [Vercel Edge Functions](https://vercel.com/docs/functions/edge-functions) support WASM runtimes") are strong.
 
 ## Illustrations
 
@@ -82,19 +96,29 @@ Good uses for mermaid:
 - Timelines and sequence diagrams
 - Comparison matrices (use tables for simple ones, mermaid for complex relationships)
 
-When delivering via Drive, mermaid diagrams in markdown render automatically. You can also create standalone diagram files and share them:
+### Verify Mermaid Before Publishing
+
+Mermaid diagrams can silently fail to render due to syntax errors, unsupported features, or edge cases in node labels. **Always verify mermaid diagrams render correctly before including them in the final report.**
+
+Verification workflow:
+
+1. Write your mermaid blocks in the report markdown.
+2. Deploy a test page with just the report (or the mermaid blocks) to check rendering:
 
 ```bash
-# Create a standalone mermaid diagram as markdown
-echo '```mermaid
-graph TB
-    A[System A] --> B[System B]
-```' > research-topic/assets/architecture.md
-
-# Upload to Drive for shareable rendering
-anycap drive upload research-topic/assets/architecture.md --parent-path /research
-anycap drive share --src-path /research/architecture.md
+# Quick test deploy
+anycap page deploy research-topic/report.md --new --name "mermaid-test" --publish
 ```
+
+3. Open the page URL and visually confirm each diagram renders correctly.
+4. Fix any syntax issues and redeploy until all diagrams look right.
+5. Delete the test page after verification (or reuse the site for the final deploy).
+
+Common mermaid pitfalls:
+- Special characters in node labels (use quotes: `A["Label with (parens)"]`)
+- Long labels that overflow (keep labels concise)
+- Unsupported diagram types (stick to `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `mindmap`)
+- Missing semicolons or arrows in sequence diagrams
 
 ### Prefer Original Images
 
@@ -102,7 +126,7 @@ When a source provides a diagram, chart, screenshot, or photo that explains a co
 
 ```markdown
 ![Architecture diagram from the official documentation](research-topic/assets/architecture-diagram.png)
-*Source: [Official Docs](https://example.com/docs) [3]*
+*Source: [Official Docs](https://example.com/docs) [[3]](https://example.com/docs)*
 ```
 
 Always attribute the source when using original images.
@@ -142,12 +166,24 @@ anycap image generate \
 
 ### Sharing Images in Reports
 
-For reports delivered via Drive or Page, upload images and get share links:
+**For multi-file reports (markdown + images), use Page deployment with relative paths.** This is the most reliable approach -- all assets are served from the same site, no embedding issues.
 
-```bash
-anycap drive upload research-topic/assets/comparison-diagram.png --parent-path /research
-SHARE_URL=$(anycap drive share --src-path /research/comparison-diagram.png | jq -r '.share_url')
-# Use in markdown: ![Comparison](${SHARE_URL})
+Organize your report directory with images alongside the markdown:
+
+```
+research-topic/
+  report.md              # references images as ![](assets/diagram.png)
+  assets/
+    diagram.png
+    comparison-chart.png
 ```
 
-For Page-hosted reports, include images in the deploy directory and reference them with relative paths.
+Deploy the entire directory:
+
+```bash
+anycap page deploy research-topic/ --new --name "Research: Topic" --publish
+```
+
+All relative image paths (`assets/diagram.png`) resolve correctly within the deployed site.
+
+**Do not embed Drive share links as images inside Drive-shared markdown files.** Drive share links are standalone -- when one markdown file references another Drive share URL as an embedded image, the nested link may fail to load (especially with access controls). For single-file sharing (a PDF, a standalone image), Drive works fine. For anything with embedded images or multiple linked files, use Page.
