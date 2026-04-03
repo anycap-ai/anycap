@@ -11,6 +11,10 @@ export type PendingLoginState = {
 export function normalizeReturnTo(raw: string | null | undefined, fallback = "/dashboard"): string {
   if (!raw) return fallback;
   if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  // Headless device login needs to land on a trusted auth-hosted completion page.
+  if (raw === "/auth/device/complete" || raw.startsWith("/auth/device/complete?")) {
+    return raw;
+  }
   if (raw.startsWith("/auth/")) return fallback;
   return raw;
 }
