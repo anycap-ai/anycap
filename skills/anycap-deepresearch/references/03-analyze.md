@@ -85,6 +85,17 @@ After analyzing your gathered material, identify what is still missing:
 
 For each gap, go back to Phase 2 with targeted searches. This loop (Gather -> Analyze -> Gather) is normal and expected. A thorough report usually requires 2-3 iterations.
 
+## When to Stop Searching
+
+The agent decides autonomously when enough material has been gathered. Stop the Gather-Analyze loop when:
+
+- **All sub-questions have at least one verified answer** from a primary or authoritative source
+- **Key claims are cross-verified** across 2+ independent sources
+- **New searches return diminishing results** -- you are seeing the same sources and claims you already have
+- **Remaining gaps are acknowledged** -- some questions may not have publicly available answers; note them as limitations rather than searching indefinitely
+
+Do not stop early just because you have some results. Do not search forever chasing perfection. Use your judgment: a thorough report with noted limitations is better than an incomplete report or an infinite search loop.
+
 ## Update Your Notes
 
 Before moving to synthesis, consolidate your analysis in `notes.md`:

@@ -5,6 +5,9 @@ New skill: anycap-deepresearch
 - Powered by web search, AI grounded search, web crawl, image generation,
   cloud storage, and web publishing
 - Produces sourced reports delivered as Markdown, Drive link, or web page
+- Mandatory user clarification step before autonomous research begins
+- Optional preliminary search to build context for better questions
+- Explicit criteria for when to stop the gather-analyze loop
 
 Updated skill: anycap-cli
 - Add web search and web crawl reference docs
