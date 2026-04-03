@@ -30,6 +30,12 @@ type fakeArtifactPublisher struct {
 	err    error
 	called bool
 }
+type fakeBillingCoordinator struct {
+	intents         []model.CreateBillingIntentInput
+	providerSuccess []model.RecordBillingProviderSuccessInput
+	uncertain       []string
+	deducted        []string
+}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -60,6 +66,10 @@ func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusi
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
 	panic("unexpected GetSubmitResult call")
+}
+
+func (zeroCostNexusClient) GetTaskIDByTrace(_ context.Context, _ string, _ string) (string, error) {
+	panic("unexpected GetTaskIDByTrace call")
 }
 
 func (f *failingUsageWriter) InsertUsageEvent(_ context.Context, _ model.UsageEventRecord) error {
@@ -98,6 +108,40 @@ func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPubli
 		return model.ArtifactPublishResult{}, f.err
 	}
 	return f.result, nil
+}
+
+func (f *fakeBillingCoordinator) CreateOrGetIntent(_ context.Context, input model.CreateBillingIntentInput) (model.BillingIntent, error) {
+	f.intents = append(f.intents, input)
+	return model.BillingIntent{
+		Provider:       input.Provider,
+		TraceID:        input.TraceID,
+		DeductSourceID: "anycap-image-generate-" + input.TraceID,
+		CreditCost:     input.CreditCost,
+	}, nil
+}
+
+func (f *fakeBillingCoordinator) RecordProviderSuccess(_ context.Context, input model.RecordBillingProviderSuccessInput) error {
+	f.providerSuccess = append(f.providerSuccess, input)
+	return nil
+}
+
+func (f *fakeBillingCoordinator) RecordProviderFailure(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkUncertain(_ context.Context, _, traceID, _ string) error {
+	f.uncertain = append(f.uncertain, traceID)
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkLookupNotReady(_ context.Context, intent model.BillingIntent, _ string) error {
+	f.uncertain = append(f.uncertain, intent.TraceID)
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkDeducted(_ context.Context, _, traceID string) error {
+	f.deducted = append(f.deducted, traceID)
+	return nil
 }
 
 func testCatalog() *nexushub.CatalogStub {
@@ -362,6 +406,41 @@ func TestGenerateImage_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	}
 	if balance.Available != 2 {
 		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
+	}
+}
+
+func TestGenerateImage_UsesBillingCoordinatorSourceID(t *testing.T) {
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 2})
+	billingCoord := &fakeBillingCoordinator{}
+	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())
+	service.SetBillingCoordinator(billingCoord)
+
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
+		UserID:    "user-1",
+		RequestID: "req-billing-1",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+
+	if len(billingCoord.intents) != 1 || billingCoord.intents[0].TraceID != "req-billing-1" {
+		t.Fatalf("expected billing intent creation, got %+v", billingCoord.intents)
+	}
+	if len(billingCoord.providerSuccess) != 1 || billingCoord.providerSuccess[0].ProviderTaskID == "" {
+		t.Fatalf("expected provider success record, got %+v", billingCoord.providerSuccess)
+	}
+	if len(billingCoord.deducted) != 1 || billingCoord.deducted[0] != "req-billing-1" {
+		t.Fatalf("expected deducted trace req-billing-1, got %+v", billingCoord.deducted)
+	}
+
+	transactions, _, err := creditClient.ListTransactions(context.Background(), "user-1", 10, 0)
+	if err != nil {
+		t.Fatalf("ListTransactions() error = %v", err)
+	}
+	if len(transactions) != 1 || transactions[0].SourceID != "anycap-image-generate-req-billing-1" {
+		t.Fatalf("expected persisted billing source id, got %#v", transactions)
 	}
 }
 

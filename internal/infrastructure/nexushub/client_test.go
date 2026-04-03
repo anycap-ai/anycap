@@ -55,6 +55,9 @@ func TestClient_GenerateImage(t *testing.T) {
 		if got := r.Header.Get("X-Trace-ID"); got != "req-1" {
 			t.Fatalf("expected trace id header req-1, got %q", got)
 		}
+		if got := r.Header.Get("X-Nexus-Extra"); !strings.Contains(got, `"trace_id":"req-1"`) || !strings.Contains(got, `"biz_id":"anycap"`) {
+			t.Fatalf("expected X-Nexus-Extra to contain trace_id and biz_id, got %q", got)
+		}
 
 		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
 			t.Fatalf("decode request: %v", err)
@@ -380,6 +383,22 @@ func TestClient_GetSubmitResult(t *testing.T) {
 	}
 	if result.ErrorCode != 5005 || result.ErrorMessage != "validation failed" {
 		t.Fatalf("unexpected error mapping: %+v", result)
+	}
+}
+
+func TestClient_GetTaskIDByTrace_NotConfigured(t *testing.T) {
+	client := NewClient(ClientConfig{
+		BaseURL: "https://nexus.example.com",
+		Token:   "nexus-token",
+	})
+
+	_, err := client.GetTaskIDByTrace(context.Background(), "trc_lookup_1", "anycap")
+	if err == nil {
+		t.Fatal("expected error when trace lookup path is not configured")
+	}
+	domainErr, ok := err.(*model.DomainError)
+	if !ok || domainErr.Code != "not_configured" {
+		t.Fatalf("expected not_configured error, got %#v", err)
 	}
 }
 

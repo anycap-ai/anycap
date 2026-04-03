@@ -34,9 +34,24 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 
 	startedAt := time.Now()
 	requestID := readRequestID(ctx, "image.read")
+	if s.billing != nil {
+		if _, billingErr := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
+			UserID:     userID,
+			Provider:   model.BillingProviderAgentPlatform,
+			Capability: "image.read",
+			TraceID:    requestID,
+			CreditCost: imageReadCreditCost,
+		}); billingErr != nil {
+			logger.WithError(billingErr).Error("create image read billing intent failed")
+			return model.UnderstandResult{}, billingErr
+		}
+	}
 	if !s.auditEnabled() {
 		result, err := s.provider.ImageRead(ctx, req)
 		if err != nil {
+			if s.billing != nil {
+				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+			}
 			return model.UnderstandResult{}, err
 		}
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
@@ -68,6 +83,9 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 		return s.provider.ImageRead(ctx, resolvedReq)
 	})
 	if err != nil {
+		if s.billing != nil {
+			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+		}
 		return model.UnderstandResult{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
@@ -93,9 +111,24 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 
 	startedAt := time.Now()
 	requestID := readRequestID(ctx, "video.read")
+	if s.billing != nil {
+		if _, billingErr := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
+			UserID:     userID,
+			Provider:   model.BillingProviderAgentPlatform,
+			Capability: "video.read",
+			TraceID:    requestID,
+			CreditCost: videoReadCreditCost,
+		}); billingErr != nil {
+			logger.WithError(billingErr).Error("create video read billing intent failed")
+			return model.UnderstandResult{}, billingErr
+		}
+	}
 	if !s.auditEnabled() {
 		result, err := s.provider.VideoRead(ctx, req)
 		if err != nil {
+			if s.billing != nil {
+				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+			}
 			return model.UnderstandResult{}, err
 		}
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
@@ -127,6 +160,9 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 		return s.provider.VideoRead(ctx, resolvedReq)
 	})
 	if err != nil {
+		if s.billing != nil {
+			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+		}
 		return model.UnderstandResult{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
@@ -152,9 +188,24 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 
 	startedAt := time.Now()
 	requestID := readRequestID(ctx, "audio.read")
+	if s.billing != nil {
+		if _, billingErr := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
+			UserID:     userID,
+			Provider:   model.BillingProviderAgentPlatform,
+			Capability: "audio.read",
+			TraceID:    requestID,
+			CreditCost: audioReadCreditCost,
+		}); billingErr != nil {
+			logger.WithError(billingErr).Error("create audio read billing intent failed")
+			return model.UnderstandResult{}, billingErr
+		}
+	}
 	if !s.auditEnabled() {
 		result, err := s.provider.AudioRead(ctx, req)
 		if err != nil {
+			if s.billing != nil {
+				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+			}
 			return model.UnderstandResult{}, err
 		}
 		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
@@ -186,6 +237,9 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 		return s.provider.AudioRead(ctx, resolvedReq)
 	})
 	if err != nil {
+		if s.billing != nil {
+			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+		}
 		return model.UnderstandResult{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
@@ -220,9 +274,44 @@ func (s *Service) ensureReadBalance(ctx context.Context, userID string, cost int
 
 func (s *Service) finalizeSuccessfulRead(ctx context.Context, userID, apiKeyID, requestID, capability, modelName string, cost int64, startedAt time.Time) error {
 	logger := logging.WithContext(ctx).WithField("capability", capability)
+	deductKey := requestID
+	if s.billing != nil {
+		intent, err := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
+			UserID:     userID,
+			APIKeyID:   apiKeyID,
+			Provider:   model.BillingProviderAgentPlatform,
+			Capability: capability,
+			TraceID:    requestID,
+			CreditCost: cost,
+		})
+		if err != nil {
+			logger.WithError(err).Error("create read billing intent failed")
+			return model.ErrBillingUncertain
+		}
+		deductKey = intent.DeductSourceID
+		if err := s.billing.RecordProviderSuccess(ctx, model.RecordBillingProviderSuccessInput{
+			Provider:       model.BillingProviderAgentPlatform,
+			TraceID:        requestID,
+			ProviderTaskID: "",
+			ProviderStatus: "success",
+			CreditCost:     cost,
+		}); err != nil {
+			logger.WithError(err).Error("record read billing provider success failed")
+			return model.ErrBillingUncertain
+		}
+	}
 	if s.credit != nil {
-		if err := s.credit.Deduct(ctx, userID, cost, capability, requestID); err != nil {
+		if err := s.credit.Deduct(ctx, userID, cost, capability, deductKey); err != nil {
+			if s.billing != nil {
+				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
+			}
 			logger.WithField("credit_cost", cost).WithError(err).Error("capabilities credit deduction failed")
+			return model.ErrBillingUncertain
+		}
+	}
+	if s.billing != nil {
+		if err := s.billing.MarkDeducted(ctx, model.BillingProviderAgentPlatform, requestID); err != nil {
+			logger.WithError(err).Error("finalize read billing intent failed")
 			return model.ErrBillingUncertain
 		}
 	}

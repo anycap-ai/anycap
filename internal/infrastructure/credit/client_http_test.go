@@ -116,6 +116,13 @@ func TestHTTPClient_Deduct(t *testing.T) {
 	}
 }
 
+func TestBuildSourceID_Passthrough(t *testing.T) {
+	got := buildSourceID("image.generate", "anycap-image-generate-trc_123")
+	if got != "anycap-image-generate-trc_123" {
+		t.Fatalf("expected passthrough source id, got %q", got)
+	}
+}
+
 func TestHTTPClient_DeductInsufficient(t *testing.T) {
 	httpClient := &http.Client{
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {

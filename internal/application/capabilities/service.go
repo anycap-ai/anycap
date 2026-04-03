@@ -16,6 +16,7 @@ type Service struct {
 	provider             port.CapabilitiesProvider
 	objectStore          port.CloudObjectStore
 	credit               port.CreditClient
+	billing              port.BillingCoordinator
 	callLogs             port.CallLogRepo
 	spaceService         port.SpaceService
 	capsUploadRepo       port.CapsUploadRepository
@@ -69,6 +70,10 @@ func NewService(provider port.CapabilitiesProvider, objectStore port.CloudObject
 
 func (s *Service) SetCreditClient(credit port.CreditClient) {
 	s.credit = credit
+}
+
+func (s *Service) SetBillingCoordinator(billing port.BillingCoordinator) {
+	s.billing = billing
 }
 
 func (s *Service) SetCallLogRepo(callLogs port.CallLogRepo) {

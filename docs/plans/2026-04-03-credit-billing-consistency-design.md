@@ -25,22 +25,33 @@
 
 1. 生成类能力当前主要上游为 NexusHub
 2. NexusHub 返回服务端生成的 `task_id`，形如 `atomic_<uuid>`
-3. AnyCap 提交请求时可以传稳定的 `request_id`
+3. AnyCap 每次请求链路中已有稳定 `trace_id`
 4. NexusHub 将新增能力：
-   - 持久化 `request_id`
-   - 支持按 `request_id` 查询任务
+   - 接收业务侧透传的 `trace_id`
+   - 支持按 `trace_id + biz_id=anycap` 反查 `task_id`
+   - 该反查结果预计在几分钟后可见
 5. Credit Service 的消费调用已经具备按 `source_id` 幂等的前提，AnyCap 继续使用：
 
 ```text
-source_id = anycap-<capability>-<request_id>
+source_id = anycap-<capability>-<trace_id>
 ```
+
+### 2.1 `trace_id` 来源
+
+首版不再额外生成新的业务请求 ID，而是统一复用现有链路中的 `trace_id`：
+
+- CLI 调 server 时，由 CLI 在进程启动时生成 `trace_id` 并通过 `X-Trace-ID` 传入
+- 如果请求进入 server 时没有 `X-Trace-ID`，server 侧 `TraceMiddleware` 会补生成
+- server 调 NexusHub 时继续透传该 `trace_id`
+
+因此，本设计中的“恢复主键”统一为 `trace_id`，不再并行维护另一套 `request_id` 主键语义。
 
 ## 3. 目标
 
 本次设计目标：
 
 1. 让 AnyCap 对“应扣费”形成自己的本地真相源
-2. 在进程崩溃、超时、网络中断后，可基于 `request_id` 恢复并补扣
+2. 在进程崩溃、超时、网络中断后，可基于 `trace_id` 恢复并补扣
 3. 不改变现有 CLI 的同步阻塞交互方式
 4. 首版尽量小改，不把整条能力链路重构为异步任务平台
 
@@ -51,7 +62,7 @@ source_id = anycap-<capability>-<request_id>
 1. 不引入完整 invoice / statement / billing portal
 2. 不改造 CLI 为“先返回 task_id 再轮询”的异步交互
 3. 不引入复杂 reservation / hold 余额模型
-4. 不要求 NexusHub 立刻支持提交幂等，只要求支持按 `request_id` 查询
+4. 不要求 NexusHub 立刻支持提交幂等，只要求支持按 `trace_id + biz_id` 反查 `task_id`
 5. 不把 usage dashboard 的所有投影逻辑并入 billing 主账
 
 ## 5. 风险取向
@@ -66,13 +77,13 @@ source_id = anycap-<capability>-<request_id>
 
 ## 6. 方案对比
 
-### 6.1 方案 A：`billing_intents + request_id` 恢复
+### 6.1 方案 A：`billing_intents + trace_id` 恢复
 
 做法：
 
 - AnyCap 本地先创建 `billing_intent`
-- 调用 NexusHub 时携带稳定 `request_id`
-- 崩溃恢复后按 `request_id` 或 `task_id` 查 NexusHub
+- 调用 NexusHub 时携带稳定 `trace_id`
+- 崩溃恢复后按 `trace_id + biz_id` 或 `task_id` 查 NexusHub
 - 查到成功则补扣，查到失败则关闭，查不到则有限重试后释放
 
 优点：
@@ -86,7 +97,7 @@ source_id = anycap-<capability>-<request_id>
 - 仍依赖 NexusHub 的查询能力正确可用
 - 在“超时自动释放”策略下仍保留极小尾部风险
 
-### 6.2 方案 B：`billing_intents + reservation + request_id` 恢复
+### 6.2 方案 B：`billing_intents + reservation + trace_id` 恢复
 
 做法：
 
@@ -139,7 +150,7 @@ source_id = anycap-<capability>-<request_id>
 一条 `billing_intent` 表示：
 
 - AnyCap 已决定这次能力调用若成功应当扣费
-- 这次调用应以哪个 `request_id` 为恢复锚点
+- 这次调用应以哪个 `trace_id` 为恢复锚点
 - 当前是否已经确认上游结果
 - 当前是否已经完成 credit consume
 
@@ -152,7 +163,7 @@ source_id = anycap-<capability>-<request_id>
 | `api_key_id` | 触发该请求的 API key，可空 |
 | `provider` | 首版固定 `nexushub`，后续可扩展 |
 | `capability` | 如 `image.generate` / `audio.read` |
-| `request_id` | AnyCap 稳定请求 ID |
+| `trace_id` | AnyCap 稳定请求主键 |
 | `provider_task_id` | NexusHub `task_id`，可空 |
 | `credit_cost` | 应扣费额度，read 为固定值，generate 可由 NexusHub 返回 |
 | `billing_status` | 账务状态 |
@@ -168,7 +179,7 @@ source_id = anycap-<capability>-<request_id>
 
 建议约束：
 
-- `UNIQUE(provider, request_id)`
+- `UNIQUE(provider, trace_id)`
 - `UNIQUE(deduct_source_id)`
 
 ## 8. 状态机
@@ -218,7 +229,7 @@ source_id = anycap-<capability>-<request_id>
 
 本地事务：
 
-1. 生成或读取稳定 `request_id`
+1. 读取稳定 `trace_id`
 2. 插入 `billing_intents`
 3. 可选地同步插入 `usage_events(status=created)`
 
@@ -264,7 +275,67 @@ worker 使用本地事务完成：
 
 需要避免多 worker 并发处理同一条 intent，建议使用行锁或显式 claim 字段。
 
-## 10. 主链路流程
+## 10. NexusHub 反查语义
+
+### 10.1 反查用途
+
+NexusHub 反查接口不是主链路依赖，而是异常恢复依赖。
+
+也就是说：
+
+- 正常请求仍然走同步调用、同步扣费
+- 只有在 AnyCap 已进入不确定状态时，后台恢复 worker 才使用 `trace_id + biz_id=anycap` 去反查 `task_id`
+- 反查到 `task_id` 后，再通过现有 `get_submit_result/:task_id` 查询任务详情和成本
+
+### 10.2 可见性延迟
+
+由于 NexusHub 侧反查结果预计在几分钟后可见，而非强实时，因此恢复流程必须把“短时间查不到”视为正常情况。
+
+本设计不要求：
+
+- 反查接口在请求结束瞬间即可命中
+
+本设计要求：
+
+- 反查接口在一个明确的、有限的延迟窗口后可以稳定命中
+
+### 10.3 `404` 处理语义
+
+当恢复 worker 调用 NexusHub 反查接口返回 `404` 时，首版按以下规则处理：
+
+1. 不把首次 `404` 解释为“任务一定不存在”
+2. 在恢复窗口内，将该 intent 保持为 `uncertain_retryable`
+3. 增加 `recovery_attempts`
+4. 记录 `last_error`
+5. 根据退避策略设置 `next_retry_at`
+6. 在恢复窗口超时后，结束自动恢复并关闭该 intent
+
+原因：
+
+- 在 NexusHub 反查结果存在几分钟延迟的前提下，短时间内的 `404` 更接近“尚未可见”，而不是“任务不存在”
+
+### 10.4 首版固定恢复窗口
+
+首版将恢复窗口固定为 `30 分钟`。
+
+在这 `30 分钟` 内：
+
+- 对 `404` 做多次退避重试
+- 不把短时间查不到解释为任务不存在
+- 自动关闭阈值显著大于 NexusHub “几分钟后可见”的反查延迟预期
+
+首版固定重试节奏为：
+
+- 第 1 分钟
+- 第 3 分钟
+- 第 5 分钟
+- 第 10 分钟
+- 第 20 分钟
+- 第 30 分钟
+
+若在第 `30` 分钟时仍无法确认，则结束自动恢复并按未扣费状态收尾。
+
+## 11. 主链路流程
 
 ### 10.1 生成类能力
 
@@ -278,12 +349,12 @@ worker 使用本地事务完成：
 
 1. 校验请求和最低余额
 2. 创建 `billing_intent`
-3. 调 NexusHub，携带 `request_id`
+3. 调 NexusHub，携带 `trace_id`
 4. 若拿到成功返回：
    - 本地落 `provider_task_id`
    - 落 `credit_cost`
    - intent 转 `provider_succeeded_pending_deduct`
-5. 调 `credit.Deduct(source_id=anycap-<capability>-<request_id>)`
+5. 调 `credit.Deduct(source_id=anycap-<capability>-<trace_id>)`
 6. 成功则标记 `deducted`
 7. 任一步崩溃，worker 负责恢复
 
@@ -301,9 +372,9 @@ worker 使用本地事务完成：
 
 - `credit_cost` 为固定值
 - 不需要 provider 成本回填
-- 若未来该上游也提供 `request_id` 查询能力，同样接入恢复逻辑
+- 若未来该上游也提供 `trace_id` 查询能力，同样接入恢复逻辑
 
-## 11. 恢复策略
+## 12. 恢复策略
 
 恢复 worker 扫描以下状态：
 
@@ -315,7 +386,7 @@ worker 使用本地事务完成：
 1. 若已有 `provider_task_id`
    - 直接按 `task_id` 调 `GET /v1/get_submit_result/:task_id`
 2. 若没有 `provider_task_id`
-   - 按 `request_id` 调 NexusHub 新接口查询
+   - 按 `trace_id + biz_id=anycap` 调 NexusHub 新接口反查 `task_id`
 
 ### 11.2 恢复结果处理
 
@@ -332,9 +403,29 @@ worker 使用本地事务完成：
 - 查不到：
   - 增加 `recovery_attempts`
   - 更新 `next_retry_at`
-  - 若超过恢复期限，则转 `released`
+  - 若超过恢复期限，则结束自动恢复并转最终未扣费状态
 
-## 12. 与 `usage_events/provider_runs` 的关系
+### 12.3 最终未扣费状态
+
+为了避免和 reservation 语义混淆，首版建议把当前文档中的 `released` 明确解释为：
+
+- 该异常单在 `30 分钟` 恢复窗口内始终无法确认 NexusHub 最终状态
+- 系统主动关闭该 intent
+- 后续不再尝试自动补扣费
+
+它的实际业务语义是：
+
+- 请求可能发生过
+- 账务未最终确认
+- 该单最终按“未扣费收尾”
+
+在后续实现中，可以将该状态名进一步收敛为更直白的命名，例如：
+
+- `closed_unbilled`
+
+但在本次设计文档中，仍暂时保留 `released` 这一占位命名。
+
+## 13. 与 `usage_events/provider_runs` 的关系
 
 `usage_events` 与 `provider_runs` 继续保留，但职责调整为：
 
@@ -347,7 +438,24 @@ worker 使用本地事务完成：
 - dashboard 和 system usage 仍可继续读 `usage_events`
 - billing 判断不再依赖 `usage_events/provider_runs` 是否存在
 
-## 13. 错误语义
+### 13.1 用户可见性
+
+对用户视图，建议区分：
+
+- `transactions`
+- `usage/call logs`
+
+若一笔异常单最终进入未扣费关闭状态：
+
+- 不应出现在 credit transactions 中，因为没有真实发生成功的 Credit consume
+- 可以出现在 usage / 调用日志中，并标记为账务未最终确认或未扣费
+
+这样可以保持两类视图语义一致：
+
+- usage logs 表示“请求是否发生过”
+- transactions 表示“是否真的发生了 credit 变动”
+
+## 14. 错误语义
 
 ### 13.1 同步请求返回
 
@@ -365,7 +473,7 @@ worker 使用本地事务完成：
 - 用户拿到 `BILLING_UNCERTAIN` 后，不需要自己重试补扣
 - AnyCap 后台负责恢复和最终收口
 
-## 14. 测试范围
+## 15. 测试范围
 
 首版至少补以下测试。
 
@@ -374,11 +482,14 @@ worker 使用本地事务完成：
 1. 生成类：
    - NexusHub 成功返回后，在 `Deduct` 前崩溃，worker 能补扣
 2. 生成类：
-   - NexusHub 响应链路中断，但按 `request_id` 能查回并补扣
+   - NexusHub 响应链路中断，但按 `trace_id + biz_id` 能反查 `task_id` 并补扣
 3. 生成类：
    - 重复恢复不会重复扣费
 4. Read 类：
    - 成功后在扣费前崩溃，worker 能补扣
+5. `404` 语义：
+   - 在恢复窗口内返回 `404` 时不会立即关闭
+   - 超过恢复窗口后才结束自动恢复
 
 ### 14.2 仓储层
 
@@ -388,11 +499,11 @@ worker 使用本地事务完成：
 
 ### 14.3 集成层
 
-1. `request_id` 正确传给 NexusHub
+1. `trace_id` 正确传给 NexusHub
 2. `source_id` 正确传给 Credit Service
-3. recovery worker 能按 `request_id` 查询 NexusHub
+3. recovery worker 能按 `trace_id + biz_id` 反查 NexusHub `task_id`
 
-## 15. 分阶段落地建议
+## 16. 分阶段落地建议
 
 ### 第一阶段
 
@@ -405,6 +516,21 @@ worker 使用本地事务完成：
 - `video.read`
 - `audio.read`
 
+若 NexusHub 反查 API 尚未就绪，第一阶段仍可先落：
+
+- `billing_intents`
+- `trace_id` 贯通
+- `deduct_source_id`
+- 主链路状态机
+- 基于已落本地 `task_id` 的恢复能力
+
+但应明确：
+
+- 没有反查 API 时，拿不到 `task_id` 的异常单仍无法自动补扣
+- 系统不会卡住
+- 正常请求不受影响
+- 少量异常请求会保留坏账尾部
+
 ### 第二阶段
 
 再考虑：
@@ -413,18 +539,18 @@ worker 使用本地事务完成：
 - dashboard 展示 `billing_intents` 状态
 - 运维后台查看 `released` / `provider_failed`
 
-## 16. Open Questions
+## 17. Open Questions
 
 以下问题在实现前需要确认：
 
-1. NexusHub 按 `request_id` 查询的接口路径、返回结构和一致性语义
-2. NexusHub 是否保证同一个 `request_id` 对应唯一任务
+1. NexusHub 按 `trace_id + biz_id` 反查 `task_id` 的接口路径、返回结构和一致性语义
+2. NexusHub 是否保证同一个 `trace_id + biz_id` 对应唯一任务
 3. Credit Service 对 `source_id` 的幂等语义是否已在生产确认
-4. `request_id` 在生成类链路中是否允许为空；若允许，需在进入 billing 链路前强制补齐
+4. 所有需要进入 billing 恢复链路的请求是否都能稳定拿到 `trace_id`
 
-## 17. 结论
+## 18. 结论
 
-在 NexusHub 支持“持久化 `request_id` + 按 `request_id` 查任务”后，AnyCap 采用 `billing_intents` 作为本地账务真相源，可以在不改成全异步产品形态的前提下，显著收敛当前 credit 扣费坏账问题。
+在 NexusHub 支持“按 `trace_id + biz_id=anycap` 反查 `task_id`”后，AnyCap 采用 `billing_intents` 作为本地账务真相源，可以在不改成全异步产品形态的前提下，显著收敛当前 credit 扣费坏账问题。
 
 这版设计的本质取舍是：
 

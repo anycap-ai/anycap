@@ -28,6 +28,13 @@ type fakeCapabilitiesProvider struct {
 	audioErr    error
 }
 
+type fakeCapabilitiesBillingCoordinator struct {
+	intents         []model.CreateBillingIntentInput
+	providerSuccess []model.RecordBillingProviderSuccessInput
+	uncertain       []string
+	deducted        []string
+}
+
 func (f *fakeCapabilitiesProvider) ImageRead(_ context.Context, _ model.ImageReadRequest) (model.UnderstandResult, error) {
 	if f.imageErr != nil {
 		return model.UnderstandResult{}, f.imageErr
@@ -62,6 +69,40 @@ func (f *fakeCapabilitiesProvider) AudioRead(_ context.Context, _ model.AudioRea
 	return agentplatform.NewStubClient().AudioRead(context.Background(), model.AudioReadRequest{
 		URL: "https://example.com/fallback-audio.mp3",
 	})
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) CreateOrGetIntent(_ context.Context, input model.CreateBillingIntentInput) (model.BillingIntent, error) {
+	f.intents = append(f.intents, input)
+	return model.BillingIntent{
+		Provider:       input.Provider,
+		TraceID:        input.TraceID,
+		DeductSourceID: "anycap-image-read-" + input.TraceID,
+		CreditCost:     input.CreditCost,
+	}, nil
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) RecordProviderSuccess(_ context.Context, input model.RecordBillingProviderSuccessInput) error {
+	f.providerSuccess = append(f.providerSuccess, input)
+	return nil
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) RecordProviderFailure(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) MarkUncertain(_ context.Context, _, traceID, _ string) error {
+	f.uncertain = append(f.uncertain, traceID)
+	return nil
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) MarkLookupNotReady(_ context.Context, intent model.BillingIntent, _ string) error {
+	f.uncertain = append(f.uncertain, intent.TraceID)
+	return nil
+}
+
+func (f *fakeCapabilitiesBillingCoordinator) MarkDeducted(_ context.Context, _, traceID string) error {
+	f.deducted = append(f.deducted, traceID)
+	return nil
 }
 
 func newTestService() *Service {
@@ -207,6 +248,42 @@ func TestService_ImageRead_DeductsFixedCreditOnSuccess(t *testing.T) {
 	}
 	if len(items) != 1 || items[0].Capability != "image.read" || items[0].CreditCost != 5 {
 		t.Fatalf("unexpected call logs: %#v", items)
+	}
+}
+
+func TestService_ImageRead_UsesBillingCoordinatorSourceID(t *testing.T) {
+	creditClient := credit.NewStubClient(map[string]int64{"user-1": 20})
+	logRepo := calllog.NewMemoryCallLogRepo()
+	billingCoord := &fakeCapabilitiesBillingCoordinator{}
+	svc := NewService(agentplatform.NewStubClient(), s3store.NewStubClient())
+	svc.SetCreditClient(creditClient)
+	svc.SetCallLogRepo(logRepo)
+	svc.SetBillingCoordinator(billingCoord)
+
+	ctx := trace.SetTraceID(middleware.ContextWithUserID(context.Background(), "user-1"), "req-image-read-billing-1")
+	_, err := svc.ImageRead(ctx, model.ImageReadRequest{
+		URL: "https://example.com/photo.jpg",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(billingCoord.intents) == 0 || billingCoord.intents[0].Provider != model.BillingProviderAgentPlatform {
+		t.Fatalf("expected agentplatform billing intent, got %+v", billingCoord.intents)
+	}
+	if len(billingCoord.providerSuccess) == 0 || billingCoord.providerSuccess[0].ProviderStatus != "success" {
+		t.Fatalf("expected provider success record, got %+v", billingCoord.providerSuccess)
+	}
+	if len(billingCoord.deducted) != 1 || billingCoord.deducted[0] != "req-image-read-billing-1" {
+		t.Fatalf("expected deducted trace req-image-read-billing-1, got %+v", billingCoord.deducted)
+	}
+
+	transactions, _, err := creditClient.ListTransactions(context.Background(), "user-1", 10, 0)
+	if err != nil {
+		t.Fatalf("ListTransactions() error = %v", err)
+	}
+	if len(transactions) != 1 || transactions[0].SourceID != "anycap-image-read-req-image-read-billing-1" {
+		t.Fatalf("expected persisted read billing source id, got %#v", transactions)
 	}
 }
 
