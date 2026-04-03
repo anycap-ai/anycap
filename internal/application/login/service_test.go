@@ -375,6 +375,46 @@ func TestService_BrowserVerifyThenPollIssuesSingleAPIKey(t *testing.T) {
 	}
 }
 
+func TestService_BrowserVerifyGrantsSignupRewardForNewUser(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 4, 3, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	credit := &fakeLoginCreditClient{}
+	users := &fakeUserProvisioner{users: map[string]model.User{
+		"2000000001": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
+	}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTestWithCredit(
+		now,
+		apiKeys,
+		users,
+		credit,
+		sessions,
+		time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
+	)
+
+	initResult, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	parsedURL, err := url.Parse(initResult.BrowserURL)
+	if err != nil {
+		t.Fatalf("parse browser url: %v", err)
+	}
+
+	_, err = service.BrowserVerify(context.Background(), parsedURL.Query().Get("browser_token"), model.Principal{
+		UserID:      "2000000001",
+		AuthType:    "auth0_jwt",
+		CreatedUser: true,
+	}, model.AuthUser{})
+	if err != nil {
+		t.Fatalf("BrowserVerify() error = %v", err)
+	}
+
+	if len(credit.grants) != 1 || credit.grants[0] != "2000000001" {
+		t.Fatalf("expected signup reward grant for browser login, got %#v", credit.grants)
+	}
+}
+
 func TestService_VerifyDeviceCodeThenPoll(t *testing.T) {
 	nowValue := time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC)
 	now := func() time.Time { return nowValue }
@@ -404,6 +444,42 @@ func TestService_VerifyDeviceCodeThenPoll(t *testing.T) {
 	}
 	if pollResult.Status != model.LoginSessionStatusComplete || pollResult.APIKey != "ak-test-2" {
 		t.Fatalf("unexpected device poll result: %#v", pollResult)
+	}
+}
+
+func TestService_VerifyDeviceCodeGrantsSignupRewardForNewUser(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 4, 3, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{createdResult: model.CreatedAPIKey{APIKey: model.APIKey{ID: "key-2"}, RawKey: "ak-test-2"}}
+	credit := &fakeLoginCreditClient{}
+	users := &fakeUserProvisioner{users: map[string]model.User{
+		"2000000002": {ID: "2000000002", Email: "device@example.com", Name: "Device User", Status: model.UserStatusActive},
+	}}
+	sessions := newFakeLoginSessionRepo()
+	service := newServiceForTestWithCredit(
+		now,
+		apiKeys,
+		users,
+		credit,
+		sessions,
+		time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
+	)
+
+	initResult, err := service.Init(context.Background(), model.LoginFlowDevice)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+
+	_, err = service.VerifyDeviceCode(context.Background(), initResult.UserCode, model.Principal{
+		UserID:      "2000000002",
+		AuthType:    "auth0_jwt",
+		CreatedUser: true,
+	}, model.AuthUser{})
+	if err != nil {
+		t.Fatalf("VerifyDeviceCode() error = %v", err)
+	}
+
+	if len(credit.grants) != 1 || credit.grants[0] != "2000000002" {
+		t.Fatalf("expected signup reward grant for device login, got %#v", credit.grants)
 	}
 }
 

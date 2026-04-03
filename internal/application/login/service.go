@@ -193,6 +193,7 @@ func (s *Service) BrowserVerify(ctx context.Context, browserToken string, princi
 		logger.WithField("login_session_id", session.ID).WithError(err).Error("resolve verified auth user failed")
 		return model.DeviceVerifyResult{}, err
 	}
+	s.grantSignupReward(ctx, principal.UserID, principal.CreatedUser)
 	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		logger.WithField("login_session_id", session.ID).WithError(err).Error("mark browser verify session authorized failed")
 		return model.DeviceVerifyResult{}, err
@@ -329,6 +330,7 @@ func (s *Service) VerifyDeviceCode(ctx context.Context, userCode string, princip
 		logger.WithField("login_session_id", session.ID).WithError(err).Error("resolve device verify auth user failed")
 		return model.DeviceVerifyResult{}, err
 	}
+	s.grantSignupReward(ctx, principal.UserID, principal.CreatedUser)
 	if err := s.sessions.MarkVerified(ctx, session.ID, authUser, s.now().UTC()); err != nil {
 		logger.WithField("login_session_id", session.ID).WithError(err).Error("mark device session authorized failed")
 		return model.DeviceVerifyResult{}, err

@@ -53,7 +53,7 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 		}
 	}
 
-	user, _, err := a.users.FindOrCreateByAuthIdentity(ctx, "auth0", authUser, a.now().UTC())
+	user, createdUser, err := a.users.FindOrCreateByAuthIdentity(ctx, "auth0", authUser, a.now().UTC())
 	if err != nil {
 		return model.Principal{}, err
 	}
@@ -61,6 +61,7 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 	return model.Principal{
 		UserID:         user.ID,
 		AuthType:       "auth0_jwt",
+		CreatedUser:    createdUser,
 		Scopes:         []string{"system.read"},
 		ExternalUserID: authUser.UserID,
 		Email:          user.Email,

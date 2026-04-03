@@ -34,6 +34,7 @@ func (f *fakeUserReader) GetUserByID(_ context.Context, userID string) (model.Us
 type fakeSystemCreditClient struct {
 	balance      model.Balance
 	transactions []model.CreditTransaction
+	grants       []string
 }
 
 func (f *fakeSystemCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
@@ -44,7 +45,8 @@ func (f *fakeSystemCreditClient) Deduct(_ context.Context, _ string, _ int64, _,
 	return nil
 }
 
-func (f *fakeSystemCreditClient) GrantSignupReward(_ context.Context, _ string) error {
+func (f *fakeSystemCreditClient) GrantSignupReward(_ context.Context, userID string) error {
+	f.grants = append(f.grants, userID)
 	return nil
 }
 
@@ -362,6 +364,35 @@ func TestService_CurrentUser(t *testing.T) {
 	}
 	if user.ID != "2000000001" || user.Email != "user@example.com" {
 		t.Fatalf("unexpected user: %+v", user)
+	}
+}
+
+func TestService_CurrentUserGrantsSignupRewardForNewUser(t *testing.T) {
+	credit := &fakeSystemCreditClient{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.SetUserReader(&fakeUserReader{
+		users: map[string]model.User{
+			"2000000001": {
+				ID:        "2000000001",
+				Email:     "user@example.com",
+				Name:      "Demo User",
+				AvatarURL: "https://cdn.example.com/avatar.png",
+				Status:    model.UserStatusActive,
+			},
+		},
+	})
+	service.SetCreditClient(credit)
+
+	_, err := service.CurrentUser(context.Background(), &model.Principal{
+		UserID:      "2000000001",
+		AuthType:    "auth0_jwt",
+		CreatedUser: true,
+	})
+	if err != nil {
+		t.Fatalf("CurrentUser() error = %v", err)
+	}
+	if len(credit.grants) != 1 || credit.grants[0] != "2000000001" {
+		t.Fatalf("expected signup reward grant for first web request, got %#v", credit.grants)
 	}
 }
 
