@@ -80,13 +80,82 @@ const websiteJsonLd = {
   url: siteConfig.url,
 };
 
+const preHydrationCleanupScript = `
+  (function () {
+    var shouldStrip = function (name) {
+      return typeof name === "string" && name.indexOf("data-cursor-") === 0;
+    };
+
+    var stripAttrs = function (root) {
+      if (!root || !root.querySelectorAll) return;
+      var nodes = root.querySelectorAll("*");
+      for (var i = 0; i < nodes.length; i += 1) {
+        var attrs = nodes[i].attributes;
+        if (!attrs) continue;
+        for (var j = attrs.length - 1; j >= 0; j -= 1) {
+          var attrName = attrs[j] && attrs[j].name;
+          if (shouldStrip(attrName)) {
+            nodes[i].removeAttribute(attrName);
+          }
+        }
+      }
+    };
+
+    var start = function () {
+      stripAttrs(document.body);
+
+      if (typeof MutationObserver === "undefined" || !document.body) return;
+
+      var observer = new MutationObserver(function (mutations) {
+        for (var i = 0; i < mutations.length; i += 1) {
+          var mutation = mutations[i];
+
+          if (mutation.type === "attributes" && shouldStrip(mutation.attributeName)) {
+            mutation.target.removeAttribute(mutation.attributeName);
+          }
+
+          for (var j = 0; j < mutation.addedNodes.length; j += 1) {
+            var node = mutation.addedNodes[j];
+            if (node && node.nodeType === 1) {
+              stripAttrs(node);
+            }
+          }
+        }
+      });
+
+      observer.observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+      });
+
+      window.addEventListener(
+        "load",
+        function () {
+          window.setTimeout(function () {
+            observer.disconnect();
+          }, 2000);
+        },
+        { once: true }
+      );
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", start, { once: true });
+      return;
+    }
+
+    start();
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang={siteConfig.defaultLocale}>
+    <html lang={siteConfig.defaultLocale} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -100,8 +169,10 @@ export default function RootLayout({
             __html: JSON.stringify(websiteJsonLd),
           }}
         />
+        <script dangerouslySetInnerHTML={{ __html: preHydrationCleanupScript }} />
       </head>
       <body
+        suppressHydrationWarning
         className={`${GeistPixelSquare.variable} ${inter.variable} ${logoFont.variable} bg-[#f4f5f0] text-[#1c1f17] antialiased`}
         style={{ fontFamily: "sans-serif" }}
       >

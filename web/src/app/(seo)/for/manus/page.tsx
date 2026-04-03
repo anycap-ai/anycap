@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import {
-  CapabilityGapTable,
-  type CapabilityGapRow,
-} from "@/components/landing/CapabilityGapTable";
+import { CapabilityGapTable } from "@/components/landing/CapabilityGapTable";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { buildAgentCapabilityGapRows } from "@/lib/capability-inventory";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -82,48 +80,7 @@ const faqJsonLd = {
   })),
 };
 
-const gapRows: CapabilityGapRow[] = [
-  {
-    capability: "Image generation",
-    cells: [
-      { label: "General-purpose workflow", tone: "muted" },
-      { label: "Dedicated image models through one runtime", tone: "accent" },
-      "Image Generation page",
-    ],
-  },
-  {
-    capability: "Video generation",
-    cells: [
-      { label: "Task-by-task setup", tone: "muted" },
-      { label: "Dedicated video generation flow", tone: "accent" },
-      "Video Generation page",
-    ],
-  },
-  {
-    capability: "Image understanding",
-    cells: [
-      { label: "Ad hoc visual reasoning", tone: "muted" },
-      { label: "Reusable image read command", tone: "accent" },
-      "Image Understanding page",
-    ],
-  },
-  {
-    capability: "Video analysis",
-    cells: [
-      { label: "Ad hoc review workflow", tone: "muted" },
-      { label: "Reusable video read command", tone: "accent" },
-      "Video Analysis page",
-    ],
-  },
-  {
-    capability: "One auth flow",
-    cells: [
-      { label: "Capability access varies by task", tone: "muted" },
-      { label: "One login across the stack", tone: "accent" },
-      "Get Started page",
-    ],
-  },
-];
+const gapRows = buildAgentCapabilityGapRows("manus");
 
 const installSteps = [
   {
@@ -145,6 +102,31 @@ const installSteps = [
     note: "After authentication, Manus can reuse the same capability runtime without fresh provider setup every time a task expands.",
   },
 ];
+
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "Add image, video, and vision capabilities to Manus",
+  description:
+    "Install the AnyCap skill and CLI to give Manus access to image generation, video generation, image understanding, and video analysis.",
+  step: [
+    {
+      "@type": "HowToStep",
+      name: "Install the skill",
+      text: "Run npx -y skills add anycap-ai/anycap -y to give Manus a durable entry point into the AnyCap runtime.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Install the CLI",
+      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the AnyCap CLI.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Log in and verify",
+      text: "Run anycap login && anycap status to authenticate and confirm the setup.",
+    },
+  ],
+};
 
 const capabilityCards = [
   {
@@ -195,6 +177,10 @@ export default function ForManusPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+      />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
@@ -203,8 +189,8 @@ export default function ForManusPage() {
               For Manus
             </p>
             <h1
-              className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
+              className="max-w-[960px] leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
+              style={{ ...pixel, fontSize: "clamp(32px, 5vw, 64px)", textWrap: "balance" } as React.CSSProperties}
             >
               Manus can plan, browse, and deliver work.
               <br />
@@ -258,14 +244,14 @@ export default function ForManusPage() {
               <CapabilityGapTable
                 eyebrow="Capability gap"
                 title="Where Manus still benefits from a dedicated runtime"
-                description="Manus can stay focused on autonomous execution while AnyCap standardizes the image, video, and vision layer across tasks."
+                description="Manus can stay focused on autonomous execution while AnyCap standardizes generation, analysis, search, storage, and publishing across tasks."
                 columns={[
                   { label: "Manus alone" },
                   { label: "Add with AnyCap", accent: true },
                   { label: "Best next step" },
                 ]}
                 rows={gapRows}
-                footnote="This page is the Manus hub. Until Manus-specific deep pages exist, the next steps route directly to the capability pages that close each gap fastest."
+                footnote="This page is the Manus hub. Until more Manus-specific deep pages exist, the next steps route to the capability pages or pricing page that closes each gap fastest."
               />
             </div>
           </FadeIn>

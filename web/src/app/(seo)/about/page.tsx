@@ -137,9 +137,9 @@ export default function AboutPage() {
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               We focus on the layer between a reasoning agent and the capabilities it still needs
-              to do real work: image generation, video generation, image understanding, and video
-              analysis today. The idea is simple. Keep the agent you already use. Add the missing
-              capability runtime around it. Music, speech, search, and crawl remain on the roadmap.
+              to do real work: {capabilitySummary}. The idea is simple. Keep the agent you already
+              use. Add the missing capability runtime around it. {roadmapCapabilitySummary} remain
+              on the roadmap.
             </p>
           </FadeIn>
 

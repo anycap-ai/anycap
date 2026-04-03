@@ -62,11 +62,14 @@ If all steps succeed, you are ready. Read the installed skill file for detailed 
 | Image Understanding | \`anycap actions image-read\` | Vision analysis — screenshots, diagrams, photos |
 | Video Analysis | \`anycap actions video-read\` | Video content and recording inspection |
 | Audio Understanding | \`anycap actions audio-read\` | Audio content analysis |
+| Web Search | \`anycap search --query\` | Structured web search results with optional page content |
+| Grounded Web Search | \`anycap search --prompt\` | Synthesized answers with citations grounded in live search |
+| Web Crawl | \`anycap crawl\` | Convert web pages into clean Markdown |
 | Drive | \`anycap drive\` | Cloud storage, file sharing, public URLs |
 | Page | \`anycap page\` | Static site deployment and publishing |
 | Download | \`anycap download\` | Download remote files to local disk |
 
-Roadmap: speech, search, crawl, sandbox, browser.
+Roadmap: speech, sandbox, browser.
 
 ## Pricing
 

@@ -1,3 +1,5 @@
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 
@@ -12,6 +14,7 @@ export type CapabilityGapCell =
       label: string;
       tone?: "default" | "muted" | "accent";
       mono?: boolean;
+      href?: string;
     };
 
 export type CapabilityGapRow = {
@@ -30,13 +33,14 @@ type CapabilityGapTableProps = {
 
 function normalizeCell(cell: CapabilityGapCell) {
   if (typeof cell === "string") {
-    return { label: cell, tone: "default" as const, mono: false };
+    return { label: cell, tone: "default" as const, mono: false, href: undefined };
   }
 
   return {
     label: cell.label,
     tone: cell.tone ?? "default",
     mono: cell.mono ?? false,
+    href: cell.href,
   };
 }
 
@@ -117,7 +121,16 @@ export function CapabilityGapTable({
                       } ${getToneClass(normalizedCell.tone)}`}
                       style={normalizedCell.mono ? mono : undefined}
                     >
-                      {normalizedCell.label}
+                      {normalizedCell.href ? (
+                        <Link
+                          href={normalizedCell.href}
+                          className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"
+                        >
+                          {normalizedCell.label}
+                        </Link>
+                      ) : (
+                        normalizedCell.label
+                      )}
                     </td>
                   );
                 })}

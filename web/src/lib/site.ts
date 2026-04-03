@@ -25,9 +25,9 @@ export const localeConfig = {
 >;
 
 export const capabilitySummary =
-  "image generation, video generation, music generation, image understanding, video analysis, and audio understanding";
+  "image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, and web crawl";
 
-export const roadmapCapabilitySummary = "speech, search, crawl, and sandbox";
+export const roadmapCapabilitySummary = "speech and sandbox";
 
 export const defaultSiteDescription =
   `AnyCap gives AI agents one CLI and one credential for ${capabilitySummary} — plus cloud storage and web publishing. Built for agents, not adapted from human tools.`;
@@ -57,6 +57,10 @@ export const publicRouteDefinitions = [
   { key: "about", kind: "seo", path: "/about", priority: 0.72 },
   { key: "pricing", kind: "seo", path: "/pricing", priority: 0.9 },
   { key: "start", kind: "seo", path: "/start", priority: 0.96 },
+  { key: "guides", kind: "seo", path: "/guides", priority: 0.68 },
+  { key: "glossary", kind: "seo", path: "/glossary", priority: 0.58 },
+  { key: "compare", kind: "seo", path: "/compare", priority: 0.66 },
+  { key: "learn", kind: "seo", path: "/learn", priority: 0.68 },
   { key: "for-claude-code", kind: "seo", path: "/for/claude-code", priority: 0.95 },
   {
     key: "for-claude-code-image-generation",
@@ -90,6 +94,7 @@ export const publicRouteDefinitions = [
   { key: "for-codex", kind: "seo", path: "/for/codex", priority: 0.78 },
   { key: "capabilities-image-generation", kind: "seo", path: "/capabilities/image-generation", priority: 0.78 },
   { key: "capabilities-video-generation", kind: "seo", path: "/capabilities/video-generation", priority: 0.76 },
+  { key: "capabilities-music-generation", kind: "seo", path: "/capabilities/music-generation", priority: 0.74 },
   {
     key: "capabilities-image-understanding",
     kind: "seo",
@@ -97,11 +102,25 @@ export const publicRouteDefinitions = [
     priority: 0.74,
   },
   {
+    key: "capabilities-audio-understanding",
+    kind: "seo",
+    path: "/capabilities/audio-understanding",
+    priority: 0.72,
+  },
+  {
     key: "capabilities-video-analysis",
     kind: "seo",
     path: "/capabilities/video-analysis",
     priority: 0.74,
   },
+  { key: "capabilities-web-search", kind: "seo", path: "/capabilities/web-search", priority: 0.72 },
+  {
+    key: "capabilities-grounded-web-search",
+    kind: "seo",
+    path: "/capabilities/grounded-web-search",
+    priority: 0.7,
+  },
+  { key: "capabilities-web-crawl", kind: "seo", path: "/capabilities/web-crawl", priority: 0.72 },
   { key: "skills", kind: "seo", path: "/skills", priority: 0.72 },
   { key: "models", kind: "seo", path: "/models", priority: 0.72 },
   {
