@@ -10,6 +10,7 @@ import {
 
 const PAGE_FILE_NAME = "page.tsx";
 const APP_DIRECTORY = path.join(process.cwd(), "src", "app");
+const SEO_DIRECTORY = path.join(APP_DIRECTORY, "(seo)");
 const LOCALIZED_APP_DIRECTORY = path.join(APP_DIRECTORY, "[locale]");
 const LOCALIZED_SEO_DIRECTORY = path.join(LOCALIZED_APP_DIRECTORY, "(seo)");
 const EXPLICIT_LOCALIZED_PAGE_FILES = [
@@ -53,6 +54,7 @@ type SitemapSourceRoute = {
 
 type RouteFileRecord = {
   filePath: string;
+  routeBaseDirectory: string;
   lastModified: Date;
 };
 
@@ -60,7 +62,7 @@ function getFileLastModified(filePath: string): Date {
   return statSync(filePath).mtime;
 }
 
-function walkPageFiles(dir: string): RouteFileRecord[] {
+function walkPageFiles(dir: string, routeBaseDirectory: string): RouteFileRecord[] {
   if (!existsSync(dir)) {
     return [];
   }
@@ -74,13 +76,14 @@ function walkPageFiles(dir: string): RouteFileRecord[] {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...walkPageFiles(fullPath));
+      files.push(...walkPageFiles(fullPath, routeBaseDirectory));
       continue;
     }
 
     if (entry.isFile() && entry.name === PAGE_FILE_NAME) {
       files.push({
         filePath: fullPath,
+        routeBaseDirectory,
         lastModified: getFileLastModified(fullPath),
       });
     }
@@ -89,8 +92,8 @@ function walkPageFiles(dir: string): RouteFileRecord[] {
   return files;
 }
 
-function toDiscoveredRoutePath(filePath: string): string | null {
-  const relativePath = path.relative(LOCALIZED_APP_DIRECTORY, filePath);
+function toDiscoveredRoutePath(routeFile: RouteFileRecord): string | null {
+  const relativePath = path.relative(routeFile.routeBaseDirectory, routeFile.filePath);
   const segments = relativePath
     .split(path.sep)
     .slice(0, -1)
@@ -131,10 +134,15 @@ function getDiscoveredRouteFiles(): RouteFileRecord[] {
     existsSync(filePath),
   ).map((filePath) => ({
     filePath,
+    routeBaseDirectory: LOCALIZED_APP_DIRECTORY,
     lastModified: getFileLastModified(filePath),
   }));
 
-  return [...explicitFiles, ...walkPageFiles(LOCALIZED_SEO_DIRECTORY)];
+  return [
+    ...explicitFiles,
+    ...walkPageFiles(SEO_DIRECTORY, APP_DIRECTORY),
+    ...walkPageFiles(LOCALIZED_SEO_DIRECTORY, LOCALIZED_APP_DIRECTORY),
+  ];
 }
 
 function compareDates(left: Date, right: Date) {
@@ -145,7 +153,7 @@ function getSitemapSourceRoutes(): SitemapSourceRoute[] {
   const routesByPath = new Map<string, SitemapSourceRoute>();
 
   for (const routeFile of getDiscoveredRouteFiles()) {
-    const routePath = toDiscoveredRoutePath(routeFile.filePath);
+    const routePath = toDiscoveredRoutePath(routeFile);
     if (!routePath) {
       continue;
     }

@@ -54,12 +54,12 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
 ];
 
 export const pricingActionRows = [
-  { action: "Image read", unit: "per request", credits: 5 },
-  { action: "Video read", unit: "per request", credits: 10 },
-  { action: "Audio read", unit: "per request", credits: 10 },
-  { action: "Web search", unit: "per request", credits: 1 },
+  { action: "Image Read", unit: "per request", credits: 5 },
+  { action: "Video Read", unit: "per request", credits: 10 },
+  { action: "Audio Read", unit: "per request", credits: 10 },
+  { action: "Web Search", unit: "per request", credits: 1 },
   { action: "Web Search (AI Grounded)", unit: "per request", credits: 5 },
-  { action: "Web crawl", unit: "per request", credits: 1 },
+  { action: "Web Crawl", unit: "per request", credits: 1 },
 ] as const;
 
 type AgentGapCopy = Record<AgentCapabilityGapAgent, string>;
