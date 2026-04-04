@@ -7,6 +7,7 @@ import { TerminalDemo } from "@/components/landing/TerminalDemo";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
+import { AgentBubble } from "@/components/landing/AgentBubble";
 
 export const runtime = "edge";
 const githubHref = "https://github.com/anycap-ai/anycap";
@@ -97,29 +98,7 @@ export default function ForHumanPage() {
           </div>
 
           <div className="relative w-full shrink-0 lg:flex lg:flex-col lg:w-[50%] lg:self-stretch lg:justify-center lg:min-h-0">
-            <div className="absolute right-[156px] top-2 z-10 hidden max-w-[320px] lg:block">
-              <div className="relative rounded-[30px] border border-[#edf3df] bg-[linear-gradient(180deg,#fcfdf8_0%,#eef5e3_58%,#e8f0d8_100%)] px-5 py-4 text-[#23281d] shadow-[0_14px_30px_rgba(10,12,9,0.12),0_2px_0_rgba(255,255,255,0.75)_inset,0_-6px_18px_rgba(255,255,255,0.24)_inset]">
-                <div
-                  aria-hidden
-                  className="absolute bottom-[-10px] right-[88px] h-5 w-5 rotate-45 rounded-[8px] border-r border-b border-[#e7eed8] bg-[#edf4e0] shadow-[6px_8px_14px_rgba(10,12,9,0.06)]"
-                />
-                <p className="text-[15px] font-semibold leading-[1.35] text-[#182012]">
-                  Get <span className="text-[#5f7a29]">250 bonus credits</span> on your first login.
-                </p>
-                <p className="mt-2 text-[12px] leading-[1.55] text-[#495240]">
-                  Sign up before <span className="font-semibold text-[#1f2619]">Apr 10</span>. No
-                  top-up needed.
-                </p>
-              </div>
-              <div
-                aria-hidden
-                className="absolute bottom-[-24px] right-[68px] h-4.5 w-4.5 rounded-full border border-[#edf4e0] bg-[radial-gradient(circle_at_32%_30%,#fbfdf6_0%,#eef5e2_62%,#e6edd8_100%)] shadow-[0_8px_16px_rgba(10,12,9,0.08)]"
-              />
-              <div
-                aria-hidden
-                className="absolute bottom-[-40px] right-[46px] h-3 w-3 rounded-full border border-[#f1f5e7] bg-[radial-gradient(circle_at_30%_30%,#ffffff_0%,#f4f8ec_58%,#ecf2e0_100%)] shadow-[0_6px_12px_rgba(10,12,9,0.07)]"
-              />
-            </div>
+            <AgentBubble />
             <div className="flex h-[50vh] w-full flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:h-[calc((100dvh-8rem)*0.8)] lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
               <TerminalDemo
                 headerRight={
