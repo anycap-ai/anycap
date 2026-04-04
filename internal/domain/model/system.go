@@ -132,6 +132,7 @@ type TimelineItem struct {
 
 type LogsResult struct {
 	Items      []TimelineItem `json:"items"`
+	Total      int            `json:"total"`
 	NextCursor string         `json:"next_cursor,omitempty"`
 }
 

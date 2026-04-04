@@ -409,7 +409,7 @@ func (s *Service) UsageEvents(ctx context.Context, principal *model.Principal, q
 	return result, nil
 }
 
-func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit int) (model.LogsResult, error) {
+func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit, offset int) (model.LogsResult, error) {
 	logger := logging.WithContext(ctx).WithField("flow", "system.logs")
 	if principal == nil || principal.UserID == "" {
 		logger.Warn("invalid principal for logs")
@@ -421,17 +421,26 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 	if limit > 100 {
 		limit = 100
 	}
+	if offset < 0 {
+		offset = 0
+	}
 	if s.callLogs == nil || s.credit == nil {
 		logger.Error("logs dependencies not configured")
 		return model.LogsResult{}, model.ErrInternal
 	}
 
-	callLogs, err := s.callLogs.ListByUserID(ctx, principal.UserID, limit)
+	// Over-fetch from both sources so the merge produces enough items for offset+limit.
+	fetchLimit := offset + limit
+	if fetchLimit < 200 {
+		fetchLimit = 200
+	}
+
+	callLogs, err := s.callLogs.ListByUserID(ctx, principal.UserID, fetchLimit)
 	if err != nil {
 		logger.WithError(err).Error("list call logs failed")
 		return model.LogsResult{}, err
 	}
-	transactions, _, err := s.credit.ListTransactions(ctx, principal.UserID, limit, 0)
+	transactions, _, err := s.credit.ListTransactions(ctx, principal.UserID, fetchLimit, 0)
 	if err != nil {
 		logger.WithError(err).Error("list credit transactions failed")
 		return model.LogsResult{}, err
@@ -492,11 +501,18 @@ func (s *Service) Logs(ctx context.Context, principal *model.Principal, limit in
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].OccurredAt.After(items[j].OccurredAt)
 	})
-	if len(items) > limit {
-		items = items[:limit]
-	}
 
-	return model.LogsResult{Items: items}, nil
+	total := len(items)
+	if offset >= len(items) {
+		return model.LogsResult{Items: []model.TimelineItem{}, Total: total}, nil
+	}
+	end := offset + limit
+	if end > len(items) {
+		end = len(items)
+	}
+	items = items[offset:end]
+
+	return model.LogsResult{Items: items, Total: total}, nil
 }
 
 // sanitizeModelForDisplay replaces internal upstream model names with
@@ -572,7 +588,7 @@ func (s *Service) DashboardSummary(ctx context.Context, principal *model.Princip
 		logger.WithError(err).Error("load dashboard balance failed")
 		return model.DashboardSummaryResult{}, err
 	}
-	logs, err := s.Logs(ctx, principal, 5)
+	logs, err := s.Logs(ctx, principal, 5, 0)
 	if err != nil {
 		logger.WithError(err).Error("load dashboard logs failed")
 		return model.DashboardSummaryResult{}, err

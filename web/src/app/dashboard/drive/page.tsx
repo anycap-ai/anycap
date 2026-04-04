@@ -12,6 +12,7 @@ import {
 import type { DriveNode } from "@/lib/api/types";
 import { FolderIcon, FileIcon } from "@/components/dashboard/DriveIcons";
 import { Spinner } from "@/components/ui/Spinner";
+import { Pagination } from "@/components/ui/Pagination";
 import { toast } from "@/lib/toast";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { DriveSharePanel } from "@/components/dashboard/DriveSharePanel";
@@ -156,6 +157,8 @@ export default function DrivePage() {
     navigateTo([...folderIds, id]);
   }, [folderIds, navigateTo]);
 
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
   const [busyAction, setBusyAction] = useState<{ nodeId: string; type: "preview" | "download" } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [shareNode, setShareNode] = useState<DriveNode | null>(null);
@@ -164,9 +167,20 @@ export default function DrivePage() {
   const [deleteNode, setDeleteNode] = useState<DriveNode | null>(null);
 
   const currentParentID = folderIds.length > 0 ? folderIds[folderIds.length - 1] : null;
-  const { data, isLoading, mutate } = useDriveNodes(currentParentID);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, isLoading, mutate } = useDriveNodes(currentParentID, PAGE_SIZE, offset);
+  const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
   const rows = useMemo(() => data?.items ?? [], [data]);
+
+  // Reset to page 1 when navigating folders
+  const prevParentRef = useRef(currentParentID);
+  useEffect(() => {
+    if (prevParentRef.current !== currentParentID) {
+      setPage(1);
+      prevParentRef.current = currentParentID;
+    }
+  }, [currentParentID]);
 
   function handleRenameClose() {
     setRenameNode(null);
@@ -370,6 +384,7 @@ export default function DrivePage() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <DriveSharePanel
         node={shareNode}

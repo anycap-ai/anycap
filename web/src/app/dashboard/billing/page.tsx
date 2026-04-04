@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { createBillingCheckout, useBalance, useCreditPacks, useLogs } from "@/lib/api/hooks";
+import { Pagination } from "@/components/ui/Pagination";
 import type { CreditPack, TimelineItem } from "@/lib/api/types";
 import { formatCredit, formatCreditCent } from "@/lib/credit";
 import { timeAgo } from "@/lib/date";
@@ -165,9 +166,13 @@ export default function BillingPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const LOGS_PAGE_SIZE = 20;
+  const [logsPage, setLogsPage] = useState(1);
+  const logsOffset = (logsPage - 1) * LOGS_PAGE_SIZE;
   const { data: balance, isLoading: balanceLoading, error: balanceError } = useBalance();
-  const { data: logs, isLoading: logsLoading, error: logsError } = useLogs(50);
+  const { data: logs, isLoading: logsLoading, error: logsError } = useLogs(LOGS_PAGE_SIZE, logsOffset);
   const { data: packData, isLoading: packsLoading, error: packsError } = useCreditPacks();
+  const logsTotalPages = Math.ceil((logs?.total ?? 0) / LOGS_PAGE_SIZE);
 
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [submittingPackID, setSubmittingPackID] = useState<string | null>(null);
@@ -416,6 +421,7 @@ export default function BillingPage() {
             </tbody>
           </table>
         </div>
+        <Pagination page={logsPage} totalPages={logsTotalPages} onPageChange={setLogsPage} />
       </section>
 
       <Modal
