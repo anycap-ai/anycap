@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-import { HoverDropdown, dropdownItemClass, dropdownDisabledClass, dropdownDividerClass } from "@/components/ui/HoverDropdown";
+import { UserAvatarMenu, UserAvatar } from "@/components/ui/UserAvatarMenu";
 import { useUser } from "@/lib/api/hooks";
 
 
@@ -24,42 +22,6 @@ const navSections: NavItem[][] = [
 ];
 
 const allItems = navSections.flat();
-
-function UserAvatar({
-  user,
-  size = 32,
-}: {
-  user?: { name?: string; email?: string; id?: string; avatar_url?: string };
-  size?: number;
-}) {
-  const displayName = user?.name || user?.email || user?.id || "";
-  const initial = displayName ? displayName.charAt(0).toUpperCase() : "";
-  const [imgError, setImgError] = useState(false);
-
-  if (user?.avatar_url && !imgError) {
-    return (
-      <img
-        src={user.avatar_url}
-        alt={displayName}
-        width={size}
-        height={size}
-        className="object-cover shrink-0 rounded-full"
-        style={{ width: size, height: size }}
-        onError={() => setImgError(true)}
-      />
-    );
-  }
-  return (
-    <div
-      className="bg-[#6b7d3a] flex items-center justify-center shrink-0 rounded-full"
-      style={{ width: size, height: size }}
-    >
-      <span className="text-[12px] font-semibold text-[#f4f5f0] leading-none">
-        {initial}
-      </span>
-    </div>
-  );
-}
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -80,7 +42,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <AnycapLogo size={24} />
         </Link>
         <div className="ml-auto">
-          <UserAvatar user={user} size={32} />
+          <UserAvatarMenu
+            trigger={
+              <button className="p-0.5 rounded-full hover:ring-2 hover:ring-[#6b7d3a]/30 transition-all duration-200 ease-out cursor-pointer">
+                <UserAvatar picture={user?.avatar_url} name={displayName} size={32} />
+              </button>
+            }
+          />
         </div>
       </header>
 
@@ -161,30 +129,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {/* User area with hover dropdown */}
           <div className="px-7 py-6 border-t border-[#dce0d2]">
-            <HoverDropdown
+            <UserAvatarMenu
               positionClass="absolute left-full bottom-0 ml-2 z-30 origin-bottom-left"
-              trigger={() => (
+              trigger={
                 <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 hover:bg-[rgba(107,125,58,0.07)]">
-                  <UserAvatar user={user} size={36} />
+                  <UserAvatar picture={user?.avatar_url} name={displayName} size={36} />
                   <span className="text-[15px] text-[#4d5145] font-medium truncate">
                     {displayName}
                   </span>
                 </div>
-              )}
-            >
-              <span className={dropdownDisabledClass}>
-                API keys
-                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
-              </span>
-              <span className={dropdownDisabledClass}>
-                Settings
-                <span className="text-[11px] text-[#b0b4a8]">coming soon</span>
-              </span>
-              <hr className={dropdownDividerClass} />
-              <LogoutButton className={`w-full text-left ${dropdownItemClass}`}>
-                Log out
-              </LogoutButton>
-            </HoverDropdown>
+              }
+            />
           </div>
         </aside>
 

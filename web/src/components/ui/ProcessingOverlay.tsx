@@ -1,9 +1,11 @@
 "use client";
 
+import { createPortal } from "react-dom";
+
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export function ProcessingOverlay({ message = "Processing" }: { message?: string }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#f4f5f0]/95 backdrop-blur-xl">
       <div className="flex flex-col items-center gap-4">
         <svg
@@ -28,6 +30,7 @@ export function ProcessingOverlay({ message = "Processing" }: { message?: string
           {message}
         </span>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
