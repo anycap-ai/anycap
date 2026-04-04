@@ -11,6 +11,7 @@ type NavItem = { label: string; href: string; disabled?: boolean };
 
 const navSections: NavItem[][] = [
   [
+    { label: "Get started", href: "/dashboard/get-started" },
     { label: "Overview", href: "/dashboard" },
     { label: "Logs", href: "/dashboard/logs" },
     { label: "Billing", href: "/dashboard/billing" },
@@ -69,7 +70,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`text-[13px] whitespace-nowrap transition-colors ${isActive(item.href)
                     ? "text-[#1c1f17] font-medium"
-                    : "text-[#6b7068] hover:text-[#3a3e32]"
+                    : item.href === "/dashboard/get-started"
+                      ? "text-[#6b7d3a] font-medium"
+                      : "text-[#6b7068] hover:text-[#3a3e32]"
                   }`}
               >
                 {item.label}
@@ -113,7 +116,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       className={`relative block px-4 py-3 rounded-[10px] text-[15px] transition-all duration-150 mb-0.5 ${isActive(item.href)
                           ? "text-[#1c1f17] font-medium bg-[rgba(107,125,58,0.10)]"
-                          : "text-[#6b7068] hover:text-[#3a3e32] hover:bg-[rgba(107,125,58,0.07)]"
+                          : item.href === "/dashboard/get-started"
+                            ? "text-[#6b7d3a] font-medium hover:bg-[rgba(107,125,58,0.07)]"
+                            : "text-[#6b7068] hover:text-[#3a3e32] hover:bg-[rgba(107,125,58,0.07)]"
                         }`}
                     >
                       {isActive(item.href) && (
