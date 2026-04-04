@@ -179,6 +179,9 @@ func ReportError(r ErrorReport) bool {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
+		if event.TraceID != "" {
+			req.Header.Set("X-Trace-ID", event.TraceID)
+		}
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {

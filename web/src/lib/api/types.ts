@@ -61,6 +61,7 @@ export type TimelineItem = {
 /** GET /v1/logs */
 export type LogsResult = {
   items: TimelineItem[];
+  total: number;
   next_cursor?: string;
 };
 

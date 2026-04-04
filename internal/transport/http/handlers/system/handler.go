@@ -419,8 +419,14 @@ func (h *Handler) Logs(c context.Context, ctx *app.RequestContext) {
 			limit = value
 		}
 	}
+	offset := 0
+	if raw := string(ctx.Query("offset")); raw != "" {
+		if value, err := strconv.Atoi(raw); err == nil && value >= 0 {
+			offset = value
+		}
+	}
 
-	result, err := h.service.Logs(c, principal, limit)
+	result, err := h.service.Logs(c, principal, limit, offset)
 	if err != nil {
 		middleware.ReportError(ctx, err)
 		status, payload := dto.MapDomainError(err)

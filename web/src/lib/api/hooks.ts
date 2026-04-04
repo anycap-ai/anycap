@@ -56,8 +56,8 @@ export function useDashboardSummary() {
   return useSWR<DashboardSummary>("/v1/dashboard/summary", fetchWithAccessToken);
 }
 
-export function useLogs(limit = 20) {
-  return useSWR<LogsResult>(`/v1/logs?limit=${limit}`, fetchWithAccessToken);
+export function useLogs(limit = 10, offset = 0) {
+  return useSWR<LogsResult>(`/v1/logs?limit=${limit}&offset=${offset}`, fetchWithAccessToken);
 }
 
 export function useBalance() {
@@ -97,9 +97,12 @@ export async function createBillingCheckout(input: {
   return postWithAccessToken<BillingCheckoutResult>("/v1/billing/checkout", body);
 }
 
-export function useDriveNodes(parentID?: string | null) {
-  const query = parentID != null ? `?parent_id=${encodeURIComponent(parentID)}` : "";
-  return useSWR<DriveNodeListResult>(`/v1/drive/nodes${query}`, fetchWithAccessToken);
+export function useDriveNodes(parentID?: string | null, limit = 10, offset = 0) {
+  const params = new URLSearchParams();
+  if (parentID != null) params.set("parent_id", parentID);
+  params.set("limit", String(limit));
+  params.set("offset", String(offset));
+  return useSWR<DriveNodeListResult>(`/v1/drive/nodes?${params}`, fetchWithAccessToken);
 }
 
 export async function createDriveFolder(input: { name: string; parent_id?: string | null }) {
@@ -170,8 +173,8 @@ export async function createDriveAccessLinks(nodeID: string) {
   return postWithAccessToken<DriveAccessLinksResult>(`/v1/drive/nodes/${nodeID}/access-links`, {});
 }
 
-export function usePageSites() {
-  return useSWR<PageSiteListResult>("/v1/pages", fetchWithAccessToken);
+export function usePageSites(limit = 10, offset = 0) {
+  return useSWR<PageSiteListResult>(`/v1/pages?limit=${limit}&offset=${offset}`, fetchWithAccessToken);
 }
 
 export function usePageSite(id?: string) {

@@ -95,8 +95,8 @@ func normalizeMusicSchema(schema map[string]any) {
 	if params, ok := schema["model_params"].(map[string]any); ok {
 		target = params
 	}
-	if _, exists := target[elevenLabsKeyMusicLengthMs]; exists {
-		delete(target, elevenLabsKeyMusicLengthMs)
+	if _, exists := target["music_length_ms"]; exists {
+		delete(target, "music_length_ms")
 		target["duration"] = map[string]any{"type": "int", "description": "Duration in seconds"}
 	}
 }

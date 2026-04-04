@@ -136,7 +136,7 @@ func feedbackHint(requestID string) string {
 
 // generateTraceID creates a unique trace ID for this CLI invocation.
 func generateTraceID() string {
-	b := make([]byte, 8)
+	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return "trc_" + hex.EncodeToString(b)
 }

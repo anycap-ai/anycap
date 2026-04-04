@@ -443,7 +443,7 @@ func TestService_LogsMergesTimeline(t *testing.T) {
 		},
 	})
 
-	result, err := service.Logs(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, 20)
+	result, err := service.Logs(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, 20, 0)
 	if err != nil {
 		t.Fatalf("Logs() error = %v", err)
 	}
@@ -486,7 +486,7 @@ func TestService_LogsUsesLedgerAmountForMatchedCapabilityCall(t *testing.T) {
 		},
 	})
 
-	result, err := service.Logs(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, 20)
+	result, err := service.Logs(context.Background(), &model.Principal{UserID: "2000000001", AuthType: "api_key"}, 20, 0)
 	if err != nil {
 		t.Fatalf("Logs() error = %v", err)
 	}

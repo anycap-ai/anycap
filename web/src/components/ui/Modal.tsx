@@ -10,12 +10,14 @@ export function Modal({
   onOpen,
   title,
   children,
+  panelClassName,
 }: {
   open: boolean;
   onClose: () => void;
   onOpen?: () => void;
   title: string;
   children: React.ReactNode;
+  panelClassName?: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [animate, setAnimate] = useState(false);
@@ -48,7 +50,7 @@ export function Modal({
       }}
     >
       <div
-        className={`w-full max-w-[420px] mx-4 max-h-[85vh] overflow-y-auto bg-white border border-[#d8dcd0] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-[250ms] ease-out ${
+        className={`w-full max-w-[420px] mx-4 max-h-[85vh] overflow-y-auto ${panelClassName || "bg-white"} border border-[#d8dcd0] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-[250ms] ease-out ${
           animate
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-3"
