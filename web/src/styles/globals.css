@@ -5,12 +5,20 @@ body {
   overscroll-behavior-y: none;
 }
 
-@layer base {
-  button,
-  a,
-  [role="button"] {
-    cursor: pointer;
-  }
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+select,
+label[for],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="reset"],
+summary {
+  cursor: pointer;
 }
 
 @theme {

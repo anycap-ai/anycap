@@ -77,6 +77,13 @@ export async function middleware(req: NextRequest) {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
+
+    if (req.cookies.has("__session")) {
+      return applyAuthResponse(
+        NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin)),
+        authResponse,
+      );
+    }
   }
 
   if (!locale) {
