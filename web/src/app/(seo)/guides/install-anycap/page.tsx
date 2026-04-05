@@ -300,7 +300,7 @@ export default function InstallAnycapPage() {
                     # Generate an image
                   </p>
                   <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                    anycap image generate --model seedream_5 --prompt &quot;a sunset over mountains&quot;
+                    anycap image generate --model seedream-5 --prompt &quot;a sunset over mountains&quot;
                   </p>
                 </div>
               </section>

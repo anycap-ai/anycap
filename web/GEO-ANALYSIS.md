@@ -3,6 +3,19 @@
 Audit date: 2026-04-03
 Scope: live site (`https://anycap.ai`) plus local Next.js app in `web/`
 
+## Implementation Update (local code): 2026-04-05
+
+Since the original audit, the local Next.js app has already implemented several of the highest-value GEO content changes:
+
+- `/models` was upgraded from a light index into a comparison-style hub with a dated answer-first summary, model comparison tables, FAQ content, FAQ schema, and a visual guide.
+- `/models/*` detail pages now expose visible “Last updated” labels more consistently, and the weaker pages such as `/models/nano-banana-pro` and `/models/veo-3-1` were brought closer to the rest of the model template with comparison blocks and FAQ schema.
+- `/capabilities/image-generation`, `/capabilities/video-generation`, and `/capabilities/music-generation` now include visible freshness cues, answer-first blocks, and stronger model-selection guidance.
+- Several stale CLI examples were normalized to current model IDs and flags, reducing trust friction between page copy and the actual product surface.
+
+Implication:
+
+- The “visible freshness” and “comparison-style answer blocks” gaps are materially smaller in local code than they were at audit time.
+- The biggest remaining GEO gaps are now more concentrated in homepage/`llms.txt` extraction quality, off-site entity corroboration, and source-backed evidence rather than in the model/capability page templates themselves.
 ## 1. GEO Readiness Score: 72/100
 
 This site is already ahead of most early-stage GEO implementations on technical accessibility:
@@ -144,12 +157,12 @@ Suggested facts:
 - official repo,
 - last updated date.
 
-2. Add visible author/editor and exact update dates across commercial SEO pages, not just schema on a few `/for/*` pages.
+2. Add visible author/editor and exact update dates across remaining commercial SEO pages that still do not surface them clearly.
 Best next targets:
 - `/about`
 - `/pricing`
-- `/capabilities/*`
-- `/models/*`
+- homepage
+- `/llms.txt`
 
 3. Replace unsupported social-proof phrasing with verifiable evidence.
 Example: the line “Agents like Claude Code, Codex, Cursor, and Manus use AnyCap and say it works” in [landing.ts](/Users/tyluo/go/src/engineering/anycap/web/src/content/landing.ts) should either link to proof or be rewritten into a neutral product statement.
@@ -161,7 +174,7 @@ Add more `sameAs` destinations once real profiles exist:
 - X/GitHub Discussions if maintained
 - Product Hunt or docs hub if authoritative
 
-5. Create source-backed comparison or benchmark blocks on pricing and capability pages.
+5. Create source-backed comparison or benchmark blocks on pricing and remaining commercial pages.
 AI systems cite pages more readily when they contain:
 - exact model/provider coverage,
 - precise operational constraints,
@@ -235,6 +248,8 @@ Why:
 - Sitemap generation is present in [sitemap.ts](/Users/tyluo/go/src/engineering/anycap/web/src/app/sitemap.ts).
 - Organization schema currently points only to GitHub in [layout.tsx](/Users/tyluo/go/src/engineering/anycap/web/src/app/layout.tsx).
 - `TechArticle` schema uses organization authorship in [schema.ts](/Users/tyluo/go/src/engineering/anycap/web/src/lib/schema.ts), which is acceptable, but named authors would be stronger if available.
+- Local schema helpers now support `datePublished`, `dateModified`, and reusable FAQ JSON-LD in [schema.ts](/Users/tyluo/go/src/engineering/anycap/web/src/lib/schema.ts).
+- Local model hub and capability pages now include stronger answer-first blocks and visible update dates in [page.tsx](/Users/tyluo/go/src/engineering/anycap/web/src/app/(seo)/models/page.tsx), [page.tsx](/Users/tyluo/go/src/engineering/anycap/web/src/app/(seo)/capabilities/image-generation/page.tsx), [page.tsx](/Users/tyluo/go/src/engineering/anycap/web/src/app/(seo)/capabilities/video-generation/page.tsx), and [page.tsx](/Users/tyluo/go/src/engineering/anycap/web/src/app/(seo)/capabilities/music-generation/page.tsx).
 
 ## 12. Overall Verdict
 
@@ -249,8 +264,8 @@ The next gains will not come from more crawl plumbing. They will come from:
 
 If you want, the best next implementation sprint is:
 
-1. tighten `landing.ts` into a more citeable fact sheet,
-2. add reusable author/date components across SEO pages,
+1. tighten `landing.ts` and `/llms.txt` into a more citeable fact sheet,
+2. add reusable author/date components across the remaining non-updated commercial pages,
 3. expand schema and organization `sameAs`,
 4. add a higher-signal `/about` facts block,
 5. create one or two source-backed benchmark/comparison pages.

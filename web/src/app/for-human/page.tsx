@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Header, humanNavLinks } from "@/components/layout/Header";
 import { AuthNav } from "@/components/layout/AuthNav";
@@ -23,11 +22,7 @@ export default function ForHumanPage() {
       <Header
         logoHref="/for-human"
         links={humanNavLinks}
-        authSlot={
-          <Suspense fallback={null}>
-            <AuthNav />
-          </Suspense>
-        }
+        authSlot={<AuthNav />}
       />
 
       <section

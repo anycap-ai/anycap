@@ -68,6 +68,6 @@ cf-deploy:
 	fi
 	@echo "Building and deploying to $(ENV) (branch: $(BRANCH))..."
 	@cp $(ENV_FILE) .env.production.local
-	@pnpm build && pnpm exec next-on-pages; rc=$$?; rm -f .env.production.local; exit $$rc
+	@pnpm run build:cf; rc=$$?; rm -f .env.production.local; exit $$rc
 	pnpm exec wrangler pages deploy .vercel/output/static --branch $(BRANCH)
 	@echo "Deployed to $(ENV)!"

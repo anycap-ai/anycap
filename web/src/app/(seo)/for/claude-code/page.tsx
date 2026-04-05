@@ -15,6 +15,8 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
   title: "Claude Code tools and capabilities — Add image, video, and vision with AnyCap",
@@ -46,9 +48,9 @@ const integrationGuideJsonLd = {
       "can claude code generate images",
       "claude code plugins",
     ],
+    datePublished: "2026-04-03",
+    dateModified: lastUpdatedIso,
   }),
-  datePublished: "2026-04-03",
-  dateModified: "2026-04-03",
 };
 
 const faqItems = [
@@ -222,6 +224,9 @@ export default function ForClaudeCodePage() {
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               For Claude Code
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="max-w-[960px] leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

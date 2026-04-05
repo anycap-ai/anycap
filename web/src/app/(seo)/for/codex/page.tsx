@@ -15,6 +15,8 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
   title: "Codex tools and capabilities — Add image, video, and vision with AnyCap",
@@ -45,10 +47,12 @@ const integrationGuideJsonLd = {
       "codex capabilities",
       "codex image generation",
       "codex cli tools",
+      "codex seedream 5 vs nano banana 2",
+      "codex veo 3.1 vs kling 3.0",
     ],
+    datePublished: "2026-04-03",
+    dateModified: lastUpdatedIso,
   }),
-  datePublished: "2026-04-03",
-  dateModified: "2026-04-03",
 };
 
 const faqItems = [
@@ -76,6 +80,16 @@ const faqItems = [
     question: "Does AnyCap work inside the Codex sandbox?",
     answer:
       "Yes. The AnyCap CLI is a single binary with no external dependencies. It runs inside the Codex sandbox, sends API requests to the AnyCap server, and returns file paths or URLs that Codex can use in subsequent terminal steps.",
+  },
+  {
+    question: "Which image model fits Codex best: Seedream 5, Nano Banana 2, or Nano Banana Pro?",
+    answer:
+      "For Codex, Seedream 5 is the stronger model when the task needs a polished first-pass result, Nano Banana 2 is better for faster iteration and batch-style generation, and Nano Banana Pro is the better fit when Codex needs targeted edits to an existing image.",
+  },
+  {
+    question: "Which video model fits Codex best: Veo 3.1, Kling 3.0, or Seedance 1.5 Pro?",
+    answer:
+      "For Codex, Veo 3.1 is the premium default, Kling 3.0 is a stronger fit for more cinematic motion, and Seedance 1.5 Pro is a steadier choice for repeatable image-to-video production workflows.",
   },
 ];
 
@@ -183,6 +197,30 @@ const capabilityCards = [
   },
 ];
 
+const modelCards = [
+  {
+    eyebrow: "Image model",
+    title: "Seedream 5",
+    href: "/models/seedream-5",
+    summary: "Best first-pass image model when Codex needs a polished output from a prompt inside the sandbox.",
+    comparison: "Compare with Nano Banana 2 when the task is speed vs polish.",
+  },
+  {
+    eyebrow: "Image model",
+    title: "Nano Banana 2",
+    href: "/models/nano-banana-2",
+    summary: "Best for fast iteration when Codex needs more variants, more drafts, or more throughput from image generation.",
+    comparison: "Compare with Seedream 5 and Nano Banana Pro for workflow tradeoffs.",
+  },
+  {
+    eyebrow: "Video model",
+    title: "Veo 3.1",
+    href: "/models/veo-3-1",
+    summary: "Best premium video model for Codex when the workflow needs a cleaner cinematic first pass.",
+    comparison: "Compare with Kling 3.0 and Seedance 1.5 Pro for motion style and production fit.",
+  },
+];
+
 const siblingAgents = [
   { label: "Claude Code", href: "/for/claude-code" },
   { label: "Cursor", href: "/for/cursor" },
@@ -222,6 +260,9 @@ export default function ForCodexPage() {
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               For Codex
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="max-w-[960px] leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -478,6 +519,50 @@ export default function ForCodexPage() {
                     <p className="text-sm leading-6 text-[#4d5145]">{card.summary}</p>
                     <p className="mt-4 text-[12px] text-[#6b7d3a]" style={mono}>
                       {card.command}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-4 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Then pick the model that matches the terminal job
+              </h2>
+              <p className="max-w-[820px] text-sm leading-6 text-[#4d5145]">
+                Codex tasks often turn into model-comparison questions once the capability is in
+                place. The common image decision is{" "}
+                <Link href="/models/seedream-5" className="underline decoration-[#d4dbb8] underline-offset-2 hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]">Seedream 5</Link>{" "}
+                vs{" "}
+                <Link href="/models/nano-banana-2" className="underline decoration-[#d4dbb8] underline-offset-2 hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]">Nano Banana 2</Link>,
+                while video decisions usually become{" "}
+                <Link href="/models/veo-3-1" className="underline decoration-[#d4dbb8] underline-offset-2 hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]">Veo 3.1</Link>{" "}
+                vs{" "}
+                <Link href="/models/kling-3-0" className="underline decoration-[#d4dbb8] underline-offset-2 hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]">Kling 3.0</Link>.
+                These model pages help Codex choose before it generates anything.
+              </p>
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {modelCards.map((card) => (
+                  <Link
+                    key={card.href}
+                    href={card.href}
+                    className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-6 transition-colors hover:border-[#6b7d3a]"
+                  >
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {card.eyebrow}
+                    </p>
+                    <h3 className="mb-3 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                      {card.title}
+                    </h3>
+                    <p className="text-sm leading-6 text-[#4d5145]">{card.summary}</p>
+                    <p className="mt-4 text-[12px] leading-5 text-[#6b7d3a]" style={mono}>
+                      {card.comparison}
                     </p>
                   </Link>
                 ))}

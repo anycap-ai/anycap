@@ -5,12 +5,14 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { VideoGenDemo } from "@/components/landing/VideoGenDemo";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
   title: "Video Generation API for AI agents - Text-to-video and image-to-video",
@@ -31,16 +33,19 @@ export const metadata: Metadata = {
 const models = [
   {
     name: "Veo 3.1",
+    href: "/models/veo-3-1",
     modes: "text-to-video, image-to-video",
     bestFor: "High-end cinematic output and premium video generation workflows",
   },
   {
     name: "Kling 3.0",
+    href: "/models/kling-3-0",
     modes: "text-to-video, image-to-video",
     bestFor: "Realistic motion and cinematic scene generation",
   },
   {
     name: "Seedance 1.5 Pro",
+    href: "/models/seedance-1-5-pro",
     modes: "text-to-video, image-to-video",
     bestFor: "Reliable image-to-video output and production-friendly motion quality",
   },
@@ -99,7 +104,10 @@ const capabilityGuideJsonLd = createTechArticleJsonLd({
     "image to video",
     "veo 3.1",
   ],
+  dateModified: lastUpdatedIso,
 });
+
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 export default function VideoGenerationPage() {
   return (
@@ -115,11 +123,18 @@ export default function VideoGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               Capabilities
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -134,6 +149,17 @@ export default function VideoGenerationPage() {
               stitching together separate video generation APIs. The result is a cleaner video
               generation layer for Claude Code, Cursor, Codex, and similar agent products.
             </p>
+            <div className="mt-8 max-w-[860px] border border-[#d4dbb8] bg-[#f9faf5]/80 p-6">
+              <p className="mb-3 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                Answer-first summary
+              </p>
+              <p className="text-sm leading-6 text-[#4d5145]">
+                Use Veo 3.1 when the first-pass clip needs to look more premium from a text brief,
+                Kling 3.0 when the workflow leans on cinematic motion or more exploratory
+                image-to-video work, and Seedance 1.5 Pro when the team wants a steadier
+                production-friendly default.
+              </p>
+            </div>
           </FadeIn>
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
@@ -141,6 +167,56 @@ export default function VideoGenerationPage() {
 
           <FadeIn className="mt-10">
             <VideoGenDemo />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                How to choose among video models
+              </h2>
+              <div className="grid max-w-[1040px] gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Premium first pass
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Veo 3.1
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the text brief needs to become a more polished teaser or concept clip
+                    on the first generation.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Cinematic motion
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Kling 3.0
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the workflow wants stronger motion style or more flexible
+                    image-to-video iteration.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Repeatable production
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Seedance 1.5 Pro
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the team values steadier image-to-video output and a more repeatable
+                    production workflow.
+                  </p>
+                </div>
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">
@@ -180,7 +256,9 @@ export default function VideoGenerationPage() {
                     {models.map((model) => (
                       <tr key={model.name} className="border-b border-[#d4dbb8]/50 last:border-b-0">
                         <td className="px-5 py-4 pr-6 text-sm font-medium text-[#1c1f17]">
-                          {model.name}
+                          <Link href={model.href} className="hover:text-[#6b7d3a] transition-colors">
+                            {model.name}
+                          </Link>
                         </td>
                         <td className="px-5 py-4 pr-6 text-sm text-[#4d5145]">{model.modes}</td>
                         <td className="px-5 py-4 text-sm text-[#4d5145]">{model.bestFor}</td>

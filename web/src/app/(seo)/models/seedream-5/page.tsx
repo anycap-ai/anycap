@@ -4,12 +4,14 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
   title: "Seedream 5 for AI agents — Image generation through AnyCap",
@@ -61,7 +63,7 @@ const faqItems = [
   {
     question: "How do agents call Seedream 5 through AnyCap?",
     answer:
-      "Agents can call it with the AnyCap CLI using anycap image generate --model seedream_5 and a text prompt.",
+      "Agents can call it with the AnyCap CLI using anycap image generate --model seedream-5 and a text prompt.",
   },
   {
     question: "Should I use Seedream 5 or Nano Banana Pro?",
@@ -77,7 +79,10 @@ const modelGuideJsonLd = createTechArticleJsonLd({
   path: "/models/seedream-5",
   about: ["Seedream 5", "Image generation", "AnyCap", "AI agents"],
   keywords: ["seedream 5", "image generation", "anycap", "ai agent model guide"],
+  dateModified: lastUpdatedIso,
 });
+
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 export default function Seedream5Page() {
   return (
@@ -93,11 +98,18 @@ export default function Seedream5Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(modelGuideJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               Model
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -156,7 +168,7 @@ export default function Seedream5Page() {
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
                     <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                      anycap image generate --model seedream_5 --prompt &quot;a product hero shot on a neutral background&quot;
+                      anycap image generate --model seedream-5 --prompt &quot;a product hero shot on a neutral background&quot;
                     </p>
                   </div>
                 </div>

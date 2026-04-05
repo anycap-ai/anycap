@@ -154,7 +154,7 @@ export default function AddToolsToClaudeCodePage() {
                 <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Generate your first image</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap image generate --model seedream_5 --prompt &quot;a minimalist product mockup&quot;</p>
+                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap image generate --model seedream-5 --prompt &quot;a minimalist product mockup&quot;</p>
               </div>
             </FadeIn>
 

@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { MusicGenDemo } from "@/components/landing/MusicGenDemo";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
+
+const models = [
+  {
+    name: "ElevenLabs Music",
+    href: "/models/elevenlabs-music",
+    modelId: "elevanlabs-music",
+    modes: "text-to-music",
+    bestFor: "Prompt-based soundtrack drafts and background music inside the same agent runtime",
+  },
+] as const;
 
 export const metadata: Metadata = {
   title: "Music Generation API for AI agents - Text-to-music through one CLI",
@@ -30,16 +43,13 @@ export const metadata: Metadata = {
 const usageExamples = [
   {
     title: "Prompt-based music generation",
-    code: 'anycap music generate --prompt "lofi night drive" --model suno-v5 -o track.mp3',
+    code:
+      'anycap music generate --prompt "lofi night drive with soft synths and a steady pulse" --model elevanlabs-music -o track.mp3',
   },
   {
     title: "Instrumental generation",
     code:
-      'anycap music generate --prompt "minimal ambient soundtrack" --model suno-v5 --instrumental -o ambient.mp3',
-  },
-  {
-    title: "Tag-driven generation",
-    code: 'anycap music generate --tags "electronic,upbeat,clean" --model suno-v5 -o loop.mp3',
+      'anycap music generate --prompt "minimal ambient soundtrack with no vocals" --model elevanlabs-music -o ambient.mp3',
   },
   {
     title: "Discover music models",
@@ -89,7 +99,10 @@ const capabilityGuideJsonLd = createTechArticleJsonLd({
     "music generation for ai agents",
     "ai music api",
   ],
+  dateModified: lastUpdatedIso,
 });
+
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 export default function MusicGenerationPage() {
   return (
@@ -105,12 +118,19 @@ export default function MusicGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               Capabilities
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -125,10 +145,69 @@ export default function MusicGenerationPage() {
               music generation easier to plug into the same agent workflow that already handles
               image generation, video generation, and media analysis.
             </p>
+            <div className="mt-8 max-w-[860px] border border-[#d4dbb8] bg-[#f9faf5]/80 p-6">
+              <p className="mb-3 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                Answer-first summary
+              </p>
+              <p className="text-sm leading-6 text-[#4d5145]">
+                AnyCap currently exposes prompt-based music generation through ElevenLabs Music.
+                Use it when the same agent that already creates visuals or clips also needs a fast
+                soundtrack draft without switching to a separate audio toolchain.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn className="mt-8">
+            <EarlyAccessBanner />
           </FadeIn>
 
           <FadeIn className="mt-10">
             <MusicGenDemo />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Supported model
+              </h2>
+              <div className="overflow-x-auto rounded-xl border border-[#d4dbb8]">
+                <table className="w-full text-left">
+                  <thead className="bg-[#f9faf5]">
+                    <tr className="border-b border-[#d4dbb8]">
+                      {["Model", "Model ID", "Modes", "Best fit"].map((header) => (
+                        <th
+                          key={header}
+                          className="px-5 py-3 text-[11px] tracking-[0.5px] text-[#5a5e52]"
+                          style={mono}
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {models.map((model) => (
+                      <tr key={model.modelId} className="border-b border-[#d4dbb8]/50 last:border-b-0">
+                        <td className="px-5 py-4 text-sm font-medium text-[#1c1f17]">
+                          <Link href={model.href} className="transition-colors hover:text-[#6b7d3a]">
+                            {model.name}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4d5145]" style={mono}>
+                          {model.modelId}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4d5145]">{model.modes}</td>
+                        <td className="px-5 py-4 text-sm text-[#4d5145]">{model.bestFor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">
@@ -185,7 +264,7 @@ export default function MusicGenerationPage() {
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
                 Related pages
               </h2>
-              <div className="grid max-w-[1100px] gap-4 sm:grid-cols-3">
+              <div className="grid max-w-[1100px] gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
                   href="/pricing"
                   className="rounded-xl border border-[#d4dbb8] p-5 transition-colors hover:border-[#6b7d3a]"
@@ -198,6 +277,20 @@ export default function MusicGenerationPage() {
                   </h3>
                   <p className="text-sm leading-6 text-[#4d5145]">
                     See credit usage for music generation alongside the rest of the capability stack.
+                  </p>
+                </Link>
+                <Link
+                  href="/models/elevenlabs-music"
+                  className="rounded-xl border border-[#d4dbb8] p-5 transition-colors hover:border-[#6b7d3a]"
+                >
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Model
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    ElevenLabs Music
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Read the model guide for prompt-based soundtrack generation through AnyCap.
                   </p>
                 </Link>
                 <Link
