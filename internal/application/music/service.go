@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/application/execflow"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/externalid"
@@ -89,139 +90,100 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		return model.GenerateMusicResult{}, err
 	}
 
-	startedAt := time.Now()
-	deductKey := req.RequestID
-	if s.billing != nil {
-		intent, billingErr := s.billing.CreateOrGetIntent(ctx, model.CreateBillingIntentInput{
-			UserID:     req.UserID,
-			APIKeyID:   req.APIKeyID,
-			Provider:   model.BillingProviderNexusHub,
-			Capability: "music.generate",
-			TraceID:    req.RequestID,
-		})
-		if billingErr != nil {
-			logger.WithError(billingErr).Error("create billing intent failed")
-			return model.GenerateMusicResult{}, billingErr
-		}
-		deductKey = intent.DeductSourceID
-	}
-	result, err := s.nexusHub.GenerateMusic(ctx, req, route)
+	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
+		UserID:     req.UserID,
+		APIKeyID:   req.APIKeyID,
+		Capability: "music.generate",
+		Provider:   model.BillingProviderNexusHub,
+		RequestID:  req.RequestID,
+		Model:      req.Model,
+		MinCredit:  1,
+	}, execflow.Hooks[model.GenerateMusicResult]{
+		Invoke: func(ctx context.Context) (model.GenerateMusicResult, error) {
+			result, err := s.nexusHub.GenerateMusic(ctx, req, route)
+			if err != nil {
+				logger.WithFields(logging.Fields{
+					"ability_key": route.AbilityKey,
+					"mode":        mode,
+				}).WithError(err).Error("music generation failed")
+			}
+			return result, err
+		},
+		OnProviderSuccess: func(result model.GenerateMusicResult) execflow.ProviderSuccessMeta {
+			return execflow.ProviderSuccessMeta{
+				ProviderTaskID: result.ID,
+				ProviderStatus: result.Status,
+				CreditCost:     result.CreditCost,
+			}
+		},
+		AfterSuccess: func(ctx context.Context, result *model.GenerateMusicResult) error {
+			if s.artifactPub == nil {
+				return nil
+			}
+			published, err := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
+				UserID:         req.UserID,
+				Capability:     "music.generate",
+				MediaType:      model.CapsArtifactMediaTypeMusic,
+				Provider:       "nexushub",
+				ProviderTaskID: result.ID,
+				Outputs:        result.Outputs,
+			})
+			if err != nil {
+				return err
+			}
+			result.Outputs = published.Outputs
+			return nil
+		},
+		BuildUsageRecords: func(result model.GenerateMusicResult, startedAt time.Time) *execflow.UsageRecords {
+			eventID := externalid.Generate(externalid.PrefixUsageEvent)
+			runID := externalid.Generate(externalid.PrefixProviderRun)
+			return &execflow.UsageRecords{
+				Event: &model.UsageEventRecord{
+					ID:            eventID,
+					UserID:        req.UserID,
+					APIKeyID:      req.APIKeyID,
+					ProductArea:   "capability",
+					Action:        "music.generate",
+					Provider:      "nexushub",
+					RequestID:     req.RequestID,
+					Status:        result.Status,
+					EstimatedCost: result.CreditCost,
+					FinalCost:     result.CreditCost,
+					OccurredAt:    startedAt.UTC(),
+				},
+				ProviderRun: &model.ProviderRunRecord{
+					ID:             runID,
+					Provider:       "nexushub",
+					ProviderTaskID: result.ID,
+					UsageEventID:   eventID,
+					AuthMode:       "platform_token",
+					AbilityKey:     route.AbilityKey,
+					ProviderStatus: result.Status,
+					ProviderUsage:  result.Usage,
+					ProviderCost:   result.CreditCost,
+					RawResult: map[string]any{
+						"model":   result.Model,
+						"outputs": result.Outputs,
+					},
+					SubmittedAt: startedAt.UTC(),
+				},
+			}
+		},
+		BuildCallLog: func(result model.GenerateMusicResult, startedAt time.Time) *model.CallLog {
+			return &model.CallLog{
+				RequestID:  req.RequestID,
+				UserID:     req.UserID,
+				APIKeyID:   req.APIKeyID,
+				Capability: "music.generate",
+				Model:      req.Model,
+				Status:     result.Status,
+				LatencyMS:  time.Since(startedAt).Milliseconds(),
+				CreditCost: result.CreditCost,
+			}
+		},
+	})
 	if err != nil {
-		if s.billing != nil {
-			_ = s.billing.MarkUncertain(ctx, model.BillingProviderNexusHub, req.RequestID, err.Error())
-		}
-		logger.WithFields(logging.Fields{
-			"ability_key": route.AbilityKey,
-			"mode":        mode,
-		}).WithError(err).Error("music generation failed")
 		return model.GenerateMusicResult{}, err
-	}
-	if s.artifactPub != nil {
-		published, publishErr := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
-			UserID:         req.UserID,
-			Capability:     "music.generate",
-			MediaType:      model.CapsArtifactMediaTypeMusic,
-			Provider:       "nexushub",
-			ProviderTaskID: result.ID,
-			Outputs:        result.Outputs,
-		})
-		if publishErr != nil {
-			return model.GenerateMusicResult{}, publishErr
-		}
-		result.Outputs = published.Outputs
-	}
-
-	cost := result.CreditCost
-	if s.billing != nil {
-		if billingErr := s.billing.RecordProviderSuccess(ctx, model.RecordBillingProviderSuccessInput{
-			Provider:       model.BillingProviderNexusHub,
-			TraceID:        req.RequestID,
-			ProviderTaskID: result.ID,
-			ProviderStatus: result.Status,
-			CreditCost:     cost,
-		}); billingErr != nil {
-			logger.WithFields(logging.Fields{
-				"provider_task": result.ID,
-				"credit_cost":   cost,
-			}).WithError(billingErr).Error("record billing provider success failed")
-			return model.GenerateMusicResult{}, model.ErrBillingUncertain
-		}
-	}
-	if s.usage != nil {
-		eventID := externalid.Generate(externalid.PrefixUsageEvent)
-		runID := externalid.Generate(externalid.PrefixProviderRun)
-		if usageErr := s.usage.InsertUsageEvent(ctx, model.UsageEventRecord{
-			ID:            eventID,
-			UserID:        req.UserID,
-			APIKeyID:      req.APIKeyID,
-			ProductArea:   "capability",
-			Action:        "music.generate",
-			Provider:      "nexushub",
-			RequestID:     req.RequestID,
-			Status:        result.Status,
-			EstimatedCost: cost,
-			FinalCost:     cost,
-			OccurredAt:    startedAt.UTC(),
-		}); usageErr != nil {
-			logger.WithFields(logging.Fields{
-				"provider":    "nexushub",
-				"credit_cost": cost,
-			}).WithError(usageErr).Warn("usage event persistence failed")
-		}
-		if runErr := s.usage.InsertProviderRun(ctx, model.ProviderRunRecord{
-			ID:             runID,
-			Provider:       "nexushub",
-			ProviderTaskID: result.ID,
-			UsageEventID:   eventID,
-			AuthMode:       "platform_token",
-			AbilityKey:     route.AbilityKey,
-			ProviderStatus: result.Status,
-			ProviderUsage:  result.Usage,
-			ProviderCost:   cost,
-			RawResult: map[string]any{
-				"model":   result.Model,
-				"outputs": result.Outputs,
-			},
-			SubmittedAt: startedAt.UTC(),
-		}); runErr != nil {
-			logger.WithFields(logging.Fields{
-				"provider":       "nexushub",
-				"provider_task":  result.ID,
-				"ability_key":    route.AbilityKey,
-				"provider_state": result.Status,
-			}).WithError(runErr).Warn("provider run persistence failed")
-		}
-	}
-	if err := s.credit.Deduct(ctx, req.UserID, cost, "music.generate", deductKey); err != nil {
-		if s.billing != nil {
-			_ = s.billing.MarkUncertain(ctx, model.BillingProviderNexusHub, req.RequestID, err.Error())
-		}
-		logger.WithField("credit_cost", cost).WithError(err).Error("music credit deduction failed")
-		return model.GenerateMusicResult{}, model.ErrBillingUncertain
-	}
-	if s.billing != nil {
-		if billingErr := s.billing.MarkDeducted(ctx, model.BillingProviderNexusHub, req.RequestID); billingErr != nil {
-			logger.WithError(billingErr).Error("finalize billing intent failed")
-			return model.GenerateMusicResult{}, model.ErrBillingUncertain
-		}
-	}
-
-	if s.callLogs != nil {
-		if callLogErr := s.callLogs.Insert(ctx, model.CallLog{
-			RequestID:  req.RequestID,
-			UserID:     req.UserID,
-			APIKeyID:   req.APIKeyID,
-			Capability: "music.generate",
-			Model:      req.Model,
-			Status:     result.Status,
-			LatencyMS:  time.Since(startedAt).Milliseconds(),
-			CreditCost: cost,
-		}); callLogErr != nil {
-			logger.WithFields(logging.Fields{
-				"credit_cost": cost,
-				"latency_ms":  time.Since(startedAt).Milliseconds(),
-			}).WithError(callLogErr).Warn("call log persistence failed")
-		}
 	}
 
 	return result, nil
