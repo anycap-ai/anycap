@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
@@ -149,11 +150,14 @@ const preHydrationCleanupScript = `
   })();
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headerStore = await headers();
+  const showGlobalUi = headerStore.get("x-anycap-global-ui") === "1";
+
   return (
     <html lang={siteConfig.defaultLocale} suppressHydrationWarning>
       <head>
@@ -177,9 +181,9 @@ export default function RootLayout({
         style={{ fontFamily: "sans-serif" }}
       >
         <GoogleAnalytics />
-        <LazyGlobalTipToast />
+        {showGlobalUi ? <LazyGlobalTipToast /> : null}
         {children}
-        <GrainOverlay />
+        {showGlobalUi ? <GrainOverlay /> : null}
       </body>
     </html>
   );

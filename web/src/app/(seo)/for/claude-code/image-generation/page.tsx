@@ -217,7 +217,7 @@ export default function ClaudeCodeImageGenerationPage() {
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
                     <p className="break-all text-[13px] text-[#d4e0a4]" style={mono}>
-                      anycap image generate --model seedream_5 --prompt &quot;launch announcement visual on off-white background&quot;
+                      anycap image generate --model seedream-5 --prompt &quot;launch announcement visual on off-white background&quot;
                     </p>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function ClaudeCodeImageGenerationPage() {
                   </p>
                   <div className="bg-[#1c1f17] px-5 py-4">
                     <p className="break-all text-[13px] text-[#d4e0a4]" style={mono}>
-                      anycap image generate --model nano_banana_pro --image ./mockup.png --prompt &quot;add olive highlight accents and softer shadows&quot;
+                      anycap image generate --model nano-banana-pro --mode image-to-image --prompt &quot;add olive highlight accents and softer shadows&quot; --param reference_image_urls=&#39;[&quot;./mockup.png&quot;]&#39;
                     </p>
                   </div>
                 </div>

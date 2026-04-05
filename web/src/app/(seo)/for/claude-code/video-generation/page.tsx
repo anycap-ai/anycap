@@ -169,7 +169,7 @@ export default function ClaudeCodeVideoGenerationPage() {
               </h2>
               <div className="max-w-[820px] bg-[#1c1f17] px-5 py-4">
                 <p className="break-all text-[13px] text-[#d4e0a4]" style={mono}>
-                  anycap video generate --model veo3.1 --prompt &quot;slow camera move over a new product launch scene with soft studio lighting&quot;
+                  anycap video generate --model veo-3.1 --prompt &quot;slow camera move over a new product launch scene with soft studio lighting&quot;
                 </p>
               </div>
               <p className="mt-4 max-w-[760px] text-sm leading-6 text-[#4d5145]">

@@ -1,5 +1,3 @@
-"use client";
-
 import Script from "next/script";
 
 const GA_MEASUREMENT_ID = "G-7Y48BMMHL6";

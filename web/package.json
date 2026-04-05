@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "check:edge-runtime": "node ./scripts/ensure-edge-runtime.mjs",
     "build": "pnpm run check:edge-runtime && next build",
+    "build:cf": "node ./scripts/pages-build.mjs",
     "start": "next start",
     "lint": "next lint"
   },

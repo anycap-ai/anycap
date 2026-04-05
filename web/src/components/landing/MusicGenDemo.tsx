@@ -16,7 +16,7 @@ const lines: DemoLine[] = [
   },
   {
     type: "tool",
-    content: `run("anycap music generate --prompt 'lofi chill beat, soft piano, warm vinyl texture, relaxed tempo' --model suno-v5 -o lofi-bg.mp3")`,
+    content: `run("anycap music generate --prompt 'lofi chill beat, soft piano, warm vinyl texture, relaxed tempo' --model elevanlabs-music -o lofi-bg.mp3")`,
     delay: 600,
   },
   {

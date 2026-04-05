@@ -5,12 +5,14 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { ImageGenDemo } from "@/components/landing/ImageGenDemo";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 5, 2026";
+const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
   title: "Image Generation API for AI agents - Text-to-image and image editing",
@@ -31,16 +33,19 @@ export const metadata: Metadata = {
 const models = [
   {
     name: "Seedream 5",
+    href: "/models/seedream-5",
     modes: "text-to-image, image-to-image",
     bestFor: "Polished first-pass image generation and visual refinement",
   },
   {
     name: "Nano Banana Pro",
+    href: "/models/nano-banana-pro",
     modes: "text-to-image, image-to-image",
     bestFor: "Higher-quality editing loops and stronger commercial output",
   },
   {
     name: "Nano Banana 2",
+    href: "/models/nano-banana-2",
     modes: "text-to-image, image-to-image",
     bestFor: "Fast iteration and scalable image generation workflows",
   },
@@ -99,7 +104,10 @@ const capabilityGuideJsonLd = createTechArticleJsonLd({
     "seedream 5",
     "nano banana pro",
   ],
+  dateModified: lastUpdatedIso,
 });
+
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 export default function ImageGenerationPage() {
   return (
@@ -115,11 +123,18 @@ export default function ImageGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               Capabilities
+            </p>
+            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
+              Last updated {lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -134,6 +149,17 @@ export default function ImageGenerationPage() {
               generation API for every model or provider. That makes it a practical image
               generation layer for Claude Code, Cursor, Codex, and similar agent products.
             </p>
+            <div className="mt-8 max-w-[860px] border border-[#d4dbb8] bg-[#f9faf5]/80 p-6">
+              <p className="mb-3 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                Answer-first summary
+              </p>
+              <p className="text-sm leading-6 text-[#4d5145]">
+                Use Seedream 5 when the agent needs a stronger first-pass image, Nano Banana Pro
+                when the workflow starts from an existing asset and needs targeted revisions, and
+                Nano Banana 2 when speed and throughput matter more than maximizing polish on the
+                first result.
+              </p>
+            </div>
           </FadeIn>
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
@@ -141,6 +167,56 @@ export default function ImageGenerationPage() {
 
           <FadeIn className="mt-10">
             <ImageGenDemo />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                How to choose among image models
+              </h2>
+              <div className="grid max-w-[1040px] gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    First-pass quality
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Seedream 5
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the workflow starts from a prompt and the first image needs to look
+                    closer to final.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Revision loops
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Nano Banana Pro
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the agent already has an image and needs prompt-based edits or more
+                    controlled visual revisions.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[#d4dbb8] p-5">
+                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                    Speed and scale
+                  </p>
+                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                    Nano Banana 2
+                  </h3>
+                  <p className="text-sm leading-6 text-[#4d5145]">
+                    Best when the agent needs many variants, quicker drafts, or a more scalable
+                    generation loop.
+                  </p>
+                </div>
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">
@@ -180,7 +256,9 @@ export default function ImageGenerationPage() {
                     {models.map((model) => (
                       <tr key={model.name} className="border-b border-[#d4dbb8]/50 last:border-b-0">
                         <td className="px-5 py-4 pr-6 text-sm font-medium text-[#1c1f17]">
-                          {model.name}
+                          <Link href={model.href} className="hover:text-[#6b7d3a] transition-colors">
+                            {model.name}
+                          </Link>
                         </td>
                         <td className="px-5 py-4 pr-6 text-sm text-[#4d5145]">{model.modes}</td>
                         <td className="px-5 py-4 text-sm text-[#4d5145]">{model.bestFor}</td>
