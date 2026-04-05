@@ -366,7 +366,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			webService:          buildWebService(cfg, creditClient, callLogs),
 			feedbackService:     feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeys,
-			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
+			identityTokens:      buildIdentityTokenAuthenticator(cfg, users, creditClient),
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
 			usageSyncWorker:     nil,
 			billingWorker:       nil,
@@ -568,7 +568,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			webService:          buildWebService(cfg, creditClient, callLogs),
 			feedbackService:     feedbackapp.NewService(feedbackstore.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
 			apiKeyService:       apiKeyService,
-			identityTokens:      buildIdentityTokenAuthenticator(cfg, users),
+			identityTokens:      buildIdentityTokenAuthenticator(cfg, users, creditClient),
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
 			usageSyncWorker:     usageSyncWorker,
 			billingWorker:       billingWorker,
@@ -1008,14 +1008,14 @@ func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService, identity
 	return middleware.Auth(apiKeys, identityTokens)
 }
 
-func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner) port.IdentityTokenAuthenticator {
+func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner, creditClient port.CreditClient) port.IdentityTokenAuthenticator {
 	if !cfg.Auth0Enabled || users == nil {
 		return nil
 	}
 	return auth.NewIdentityTokenAuthenticator(auth.NewJWTVerifier(auth.JWTVerifierConfig{
 		Issuer:   cfg.Auth0Issuer,
 		Audience: cfg.Auth0Audience,
-	}, nil), users, nil)
+	}, nil), users, creditClient, nil, cfg.Credit.SignupRewardDeadline)
 }
 
 func shouldBypassAuthForLocalTest(_ config.Config) bool {
