@@ -1,6 +1,6 @@
 ---
 name: anycap-cli
-description: "AnyCap CLI reference -- command syntax, flags, and usage for AnyCap, the capability runtime that equips AI agents with multimodal powers through a single CLI. Covers image generation, image editing, video generation, image understanding, video analysis, audio analysis, music composition, web search, web crawl, file download, static site hosting, and cloud file storage. Use when the agent needs to run anycap commands: generate/edit images, generate video, analyze images/video/audio, compose music, search the web, crawl pages, download files, deploy sites, or manage drive storage. Also use for AnyCap authentication (login, API key, credentials), troubleshooting, or submitting feedback via 'anycap feedback'. Trigger on mentions of AnyCap, anycap commands, multimodal capabilities, AI-generated media, web search, web crawl, page hosting, or drive storage."
+description: "AnyCap CLI -- create media humans can see and hear (generate/edit images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
   version: 0.1.0
   website: https://anycap.ai
@@ -12,7 +12,14 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 One CLI. Any capability.
 
-You can reason, plan, and decide -- but you cannot generate images, produce video, compose music, analyze visual and audio content, search the web, or read web pages on your own. AnyCap gives you all of these through a single command-line tool. One binary. One auth. Structured I/O.
+AnyCap lets you create media humans can see and hear, understand media humans share with you, access the web for information, and deliver results through shareable links and hosted pages. One CLI, one auth, structured JSON I/O.
+
+Use AnyCap when a task involves:
+
+- **Creating** visual or audio content for humans (images, video, music)
+- **Understanding** media humans share (analyze images, video, audio)
+- **Finding** information on the web (search, crawl pages)
+- **Delivering** results humans can access and share (Drive links, hosted pages)
 
 ## Install
 
@@ -167,12 +174,24 @@ Use `anycap feedback --type feature` to request prioritization of upcoming capab
 anycap download <url> [-o path]
 ```
 
-## Infrastructure
+## Delivering Results to Humans
 
-AnyCap provides infrastructure services for agents to host content and store files.
+AnyCap is the bridge between agent work and human experience. Use these patterns to make results tangible:
 
-**Page Hosting** -- deploy static sites to AnyCap's edge network.
-Read [references/page.md](references/page.md) when you need to deploy HTML files, static sites, or generated reports. Sites get a unique URL and support versioning, rollback, and badge opt-out.
+**Show a generated file.** Generation commands auto-download results locally. Reference the local path in your response so the human can open it directly.
+
+**Share via Drive.** When the human needs a link -- remote access, mobile viewing, sharing with others -- upload to Drive and create a share link.
+Read [references/drive.md](references/drive.md) for full Drive usage (folders, move, delete, path-based addressing).
+
+```bash
+anycap drive upload result.png --parent-path /deliverables
+anycap drive share --src-path /deliverables/result.png
+```
+
+Do NOT use Drive to get URLs for other AnyCap commands -- actions and generation commands accept `--file` directly.
+
+**Publish a page.** When results are rich content (HTML reports, dashboards, documentation), deploy as a hosted web page.
+Read [references/page.md](references/page.md) for full Page usage (versioning, rollback, password protection, SPA mode).
 
 ```bash
 # Quick deploy (writes anycap.toml for future deploys)
@@ -182,14 +201,16 @@ anycap page deploy ./dist --name "My Site" --publish
 anycap page deploy ./dist --publish
 ```
 
-**Drive Storage** -- share files with humans via cloud storage.
-Read [references/drive.md](references/drive.md) when you need to give the human a shareable link to view or download a file.
-Do NOT use drive to get URLs for other AnyCap commands -- actions and generation commands accept `--file` directly.
+The human gets a live URL they can open in any browser.
 
-```bash
-anycap drive upload result.pdf --parent-path /reports
-anycap drive share --src-path /reports/result.pdf
-```
+**Choose the right delivery method:**
+
+| Scenario | Method |
+|----------|--------|
+| Human is in the same terminal session | Local file path |
+| Human needs a download link | Drive upload + share |
+| Human needs to view rich content (HTML, report) | Page deploy |
+| Human needs to share with others | Drive share or Page (public) |
 
 ## Feedback
 
