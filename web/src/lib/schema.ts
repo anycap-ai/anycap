@@ -6,6 +6,13 @@ type ArticleSchemaInput = {
   path: string;
   about?: string[];
   keywords?: string[];
+  datePublished?: string;
+  dateModified?: string;
+};
+
+type FaqPageItem = {
+  question: string;
+  answer: string;
 };
 
 type SoftwareApplicationSchemaInput = {
@@ -38,6 +45,8 @@ export function createTechArticleJsonLd({
   path,
   about = [],
   keywords = [],
+  datePublished,
+  dateModified,
 }: ArticleSchemaInput) {
   return {
     "@context": "https://schema.org",
@@ -61,6 +70,23 @@ export function createTechArticleJsonLd({
           keywords: keywords.join(", "),
         }
       : {}),
+    ...(datePublished ? { datePublished } : {}),
+    ...(dateModified ? { dateModified } : {}),
+  };
+}
+
+export function createFaqPageJsonLd(items: readonly FaqPageItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
   };
 }
 

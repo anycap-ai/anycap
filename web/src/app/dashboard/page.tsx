@@ -2,8 +2,10 @@
 
 export const runtime = "edge";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useDashboardSummary } from "@/lib/api/hooks";
+import { getInstallPrompt, agents } from "@/lib/agents";
 import type { TimelineItem, Balance } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -86,6 +88,46 @@ function LastActivityCard({
 }
 
 
+function GetStartedCard() {
+  const [copied, setCopied] = useState(false);
+  const prompt = getInstallPrompt(agents[0]);
+
+  return (
+    <div className="mb-10">
+      <div className="border border-[#d8dcd0] bg-white rounded-2xl px-6 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[14px] font-medium text-[#7a7e71] mb-2">
+              Get started
+            </p>
+            <p className="text-[14px] text-[#1c1f17] leading-relaxed">
+              {prompt}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(prompt);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="shrink-0 mt-5 rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-2 text-[12px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235]"
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+        <div className="mt-3">
+          <Link
+            href="/dashboard/get-started"
+            className="text-[13px] font-medium text-[#6b7d3a] hover:text-[#4d5f28] transition-colors"
+          >
+            Pick your agent &rarr;
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ActivityRow({ item }: { item: TimelineItem }) {
   return (
     <tr className="border-b border-[#eceee7] hover:bg-[#fafbf8] transition-colors">
@@ -113,12 +155,15 @@ export default function DashboardPage() {
   const recentUsage = data?.recent_activity?.filter(
     (item) => item.type === "capability_call",
   );
+  const isNewUser = !!data && !data.usage_summary;
 
   return (
     <div>
       <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
         Overview
       </h1>
+
+      {isNewUser && <GetStartedCard />}
 
       {/* Stats cards */}
       {isLoading || !data ? (

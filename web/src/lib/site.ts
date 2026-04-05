@@ -174,10 +174,34 @@ export const publicRouteDefinitions = [
     priority: 0.65,
   },
   {
+    key: "models-nano-banana-2",
+    kind: "seo",
+    path: "/models/nano-banana-2",
+    priority: 0.65,
+  },
+  {
     key: "models-veo-3-1",
     kind: "seo",
     path: "/models/veo-3-1",
     priority: 0.65,
+  },
+  {
+    key: "models-kling-3-0",
+    kind: "seo",
+    path: "/models/kling-3-0",
+    priority: 0.65,
+  },
+  {
+    key: "models-seedance-1-5-pro",
+    kind: "seo",
+    path: "/models/seedance-1-5-pro",
+    priority: 0.65,
+  },
+  {
+    key: "models-elevenlabs-music",
+    kind: "seo",
+    path: "/models/elevenlabs-music",
+    priority: 0.62,
   },
   {
     key: "glossary-context-engineering",

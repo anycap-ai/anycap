@@ -73,7 +73,7 @@ const universalSteps = [
   },
   {
     title: "Use the first missing capability",
-    code: "anycap image generate --model seedream_5 --prompt \"launch visual on clean background\"",
+    code: "anycap image generate --model seedream-5 --prompt \"launch visual on clean background\"",
     note: "Start with image generation, video generation, or image understanding from the same CLI.",
   },
 ];

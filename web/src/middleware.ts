@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth/auth0";
-import { landingMarkdown } from "@/lib/landing-content";
 import {
   buildLocalizedPath,
   defaultLocale,
@@ -12,6 +11,8 @@ import {
 
 const protectedPaths = ["/dashboard"];
 const passthroughPrefixes = ["/auth", "/dashboard"];
+const globalUiPrefixes = ["/auth", "/dashboard"];
+const globalUiPaths = new Set(["/for-human"]);
 const legacyRouteRedirects = new Map<string, string>([
   ["/capabilities/image-read", "/capabilities/image-understanding"],
 ]);
@@ -69,16 +70,6 @@ export async function middleware(req: NextRequest) {
     redirectURL.pathname = buildLocalizedPath(locale ?? defaultLocale, legacyRedirectPath);
     return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
   }
-
-  if (pathname === "/") {
-    const accept = req.headers.get("accept") ?? "";
-    if (!accept.includes("text/html")) {
-      return new Response(landingMarkdown, {
-        headers: { "content-type": "text/plain; charset=utf-8" },
-      });
-    }
-  }
-
   if (!locale) {
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute) {
@@ -106,6 +97,13 @@ export async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set(localeHeaderName, locale ?? defaultLocale);
+  requestHeaders.set(
+    "x-anycap-global-ui",
+    globalUiPaths.has(pathname) ||
+      globalUiPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+      ? "1"
+      : "0"
+  );
 
   return applyAuthResponse(
     NextResponse.next({

@@ -4,10 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/zalando/go-keyring"
 )
+
+// enableKeyringForTest ensures keyringDisabled() returns false on Linux CI
+// (which lacks DISPLAY/WAYLAND_DISPLAY) so keyring-path tests can exercise
+// the mock keyring.
+func enableKeyringForTest(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "linux" {
+		t.Setenv("DISPLAY", ":0")
+	}
+}
 
 func TestMain(m *testing.M) {
 	keyring.MockInit()
@@ -34,6 +45,7 @@ func TestNilCredentialToken(t *testing.T) {
 
 func TestSaveAndLoadCredential_APIKey(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	cred := NewAPIKeyCredential("sk-test-123")
@@ -60,6 +72,7 @@ func TestSaveAndLoadCredential_APIKey(t *testing.T) {
 
 func TestDeleteCredential(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	_ = SaveCredential(NewAPIKeyCredential("sk-to-delete"))
@@ -75,6 +88,7 @@ func TestDeleteCredential(t *testing.T) {
 
 func TestLoadCredential_EnvOverridesKeyring(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	_ = SaveCredential(NewAPIKeyCredential("sk-keyring"))
@@ -94,6 +108,7 @@ func TestLoadCredential_EnvOverridesKeyring(t *testing.T) {
 
 func TestLoadCredential_AutoMigrateFileToKeyring(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	cred := NewAPIKeyCredential("sk-file-key")
@@ -120,6 +135,7 @@ func TestLoadCredential_AutoMigrateFileToKeyring(t *testing.T) {
 
 func TestSaveCredential_KeychainUnavailable_FallbackToFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 
 	keyring.MockInitWithError(fmt.Errorf("D-Bus session bus not available"))
 	t.Cleanup(func() { keyring.MockInit() })
@@ -151,6 +167,7 @@ func TestSaveCredential_KeychainUnavailable_FallbackToFile(t *testing.T) {
 
 func TestSaveAndLoadCredential_KeychainUnavailable_RoundTrip(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 
 	keyring.MockInitWithError(fmt.Errorf("D-Bus session bus not available"))
 	t.Cleanup(func() { keyring.MockInit() })
@@ -178,6 +195,7 @@ func TestSaveAndLoadCredential_KeychainUnavailable_RoundTrip(t *testing.T) {
 
 func TestDeleteCredential_NothingStored(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	enableKeyringForTest(t)
 	_ = keyring.Delete(resolvedKeyringService(), keyringAccount)
 
 	if err := DeleteCredential(); err != nil {
@@ -275,8 +293,32 @@ func TestKeyringDisabled_TruthyValues(t *testing.T) {
 	}
 	for _, val := range []string{"", "0", "false", "no"} {
 		t.Setenv("ANYCAP_NO_KEYRING", val)
+		enableKeyringForTest(t)
 		if keyringDisabled() {
 			t.Errorf("expected keyringDisabled()=false for %q", val)
 		}
+	}
+}
+
+func TestKeyringDisabled_LinuxHeadless(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Linux-only test")
+	}
+	t.Setenv("ANYCAP_NO_KEYRING", "")
+	t.Setenv("DISPLAY", "")
+	t.Setenv("WAYLAND_DISPLAY", "")
+	if !keyringDisabled() {
+		t.Error("expected keyringDisabled()=true on Linux without DISPLAY")
+	}
+
+	t.Setenv("DISPLAY", ":0")
+	if keyringDisabled() {
+		t.Error("expected keyringDisabled()=false on Linux with DISPLAY set")
+	}
+
+	t.Setenv("DISPLAY", "")
+	t.Setenv("WAYLAND_DISPLAY", "wayland-0")
+	if keyringDisabled() {
+		t.Error("expected keyringDisabled()=false on Linux with WAYLAND_DISPLAY set")
 	}
 }

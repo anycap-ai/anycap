@@ -2,13 +2,20 @@
 
 export const runtime = "edge";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePageSites } from "@/lib/api/hooks";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatTime } from "@/lib/date";
 
+const PAGE_SIZE = 20;
+
 export default function PagesPage() {
-  const { data, isLoading } = usePageSites();
+  const [page, setPage] = useState(1);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, isLoading } = usePageSites(PAGE_SIZE, offset);
+  const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
   return (
     <div>
@@ -92,6 +99,8 @@ export default function PagesPage() {
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

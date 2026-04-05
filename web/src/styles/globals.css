@@ -5,12 +5,20 @@ body {
   overscroll-behavior-y: none;
 }
 
-@layer base {
-  button,
-  a,
-  [role="button"] {
-    cursor: pointer;
-  }
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+select,
+label[for],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="reset"],
+summary {
+  cursor: pointer;
 }
 
 @theme {
@@ -26,6 +34,42 @@ body {
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fade-in-up,
+.fade-in-left,
+.fade-in-right {
+  animation-duration: 700ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+  will-change: transform, opacity;
+}
+
+.fade-in-up {
+  animation-name: fade-in-up;
+}
+
+.fade-in-left {
+  animation-name: fade-in-left;
+}
+
+.fade-in-right {
+  animation-name: fade-in-right;
 }
 
 /* ── Scrollbar ── */

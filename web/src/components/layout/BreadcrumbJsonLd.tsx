@@ -7,12 +7,12 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 
 export interface BreadcrumbItem {
   name: string;
-  /** URL path used for both JSON-LD `item` and visual link. */
+  /** URL path used for JSON-LD `item` and intermediate visual links. */
   href?: string;
   /**
-   * When true, the item is rendered as plain text in the visual breadcrumb
-   * even if `href` is provided. The `href` is still emitted in JSON-LD so
-   * Google receives a valid `item` URL (required for all non-last items).
+   * Retained for backwards compatibility. Non-last breadcrumb items with
+   * `href` are always rendered as links so the visible trail matches the
+   * structured breadcrumb trail Google reads.
    */
   unlinkable?: boolean;
 }
@@ -27,12 +27,15 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: localizedItems.map((item, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: item.name,
-      ...(item.href ? { item: `${siteConfig.url}${item.href}` } : {}),
-    })),
+    itemListElement: localizedItems.map((item, i) => {
+      const isLast = i === localizedItems.length - 1;
+      return {
+        "@type": "ListItem",
+        position: i + 1,
+        name: item.name,
+        ...(item.href && !isLast ? { item: `${siteConfig.url}${item.href}` } : {}),
+      };
+    }),
   };
 
   return (
@@ -48,7 +51,7 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
         <ol className="mx-auto max-w-[1280px] flex flex-wrap items-center gap-2">
           {localizedItems.map((item, i) => {
             const isLast = i === items.length - 1;
-            const showLink = item.href && !isLast && !item.unlinkable;
+            const showLink = Boolean(item.href && !isLast);
             return (
               <li key={i} className="flex items-center gap-2">
                 {i > 0 && (
@@ -72,6 +75,7 @@ export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
                   <span
                     className="text-[11px] tracking-[0.5px] text-[#3a3e32]"
                     style={mono}
+                    aria-current={isLast ? "page" : undefined}
                   >
                     {item.name}
                   </span>

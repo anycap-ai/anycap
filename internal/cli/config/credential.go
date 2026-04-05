@@ -2,12 +2,20 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/zalando/go-keyring"
 )
+
+// keyringTimeout is the maximum time to wait for OS keychain operations.
+// On Linux, D-Bus Secret Service calls can hang indefinitely in headless
+// environments (no gnome-keyring-daemon, SSH sessions, containers).
+const keyringTimeout = 3 * time.Second
 
 // Credential storage strategy (safe-first):
 //
@@ -32,12 +40,26 @@ const (
 	keyringAccount     = "credential"
 )
 
-// keyringDisabled returns true when ANYCAP_NO_KEYRING is set to a truthy
-// value ("1", "true", "yes"). When disabled, credentials are always stored
-// in the fallback file.
+// keyringDisabled returns true when the OS keychain should be skipped.
+//
+// Explicitly disabled: ANYCAP_NO_KEYRING=1/true/yes.
+//
+// Auto-disabled on Linux: when neither DISPLAY nor WAYLAND_DISPLAY is set,
+// there is no graphical session, so gnome-keyring / KDE Wallet cannot show
+// an unlock prompt. Attempting D-Bus calls in this state hangs indefinitely.
+// This covers SSH logins, containers, cron, and AI agent sandboxes -- the
+// primary environments where the CLI runs on Linux.
 func keyringDisabled() bool {
 	v := strings.ToLower(os.Getenv("ANYCAP_NO_KEYRING"))
-	return v == "1" || v == "true" || v == "yes"
+	if v == "1" || v == "true" || v == "yes" {
+		return true
+	}
+	if runtime.GOOS == "linux" {
+		if os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "" {
+			return true
+		}
+	}
+	return false
 }
 
 // resolvedKeyringService returns the keyring service name, suffixed with
@@ -94,7 +116,7 @@ func LoadCredential() *Credential {
 
 	// 2. OS keychain (primary persistent store, skipped when disabled).
 	if !keyringDisabled() {
-		if secret, err := keyring.Get(resolvedKeyringService(), keyringAccount); err == nil && secret != "" {
+		if secret, err := keyringGet(resolvedKeyringService(), keyringAccount); err == nil && secret != "" {
 			if cred := parseCredential(secret); cred != nil {
 				return cred
 			}
@@ -116,7 +138,7 @@ func LoadCredential() *Credential {
 	// Skipped when keyring is disabled -- the file IS the primary store.
 	if !keyringDisabled() {
 		if data, err := json.Marshal(cred); err == nil {
-			if err := keyring.Set(resolvedKeyringService(), keyringAccount, string(data)); err == nil {
+			if err := keyringSet(resolvedKeyringService(), keyringAccount, string(data)); err == nil {
 				_ = deleteCredentialFile()
 			}
 		}
@@ -137,7 +159,7 @@ func SaveCredential(cred *Credential) error {
 	raw := string(data)
 
 	if !keyringDisabled() {
-		if err := keyring.Set(resolvedKeyringService(), keyringAccount, raw); err == nil {
+		if err := keyringSet(resolvedKeyringService(), keyringAccount, raw); err == nil {
 			_ = deleteCredentialFile() // clean up fallback file if it exists
 			return nil
 		}
@@ -159,7 +181,7 @@ func DeleteCredential() error {
 		return fileErr
 	}
 
-	keyringErr := keyring.Delete(resolvedKeyringService(), keyringAccount)
+	keyringErr := keyringDelete(resolvedKeyringService(), keyringAccount)
 	if keyringErr == keyring.ErrNotFound {
 		keyringErr = nil
 	}
@@ -169,6 +191,58 @@ func DeleteCredential() error {
 		return nil
 	}
 	return keyringErr
+}
+
+// --- keyring wrappers with timeout (prevents hang on headless Linux) -------
+
+// keyringGet wraps keyring.Get with a timeout. On Linux, D-Bus calls to
+// org.freedesktop.secrets can hang indefinitely when no Secret Service
+// provider is running (headless Ubuntu, SSH, Docker). The goroutine may
+// leak on timeout, but that is acceptable for a short-lived CLI process.
+func keyringGet(service, account string) (string, error) {
+	type result struct {
+		secret string
+		err    error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		s, err := keyring.Get(service, account)
+		ch <- result{s, err}
+	}()
+	select {
+	case r := <-ch:
+		return r.secret, r.err
+	case <-time.After(keyringTimeout):
+		return "", fmt.Errorf("keyring access timed out")
+	}
+}
+
+// keyringSet wraps keyring.Set with a timeout.
+func keyringSet(service, account, secret string) error {
+	ch := make(chan error, 1)
+	go func() {
+		ch <- keyring.Set(service, account, secret)
+	}()
+	select {
+	case err := <-ch:
+		return err
+	case <-time.After(keyringTimeout):
+		return fmt.Errorf("keyring access timed out")
+	}
+}
+
+// keyringDelete wraps keyring.Delete with a timeout.
+func keyringDelete(service, account string) error {
+	ch := make(chan error, 1)
+	go func() {
+		ch <- keyring.Delete(service, account)
+	}()
+	select {
+	case err := <-ch:
+		return err
+	case <-time.After(keyringTimeout):
+		return fmt.Errorf("keyring access timed out")
+	}
 }
 
 // parseCredential parses a stored JSON credential string.

@@ -2,11 +2,15 @@
 
 export const runtime = "edge";
 
+import { useState } from "react";
 import { useLogs } from "@/lib/api/hooks";
 import type { TimelineItem } from "@/lib/api/types";
 import { formatCredit } from "@/lib/credit";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { Pagination } from "@/components/ui/Pagination";
 import { timeAgo } from "@/lib/date";
+
+const PAGE_SIZE = 20;
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;
@@ -48,7 +52,10 @@ function LogRow({ item }: { item: TimelineItem }) {
 }
 
 export default function LogsPage() {
-  const { data, isLoading } = useLogs(100);
+  const [page, setPage] = useState(1);
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, isLoading } = useLogs(PAGE_SIZE, offset);
+  const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
   const items = data?.items?.filter((item) => item.type === "capability_call");
 
   return (
@@ -57,7 +64,6 @@ export default function LogsPage() {
         Logs
       </h1>
 
-      {/* Table */}
       <div className="overflow-x-auto border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
         <table className="w-full border-collapse">
           <thead>
@@ -104,6 +110,8 @@ export default function LogsPage() {
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

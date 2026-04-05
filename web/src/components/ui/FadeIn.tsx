@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface FadeInProps {
   children: ReactNode;
@@ -11,11 +9,11 @@ interface FadeInProps {
   delay?: number;
 }
 
-const directionMap = {
-  bottom: "translate-y-6",
-  left: "-translate-x-6",
-  right: "translate-x-6",
-};
+const directionClassMap = {
+  bottom: "fade-in-up",
+  left: "fade-in-left",
+  right: "fade-in-right",
+} as const;
 
 export function FadeIn({
   children,
@@ -23,34 +21,10 @@ export function FadeIn({
   from = "bottom",
   delay = 0,
 }: FadeInProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div
-      ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        visible
-          ? "opacity-100 translate-x-0 translate-y-0"
-          : `opacity-0 ${directionMap[from]}`
-      } ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
+      className={`${directionClassMap[from]} ${className}`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       {children}
     </div>
