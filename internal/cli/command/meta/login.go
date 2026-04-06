@@ -12,9 +12,18 @@ import (
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/output"
+	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
+
+func hasUsableStoredCredential(cmd *cobra.Command, client *httpclient.Client) bool {
+	if client == nil {
+		return false
+	}
+	_, err := client.Get(cmd.Context(), api.StatusPath)
+	return err == nil
+}
 
 func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	var headless bool
@@ -54,8 +63,9 @@ func NewLoginCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdou
 
 			client := clientFactory()
 
-			// Check if already logged in (OAuth flows only, --with-token always overwrites)
-			if existing := cliconfig.LoadCredential(); existing != nil {
+			// Short-circuit only when the stored credential is still valid for the
+			// current endpoint; otherwise continue with a fresh login flow.
+			if existing := cliconfig.LoadCredential(); existing != nil && hasUsableStoredCredential(cmd, client) {
 				fmt.Fprintln(stderr, "Already logged in. Use 'anycap logout' first to switch accounts.")
 				return nil
 			}
