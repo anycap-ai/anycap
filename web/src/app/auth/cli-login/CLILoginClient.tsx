@@ -22,7 +22,7 @@ export function CLILoginClient() {
       browserToken,
     });
 
-    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent("/auth/callback")}`;
+    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent("/auth/callback")}&connection=${encodeURIComponent("google-oauth2")}&prompt=${encodeURIComponent("login")}`;
     window.location.assign(sdkLoginURL);
   }, [params]);
 
