@@ -44,7 +44,7 @@ export const siteConfig = {
   supportedLocales,
   defaultTitle: "Any Capability, Instantly",
   defaultDescription: defaultSiteDescription,
-  humanTitle: "Any Capability, Instantly",
+  humanTitle: "Your agent can do anything. It just needs AnyCap.",
   humanDescription:
     `See how AnyCap gives agents ${capabilitySummary} through one install path, one auth flow, and one command surface.`,
 } as const;
@@ -160,6 +160,12 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/compare/anycap-vs-openai-agent-builder",
     priority: 0.65,
+  },
+  {
+    key: "compare-anycap-vs-openclaw-image-generation",
+    kind: "seo",
+    path: "/compare/anycap-vs-openclaw-image-generation",
+    priority: 0.67,
   },
   {
     key: "models-seedream-5",

@@ -10,6 +10,7 @@ import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
+const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
 
 export const runtime = "edge";
 
@@ -138,7 +139,7 @@ const videoObjectJsonLd = {
   contentUrl: `${CDN_BASE}/for_cursor.mp4`,
   uploadDate: "2026-04-03",
   duration: "PT48S",
-  thumbnailUrl: "https://anycap.ai/opengraph-image",
+  thumbnailUrl: FALLBACK_THUMBNAIL_URL,
 };
 
 const howToJsonLd = {
@@ -275,7 +276,7 @@ export default function ForCursorPage() {
             <div className="mt-8">
               <DemoVideo
                 src={`${CDN_BASE}/for_cursor.mp4`}
-                poster={`${CDN_BASE}/for_cursor_thumb.jpg`}
+                poster={FALLBACK_THUMBNAIL_URL}
                 title="Install and use AnyCap with Cursor"
                 autoLoop
               />

@@ -44,10 +44,12 @@ const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "Learn",
     links: [
+      { href: "/learn", label: "Overview" },
       { href: "/cli", label: "CLI" },
       { href: "/skills", label: "Skills" },
       { href: "/guides/install-anycap", label: "Install AnyCap" },
       { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
+      { href: "/compare", label: "Compare AnyCap" },
       { href: "/learn/what-agents-cant-do", label: "What agents can't do" },
     ],
   },
