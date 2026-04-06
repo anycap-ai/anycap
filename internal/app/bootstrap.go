@@ -9,11 +9,9 @@ import (
 	"path"
 	"slices"
 	"strings"
-	"time"
 
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
 	billingapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billing"
-	billingeventsapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billingevents"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
@@ -33,18 +31,12 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/api302"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
-	billinginfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/billing"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/feedbackstore"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/idempotency"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/loginsession"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	paymentinfra "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/payment"
@@ -53,8 +45,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/ratelimit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/s3store"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/usage"
-	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
@@ -135,6 +125,7 @@ type Server struct {
 	config     config.Config
 	buildInfo  buildinfo.Info
 	httpServer *server.Hertz
+	runtime    *serverRuntime
 }
 
 func NewServer(cfg config.Config, info buildinfo.Info) *Server {
@@ -142,36 +133,9 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	if err != nil {
 		panic(err)
 	}
-
-	if deps.kvSyncWorker != nil {
-		go func() {
-			if err := deps.kvSyncWorker.Run(context.Background()); err != nil {
-				logging.WithError(err).Error("kvsync worker stopped")
-			}
-		}()
-	}
-	if deps.usageSyncWorker != nil {
-		go func() {
-			if err := deps.usageSyncWorker.Run(context.Background()); err != nil {
-				logging.WithError(err).Error("usage sync worker stopped")
-			}
-		}()
-	}
-	if deps.billingWorker != nil {
-		go func() {
-			if err := deps.billingWorker.Run(context.Background()); err != nil {
-				logging.WithError(err).Error("billing worker stopped")
-			}
-		}()
-	}
+	runtime := newServerRuntime()
+	registerRuntimeTasks(runtime, deps)
 	logging.WithField("config", describePaymentEventsConfig(cfg.PaymentEvents)).Info("payment events")
-	if deps.paymentEventsWorker != nil {
-		go func() {
-			if err := deps.paymentEventsWorker.Run(context.Background()); err != nil {
-				logging.WithError(err).Error("payment events worker stopped")
-			}
-		}()
-	}
 
 	serverFeatures := buildServerFeatures(cfg)
 	deps.systemService.SetFeatures(serverFeatures)
@@ -235,7 +199,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		},
 	})
 
-	return &Server{config: cfg, buildInfo: info, httpServer: httpServer}
+	return &Server{config: cfg, buildInfo: info, httpServer: httpServer, runtime: runtime}
 }
 
 func buildServerFeatures(cfg config.Config) map[string]bool {
@@ -305,284 +269,101 @@ func fallbackLogValue(value string) string {
 }
 
 func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDependencies, error) {
-	catalogRepo, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
-	catalogService := catalogapp.NewService(catalogRepo)
-	modelRouteService := modelrouteapp.NewService(modelRouteRepo)
-	capProvider := buildCapabilitiesProvider(cfg)
-	cloudObjectStore := buildCloudObjectStorage(cfg)
-	capGetExpiry := time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second
-	artifactIngestClient := buildArtifactIngestClient(cfg)
-	imageExecutionClient := buildImageExecutionClient(cfg)
-	videoExecutionClient := buildVideoExecutionClient(cfg)
-	musicExecutionClient := buildMusicExecutionClient(cfg)
-	creditClient := buildCreditClient(cfg)
-	paymentClient := buildPaymentClient(cfg)
-	creditPacks := buildCreditPackSpecs(cfg.CreditPacks)
+	shared := buildSharedComposition(cfg, info)
 
 	switch cfg.RuntimeMode {
 	case "", "stub":
-		apiKeys := apikey.NewMemoryService()
-		callLogs := calllog.NewMemoryCallLogRepo()
-		usageRepo := usage.NewMemoryRepo()
-		billingRepo := billinginfra.NewMemoryRepo()
-		billingService := billingapp.NewService(billingRepo)
-		loginSessions := loginsession.NewMemoryLoginSessionRepo()
-		users := userstore.NewMemoryProvisioner()
-		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeys)
-		systemService.SetUserReader(users)
-		systemService.SetCreditClient(creditClient)
-		systemService.SetPaymentClient(paymentClient)
-		systemService.SetCallLogRepo(callLogs)
-		systemService.SetCreditPacks(creditPacks)
+		authComp := buildStubAuthComposition(cfg, shared)
+		billingComp := buildStubBillingComposition(cfg, shared)
+		mediaComp := buildStubMediaComposition(cfg, shared, billingComp)
+		webComp := buildStubWebComposition(cfg, shared, billingComp)
+		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
+		systemService.SetUserReader(authComp.userReader)
+		systemService.SetCreditClient(shared.creditClient)
+		systemService.SetPaymentClient(shared.paymentClient)
+		systemService.SetCallLogRepo(billingComp.callLogs)
+		systemService.SetCreditPacks(shared.creditPacks)
 		systemService.SetAllowedCheckoutReturnOrigins(buildCORSAllowedOrigins(cfg))
-		systemService.SetUsageReader(usageRepo)
-		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
-		imageService.SetUsageWriter(usageRepo)
-		imageService.SetBillingCoordinator(billingService)
-		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
-		videoService.SetUsageWriter(usageRepo)
-		videoService.SetBillingCoordinator(billingService)
-		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
-		musicService.SetUsageWriter(usageRepo)
-		musicService.SetBillingCoordinator(billingService)
-		capService := capapp.NewService(capProvider, cloudObjectStore, capapp.WithPresignGetExpiry(capGetExpiry))
-		capService.SetCreditClient(creditClient)
-		capService.SetCallLogRepo(callLogs)
-		capService.SetBillingCoordinator(billingService)
+		systemService.SetUsageReader(billingComp.usageReader)
 		return serverDependencies{
 			config:              cfg,
 			buildInfo:           info,
 			systemService:       systemService,
-			loginService:        loginapp.NewService(users, creditClient, apiKeys, loginSessions, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL, cfg.Credit.SignupRewardDeadline),
-			imageService:        imageService,
-			videoService:        videoService,
-			musicService:        musicService,
+			loginService:        authComp.loginService,
+			imageService:        mediaComp.imageService,
+			videoService:        mediaComp.videoService,
+			musicService:        mediaComp.musicService,
 			spaceService:        nil,
 			driveService:        nil,
 			pageService:         nil,
-			catalogService:      catalogService,
-			modelRouteService:   modelRouteService,
-			capabilitiesService: capService,
-			webService:          buildWebService(cfg, creditClient, callLogs),
-			feedbackService:     feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), buildFeedbackNotifier(cfg), cfg.AppEnv),
-			apiKeyService:       apiKeys,
-			identityTokens:      buildIdentityTokenAuthenticator(cfg, users, creditClient),
+			catalogService:      shared.catalogService,
+			modelRouteService:   shared.modelRouteService,
+			capabilitiesService: mediaComp.capabilitiesService,
+			webService:          webComp.webService,
+			feedbackService:     webComp.feedbackService,
+			apiKeyService:       authComp.apiKeyService,
+			identityTokens:      authComp.identityTokens,
 			rateLimiter:         ratelimit.NewInMemoryLimiter(),
-			usageSyncWorker:     nil,
-			billingWorker:       nil,
-			paymentEventsWorker: nil,
+			usageSyncWorker:     mediaComp.usageSyncWorker,
+			billingWorker:       mediaComp.billingWorker,
+			paymentEventsWorker: billingComp.paymentEventsWorker,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
-			idResolver:          idresolver.PassthroughIDResolver{},
-			idMapper:            presenter.PassthroughIDMapper{},
+			idResolver:          authComp.idResolver,
+			idMapper:            authComp.idMapper,
 		}, nil
 	case "dev", "prod", "integration":
 		sqlDB, err := openPostgres(cfg.PGDSN)
 		if err != nil {
 			return serverDependencies{}, err
 		}
-		db, err := newExternalDB(cfg, sqlDB)
+		storageComp, err := buildPersistentStorageComposition(cfg, sqlDB, shared)
 		if err != nil {
 			return serverDependencies{}, err
 		}
-		spaceRepo := postgres.NewSpaceRepo(db)
-		spaceService := spaceapp.NewService(spaceRepo)
-		quotaProvider := config.NewStorageQuotaProvider(cfg)
-		driveNodeRepo := postgres.NewDriveNodeRepo(db)
-		driveShareRepo := postgres.NewDriveShareRepo(db)
-		uploadSessionRepo := postgres.NewUploadSessionRepo(db)
-		storageObjectRepo := postgres.NewStorageObjectRepo(db)
-		pageSiteRepo := postgres.NewPageSiteRepo(db)
-		pageSlugRepo := postgres.NewPageSlugRepo(db)
-		pageVersionRepo := postgres.NewPageVersionRepo(db)
-		kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
-		kvClient := buildKVSyncClient(cfg)
-		edgeGrantStore := buildEdgeGrantStore(cfg)
-		driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
-		pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, cfg.PageHostFormat)
-		kvSyncWorker := kvsync.NewWorker(kvSyncJobRepo, map[string]kvsync.Projector{
-			model.KVSyncJobTypeDriveFileMetaSync:    driveProjector,
-			model.KVSyncJobTypeDriveDirChildrenSync: driveProjector,
-			model.KVSyncJobTypeDriveDirMetaSync:     driveProjector,
-			model.KVSyncJobTypeDriveShareSync:       driveProjector,
-			model.KVSyncJobTypeDriveDirTreeDelete:   driveProjector,
-			model.KVSyncJobTypePageHostSync:         pageProjector,
-			model.KVSyncJobTypePageHostDelete:       pageProjector,
-		}, kvsync.WorkerConfig{
-			WorkerID:     "anycap-server",
-			PollInterval: cfg.KVSyncPollInterval,
-			LockTTL:      cfg.KVSyncLockTTL,
-		})
-		kvSyncWaiter := kvsync.NewWaiter(kvSyncJobRepo, kvsync.WaiterConfig{
-			Timeout: cfg.KVSyncWaitTimeout,
-		})
-		var driveKVSyncOption driveapp.ServiceOption
-		var pageKVSyncOption pageapp.ServiceOption
-		if cfg.KVSyncEnabled {
-			driveKVSyncOption = driveapp.WithKVSync(kvSyncJobRepo, kvSyncWaiter, cfg.KVSyncWaitEnabled)
-			pageKVSyncOption = pageapp.WithKVSync(kvSyncJobRepo, kvSyncWaiter, cfg.KVSyncWaitEnabled)
+		authComp := buildPersistentAuthComposition(cfg, storageComp.db, shared)
+		billingComp, err := buildPersistentBillingComposition(cfg, storageComp.db, shared)
+		if err != nil {
+			return serverDependencies{}, err
 		}
-		apiKeyRepo := apikey.NewAPIKeyRepo(db)
-		checkoutIdempotencyRepo := idempotency.NewIdempotencyRepo(db)
-		loginSessionRepo := loginsession.NewLoginSessionRepo(db)
-		callLogs := calllog.NewCallLogDBRepo(db)
-		usageRepo := usage.NewRepo(db)
-		billingRepo := billinginfra.NewRepo(db)
-		billingService := billingapp.NewService(billingRepo)
-		users := userstore.NewProvisioner(db)
-		apiKeyService := auth.NewRepositoryAPIKeyService(apiKeyRepo, users, nil, nil)
-		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, apiKeyService)
-		systemService.SetUserReader(users)
-		systemService.SetCreditClient(creditClient)
-		systemService.SetPaymentClient(paymentClient)
-		systemService.SetCallLogRepo(callLogs)
-		systemService.SetCreditPacks(creditPacks)
+		mediaComp := buildPersistentMediaComposition(cfg, shared, billingComp, storageComp)
+		webComp := buildPersistentWebComposition(cfg, storageComp.db, shared, billingComp)
+		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
+		systemService.SetUserReader(authComp.userReader)
+		systemService.SetCreditClient(shared.creditClient)
+		systemService.SetPaymentClient(shared.paymentClient)
+		systemService.SetCallLogRepo(billingComp.callLogs)
+		systemService.SetCreditPacks(shared.creditPacks)
 		systemService.SetAllowedCheckoutReturnOrigins(buildCORSAllowedOrigins(cfg))
-		systemService.SetCheckoutIdempotencyClaimer(checkoutIdempotencyRepo)
-		systemService.SetUsageReader(usageRepo)
-		var externalIDMapper interface {
-			idresolver.IDResolver
-			presenter.IDMapper
-		}
-		if shouldBypassAuthForLocalTest(cfg) {
-			logging.GetLogger().Warn("external-id using passthrough mapper because bypass auth is enabled")
-			externalIDMapper = passthroughIDMapperResolver{}
-		} else {
-			externalIDMapper = idresolver.NewPostgresExternalIDMapper(db)
-		}
-		capsUploadRepo := postgres.NewCapsUploadRepo(db)
-		capsTaskRepo := postgres.NewCapsTaskRepo(db)
-		capsTaskArtifactRepo := postgres.NewCapsTaskArtifactRepo(db)
-		capsArtifactRepo := postgres.NewCapsArtifactRepo(db)
-		capService := capapp.NewService(
-			capProvider,
-			cloudObjectStore,
-			capapp.WithAudit(spaceService, capsUploadRepo, storageObjectRepo, capsTaskRepo, capsTaskArtifactRepo),
-			capapp.WithPresignGetExpiry(capGetExpiry),
-		)
-		capService.SetCreditClient(creditClient)
-		capService.SetCallLogRepo(callLogs)
-		capService.SetBillingCoordinator(billingService)
+		systemService.SetCheckoutIdempotencyClaimer(billingComp.checkoutIdempotencyClaimer)
+		systemService.SetUsageReader(billingComp.usageReader)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
-		imageService := imageapp.NewService(catalogRepo, imageExecutionClient, creditClient, callLogs)
-		imageService.SetUsageWriter(usageRepo)
-		imageService.SetBillingCoordinator(billingService)
-		imageService.SetUploadRefResolver(capService)
-		videoService := videoapp.NewService(catalogRepo, videoExecutionClient, creditClient, callLogs)
-		videoService.SetUsageWriter(usageRepo)
-		videoService.SetBillingCoordinator(billingService)
-		videoService.SetUploadRefResolver(capService)
-		musicService := musicapp.NewService(catalogRepo, musicExecutionClient, creditClient, callLogs)
-		musicService.SetUsageWriter(usageRepo)
-		musicService.SetBillingCoordinator(billingService)
-		artifactPublisher := buildArtifactPublisher(
-			cfg,
-			artifactIngestClient,
-			capsArtifactRepo,
-			storageObjectRepo,
-			edgeGrantStore,
-			spaceService,
-			cloudObjectStore,
-		)
-		if artifactPublisher != nil {
-			imageService.SetArtifactPublisher(artifactPublisher)
-			videoService.SetArtifactPublisher(artifactPublisher)
-			musicService.SetArtifactPublisher(artifactPublisher)
-		}
-		var usageSyncWorker *usageapp.Worker
-		if cfg.UsageSyncEnabled && hasImageExecutionProvider(cfg) {
-			usageSyncWorker = usageapp.NewWorker(
-				usageapp.NewService(usageRepo, imageExecutionClient),
-				usageapp.WorkerConfig{
-					PollInterval: cfg.UsageSyncPollInterval,
-					BatchSize:    cfg.UsageSyncBatchSize,
-				},
-			)
-		}
-		var billingWorker *billingapp.Worker
-		if creditClient != nil {
-			billingNexusClient := imageExecutionClient
-			switch {
-			case hasImageExecutionProvider(cfg):
-				billingNexusClient = imageExecutionClient
-			case hasVideoExecutionProvider(cfg):
-				billingNexusClient = videoExecutionClient
-			case hasMusicExecutionProvider(cfg):
-				billingNexusClient = musicExecutionClient
-			}
-			billingWorker = billingapp.NewWorker(
-				billingRepo,
-				billingService,
-				billingNexusClient,
-				creditClient,
-				billingapp.WorkerConfig{},
-			)
-		}
-		var paymentEventsWorker *paymenteventsinfra.Worker
-		if cfg.PaymentEvents.Enabled {
-			if !cfg.PaymentEvents.Configured() {
-				return serverDependencies{}, fmt.Errorf("payment events mq is enabled but not fully configured")
-			}
-			receiptRepo := paymenteventsinfra.NewRepo(db)
-			billingEventsService := billingeventsapp.NewService(receiptRepo, billingeventsapp.Config{
-				BizID: cfg.PaymentEvents.BizID,
-			})
-			handler := paymenteventsinfra.NewMessageHandler(billingEventsService)
-			worker, err := paymenteventsinfra.NewWorker(paymenteventsinfra.NewWorkerConfig(cfg.PaymentEvents), handler)
-			if err != nil {
-				return serverDependencies{}, err
-			}
-			paymentEventsWorker = worker
-		}
 		return serverDependencies{
-			config:        cfg,
-			buildInfo:     info,
-			systemService: systemService,
-			loginService:  loginapp.NewService(users, creditClient, apiKeyService, loginSessionRepo, buildDeviceVerificationURL(cfg), nil, nil, nil, nil, cfg.LoginAPIKeyTTL, cfg.Credit.SignupRewardDeadline),
-			imageService:  imageService,
-			videoService:  videoService,
-			musicService:  musicService,
-			spaceService:  spaceService,
-			driveService: driveapp.NewService(
-				spaceService,
-				driveNodeRepo,
-				driveapp.WithUpload(uploadSessionRepo, storageObjectRepo, cloudObjectStore),
-				driveapp.WithShare(driveShareRepo, cfg.PasswordPepper, cfg.DriveShareBaseURL),
-				driveapp.WithEdgeAccess(edgeGrantStore, cfg.DriveAccessTTLSeconds, deriveDriveAccessBaseURL(cfg.DriveShareBaseURL)),
-				driveKVSyncOption,
-				driveapp.WithQuota(quotaProvider, spaceRepo),
-			),
-			pageService: pageapp.NewService(
-				spaceService,
-				pageSiteRepo,
-				pageSlugRepo,
-				cfg.PasswordPepper,
-				pageapp.WithVersioning(pageVersionRepo, uploadSessionRepo, storageObjectRepo, cloudObjectStore),
-				pageapp.WithPageHostFormat(cfg.PageHostFormat),
-				pageapp.WithPreviewHost(edgeGrantStore, cfg.PagePreviewHostFormat, cfg.PagePreviewTTLSeconds),
-				pageKVSyncOption,
-				pageapp.WithQuota(quotaProvider, spaceRepo),
-			),
-			catalogService:      catalogService,
-			modelRouteService:   modelRouteService,
-			capabilitiesService: capService,
-			webService:          buildWebService(cfg, creditClient, callLogs),
-			feedbackService:     feedbackapp.NewService(feedbackstore.NewFeedbackDBRepo(db), buildFeedbackNotifier(cfg), cfg.AppEnv),
-			apiKeyService:       apiKeyService,
-			identityTokens:      buildIdentityTokenAuthenticator(cfg, users, creditClient),
+			config:              cfg,
+			buildInfo:           info,
+			systemService:       systemService,
+			loginService:        authComp.loginService,
+			imageService:        mediaComp.imageService,
+			videoService:        mediaComp.videoService,
+			musicService:        mediaComp.musicService,
+			spaceService:        storageComp.spaceService,
+			driveService:        storageComp.driveService,
+			pageService:         storageComp.pageService,
+			catalogService:      shared.catalogService,
+			modelRouteService:   shared.modelRouteService,
+			capabilitiesService: mediaComp.capabilitiesService,
+			webService:          webComp.webService,
+			feedbackService:     webComp.feedbackService,
+			apiKeyService:       authComp.apiKeyService,
+			identityTokens:      authComp.identityTokens,
 			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
-			usageSyncWorker:     usageSyncWorker,
-			billingWorker:       billingWorker,
-			paymentEventsWorker: paymentEventsWorker,
+			usageSyncWorker:     mediaComp.usageSyncWorker,
+			billingWorker:       mediaComp.billingWorker,
+			paymentEventsWorker: billingComp.paymentEventsWorker,
 			rateLimitResolver:   config.NewRateLimitProvider(cfg),
-			idResolver:          externalIDMapper,
-			idMapper:            externalIDMapper,
-			kvSyncWorker: func() *kvsync.Worker {
-				if cfg.KVSyncEnabled {
-					return kvSyncWorker
-				}
-				return nil
-			}(),
-			quotaProvider: quotaProvider,
+			idResolver:          authComp.idResolver,
+			idMapper:            authComp.idMapper,
+			kvSyncWorker:        storageComp.kvSyncWorker,
+			quotaProvider:       storageComp.quotaProvider,
 		}, nil
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
@@ -1053,6 +834,13 @@ func newExternalDB(cfg config.Config, sqlDB *sql.DB) (*sqlstore.SQLDB, error) {
 }
 
 func (s *Server) Run() {
+	if err := s.Start(context.Background()); err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = s.Shutdown(context.Background())
+	}()
+
 	logging.WithFields(logging.Fields{
 		"app":     s.config.AppName,
 		"addr":    s.config.HTTPAddr,
@@ -1060,6 +848,26 @@ func (s *Server) Run() {
 		"version": s.buildInfo.Version,
 	}).Info("server listening")
 	s.httpServer.Spin()
+}
+
+func (s *Server) Start(ctx context.Context) error {
+	if s == nil || s.runtime == nil {
+		return nil
+	}
+	return s.runtime.Start(ctx)
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	if s == nil || s.runtime == nil {
+		return nil
+	}
+	if err := s.runtime.Shutdown(ctx); err != nil {
+		return err
+	}
+	if s.httpServer != nil && s.httpServer.IsRunning() {
+		return s.httpServer.Shutdown(ctx)
+	}
+	return nil
 }
 
 func buildModelRouteRepo(cfg config.Config) port.ModelRouteRepository {

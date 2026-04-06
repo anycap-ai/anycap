@@ -10,6 +10,8 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/feature"
 )
@@ -96,6 +98,86 @@ func TestBuildServerDependencies_PaymentEventsEnabledRequiresCompleteConfig(t *t
 	}, buildinfo.Info{Version: "dev"})
 	if err == nil {
 		t.Fatal("expected error when payment events config is incomplete")
+	}
+}
+
+func TestBuildSharedComposition_InitializesSharedServices(t *testing.T) {
+	shared := buildSharedComposition(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+	}, buildinfo.Info{Version: "dev"})
+
+	if shared.catalogService == nil {
+		t.Fatal("expected catalog service")
+	}
+	if shared.modelRouteService == nil {
+		t.Fatal("expected model route service")
+	}
+	if shared.creditClient == nil {
+		t.Fatal("expected credit client")
+	}
+	if shared.paymentClient == nil {
+		t.Fatal("expected payment client")
+	}
+}
+
+func TestBuildStubAuthComposition_InitializesLoginAndPassthroughIDs(t *testing.T) {
+	shared := buildSharedComposition(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+	}, buildinfo.Info{Version: "dev"})
+
+	authComp := buildStubAuthComposition(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+	}, shared)
+
+	if authComp.loginService == nil {
+		t.Fatal("expected login service")
+	}
+	if authComp.apiKeyService == nil {
+		t.Fatal("expected api key service")
+	}
+	if _, ok := authComp.idResolver.(idresolver.PassthroughIDResolver); !ok {
+		t.Fatalf("expected passthrough id resolver, got %T", authComp.idResolver)
+	}
+	if _, ok := authComp.idMapper.(presenter.PassthroughIDMapper); !ok {
+		t.Fatalf("expected passthrough id mapper, got %T", authComp.idMapper)
+	}
+}
+
+func TestBuildStubBillingComposition_InitializesBillingAndUsage(t *testing.T) {
+	billingComp := buildStubBillingComposition(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+	}, buildSharedComposition(config.Config{
+		AppName:      "anycap-server",
+		AppEnv:       "test",
+		HTTPAddr:     ":0",
+		RuntimeMode:  "stub",
+		RateLimitRPM: 60,
+	}, buildinfo.Info{Version: "dev"}))
+
+	if billingComp.billingService == nil {
+		t.Fatal("expected billing service")
+	}
+	if billingComp.callLogs == nil {
+		t.Fatal("expected call log repo")
+	}
+	if billingComp.usageWriter == nil {
+		t.Fatal("expected usage writer")
 	}
 }
 
