@@ -10,6 +10,7 @@ import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
+const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
 
 export const runtime = "edge";
 
@@ -126,7 +127,7 @@ const videoObjectJsonLd = {
   contentUrl: `${CDN_BASE}/for_claude_code2.mp4`,
   uploadDate: "2026-04-03",
   duration: "PT48S",
-  thumbnailUrl: `${CDN_BASE}/for_claude_code_thumb.jpg`,
+  thumbnailUrl: FALLBACK_THUMBNAIL_URL,
 };
 
 const howToJsonLd = {
@@ -240,7 +241,7 @@ export default function ForClaudeCodePage() {
             <div className="mt-8">
               <DemoVideo
                 src={`${CDN_BASE}/for_claude_code2.mp4`}
-                poster={`${CDN_BASE}/for_claude_code_thumb.jpg`}
+                poster={FALLBACK_THUMBNAIL_URL}
                 title="Install and use AnyCap with Claude Code"
                 autoLoop
               />

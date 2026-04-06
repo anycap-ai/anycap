@@ -139,6 +139,11 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         href: "/compare/anycap-vs-openai-agent-builder",
         description: "See where AnyCap fits alongside hosted agent-building workflows.",
       },
+      {
+        title: "AnyCap vs OpenClaw Image Generation",
+        href: "/compare/anycap-vs-openclaw-image-generation",
+        description: "Compare one-key image access with a provider-key setup inside OpenClaw.",
+      },
     ],
   },
   learn: {

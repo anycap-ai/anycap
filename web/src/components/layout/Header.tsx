@@ -222,12 +222,44 @@ const equipAgentsDropdown: NavDropdownDef = {
 const learnDropdown: NavDropdownDef = {
   kind: "dropdown",
   label: "Learn",
+  href: "/learn",
   items: [
-    { href: "/cli", label: "CLI" },
-    { href: "/skills", label: "Skills" },
-    { href: "/guides/install-anycap", label: "Install AnyCap" },
-    { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
-    { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
+    {
+      href: "/cli",
+      label: "CLI",
+      section: "Product",
+      description: "See the command surface agents use to call capabilities through one runtime.",
+    },
+    {
+      href: "/skills",
+      label: "Skills",
+      section: "Product",
+      description: "Learn how agent skills expose capabilities inside developer tools.",
+    },
+    {
+      href: "/guides/install-anycap",
+      label: "Install AnyCap",
+      section: "Guides",
+      description: "Set up the CLI, auth once, and verify the capability runtime is ready.",
+    },
+    {
+      href: "/guides/context-engineering-for-agents",
+      label: "Context Engineering",
+      section: "Guides",
+      description: "Understand how prompts, files, and workspace state shape agent behavior.",
+    },
+    {
+      href: "/compare",
+      label: "Compare AnyCap",
+      section: "Evaluate",
+      description: "Browse comparison pages for adjacent agent tooling approaches and tradeoffs.",
+    },
+    {
+      href: "/learn/what-agents-cant-do",
+      label: "What Agents Can't Do",
+      section: "Evaluate",
+      description: "Read a practical explainer on where agents still struggle in production workflows.",
+    },
   ],
   hideBelow: "md",
 };
