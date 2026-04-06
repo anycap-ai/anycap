@@ -615,6 +615,72 @@ func TestLoginAlreadyLoggedIn(t *testing.T) {
 	}
 }
 
+func TestLoginInvalidStoredCredentialStartsFreshFlow(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-existing-key")); err != nil {
+		t.Fatalf("setup: save credential: %v", err)
+	}
+
+	var statusCalls int
+	var deviceCodeCalls int
+	var devicePollCalls int
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/status":
+			statusCalls++
+			if got := r.Header.Get("Authorization"); got != "Bearer sk-existing-key" {
+				t.Fatalf("expected stored credential on status request, got %q", got)
+			}
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/auth/device-code":
+			deviceCodeCalls++
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"login_session_id":"lsn-test","user_code":"ABC-123","verification_uri":"https://anycap.ai/auth/device","interval":1,"expires_in":300}}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/auth/device-poll":
+			devicePollCalls++
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"status":"complete","api_key":"ak-new","api_key_id":"key-test","user":{"email":"dev@anycap.ai","id":"user-dev","name":"Dev User"}}}`))
+		default:
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer ts.Close()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "test"},
+		Endpoint:  ts.URL,
+		Stdout:    stdout,
+		Stderr:    stderr,
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"login", "--headless"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("login should fall through to fresh auth flow: %v\nstderr: %s", err, stderr.String())
+	}
+
+	if statusCalls != 1 {
+		t.Fatalf("expected one credential validation request, got %d", statusCalls)
+	}
+	if deviceCodeCalls != 1 || devicePollCalls != 1 {
+		t.Fatalf("expected device flow to run once, got device-code=%d device-poll=%d", deviceCodeCalls, devicePollCalls)
+	}
+	if strings.Contains(stderr.String(), "Already logged in") {
+		t.Fatalf("expected fresh login flow instead of short-circuit, got: %s", stderr.String())
+	}
+
+	cred := cliconfig.LoadCredential()
+	if cred == nil || cred.Token() != "ak-new" {
+		t.Fatalf("expected refreshed credential, got %+v", cred)
+	}
+}
+
 func TestLoginWithTokenOverridesExisting(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
