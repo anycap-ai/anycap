@@ -31,7 +31,7 @@ export function LoginClient() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
         const tip = msg.includes("invalid request") ? "login_web_not_enabled" : "login_failed";
-        window.location.assign(`/for-human?tip=${tip}`);
+        window.location.assign(`/?tip=${tip}`);
       }
     })();
   }, [params]);

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
+import { MobileNavMenu, type MobileNavEntry } from "@/components/layout/MobileNavMenu";
 import { NavDropdown, type DropdownItem } from "@/components/layout/NavDropdown";
 import { GitHubStarButton } from "@/components/ui/GitHubStarButton";
 import { getRequestLocale } from "@/lib/request-locale";
@@ -53,9 +54,32 @@ type HeaderProps = {
   topOffset?: string;
 };
 
-export async function Header({ logoHref = "/for-human", links, authSlot, topOffset = "0px" }: HeaderProps) {
+export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px" }: HeaderProps) {
   const locale = await getRequestLocale();
   const localizedLogoHref = localizePublicPath(locale, logoHref);
+  const mobileEntries: MobileNavEntry[] = links.map((entry) => {
+    if (isDropdown(entry)) {
+      return {
+        kind: "section",
+        label: entry.label,
+        href: entry.href ? localizePublicPath(locale, entry.href) : undefined,
+        items: entry.items.map((item) => ({
+          label: item.label,
+          href: localizePublicPath(locale, item.href),
+          description: item.description,
+        })),
+      };
+    }
+
+    const external = entry.external ?? isExternalHref(entry.href);
+
+    return {
+      kind: "link",
+      label: entry.label,
+      href: external ? entry.href : localizePublicPath(locale, entry.href),
+      external,
+    };
+  });
 
   function localize(href: string) {
     return localizePublicPath(locale, href);
@@ -116,7 +140,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot, topOffs
       className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-5 py-4 backdrop-blur-sm md:px-16 md:py-6 lg:px-24"
       style={{ top: topOffset }}
     >
-      <div className="flex items-center gap-3">
+      <div className="relative flex items-center gap-3">
         <Link href={localizedLogoHref} className="shrink-0">
           <span className="block md:hidden"><AnycapLogo size={32} /></span>
           <span className="hidden md:block"><AnycapLogo size={42} /></span>
@@ -128,6 +152,7 @@ export async function Header({ logoHref = "/for-human", links, authSlot, topOffs
           <div className="flex shrink-0 items-center gap-2">
             <GitHubStarButton />
             {authSlot}
+            <MobileNavMenu entries={mobileEntries} />
           </div>
         </div>
       </div>
@@ -259,6 +284,13 @@ const learnDropdown: NavDropdownDef = {
       label: "What Agents Can't Do",
       section: "Evaluate",
       description: "Read a practical explainer on where agents still struggle in production workflows.",
+    },
+    {
+      href: "/learn/smart-goal-generator",
+      label: "SMART Goal Generator",
+      section: "Use Cases",
+      description:
+        "Turn rough goals into research-backed SMART goals with Codex, Cursor, or Claude Code.",
     },
   ],
   hideBelow: "md",

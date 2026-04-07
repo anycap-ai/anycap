@@ -9,7 +9,7 @@ import {
   pricingGenerationGroups,
   type GenerationModel,
 } from "@/lib/capability-inventory";
-import { siteConfig } from "@/lib/site";
+import { adjacentWorkflowSummary, publicCapabilityLabel, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -17,18 +17,18 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "Pricing — AnyCap",
+  title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
   description:
-    "AnyCap pricing: pay-as-you-go credits with no markup over official model provider rates. $5 free credit on signup. Image, video, music generation, web search, and web crawl at provider cost.",
+    "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance for image, video, and vision workflows in AnyCap.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/pricing",
     siteName: siteConfig.siteName,
-    title: "Pricing — AnyCap",
+    title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
     description:
-      "Pay-as-you-go credits at the same rate as official model providers. No markup, no subscription.",
+      "One balance for image, video, and vision workflows. $5 free credit, pay as you go, no subscription.",
   },
 };
 
@@ -37,13 +37,13 @@ const pricingPageJsonLd = {
   "@type": "WebPage",
   name: "AnyCap Pricing",
   description:
-    "AnyCap pricing page. Pay-as-you-go credits for image generation, video generation, music generation, web search, web crawl, and more.",
+    "AnyCap pricing page. Pay-as-you-go credits for image, video, and vision workflows, with one balance across the broader runtime.",
   url: `${siteConfig.url}/pricing`,
   mainEntity: {
     "@type": "Product",
     name: "AnyCap Credits",
     description:
-      "Pay-as-you-go credits for AI agent capabilities including image, video, music generation, web search, and web crawl.",
+      "Pay-as-you-go credits for the image, video, and vision workflows coding agents miss most often, with one balance across the wider AnyCap runtime.",
     offers: [
       {
         "@type": "Offer",
@@ -194,9 +194,10 @@ export default function PricingPage() {
               pricing.
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              We sell the same APIs you would get from each model provider directly. No markup over
-              official rates, no subscription. Pay-as-you-go with credits. Every new account starts
-              with $5 free credit — no payment required.
+              Start with the {publicCapabilityLabel} coding agents miss most often. AnyCap gives
+              you one prepaid balance for those workflows, then lets that same balance extend
+              across the broader runtime as your stack grows. No markup over official rates. No
+              subscription. Every new account starts with $5 free credit.
             </p>
             <div className="mt-8 max-w-[860px] rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6 md:p-7">
               <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
@@ -204,9 +205,10 @@ export default function PricingPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
                 AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that,
-                supported capabilities are billed at the same rate as the official model provider,
-                with no subscription fee and no platform markup. Credit packages are one-time
-                purchases, and larger packages include bonus credits.
+                the image, video, and vision workflows on the public site are billed at the same
+                rate as the official model provider, with no subscription fee and no platform
+                markup. The same balance can also be used across {adjacentWorkflowSummary}. Credit
+                packages are one-time purchases, and larger packages include bonus credits.
               </p>
               <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
                 Last updated {lastUpdated}

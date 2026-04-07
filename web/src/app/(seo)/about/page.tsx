@@ -302,11 +302,11 @@ export default function AboutPage() {
                   Get Started
                 </Link>
                 <Link
-                  href="/for-human"
+                  href="/"
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                   style={mono}
                 >
-                  Product overview
+                  Homepage
                 </Link>
                 <Link
                   href="/capabilities"

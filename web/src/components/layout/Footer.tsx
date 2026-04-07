@@ -49,6 +49,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/skills", label: "Skills" },
       { href: "/guides/install-anycap", label: "Install AnyCap" },
       { href: "/guides/context-engineering-for-agents", label: "Context Engineering" },
+      { href: "/learn/smart-goal-generator", label: "SMART Goal Generator" },
       { href: "/compare", label: "Compare AnyCap" },
       { href: "/learn/what-agents-cant-do", label: "What agents can't do" },
     ],
@@ -56,7 +57,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "Product",
     links: [
-      { href: "/for-human", label: "Product overview" },
+      { href: "/", label: "Product overview" },
       { href: "/models", label: "Models" },
       { href: "/guides/install-anycap", label: "Install AnyCap" },
       { href: "/guides/add-tools-to-claude-code", label: "Add Tools to Claude Code" },

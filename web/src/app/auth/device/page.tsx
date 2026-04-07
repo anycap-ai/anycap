@@ -26,7 +26,7 @@ function DevicePageInner() {
         <header className="flex items-center gap-3 mb-8 md:mb-10">
           <AnycapLogo size={28} />
           <Link
-            href="/for-human"
+            href="/"
             className="ml-auto text-[11px] text-[#8f9487] hover:text-[#6b7d3a] tracking-[0.5px] transition-colors"
             style={mono}
           >

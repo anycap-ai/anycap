@@ -1,5 +1,5 @@
-// Single source of truth for the agent landing page and /llms.txt.
-// Edit the markdown below — it renders on the landing page and is served as plain text at /llms.txt.
+// Single source of truth for the agent entry page and /llms.txt.
+// Edit the markdown below — it renders on /agent and is served as plain text at /llms.txt.
 const landingContent = `# AnyCap
 
 One CLI. Any capability you're missing.
@@ -104,7 +104,7 @@ AnyCap is built to work alongside coding agents such as Claude Code, Codex, Curs
 
 ---
 
-Human-readable version: https://anycap.ai/en/for-human
+Human-readable version: https://anycap.ai/en
 
 LLM guidance: https://anycap.ai/llms.txt
 

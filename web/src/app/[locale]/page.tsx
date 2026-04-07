@@ -1,4 +1,4 @@
-import AgentLanding from "@/app/page";
+import { HumanHomePage } from "@/components/landing/HumanHomePage";
 import { createRootMetadata } from "@/lib/localized-metadata";
 import { isSupportedLocale } from "@/lib/site";
 import { notFound } from "next/navigation";
@@ -26,5 +26,5 @@ export default async function LocalizedHomePage({
     notFound();
   }
 
-  return <AgentLanding />;
+  return <HumanHomePage />;
 }

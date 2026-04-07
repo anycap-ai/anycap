@@ -39,7 +39,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#f2f3ef]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
       <header className="lg:hidden px-6 py-4 border-b border-[#dce0d2] bg-[#f2f3ef] flex items-center">
-        <Link href="/for-human">
+        <Link href="/">
           <AnycapLogo size={24} />
         </Link>
         <div className="ml-auto">
@@ -87,7 +87,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <aside className="hidden lg:flex flex-col w-[280px] shrink-0 border-r border-[#dce0d2] bg-[#f2f3ef] sticky top-0 h-screen">
           {/* Logo */}
           <div className="px-7 py-8">
-            <Link href="/for-human">
+            <Link href="/">
               <AnycapLogo size={28} />
             </Link>
           </div>

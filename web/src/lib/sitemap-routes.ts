@@ -21,7 +21,7 @@ const SITEMAP_LASTMOD_MANIFEST_PATH = path.join(
 );
 const EXPLICIT_LOCALIZED_PAGE_FILES = [
   path.join(LOCALIZED_APP_DIRECTORY, PAGE_FILE_NAME),
-  path.join(LOCALIZED_APP_DIRECTORY, "for-human", PAGE_FILE_NAME),
+  path.join(LOCALIZED_APP_DIRECTORY, "agent", PAGE_FILE_NAME),
 ] as const;
 const ROUTE_GROUP_SEGMENT_PATTERN = /^\(.*\)$/;
 const DYNAMIC_SEGMENT_PATTERN = /^\[.*\]$/;
@@ -33,7 +33,7 @@ const priorityByKnownPath = new Map<string, number>(
 
 const exactFallbackPriorities = new Map<string, number>([
   ["/", 1],
-  ["/for-human", 0.8],
+  ["/agent", 0.6],
   ["/start", 0.96],
   ["/about", 0.72],
   ["/cli", 0.78],

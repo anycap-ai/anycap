@@ -162,6 +162,11 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         href: "/learn/what-agents-cant-do",
         description: "A practical look at the gaps between agent potential and production reality.",
       },
+      {
+        title: "SMART Goal Generator",
+        href: "/learn/smart-goal-generator",
+        description: "See how AnyCap turns Codex, Cursor, and Claude Code into a research-backed SMART goal writer.",
+      },
     ],
   },
 };
