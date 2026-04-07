@@ -286,10 +286,25 @@ export function normalizePublicPath(pathname: string): string {
 export function buildLocalizedPath(locale: SiteLocale, pathname: string): string {
   const normalizedPath = normalizePublicPath(pathname);
   if (normalizedPath === ROOT_PATH) {
+    // Default-locale home is served at `/` (not `/en`) to avoid duplicate URLs and title tags.
+    if (locale === defaultLocale) {
+      return ROOT_PATH;
+    }
     return `/${locale}`;
   }
   return `/${locale}${normalizedPath}`;
 }
+
+/** In-app link target for the public home page for a given locale. */
+export function localizedHomePath(locale: SiteLocale): string {
+  return buildLocalizedPath(locale, ROOT_PATH);
+}
+
+/**
+ * Default-locale home path for client components (no request locale).
+ * Keep in sync with `localizedHomePath(defaultLocale)`.
+ */
+export const defaultPublicHomePath = localizedHomePath(defaultLocale);
 
 export function hasLocalePrefix(pathname: string): boolean {
   const [, maybeLocale] = normalizePublicPath(pathname).split("/");

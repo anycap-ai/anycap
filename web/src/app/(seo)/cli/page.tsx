@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createSoftwareApplicationJsonLd } from "@/lib/schema";
+import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -117,13 +117,12 @@ const nextPages = [
   },
 ];
 
-const softwareApplicationJsonLd = createSoftwareApplicationJsonLd({
+const cliSoftwareJsonLd = createSoftwareSourceCodeJsonLd({
   name: "AnyCap CLI",
   description:
     "Agent-native CLI that gives AI agents one install path and one interface for capabilities like image generation, video generation, image understanding, and video analysis.",
   path: "/cli",
-  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
-  installUrl: `${siteConfig.url}/install.sh`,
+  codeRepository: "https://github.com/anycap-ai/anycap",
 });
 
 export default function CliPage() {
@@ -137,7 +136,7 @@ export default function CliPage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(cliSoftwareJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">

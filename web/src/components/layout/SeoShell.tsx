@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 import { Header, humanNavLinks } from "@/components/layout/Header";
 import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
+import { getRequestLocale } from "@/lib/request-locale";
+import { localizedHomePath } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,6 +16,9 @@ const inter = Inter({
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export async function SeoShell({ children }: { children: React.ReactNode }) {
+  const locale = await getRequestLocale();
+  const homeHref = localizedHomePath(locale);
+
   return (
     <div
       className={`${GeistPixelSquare.variable} ${inter.variable} relative min-h-screen bg-[#f4f5f0] text-[#1c1f17] antialiased`}
@@ -34,7 +39,7 @@ export async function SeoShell({ children }: { children: React.ReactNode }) {
               Login
             </Link>
             <Link
-              href="/"
+              href={homeHref}
               prefetch={false}
               className="hidden lg:inline-block px-5 py-2 text-[15px] text-[#3f4437] bg-[#fffffc] border border-[#d4dbb8] hover:bg-white hover:border-[#b8c09a] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out"
               style={mono}

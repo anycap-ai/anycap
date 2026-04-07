@@ -1,6 +1,6 @@
 import "server-only";
 
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import {
   getLocalizedRouteUrl,
@@ -13,6 +13,12 @@ const APP_DIRECTORY = path.join(process.cwd(), "src", "app");
 const SEO_DIRECTORY = path.join(APP_DIRECTORY, "(seo)");
 const LOCALIZED_APP_DIRECTORY = path.join(APP_DIRECTORY, "[locale]");
 const LOCALIZED_SEO_DIRECTORY = path.join(LOCALIZED_APP_DIRECTORY, "(seo)");
+const SITEMAP_LASTMOD_MANIFEST_PATH = path.join(
+  process.cwd(),
+  "src",
+  "generated",
+  "sitemap-lastmod.json",
+);
 const EXPLICIT_LOCALIZED_PAGE_FILES = [
   path.join(LOCALIZED_APP_DIRECTORY, PAGE_FILE_NAME),
   path.join(LOCALIZED_APP_DIRECTORY, "for-human", PAGE_FILE_NAME),
@@ -58,7 +64,43 @@ type RouteFileRecord = {
   lastModified: Date;
 };
 
+type SitemapLastmodManifest = Record<string, string>;
+
+let sitemapLastmodManifest: SitemapLastmodManifest | null | undefined;
+
+function getSitemapLastmodManifest(): SitemapLastmodManifest | null {
+  if (sitemapLastmodManifest !== undefined) {
+    return sitemapLastmodManifest;
+  }
+
+  if (!existsSync(SITEMAP_LASTMOD_MANIFEST_PATH)) {
+    sitemapLastmodManifest = null;
+    return sitemapLastmodManifest;
+  }
+
+  try {
+    sitemapLastmodManifest = JSON.parse(
+      readFileSync(SITEMAP_LASTMOD_MANIFEST_PATH, "utf8"),
+    ) as SitemapLastmodManifest;
+  } catch (error) {
+    console.warn("Failed to load sitemap lastmod manifest", error);
+    sitemapLastmodManifest = null;
+  }
+
+  return sitemapLastmodManifest;
+}
+
 function getFileLastModified(filePath: string): Date {
+  const manifestKey = path.relative(process.cwd(), filePath);
+  const storedLastModified = getSitemapLastmodManifest()?.[manifestKey];
+
+  if (storedLastModified) {
+    const parsedDate = new Date(storedLastModified);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
   return statSync(filePath).mtime;
 }
 

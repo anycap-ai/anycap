@@ -1,11 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { marked } from "marked";
 import { landingMarkdown } from "@/lib/landing-content";
 import { HumanRedirectDialog } from "@/components/landing/HumanRedirectDialog";
 import { getRequestLocale } from "@/lib/request-locale";
-import { localizePublicPath } from "@/lib/site";
+import { createRootMetadata } from "@/lib/localized-metadata";
+import { defaultLocale, localizePublicPath } from "@/lib/site";
 
 export const runtime = "edge";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return createRootMetadata(defaultLocale);
+}
 
 const html = marked.parse(landingMarkdown, { async: false }) as string;
 

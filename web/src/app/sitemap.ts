@@ -10,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return localizedRoutes.map((route) => ({
       url: route.url,
       lastModified: route.lastModified,
-      changeFrequency: "weekly" as const,
-      priority: route.priority,
     }));
   } catch (error) {
     console.error("Failed to generate sitemap", error);
