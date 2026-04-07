@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate/edit images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.1.1
+  version: 0.1.2
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
