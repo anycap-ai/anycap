@@ -144,19 +144,54 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         href: "/compare/anycap-vs-openclaw-image-generation",
         description: "Compare one-key image access with a provider-key setup inside OpenClaw.",
       },
+      {
+        title: "AnyCap vs OpenClaw Video Generation",
+        href: "/compare/anycap-vs-openclaw-video-generation",
+        description: "Compare one-key video generation with a provider-key setup inside OpenClaw.",
+      },
     ],
   },
   learn: {
     key: "learn",
     path: "/learn",
-    title: "Learn — Essays and explainers for agent limitations and workflows",
+    title: "Learn — Buyer guides, assistant architecture, and workflow essays",
     description:
-      "Read explainers about what agents can and cannot do well, and how capability runtimes improve practical workflows.",
+      "Read coding-agent buyer guides, SaaS assistant architecture explainers, and workflow essays about how capability runtimes improve practical work.",
     eyebrow: "Learn",
-    heroLines: ["Learn the edges", "of agent work."],
+    heroLines: ["Buyer guides and explainers", "for modern assistants."],
     intro:
-      "This section collects explainers about agent constraints, tradeoffs, and the workflows that benefit from better tooling.",
+      "This section collects buyer guides for agent stacks, SaaS assistant architecture explainers, foundational capability-gap pages, and workflow proofs that show where AnyCap fits.",
     items: [
+      {
+        title: "Best AI for Coding Agents",
+        href: "/learn/best-ai-for-coding-agents",
+        description: "A cluster-anchor buyer guide on how to choose the right model and capability stack for coding agents.",
+      },
+      {
+        title: "Best AI for Claude Code",
+        href: "/learn/best-ai-for-claude-code",
+        description: "A Claude Code specific buyer-guide page on when the best setup is Claude Code plus a capability layer.",
+      },
+      {
+        title: "Best AI for Cursor",
+        href: "/learn/best-ai-for-cursor",
+        description: "A Cursor specific buyer-guide page on when the best setup is Cursor plus a capability layer.",
+      },
+      {
+        title: "AI Chatbot SaaS vs AI Agent for SaaS",
+        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        description: "A bridge explainer for teams deciding when a SaaS assistant is still a chatbot and when it has become an agent system.",
+      },
+      {
+        title: "Add Multimodal Capabilities to a SaaS Chatbot",
+        href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
+        description: "An implementation guide for adding image, video, web, and delivery workflows around a SaaS assistant.",
+      },
+      {
+        title: "What Is the Most Advanced AI?",
+        href: "/learn/what-is-the-most-advanced-ai",
+        description: "A product-aware explainer on why the most advanced AI is usually a stack, not a single model ranking.",
+      },
       {
         title: "What Agents Can't Do",
         href: "/learn/what-agents-cant-do",
