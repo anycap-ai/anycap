@@ -12,8 +12,9 @@ import {
 const protectedPaths = ["/dashboard"];
 const passthroughPrefixes = ["/auth", "/dashboard"];
 const globalUiPrefixes = ["/auth", "/dashboard"];
-const globalUiPaths = new Set(["/for-human"]);
+const globalUiPaths = new Set(["/"]);
 const legacyRouteRedirects = new Map<string, string>([
+  ["/for-human", "/"],
   ["/capabilities/image-read", "/capabilities/image-understanding"],
 ]);
 

@@ -9,7 +9,7 @@ export const runtime = "edge";
 export default function LogoutPage() {
   useEffect(() => {
     sessionStorage.removeItem("anycap_login");
-    window.location.assign(buildLogoutURL("/for-human"));
+    window.location.assign(buildLogoutURL("/"));
   }, []);
 
   return <ProcessingOverlay message="Logging out" />;

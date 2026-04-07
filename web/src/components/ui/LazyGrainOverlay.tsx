@@ -1,11 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-const GrainOverlay = dynamic(
-  () => import("./GrainOverlay").then((mod) => mod.GrainOverlay),
-  { ssr: false }
-);
+import { GrainOverlay } from "./GrainOverlay";
 
 export function LazyGrainOverlay() {
   return <GrainOverlay />;

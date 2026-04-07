@@ -21,7 +21,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
       const login = consumePendingLogin();
 
       if (!login) {
-        window.location.assign("/for-human?tip=login_callback_invalid");
+        window.location.assign("/?tip=login_callback_invalid");
         return;
       }
 
@@ -30,12 +30,12 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         if (login.mode === "browser_poll" || login.mode === "cli_login") {
           if (!login.browserToken) {
-            window.location.assign("/for-human?tip=login_callback_invalid");
+            window.location.assign("/?tip=login_callback_invalid");
             return;
           }
           const accessToken = await getAccessToken();
           if (!accessToken) {
-            window.location.assign("/for-human?tip=login_callback_failed");
+            window.location.assign("/?tip=login_callback_failed");
             return;
           }
           await anycapPost<{ message: string }>("/v1/auth/browser-verify", {
@@ -50,7 +50,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         const accessToken = await getAccessToken();
         if (!accessToken) {
-          window.location.assign("/for-human?tip=login_callback_failed");
+          window.location.assign("/?tip=login_callback_failed");
           return;
         }
 
@@ -73,7 +73,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         window.location.assign(redirectTarget);
       } catch {
-        window.location.assign("/for-human?tip=login_callback_failed");
+        window.location.assign("/?tip=login_callback_failed");
       }
     })();
   }, [initialProfile, params]);

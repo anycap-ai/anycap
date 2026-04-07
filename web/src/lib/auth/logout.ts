@@ -1,4 +1,4 @@
-export function buildLogoutURL(pathname = "/for-human"): string {
+export function buildLogoutURL(pathname = "/"): string {
   if (typeof window === "undefined") {
     return `/api/auth/logout?returnTo=${encodeURIComponent(pathname)}`;
   }

@@ -12,7 +12,7 @@ export function CLILoginClient() {
     const browserToken = params.get("browser_token") || "";
 
     if (!browserToken) {
-      window.location.assign("/for-human?tip=login_callback_invalid");
+      window.location.assign("/?tip=login_callback_invalid");
       return;
     }
 

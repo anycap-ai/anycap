@@ -7,7 +7,7 @@ import { DemoVideo } from "@/components/ui/DemoVideo";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { buildAgentCapabilityGapRows } from "@/lib/capability-inventory";
 import { createTechArticleJsonLd } from "@/lib/schema";
-import { siteConfig } from "@/lib/site";
+import { publicCapabilityLabel, siteConfig } from "@/lib/site";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
 const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
@@ -20,26 +20,26 @@ const lastUpdatedLabel = "April 5, 2026";
 const lastUpdatedIso = "2026-04-05";
 
 export const metadata: Metadata = {
-  title: "Claude Code tools and capabilities — Add image, video, and vision with AnyCap",
+  title: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
   description:
-    "Tell Claude Code 'help me install anycap.ai' and it handles the rest — skill discovery, CLI install, authentication, and immediate access to image generation, video generation, image understanding, and video analysis, all from natural language.",
+    "Add image generation, video generation, and vision to Claude Code through one skill install, one CLI, and one auth flow with AnyCap.",
   alternates: { canonical: "/for/claude-code" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/for/claude-code",
     siteName: siteConfig.siteName,
-    title: "Claude Code tools and capabilities — Add image, video, and vision with AnyCap",
+    title: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
     description:
-      "Tell Claude Code to install AnyCap and it handles the rest — skill discovery, CLI setup, authentication, and capability calls, all from natural language.",
+      "Give Claude Code one install path for image, video, and vision workflows through AnyCap.",
   },
 };
 
 const integrationGuideJsonLd = {
   ...createTechArticleJsonLd({
-    headline: "Claude Code tools and capabilities — Add image, video, and vision with AnyCap",
+    headline: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
     description:
-      "Guide to adding image generation, video generation, image understanding, and video analysis to Claude Code through one capability runtime.",
+      "Guide to adding image generation, video generation, and vision workflows to Claude Code through one capability runtime.",
     path: "/for/claude-code",
     about: ["Claude Code", "AnyCap CLI", "Agent skills", "Capability runtime"],
     keywords: [
@@ -261,8 +261,9 @@ export default function ForClaudeCodePage() {
                 Claude Code
               </a>{" "}
               is excellent at planning, refactoring, and code execution. The gap appears when the
-              workflow needs product visuals, walkthrough videos, screenshot understanding, or
-              recording review — none of those are Claude Code tools today.
+              workflow needs {publicCapabilityLabel}, like product visuals, walkthrough videos,
+              screenshot understanding, or recording review — none of those are Claude Code tools
+              today.
             </p>
             <p className="mt-4 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               Just tell Claude Code what you need — like{" "}

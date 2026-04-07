@@ -16,7 +16,7 @@ export function LogoutButton({ className, style, children }: Props) {
   function handleLogout() {
     setLoading(true);
     sessionStorage.removeItem("anycap_login");
-    window.location.assign(buildLogoutURL("/for-human"));
+    window.location.assign(buildLogoutURL("/"));
   }
 
   return (

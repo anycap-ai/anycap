@@ -27,13 +27,21 @@ export const localeConfig = {
 export const capabilitySummary =
   "image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, and web crawl";
 
+export const publicCapabilityLabel = "image, video, and vision capabilities";
+
+export const publicCapabilitySummary =
+  "image generation, video generation, and vision workflows";
+
+export const adjacentWorkflowSummary =
+  "audio, web, storage, and publishing workflows";
+
 export const roadmapCapabilitySummary = "speech and sandbox";
 
 export const defaultSiteDescription =
-  `AnyCap gives AI agents one CLI and one credential for ${capabilitySummary} — plus cloud storage and web publishing. Built for agents, not adapted from human tools.`;
+  `AnyCap gives coding agents one install path, one auth flow, and one CLI for ${publicCapabilitySummary}.`;
 
 export const defaultSocialImageAlt =
-  `AnyCap gives AI agents ${capabilitySummary} through one command.`;
+  `AnyCap adds ${publicCapabilityLabel} to coding agents through one CLI.`;
 
 export const siteConfig = {
   name: "AnyCap",
@@ -44,16 +52,16 @@ export const siteConfig = {
   supportedLocales,
   defaultTitle: "Any Capability, Instantly",
   defaultDescription: defaultSiteDescription,
-  humanTitle: "Your agent can do anything. It just needs AnyCap.",
-  humanDescription:
-    `See how AnyCap gives agents ${capabilitySummary} through one install path, one auth flow, and one command surface.`,
+  agentTitle: "AnyCap for Agents — Add Image, Video, and Vision Through One CLI",
+  agentDescription:
+    `Agent entry for AnyCap. Install once, authenticate once, and add ${publicCapabilitySummary} to coding agents through one command surface.`,
 } as const;
 
-export type PublicRouteKind = "home" | "human" | "seo";
+export type PublicRouteKind = "home" | "agent" | "seo";
 
 export const publicRouteDefinitions = [
   { key: "home", kind: "home", path: ROOT_PATH, priority: 1 },
-  { key: "for-human", kind: "human", path: "/for-human", priority: 0.8 },
+  { key: "agent", kind: "agent", path: "/agent", priority: 0.6 },
   { key: "about", kind: "seo", path: "/about", priority: 0.72 },
   { key: "pricing", kind: "seo", path: "/pricing", priority: 0.9 },
   { key: "start", kind: "seo", path: "/start", priority: 0.96 },
@@ -80,6 +88,12 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/learn/what-agents-cant-do",
     priority: 0.84,
+  },
+  {
+    key: "learn-smart-goal-generator",
+    kind: "seo",
+    path: "/learn/smart-goal-generator",
+    priority: 0.82,
   },
   { key: "guides-add-tools-to-claude-code", kind: "seo", path: "/guides/add-tools-to-claude-code", priority: 0.84 },
   {
@@ -300,11 +314,22 @@ export function localizedHomePath(locale: SiteLocale): string {
   return buildLocalizedPath(locale, ROOT_PATH);
 }
 
+/** In-app link target for the agent entry page for a given locale. */
+export function localizedAgentPath(locale: SiteLocale): string {
+  return buildLocalizedPath(locale, "/agent");
+}
+
 /**
  * Default-locale home path for client components (no request locale).
  * Keep in sync with `localizedHomePath(defaultLocale)`.
  */
 export const defaultPublicHomePath = localizedHomePath(defaultLocale);
+
+/**
+ * Default-locale agent entry path for client components (no request locale).
+ * Keep in sync with `localizedAgentPath(defaultLocale)`.
+ */
+export const defaultAgentEntryPath = localizedAgentPath(defaultLocale);
 
 export function hasLocalePrefix(pathname: string): boolean {
   const [, maybeLocale] = normalizePublicPath(pathname).split("/");

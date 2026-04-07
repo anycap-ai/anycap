@@ -91,23 +91,23 @@ export function createRootMetadata(locale: SiteLocale): Metadata {
   });
 }
 
-export function createForHumanMetadata(locale: SiteLocale): Metadata {
-  return createLocalizedMetadata(locale, "for-human", {
-    title: siteConfig.humanTitle,
-    description: siteConfig.humanDescription,
+export function createAgentMetadata(locale: SiteLocale): Metadata {
+  return createLocalizedMetadata(locale, "agent", {
+    title: siteConfig.agentTitle,
+    description: siteConfig.agentDescription,
     openGraph: {
       type: "website",
       locale: getLocaleConfig(locale).ogLocale,
-      url: buildLocalizedPath(locale, "/for-human"),
+      url: buildLocalizedPath(locale, "/agent"),
       siteName: siteConfig.siteName,
-      title: siteConfig.humanTitle,
-      description: siteConfig.humanDescription,
+      title: siteConfig.agentTitle,
+      description: siteConfig.agentDescription,
       images: [defaultSocialImage],
     },
     twitter: {
       card: "summary_large_image",
-      title: siteConfig.humanTitle,
-      description: siteConfig.humanDescription,
+      title: siteConfig.agentTitle,
+      description: siteConfig.agentDescription,
       images: [defaultSocialImage.url],
     },
   });

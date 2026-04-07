@@ -7,7 +7,12 @@ import {
 } from "@/components/landing/CapabilityGapTable";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createTechArticleJsonLd } from "@/lib/schema";
-import { siteConfig } from "@/lib/site";
+import {
+  adjacentWorkflowSummary,
+  publicCapabilityLabel,
+  publicCapabilitySummary,
+  siteConfig,
+} from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -15,18 +20,18 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
+  title: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
   description:
-    "Your agent can reason, but it still needs capabilities for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, web crawl, and drive storage. AnyCap provides those capabilities through one CLI, one auth flow, and one install path.",
+    "Browse the capability runtime that adds image generation, video generation, and vision workflows to coding agents through one install path, one auth flow, and one CLI.",
   alternates: { canonical: "/capabilities" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/capabilities",
     siteName: siteConfig.siteName,
-    title: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
+    title: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
     description:
-      "Browse the capability layer that adds generation, analysis, retrieval, and storage workflows to modern coding agents.",
+      "Start with image, video, and vision workflows, then expand into adjacent agent capabilities through the same runtime.",
   },
 };
 
@@ -127,11 +132,11 @@ const capabilities: Capability[] = [
 ];
 
 const hubArticleJsonLd = createTechArticleJsonLd({
-  headline: "AI agent capabilities — generation, analysis, retrieval, and storage through one interface",
+  headline: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
   description:
-    "Hub page for the capabilities agents use across generation, analysis, retrieval, and storage workflows.",
+    "Hub page for the image, video, and vision workflows coding agents miss most often, with adjacent capabilities in the same runtime.",
   path: "/capabilities",
-  about: ["AI agent capabilities", "Generation", "Analysis", "Web search", "Drive storage"],
+  about: ["AI agent capabilities", "Image generation", "Video generation", "Vision workflows"],
   keywords: [
     "ai agent capabilities",
     "image generation for ai agents",
@@ -147,7 +152,8 @@ const itemListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "AnyCap Capabilities",
-  description: "Agent capabilities across generation, analysis, retrieval, and storage through the AnyCap CLI and capability runtime.",
+  description:
+    "Capability hub for image, video, and vision workflows first, with adjacent runtime capabilities in the same AnyCap CLI.",
   numberOfItems: capabilities.filter((capability) => capability.status === "available").length,
   itemListElement: capabilities
     .filter((capability) => capability.status === "available")
@@ -318,16 +324,16 @@ export default function CapabilitiesPage() {
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Your agent can reason.
+              Your agent can code.
               <br />
-              It still needs capabilities.
+              It still needs {publicCapabilityLabel}.
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               The missing layer is usually not planning or code generation. It is access to
-              generation, analysis, retrieval, and storage workflows through a consistent runtime.
-              AnyCap gives agents image, video, music, vision, audio, web, and drive capabilities
-              through one interface, one auth flow, and one install path across Claude Code,
-              Cursor, Codex, and the rest of your agent stack.
+              {publicCapabilitySummary} through a consistent runtime. AnyCap adds those workflows
+              through one CLI, one auth flow, and one install path across Claude Code, Cursor,
+              Codex, and the rest of your agent stack. The same runtime also extends into
+              {" "}{adjacentWorkflowSummary} as your stack grows.
             </p>
           </FadeIn>
 
