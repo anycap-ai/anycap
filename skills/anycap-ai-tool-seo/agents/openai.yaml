@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Tool SEO"
+  short_description: "Plan search-intent-driven SEO for AI tool websites"
+  default_prompt: "Analyze my AI tool website and propose a search-intent-driven SEO plan"

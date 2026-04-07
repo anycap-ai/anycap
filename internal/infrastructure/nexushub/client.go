@@ -23,7 +23,6 @@ const (
 	defaultNexusHubEnterFrom = "anycap_api"
 	submitAtomicProcessPath  = "/v1/submit_atomic_process"
 	getSubmitResultPath      = "/v1/get_submit_result/"
-
 )
 
 type ClientConfig struct {
