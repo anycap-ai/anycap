@@ -30,7 +30,7 @@ const (
 	rateLimitEnvPrefix           = "ANYCAP_RATE_LIMIT_"
 	rateLimitEnvSuffix           = "_RPM"
 	defaultLoginAPIKeyTTL        = 7 * 24 * time.Hour
-	defaultAgentPlatformTimeout  = 120 * time.Second
+	defaultAgentPlatformTimeout  = 600 * time.Second
 	defaultPresignExpiry         = 600   // seconds (10 minutes)
 	defaultPresignGetExpiry      = 3600  // seconds (1 hour)
 	maxPresignExpiry             = 3600  // seconds (1 hour hard cap)

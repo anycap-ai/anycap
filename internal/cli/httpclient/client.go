@@ -77,7 +77,7 @@ func New(baseURL string, opts ...Option) *Client {
 		baseURL: strings.TrimRight(baseURL, "/"),
 		version: "dev",
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second,
+			Timeout: 600 * time.Second,
 		},
 	}
 	for _, o := range opts {
