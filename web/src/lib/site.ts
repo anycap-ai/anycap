@@ -95,6 +95,42 @@ export const publicRouteDefinitions = [
     path: "/learn/smart-goal-generator",
     priority: 0.82,
   },
+  {
+    key: "learn-what-is-the-most-advanced-ai",
+    kind: "seo",
+    path: "/learn/what-is-the-most-advanced-ai",
+    priority: 0.8,
+  },
+  {
+    key: "learn-ai-chatbot-vs-ai-agent-for-saas",
+    kind: "seo",
+    path: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+    priority: 0.79,
+  },
+  {
+    key: "learn-best-ai-for-coding-agents",
+    kind: "seo",
+    path: "/learn/best-ai-for-coding-agents",
+    priority: 0.8,
+  },
+  {
+    key: "learn-best-ai-for-claude-code",
+    kind: "seo",
+    path: "/learn/best-ai-for-claude-code",
+    priority: 0.8,
+  },
+  {
+    key: "learn-best-ai-for-cursor",
+    kind: "seo",
+    path: "/learn/best-ai-for-cursor",
+    priority: 0.8,
+  },
+  {
+    key: "learn-add-multimodal-capabilities-to-saas-chatbot",
+    kind: "seo",
+    path: "/learn/add-multimodal-capabilities-to-saas-chatbot",
+    priority: 0.78,
+  },
   { key: "guides-add-tools-to-claude-code", kind: "seo", path: "/guides/add-tools-to-claude-code", priority: 0.84 },
   {
     key: "guides-install-anycap",
@@ -179,6 +215,12 @@ export const publicRouteDefinitions = [
     key: "compare-anycap-vs-openclaw-image-generation",
     kind: "seo",
     path: "/compare/anycap-vs-openclaw-image-generation",
+    priority: 0.67,
+  },
+  {
+    key: "compare-anycap-vs-openclaw-video-generation",
+    kind: "seo",
+    path: "/compare/anycap-vs-openclaw-video-generation",
     priority: 0.67,
   },
   {
