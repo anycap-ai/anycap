@@ -20,7 +20,7 @@ const legacyRouteRedirects = new Map<string, string>([
 function redirectToLocalizedPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
   redirectURL.pathname = buildLocalizedPath(defaultLocale, pathname);
-  return NextResponse.redirect(redirectURL);
+  return NextResponse.redirect(redirectURL, 308);
 }
 
 function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
@@ -70,9 +70,20 @@ export async function middleware(req: NextRequest) {
     redirectURL.pathname = buildLocalizedPath(locale ?? defaultLocale, legacyRedirectPath);
     return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
   }
+
+  if (
+    locale === defaultLocale &&
+    pathname === "/" &&
+    normalizedPath === `/${defaultLocale}`
+  ) {
+    const redirectURL = req.nextUrl.clone();
+    redirectURL.pathname = "/";
+    return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
+  }
+
   if (!locale) {
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
-    if (matchedPublicRoute) {
+    if (matchedPublicRoute && matchedPublicRoute.key !== "home") {
       return applyAuthResponse(
         redirectToLocalizedPath(req, matchedPublicRoute.path),
         authResponse,

@@ -3,6 +3,7 @@
 import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { UserAvatarMenu, UserAvatar } from "@/components/ui/UserAvatarMenu";
+import { defaultPublicHomePath } from "@/lib/site";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
@@ -43,11 +44,21 @@ export function AuthNav({ variant = "human" }: { variant?: "human" | "seo" }) {
         Try AnyCap
       </Link>
       {variant === "human" ? (
-        <Link href="/" prefetch={false} className="hidden lg:inline-block px-5 py-2 text-[15px] text-[#3f4437] bg-[#fffffc] border border-[#d4dbb8] hover:bg-white hover:border-[#b8c09a] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out" style={mono}>
+        <Link
+          href={defaultPublicHomePath}
+          prefetch={false}
+          className="hidden lg:inline-block px-5 py-2 text-[15px] text-[#3f4437] bg-[#fffffc] border border-[#d4dbb8] hover:bg-white hover:border-[#b8c09a] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out"
+          style={mono}
+        >
           I&apos;m Agent
         </Link>
       ) : (
-        <Link href="/" prefetch={false} className="px-3 py-2 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out" style={mono}>
+        <Link
+          href={defaultPublicHomePath}
+          prefetch={false}
+          className="px-3 py-2 text-[15px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out"
+          style={mono}
+        >
           I&apos;m Agent →
         </Link>
       )}

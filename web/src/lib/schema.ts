@@ -25,6 +25,15 @@ type SoftwareApplicationSchemaInput = {
   installUrl?: string;
 };
 
+type SoftwareSourceCodeSchemaInput = {
+  name: string;
+  description: string;
+  path: string;
+  codeRepository: string;
+  programmingLanguage?: string;
+  runtimePlatform?: string;
+};
+
 const organizationReference = {
   "@type": "Organization",
   name: siteConfig.siteName,
@@ -113,8 +122,32 @@ export function createSoftwareApplicationJsonLd({
     ...(installUrl ? { installUrl } : {}),
     offers: {
       "@type": "Offer",
-      price: "0",
+      price: 0,
       priceCurrency: "USD",
     },
+  };
+}
+
+/** CLI / repo-style tooling: avoids Google Software App rules that require aggregateRating or review. */
+export function createSoftwareSourceCodeJsonLd({
+  name,
+  description,
+  path,
+  codeRepository,
+  programmingLanguage = "Go",
+  runtimePlatform = "macOS, Linux, Windows",
+}: SoftwareSourceCodeSchemaInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name,
+    description,
+    url: buildAbsoluteUrl(path),
+    codeRepository,
+    programmingLanguage,
+    runtimePlatform,
+    codeSampleType: "full (compile ready) solution",
+    author: organizationReference,
+    publisher: organizationReference,
   };
 }
