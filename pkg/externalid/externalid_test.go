@@ -55,3 +55,29 @@ func TestValidatePrefix(t *testing.T) {
 		})
 	}
 }
+
+func TestNewAgentControlPrefixesGenerateValidIDs(t *testing.T) {
+	tests := []struct {
+		name   string
+		prefix string
+	}{
+		{name: "im binding", prefix: PrefixIMBinding},
+		{name: "runner", prefix: PrefixRunner},
+		{name: "agent conversation", prefix: PrefixAgentConversation},
+		{name: "agent task", prefix: PrefixAgentTask},
+		{name: "agent session", prefix: PrefixAgentSession},
+		{name: "agent mailbox message", prefix: PrefixAgentMailboxMessage},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Generate(tt.prefix)
+			if !strings.HasPrefix(got, tt.prefix) {
+				t.Fatalf("expected prefix %q, got %q", tt.prefix, got)
+			}
+			if err := ValidatePrefix(got, tt.prefix); err != nil {
+				t.Fatalf("expected valid generated id, got error %v", err)
+			}
+		})
+	}
+}

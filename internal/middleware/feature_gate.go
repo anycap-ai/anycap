@@ -43,6 +43,8 @@ func FeatureGate(provider FeatureAccessProvider) app.HandlerFunc {
 		{"/v1/capabilities/audio/read", "audio.read"},
 		{"/v1/drive/", "drive"},
 		{"/v1/pages", "page"},
+		{"/v1/agent/", "agent.control"},
+		{"/im/events/", "agent.control"},
 	}
 
 	return func(c context.Context, ctx *app.RequestContext) {

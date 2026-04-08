@@ -84,6 +84,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		meta.NewUpdateCmd(opts.Stdout, opts.Stderr),
 		meta.NewSkillCmd(opts.Stdout, opts.Stderr),
 		meta.NewDownloadCmd(opts.Stdout),
+		meta.NewAgentCmd(clientFactory, opts.Stdout),
 	)
 
 	// Infrastructure commands.

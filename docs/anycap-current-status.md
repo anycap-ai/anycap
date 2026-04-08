@@ -100,6 +100,40 @@ Supports both ID-based (`--parent dn_xxx`) and path-based (`--parent-path /folde
 
 Deploy supports concurrent asset uploads. Sites support password-protected access and SPA mode.
 
+### Agent Control — IM Command Surface
+
+| Feature | Surface | Description |
+|---------|---------|-------------|
+| IM binding token | `anycap agent im-bindings token create --platform feishu` | Mint a short-lived bind token for explicit IM sender -> AnyCap account binding |
+| IM binding list | `anycap agent im-bindings list` | List current IM bindings for the signed-in user |
+| Runner list | `anycap agent runners list` | Inspect registered runners visible to the current user |
+| Runner daemon | `anycap agent runners serve --name mac-mini --platform feishu --executor codex` | Register or reuse a runner, poll conversation sessions, execute them via local executor, and report session lifecycle updates |
+| Conversation list/get | `anycap agent conversations list|get <agc_...>` | Inspect protected conversation state, including the latest session summary |
+| Conversation control | `anycap agent conversations stop|reset|fork|fire <agc_...>` | Stop an active conversation, reset it into a new session, fork it into a new branch, or manually consume pending mailbox results and continue |
+| Task inspect | `anycap agent task get <agt_...>` | View a remote agent task and its lifecycle state |
+| Task cancel | `anycap agent task cancel <agt_...>` | Cancel a queued/dispatched/running remote agent task |
+| Feishu webhook | `POST /im/events/feishu` | Root/public webhook with platform verification, bind command handling, and command intake |
+| Conversation inspect | `/v1/agent/conversations*` | Protected server APIs for listing active conversations, session history, and mailbox entries |
+| Runner control API | `/v1/agent/*` | Protected server APIs for bindings, runners, heartbeats, session polling, session status lookup, and updates |
+
+Current Phase 1 behavior:
+
+- Feishu is the first wired IM adapter.
+- Binding uses explicit `/bind <token>` flow.
+- IM chat intake is conversation-first: plain text appends a new session to the active conversation for that Feishu DM chat.
+- Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
+- Fixed bot -> runner routing is supported via server config.
+- Runner execution uses polling-style session dispatch: webhook persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.
+- The CLI runner supports a real local `codex` executor. Non-interactive runs capture Codex `thread_id` and persist it as `executor_ref`.
+- Continue-mode sessions inherit the parent `executor_ref`, so the runner can resume the existing Codex thread with `codex exec resume`.
+- Fire-mode sessions inherit the parent `executor_ref`, so pending mailbox results can be fed back into the same Codex conversation context.
+- Protected mailbox APIs support creating and listing undelivered mailbox entries. By default, mailbox writes auto-fire into a new fire-mode session whenever the current front session is idle; if a session is still `created` or `running`, mailbox entries stay queued and are auto-fired after that session reaches `committed` or `failed`.
+- Runtime now emits a lightweight conversation notification on session terminal updates; the Feishu layer translates that structured notification into a stage-style reply, including a short summary when an async mailbox result triggers auto-fire continuation.
+- Manual `/fire` and `anycap agent conversations fire ...` remain available as operator/debug fallbacks.
+- `/stop` is end-to-end: it marks the active session interrupted on the server, runner detects that state, and the local Codex subprocess is canceled.
+- Conversation list/detail APIs now include a `last_session` summary with mode, status, executor reuse marker, timestamps, and final message when available.
+- The same stop/reset/fork/fire controls are exposed through protected HTTP APIs and the `anycap agent conversations ...` CLI group, not only through Feishu slash-style commands.
+
 ## 3. CLI
 
 ### Full Command Tree
@@ -139,6 +173,16 @@ anycap
 ├── config
 │   ├── show / keys / get / set / unset
 ├── feedback                  Submit bug report / feature request
+├── agent
+│   ├── im-bindings
+│   │   ├── token create      Create short-lived IM bind token
+│   │   └── list              List current IM bindings
+│   ├── runners
+│   │   ├── list              List registered runners
+│   │   └── serve             Run a polling runner loop (stub or local codex executor)
+│   └── task
+│       ├── get               Get remote agent task details
+│       └── cancel            Cancel remote agent task
 ├── skill
 │   ├── check / install / update
 ├── update                    Self-update CLI binary
@@ -163,7 +207,7 @@ Credentials stored in system keychain (file fallback at `~/.anycap/credentials`)
 
 ### Feature Gating
 
-CLI fetches available features from the server at startup. Disabled capabilities are hidden from help and unavailable. Falls back to all-enabled when server is unreachable.
+CLI always shows all commands. Feature gating is enforced on the server side. When a capability or control surface is disabled, the server returns a structured error and hint.
 
 ## 4. Skill Files
 

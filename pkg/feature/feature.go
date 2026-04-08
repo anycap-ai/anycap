@@ -36,6 +36,7 @@ const (
 	Page          = "page"
 	WebSearch     = "web.search"
 	WebCrawl      = "web.crawl"
+	AgentControl  = "agent.control"
 )
 
 // defaults defines the code-level default state for each feature.
@@ -56,6 +57,7 @@ var defaults = map[string]bool{
 	Page:          true,
 	WebSearch:     true,
 	WebCrawl:      true,
+	AgentControl:  true,
 }
 
 var (

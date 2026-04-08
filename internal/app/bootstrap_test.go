@@ -38,6 +38,52 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	}
 }
 
+func TestBuildFixedRunnerResolver_ResolvesConfiguredBotToRunner(t *testing.T) {
+	resolver := buildFixedRunnerResolver(config.Config{
+		AgentControl: config.AgentControlConfig{
+			FixedRunners: []config.AgentControlFixedRunnerConfig{
+				{
+					Platform: "feishu",
+					BotID:    "cli_bot",
+					RunnerID: "21",
+				},
+			},
+		},
+	}, idresolver.PassthroughIDResolver{})
+	if resolver == nil {
+		t.Fatal("expected fixed runner resolver")
+	}
+
+	id, err := resolver(model.IMPlatformFeishu, "cli_bot")
+	if err != nil {
+		t.Fatalf("resolver() error = %v", err)
+	}
+	if id != 21 {
+		t.Fatalf("expected runner id 21, got %d", id)
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsNilWhenConfigMissing(t *testing.T) {
+	if adapter := buildFeishuAdapter(config.Config{}); adapter != nil {
+		t.Fatalf("expected nil adapter when config missing, got %T", adapter)
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsAdapterWhenConfigured(t *testing.T) {
+	adapter := buildFeishuAdapter(config.Config{
+		AgentControl: config.AgentControlConfig{
+			Feishu: config.AgentControlFeishuConfig{
+				VerificationToken: "verify_token",
+				EncryptKey:        "encrypt_key",
+				ReplyAPI:          "https://reply.anycap.dev",
+			},
+		},
+	})
+	if adapter == nil {
+		t.Fatal("expected configured feishu adapter")
+	}
+}
+
 func TestDescribePaymentEventsConfig(t *testing.T) {
 	got := describePaymentEventsConfig(config.PaymentEventsConfig{
 		Enabled:       true,

@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
 	billingapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billing"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
@@ -35,6 +36,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
+	infraim "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/im"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/lark"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/migration"
@@ -47,6 +49,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
+	agentcontrolhandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/agentcontrol"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
@@ -93,32 +96,41 @@ const (
 )
 
 type serverDependencies struct {
-	config              config.Config
-	buildInfo           buildinfo.Info
-	systemService       *systemapp.Service
-	loginService        *loginapp.Service
-	imageService        *imageapp.Service
-	videoService        *videoapp.Service
-	musicService        *musicapp.Service
-	spaceService        *spaceapp.Service
-	driveService        *driveapp.Service
-	pageService         *pageapp.Service
-	catalogService      *catalogapp.Service
-	modelRouteService   *modelrouteapp.Service
-	capabilitiesService *capapp.Service
-	webService          *webapp.Service
-	feedbackService     *feedbackapp.Service
-	apiKeyService       port.APIKeyService
-	identityTokens      port.IdentityTokenAuthenticator
-	rateLimiter         port.RateLimiter
-	rateLimitResolver   middleware.CapabilityRateLimitResolver
-	kvSyncWorker        *kvsync.Worker
-	usageSyncWorker     *usageapp.Worker
-	billingWorker       *billingapp.Worker
-	paymentEventsWorker *paymenteventsinfra.Worker
-	idResolver          idresolver.IDResolver
-	idMapper            presenter.IDMapper
-	quotaProvider       port.StorageQuotaProvider
+	config                config.Config
+	buildInfo             buildinfo.Info
+	systemService         *systemapp.Service
+	loginService          *loginapp.Service
+	imageService          *imageapp.Service
+	videoService          *videoapp.Service
+	musicService          *musicapp.Service
+	spaceService          *spaceapp.Service
+	driveService          *driveapp.Service
+	pageService           *pageapp.Service
+	catalogService        *catalogapp.Service
+	modelRouteService     *modelrouteapp.Service
+	bindingService        *agentcontrolapp.BindingService
+	conversationService   *agentcontrolapp.ConversationService
+	taskService           *agentcontrolapp.TaskService
+	capabilitiesService   *capapp.Service
+	webService            *webapp.Service
+	feedbackService       *feedbackapp.Service
+	agentBindingRepo      port.IMBindingRepository
+	agentRunnerRepo       port.AgentRunnerRepository
+	agentConversationRepo port.AgentConversationRepository
+	agentSessionRepo      port.AgentSessionRepository
+	agentTaskRepo         port.AgentTaskRepository
+	imAdapter             *infraim.FeishuAdapter
+	apiKeyService         port.APIKeyService
+	identityTokens        port.IdentityTokenAuthenticator
+	rateLimiter           port.RateLimiter
+	rateLimitResolver     middleware.CapabilityRateLimitResolver
+	kvSyncWorker          *kvsync.Worker
+	usageSyncWorker       *usageapp.Worker
+	billingWorker         *billingapp.Worker
+	paymentEventsWorker   *paymenteventsinfra.Worker
+	idResolver            idresolver.IDResolver
+	idMapper              presenter.IDMapper
+	quotaProvider         port.StorageQuotaProvider
 }
 
 type Server struct {
@@ -171,6 +183,20 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	authMiddleware := buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens)
 	rateLimitMiddleware := middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver)
 	featureGateMiddleware := middleware.FeatureGate(featureProvider)
+	webhookHandler := agentcontrolhandler.NewWebhookHandler(deps.bindingService, deps.conversationService, deps.taskService, deps.imAdapter)
+	bindingHandler := agentcontrolhandler.NewBindingHandler(deps.bindingService, deps.agentBindingRepo, deps.idResolver, deps.idMapper)
+	conversationHandler := agentcontrolhandler.NewConversationHandler(deps.conversationService, deps.agentConversationRepo, deps.agentSessionRepo, deps.idResolver, deps.idMapper)
+	taskHandler := agentcontrolhandler.NewTaskHandler(deps.taskService, deps.agentTaskRepo, deps.idResolver, deps.idMapper)
+	runnerHandler := agentcontrolhandler.NewRunnerHandler(
+		deps.agentBindingRepo,
+		deps.agentRunnerRepo,
+		deps.agentConversationRepo,
+		deps.taskService,
+		deps.conversationService,
+		deps.imAdapter,
+		deps.idResolver,
+		deps.idMapper,
+	)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr:        deps.config.HTTPAddr,
@@ -178,6 +204,10 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		Root: []transporthttp.RouteRegistrar{
 			transporthttp.RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
 			transporthttp.RouteRegistrarFunc(loginHandler.RegisterRootRoutes),
+			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
+				rootProtected := group.Group("", middleware.FeatureGate(featureProvider))
+				webhookHandler.RegisterRoutes(rootProtected)
+			}),
 		},
 		V1: []transporthttp.RouteRegistrar{
 			systemHandler,
@@ -199,6 +229,10 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				capHandler.RegisterRoutes(protected)
 				webHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
+				bindingHandler.RegisterRoutes(protected)
+				conversationHandler.RegisterRoutes(protected)
+				taskHandler.RegisterRoutes(protected)
+				runnerHandler.RegisterRoutes(protected)
 			}),
 		},
 	})
@@ -236,6 +270,7 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.Page:          true,
 		feature.WebSearch:     cfg.Api302.Enabled() || cfg.AgentPlatform.Enabled(),
 		feature.WebCrawl:      cfg.Api302.Enabled(),
+		feature.AgentControl:  true,
 	}
 
 	for name, defVal := range defaults {
@@ -301,30 +336,39 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetAllowedCheckoutReturnOrigins(buildCORSAllowedOrigins(cfg))
 		systemService.SetUsageReader(billingComp.usageReader)
 		return serverDependencies{
-			config:              cfg,
-			buildInfo:           info,
-			systemService:       systemService,
-			loginService:        authComp.loginService,
-			imageService:        mediaComp.imageService,
-			videoService:        mediaComp.videoService,
-			musicService:        mediaComp.musicService,
-			spaceService:        nil,
-			driveService:        nil,
-			pageService:         nil,
-			catalogService:      shared.catalogService,
-			modelRouteService:   shared.modelRouteService,
-			capabilitiesService: mediaComp.capabilitiesService,
-			webService:          webComp.webService,
-			feedbackService:     webComp.feedbackService,
-			apiKeyService:       authComp.apiKeyService,
-			identityTokens:      authComp.identityTokens,
-			rateLimiter:         ratelimit.NewInMemoryLimiter(),
-			usageSyncWorker:     mediaComp.usageSyncWorker,
-			billingWorker:       mediaComp.billingWorker,
-			paymentEventsWorker: billingComp.paymentEventsWorker,
-			rateLimitResolver:   config.NewRateLimitProvider(cfg),
-			idResolver:          authComp.idResolver,
-			idMapper:            authComp.idMapper,
+			config:                cfg,
+			buildInfo:             info,
+			systemService:         systemService,
+			loginService:          authComp.loginService,
+			imageService:          mediaComp.imageService,
+			videoService:          mediaComp.videoService,
+			musicService:          mediaComp.musicService,
+			spaceService:          nil,
+			driveService:          nil,
+			pageService:           nil,
+			catalogService:        shared.catalogService,
+			modelRouteService:     shared.modelRouteService,
+			bindingService:        nil,
+			conversationService:   nil,
+			taskService:           nil,
+			capabilitiesService:   mediaComp.capabilitiesService,
+			webService:            webComp.webService,
+			feedbackService:       webComp.feedbackService,
+			agentBindingRepo:      nil,
+			agentRunnerRepo:       nil,
+			agentConversationRepo: nil,
+			agentSessionRepo:      nil,
+			agentTaskRepo:         nil,
+			imAdapter:             nil,
+			apiKeyService:         authComp.apiKeyService,
+			identityTokens:        authComp.identityTokens,
+			rateLimiter:           ratelimit.NewInMemoryLimiter(),
+			usageSyncWorker:       mediaComp.usageSyncWorker,
+			billingWorker:         mediaComp.billingWorker,
+			paymentEventsWorker:   billingComp.paymentEventsWorker,
+			rateLimitResolver:     config.NewRateLimitProvider(cfg),
+			idResolver:            authComp.idResolver,
+			idMapper:              authComp.idMapper,
 		}, nil
 	case "dev", "prod", "integration":
 		sqlDB, err := openPostgres(cfg.PGDSN)
@@ -342,6 +386,23 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		}
 		mediaComp := buildPersistentMediaComposition(cfg, shared, billingComp, storageComp)
 		webComp := buildPersistentWebComposition(cfg, storageComp.db, shared, billingComp)
+		agentControlRepo := postgres.NewAgentControlRepo(storageComp.db)
+		bindingService := agentcontrolapp.NewBindingService(agentControlRepo, agentControlRepo)
+		conversationService := agentcontrolapp.NewConversationService(
+			agentControlRepo,
+			agentControlRepo,
+			agentControlRepo,
+			agentControlRepo,
+			agentControlRepo,
+			agentcontrolapp.WithConversationFixedRunnerResolver(buildFixedRunnerResolver(cfg, authComp.idResolver)),
+		)
+		taskService := agentcontrolapp.NewTaskService(
+			agentControlRepo,
+			agentControlRepo,
+			agentControlRepo,
+			agentcontrolapp.NewPollingDispatcher(),
+			agentcontrolapp.WithFixedRunnerResolver(buildFixedRunnerResolver(cfg, authComp.idResolver)),
+		)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
 		systemService.SetUserReader(authComp.userReader)
 		systemService.SetCreditClient(shared.creditClient)
@@ -353,36 +414,95 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUsageReader(billingComp.usageReader)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
-			config:              cfg,
-			buildInfo:           info,
-			systemService:       systemService,
-			loginService:        authComp.loginService,
-			imageService:        mediaComp.imageService,
-			videoService:        mediaComp.videoService,
-			musicService:        mediaComp.musicService,
-			spaceService:        storageComp.spaceService,
-			driveService:        storageComp.driveService,
-			pageService:         storageComp.pageService,
-			catalogService:      shared.catalogService,
-			modelRouteService:   shared.modelRouteService,
-			capabilitiesService: mediaComp.capabilitiesService,
-			webService:          webComp.webService,
-			feedbackService:     webComp.feedbackService,
-			apiKeyService:       authComp.apiKeyService,
-			identityTokens:      authComp.identityTokens,
-			rateLimiter:         ratelimit.NewRedisLimiter(redisClient),
-			usageSyncWorker:     mediaComp.usageSyncWorker,
-			billingWorker:       mediaComp.billingWorker,
-			paymentEventsWorker: billingComp.paymentEventsWorker,
-			rateLimitResolver:   config.NewRateLimitProvider(cfg),
-			idResolver:          authComp.idResolver,
-			idMapper:            authComp.idMapper,
-			kvSyncWorker:        storageComp.kvSyncWorker,
-			quotaProvider:       storageComp.quotaProvider,
+			config:                cfg,
+			buildInfo:             info,
+			systemService:         systemService,
+			loginService:          authComp.loginService,
+			imageService:          mediaComp.imageService,
+			videoService:          mediaComp.videoService,
+			musicService:          mediaComp.musicService,
+			spaceService:          storageComp.spaceService,
+			driveService:          storageComp.driveService,
+			pageService:           storageComp.pageService,
+			catalogService:        shared.catalogService,
+			modelRouteService:     shared.modelRouteService,
+			bindingService:        bindingService,
+			conversationService:   conversationService,
+			taskService:           taskService,
+			capabilitiesService:   mediaComp.capabilitiesService,
+			webService:            webComp.webService,
+			feedbackService:       webComp.feedbackService,
+			agentBindingRepo:      agentControlRepo,
+			agentRunnerRepo:       agentControlRepo,
+			agentConversationRepo: agentControlRepo,
+			agentSessionRepo:      agentControlRepo,
+			agentTaskRepo:         agentControlRepo,
+			imAdapter:             buildFeishuAdapter(cfg),
+			apiKeyService:         authComp.apiKeyService,
+			identityTokens:        authComp.identityTokens,
+			rateLimiter:           ratelimit.NewRedisLimiter(redisClient),
+			usageSyncWorker:       mediaComp.usageSyncWorker,
+			billingWorker:         mediaComp.billingWorker,
+			paymentEventsWorker:   billingComp.paymentEventsWorker,
+			rateLimitResolver:     config.NewRateLimitProvider(cfg),
+			idResolver:            authComp.idResolver,
+			idMapper:              authComp.idMapper,
+			kvSyncWorker:          storageComp.kvSyncWorker,
+			quotaProvider:         storageComp.quotaProvider,
 		}, nil
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
 	}
+}
+
+func buildFixedRunnerResolver(cfg config.Config, resolver idresolver.IDResolver) agentcontrolapp.FixedRunnerResolver {
+	if resolver == nil || len(cfg.AgentControl.FixedRunners) == 0 {
+		return nil
+	}
+
+	type runnerTarget struct {
+		platform string
+		botID    string
+		runnerID string
+	}
+
+	mappings := make(map[string]runnerTarget, len(cfg.AgentControl.FixedRunners))
+	for _, item := range cfg.AgentControl.FixedRunners {
+		platform := strings.ToLower(strings.TrimSpace(item.Platform))
+		botID := strings.TrimSpace(item.BotID)
+		runnerID := strings.TrimSpace(item.RunnerID)
+		if platform == "" || botID == "" || runnerID == "" {
+			continue
+		}
+		mappings[platform+"::"+botID] = runnerTarget{
+			platform: platform,
+			botID:    botID,
+			runnerID: runnerID,
+		}
+	}
+	if len(mappings) == 0 {
+		return nil
+	}
+
+	return func(platform string, botID string) (int64, error) {
+		key := strings.ToLower(strings.TrimSpace(platform)) + "::" + strings.TrimSpace(botID)
+		target, ok := mappings[key]
+		if !ok {
+			return 0, model.ErrNotFound("fixed runner mapping not found")
+		}
+		return resolver.ResolveRunnerID(context.Background(), target.runnerID)
+	}
+}
+
+func buildFeishuAdapter(cfg config.Config) *infraim.FeishuAdapter {
+	if !cfg.AgentControl.Feishu.Enabled() {
+		return nil
+	}
+	return infraim.NewFeishuAdapter(infraim.FeishuAdapterConfig{
+		VerificationToken: cfg.AgentControl.Feishu.VerificationToken,
+		EncryptKey:        cfg.AgentControl.Feishu.EncryptKey,
+		ReplyAPI:          cfg.AgentControl.Feishu.ReplyAPI,
+	})
 }
 
 func buildDeviceVerificationURL(cfg config.Config) string {
