@@ -8,11 +8,12 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 8, 2026";
 
 export const metadata: Metadata = {
   title: "About AnyCap — AI agent capability infrastructure",
   description:
-    `AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and ${capabilitySummary}.`,
+    `About AnyCap, the team shipping an AI agent capability runtime with a public repository, release history, and one install path for ${capabilitySummary}.`,
   alternates: { canonical: "/about" },
   openGraph: {
     type: "website",
@@ -36,7 +37,11 @@ const aboutPageJsonLd = {
     "@type": "Organization",
     name: siteConfig.siteName,
     url: siteConfig.url,
-    sameAs: ["https://github.com/anycap-ai/anycap"],
+    sameAs: [
+      "https://github.com/anycap-ai/anycap",
+      "https://github.com/anycap-ai/anycap/releases",
+      "https://skills.sh/anycap-ai/anycap",
+    ],
   },
 };
 
@@ -45,7 +50,11 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: siteConfig.siteName,
   url: siteConfig.url,
-  sameAs: ["https://github.com/anycap-ai/anycap"],
+  sameAs: [
+    "https://github.com/anycap-ai/anycap",
+    "https://github.com/anycap-ai/anycap/releases",
+    "https://skills.sh/anycap-ai/anycap",
+  ],
   description:
     `AnyCap builds agent-native capability infrastructure that lets AI agents use ${capabilitySummary} through one runtime.`,
 };
@@ -96,7 +105,7 @@ const principles = [
 const trustSignals = [
   {
     label: "Open distribution",
-    detail: "Skill files and release artifacts are published through public GitHub paths.",
+    detail: "Skill files, release artifacts, and the main codebase are published through public GitHub paths.",
   },
   {
     label: "Portable runtime",
@@ -112,10 +121,121 @@ const companyFacts = [
   { label: "Company", value: "AnyCap" },
   { label: "Product", value: "AI agent capability runtime" },
   { label: "Primary interface", value: "CLI + skill files" },
+  { label: "Public repo history", value: "Since March 2026" },
+  { label: "Shipping surfaces", value: "CLI, web app, edge delivery, skill distribution" },
   { label: "Official repository", value: "github.com/anycap-ai/anycap" },
   { label: "License", value: "MIT" },
   { label: "Last updated", value: "2026-04-08" },
 ] as const;
+
+const teamCards = [
+  {
+    title: "Product and engineering",
+    body:
+      "AnyCap is shipped as one product surface across the CLI, the public website, the dashboard, and the edge delivery layer. That makes it possible to verify how the runtime, the docs, and the distribution path fit together.",
+  },
+  {
+    title: "Distribution and releases",
+    body:
+      "The public repository documents GitHub releases, npm packaging, skill sync, and Cloudflare Pages deployment. The delivery path is visible instead of hidden behind a closed launch page.",
+  },
+  {
+    title: "Feedback and iteration",
+    body:
+      "Operators can report issues through GitHub and through the built-in `anycap feedback` flow. That creates a real path from failed requests or missing capabilities back to the team.",
+  },
+] as const;
+
+const timelineItems = [
+  {
+    label: "March 2026",
+    detail:
+      "Current public repository history begins, with the CLI, server, dashboard foundations, and website all shipping from the same codebase.",
+  },
+  {
+    label: "Early April 2026",
+    detail:
+      "Capability inventory alignment, compare pages, and workflow-led SEO content were expanded so buyers can evaluate the product through concrete use cases instead of brand copy alone.",
+  },
+  {
+    label: "Current operating model",
+    detail:
+      "AnyCap is being developed as an agent-first product with one runtime, one install path, one auth flow, and public documentation around releases, guides, and skills.",
+  },
+] as const;
+
+const publicReferences = [
+  {
+    label: "GitHub repository",
+    href: "https://github.com/anycap-ai/anycap",
+    detail: "Primary public codebase for the runtime, website, and skill files.",
+  },
+  {
+    label: "GitHub releases",
+    href: "https://github.com/anycap-ai/anycap/releases",
+    detail: "Public release artifacts and notes for shipped CLI versions.",
+  },
+  {
+    label: "skills.sh listing",
+    href: "https://skills.sh/anycap-ai/anycap",
+    detail: "Public skill distribution surface for agent installs.",
+  },
+  {
+    label: "Install guide",
+    href: "/guides/install-anycap",
+    detail: "The shortest path from evaluation to a working local setup.",
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    detail: "Public explanation of free credit and pay-as-you-go positioning.",
+  },
+] as const;
+
+const contactPaths = [
+  {
+    label: "GitHub issues",
+    href: "https://github.com/anycap-ai/anycap/issues",
+    detail: "Best public path for bug reports, regressions, or roadmap requests.",
+  },
+  {
+    label: "CLI feedback command",
+    href: "/cli",
+    detail: "Use `anycap feedback` when the issue comes from a live request or capability gap.",
+  },
+  {
+    label: "Start here",
+    href: "/start",
+    detail: "Best next step when the goal is to verify the runtime directly.",
+  },
+] as const;
+
+function ReferenceLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  if (href.startsWith("http")) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4"
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className="text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4">
+      {children}
+    </Link>
+  );
+}
 
 export default function AboutPage() {
   return (
@@ -151,7 +271,7 @@ export default function AboutPage() {
               on the roadmap.
             </p>
             <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
-              Last updated 2026-04-08
+              Last updated {lastUpdatedLabel}
             </p>
           </FadeIn>
 
@@ -171,6 +291,76 @@ export default function AboutPage() {
                       {fact.label}
                     </p>
                     <p className="text-sm leading-6 text-[#4d5145]">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                How the team ships
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {teamCards.map((card) => (
+                  <div key={card.title} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <h3 className="mb-3 text-[15px] font-bold text-[#1c1f17]" style={mono}>
+                      {card.title}
+                    </h3>
+                    <p className="text-sm leading-6 text-[#4d5145]">{card.body}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Public build timeline
+              </h2>
+              <div className="grid gap-4 lg:grid-cols-3">
+                {timelineItems.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {item.label}
+                    </p>
+                    <p className="text-sm leading-6 text-[#4d5145]">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Public references
+              </h2>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {publicReferences.map((reference) => (
+                  <div key={reference.label} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {reference.label}
+                    </p>
+                    <p className="text-sm leading-6 text-[#4d5145]">
+                      <ReferenceLink href={reference.href}>{reference.label}</ReferenceLink>
+                      {" — "}
+                      {reference.detail}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -259,6 +449,32 @@ export default function AboutPage() {
                 {principles.map((principle) => (
                   <div key={principle} className="border-l-[3px] border-[#6b7d3a] pl-5">
                     <p className="text-sm leading-6 text-[#4d5145]">{principle}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Contact and reporting paths
+              </h2>
+              <div className="grid gap-4 lg:grid-cols-3">
+                {contactPaths.map((path) => (
+                  <div key={path.label} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {path.label}
+                    </p>
+                    <p className="text-sm leading-6 text-[#4d5145]">
+                      <ReferenceLink href={path.href}>{path.label}</ReferenceLink>
+                      {" — "}
+                      {path.detail}
+                    </p>
                   </div>
                 ))}
               </div>

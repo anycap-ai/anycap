@@ -7,7 +7,7 @@ Cloudflare Worker that serves Drive, Page, and CDN public access.
 | | Dev | Prod |
 |---|---|---|
 | Worker | `anycap-edge-dev` | `anycap-edge` |
-| CDN | `cdn.anycap.dev` | `cdn.anycap.cloud` |
+| CDN | `cdn.anycap.dev` | `cdn.anycap.ai` |
 | Drive | `drive.anycap.dev` | `drive.anycap.cloud` |
 | Artifact public | `artifact.anycap.dev` | `artifact.anycap.cloud` |
 | Artifact ingest (internal) | `artifact-ingest.anycap.dev` | `artifact-ingest.anycap.cloud` |

@@ -3,6 +3,7 @@ import type { Env } from "./types";
 import { guessContentType } from "./mime";
 
 const PUBLIC_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const PUBLIC_ROOT_REDIRECT_URL = "https://anycap.ai/";
 
 function normalizePublicObjectKey(pathname: string): string | null {
 	if (!pathname || pathname === "/") {
@@ -38,6 +39,10 @@ export async function handlePublic(request: Request, env: Env): Promise<Response
 	}
 
 	const url = new URL(request.url);
+	if (url.pathname === "/" || url.pathname === "") {
+		return Response.redirect(PUBLIC_ROOT_REDIRECT_URL, 308);
+	}
+
 	const objectKey = normalizePublicObjectKey(url.pathname);
 	if (!objectKey) {
 		return notFoundPage("Public asset not found");

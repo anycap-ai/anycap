@@ -7,8 +7,79 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
+import { siteConfig } from "@/lib/site";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
+const organizationId = `${siteConfig.url}#organization`;
+const websiteId = `${siteConfig.url}#website`;
+const homePageId = `${siteConfig.url}#home`;
+const softwareApplicationId = `${siteConfig.url}#software`;
+
+const homeWebPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": homePageId,
+  name: "AnyCap Home",
+  url: siteConfig.url,
+  description:
+    "AnyCap gives coding agents one install path, one login, and one CLI for media generation, media understanding, web retrieval, storage, and publishing workflows.",
+  isPartOf: {
+    "@id": websiteId,
+  },
+  about: [
+    { "@type": "Thing", name: "AI agents" },
+    { "@type": "Thing", name: "Coding agents" },
+    { "@type": "Thing", name: "Agent capabilities" },
+    { "@type": "Thing", name: "Developer tools" },
+  ],
+  primaryImageOfPage: {
+    "@type": "ImageObject",
+    url: `${siteConfig.url}/opengraph-image`,
+  },
+  mainEntity: {
+    "@id": softwareApplicationId,
+  },
+};
+
+const homeSoftwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": softwareApplicationId,
+  name: "AnyCap",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "macOS, Linux, Windows",
+  url: siteConfig.url,
+  installUrl: `${siteConfig.url}/install.sh`,
+  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
+  description:
+    "AI agent capability runtime for coding agents. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
+  featureList: [
+    "Image generation",
+    "Video generation",
+    "Music generation",
+    "Image understanding",
+    "Video analysis",
+    "Audio understanding",
+    "Web search",
+    "Grounded web search",
+    "Web crawl",
+    "Drive storage",
+    "Static page publishing",
+    "File download",
+  ],
+  author: {
+    "@id": organizationId,
+  },
+  publisher: {
+    "@id": organizationId,
+  },
+  sameAs: [githubHref],
+  softwareHelp: {
+    "@type": "CreativeWork",
+    name: "Install AnyCap",
+    url: `${siteConfig.url}/guides/install-anycap`,
+  },
+};
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
@@ -18,6 +89,15 @@ const capabilities = ["Image", "Video", "Music", "Voice", "Vision", "Pages"];
 export function HumanHomePage() {
   return (
     <main className="overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeWebPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSoftwareJsonLd) }}
+      />
+
       <Header
         logoHref="/"
         links={humanNavLinks}

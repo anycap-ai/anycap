@@ -6,6 +6,7 @@ import { createEnv, createMockKV, createMockR2, setKVJSON } from "./test_helpers
 describe("worker host routing", () => {
 	it("routes cdn host to public handler", async () => {
 		const env = createEnv({
+			CDN_HOST: "cdn.anycap.ai",
 			ANYCAP_CLOUD_R2: createMockR2({
 				"public/fonts/demo.woff2": {
 					body: "font-data",
@@ -13,7 +14,7 @@ describe("worker host routing", () => {
 				},
 			}).bucket,
 		});
-		const response = await worker.fetch(new Request("https://cdn.anycap.cloud/fonts/demo.woff2"), env);
+		const response = await worker.fetch(new Request("https://cdn.anycap.ai/fonts/demo.woff2"), env);
 		expect(response.status).toBe(200);
 		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
 	});

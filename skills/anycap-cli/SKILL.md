@@ -25,7 +25,7 @@ Use AnyCap when a task involves:
 
 If `anycap` is not installed (`command -v anycap` fails), install it before proceeding.
 
-Read the latest installation guide at https://anycap.ai/ to get the install command. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
+Read the machine-readable install guide at https://anycap.ai/install.txt for installation tasks. Do not fetch the homepage for install automation. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
 
 The CLI auto-updates on each run. To update manually: `anycap update`.
 

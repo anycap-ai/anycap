@@ -274,10 +274,28 @@ const learnDropdown: NavDropdownDef = {
       description: "Understand how prompts, files, and workspace state shape agent behavior.",
     },
     {
+      href: "/guides/agent-skills-for-developer-tools",
+      label: "Agent Skills",
+      section: "Guides",
+      description: "See how reusable skills package workflows and capability usage for agents.",
+    },
+    {
       href: "/compare",
-      label: "Compare AnyCap",
+      label: "Compare Overview",
       section: "Evaluate",
-      description: "Browse comparison pages for adjacent agent tooling approaches and tradeoffs.",
+      description: "Browse comparison pages for adjacent agent tooling, media APIs, and tradeoffs.",
+    },
+    {
+      href: "/compare/anycap-vs-replicate",
+      label: "AnyCap vs Replicate",
+      section: "Evaluate",
+      description: "Compare an agent capability runtime with a model-inference API and deployment platform.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      label: "AnyCap vs fal.ai",
+      section: "Evaluate",
+      description: "Compare cross-agent capability access with a queue-first generative media API stack.",
     },
     {
       href: "/learn/what-agents-cant-do",
@@ -291,6 +309,13 @@ const learnDropdown: NavDropdownDef = {
       section: "Use Cases",
       description:
         "Turn rough goals into research-backed SMART goals with Codex, Cursor, or Claude Code.",
+    },
+    {
+      href: "/learn/how-to-make-memes-online",
+      label: "How to Make Memes Online",
+      section: "Use Cases",
+      description:
+        "See a concrete creative workflow for generating the visual, keeping the caption exact, and delivering a meme.",
     },
   ],
   hideBelow: "md",
