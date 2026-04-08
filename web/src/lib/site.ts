@@ -25,23 +25,23 @@ export const localeConfig = {
 >;
 
 export const capabilitySummary =
-  "image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded search, and web crawl";
+  "media generation, media understanding, web retrieval, cloud storage, and static page publishing";
 
-export const publicCapabilityLabel = "image, video, and vision capabilities";
+export const publicCapabilityLabel = "AI agent capabilities";
 
 export const publicCapabilitySummary =
-  "image generation, video generation, and vision workflows";
+  "image, video, audio, web, storage, and publishing workflows";
 
 export const adjacentWorkflowSummary =
-  "audio, web, storage, and publishing workflows";
+  "drive storage, page publishing, and other delivery workflows";
 
-export const roadmapCapabilitySummary = "speech and sandbox";
+export const roadmapCapabilitySummary = "speech, sandbox, and browser automation";
 
 export const defaultSiteDescription =
-  `AnyCap gives coding agents one install path, one auth flow, and one CLI for ${publicCapabilitySummary}.`;
+  "AnyCap gives coding agents one install path, one auth flow, and one CLI for image generation, video generation, and vision workflows.";
 
 export const defaultSocialImageAlt =
-  `AnyCap adds ${publicCapabilityLabel} to coding agents through one CLI.`;
+  "AnyCap adds image, video, and vision capabilities to coding agents through one CLI.";
 
 export const siteConfig = {
   name: "AnyCap",
@@ -52,9 +52,9 @@ export const siteConfig = {
   supportedLocales,
   defaultTitle: "Any Capability, Instantly",
   defaultDescription: defaultSiteDescription,
-  agentTitle: "AnyCap for Agents — Add Image, Video, and Vision Through One CLI",
+  agentTitle: "AnyCap for Agents — AI Agent Capabilities Through One CLI",
   agentDescription:
-    `Agent entry for AnyCap. Install once, authenticate once, and add ${publicCapabilitySummary} to coding agents through one command surface.`,
+    `Agent entry for AnyCap. Install once, authenticate once, and access ${publicCapabilitySummary} through one command surface.`,
 } as const;
 
 export type PublicRouteKind = "home" | "agent" | "seo";

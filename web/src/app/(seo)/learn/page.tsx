@@ -11,18 +11,18 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "Learn - Buyer guides, SaaS assistant explainers, and workflow essays",
+  title: "Learn - choose the right agent guide, architecture explainer, or workflow example",
   description:
-    "Browse AnyCap Learn for coding-agent buyer guides, SaaS assistant architecture explainers, capability strategy, and workflow essays tied to real tasks.",
+    "Start with buyer guides for coding-agent stacks, SaaS assistant architecture explainers, capability-gap primers, and workflow examples that lead into AnyCap capabilities.",
   alternates: { canonical: "/learn" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/learn",
     siteName: siteConfig.siteName,
-    title: "Learn - Buyer guides, SaaS assistant explainers, and workflow essays",
+    title: "Learn - choose the right agent guide, architecture explainer, or workflow example",
     description:
-      "Use Learn as the editorial hub for coding-agent buyer guides, SaaS assistant architecture, and workflow pages that connect readers to AnyCap capabilities.",
+      "Use Learn when you are choosing a coding-agent stack, designing a SaaS assistant, mapping capability gaps, or looking for a real workflow example.",
   },
 };
 
@@ -31,10 +31,10 @@ const featuredArticle = {
   title: "Best AI for Coding Agents: choose the right model and capability stack",
   href: "/learn/best-ai-for-coding-agents",
   description:
-    "A high-intent evaluation page that reframes model ranking as a stack decision across reasoning, media work, and the capability layer around Claude Code, Cursor, and Codex.",
+    "Use this as the category guide when you are comparing coding-agent setups before you drill into Claude Code, Cursor, and capability-layer decisions.",
   updated: "Updated Apr 7, 2026",
-  cta: "Read the buyer guide",
-  tags: ["Coding agents", "Buyer guide", "Capabilities"],
+  cta: "Start with the category guide",
+  tags: ["Coding agents", "Decision guide", "Capabilities"],
 } as const;
 
 const learnArticles = [
@@ -42,7 +42,7 @@ const learnArticles = [
     title: "Best AI for Coding Agents: choose the right model and capability stack",
     href: "/learn/best-ai-for-coding-agents",
     description:
-      "A practical guide to choosing the best AI setup for coding agents when the workflow expands beyond pure code generation.",
+      "A category guide for teams deciding whether the real question is model quality, platform fit, or the capability layer around a coding agent.",
     label: "Buyer guide",
     updated: "Apr 7, 2026",
     tags: ["Coding agents", "AI models", "Capabilities"],
@@ -51,7 +51,7 @@ const learnArticles = [
     title: "Best AI for Claude Code: the right setup is usually Claude Code plus capabilities",
     href: "/learn/best-ai-for-claude-code",
     description:
-      "A Claude Code specific guide to deciding when pure coding is enough and when you need image, video, and vision capabilities around the agent.",
+      "A Claude Code specific buyer guide for teams deciding when pure repo work is enough and when capability gaps start to matter.",
     label: "Buyer guide",
     updated: "Apr 7, 2026",
     tags: ["Claude Code", "Capabilities", "Agent workflow"],
@@ -60,7 +60,7 @@ const learnArticles = [
     title: "Best AI for Cursor: the right setup is usually Cursor plus capabilities",
     href: "/learn/best-ai-for-cursor",
     description:
-      "A Cursor specific guide to deciding when pure coding is enough and when you need image, video, and vision capabilities around the editor workflow.",
+      "A Cursor specific buyer guide for teams deciding when the editor loop is enough and when they need image, video, or vision workflows around it.",
     label: "Buyer guide",
     updated: "Apr 7, 2026",
     tags: ["Cursor", "Capabilities", "Agent workflow"],
@@ -96,7 +96,7 @@ const learnArticles = [
     title: "What Is the Most Advanced AI? Why the real answer is not one model",
     href: "/learn/what-is-the-most-advanced-ai",
     description:
-      "An honest explainer on why advanced AI depends on reasoning, multimodal output, and the capability layer around the model.",
+      "A broad explainer on when advanced AI is really a model question and when it becomes a system and capability question.",
     label: "Explainer",
     updated: "Apr 7, 2026",
     tags: ["AI models", "Agent strategy", "Capabilities"],
@@ -112,11 +112,38 @@ const learnArticles = [
   },
 ] as const;
 
+const startingPoints = [
+  {
+    title: "Choosing a coding-agent stack",
+    href: "/learn/best-ai-for-coding-agents",
+    description:
+      "Start here if you are comparing broad setup options before you narrow into Claude Code, Cursor, or another agent surface.",
+  },
+  {
+    title: "Designing a SaaS assistant",
+    href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+    description:
+      "Start here if your product began as chat and now needs tools, media workflows, or richer output delivery.",
+  },
+  {
+    title: "Finding the missing capability",
+    href: "/learn/what-agents-cant-do",
+    description:
+      "Start here if the agent mostly works already but breaks on screenshots, recordings, generation, or delivery.",
+  },
+  {
+    title: "Seeing a real workflow example",
+    href: "/learn/smart-goal-generator",
+    description:
+      "Start here if you want one concrete example of AnyCap making an agent more useful on a real task.",
+  },
+] as const;
+
 const topicClusters = [
   {
     title: "Buyer guides for agent stacks",
     description:
-      "Capture commercial-intent evaluation queries around coding agents, agent shells, and the best setup once capabilities start to matter.",
+      "Start here when the real question is how to choose a coding-agent setup before you narrow into a specific platform.",
     links: [
       { label: "Best AI for Coding Agents", href: "/learn/best-ai-for-coding-agents" },
       { label: "Best AI for Claude Code", href: "/learn/best-ai-for-claude-code" },
@@ -126,7 +153,7 @@ const topicClusters = [
   {
     title: "SaaS assistant architecture",
     description:
-      "Capture SaaS chatbot and copilot queries when the product shifts from answering in chat to multimodal execution and richer output delivery.",
+      "Start here when a SaaS chatbot or copilot has to move from answering in chat to inspecting, generating, and delivering outputs.",
     links: [
       { label: "AI Chatbot SaaS vs AI Agent", href: "/learn/ai-chatbot-vs-ai-agent-for-saas" },
       {
@@ -139,17 +166,17 @@ const topicClusters = [
   {
     title: "Foundations and capability gaps",
     description:
-      "Use broader explainers to teach where model comparisons stop being enough and why a capability runtime matters in practical work.",
+      "Start here when you need the broad explanation for where model comparisons stop being enough and capability gaps begin.",
     links: [
       { label: "What Is the Most Advanced AI?", href: "/learn/what-is-the-most-advanced-ai" },
       { label: "What Agents Can't Do", href: "/learn/what-agents-cant-do" },
-      { label: "Agent Capability Runtime", href: "/glossary/agent-capability-runtime" },
+      { label: "Agent Harness", href: "/glossary/agent-harness" },
     ],
   },
   {
     title: "Research-backed workflows",
     description:
-      "Publish workflow pages that prove the runtime is useful in a real task instead of only describing the architecture in theory.",
+      "Start here when you want a concrete workflow example instead of another abstract page about architecture or tooling.",
     links: [
       { label: "SMART Goal Generator", href: "/learn/smart-goal-generator" },
       { label: "Web Search capability", href: "/capabilities/web-search" },
@@ -162,40 +189,40 @@ const adjacentHubs = [
   {
     title: "Guides",
     href: "/guides",
-    description: "Use Guides when the reader already knows the task and wants hands-on setup steps.",
+    description: "Use Guides when you already know what you want to set up and need step-by-step implementation.",
   },
   {
     title: "Glossary",
     href: "/glossary",
-    description: "Use Glossary when the reader needs shared language for harnesses, context, and capability runtimes.",
+    description: "Use Glossary when the main blocker is vocabulary and you need shared language for harnesses, context, and runtimes.",
   },
   {
     title: "Capabilities",
     href: "/capabilities",
-    description: "Use Capabilities when the intent shifts from education into product and feature evaluation.",
+    description: "Use Capabilities when you are past the explainer stage and want the exact product surfaces AnyCap adds.",
   },
   {
     title: "Compare",
     href: "/compare",
-    description: "Use Compare when the search starts from adjacent vendors, alternatives, or evaluation queries.",
+    description: "Use Compare when the question starts from an alternative vendor, adjacent product, or replacement decision.",
   },
 ] as const;
 
 const faqItems = [
   {
-    question: "Is Learn the AnyCap blog?",
+    question: "Which page should I start with if I am choosing a coding-agent setup?",
     answer:
-      "Yes. Learn now acts as the editorial blog-style hub for explainers, workflow essays, and broader search-intent pages instead of creating a separate /blog directory.",
+      "Start with Best AI for Coding Agents if you are still framing the category question. From there, move into the Claude Code or Cursor specific page once you know which workflow you care about.",
   },
   {
-    question: "Should category pages go live before there are many articles?",
+    question: "What if I am building a SaaS assistant instead of using a coding agent?",
     answer:
-      "No. Thin category pages usually add crawl noise without adding much ranking value. Publish strong articles first, then add category landing pages only after each cluster has enough depth.",
+      "Start with AI Chatbot SaaS vs AI Agent for SaaS if you are deciding what kind of system you need. Then move into Add Multimodal Capabilities to a SaaS Chatbot when the question becomes implementation.",
   },
   {
-    question: "What should each Learn article link to?",
+    question: "When should I move from Learn into Guides or Capabilities?",
     answer:
-      "Each article should link to at least one related Learn page and one higher-intent destination such as Guides, Capabilities, or agent-specific pages.",
+      "Move into Guides when you are ready to set something up step by step. Move into Capabilities when you already understand the problem and want the exact surface, such as image generation, video analysis, or web crawl.",
   },
 ] as const;
 
@@ -206,7 +233,7 @@ const collectionJsonLd = {
   "@type": "CollectionPage",
   name: "AnyCap Learn",
   description:
-    "Editorial hub for AnyCap buyer guides, SaaS assistant architecture explainers, and workflow pages about capability runtimes.",
+    "Learn hub for choosing coding-agent setups, understanding SaaS assistant architecture, mapping capability gaps, and seeing real workflow examples.",
   url: `${siteConfig.url}/learn`,
   hasPart: learnArticles.map((article) => ({
     "@type": "TechArticle",
@@ -270,16 +297,15 @@ export default function LearnIndexPage() {
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Buyer guides, explainers,
+              Start with the question
               <br />
-              and workflow essays
+              you are actually asking
             </h1>
             <p className="mt-6 max-w-[820px] text-base leading-7 text-[#4d5145] md:text-lg">
-              Learn now carries four clear intent tracks: buyer guides for coding-agent stacks,
-              architecture explainers for SaaS assistants, foundational pages about capability
-              gaps, and workflow essays that prove the runtime in real use. Instead of launching
-              thin taxonomies, the goal is to turn each strong page into a cluster anchor with
-              internal links to Guides, Capabilities, Compare, and agent-specific paths.
+              Use Learn when you are choosing a coding-agent stack, figuring out whether a SaaS
+              assistant needs agent architecture, mapping capability gaps, or looking for a real
+              workflow example. Each path is designed to move you from explanation into the next
+              step: agent-specific guides, capability pages, or setup documentation.
             </p>
           </FadeIn>
 
@@ -312,31 +338,29 @@ export default function LearnIndexPage() {
 
               <div className="rounded-[28px] border border-[#d4dbb8] bg-[#f7f8ef]/80 p-6 md:p-8">
                 <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  Editorial strategy
+                  Choose your starting point
                 </p>
                 <h2 className="mt-4 text-[22px] leading-8 text-[#1c1f17]" style={pixel}>
-                  Build intent clusters, not empty taxonomies
+                  Four common ways people enter Learn
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                  The Learn IA is now organized around four jobs-to-be-done: evaluate the best
-                  agent stack, understand SaaS assistant architecture, learn the capability gap, and
-                  see a real workflow proof. That keeps new pages additive instead of letting the
-                  hub become a flat list of unrelated articles.
+                  You do not need to read this hub linearly. Pick the shortest path that matches
+                  your question, then move into the narrower page when you are ready.
                 </p>
                 <div className="mt-8 space-y-3">
-                  {adjacentHubs.slice(0, 2).map((hub) => (
+                  {startingPoints.map((entry) => (
                     <Link
-                      key={hub.href}
-                      href={hub.href}
+                      key={entry.href}
+                      href={entry.href}
                       className="block rounded-2xl border border-[#d4dbb8] bg-[#fffffc]/70 p-4 transition-colors hover:border-[#6b7d3a]"
                     >
                       <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                        Adjacent hub
+                        Start here if you are
                       </p>
                       <h3 className="mt-2 text-base text-[#1c1f17]" style={mono}>
-                        {hub.title}
+                        {entry.title}
                       </h3>
-                      <p className="mt-2 text-sm leading-6 text-[#4d5145]">{hub.description}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#4d5145]">{entry.description}</p>
                     </Link>
                   ))}
                 </div>
@@ -356,7 +380,7 @@ export default function LearnIndexPage() {
                     Latest from Learn
                   </p>
                   <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                    Start with the cluster that matches your question
+                    Browse the full set when you want to see every path
                   </h2>
                 </div>
                 <Link
@@ -364,7 +388,7 @@ export default function LearnIndexPage() {
                   className="text-sm text-[#6b7d3a] underline decoration-[#a7b57b] underline-offset-4"
                   style={mono}
                 >
-                  Need hands-on setup instead? Browse Guides
+                  Already know you need setup steps? Browse Guides
                 </Link>
               </div>
 
@@ -403,10 +427,10 @@ export default function LearnIndexPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                Topic clusters
+                Entry paths
               </p>
               <h2 className="mt-3 max-w-[760px] text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                Organize Learn around evaluation, architecture, foundations, and workflow proofs
+                Most readers land here through four different decisions
               </h2>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {topicClusters.map((cluster) => (
@@ -445,7 +469,7 @@ export default function LearnIndexPage() {
                 Read across the site
               </p>
               <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                Learn should feed the rest of the information architecture
+                Move from explanation into evaluation or setup
               </h2>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {adjacentHubs.map((hub) => (
@@ -474,7 +498,7 @@ export default function LearnIndexPage() {
                 FAQ
               </p>
               <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                How to use this blog-style Learn hub for SEO
+                Common questions before you pick a path
               </h2>
               <div className="mt-8 space-y-4">
                 {faqItems.map((item) => (

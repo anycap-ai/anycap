@@ -19,7 +19,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = {
   title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
   description:
-    "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance for image, video, and vision workflows in AnyCap.",
+    "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.siteName,
     title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
     description:
-      "One balance for image, video, and vision workflows. $5 free credit, pay as you go, no subscription.",
+      "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
   },
 };
 
@@ -37,13 +37,13 @@ const pricingPageJsonLd = {
   "@type": "WebPage",
   name: "AnyCap Pricing",
   description:
-    "AnyCap pricing page. Pay-as-you-go credits for image, video, and vision workflows, with one balance across the broader runtime.",
+    "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
   url: `${siteConfig.url}/pricing`,
   mainEntity: {
     "@type": "Product",
     name: "AnyCap Credits",
     description:
-      "Pay-as-you-go credits for the image, video, and vision workflows coding agents miss most often, with one balance across the wider AnyCap runtime.",
+      "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
     offers: [
       {
         "@type": "Offer",
@@ -107,7 +107,7 @@ const pageQuotas = [
   { label: "Versions per site", value: "500" },
 ] as const;
 
-const lastUpdated = "2026-04-03";
+const lastUpdated = "2026-04-08";
 
 function ModelTable({
   models,
@@ -205,10 +205,10 @@ export default function PricingPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
                 AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that,
-                the image, video, and vision workflows on the public site are billed at the same
-                rate as the official model provider, with no subscription fee and no platform
-                markup. The same balance can also be used across {adjacentWorkflowSummary}. Credit
-                packages are one-time purchases, and larger packages include bonus credits.
+                the public AnyCap capability inventory is billed at the same rate as the official
+                model provider, with no subscription fee and no platform markup. The same balance
+                can also be used across {adjacentWorkflowSummary}. Credit packages are one-time
+                purchases, and larger packages include bonus credits.
               </p>
               <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
                 Last updated {lastUpdated}

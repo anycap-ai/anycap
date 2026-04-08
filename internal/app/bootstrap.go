@@ -122,10 +122,11 @@ type serverDependencies struct {
 }
 
 type Server struct {
-	config     config.Config
-	buildInfo  buildinfo.Info
-	httpServer *server.Hertz
-	runtime    *serverRuntime
+	config          config.Config
+	buildInfo       buildinfo.Info
+	httpServer      *server.Hertz
+	adminHTTPServer *server.Hertz
+	runtime         *serverRuntime
 }
 
 func NewServer(cfg config.Config, info buildinfo.Info) *Server {
@@ -160,16 +161,20 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	modelRouteHandler := modelroute.NewHandler(deps.modelRouteService, deps.idResolver, deps.idMapper)
 	feedbackHandler := feedback.NewHandler(deps.feedbackService)
 	telemetryHandler := telemetry.NewHandler()
+	httpMiddlewares := []hertzapp.HandlerFunc{
+		middleware.Recover(),
+		commonmw.TraceMiddleware(),
+		commonmw.AccessMiddleware("/ping", "/healthz"),
+		commonmw.MetricsMiddleware(),
+		middleware.CORS(buildCORSAllowedOrigins(cfg)),
+	}
+	authMiddleware := buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens)
+	rateLimitMiddleware := middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver)
+	featureGateMiddleware := middleware.FeatureGate(featureProvider)
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
-		Addr: deps.config.HTTPAddr,
-		Middlewares: []hertzapp.HandlerFunc{
-			middleware.Recover(),
-			commonmw.TraceMiddleware(),
-			commonmw.AccessMiddleware("/ping", "/healthz"),
-			commonmw.MetricsMiddleware(),
-			middleware.CORS(buildCORSAllowedOrigins(cfg)),
-		},
+		Addr:        deps.config.HTTPAddr,
+		Middlewares: httpMiddlewares,
 		Root: []transporthttp.RouteRegistrar{
 			transporthttp.RouteRegistrarFunc(systemHandler.RegisterRootRoutes),
 			transporthttp.RouteRegistrarFunc(loginHandler.RegisterRootRoutes),
@@ -183,13 +188,12 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			audioCatalog,
 			musicCatalog,
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens), middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver), middleware.FeatureGate(featureProvider))
+				protected := group.Group("", authMiddleware, rateLimitMiddleware, featureGateMiddleware)
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
-				modelRouteHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -199,7 +203,18 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		},
 	})
 
-	return &Server{config: cfg, buildInfo: info, httpServer: httpServer, runtime: runtime}
+	adminHTTPServer := transporthttp.NewRouter(transporthttp.RouterConfig{
+		Addr:        deps.config.AdminHTTPAddr,
+		Middlewares: httpMiddlewares,
+		V1: []transporthttp.RouteRegistrar{
+			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
+				protected := group.Group("", rateLimitMiddleware)
+				modelRouteHandler.RegisterRoutes(protected)
+			}),
+		},
+	})
+
+	return &Server{config: cfg, buildInfo: info, httpServer: httpServer, adminHTTPServer: adminHTTPServer, runtime: runtime}
 }
 
 func buildServerFeatures(cfg config.Config) map[string]bool {
@@ -841,6 +856,16 @@ func (s *Server) Run() {
 		_ = s.Shutdown(context.Background())
 	}()
 
+	if s.adminHTTPServer != nil {
+		logging.WithFields(logging.Fields{
+			"app":     s.config.AppName,
+			"addr":    s.config.AdminHTTPAddr,
+			"env":     s.config.AppEnv,
+			"version": s.buildInfo.Version,
+		}).Info("admin server listening")
+		go s.adminHTTPServer.Spin()
+	}
+
 	logging.WithFields(logging.Fields{
 		"app":     s.config.AppName,
 		"addr":    s.config.HTTPAddr,
@@ -858,19 +883,28 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	if s == nil || s.runtime == nil {
+	if s == nil {
 		return nil
 	}
-	if err := s.runtime.Shutdown(ctx); err != nil {
-		return err
+	var firstErr error
+	if s.runtime != nil {
+		if err := s.runtime.Shutdown(ctx); err != nil {
+			firstErr = err
+		}
+	}
+	if s.adminHTTPServer != nil && s.adminHTTPServer.IsRunning() {
+		if err := s.adminHTTPServer.Shutdown(ctx); err != nil && firstErr == nil {
+			firstErr = err
+		}
 	}
 	if s.httpServer != nil && s.httpServer.IsRunning() {
-		return s.httpServer.Shutdown(ctx)
+		if err := s.httpServer.Shutdown(ctx); err != nil && firstErr == nil {
+			firstErr = err
+		}
 	}
-	return nil
+	return firstErr
 }
 
-func buildModelRouteRepo(cfg config.Config) port.ModelRouteRepository {
-	_, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
-	return modelRouteRepo
+func hasSeparateAdminHTTPServer(cfg config.Config) bool {
+	return strings.TrimSpace(cfg.AdminHTTPAddr) != ""
 }

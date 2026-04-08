@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth/auth0";
 import {
+  appendAgentNegotiationVary,
+  isAgentNegotiationPath,
+  shouldServeAgentMarkdown,
+} from "@/lib/agent-request";
+import {
   buildLocalizedPath,
   defaultLocale,
   getPublicRouteByPath,
@@ -39,6 +44,11 @@ function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
   return target;
 }
 
+function applyAgentNegotiationHeaders(target: NextResponse) {
+  appendAgentNegotiationVary(target.headers);
+  return target;
+}
+
 export async function middleware(req: NextRequest) {
   const authResponse = await auth0.middleware(req);
   const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
@@ -65,6 +75,23 @@ export async function middleware(req: NextRequest) {
   }
 
   const { locale, pathname } = stripLocalePrefix(normalizedPath);
+  if (
+    shouldServeAgentMarkdown({
+      pathname,
+      searchParams: req.nextUrl.searchParams,
+      userAgent: req.headers.get("user-agent"),
+      accept: req.headers.get("accept"),
+    })
+  ) {
+    const rewriteURL = req.nextUrl.clone();
+    rewriteURL.pathname = "/llms.txt";
+    rewriteURL.search = "";
+    return applyAuthResponse(
+      applyAgentNegotiationHeaders(NextResponse.rewrite(rewriteURL)),
+      authResponse,
+    );
+  }
+
   const legacyRedirectPath = legacyRouteRedirects.get(pathname);
   if (legacyRedirectPath) {
     const redirectURL = req.nextUrl.clone();
@@ -117,12 +144,18 @@ export async function middleware(req: NextRequest) {
       : "0"
   );
 
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  if (isAgentNegotiationPath(pathname)) {
+    applyAgentNegotiationHeaders(response);
+  }
+
   return applyAuthResponse(
-    NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    }),
+    response,
     authResponse,
   );
 }

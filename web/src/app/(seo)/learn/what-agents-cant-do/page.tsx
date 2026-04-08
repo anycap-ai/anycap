@@ -7,18 +7,20 @@ import {
 } from "@/components/landing/CapabilityGapTable";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const lastUpdatedLabel = "April 7, 2026";
+const lastUpdatedIso = "2026-04-07";
 
 export const metadata: Metadata = {
   title: "What AI agents can't do out of the box — and how to add capabilities",
   description:
-    "AI agents can reason, but they still need capabilities for image generation, video generation, image understanding, and video analysis. See the common gaps and the fastest AnyCap pages to close them.",
+    "AI agents can reason, but out of the box they still struggle with image generation, video generation, screenshot understanding, recording analysis, and shareable output workflows.",
   alternates: { canonical: "/learn/what-agents-cant-do" },
   openGraph: {
     type: "website",
@@ -36,40 +38,42 @@ const articleJsonLd = createTechArticleJsonLd({
   description:
     "Problem-intent guide covering the capability gaps that appear when coding agents need image, video, and vision workflows.",
   path: "/learn/what-agents-cant-do",
-  about: ["AI agents", "Claude Code", "Image generation", "Video generation", "Image understanding"],
-  keywords: ["what ai agents can't do", "can claude code generate images", "ai agent can't generate video", "extend ai agent capabilities"],
+  about: ["AI agents", "Coding agents", "Image generation", "Video generation", "Image understanding", "Video analysis"],
+  keywords: [
+    "what ai agents can't do",
+    "coding agent limitations",
+    "ai agent capability gaps",
+    "ai agent can't generate video",
+    "extend ai agent capabilities",
+  ],
+  datePublished: lastUpdatedIso,
+  dateModified: lastUpdatedIso,
 });
 
 const faqItems = [
   {
-    question: "Can Claude Code generate images on its own?",
+    question: "What do AI agents usually miss first?",
     answer:
-      "Not as a built-in capability layer. AnyCap adds image generation to Claude Code through one install path and one CLI.",
+      "The first missing pieces are usually image generation, video generation, screenshot understanding, and recording analysis. The agent can plan the work, but it cannot finish those tasks through a consistent runtime.",
   },
   {
-    question: "What do coding agents usually miss first?",
+    question: "Can coding agents generate images or videos on their own?",
     answer:
-      "The biggest missing pieces are usually image generation, video generation, image understanding, and video analysis.",
+      "Not as a built-in capability layer. Some agents can call custom tools, but most teams still need to add a consistent runtime for image generation, video generation, and media understanding.",
   },
   {
     question: "Do I need to switch agents to get those capabilities?",
     answer:
       "No. The point of AnyCap is to keep the agent you already use and add the missing capability layer around it.",
   },
+  {
+    question: "Where should I start if I already like my current agent?",
+    answer:
+      "Start with the capability page that matches the missing task, such as image generation, video generation, image understanding, or video analysis. If you need the agent-specific entry first, use the Equip Agents pages.",
+  },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 const gapRows: CapabilityGapRow[] = [
   {
@@ -77,7 +81,7 @@ const gapRows: CapabilityGapRow[] = [
     cells: [
       { label: "Not built in", tone: "muted" },
       { label: "Generate mockups, thumbnails, and creative assets", tone: "accent" },
-      "Start with Claude Code image generation",
+      "Use the Image Generation capability page",
     ],
   },
   {
@@ -85,7 +89,7 @@ const gapRows: CapabilityGapRow[] = [
     cells: [
       { label: "Not built in", tone: "muted" },
       { label: "Create demos, walkthroughs, and short clips", tone: "accent" },
-      "Start with Claude Code video generation",
+      "Use the Video Generation capability page",
     ],
   },
   {
@@ -109,15 +113,15 @@ const gapRows: CapabilityGapRow[] = [
 const intentCards = [
   {
     eyebrow: "Image gap",
-    title: "Claude Code image generation",
-    href: "/for/claude-code/image-generation",
-    summary: "Best page when the problem is product visuals, marketing assets, or creative output.",
+    title: "Image Generation",
+    href: "/capabilities/image-generation",
+    summary: "Best page when the missing capability is product visuals, marketing assets, mockups, or creative output.",
   },
   {
     eyebrow: "Video gap",
-    title: "Claude Code video generation",
-    href: "/for/claude-code/video-generation",
-    summary: "Best page when the missing capability is demos, walkthroughs, or video clips.",
+    title: "Video Generation",
+    href: "/capabilities/video-generation",
+    summary: "Best page when the missing capability is demos, walkthroughs, motion assets, or short clips.",
   },
   {
     eyebrow: "Vision gap",
@@ -126,12 +130,12 @@ const intentCards = [
     summary: "Best page when the workflow starts from screenshots, diagrams, OCR, or visual QA.",
   },
   {
-    eyebrow: "Universal install",
-    title: "Get Started",
-    href: "/start",
-    summary: "Best page when you want the quickest install path before choosing specific capability pages.",
+    eyebrow: "Analysis gap",
+    title: "Video Analysis",
+    href: "/capabilities/video-analysis",
+    summary: "Best page when the problem lives in a recording instead of a text log or static screenshot.",
   },
-];
+] as const;
 
 export default function WhatAgentsCantDoPage() {
   return (
@@ -158,6 +162,9 @@ export default function WhatAgentsCantDoPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               Learn
             </p>
+            <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
+              Last updated {lastUpdatedLabel}
+            </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
@@ -169,8 +176,9 @@ export default function WhatAgentsCantDoPage() {
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               The gap usually appears the same way every time: the agent can plan the work, but it
               cannot generate the image, create the video, read the screenshot, or inspect the
-              recording through a consistent runtime. That is the gap AnyCap closes. You keep the
-              agent. You add the missing capability layer.
+              recording through a consistent runtime. Whether you use Claude Code, Cursor, Codex,
+              or another assistant shell, the fix is usually not a brand-new agent. It is the
+              missing capability layer around the one you already like.
             </p>
           </FadeIn>
 
@@ -185,8 +193,8 @@ export default function WhatAgentsCantDoPage() {
           <FadeIn>
             <div className="mt-16 md:mt-24">
               <CapabilityGapTable
-                eyebrow="Problem intent"
-                title="Where the gap shows up first"
+                eyebrow="Common breakpoints"
+                title="Where agents hit the wall first"
                 description="These are the common workflows where coding agents hit a hard boundary and need an external capability layer."
                 columns={[
                   { label: "Without AnyCap" },
@@ -194,7 +202,7 @@ export default function WhatAgentsCantDoPage() {
                   { label: "Best next move" },
                 ]}
                 rows={gapRows}
-                footnote="The rightmost column maps each problem to the highest-intent page in the current site architecture."
+                footnote="Use the rightmost column to jump to the shortest next page for the exact missing capability."
               />
             </div>
           </FadeIn>
@@ -206,7 +214,7 @@ export default function WhatAgentsCantDoPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Choose the shortest page for your missing capability
+                Choose the shortest page for the missing capability
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {intentCards.map((card) => (
@@ -265,18 +273,18 @@ export default function WhatAgentsCantDoPage() {
                   Get Started
                 </Link>
                 <Link
-                  href="/for/claude-code"
+                  href="/for"
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                   style={mono}
                 >
-                  For Claude Code
+                  Equip Agents
                 </Link>
                 <Link
                   href="/capabilities"
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                   style={mono}
                 >
-                  Any Capability
+                  Browse Capabilities
                 </Link>
               </div>
             </section>

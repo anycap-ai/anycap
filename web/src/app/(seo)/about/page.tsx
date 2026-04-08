@@ -10,7 +10,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "About AnyCap — Agent-native capability infrastructure",
+  title: "About AnyCap — AI agent capability infrastructure",
   description:
     `AnyCap builds capability infrastructure for agents. We focus on the missing runtime layer between a reasoning agent and ${capabilitySummary}.`,
   alternates: { canonical: "/about" },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/about",
     siteName: siteConfig.siteName,
-    title: "About AnyCap — Agent-native capability infrastructure",
+    title: "About AnyCap — AI agent capability infrastructure",
     description:
       "Why AnyCap exists, what it is, what it is not, and the principles behind an agent-native capability runtime.",
   },
@@ -30,7 +30,7 @@ const aboutPageJsonLd = {
   "@type": "AboutPage",
   name: "About AnyCap",
   description:
-    `About page for AnyCap, an agent-native capability runtime that adds ${capabilitySummary} to AI agents through one interface.`,
+    `About page for AnyCap, an AI agent capability runtime that adds ${capabilitySummary} through one interface.`,
   url: `${siteConfig.url}/about`,
   mainEntity: {
     "@type": "Organization",
@@ -110,11 +110,11 @@ const trustSignals = [
 
 const companyFacts = [
   { label: "Company", value: "AnyCap" },
-  { label: "Product", value: "Agent-native capability runtime" },
+  { label: "Product", value: "AI agent capability runtime" },
   { label: "Primary interface", value: "CLI + skill files" },
   { label: "Official repository", value: "github.com/anycap-ai/anycap" },
   { label: "License", value: "MIT" },
-  { label: "Last updated", value: "2026-04-03" },
+  { label: "Last updated", value: "2026-04-08" },
 ] as const;
 
 export default function AboutPage() {
@@ -151,7 +151,7 @@ export default function AboutPage() {
               on the roadmap.
             </p>
             <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
-              Last updated 2026-04-03
+              Last updated 2026-04-08
             </p>
           </FadeIn>
 

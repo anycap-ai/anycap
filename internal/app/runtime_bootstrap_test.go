@@ -96,6 +96,27 @@ func TestNewServer_DoesNotStartRuntimeDuringConstruction(t *testing.T) {
 	if server.runtime.ctx != nil {
 		t.Fatal("expected runtime context to be nil before Start")
 	}
+	if server.adminHTTPServer == nil {
+		t.Fatal("expected admin http server to be initialized during construction")
+	}
+	if server.adminHTTPServer.IsRunning() {
+		t.Fatal("expected admin http server to remain stopped after construction")
+	}
+}
+
+func TestNewServer_InitializesAdminHTTPServerWhenConfigured(t *testing.T) {
+	server := NewServer(config.Config{
+		AppName:       "anycap-server",
+		AppEnv:        "test",
+		HTTPAddr:      ":0",
+		AdminHTTPAddr: ":0",
+		RuntimeMode:   "stub",
+		RateLimitRPM:  60,
+	}, buildinfo.Info{Version: "dev"})
+
+	if server.adminHTTPServer == nil {
+		t.Fatal("expected admin http server when admin addr is configured")
+	}
 }
 
 func TestServerStart_CreatesCancelableRuntimeContext(t *testing.T) {

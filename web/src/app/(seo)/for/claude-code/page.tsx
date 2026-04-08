@@ -7,7 +7,7 @@ import { DemoVideo } from "@/components/ui/DemoVideo";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { buildAgentCapabilityGapRows } from "@/lib/capability-inventory";
 import { createTechArticleJsonLd } from "@/lib/schema";
-import { publicCapabilityLabel, siteConfig } from "@/lib/site";
+import { siteConfig } from "@/lib/site";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
 const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
@@ -261,9 +261,9 @@ export default function ForClaudeCodePage() {
                 Claude Code
               </a>{" "}
               is excellent at planning, refactoring, and code execution. The gap appears when the
-              workflow needs {publicCapabilityLabel}, like product visuals, walkthrough videos,
-              screenshot understanding, or recording review — none of those are Claude Code tools
-              today.
+              workflow needs image, video, audio, or visual-analysis capabilities, like product
+              visuals, walkthrough videos, screenshot understanding, or recording review — none of
+              those are Claude Code tools today.
             </p>
             <p className="mt-4 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               Just tell Claude Code what you need — like{" "}
