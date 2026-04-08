@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 # AnyCap CLI
 
+> **Read this entire file before starting.** It covers install, auth, capabilities, and output conventions. Load reference files from `references/` as needed for specific commands.
+
 One CLI. Any capability.
 
 AnyCap lets you create media humans can see and hear, understand media humans share with you, access the web for information, and deliver results through shareable links and hosted pages. One CLI, one auth, structured JSON I/O.

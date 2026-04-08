@@ -166,6 +166,12 @@ func sessionFilePath(id string) string {
 	return filepath.Join(sessionDir(), id+".json")
 }
 
+// SessionFilePath returns the path to the session JSON file for the given ID.
+// Exported so the command layer can include it in the non-blocking start response.
+func SessionFilePath(id string) string {
+	return sessionFilePath(id)
+}
+
 func yjsStatePath(id string) string {
 	return filepath.Join(sessionDir(), id+"_yjs.bin")
 }

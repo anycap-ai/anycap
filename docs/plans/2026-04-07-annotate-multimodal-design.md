@@ -58,7 +58,7 @@ anycap annotate stop --session ann_xxx
 | `--port` | 0 (random) | Server port. Agents should specify a fixed port. |
 | `-o` | `{name}_annotated.png` | Output path for annotated image |
 | `--bind` | `127.0.0.1` | Bind address |
-| `--viewport` | `1440x900` | URL mode: iframe dimensions |
+| ~~`--viewport`~~ | ~~`1440x900`~~ | ~~URL mode: iframe dimensions~~ (removed: iframe uses 100% responsive sizing) |
 
 ## Architecture
 

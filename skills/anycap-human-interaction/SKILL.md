@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 # AnyCap Human Interaction
 
+> **Read this entire file before starting.** Skipping sections leads to incorrect workflows -- each media type has different capabilities and constraints.
+
 Workflow guide for collecting structured visual feedback from humans using AnyCap's annotation tool. This skill teaches you **when and how** to involve humans in your workflow through visual annotation and screen recording.
 
 For CLI command reference, read the `anycap-cli` skill. For media generation workflows, read the `anycap-media-production` skill.
@@ -17,6 +19,17 @@ For CLI command reference, read the `anycap-cli` skill. For media generation wor
 ## Prerequisites
 
 AnyCap CLI must be installed and authenticated. Read the `anycap-cli` skill if setup is needed.
+
+## Two Core Scenarios
+
+AnyCap annotation excels at two distinct review workflows. Choose the one that fits your situation:
+
+| Scenario | Best for | Primary artifact | Highlight |
+|----------|----------|------------------|-----------|
+| **URL / Web Page Review** | Web pages, local dev servers, live UIs | Screen recording with narration | Browse, annotate, and narrate -- the recording captures everything |
+| **Image Collaborative Review** | Generated images, screenshots, designs | Annotated image with merged feedback | Multiple reviewers annotate simultaneously in real-time |
+
+Both scenarios support all annotation tools (Rect, Arrow, Point, Freehand) and text labels. The difference is in what you get back and how the review is conducted.
 
 ## Command Quick Reference
 
@@ -59,8 +72,19 @@ The human can then access the annotation UI via:
 - **Direct access:** `http://<server-ip>:8888` (if the port is exposed)
 - **SSH port forward:** `ssh -L 8888:localhost:8888 user@host`, then open `http://localhost:8888`
 - **Container port mapping:** `docker run -p 8888:8888 ...`, then open `http://localhost:8888`
+- **Reverse proxy:** expose through nginx, Caddy, or any reverse proxy with a path prefix
 
 Always use `--port` with a fixed number in headless environments so the URL is predictable and forwardable.
+
+### Reverse Proxy Compatibility
+
+The annotation UI works behind reverse proxies with arbitrary path prefixes. All asset, API, and WebSocket URLs are resolved relative to the page URL, so setups like the following work out of the box:
+
+```
+https://yourserver.com/tools/annotate/  ->  http://localhost:8888/
+```
+
+If your proxy passes query parameters (e.g., `?token=...` for access control), they are preserved on all internal requests automatically. No additional configuration is needed on the annotation server side.
 
 ## When to Use Annotation
 
@@ -77,17 +101,6 @@ Do NOT use annotation when:
 - You only need a yes/no approval (just ask in chat)
 - The feedback is purely textual (e.g., "change the title text to X")
 
-## Four Media Types
-
-| Type | Best for | Annotated image? | Recording? |
-|------|----------|-------------------|------------|
-| **Image** | Generated images, screenshots, designs | Yes (full resolution) | Optional |
-| **URL** | Web pages, local dev servers, live UIs | No (cross-origin) | Critical |
-| **Video** | Generated videos, screen recordings | Yes (frame snapshot) | Optional |
-| **Audio** | Music, speech, sound effects | Yes (canvas) | Optional |
-
-Key insight: **URL mode has no annotated image output.** The recording is the primary feedback artifact. Always encourage recording for URL reviews.
-
 ## Interaction Pattern
 
 All annotation workflows follow this pattern:
@@ -99,7 +112,7 @@ sequenceDiagram
     participant Human
 
     Agent->>CLI: anycap annotate <target> --no-wait
-    CLI-->>Agent: {session, url, poll_command, stop_command}
+    CLI-->>Agent: {session, url, session_file, poll_command, stop_command}
     Agent->>Human: Present URL with guidance
     Human->>Human: Annotate, record, click Done
     Human->>Agent: Confirms done
@@ -109,50 +122,17 @@ sequenceDiagram
     Agent->>CLI: stop_command
 ```
 
-## Image Review
+### Session Recovery
 
-Use when you generated an image and need the human to mark desired changes. For the complete image-to-image refinement loop (generate -> annotate -> edit -> iterate), read the `anycap-media-production` skill.
+Session state is persisted at `.anycap/annotate/<session_id>.json` in the working directory (returned as `session_file` in the start response). If you lose the session ID or commands after a context reset, list files in `.anycap/annotate/` to find active sessions and read the JSON to recover poll/stop commands, URL, and status.
 
-### Start the Session
+---
 
-```bash
-anycap annotate hero-banner.png --no-wait -o hero-banner-annotated.png
-```
-
-### Present to the Human
-
-> "I generated the banner image. Please open this link to review it:
-> {url}
->
-> Draw rectangles, arrows, or points on areas you want changed, and type a description for each annotation. Click Done when finished."
-
-### Collect and Use Feedback
-
-```bash
-# Poll for result
-anycap annotate poll --session <session_id>
-
-# Extract annotation labels for image-to-image prompt
-anycap annotate poll --session <session_id> \
-  | jq -r '[.annotations[] | select(.label != "") | "#\(.id): \(.label)"] | join(". ")'
-
-# Apply changes via image-to-image
-anycap image generate \
-  --prompt "<annotations as prompt>. Keep all other elements unchanged." \
-  --model nano-banana-2 \
-  --mode image-to-image \
-  --param images=./hero-banner-annotated.png \
-  -o hero-banner-v2.png
-
-# Clean up
-anycap annotate stop --session <session_id>
-```
-
-## URL / Web Page Review
+## Scenario 1: URL / Web Page Review
 
 Use when you built or modified a web page, UI, or any browser-accessible content and need the human to review it visually.
 
-**This is the most important mode to get right.** Unlike image mode, URL mode cannot export an annotated screenshot (cross-origin iframe restriction). The **screen recording with narration** is the primary feedback artifact.
+**Why recording matters:** Unlike image mode, URL mode cannot export an annotated screenshot (cross-origin iframe restriction). The **screen recording with narration** is the primary feedback artifact. The human browses your page inside the annotation frame, draws annotations on top, and records a narrated walkthrough -- you get both the visual markups and a video of exactly what they saw and said.
 
 ### Start the Session
 
@@ -209,24 +189,112 @@ URL review feedback typically maps to code changes, not image generation. After 
 2. Make the code changes
 3. Start a new annotation session for the human to verify
 
-## Video Review
+### Recording Analysis Patterns
 
-Use when you generated a video or need the human to review video content.
+The recording is a `.webm` video captured from the browser tab, including annotations being drawn and voice narration. Use `anycap actions video-read` to analyze it:
+
+```bash
+# General feedback extraction
+anycap actions video-read --file <recording_path> \
+  --instruction "List all issues and desired changes the user described"
+
+# UI-specific review
+anycap actions video-read --file <recording_path> \
+  --instruction "For each UI element the user points at, describe the current state and the desired change"
+
+# Prioritized feedback
+anycap actions video-read --file <recording_path> \
+  --instruction "Categorize the user's feedback by priority (critical, important, nice-to-have)"
+```
+
+---
+
+## Scenario 2: Image Collaborative Review
+
+Use when you generated an image and need one or more humans to mark desired changes. This scenario shines with **real-time multi-user collaboration** -- multiple reviewers can open the same URL and annotate simultaneously, seeing each other's cursors and drawings in real-time.
+
+For the complete image-to-image refinement loop (generate -> annotate -> edit -> iterate), read the `anycap-media-production` skill.
 
 ### Start the Session
+
+```bash
+# Single reviewer
+anycap annotate hero-banner.png --no-wait -o hero-banner-annotated.png
+
+# Multi-user review -- bind to network so teammates can join
+anycap annotate hero-banner.png --no-wait -o hero-banner-annotated.png \
+  --bind 0.0.0.0 --port 8888
+```
+
+### Real-Time Multi-User Collaboration
+
+Multiple humans can open the same annotation URL simultaneously. All annotations and cursor positions sync in real-time via WebSocket (powered by Yjs CRDT). Each participant gets a random animal name and color for identification.
+
+Use multi-user mode for:
+
+- Team reviews where multiple stakeholders have input
+- Design critiques with several reviewers
+- Collaborative walkthroughs
+- Remote pair review across a LAN or the internet
+
+Share `http://<server-ip>:8888` with your team. Everyone sees each other's cursors and annotations in real-time. When any participant clicks **Done**, all connected collaborators see a notification that the session has been submitted.
+
+For public-facing servers, use a reverse proxy with authentication (e.g., nginx with basic auth, OAuth proxy, or a VPN) to control who can access the session. The annotation server itself uses CSRF protection for write operations but does not enforce its own access control -- rely on your network or proxy layer for that.
+
+### Present to the Human
+
+For a single reviewer:
+
+> "I generated the banner image. Please open this link to review it:
+> {url}
+>
+> Draw rectangles, arrows, or points on areas you want changed, and type a description for each annotation. Click Done when finished."
+
+For multiple reviewers:
+
+> "I generated the banner image. Please open this link to review it:
+> {url}
+>
+> Everyone can annotate at the same time -- you will see each other's cursors and drawings in real-time. Mark regions you want changed and add descriptions. When the team is done, any one of you can click **Done** to submit."
+
+### Collect and Use Feedback
+
+```bash
+# Poll for result
+anycap annotate poll --session <session_id>
+
+# Extract annotation labels for image-to-image prompt
+anycap annotate poll --session <session_id> \
+  | jq -r '[.annotations[] | select(.label != "") | "#\(.id): \(.label)"] | join(". ")'
+
+# Apply changes via image-to-image
+anycap image generate \
+  --prompt "<annotations as prompt>. Keep all other elements unchanged." \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images=./hero-banner-annotated.png \
+  -o hero-banner-v2.png
+
+# Clean up
+anycap annotate stop --session <session_id>
+```
+
+---
+
+## Other Media Types
+
+### Video Review
+
+Use when you generated a video or need the human to review video content.
 
 ```bash
 anycap annotate output.mp4 --no-wait
 ```
 
-### Present to the Human
-
 > "I generated the video. Please open this link to review it:
 > {url}
 >
 > Pause at key moments and draw annotations on the frame. If you have detailed feedback, click **Rec** to record your screen while narrating. Click **Done** when finished."
-
-### Collect Feedback
 
 ```bash
 anycap annotate poll --session <session_id>
@@ -244,17 +312,13 @@ fi
 anycap annotate stop --session <session_id>
 ```
 
-## Audio Review
+### Audio Review
 
 Use when you generated music or audio and need the human to provide feedback.
-
-### Start the Session
 
 ```bash
 anycap annotate track.mp3 --no-wait
 ```
-
-### Present to the Human
 
 > "I generated the audio track. Please open this link to review it:
 > {url}
@@ -263,17 +327,7 @@ anycap annotate track.mp3 --no-wait
 
 Audio feedback typically results in re-generation with an adjusted prompt rather than spatial edits.
 
-## Multi-User Collaboration
-
-Multiple humans can open the same annotation URL simultaneously. All annotations and cursor positions sync in real-time. Each participant gets a random name and color.
-
-Use this for:
-
-- Team reviews where multiple stakeholders have input
-- Design critiques with several reviewers
-- Collaborative walkthroughs
-
-Present the same URL to all participants and wait for all to finish before polling.
+---
 
 ## Iterative Review Loop
 
@@ -296,31 +350,14 @@ Tips for iteration:
 - Reference previous feedback in your changes ("Addressed #1 from previous review: ...")
 - After 2-3 rounds, summarize all changes made to confirm nothing was missed
 
-## Recording Analysis Patterns
+## Choosing the Right Scenario
 
-The recording is a `.webm` video captured from the browser tab, including annotations being drawn and voice narration. Use `anycap actions video-read` to analyze it:
-
-```bash
-# General feedback extraction
-anycap actions video-read --file <recording_path> \
-  --instruction "List all issues and desired changes the user described"
-
-# UI-specific review
-anycap actions video-read --file <recording_path> \
-  --instruction "For each UI element the user points at, describe the current state and the desired change"
-
-# Prioritized feedback
-anycap actions video-read --file <recording_path> \
-  --instruction "Categorize the user's feedback by priority (critical, important, nice-to-have)"
-```
-
-## Choosing the Right Presentation
-
-| Scenario | What to annotate | Key guidance to human |
-|----------|------------------|----------------------|
-| Generated image needs edits | The image file | Mark regions, describe changes |
-| Web page needs review | The URL | Browse, annotate, and **record with narration** |
-| Local dev server review | `http://localhost:PORT` | Browse, annotate, and **record with narration** |
-| Video needs feedback | The video file | Pause at key moments, annotate frames |
-| Music/audio needs feedback | The audio file | Play and annotate the canvas |
-| Multiple reviewers needed | Any of the above | Share the same URL with all reviewers |
+| Situation | Scenario | Why |
+|-----------|----------|-----|
+| Built/modified a web page | URL Review | Recording captures browsing, scrolling, and narrated feedback |
+| Local dev server needs review | URL Review | Same as above -- use `http://localhost:PORT` |
+| Generated image needs edits | Image Review | Annotated image feeds directly into image-to-image editing |
+| Team needs to review a design | Image Review (multi-user) | Everyone annotates together, all feedback in one place |
+| Design critique with stakeholders | Image Review (multi-user) | Real-time cursors and annotations keep everyone aligned |
+| Generated video needs feedback | Video Review | Pause at key moments to annotate specific frames |
+| Music/audio needs feedback | Audio Review | Annotate the canvas to mark time regions |

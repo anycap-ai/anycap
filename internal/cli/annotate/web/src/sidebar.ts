@@ -11,6 +11,21 @@ export function onAnnotationSync(cb: () => void): void {
   _onSync = cb;
 }
 
+// Track whether a sidebar input is being edited.
+let _pendingRender = false;
+
+/** True when the user is actively editing a label input in the sidebar. */
+export function isEditingLabel(): boolean {
+  const el = document.activeElement as HTMLElement | null;
+  const list = document.getElementById('annotation-list');
+  return !!el && el.tagName === 'INPUT' && !!list && list.contains(el);
+}
+
+/** Schedule a deferred renderList() for when the user finishes editing. */
+export function deferRenderList(): void {
+  _pendingRender = true;
+}
+
 // --- List rendering ---
 
 export function renderList(): void {
@@ -117,6 +132,16 @@ export function initSidebar(): void {
     const input = e.target as HTMLInputElement;
     if (input.dataset.idx !== undefined) {
       updateLabel(parseInt(input.dataset.idx), input.value);
+    }
+  });
+
+  // When a label input loses focus, flush any deferred render so the sidebar
+  // catches up with remote changes that arrived while the user was typing.
+  list.addEventListener('focusout', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' && _pendingRender) {
+      _pendingRender = false;
+      renderList();
     }
   });
 }

@@ -15,7 +15,18 @@ Use annotation when you need structured visual feedback from a human -- pointing
 
 ## Multi-User Collaboration
 
-Multiple users can open the same annotation URL simultaneously. All annotation changes and cursor positions sync in real-time across connected clients. Each client gets a random animal name (e.g., "Swift Fox") and color for identification. This is useful for collaborative review sessions where several people mark up the same content together.
+Multiple users can open the same annotation URL simultaneously. All annotation changes and cursor positions sync in real-time via WebSocket. Each client gets a random animal name (e.g., "Swift Fox") and color for identification. When any participant clicks **Done**, all other connected collaborators see a notification that the session has been submitted.
+
+This is especially useful for team review sessions on shared servers:
+
+```bash
+# Start on a LAN/public server so teammates can join
+anycap annotate design.png --no-wait --bind 0.0.0.0 --port 8888
+```
+
+Share `http://<server-ip>:8888` with your team. Everyone can annotate and see each other's cursors in real-time.
+
+**Security note:** The annotation server uses CSRF protection for write operations but does not enforce its own access control. When binding to `0.0.0.0` on a public network, use a reverse proxy with authentication (basic auth, OAuth proxy, VPN) to restrict access. On a trusted LAN, direct access is fine.
 
 ## Recording
 
@@ -90,12 +101,15 @@ Response:
   "url": "http://127.0.0.1:54321",
   "poll_command": "anycap annotate poll --session ann_a1b2c3d4",
   "stop_command": "anycap annotate stop --session ann_a1b2c3d4",
+  "session_file": ".anycap/annotate/ann_a1b2c3d4.json",
   "expires_in": 600,
-  "next_action_hint": "Show the URL to the user. Multiple users can open the same URL to collaborate in real-time (shared annotations, live cursors). Users can draw annotations, record screen video with narration, or both. The recording captures the full browser tab as video -- use `anycap actions video-read` to analyze it for visual understanding. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command."
+  "next_action_hint": "Show the URL to the user. Multiple users can open the same URL to collaborate in real-time (shared annotations, live cursors). Users can draw annotations, record screen video with narration, or both. The recording captures the full browser tab as video -- use `anycap actions video-read` to analyze it for visual understanding. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command. Session state is persisted at session_file -- read it to recover session details if needed."
 }
 ```
 
 Show the URL to the human. Multiple people can open the same URL to collaborate. Wait for the human to confirm they are done before polling.
+
+**Session recovery:** If you lose track of the session ID or commands, read the `session_file` (`.anycap/annotate/<session_id>.json` in the working directory). It contains the full session state including port, URL, status, and result.
 
 ### Step 2: Poll
 
@@ -137,8 +151,12 @@ anycap annotate stop --session ann_a1b2c3d4
 | `<target>` | yes | Image file, URL, video file, or audio file |
 | `-o, --output` | no | Save annotated image to this path (default: `<name>_annotated.<ext>`) |
 | `--no-wait` | no | Start background server and return immediately |
-| `--bind` | no | Bind address (default: `127.0.0.1`; use `0.0.0.0` for remote/headless access) |
+| `--bind` | no | Bind address (default: `127.0.0.1`; use `0.0.0.0` for LAN/remote/headless access) |
 | `--port` | no | Server port (default: random; agents should specify a fixed port) |
+
+### Reverse Proxy Compatibility
+
+The annotation UI works behind reverse proxies with arbitrary path prefixes. All asset, API, and WebSocket URLs are resolved relative to the page URL, so setups like `https://server.com/tools/annotate/ -> http://localhost:8888/` work without configuration. Query parameters (e.g., `?token=...` for proxy-level auth) are preserved on all internal requests automatically.
 
 ## Annotation Types
 

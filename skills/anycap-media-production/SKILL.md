@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 # AnyCap Media Production
 
+> **Read this entire file before starting.** It covers the full production workflow across image, video, music, and audio -- including iterative refinement with human feedback.
+
 Workflow guide for producing media assets with AnyCap. Covers image, video, music, and audio -- from initial generation through iterative refinement to delivery.
 
 This skill is about **how to produce media**. For CLI command reference and parameters, read the `anycap-cli` skill.

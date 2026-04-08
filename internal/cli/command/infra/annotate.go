@@ -23,7 +23,6 @@ func NewAnnotateCmd(stdout io.Writer) *cobra.Command {
 		outputPath string
 		bindAddr   string
 		port       int
-		viewport   string
 	)
 
 	cmd := &cobra.Command{
@@ -93,7 +92,6 @@ Examples:
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Save annotated image to this path")
 	cmd.Flags().StringVar(&bindAddr, "bind", "127.0.0.1", "Bind address (use 0.0.0.0 for remote/headless access)")
 	cmd.Flags().IntVar(&port, "port", 0, "Server port (0 = random). Agents should specify a fixed port.")
-	cmd.Flags().StringVar(&viewport, "viewport", "1440x900", "URL mode: iframe dimensions")
 
 	// Subcommands.
 	cmd.AddCommand(newAnnotatePollCmd(stdout))
@@ -210,14 +208,16 @@ func runAnnotateNonBlocking(stdout io.Writer, stderr io.Writer, target, outputPa
 			"anycap annotate poll --session %s", session.SessionID),
 		"stop_command": fmt.Sprintf(
 			"anycap annotate stop --session %s", session.SessionID),
-		"expires_in": annotate.SessionTimeoutSeconds(),
+		"session_file": annotate.SessionFilePath(session.SessionID),
+		"expires_in":   annotate.SessionTimeoutSeconds(),
 		"next_action_hint": "Show the URL to the user. Multiple users can open the same URL " +
 			"to collaborate in real-time (shared annotations, live cursors). " +
 			"Users can draw annotations, record screen video with narration, or both. " +
 			"The recording captures the full browser tab as video -- use `anycap actions video-read` " +
 			"to analyze it for visual understanding. " +
 			"After the user confirms they are done, run poll_command to retrieve all feedback, " +
-			"then run stop_command.",
+			"then run stop_command. " +
+			"Session state is persisted at session_file -- read it to recover session details if needed.",
 	}
 
 	data, _ := json.Marshal(result)

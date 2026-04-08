@@ -3,7 +3,7 @@
 import * as S from './state';
 import { sessionId, resolveWsUrl } from './config';
 import { render } from './canvas';
-import { renderList } from './sidebar';
+import { renderList, isEditingLabel, deferRenderList } from './sidebar';
 import { esc } from './ui';
 
 let ws: WebSocket | null = null;
@@ -57,7 +57,14 @@ export function initWebSocket(): void {
               );
               S.setColorIndex(S.annotations.length);
               render();
-              renderList();
+              // Skip DOM rebuild while user is typing a label to avoid
+              // breaking focus / IME composition. Deferred render will
+              // fire on focusout.
+              if (isEditingLabel()) {
+                deferRenderList();
+              } else {
+                renderList();
+              }
             }
             break;
           case 'cursor':
