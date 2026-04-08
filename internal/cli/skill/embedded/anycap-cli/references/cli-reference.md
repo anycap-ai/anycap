@@ -209,3 +209,27 @@ anycap feedback --type other -m "schema missing aspect_ratio for model X"
 | `-m, --message` | yes | Description |
 | `--request-id` | no | Request ID from a previous command |
 | `--context` | no | Additional context as JSON |
+
+## Advanced
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `ANYCAP_API_KEY` | API key for authentication (skips keychain entirely) |
+| `ANYCAP_API_ENDPOINT` | Override server endpoint |
+| `ANYCAP_CONFIG_DIR` | Custom config/credential directory (default: `~/.anycap/`) |
+| `ANYCAP_NO_UPDATE` | Disable auto-update (any value) |
+| `ANYCAP_NO_KEYRING` | Disable OS keychain, force file-based credential storage (see below) |
+
+### Disabling the OS Keychain
+
+The CLI stores credentials in the OS keychain by default (macOS Keychain, Windows Credential Manager, Linux Secret Service). On headless Linux (no DISPLAY/WAYLAND_DISPLAY), the CLI auto-detects and falls back to file storage automatically.
+
+Set `ANYCAP_NO_KEYRING=1` only when all of these are true:
+
+- The environment has an OS keychain available (not auto-disabled)
+- The keychain is ephemeral (lost on restart, e.g. some Docker setups with forwarded DISPLAY)
+- You need credentials to persist across restarts
+
+In all other cases, leave this unset. The keychain is the more secure storage option.

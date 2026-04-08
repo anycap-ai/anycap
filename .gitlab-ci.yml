@@ -18,6 +18,7 @@ include:
     file: "workflows/go-1.24/.gitlab-ci.yml"
 
 stages:
+  - prepare
   - lint
   - test
   - build
@@ -80,6 +81,32 @@ workflow:
         APP_server_SAE_APP_NAMESPACE: "anycap-prod"
 
 # ---------------------------------------------------------------------------
+# Prepare: Build annotate UI (page.html for go:embed)
+# Skipped for skills-only releases and server builds (no CLI code needed).
+# ---------------------------------------------------------------------------
+
+build:annotate-ui:
+  stage: prepare
+  tags:
+    - docker
+  image: node:22-slim
+  script:
+    - cd internal/cli/annotate/web
+    - npm install
+    - npm run build
+    - cp dist/index.html ../page.html
+  artifacts:
+    paths:
+      - internal/cli/annotate/page.html
+    expire_in: 1 day
+  rules:
+    - if: $RELEASE_SKILLS
+      when: never
+    - if: $APPS
+      when: never
+    - when: on_success
+
+# ---------------------------------------------------------------------------
 # Lint (skip on release, build, deploy, nightly branches)
 # ---------------------------------------------------------------------------
 
@@ -87,6 +114,9 @@ lint:
   stage: lint
   tags:
     - docker
+  needs:
+    - job: build:annotate-ui
+      artifacts: true
   script:
     - go vet ./...
   rules:
@@ -108,6 +138,9 @@ test:
   stage: test
   tags:
     - docker
+  needs:
+    - job: build:annotate-ui
+      artifacts: true
   script:
     - go test ./...
   rules:
@@ -156,6 +189,9 @@ build:cli:dev:
   image:
     name: goreleaser/goreleaser:latest
     entrypoint: [""]
+  needs:
+    - job: build:annotate-ui
+      artifacts: true
   variables:
     GIT_DEPTH: 0
     CLI_DEFAULT_ENDPOINT: "https://anycap-server.dev.knoffice.tech"
@@ -231,6 +267,9 @@ build:cli:
   image:
     name: goreleaser/goreleaser:latest
     entrypoint: [""]
+  needs:
+    - job: build:annotate-ui
+      artifacts: true
   variables:
     GIT_DEPTH: 0
   script:

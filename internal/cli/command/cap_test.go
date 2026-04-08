@@ -566,15 +566,15 @@ func TestImageModelsSchemaWithOperation(t *testing.T) {
 		Stderr:    stderr,
 		Stdin:     strings.NewReader(""),
 	})
-	cmd.SetArgs([]string{"image", "models", "mock-model-1", "schema", "--operation", "edit"})
+	cmd.SetArgs([]string{"image", "models", "mock-model-1", "schema", "--operation", "generate"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("image models schema --operation failed: %v", err)
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, `"edit"`) {
-		t.Fatalf("expected 'edit' operation in output, got: %s", output)
+	if !strings.Contains(output, `"generate"`) {
+		t.Fatalf("expected 'generate' operation in output, got: %s", output)
 	}
 }
 
@@ -620,7 +620,7 @@ func TestImageGenerate(t *testing.T) {
 	}
 }
 
-func TestImageEdit(t *testing.T) {
+func TestImageGenerateImageToImage(t *testing.T) {
 	ms := mockserver.New()
 	ts := httptest.NewServer(ms)
 	defer ts.Close()
@@ -640,14 +640,15 @@ func TestImageEdit(t *testing.T) {
 		Stdin:     strings.NewReader(""),
 	})
 	cmd.SetArgs([]string{
-		"image", "edit",
+		"image", "generate",
 		"--prompt", "make it a watercolor painting",
 		"--model", "mock-model-1",
+		"--mode", "image-to-image",
 		"--param", "images=[\"https://example.com/photo.png\"]",
 	})
 
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("image edit failed: %v\nstderr: %s", err, stderr.String())
+		t.Fatalf("image generate image-to-image failed: %v\nstderr: %s", err, stderr.String())
 	}
 
 	output := stdout.String()
@@ -659,26 +660,6 @@ func TestImageEdit(t *testing.T) {
 	}
 	if !strings.Contains(output, "credits_used") {
 		t.Fatalf("expected credits_used in flat output, got: %s", output)
-	}
-}
-
-func TestImageEditRequiresPromptAndModel(t *testing.T) {
-	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
-	cmd := NewRootCmd(Options{
-		BuildInfo: buildinfo.Info{Version: "test"},
-		Stdout:    stdout,
-		Stderr:    stderr,
-		Stdin:     strings.NewReader(""),
-	})
-	cmd.SetArgs([]string{"image", "edit", "--model", "m"})
-
-	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("expected error when --prompt missing")
-	}
-	if !strings.Contains(err.Error(), "prompt") {
-		t.Fatalf("expected prompt-related error, got: %v", err)
 	}
 }
 

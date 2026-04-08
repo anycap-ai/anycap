@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 # AnyCap AI Tool SEO
 
+> **Read this entire file before starting.** It covers the full SEO planning and audit workflow for AI tool websites.
+
 Plan and audit SEO for AI tool websites. Focus on product-led SEO where each page should help a searcher complete a task, evaluate options, or enter the product with high intent.
 
 **Map intent. Shape pages. Add evidence. Protect quality.**

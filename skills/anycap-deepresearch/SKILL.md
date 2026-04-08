@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI (authenticated). Works with any agent that su
 
 # AnyCap Deep Research
 
+> **Read this entire file before starting.** It defines the multi-source research workflow from planning through synthesis.
+
 Conduct thorough, multi-source research on any topic. Gather information broadly, verify claims rigorously, and synthesize findings into a polished, well-sourced report.
 
 **Think deeply. Search broadly. Verify everything. Deliver clearly.**

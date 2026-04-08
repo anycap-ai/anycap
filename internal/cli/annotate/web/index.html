@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnyCap - Annotate</title>
+<script>
+// Template variables (replaced by Go backend)
+var CSRF_TOKEN = '{{CSRF_TOKEN}}';
+var MEDIA_TYPE = '{{MEDIA_TYPE}}';
+var TARGET_URL = '{{TARGET_URL}}';
+var SESSION_ID = '{{SESSION_ID}}';
+</script>
+</head>
+<body>
+
+<div id="toolbar">
+    <span class="title">Annotate</span>
+    <span class="client-name-tag">
+        <span class="client-dot" id="client-dot"></span>
+        <input type="text" id="client-name" maxlength="20" spellcheck="false" placeholder="Your name">
+    </span>
+    <div class="sep"></div>
+    <div class="group" id="browse-group" style="display:none">
+        <button class="tool-btn active" data-tool="browse">Browse <kbd>B</kbd></button>
+    </div>
+    <div class="sep" id="browse-sep" style="display:none"></div>
+    <div class="group">
+        <button class="tool-btn" data-tool="rect">Rect <kbd>R</kbd></button>
+        <button class="tool-btn" data-tool="arrow">Arrow <kbd>A</kbd></button>
+        <button class="tool-btn" data-tool="point">Point <kbd>P</kbd></button>
+        <button class="tool-btn" data-tool="freehand">Free <kbd>F</kbd></button>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+        <button class="tool-btn" data-action="undo">Undo <kbd data-mod="Z"></kbd></button>
+        <button class="tool-btn" data-action="clear">Clear</button>
+    </div>
+    <span class="spacer"></span>
+    <span class="peers-indicator" id="peers-indicator" style="display:none">
+        <span class="peers-dots" id="peers-dots"></span>
+        <span id="peers-count"></span>
+    </span>
+    <button class="tool-btn rec" id="btn-rec" data-action="rec"><span class="rec-dot"></span> Rec</button>
+    <button class="tool-btn primary" data-action="submit">Done</button>
+</div>
+
+<div id="workspace">
+    <div id="canvas-wrap">
+        <div id="loading">Loading...</div>
+    </div>
+    <div id="sidebar">
+        <div id="sidebar-header">Annotations</div>
+        <div id="annotation-list">
+            <div class="empty-state">Draw on the canvas to add annotations.<br>Each annotation can have a label<br>describing the desired change.</div>
+        </div>
+        <div id="shortcuts"></div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

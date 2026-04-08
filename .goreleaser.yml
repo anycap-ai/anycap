@@ -4,6 +4,7 @@ project_name: anycap
 
 before:
   hooks:
+    # annotate-ui (page.html) is built by CI and passed as artifact — not built here.
     - sh -c "rm -rf internal/cli/skill/embedded/anycap-cli && mkdir -p internal/cli/skill/embedded/anycap-cli/references && cp skills/anycap-cli/SKILL.md internal/cli/skill/embedded/anycap-cli/ && cp skills/anycap-cli/references/*.md internal/cli/skill/embedded/anycap-cli/references/"
 
 builds:

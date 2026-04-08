@@ -89,6 +89,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 	// Infrastructure commands.
 	rootCmd.AddCommand(infra.NewDriveCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(infra.NewPageCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(infra.NewAnnotateCmd(opts.Stdout))
 
 	// Action commands (AI analysis: image-read, video-read, etc.).
 	rootCmd.AddCommand(cap.NewActionsCmd(clientFactory, opts.Stdout))
