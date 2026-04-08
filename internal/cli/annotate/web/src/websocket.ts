@@ -1,7 +1,7 @@
 // WebSocket: real-time sync, remote cursors, peers indicator.
 
 import * as S from './state';
-import { sessionId } from './config';
+import { sessionId, resolveWsUrl } from './config';
 import { render } from './canvas';
 import { renderList } from './sidebar';
 import { esc } from './ui';
@@ -29,8 +29,7 @@ export function initClientUI(): void {
 
 export function initWebSocket(): void {
   if (wsReconnectTimer) { clearTimeout(wsReconnectTimer); wsReconnectTimer = null; }
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = proto + '//' + location.host + '/ws';
+  const wsUrl = resolveWsUrl('/ws');
   try {
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {

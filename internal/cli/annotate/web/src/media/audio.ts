@@ -1,6 +1,7 @@
 // Audio mode initialization.
 
 import * as S from '../state';
+import { resolveUrl } from '../config';
 import { render } from '../canvas';
 
 export function initAudio(): void {
@@ -16,7 +17,7 @@ export function initAudio(): void {
 
   const audio = document.createElement('audio');
   audio.controls = true;
-  audio.src = '/media';
+  audio.src = resolveUrl('/media');
   S.setAudioEl(audio);
 
   const playerBar = document.createElement('div');

@@ -1,6 +1,7 @@
 // Video mode initialization.
 
 import * as S from '../state';
+import { resolveUrl } from '../config';
 import { render } from '../canvas';
 
 export function initVideo(): void {
@@ -18,7 +19,7 @@ export function initVideo(): void {
   video.style.maxHeight = '100%';
   video.style.display = 'block';
   video.style.background = '#000';
-  video.src = '/media';
+  video.src = resolveUrl('/media');
   S.setVideoEl(video);
 
   const canvas = document.createElement('canvas');

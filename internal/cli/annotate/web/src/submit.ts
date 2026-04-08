@@ -1,7 +1,7 @@
 // Submit: send annotations, annotated image, and recording to server.
 
 import * as S from './state';
-import { csrfToken, mediaType } from './config';
+import { csrfToken, mediaType, resolveUrl } from './config';
 import { render, renderAnnotation } from './canvas';
 import { stopRecording, getIsRecording, getRecordedChunks, getRecordingDuration, getHasRecordedClip } from './recording';
 import { showToast, formatDuration } from './ui';
@@ -96,7 +96,7 @@ export async function submitAll(): Promise<void> {
   const summary = buildSubmitSummary(S.annotations.length, hasRecording, submitRecDuration, hasAnnotatedImage);
 
   try {
-    const resp = await fetch('/submit', { method: 'POST', body: fd });
+    const resp = await fetch(resolveUrl('/submit'), { method: 'POST', body: fd });
     if (resp.ok) {
       const body = await resp.json();
       if (body.closing) {

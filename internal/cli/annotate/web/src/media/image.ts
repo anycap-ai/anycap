@@ -1,6 +1,7 @@
 // Image mode initialization.
 
 import * as S from '../state';
+import { resolveUrl } from '../config';
 import { render } from '../canvas';
 
 export function initImage(): void {
@@ -20,7 +21,7 @@ export function initImage(): void {
   img.onerror = () => {
     document.getElementById('loading')!.textContent = 'Failed to load image.';
   };
-  img.src = '/image';
+  img.src = resolveUrl('/image');
   S.setOriginalImage(img);
 
   window.addEventListener('resize', () => { fitCanvasImage(); render(); });
