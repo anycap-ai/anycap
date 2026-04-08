@@ -16,6 +16,7 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	t.Setenv("ANYCAP_APP_NAME", "")
 	t.Setenv("ANYCAP_APP_ENV", "")
 	t.Setenv("ANYCAP_HTTP_ADDR", "")
+	t.Setenv("ANYCAP_ADMIN_HTTP_ADDR", "")
 	t.Setenv("ANYCAP_RUNTIME_MODE", "")
 	t.Setenv("ANYCAP_LOG_OUTPUT", "")
 	t.Setenv("ANYCAP_RATE_LIMIT_RPM", "")
@@ -36,6 +37,9 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.HTTPAddr != ":18080" {
 		t.Fatalf("expected default addr, got %q", cfg.HTTPAddr)
+	}
+	if cfg.AdminHTTPAddr != "" {
+		t.Fatalf("expected default admin addr empty, got %q", cfg.AdminHTTPAddr)
 	}
 	if cfg.RuntimeMode != "stub" {
 		t.Fatalf("expected runtime mode stub, got %q", cfg.RuntimeMode)
@@ -69,6 +73,19 @@ func TestLoadFromEnv_Defaults(t *testing.T) {
 	}
 	if cfg.Artifact.LinkTTLSeconds != 600 {
 		t.Fatalf("expected default artifact link ttl 600, got %d", cfg.Artifact.LinkTTLSeconds)
+	}
+}
+
+func TestLoadFromEnv_ReadsAdminHTTPAddr(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_ADMIN_HTTP_ADDR", ":18081")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.AdminHTTPAddr != ":18081" {
+		t.Fatalf("expected admin addr :18081, got %q", cfg.AdminHTTPAddr)
 	}
 }
 

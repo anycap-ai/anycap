@@ -478,10 +478,18 @@ func (r *fakePageSlugRepo) MarkTombstone(_ context.Context, _ string, _ int64) e
 }
 
 func newRouterForTest(t *testing.T, rpm int) (*serverHarness, string) {
-	return newRouterForTestWithOverrides(t, rpm, nil)
+	return newRouterForTestWithOptions(t, rpm, nil, false)
+}
+
+func newRouterForTestWithAdminServer(t *testing.T, rpm int) (*serverHarness, string) {
+	return newRouterForTestWithOptions(t, rpm, nil, true)
 }
 
 func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]int) (*serverHarness, string) {
+	return newRouterForTestWithOptions(t, rpm, overrides, false)
+}
+
+func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int, separateAdminServer bool) (*serverHarness, string) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
@@ -728,6 +736,10 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 		},
 	}
 
+	protectedMiddlewares := []app.HandlerFunc{
+		middleware.Auth(apiKeys, identityTokens),
+		middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}),
+	}
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
 		Middlewares: []app.HandlerFunc{
@@ -747,13 +759,15 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 			videoCatalog,
 			musicCatalog,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
-				protected := group.Group("", middleware.Auth(apiKeys, identityTokens), middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}))
+				protected := group.Group("", protectedMiddlewares...)
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
-				modelRouteHandler.RegisterRoutes(protected)
+				if !separateAdminServer {
+					modelRouteHandler.RegisterRoutes(protected)
+				}
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -762,19 +776,40 @@ func newRouterForTestWithOverrides(t *testing.T, rpm int, overrides map[string]i
 		},
 	})
 
+	var adminEngine *server.Hertz
+	if separateAdminServer {
+		adminEngine = NewRouter(RouterConfig{
+			Addr: ":0",
+			Middlewares: []app.HandlerFunc{
+				middleware.Recover(),
+				commonmw.TraceMiddleware(),
+				commonmw.AccessMiddleware("/ping", "/healthz"),
+				commonmw.MetricsMiddleware(),
+			},
+			V1: []RouteRegistrar{
+				RouteRegistrarFunc(func(group *route.RouterGroup) {
+					protected := group.Group("", protectedMiddlewares...)
+					modelRouteHandler.RegisterRoutes(protected)
+				}),
+			},
+		})
+	}
+
 	return &serverHarness{
-		engine:   engine,
-		callLogs: callLogs,
-		userID:   seededUser.ID,
-		apiKeyID: created.APIKey.ID,
+		engine:      engine,
+		adminEngine: adminEngine,
+		callLogs:    callLogs,
+		userID:      seededUser.ID,
+		apiKeyID:    created.APIKey.ID,
 	}, created.RawKey
 }
 
 type serverHarness struct {
-	engine   *server.Hertz
-	callLogs *calllog.MemoryCallLogRepo
-	userID   string
-	apiKeyID string
+	engine      *server.Hertz
+	adminEngine *server.Hertz
+	callLogs    *calllog.MemoryCallLogRepo
+	userID      string
+	apiKeyID    string
 }
 
 type staticCapabilityRateLimitResolver struct {
@@ -1943,10 +1978,35 @@ func TestRouter_ModelRoutesRequireAuth(t *testing.T) {
 	}
 }
 
-func TestRouter_ModelRoutesExposeModeMetadata(t *testing.T) {
-	h, rawKey := newRouterForTest(t, 10)
+func TestRouter_ModelRoutesMoveToAdminServerWhenConfigured(t *testing.T) {
+	h, rawKey := newRouterForTestWithAdminServer(t, 10)
+	if h.adminEngine == nil {
+		t.Fatal("expected admin engine when router is configured with separate admin server")
+	}
 
 	resp := ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/admin/model-routes", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusNotFound {
+		t.Fatalf("expected public server to return 404, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.adminEngine.Engine, http.MethodGet, "/v1/admin/model-routes", nil)
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected admin server to require auth, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.adminEngine.Engine, http.MethodGet, "/v1/admin/model-routes", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected admin server to return 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_ModelRoutesExposeModeMetadata(t *testing.T) {
+	h, rawKey := newRouterForTestWithAdminServer(t, 10)
+	if h.adminEngine == nil {
+		t.Fatal("expected admin engine when router is configured with separate admin server")
+	}
+
+	resp := ut.PerformRequest(h.adminEngine.Engine, http.MethodGet, "/v1/admin/model-routes", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
 	}

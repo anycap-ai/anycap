@@ -9,7 +9,6 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import {
   adjacentWorkflowSummary,
-  publicCapabilityLabel,
   publicCapabilitySummary,
   siteConfig,
 } from "@/lib/site";
@@ -20,18 +19,18 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
+  title: "AI Agent Capabilities — Image, video, audio, web, storage, and publishing",
   description:
-    "Browse the capability runtime that adds image generation, video generation, and vision workflows to coding agents through one install path, one auth flow, and one CLI.",
+    "Browse the AI agent capability runtime that adds image, video, audio, web, storage, and publishing workflows through one install path, one auth flow, and one CLI.",
   alternates: { canonical: "/capabilities" },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
     url: "/capabilities",
     siteName: siteConfig.siteName,
-    title: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
+    title: "AI Agent Capabilities — Image, video, audio, web, storage, and publishing",
     description:
-      "Start with image, video, and vision workflows, then expand into adjacent agent capabilities through the same runtime.",
+      "Start with the live capability inventory for coding agents, then expand into storage and publishing workflows through the same runtime.",
   },
 };
 
@@ -132,19 +131,20 @@ const capabilities: Capability[] = [
 ];
 
 const hubArticleJsonLd = createTechArticleJsonLd({
-  headline: "AI Agent Capabilities — Image, Video, and Vision via One CLI",
+  headline: "AI Agent Capabilities — Image, video, audio, web, storage, and publishing",
   description:
-    "Hub page for the image, video, and vision workflows coding agents miss most often, with adjacent capabilities in the same runtime.",
+    "Hub page for the live AnyCap capability inventory across media, web retrieval, storage, and publishing workflows.",
   path: "/capabilities",
-  about: ["AI agent capabilities", "Image generation", "Video generation", "Vision workflows"],
+  about: ["AI agent capabilities", "Media generation", "Web retrieval", "Drive storage"],
   keywords: [
     "ai agent capabilities",
     "image generation for ai agents",
     "video generation for ai agents",
-    "vision api for agents",
+    "audio understanding for ai agents",
     "web search api for ai agents",
     "web crawl for ai agents",
     "drive for ai agents",
+    "page publishing for ai agents",
   ],
 });
 
@@ -153,7 +153,7 @@ const itemListJsonLd = {
   "@type": "ItemList",
   name: "AnyCap Capabilities",
   description:
-    "Capability hub for image, video, and vision workflows first, with adjacent runtime capabilities in the same AnyCap CLI.",
+    "Capability hub for the live AnyCap inventory across media, web retrieval, storage, and publishing workflows.",
   numberOfItems: capabilities.filter((capability) => capability.status === "available").length,
   itemListElement: capabilities
     .filter((capability) => capability.status === "available")
@@ -318,22 +318,21 @@ export default function CapabilitiesPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Capability runtime
+              AI agent capabilities
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Your agent can code.
+              Keep the agent you use.
               <br />
-              It still needs {publicCapabilityLabel}.
+              Add the capabilities it lacks.
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              The missing layer is usually not planning or code generation. It is access to
-              {publicCapabilitySummary} through a consistent runtime. AnyCap adds those workflows
-              through one CLI, one auth flow, and one install path across Claude Code, Cursor,
-              Codex, and the rest of your agent stack. The same runtime also extends into
-              {" "}{adjacentWorkflowSummary} as your stack grows.
+              AnyCap is an AI agent capability runtime for coding agents. Start with
+              {` ${publicCapabilitySummary}`} through one CLI, one auth flow, and one install
+              path across Claude Code, Cursor, Codex, and the rest of your agent stack. The same
+              runtime also extends into {adjacentWorkflowSummary} as your workflows grow.
             </p>
           </FadeIn>
 
@@ -362,7 +361,7 @@ export default function CapabilitiesPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Start with the capability you need right now
+                Browse the live capability inventory
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {availableCapabilities.map((capability) => {

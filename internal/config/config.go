@@ -54,6 +54,7 @@ type Config struct {
 	AppName               string
 	AppEnv                string
 	HTTPAddr              string
+	AdminHTTPAddr         string
 	RuntimeMode           string
 	LogLevel              string
 	LogFormat             string
@@ -278,6 +279,7 @@ func LoadFromEnv() (Config, error) {
 		AppName:                 getEnv("ANYCAP_APP_NAME", defaultAppName),
 		AppEnv:                  getEnv("ANYCAP_APP_ENV", defaultAppEnv),
 		HTTPAddr:                getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
+		AdminHTTPAddr:           getEnv("ANYCAP_ADMIN_HTTP_ADDR", ""),
 		RuntimeMode:             getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
 		LogLevel:                getEnv("ANYCAP_LOG_LEVEL", defaultLogLevel),
 		LogFormat:               getEnv("ANYCAP_LOG_FORMAT", defaultLogFormat),
