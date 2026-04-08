@@ -10,7 +10,7 @@ LDFLAGS  := -s -w \
 
 BINARIES := anycap anycap-server anycap-mock
 
-.PHONY: all build install install-bin clean test lint setup-hooks tools dev dev-no-watch infra-up infra-down infra-reset sync-skills $(BINARIES)
+.PHONY: all build install install-bin clean test lint setup-hooks tools dev dev-no-watch infra-up infra-down infra-reset sync-skills annotate-ui $(BINARIES)
 
 all:
 	@echo "Usage: make <target>"
@@ -28,7 +28,7 @@ all:
 	@echo "  infra-reset  Destroy local infra volumes and restart"
 	@echo "  sync-skills  Sync skills/ to embedded for go:embed"
 
-build: sync-skills $(BINARIES)
+build: annotate-ui sync-skills $(BINARIES)
 
 $(BINARIES):
 	go build -ldflags '$(LDFLAGS)' -o ./$@ ./cmd/$@
@@ -40,7 +40,7 @@ install-bin:
 	go install -ldflags '$(LDFLAGS)' ./cmd/anycap
 	go install -ldflags '$(LDFLAGS)' ./cmd/anycap-server
 
-test: sync-skills
+test: annotate-ui sync-skills
 	go test ./...
 
 lint:
@@ -63,6 +63,16 @@ dev-no-watch:
 
 clean:
 	rm -f $(BINARIES)
+
+# ---------- Annotate UI ----------
+
+ANNOTATE_WEB := internal/cli/annotate/web
+ANNOTATE_PAGE := internal/cli/annotate/page.html
+
+annotate-ui:
+	cd $(ANNOTATE_WEB) && npm install && npm run build
+	cp $(ANNOTATE_WEB)/dist/index.html $(ANNOTATE_PAGE)
+	@echo "annotate UI built -> $(ANNOTATE_PAGE)"
 
 # ---------- Skills Embedding ----------
 

@@ -18,7 +18,9 @@ This works for both first-time install and subsequent upgrades.
 
 ## Step 2: Set environment variables
 
-Set these **before** using the CLI. They store config and credentials in the working directory instead of `~/.anycap`, and disable the OS keychain (ephemeral in sandboxes):
+Set these **before** using the CLI. They store config and credentials in the working directory instead of `~/.anycap`, and disable the OS keychain (ephemeral in sandboxes).
+
+> Note: `ANYCAP_NO_KEYRING=1` is only needed in sandbox/container environments where the OS keychain is ephemeral. On normal machines (macOS, Windows, Linux desktop), do NOT set this -- the keychain is the more secure storage option and works automatically.
 
 ```bash
 export ANYCAP_CONFIG_DIR=./.anycap
@@ -76,14 +78,14 @@ Add the following section to the project's `AGENTS.md` file (create the file if 
 ````markdown
 ## AnyCap CLI
 
-AnyCap CLI is installed locally via npm (`@anycap/cli`). Before using it, set these environment variables:
+AnyCap CLI is installed locally via npm (`@anycap/cli`). Before using it, set these environment variables (sandbox only -- on normal machines, do NOT set `ANYCAP_NO_KEYRING`):
 
 ```bash
 export ANYCAP_CONFIG_DIR=./.anycap
-export ANYCAP_NO_KEYRING=1
+export ANYCAP_NO_KEYRING=1  # sandbox only: disable ephemeral OS keychain
 ```
 
-These variables store config and credentials in the working directory's `.anycap/` folder, preventing loss on sandbox restart. Auto-update is disabled -- the npm package manages the binary version.
+These variables store config and credentials in the working directory's `.anycap/` folder, preventing loss on sandbox restart. `ANYCAP_NO_KEYRING=1` is only needed because sandboxes have ephemeral keychains. Auto-update is disabled -- the npm package manages the binary version.
 
 **Usage:** `npx anycap <command>`
 

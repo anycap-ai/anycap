@@ -48,3 +48,7 @@ next-env.d.ts
 .pnpm-store/
 # AnyCap
 anycap.toml
+.anycap/
+
+# Annotate UI build artifact (built from internal/cli/annotate/web/)
+internal/cli/annotate/page.html

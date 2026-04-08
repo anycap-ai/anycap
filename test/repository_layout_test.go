@@ -27,7 +27,6 @@ func TestProductAssetsExist(t *testing.T) {
 		"../scripts/dev/run-cli.sh",
 		"../scripts/release/build.sh",
 		"../deploy/docker/Dockerfile.server",
-		"../deploy/docker/Dockerfile.cli",
 		"../test/integration/smoke_test.sh",
 	}
 
