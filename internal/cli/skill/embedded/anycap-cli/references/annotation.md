@@ -2,7 +2,7 @@
 
 Interactive browser-based annotation and feedback tool. Opens a visual editor where humans draw annotations (rectangles, arrows, points, freehand) with text labels, and optionally record screen video with voice narration. Supports four media types and real-time multi-user collaboration.
 
-Use annotation when you need structured visual feedback from a human -- pointing at specific regions, marking desired changes, or recording a narrated walkthrough that you can analyze with `anycap video read`.
+Use annotation when you need structured visual feedback from a human -- pointing at specific regions, marking desired changes, or recording a narrated walkthrough that you can analyze with `anycap actions video-read`.
 
 ## Supported Media Types
 
@@ -21,7 +21,17 @@ Multiple users can open the same annotation URL simultaneously. All annotation c
 
 The Rec button captures the full browser tab as a video file (via `getDisplayMedia`). The human can narrate with their microphone while annotating. The resulting `.webm` video captures everything visible in the tab -- the content, annotations being drawn, and voice commentary.
 
-**Key insight for agents:** Use `anycap video read` on the recording to get AI video understanding of the feedback session. This lets you "watch" what the human did and said, even for complex spatial feedback that is hard to express in text annotations alone.
+**Key insight for agents:** Use `anycap actions video-read` on the recording to get AI video understanding of the feedback session. This lets you "watch" what the human did and said, even for complex spatial feedback that is hard to express in text annotations alone.
+
+## Tutorial Overlay (URL & Video Modes)
+
+When a human opens an annotation session for a **URL** or **video** target, the editor shows a quick-start tutorial overlay explaining the three-step workflow: annotate, record, and submit. This guides users who may not know that recording is available or important.
+
+**For agents:** When presenting a URL or video annotation link to the user, emphasize that they should **record their screen with narration** while reviewing. The tutorial overlay reinforces this, but your message should set the expectation. Example:
+
+> "Open this link to review the page. Draw annotations on areas you want changed, then click **Rec** to record your screen while narrating your feedback. Click **Done** when finished."
+
+The recording is critical for URL mode because there is no annotated image output (cross-origin iframe prevents capture). The recording is the primary artifact that captures the human's visual feedback.
 
 ## Two Modes
 
@@ -60,7 +70,7 @@ sequenceDiagram
     Human->>Agent: Confirms done
     Agent->>CLI: anycap annotate poll --session <id>
     CLI-->>Agent: {annotations, annotated_image, recording, ...}
-    Agent->>CLI: anycap video read --file recording.webm (if recording exists)
+    Agent->>CLI: anycap actions video-read --file recording.webm (if recording exists)
     CLI-->>Agent: AI analysis of the recorded feedback session
     Agent->>CLI: anycap annotate stop --session <id>
 ```
@@ -80,8 +90,8 @@ Response:
   "url": "http://127.0.0.1:54321",
   "poll_command": "anycap annotate poll --session ann_a1b2c3d4",
   "stop_command": "anycap annotate stop --session ann_a1b2c3d4",
-  "expires_in": 3600,
-  "next_action_hint": "Show the URL to the user. Multiple users can open the same URL to collaborate in real-time (shared annotations, live cursors). Users can draw annotations, record screen video with narration, or both. The recording captures the full browser tab as video -- use `anycap video read` to analyze it for visual understanding. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command."
+  "expires_in": 600,
+  "next_action_hint": "Show the URL to the user. Multiple users can open the same URL to collaborate in real-time (shared annotations, live cursors). Users can draw annotations, record screen video with narration, or both. The recording captures the full browser tab as video -- use `anycap actions video-read` to analyze it for visual understanding. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command."
 }
 ```
 
@@ -105,10 +115,10 @@ Possible responses:
 
 ### Step 3: Analyze Recording (Optional)
 
-If the result includes a `recording` field, use `anycap video read` to understand the human's narrated feedback:
+If the result includes a `recording` field, use `anycap actions video-read` to understand the human's narrated feedback:
 
 ```bash
-anycap video read --file .anycap/annotate/<session>/recording.webm \
+anycap actions video-read --file .anycap/annotate/<session>/recording.webm \
   --instruction "Describe what the user is pointing at and what changes they want"
 ```
 
@@ -159,10 +169,11 @@ Available fields depend on media type:
 ```json
 {
   "status": "submitted",
-  "source_image": "/path/to/original.png",
+  "source": "/path/to/original.png",
+  "source_type": "image",
   "annotated_image": "/path/to/original_annotated.png",
   "recording": "/path/to/.anycap/annotate/<session>/recording.webm",
-  "recording_duration": 45,
+  "recording_duration_seconds": 45,
   "annotations": [
     {
       "id": 1,
@@ -190,7 +201,8 @@ Available fields depend on media type:
       "label": "Outline the area to blur"
     }
   ],
-  "image_dimensions": {"width": 1920, "height": 1080}
+  "image_dimensions": {"width": 1920, "height": 1080},
+  "hint": "Use the annotated image with 'anycap image generate --mode image-to-image --param images=<annotated_image>'. Use 'anycap actions video-read' on the recording to understand the user's narrated feedback."
 }
 ```
 
@@ -223,7 +235,7 @@ For any media type, the recording captures the full annotation session as video.
 
 ```bash
 # Analyze the recording
-anycap video read --file .anycap/annotate/<session>/recording.webm \
+anycap actions video-read --file .anycap/annotate/<session>/recording.webm \
   --instruction "List all issues the user pointed out, with timestamps"
 ```
 

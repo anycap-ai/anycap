@@ -68,6 +68,9 @@ export function initWebSocket(): void {
           case 'leave':
             removeRemoteCursor(msg.clientId);
             break;
+          case 'submitted':
+            showSubmittedOverlay();
+            break;
         }
       } catch (_err) { /* ignore parse errors */ }
     };
@@ -76,6 +79,14 @@ export function initWebSocket(): void {
     };
     ws.onerror = () => { /* silently ignore */ };
   } catch (_err) { /* WebSocket not available */ }
+}
+
+// --- Content element helper ---
+// Returns the element that represents the actual annotation content area.
+// Cursor coordinates should be relative to this element for correct mapping
+// across different screen sizes (the content may be centered within canvasWrap).
+function getContentEl(): HTMLElement {
+  return S.mediaContainer || S.canvas || S.canvasWrap!;
 }
 
 // --- Broadcast ---
@@ -104,7 +115,8 @@ export function broadcastCursor(e: MouseEvent): void {
   const now = Date.now();
   if (now - lastCursorBroadcast < 50) return;
   lastCursorBroadcast = now;
-  const rect = S.canvasWrap!.getBoundingClientRect();
+  const contentEl = getContentEl();
+  const rect = contentEl.getBoundingClientRect();
   try {
     ws.send(JSON.stringify({
       type: 'cursor', clientId: S.clientId, name: S.clientName, color: S.clientColor,
@@ -147,9 +159,15 @@ function updateRemoteCursor(data: {
     cursor = { el, name: data.name || '?', color: data.color || '#999', timer: null };
     remoteCursors[data.clientId] = cursor;
   }
-  const rect = S.canvasWrap!.getBoundingClientRect();
+  // Position relative to the content element, then offset within canvasWrap.
+  const contentEl = getContentEl();
+  const contentRect = contentEl.getBoundingClientRect();
+  const wrapRect = S.canvasWrap!.getBoundingClientRect();
+  const offsetX = contentRect.left - wrapRect.left;
+  const offsetY = contentRect.top - wrapRect.top;
   cursor.el.style.transform =
-    'translate(' + Math.round(data.rx * rect.width) + 'px,' + Math.round(data.ry * rect.height) + 'px)';
+    'translate(' + Math.round(offsetX + data.rx * contentRect.width) + 'px,' +
+    Math.round(offsetY + data.ry * contentRect.height) + 'px)';
   if (data.name && data.name !== cursor.name) {
     cursor.name = data.name;
     const label = cursor.el.querySelector('.cursor-name') as HTMLElement | null;
@@ -184,4 +202,27 @@ function updatePeersUI(): void {
     .join('');
   document.getElementById('peers-count')!.textContent =
     ids.length + (ids.length === 1 ? ' peer' : ' peers');
+}
+
+// --- Submitted overlay ---
+// Shown on OTHER clients when someone submits feedback.
+
+function showSubmittedOverlay(): void {
+  // Don't show if the page was already replaced by the submitter's own handler.
+  if (document.getElementById('submitted-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'submitted-overlay';
+  overlay.innerHTML =
+    '<div class="submitted-overlay-content">' +
+    '<div class="submitted-overlay-icon">' +
+    '<svg width="48" height="48" viewBox="0 0 48 48" fill="none">' +
+    '<circle cx="24" cy="24" r="22" stroke="#6b7d3a" stroke-width="3" fill="none"/>' +
+    '<path d="M14 24L21 31L34 18" stroke="#6b7d3a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg></div>' +
+    '<div class="submitted-overlay-title">Feedback Submitted</div>' +
+    '<div class="submitted-overlay-sub">Another collaborator has submitted the feedback for this session.</div>' +
+    '<div class="submitted-overlay-hint">You can close this tab.</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
 }

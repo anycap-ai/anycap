@@ -20,6 +20,7 @@ export async function submitAll(): Promise<void> {
 
   const fd = new FormData();
   fd.append('csrf_token', csrfToken());
+  fd.append('client_id', S.clientId);
 
   // Annotations JSON
   if (S.annotations.length) {

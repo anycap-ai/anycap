@@ -142,7 +142,7 @@ Music generation may return multiple clips -- use `.outputs[0].local_path` to ex
 If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
 **Annotate** -- interactive visual feedback with real-time collaboration.
-Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. Multiple users can collaborate on the same session in real-time with shared annotations and live cursors. The built-in screen recorder captures the full browser tab as video -- use `anycap video read` on the recording for AI video understanding of the feedback.
+Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. Multiple users can collaborate on the same session in real-time with shared annotations and live cursors. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
 
 ```bash
 # Blocking mode -- opens browser, waits for Done click

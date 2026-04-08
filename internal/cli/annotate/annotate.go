@@ -339,6 +339,14 @@ func (r *wsRelay) remove(c *websocket.Conn) {
 	delete(r.clients, c)
 }
 
+func (r *wsRelay) broadcastAll(msg []byte) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for c := range r.clients {
+		_ = c.Write(context.Background(), websocket.MessageText, msg)
+	}
+}
+
 func (r *wsRelay) broadcast(sender *websocket.Conn, typ websocket.MessageType, msg []byte) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -638,6 +646,15 @@ func (s *Server) handleSubmit(w http.ResponseWriter, r *http.Request) {
 		resp["closing"] = true
 	}
 	_ = json.NewEncoder(w).Encode(resp)
+
+	// Notify all connected WebSocket clients that feedback has been submitted.
+	// Include the submitter's clientId so the submitting browser tab can skip
+	// the overlay (it already has its own feedback via the HTTP response).
+	submittedMsg, _ := json.Marshal(map[string]any{
+		"type":     "submitted",
+		"clientId": r.FormValue("client_id"),
+	})
+	s.relay.broadcastAll(submittedMsg)
 
 	// Auto-close: shutdown server after the first submit (blocking mode).
 	if s.autoClose {
