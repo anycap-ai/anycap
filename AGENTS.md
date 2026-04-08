@@ -455,8 +455,8 @@ The agent landing page (`web/src/app/[locale]/page.tsx` / `web/src/app/page.tsx`
 
 Site-wide capability descriptions are centralized in `web/src/lib/site.ts`:
 
-- **Early access (now):** image generation, video generation, image understanding, video analysis
-- **Roadmap:** music, speech, search, crawl
+- **Early access (now):** image generation, video generation, image understanding, video analysis, web search, web crawl
+- **Roadmap:** music, speech
 
 All pages, metadata, `llms.txt`, and agent-facing copy must use these canonical lists. Never describe roadmap capabilities as available.
 

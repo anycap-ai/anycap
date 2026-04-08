@@ -45,6 +45,9 @@ anycap annotate poll --session <session_id>
 
 # Stop background server
 anycap annotate stop --session <session_id>
+
+# List all active sessions (useful for recovery after context loss)
+anycap annotate list
 ```
 
 `<target>` is auto-detected by content: image file, URL (`http://` or `https://`), video file, or audio file.
@@ -57,6 +60,14 @@ anycap annotate stop --session <session_id>
 | `-o, --output` | Save annotated image to this path |
 | `--port <port>` | Bind to a fixed port (default: random) |
 | `--bind <addr>` | Bind address (default: `127.0.0.1`) |
+
+### Browser Auto-Open
+
+Both blocking and non-blocking modes automatically attempt to open the annotation URL in the default browser. In desktop environments, the human will see the annotation UI immediately without needing to copy-paste a URL.
+
+If the browser cannot be opened (headless server, SSH session, container), the CLI prints the URL to stderr with instructions to open it manually. No error is raised -- the session continues normally.
+
+**For agents:** When running on a machine with a desktop environment, the human likely already has the annotation page open by the time you present the URL. Your message can say "the annotation page should already be open in your browser" rather than asking them to open it.
 
 ### Headless / Remote Access
 
@@ -124,7 +135,14 @@ sequenceDiagram
 
 ### Session Recovery
 
-Session state is persisted at `.anycap/annotate/<session_id>.json` in the working directory (returned as `session_file` in the start response). If you lose the session ID or commands after a context reset, list files in `.anycap/annotate/` to find active sessions and read the JSON to recover poll/stop commands, URL, and status.
+Session state is persisted at `.anycap/annotate/<session_id>.json` in the working directory (returned as `session_file` in the start response). If you lose the session ID or commands after a context reset:
+
+```bash
+# List all sessions with their status and recovery commands
+anycap annotate list
+```
+
+The `list` output includes `poll_command` and `stop_command` for each session, so you can resume without manually reading session files.
 
 ---
 
@@ -181,13 +199,35 @@ anycap annotate poll --session <session_id> \
 anycap annotate stop --session <session_id>
 ```
 
-### Applying URL Feedback
+> **Recording may be empty.** The Rec button uses the browser's `getDisplayMedia` API, which requires the user to grant screen-sharing permission. If the user declines the permission prompt or never clicks Rec, the `recording` field will be absent from the poll result. Always check for its existence before attempting video-read. Text annotations are still available regardless.
+
+### Applying URL Feedback -- Iterative Review
 
 URL review feedback typically maps to code changes, not image generation. After analyzing the recording and annotations:
 
 1. Identify which files need changes based on the visual feedback
 2. Make the code changes
-3. Start a new annotation session for the human to verify
+3. Stop the previous session
+4. Start a **new** annotation session for the human to verify
+
+Each round of changes requires a fresh session because the URL content has changed:
+
+```bash
+# Round 1: Initial review
+anycap annotate http://localhost:3000 --no-wait
+# ... human reviews, you poll and analyze ...
+anycap annotate stop --session <session_1>
+
+# Apply code changes based on feedback
+# ... edit files ...
+
+# Round 2: Verification review
+anycap annotate http://localhost:3000 --no-wait
+# ... human confirms or gives more feedback ...
+anycap annotate stop --session <session_2>
+```
+
+Version your rounds in your messages so the human can track progress ("Round 2: I addressed issues #1 and #3 from your first review").
 
 ### Recording Analysis Patterns
 
@@ -285,45 +325,80 @@ anycap annotate stop --session <session_id>
 
 ### Video Review
 
-Use when you generated a video or need the human to review video content.
+Use when you generated a video or need the human to review video content. The human can pause the video at any frame and annotate it. The annotated image output is a snapshot of the paused frame with all annotations composited on top.
+
+#### Start and Present
 
 ```bash
 anycap annotate output.mp4 --no-wait
 ```
 
-> "I generated the video. Please open this link to review it:
-> {url}
+> "I generated the video. The review page should already be open in your browser.
 >
-> Pause at key moments and draw annotations on the frame. If you have detailed feedback, click **Rec** to record your screen while narrating. Click **Done** when finished."
+> **How to review:**
+> 1. Play the video and pause at moments you want to comment on
+> 2. Draw annotations (Rect, Arrow, Point) on the paused frame
+> 3. Click **Rec** to record your screen while narrating your feedback -- this helps me understand timing-specific issues
+> 4. Click **Done** when finished"
+
+#### Collect and Analyze
 
 ```bash
+# Poll for result
 anycap annotate poll --session <session_id>
 
 # The annotated_image is a snapshot of the paused frame with annotations
-# Use annotations + recording to understand time-specific feedback
+# Read the annotations for spatial feedback on that frame
+anycap annotate poll --session <session_id> \
+  | jq -r '.annotations[] | "#\(.id) [\(.type)]: \(.label)"'
 
-# If recording exists, analyze it
+# If recording exists, analyze it for time-specific feedback
 RECORDING=$(anycap annotate poll --session <session_id> | jq -r '.recording // empty')
 if [ -n "$RECORDING" ]; then
   anycap actions video-read --file "$RECORDING" \
-    --instruction "What feedback did the user give about the video? Note timestamps."
+    --instruction "What feedback did the user give about the video? For each issue, note the timestamp in the original video, what is wrong, and what they want changed."
 fi
 
+# Clean up
 anycap annotate stop --session <session_id>
 ```
 
+Video feedback typically maps to regeneration with an adjusted prompt, or specific frame-level edits if the model supports it.
+
 ### Audio Review
 
-Use when you generated music or audio and need the human to provide feedback.
+Use when you generated music or audio and need the human to provide feedback. The human sees an audio player with a drawing canvas below it.
+
+#### Start and Present
 
 ```bash
 anycap annotate track.mp3 --no-wait
 ```
 
-> "I generated the audio track. Please open this link to review it:
-> {url}
+> "I generated the audio track. The review page should already be open in your browser.
 >
-> Play the audio and draw annotations on the canvas to mark time regions or sections. Add labels describing what you want changed. Click **Done** when finished."
+> Play the audio and draw annotations on the canvas to mark time regions or sections that need changes. Add labels describing what you want adjusted (e.g., 'too loud here', 'add more bass', 'cut this section'). Click **Done** when finished."
+
+#### Collect and Analyze
+
+```bash
+# Poll for result
+anycap annotate poll --session <session_id>
+
+# Read annotation labels -- these describe desired audio changes
+anycap annotate poll --session <session_id> \
+  | jq -r '.annotations[] | "#\(.id) [\(.type)]: \(.label)"'
+
+# If recording exists, analyze the narrated feedback
+RECORDING=$(anycap annotate poll --session <session_id> | jq -r '.recording // empty')
+if [ -n "$RECORDING" ]; then
+  anycap actions video-read --file "$RECORDING" \
+    --instruction "What audio changes did the user request? Note any specific time ranges or sections they mentioned."
+fi
+
+# Clean up
+anycap annotate stop --session <session_id>
+```
 
 Audio feedback typically results in re-generation with an adjusted prompt rather than spatial edits.
 

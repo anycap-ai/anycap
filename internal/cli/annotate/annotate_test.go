@@ -861,3 +861,67 @@ func TestURLSessionPageContent(t *testing.T) {
 		t.Error("page should contain target URL")
 	}
 }
+
+func TestListSessions(t *testing.T) {
+	tmp := t.TempDir()
+
+	// sessionDir() uses os.Getwd(), so we need to chdir.
+	origDir, _ := os.Getwd()
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chdir(origDir) })
+
+	// No sessions yet.
+	sessions, err := ListSessions()
+	if err != nil {
+		t.Fatalf("ListSessions (empty): %v", err)
+	}
+	if len(sessions) != 0 {
+		t.Errorf("expected 0 sessions, got %d", len(sessions))
+	}
+
+	// Create a few sessions.
+	s1 := NewSession("/tmp/a.png", "", "127.0.0.1", 11111, MediaTypeImage)
+	if err := s1.Save(); err != nil {
+		t.Fatal(err)
+	}
+	s2 := NewSession("https://example.com", "", "127.0.0.1", 22222, MediaTypeURL)
+	if err := s2.Save(); err != nil {
+		t.Fatal(err)
+	}
+	s3 := NewSession("/tmp/v.mp4", "", "127.0.0.1", 33333, MediaTypeVideo)
+	s3.ExpiresAt = time.Now().Add(-1 * time.Second) // expired
+	if err := s3.Save(); err != nil {
+		t.Fatal(err)
+	}
+
+	sessions, err = ListSessions()
+	if err != nil {
+		t.Fatalf("ListSessions: %v", err)
+	}
+	if len(sessions) != 3 {
+		t.Fatalf("expected 3 sessions, got %d", len(sessions))
+	}
+
+	// Check that expired session is marked.
+	found := false
+	for _, s := range sessions {
+		if s.SessionID == s3.SessionID && s.Status == "expired" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected expired session to be marked as expired")
+	}
+
+	// Remove one session.
+	s1.Remove()
+	sessions, err = ListSessions()
+	if err != nil {
+		t.Fatalf("ListSessions after remove: %v", err)
+	}
+	if len(sessions) != 2 {
+		t.Errorf("expected 2 sessions after remove, got %d", len(sessions))
+	}
+}

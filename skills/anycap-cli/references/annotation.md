@@ -34,15 +34,19 @@ The Rec button captures the full browser tab as a video file (via `getDisplayMed
 
 **Key insight for agents:** Use `anycap actions video-read` on the recording to get AI video understanding of the feedback session. This lets you "watch" what the human did and said, even for complex spatial feedback that is hard to express in text annotations alone.
 
-## Tutorial Overlay (URL & Video Modes)
+## Recording Permission Note
 
-When a human opens an annotation session for a **URL** or **video** target, the editor shows a quick-start tutorial overlay explaining the three-step workflow: annotate, record, and submit. This guides users who may not know that recording is available or important.
+The Rec button uses the browser's `getDisplayMedia` API, which triggers a permission prompt. If the user declines the permission or never clicks Rec, the `recording` field will be absent from the result. Always check for its existence before attempting `video-read`. Text annotations are available regardless of whether a recording was made.
 
-**For agents:** When presenting a URL or video annotation link to the user, emphasize that they should **record their screen with narration** while reviewing. The tutorial overlay reinforces this, but your message should set the expectation. Example:
+**For agents:** When presenting an annotation link, emphasize that the user should **record their screen with narration** while reviewing, especially for URL mode where there is no annotated image output (cross-origin iframe prevents capture). The recording is the primary artifact for URL reviews.
 
 > "Open this link to review the page. Draw annotations on areas you want changed, then click **Rec** to record your screen while narrating your feedback. Click **Done** when finished."
 
-The recording is critical for URL mode because there is no annotated image output (cross-origin iframe prevents capture). The recording is the primary artifact that captures the human's visual feedback.
+## Browser Auto-Open
+
+Both blocking and non-blocking modes automatically attempt to open the annotation URL in the default browser. In desktop environments, the human sees the annotation UI immediately.
+
+If the browser cannot be opened (headless server, SSH, container), the CLI prints the URL to stderr with a fallback message. No error is raised -- the session proceeds normally.
 
 ## Two Modes
 
@@ -109,7 +113,7 @@ Response:
 
 Show the URL to the human. Multiple people can open the same URL to collaborate. Wait for the human to confirm they are done before polling.
 
-**Session recovery:** If you lose track of the session ID or commands, read the `session_file` (`.anycap/annotate/<session_id>.json` in the working directory). It contains the full session state including port, URL, status, and result.
+**Session recovery:** If you lose track of the session ID or commands, use `anycap annotate list` to see all sessions with their recovery commands. Alternatively, read the `session_file` (`.anycap/annotate/<session_id>.json` in the working directory) directly.
 
 ### Step 2: Poll
 
@@ -153,6 +157,8 @@ anycap annotate stop --session ann_a1b2c3d4
 | `--no-wait` | no | Start background server and return immediately |
 | `--bind` | no | Bind address (default: `127.0.0.1`; use `0.0.0.0` for LAN/remote/headless access) |
 | `--port` | no | Server port (default: random; agents should specify a fixed port) |
+
+Note: `--json` and `--pretty` are global CLI flags (not annotate-specific) that control output format. Non-TTY environments default to JSON automatically.
 
 ### Reverse Proxy Compatibility
 
@@ -256,6 +262,53 @@ For any media type, the recording captures the full annotation session as video.
 anycap actions video-read --file .anycap/annotate/<session>/recording.webm \
   --instruction "List all issues the user pointed out, with timestamps"
 ```
+
+## Subcommands
+
+### `annotate poll`
+
+Poll for annotation result after the human clicks Done.
+
+```bash
+anycap annotate poll --session <session_id>
+```
+
+### `annotate stop`
+
+Stop the background annotation server and clean up the session.
+
+```bash
+anycap annotate stop --session <session_id>
+```
+
+### `annotate list`
+
+List all annotation sessions in the current directory. Shows session ID, status, media type, source, port, and recovery commands.
+
+```bash
+anycap annotate list
+```
+
+Output:
+
+```json
+{
+  "sessions": [
+    {
+      "session": "ann_a1b2c3d4",
+      "status": "pending",
+      "media_type": "image",
+      "source": "/path/to/photo.png",
+      "port": 54321,
+      "poll_command": "anycap annotate poll --session ann_a1b2c3d4",
+      "stop_command": "anycap annotate stop --session ann_a1b2c3d4"
+    }
+  ],
+  "count": 1
+}
+```
+
+Use `list` to recover session details after a context reset or when you have lost track of active sessions. Expired sessions are included with `"status": "expired"`.
 
 ## jq Recipes
 

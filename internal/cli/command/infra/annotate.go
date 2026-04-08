@@ -96,6 +96,7 @@ Examples:
 	// Subcommands.
 	cmd.AddCommand(newAnnotatePollCmd(stdout))
 	cmd.AddCommand(newAnnotateStopCmd(stdout))
+	cmd.AddCommand(newAnnotateListCmd(stdout))
 	cmd.AddCommand(newAnnotateServeCmd())
 
 	return cmd
@@ -181,7 +182,7 @@ func runAnnotateNonBlocking(stdout io.Writer, stderr io.Writer, target, outputPa
 	// users get a reachable URL when --bind 0.0.0.0 is used.
 	urlHost := bind
 	if urlHost == "0.0.0.0" {
-		urlHost = "0.0.0.0"
+		urlHost = "<host-ip>"
 	}
 	url := fmt.Sprintf("http://%s:%d", urlHost, session.Port)
 
@@ -290,6 +291,55 @@ Example:
 	cmd.Flags().StringVar(&sessionID, "session", "", "Session ID to stop")
 	_ = cmd.MarkFlagRequired("session")
 
+	return cmd
+}
+
+func newAnnotateListCmd(stdout io.Writer) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List active annotation sessions",
+		Long: `List all annotation sessions in the current directory.
+Shows session ID, status, media type, target, and port.
+
+Example:
+  anycap annotate list`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sessions, err := annotate.ListSessions()
+			if err != nil {
+				return err
+			}
+
+			type sessionInfo struct {
+				SessionID   string `json:"session"`
+				Status      string `json:"status"`
+				MediaType   string `json:"media_type"`
+				Source      string `json:"source"`
+				Port        int    `json:"port"`
+				PollCommand string `json:"poll_command"`
+				StopCommand string `json:"stop_command"`
+			}
+
+			items := make([]sessionInfo, 0, len(sessions))
+			for _, s := range sessions {
+				items = append(items, sessionInfo{
+					SessionID:   s.SessionID,
+					Status:      s.Status,
+					MediaType:   s.MediaType,
+					Source:      s.Source(),
+					Port:        s.Port,
+					PollCommand: fmt.Sprintf("anycap annotate poll --session %s", s.SessionID),
+					StopCommand: fmt.Sprintf("anycap annotate stop --session %s", s.SessionID),
+				})
+			}
+
+			result := map[string]any{
+				"sessions": items,
+				"count":    len(items),
+			}
+			data, _ := json.Marshal(result)
+			return output.WriteJSON(stdout, data)
+		},
+	}
 	return cmd
 }
 

@@ -28,7 +28,7 @@ import (
 const (
 	sessionTimeout = 10 * time.Minute
 	sessionGCAge   = 1 * time.Hour
-	maxUploadSize  = 50 << 20 // 50 MB (increased for recording uploads)
+	maxUploadSize  = 100 << 20 // 100 MB (recording can be 8 MB/min, 10+ min sessions)
 )
 
 // SessionTimeoutSeconds returns the session timeout in seconds.
@@ -284,6 +284,32 @@ func (s *Session) Source() string {
 		return s.MediaPath
 	}
 	return ""
+}
+
+// ListSessions returns all sessions found in the session directory.
+// Expired sessions are marked with status "expired".
+func ListSessions() ([]*Session, error) {
+	dir := sessionDir()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var sessions []*Session
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+			continue
+		}
+		id := strings.TrimSuffix(e.Name(), ".json")
+		s, err := LoadSession(id)
+		if err != nil {
+			continue
+		}
+		sessions = append(sessions, s)
+	}
+	return sessions, nil
 }
 
 // CleanExpiredSessions removes session files older than sessionGCAge.
@@ -747,7 +773,7 @@ func StartBackground(target, outputPath, bind string, port int, mediaType string
 		// Verify the specified port is available.
 		ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, port))
 		if err != nil {
-			return nil, fmt.Errorf("port %d is already in use: %w", port, err)
+			return nil, fmt.Errorf("port %d is already in use", port)
 		}
 		ln.Close()
 	}
