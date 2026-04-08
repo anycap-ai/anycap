@@ -21,6 +21,18 @@ export function renderList(): void {
       'Each annotation can have a label<br>describing the desired change.</div>';
     return;
   }
+
+  // Preserve focus state so remote syncs don't steal the user's cursor.
+  const activeEl = document.activeElement as HTMLInputElement | null;
+  let focusedIdx: string | null = null;
+  let focusedVal: string | null = null;
+  let focusedSel: [number, number] | null = null;
+  if (activeEl && activeEl.tagName === 'INPUT' && el.contains(activeEl) && activeEl.dataset.idx !== undefined) {
+    focusedIdx = activeEl.dataset.idx;
+    focusedVal = activeEl.value;
+    focusedSel = [activeEl.selectionStart ?? 0, activeEl.selectionEnd ?? 0];
+  }
+
   el.innerHTML = S.annotations
     .map((a, i) => {
       let coords = '';
@@ -33,6 +45,10 @@ export function renderList(): void {
       else if (a.type === 'freehand' && a.points)
         coords = a.points.length + ' pts';
 
+      // If this input was focused, keep the local in-progress value so remote
+      // syncs don't overwrite what the user is typing.
+      const label = (focusedIdx === String(i) && focusedVal !== null) ? focusedVal : a.label;
+
       return (
         '<div class="ann-item" style="border-left-color:' + a.color + '">' +
         '<div class="ann-header">' +
@@ -42,12 +58,23 @@ export function renderList(): void {
         '<span class="ann-delete" data-idx="' + i + '">&times;</span>' +
         '</div>' +
         '<input type="text" placeholder="Describe the change..." value="' +
-        esc(a.label) +
+        esc(label) +
         '" data-idx="' + i + '">' +
         '</div>'
       );
     })
     .join('');
+
+  // Restore focus after DOM rebuild.
+  if (focusedIdx !== null) {
+    const newInput = el.querySelector('input[data-idx="' + focusedIdx + '"]') as HTMLInputElement | null;
+    if (newInput) {
+      newInput.focus();
+      if (focusedSel) {
+        newInput.setSelectionRange(focusedSel[0], focusedSel[1]);
+      }
+    }
+  }
 }
 
 // --- Event handlers ---

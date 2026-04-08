@@ -188,3 +188,30 @@ body{
 .submitted-overlay-title{font-size:24px;font-weight:600;color:#e0e0e0;margin-bottom:10px}
 .submitted-overlay-sub{font-size:14px;opacity:.7;max-width:320px;margin:0 auto 16px}
 .submitted-overlay-hint{font-size:13px;opacity:.4}
+
+/* --- Confirm dialog --- */
+#confirm-dialog-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;
+  background:rgba(26,26,46,.6);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;
+  animation:overlay-fade-in .15s ease
+}
+.confirm-dialog{
+  background:#2a2d26;border:1px solid #3a3e32;border-radius:12px;
+  padding:28px 32px 24px;max-width:380px;width:90%;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);text-align:center;
+  font-family:system-ui,sans-serif
+}
+.confirm-dialog-title{font-size:18px;font-weight:600;color:#e0e0d8;margin-bottom:10px}
+.confirm-dialog-msg{font-size:13px;color:#9a9e90;line-height:1.5;margin-bottom:24px}
+.confirm-dialog-actions{display:flex;gap:10px;justify-content:center}
+.confirm-dialog-btn{
+  padding:8px 22px;border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid #3a3e32;transition:all .15s ease;
+  font-family:inherit
+}
+.confirm-dialog-btn.cancel{background:transparent;color:#9a9e90}
+.confirm-dialog-btn.cancel:hover{background:#3a3e32;color:#e0e0d8}
+.confirm-dialog-btn.confirm{background:#6b7d3a;color:#fff;border-color:#6b7d3a}
+.confirm-dialog-btn.confirm:hover{background:#7d9244}
+.confirm-dialog-btn:focus{outline:2px solid #6b7d3a;outline-offset:2px}

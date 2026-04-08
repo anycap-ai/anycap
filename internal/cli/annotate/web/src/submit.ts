@@ -4,9 +4,18 @@ import * as S from './state';
 import { csrfToken, mediaType, resolveUrl } from './config';
 import { render, renderAnnotation } from './canvas';
 import { stopRecording, getIsRecording, getRecordedChunks, getRecordingDuration, getHasRecordedClip } from './recording';
-import { showToast, formatDuration } from './ui';
+import { showToast, formatDuration, showConfirmDialog } from './ui';
 
 export async function submitAll(): Promise<void> {
+  // Confirm before submitting -- warns that the session will end for all.
+  const confirmed = await showConfirmDialog(
+    'Submit Feedback?',
+    'This will submit your feedback and end the session. All collaborators will be disconnected.',
+    'Submit',
+    'Keep Editing',
+  );
+  if (!confirmed) return;
+
   // Stop recording if active
   let recordingBlob: Blob | null = null;
   let submitRecDuration = 0;
