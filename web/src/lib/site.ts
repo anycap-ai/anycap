@@ -1,5 +1,6 @@
 const ROOT_PATH = "/";
 const LOCALE_HEADER = "x-anycap-locale";
+const REQUEST_PATHNAME_HEADER = "x-anycap-pathname";
 const DEFAULT_LOCALE = "en";
 
 export const supportedLocales = [DEFAULT_LOCALE] as const;
@@ -8,6 +9,7 @@ export type SiteLocale = (typeof supportedLocales)[number];
 
 export const defaultLocale: SiteLocale = DEFAULT_LOCALE;
 export const localeHeaderName = LOCALE_HEADER;
+export const requestPathnameHeaderName = REQUEST_PATHNAME_HEADER;
 
 export const localeConfig = {
   en: {
@@ -50,7 +52,7 @@ export const siteConfig = {
   locale: localeConfig[defaultLocale].ogLocale,
   defaultLocale,
   supportedLocales,
-  defaultTitle: "Any Capability, Instantly",
+  defaultTitle: "AnyCap | AI Agent Capabilities Through One CLI",
   defaultDescription: defaultSiteDescription,
   agentTitle: "AnyCap for Agents — AI Agent Capabilities Through One CLI",
   agentDescription:

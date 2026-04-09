@@ -5,7 +5,7 @@ import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 
@@ -86,7 +86,7 @@ const organizationJsonLd = {
       "@type": "ContactPoint",
       contactType: "customer support",
       email: "admin@anycap.ai",
-      url: `${siteConfig.url}/contact`,
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
     },
   ],
 };

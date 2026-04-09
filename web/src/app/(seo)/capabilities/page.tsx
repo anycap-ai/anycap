@@ -304,7 +304,7 @@ export default function CapabilitiesPage() {
 
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Capabilities" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Capabilities", href: "/capabilities" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(hubArticleJsonLd) }}

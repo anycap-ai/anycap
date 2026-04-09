@@ -3,6 +3,8 @@ import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { ModelVisualShowcase } from "@/components/seo/ModelVisualShowcase";
+import { modelShowcaseEntries } from "@/lib/model-showcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
@@ -112,6 +114,10 @@ export default function ElevenLabsMusicPage() {
               keeps text-to-music generation in the same runtime as image generation, video
               generation, and downstream media review tasks.
             </p>
+          </FadeIn>
+
+          <FadeIn className="mt-10">
+            <ModelVisualShowcase entry={modelShowcaseEntries["elevenlabs-music"]} />
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

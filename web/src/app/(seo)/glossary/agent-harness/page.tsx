@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -32,13 +32,13 @@ const definitionJsonLd = {
   name: "Agent Harness",
   description:
     "The execution environment around an AI agent that provides tools, files, permissions, runtime state, and policy controls.",
-  url: `${siteConfig.url}/glossary/agent-harness`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
 };
 
 export default function AgentHarnessGlossaryPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Agent Harness" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Agent Harness", href: "/glossary/agent-harness" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">

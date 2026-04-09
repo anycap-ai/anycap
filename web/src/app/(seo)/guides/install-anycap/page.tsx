@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
@@ -36,14 +37,12 @@ const guideJsonLd = createTechArticleJsonLd({
   keywords: ["install anycap", "anycap cli", "agent skills", "ai agent setup"],
 });
 
+const pageChrome = getSeoPageChrome("/guides/install-anycap");
+
 export default function InstallAnycapPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[
-        { name: "Home", href: "/" },
-        { name: "Guides", href: "/guides", unlinkable: true },
-        { name: "Install AnyCap" },
-      ]} />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
@@ -57,7 +56,7 @@ export default function InstallAnycapPage() {
               className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4"
               style={mono}
             >
-              Guide
+              {pageChrome?.eyebrow ?? "Guide"}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

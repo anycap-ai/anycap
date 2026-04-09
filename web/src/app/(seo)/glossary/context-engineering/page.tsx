@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -32,13 +32,13 @@ const definitionJsonLd = {
   name: "Context Engineering",
   description:
     "The practice of shaping the information, tools, constraints, and runtime state an AI agent uses during execution so it can make better decisions.",
-  url: `${siteConfig.url}/glossary/context-engineering`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
 };
 
 export default function ContextEngineeringGlossaryPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Context Engineering" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Context Engineering", href: "/glossary/context-engineering" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">

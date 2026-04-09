@@ -5,6 +5,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { CommandCodeCard } from "@/components/ui/CommandCodeCard";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -81,6 +82,8 @@ const faqItems = [
 ];
 
 const faqJsonLd = createFaqPageJsonLd(faqItems);
+
+const pageChrome = getSeoPageChrome("/learn/how-to-make-bad-drawing-memes");
 
 const quickTakeaways = [
   "Bad drawing memes work when the awkwardness feels intentional, not when the image becomes unreadable.",
@@ -223,13 +226,7 @@ function BulletList({ items }: { items: readonly string[] }) {
 export default function HowToMakeBadDrawingMemesPage() {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: "Home", href: "/" },
-          { name: "Learn", href: "/learn", unlinkable: true },
-          { name: "How to make bad drawing memes" },
-        ]}
-      />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -243,7 +240,7 @@ export default function HowToMakeBadDrawingMemesPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Learn
+              {pageChrome?.eyebrow ?? "Learn"}
             </p>
             <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
               Last updated {lastUpdatedLabel}

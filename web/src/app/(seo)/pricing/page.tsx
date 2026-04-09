@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import {
   pricingActionRows,
@@ -9,13 +10,12 @@ import {
   type GenerationModel,
 } from "@/lib/capability-inventory";
 import { createFaqPageJsonLd } from "@/lib/schema";
-import { adjacentWorkflowSummary, publicCapabilityLabel, siteConfig } from "@/lib/site";
+import { adjacentWorkflowSummary, getLocalizedRouteUrl, publicCapabilityLabel, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const enterpriseContactHref = "mailto:admin@anycap.ai?subject=AnyCap%20Enterprise%20pricing";
 const defaultBillingHref = "/dashboard/billing?buy=1";
 
 export const metadata: Metadata = {
@@ -40,7 +40,7 @@ const pricingPageJsonLd = {
   name: "AnyCap Pricing",
   description:
     "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
-  url: `${siteConfig.url}/pricing`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
   dateModified: "2026-04-08",
   mainEntity: {
     "@type": "Product",
@@ -161,7 +161,7 @@ const enterprisePackage = {
     "For teams that need larger purchases, consolidated billing, procurement support, or invoiced billing.",
   highlights: ["Custom credit volume", "Volume pricing", "Invoiced billing"],
   ctaLabel: "Contact us",
-  ctaHref: enterpriseContactHref,
+  ctaSubject: "AnyCap Enterprise pricing",
 } as const;
 
 const driveQuotas = [
@@ -280,7 +280,7 @@ function ModelTable({
 export default function PricingPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Pricing" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Pricing", href: "/pricing" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingPageJsonLd) }}
@@ -461,13 +461,13 @@ export default function PricingPage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <a
-                      href={enterprisePackage.ctaHref}
-                      className="inline-flex items-center rounded-lg bg-[#1c1f17] px-5 py-3 text-[11px] tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#6b7d3a]"
+                    <EmailActionButton
+                      subject={enterprisePackage.ctaSubject}
+                      className="inline-flex cursor-pointer items-center rounded-lg border-0 bg-[#1c1f17] px-5 py-3 text-[11px] tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#6b7d3a]"
                       style={mono}
                     >
                       {enterprisePackage.ctaLabel}
-                    </a>
+                    </EmailActionButton>
                   </div>
                 </div>
               </div>

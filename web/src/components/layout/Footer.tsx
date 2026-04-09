@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
+import { EmailActionButton } from "@/components/ui/EmailActionButton";
+import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
+import { contactEmail } from "@/lib/contact";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const contactEmail = "admin@anycap.ai";
-const contactHref = `mailto:${contactEmail}`;
 
 const linkClass =
   "px-2 py-1 text-[10px] text-[#3f4437] hover:text-[#1c1f17] hover:bg-[#6b7d3a]/[0.08] active:scale-[0.97] tracking-[0.5px] rounded-lg transition-all duration-200 ease-out";
@@ -162,19 +163,16 @@ export async function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col gap-4 border-t border-[#d4dbb8] pt-6 sm:flex-row sm:items-end sm:justify-between">
           <AnycapLogo size={16} />
-          <a
-            href={contactHref}
+          <EmailActionButton
             aria-label={`Email ${contactEmail}`}
-            className="inline-flex flex-col items-start rounded-lg px-2 py-1 text-left transition-colors duration-200 hover:bg-[#6b7d3a]/[0.08] sm:items-end sm:text-right"
+            className="inline-flex cursor-pointer flex-col items-start rounded-lg border-0 bg-transparent px-2 py-1 text-left transition-colors duration-200 hover:bg-[#6b7d3a]/[0.08] sm:items-end sm:text-right"
             style={mono}
           >
             <span className="text-[9px] uppercase tracking-[0.7px] text-[#697057]">
               Contact
             </span>
-            <span className="mt-1 text-[10px] tracking-[0.35px] text-[#1f221a]">
-              {contactEmail}
-            </span>
-          </a>
+            <ProtectedEmailText className="mt-1 text-[10px] tracking-[0.35px] text-[#1f221a]" />
+          </EmailActionButton>
         </div>
       </div>
     </footer>

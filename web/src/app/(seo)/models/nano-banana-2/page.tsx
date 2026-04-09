@@ -4,6 +4,8 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { ModelVisualShowcase } from "@/components/seo/ModelVisualShowcase";
+import { modelShowcaseEntries } from "@/lib/model-showcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
@@ -140,6 +142,10 @@ export default function NanoBanana2Page() {
 
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
+          </FadeIn>
+
+          <FadeIn className="mt-10">
+            <ModelVisualShowcase entry={modelShowcaseEntries["nano-banana-2"]} />
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

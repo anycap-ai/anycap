@@ -7,6 +7,7 @@ import {
 } from "@/components/landing/CapabilityGapTable";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -75,6 +76,8 @@ const faqItems = [
 
 const faqJsonLd = createFaqPageJsonLd(faqItems);
 
+const pageChrome = getSeoPageChrome("/learn/what-agents-cant-do");
+
 const gapRows: CapabilityGapRow[] = [
   {
     capability: "Image generation",
@@ -140,13 +143,7 @@ const intentCards = [
 export default function WhatAgentsCantDoPage() {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: "Home", href: "/" },
-          { name: "Learn", href: "/learn", unlinkable: true },
-          { name: "What agents can't do" },
-        ]}
-      />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -160,7 +157,7 @@ export default function WhatAgentsCantDoPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Learn
+              {pageChrome?.eyebrow ?? "Learn"}
             </p>
             <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
               Last updated {lastUpdatedLabel}

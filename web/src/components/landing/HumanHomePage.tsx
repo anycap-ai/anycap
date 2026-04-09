@@ -7,7 +7,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
@@ -19,7 +19,7 @@ const homeWebPageJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebPage",
   "@id": homePageId,
-  name: "AnyCap Home",
+  name: "AnyCap | AI Agent Capabilities Through One CLI",
   url: siteConfig.url,
   description:
     "AnyCap gives coding agents one install path, one login, and one CLI for media generation, media understanding, web retrieval, storage, and publishing workflows.",
@@ -55,7 +55,7 @@ const homeSoftwareJsonLd = {
   softwareHelp: {
     "@type": "CreativeWork",
     name: "Install AnyCap",
-    url: `${siteConfig.url}/guides/install-anycap`,
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/guides/install-anycap"),
   },
 };
 

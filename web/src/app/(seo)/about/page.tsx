@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { capabilitySummary, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
+import { capabilitySummary, getLocalizedRouteUrl, roadmapCapabilitySummary, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -37,7 +37,7 @@ const aboutPageJsonLd = {
   name: "About AnyCap",
   description:
     `About page for AnyCap, an AI agent capability runtime that adds ${capabilitySummary} through one interface.`,
-  url: `${siteConfig.url}/about`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/about"),
   mainEntity: {
     "@type": "Organization",
     name: siteConfig.siteName,
@@ -49,7 +49,7 @@ const aboutPageJsonLd = {
         "@type": "ContactPoint",
         contactType: "customer support",
         email: "admin@anycap.ai",
-        url: `${siteConfig.url}/contact`,
+        url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
       },
     ],
   },
@@ -69,7 +69,7 @@ const organizationJsonLd = {
       "@type": "ContactPoint",
       contactType: "customer support",
       email: "admin@anycap.ai",
-      url: `${siteConfig.url}/contact`,
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
     },
   ],
 };
@@ -255,7 +255,7 @@ function ReferenceLink({
 export default function AboutPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "About" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "About", href: "/about" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutPageJsonLd) }}

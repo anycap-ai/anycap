@@ -3,7 +3,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createFaqPageJsonLd } from "@/lib/schema";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -314,12 +314,12 @@ const collectionJsonLd = {
   name: "AnyCap Learn",
   description:
     "Learn hub for choosing coding-agent setups, designing AI products, mapping capability gaps, and seeing real workflow examples.",
-  url: `${siteConfig.url}/learn`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/learn"),
   hasPart: learnArticles.map((article) => ({
     "@type": "TechArticle",
     headline: article.title,
     description: article.description,
-    url: `${siteConfig.url}${article.href}`,
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
   })),
 } as const;
 
@@ -330,7 +330,7 @@ const itemListJsonLd = {
     "@type": "ListItem",
     position: index + 1,
     name: article.title,
-    url: `${siteConfig.url}${article.href}`,
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
   })),
 } as const;
 
@@ -422,7 +422,7 @@ function SectionLinks({ links }: { links: readonly LearnLink[] }) {
 export default function LearnIndexPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Learn" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Learn", href: "/learn" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -15,6 +17,7 @@ const bodyClass = "text-base leading-7 text-[#4d5145]";
 const listClass =
   "mt-5 list-disc space-y-3 pl-5 text-base leading-7 text-[#4d5145] marker:text-[#6b7d3a]";
 const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4";
+const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
 export const metadata: Metadata = {
   title: "AnyCap Privacy Policy",
@@ -38,7 +41,7 @@ const privacyPageJsonLd = {
   name: "AnyCap Privacy Policy",
   description:
     "Privacy policy for AnyCap, including account data, submitted content, analytics, third-party providers, and contact details.",
-  url: `${siteConfig.url}/privacy`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/privacy"),
   dateModified: "2026-04-09",
 };
 
@@ -83,7 +86,7 @@ function PageSection({
 export default function PrivacyPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Privacy" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(privacyPageJsonLd) }}
@@ -164,12 +167,9 @@ export default function PrivacyPage() {
               <p className={bodyClass}>
                 If you need to ask about account data, submitted content, deletion requests, or
                 another privacy matter, email{" "}
-                <a
-                  href="mailto:admin@anycap.ai?subject=AnyCap%20privacy%20request"
-                  className={linkClass}
-                >
-                  admin@anycap.ai
-                </a>{" "}
+                <EmailActionButton subject="AnyCap privacy request" className={buttonLinkClass}>
+                  <ProtectedEmailText />
+                </EmailActionButton>{" "}
                 or use the{" "}
                 <Link href="/contact" className={linkClass}>
                   contact page
