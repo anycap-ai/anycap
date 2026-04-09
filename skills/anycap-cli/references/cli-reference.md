@@ -186,12 +186,19 @@ Start the local agent on the target repository:
 anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
+When the human explicitly wants Codex to bypass sandbox and approval restrictions for local-network or VPN-only access, add:
+
+```bash
+anycap agent daemon start --platform feishu --executor codex --codex-exec-mode danger-full-access --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
 This command will:
 
 - registers a local runner
 - claims it as the current user's primary Feishu runner
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
 - starts the normal polling loop for sessions/tasks
+- uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided
 
 Check which local machine is currently connected:
 
@@ -210,6 +217,7 @@ anycap agent runners serve --name local-mac --platform feishu --executor codex -
 ```
 
 - `agent runners serve` is still useful for debugging and operator workflows, but `agent daemon start` is the main user-facing path.
+- `agent runners serve` also accepts `--codex-exec-mode danger-full-access` when debugging local execution outside the default Codex sandbox.
 - `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
 - Do not use these legacy flows as the primary setup path for a personal Feishu bot daemon.
 

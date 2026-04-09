@@ -53,16 +53,17 @@ var (
 
 func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		name         string
-		platform     string
-		once         bool
-		foreground   bool
-		pollEvery    time.Duration
-		executorKind string
-		codexBin     string
-		workspace    string
-		feishuAppID  string
-		feishuSecret string
+		name          string
+		platform      string
+		once          bool
+		foreground    bool
+		pollEvery     time.Duration
+		executorKind  string
+		codexBin      string
+		codexExecMode string
+		workspace     string
+		feishuAppID   string
+		feishuSecret  string
 	)
 
 	cmd := &cobra.Command{
@@ -76,9 +77,9 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		Short: "Start the local agent and connect this machine to your Feishu chat",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !once && !foreground {
-				return startDaemonInBackground(cmd, stdout, strings.TrimSpace(platform), strings.TrimSpace(name), strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
+				return startDaemonInBackground(cmd, stdout, strings.TrimSpace(platform), strings.TrimSpace(name), strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
 			}
-			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), strings.TrimSpace(platform), once, pollEvery, strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
+			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), strings.TrimSpace(platform), once, pollEvery, strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
 		},
 	}
 	startCmd.Flags().StringVar(&name, "name", "local-agent", "Local runner name")
@@ -89,6 +90,7 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 	startCmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
 	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex or stub")
 	startCmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
+	startCmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	startCmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to codex exec")
 	startCmd.Flags().StringVar(&feishuAppID, "feishu-app-id", "", "Feishu app ID for local daemon ingress")
 	startCmd.Flags().StringVar(&feishuSecret, "feishu-app-secret", "", "Feishu app secret for local daemon ingress")
@@ -237,6 +239,7 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 			"next_steps": []string{
 				"Open Feishu and send a message to the bot to start a task.",
 				fmt.Sprintf("Run 'anycap agent daemon start --platform %s --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>' on the local machine if the personal bot is not connected yet.", platform),
+				fmt.Sprintf("Add '--codex-exec-mode danger-full-access' only when the human explicitly wants Codex to bypass sandbox restrictions on the local machine for %s.", platform),
 			},
 		},
 	}
@@ -298,6 +301,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 			"message":   "No local machine is currently connected for this platform.",
 			"next_steps": []string{
 				fmt.Sprintf("Run 'anycap agent daemon start --platform %s --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>' on the local machine you want to receive chat tasks.", platform),
+				"Add '--codex-exec-mode danger-full-access' only if the human explicitly wants unrestricted local Codex execution.",
 				fmt.Sprintf("Run 'anycap agent daemon status --platform %s' again after startup to confirm the connection.", platform),
 			},
 		},
@@ -308,7 +312,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 	return output.WriteJSON(stdout, payload)
 }
 
-func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, name, executorKind, codexBin, workspace, feishuAppID, feishuSecret string) error {
+func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, name, executorKind, codexBin, codexExecMode, workspace, feishuAppID, feishuSecret string) error {
 	executable, err := daemonExecutable()
 	if err != nil {
 		return err
@@ -322,7 +326,7 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 	}
 	_ = removeDaemonProcessState(platform)
 
-	args := buildDaemonForegroundArgs(cmd, platform, name, executorKind, codexBin, workspace, feishuAppID, feishuSecret)
+	args := buildDaemonForegroundArgs(cmd, platform, name, executorKind, codexBin, codexExecMode, workspace, feishuAppID, feishuSecret)
 	logPath := daemonLogPath(platform)
 	pid, err := spawnDaemonProcess(executable, args, logPath)
 	if err != nil {
@@ -364,7 +368,7 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 	return output.WriteJSON(stdout, payload)
 }
 
-func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind, codexBin, workspace, feishuAppID, feishuSecret string) []string {
+func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind, codexBin, codexExecMode, workspace, feishuAppID, feishuSecret string) []string {
 	args := make([]string, 0, 20)
 	if root := cmd.Root(); root != nil {
 		if endpointFlag := root.PersistentFlags().Lookup("endpoint"); endpointFlag != nil {
@@ -380,6 +384,9 @@ func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind,
 	if codexBin != "" {
 		args = append(args, "--codex-bin", codexBin)
 	}
+	if codexExecMode != "" {
+		args = append(args, "--codex-exec-mode", codexExecMode)
+	}
 	if workspace != "" {
 		args = append(args, "--workspace", workspace)
 	}
@@ -392,7 +399,7 @@ func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind,
 	return args
 }
 
-func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Client, stdout io.Writer, name, platform string, once bool, pollEvery time.Duration, executorKind, codexBin, workspace, feishuAppID, feishuSecret string) error {
+func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Client, stdout io.Writer, name, platform string, once bool, pollEvery time.Duration, executorKind, codexBin, codexExecMode, workspace, feishuAppID, feishuSecret string) error {
 	httpClient := &runnerServeHTTPClient{client: clientFactory()}
 	trimmedPlatform := strings.TrimSpace(platform)
 	reg, err := httpClient.Register(cmd.Context(), strings.TrimSpace(name), strings.TrimSpace(platform))
@@ -409,7 +416,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 	var executor agentcontrolapp.RunnerTaskExecutor
 	switch strings.ToLower(strings.TrimSpace(executorKind)) {
 	case "codex", "":
-		executor = newCodexExecExecutor(codexBin, workspace)
+		executor = newCodexExecExecutor(codexBin, workspace, codexExecMode)
 	case "stub":
 		executor = agentcontrolapp.StubExecutor{}
 	default:

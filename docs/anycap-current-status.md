@@ -105,6 +105,7 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 | Feature | Surface | Description |
 |---------|---------|-------------|
 | Preferred local daemon | `anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>` | Start the preferred local AnyCap agent for Feishu chat, open the user's personal Feishu bot long connection locally, and connect the current machine for execution |
+| Optional unrestricted Codex mode | `anycap agent daemon start --platform feishu --executor codex --codex-exec-mode danger-full-access --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>` | Explicitly run the local Codex executor without Codex sandbox/approval restrictions when the user wants real local-network or VPN-only access |
 | Daemon status | `anycap agent daemon status --platform feishu` | Show which local machine is currently connected for the signed-in user on the selected IM platform |
 | Runner list | `anycap agent runners list` | Inspect registered runners visible to the current user |
 | Runner low-level loop | `anycap agent runners serve --name mac-mini --platform feishu --executor codex` | Low-level/debug entry point for direct runner registration and polling without daemon-first primary-runner claim |
@@ -134,6 +135,7 @@ Current Phase 1 behavior:
 - Feishu chat routing now prefers a per-user primary runner mapping instead of requiring per-user `bot -> runner_id` server env wiring.
 - Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.
 - `anycap agent daemon start` is the preferred single-machine setup path: user logs in locally, starts the daemon with their personal Feishu bot App ID/App Secret, and the daemon owns bot ingress while the server stores conversation/session/mailbox state.
+- `anycap agent daemon start` defaults to Codex safe mode (`--full-auto`). Operators can explicitly opt into `--codex-exec-mode danger-full-access` when they need the local Codex subprocess to bypass sandbox restrictions.
 - The CLI runner supports a real local `codex` executor. Non-interactive runs capture Codex `thread_id` and persist it as `executor_ref`.
 - Continue-mode sessions inherit the parent `executor_ref`, so the runner can resume the existing Codex thread with `codex exec resume`.
 - Fire-mode sessions inherit the parent `executor_ref`, so pending mailbox results can be fed back into the same Codex conversation context.

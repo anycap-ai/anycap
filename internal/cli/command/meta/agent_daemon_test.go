@@ -130,6 +130,9 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 		if !strings.Contains(strings.Join(args, " "), "agent daemon start --foreground") {
 			t.Fatalf("expected foreground daemon args, got %v", args)
 		}
+		if !strings.Contains(strings.Join(args, " "), "--codex-exec-mode danger-full-access") {
+			t.Fatalf("expected codex exec mode in args, got %v", args)
+		}
 		if err := saveDaemonProcessState(daemonProcessState{
 			PID:         4321,
 			Platform:    "feishu",
@@ -146,7 +149,7 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 
 	stdout := &bytes.Buffer{}
 	cmd := newAgentDaemonCmd(func() *httpclient.Client { return nil }, stdout)
-	cmd.SetArgs([]string{"start", "--platform", "feishu", "--workspace", "/repo"})
+	cmd.SetArgs([]string{"start", "--platform", "feishu", "--workspace", "/repo", "--codex-exec-mode", "danger-full-access"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("daemon start background: %v", err)

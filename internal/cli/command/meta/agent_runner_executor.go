@@ -16,12 +16,14 @@ import (
 type codexExecExecutor struct {
 	binary    string
 	workspace string
+	execMode  string
 }
 
-func newCodexExecExecutor(binary string, workspace string) *codexExecExecutor {
+func newCodexExecExecutor(binary string, workspace string, execMode string) *codexExecExecutor {
 	return &codexExecExecutor{
 		binary:    strings.TrimSpace(binary),
 		workspace: strings.TrimSpace(workspace),
+		execMode:  strings.TrimSpace(execMode),
 	}
 }
 
@@ -85,10 +87,15 @@ func (e *codexExecExecutor) runPrompt(ctx context.Context, prompt string, resume
 	if strings.TrimSpace(e.workspace) != "" {
 		args = append(args, "-C", strings.TrimSpace(e.workspace))
 	}
+	safetyArgs := e.codexSafetyArgs()
 	if strings.TrimSpace(resumeID) != "" {
-		args = append(args, "exec", "resume", "--full-auto", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, strings.TrimSpace(resumeID), "-")
+		args = append(args, "exec", "resume")
+		args = append(args, safetyArgs...)
+		args = append(args, "--skip-git-repo-check", "--json", "--output-last-message", outputPath, strings.TrimSpace(resumeID), "-")
 	} else {
-		args = append(args, "exec", "--full-auto", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, "-")
+		args = append(args, "exec")
+		args = append(args, safetyArgs...)
+		args = append(args, "--skip-git-repo-check", "--json", "--output-last-message", outputPath, "-")
 	}
 
 	cmd := exec.CommandContext(ctx, resolved, args...)
@@ -143,6 +150,15 @@ func (e *codexExecExecutor) runPrompt(ctx context.Context, prompt string, resume
 		FinalMessage: result,
 		ExecutorRef:  threadID,
 	}, nil
+}
+
+func (e *codexExecExecutor) codexSafetyArgs() []string {
+	switch strings.ToLower(strings.TrimSpace(e.execMode)) {
+	case "danger-full-access":
+		return []string{"--dangerously-bypass-approvals-and-sandbox"}
+	default:
+		return []string{"--full-auto"}
+	}
 }
 
 func ptrExecutorString(v string) *string {

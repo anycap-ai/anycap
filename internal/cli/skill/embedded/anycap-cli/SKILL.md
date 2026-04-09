@@ -127,6 +127,12 @@ Then start the local Feishu agent on the target repository:
 anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
+If the human wants Codex to run in a less restricted environment for local-network or VPN-only resources, explicitly add:
+
+```bash
+--codex-exec-mode danger-full-access
+```
+
 After startup, verify which local machine is currently connected:
 
 ```bash
@@ -155,6 +161,8 @@ Main notes:
 - `anycap agent daemon stop` is not yet a full background-process manager; if the daemon is running in the current foreground terminal, stop it manually.
 - If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
 - The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
+- `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
+- Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions.
 
 ## Legacy / Debug Only
 

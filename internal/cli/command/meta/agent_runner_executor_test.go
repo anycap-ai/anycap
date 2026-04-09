@@ -43,7 +43,7 @@ sleep 10
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	executor := newCodexExecExecutor(scriptPath, tmpDir)
+	executor := newCodexExecExecutor(scriptPath, tmpDir, "")
 	message := "继续修复 parser panic"
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -128,7 +128,7 @@ fi
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	executor := newCodexExecExecutor(scriptPath, tmpDir)
+	executor := newCodexExecExecutor(scriptPath, tmpDir, "")
 	message := "继续修复 parser panic"
 
 	fresh, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
@@ -169,5 +169,69 @@ fi
 	}
 	if resumed.FinalMessage == nil || !strings.Contains(*resumed.FinalMessage, "resumed") {
 		t.Fatalf("unexpected resumed final message %+v", resumed.FinalMessage)
+	}
+}
+
+func TestCodexExecExecutorExecuteSessionUsesDangerFullAccessModeWhenRequested(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "codex-stub.sh")
+	argsPath := filepath.Join(tmpDir, "codex-args.txt")
+	script := `#!/bin/sh
+args_log="` + argsPath + `"
+printf '%s\n' "$@" > "$args_log"
+out=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    exec|resume)
+      shift
+      ;;
+    --output-last-message)
+      out="$2"
+      shift 2
+      ;;
+    --json|--skip-git-repo-check|--dangerously-bypass-approvals-and-sandbox)
+      shift
+      ;;
+    -C)
+      shift 2
+      ;;
+    -)
+      shift
+      break
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+cat >/dev/null
+printf '{"type":"thread.started","thread_id":"thread_123"}\n'
+printf 'fresh' > "$out"
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newCodexExecExecutor(scriptPath, tmpDir, "danger-full-access")
+	message := "继续修复 parser panic"
+
+	_, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_123",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession() error = %v", err)
+	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if !strings.Contains(argsText, "--dangerously-bypass-approvals-and-sandbox\n") {
+		t.Fatalf("expected danger mode in args, got %q", argsText)
+	}
+	if strings.Contains(argsText, "--full-auto\n") {
+		t.Fatalf("expected full-auto to be absent in danger mode, got %q", argsText)
 	}
 }

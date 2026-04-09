@@ -237,17 +237,18 @@ func (c *runnerServeHTTPClient) UpdateTask(ctx context.Context, runnerID string,
 
 func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
-		name         string
-		platform     string
-		runnerID     string
-		once         bool
-		pollEvery    time.Duration
-		executorKind string
-		codexBin     string
-		workspace    string
-		stubResult   string
-		stubDelay    time.Duration
-		stubMessage  string
+		name          string
+		platform      string
+		runnerID      string
+		once          bool
+		pollEvery     time.Duration
+		executorKind  string
+		codexBin      string
+		codexExecMode string
+		workspace     string
+		stubResult    string
+		stubDelay     time.Duration
+		stubMessage   string
 	)
 
 	cmd := &cobra.Command{
@@ -280,7 +281,7 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 				}
 				executorName = "stub"
 			case "codex":
-				executor = newCodexExecExecutor(codexBin, workspace)
+				executor = newCodexExecExecutor(codexBin, workspace, codexExecMode)
 				executorName = "codex"
 			default:
 				return fmt.Errorf("unsupported executor %q", executorKind)
@@ -327,6 +328,7 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 	cmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
 	cmd.Flags().StringVar(&executorKind, "executor", "stub", "Runner executor: stub or codex")
 	cmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
+	cmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	cmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to codex exec")
 	cmd.Flags().StringVar(&stubResult, "stub-result", "success", "Stub executor result: success or failed")
 	cmd.Flags().DurationVar(&stubDelay, "stub-delay", 0, "Optional stub executor delay")
