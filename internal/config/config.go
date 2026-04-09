@@ -237,6 +237,8 @@ type Api302Config struct {
 }
 
 type AgentControlConfig struct {
+	// Feishu holds server-side shared-bot compatibility config.
+	// The preferred path is now personal bot ingress owned by the local daemon.
 	Feishu       AgentControlFeishuConfig
 	FixedRunners []AgentControlFixedRunnerConfig
 }
@@ -268,6 +270,10 @@ func (c AgentControlFeishuConfig) WebhookEnabled() bool {
 func (c AgentControlFeishuConfig) DirectAPIEnabled() bool {
 	return strings.TrimSpace(c.AppID) != "" &&
 		strings.TrimSpace(c.AppSecret) != ""
+}
+
+func (c AgentControlFeishuConfig) LegacyLongConnEnabled() bool {
+	return c.LongConnEnabled && c.DirectAPIEnabled()
 }
 
 func (c AgentControlFeishuConfig) OutboundEnabled() bool {

@@ -99,8 +99,8 @@ func TestBuildFeishuAdapter_ReturnsAdapterWhenDirectAPIConfigured(t *testing.T) 
 	}
 }
 
-func TestBuildFeishuLongConnBot_ReturnsBotWhenConfigured(t *testing.T) {
-	bot := buildFeishuLongConnBot(
+func TestBuildLegacyFeishuLongConnBot_ReturnsBotWhenConfigured(t *testing.T) {
+	bot := buildLegacyFeishuLongConnBot(
 		config.Config{
 			AgentControl: config.AgentControlConfig{
 				Feishu: config.AgentControlFeishuConfig{

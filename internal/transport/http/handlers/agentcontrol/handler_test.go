@@ -98,7 +98,8 @@ func (r *testBindingRepo) RevokeBinding(_ context.Context, id int64) error {
 }
 
 type testRunnerRepo struct {
-	items map[int64]model.AgentRunner
+	items                 map[int64]model.AgentRunner
+	primaryByUserPlatform map[string]model.AgentPrimaryRunner
 }
 
 func (r *testRunnerRepo) CreateRunner(_ context.Context, runner model.AgentRunner) (*model.AgentRunner, error) {
@@ -119,8 +120,36 @@ func (r *testRunnerRepo) GetRunnerByID(_ context.Context, id int64) (*model.Agen
 	return &copy, nil
 }
 
+func (r *testRunnerRepo) GetPrimaryRunner(_ context.Context, userID string, platform string) (*model.AgentPrimaryRunner, error) {
+	if r.primaryByUserPlatform == nil {
+		return nil, nil
+	}
+	item, ok := r.primaryByUserPlatform[userID+"|"+platform]
+	if !ok {
+		return nil, nil
+	}
+	copy := item
+	return &copy, nil
+}
+
 func (r *testRunnerRepo) ListRunnersByUser(_ context.Context, _ string) ([]model.AgentRunner, error) {
 	return nil, nil
+}
+
+func (r *testRunnerRepo) ClaimPrimaryRunner(_ context.Context, userID string, platform string, runnerID int64, updatedAt time.Time) (*model.AgentPrimaryRunner, error) {
+	if r.primaryByUserPlatform == nil {
+		r.primaryByUserPlatform = map[string]model.AgentPrimaryRunner{}
+	}
+	item := model.AgentPrimaryRunner{
+		ID:        int64(len(r.primaryByUserPlatform) + 1),
+		UserID:    userID,
+		Platform:  platform,
+		RunnerID:  runnerID,
+		UpdatedAt: updatedAt,
+	}
+	r.primaryByUserPlatform[userID+"|"+platform] = item
+	copy := item
+	return &copy, nil
 }
 
 func (r *testRunnerRepo) UpdateRunnerState(_ context.Context, id int64, state string) (*model.AgentRunner, error) {
@@ -460,6 +489,68 @@ func TestWebhookRouteCreatesConversationSessionForPlainText(t *testing.T) {
 	}
 	if len(sessions.items) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(sessions.items))
+	}
+}
+
+func TestWebhookRouteRepliesWhenPrimaryRunnerOffline(t *testing.T) {
+	engine, _, _, _, runners, adapter := newAgentControlTestEngineWithRepos(t, true)
+
+	bindBody := []byte(`{"schema":"2.0","header":{"event_type":"im.message.receive_v1","app_id":"cli_bot"},"event":{"sender":{"sender_id":{"open_id":"ou_sender"}},"message":{"chat_id":"oc_chat","content":"{\"text\":\"/bind bind_abc\"}"}}}`)
+	_ = ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/im/events/feishu",
+		&ut.Body{Body: bytes.NewReader(bindBody), Len: len(bindBody)},
+		ut.Header{Key: "X-Lark-Request-Timestamp", Value: "1710000000"},
+		ut.Header{Key: "X-Lark-Request-Nonce", Value: "nonce-123"},
+		ut.Header{Key: "X-Lark-Signature", Value: feishuTestSignature("1710000000", "nonce-123", "encrypt_key", string(bindBody))},
+	)
+
+	delete(runners.primaryByUserPlatform, "2000000001|feishu")
+
+	nowBody := []byte(`{"schema":"2.0","header":{"event_type":"im.message.receive_v1","app_id":"cli_bot"},"event":{"sender":{"sender_id":{"open_id":"ou_sender"}},"message":{"chat_id":"oc_chat","content":"{\"text\":\"帮我看下 anycap 这个 bug\"}"}}}`)
+	resp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/im/events/feishu",
+		&ut.Body{Body: bytes.NewReader(nowBody), Len: len(nowBody)},
+		ut.Header{Key: "X-Lark-Request-Timestamp", Value: "1710000000"},
+		ut.Header{Key: "X-Lark-Request-Nonce", Value: "nonce-123"},
+		ut.Header{Key: "X-Lark-Signature", Value: feishuTestSignature("1710000000", "nonce-123", "encrypt_key", string(nowBody))},
+	)
+	if resp.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if len(adapter.sentMessages) == 0 {
+		t.Fatalf("expected offline reply to be sent")
+	}
+	got := adapter.sentMessages[len(adapter.sentMessages)-1]
+	if !strings.Contains(got, "当前不在线") {
+		t.Fatalf("expected offline reply, got %q", got)
+	}
+}
+
+func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
+	engine, rawKey, conversations, sessions, _ := newAgentControlTestEngine(t, true)
+	reqBody := `{"platform":"feishu","bot_id":"cli_personal_bot","chat_id":"oc_chat","sender_id":"ou_owner","message":"请回复 hello"}`
+	req := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/im/inbound",
+		&ut.Body{Body: bytes.NewReader([]byte(reqBody)), Len: len(reqBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+	)
+	if req.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", req.Code, req.Body.String())
+	}
+	if !strings.Contains(req.Body.String(), `"reply_message":"会话已接收，正在处理中"`) {
+		t.Fatalf("expected reply_message in response, got %s", req.Body.String())
+	}
+	if len(conversations.itemsByID) != 1 {
+		t.Fatalf("expected conversation to be created, got %d", len(conversations.itemsByID))
+	}
+	if len(sessions.items) != 1 {
+		t.Fatalf("expected session to be created, got %d", len(sessions.items))
 	}
 }
 
@@ -1235,7 +1326,27 @@ func TestBuildAutoContinueReplyMessageFallsBackWithoutSummary(t *testing.T) {
 	}
 }
 
+func TestRunnerClaimPrimaryRouteClaimsRunnerForCurrentUser(t *testing.T) {
+	engine, rawKey, _, _, _ := newAgentControlTestEngine(t, true)
+
+	resp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/runners/21/claim-primary",
+		nil,
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+	)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected 200 claim primary, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
 func newAgentControlTestEngine(t *testing.T, featureEnabled bool) (*server.Hertz, string, *testConversationRepo, *testSessionRepo, *testWebhookAdapter) {
+	h, rawKey, conversations, sessions, _, adapter := newAgentControlTestEngineWithRepos(t, featureEnabled)
+	return h, rawKey, conversations, sessions, adapter
+}
+
+func newAgentControlTestEngineWithRepos(t *testing.T, featureEnabled bool) (*server.Hertz, string, *testConversationRepo, *testSessionRepo, *testRunnerRepo, *testWebhookAdapter) {
 	t.Helper()
 
 	apiKeys := apikey.NewMemoryService()
@@ -1266,6 +1377,14 @@ func newAgentControlTestEngine(t *testing.T, featureEnabled bool) (*server.Hertz
 				Name:     "runner-a",
 				Platform: model.IMPlatformFeishu,
 				State:    model.AgentRunnerStateIdle,
+			},
+		},
+		primaryByUserPlatform: map[string]model.AgentPrimaryRunner{
+			"2000000001|feishu": {
+				ID:       1,
+				UserID:   "2000000001",
+				Platform: model.IMPlatformFeishu,
+				RunnerID: 21,
 			},
 		},
 	}
@@ -1304,7 +1423,7 @@ func newAgentControlTestEngine(t *testing.T, featureEnabled bool) (*server.Hertz
 	NewTaskHandler(nil, nil, resolver, mapper).RegisterRoutes(protected)
 	NewRunnerHandler(bindings, runners, conversations, nil, conversationService, adapter, resolver, mapper).RegisterRoutes(protected)
 
-	return h, created.RawKey, conversations, sessions, adapter
+	return h, created.RawKey, conversations, sessions, runners, adapter
 }
 
 func feishuTestSignature(timestamp, nonce, encryptKey, body string) string {

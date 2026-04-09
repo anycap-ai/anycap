@@ -12,12 +12,13 @@ import (
 func NewAgentCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "agent",
-		Short: "Manage IM bindings, runners, and agent tasks",
+		Short: "Run the daemon-first local agent flow, plus legacy/debug agent controls",
 		RunE:  requireSubcommand,
 	}
 
 	cmd.AddCommand(
 		newAgentIMBindingsCmd(clientFactory, stdout),
+		newAgentDaemonCmd(clientFactory, stdout),
 		newAgentRunnersCmd(clientFactory, stdout),
 		newAgentConversationsCmd(clientFactory, stdout),
 		newAgentTaskCmd(clientFactory, stdout),

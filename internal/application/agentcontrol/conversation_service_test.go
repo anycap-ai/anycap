@@ -208,6 +208,13 @@ func (r *fakeMailboxRepo) MarkMailboxMessagesDelivered(_ context.Context, ids []
 	return nil
 }
 
+type fakePrimaryRunnerBinding struct {
+	UserID    string
+	Platform  string
+	RunnerID  int64
+	UpdatedAt time.Time
+}
+
 func TestConversationServiceHandleInboundMessageCreatesConversationAndSession(t *testing.T) {
 	now := time.Date(2026, 4, 8, 15, 0, 0, 0, time.UTC)
 	bindings := &fakeBindingRepo{
@@ -227,14 +234,14 @@ func TestConversationServiceHandleInboundMessageCreatesConversationAndSession(t 
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
 		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
 	}
 	conversations := &fakeConversationRepo{}
 	sessions := &fakeSessionRepo{}
 	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
 		WithConversationClock(func() time.Time { return now }),
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) {
-			return 21, nil
-		}),
 	)
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
@@ -258,6 +265,107 @@ func TestConversationServiceHandleInboundMessageCreatesConversationAndSession(t 
 	}
 }
 
+func TestConversationServiceHandleOwnedInboundMessageCreatesConversationAndSession(t *testing.T) {
+	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
+	}
+	conversations := &fakeConversationRepo{}
+	sessions := &fakeSessionRepo{}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "帮我看下 anycap 这个 bug",
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if result.Binding == nil || result.Binding.UserID != "2000000001" {
+		t.Fatalf("expected synthetic binding for owner user, got %+v", result.Binding)
+	}
+	if result.Conversation == nil || result.Conversation.ID == 0 {
+		t.Fatalf("expected conversation, got %+v", result.Conversation)
+	}
+	if result.Session == nil || result.Session.Mode != model.AgentSessionModeContinue {
+		t.Fatalf("expected continue session, got %+v", result.Session)
+	}
+	if result.Chat.Action != model.AgentChatActionContinue {
+		t.Fatalf("expected continue action, got %q", result.Chat.Action)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageRequiresPrimaryRunner(t *testing.T) {
+	now := time.Date(2026, 4, 9, 12, 30, 0, 0, time.UTC)
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+	}
+	service := NewConversationService(nil, runners, &fakeConversationRepo{}, &fakeSessionRepo{}, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	_, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "帮我看下 anycap 这个 bug",
+	})
+	if err == nil || !strings.Contains(err.Error(), "当前不在线") {
+		t.Fatalf("expected offline primary runner error, got %v", err)
+	}
+}
+
+func TestConversationServiceHandleInboundMessageRequiresPrimaryRunner(t *testing.T) {
+	now := time.Date(2026, 4, 9, 11, 0, 0, 0, time.UTC)
+	bindings := &fakeBindingRepo{
+		activeBySender: map[string]model.IMBinding{
+			"feishu|bot_123|ou_sender": {
+				ID:        11,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				BotID:     "bot_123",
+				ChannelID: "oc_chat",
+				SenderID:  "ou_sender",
+				Status:    model.IMBindingStatusActive,
+			},
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+	}
+	service := NewConversationService(bindings, runners, &fakeConversationRepo{}, &fakeSessionRepo{}, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	_, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
+		Platform: model.IMPlatformFeishu,
+		BotID:    "bot_123",
+		ChatID:   "oc_chat",
+		SenderID: "ou_sender",
+		Message:  "帮我看下 anycap 这个 bug",
+	})
+	if err == nil || !strings.Contains(err.Error(), "当前不在线") {
+		t.Fatalf("expected offline primary runner error, got %v", err)
+	}
+}
+
 func TestConversationServiceHandleInboundMessageResetArchivesOldConversation(t *testing.T) {
 	now := time.Date(2026, 4, 8, 15, 30, 0, 0, time.UTC)
 	lastSessionID := int64(88)
@@ -277,6 +385,9 @@ func TestConversationServiceHandleInboundMessageResetArchivesOldConversation(t *
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	conversations := &fakeConversationRepo{
@@ -313,9 +424,6 @@ func TestConversationServiceHandleInboundMessageResetArchivesOldConversation(t *
 	sessions := &fakeSessionRepo{}
 	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
 		WithConversationClock(func() time.Time { return now }),
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) {
-			return 21, nil
-		}),
 	)
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
@@ -340,6 +448,9 @@ func TestConversationServiceGetNextSessionForRunnerReturnsCreatedSession(t *test
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	sessions := &fakeSessionRepo{
@@ -417,6 +528,9 @@ func TestConversationServiceHandleInboundMessageStatusReturnsActiveConversation(
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
 		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
 	}
 	conversations := &fakeConversationRepo{
 		itemsByID: map[int64]model.AgentConversation{
@@ -451,9 +565,7 @@ func TestConversationServiceHandleInboundMessageStatusReturnsActiveConversation(
 			{ID: 11, UserID: "2000000001", ConversationID: 31, RunnerID: 21, Status: model.AgentSessionStatusRunning},
 		},
 	}
-	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) { return 21, nil }),
-	)
+	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{})
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
 		Platform: model.IMPlatformFeishu,
@@ -489,6 +601,9 @@ func TestConversationServiceHandleInboundMessageStopInterruptsActiveSession(t *t
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	lastSessionID := int64(7)
@@ -531,9 +646,7 @@ func TestConversationServiceHandleInboundMessageStopInterruptsActiveSession(t *t
 			},
 		},
 	}
-	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) { return 21, nil }),
-	)
+	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{})
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
 		Platform: model.IMPlatformFeishu,
@@ -571,6 +684,9 @@ func TestConversationServiceHandleInboundMessageContinueInheritsParentExecutorRe
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	conversations := &fakeConversationRepo{
@@ -614,9 +730,7 @@ func TestConversationServiceHandleInboundMessageContinueInheritsParentExecutorRe
 		},
 		nextID: 7,
 	}
-	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) { return 21, nil }),
-	)
+	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{})
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
 		Platform: model.IMPlatformFeishu,
@@ -649,6 +763,9 @@ func TestConversationServiceHandleInboundMessageForkArchivesConversationAndCreat
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	lastSessionID := int64(7)
@@ -693,9 +810,7 @@ func TestConversationServiceHandleInboundMessageForkArchivesConversationAndCreat
 		},
 		nextID: 7,
 	}
-	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{},
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) { return 21, nil }),
-	)
+	service := NewConversationService(bindings, runners, conversations, sessions, &fakeMailboxRepo{})
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{
 		Platform: model.IMPlatformFeishu,
@@ -861,6 +976,9 @@ func TestConversationServiceResetConversationByIDArchivesAndCreatesNewConversati
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
 		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
 	}
 	sessions := &fakeSessionRepo{}
 	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
@@ -929,6 +1047,9 @@ func TestConversationServiceForkConversationByIDCreatesBranch(t *testing.T) {
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
 		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
 	}
 	sessions := &fakeSessionRepo{
 		created: []model.AgentSession{
@@ -989,6 +1110,9 @@ func TestConversationServiceHandleInboundMessageFireConsumesMailbox(t *testing.T
 	runners := &fakeRunnerRepo{
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
 		},
 	}
 	conversations := &fakeConversationRepo{
@@ -1055,9 +1179,6 @@ func TestConversationServiceHandleInboundMessageFireConsumesMailbox(t *testing.T
 	}
 	service := NewConversationService(bindings, runners, conversations, sessions, mailbox,
 		WithConversationClock(func() time.Time { return now }),
-		WithConversationFixedRunnerResolver(func(platform string, botID string) (int64, error) {
-			return 21, nil
-		}),
 	)
 
 	result, err := service.HandleInboundMessage(context.Background(), InboundChatInput{

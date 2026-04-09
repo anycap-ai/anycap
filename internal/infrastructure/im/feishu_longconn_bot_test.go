@@ -1,8 +1,14 @@
 package im
 
 import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -79,5 +85,59 @@ func TestFeishuLongConnBot_NormalizeEventSkipsNonText(t *testing.T) {
 	}
 	if ok {
 		t.Fatal("expected normalizeEvent() to skip non-text message")
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventUsesInboundHandler(t *testing.T) {
+	var (
+		gotReplyBody map[string]string
+		gotEvent     NormalizedInboundEvent
+	)
+	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+		if err := json.NewDecoder(r.Body).Decode(&gotReplyBody); err != nil {
+			t.Fatalf("json.Decode() error = %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer replyAPI.Close()
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{
+		ReplyAPI:   replyAPI.URL,
+		HTTPClient: replyAPI.Client(),
+	})
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:     "cli_appid",
+		AppSecret: "app_secret",
+		Adapter:   adapter,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "会话已接收，正在处理中", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:  model.IMPlatformFeishu,
+		BotID:     "cli_appid",
+		ChannelID: "oc_chat",
+		SenderID:  "ou_sender",
+		Message:   "帮我看这个 bug",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+	if gotEvent.SenderID != "ou_sender" {
+		t.Fatalf("expected sender ou_sender, got %+v", gotEvent)
+	}
+	if strings.TrimSpace(gotReplyBody["channel_id"]) != "oc_chat" {
+		t.Fatalf("expected reply channel oc_chat, got %+v", gotReplyBody)
+	}
+	if strings.TrimSpace(gotReplyBody["message"]) != "会话已接收，正在处理中" {
+		t.Fatalf("expected reply message, got %+v", gotReplyBody)
 	}
 }

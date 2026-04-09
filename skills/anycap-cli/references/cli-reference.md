@@ -164,6 +164,55 @@ feedback = true
 
 ## Utility Commands
 
+## Agent Commands
+
+### Preferred local Feishu daemon flow
+
+Use this order for the chat-style Feishu agent flow:
+
+```bash
+anycap status
+```
+
+If the CLI is not authenticated:
+
+```bash
+anycap login
+```
+
+Start the local agent on the target repository:
+
+```bash
+anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+This command will:
+
+- registers a local runner
+- claims it as the current user's primary Feishu runner
+- starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
+- starts the normal polling loop for sessions/tasks
+
+Check which local machine is currently connected:
+
+```bash
+anycap agent daemon status --platform feishu
+```
+
+After startup, ask the human to go back to Feishu and send a normal message to their personal bot.
+
+### Legacy / Debug Compatibility
+
+Only use the commands below when the human is explicitly debugging an older shared-bot deployment or direct runner wiring.
+
+```bash
+anycap agent runners serve --name local-mac --platform feishu --executor codex --workspace /path/to/repo
+```
+
+- `agent runners serve` is still useful for debugging and operator workflows, but `agent daemon start` is the main user-facing path.
+- `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
+- Do not use these legacy flows as the primary setup path for a personal Feishu bot daemon.
+
 ### download
 
 Save a remote file locally. Commonly used after `image generate` when `-o` was not specified.

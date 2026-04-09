@@ -104,28 +104,36 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 
 | Feature | Surface | Description |
 |---------|---------|-------------|
-| IM binding token | `anycap agent im-bindings token create --platform feishu` | Mint a short-lived bind token for explicit IM sender -> AnyCap account binding |
-| IM binding list | `anycap agent im-bindings list` | List current IM bindings for the signed-in user |
+| Preferred local daemon | `anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>` | Start the preferred local AnyCap agent for Feishu chat, open the user's personal Feishu bot long connection locally, and connect the current machine for execution |
+| Daemon status | `anycap agent daemon status --platform feishu` | Show which local machine is currently connected for the signed-in user on the selected IM platform |
 | Runner list | `anycap agent runners list` | Inspect registered runners visible to the current user |
-| Runner daemon | `anycap agent runners serve --name mac-mini --platform feishu --executor codex` | Register or reuse a runner, poll conversation sessions, execute them via local executor, and report session lifecycle updates |
+| Runner low-level loop | `anycap agent runners serve --name mac-mini --platform feishu --executor codex` | Low-level/debug entry point for direct runner registration and polling without daemon-first primary-runner claim |
 | Conversation list/get | `anycap agent conversations list|get <agc_...>` | Inspect protected conversation state, including the latest session summary |
 | Conversation control | `anycap agent conversations stop|reset|fork|fire <agc_...>` | Stop an active conversation, reset it into a new session, fork it into a new branch, or manually consume pending mailbox results and continue |
 | Task inspect | `anycap agent task get <agt_...>` | View a remote agent task and its lifecycle state |
 | Task cancel | `anycap agent task cancel <agt_...>` | Cancel a queued/dispatched/running remote agent task |
-| Feishu long connection | server runtime background task | Optional long-connection bot ingress using Feishu App ID/App Secret; receives IM events without公网 webhook |
-| Feishu webhook | `POST /im/events/feishu` | Root/public webhook with platform verification, bind command handling, and command intake |
+| Feishu long connection | local daemon runtime | Preferred personal-bot ingress; local daemon owns Feishu App ID/App Secret, receives IM events without公网 webhook, forwards normalized chat to server, and sends replies back to Feishu |
 | Conversation inspect | `/v1/agent/conversations*` | Protected server APIs for listing active conversations, session history, and mailbox entries |
 | Runner control API | `/v1/agent/*` | Protected server APIs for bindings, runners, heartbeats, session polling, session status lookup, and updates |
+
+### Agent Control — Legacy Compatibility
+
+| Feature | Surface | Description |
+|---------|---------|-------------|
+| IM binding token | `anycap agent im-bindings token create --platform feishu` | Legacy/debug fallback for explicit IM sender -> AnyCap account binding when testing old shared-bot flows |
+| IM binding list | `anycap agent im-bindings list` | Inspect IM bindings recorded by legacy/debug flows |
+| Feishu webhook | `POST /im/events/feishu` | Legacy shared-bot webhook compatibility path with platform verification, bind command handling, and command intake |
 
 Current Phase 1 behavior:
 
 - Feishu is the first wired IM adapter.
-- Feishu ingress now supports two modes: webhook callback and long connection. Long connection is the preferred local/single-machine mode because it does not require a public callback URL.
-- Binding uses explicit `/bind <token>` flow.
+- Feishu ingress now supports two modes: local personal-bot daemon ingress and legacy server-owned shared-bot ingress. The preferred path is local daemon long connection because it does not require a public callback URL and keeps the user's bot credentials on the local machine.
+- `/bind <token>` remains available only as a legacy/debug fallback for old shared-bot flows. It is not the main personal-bot setup path.
 - IM chat intake is conversation-first: plain text appends a new session to the active conversation for that Feishu DM chat.
 - Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
-- Fixed bot -> runner routing is supported via server config.
+- Feishu chat routing now prefers a per-user primary runner mapping instead of requiring per-user `bot -> runner_id` server env wiring.
 - Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.
+- `anycap agent daemon start` is the preferred single-machine setup path: user logs in locally, starts the daemon with their personal Feishu bot App ID/App Secret, and the daemon owns bot ingress while the server stores conversation/session/mailbox state.
 - The CLI runner supports a real local `codex` executor. Non-interactive runs capture Codex `thread_id` and persist it as `executor_ref`.
 - Continue-mode sessions inherit the parent `executor_ref`, so the runner can resume the existing Codex thread with `codex exec resume`.
 - Fire-mode sessions inherit the parent `executor_ref`, so pending mailbox results can be fed back into the same Codex conversation context.
@@ -177,12 +185,19 @@ anycap
 │   ├── show / keys / get / set / unset
 ├── feedback                  Submit bug report / feature request
 ├── agent
+│   ├── daemon
+│   │   ├── start             Start and connect the preferred local IM agent loop
+│   │   ├── status            Show the currently connected local machine for a platform
+│   │   └── stop              Explain foreground-mode stop behavior
 │   ├── im-bindings
 │   │   ├── token create      Create short-lived IM bind token
 │   │   └── list              List current IM bindings
 │   ├── runners
 │   │   ├── list              List registered runners
 │   │   └── serve             Run a polling runner loop (stub or local codex executor)
+│   ├── conversations
+│   │   ├── list / get        Inspect conversation state
+│   │   └── stop / reset / fork / fire
 │   └── task
 │       ├── get               Get remote agent task details
 │       └── cancel            Cancel remote agent task

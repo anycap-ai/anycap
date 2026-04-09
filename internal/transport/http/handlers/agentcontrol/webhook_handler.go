@@ -110,6 +110,14 @@ func (h *WebhookHandler) FeishuEvent(c context.Context, ctx *app.RequestContext)
 			Message:  event.Message,
 		})
 		if err != nil {
+			if domainErr, ok := err.(*model.DomainError); ok && domainErr.Code == "not_configured" {
+				_ = h.adapter.SendMessage(c, model.IMBinding{
+					Platform:  event.Platform,
+					BotID:     event.BotID,
+					ChannelID: event.ChannelID,
+					SenderID:  event.SenderID,
+				}, domainErr.Message)
+			}
 			status, payload := dto.MapDomainError(err)
 			payload.ID = trace.GetTraceID(c)
 			ctx.JSON(status, payload)

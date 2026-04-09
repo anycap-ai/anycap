@@ -204,6 +204,18 @@ func AgentRunnerNextSessionPath(runnerID string) string {
 	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/sessions/next"
 }
 
+func AgentRunnerClaimPrimaryPath(runnerID string) string {
+	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/claim-primary"
+}
+
+func AgentRunnerPrimaryPath(platform string) string {
+	return AgentRunnersPath + "/primary?platform=" + url.QueryEscape(platform)
+}
+
+func AgentIMInboundPath() string {
+	return "/v1/agent/im/inbound"
+}
+
 func AgentRunnerSessionPath(runnerID string, sessionID string) string {
 	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/sessions/" + url.PathEscape(sessionID)
 }

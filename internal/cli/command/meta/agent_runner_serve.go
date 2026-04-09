@@ -52,6 +52,33 @@ func (c *runnerServeHTTPClient) Heartbeat(ctx context.Context, runnerID string, 
 	return err
 }
 
+func (c *runnerServeHTTPClient) ClaimPrimary(ctx context.Context, runnerID string) error {
+	_, err := c.client.PostJSON(ctx, api.AgentRunnerClaimPrimaryPath(runnerID), map[string]any{})
+	return err
+}
+
+func (c *runnerServeHTTPClient) InboundIMChat(ctx context.Context, platform, botID, chatID, senderID, message string) (string, error) {
+	resp, err := c.client.PostJSON(ctx, api.AgentIMInboundPath(), map[string]any{
+		"platform":  strings.TrimSpace(platform),
+		"bot_id":    strings.TrimSpace(botID),
+		"chat_id":   strings.TrimSpace(chatID),
+		"sender_id": strings.TrimSpace(senderID),
+		"message":   strings.TrimSpace(message),
+	})
+	if err != nil {
+		return "", err
+	}
+	var envelope struct {
+		Data struct {
+			ReplyMessage string `json:"reply_message"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(resp.Body, &envelope); err != nil {
+		return "", fmt.Errorf("decode inbound im chat response: %w", err)
+	}
+	return strings.TrimSpace(envelope.Data.ReplyMessage), nil
+}
+
 func (c *runnerServeHTTPClient) NextSession(ctx context.Context, runnerID string) (*agentcontrolapp.RunnerSession, error) {
 	resp, err := c.client.Get(ctx, api.AgentRunnerNextSessionPath(runnerID))
 	if err != nil {

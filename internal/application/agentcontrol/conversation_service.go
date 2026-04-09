@@ -30,6 +30,15 @@ type InboundChatInput struct {
 	Message  string
 }
 
+type OwnedInboundChatInput struct {
+	UserID   string
+	Platform string
+	BotID    string
+	ChatID   string
+	SenderID string
+	Message  string
+}
+
 type InboundChatResult struct {
 	Chat         model.ParsedAgentChatCommand
 	Binding      *model.IMBinding
@@ -96,9 +105,6 @@ func (s *ConversationService) HandleInboundMessage(ctx context.Context, input In
 	if s == nil || s.bindings == nil || s.runners == nil || s.conversations == nil || s.sessions == nil {
 		return nil, model.ErrNotConfigured("conversation service is not configured")
 	}
-	if s.fixedRunnerResolver == nil {
-		return nil, model.ErrNotConfigured("fixed runner resolver is not configured")
-	}
 
 	platform, err := normalizeIMPlatform(input.Platform)
 	if err != nil {
@@ -109,48 +115,85 @@ func (s *ConversationService) HandleInboundMessage(ctx context.Context, input In
 		return nil, err
 	}
 
-	chat, err := ParseChatCommand(input.Message)
+	return s.handleResolvedInboundMessage(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), input.Message)
+}
+
+func (s *ConversationService) HandleOwnedInboundMessage(ctx context.Context, input OwnedInboundChatInput) (*InboundChatResult, error) {
+	if s == nil || s.runners == nil || s.conversations == nil || s.sessions == nil {
+		return nil, model.ErrNotConfigured("conversation service is not configured")
+	}
+	userID := strings.TrimSpace(input.UserID)
+	if userID == "" {
+		return nil, model.ErrAuthInvalid
+	}
+	platform, err := normalizeIMPlatform(input.Platform)
+	if err != nil {
+		return nil, err
+	}
+	runner, err := s.resolvePrimaryRunnerByUser(ctx, userID, platform)
+	if err != nil {
+		return nil, err
+	}
+	binding := model.IMBinding{
+		UserID:    userID,
+		Platform:  platform,
+		BotID:     strings.TrimSpace(input.BotID),
+		ChannelID: strings.TrimSpace(input.ChatID),
+		SenderID:  strings.TrimSpace(input.SenderID),
+		Status:    model.IMBindingStatusActive,
+	}
+	if binding.BotID == "" {
+		return nil, model.ErrValidation("bot_id is required")
+	}
+	if binding.ChannelID == "" {
+		return nil, model.ErrValidation("chat_id is required")
+	}
+	return s.handleResolvedInboundMessage(ctx, binding, *runner, binding.ChannelID, input.Message)
+}
+
+func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, message string) (*InboundChatResult, error) {
+	chat, err := ParseChatCommand(message)
 	if err != nil {
 		return nil, err
 	}
 
 	switch chat.Action {
 	case model.AgentChatActionContinue:
-		conversation, session, err := s.continueConversation(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), chat)
+		conversation, session, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	case model.AgentChatActionNew, model.AgentChatActionReset:
-		conversation, session, err := s.resetConversation(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), chat)
+		conversation, session, err := s.resetConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	case model.AgentChatActionStatus:
-		conversation, session, err := s.getConversationStatus(ctx, *binding, strings.TrimSpace(input.ChatID))
+		conversation, session, err := s.getConversationStatus(ctx, binding, strings.TrimSpace(chatID))
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	case model.AgentChatActionStop:
-		conversation, session, err := s.stopConversation(ctx, *binding, strings.TrimSpace(input.ChatID))
+		conversation, session, err := s.stopConversation(ctx, binding, strings.TrimSpace(chatID))
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	case model.AgentChatActionFork:
-		conversation, session, err := s.forkConversation(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), chat)
+		conversation, session, err := s.forkConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	case model.AgentChatActionFire:
-		conversation, session, err := s.fireConversation(ctx, *binding, strings.TrimSpace(input.ChatID), chat)
+		conversation, session, err := s.fireConversation(ctx, binding, strings.TrimSpace(chatID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
 	default:
 		return nil, model.ErrValidation("unsupported chat action")
 	}
@@ -427,24 +470,41 @@ func (s *ConversationService) resolveAuthorizedBindingAndRunner(ctx context.Cont
 		return nil, nil, model.ErrAuthInvalid
 	}
 
-	runnerID, err := s.fixedRunnerResolver(platform, strings.TrimSpace(botID))
+	runner, err := s.resolvePrimaryRunnerByUser(ctx, binding.UserID, platform)
 	if err != nil {
 		return nil, nil, err
-	}
-	runner, err := s.runners.GetRunnerByID(ctx, runnerID)
-	if err != nil {
-		return nil, nil, err
-	}
-	if runner == nil || runner.ID <= 0 {
-		return nil, nil, model.ErrNotFound("agent runner not found")
-	}
-	if strings.TrimSpace(runner.UserID) != strings.TrimSpace(binding.UserID) {
-		return nil, nil, model.ErrAuthInvalid
 	}
 	if runner.FixedBinding != nil && *runner.FixedBinding != binding.ID {
 		return nil, nil, model.ErrAuthInvalid
 	}
 	return binding, runner, nil
+}
+
+func (s *ConversationService) resolvePrimaryRunnerByUser(ctx context.Context, userID string, platform string) (*model.AgentRunner, error) {
+	runnerID := int64(0)
+	primary, err := s.runners.GetPrimaryRunner(ctx, userID, platform)
+	if err != nil {
+		return nil, err
+	}
+	if primary != nil && primary.ID > 0 {
+		runnerID = primary.RunnerID
+	} else {
+		return nil, model.ErrNotConfigured("你的本地 AnyCap agent 当前不在线")
+	}
+	runner, err := s.runners.GetRunnerByID(ctx, runnerID)
+	if err != nil {
+		return nil, err
+	}
+	if runner == nil || runner.ID <= 0 {
+		return nil, model.ErrNotConfigured("你的本地 AnyCap agent 当前不在线")
+	}
+	if strings.TrimSpace(runner.UserID) != strings.TrimSpace(userID) {
+		return nil, model.ErrAuthInvalid
+	}
+	if strings.TrimSpace(runner.State) == model.AgentRunnerStateOffline {
+		return nil, model.ErrNotConfigured("你的本地 AnyCap agent 当前不在线")
+	}
+	return runner, nil
 }
 
 func (s *ConversationService) loadAuthorizedConversation(ctx context.Context, principal *model.Principal, conversationID int64) (*model.AgentConversation, error) {

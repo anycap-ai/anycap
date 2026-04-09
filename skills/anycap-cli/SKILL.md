@@ -120,6 +120,72 @@ export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
 
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
 
+## Agent Daemon (Feishu Chat)
+
+When the human wants to chat with a local coding agent from Feishu, follow this exact order.
+
+First make sure the human already has a **personal Feishu app bot**:
+
+- created in Feishu Open Platform
+- robot capability enabled
+- long connection event delivery enabled
+- message receive permissions granted
+- App ID and App Secret available locally
+
+```bash
+anycap status
+```
+
+If the CLI is not authenticated, run:
+
+```bash
+anycap login
+```
+
+Then start the local Feishu agent on the target repository:
+
+```bash
+anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+After startup, verify which local machine is currently connected:
+
+```bash
+anycap agent daemon status --platform feishu
+```
+
+Then tell the human to go back to Feishu and send a normal message to their personal bot.
+
+Do not tell the human to:
+
+- start `agent runners serve` manually
+- copy a `runner_id`
+- edit server env to bind bot -> runner
+- use `/bind` as the normal setup flow
+- configure the server-side shared Feishu bot unless they are explicitly debugging a legacy deployment
+
+Helpful commands:
+
+```bash
+anycap agent daemon status --platform feishu
+anycap agent runners list
+```
+
+Main notes:
+
+- `anycap agent daemon stop` is not yet a full background-process manager; if the daemon is running in the current foreground terminal, stop it manually.
+- If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
+- The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
+
+## Legacy / Debug Only
+
+Only use this section when the human is explicitly debugging an older shared-bot deployment.
+
+- `anycap agent runners serve` is the low-level/debug path.
+- `anycap agent im-bindings ...` is only for legacy/debug flows.
+- `/bind` is a legacy/debug compatibility path.
+- Treat server-side shared-bot webhook/long-connection setup as legacy compatibility only, not the preferred setup path.
+
 ## Capabilities
 
 AnyCap capabilities are organized into two groups: **generation** (create new content) and **actions** (AI operations on existing content).

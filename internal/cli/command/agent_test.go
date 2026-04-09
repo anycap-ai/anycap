@@ -689,3 +689,157 @@ printf 'cwd=%s resume=%s prompt=%s' "$cwd" "$resume_id" "$prompt" > "$out"
 		t.Fatalf("expected executor_ref thread_prev, got %+v", sessionUpdatePayload[1]["executor_ref"])
 	}
 }
+
+func TestAgentDaemonStartClaimsPrimaryBeforeLoop(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")); err != nil {
+		t.Fatalf("SaveCredential() error = %v", err)
+	}
+
+	var (
+		registerCalls   int
+		claimCalls      int
+		claimSeenBefore bool
+		nextTaskCalls   int
+	)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/agent/runners/register" && r.Method == http.MethodPost:
+			registerCalls++
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123","name":"local-mac","platform":"feishu","state":"idle","created_at":"2026-04-09T12:00:00Z","updated_at":"2026-04-09T12:00:00Z","user_id":"u_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/claim-primary" && r.Method == http.MethodPost:
+			claimCalls++
+			claimSeenBefore = nextTaskCalls == 0
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123","name":"local-mac","platform":"feishu","state":"idle","created_at":"2026-04-09T12:00:00Z","updated_at":"2026-04-09T12:00:00Z","user_id":"u_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/heartbeat" && r.Method == http.MethodPost:
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/sessions/next" && r.Method == http.MethodGet:
+			w.WriteHeader(http.StatusNoContent)
+		case r.URL.Path == "/v1/agent/runners/run_123/tasks/next" && r.Method == http.MethodGet:
+			nextTaskCalls++
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	stdout := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "0.1.0-test"},
+		Endpoint:  server.URL,
+		Stdout:    stdout,
+		Stderr:    &bytes.Buffer{},
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"agent", "daemon", "start", "--name", "local-mac", "--platform", "feishu", "--once"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("agent daemon start: %v", err)
+	}
+	if registerCalls != 1 {
+		t.Fatalf("expected 1 register call, got %d", registerCalls)
+	}
+	if claimCalls != 1 {
+		t.Fatalf("expected 1 claim call, got %d", claimCalls)
+	}
+	if !claimSeenBefore {
+		t.Fatalf("expected claim-primary before polling loop, nextTaskCalls=%d", nextTaskCalls)
+	}
+	if !strings.Contains(stdout.String(), `"connected":true`) {
+		t.Fatalf("expected connected=true in output, got %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"message":"The local machine is connected and ready to receive chat tasks from Feishu."`) {
+		t.Fatalf("expected connected message in output, got %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"workspace":""`) {
+		t.Fatalf("expected workspace field in output, got %s", stdout.String())
+	}
+}
+
+func TestAgentDaemonStatusReadsPrimaryRunner(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")); err != nil {
+		t.Fatalf("SaveCredential() error = %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/agent/runners/primary" && r.Method == http.MethodGet && r.URL.Query().Get("platform") == "feishu":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123","name":"local-mac","platform":"feishu","state":"idle","created_at":"2026-04-09T12:00:00Z","updated_at":"2026-04-09T12:00:00Z","user_id":"u_123"}}`))
+		default:
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.String())
+		}
+	}))
+	defer server.Close()
+
+	stdout := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "0.1.0-test"},
+		Endpoint:  server.URL,
+		Stdout:    stdout,
+		Stderr:    &bytes.Buffer{},
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"agent", "daemon", "status", "--platform", "feishu"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("agent daemon status: %v", err)
+	}
+	if !strings.Contains(stdout.String(), `"connected":true`) {
+		t.Fatalf("expected connected=true in output, got %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"id":"run_123"`) {
+		t.Fatalf("expected machine id in output, got %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"message":"A local machine is connected and ready to receive chat tasks for this platform."`) {
+		t.Fatalf("expected connected message in output, got %s", stdout.String())
+	}
+}
+
+func TestAgentDaemonStatusReportsNextStepsWhenNoPrimaryRunner(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")); err != nil {
+		t.Fatalf("SaveCredential() error = %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/agent/runners/primary" && r.Method == http.MethodGet && r.URL.Query().Get("platform") == "feishu":
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.String())
+		}
+	}))
+	defer server.Close()
+
+	stdout := &bytes.Buffer{}
+	cmd := NewRootCmd(Options{
+		BuildInfo: buildinfo.Info{Version: "0.1.0-test"},
+		Endpoint:  server.URL,
+		Stdout:    stdout,
+		Stderr:    &bytes.Buffer{},
+		Stdin:     strings.NewReader(""),
+	})
+	cmd.SetArgs([]string{"agent", "daemon", "status", "--platform", "feishu"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("agent daemon status: %v", err)
+	}
+	if !strings.Contains(stdout.String(), `"connected":false`) {
+		t.Fatalf("expected connected=false in output, got %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo`) {
+		t.Fatalf("expected startup next step in output, got %s", stdout.String())
+	}
+}

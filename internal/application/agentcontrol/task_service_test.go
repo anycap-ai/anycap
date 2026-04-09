@@ -10,8 +10,9 @@ import (
 )
 
 type fakeRunnerRepo struct {
-	itemsByID map[int64]model.AgentRunner
-	getErr    error
+	itemsByID             map[int64]model.AgentRunner
+	primaryByUserPlatform map[string]fakePrimaryRunnerBinding
+	getErr                error
 }
 
 func (r *fakeRunnerRepo) CreateRunner(_ context.Context, _ model.AgentRunner) (*model.AgentRunner, error) {
@@ -29,8 +30,41 @@ func (r *fakeRunnerRepo) GetRunnerByID(_ context.Context, id int64) (*model.Agen
 	return nil, nil
 }
 
+func (r *fakeRunnerRepo) GetPrimaryRunner(_ context.Context, userID string, platform string) (*model.AgentPrimaryRunner, error) {
+	if item, ok := r.primaryByUserPlatform[userID+"|"+platform]; ok {
+		return &model.AgentPrimaryRunner{
+			ID:        1,
+			UserID:    item.UserID,
+			Platform:  item.Platform,
+			RunnerID:  item.RunnerID,
+			UpdatedAt: item.UpdatedAt,
+		}, nil
+	}
+	return nil, nil
+}
+
 func (r *fakeRunnerRepo) ListRunnersByUser(_ context.Context, _ string) ([]model.AgentRunner, error) {
 	return nil, errors.New("unexpected ListRunnersByUser call")
+}
+
+func (r *fakeRunnerRepo) ClaimPrimaryRunner(_ context.Context, userID string, platform string, runnerID int64, updatedAt time.Time) (*model.AgentPrimaryRunner, error) {
+	if r.primaryByUserPlatform == nil {
+		r.primaryByUserPlatform = map[string]fakePrimaryRunnerBinding{}
+	}
+	item := fakePrimaryRunnerBinding{
+		UserID:    userID,
+		Platform:  platform,
+		RunnerID:  runnerID,
+		UpdatedAt: updatedAt,
+	}
+	r.primaryByUserPlatform[userID+"|"+platform] = item
+	return &model.AgentPrimaryRunner{
+		ID:        1,
+		UserID:    userID,
+		Platform:  platform,
+		RunnerID:  runnerID,
+		UpdatedAt: updatedAt,
+	}, nil
 }
 
 func (r *fakeRunnerRepo) UpdateRunnerState(_ context.Context, _ int64, _ string) (*model.AgentRunner, error) {

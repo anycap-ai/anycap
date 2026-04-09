@@ -149,6 +149,9 @@ func TestLoadFromEnv_ReadsAgentControlConfig(t *testing.T) {
 	if !cfg.AgentControl.Feishu.LongConnEnabled {
 		t.Fatal("expected feishu long connection enabled")
 	}
+	if !cfg.AgentControl.Feishu.LegacyLongConnEnabled() {
+		t.Fatal("expected feishu legacy long connection enabled")
+	}
 	if len(cfg.AgentControl.FixedRunners) != 1 {
 		t.Fatalf("expected 1 fixed runner mapping, got %d", len(cfg.AgentControl.FixedRunners))
 	}

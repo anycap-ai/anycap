@@ -261,6 +261,29 @@ func (r *AgentControlRepo) GetRunnerByID(ctx context.Context, id int64) (*model.
 	return item, nil
 }
 
+func (r *AgentControlRepo) GetPrimaryRunner(ctx context.Context, userID string, platform string) (*model.AgentPrimaryRunner, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("agent control repo db is not configured")
+	}
+	internalUserID, err := parseInternalUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	row := r.db.QueryRowContext(ctx, `
+		SELECT id, user_id, platform, runner_id, updated_at
+		FROM agent_primary_runners
+		WHERE user_id = $1 AND platform = $2
+	`, internalUserID, strings.TrimSpace(platform))
+	item, err := scanAgentPrimaryRunner(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get primary runner: %w", err)
+	}
+	return item, nil
+}
+
 func (r *AgentControlRepo) ListRunnersByUser(ctx context.Context, userID string) ([]model.AgentRunner, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("agent control repo db is not configured")
@@ -292,6 +315,28 @@ func (r *AgentControlRepo) ListRunnersByUser(ctx context.Context, userID string)
 		return nil, fmt.Errorf("iterate agent runners: %w", err)
 	}
 	return items, nil
+}
+
+func (r *AgentControlRepo) ClaimPrimaryRunner(ctx context.Context, userID string, platform string, runnerID int64, updatedAt time.Time) (*model.AgentPrimaryRunner, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("agent control repo db is not configured")
+	}
+	internalUserID, err := parseInternalUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	row := r.db.QueryRowContext(ctx, `
+		INSERT INTO agent_primary_runners (user_id, platform, runner_id, updated_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id, platform)
+		DO UPDATE SET runner_id = EXCLUDED.runner_id, updated_at = EXCLUDED.updated_at
+		RETURNING id, user_id, platform, runner_id, updated_at
+	`, internalUserID, strings.TrimSpace(platform), runnerID, updatedAt.UTC())
+	item, err := scanAgentPrimaryRunner(row)
+	if err != nil {
+		return nil, fmt.Errorf("claim primary runner: %w", err)
+	}
+	return item, nil
 }
 
 func (r *AgentControlRepo) UpdateRunnerState(ctx context.Context, id int64, state string) (*model.AgentRunner, error) {
@@ -1110,6 +1155,24 @@ func scanAgentMailboxMessage(row rowScanner) (*model.AgentMailboxMessage, error)
 		value := deliveredToSessionID.Int64
 		item.DeliveredToSessionID = &value
 	}
+	return &item, nil
+}
+
+func scanAgentPrimaryRunner(row rowScanner) (*model.AgentPrimaryRunner, error) {
+	var (
+		item           model.AgentPrimaryRunner
+		internalUserID int64
+	)
+	if err := row.Scan(
+		&item.ID,
+		&internalUserID,
+		&item.Platform,
+		&item.RunnerID,
+		&item.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	item.UserID = strconv.FormatInt(internalUserID, 10)
 	return &item, nil
 }
 

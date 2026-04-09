@@ -20,6 +20,7 @@ type FeishuLongConnBotConfig struct {
 	AppSecret           string
 	BindingService      *agentcontrolapp.BindingService
 	ConversationService *agentcontrolapp.ConversationService
+	HandleInbound       func(context.Context, NormalizedInboundEvent) (string, error)
 	Adapter             *FeishuAdapter
 }
 
@@ -28,6 +29,7 @@ type FeishuLongConnBot struct {
 	appSecret           string
 	bindingService      *agentcontrolapp.BindingService
 	conversationService *agentcontrolapp.ConversationService
+	inboundHandler      func(context.Context, NormalizedInboundEvent) (string, error)
 	adapter             *FeishuAdapter
 	client              *larkws.Client
 }
@@ -35,7 +37,10 @@ type FeishuLongConnBot struct {
 func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 	appID := strings.TrimSpace(cfg.AppID)
 	appSecret := strings.TrimSpace(cfg.AppSecret)
-	if appID == "" || appSecret == "" || cfg.ConversationService == nil || cfg.Adapter == nil {
+	if appID == "" || appSecret == "" || cfg.Adapter == nil {
+		return nil
+	}
+	if cfg.ConversationService == nil && cfg.HandleInbound == nil {
 		return nil
 	}
 
@@ -44,6 +49,7 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		appSecret:           appSecret,
 		bindingService:      cfg.BindingService,
 		conversationService: cfg.ConversationService,
+		inboundHandler:      cfg.HandleInbound,
 		adapter:             cfg.Adapter,
 	}
 
@@ -119,7 +125,30 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 }
 
 func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event NormalizedInboundEvent) error {
-	if b == nil || b.conversationService == nil {
+	if b == nil {
+		return model.ErrNotConfigured("feishu long connection bot is not configured")
+	}
+	if b.inboundHandler != nil {
+		replyMessage, err := b.inboundHandler(ctx, event)
+		if err != nil {
+			return err
+		}
+		replyMessage = strings.TrimSpace(replyMessage)
+		if replyMessage == "" {
+			return nil
+		}
+		binding := model.IMBinding{
+			Platform:  event.Platform,
+			BotID:     event.BotID,
+			ChannelID: event.ChannelID,
+			SenderID:  event.SenderID,
+		}
+		if sendErr := b.adapter.SendMessage(ctx, binding, replyMessage); sendErr != nil {
+			logging.WithError(sendErr).Warn("send feishu long connection reply failed")
+		}
+		return nil
+	}
+	if b.conversationService == nil {
 		return model.ErrNotConfigured("feishu long connection bot is not configured")
 	}
 

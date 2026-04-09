@@ -52,14 +52,146 @@ func NewRunnerHandler(bindings port.IMBindingRepository, runners port.AgentRunne
 }
 
 func (h *RunnerHandler) RegisterRoutes(group *route.RouterGroup) {
+	group.POST("/agent/im/inbound", h.InboundChat)
 	group.GET("/agent/runners", h.ListRunners)
+	group.GET("/agent/runners/primary", h.GetPrimary)
 	group.POST("/agent/runners/register", h.RegisterRunner)
+	group.POST("/agent/runners/:id/claim-primary", h.ClaimPrimary)
 	group.POST("/agent/runners/:id/heartbeat", h.Heartbeat)
 	group.GET("/agent/runners/:id/sessions/next", h.NextSession)
 	group.GET("/agent/runners/:id/sessions/:session_id", h.GetSession)
 	group.POST("/agent/runners/:id/sessions/:session_id", h.UpdateSession)
 	group.GET("/agent/runners/:id/tasks/next", h.NextTask)
 	group.POST("/agent/runners/:id/tasks/:task_id", h.UpdateTask)
+}
+
+func (h *RunnerHandler) InboundChat(c context.Context, ctx *app.RequestContext) {
+	if h.conversationService == nil {
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "agent_control_unavailable", "conversation service is not configured")
+		return
+	}
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+	var req dto.InboundIMChatRequest
+	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+		return
+	}
+	result, err := h.conversationService.HandleOwnedInboundMessage(c, agentcontrolapp.OwnedInboundChatInput{
+		UserID:   principal.UserID,
+		Platform: req.Platform,
+		BotID:    req.BotID,
+		ChatID:   req.ChatID,
+		SenderID: req.SenderID,
+		Message:  req.Message,
+	})
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	replyMessage := ""
+	if result != nil {
+		replyMessage = strings.TrimSpace(agentcontrolapp.BuildInboundChatReply(*result))
+	}
+	ctx.JSON(consts.StatusOK, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
+		"reply_message": replyMessage,
+	}))
+}
+
+func (h *RunnerHandler) GetPrimary(c context.Context, ctx *app.RequestContext) {
+	if h.runners == nil || h.mapper == nil {
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "agent_control_unavailable", "runner service is not configured")
+		return
+	}
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+	platform, err := normalizeRunnerPlatform(string(ctx.Query("platform")))
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	primary, err := h.runners.GetPrimaryRunner(c, principal.UserID, platform)
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	if primary == nil || primary.RunnerID <= 0 {
+		ctx.SetStatusCode(consts.StatusNoContent)
+		return
+	}
+	runner, err := h.runners.GetRunnerByID(c, primary.RunnerID)
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	if runner == nil || runner.ID <= 0 {
+		ctx.SetStatusCode(consts.StatusNoContent)
+		return
+	}
+	out, err := presenter.PresentAgentRunner(c, h.mapper, runner)
+	if err != nil {
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_agent_runner_failed", err.Error())
+		return
+	}
+	ctx.JSON(consts.StatusOK, dto.SuccessEnvelope(trace.GetTraceID(c), out))
+}
+
+func (h *RunnerHandler) ClaimPrimary(c context.Context, ctx *app.RequestContext) {
+	if h.runners == nil || h.resolver == nil || h.mapper == nil {
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "agent_control_unavailable", "runner service is not configured")
+		return
+	}
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+	id, err := h.resolver.ResolveRunnerID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(c, ctx, "resolve_agent_runner_failed", err)
+		return
+	}
+	runner, err := h.runners.GetRunnerByID(c, id)
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	if runner == nil || runner.ID <= 0 {
+		handlers.WriteError(c, ctx, consts.StatusNotFound, "not_found", "agent runner not found")
+		return
+	}
+	if runner.UserID != principal.UserID {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "runner not accessible")
+		return
+	}
+	if _, err := h.runners.ClaimPrimaryRunner(c, principal.UserID, runner.Platform, runner.ID, h.now()); err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	out, err := presenter.PresentAgentRunner(c, h.mapper, runner)
+	if err != nil {
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_agent_runner_failed", err.Error())
+		return
+	}
+	ctx.JSON(consts.StatusOK, dto.SuccessEnvelope(trace.GetTraceID(c), out))
 }
 
 func (h *RunnerHandler) ListRunners(c context.Context, ctx *app.RequestContext) {

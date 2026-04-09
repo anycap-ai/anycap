@@ -120,7 +120,7 @@ type serverDependencies struct {
 	agentSessionRepo      port.AgentSessionRepository
 	agentTaskRepo         port.AgentTaskRepository
 	imAdapter             *infraim.FeishuAdapter
-	feishuLongConnBot     *infraim.FeishuLongConnBot
+	legacyFeishuLongConnBot *infraim.FeishuLongConnBot
 	apiKeyService         port.APIKeyService
 	identityTokens        port.IdentityTokenAuthenticator
 	rateLimiter           port.RateLimiter
@@ -429,7 +429,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			agentSessionRepo:      agentControlRepo,
 			agentTaskRepo:         agentControlRepo,
 			imAdapter:             imAdapter,
-			feishuLongConnBot:     buildFeishuLongConnBot(cfg, bindingService, conversationService, imAdapter),
+			legacyFeishuLongConnBot: buildLegacyFeishuLongConnBot(cfg, bindingService, conversationService, imAdapter),
 			apiKeyService:         authComp.apiKeyService,
 			identityTokens:        authComp.identityTokens,
 			rateLimiter:           ratelimit.NewRedisLimiter(redisClient),
@@ -499,8 +499,8 @@ func buildFeishuAdapter(cfg config.Config) *infraim.FeishuAdapter {
 	})
 }
 
-func buildFeishuLongConnBot(cfg config.Config, bindingService *agentcontrolapp.BindingService, conversationService *agentcontrolapp.ConversationService, adapter *infraim.FeishuAdapter) *infraim.FeishuLongConnBot {
-	if !cfg.AgentControl.Feishu.LongConnEnabled || !cfg.AgentControl.Feishu.DirectAPIEnabled() {
+func buildLegacyFeishuLongConnBot(cfg config.Config, bindingService *agentcontrolapp.BindingService, conversationService *agentcontrolapp.ConversationService, adapter *infraim.FeishuAdapter) *infraim.FeishuLongConnBot {
+	if !cfg.AgentControl.Feishu.LegacyLongConnEnabled() {
 		return nil
 	}
 	return infraim.NewFeishuLongConnBot(infraim.FeishuLongConnBotConfig{

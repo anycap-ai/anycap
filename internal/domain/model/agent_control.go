@@ -106,6 +106,14 @@ type AgentRunner struct {
 	UpdatedAt     time.Time
 }
 
+type AgentPrimaryRunner struct {
+	ID        int64
+	UserID    string
+	Platform  string
+	RunnerID  int64
+	UpdatedAt time.Time
+}
+
 type AgentTask struct {
 	ID             int64
 	UserID         string

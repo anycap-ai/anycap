@@ -267,6 +267,52 @@ func TestAgentControlRepo_CreateConversation(t *testing.T) {
 	}
 }
 
+func TestAgentControlRepo_ClaimPrimaryRunner(t *testing.T) {
+	now := time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC)
+	db := &fakeAgentControlDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*int64)) = 51
+			*(dest[1].(*int64)) = 2001
+			*(dest[2].(*string)) = model.IMPlatformFeishu
+			*(dest[3].(*int64)) = 71
+			*(dest[4].(*time.Time)) = now
+			return nil
+		},
+	}
+	repo := NewAgentControlRepo(db)
+
+	item, err := repo.ClaimPrimaryRunner(context.Background(), "2001", model.IMPlatformFeishu, 71, now)
+	if err != nil {
+		t.Fatalf("ClaimPrimaryRunner() error = %v", err)
+	}
+	if item == nil || item.RunnerID != 71 || item.UserID != "2001" {
+		t.Fatalf("unexpected primary runner: %+v", item)
+	}
+}
+
+func TestAgentControlRepo_GetPrimaryRunner(t *testing.T) {
+	now := time.Date(2026, 4, 9, 10, 5, 0, 0, time.UTC)
+	db := &fakeAgentControlDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*int64)) = 51
+			*(dest[1].(*int64)) = 2001
+			*(dest[2].(*string)) = model.IMPlatformFeishu
+			*(dest[3].(*int64)) = 71
+			*(dest[4].(*time.Time)) = now
+			return nil
+		},
+	}
+	repo := NewAgentControlRepo(db)
+
+	item, err := repo.GetPrimaryRunner(context.Background(), "2001", model.IMPlatformFeishu)
+	if err != nil {
+		t.Fatalf("GetPrimaryRunner() error = %v", err)
+	}
+	if item == nil || item.RunnerID != 71 || item.Platform != model.IMPlatformFeishu {
+		t.Fatalf("unexpected primary runner: %+v", item)
+	}
+}
+
 func TestAgentControlRepo_CreateSession(t *testing.T) {
 	now := time.Date(2026, 4, 8, 13, 30, 0, 0, time.UTC)
 	parentID := int64(61)

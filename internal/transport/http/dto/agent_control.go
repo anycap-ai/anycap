@@ -21,6 +21,14 @@ type RunnerHeartbeatRequest struct {
 	State string `json:"state"`
 }
 
+type InboundIMChatRequest struct {
+	Platform string `json:"platform"`
+	BotID    string `json:"bot_id"`
+	ChatID   string `json:"chat_id"`
+	SenderID string `json:"sender_id"`
+	Message  string `json:"message"`
+}
+
 type RunnerTaskUpdateRequest struct {
 	Status       string `json:"status"`
 	ErrorMessage string `json:"error_message,omitempty"`

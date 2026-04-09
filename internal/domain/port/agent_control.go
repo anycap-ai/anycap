@@ -2,6 +2,7 @@ package port
 
 import (
 	"context"
+	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
@@ -22,7 +23,9 @@ type IMBindingRepository interface {
 type AgentRunnerRepository interface {
 	CreateRunner(ctx context.Context, runner model.AgentRunner) (*model.AgentRunner, error)
 	GetRunnerByID(ctx context.Context, id int64) (*model.AgentRunner, error)
+	GetPrimaryRunner(ctx context.Context, userID string, platform string) (*model.AgentPrimaryRunner, error)
 	ListRunnersByUser(ctx context.Context, userID string) ([]model.AgentRunner, error)
+	ClaimPrimaryRunner(ctx context.Context, userID string, platform string, runnerID int64, updatedAt time.Time) (*model.AgentPrimaryRunner, error)
 	UpdateRunnerState(ctx context.Context, id int64, state string) (*model.AgentRunner, error)
 }
 
