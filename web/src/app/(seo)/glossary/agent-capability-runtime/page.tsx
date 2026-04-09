@@ -11,7 +11,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "What is an agent capability runtime?",
+  title: "What is an agent capability runtime? Definition and why it matters",
   description:
     "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, image understanding, and video analysis through one interface. AnyCap is an example of an agent-native capability runtime.",
   alternates: { canonical: "/glossary/agent-capability-runtime" },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/glossary/agent-capability-runtime",
     siteName: siteConfig.siteName,
-    title: "What is an agent capability runtime?",
+    title: "What is an agent capability runtime? Definition and why it matters",
     description:
       "An agent capability runtime is a layer that gives AI agents installable capabilities like image generation, video generation, image understanding, and video analysis through one interface.",
   },

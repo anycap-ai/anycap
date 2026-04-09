@@ -55,7 +55,7 @@ export function AgentBubble() {
   if (isLoading || user) return null;
 
   return (
-    <div className="absolute right-[156px] top-2 z-[60] hidden max-w-[320px] lg:block">
+    <div className="absolute right-[112px] top-4 z-20 hidden max-w-[320px] xl:block">
       <style dangerouslySetInnerHTML={{ __html: bubbleStyles }} />
 
       {/* thought dots — appear first */}

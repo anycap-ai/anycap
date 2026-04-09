@@ -62,20 +62,33 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSameAs = [
+  "https://github.com/anycap-ai/anycap",
+  "https://github.com/anycap-ai/anycap/releases",
+  "https://skills.sh/anycap-ai/anycap",
+] as const;
+
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${siteConfig.url}#organization`,
   name: "AnyCap",
   url: siteConfig.url,
+  email: "admin@anycap.ai",
   logo: {
     "@type": "ImageObject",
     url: `${siteConfig.url}/anycap-mark.svg`,
   },
-  sameAs: [
-    "https://github.com/anycap-ai/anycap",
-  ],
+  sameAs: organizationSameAs,
   description: siteConfig.defaultDescription,
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "admin@anycap.ai",
+      url: `${siteConfig.url}/contact`,
+    },
+  ],
 };
 
 const websiteJsonLd = {

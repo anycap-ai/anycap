@@ -7,12 +7,41 @@ import Link from "next/link";
 import { useDashboardSummary } from "@/lib/api/hooks";
 import { getInstallPrompt, agents } from "@/lib/agents";
 import type { TimelineItem, Balance } from "@/lib/api/types";
+import { CapabilityActivityList } from "@/components/dashboard/CapabilityActivityList";
 import { formatCredit } from "@/lib/credit";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { timeAgo } from "@/lib/date";
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`bg-[#d0d4c8]/40 animate-pulse rounded ${className}`} />;
+}
+
+function ActivityCardsSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="space-y-3 md:hidden">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-2xl border border-[#d8dcd0] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="mt-2 h-4 w-40" />
+            </div>
+            <div className="w-16 shrink-0">
+              <Skeleton className="ml-auto h-3 w-14" />
+              <Skeleton className="mt-2 ml-auto h-4 w-12" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function StatCard({
@@ -23,7 +52,7 @@ function StatCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-[#d8dcd0] bg-white px-8 py-7 min-h-[152px] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_12px_rgba(0,0,0,0.08)] transition-shadow">
+    <div className="min-h-[152px] rounded-2xl border border-[#d8dcd0] bg-white px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:px-8 sm:py-7">
       <p className="text-[14px] font-medium text-[#7a7e71] mb-5">
         {label}
       </p>
@@ -37,7 +66,7 @@ function BalanceCard({ balance }: { balance: Balance }) {
     <StatCard label="Balance">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[40px] text-[#1c1f17] font-bold leading-none tracking-tight">
+          <p className="text-[36px] text-[#1c1f17] font-bold leading-none tracking-tight sm:text-[40px]">
             {formatCredit(balance.available)}
           </p>
           <p className="text-[15px] text-[#4d5145] mt-2.5">
@@ -47,7 +76,7 @@ function BalanceCard({ balance }: { balance: Balance }) {
 
         <Link
           href="/dashboard/billing?buy=1"
-          className="inline-flex items-center justify-center self-start rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:mt-5"
+          className="inline-flex w-full items-center justify-center self-start rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:mt-5 sm:w-auto"
         >
           Buy credits
         </Link>
@@ -94,8 +123,8 @@ function GetStartedCard() {
 
   return (
     <div className="mb-10">
-      <div className="border border-[#d8dcd0] bg-white rounded-2xl px-6 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
-        <div className="flex items-start justify-between gap-4">
+      <div className="border border-[#d8dcd0] bg-white rounded-2xl px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[14px] font-medium text-[#7a7e71] mb-2">
               Get started
@@ -110,7 +139,7 @@ function GetStartedCard() {
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}
-            className="shrink-0 mt-5 rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-2 text-[12px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235]"
+            className="w-full rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-2 text-[12px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:mt-5 sm:w-auto sm:shrink-0"
           >
             {copied ? "Copied!" : "Copy"}
           </button>
@@ -159,7 +188,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-[28px] font-semibold text-[#1c1f17] mb-9 tracking-tight">
+      <h1 className="mb-7 text-[28px] font-semibold tracking-tight text-[#1c1f17] md:mb-9">
         Overview
       </h1>
 
@@ -167,9 +196,9 @@ export default function DashboardPage() {
 
       {/* Stats cards */}
       {isLoading || !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           {[0, 1].map((i) => (
-            <div key={i} className="border border-[#d8dcd0] bg-white px-8 py-7 rounded-2xl">
+            <div key={i} className="rounded-2xl border border-[#d8dcd0] bg-white px-5 py-5 sm:px-8 sm:py-7">
               <Skeleton className="h-4 w-16 mb-6" />
               <Skeleton className="h-10 w-24 mb-3" />
               <Skeleton className="h-4 w-20" />
@@ -177,7 +206,7 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           <BalanceCard balance={data.balance} />
           <LastActivityCard summary={data.usage_summary} />
         </div>
@@ -190,33 +219,39 @@ export default function DashboardPage() {
         </p>
 
         {isLoading ? (
-          <div className="space-y-3 border border-[#d8dcd0] bg-white px-6 py-4 rounded-2xl">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-14 w-full" />
-            ))}
-          </div>
+          <>
+            <ActivityCardsSkeleton count={4} />
+            <div className="hidden space-y-3 rounded-2xl border border-[#d8dcd0] bg-white px-6 py-4 md:block">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          </>
         ) : recentUsage?.length ? (
-          <div className="border border-[#d8dcd0] bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
-            <table className="w-full border-collapse text-[15px]">
-              <thead>
-                <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
-                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Time</th>
-                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Capability</th>
-                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Model</th>
-                  <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Status</th>
-                  <th className="text-right py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentUsage.map((item, i) => (
-                  <ActivityRow
-                    key={item.request_id || i}
-                    item={item}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <CapabilityActivityList items={recentUsage} className="md:hidden" />
+            <div className="hidden overflow-hidden rounded-2xl border border-[#d8dcd0] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] md:block">
+              <table className="w-full border-collapse text-[15px]">
+                <thead>
+                  <tr className="bg-[#f4f5f1] border-b border-[#e0e3da]">
+                    <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Time</th>
+                    <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Capability</th>
+                    <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Model</th>
+                    <th className="text-left py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Status</th>
+                    <th className="text-right py-4 px-6 text-[13.5px] font-medium text-[#7a7e71]">Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentUsage.map((item, i) => (
+                    <ActivityRow
+                      key={item.request_id || i}
+                      item={item}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <p className="text-[15px] text-[#7a7e71] py-10">
             No activity yet. Ask your agent to use anycap.

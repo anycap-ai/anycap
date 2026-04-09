@@ -13,6 +13,7 @@ const protectedPaths = ["/dashboard"];
 const passthroughPrefixes = ["/auth", "/dashboard"];
 const globalUiPrefixes = ["/auth", "/dashboard"];
 const globalUiPaths = new Set(["/"]);
+const metadataRoutePaths = new Set(["/opengraph-image", "/twitter-image"]);
 const legacyRouteRedirects = new Map<string, string>([
   ["/for-human", "/"],
   ["/capabilities/image-read", "/capabilities/image-understanding"],
@@ -84,6 +85,21 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!locale) {
+    if (metadataRoutePaths.has(normalizedPath)) {
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set(localeHeaderName, defaultLocale);
+      requestHeaders.set("x-anycap-global-ui", "0");
+
+      return applyAuthResponse(
+        NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        authResponse,
+      );
+    }
+
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute && matchedPublicRoute.key !== "home") {
       return applyAuthResponse(

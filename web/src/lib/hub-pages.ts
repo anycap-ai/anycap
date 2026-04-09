@@ -17,7 +17,7 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
   for: {
     key: "for",
     path: "/for",
-    title: "Equip Agents — Add missing capabilities to Claude Code, Cursor, Codex, and Manus",
+    title: "Equip Agents | Add Missing Capabilities to AI Agents",
     description:
       "Choose your agent and add the capability layer it does not ship with. Equip Claude Code, Cursor, Codex, and Manus with image, video, vision, and retrieval workflows through AnyCap.",
     eyebrow: "Equip Agents",

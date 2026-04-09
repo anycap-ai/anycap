@@ -13,7 +13,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "Video Analysis API for AI agents - Video understanding and video intelligence",
+  title: "Video Analysis API for AI Agents | AnyCap",
   description:
     "Give AI agents video analysis through AnyCap. Analyze recordings, summarize scenes, and extract video intelligence through one CLI command across Claude Code, Cursor, and more.",
   alternates: { canonical: "/capabilities/video-analysis" },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/capabilities/video-analysis",
     siteName: siteConfig.siteName,
-    title: "Video Analysis API for AI agents - Video understanding and video intelligence",
+    title: "Video Analysis API for AI Agents | AnyCap",
     description:
       "Give AI agents video analysis through AnyCap. Analyze recordings, summarize scenes, and extract video intelligence through one CLI command across Claude Code, Cursor, and more.",
   },

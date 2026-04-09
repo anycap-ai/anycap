@@ -38,7 +38,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f2f3ef]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
-      <header className="lg:hidden px-6 py-4 border-b border-[#dce0d2] bg-[#f2f3ef] flex items-center">
+      <header className="flex items-center border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-4 sm:px-6 lg:hidden">
         <Link href="/">
           <AnycapLogo size={24} />
         </Link>
@@ -54,13 +54,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Mobile nav ── */}
-      <nav className="lg:hidden px-6 py-4 border-b border-[#dce0d2] bg-[#f2f3ef] overflow-x-auto">
-        <div className="flex gap-5">
+      <nav className="overflow-x-auto border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-3 sm:px-6 lg:hidden">
+        <div className="flex min-w-max gap-2">
           {allItems.map((item) =>
             item.disabled ? (
               <span
                 key={item.href}
-                className="text-[13px] text-[#b0b4a8] whitespace-nowrap cursor-not-allowed"
+                className="inline-flex cursor-not-allowed items-center rounded-full border border-[#d8dcd0] bg-[#fafbf8] px-3 py-2 text-[13px] text-[#b0b4a8] whitespace-nowrap"
               >
                 {item.label}
               </span>
@@ -68,12 +68,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-[13px] whitespace-nowrap transition-colors ${isActive(item.href)
-                    ? "text-[#1c1f17] font-medium"
+                className={`inline-flex items-center rounded-full border px-3 py-2 text-[13px] whitespace-nowrap transition-all ${
+                  isActive(item.href)
+                    ? "border-[#6b7d3a] bg-[rgba(107,125,58,0.09)] text-[#1c1f17] font-medium"
                     : item.href === "/dashboard/get-started"
-                      ? "text-[#6b7d3a] font-medium"
-                      : "text-[#6b7068] hover:text-[#3a3e32]"
-                  }`}
+                      ? "border-[rgba(107,125,58,0.14)] bg-[rgba(107,125,58,0.05)] text-[#6b7d3a] font-medium"
+                      : "border-[#d8dcd0] bg-[#fafbf8] text-[#6b7068] hover:border-[#c9ceb9] hover:text-[#3a3e32]"
+                }`}
               >
                 {item.label}
               </Link>
@@ -149,7 +150,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* ── Main content ── */}
-        <main className="flex-1 min-w-0 px-10 md:px-16 py-14">
+        <main className="flex-1 min-w-0 px-5 py-10 sm:px-8 sm:py-12 md:px-16 md:py-14">
           <div className="max-w-[1200px]">{children}</div>
         </main>
       </div>
