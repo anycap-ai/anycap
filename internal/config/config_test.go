@@ -122,6 +122,9 @@ func TestLoadFromEnv_ReadsAgentControlConfig(t *testing.T) {
 	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_VERIFICATION_TOKEN", "verify_token")
 	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_ENCRYPT_KEY", "encrypt_key")
 	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_REPLY_API", "https://reply.anycap.dev")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_APP_ID", "cli_appid")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_APP_SECRET", "cli_secret")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_LONG_CONNECTION_ENABLED", "true")
 	t.Setenv("ANYCAP_AGENT_CONTROL_FIXED_RUNNERS_JSON", `[{"platform":"feishu","bot_id":"cli_bot","runner_id":"run_123"}]`)
 
 	cfg, err := LoadFromEnv()
@@ -136,6 +139,15 @@ func TestLoadFromEnv_ReadsAgentControlConfig(t *testing.T) {
 	}
 	if cfg.AgentControl.Feishu.ReplyAPI != "https://reply.anycap.dev" {
 		t.Fatalf("expected feishu reply api, got %q", cfg.AgentControl.Feishu.ReplyAPI)
+	}
+	if cfg.AgentControl.Feishu.AppID != "cli_appid" {
+		t.Fatalf("expected feishu app id, got %q", cfg.AgentControl.Feishu.AppID)
+	}
+	if cfg.AgentControl.Feishu.AppSecret != "cli_secret" {
+		t.Fatalf("expected feishu app secret, got %q", cfg.AgentControl.Feishu.AppSecret)
+	}
+	if !cfg.AgentControl.Feishu.LongConnEnabled {
+		t.Fatal("expected feishu long connection enabled")
 	}
 	if len(cfg.AgentControl.FixedRunners) != 1 {
 		t.Fatalf("expected 1 fixed runner mapping, got %d", len(cfg.AgentControl.FixedRunners))

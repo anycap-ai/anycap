@@ -245,6 +245,9 @@ type AgentControlFeishuConfig struct {
 	VerificationToken string
 	EncryptKey        string
 	ReplyAPI          string
+	AppID             string
+	AppSecret         string
+	LongConnEnabled   bool
 }
 
 type AgentControlFixedRunnerConfig struct {
@@ -257,10 +260,22 @@ func (c Api302Config) Enabled() bool {
 	return c.APIKey != ""
 }
 
-func (c AgentControlFeishuConfig) Enabled() bool {
+func (c AgentControlFeishuConfig) WebhookEnabled() bool {
 	return strings.TrimSpace(c.VerificationToken) != "" &&
-		strings.TrimSpace(c.EncryptKey) != "" &&
-		strings.TrimSpace(c.ReplyAPI) != ""
+		strings.TrimSpace(c.EncryptKey) != ""
+}
+
+func (c AgentControlFeishuConfig) DirectAPIEnabled() bool {
+	return strings.TrimSpace(c.AppID) != "" &&
+		strings.TrimSpace(c.AppSecret) != ""
+}
+
+func (c AgentControlFeishuConfig) OutboundEnabled() bool {
+	return c.DirectAPIEnabled() || strings.TrimSpace(c.ReplyAPI) != ""
+}
+
+func (c AgentControlFeishuConfig) Enabled() bool {
+	return c.WebhookEnabled() || c.OutboundEnabled()
 }
 
 type ArtifactConfig struct {
@@ -593,6 +608,9 @@ func loadAgentControlConfig() (AgentControlConfig, error) {
 			VerificationToken: getEnv("ANYCAP_AGENT_CONTROL_FEISHU_VERIFICATION_TOKEN", ""),
 			EncryptKey:        getEnv("ANYCAP_AGENT_CONTROL_FEISHU_ENCRYPT_KEY", ""),
 			ReplyAPI:          getEnv("ANYCAP_AGENT_CONTROL_FEISHU_REPLY_API", ""),
+			AppID:             getEnv("ANYCAP_AGENT_CONTROL_FEISHU_APP_ID", ""),
+			AppSecret:         getEnv("ANYCAP_AGENT_CONTROL_FEISHU_APP_SECRET", ""),
+			LongConnEnabled:   getEnvBool("ANYCAP_AGENT_CONTROL_FEISHU_LONG_CONNECTION_ENABLED", false),
 		},
 	}
 

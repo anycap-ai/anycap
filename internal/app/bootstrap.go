@@ -120,6 +120,7 @@ type serverDependencies struct {
 	agentSessionRepo      port.AgentSessionRepository
 	agentTaskRepo         port.AgentTaskRepository
 	imAdapter             *infraim.FeishuAdapter
+	feishuLongConnBot     *infraim.FeishuLongConnBot
 	apiKeyService         port.APIKeyService
 	identityTokens        port.IdentityTokenAuthenticator
 	rateLimiter           port.RateLimiter
@@ -403,6 +404,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			agentcontrolapp.NewPollingDispatcher(),
 			agentcontrolapp.WithFixedRunnerResolver(buildFixedRunnerResolver(cfg, authComp.idResolver)),
 		)
+		imAdapter := buildFeishuAdapter(cfg)
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
 		systemService.SetUserReader(authComp.userReader)
 		systemService.SetCreditClient(shared.creditClient)
@@ -437,7 +439,8 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			agentConversationRepo: agentControlRepo,
 			agentSessionRepo:      agentControlRepo,
 			agentTaskRepo:         agentControlRepo,
-			imAdapter:             buildFeishuAdapter(cfg),
+			imAdapter:             imAdapter,
+			feishuLongConnBot:     buildFeishuLongConnBot(cfg, bindingService, conversationService, imAdapter),
 			apiKeyService:         authComp.apiKeyService,
 			identityTokens:        authComp.identityTokens,
 			rateLimiter:           ratelimit.NewRedisLimiter(redisClient),
@@ -502,6 +505,21 @@ func buildFeishuAdapter(cfg config.Config) *infraim.FeishuAdapter {
 		VerificationToken: cfg.AgentControl.Feishu.VerificationToken,
 		EncryptKey:        cfg.AgentControl.Feishu.EncryptKey,
 		ReplyAPI:          cfg.AgentControl.Feishu.ReplyAPI,
+		AppID:             cfg.AgentControl.Feishu.AppID,
+		AppSecret:         cfg.AgentControl.Feishu.AppSecret,
+	})
+}
+
+func buildFeishuLongConnBot(cfg config.Config, bindingService *agentcontrolapp.BindingService, conversationService *agentcontrolapp.ConversationService, adapter *infraim.FeishuAdapter) *infraim.FeishuLongConnBot {
+	if !cfg.AgentControl.Feishu.LongConnEnabled || !cfg.AgentControl.Feishu.DirectAPIEnabled() {
+		return nil
+	}
+	return infraim.NewFeishuLongConnBot(infraim.FeishuLongConnBotConfig{
+		AppID:               cfg.AgentControl.Feishu.AppID,
+		AppSecret:           cfg.AgentControl.Feishu.AppSecret,
+		BindingService:      bindingService,
+		ConversationService: conversationService,
+		Adapter:             adapter,
 	})
 }
 

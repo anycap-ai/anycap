@@ -12,6 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	lark "github.com/larksuite/oapi-sdk-go/v3"
+	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
+	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
@@ -19,6 +23,8 @@ type FeishuAdapterConfig struct {
 	VerificationToken string
 	EncryptKey        string
 	ReplyAPI          string
+	AppID             string
+	AppSecret         string
 	HTTPClient        *http.Client
 }
 
@@ -27,6 +33,9 @@ type FeishuAdapter struct {
 	encryptKey        string
 	replyAPI          string
 	client            *http.Client
+	appID             string
+	appSecret         string
+	larkClient        *lark.Client
 }
 
 func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
@@ -39,6 +48,9 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 		encryptKey:        strings.TrimSpace(cfg.EncryptKey),
 		replyAPI:          strings.TrimSpace(cfg.ReplyAPI),
 		client:            client,
+		appID:             strings.TrimSpace(cfg.AppID),
+		appSecret:         strings.TrimSpace(cfg.AppSecret),
+		larkClient:        buildFeishuDirectClient(strings.TrimSpace(cfg.AppID), strings.TrimSpace(cfg.AppSecret), client),
 	}
 }
 
@@ -151,6 +163,9 @@ func (a *FeishuAdapter) verifySignature(req *http.Request, body []byte) error {
 }
 
 func (a *FeishuAdapter) sendReply(ctx context.Context, binding model.IMBinding, message string) error {
+	if a.larkClient != nil {
+		return a.sendDirectMessage(ctx, binding, message)
+	}
 	if strings.TrimSpace(a.replyAPI) == "" {
 		return model.ErrNotConfigured("feishu reply api is not configured")
 	}
@@ -177,6 +192,57 @@ func (a *FeishuAdapter) sendReply(ctx context.Context, binding model.IMBinding, 
 	defer resp.Body.Close()
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("send feishu reply: status %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func buildFeishuDirectClient(appID, appSecret string, httpClient *http.Client) *lark.Client {
+	if strings.TrimSpace(appID) == "" || strings.TrimSpace(appSecret) == "" {
+		return nil
+	}
+	options := []lark.ClientOptionFunc{
+		lark.WithEnableTokenCache(true),
+		lark.WithReqTimeout(10 * time.Second),
+		lark.WithLogLevel(larkcore.LogLevelInfo),
+	}
+	if httpClient != nil {
+		options = append(options, lark.WithHttpClient(httpClient))
+	}
+	return lark.NewClient(appID, appSecret, options...)
+}
+
+func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMBinding, message string) error {
+	if a == nil || a.larkClient == nil {
+		return model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	chatID := strings.TrimSpace(binding.ChannelID)
+	if chatID == "" {
+		return model.ErrValidation("feishu chat id is required")
+	}
+
+	content, err := json.Marshal(map[string]string{"text": strings.TrimSpace(message)})
+	if err != nil {
+		return fmt.Errorf("marshal feishu message content: %w", err)
+	}
+
+	req := larkim.NewCreateMessageReqBuilder().
+		ReceiveIdType(larkim.ReceiveIdTypeChatId).
+		Body(
+			larkim.NewCreateMessageReqBodyBuilder().
+				ReceiveId(chatID).
+				MsgType("text").
+				Content(string(content)).
+				Uuid(uuid.NewString()).
+				Build(),
+		).
+		Build()
+
+	resp, err := a.larkClient.Im.V1.Message.Create(ctx, req)
+	if err != nil {
+		return fmt.Errorf("send feishu direct message: %w", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("send feishu direct message: code=%d msg=%s", resp.Code, resp.Msg)
 	}
 	return nil
 }

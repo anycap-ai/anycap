@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
@@ -81,6 +82,47 @@ func TestBuildFeishuAdapter_ReturnsAdapterWhenConfigured(t *testing.T) {
 	})
 	if adapter == nil {
 		t.Fatal("expected configured feishu adapter")
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsAdapterWhenDirectAPIConfigured(t *testing.T) {
+	adapter := buildFeishuAdapter(config.Config{
+		AgentControl: config.AgentControlConfig{
+			Feishu: config.AgentControlFeishuConfig{
+				AppID:     "cli_appid",
+				AppSecret: "cli_secret",
+			},
+		},
+	})
+	if adapter == nil {
+		t.Fatal("expected configured feishu adapter")
+	}
+}
+
+func TestBuildFeishuLongConnBot_ReturnsBotWhenConfigured(t *testing.T) {
+	bot := buildFeishuLongConnBot(
+		config.Config{
+			AgentControl: config.AgentControlConfig{
+				Feishu: config.AgentControlFeishuConfig{
+					AppID:           "cli_appid",
+					AppSecret:       "cli_secret",
+					LongConnEnabled: true,
+				},
+			},
+		},
+		&agentcontrolapp.BindingService{},
+		&agentcontrolapp.ConversationService{},
+		buildFeishuAdapter(config.Config{
+			AgentControl: config.AgentControlConfig{
+				Feishu: config.AgentControlFeishuConfig{
+					AppID:     "cli_appid",
+					AppSecret: "cli_secret",
+				},
+			},
+		}),
+	)
+	if bot == nil {
+		t.Fatal("expected feishu long connection bot")
 	}
 }
 

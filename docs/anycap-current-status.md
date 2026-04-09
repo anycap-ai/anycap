@@ -112,6 +112,7 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 | Conversation control | `anycap agent conversations stop|reset|fork|fire <agc_...>` | Stop an active conversation, reset it into a new session, fork it into a new branch, or manually consume pending mailbox results and continue |
 | Task inspect | `anycap agent task get <agt_...>` | View a remote agent task and its lifecycle state |
 | Task cancel | `anycap agent task cancel <agt_...>` | Cancel a queued/dispatched/running remote agent task |
+| Feishu long connection | server runtime background task | Optional long-connection bot ingress using Feishu App ID/App Secret; receives IM events without公网 webhook |
 | Feishu webhook | `POST /im/events/feishu` | Root/public webhook with platform verification, bind command handling, and command intake |
 | Conversation inspect | `/v1/agent/conversations*` | Protected server APIs for listing active conversations, session history, and mailbox entries |
 | Runner control API | `/v1/agent/*` | Protected server APIs for bindings, runners, heartbeats, session polling, session status lookup, and updates |
@@ -119,11 +120,12 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 Current Phase 1 behavior:
 
 - Feishu is the first wired IM adapter.
+- Feishu ingress now supports two modes: webhook callback and long connection. Long connection is the preferred local/single-machine mode because it does not require a public callback URL.
 - Binding uses explicit `/bind <token>` flow.
 - IM chat intake is conversation-first: plain text appends a new session to the active conversation for that Feishu DM chat.
 - Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
 - Fixed bot -> runner routing is supported via server config.
-- Runner execution uses polling-style session dispatch: webhook persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.
+- Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.
 - The CLI runner supports a real local `codex` executor. Non-interactive runs capture Codex `thread_id` and persist it as `executor_ref`.
 - Continue-mode sessions inherit the parent `executor_ref`, so the runner can resume the existing Codex thread with `codex exec resume`.
 - Fire-mode sessions inherit the parent `executor_ref`, so pending mailbox results can be fed back into the same Codex conversation context.
@@ -133,6 +135,7 @@ Current Phase 1 behavior:
 - `/stop` is end-to-end: it marks the active session interrupted on the server, runner detects that state, and the local Codex subprocess is canceled.
 - Conversation list/detail APIs now include a `last_session` summary with mode, status, executor reuse marker, timestamps, and final message when available.
 - The same stop/reset/fork/fire controls are exposed through protected HTTP APIs and the `anycap agent conversations ...` CLI group, not only through Feishu slash-style commands.
+- Outbound Feishu replies can use either the legacy reply proxy API or direct Feishu OpenAPI send with App ID/App Secret.
 
 ## 3. CLI
 
