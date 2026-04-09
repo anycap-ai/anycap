@@ -86,9 +86,9 @@ func (e *codexExecExecutor) runPrompt(ctx context.Context, prompt string, resume
 		args = append(args, "-C", strings.TrimSpace(e.workspace))
 	}
 	if strings.TrimSpace(resumeID) != "" {
-		args = append(args, "exec", "resume", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, strings.TrimSpace(resumeID), "-")
+		args = append(args, "exec", "resume", "--full-auto", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, strings.TrimSpace(resumeID), "-")
 	} else {
-		args = append(args, "exec", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, "-")
+		args = append(args, "exec", "--full-auto", "--skip-git-repo-check", "--json", "--output-last-message", outputPath, "-")
 	}
 
 	cmd := exec.CommandContext(ctx, resolved, args...)

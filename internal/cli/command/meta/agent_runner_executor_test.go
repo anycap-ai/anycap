@@ -74,7 +74,10 @@ sleep 10
 func TestCodexExecExecutorExecuteSessionCapturesThreadID(t *testing.T) {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "codex-stub.sh")
+	argsPath := filepath.Join(tmpDir, "codex-args.txt")
 	script := `#!/bin/sh
+args_log="` + argsPath + `"
+printf '%s\n' "$@" > "$args_log"
 out=""
 resume_id=""
 mode="exec"
@@ -93,7 +96,7 @@ while [ "$#" -gt 0 ]; do
       out="$2"
       shift 2
       ;;
-    --json|--skip-git-repo-check)
+    --json|--skip-git-repo-check|--full-auto)
       shift
       ;;
     -C)
@@ -141,6 +144,14 @@ fi
 	}
 	if fresh.FinalMessage == nil || *fresh.FinalMessage != "fresh" {
 		t.Fatalf("unexpected fresh final message %+v", fresh.FinalMessage)
+	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if !strings.Contains(argsText, "--full-auto\n") {
+		t.Fatalf("expected full-auto in args, got %q", argsText)
 	}
 
 	resumeID := "thread_123"

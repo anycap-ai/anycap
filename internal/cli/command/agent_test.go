@@ -595,7 +595,7 @@ while [ "$#" -gt 0 ]; do
       out="$2"
       shift 2
       ;;
-    --json|--skip-git-repo-check)
+    --json|--skip-git-repo-check|--full-auto)
       shift
       ;;
     --cd|-C)
