@@ -22,12 +22,17 @@ func jsStringEscape(s string) string {
 // injectTemplateVars replaces template placeholders in the HTML with actual values.
 // All values are JS-string-escaped to prevent injection or syntax errors when
 // the target URL (or other values) contain characters like ', ", \, or </script>.
-func injectTemplateVars(html, csrfToken, mediaType, targetURL, sessionID string) string {
+func injectTemplateVars(html, csrfToken, mediaType, targetURL, sessionID string, autoClose bool) string {
+	autoCloseStr := "false"
+	if autoClose {
+		autoCloseStr = "true"
+	}
 	r := strings.NewReplacer(
 		"{{CSRF_TOKEN}}", jsStringEscape(csrfToken),
 		"{{MEDIA_TYPE}}", jsStringEscape(mediaType),
 		"{{TARGET_URL}}", jsStringEscape(targetURL),
 		"{{SESSION_ID}}", jsStringEscape(sessionID),
+		"{{AUTO_CLOSE}}", autoCloseStr,
 	)
 	return r.Replace(html)
 }

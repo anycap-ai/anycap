@@ -1,10 +1,10 @@
 // WebSocket: real-time sync, remote cursors, peers indicator.
 
 import * as S from './state';
-import { sessionId, resolveWsUrl } from './config';
+import { sessionId, resolveWsUrl, autoClose } from './config';
 import { render } from './canvas';
 import { renderList, isEditingLabel, deferRenderList } from './sidebar';
-import { esc } from './ui';
+import { esc, showToast } from './ui';
 
 let ws: WebSocket | null = null;
 let lastCursorBroadcast = 0;
@@ -75,7 +75,14 @@ export function initWebSocket(): void {
             removeRemoteCursor(msg.clientId);
             break;
           case 'submitted':
-            showSubmittedOverlay();
+            // In blocking (autoClose) mode, show a full-screen overlay since
+            // the session is ending. In non-blocking mode, show a toast so
+            // other collaborators can continue editing.
+            if (msg.autoClose || autoClose()) {
+              showSubmittedOverlay();
+            } else {
+              showSavedToast(msg);
+            }
             break;
         }
       } catch (_err) { /* ignore parse errors */ }
@@ -210,8 +217,17 @@ function updatePeersUI(): void {
     ids.length + (ids.length === 1 ? ' peer' : ' peers');
 }
 
+// --- Saved toast (non-blocking mode) ---
+// Shown on OTHER clients when someone saves in non-blocking mode.
+// Unlike the overlay, this does not block the UI -- other collaborators
+// can continue editing and save separately.
+
+function showSavedToast(_msg: { clientId?: string }): void {
+  showToast('Another collaborator has saved. You can continue editing or click Done to save.');
+}
+
 // --- Submitted overlay ---
-// Shown on OTHER clients when someone submits feedback.
+// Shown on OTHER clients when someone submits feedback (blocking mode).
 
 function showSubmittedOverlay(): void {
   // Don't show if the page was already replaced by the submitter's own handler.

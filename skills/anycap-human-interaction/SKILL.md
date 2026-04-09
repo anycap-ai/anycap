@@ -63,11 +63,20 @@ anycap annotate list
 
 ### Browser Auto-Open
 
-Both blocking and non-blocking modes automatically attempt to open the annotation URL in the default browser. In desktop environments, the human will see the annotation UI immediately without needing to copy-paste a URL.
+Both blocking and non-blocking modes automatically attempt to open the annotation URL in the default browser. In headless environments (SSH, container), the CLI prints the URL to stderr instead. No error is raised.
 
-If the browser cannot be opened (headless server, SSH session, container), the CLI prints the URL to stderr with instructions to open it manually. No error is raised -- the session continues normally.
+### Presenting to the Human -- Guidelines
 
-**For agents:** When running on a machine with a desktop environment, the human likely already has the annotation page open by the time you present the URL. Your message can say "the annotation page should already be open in your browser" rather than asking them to open it.
+When presenting an annotation session to the human, adapt your message based on context. Key points to communicate:
+
+- **Browser auto-open**: On desktop, the page opens automatically -- acknowledge this ("the review page should already be open"). In headless/SSH, share the URL and tell them how to access it.
+- **Always mention Done**: Tell the human to click **Done** when finished. This is how feedback gets saved.
+- **Recording for URL mode**: Emphasize recording (Rec button) because URL mode cannot export an annotated screenshot. The recording is the primary artifact.
+- **Multi-user**: If multiple reviewers will participate, mention real-time collaboration and that each person can save independently.
+- **Headless access**: When using `--bind 0.0.0.0`, share the URL with the actual host IP. If behind SSH, suggest port forwarding.
+- **What to annotate**: Briefly describe what tools are available (Rect, Arrow, Point, Freehand) and that each annotation can have a text label.
+
+Do NOT use canned messages. Compose naturally based on the situation (what you just generated/modified, whether it is desktop or headless, single or multi-reviewer).
 
 ### Headless / Remote Access
 
@@ -133,6 +142,15 @@ sequenceDiagram
     Agent->>CLI: stop_command
 ```
 
+### The "Done" Button
+
+The human clicks **Done** in the annotation toolbar to save their feedback. The behavior differs by mode:
+
+- **Blocking mode** (no `--no-wait`): Clicking Done ends the session for all collaborators. Other connected users see a "Feedback Submitted" overlay and cannot continue editing. The CLI command returns immediately with the result.
+- **Non-blocking mode** (`--no-wait`): Clicking Done **saves** the feedback without ending the session. Other collaborators see a toast notification ("Another collaborator has saved. You can continue editing or click Done to save.") and can keep annotating. Each subsequent Done click overwrites the saved result. The agent polls to retrieve the latest saved state.
+
+**For agents:** Always tell the human to click **Done** when they are finished. In non-blocking mode with multiple reviewers, each reviewer can save independently -- the poll result reflects the most recent save. Wait for the human to confirm they are done before polling.
+
 ### Session Recovery
 
 Session state is persisted at `.anycap/annotate/<session_id>.json` in the working directory (returned as `session_file` in the start response). If you lose the session ID or commands after a context reset:
@@ -161,20 +179,6 @@ anycap annotate http://localhost:3000 --no-wait
 # Live URL
 anycap annotate https://staging.example.com --no-wait
 ```
-
-### Present to the Human -- Emphasize Recording
-
-The annotation tool shows a tutorial overlay on first open for URL mode, but your message should reinforce it:
-
-> "I updated the page. Please open this link to review it:
-> {url}
->
-> **How to review:**
-> 1. Browse the page and use annotation tools (Rect, Arrow, Point) to mark issues
-> 2. Click **Rec** to start recording your screen -- narrate what you see and what you want changed
-> 3. Click **Done** when finished
->
-> The recording helps me understand exactly what you see and what needs to change."
 
 ### Collect and Analyze Feedback
 
@@ -266,37 +270,6 @@ anycap annotate hero-banner.png --no-wait -o hero-banner-annotated.png \
   --bind 0.0.0.0 --port 8888
 ```
 
-### Real-Time Multi-User Collaboration
-
-Multiple humans can open the same annotation URL simultaneously. All annotations and cursor positions sync in real-time via WebSocket (powered by Yjs CRDT). Each participant gets a random animal name and color for identification.
-
-Use multi-user mode for:
-
-- Team reviews where multiple stakeholders have input
-- Design critiques with several reviewers
-- Collaborative walkthroughs
-- Remote pair review across a LAN or the internet
-
-Share `http://<server-ip>:8888` with your team. Everyone sees each other's cursors and annotations in real-time. When any participant clicks **Done**, all connected collaborators see a notification that the session has been submitted.
-
-For public-facing servers, use a reverse proxy with authentication (e.g., nginx with basic auth, OAuth proxy, or a VPN) to control who can access the session. The annotation server itself uses CSRF protection for write operations but does not enforce its own access control -- rely on your network or proxy layer for that.
-
-### Present to the Human
-
-For a single reviewer:
-
-> "I generated the banner image. Please open this link to review it:
-> {url}
->
-> Draw rectangles, arrows, or points on areas you want changed, and type a description for each annotation. Click Done when finished."
-
-For multiple reviewers:
-
-> "I generated the banner image. Please open this link to review it:
-> {url}
->
-> Everyone can annotate at the same time -- you will see each other's cursors and drawings in real-time. Mark regions you want changed and add descriptions. When the team is done, any one of you can click **Done** to submit."
-
 ### Collect and Use Feedback
 
 ```bash
@@ -327,19 +300,13 @@ anycap annotate stop --session <session_id>
 
 Use when you generated a video or need the human to review video content. The human can pause the video at any frame and annotate it. The annotated image output is a snapshot of the paused frame with all annotations composited on top.
 
-#### Start and Present
+#### Start
 
 ```bash
 anycap annotate output.mp4 --no-wait
 ```
 
-> "I generated the video. The review page should already be open in your browser.
->
-> **How to review:**
-> 1. Play the video and pause at moments you want to comment on
-> 2. Draw annotations (Rect, Arrow, Point) on the paused frame
-> 3. Click **Rec** to record your screen while narrating your feedback -- this helps me understand timing-specific issues
-> 4. Click **Done** when finished"
+Tell the human to pause at key moments, draw annotations on the frame, optionally record with narration, and click Done when finished.
 
 #### Collect and Analyze
 
@@ -369,15 +336,13 @@ Video feedback typically maps to regeneration with an adjusted prompt, or specif
 
 Use when you generated music or audio and need the human to provide feedback. The human sees an audio player with a drawing canvas below it.
 
-#### Start and Present
+#### Start
 
 ```bash
 anycap annotate track.mp3 --no-wait
 ```
 
-> "I generated the audio track. The review page should already be open in your browser.
->
-> Play the audio and draw annotations on the canvas to mark time regions or sections that need changes. Add labels describing what you want adjusted (e.g., 'too loud here', 'add more bass', 'cut this section'). Click **Done** when finished."
+Tell the human to play the audio, draw annotations on the canvas to mark time regions or sections, add labels describing desired changes, and click Done when finished.
 
 #### Collect and Analyze
 

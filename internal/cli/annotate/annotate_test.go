@@ -643,16 +643,16 @@ func TestCleanExpiredSessions(t *testing.T) {
 }
 
 func TestInjectTemplateVars(t *testing.T) {
-	html := `TOKEN='{{CSRF_TOKEN}}' TYPE='{{MEDIA_TYPE}}' URL='{{TARGET_URL}}' SID='{{SESSION_ID}}'`
-	got := injectTemplateVars(html, "abc123", "video", "", "ann_test1")
-	want := `TOKEN='abc123' TYPE='video' URL='' SID='ann_test1'`
+	html := `TOKEN='{{CSRF_TOKEN}}' TYPE='{{MEDIA_TYPE}}' URL='{{TARGET_URL}}' SID='{{SESSION_ID}}' AC={{AUTO_CLOSE}}`
+	got := injectTemplateVars(html, "abc123", "video", "", "ann_test1", false)
+	want := `TOKEN='abc123' TYPE='video' URL='' SID='ann_test1' AC=false`
 	if got != want {
 		t.Errorf("injectTemplateVars = %q, want %q", got, want)
 	}
 
-	// With URL.
-	got = injectTemplateVars(html, "tok", "url", "https://localhost:3000", "ann_test2")
-	want = `TOKEN='tok' TYPE='url' URL='https://localhost:3000' SID='ann_test2'`
+	// With URL and autoClose=true.
+	got = injectTemplateVars(html, "tok", "url", "https://localhost:3000", "ann_test2", true)
+	want = `TOKEN='tok' TYPE='url' URL='https://localhost:3000' SID='ann_test2' AC=true`
 	if got != want {
 		t.Errorf("injectTemplateVars (url) = %q, want %q", got, want)
 	}

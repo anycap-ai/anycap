@@ -510,7 +510,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	page := injectTemplateVars(annotationPageHTML, s.session.CSRFToken, s.session.MediaType, s.session.SourceURL, s.session.SessionID)
+	page := injectTemplateVars(annotationPageHTML, s.session.CSRFToken, s.session.MediaType, s.session.SourceURL, s.session.SessionID, s.autoClose)
 	_, _ = w.Write([]byte(page))
 }
 
@@ -683,8 +683,9 @@ func (s *Server) handleSubmit(w http.ResponseWriter, r *http.Request) {
 	// Include the submitter's clientId so the submitting browser tab can skip
 	// the overlay (it already has its own feedback via the HTTP response).
 	submittedMsg, _ := json.Marshal(map[string]any{
-		"type":     "submitted",
-		"clientId": r.FormValue("client_id"),
+		"type":      "submitted",
+		"clientId":  r.FormValue("client_id"),
+		"autoClose": s.autoClose,
 	})
 	s.relay.broadcastAll(submittedMsg)
 

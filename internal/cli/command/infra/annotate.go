@@ -211,14 +211,13 @@ func runAnnotateNonBlocking(stdout io.Writer, stderr io.Writer, target, outputPa
 			"anycap annotate stop --session %s", session.SessionID),
 		"session_file": annotate.SessionFilePath(session.SessionID),
 		"expires_in":   annotate.SessionTimeoutSeconds(),
-		"next_action_hint": "Show the URL to the user. Multiple users can open the same URL " +
-			"to collaborate in real-time (shared annotations, live cursors). " +
-			"Users can draw annotations, record screen video with narration, or both. " +
-			"The recording captures the full browser tab as video -- use `anycap actions video-read` " +
-			"to analyze it for visual understanding. " +
-			"After the user confirms they are done, run poll_command to retrieve all feedback, " +
-			"then run stop_command. " +
-			"Session state is persisted at session_file -- read it to recover session details if needed.",
+		"next_action_hint": "The browser opens automatically on desktop; in headless environments share the URL with the user. " +
+			"Tell the user to click Done when finished. " +
+			"Multiple users can open the same URL for real-time collaboration. " +
+			"Users can draw annotations and/or record screen with narration (Rec button). " +
+			"For URL targets, emphasize recording -- it is the primary feedback artifact (no annotated image due to cross-origin). " +
+			"After the user confirms they clicked Done, run poll_command to get the result, then stop_command to shut down. " +
+			"Use `anycap annotate list` to recover sessions after context loss.",
 	}
 
 	data, _ := json.Marshal(result)

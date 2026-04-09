@@ -7,17 +7,20 @@ declare global {
     MEDIA_TYPE: string;
     TARGET_URL: string;
     SESSION_ID: string;
+    AUTO_CLOSE: boolean;
   }
   var CSRF_TOKEN: string;
   var MEDIA_TYPE: string;
   var TARGET_URL: string;
   var SESSION_ID: string;
+  var AUTO_CLOSE: boolean;
 }
 
 export const csrfToken = (): string => CSRF_TOKEN;
 export const mediaType = (): string => MEDIA_TYPE;
 export const targetUrl = (): string => TARGET_URL;
 export const sessionId = (): string => SESSION_ID;
+export const autoClose = (): boolean => AUTO_CLOSE;
 
 // --- URL resolution for proxy compatibility ---
 // When the annotate page is served behind a path-prefix proxy

@@ -1,17 +1,21 @@
 // Submit: send annotations, annotated image, and recording to server.
 
 import * as S from './state';
-import { csrfToken, mediaType, resolveUrl } from './config';
+import { csrfToken, mediaType, resolveUrl, autoClose } from './config';
 import { render, renderAnnotation } from './canvas';
 import { stopRecording, getIsRecording, getRecordedChunks, getRecordingDuration, getHasRecordedClip } from './recording';
 import { showToast, formatDuration, showConfirmDialog } from './ui';
 
 export async function submitAll(): Promise<void> {
-  // Confirm before submitting -- warns that the session will end for all.
+  // Confirm before submitting.
+  const confirmTitle = 'Submit Feedback?';
+  const confirmMsg = autoClose()
+    ? 'This will submit your feedback and end the session. All collaborators will be disconnected.'
+    : 'This will save your annotations. Other collaborators can continue editing and save separately.';
   const confirmed = await showConfirmDialog(
-    'Submit Feedback?',
-    'This will submit your feedback and end the session. All collaborators will be disconnected.',
-    'Submit',
+    confirmTitle,
+    confirmMsg,
+    autoClose() ? 'Submit' : 'Save',
     'Keep Editing',
   );
   if (!confirmed) return;

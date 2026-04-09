@@ -15,7 +15,7 @@ Use annotation when you need structured visual feedback from a human -- pointing
 
 ## Multi-User Collaboration
 
-Multiple users can open the same annotation URL simultaneously. All annotation changes and cursor positions sync in real-time via WebSocket. Each client gets a random animal name (e.g., "Swift Fox") and color for identification. When any participant clicks **Done**, all other connected collaborators see a notification that the session has been submitted.
+Multiple users can open the same annotation URL simultaneously. All annotation changes and cursor positions sync in real-time via WebSocket. Each client gets a random animal name (e.g., "Swift Fox") and color for identification. In non-blocking mode (`--no-wait`), when any participant clicks **Done**, others see a toast notification and can continue editing. In blocking mode (default), clicking Done ends the session for all collaborators.
 
 This is especially useful for team review sessions on shared servers:
 
@@ -38,9 +38,7 @@ The Rec button captures the full browser tab as a video file (via `getDisplayMed
 
 The Rec button uses the browser's `getDisplayMedia` API, which triggers a permission prompt. If the user declines the permission or never clicks Rec, the `recording` field will be absent from the result. Always check for its existence before attempting `video-read`. Text annotations are available regardless of whether a recording was made.
 
-**For agents:** When presenting an annotation link, emphasize that the user should **record their screen with narration** while reviewing, especially for URL mode where there is no annotated image output (cross-origin iframe prevents capture). The recording is the primary artifact for URL reviews.
-
-> "Open this link to review the page. Draw annotations on areas you want changed, then click **Rec** to record your screen while narrating your feedback. Click **Done** when finished."
+For URL mode, the recording is the **primary** feedback artifact because cross-origin iframe prevents annotated image export. Emphasize recording when presenting URL annotation sessions to the user.
 
 ## Browser Auto-Open
 
@@ -54,6 +52,15 @@ If the browser cannot be opened (headless server, SSH, container), the CLI print
 |------|------|----------|
 | Blocking | (default) | Opens browser, waits for user to click Done, outputs result |
 | Non-blocking | `--no-wait` | Starts background server, returns session info immediately |
+
+### Done Button Behavior
+
+The "Done" button in the annotation toolbar behaves differently depending on the mode:
+
+- **Blocking mode**: Clicking Done ends the session. Other connected collaborators see a full-screen "Feedback Submitted" overlay and cannot continue. The CLI command returns immediately with the result.
+- **Non-blocking mode**: Clicking Done **saves** the current annotations without ending the session. Other collaborators see a toast notification ("Another collaborator has saved. You can continue editing or click Done to save.") and can keep working. Each subsequent Done overwrites the saved result. The agent retrieves the latest save via `poll`.
+
+This means in non-blocking multi-user sessions, reviewers can save independently and iteratively without disrupting each other.
 
 ## Blocking Mode
 
