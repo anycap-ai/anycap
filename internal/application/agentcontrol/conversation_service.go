@@ -44,6 +44,7 @@ type InboundChatResult struct {
 	Binding      *model.IMBinding
 	Conversation *model.AgentConversation
 	Session      *model.AgentSession
+	Queued       bool
 }
 
 type RunnerSessionUpdateInput struct {
@@ -159,11 +160,11 @@ func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, 
 
 	switch chat.Action {
 	case model.AgentChatActionContinue:
-		conversation, session, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
+		conversation, session, queued, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session, Queued: queued}, nil
 	case model.AgentChatActionNew, model.AgentChatActionReset:
 		conversation, session, err := s.resetConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
@@ -544,27 +545,35 @@ func (s *ConversationService) loadAuthorizedRunner(ctx context.Context, userID s
 	return runner, nil
 }
 
-func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, error) {
+func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, bool, error) {
 	conversation, err := s.conversations.GetActiveConversationByChat(ctx, binding.UserID, binding.Platform, binding.BotID, chatID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 	if conversation == nil {
 		conversation, err = s.createConversation(ctx, binding, runner, chatID)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, false, err
 		}
+	}
+	conversation, err = s.ensureConversationRunner(ctx, *conversation, runner)
+	if err != nil {
+		return nil, nil, false, err
+	}
+	queued, err := s.isConversationBusy(ctx, *conversation)
+	if err != nil {
+		return nil, nil, false, err
 	}
 
 	session, err := s.createSession(ctx, binding.UserID, *conversation, model.AgentSessionModeContinue, chat.Message, conversation.LastSessionID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 	conversation, err = s.conversations.UpdateConversationLastSession(ctx, conversation.ID, session.ID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
-	return conversation, session, nil
+	return conversation, session, queued, nil
 }
 
 func (s *ConversationService) resetConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, error) {
@@ -667,6 +676,15 @@ func (s *ConversationService) fireConversationForConversation(ctx context.Contex
 	if s.mailbox == nil {
 		return nil, nil, model.ErrNotConfigured("conversation service is not configured")
 	}
+	runner, err := s.resolvePrimaryRunnerByUser(ctx, conversation.UserID, conversation.Platform)
+	if err != nil {
+		return nil, nil, err
+	}
+	updatedConversation, err := s.ensureConversationRunner(ctx, conversation, *runner)
+	if err != nil {
+		return nil, nil, err
+	}
+	conversation = *updatedConversation
 	items, err := s.mailbox.ListUndeliveredMailboxMessages(ctx, conversation.ID)
 	if err != nil {
 		return nil, nil, err
@@ -795,6 +813,35 @@ func (s *ConversationService) createSession(ctx context.Context, userID string, 
 		UpdatedAt:       now,
 	}
 	return s.sessions.CreateSession(ctx, session)
+}
+
+func (s *ConversationService) isConversationBusy(ctx context.Context, conversation model.AgentConversation) (bool, error) {
+	if s.sessions == nil || conversation.LastSessionID == nil || *conversation.LastSessionID <= 0 {
+		return false, nil
+	}
+	lastSession, err := s.sessions.GetSessionByID(ctx, *conversation.LastSessionID)
+	if err != nil {
+		return false, err
+	}
+	if lastSession == nil {
+		return false, nil
+	}
+	return lastSession.Status == model.AgentSessionStatusCreated || lastSession.Status == model.AgentSessionStatusRunning, nil
+}
+
+func (s *ConversationService) ensureConversationRunner(ctx context.Context, conversation model.AgentConversation, runner model.AgentRunner) (*model.AgentConversation, error) {
+	if conversation.RunnerID == runner.ID {
+		copy := conversation
+		return &copy, nil
+	}
+	updated, err := s.conversations.UpdateConversationRunner(ctx, conversation.ID, runner.ID)
+	if err != nil {
+		return nil, err
+	}
+	if updated == nil {
+		return nil, model.ErrNotFound("agent conversation not found")
+	}
+	return updated, nil
 }
 
 func trimOptionalMessage(message *string) *string {

@@ -16,6 +16,7 @@ type fakeConversationRepo struct {
 	activeByChatKey map[string]model.AgentConversation
 	createErr       error
 	getErr          error
+	updateRunnerErr error
 	updateLastErr   error
 	archiveErr      error
 	nextID          int64
@@ -76,6 +77,23 @@ func (r *fakeConversationRepo) UpdateConversationLastSession(_ context.Context, 
 		return nil, nil
 	}
 	item.LastSessionID = &lastSessionID
+	r.itemsByID[id] = item
+	if r.activeByChatKey != nil && item.Status == model.AgentConversationStatusActive {
+		r.activeByChatKey[item.UserID+"|"+item.Platform+"|"+item.BotID+"|"+item.ChatID] = item
+	}
+	copy := item
+	return &copy, nil
+}
+
+func (r *fakeConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+	if r.updateRunnerErr != nil {
+		return nil, r.updateRunnerErr
+	}
+	item, ok := r.itemsByID[id]
+	if !ok {
+		return nil, nil
+	}
+	item.RunnerID = runnerID
 	r.itemsByID[id] = item
 	if r.activeByChatKey != nil && item.Status == model.AgentConversationStatusActive {
 		r.activeByChatKey[item.UserID+"|"+item.Platform+"|"+item.BotID+"|"+item.ChatID] = item
@@ -327,6 +345,150 @@ func TestConversationServiceHandleOwnedInboundMessageRequiresPrimaryRunner(t *te
 	})
 	if err == nil || !strings.Contains(err.Error(), "当前不在线") {
 		t.Fatalf("expected offline primary runner error, got %v", err)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageMigratesExistingConversationToPrimaryRunner(t *testing.T) {
+	now := time.Date(2026, 4, 9, 15, 40, 0, 0, time.UTC)
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			51: {
+				ID:        51,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				BotID:     "cli_personal_bot",
+				ChatID:    "oc_chat",
+				RunnerID:  21,
+				Agent:     "codex",
+				Status:    model.AgentConversationStatusActive,
+				CreatedAt: now.Add(-10 * time.Minute),
+				UpdatedAt: now.Add(-5 * time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|cli_personal_bot|oc_chat": {
+				ID:        51,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				BotID:     "cli_personal_bot",
+				ChatID:    "oc_chat",
+				RunnerID:  21,
+				Agent:     "codex",
+				Status:    model.AgentConversationStatusActive,
+				CreatedAt: now.Add(-10 * time.Minute),
+				UpdatedAt: now.Add(-5 * time.Minute),
+			},
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+			99: {ID: 99, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 99},
+		},
+	}
+	sessions := &fakeSessionRepo{}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "继续刚才那个任务",
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if result.Conversation == nil || result.Conversation.RunnerID != 99 {
+		t.Fatalf("expected conversation runner to migrate to 99, got %+v", result.Conversation)
+	}
+	if result.Session == nil || result.Session.RunnerID != 99 {
+		t.Fatalf("expected session runner to use current primary runner, got %+v", result.Session)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageMarksQueuedWhenPreviousSessionStillRunning(t *testing.T) {
+	now := time.Date(2026, 4, 9, 15, 50, 0, 0, time.UTC)
+	lastSessionID := int64(7)
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			51: {
+				ID:            51,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "cli_personal_bot",
+				ChatID:        "oc_chat",
+				RunnerID:      99,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-10 * time.Minute),
+				UpdatedAt:     now.Add(-5 * time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|cli_personal_bot|oc_chat": {
+				ID:            51,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "cli_personal_bot",
+				ChatID:        "oc_chat",
+				RunnerID:      99,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-10 * time.Minute),
+				UpdatedAt:     now.Add(-5 * time.Minute),
+			},
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			99: {ID: 99, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 99},
+		},
+	}
+	sessions := &fakeSessionRepo{
+		created: []model.AgentSession{
+			{
+				ID:             7,
+				UserID:         "2000000001",
+				ConversationID: 51,
+				RunnerID:       99,
+				Agent:          "codex",
+				Mode:           model.AgentSessionModeContinue,
+				Status:         model.AgentSessionStatusRunning,
+				CreatedAt:      now.Add(-2 * time.Minute),
+				UpdatedAt:      now.Add(-1 * time.Minute),
+			},
+		},
+		nextID: 7,
+	}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "好的。你是谁",
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if !result.Queued {
+		t.Fatalf("expected inbound result to be marked queued, got %+v", result)
 	}
 }
 

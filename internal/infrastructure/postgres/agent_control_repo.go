@@ -496,6 +496,27 @@ func (r *AgentControlRepo) UpdateConversationLastSession(ctx context.Context, id
 	return item, nil
 }
 
+func (r *AgentControlRepo) UpdateConversationRunner(ctx context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("agent control repo db is not configured")
+	}
+	row := r.db.QueryRowContext(ctx, `
+		UPDATE agent_conversations
+		SET runner_id = $2,
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING id, user_id, platform, bot_id, chat_id, runner_id, agent, status, last_session_id, created_at, updated_at
+	`, id, runnerID)
+	item, err := scanAgentConversation(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("update conversation runner: %w", err)
+	}
+	return item, nil
+}
+
 func (r *AgentControlRepo) ArchiveConversation(ctx context.Context, id int64) (*model.AgentConversation, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("agent control repo db is not configured")

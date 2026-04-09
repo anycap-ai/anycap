@@ -225,6 +225,20 @@ func (r *testConversationRepo) UpdateConversationLastSession(_ context.Context, 
 	return &copy, nil
 }
 
+func (r *testConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+	item, ok := r.itemsByID[id]
+	if !ok {
+		return nil, nil
+	}
+	item.RunnerID = runnerID
+	r.itemsByID[id] = item
+	if item.Status == model.AgentConversationStatusActive {
+		r.activeByChatKey[item.UserID+"|"+item.Platform+"|"+item.BotID+"|"+item.ChatID] = item
+	}
+	copy := item
+	return &copy, nil
+}
+
 func (r *testConversationRepo) ArchiveConversation(_ context.Context, id int64) (*model.AgentConversation, error) {
 	item, ok := r.itemsByID[id]
 	if !ok {
@@ -551,6 +565,57 @@ func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
 	}
 	if len(sessions.items) != 1 {
 		t.Fatalf("expected session to be created, got %d", len(sessions.items))
+	}
+}
+
+func TestRunnerRouteReturnsQueuedReplyWhenPreviousSessionStillRunning(t *testing.T) {
+	engine, rawKey, conversations, sessions, _ := newAgentControlTestEngine(t, true)
+	lastSessionID := int64(7)
+	conversations.itemsByID = map[int64]model.AgentConversation{
+		51: {
+			ID:            51,
+			UserID:        "2000000001",
+			Platform:      model.IMPlatformFeishu,
+			BotID:         "cli_personal_bot",
+			ChatID:        "oc_chat",
+			RunnerID:      21,
+			Agent:         "codex",
+			Status:        model.AgentConversationStatusActive,
+			LastSessionID: &lastSessionID,
+			CreatedAt:     time.Now().UTC().Add(-10 * time.Minute),
+			UpdatedAt:     time.Now().UTC().Add(-5 * time.Minute),
+		},
+	}
+	conversations.activeByChatKey = map[string]model.AgentConversation{
+		"2000000001|feishu|cli_personal_bot|oc_chat": conversations.itemsByID[51],
+	}
+	sessions.items = []model.AgentSession{
+		{
+			ID:             7,
+			UserID:         "2000000001",
+			ConversationID: 51,
+			RunnerID:       21,
+			Agent:          "codex",
+			Mode:           model.AgentSessionModeContinue,
+			Status:         model.AgentSessionStatusRunning,
+			CreatedAt:      time.Now().UTC().Add(-2 * time.Minute),
+			UpdatedAt:      time.Now().UTC().Add(-1 * time.Minute),
+		},
+	}
+
+	reqBody := `{"platform":"feishu","bot_id":"cli_personal_bot","chat_id":"oc_chat","sender_id":"ou_owner","message":"好的。你是谁"}`
+	req := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/im/inbound",
+		&ut.Body{Body: bytes.NewReader([]byte(reqBody)), Len: len(reqBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+	)
+	if req.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", req.Code, req.Body.String())
+	}
+	if !strings.Contains(req.Body.String(), `"reply_message":"上一条还在处理中，这条消息已排队"`) {
+		t.Fatalf("expected queued reply_message in response, got %s", req.Body.String())
 	}
 }
 

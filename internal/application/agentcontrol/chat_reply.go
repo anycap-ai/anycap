@@ -10,7 +10,12 @@ import (
 
 func BuildInboundChatReply(result InboundChatResult) string {
 	switch result.Chat.Action {
-	case model.AgentChatActionContinue, model.AgentChatActionNew, model.AgentChatActionReset:
+	case model.AgentChatActionContinue:
+		if result.Queued {
+			return "上一条还在处理中，这条消息已排队"
+		}
+		return "会话已接收，正在处理中"
+	case model.AgentChatActionNew, model.AgentChatActionReset:
 		return "会话已接收，正在处理中"
 	case model.AgentChatActionFork:
 		if result.Conversation == nil || result.Conversation.ID <= 0 || result.Session == nil || result.Session.ID <= 0 {
