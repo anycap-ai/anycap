@@ -15,19 +15,25 @@ describe("public route", () => {
 			}).bucket,
 		});
 
-		const response = await handlePublic(new Request("https://cdn.anycap.cloud/assets/logo.svg"), env);
+		const response = await handlePublic(new Request("https://cdn.anycap.ai/assets/logo.svg"), env);
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toContain("image/svg+xml");
 		expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
 	});
 
+	it("redirects the CDN root to the marketing site", async () => {
+		const response = await handlePublic(new Request("https://cdn.anycap.ai/"), createEnv());
+		expect(response.status).toBe(308);
+		expect(response.headers.get("location")).toBe("https://anycap.ai/");
+	});
+
 	it("rejects non-GET/HEAD methods", async () => {
-		const response = await handlePublic(new Request("https://cdn.anycap.cloud/assets/logo.svg", { method: "POST" }), createEnv());
+		const response = await handlePublic(new Request("https://cdn.anycap.ai/assets/logo.svg", { method: "POST" }), createEnv());
 		expect(response.status).toBe(405);
 	});
 
 	it("blocks path traversal", async () => {
-		const response = await handlePublic(new Request("https://cdn.anycap.cloud/../secrets.txt"), createEnv());
+		const response = await handlePublic(new Request("https://cdn.anycap.ai/../secrets.txt"), createEnv());
 		expect(response.status).toBe(404);
 	});
 });

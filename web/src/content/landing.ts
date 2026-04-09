@@ -17,6 +17,7 @@ AnyCap is designed for terminal-based agent workflows. The CLI returns structure
 - Product: AnyCap
 - Type: AI agent capability runtime
 - Primary interface: CLI + skill file
+- Machine install guide: https://anycap.ai/install.txt
 - Install: \`curl -fsSL https://anycap.ai/install.sh | sh\` or \`npm install -g @anycap/cli\`
 - Skill install: \`npx -y skills add anycap-ai/anycap -y\` or \`npx -y skills add anycap-ai/anycap -a <agent> -y\`
 - Pricing: $5 free credit on signup, then pay-as-you-go with no markup over official provider rates
@@ -143,6 +144,7 @@ AnyCap is built to work alongside coding agents such as Claude Code, Codex, Curs
 - [For Claude Code](https://anycap.ai/for/claude-code) — Agent-specific skill install guidance
 - [For Cursor](https://anycap.ai/for/cursor) — Agent-specific skill install guidance
 - [Skill File](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md) — Full capability documentation
+- [install.txt](https://anycap.ai/install.txt) — Machine-readable install instructions
 - [llms.txt](https://anycap.ai/llms.txt)
 - [GitHub](https://github.com/anycap-ai/anycap)
 - [GitHub Releases](https://github.com/anycap-ai/anycap/releases) — CLI binaries
@@ -151,7 +153,9 @@ AnyCap is built to work alongside coding agents such as Claude Code, Codex, Curs
 
 ---
 
-Human-readable version: https://anycap.ai/en
+Human-readable version: https://anycap.ai/
+
+Machine install guide: https://anycap.ai/install.txt
 
 LLM guidance: https://anycap.ai/llms.txt
 

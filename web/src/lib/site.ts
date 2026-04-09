@@ -96,6 +96,30 @@ export const publicRouteDefinitions = [
     priority: 0.82,
   },
   {
+    key: "learn-how-to-make-memes-online",
+    kind: "seo",
+    path: "/learn/how-to-make-memes-online",
+    priority: 0.76,
+  },
+  {
+    key: "learn-funny-meme-drawings",
+    kind: "seo",
+    path: "/learn/funny-meme-drawings",
+    priority: 0.74,
+  },
+  {
+    key: "learn-easy-memes-to-draw",
+    kind: "seo",
+    path: "/learn/easy-memes-to-draw",
+    priority: 0.72,
+  },
+  {
+    key: "learn-how-to-make-bad-drawing-memes",
+    kind: "seo",
+    path: "/learn/how-to-make-bad-drawing-memes",
+    priority: 0.7,
+  },
+  {
     key: "learn-what-is-the-most-advanced-ai",
     kind: "seo",
     path: "/learn/what-is-the-most-advanced-ai",
@@ -210,6 +234,18 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/compare/anycap-vs-openai-agent-builder",
     priority: 0.65,
+  },
+  {
+    key: "compare-anycap-vs-replicate",
+    kind: "seo",
+    path: "/compare/anycap-vs-replicate",
+    priority: 0.67,
+  },
+  {
+    key: "compare-anycap-vs-fal-ai",
+    kind: "seo",
+    path: "/compare/anycap-vs-fal-ai",
+    priority: 0.67,
   },
   {
     key: "compare-anycap-vs-openclaw-image-generation",

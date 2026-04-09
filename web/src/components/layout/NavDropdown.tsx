@@ -81,7 +81,7 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
     >
       {(close) =>
         hasRichItems ? (
-          <div className="w-[min(92vw,38rem)] p-3">
+          <div className="w-[min(94vw,46rem)] p-3">
             <div className="grid gap-3 md:grid-cols-2">
               {groupEntries.map(([section, sectionItems]) => (
                 <div

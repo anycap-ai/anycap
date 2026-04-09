@@ -1,18 +1,14 @@
-import { appendAgentNegotiationVary } from "@/lib/agent-request";
 import { landingMarkdown } from "@/lib/landing-content";
 
 export const runtime = "edge";
 
 function buildHeaders() {
-  const headers = new Headers({
-    "Content-Type": "text/markdown; charset=utf-8",
-    "Cache-Control": "private, no-store, max-age=0",
+  return new Headers({
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": "public, max-age=0, s-maxage=3600",
     "X-Content-Type-Options": "nosniff",
+    "X-Robots-Tag": "noindex, nofollow",
   });
-
-  appendAgentNegotiationVary(headers);
-
-  return headers;
 }
 
 export function GET() {

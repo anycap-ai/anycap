@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-03
+> Last updated: 2026-04-08
 
 ## 1. Capabilities (Cap)
 
@@ -201,6 +201,8 @@ Distributed via GitHub. Agents install with `anycap skill install`.
 
 Localized landing page with a separate `/for-human` variant. Supports i18n routing.
 
+Home and `/agent` keep HTML as the default human-facing response. Markdown negotiation for agent-readable content is still available through `/llms.txt`, explicit markdown `Accept` headers, or `view=agent`.
+
 ### SEO Content (32 pages)
 
 | Category | Pages |
@@ -209,7 +211,7 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 | For agents | Claude Code (+ image-generation, video-generation sub-pages), Cursor, Codex, Manus |
 | Guides | Install AnyCap, agent skills, context engineering, workspace context, agent harness, add tools to Claude Code |
 | Glossary | Agent capability runtime, agent harness, context engineering |
-| Compare | AnyCap vs Composio, AnyCap vs OpenAI Agent Builder |
+| Compare | AnyCap vs Composio, AnyCap vs OpenAI Agent Builder, AnyCap vs Replicate, AnyCap vs fal.ai |
 | Models | Overview, Seedream 5, Nano Banana Pro, Veo 3.1 |
 | Learn | What agents can't do |
 | Top-level | Start, CLI, Skills, About |

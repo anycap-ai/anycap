@@ -18,6 +18,17 @@ export const agents: Agent[] = [
   { name: "Other Agent", icon: null, slug: null },
 ];
 
-export function getInstallPrompt(_agent: Agent): string {
-  return "Follow the onboarding flow at https://anycap.ai to set up AnyCap. Hope you enjoy using it!";
+export function getInstallPrompt(agent: Agent): string {
+  const skillCommand = agent.slug
+    ? `npx -y skills add anycap-ai/anycap -a ${agent.slug} -y`
+    : "npx -y skills add anycap-ai/anycap -y";
+
+  return `Install AnyCap using the machine-readable install guide at https://anycap.ai/install.txt.
+Do not fetch the homepage for installation.
+Run:
+1. curl -fsSL https://anycap.ai/install.sh | sh
+2. ${skillCommand}
+3. anycap login
+4. anycap status
+Then continue with the task.`;
 }

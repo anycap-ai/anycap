@@ -121,13 +121,13 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
   compare: {
     key: "compare",
     path: "/compare",
-    title: "Compare — AnyCap vs other agent tooling approaches",
+    title: "Compare — AnyCap vs agent tooling and media API platforms",
     description:
-      "Compare AnyCap with adjacent agent tooling approaches and understand where a capability runtime fits best.",
+      "Compare AnyCap with adjacent agent tooling, model APIs, and media platforms so teams can choose the right layer of the stack.",
     eyebrow: "Compare",
-    heroLines: ["Compare AnyCap", "to adjacent tools."],
+    heroLines: ["Compare AnyCap", "to the right stack layer."],
     intro:
-      "These comparisons help teams decide when a capability runtime is a better fit than stitching together human-oriented tools.",
+      "These comparisons help teams decide when a capability runtime is a better fit than stitching together model APIs, hosted builders, or human-oriented tool surfaces.",
     items: [
       {
         title: "AnyCap vs Composio",
@@ -140,27 +140,27 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         description: "See where AnyCap fits alongside hosted agent-building workflows.",
       },
       {
-        title: "AnyCap vs OpenClaw Image Generation",
-        href: "/compare/anycap-vs-openclaw-image-generation",
-        description: "Compare one-key image access with a provider-key setup inside OpenClaw.",
+        title: "AnyCap vs Replicate",
+        href: "/compare/anycap-vs-replicate",
+        description: "Compare an agent capability runtime with a model-inference API and deployment platform.",
       },
       {
-        title: "AnyCap vs OpenClaw Video Generation",
-        href: "/compare/anycap-vs-openclaw-video-generation",
-        description: "Compare one-key video generation with a provider-key setup inside OpenClaw.",
+        title: "AnyCap vs fal.ai",
+        href: "/compare/anycap-vs-fal-ai",
+        description: "Compare cross-agent capability access with a queue-first generative media API stack.",
       },
     ],
   },
   learn: {
     key: "learn",
     path: "/learn",
-    title: "Learn — Buyer guides, assistant architecture, and workflow essays",
+    title: "Learn — Decision guides, assistant architecture, and real workflows",
     description:
-      "Read coding-agent buyer guides, SaaS assistant architecture explainers, and workflow essays about how capability runtimes improve practical work.",
+      "Browse coding-agent stack guides, AI product explainers, capability-gap primers, and real workflows that show where AnyCap fits.",
     eyebrow: "Learn",
-    heroLines: ["Buyer guides and explainers", "for modern assistants."],
+    heroLines: ["Decision guides and workflows", "for modern agent teams."],
     intro:
-      "This section collects buyer guides for agent stacks, SaaS assistant architecture explainers, foundational capability-gap pages, and workflow proofs that show where AnyCap fits.",
+      "This section groups coding-agent buyer guides, AI product architecture explainers, capability-gap pages, and concrete workflows so readers can start with the question they are actually asking.",
     items: [
       {
         title: "Best AI for Coding Agents",
@@ -201,6 +201,11 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         title: "SMART Goal Generator",
         href: "/learn/smart-goal-generator",
         description: "See how AnyCap turns Codex, Cursor, and Claude Code into a research-backed SMART goal writer.",
+      },
+      {
+        title: "How to Make Memes Online",
+        href: "/learn/how-to-make-memes-online",
+        description: "The anchor workflow for the creative meme cluster, focused on generating the base visual and keeping the caption exact.",
       },
     ],
   },

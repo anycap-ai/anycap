@@ -130,7 +130,11 @@ export function shouldServeAgentMarkdown({
     return true;
   }
 
-  return isProgrammaticClient(userAgent) && !acceptsHtml(normalizedAccept);
+  // Generic programmatic clients such as curl or request libraries should not be
+  // auto-rewritten to markdown unless they explicitly negotiate for markdown.
+  // This keeps homepage audits and generic crawlers on the human HTML version
+  // while preserving `/llms.txt`, `?view=agent`, and markdown Accept opt-ins.
+  return false;
 }
 
 export function appendAgentNegotiationVary(headers: Headers) {

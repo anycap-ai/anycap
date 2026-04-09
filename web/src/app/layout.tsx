@@ -65,9 +65,13 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${siteConfig.url}#organization`,
   name: "AnyCap",
   url: siteConfig.url,
-  logo: `${siteConfig.url}/anycap-mark.svg`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${siteConfig.url}/anycap-mark.svg`,
+  },
   sameAs: [
     "https://github.com/anycap-ai/anycap",
   ],
@@ -77,8 +81,12 @@ const organizationJsonLd = {
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${siteConfig.url}#website`,
   name: siteConfig.siteName,
   url: siteConfig.url,
+  publisher: {
+    "@id": `${siteConfig.url}#organization`,
+  },
 };
 
 const preHydrationCleanupScript = `
