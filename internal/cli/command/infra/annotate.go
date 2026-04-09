@@ -201,6 +201,22 @@ func runAnnotateNonBlocking(stdout io.Writer, stderr io.Writer, target, outputPa
 		fmt.Fprintln(stderr)
 	}
 
+	hint := "The browser opens automatically on desktop; in headless environments share the URL with the user. " +
+		"Tell the user to click Done when finished. " +
+		"Multiple users can open the same URL for real-time collaboration. " +
+		"Users can draw annotations and/or record screen with narration (Rec button). " +
+		"For URL targets, emphasize recording -- it is the primary feedback artifact (no annotated image due to cross-origin). " +
+		"After the user confirms they clicked Done, run poll_command to get the result, then stop_command to shut down. " +
+		"Use `anycap annotate list` to recover sessions after context loss."
+	if mediaType == "url" {
+		hint = "The browser opens automatically on desktop; in headless environments share the URL with the user. " +
+			"Tell the user to click Done when finished. " +
+			"URL mode is single-user -- do NOT share the URL with multiple people. " +
+			"Recording is the primary feedback artifact (no annotated image due to cross-origin). Emphasize the Rec button. " +
+			"After the user confirms they clicked Done, run poll_command to get the result, then stop_command to shut down. " +
+			"Use `anycap annotate list` to recover sessions after context loss."
+	}
+
 	result := map[string]any{
 		"status":  "started",
 		"session": session.SessionID,
@@ -209,15 +225,9 @@ func runAnnotateNonBlocking(stdout io.Writer, stderr io.Writer, target, outputPa
 			"anycap annotate poll --session %s", session.SessionID),
 		"stop_command": fmt.Sprintf(
 			"anycap annotate stop --session %s", session.SessionID),
-		"session_file": annotate.SessionFilePath(session.SessionID),
-		"expires_in":   annotate.SessionTimeoutSeconds(),
-		"next_action_hint": "The browser opens automatically on desktop; in headless environments share the URL with the user. " +
-			"Tell the user to click Done when finished. " +
-			"Multiple users can open the same URL for real-time collaboration. " +
-			"Users can draw annotations and/or record screen with narration (Rec button). " +
-			"For URL targets, emphasize recording -- it is the primary feedback artifact (no annotated image due to cross-origin). " +
-			"After the user confirms they clicked Done, run poll_command to get the result, then stop_command to shut down. " +
-			"Use `anycap annotate list` to recover sessions after context loss.",
+		"session_file":     annotate.SessionFilePath(session.SessionID),
+		"expires_in":       annotate.SessionTimeoutSeconds(),
+		"next_action_hint": hint,
 	}
 
 	data, _ := json.Marshal(result)

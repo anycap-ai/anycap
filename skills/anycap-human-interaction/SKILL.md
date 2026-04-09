@@ -61,6 +61,8 @@ anycap annotate list
 | `--port <port>` | Bind to a fixed port (default: random) |
 | `--bind <addr>` | Bind address (default: `127.0.0.1`) |
 
+**Tip:** Use `--port` with a consistent value (e.g., `--port 8888`) across sessions. The browser stores each user's display name in localStorage, which is scoped by origin (host + port). A fixed port means returning collaborators are recognized automatically without re-entering their name.
+
 ### Browser Auto-Open
 
 Both blocking and non-blocking modes automatically attempt to open the annotation URL in the default browser. In headless environments (SSH, container), the CLI prints the URL to stderr instead. No error is raised.
@@ -72,7 +74,7 @@ When presenting an annotation session to the human, adapt your message based on 
 - **Browser auto-open**: On desktop, the page opens automatically -- acknowledge this ("the review page should already be open"). In headless/SSH, share the URL and tell them how to access it.
 - **Always mention Done**: Tell the human to click **Done** when finished. This is how feedback gets saved.
 - **Recording for URL mode**: Emphasize recording (Rec button) because URL mode cannot export an annotated screenshot. The recording is the primary artifact.
-- **Multi-user**: If multiple reviewers will participate, mention real-time collaboration and that each person can save independently.
+- **Multi-user**: If multiple reviewers will participate, mention real-time collaboration and that each person can save independently. **Exception: URL/iframe mode is single-user** (recording is the primary feedback artifact, and multiple users' cursors would make it confusing).
 - **Headless access**: When using `--bind 0.0.0.0`, share the URL with the actual host IP. If behind SSH, suggest port forwarding.
 - **What to annotate**: Briefly describe what tools are available (Rect, Arrow, Point, Freehand) and that each annotation can have a text label.
 
@@ -146,10 +148,10 @@ sequenceDiagram
 
 The human clicks **Done** in the annotation toolbar to save their feedback. The behavior differs by mode:
 
-- **Blocking mode** (no `--no-wait`): Clicking Done ends the session for all collaborators. Other connected users see a "Feedback Submitted" overlay and cannot continue editing. The CLI command returns immediately with the result.
-- **Non-blocking mode** (`--no-wait`): Clicking Done **saves** the feedback without ending the session. Other collaborators see a toast notification ("Another collaborator has saved. You can continue editing or click Done to save.") and can keep annotating. Each subsequent Done click overwrites the saved result. The agent polls to retrieve the latest saved state.
+- **Blocking mode** (no `--no-wait`): Clicking Done ends the session. The CLI command returns immediately with the result. In collaborative modes (image, video, audio), other connected users see a "Feedback Submitted" overlay.
+- **Non-blocking mode** (`--no-wait`): Clicking Done **saves** the feedback without ending the session. In collaborative modes, other users see a toast notification and can keep annotating. Each subsequent Done click overwrites the saved result. The agent polls to retrieve the latest saved state.
 
-**For agents:** Always tell the human to click **Done** when they are finished. In non-blocking mode with multiple reviewers, each reviewer can save independently -- the poll result reflects the most recent save. Wait for the human to confirm they are done before polling.
+**For agents:** Always tell the human to click **Done** when they are finished. In non-blocking mode with multiple reviewers (image/video/audio only), each reviewer can save independently -- the poll result reflects the most recent save.
 
 ### Session Recovery
 
@@ -167,6 +169,8 @@ The `list` output includes `poll_command` and `stop_command` for each session, s
 ## Scenario 1: URL / Web Page Review
 
 Use when you built or modified a web page, UI, or any browser-accessible content and need the human to review it visually.
+
+> **URL mode is single-user.** Recording is the primary feedback artifact (cross-origin iframe prevents annotated screenshot export). Multiple users' cursors and annotations would make the recording confusing. The client name tag and peers indicator are hidden. Only one person should review a URL session at a time.
 
 **Why recording matters:** Unlike image mode, URL mode cannot export an annotated screenshot (cross-origin iframe restriction). The **screen recording with narration** is the primary feedback artifact. The human browses your page inside the annotation frame, draws annotations on top, and records a narrated walkthrough -- you get both the visual markups and a video of exactly what they saw and said.
 
@@ -256,6 +260,8 @@ anycap actions video-read --file <recording_path> \
 ## Scenario 2: Image Collaborative Review
 
 Use when you generated an image and need one or more humans to mark desired changes. This scenario shines with **real-time multi-user collaboration** -- multiple reviewers can open the same URL and annotate simultaneously, seeing each other's cursors and drawings in real-time.
+
+> **Note:** Multi-user collaboration is available for image, video, and audio modes. URL/iframe mode is single-user only.
 
 For the complete image-to-image refinement loop (generate -> annotate -> edit -> iterate), read the `anycap-media-production` skill.
 
@@ -394,8 +400,8 @@ Tips for iteration:
 
 | Situation | Scenario | Why |
 |-----------|----------|-----|
-| Built/modified a web page | URL Review | Recording captures browsing, scrolling, and narrated feedback |
-| Local dev server needs review | URL Review | Same as above -- use `http://localhost:PORT` |
+| Built/modified a web page | URL Review (single-user) | Recording captures browsing, scrolling, and narrated feedback |
+| Local dev server needs review | URL Review (single-user) | Same as above -- use `http://localhost:PORT` |
 | Generated image needs edits | Image Review | Annotated image feeds directly into image-to-image editing |
 | Team needs to review a design | Image Review (multi-user) | Everyone annotates together, all feedback in one place |
 | Design critique with stakeholders | Image Review (multi-user) | Real-time cursors and annotations keep everyone aligned |

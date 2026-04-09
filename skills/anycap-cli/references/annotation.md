@@ -15,6 +15,8 @@ Use annotation when you need structured visual feedback from a human -- pointing
 
 ## Multi-User Collaboration
 
+> **URL/iframe mode is single-user only.** The screen recording is the primary feedback artifact in URL mode, and multiple users' cursors and annotations would make the recording confusing. Collaboration features below apply to image, video, and audio modes.
+
 Multiple users can open the same annotation URL simultaneously. All annotation changes and cursor positions sync in real-time via WebSocket. Each client gets a random animal name (e.g., "Swift Fox") and color for identification. In non-blocking mode (`--no-wait`), when any participant clicks **Done**, others see a toast notification and can continue editing. In blocking mode (default), clicking Done ends the session for all collaborators.
 
 This is especially useful for team review sessions on shared servers:
@@ -57,10 +59,10 @@ If the browser cannot be opened (headless server, SSH, container), the CLI print
 
 The "Done" button in the annotation toolbar behaves differently depending on the mode:
 
-- **Blocking mode**: Clicking Done ends the session. Other connected collaborators see a full-screen "Feedback Submitted" overlay and cannot continue. The CLI command returns immediately with the result.
-- **Non-blocking mode**: Clicking Done **saves** the current annotations without ending the session. Other collaborators see a toast notification ("Another collaborator has saved. You can continue editing or click Done to save.") and can keep working. Each subsequent Done overwrites the saved result. The agent retrieves the latest save via `poll`.
+- **Blocking mode**: Clicking Done ends the session. The CLI command returns immediately with the result.
+- **Non-blocking mode**: Clicking Done **saves** the current annotations without ending the session. Each subsequent Done overwrites the saved result. The agent retrieves the latest save via `poll`.
 
-This means in non-blocking multi-user sessions, reviewers can save independently and iteratively without disrupting each other.
+In collaborative modes (image, video, audio), other connected users see a notification when someone clicks Done. In non-blocking multi-user sessions, reviewers can save independently without disrupting each other.
 
 ## Blocking Mode
 
@@ -114,11 +116,11 @@ Response:
   "stop_command": "anycap annotate stop --session ann_a1b2c3d4",
   "session_file": ".anycap/annotate/ann_a1b2c3d4.json",
   "expires_in": 600,
-  "next_action_hint": "Show the URL to the user. Multiple users can open the same URL to collaborate in real-time (shared annotations, live cursors). Users can draw annotations, record screen video with narration, or both. The recording captures the full browser tab as video -- use `anycap actions video-read` to analyze it for visual understanding. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command. Session state is persisted at session_file -- read it to recover session details if needed."
+  "next_action_hint": "Show the URL to the user. For non-URL targets, multiple users can open the same URL to collaborate in real-time. URL mode is single-user -- recording is the primary feedback artifact. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command. Session state is persisted at session_file -- read it to recover session details if needed."
 }
 ```
 
-Show the URL to the human. Multiple people can open the same URL to collaborate. Wait for the human to confirm they are done before polling.
+Show the URL to the human. For image/video/audio targets, multiple people can open the same URL to collaborate. For URL targets, only one user should use the session (recording is the primary artifact). Wait for the human to confirm they are done before polling.
 
 **Session recovery:** If you lose track of the session ID or commands, use `anycap annotate list` to see all sessions with their recovery commands. Alternatively, read the `session_file` (`.anycap/annotate/<session_id>.json` in the working directory) directly.
 
@@ -164,6 +166,8 @@ anycap annotate stop --session ann_a1b2c3d4
 | `--no-wait` | no | Start background server and return immediately |
 | `--bind` | no | Bind address (default: `127.0.0.1`; use `0.0.0.0` for LAN/remote/headless access) |
 | `--port` | no | Server port (default: random; agents should specify a fixed port) |
+
+**Port tip:** Use the same `--port` value across sessions (e.g., `--port 8888`). The browser stores each user's display name in localStorage, which is scoped by origin (host + port). A consistent port means returning collaborators keep their name without re-entering it.
 
 Note: `--json` and `--pretty` are global CLI flags (not annotate-specific) that control output format. Non-TTY environments default to JSON automatically.
 

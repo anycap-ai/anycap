@@ -1,7 +1,7 @@
 // WebSocket: real-time sync, remote cursors, peers indicator.
 
 import * as S from './state';
-import { sessionId, resolveWsUrl, autoClose } from './config';
+import { sessionId, resolveWsUrl, autoClose, mediaType } from './config';
 import { render } from './canvas';
 import { renderList, isEditingLabel, deferRenderList } from './sidebar';
 import { esc, showToast } from './ui';
@@ -10,9 +10,19 @@ let ws: WebSocket | null = null;
 let lastCursorBroadcast = 0;
 let wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
+// URL/iframe mode is single-user: the screen recording is the primary
+// feedback artifact, and multiple cursors/annotations from different
+// users would make the recording confusing. WebSocket stays connected
+// for submitted/reload notifications only.
+const collaborative = mediaType() !== 'url';
+
 // --- Client UI init ---
 
 export function initClientUI(): void {
+  const nameTag = document.querySelector('.client-name-tag') as HTMLElement | null;
+  if (!collaborative && nameTag) {
+    nameTag.style.display = 'none';
+  }
   const nameInput = document.getElementById('client-name') as HTMLInputElement | null;
   const dot = document.getElementById('client-dot') as HTMLElement | null;
   if (nameInput) {
@@ -48,6 +58,7 @@ export function initWebSocket(): void {
             location.reload();
             return;
           case 'sync':
+            if (!collaborative) break;
             if (msg.annotations) {
               S.setAnnotations(msg.annotations);
               S.setNextId(
@@ -68,10 +79,12 @@ export function initWebSocket(): void {
             }
             break;
           case 'cursor':
+            if (!collaborative) break;
             updateRemoteCursor(msg);
             break;
           case 'cursor_leave':
           case 'leave':
+            if (!collaborative) break;
             removeRemoteCursor(msg.clientId);
             break;
           case 'submitted':
@@ -105,6 +118,7 @@ function getContentEl(): HTMLElement {
 // --- Broadcast ---
 
 export function broadcastAnnotations(): void {
+  if (!collaborative) return;
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   try {
     ws.send(JSON.stringify({
@@ -124,6 +138,7 @@ export function broadcastAnnotations(): void {
 }
 
 export function broadcastCursor(e: MouseEvent): void {
+  if (!collaborative) return;
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   const now = Date.now();
   if (now - lastCursorBroadcast < 50) return;
@@ -140,12 +155,14 @@ export function broadcastCursor(e: MouseEvent): void {
 }
 
 export function broadcastLeave(): void {
+  if (!collaborative) return;
   if (ws && ws.readyState === WebSocket.OPEN) {
     try { ws.send(JSON.stringify({ type: 'leave', clientId: S.clientId })); } catch (_e) { /* ignore */ }
   }
 }
 
 export function broadcastCursorLeave(): void {
+  if (!collaborative) return;
   if (ws && ws.readyState === WebSocket.OPEN) {
     try { ws.send(JSON.stringify({ type: 'cursor_leave', clientId: S.clientId })); } catch (_e) { /* ignore */ }
   }

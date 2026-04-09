@@ -10,6 +10,8 @@ compatibility: Requires anycap CLI binary and internet access. Works with any ag
 
 # AnyCap CLI
 
+> **Read this entire file before starting.** It covers install, auth, capabilities, and output conventions. Load reference files from `references/` as needed for specific commands.
+
 One CLI. Any capability.
 
 AnyCap lets you create media humans can see and hear, understand media humans share with you, access the web for information, and deliver results through shareable links and hosted pages. One CLI, one auth, structured JSON I/O.
@@ -25,7 +27,7 @@ Use AnyCap when a task involves:
 
 If `anycap` is not installed (`command -v anycap` fails), install it before proceeding.
 
-Read the latest installation guide at https://anycap.ai/ to get the install command. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
+Read the machine-readable install guide at https://anycap.ai/install.txt for installation tasks. Do not fetch the homepage for install automation. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
 
 The CLI auto-updates on each run. To update manually: `anycap update`.
 
@@ -141,8 +143,8 @@ Music generation may return multiple clips -- use `.outputs[0].local_path` to ex
 
 If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
-**Annotate** -- interactive visual feedback with real-time collaboration.
-Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. Multiple users can collaborate on the same session in real-time with shared annotations and live cursors. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
+**Annotate** -- interactive visual feedback with real-time collaboration (image, video, audio) or single-user review (URL/iframe).
+Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. For image, video, and audio sessions, multiple users can collaborate in real-time with shared annotations and live cursors. URL mode is single-user because screen recording is the primary feedback artifact and multiple users' cursors would make it confusing. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
 
 ```bash
 # Blocking mode -- opens browser, waits for Done click
