@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -17,6 +19,7 @@ const bodyClass = "text-base leading-7 text-[#4d5145]";
 const listClass =
   "mt-4 list-disc space-y-3 pl-5 text-base leading-7 text-[#4d5145] marker:text-[#6b7d3a]";
 const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4";
+const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
 export const metadata: Metadata = {
   title: "AnyCap Terms of Service",
@@ -40,7 +43,7 @@ const termsPageJsonLd = {
   name: "AnyCap Terms of Service",
   description:
     "Terms of service for AnyCap, covering access, acceptable use, third-party providers, billing surfaces, and service changes.",
-  url: `${siteConfig.url}/terms`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/terms"),
   dateModified: "2026-04-09",
 };
 
@@ -163,7 +166,7 @@ function PageSection({
 export default function TermsPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Terms" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Terms", href: "/terms" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(termsPageJsonLd) }}
@@ -260,12 +263,9 @@ export default function TermsPage() {
               </p>
               <p className={bodyClass}>
                 If your team needs clarification before broader rollout, email{" "}
-                <a
-                  href="mailto:admin@anycap.ai?subject=AnyCap%20terms%20question"
-                  className={linkClass}
-                >
-                  admin@anycap.ai
-                </a>{" "}
+                <EmailActionButton subject="AnyCap terms question" className={buttonLinkClass}>
+                  <ProtectedEmailText />
+                </EmailActionButton>{" "}
                 or use the{" "}
                 <Link href="/contact" className={linkClass}>
                   contact page

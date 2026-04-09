@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
@@ -125,15 +126,12 @@ const cliSoftwareJsonLd = createSoftwareSourceCodeJsonLd({
   codeRepository: "https://github.com/anycap-ai/anycap",
 });
 
+const pageChrome = getSeoPageChrome("/cli");
+
 export default function CliPage() {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: "Home", href: "/" },
-          { name: "CLI" },
-        ]}
-      />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(cliSoftwareJsonLd) }}
@@ -143,7 +141,7 @@ export default function CliPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              CLI
+              {pageChrome?.eyebrow ?? "CLI"}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

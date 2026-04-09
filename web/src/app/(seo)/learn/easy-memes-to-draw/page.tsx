@@ -5,6 +5,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { CommandCodeCard } from "@/components/ui/CommandCodeCard";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -80,6 +81,8 @@ const faqItems = [
 ];
 
 const faqJsonLd = createFaqPageJsonLd(faqItems);
+
+const pageChrome = getSeoPageChrome("/learn/easy-memes-to-draw");
 
 const quickTakeaways = [
   "The best easy memes to draw are usually not iconic templates. They are simple expression-driven doodles with one small absurd situation.",
@@ -237,13 +240,7 @@ function BulletList({ items }: { items: readonly string[] }) {
 export default function EasyMemesToDrawPage() {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: "Home", href: "/" },
-          { name: "Learn", href: "/learn", unlinkable: true },
-          { name: "Easy memes to draw" },
-        ]}
-      />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -257,7 +254,7 @@ export default function EasyMemesToDrawPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Learn
+              {pageChrome?.eyebrow ?? "Learn"}
             </p>
             <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
               Last updated {lastUpdatedLabel}

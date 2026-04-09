@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
+import { contactEmail } from "@/lib/contact";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const lastUpdatedLabel = "April 9, 2026";
-const contactEmail = "admin@anycap.ai";
-const contactHref = `mailto:${contactEmail}`;
 const sectionTitleClass =
   "text-[22px] leading-8 tracking-[-0.01em] text-[#1c1f17] md:text-[26px]";
 const subTitleClass =
@@ -19,6 +20,7 @@ const bodyClass = "text-base leading-7 text-[#4d5145]";
 const listClass =
   "mt-5 list-disc space-y-3 pl-5 text-base leading-7 text-[#4d5145] marker:text-[#6b7d3a]";
 const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4";
+const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
 export const metadata: Metadata = {
   title: "Contact AnyCap - Support, pricing, and issue reporting",
@@ -42,7 +44,7 @@ const contactPageJsonLd = {
   name: "Contact AnyCap",
   description:
     "Contact AnyCap for support, pricing, product questions, security reporting, and privacy requests.",
-  url: `${siteConfig.url}/contact`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
   mainEntity: {
     "@type": "Organization",
     name: siteConfig.siteName,
@@ -53,18 +55,35 @@ const contactPageJsonLd = {
         "@type": "ContactPoint",
         contactType: "customer support",
         email: contactEmail,
-        url: `${siteConfig.url}/contact`,
+        url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
       },
     ],
   },
 };
 
-const contactRoutes = [
+type ContactRoute =
+  | {
+      title: string;
+      detail: string;
+      ctaLabel: string;
+      ctaKind: "link";
+      ctaHref: string;
+    }
+  | {
+      title: string;
+      detail: string;
+      ctaLabel: string;
+      ctaKind: "email";
+      ctaSubject?: string;
+    };
+
+const contactRoutes: readonly ContactRoute[] = [
   {
     title: "Product support and install help",
     detail:
       "If you are trying to get your first workflow running, start with the install guide and include the agent, capability, and exact step that failed.",
     ctaLabel: "Open install guide",
+    ctaKind: "link",
     ctaHref: "/guides/install-anycap",
   },
   {
@@ -72,6 +91,7 @@ const contactRoutes = [
     detail:
       "For reproducible bugs, GitHub issues are the best path because they keep stack traces, environment details, and screenshots in one public thread.",
     ctaLabel: "Open GitHub issues",
+    ctaKind: "link",
     ctaHref: "https://github.com/anycap-ai/anycap/issues",
   },
   {
@@ -79,7 +99,8 @@ const contactRoutes = [
     detail:
       "If you need larger credit volume, invoiced billing, or product fit clarification, contact the team directly by email.",
     ctaLabel: `Email ${contactEmail}`,
-    ctaHref: contactHref,
+    ctaKind: "email",
+    ctaSubject: "AnyCap Enterprise pricing",
   },
 ] as const;
 
@@ -98,7 +119,7 @@ function ContactLink({
   href: string;
   children: React.ReactNode;
 }) {
-  if (href.startsWith("http") || href.startsWith("mailto:")) {
+  if (href.startsWith("http")) {
     return (
       <a
         href={href}
@@ -136,7 +157,7 @@ function PageSection({
 export default function ContactPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Contact" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Contact", href: "/contact" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
@@ -175,7 +196,18 @@ export default function ContactPage() {
                     <h3 className={subTitleClass}>{route.title}</h3>
                     <p className={`${bodyClass} mt-2`}>
                       {route.detail}{" "}
-                      <ContactLink href={route.ctaHref}>{route.ctaLabel}</ContactLink>.
+                      {route.ctaKind === "email" ? (
+                        <EmailActionButton
+                          subject={route.ctaSubject}
+                          className={buttonLinkClass}
+                          aria-label={`Email ${contactEmail}`}
+                        >
+                          {route.ctaLabel}
+                        </EmailActionButton>
+                      ) : (
+                        <ContactLink href={route.ctaHref}>{route.ctaLabel}</ContactLink>
+                      )}
+                      .
                     </p>
                   </div>
                 ))}
@@ -197,7 +229,13 @@ export default function ContactPage() {
             <PageSection title="Direct contact">
               <p className={bodyClass}>
                 Email{" "}
-                <ContactLink href={contactHref}>{contactEmail}</ContactLink> for pricing
+                <EmailActionButton
+                  className={buttonLinkClass}
+                  aria-label={`Email ${contactEmail}`}
+                >
+                  <ProtectedEmailText />
+                </EmailActionButton>{" "}
+                for pricing
                 conversations, privacy requests, or any issue that should not live in a public
                 GitHub thread.
               </p>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { getSeoPageChrome } from "@/lib/seo-ia";
 
 export const runtime = "edge";
 
@@ -98,19 +99,33 @@ const skillsHubJsonLd = {
   name: "AnyCap Skills",
   description:
     "Hub page for installable AnyCap skills that teach AI agents how to discover and use capabilities through one runtime.",
-  url: `${siteConfig.url}/skills`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/skills"),
   hasPart: [
-    { "@type": "WebPage", name: "AnyCap for Claude Code", url: `${siteConfig.url}/for/claude-code` },
-    { "@type": "WebPage", name: "AnyCap for Cursor", url: `${siteConfig.url}/for/cursor` },
-    { "@type": "WebPage", name: "AnyCap CLI", url: `${siteConfig.url}/cli` },
-    { "@type": "WebPage", name: "Install AnyCap", url: `${siteConfig.url}/guides/install-anycap` },
+    {
+      "@type": "WebPage",
+      name: "AnyCap for Claude Code",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/for/claude-code"),
+    },
+    {
+      "@type": "WebPage",
+      name: "AnyCap for Cursor",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/for/cursor"),
+    },
+    { "@type": "WebPage", name: "AnyCap CLI", url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/cli") },
+    {
+      "@type": "WebPage",
+      name: "Install AnyCap",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/guides/install-anycap"),
+    },
   ],
 };
+
+const pageChrome = getSeoPageChrome("/skills");
 
 export default function SkillsPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Skills" }]} />
+      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(skillsHubJsonLd) }}
@@ -119,7 +134,7 @@ export default function SkillsPage() {
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Learn
+              {pageChrome?.eyebrow ?? "Learn"}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

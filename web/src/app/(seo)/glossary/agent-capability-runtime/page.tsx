@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
+import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -32,7 +32,7 @@ const definitionJsonLd = {
   name: "Agent Capability Runtime",
   description:
     "A software layer that gives AI agents installable capabilities such as image generation, video generation, image understanding, and video analysis through a single interface, rather than requiring separate integrations for each capability.",
-  url: `${siteConfig.url}/glossary/agent-capability-runtime`,
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-capability-runtime"),
 };
 
 export default function AgentCapabilityRuntimePage() {
@@ -41,7 +41,7 @@ export default function AgentCapabilityRuntimePage() {
       <BreadcrumbJsonLd items={[
         { name: "Home", href: "/" },
         { name: "Glossary", href: "/glossary", unlinkable: true },
-        { name: "Agent Capability Runtime" },
+        { name: "Agent Capability Runtime", href: "/glossary/agent-capability-runtime" },
       ]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
 

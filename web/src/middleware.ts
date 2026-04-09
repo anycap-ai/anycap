@@ -6,6 +6,7 @@ import {
   getPublicRouteByPath,
   localeHeaderName,
   normalizePublicPath,
+  requestPathnameHeaderName,
   stripLocalePrefix,
 } from "@/lib/site";
 
@@ -88,6 +89,7 @@ export async function middleware(req: NextRequest) {
     if (metadataRoutePaths.has(normalizedPath)) {
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set(localeHeaderName, defaultLocale);
+      requestHeaders.set(requestPathnameHeaderName, normalizedPath);
       requestHeaders.set("x-anycap-global-ui", "0");
 
       return applyAuthResponse(
@@ -126,6 +128,7 @@ export async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set(localeHeaderName, locale ?? defaultLocale);
+  requestHeaders.set(requestPathnameHeaderName, normalizedPath);
   requestHeaders.set(
     "x-anycap-global-ui",
     globalUiPaths.has(pathname) ||

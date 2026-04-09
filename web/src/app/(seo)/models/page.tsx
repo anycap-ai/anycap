@@ -162,7 +162,7 @@ export const metadata: Metadata = {
 export default function ModelsPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Models" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Models", href: "/models" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(modelHubJsonLd) }}

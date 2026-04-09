@@ -108,7 +108,7 @@ const gapEntrances = [
 export default function StartPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Get Started" }]} />
+      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Get Started", href: "/start" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(getStartedJsonLd) }}

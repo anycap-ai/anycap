@@ -51,6 +51,27 @@ const models = [
   },
 ] as const;
 
+const decisionCards = [
+  {
+    eyebrow: "First-pass quality",
+    title: "Seedream 5",
+    href: "/models/seedream-5",
+    body: "Best when the workflow starts from a prompt and the first image needs to look closer to final.",
+  },
+  {
+    eyebrow: "Revision loops",
+    title: "Nano Banana Pro",
+    href: "/models/nano-banana-pro",
+    body: "Best when the agent already has an image and needs prompt-based edits or more controlled visual revisions.",
+  },
+  {
+    eyebrow: "Speed and scale",
+    title: "Nano Banana 2",
+    href: "/models/nano-banana-2",
+    body: "Best when the agent needs many variants, quicker drafts, or a more scalable generation loop.",
+  },
+] as const;
+
 const usageExamples = [
   {
     title: "Text-to-image",
@@ -179,42 +200,31 @@ export default function ImageGenerationPage() {
                 How to choose among image models
               </h2>
               <div className="grid max-w-[1040px] gap-4 sm:grid-cols-3">
-                <div className="rounded-xl border border-[#d4dbb8] p-5">
-                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                    First-pass quality
-                  </p>
-                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                    Seedream 5
-                  </h3>
-                  <p className="text-sm leading-6 text-[#4d5145]">
-                    Best when the workflow starts from a prompt and the first image needs to look
-                    closer to final.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#d4dbb8] p-5">
-                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                    Revision loops
-                  </p>
-                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                    Nano Banana Pro
-                  </h3>
-                  <p className="text-sm leading-6 text-[#4d5145]">
-                    Best when the agent already has an image and needs prompt-based edits or more
-                    controlled visual revisions.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#d4dbb8] p-5">
-                  <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                    Speed and scale
-                  </p>
-                  <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                    Nano Banana 2
-                  </h3>
-                  <p className="text-sm leading-6 text-[#4d5145]">
-                    Best when the agent needs many variants, quicker drafts, or a more scalable
-                    generation loop.
-                  </p>
-                </div>
+                {decisionCards.map((card) => (
+                  <Link
+                    key={card.title}
+                    href={card.href}
+                    aria-label={`Read the ${card.title} model guide`}
+                    className="group flex h-full flex-col rounded-xl border border-[#d4dbb8] p-5 transition-all hover:-translate-y-0.5 hover:border-[#6b7d3a] hover:shadow-[0_10px_24px_rgba(28,31,23,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6b7d3a] focus-visible:ring-offset-2"
+                  >
+                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                      {card.eyebrow}
+                    </p>
+                    <h3
+                      className="mb-2 text-[15px] font-bold text-[#1c1f17] transition-colors group-hover:text-[#6b7d3a]"
+                      style={mono}
+                    >
+                      {card.title}
+                    </h3>
+                    <p className="text-sm leading-6 text-[#4d5145]">{card.body}</p>
+                    <span
+                      className="mt-4 text-[11px] tracking-[0.5px] text-[#5a5e52] transition-colors group-hover:text-[#6b7d3a]"
+                      style={mono}
+                    >
+                      Open model guide &rarr;
+                    </span>
+                  </Link>
+                ))}
               </div>
             </section>
           </FadeIn>

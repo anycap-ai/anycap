@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "check:edge-runtime": "node ./scripts/ensure-edge-runtime.mjs",
+    "check:seo-breadcrumbs": "node ./scripts/check-seo-breadcrumbs.mjs",
+    "check:seo-ia": "node ./scripts/check-seo-information-architecture.mjs",
     "generate:sitemap-lastmod": "node ./scripts/generate-sitemap-lastmod.mjs",
-    "build": "pnpm run check:edge-runtime && pnpm run generate:sitemap-lastmod && next build",
-    "build:cf": "pnpm run generate:sitemap-lastmod && node ./scripts/pages-build.mjs",
+    "build": "pnpm run check:edge-runtime && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run generate:sitemap-lastmod && next build",
+    "build:cf": "pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run generate:sitemap-lastmod && node ./scripts/pages-build.mjs",
     "start": "next start",
     "lint": "next lint"
   },
