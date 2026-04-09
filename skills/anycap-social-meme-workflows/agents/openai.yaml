@@ -1,0 +1,4 @@
+interface:
+  display_name: "Social Meme Workflows"
+  short_description: "Create funny meme drawings, meme-style images, and captioned social visuals with AnyCap"
+  default_prompt: "Use AnyCap to turn this idea into a funny meme drawing, meme-style image, or captioned social visual"

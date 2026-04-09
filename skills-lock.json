@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "anycap-ai-tool-seo": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "23cc914ab0ff2f040b95b877b4c19925e0485d40311e6b90ed7684a93d99a1fc"
+    },
+    "anycap-cli": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "e4b7758db7f8901ccf24648d46be06bcc28909acbffa224fa9329f75bc5e797e"
+    },
+    "anycap-deepresearch": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "256be3e9780541a424ff7b7c11849bbee5a7ae561bbf4c16776b13e5b15d0082"
+    }
+  }
+}

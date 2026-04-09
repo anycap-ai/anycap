@@ -59,7 +59,7 @@ export async function GitHubStarButton() {
       href={REPO_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-[15px] tracking-[0.3px] rounded-lg border border-[#ccd1c3] bg-[#fafbf8] text-[#3a3e32] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17] active:scale-[0.97]"
+      className="hidden xl:inline-flex items-center gap-1.5 px-4 py-2 text-[15px] tracking-[0.3px] rounded-lg border border-[#ccd1c3] bg-[#fafbf8] text-[#3a3e32] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17] active:scale-[0.97]"
       style={{ fontFamily: "var(--font-mono), monospace", fontWeight: 500 }}
     >
       <GitHubMark size={16} />

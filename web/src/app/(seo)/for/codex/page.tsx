@@ -289,7 +289,7 @@ export default function ForCodexPage() {
 
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
               <a
-                href="https://openai.com/index/codex/"
+                href="https://developers.openai.com/codex/use-cases"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"

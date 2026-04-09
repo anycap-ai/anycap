@@ -11,7 +11,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AnyCap skills — Teach your agent how to use the capabilities it doesn't ship with",
+  title: "AnyCap Skills | Add Capabilities to AI Agents",
   description:
     "A skill teaches Claude Code, Cursor, or Codex how to discover, install, authenticate, and invoke AnyCap. It is the instruction layer that turns a capable coding agent into a capable multimodal agent.",
   alternates: { canonical: "/skills" },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/skills",
     siteName: siteConfig.siteName,
-    title: "AnyCap skills — Teach your agent how to use the capabilities it doesn't ship with",
+    title: "AnyCap Skills | Add Capabilities to AI Agents",
     description:
       "Learn how AnyCap skills connect the agent to the CLI, runtime, and capability stack.",
   },

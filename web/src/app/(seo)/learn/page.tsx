@@ -11,7 +11,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "Learn - choose the right decision guide, architecture explainer, or workflow",
+  title: "Learn | AI Agent Guides, Workflows, and Explainers",
   description:
     "Start with coding-agent stack guides, AI product explainers, capability-gap primers, and real workflows that lead into AnyCap capabilities.",
   alternates: { canonical: "/learn" },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/learn",
     siteName: siteConfig.siteName,
-    title: "Learn - choose the right decision guide, architecture explainer, or workflow",
+    title: "Learn | AI Agent Guides, Workflows, and Explainers",
     description:
       "Use Learn when you are choosing a coding-agent stack, extending an AI product, mapping capability gaps, or browsing a real workflow example.",
   },

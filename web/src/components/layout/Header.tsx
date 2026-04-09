@@ -17,6 +17,7 @@ const hideBelowInlineClass: Record<string, string> = {
   sm: "hidden sm:inline-block",
   md: "hidden md:inline-block",
   lg: "hidden lg:inline-block",
+  xl: "hidden xl:inline-block",
 };
 const primaryLinkClass =
   `${baseLinkClass} px-5 text-[#f4f5f0] bg-[#6b7d3a] border border-[#6b7d3a] hover:bg-[#1c1f17] hover:border-[#1c1f17] active:scale-[0.97]`;
@@ -24,7 +25,7 @@ const primaryLinkClass =
 export type NavItem = {
   href: string;
   label: string;
-  hideBelow?: "sm" | "md" | "lg";
+  hideBelow?: "sm" | "md" | "lg" | "xl";
   variant?: "default" | "primary";
   external?: boolean;
 };
@@ -34,7 +35,8 @@ export type NavDropdownDef = {
   label: string;
   href?: string;
   items: DropdownItem[];
-  hideBelow?: "sm" | "md" | "lg";
+  hideBelow?: "sm" | "md" | "lg" | "xl";
+  align?: "left" | "right";
 };
 
 export type NavEntry = NavItem | NavDropdownDef;
@@ -98,6 +100,7 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
           href={entry.href ? localize(entry.href) : undefined}
           items={localizedItems}
           hideBelow={entry.hideBelow}
+          align={entry.align}
         />
       );
     }
@@ -137,19 +140,19 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
 
   return (
     <header
-      className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-5 py-4 backdrop-blur-sm md:px-16 md:py-6 lg:px-24"
+      className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-4 py-3 backdrop-blur-sm sm:px-5 sm:py-4 md:px-16 md:py-6 lg:px-24"
       style={{ top: topOffset }}
     >
-      <div className="relative flex items-center gap-3">
+      <div className="relative flex items-center gap-2 sm:gap-3">
         <Link href={localizedLogoHref} className="shrink-0">
-          <span className="block md:hidden"><AnycapLogo size={32} /></span>
+          <span className="block md:hidden"><AnycapLogo size={30} /></span>
           <span className="hidden md:block"><AnycapLogo size={42} /></span>
         </Link>
         <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
-          <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
+          <nav className="flex min-w-0 items-center gap-0.5 sm:gap-2">
             {links.map(renderEntry)}
           </nav>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <GitHubStarButton />
             {authSlot}
             <MobileNavMenu entries={mobileEntries} />
@@ -167,6 +170,7 @@ const capabilitiesDropdown: NavDropdownDef = {
   label: "Capabilities",
   href: "/capabilities",
   hideBelow: "sm",
+  align: "left",
   items: [
     {
       href: "/capabilities/image-generation",
@@ -286,18 +290,6 @@ const learnDropdown: NavDropdownDef = {
       description: "Browse comparison pages for adjacent agent tooling, media APIs, and tradeoffs.",
     },
     {
-      href: "/compare/anycap-vs-replicate",
-      label: "AnyCap vs Replicate",
-      section: "Evaluate",
-      description: "Compare an agent capability runtime with a model-inference API and deployment platform.",
-    },
-    {
-      href: "/compare/anycap-vs-fal-ai",
-      label: "AnyCap vs fal.ai",
-      section: "Evaluate",
-      description: "Compare cross-agent capability access with a queue-first generative media API stack.",
-    },
-    {
       href: "/learn/what-agents-cant-do",
       label: "What Agents Can't Do",
       section: "Evaluate",
@@ -325,14 +317,14 @@ export const seoNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   equipAgentsDropdown,
   learnDropdown,
-  { href: "/pricing", label: "Pricing", hideBelow: "lg" },
-  { href: "/about", label: "About", hideBelow: "lg" },
+  { href: "/pricing", label: "Pricing", hideBelow: "xl" },
+  { href: "/about", label: "About", hideBelow: "xl" },
 ];
 
 export const humanNavLinks: NavEntry[] = [
   capabilitiesDropdown,
   equipAgentsDropdown,
   learnDropdown,
-  { href: "/pricing", label: "Pricing", hideBelow: "lg" },
-  { href: "/about", label: "About", hideBelow: "lg" },
+  { href: "/pricing", label: "Pricing", hideBelow: "xl" },
+  { href: "/about", label: "About", hideBelow: "xl" },
 ];

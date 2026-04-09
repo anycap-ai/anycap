@@ -9,6 +9,11 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const lastUpdatedLabel = "April 8, 2026";
+const organizationSameAs = [
+  "https://github.com/anycap-ai/anycap",
+  "https://github.com/anycap-ai/anycap/releases",
+  "https://skills.sh/anycap-ai/anycap",
+] as const;
 
 export const metadata: Metadata = {
   title: "About AnyCap — AI agent capability infrastructure",
@@ -37,10 +42,15 @@ const aboutPageJsonLd = {
     "@type": "Organization",
     name: siteConfig.siteName,
     url: siteConfig.url,
-    sameAs: [
-      "https://github.com/anycap-ai/anycap",
-      "https://github.com/anycap-ai/anycap/releases",
-      "https://skills.sh/anycap-ai/anycap",
+    sameAs: organizationSameAs,
+    email: "admin@anycap.ai",
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "admin@anycap.ai",
+        url: `${siteConfig.url}/contact`,
+      },
     ],
   },
 };
@@ -50,13 +60,18 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: siteConfig.siteName,
   url: siteConfig.url,
-  sameAs: [
-    "https://github.com/anycap-ai/anycap",
-    "https://github.com/anycap-ai/anycap/releases",
-    "https://skills.sh/anycap-ai/anycap",
-  ],
+  sameAs: organizationSameAs,
+  email: "admin@anycap.ai",
   description:
     `AnyCap builds agent-native capability infrastructure that lets AI agents use ${capabilitySummary} through one runtime.`,
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "admin@anycap.ai",
+      url: `${siteConfig.url}/contact`,
+    },
+  ],
 };
 
 const whyCards = [

@@ -12,7 +12,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "AnyCap CLI — One command surface for the capabilities your agent still needs",
+  title: "AnyCap CLI | AI Agent Capability Runtime",
   description:
     "Your agent can plan the work, but it still needs a command surface for image generation, video generation, image understanding, and video analysis. AnyCap CLI gives that capability layer one install path, one auth flow, and one interface.",
   alternates: { canonical: "/cli" },
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/cli",
     siteName: siteConfig.siteName,
-    title: "AnyCap CLI — One command surface for the capabilities your agent still needs",
+    title: "AnyCap CLI | AI Agent Capability Runtime",
     description:
       "One CLI for image, video, and vision workflows across Claude Code, Cursor, Codex, and similar agent environments.",
   },

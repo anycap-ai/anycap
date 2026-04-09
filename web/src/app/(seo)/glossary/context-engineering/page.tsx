@@ -11,7 +11,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "What is context engineering?",
+  title: "What is context engineering? How AI agents use context",
   description:
     "Context engineering is the practice of shaping what an AI agent sees, remembers, and can do during execution. Learn how it affects capability calls, workspace behavior, and multimodal workflows.",
   alternates: { canonical: "/glossary/context-engineering" },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/glossary/context-engineering",
     siteName: siteConfig.siteName,
-    title: "What is context engineering?",
+    title: "What is context engineering? How AI agents use context",
     description:
       "Learn what context engineering means for AI agents and how it affects capability calls, workspace behavior, and multimodal workflows.",
   },

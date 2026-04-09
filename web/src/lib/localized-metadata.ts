@@ -30,6 +30,14 @@ function cloneTwitterCard(twitter: Metadata["twitter"]): Metadata["twitter"] {
   };
 }
 
+function hasValues<T>(value: T | T[] | null | undefined): value is T | T[] {
+  return Array.isArray(value) ? value.length > 0 : Boolean(value);
+}
+
+function resolveStringTitle(title: Metadata["title"]): string | undefined {
+  return typeof title === "string" ? title : undefined;
+}
+
 export function createLocalizedMetadata(
   locale: SiteLocale,
   routeKey: PublicRouteKey,
@@ -39,6 +47,23 @@ export function createLocalizedMetadata(
   const localizedPath = buildLocalizedPath(locale, route.path);
   const localeDetails = getLocaleConfig(locale);
   const openGraph = cloneOpenGraph(baseMetadata.openGraph);
+  const twitter = cloneTwitterCard(baseMetadata.twitter);
+  const twitterTitle =
+    twitter && typeof twitter === "object" && "title" in twitter ? twitter.title ?? undefined : undefined;
+  const twitterDescription =
+    twitter && typeof twitter === "object" && "description" in twitter
+      ? twitter.description ?? undefined
+      : undefined;
+  const twitterImages =
+    twitter && typeof twitter === "object" && "images" in twitter ? twitter.images : undefined;
+  const twitterCard =
+    twitter && typeof twitter === "object" && "card" in twitter ? twitter.card ?? undefined : undefined;
+  const socialTitle = openGraph?.title ?? twitterTitle ?? resolveStringTitle(baseMetadata.title);
+  const socialDescription =
+    openGraph?.description ??
+    twitterDescription ??
+    baseMetadata.description ??
+    siteConfig.defaultDescription;
   const languageAlternates = {
     ...(baseMetadata.alternates?.languages ?? {}),
     ...getLocalizedAlternates(route.path),
@@ -58,9 +83,18 @@ export function createLocalizedMetadata(
           locale: localeDetails.ogLocale,
           url: localizedPath,
           siteName: openGraph.siteName ?? siteConfig.siteName,
+          title: openGraph.title ?? socialTitle,
+          description: openGraph.description ?? socialDescription,
+          images: hasValues(openGraph.images) ? openGraph.images : [defaultSocialImage],
         }
       : undefined,
-    twitter: cloneTwitterCard(baseMetadata.twitter),
+    twitter: {
+      ...twitter,
+      card: twitterCard ?? "summary_large_image",
+      title: twitterTitle ?? socialTitle,
+      description: twitterDescription ?? socialDescription,
+      images: hasValues(twitterImages) ? twitterImages : [defaultSocialImage.url],
+    } as Metadata["twitter"],
     robots: baseMetadata.robots ?? createRobotsMetadata(),
   };
 }

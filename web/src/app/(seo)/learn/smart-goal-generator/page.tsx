@@ -159,8 +159,8 @@ const sourceLinks = [
     href: "https://www.asana.com/resources/smart-goals",
   },
   {
-    label: "Atlassian guide to quarterly planning",
-    href: "https://www.atlassian.com/work-management/strategic-planning/quarterly-planning",
+    label: "Atlassian quarterly planning playbook",
+    href: "https://www.atlassian.com/team-playbook/plays/rolling-4-quarterly-planning",
   },
 ] as const;
 

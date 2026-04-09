@@ -19,16 +19,18 @@ type NavDropdownProps = {
   label: string;
   href?: string;
   items: DropdownItem[];
-  hideBelow?: "sm" | "md" | "lg";
+  hideBelow?: "sm" | "md" | "lg" | "xl";
+  align?: "left" | "right";
 };
 
 const hideBelowBlockClass: Record<string, string> = {
   sm: "hidden sm:block",
   md: "hidden md:block",
   lg: "hidden lg:block",
+  xl: "hidden xl:block",
 };
 
-export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps) {
+export function NavDropdown({ label, href, items, hideBelow, align = "right" }: NavDropdownProps) {
   const outerClass = hideBelow ? hideBelowBlockClass[hideBelow] ?? "" : "";
   const hasRichItems = items.some((item) => item.description || item.section);
   const groupedItems = items.reduce<Record<string, DropdownItem[]>>((acc, item) => {
@@ -41,6 +43,7 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
 
   return (
     <HoverDropdown
+      align={align}
       className={outerClass}
       trigger={(open, close, toggle) =>
         href ? (
@@ -81,41 +84,43 @@ export function NavDropdown({ label, href, items, hideBelow }: NavDropdownProps)
     >
       {(close) =>
         hasRichItems ? (
-          <div className="w-[min(94vw,46rem)] p-3">
-            <div className="grid gap-3 md:grid-cols-2">
-              {groupEntries.map(([section, sectionItems]) => (
-                <div
-                  key={section}
-                  className="rounded-xl border border-[#e7eadf] bg-[#fbfcf8]/90 p-2.5"
-                >
-                  <p
-                    className="px-2 py-1 text-[10px] uppercase tracking-[0.9px] text-[#7d846f]"
-                    style={mono}
+          <div className="w-[min(92vw,40rem)] p-3 lg:w-[min(94vw,46rem)]">
+            <div className="max-h-[min(70dvh,40rem)] overflow-y-auto pr-1">
+              <div className="grid gap-3 lg:grid-cols-2">
+                {groupEntries.map(([section, sectionItems]) => (
+                  <div
+                    key={section}
+                    className="rounded-xl border border-[#e7eadf] bg-[#fbfcf8]/90 p-2.5"
                   >
-                    {section}
-                  </p>
-                  <div className="mt-1 space-y-1">
-                    {sectionItems.map(({ href: itemHref, label: itemLabel, description }) => (
-                      <Link
-                        key={itemHref}
-                        href={itemHref}
-                        prefetch={false}
-                        className="block rounded-lg px-3 py-3 transition-colors duration-150 hover:bg-[#eef2e5]"
-                        onClick={close}
-                      >
-                        <span className="block text-[14px] text-[#28301f]" style={mono}>
-                          {itemLabel}
-                        </span>
-                        {description ? (
-                          <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">
-                            {description}
+                    <p
+                      className="px-2 py-1 text-[10px] uppercase tracking-[0.9px] text-[#7d846f]"
+                      style={mono}
+                    >
+                      {section}
+                    </p>
+                    <div className="mt-1 space-y-1">
+                      {sectionItems.map(({ href: itemHref, label: itemLabel, description }) => (
+                        <Link
+                          key={itemHref}
+                          href={itemHref}
+                          prefetch={false}
+                          className="block rounded-lg px-3 py-3 transition-colors duration-150 hover:bg-[#eef2e5]"
+                          onClick={close}
+                        >
+                          <span className="block text-[14px] text-[#28301f]" style={mono}>
+                            {itemLabel}
                           </span>
-                        ) : null}
-                      </Link>
-                    ))}
+                          {description ? (
+                            <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">
+                              {description}
+                            </span>
+                          ) : null}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         ) : (

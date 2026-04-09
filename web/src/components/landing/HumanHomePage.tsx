@@ -8,12 +8,12 @@ import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
 import { siteConfig } from "@/lib/site";
+import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
-const organizationId = `${siteConfig.url}#organization`;
 const websiteId = `${siteConfig.url}#website`;
 const homePageId = `${siteConfig.url}#home`;
-const softwareApplicationId = `${siteConfig.url}#software`;
+const softwareEntityId = `${siteConfig.url}#software`;
 
 const homeWebPageJsonLd = {
   "@context": "https://schema.org",
@@ -37,43 +37,21 @@ const homeWebPageJsonLd = {
     url: `${siteConfig.url}/opengraph-image`,
   },
   mainEntity: {
-    "@id": softwareApplicationId,
+    "@id": softwareEntityId,
   },
 };
 
 const homeSoftwareJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "@id": softwareApplicationId,
-  name: "AnyCap",
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "macOS, Linux, Windows",
-  url: siteConfig.url,
-  installUrl: `${siteConfig.url}/install.sh`,
-  downloadUrl: "https://github.com/anycap-ai/anycap/releases",
-  description:
-    "AI agent capability runtime for coding agents. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
-  featureList: [
-    "Image generation",
-    "Video generation",
-    "Music generation",
-    "Image understanding",
-    "Video analysis",
-    "Audio understanding",
-    "Web search",
-    "Grounded web search",
-    "Web crawl",
-    "Drive storage",
-    "Static page publishing",
-    "File download",
-  ],
-  author: {
-    "@id": organizationId,
-  },
-  publisher: {
-    "@id": organizationId,
-  },
+  ...createSoftwareSourceCodeJsonLd({
+    name: "AnyCap",
+    description:
+      "Open-source AI agent capability runtime for coding agents. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
+    path: "/",
+    codeRepository: githubHref,
+  }),
+  "@id": softwareEntityId,
   sameAs: [githubHref],
+  isAccessibleForFree: true,
   softwareHelp: {
     "@type": "CreativeWork",
     name: "Install AnyCap",
@@ -104,15 +82,12 @@ export function HumanHomePage() {
         authSlot={<AuthNav />}
       />
 
-      <section
-        className="flex flex-col px-5 md:px-16 lg:h-dvh lg:px-24 lg:pb-8"
-        style={{ paddingTop: "84px" }}
-      >
-        <div className="flex flex-col gap-8 lg:flex-1 lg:min-h-0 lg:flex-row lg:items-center lg:gap-12">
-          <div className="min-w-0 flex-1">
+      <section className="flex flex-col px-5 pt-20 sm:px-8 sm:pt-24 md:px-16 lg:px-24 xl:h-dvh xl:pb-8">
+        <div className="flex flex-col gap-10 md:gap-12 xl:flex-1 xl:min-h-0 xl:flex-row xl:items-center xl:gap-12">
+          <div className="min-w-0 flex-1 xl:max-w-[46rem]">
             <h1
-              className="leading-[1.15] tracking-[-0.03em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(42px, 5.5vw, 76px)" }}
+              className="leading-[1.08] tracking-[-0.03em] text-[#1c1f17]"
+              style={{ ...pixel, fontSize: "clamp(36px, 5.5vw, 76px)" }}
             >
               <span className="sr-only">
                 Your Agent can do anything. It just needs AnyCap.
@@ -143,18 +118,20 @@ export function HumanHomePage() {
                 />
               </span>
             </h1>
-            <p className="mt-5 hidden max-w-[700px] text-base leading-7 text-[#4d5145] md:block md:text-lg">
+            <p className="mt-5 max-w-[700px] text-[15px] leading-6 text-[#4d5145] sm:text-base sm:leading-7 md:text-lg">
               Your agent can reason and code, but it can&apos;t create images, produce
               videos, or publish sites. AnyCap gives it any capability it&apos;s
               missing&nbsp;&mdash; with one install.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3 md:mt-8">
-              <LazyEquipAgent style={mono} />
+            <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex w-full justify-start sm:w-auto">
+                <LazyEquipAgent style={mono} />
+              </div>
               <a
                 href={githubHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-[#ccd1c3] bg-[#fafbf8] px-6 py-4 text-[13px] text-[#3a3e32] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ccd1c3] bg-[#fafbf8] px-6 py-4 text-[13px] text-[#3a3e32] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17] sm:w-auto sm:justify-start"
                 style={mono}
               >
                 View on GitHub
@@ -171,9 +148,9 @@ export function HumanHomePage() {
             </div>
           </div>
 
-          <div className="relative w-full shrink-0 lg:flex lg:flex-col lg:w-[50%] lg:self-stretch lg:justify-center lg:min-h-0">
+          <div className="relative w-full shrink-0 xl:flex xl:min-h-0 xl:w-[50%] xl:flex-col xl:self-stretch xl:justify-center">
             <AgentBubble />
-            <div className="flex h-[50vh] w-full flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-5 pt-0 pb-5 md:px-6 md:pb-6 lg:h-[calc((100dvh-8rem)*0.8)] lg:px-8 lg:pb-8 transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)]">
+            <div className="flex h-[22rem] w-full flex-col overflow-hidden rounded-lg bg-[#1c1f17] px-4 pb-4 pt-0 sm:h-[26rem] sm:px-5 sm:pb-5 md:h-[30rem] md:px-6 md:pb-6 lg:h-[34rem] lg:px-8 lg:pb-8 xl:h-[calc((100dvh-8rem)*0.78)] xl:hover:scale-[1.02] xl:hover:shadow-[0_20px_60px_rgba(28,31,23,0.25)] transition-all duration-300">
               <TerminalDemo
                 headerRight={
                   <ParticleAgent scale={0.35} />
@@ -184,8 +161,8 @@ export function HumanHomePage() {
         </div>
       </section>
 
-      <FadeIn from="right" className="mt-16 flex justify-end px-8 md:mt-28 md:px-16 lg:px-24">
-        <div className="max-w-[520px] border-r-[3px] border-[#1c1f17] pr-6 text-right md:pr-8">
+      <FadeIn from="right" className="mt-16 flex justify-start px-8 md:mt-28 md:justify-end md:px-16 lg:px-24">
+        <div className="max-w-[520px] border-l-[3px] border-[#1c1f17] pl-5 text-left md:border-l-0 md:border-r-[3px] md:pl-0 md:pr-8 md:text-right">
           <p className="text-lg leading-[1.65] text-[#3a3e32] md:text-[22px]">
             It reasons. It plans. It writes code.
             <br />
@@ -282,7 +259,7 @@ export function HumanHomePage() {
           </div>
         </FadeIn>
         <FadeIn delay={200}>
-          <p className="mt-12 max-w-[640px] text-xl leading-[1.7] text-[#3a3e32] md:mt-16 md:text-2xl">
+          <p className="mt-12 max-w-[640px] text-lg leading-[1.7] text-[#3a3e32] sm:text-xl md:mt-16 md:text-2xl">
             Today&apos;s agents learned to think. But thinking is only part of getting
             things done. They can&apos;t generate images, produce videos, store files, or
             publish pages. These real-world capabilities are the last mile between what

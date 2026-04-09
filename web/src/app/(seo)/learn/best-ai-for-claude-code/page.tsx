@@ -13,7 +13,7 @@ const lastUpdatedLabel = "April 7, 2026";
 const lastUpdatedIso = "2026-04-07";
 
 export const metadata: Metadata = {
-  title: "Best AI for Claude Code: the right setup is usually Claude Code plus capabilities",
+  title: "Best AI for Claude Code | Claude Code + Capabilities",
   description:
     "The best AI for Claude Code is usually the setup that keeps Claude Code's terminal-native workflow intact while adding the image, video, and vision capabilities it lacks.",
   alternates: { canonical: "/learn/best-ai-for-claude-code" },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/learn/best-ai-for-claude-code",
     siteName: siteConfig.siteName,
-    title: "Best AI for Claude Code: the right setup is usually Claude Code plus capabilities",
+    title: "Best AI for Claude Code | Claude Code + Capabilities",
     description:
       "A buyer guide for teams deciding whether the best Claude Code setup is Claude Code alone, Claude Code plus ad hoc tools, or Claude Code plus one capability runtime.",
   },

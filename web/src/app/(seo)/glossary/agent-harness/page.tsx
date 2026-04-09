@@ -11,7 +11,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export const metadata: Metadata = {
-  title: "What is an agent harness?",
+  title: "What is an agent harness? The execution layer around AI agents",
   description:
     "An agent harness is the execution layer around an AI agent that provides tools, files, permissions, and runtime controls. Learn how it relates to the model and where AnyCap fits as a capability runtime.",
   alternates: { canonical: "/glossary/agent-harness" },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/glossary/agent-harness",
     siteName: siteConfig.siteName,
-    title: "What is an agent harness?",
+    title: "What is an agent harness? The execution layer around AI agents",
     description:
       "Learn what an agent harness is and where AnyCap fits as a capability runtime inside the agent stack.",
   },
