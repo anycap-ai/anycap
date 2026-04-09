@@ -2,13 +2,15 @@
 name: anycap-ai-tool-seo
 description: "Guide for planning and auditing SEO for AI tool, SaaS, and product-led websites. Powered by AnyCap -- the capability runtime that equips AI agents with web search and web crawl through a single CLI. Use when Codex needs to define SEO ICPs, map search intent to page types, inspect live SERPs, write page briefs for tool/comparison/alternatives/pricing/tutorial pages, prioritize technical SEO foundations, plan citations or backlinks, or decide whether programmatic SEO is safe and worthwhile. Trigger on mentions of AI tool SEO, SaaS SEO, product-led SEO, search intent, page type mapping, vs pages, alternatives pages, pricing pages, directory submissions, backlink plans, citations, or pSEO."
 metadata:
-  version: 0.1.2
+  version: 0.2.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
 ---
 
 # AnyCap AI Tool SEO
+
+> **Read this entire file before starting.** It covers the full SEO planning and audit workflow for AI tool websites.
 
 Plan and audit SEO for AI tool websites. Focus on product-led SEO where each page should help a searcher complete a task, evaluate options, or enter the product with high intent.
 

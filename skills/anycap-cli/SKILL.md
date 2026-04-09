@@ -1,14 +1,16 @@
 ---
 name: anycap-cli
-description: "AnyCap CLI -- create media humans can see and hear (generate/edit images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
+description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.1.2
+  version: 0.2.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
 ---
 
 # AnyCap CLI
+
+> **Read this entire file before starting.** It covers install, auth, capabilities, and output conventions. Load reference files from `references/` as needed for specific commands.
 
 One CLI. Any capability.
 
@@ -25,7 +27,7 @@ Use AnyCap when a task involves:
 
 If `anycap` is not installed (`command -v anycap` fails), install it before proceeding.
 
-Read the latest installation guide at https://anycap.ai/ to get the install command. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
+Read the machine-readable install guide at https://anycap.ai/install.txt for installation tasks. Do not fetch the homepage for install automation. Prefer the **binary install** (install script or GitHub Releases) over npm -- fewer dependencies, faster startup, no Node.js required.
 
 The CLI auto-updates on each run. To update manually: `anycap update`.
 
@@ -85,15 +87,15 @@ Key settings: `endpoint` (server URL), `auto_update` (default true), `feedback` 
 
 ### Custom config directory
 
-By default the CLI stores config and credentials in `~/.anycap/`. In sandboxed or containerized environments where the home directory is not persistent, set these environment variables to keep credentials across restarts:
+By default the CLI stores config and credentials in `~/.anycap/`. Credentials are stored securely in the OS keychain (macOS Keychain, Windows Credential Manager). On headless Linux (no graphical session), the CLI auto-detects and falls back to an encrypted file -- no manual configuration needed.
+
+In sandboxed or containerized environments where the home directory is not persistent, redirect the config directory:
 
 ```bash
 export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
-export ANYCAP_NO_KEYRING=1           # disable OS keychain, use file storage
 ```
 
 - `ANYCAP_CONFIG_DIR` redirects all CLI state (config, credentials, update markers) to the specified path. Relative paths are resolved to absolute paths automatically.
-- `ANYCAP_NO_KEYRING=1` disables OS keychain and forces credential storage to a file (`credentials` in the config directory). Without this, an ephemeral keychain may accept credentials but lose them on restart.
 
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
 
@@ -107,7 +109,7 @@ Before generating content, ask the user which model they want to use. Run `anyca
 
 ### Generation Workflow
 
-Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`, `edit`) as CLI subcommands:
+Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`) as CLI subcommands:
 
 ```
 1. Discover models    anycap {cap} models
@@ -115,9 +117,9 @@ Capabilities follow a three-step pattern. Each capability (image, video, music) 
 3. Run operation      anycap {cap} {operation} --model <model> [--mode <mode>] --prompt "..."
 ```
 
-**Operations** are the top-level actions (generate, edit, etc.). Which operations a model supports is defined in the catalog.
+**Operations** are the top-level actions (generate, etc.). Which operations a model supports is defined in the catalog.
 
-**Modes** describe the input/output modality within an operation (e.g., `text-to-image`, `image-to-image`). When only one mode exists, it is inferred automatically.
+**Modes** describe the input/output modality within an operation (e.g., `text-to-image`, `image-to-image`). When only one mode exists, it is inferred automatically. Use `--mode image-to-image` with a reference image to edit or transform an existing image.
 
 Generated files are auto-downloaded to the current directory. Always use `-o` with a descriptive filename (e.g., `-o hero-banner.png`).
 
@@ -132,13 +134,27 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 
 | Capability | Reference | Operations | Typical duration |
 |------------|-----------|------------|------------------|
-| Image | [generation.md](references/generation.md) | `generate`, `edit` | 5-30s |
+| Image | [generation.md](references/generation.md) | `generate` | 5-30s |
+| Annotate | [annotation.md](references/annotation.md) | `annotate` | Interactive |
 | Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
 
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
 
 If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
+
+**Annotate** -- interactive visual feedback with real-time collaboration (image, video, audio) or single-user review (URL/iframe).
+Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. For image, video, and audio sessions, multiple users can collaborate in real-time with shared annotations and live cursors. URL mode is single-user because screen recording is the primary feedback artifact and multiple users' cursors would make it confusing. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
+
+```bash
+# Blocking mode -- opens browser, waits for Done click
+anycap annotate photo.png -o annotated.png
+anycap annotate https://localhost:3000
+anycap annotate output.mp4
+
+# Non-blocking mode (for agents) -- returns immediately
+anycap annotate photo.png --no-wait
+```
 
 **Actions** -- AI-powered operations on existing content.
 Read [references/actions.md](references/actions.md) when you need to understand images, read videos, analyze audio, or perform other AI actions on existing files or URLs.
@@ -275,8 +291,8 @@ anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
 # Get the local file path from a generate response (use -o for a descriptive name)
 anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
 
-# Edit an existing image
-anycap image edit --prompt "remove the background" --model seedream-5 --param images=./photo.png -o edited.png | jq -r '.local_path'
+# Edit an existing image (image-to-image mode)
+anycap image generate --prompt "remove the background" --model nano-banana-2 --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
 
 # Generate a video (text-to-video, mode inferred) and get its path
 anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
@@ -286,6 +302,12 @@ anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode im
 
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
+
+# Annotate (non-blocking, for agent workflows)
+anycap annotate photo.png --no-wait | jq -r '.poll_command'
+
+# Poll for annotation result
+anycap annotate poll --session ann_xxxx | jq -r '.annotations[] | "#\(.id) [\(.type)]: \(.label)"'
 
 # Analyze a local image file (auto-uploaded, no drive needed)
 anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
