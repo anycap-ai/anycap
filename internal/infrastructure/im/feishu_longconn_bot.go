@@ -21,6 +21,8 @@ type FeishuLongConnBotConfig struct {
 	BindingService      *agentcontrolapp.BindingService
 	ConversationService *agentcontrolapp.ConversationService
 	HandleInbound       func(context.Context, NormalizedInboundEvent) (string, error)
+	SelectReaction      func(context.Context, NormalizedInboundEvent) (string, error)
+	SendReaction        func(context.Context, model.IMBinding, string, string) error
 	Adapter             *FeishuAdapter
 }
 
@@ -30,6 +32,8 @@ type FeishuLongConnBot struct {
 	bindingService      *agentcontrolapp.BindingService
 	conversationService *agentcontrolapp.ConversationService
 	inboundHandler      func(context.Context, NormalizedInboundEvent) (string, error)
+	selectReaction      func(context.Context, NormalizedInboundEvent) (string, error)
+	sendReaction        func(context.Context, model.IMBinding, string, string) error
 	adapter             *FeishuAdapter
 	client              *larkws.Client
 }
@@ -50,6 +54,8 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		bindingService:      cfg.BindingService,
 		conversationService: cfg.ConversationService,
 		inboundHandler:      cfg.HandleInbound,
+		selectReaction:      cfg.SelectReaction,
+		sendReaction:        cfg.SendReaction,
 		adapter:             cfg.Adapter,
 	}
 
@@ -114,13 +120,22 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 	if senderID == "" {
 		return NormalizedInboundEvent{}, false, nil
 	}
+	mentions := normalizeFeishuMentions(event.Event.Message.Mentions)
+	messageText := resolveMentionPlaceholders(strings.TrimSpace(content.Text), mentions)
 
 	return NormalizedInboundEvent{
-		Platform:  model.IMPlatformFeishu,
-		BotID:     b.appID,
-		ChannelID: chatID,
-		SenderID:  senderID,
-		Message:   strings.TrimSpace(content.Text),
+		Platform:    model.IMPlatformFeishu,
+		BotID:       b.appID,
+		ChannelID:   chatID,
+		MessageID:   strings.TrimSpace(stringValue(event.Event.Message.MessageId)),
+		SenderID:    senderID,
+		ChatType:    strings.TrimSpace(stringValue(event.Event.Message.ChatType)),
+		ThreadID:    strings.TrimSpace(stringValue(event.Event.Message.ThreadId)),
+		ParentID:    strings.TrimSpace(stringValue(event.Event.Message.ParentId)),
+		RootID:      strings.TrimSpace(stringValue(event.Event.Message.RootId)),
+		MessageType: strings.TrimSpace(stringValue(event.Event.Message.MessageType)),
+		Message:     messageText,
+		Mentions:    mentions,
 	}, true, nil
 }
 
@@ -142,6 +157,9 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 			BotID:     event.BotID,
 			ChannelID: event.ChannelID,
 			SenderID:  event.SenderID,
+		}
+		if b.shouldUseReactionAck(event) && b.tryReactionAck(ctx, binding, event) {
+			return nil
 		}
 		if sendErr := b.adapter.SendMessage(ctx, binding, replyMessage); sendErr != nil {
 			logging.WithError(sendErr).Warn("send feishu long connection reply failed")
@@ -191,4 +209,78 @@ func stringValue(value *string) string {
 		return ""
 	}
 	return strings.TrimSpace(*value)
+}
+
+func (b *FeishuLongConnBot) shouldUseReactionAck(event NormalizedInboundEvent) bool {
+	if b == nil || b.selectReaction == nil || b.sendReaction == nil {
+		return false
+	}
+	if strings.TrimSpace(event.MessageID) == "" {
+		return false
+	}
+	command, err := agentcontrolapp.ParseChatCommand(event.Message)
+	if err != nil {
+		return false
+	}
+	return command.Action == model.AgentChatActionContinue
+}
+
+func (b *FeishuLongConnBot) tryReactionAck(ctx context.Context, binding model.IMBinding, event NormalizedInboundEvent) bool {
+	reactionType, err := b.selectReaction(ctx, event)
+	if err != nil {
+		logging.WithError(err).Warn("select feishu reaction ack failed")
+		return false
+	}
+	reactionType = NormalizeReactionEmojiType(reactionType)
+	if !IsAllowedReactionEmojiType(reactionType) {
+		logging.WithField("reaction_type", reactionType).Warn("skip feishu reaction ack because the emoji type is not allowed")
+		return false
+	}
+	if err := b.sendReaction(ctx, binding, event.MessageID, reactionType); err != nil {
+		logging.WithError(err).Warn("send feishu reaction ack failed")
+		return false
+	}
+	return true
+}
+
+func normalizeFeishuMentions(raw []*larkim.MentionEvent) []NormalizedInboundMention {
+	if len(raw) == 0 {
+		return nil
+	}
+	mentions := make([]NormalizedInboundMention, 0, len(raw))
+	for _, item := range raw {
+		if item == nil {
+			continue
+		}
+		mention := NormalizedInboundMention{
+			Key:       stringValue(item.Key),
+			Name:      stringValue(item.Name),
+			TenantKey: stringValue(item.TenantKey),
+		}
+		if item.Id != nil {
+			mention.OpenID = stringValue(item.Id.OpenId)
+		}
+		if mention.Key == "" && mention.OpenID == "" && mention.Name == "" && mention.TenantKey == "" {
+			continue
+		}
+		mentions = append(mentions, mention)
+	}
+	if len(mentions) == 0 {
+		return nil
+	}
+	return mentions
+}
+
+func resolveMentionPlaceholders(text string, mentions []NormalizedInboundMention) string {
+	resolved := strings.TrimSpace(text)
+	if resolved == "" || len(mentions) == 0 {
+		return resolved
+	}
+	for _, mention := range mentions {
+		if strings.TrimSpace(mention.Key) == "" || strings.TrimSpace(mention.Name) == "" {
+			continue
+		}
+		resolved = strings.ReplaceAll(resolved, mention.Key, "@"+strings.TrimSpace(mention.Name))
+	}
+	return resolved
 }

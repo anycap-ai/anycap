@@ -44,6 +44,7 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 		return stubDaemonIMBot{}
 	}
 
+	var inboundBody map[string]any
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/v1/agent/runners/register" && r.Method == http.MethodPost:
@@ -59,6 +60,12 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 			w.WriteHeader(http.StatusNoContent)
 		case r.URL.Path == "/v1/agent/runners/run_123/tasks/next" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusNoContent)
+		case r.URL.Path == "/v1/agent/im/inbound" && r.Method == http.MethodPost:
+			if err := json.NewDecoder(r.Body).Decode(&inboundBody); err != nil {
+				t.Fatalf("json.Decode() error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"reply_message":"会话已接收，正在处理中"}}`))
 		default:
 			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
 		}
@@ -94,6 +101,41 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	if gotCfg.Adapter == nil {
 		t.Fatal("expected feishu adapter in bot config")
 	}
+	if gotCfg.SelectReaction == nil {
+		t.Fatal("expected daemon personal bot config to include reaction selector")
+	}
+	if gotCfg.SendReaction == nil {
+		t.Fatal("expected daemon personal bot config to include reaction sender")
+	}
+	replyMessage, err := gotCfg.HandleInbound(context.Background(), im.NormalizedInboundEvent{
+		Platform:    "feishu",
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_message",
+		ChatType:    "p2p",
+		ThreadID:    "omt_thread",
+		ParentID:    "om_parent",
+		RootID:      "om_root",
+		MessageType: "text",
+		Message:     "帮 @赵晨 看这个 bug",
+		Mentions: []im.NormalizedInboundMention{
+			{Key: "@_user_1", OpenID: "ou_target", Name: "赵晨"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("HandleInbound() error = %v", err)
+	}
+	if replyMessage != "会话已接收，正在处理中" {
+		t.Fatalf("unexpected inbound reply %q", replyMessage)
+	}
+	message, _ := inboundBody["message"].(string)
+	if !strings.Contains(message, `<feishu-message message_id="om_message" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_sender" thread_id="omt_thread" parent_id="om_parent" root_id="om_root">`) {
+		t.Fatalf("expected structured message payload, got %v", inboundBody["message"])
+	}
+	if !strings.Contains(message, "帮 @赵晨 看这个 bug") {
+		t.Fatalf("expected structured message body, got %v", inboundBody["message"])
+	}
 
 	var payload map[string]any
 	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
@@ -101,6 +143,18 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	}
 	if !strings.Contains(stdout.String(), `"connected":true`) {
 		t.Fatalf("expected connected output, got %s", stdout.String())
+	}
+}
+
+func TestMessageForInboundChatKeepsRawCommandText(t *testing.T) {
+	event := im.NormalizedInboundEvent{
+		Message:   "/reset",
+		ChatType:  "p2p",
+		ThreadID:  "omt_thread",
+		MessageID: "om_message",
+	}
+	if got := messageForInboundChat(event); got != "/reset" {
+		t.Fatalf("expected raw command text, got %q", got)
 	}
 }
 

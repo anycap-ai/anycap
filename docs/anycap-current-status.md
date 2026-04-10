@@ -113,7 +113,7 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 | Conversation control | `anycap agent conversations stop|reset|fork|fire <agc_...>` | Stop an active conversation, reset it into a new session, fork it into a new branch, or manually consume pending mailbox results and continue |
 | Task inspect | `anycap agent task get <agt_...>` | View a remote agent task and its lifecycle state |
 | Task cancel | `anycap agent task cancel <agt_...>` | Cancel a queued/dispatched/running remote agent task |
-| Feishu long connection | local daemon runtime | Preferred personal-bot ingress; local daemon owns Feishu App ID/App Secret, receives IM events without公网 webhook, forwards normalized chat to server, and sends replies back to Feishu |
+| Feishu long connection | local daemon runtime | Preferred personal-bot ingress; local daemon owns Feishu App ID/App Secret, receives IM events without公网 webhook, forwards structured Feishu message context to server for normal chat turns, and sends replies back to Feishu |
 | Conversation inspect | `/v1/agent/conversations*` | Protected server APIs for listing active conversations, session history, and mailbox entries |
 | Runner control API | `/v1/agent/*` | Protected server APIs for bindings, runners, heartbeats, session polling, session status lookup, and updates |
 
@@ -130,7 +130,7 @@ Current Phase 1 behavior:
 - Feishu is the first wired IM adapter.
 - Feishu ingress now supports two modes: local personal-bot daemon ingress and legacy server-owned shared-bot ingress. The preferred path is local daemon long connection because it does not require a public callback URL and keeps the user's bot credentials on the local machine.
 - `/bind <token>` remains available only as a legacy/debug fallback for old shared-bot flows. It is not the main personal-bot setup path.
-- IM chat intake is conversation-first: plain text appends a new session to the active conversation for that Feishu DM chat.
+- IM chat intake is conversation-first: daemon keeps command parsing on raw text, but normal chat turns now forward structured Feishu message context (`message_id`, `chat_type`, thread/reply IDs, mentions, resolved text) into the session input.
 - Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
 - Feishu chat routing now prefers a per-user primary runner mapping instead of requiring per-user `bot -> runner_id` server env wiring.
 - Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.

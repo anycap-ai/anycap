@@ -96,8 +96,9 @@ func (a *FeishuAdapter) VerifyAndNormalize(req *http.Request) (NormalizedInbound
 				} `json:"sender_id"`
 			} `json:"sender"`
 			Message struct {
-				ChatID  string `json:"chat_id"`
-				Content string `json:"content"`
+				MessageID string `json:"message_id"`
+				ChatID    string `json:"chat_id"`
+				Content   string `json:"content"`
 			} `json:"message"`
 		} `json:"event"`
 	}
@@ -118,6 +119,7 @@ func (a *FeishuAdapter) VerifyAndNormalize(req *http.Request) (NormalizedInbound
 		Platform:  model.IMPlatformFeishu,
 		BotID:     strings.TrimSpace(payload.Header.AppID),
 		ChannelID: strings.TrimSpace(payload.Event.Message.ChatID),
+		MessageID: strings.TrimSpace(payload.Event.Message.MessageID),
 		SenderID:  strings.TrimSpace(payload.Event.Sender.SenderID.OpenID),
 		Message:   strings.TrimSpace(content.Text),
 	}, nil
@@ -129,6 +131,38 @@ func (a *FeishuAdapter) SendAccepted(ctx context.Context, binding model.IMBindin
 
 func (a *FeishuAdapter) SendMessage(ctx context.Context, binding model.IMBinding, message string) error {
 	return a.sendReply(ctx, binding, message)
+}
+
+func (a *FeishuAdapter) SendReaction(ctx context.Context, binding model.IMBinding, messageID string, emojiType string) error {
+	if a == nil || a.larkClient == nil {
+		return model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	trimmedMessageID := strings.TrimSpace(messageID)
+	if trimmedMessageID == "" {
+		return model.ErrValidation("feishu message id is required")
+	}
+	normalizedEmojiType := NormalizeReactionEmojiType(emojiType)
+	if !IsAllowedReactionEmojiType(normalizedEmojiType) {
+		return model.ErrValidation("unsupported feishu reaction emoji type")
+	}
+
+	req := larkim.NewCreateMessageReactionReqBuilder().
+		MessageId(trimmedMessageID).
+		Body(
+			larkim.NewCreateMessageReactionReqBodyBuilder().
+				ReactionType(larkim.NewEmojiBuilder().EmojiType(normalizedEmojiType).Build()).
+				Build(),
+		).
+		Build()
+
+	resp, err := a.larkClient.Im.V1.MessageReaction.Create(ctx, req)
+	if err != nil {
+		return fmt.Errorf("send feishu reaction: %w", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("send feishu reaction: code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return nil
 }
 
 func (a *FeishuAdapter) SendCompleted(ctx context.Context, binding model.IMBinding, task model.AgentTask) error {
