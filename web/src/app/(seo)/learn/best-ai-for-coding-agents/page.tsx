@@ -185,6 +185,11 @@ const nextMoveCards = [
     body: "Go here if the same stack decision is showing up in a SaaS chatbot or copilot instead of a coding workflow.",
   },
   {
+    title: "What is the most advanced AI?",
+    href: "/learn/what-is-the-most-advanced-ai",
+    body: "Go here when the question is really about the frontier: which AI system is the most advanced overall, and why the answer changes depending on the task.",
+  },
+  {
     title: "Browse the capability hub",
     href: "/capabilities",
     body: "Go here when you already know the problem and want the exact AnyCap surface that solves it.",

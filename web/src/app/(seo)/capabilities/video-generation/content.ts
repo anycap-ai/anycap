@@ -323,15 +323,14 @@ const contentByLocale = {
   },
   "pt-br": {
     metadata: {
-      title: "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+      title: "Geração de vídeo para agentes de IA | AnyCap",
       description:
         "Dê aos agentes de IA geração de vídeo por meio do AnyCap. Use Veo 3.1, Kling 3.0 e Seedance 1.5 Pro para fluxos de texto para vídeo, imagem para vídeo e criação de vídeo em uma única CLI.",
-      openGraphTitle:
-        "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+      openGraphTitle: "Geração de vídeo para agentes de IA | AnyCap",
       openGraphDescription:
         "Dê aos agentes de IA geração de vídeo por meio do AnyCap. Use Veo 3.1, Kling 3.0 e Seedance 1.5 Pro para fluxos de texto para vídeo, imagem para vídeo e criação de vídeo em uma única CLI.",
       articleHeadline:
-        "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+        "Geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo via AnyCap",
       articleDescription:
         "Guia de capability para usar a geração de vídeo do AnyCap em fluxos de agentes de IA com Veo 3.1, Kling 3.0 e Seedance 1.5 Pro.",
       articleAbout: ["Geração de vídeo", "API de texto para vídeo", "Imagem para vídeo", "AnyCap"],

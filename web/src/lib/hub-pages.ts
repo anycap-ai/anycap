@@ -149,6 +149,16 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
         href: "/compare/anycap-vs-fal-ai",
         description: "Compare cross-agent capability access with a queue-first generative media API stack.",
       },
+      {
+        title: "AnyCap vs OpenClaw (Image)",
+        href: "/compare/anycap-vs-openclaw-image-generation",
+        description: "Compare agent-native image generation with a human-facing AI image editing interface.",
+      },
+      {
+        title: "AnyCap vs OpenClaw (Video)",
+        href: "/compare/anycap-vs-openclaw-video-generation",
+        description: "Compare agent-native video generation with a human-facing AI video creation interface.",
+      },
     ],
   },
   learn: {

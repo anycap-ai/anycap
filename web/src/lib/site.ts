@@ -214,6 +214,18 @@ const manualPublicRouteDefinitions = [
     priority: 0.74,
   },
   {
+    key: "learn-how-to-remove-people-from-photos",
+    kind: "seo",
+    path: "/learn/how-to-remove-people-from-photos",
+    priority: 0.74,
+  },
+  {
+    key: "learn-how-to-brighten-a-photo-online",
+    kind: "seo",
+    path: "/learn/how-to-brighten-a-photo-online",
+    priority: 0.72,
+  },
+  {
     key: "learn-how-to-make-memes-online",
     kind: "seo",
     path: "/learn/how-to-make-memes-online",
@@ -372,6 +384,24 @@ const manualPublicRouteDefinitions = [
     priority: 0.7,
   },
   {
+    key: "guides-how-to-add-image-generation-to-ai-agent",
+    kind: "seo",
+    path: "/guides/how-to-add-image-generation-to-ai-agent",
+    priority: 0.7,
+  },
+  {
+    key: "guides-how-to-add-video-generation-to-ai-agent",
+    kind: "seo",
+    path: "/guides/how-to-add-video-generation-to-ai-agent",
+    priority: 0.7,
+  },
+  {
+    key: "guides-how-to-add-vision-to-ai-agent",
+    kind: "seo",
+    path: "/guides/how-to-add-vision-to-ai-agent",
+    priority: 0.7,
+  },
+  {
     key: "compare-anycap-vs-composio",
     kind: "seo",
     path: "/compare/anycap-vs-composio",
@@ -394,6 +424,18 @@ const manualPublicRouteDefinitions = [
     kind: "seo",
     path: "/compare/anycap-vs-fal-ai",
     priority: 0.67,
+  },
+  {
+    key: "compare-replicate-alternatives-for-agents",
+    kind: "seo",
+    path: "/compare/replicate-alternatives-for-agents",
+    priority: 0.7,
+  },
+  {
+    key: "compare-fal-ai-alternatives-for-agents",
+    kind: "seo",
+    path: "/compare/fal-ai-alternatives-for-agents",
+    priority: 0.7,
   },
   {
     key: "compare-anycap-vs-openclaw-image-generation",

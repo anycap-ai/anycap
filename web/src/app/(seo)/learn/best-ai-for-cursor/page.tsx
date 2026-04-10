@@ -186,6 +186,11 @@ const nextMoveCards = [
     body: "Best next move when the real question is which video model fits demos, walkthroughs, or cinematic product motion.",
   },
   {
+    title: "What is the most advanced AI?",
+    href: "/learn/what-is-the-most-advanced-ai",
+    body: "Go here when the question is about the frontier overall, not just Cursor specifically.",
+  },
+  {
     title: "Install the runtime",
     href: "/guides/install-anycap",
     body: "Use the install guide when you are ready to move from evaluation into actual setup steps.",

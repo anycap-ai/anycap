@@ -245,6 +245,20 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
     updated: "Apr 9, 2026",
     order: 30,
   },
+  "learn-how-to-remove-people-from-photos": {
+    description:
+      "Remove one distracting person from a photo, reconstruct the surrounding scene, and verify that the repaired image still looks believable before reuse.",
+    badge: "Workflow",
+    updated: "Apr 10, 2026",
+    order: 40,
+  },
+  "learn-how-to-brighten-a-photo-online": {
+    description:
+      "Brighten a dark photo, soften harsh shadow, and inspect whether the corrected image still looks like the same subject instead of a washed-out redo.",
+    badge: "Workflow",
+    updated: "Apr 10, 2026",
+    order: 45,
+  },
   "learn-how-to-make-memes-online": {
     description:
       "Generate or edit the base visual, keep the caption exact, and branch into narrower meme styles from one anchor workflow.",

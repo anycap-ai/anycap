@@ -40,6 +40,9 @@
     { "id": "guides-agent-skills-for-developer-tools", "kind": "detail", "label": "Agent Skills for Developer Tools", "path": "/guides/agent-skills-for-developer-tools", "eyebrow": "Guides", "parentId": "hub-guides" },
     { "id": "guides-workspace-context-engineering", "kind": "detail", "label": "Workspace Context Engineering", "path": "/guides/workspace-context-engineering", "eyebrow": "Guides", "parentId": "hub-guides" },
     { "id": "guides-what-is-agent-harness", "kind": "detail", "label": "What Is Agent Harness?", "path": "/guides/what-is-agent-harness", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "guides-how-to-add-image-generation-to-ai-agent", "kind": "detail", "label": "How to Add Image Generation to AI Agent", "path": "/guides/how-to-add-image-generation-to-ai-agent", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "guides-how-to-add-video-generation-to-ai-agent", "kind": "detail", "label": "How to Add Video Generation to AI Agent", "path": "/guides/how-to-add-video-generation-to-ai-agent", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "guides-how-to-add-vision-to-ai-agent", "kind": "detail", "label": "How to Add Vision to AI Agent", "path": "/guides/how-to-add-vision-to-ai-agent", "eyebrow": "Guides", "parentId": "hub-guides" },
 
     { "id": "hub-glossary", "kind": "hub", "label": "Glossary", "path": "/glossary", "eyebrow": "Glossary", "parentId": "home" },
     { "id": "glossary-context-engineering", "kind": "detail", "label": "Context Engineering", "path": "/glossary/context-engineering", "eyebrow": "Glossary", "parentId": "hub-glossary" },
@@ -53,6 +56,8 @@
     { "id": "compare-anycap-vs-fal-ai", "kind": "detail", "label": "AnyCap vs fal.ai", "path": "/compare/anycap-vs-fal-ai", "eyebrow": "Compare", "parentId": "hub-compare" },
     { "id": "compare-anycap-vs-openclaw-image-generation", "kind": "detail", "label": "AnyCap vs OpenClaw Image Generation", "path": "/compare/anycap-vs-openclaw-image-generation", "eyebrow": "Compare", "parentId": "hub-compare" },
     { "id": "compare-anycap-vs-openclaw-video-generation", "kind": "detail", "label": "AnyCap vs OpenClaw Video Generation", "path": "/compare/anycap-vs-openclaw-video-generation", "eyebrow": "Compare", "parentId": "hub-compare" },
+    { "id": "compare-fal-ai-alternatives-for-agents", "kind": "detail", "label": "fal.ai Alternatives for Agents", "path": "/compare/fal-ai-alternatives-for-agents", "eyebrow": "Compare", "parentId": "hub-compare" },
+    { "id": "compare-replicate-alternatives-for-agents", "kind": "detail", "label": "Replicate Alternatives for Agents", "path": "/compare/replicate-alternatives-for-agents", "eyebrow": "Compare", "parentId": "hub-compare" },
 
     { "id": "hub-learn", "kind": "hub", "label": "Learn", "path": "/learn", "eyebrow": "Learn", "parentId": "home" },
     { "id": "learn-product", "kind": "cluster", "label": "Product", "eyebrow": "Product", "parentId": "hub-learn" },
@@ -73,6 +78,8 @@
     { "id": "learn-how-to-make-image-transparent", "kind": "workflow", "label": "How to Make an Image Transparent", "path": "/learn/how-to-make-image-transparent", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-change-photo-background", "kind": "workflow", "label": "How to Change a Photo Background", "path": "/learn/how-to-change-photo-background", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-make-background-white-for-product-photos", "kind": "workflow", "label": "How to Make Background White for Product Photos", "path": "/learn/how-to-make-background-white-for-product-photos", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
+    { "id": "learn-how-to-remove-people-from-photos", "kind": "workflow", "label": "How to Remove People from Photos", "path": "/learn/how-to-remove-people-from-photos", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
+    { "id": "learn-how-to-brighten-a-photo-online", "kind": "workflow", "label": "How to Brighten a Photo Online", "path": "/learn/how-to-brighten-a-photo-online", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-make-memes-online", "kind": "workflow", "label": "How to Make Memes Online", "path": "/learn/how-to-make-memes-online", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-funny-meme-drawings", "kind": "leaf", "label": "Funny Meme Drawings", "path": "/learn/funny-meme-drawings", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-memes-online" },
     { "id": "learn-easy-memes-to-draw", "kind": "leaf", "label": "Easy Memes to Draw", "path": "/learn/easy-memes-to-draw", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-memes-online" },

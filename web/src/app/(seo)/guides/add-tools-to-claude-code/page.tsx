@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
 
 export const runtime = "edge";
 
@@ -34,7 +34,74 @@ const guideJsonLd = createTechArticleJsonLd({
   path: "/guides/add-tools-to-claude-code",
   about: ["Claude Code", "AnyCap CLI", "Agent skills", "AI agent capabilities"],
   keywords: ["claude code tools", "add tools to claude code", "anycap", "agent skills"],
+  datePublished: "2026-04-03",
+  dateModified: "2026-04-10",
 });
+
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "Add tools to Claude Code",
+  description:
+    "Step-by-step guide to adding image generation, video generation, image understanding, and video analysis tools to Claude Code using AnyCap skills and CLI.",
+  step: [
+    {
+      "@type": "HowToStep",
+      name: "Install the AnyCap skill",
+      text: "Run npx -y skills add anycap-ai/anycap -a claude-code -y to place the AnyCap SKILL.md file into Claude Code's skills directory.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Install the AnyCap CLI",
+      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI binary. Alternatively use npm install -g @anycap/cli.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Log in",
+      text: "Run anycap login to authenticate. This single login covers every capability.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Discover available models",
+      text: "Run anycap image models to see available image models like Seedream 5, Nano Banana Pro, and Nano Banana 2.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Generate your first image",
+      text: "Run anycap image generate --model seedream-5 --prompt 'a minimalist product mockup' to generate your first image.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Try more capabilities",
+      text: "Use anycap image read for image understanding, anycap video read for video analysis, and anycap video generate for video generation.",
+    },
+  ],
+};
+
+const faqItems = [
+  {
+    question: "Do I need to install anything besides the skill and CLI?",
+    answer:
+      "No. The AnyCap CLI is a single binary with no runtime dependencies. The skill file teaches Claude Code how to discover it. No additional SDKs, Docker containers, or language runtimes are required.",
+  },
+  {
+    question: "Does this work with Claude Code on all operating systems?",
+    answer:
+      "Yes. The AnyCap CLI supports macOS, Linux, and Windows. It runs in the same terminal session Claude Code uses.",
+  },
+  {
+    question: "How much does it cost to generate an image?",
+    answer:
+      "AnyCap uses pay-as-you-go pricing with no monthly fee. New users receive $5 in free credit. See the pricing page for per-model rates.",
+  },
+  {
+    question: "Can Claude Code call AnyCap automatically without my intervention?",
+    answer:
+      "Yes. Once the skill is installed and the CLI is authenticated, Claude Code can invoke any AnyCap capability in response to natural-language prompts. You can say 'generate a product mockup' and Claude Code will call the right AnyCap command.",
+  },
+] as const;
+
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 export default function AddToolsToClaudeCodePage() {
   return (
@@ -45,6 +112,8 @@ export default function AddToolsToClaudeCodePage() {
         { name: "Add Tools to Claude Code" },
       ]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
@@ -172,6 +241,24 @@ export default function AddToolsToClaudeCodePage() {
               </div>
             </FadeIn>
           </div>
+
+          <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-8" style={{ ...pixel }}>FAQ</h2>
+              <div className="max-w-[860px] space-y-4">
+                {faqItems.map((item) => (
+                  <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
+                    <h3 className="mb-2 text-[14px] font-bold text-[#1c1f17]" style={mono}>
+                      {item.question}
+                    </h3>
+                    <p className="text-sm leading-6 text-[#4d5145]">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
 
           <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
 

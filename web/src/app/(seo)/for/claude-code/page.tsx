@@ -440,6 +440,97 @@ export default function ForClaudeCodePage() {
             <hr className="border-t border-[#d4dbb8]" />
           </div>
 
+          {/* ── Real workflow evidence ── */}
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
+                Real workflow
+              </p>
+              <h2
+                className="text-[#1c1f17] leading-[1.1] tracking-[-0.02em]"
+                style={{ ...pixel, fontSize: "clamp(24px, 4vw, 44px)" }}
+              >
+                What a Claude Code + AnyCap session looks like
+              </h2>
+              <p className="mt-5 max-w-[760px] text-base leading-7 text-[#4d5145]">
+                These are real CLI commands and outputs. Each example runs directly inside the
+                Claude Code terminal session — no external tools, dashboards, or browser tabs.
+              </p>
+              <div className="mt-8 space-y-6 max-w-[860px]">
+                <div className="rounded-xl border border-[#d4dbb8] overflow-hidden">
+                  <div className="bg-[#f7f8ef] px-5 py-3 border-b border-[#d4dbb8]">
+                    <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>
+                      Image generation — text-to-image
+                    </p>
+                  </div>
+                  <div className="bg-[#1c1f17] px-5 py-4 space-y-2">
+                    <p className="text-[13px] text-[#5a5e52]" style={mono}>$</p>
+                    <p className="text-[13px] text-[#d4e0a4]" style={mono}>
+                      anycap image generate --model seedream-5 --prompt &quot;a minimal SaaS dashboard
+                      on a light background, clean UI, rounded corners&quot; -o dashboard-hero.png
+                    </p>
+                    <p className="text-[13px] text-[#8b9070] mt-3" style={mono}>
+                      Generating image with seedream-5...
+                    </p>
+                    <p className="text-[13px] text-[#8b9070]" style={mono}>
+                      Image saved to dashboard-hero.png (1024x1024, 487KB)
+                    </p>
+                    <p className="text-[13px] text-[#8b9070]" style={mono}>
+                      CDN URL: https://cdn.anycap.ai/...
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#d4dbb8] overflow-hidden">
+                  <div className="bg-[#f7f8ef] px-5 py-3 border-b border-[#d4dbb8]">
+                    <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>
+                      Image understanding — screenshot analysis
+                    </p>
+                  </div>
+                  <div className="bg-[#1c1f17] px-5 py-4 space-y-2">
+                    <p className="text-[13px] text-[#5a5e52]" style={mono}>$</p>
+                    <p className="text-[13px] text-[#d4e0a4]" style={mono}>
+                      anycap image read --file ./bug-screenshot.png --prompt &quot;What UI issue do you see?&quot;
+                    </p>
+                    <p className="text-[13px] text-[#8b9070] mt-3" style={mono}>
+                      The modal overlay clips the submit button at viewport widths below 640px.
+                      The button is partially hidden behind the bottom edge of the dialog container.
+                      This appears to be a CSS overflow issue on the parent .modal-body element.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#d4dbb8] overflow-hidden">
+                  <div className="bg-[#f7f8ef] px-5 py-3 border-b border-[#d4dbb8]">
+                    <p className="text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>
+                      Video generation — demo clip
+                    </p>
+                  </div>
+                  <div className="bg-[#1c1f17] px-5 py-4 space-y-2">
+                    <p className="text-[13px] text-[#5a5e52]" style={mono}>$</p>
+                    <p className="text-[13px] text-[#d4e0a4]" style={mono}>
+                      anycap video generate --model veo-3-1 --prompt &quot;a developer typing in a dark
+                      terminal, smooth camera push-in, ambient desk lighting&quot;
+                    </p>
+                    <p className="text-[13px] text-[#8b9070] mt-3" style={mono}>
+                      Generating video with veo-3-1...
+                    </p>
+                    <p className="text-[13px] text-[#8b9070]" style={mono}>
+                      Video ready (8s, 1080p, 12.4MB)
+                    </p>
+                    <p className="text-[13px] text-[#8b9070]" style={mono}>
+                      CDN URL: https://cdn.anycap.ai/...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
           {/* ── Gap table ── */}
           <FadeIn>
             <div className="mt-16 md:mt-24">

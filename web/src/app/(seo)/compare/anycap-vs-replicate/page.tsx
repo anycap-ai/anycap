@@ -364,6 +364,56 @@ export default function AnycapVsReplicatePage() {
           </FadeIn>
 
           <FadeIn className="mt-16 md:mt-20">
+            <section>
+              <h2 className="mb-4 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                Practical benchmark: zero to first image
+              </h2>
+              <p className="max-w-[700px] text-sm leading-6 text-[#4d5145] mb-6">
+                The table below compares what it takes to go from zero setup to generating
+                the first image in a Claude Code / Cursor / Codex agent workflow.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-[#d4dbb8]">
+                      <th className="pb-3 pr-6 text-[11px] text-[#5a5e52] tracking-[0.5px] w-[200px]" style={mono}>Metric</th>
+                      <th className="pb-3 pr-6 text-[11px] text-[#6b7d3a] tracking-[0.5px]" style={mono}>AnyCap</th>
+                      <th className="pb-3 text-[11px] text-[#5a5e52] tracking-[0.5px]" style={mono}>Replicate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-[#d4dbb8]/50">
+                      <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17] align-top">Commands to first image</td>
+                      <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">3 (install + login + generate)</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">pip install + API key setup + Python script + model version lookup</td>
+                    </tr>
+                    <tr className="border-b border-[#d4dbb8]/50">
+                      <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17] align-top">Auth flows required</td>
+                      <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">1 (anycap login)</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">1 API token, but model versioning and input schema differ per model</td>
+                    </tr>
+                    <tr className="border-b border-[#d4dbb8]/50">
+                      <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17] align-top">Agent integration required</td>
+                      <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">Skill file auto-discovery</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">Custom Python script or API wrapper</td>
+                    </tr>
+                    <tr className="border-b border-[#d4dbb8]/50">
+                      <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17] align-top">Adding video after image</td>
+                      <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">Same CLI, same auth: anycap video generate</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">Find a video model, learn its input schema, add new prediction code</td>
+                    </tr>
+                    <tr className="border-b border-[#d4dbb8]/50">
+                      <td className="py-4 pr-6 text-sm font-medium text-[#1c1f17] align-top">Free credit to start</td>
+                      <td className="py-4 pr-6 text-sm text-[#4d5145] leading-6 align-top">$5 free credit, no card required</td>
+                      <td className="py-4 text-sm text-[#4d5145] leading-6 align-top">Pay-per-prediction, pricing varies by model and hardware tier</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </FadeIn>
+
+          <FadeIn className="mt-16 md:mt-20">
             <section className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6">
                 <p className="mb-3 text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
