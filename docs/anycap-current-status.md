@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-08
+> Last updated: 2026-04-09
 
 ## 1. Capabilities (Cap)
 
@@ -53,6 +53,15 @@ Models advertise which operations they support. Schema discovery works for all, 
 Search has two modes:
 - **General** (default) -- returns a list of results with titles, URLs, descriptions, and full page content.
 - **Grounding** -- LLM synthesizes an answer with per-segment source attribution using Google Search grounding via Gemini. Response excludes model and usage details (internal implementation details).
+
+### Interactive Tools (Local, No Server Required)
+
+| Tool | CLI Command | Description |
+|------|-------------|-------------|
+| Annotate | `anycap annotate` | Browser-based visual annotation and feedback. Supports images, URLs, videos, audio. Multi-user real-time collaboration. Screen recording with narration. |
+| Draw | `anycap draw` | Browser-based interactive whiteboard (Excalidraw). Supports Mermaid input (auto-converted), Excalidraw JSON, blank canvas. Agent can push updates via `draw update`. Multi-user collaboration. |
+
+Both tools run entirely locally (no server connection needed). Non-blocking mode (`--no-wait`) is recommended for agent workflows -- start a session, let the human interact, poll for results, and push updates without restarting.
 
 ### File Upload
 
@@ -110,6 +119,10 @@ anycap
 │   ├── image-read            Analyze images
 │   ├── video-read            Analyze video
 │   └── audio-read            Analyze audio
+├── annotate                  Interactive visual annotation
+│   ├── poll / stop / list
+├── draw                      Interactive whiteboard (Excalidraw)
+│   ├── poll / update / stop / list
 ├── search                    Web search (--grounding for LLM mode)
 ├── crawl                     Convert web page to Markdown
 ├── drive

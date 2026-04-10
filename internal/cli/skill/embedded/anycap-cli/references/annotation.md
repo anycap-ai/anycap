@@ -1,6 +1,6 @@
 # Annotate
 
-Interactive browser-based annotation and feedback tool. Opens a visual editor where humans draw annotations (rectangles, arrows, points, freehand) with text labels, and optionally record screen video with voice narration. Supports four media types and real-time multi-user collaboration.
+Interactive browser-based annotation and feedback tool. Opens a visual editor where humans draw annotations (rectangles, arrows, points, freehand) with text labels, and optionally record screen video with voice narration. Supports four media types and real-time multi-user collaboration (image, video, audio; URL mode is single-user).
 
 Use annotation when you need structured visual feedback from a human -- pointing at specific regions, marking desired changes, or recording a narrated walkthrough that you can analyze with `anycap actions video-read`.
 
@@ -116,11 +116,11 @@ Response:
   "stop_command": "anycap annotate stop --session ann_a1b2c3d4",
   "session_file": ".anycap/annotate/ann_a1b2c3d4.json",
   "expires_in": 600,
-  "next_action_hint": "Show the URL to the user. For non-URL targets, multiple users can open the same URL to collaborate in real-time. URL mode is single-user -- recording is the primary feedback artifact. After the user confirms they are done, run poll_command to retrieve all feedback, then run stop_command. Session state is persisted at session_file -- read it to recover session details if needed."
+  "next_action_hint": "The browser opens automatically on desktop; in headless environments share the URL with the user. Tell the user to click Done when finished. Multiple users can open the same URL for real-time collaboration. Users can draw annotations and/or record screen with narration (Rec button). For URL targets, emphasize recording -- it is the primary feedback artifact (no annotated image due to cross-origin). After the user confirms they clicked Done, run poll_command to get the result, then stop_command to shut down. Use `anycap annotate list` to recover sessions after context loss."
 }
 ```
 
-Show the URL to the human. For image/video/audio targets, multiple people can open the same URL to collaborate. For URL targets, only one user should use the session (recording is the primary artifact). Wait for the human to confirm they are done before polling.
+Show the URL to the human. For image/video/audio targets, multiple people can open the same URL to collaborate. Wait for the human to confirm they are done before polling.
 
 **Session recovery:** If you lose track of the session ID or commands, use `anycap annotate list` to see all sessions with their recovery commands. Alternatively, read the `session_file` (`.anycap/annotate/<session_id>.json` in the working directory) directly.
 
@@ -166,6 +166,8 @@ anycap annotate stop --session ann_a1b2c3d4
 | `--no-wait` | no | Start background server and return immediately |
 | `--bind` | no | Bind address (default: `127.0.0.1`; use `0.0.0.0` for LAN/remote/headless access) |
 | `--port` | no | Server port (default: random; agents should specify a fixed port) |
+
+**Port tip:** Use the same `--port` value across sessions (e.g., `--port 8888`). The browser stores each user's display name in localStorage, which is scoped by origin (host + port). A consistent port means returning collaborators keep their name without re-entering it.
 
 Note: `--json` and `--pretty` are global CLI flags (not annotate-specific) that control output format. Non-TTY environments default to JSON automatically.
 

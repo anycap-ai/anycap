@@ -107,6 +107,31 @@ build:annotate-ui:
     - when: on_success
 
 # ---------------------------------------------------------------------------
+# Prepare: Build draw UI (page.html for go:embed)
+# ---------------------------------------------------------------------------
+
+build:draw-ui:
+  stage: prepare
+  tags:
+    - docker
+  image: node:22-slim
+  script:
+    - cd internal/cli/draw/web
+    - npm install
+    - npm run build
+    - cp dist/index.html ../page.html
+  artifacts:
+    paths:
+      - internal/cli/draw/page.html
+    expire_in: 1 day
+  rules:
+    - if: $RELEASE_SKILLS
+      when: never
+    - if: $APPS
+      when: never
+    - when: on_success
+
+# ---------------------------------------------------------------------------
 # Lint (skip on release, build, deploy, nightly branches)
 # ---------------------------------------------------------------------------
 
@@ -116,6 +141,8 @@ lint:
     - docker
   needs:
     - job: build:annotate-ui
+      artifacts: true
+    - job: build:draw-ui
       artifacts: true
   script:
     - go vet ./...
@@ -140,6 +167,8 @@ test:
     - docker
   needs:
     - job: build:annotate-ui
+      artifacts: true
+    - job: build:draw-ui
       artifacts: true
   script:
     - go test ./...
@@ -191,6 +220,8 @@ build:cli:dev:
     entrypoint: [""]
   needs:
     - job: build:annotate-ui
+      artifacts: true
+    - job: build:draw-ui
       artifacts: true
   variables:
     GIT_DEPTH: 0
@@ -269,6 +300,8 @@ build:cli:
     entrypoint: [""]
   needs:
     - job: build:annotate-ui
+      artifacts: true
+    - job: build:draw-ui
       artifacts: true
   variables:
     GIT_DEPTH: 0

@@ -28,7 +28,7 @@ all:
 	@echo "  infra-reset  Destroy local infra volumes and restart"
 	@echo "  sync-skills  Sync skills/ to embedded for go:embed"
 
-build: annotate-ui sync-skills $(BINARIES)
+build: annotate-ui draw-ui sync-skills $(BINARIES)
 
 $(BINARIES):
 	go build -ldflags '$(LDFLAGS)' -o ./$@ ./cmd/$@
@@ -73,6 +73,16 @@ annotate-ui:
 	cd $(ANNOTATE_WEB) && npm install && npm run build
 	cp $(ANNOTATE_WEB)/dist/index.html $(ANNOTATE_PAGE)
 	@echo "annotate UI built -> $(ANNOTATE_PAGE)"
+
+# ---------- Draw UI ----------
+
+DRAW_WEB := internal/cli/draw/web
+DRAW_PAGE := internal/cli/draw/page.html
+
+draw-ui:
+	cd $(DRAW_WEB) && npm install && npm run build
+	cp $(DRAW_WEB)/dist/index.html $(DRAW_PAGE)
+	@echo "draw UI built -> $(DRAW_PAGE)"
 
 # ---------- Skills Embedding ----------
 
