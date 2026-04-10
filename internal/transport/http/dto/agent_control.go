@@ -22,11 +22,12 @@ type RunnerHeartbeatRequest struct {
 }
 
 type InboundIMChatRequest struct {
-	Platform string `json:"platform"`
-	BotID    string `json:"bot_id"`
-	ChatID   string `json:"chat_id"`
-	SenderID string `json:"sender_id"`
-	Message  string `json:"message"`
+	Platform  string `json:"platform"`
+	BotID     string `json:"bot_id"`
+	ChatID    string `json:"chat_id"`
+	MessageID string `json:"message_id,omitempty"`
+	SenderID  string `json:"sender_id"`
+	Message   string `json:"message"`
 }
 
 type RunnerTaskUpdateRequest struct {

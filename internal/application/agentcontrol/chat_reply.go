@@ -11,6 +11,9 @@ import (
 func BuildInboundChatReply(result InboundChatResult) string {
 	switch result.Chat.Action {
 	case model.AgentChatActionContinue:
+		if result.Duplicated {
+			return ""
+		}
 		if result.Queued {
 			return "上一条还在处理中，这条消息已排队"
 		}

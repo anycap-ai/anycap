@@ -23,20 +23,22 @@ type ConversationService struct {
 type ConversationServiceOption func(*ConversationService)
 
 type InboundChatInput struct {
-	Platform string
-	BotID    string
-	ChatID   string
-	SenderID string
-	Message  string
+	Platform  string
+	BotID     string
+	ChatID    string
+	MessageID string
+	SenderID  string
+	Message   string
 }
 
 type OwnedInboundChatInput struct {
-	UserID   string
-	Platform string
-	BotID    string
-	ChatID   string
-	SenderID string
-	Message  string
+	UserID    string
+	Platform  string
+	BotID     string
+	ChatID    string
+	MessageID string
+	SenderID  string
+	Message   string
 }
 
 type InboundChatResult struct {
@@ -45,6 +47,7 @@ type InboundChatResult struct {
 	Conversation *model.AgentConversation
 	Session      *model.AgentSession
 	Queued       bool
+	Duplicated   bool
 }
 
 type RunnerSessionUpdateInput struct {
@@ -116,7 +119,7 @@ func (s *ConversationService) HandleInboundMessage(ctx context.Context, input In
 		return nil, err
 	}
 
-	return s.handleResolvedInboundMessage(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), input.Message)
+	return s.handleResolvedInboundMessage(ctx, *binding, *runner, strings.TrimSpace(input.ChatID), strings.TrimSpace(input.MessageID), input.Message)
 }
 
 func (s *ConversationService) HandleOwnedInboundMessage(ctx context.Context, input OwnedInboundChatInput) (*InboundChatResult, error) {
@@ -149,10 +152,10 @@ func (s *ConversationService) HandleOwnedInboundMessage(ctx context.Context, inp
 	if binding.ChannelID == "" {
 		return nil, model.ErrValidation("chat_id is required")
 	}
-	return s.handleResolvedInboundMessage(ctx, binding, *runner, binding.ChannelID, input.Message)
+	return s.handleResolvedInboundMessage(ctx, binding, *runner, binding.ChannelID, strings.TrimSpace(input.MessageID), input.Message)
 }
 
-func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, message string) (*InboundChatResult, error) {
+func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, messageID string, message string) (*InboundChatResult, error) {
 	chat, err := ParseChatCommand(message)
 	if err != nil {
 		return nil, err
@@ -160,11 +163,11 @@ func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, 
 
 	switch chat.Action {
 	case model.AgentChatActionContinue:
-		conversation, session, queued, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
+		conversation, session, queued, duplicated, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), strings.TrimSpace(messageID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session, Queued: queued}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session, Queued: queued, Duplicated: duplicated}, nil
 	case model.AgentChatActionNew, model.AgentChatActionReset:
 		conversation, session, err := s.resetConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
@@ -545,35 +548,40 @@ func (s *ConversationService) loadAuthorizedRunner(ctx context.Context, userID s
 	return runner, nil
 }
 
-func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, bool, error) {
+func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, messageID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, bool, bool, error) {
 	conversation, err := s.conversations.GetActiveConversationByChat(ctx, binding.UserID, binding.Platform, binding.BotID, chatID)
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, false, false, err
 	}
 	if conversation == nil {
 		conversation, err = s.createConversation(ctx, binding, runner, chatID)
 		if err != nil {
-			return nil, nil, false, err
+			return nil, nil, false, false, err
 		}
 	}
 	conversation, err = s.ensureConversationRunner(ctx, *conversation, runner)
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, false, false, err
+	}
+	if existing, err := s.findDuplicateInboundSession(ctx, *conversation, messageID); err != nil {
+		return nil, nil, false, false, err
+	} else if existing != nil {
+		return conversation, existing, false, true, nil
 	}
 	queued, err := s.isConversationBusy(ctx, *conversation)
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, false, false, err
 	}
 
 	session, err := s.createSession(ctx, binding.UserID, *conversation, model.AgentSessionModeContinue, chat.Message, conversation.LastSessionID)
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, false, false, err
 	}
 	conversation, err = s.conversations.UpdateConversationLastSession(ctx, conversation.ID, session.ID)
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, false, false, err
 	}
-	return conversation, session, queued, nil
+	return conversation, session, queued, false, nil
 }
 
 func (s *ConversationService) resetConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, error) {
@@ -827,6 +835,51 @@ func (s *ConversationService) isConversationBusy(ctx context.Context, conversati
 		return false, nil
 	}
 	return lastSession.Status == model.AgentSessionStatusCreated || lastSession.Status == model.AgentSessionStatusRunning, nil
+}
+
+func (s *ConversationService) findDuplicateInboundSession(ctx context.Context, conversation model.AgentConversation, messageID string) (*model.AgentSession, error) {
+	messageID = strings.TrimSpace(messageID)
+	if s.sessions == nil || conversation.ID <= 0 || messageID == "" {
+		return nil, nil
+	}
+	items, err := s.sessions.ListSessionsByConversation(ctx, conversation.ID)
+	if err != nil {
+		return nil, err
+	}
+	for i := len(items) - 1; i >= 0; i-- {
+		item := items[i]
+		if inboundMessageIDForSession(item) != messageID {
+			continue
+		}
+		copy := item
+		return &copy, nil
+	}
+	return nil, nil
+}
+
+func inboundMessageIDForSession(session model.AgentSession) string {
+	if session.UserMessage == nil {
+		return ""
+	}
+	return extractFeishuMessageID(*session.UserMessage)
+}
+
+func extractFeishuMessageID(message string) string {
+	message = strings.TrimSpace(message)
+	if message == "" {
+		return ""
+	}
+	const marker = `message_id="`
+	start := strings.Index(message, marker)
+	if start < 0 {
+		return ""
+	}
+	start += len(marker)
+	end := strings.Index(message[start:], `"`)
+	if end < 0 {
+		return ""
+	}
+	return strings.TrimSpace(message[start : start+end])
 }
 
 func (s *ConversationService) ensureConversationRunner(ctx context.Context, conversation model.AgentConversation, runner model.AgentRunner) (*model.AgentConversation, error) {

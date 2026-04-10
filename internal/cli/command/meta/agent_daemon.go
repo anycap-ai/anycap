@@ -511,7 +511,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 			SelectReaction: reactionSelector,
 			SendReaction:   adapter.SendReaction,
 			HandleInbound: func(ctx context.Context, event im.NormalizedInboundEvent) (string, error) {
-				return httpClient.InboundIMChat(ctx, event.Platform, event.BotID, event.ChannelID, event.SenderID, messageForInboundChat(event))
+				return httpClient.InboundIMChat(ctx, event.Platform, event.BotID, event.ChannelID, event.MessageID, event.SenderID, messageForInboundChat(event))
 			},
 		})
 		if bot == nil {

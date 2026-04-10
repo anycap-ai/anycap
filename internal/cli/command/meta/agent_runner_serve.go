@@ -57,13 +57,14 @@ func (c *runnerServeHTTPClient) ClaimPrimary(ctx context.Context, runnerID strin
 	return err
 }
 
-func (c *runnerServeHTTPClient) InboundIMChat(ctx context.Context, platform, botID, chatID, senderID, message string) (string, error) {
+func (c *runnerServeHTTPClient) InboundIMChat(ctx context.Context, platform, botID, chatID, messageID, senderID, message string) (string, error) {
 	resp, err := c.client.PostJSON(ctx, api.AgentIMInboundPath(), map[string]any{
-		"platform":  strings.TrimSpace(platform),
-		"bot_id":    strings.TrimSpace(botID),
-		"chat_id":   strings.TrimSpace(chatID),
-		"sender_id": strings.TrimSpace(senderID),
-		"message":   strings.TrimSpace(message),
+		"platform":   strings.TrimSpace(platform),
+		"bot_id":     strings.TrimSpace(botID),
+		"chat_id":    strings.TrimSpace(chatID),
+		"message_id": strings.TrimSpace(messageID),
+		"sender_id":  strings.TrimSpace(senderID),
+		"message":    strings.TrimSpace(message),
 	})
 	if err != nil {
 		return "", err

@@ -32,7 +32,7 @@ func TestRunnerServeHTTPClientInboundIMChat(t *testing.T) {
 		client: httpclient.New(server.URL, httpclient.WithCredential(cliconfig.NewAPIKeyCredential("sk-agent-test"))),
 	}
 
-	reply, err := client.InboundIMChat(context.Background(), "feishu", "cli_appid", "oc_chat", "ou_sender", "帮我看这个 bug")
+	reply, err := client.InboundIMChat(context.Background(), "feishu", "cli_appid", "oc_chat", "om_message", "ou_sender", "帮我看这个 bug")
 	if err != nil {
 		t.Fatalf("InboundIMChat() error = %v", err)
 	}
@@ -47,6 +47,9 @@ func TestRunnerServeHTTPClientInboundIMChat(t *testing.T) {
 	}
 	if gotBody["chat_id"] != "oc_chat" {
 		t.Fatalf("expected chat_id oc_chat, got %v", gotBody["chat_id"])
+	}
+	if gotBody["message_id"] != "om_message" {
+		t.Fatalf("expected message_id om_message, got %v", gotBody["message_id"])
 	}
 	if gotBody["sender_id"] != "ou_sender" {
 		t.Fatalf("expected sender_id ou_sender, got %v", gotBody["sender_id"])

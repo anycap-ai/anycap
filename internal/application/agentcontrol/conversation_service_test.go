@@ -492,6 +492,98 @@ func TestConversationServiceHandleOwnedInboundMessageMarksQueuedWhenPreviousSess
 	}
 }
 
+func TestConversationServiceHandleOwnedInboundMessageDedupesDuplicateMessageID(t *testing.T) {
+	now := time.Date(2026, 4, 10, 4, 37, 28, 0, time.UTC)
+	lastSessionID := int64(7)
+	originalMessage := `<feishu-message message_id="om_x100b52b3a64844a0b4c3001d2a52d4c" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner">
+哈咯
+</feishu-message>`
+	existingSession := model.AgentSession{
+		ID:             7,
+		UserID:         "2000000001",
+		ConversationID: 51,
+		RunnerID:       99,
+		Agent:          "codex",
+		Mode:           model.AgentSessionModeContinue,
+		Status:         model.AgentSessionStatusCommitted,
+		UserMessage:    stringPtr(originalMessage),
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			51: {
+				ID:            51,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "cli_personal_bot",
+				ChatID:        "oc_chat",
+				RunnerID:      99,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-10 * time.Minute),
+				UpdatedAt:     now.Add(-5 * time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|cli_personal_bot|oc_chat": {
+				ID:            51,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "cli_personal_bot",
+				ChatID:        "oc_chat",
+				RunnerID:      99,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-10 * time.Minute),
+				UpdatedAt:     now.Add(-5 * time.Minute),
+			},
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			99: {ID: 99, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 99},
+		},
+	}
+	sessions := &fakeSessionRepo{
+		created: []model.AgentSession{existingSession},
+		nextID:  7,
+	}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now.Add(20 * time.Second) }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:    "2000000001",
+		Platform:  model.IMPlatformFeishu,
+		BotID:     "cli_personal_bot",
+		ChatID:    "oc_chat",
+		MessageID: "om_x100b52b3a64844a0b4c3001d2a52d4c",
+		SenderID:  "ou_owner",
+		Message:   originalMessage,
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if !result.Duplicated {
+		t.Fatalf("expected inbound result to be marked duplicated, got %+v", result)
+	}
+	if result.Session == nil || result.Session.ID != 7 {
+		t.Fatalf("expected existing session 7 to be reused, got %+v", result.Session)
+	}
+	if len(sessions.created) != 1 {
+		t.Fatalf("expected no new session to be created, got %d sessions", len(sessions.created))
+	}
+	if reply := BuildInboundChatReply(*result); reply != "" {
+		t.Fatalf("expected duplicate inbound reply to be suppressed, got %q", reply)
+	}
+}
+
 func TestConversationServiceHandleInboundMessageRequiresPrimaryRunner(t *testing.T) {
 	now := time.Date(2026, 4, 9, 11, 0, 0, 0, time.UTC)
 	bindings := &fakeBindingRepo{

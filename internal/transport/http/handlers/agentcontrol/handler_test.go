@@ -546,7 +546,7 @@ func TestWebhookRouteRepliesWhenPrimaryRunnerOffline(t *testing.T) {
 
 func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
 	engine, rawKey, conversations, sessions, _ := newAgentControlTestEngine(t, true)
-	reqBody := `{"platform":"feishu","bot_id":"cli_personal_bot","chat_id":"oc_chat","sender_id":"ou_owner","message":"请回复 hello"}`
+	reqBody := `{"platform":"feishu","bot_id":"cli_personal_bot","chat_id":"oc_chat","message_id":"om_message","sender_id":"ou_owner","message":"<feishu-message message_id=\"om_message\" chat_id=\"oc_chat\" chat_type=\"p2p\" message_type=\"text\" sender_open_id=\"ou_owner\">\n请回复 hello\n</feishu-message>"}`
 	req := ut.PerformRequest(
 		engine.Engine,
 		http.MethodPost,
@@ -565,6 +565,9 @@ func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
 	}
 	if len(sessions.items) != 1 {
 		t.Fatalf("expected session to be created, got %d", len(sessions.items))
+	}
+	if sessions.items[0].UserMessage == nil || !strings.Contains(*sessions.items[0].UserMessage, `message_id="om_message"`) {
+		t.Fatalf("expected created session to retain inbound message context, got %+v", sessions.items[0].UserMessage)
 	}
 }
 

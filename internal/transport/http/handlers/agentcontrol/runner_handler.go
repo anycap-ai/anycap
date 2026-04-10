@@ -81,12 +81,13 @@ func (h *RunnerHandler) InboundChat(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 	result, err := h.conversationService.HandleOwnedInboundMessage(c, agentcontrolapp.OwnedInboundChatInput{
-		UserID:   principal.UserID,
-		Platform: req.Platform,
-		BotID:    req.BotID,
-		ChatID:   req.ChatID,
-		SenderID: req.SenderID,
-		Message:  req.Message,
+		UserID:    principal.UserID,
+		Platform:  req.Platform,
+		BotID:     req.BotID,
+		ChatID:    req.ChatID,
+		MessageID: req.MessageID,
+		SenderID:  req.SenderID,
+		Message:   req.Message,
 	})
 	if err != nil {
 		status, payload := dto.MapDomainError(err)
