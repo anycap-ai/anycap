@@ -2,6 +2,7 @@
 
 import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
+import { LoginButton } from "@/components/auth/LoginButton";
 import { UserAvatarMenu, UserAvatar } from "@/components/ui/UserAvatarMenu";
 import { defaultAgentEntryPath } from "@/lib/site";
 
@@ -41,15 +42,13 @@ export function AuthNav({ variant = "human" }: { variant?: "human" | "seo" }) {
 
   return (
     <>
-      <Link
-        href="/auth/login"
-        prefetch={false}
+      <LoginButton
         className={primaryActionClass}
         style={mono}
       >
         <span className="sm:hidden">Try</span>
         <span className="hidden sm:inline">Try AnyCap</span>
-      </Link>
+      </LoginButton>
       {variant === "human" ? (
         <Link
           href={defaultAgentEntryPath}

@@ -13,6 +13,8 @@ export function AgentIconSlot({ icon, size = 20 }: { icon: string | null; size?:
       style={{ width: size, height: size }}
     >
       {icon ? (
+        // Remote SVG icons from the agent catalog are tiny and numerous; keep a plain img here.
+        // eslint-disable-next-line @next/next/no-img-element
         <img src={`${AGENT_ICON_CDN}/${icon}`} alt="" width={size} height={size} />
       ) : (
         <svg width={size - 2} height={size - 2} viewBox="0 0 18 18" fill="none">

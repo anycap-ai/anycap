@@ -1,0 +1,814 @@
+import type { Metadata } from "next";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { type DemoLine } from "@/components/landing/CapabilityDemo";
+
+export const VIDEO_GENERATION_PATH = "/capabilities/video-generation";
+
+const LAST_UPDATED_ISO = "2026-04-05";
+
+type VideoGenerationDemoLabels = {
+  header: string;
+  name: string;
+  size: string;
+  date: string;
+  link: string;
+};
+
+type VideoGenerationCard = {
+  eyebrow: string;
+  title: string;
+  href: string;
+  body: string;
+};
+
+type VideoGenerationModel = {
+  name: string;
+  href: string;
+  modes: string;
+  bestFor: string;
+};
+
+type VideoGenerationFaqItem = {
+  question: string;
+  answer: string;
+};
+
+type VideoGenerationUseCase = {
+  title: string;
+  description: string;
+};
+
+type VideoGenerationRelatedCard = {
+  eyebrow: string;
+  title: string;
+  href: string;
+  description: string;
+};
+
+type VideoGenerationNextAction = {
+  label: string;
+  href: string;
+  external?: boolean;
+  primary?: boolean;
+};
+
+type VideoGenerationPageContent = {
+  metadata: {
+    title: string;
+    description: string;
+    openGraphTitle: string;
+    openGraphDescription: string;
+    articleHeadline: string;
+    articleDescription: string;
+    articleAbout: readonly string[];
+    articleKeywords: readonly string[];
+  };
+  breadcrumbItems: readonly { name: string; href?: string }[];
+  eyebrow: string;
+  lastUpdatedLabel: string;
+  hero: {
+    title: string;
+    intro: string;
+    summaryLabel: string;
+    summaryText: string;
+  };
+  demo: {
+    labels: VideoGenerationDemoLabels;
+    lines: readonly DemoLine[];
+  };
+  decisionTitle: string;
+  decisionCardCta: string;
+  decisionCardAriaLabelTemplate: string;
+  decisionCards: readonly VideoGenerationCard[];
+  supportedModelsTitle: string;
+  tableHeaders: {
+    model: string;
+    modes: string;
+    bestFit: string;
+  };
+  models: readonly VideoGenerationModel[];
+  usageTitle: string;
+  usageExamples: readonly { title: string; code: string }[];
+  useCasesTitle: string;
+  useCases: readonly VideoGenerationUseCase[];
+  relatedTitle: string;
+  relatedCards: readonly VideoGenerationRelatedCard[];
+  faqTitle: string;
+  faqItems: readonly VideoGenerationFaqItem[];
+  nextStepsTitle: string;
+  nextActions: readonly VideoGenerationNextAction[];
+};
+
+const contentByLocale = {
+  en: {
+    metadata: {
+      title: "Video Generation API for AI agents - Text-to-video and image-to-video",
+      description:
+        "Give AI agents video generation through AnyCap. Use Veo 3.1, Kling 3.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
+      openGraphTitle: "Video Generation API for AI agents - Text-to-video and image-to-video",
+      openGraphDescription:
+        "Give AI agents video generation through AnyCap. Use Veo 3.1, Kling 3.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
+      articleHeadline: "Video Generation API for AI agents - Text-to-video and image-to-video",
+      articleDescription:
+        "Capability guide for using AnyCap video generation across AI agent workflows with Veo 3.1, Kling 3.0, and Seedance 1.5 Pro.",
+      articleAbout: ["Video generation", "Text-to-video API", "Image-to-video", "AnyCap"],
+      articleKeywords: [
+        "video generation for ai agents",
+        "text to video api",
+        "video creation api",
+        "image to video",
+        "veo 3.1",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Home", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Video Generation", href: VIDEO_GENERATION_PATH },
+    ],
+    eyebrow: "Capabilities",
+    lastUpdatedLabel: "Last updated April 5, 2026",
+    hero: {
+      title: "Video Generation",
+      intro:
+        "AnyCap video generation gives agents one CLI for text-to-video and image-to-video workflows. Agents can generate short cinematic clips from prompts, animate still images into motion, and run video creation tasks through one interface instead of stitching together separate video generation APIs. The result is a cleaner video generation layer for Claude Code, Cursor, Codex, and similar agent products.",
+      summaryLabel: "Answer-first summary",
+      summaryText:
+        "Use Veo 3.1 when the first-pass clip needs to look more premium from a text brief, Kling 3.0 when the workflow leans on cinematic motion or more exploratory image-to-video work, and Seedance 1.5 Pro when the team wants a steadier production-friendly default.",
+    },
+    demo: {
+      labels: {
+        header: "agent with anycap",
+        name: "Name",
+        size: "Size",
+        date: "Date",
+        link: "Link",
+      },
+      lines: [
+        { type: "header", delay: 0 },
+        {
+          type: "prompt",
+          content: "Create a 5-second drone shot flying over mountains at sunset",
+          delay: 500,
+        },
+        {
+          type: "text",
+          content: "I'll generate a video clip using AnyCap.",
+          delay: 800,
+        },
+        {
+          type: "tool",
+          content:
+            'run("anycap video generate --prompt \'drone shot flying over mountain range at golden hour sunset\' --model veo-3.1 -o mountains.mp4")',
+          delay: 600,
+        },
+        {
+          type: "text",
+          content: "Video generated — mountains.mp4 (5s, 1080p, 4.2 MB)",
+          sub: "✓",
+          delay: 2000,
+        },
+        { type: "video", delay: 400 },
+        {
+          type: "text",
+          content: "Here's the clip. Smooth camera movement with warm sunset tones.",
+          delay: 600,
+        },
+        { type: "cursor", delay: 500 },
+      ] as const,
+    },
+    decisionTitle: "How to choose among video models",
+    decisionCardCta: "Open model guide →",
+    decisionCardAriaLabelTemplate: "Read the {title} model guide",
+    decisionCards: [
+      {
+        eyebrow: "Premium first pass",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Best when the text brief needs to become a more polished teaser or concept clip on the first generation.",
+      },
+      {
+        eyebrow: "Cinematic motion",
+        title: "Kling 3.0",
+        href: "/models/kling-3-0",
+        body: "Best when the workflow wants stronger motion style or more flexible image-to-video iteration.",
+      },
+      {
+        eyebrow: "Repeatable production",
+        title: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        body: "Best when the team values steadier image-to-video output and a more repeatable production workflow.",
+      },
+    ] as const,
+    supportedModelsTitle: "Supported models",
+    tableHeaders: {
+      model: "Model",
+      modes: "Modes",
+      bestFit: "Best fit",
+    },
+    models: [
+      {
+        name: "Veo 3.1",
+        href: "/models/veo-3-1",
+        modes: "text-to-video, image-to-video",
+        bestFor: "High-end cinematic output and premium video generation workflows",
+      },
+      {
+        name: "Kling 3.0",
+        href: "/models/kling-3-0",
+        modes: "text-to-video, image-to-video",
+        bestFor: "Realistic motion and cinematic scene generation",
+      },
+      {
+        name: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        modes: "text-to-video, image-to-video",
+        bestFor: "Reliable image-to-video output and production-friendly motion quality",
+      },
+    ] as const,
+    usageTitle: "CLI usage",
+    usageExamples: [
+      {
+        title: "Text-to-video",
+        code:
+          'anycap video generate --prompt "a drone shot flying over a mountain range at sunset" --model veo-3.1 -o hero.mp4',
+      },
+      {
+        title: "Image-to-video",
+        code:
+          'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+      },
+      {
+        title: "Discover models",
+        code: "anycap video models",
+      },
+    ] as const,
+    useCasesTitle: "When agents need video generation",
+    useCases: [
+      {
+        title: "Demo videos",
+        description: "Generate launch clips, walkthroughs, and product demos through one command.",
+      },
+      {
+        title: "Storyboards to motion",
+        description: "Turn design stills, screenshots, or reference frames into animated video drafts.",
+      },
+      {
+        title: "Social content",
+        description:
+          "Produce short-form clips for campaigns, changelog announcements, and creator workflows.",
+      },
+      {
+        title: "Rapid prototyping",
+        description:
+          "Explore visual concepts in motion before committing to a larger production pass.",
+      },
+    ] as const,
+    relatedTitle: "Related models and guides",
+    relatedCards: [
+      {
+        eyebrow: "Model",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        description: "See when Veo 3.1 is the right choice for premium agent-led video generation.",
+      },
+      {
+        eyebrow: "Agent page",
+        title: "For Claude Code",
+        href: "/for/claude-code",
+        description: "See how video generation fits into the broader Claude Code capability story.",
+      },
+      {
+        eyebrow: "Related capability",
+        title: "Image Generation",
+        href: "/capabilities/image-generation",
+        description:
+          "Pair image generation with video workflows when the agent starts from stills or concept frames.",
+      },
+    ] as const,
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "What does AnyCap video generation let agents do?",
+        answer:
+          "It gives agents one command surface for text-to-video and image-to-video workflows. Teams can generate new clips, animate reference images, and run repeatable video creation tasks without separate provider-specific integrations.",
+      },
+      {
+        question: "Which video models are available through AnyCap today?",
+        answer:
+          "The current public video generation surface includes Veo 3.1, Kling 3.0, and Seedance 1.5 Pro. Each model is available through the same AnyCap video generation API, CLI, and auth flow.",
+      },
+      {
+        question: "Why does this page include image-to-video as well as text-to-video?",
+        answer:
+          "Agent workflows often start from a screenshot, design frame, or product still rather than a prompt alone. AnyCap treats both text-to-video and image-to-video as one video generation capability so the workflow stays consistent.",
+      },
+      {
+        question: "Is this page about a video generation API or a CLI workflow?",
+        answer:
+          "It is both. Teams often search for a text-to-video API or video generation API, while agent execution usually happens through the AnyCap CLI.",
+      },
+    ] as const,
+    nextStepsTitle: "Next steps",
+    nextActions: [
+      {
+        label: "View on GitHub",
+        href: "https://github.com/anycap-ai/anycap",
+        external: true,
+        primary: true,
+      },
+      { label: "Explore capabilities", href: "/capabilities" },
+      { label: "Explore the CLI", href: "/cli" },
+    ] as const,
+  },
+  "pt-br": {
+    metadata: {
+      title: "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+      description:
+        "Dê aos agentes de IA geração de vídeo por meio do AnyCap. Use Veo 3.1, Kling 3.0 e Seedance 1.5 Pro para fluxos de texto para vídeo, imagem para vídeo e criação de vídeo em uma única CLI.",
+      openGraphTitle:
+        "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+      openGraphDescription:
+        "Dê aos agentes de IA geração de vídeo por meio do AnyCap. Use Veo 3.1, Kling 3.0 e Seedance 1.5 Pro para fluxos de texto para vídeo, imagem para vídeo e criação de vídeo em uma única CLI.",
+      articleHeadline:
+        "API de geração de vídeo para agentes de IA - texto para vídeo e imagem para vídeo",
+      articleDescription:
+        "Guia de capability para usar a geração de vídeo do AnyCap em fluxos de agentes de IA com Veo 3.1, Kling 3.0 e Seedance 1.5 Pro.",
+      articleAbout: ["Geração de vídeo", "API de texto para vídeo", "Imagem para vídeo", "AnyCap"],
+      articleKeywords: [
+        "geração de vídeo para agentes de ia",
+        "texto para vídeo api",
+        "api de criação de vídeo",
+        "imagem para vídeo",
+        "veo 3.1",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Início", href: "/" },
+      { name: "Capacidades", href: "/capabilities" },
+      { name: "Geração de vídeo", href: VIDEO_GENERATION_PATH },
+    ],
+    eyebrow: "Capacidades",
+    lastUpdatedLabel: "Atualizado em 5 de abril de 2026",
+    hero: {
+      title: "Geração de vídeo",
+      intro:
+        "A geração de vídeo do AnyCap dá aos agentes uma única CLI para fluxos de texto para vídeo e imagem para vídeo. Os agentes podem gerar clipes cinematográficos curtos a partir de prompts, animar imagens estáticas em movimento e executar tarefas de criação de vídeo por meio de uma interface consistente, em vez de integrar APIs separadas para cada modelo ou provedor. O resultado é uma camada de geração de vídeo mais limpa para Claude Code, Cursor, Codex e produtos de agente semelhantes.",
+      summaryLabel: "Resumo direto",
+      summaryText:
+        "Use o Veo 3.1 quando o primeiro clipe precisar parecer mais premium a partir de um briefing textual, o Kling 3.0 quando o fluxo depender mais de movimento cinematográfico ou de uma exploração mais flexível de imagem para vídeo, e o Seedance 1.5 Pro quando a equipe quiser um padrão mais estável e amigável para produção.",
+    },
+    demo: {
+      labels: {
+        header: "agente com AnyCap",
+        name: "Nome",
+        size: "Tamanho",
+        date: "Data",
+        link: "Link",
+      },
+      lines: [
+        { type: "header", delay: 0 },
+        {
+          type: "prompt",
+          content: "Crie um plano de drone de 5 segundos voando sobre montanhas ao pôr do sol",
+          delay: 500,
+        },
+        {
+          type: "text",
+          content: "Vou gerar esse clipe de vídeo usando o AnyCap.",
+          delay: 800,
+        },
+        {
+          type: "tool",
+          content:
+            "run(\"anycap video generate --prompt 'plano de drone sobre uma cadeia de montanhas ao pôr do sol com luz dourada' --model veo-3.1 -o mountains.mp4\")",
+          delay: 600,
+        },
+        {
+          type: "text",
+          content: "Vídeo gerado — mountains.mp4 (5s, 1080p, 4.2 MB)",
+          sub: "✓",
+          delay: 2000,
+        },
+        { type: "video", delay: 400 },
+        {
+          type: "text",
+          content: "Aqui está o clipe. Movimento de câmera suave com tons quentes de pôr do sol.",
+          delay: 600,
+        },
+        { type: "cursor", delay: 500 },
+      ] as const,
+    },
+    decisionTitle: "Como escolher entre os modelos de vídeo",
+    decisionCardCta: "Abrir guia do modelo →",
+    decisionCardAriaLabelTemplate: "Ler o guia do modelo {title}",
+    decisionCards: [
+      {
+        eyebrow: "Primeira versão premium",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Melhor quando o briefing textual precisa virar um teaser ou clipe conceitual mais polido na primeira geração.",
+      },
+      {
+        eyebrow: "Movimento cinematográfico",
+        title: "Kling 3.0",
+        href: "/models/kling-3-0",
+        body: "Melhor quando o fluxo quer um estilo de movimento mais forte ou uma iteração de imagem para vídeo mais flexível.",
+      },
+      {
+        eyebrow: "Produção repetível",
+        title: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        body: "Melhor quando a equipe valoriza uma saída de imagem para vídeo mais estável e um fluxo de produção mais repetível.",
+      },
+    ] as const,
+    supportedModelsTitle: "Modelos suportados",
+    tableHeaders: {
+      model: "Modelo",
+      modes: "Modos",
+      bestFit: "Melhor ajuste",
+    },
+    models: [
+      {
+        name: "Veo 3.1",
+        href: "/models/veo-3-1",
+        modes: "texto para vídeo, imagem para vídeo",
+        bestFor: "Saída cinematográfica premium e fluxos de geração de vídeo de alto nível",
+      },
+      {
+        name: "Kling 3.0",
+        href: "/models/kling-3-0",
+        modes: "texto para vídeo, imagem para vídeo",
+        bestFor: "Movimento realista e geração de cenas cinematográficas",
+      },
+      {
+        name: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        modes: "texto para vídeo, imagem para vídeo",
+        bestFor: "Saída confiável de imagem para vídeo e qualidade de movimento amigável para produção",
+      },
+    ] as const,
+    usageTitle: "Uso na CLI",
+    usageExamples: [
+      {
+        title: "Texto para vídeo",
+        code:
+          'anycap video generate --prompt "um plano de drone voando sobre uma cadeia de montanhas ao pôr do sol" --model veo-3.1 -o hero.mp4',
+      },
+      {
+        title: "Imagem para vídeo",
+        code:
+          'anycap video generate --prompt "anime este frame em um movimento sutil de câmera" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+      },
+      {
+        title: "Descobrir modelos",
+        code: "anycap video models",
+      },
+    ] as const,
+    useCasesTitle: "Quando os agentes precisam de geração de vídeo",
+    useCases: [
+      {
+        title: "Vídeos de demonstração",
+        description:
+          "Gere clipes de lançamento, walkthroughs e demos de produto com um único comando.",
+      },
+      {
+        title: "Do storyboard ao movimento",
+        description:
+          "Transforme imagens de design, screenshots ou frames de referência em rascunhos animados.",
+      },
+      {
+        title: "Conteúdo social",
+        description:
+          "Produza clipes curtos para campanhas, anúncios de changelog e fluxos de criadores.",
+      },
+      {
+        title: "Protótipo rápido",
+        description:
+          "Explore conceitos visuais em movimento antes de partir para uma produção maior.",
+      },
+    ] as const,
+    relatedTitle: "Modelos e guias relacionados",
+    relatedCards: [
+      {
+        eyebrow: "Modelo",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        description:
+          "Veja quando o Veo 3.1 é a melhor escolha para geração de vídeo premium orientada por agentes.",
+      },
+      {
+        eyebrow: "Página de agente",
+        title: "Para Claude Code",
+        href: "/for/claude-code",
+        description:
+          "Veja como a geração de vídeo entra na história mais ampla de capabilities do Claude Code.",
+      },
+      {
+        eyebrow: "Capability relacionada",
+        title: "Geração de imagem",
+        href: "/capabilities/image-generation",
+        description:
+          "Combine geração de imagem com fluxos de vídeo quando o agente parte de stills ou frames de conceito.",
+      },
+    ] as const,
+    faqTitle: "Perguntas frequentes",
+    faqItems: [
+      {
+        question: "O que a geração de vídeo do AnyCap permite que os agentes façam?",
+        answer:
+          "Ela dá aos agentes uma única superfície de comando para fluxos de texto para vídeo e imagem para vídeo. As equipes podem gerar novos clipes, animar imagens de referência e executar tarefas repetíveis de criação de vídeo sem integrações separadas por provedor.",
+      },
+      {
+        question: "Quais modelos de vídeo estão disponíveis no AnyCap hoje?",
+        answer:
+          "A superfície pública atual de geração de vídeo inclui Veo 3.1, Kling 3.0 e Seedance 1.5 Pro. Cada modelo está disponível pela mesma API de geração de vídeo, CLI e fluxo de autenticação do AnyCap.",
+      },
+      {
+        question: "Por que esta página inclui imagem para vídeo além de texto para vídeo?",
+        answer:
+          "Os fluxos de agente costumam começar de uma captura de tela, um frame de design ou um still de produto, em vez de um prompt isolado. O AnyCap trata texto para vídeo e imagem para vídeo como uma capability só para manter o fluxo consistente.",
+      },
+      {
+        question: "Esta página fala de uma API de geração de vídeo ou de um fluxo CLI?",
+        answer:
+          "Das duas coisas. As equipes costumam procurar uma API de texto para vídeo ou de geração de vídeo, enquanto a execução em agentes normalmente acontece pela CLI do AnyCap.",
+      },
+    ] as const,
+    nextStepsTitle: "Próximos passos",
+    nextActions: [
+      {
+        label: "Ver no GitHub",
+        href: "https://github.com/anycap-ai/anycap",
+        external: true,
+        primary: true,
+      },
+      { label: "Explorar capabilities", href: "/capabilities" },
+      { label: "Explorar a CLI", href: "/cli" },
+    ] as const,
+  },
+  id: {
+    metadata: {
+      title: "API generasi video untuk agen AI - text-to-video dan image-to-video",
+      description:
+        "Berikan generasi video ke agen AI melalui AnyCap. Gunakan Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro untuk alur text-to-video, image-to-video, dan pembuatan video dalam satu CLI.",
+      openGraphTitle: "API generasi video untuk agen AI - text-to-video dan image-to-video",
+      openGraphDescription:
+        "Berikan generasi video ke agen AI melalui AnyCap. Gunakan Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro untuk alur text-to-video, image-to-video, dan pembuatan video dalam satu CLI.",
+      articleHeadline: "API generasi video untuk agen AI - text-to-video dan image-to-video",
+      articleDescription:
+        "Panduan capability untuk menggunakan generasi video AnyCap dalam alur kerja agen AI dengan Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro.",
+      articleAbout: ["Generasi video", "API text-to-video", "Image-to-video", "AnyCap"],
+      articleKeywords: [
+        "generasi video untuk agen ai",
+        "text to video api",
+        "video creation api",
+        "image to video",
+        "veo 3.1",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Generasi video", href: VIDEO_GENERATION_PATH },
+    ],
+    eyebrow: "Capabilities",
+    lastUpdatedLabel: "Diperbarui 5 April 2026",
+    hero: {
+      title: "Generasi video",
+      intro:
+        "Generasi video AnyCap memberi agen satu CLI untuk alur text-to-video dan image-to-video. Agen dapat menghasilkan klip sinematik singkat dari prompt, menganimasikan gambar diam menjadi gerak, dan menjalankan tugas pembuatan video lewat satu antarmuka yang konsisten, alih-alih merangkai API generasi video terpisah untuk setiap model atau penyedia. Hasilnya adalah lapisan generasi video yang lebih bersih untuk Claude Code, Cursor, Codex, dan produk agen serupa.",
+      summaryLabel: "Ringkasan langsung",
+      summaryText:
+        "Gunakan Veo 3.1 saat klip first-pass perlu terlihat lebih premium dari briefing teks, Kling 3.0 saat alur lebih bergantung pada gerakan sinematik atau iterasi image-to-video yang lebih fleksibel, dan Seedance 1.5 Pro saat tim menginginkan default yang lebih stabil dan ramah produksi.",
+    },
+    demo: {
+      labels: {
+        header: "agen dengan AnyCap",
+        name: "Nama",
+        size: "Ukuran",
+        date: "Tanggal",
+        link: "Tautan",
+      },
+      lines: [
+        { type: "header", delay: 0 },
+        {
+          type: "prompt",
+          content: "Buat shot drone 5 detik melayang di atas pegunungan saat matahari terbenam",
+          delay: 500,
+        },
+        {
+          type: "text",
+          content: "Saya akan membuat klip video itu menggunakan AnyCap.",
+          delay: 800,
+        },
+        {
+          type: "tool",
+          content:
+            "run(\"anycap video generate --prompt 'shot drone melintas di atas rangkaian pegunungan saat golden hour sunset' --model veo-3.1 -o mountains.mp4\")",
+          delay: 600,
+        },
+        {
+          type: "text",
+          content: "Video dibuat — mountains.mp4 (5s, 1080p, 4.2 MB)",
+          sub: "✓",
+          delay: 2000,
+        },
+        { type: "video", delay: 400 },
+        {
+          type: "text",
+          content: "Ini klipnya. Gerakan kamera mulus dengan nuansa hangat matahari terbenam.",
+          delay: 600,
+        },
+        { type: "cursor", delay: 500 },
+      ] as const,
+    },
+    decisionTitle: "Cara memilih model video",
+    decisionCardCta: "Buka panduan model →",
+    decisionCardAriaLabelTemplate: "Baca panduan model {title}",
+    decisionCards: [
+      {
+        eyebrow: "First pass premium",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Terbaik saat briefing teks perlu menjadi teaser atau konsep klip yang lebih rapi pada generasi pertama.",
+      },
+      {
+        eyebrow: "Gerakan sinematik",
+        title: "Kling 3.0",
+        href: "/models/kling-3-0",
+        body: "Terbaik saat alur membutuhkan gaya gerakan yang lebih kuat atau iterasi image-to-video yang lebih fleksibel.",
+      },
+      {
+        eyebrow: "Produksi yang dapat diulang",
+        title: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        body: "Terbaik saat tim mengutamakan output image-to-video yang lebih stabil dan alur produksi yang lebih mudah diulang.",
+      },
+    ] as const,
+    supportedModelsTitle: "Model yang didukung",
+    tableHeaders: {
+      model: "Model",
+      modes: "Mode",
+      bestFit: "Paling cocok",
+    },
+    models: [
+      {
+        name: "Veo 3.1",
+        href: "/models/veo-3-1",
+        modes: "text-to-video, image-to-video",
+        bestFor: "Output sinematik kelas atas dan alur generasi video premium",
+      },
+      {
+        name: "Kling 3.0",
+        href: "/models/kling-3-0",
+        modes: "text-to-video, image-to-video",
+        bestFor: "Gerakan realistis dan generasi adegan sinematik",
+      },
+      {
+        name: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        modes: "text-to-video, image-to-video",
+        bestFor: "Output image-to-video yang andal dan kualitas gerakan yang ramah produksi",
+      },
+    ] as const,
+    usageTitle: "Penggunaan CLI",
+    usageExamples: [
+      {
+        title: "Text-to-video",
+        code:
+          'anycap video generate --prompt "shot drone terbang di atas rangkaian pegunungan saat matahari terbenam" --model veo-3.1 -o hero.mp4',
+      },
+      {
+        title: "Image-to-video",
+        code:
+          'anycap video generate --prompt "animasikan still ini menjadi gerakan kamera yang halus" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+      },
+      {
+        title: "Temukan model",
+        code: "anycap video models",
+      },
+    ] as const,
+    useCasesTitle: "Saat agen membutuhkan generasi video",
+    useCases: [
+      {
+        title: "Video demo",
+        description:
+          "Hasilkan klip peluncuran, walkthrough, dan demo produk lewat satu command.",
+      },
+      {
+        title: "Storyboard ke motion",
+        description:
+          "Ubah still desain, screenshot, atau frame referensi menjadi draft video animasi.",
+      },
+      {
+        title: "Konten sosial",
+        description:
+          "Buat klip pendek untuk kampanye, pengumuman changelog, dan workflow kreator.",
+      },
+      {
+        title: "Prototipe cepat",
+        description:
+          "Jelajahi konsep visual dalam motion sebelum masuk ke fase produksi yang lebih besar.",
+      },
+    ] as const,
+    relatedTitle: "Model dan panduan terkait",
+    relatedCards: [
+      {
+        eyebrow: "Model",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        description:
+          "Lihat kapan Veo 3.1 menjadi pilihan yang tepat untuk generasi video premium yang digerakkan agen.",
+      },
+      {
+        eyebrow: "Halaman agen",
+        title: "Untuk Claude Code",
+        href: "/for/claude-code",
+        description:
+          "Lihat bagaimana generasi video masuk ke cerita capability Claude Code yang lebih luas.",
+      },
+      {
+        eyebrow: "Capability terkait",
+        title: "Generasi gambar",
+        href: "/capabilities/image-generation",
+        description:
+          "Padukan generasi gambar dengan alur video saat agen berawal dari still atau frame konsep.",
+      },
+    ] as const,
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang bisa dilakukan agen dengan generasi video AnyCap?",
+        answer:
+          "Itu memberi agen satu surface perintah untuk alur text-to-video dan image-to-video. Tim dapat menghasilkan klip baru, menganimasikan gambar referensi, dan menjalankan tugas pembuatan video yang berulang tanpa integrasi penyedia terpisah.",
+      },
+      {
+        question: "Model video apa saja yang tersedia di AnyCap sekarang?",
+        answer:
+          "Surface generasi video publik saat ini mencakup Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro. Setiap model tersedia lewat API generasi video, CLI, dan alur autentikasi AnyCap yang sama.",
+      },
+      {
+        question: "Mengapa halaman ini menyertakan image-to-video selain text-to-video?",
+        answer:
+          "Alur agen sering dimulai dari screenshot, frame desain, atau still produk, bukan dari prompt saja. AnyCap memperlakukan text-to-video dan image-to-video sebagai satu capability agar alurnya tetap konsisten.",
+      },
+      {
+        question: "Apakah halaman ini tentang API generasi video atau workflow CLI?",
+        answer:
+          "Keduanya. Tim sering mencari API text-to-video atau API generasi video, sementara eksekusi agen biasanya berjalan lewat CLI AnyCap.",
+      },
+    ] as const,
+    nextStepsTitle: "Langkah berikutnya",
+    nextActions: [
+      {
+        label: "Lihat di GitHub",
+        href: "https://github.com/anycap-ai/anycap",
+        external: true,
+        primary: true,
+      },
+      { label: "Jelajahi capabilities", href: "/capabilities" },
+      { label: "Jelajahi CLI", href: "/cli" },
+    ] as const,
+  },
+} as const satisfies Record<SiteLocale, VideoGenerationPageContent>;
+
+export function getVideoGenerationMetadata(locale: SiteLocale): Metadata {
+  const content = contentByLocale[locale] ?? contentByLocale.en;
+
+  return {
+    title: content.metadata.title,
+    description: content.metadata.description,
+    alternates: { canonical: VIDEO_GENERATION_PATH },
+    openGraph: {
+      type: "website",
+      locale: getLocaleConfig(locale).ogLocale,
+      url: VIDEO_GENERATION_PATH,
+      siteName: siteConfig.siteName,
+      title: content.metadata.openGraphTitle,
+      description: content.metadata.openGraphDescription,
+    },
+  };
+}
+
+export function getVideoGenerationPageData(locale: SiteLocale) {
+  const content = contentByLocale[locale] ?? contentByLocale.en;
+
+  const capabilityGuideJsonLd = createTechArticleJsonLd({
+    headline: content.metadata.articleHeadline,
+    description: content.metadata.articleDescription,
+    path: VIDEO_GENERATION_PATH,
+    locale,
+    about: [...content.metadata.articleAbout],
+    keywords: [...content.metadata.articleKeywords],
+    dateModified: LAST_UPDATED_ISO,
+  });
+
+  return {
+    ...content,
+    capabilityGuideJsonLd,
+    faqJsonLd: createFaqPageJsonLd(content.faqItems),
+  };
+}
+
+export type VideoGenerationPageData = ReturnType<typeof getVideoGenerationPageData>;

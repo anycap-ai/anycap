@@ -65,9 +65,11 @@ npx -y skills check
 
 ## If you need more context
 
-- Product + capability overview: https://anycap.ai/llms.txt
-- Human install guide: https://anycap.ai/guides/install-anycap
-- GitHub releases: https://github.com/anycap-ai/anycap/releases
+- [AnyCap llms.txt](https://anycap.ai/llms.txt): Product and capability overview for agents.
+- [Install guide](https://anycap.ai/guides/install-anycap): Human-readable setup walkthrough.
+- [Pricing](https://anycap.ai/pricing): Credit model and pay-as-you-go details.
+- [Capabilities](https://anycap.ai/capabilities): Public capability inventory.
+- [GitHub releases](https://github.com/anycap-ai/anycap/releases): CLI binaries and release history.
 
 Last updated: 2026-04-08
 `;

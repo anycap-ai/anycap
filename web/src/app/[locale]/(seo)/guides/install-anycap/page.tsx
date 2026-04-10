@@ -1,13 +1,24 @@
-import InstallAnyCapGuidePage, {
-
-  metadata as baseMetadata,
-} from "@/app/(seo)/guides/install-anycap/page";
-import { generateLocalizedPageMetadata, type LocalePageParams } from "@/lib/localized-page";
+import InstallAnyCapGuidePage from "@/app/(seo)/guides/install-anycap/page";
+import {
+  getInstallAnyCapMetadata,
+  INSTALL_ANYCAP_GUIDE_PATH,
+} from "@/app/(seo)/guides/install-anycap/content";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getValidatedLocale, type LocalePageParams } from "@/lib/localized-page";
 
 export const runtime = "edge";
 
 export async function generateMetadata({ params }: LocalePageParams) {
-  return generateLocalizedPageMetadata(params, "guides-install-anycap", baseMetadata);
+  const locale = await getValidatedLocale(params);
+  if (!locale) {
+    return {};
+  }
+
+  return createLocalizedMetadataForPath(
+    locale,
+    INSTALL_ANYCAP_GUIDE_PATH,
+    getInstallAnyCapMetadata(locale),
+  );
 }
 
 export default function LocalizedInstallAnyCapGuidePage() {

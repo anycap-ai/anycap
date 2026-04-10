@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
-import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
-import { contactEmail } from "@/lib/contact";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
@@ -164,14 +162,16 @@ export async function Footer() {
         <div className="flex flex-col gap-4 border-t border-[#d4dbb8] pt-6 sm:flex-row sm:items-end sm:justify-between">
           <AnycapLogo size={16} />
           <EmailActionButton
-            aria-label={`Email ${contactEmail}`}
+            aria-label="Email the AnyCap team"
             className="inline-flex cursor-pointer flex-col items-start rounded-lg border-0 bg-transparent px-2 py-1 text-left transition-colors duration-200 hover:bg-[#6b7d3a]/[0.08] sm:items-end sm:text-right"
             style={mono}
           >
             <span className="text-[9px] uppercase tracking-[0.7px] text-[#697057]">
               Contact
             </span>
-            <ProtectedEmailText className="mt-1 text-[10px] tracking-[0.35px] text-[#1f221a]" />
+            <span className="mt-1 text-[10px] tracking-[0.35px] text-[#1f221a]">
+              Email the team
+            </span>
           </EmailActionButton>
         </div>
       </div>

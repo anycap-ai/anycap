@@ -3,7 +3,6 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -20,7 +19,7 @@ const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offse
 const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
 export const metadata: Metadata = {
-  title: "AnyCap Privacy Policy",
+  title: "Privacy Policy | AnyCap",
   description:
     "Read how AnyCap handles account data, usage logs, submitted content, analytics, third-party providers, and privacy requests.",
   alternates: { canonical: "/privacy" },
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/privacy",
     siteName: siteConfig.siteName,
-    title: "AnyCap Privacy Policy",
+    title: "Privacy Policy | AnyCap",
     description:
       "Read how AnyCap handles account data, billing and usage records, submitted content, analytics, and privacy requests.",
   },
@@ -102,7 +101,7 @@ export default function PrivacyPage() {
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              AnyCap Privacy Policy
+              Privacy policy for AnyCap
             </h1>
             <p className="mt-6 max-w-[760px] text-base leading-7 text-[#4d5145] md:text-lg">
               This policy explains what data AnyCap handles, why it is used, when it may be shared
@@ -168,7 +167,7 @@ export default function PrivacyPage() {
                 If you need to ask about account data, submitted content, deletion requests, or
                 another privacy matter, email{" "}
                 <EmailActionButton subject="AnyCap privacy request" className={buttonLinkClass}>
-                  <ProtectedEmailText />
+                  the AnyCap team
                 </EmailActionButton>{" "}
                 or use the{" "}
                 <Link href="/contact" className={linkClass}>

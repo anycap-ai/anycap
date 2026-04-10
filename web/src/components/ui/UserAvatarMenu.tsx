@@ -59,6 +59,8 @@ export function UserAvatar({ picture, name, size = 32 }: AvatarProps) {
 
   if (picture && !imgError) {
     return (
+      // Auth provider avatars come from user-controlled remote hosts; a plain img is simpler here.
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={picture}
         alt={name}

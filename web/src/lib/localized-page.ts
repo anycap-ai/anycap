@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { createLocalizedMetadata } from "@/lib/localized-metadata";
+import {
+  createLocalizedMetadata,
+  createLocalizedMetadataForPath,
+} from "@/lib/localized-metadata";
 import { isSupportedLocale, type PublicRouteKey, type SiteLocale } from "@/lib/site";
 
 export type LocalePageParams = {
@@ -28,4 +31,17 @@ export async function generateLocalizedPageMetadata(
   }
 
   return createLocalizedMetadata(locale, routeKey, metadata);
+}
+
+export async function generateLocalizedPageMetadataForPath(
+  paramsPromise: Promise<{ locale: string }>,
+  pathname: string,
+  metadata: Metadata
+): Promise<Metadata> {
+  const locale = await getValidatedLocale(paramsPromise);
+  if (!locale) {
+    return {};
+  }
+
+  return createLocalizedMetadataForPath(locale, pathname, metadata);
 }

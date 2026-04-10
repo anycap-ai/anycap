@@ -3,7 +3,6 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -22,7 +21,7 @@ const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offse
 const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
 export const metadata: Metadata = {
-  title: "AnyCap Terms of Service",
+  title: "Terms of Service | AnyCap",
   description:
     "Read the baseline AnyCap terms covering product access, acceptable use, third-party providers, billing surfaces, and service changes.",
   alternates: { canonical: "/terms" },
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/terms",
     siteName: siteConfig.siteName,
-    title: "AnyCap Terms of Service",
+    title: "Terms of Service | AnyCap",
     description:
       "Read the baseline AnyCap terms covering access, acceptable use, third-party providers, and service changes.",
   },
@@ -183,7 +182,7 @@ export default function TermsPage() {
                 className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
                 style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
               >
-                AnyCap Terms of Service
+                Service terms for AnyCap
               </h1>
               <p className="mt-6 text-base leading-7 text-[#4d5145] md:text-lg">
                 These baseline terms explain what AnyCap provides, what you remain responsible for
@@ -264,7 +263,7 @@ export default function TermsPage() {
               <p className={bodyClass}>
                 If your team needs clarification before broader rollout, email{" "}
                 <EmailActionButton subject="AnyCap terms question" className={buttonLinkClass}>
-                  <ProtectedEmailText />
+                  the AnyCap team
                 </EmailActionButton>{" "}
                 or use the{" "}
                 <Link href="/contact" className={linkClass}>

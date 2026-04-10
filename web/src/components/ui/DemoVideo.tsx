@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState, useEffect, useCallback } from "react";
 
 interface DemoVideoProps {
@@ -8,9 +9,17 @@ interface DemoVideoProps {
   description?: string;
   autoLoop?: boolean;
   poster?: string;
+  aspectRatio?: string;
 }
 
-export function DemoVideo({ src, title, description, autoLoop, poster }: DemoVideoProps) {
+export function DemoVideo({
+  src,
+  title,
+  description,
+  autoLoop,
+  poster,
+  aspectRatio = "16 / 9",
+}: DemoVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -53,13 +62,15 @@ export function DemoVideo({ src, title, description, autoLoop, poster }: DemoVid
       <div
         ref={containerRef}
         className="relative overflow-hidden rounded-xl border border-[#d4dbb8]"
-        style={{ aspectRatio: "16 / 9" }}
+        style={{ aspectRatio }}
       >
         {poster && !isLoaded && (
-          <img
+          <Image
             src={poster}
             alt=""
             aria-hidden
+            fill
+            unoptimized
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}

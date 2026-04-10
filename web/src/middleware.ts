@@ -20,9 +20,9 @@ const legacyRouteRedirects = new Map<string, string>([
   ["/capabilities/image-read", "/capabilities/image-understanding"],
 ]);
 
-function redirectToLocalizedPath(req: NextRequest, pathname: string) {
+function redirectToPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
-  redirectURL.pathname = buildLocalizedPath(defaultLocale, pathname);
+  redirectURL.pathname = pathname;
   return NextResponse.redirect(redirectURL, 308);
 }
 
@@ -75,14 +75,8 @@ export async function middleware(req: NextRequest) {
     return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
   }
 
-  if (
-    locale === defaultLocale &&
-    pathname === "/" &&
-    normalizedPath === `/${defaultLocale}`
-  ) {
-    const redirectURL = req.nextUrl.clone();
-    redirectURL.pathname = "/";
-    return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
+  if (locale === defaultLocale) {
+    return applyAuthResponse(redirectToPath(req, pathname), authResponse);
   }
 
   if (!locale) {
@@ -103,9 +97,26 @@ export async function middleware(req: NextRequest) {
     }
 
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
-    if (matchedPublicRoute && matchedPublicRoute.key !== "home") {
+    if (matchedPublicRoute) {
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set(localeHeaderName, defaultLocale);
+      requestHeaders.set(requestPathnameHeaderName, normalizedPath);
+      requestHeaders.set(
+        "x-anycap-global-ui",
+        globalUiPaths.has(normalizedPath) ||
+          globalUiPrefixes.some(
+            (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
+          )
+          ? "1"
+          : "0",
+      );
+
       return applyAuthResponse(
-        redirectToLocalizedPath(req, matchedPublicRoute.path),
+        NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        }),
         authResponse,
       );
     }

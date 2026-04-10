@@ -17,12 +17,12 @@ AnyCap is designed for terminal-based agent workflows. The CLI returns structure
 - Product: AnyCap
 - Type: AI agent capability runtime
 - Primary interface: CLI + skill file
-- Machine install guide: https://anycap.ai/install.txt
+- Machine install guide: [AnyCap install.txt](https://anycap.ai/install.txt)
 - Install: \`curl -fsSL https://anycap.ai/install.sh | sh\` or \`npm install -g @anycap/cli\`
 - Skill install: \`npx -y skills add anycap-ai/anycap -y\` or \`npx -y skills add anycap-ai/anycap -a <agent> -y\`
 - Pricing: $5 free credit on signup, then pay-as-you-go with no markup over official provider rates
 - License: MIT
-- Official repository: https://github.com/anycap-ai/anycap
+- Official repository: [AnyCap GitHub repository](https://github.com/anycap-ai/anycap)
 - Last updated: 2026-04-08
 
 ## Onboard
@@ -145,19 +145,19 @@ AnyCap is built to work alongside coding agents such as Claude Code, Codex, Curs
 - [For Cursor](https://anycap.ai/for/cursor) — Agent-specific skill install guidance
 - [Skill File](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md) — Full capability documentation
 - [install.txt](https://anycap.ai/install.txt) — Machine-readable install instructions
-- [llms.txt](https://anycap.ai/llms.txt)
+- [AnyCap llms.txt](https://anycap.ai/llms.txt) — LLM-facing site overview
 - [GitHub](https://github.com/anycap-ai/anycap)
 - [GitHub Releases](https://github.com/anycap-ai/anycap/releases) — CLI binaries
 - [skills.sh](https://skills.sh/anycap-ai/anycap) — Skills directory listing
-- [Website](https://anycap.ai)
+- [Website](https://anycap.ai) — Human-readable homepage
 
 ---
 
-Human-readable version: https://anycap.ai/
+Human-readable version: [AnyCap website](https://anycap.ai/)
 
-Machine install guide: https://anycap.ai/install.txt
+Machine install guide: [AnyCap install.txt](https://anycap.ai/install.txt)
 
-LLM guidance: https://anycap.ai/llms.txt
+LLM guidance: [AnyCap llms.txt](https://anycap.ai/llms.txt)
 
 MIT License
 `;

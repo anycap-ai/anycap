@@ -5,6 +5,7 @@ import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
+import { getRequestHtmlLang } from "@/lib/request-locale";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
@@ -74,7 +75,6 @@ const organizationJsonLd = {
   "@id": `${siteConfig.url}#organization`,
   name: "AnyCap",
   url: siteConfig.url,
-  email: "admin@anycap.ai",
   logo: {
     "@type": "ImageObject",
     url: `${siteConfig.url}/anycap-mark.svg`,
@@ -85,7 +85,6 @@ const organizationJsonLd = {
     {
       "@type": "ContactPoint",
       contactType: "customer support",
-      email: "admin@anycap.ai",
       url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
     },
   ],
@@ -177,10 +176,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const headerStore = await headers();
+  const htmlLang = await getRequestHtmlLang();
   const showGlobalUi = headerStore.get("x-anycap-global-ui") === "1";
 
   return (
-    <html lang={siteConfig.defaultLocale} suppressHydrationWarning>
+    <html lang={htmlLang} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

@@ -13,6 +13,22 @@ export interface DemoLine {
   driveFiles?: { name: string; size: string; date: string; shared?: boolean }[];
 }
 
+export interface CapabilityDemoLabels {
+  header: string;
+  name: string;
+  size: string;
+  date: string;
+  link: string;
+}
+
+const defaultLabels: CapabilityDemoLabels = {
+  header: "agent with anycap",
+  name: "Name",
+  size: "Size",
+  date: "Date",
+  link: "Link",
+};
+
 function ProcessingDot() {
   return (
     <span className="inline-block h-3 w-3 rounded-full border-[1.5px] border-[#808080] border-t-[#8fa34e] animate-spin" />
@@ -278,11 +294,18 @@ function DriveFileList({ files }: { files: { name: string; size: string; date: s
   );
 }
 
-export function CapabilityDemo({ lines }: { lines: DemoLine[] }) {
+export function CapabilityDemo({
+  lines,
+  labels = defaultLabels,
+}: {
+  lines: readonly DemoLine[];
+  labels?: Partial<CapabilityDemoLabels>;
+}) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mergedLabels = { ...defaultLabels, ...labels };
 
   useEffect(() => {
     const el = ref.current;
@@ -321,7 +344,7 @@ export function CapabilityDemo({ lines }: { lines: DemoLine[] }) {
         <div className="flex items-center gap-2 border-b border-[#2a2e22] py-3">
           <span className="text-[#8fa34e]">✻</span>
           <span className="text-base font-bold tracking-wide text-[#e0e0dc]">
-            agent with anycap
+            {mergedLabels.header}
           </span>
         </div>
       )}

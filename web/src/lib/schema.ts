@@ -1,9 +1,10 @@
-import { defaultLocale, localizePublicPath, siteConfig } from "@/lib/site";
+import { defaultLocale, localizePublicPath, siteConfig, type SiteLocale } from "@/lib/site";
 
 type ArticleSchemaInput = {
   headline: string;
   description: string;
   path: string;
+  locale?: SiteLocale;
   about?: string[];
   keywords?: string[];
   datePublished?: string;
@@ -19,6 +20,7 @@ type SoftwareApplicationSchemaInput = {
   name: string;
   description: string;
   path: string;
+  locale?: SiteLocale;
   applicationCategory?: string;
   operatingSystem?: string;
   downloadUrl?: string;
@@ -29,6 +31,7 @@ type SoftwareSourceCodeSchemaInput = {
   name: string;
   description: string;
   path: string;
+  locale?: SiteLocale;
   codeRepository: string;
   programmingLanguage?: string;
   runtimePlatform?: string;
@@ -40,18 +43,19 @@ const organizationReference = {
   url: siteConfig.url,
 } as const;
 
-function buildAbsoluteUrl(path: string) {
+function buildAbsoluteUrl(path: string, locale: SiteLocale = defaultLocale) {
   if (/^https?:\/\//.test(path)) {
     return path;
   }
 
-  return `${siteConfig.url}${localizePublicPath(defaultLocale, path)}`;
+  return `${siteConfig.url}${localizePublicPath(locale, path)}`;
 }
 
 export function createTechArticleJsonLd({
   headline,
   description,
   path,
+  locale,
   about = [],
   keywords = [],
   datePublished,
@@ -62,8 +66,8 @@ export function createTechArticleJsonLd({
     "@type": "TechArticle",
     headline,
     description,
-    url: buildAbsoluteUrl(path),
-    mainEntityOfPage: buildAbsoluteUrl(path),
+    url: buildAbsoluteUrl(path, locale),
+    mainEntityOfPage: buildAbsoluteUrl(path, locale),
     author: organizationReference,
     publisher: organizationReference,
     ...(about.length > 0
@@ -103,6 +107,7 @@ export function createSoftwareApplicationJsonLd({
   name,
   description,
   path,
+  locale,
   applicationCategory = "DeveloperApplication",
   operatingSystem = "macOS, Linux, Windows",
   downloadUrl,
@@ -114,7 +119,7 @@ export function createSoftwareApplicationJsonLd({
     name,
     applicationCategory,
     operatingSystem,
-    url: buildAbsoluteUrl(path),
+    url: buildAbsoluteUrl(path, locale),
     description,
     author: organizationReference,
     publisher: organizationReference,
@@ -133,6 +138,7 @@ export function createSoftwareSourceCodeJsonLd({
   name,
   description,
   path,
+  locale,
   codeRepository,
   programmingLanguage = "Go",
   runtimePlatform = "macOS, Linux, Windows",
@@ -142,7 +148,7 @@ export function createSoftwareSourceCodeJsonLd({
     "@type": "SoftwareSourceCode",
     name,
     description,
-    url: buildAbsoluteUrl(path),
+    url: buildAbsoluteUrl(path, locale),
     codeRepository,
     programmingLanguage,
     runtimePlatform,

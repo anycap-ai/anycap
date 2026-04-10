@@ -3,7 +3,9 @@ import {
   buildLocalizedPath,
   getLocaleConfig,
   getLocalizedAlternates,
+  isSeoIndexedPathForLocale,
   getPublicRouteByKey,
+  normalizePublicPath,
   siteConfig,
   type PublicRouteKey,
   type SiteLocale,
@@ -38,16 +40,19 @@ function resolveStringTitle(title: Metadata["title"]): string | undefined {
   return typeof title === "string" ? title : undefined;
 }
 
-export function createLocalizedMetadata(
+export function createLocalizedMetadataForPath(
   locale: SiteLocale,
-  routeKey: PublicRouteKey,
+  pathname: string,
   baseMetadata: Metadata
 ): Metadata {
-  const route = getPublicRouteByKey(routeKey);
-  const localizedPath = buildLocalizedPath(locale, route.path);
+  const normalizedPath = normalizePublicPath(pathname);
+  const localizedPath = buildLocalizedPath(locale, normalizedPath);
+  const isIndexedPathForLocale = isSeoIndexedPathForLocale(normalizedPath, locale);
   const localeDetails = getLocaleConfig(locale);
   const openGraph = cloneOpenGraph(baseMetadata.openGraph);
   const twitter = cloneTwitterCard(baseMetadata.twitter);
+  const { languages: _baseLanguages, ...baseAlternates } =
+    baseMetadata.alternates ?? {};
   const twitterTitle =
     twitter && typeof twitter === "object" && "title" in twitter ? twitter.title ?? undefined : undefined;
   const twitterDescription =
@@ -64,18 +69,20 @@ export function createLocalizedMetadata(
     twitterDescription ??
     baseMetadata.description ??
     siteConfig.defaultDescription;
-  const languageAlternates = {
-    ...(baseMetadata.alternates?.languages ?? {}),
-    ...getLocalizedAlternates(route.path),
-  };
+  const languageAlternates = isIndexedPathForLocale
+    ? {
+        ...(baseMetadata.alternates?.languages ?? {}),
+        ...getLocalizedAlternates(normalizedPath),
+      }
+    : undefined;
 
   return {
     ...baseMetadata,
     metadataBase: new URL(siteConfig.url),
     alternates: {
-      ...baseMetadata.alternates,
+      ...baseAlternates,
       canonical: localizedPath,
-      languages: languageAlternates,
+      ...(languageAlternates ? { languages: languageAlternates } : {}),
     },
     openGraph: openGraph
       ? {
@@ -95,8 +102,21 @@ export function createLocalizedMetadata(
       description: twitterDescription ?? socialDescription,
       images: hasValues(twitterImages) ? twitterImages : [defaultSocialImage.url],
     } as Metadata["twitter"],
-    robots: baseMetadata.robots ?? createRobotsMetadata(),
+    robots:
+      baseMetadata.robots ??
+      createRobotsMetadata({
+        allowIndexing: isIndexedPathForLocale,
+      }),
   };
+}
+
+export function createLocalizedMetadata(
+  locale: SiteLocale,
+  routeKey: PublicRouteKey,
+  baseMetadata: Metadata
+): Metadata {
+  const route = getPublicRouteByKey(routeKey);
+  return createLocalizedMetadataForPath(locale, route.path, baseMetadata);
 }
 
 export function createRootMetadata(locale: SiteLocale): Metadata {
@@ -121,7 +141,6 @@ export function createRootMetadata(locale: SiteLocale): Metadata {
       description: siteConfig.defaultDescription,
       images: [defaultSocialImage.url],
     },
-    robots: createRobotsMetadata(),
   });
 }
 

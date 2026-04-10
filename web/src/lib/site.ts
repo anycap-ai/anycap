@@ -1,9 +1,15 @@
+import seoRouteManifest from "@/generated/seo-route-manifest.json";
+import {
+  defaultSeoIndexedLocaleCodes,
+  seoIndexedLocaleCodesByRouteKey,
+} from "@/lib/seo-locale-rollout";
+
 const ROOT_PATH = "/";
 const LOCALE_HEADER = "x-anycap-locale";
 const REQUEST_PATHNAME_HEADER = "x-anycap-pathname";
 const DEFAULT_LOCALE = "en";
 
-export const supportedLocales = [DEFAULT_LOCALE] as const;
+export const supportedLocales = [DEFAULT_LOCALE, "pt-br", "id"] as const;
 
 export type SiteLocale = (typeof supportedLocales)[number];
 
@@ -11,11 +17,62 @@ export const defaultLocale: SiteLocale = DEFAULT_LOCALE;
 export const localeHeaderName = LOCALE_HEADER;
 export const requestPathnameHeaderName = REQUEST_PATHNAME_HEADER;
 
+function isConfiguredSeoLocale(value: string): value is SiteLocale {
+  return supportedLocales.includes(value as SiteLocale);
+}
+
+function normalizeSeoIndexedLocaleCodes(
+  localeCodes: readonly string[],
+  configLabel: string,
+): readonly SiteLocale[] {
+  const invalidLocaleCodes = localeCodes.filter(
+    (localeCode) => !isConfiguredSeoLocale(localeCode),
+  );
+
+  if (invalidLocaleCodes.length > 0) {
+    throw new Error(
+      `${configLabel} includes unsupported locales: ${invalidLocaleCodes.join(", ")}`,
+    );
+  }
+
+  const uniqueLocales = [...new Set(localeCodes)] as SiteLocale[];
+
+  if (uniqueLocales.length === 0) {
+    return [defaultLocale];
+  }
+
+  if (uniqueLocales.includes(defaultLocale)) {
+    return uniqueLocales;
+  }
+
+  return [defaultLocale, ...uniqueLocales];
+}
+
+/**
+ * Default locales exposed in sitemap/hreflang for routes that do not define an
+ * explicit override in `seo-locale-rollout.ts`.
+ */
+const defaultSeoIndexedLocales: readonly SiteLocale[] =
+  normalizeSeoIndexedLocaleCodes(
+    defaultSeoIndexedLocaleCodes,
+    "default SEO locale rollout",
+  );
+
 export const localeConfig = {
   en: {
     htmlLang: "en",
     ogLocale: "en_US",
     label: "English",
+  },
+  "pt-br": {
+    htmlLang: "pt-BR",
+    ogLocale: "pt_BR",
+    label: "Português (Brasil)",
+  },
+  id: {
+    htmlLang: "id",
+    ogLocale: "id_ID",
+    label: "Bahasa Indonesia",
   },
 } as const satisfies Record<
   SiteLocale,
@@ -61,7 +118,45 @@ export const siteConfig = {
 
 export type PublicRouteKind = "home" | "agent" | "seo";
 
-export const publicRouteDefinitions = [
+type BasePublicRouteDefinition = {
+  key: string;
+  kind: PublicRouteKind;
+  path: string;
+  priority: number;
+};
+
+export type PublicRouteDefinition = BasePublicRouteDefinition;
+export type PublicRouteKey = PublicRouteDefinition["key"];
+export type SeoRouteDefinition = PublicRouteDefinition & { kind: "seo" };
+export type SeoRouteKey = SeoRouteDefinition["key"];
+
+type SeoRouteManifest = {
+  routes?: string[];
+};
+
+function normalizeSitePath(pathname: string): string {
+  if (!pathname || pathname === ROOT_PATH) {
+    return ROOT_PATH;
+  }
+
+  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
+function deriveSeoRouteKey(pathname: string): string {
+  const normalizedPath = normalizeSitePath(pathname);
+  if (normalizedPath === ROOT_PATH) {
+    return "home";
+  }
+
+  return normalizedPath.slice(1).replaceAll("/", "-");
+}
+
+function getGeneratedSeoRoutePriority(pathname: string): number {
+  const segmentCount = normalizeSitePath(pathname).split("/").filter(Boolean).length;
+  return segmentCount <= 1 ? 0.68 : 0.64;
+}
+
+const manualPublicRouteDefinitions = [
   { key: "home", kind: "home", path: ROOT_PATH, priority: 1 },
   { key: "agent", kind: "agent", path: "/agent", priority: 0.6 },
   { key: "about", kind: "seo", path: "/about", priority: 0.72 },
@@ -101,6 +196,24 @@ export const publicRouteDefinitions = [
     priority: 0.82,
   },
   {
+    key: "learn-how-to-make-image-transparent",
+    kind: "seo",
+    path: "/learn/how-to-make-image-transparent",
+    priority: 0.78,
+  },
+  {
+    key: "learn-how-to-change-photo-background",
+    kind: "seo",
+    path: "/learn/how-to-change-photo-background",
+    priority: 0.76,
+  },
+  {
+    key: "learn-how-to-make-background-white-for-product-photos",
+    kind: "seo",
+    path: "/learn/how-to-make-background-white-for-product-photos",
+    priority: 0.74,
+  },
+  {
     key: "learn-how-to-make-memes-online",
     kind: "seo",
     path: "/learn/how-to-make-memes-online",
@@ -123,6 +236,36 @@ export const publicRouteDefinitions = [
     kind: "seo",
     path: "/learn/how-to-make-bad-drawing-memes",
     priority: 0.7,
+  },
+  {
+    key: "learn-how-to-make-ai-influencers",
+    kind: "seo",
+    path: "/learn/how-to-make-ai-influencers",
+    priority: 0.78,
+  },
+  {
+    key: "learn-create-ai-influencer-for-free",
+    kind: "seo",
+    path: "/learn/create-ai-influencer-for-free",
+    priority: 0.74,
+  },
+  {
+    key: "learn-how-to-make-ai-influencer-videos",
+    kind: "seo",
+    path: "/learn/how-to-make-ai-influencer-videos",
+    priority: 0.76,
+  },
+  {
+    key: "learn-ai-video-generator-from-image",
+    kind: "seo",
+    path: "/learn/ai-video-generator-from-image",
+    priority: 0.74,
+  },
+  {
+    key: "learn-what-is-an-ai-influencer",
+    kind: "seo",
+    path: "/learn/what-is-an-ai-influencer",
+    priority: 0.72,
   },
   {
     key: "learn-what-is-the-most-advanced-ai",
@@ -324,12 +467,35 @@ export const publicRouteDefinitions = [
     path: "/glossary/agent-capability-runtime",
     priority: 0.5,
   },
-] as const;
+] as const satisfies readonly PublicRouteDefinition[];
 
-export type PublicRouteDefinition = (typeof publicRouteDefinitions)[number];
-export type PublicRouteKey = PublicRouteDefinition["key"];
-export type SeoRouteDefinition = Extract<PublicRouteDefinition, { kind: "seo" }>;
-export type SeoRouteKey = SeoRouteDefinition["key"];
+export type ManualPublicRouteKey =
+  (typeof manualPublicRouteDefinitions)[number]["key"];
+
+const seoRouteManifestEntries = ((seoRouteManifest as SeoRouteManifest).routes ?? [])
+  .map((routePath) => normalizeSitePath(routePath))
+  .filter((routePath) => routePath !== ROOT_PATH && routePath !== "/agent");
+
+const manualPublicRoutePaths = new Set<string>(
+  manualPublicRouteDefinitions.map((route) => route.path)
+);
+
+const generatedSeoRouteDefinitions: SeoRouteDefinition[] = [
+  ...new Set(seoRouteManifestEntries),
+]
+  .filter((routePath) => !manualPublicRoutePaths.has(routePath))
+  .sort((left, right) => left.localeCompare(right))
+  .map((routePath) => ({
+    key: deriveSeoRouteKey(routePath),
+    kind: "seo",
+    path: routePath,
+    priority: getGeneratedSeoRoutePriority(routePath),
+  }));
+
+export const publicRouteDefinitions: readonly PublicRouteDefinition[] = [
+  ...manualPublicRouteDefinitions,
+  ...generatedSeoRouteDefinitions,
+];
 
 export const publicSiteRoutes = publicRouteDefinitions.map((route) => route.path);
 
@@ -358,12 +524,72 @@ const seoRouteByPath = Object.fromEntries(
   seoRouteDefinitions.map((route) => [route.path, route])
 ) as Record<string, SeoRouteDefinition>;
 
+const seoIndexedLocalesByRouteKey = Object.fromEntries(
+  Object.entries(seoIndexedLocaleCodesByRouteKey).map(
+    ([routeKey, localeCodes]) => {
+      if (!Object.prototype.hasOwnProperty.call(publicRouteByKey, routeKey)) {
+        throw new Error(
+          `SEO locale rollout references unknown route key: ${routeKey}`,
+        );
+      }
+
+      return [
+        routeKey,
+        normalizeSeoIndexedLocaleCodes(
+          localeCodes,
+          `SEO locale rollout for route "${routeKey}"`,
+        ),
+      ];
+    },
+  ),
+) as Partial<Record<ManualPublicRouteKey, readonly SiteLocale[]>>;
+
+const allSeoIndexedLocales = normalizeSeoIndexedLocaleCodes(
+  [
+    ...defaultSeoIndexedLocales,
+    ...Object.values(seoIndexedLocalesByRouteKey).flat(),
+  ],
+  "combined SEO locale rollout",
+);
+
 export function getLocaleConfig(locale: SiteLocale) {
   return localeConfig[locale];
 }
 
 export function isSupportedLocale(value: string): value is SiteLocale {
   return supportedLocales.includes(value as SiteLocale);
+}
+
+export function getSeoIndexedLocalesForRouteKey(
+  routeKey: PublicRouteKey,
+): readonly SiteLocale[] {
+  return (
+    seoIndexedLocalesByRouteKey[routeKey as ManualPublicRouteKey] ??
+    defaultSeoIndexedLocales
+  );
+}
+
+export function getSeoIndexedLocalesForPath(
+  pathname: string,
+): readonly SiteLocale[] {
+  const route = getPublicRouteByPath(pathname);
+
+  if (!route) {
+    return defaultSeoIndexedLocales;
+  }
+
+  return getSeoIndexedLocalesForRouteKey(route.key);
+}
+
+export function getAllSeoIndexedLocales(): readonly SiteLocale[] {
+  return allSeoIndexedLocales;
+}
+
+export function isSeoIndexedPathForLocale(
+  pathname: string,
+  locale: SiteLocale,
+): boolean {
+  return getSeoIndexedLocalesForPath(pathname).includes(locale);
 }
 
 export function getLocaleFromHeader(value?: string | null): SiteLocale {
@@ -374,19 +600,17 @@ export function getLocaleFromHeader(value?: string | null): SiteLocale {
 }
 
 export function normalizePublicPath(pathname: string): string {
-  if (!pathname || pathname === ROOT_PATH) {
-    return ROOT_PATH;
-  }
-  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return normalizeSitePath(pathname);
 }
 
 export function buildLocalizedPath(locale: SiteLocale, pathname: string): string {
   const normalizedPath = normalizePublicPath(pathname);
+  // Keep the default locale on the historical unprefixed URLs.
+  if (locale === defaultLocale) {
+    return normalizedPath;
+  }
+
   if (normalizedPath === ROOT_PATH) {
-    // Default-locale home is served at `/` (not `/en`) to avoid duplicate URLs and title tags.
-    if (locale === defaultLocale) {
-      return ROOT_PATH;
-    }
     return `/${locale}`;
   }
   return `/${locale}${normalizedPath}`;
@@ -489,14 +713,15 @@ export function getAllLocalizedPublicRoutes() {
 }
 
 export function getLocalizedAlternates(pathname: string): Record<string, string> {
+  const normalizedPath = normalizePublicPath(pathname);
   const alternates = Object.fromEntries(
-    supportedLocales.map((locale) => [
+    getSeoIndexedLocalesForPath(normalizedPath).map((locale) => [
       getLocaleConfig(locale).htmlLang,
-      buildLocalizedPath(locale, pathname),
+      buildLocalizedPath(locale, normalizedPath),
     ])
   ) as Record<string, string>;
 
-  alternates["x-default"] = buildLocalizedPath(defaultLocale, pathname);
+  alternates["x-default"] = buildLocalizedPath(defaultLocale, normalizedPath);
 
   return alternates;
 }

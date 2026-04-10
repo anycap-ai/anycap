@@ -1,8 +1,12 @@
 "use client";
 
-import { CapabilityDemo, type DemoLine } from "./CapabilityDemo";
+import {
+  CapabilityDemo,
+  type CapabilityDemoLabels,
+  type DemoLine,
+} from "./CapabilityDemo";
 
-const lines: DemoLine[] = [
+const defaultLines: DemoLine[] = [
   { type: "header", delay: 0 },
   {
     type: "prompt",
@@ -34,6 +38,20 @@ const lines: DemoLine[] = [
   { type: "cursor", delay: 500 },
 ];
 
-export function ImageGenDemo() {
-  return <CapabilityDemo lines={lines} />;
+const defaultLabels: CapabilityDemoLabels = {
+  header: "agent with anycap",
+  name: "Name",
+  size: "Size",
+  date: "Date",
+  link: "Link",
+};
+
+export function ImageGenDemo({
+  lines = defaultLines,
+  labels = defaultLabels,
+}: {
+  lines?: readonly DemoLine[];
+  labels?: Partial<CapabilityDemoLabels>;
+}) {
+  return <CapabilityDemo lines={lines} labels={labels} />;
 }

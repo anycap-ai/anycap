@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { type CSSProperties, useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { type Agent, agents } from "@/lib/agents";
 import { AgentIconSlot, SendToAgentPanel } from "@/components/agent/SendToAgentModal";
@@ -9,7 +9,17 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 
 export const EQUIP_MODAL_EVENT = "openEquipModal";
 
-export function EquipAgent({ label = "Equip your Agent" }: { label?: string }) {
+type EquipAgentProps = {
+  label?: string;
+  className?: string;
+  style?: CSSProperties;
+};
+
+export function EquipAgent({
+  label = "Equip your Agent",
+  className,
+  style,
+}: EquipAgentProps) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -60,8 +70,8 @@ export function EquipAgent({ label = "Equip your Agent" }: { label?: string }) {
       {/* Trigger button */}
       <button
         onClick={openModal}
-        className="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-[#8fa34e] text-white text-[13px] font-bold tracking-[1px] hover:bg-[#6b7d3a] transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]"
-        style={mono}
+        className={`inline-flex items-center gap-3 rounded-lg bg-[#8fa34e] px-8 py-4 text-[13px] font-bold tracking-[1px] text-white transition-all shadow-[0_4px_16px_rgba(143,163,78,0.35)] hover:bg-[#6b7d3a] hover:shadow-[0_6px_24px_rgba(107,125,58,0.4)]${className ? ` ${className}` : ""}`}
+        style={{ ...mono, ...style }}
       >
         {label}
         <svg width="6" height="10" viewBox="0 0 6 10" className="opacity-60">

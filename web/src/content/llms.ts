@@ -1,0 +1,61 @@
+const llmsContent = `# AnyCap
+
+> AnyCap is an AI agent capability runtime that gives coding agents one install path, one auth flow, and one CLI for image, video, audio, web, storage, and publishing workflows.
+
+Use AnyCap when an existing coding agent needs capabilities outside its native toolset. The primary interface is the CLI plus an installable skill file. The machine-readable install path is available at \`/install.txt\`, and the public product pages explain pricing, capabilities, and agent-specific setup.
+
+## Getting Started
+
+- [Install guide](https://anycap.ai/guides/install-anycap): Human-readable setup guide for the CLI, auth, and verification flow.
+- [install.txt](https://anycap.ai/install.txt): Machine-readable installation instructions for agent workflows.
+- [CLI overview](https://anycap.ai/cli): Public overview of the command surface and workflow shape.
+- [Pricing](https://anycap.ai/pricing): Credit model, free credit, and pay-as-you-go details.
+
+## Agent Guides
+
+- [For Codex](https://anycap.ai/for/codex): Agent-specific setup and workflow guidance for Codex.
+- [For Claude Code](https://anycap.ai/for/claude-code): Agent-specific setup and workflow guidance for Claude Code.
+- [For Cursor](https://anycap.ai/for/cursor): Agent-specific setup and workflow guidance for Cursor.
+- [For Manus](https://anycap.ai/for/manus): Agent-specific setup and workflow guidance for Manus.
+
+## Capabilities
+
+- [Capabilities overview](https://anycap.ai/capabilities): Summary of the public capability surface.
+- [Image generation](https://anycap.ai/capabilities/image-generation): Image generation models and workflow positioning.
+- [Video generation](https://anycap.ai/capabilities/video-generation): Video generation models and workflow positioning.
+- [Music generation](https://anycap.ai/capabilities/music-generation): Music generation models and workflow positioning.
+- [Image understanding](https://anycap.ai/capabilities/image-understanding): Vision and screenshot analysis workflows.
+- [Video analysis](https://anycap.ai/capabilities/video-analysis): Video inspection and understanding workflows.
+- [Audio understanding](https://anycap.ai/capabilities/audio-understanding): Audio transcription and understanding workflows.
+- [Grounded web search](https://anycap.ai/capabilities/grounded-web-search): Search workflows that return synthesized answers with citations.
+- [Web crawl](https://anycap.ai/capabilities/web-crawl): Convert web pages into clean text for downstream agent work.
+- [Drive](https://anycap.ai/capabilities/drive): Storage, sharing, and artifact handoff workflows.
+
+## Workflows
+
+- [SMART Goal Generator](https://anycap.ai/learn/smart-goal-generator): Turn rough goals into research-backed SMART goals with citations and structured notes.
+- [How to Make an Image Transparent](https://anycap.ai/learn/how-to-make-image-transparent): Remove a background, inspect the cutout, and keep the asset reusable for product and content workflows.
+- [How to Change a Photo Background](https://anycap.ai/learn/how-to-change-photo-background): Replace a photo background while preserving the original subject and branch into scene-specific variants.
+- [How to Make Background White for Product Photos](https://anycap.ai/learn/how-to-make-background-white-for-product-photos): Convert a cluttered product photo into a white-background listing image while keeping the product consistent.
+- [How to Make AI Influencers](https://anycap.ai/learn/how-to-make-ai-influencers): Build a reusable virtual creator workflow from realistic stills to motion-ready clips instead of relying on one black-box influencer app.
+- [Create AI Influencer for Free](https://anycap.ai/learn/create-ai-influencer-for-free): Validate a realistic creator direction cheaply by proving the still before you pay for more motion or distribution.
+- [How to Make AI Influencer Videos](https://anycap.ai/learn/how-to-make-ai-influencer-videos): Start with a still that already works, then promote it into image-to-video motion and inspect the clip before handoff.
+- [AI Video Generator from Image](https://anycap.ai/learn/ai-video-generator-from-image): Keep the source image, motion layer, QA, and delivery workflow connected instead of treating the still as disposable input.
+- [What Is an AI Influencer?](https://anycap.ai/learn/what-is-an-ai-influencer): A workflow-aware explainer on the persona, motion, distribution, and QA layers behind virtual creators.
+
+## Product
+
+- [About](https://anycap.ai/about): What AnyCap is, what it is not, and why it exists.
+- [Contact](https://anycap.ai/contact): Best route for support, bug reports, and enterprise questions.
+- [Privacy](https://anycap.ai/privacy): Public privacy policy.
+- [Terms](https://anycap.ai/terms): Public terms of service.
+
+## Optional
+
+- [GitHub repository](https://github.com/anycap-ai/anycap): Public codebase for the runtime, website, and skill files.
+- [GitHub releases](https://github.com/anycap-ai/anycap/releases): Release artifacts and version history.
+- [Skill file](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md): Full skill reference used by supported agents.
+- [skills.sh listing](https://skills.sh/anycap-ai/anycap): Public skill distribution page.
+`;
+
+export default llmsContent;
