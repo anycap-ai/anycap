@@ -228,6 +228,7 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 		"status": "success",
 		"data": map[string]any{
 			"connected": true,
+			"ready":     true,
 			"platform":  platform,
 			"machine": map[string]any{
 				"id":         strings.TrimSpace(envelope.Data.ID),
@@ -254,6 +255,19 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 			"executor":   strings.TrimSpace(state.Executor),
 			"started_at": strings.TrimSpace(state.StartedAt),
 		}
+		if personalBot := inspectDaemonPersonalBotStatus(state); personalBot != nil {
+			payload["data"].(map[string]any)["personal_bot"] = map[string]any{
+				"configured":        personalBot.Configured,
+				"connected":         personalBot.Connected,
+				"last_connected_at": strings.TrimSpace(personalBot.LastConnectedAt),
+				"last_error":        strings.TrimSpace(personalBot.LastError),
+				"last_error_at":     strings.TrimSpace(personalBot.LastErrorAt),
+			}
+			if !personalBot.Connected {
+				payload["data"].(map[string]any)["ready"] = false
+				payload["data"].(map[string]any)["message"] = "The local machine is connected to AnyCap server, but the personal Feishu bot is not connected yet."
+			}
+		}
 	}
 	if requestID != "" {
 		payload["request_id"] = requestID
@@ -262,30 +276,49 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 }
 
 func writeLocalDaemonStatus(stdout io.Writer, platform string, state *daemonProcessState) error {
+	data := map[string]any{
+		"connected": true,
+		"ready":     true,
+		"platform":  platform,
+		"machine": map[string]any{
+			"id":    strings.TrimSpace(state.RunnerID),
+			"name":  strings.TrimSpace(state.MachineName),
+			"state": "running",
+		},
+		"daemon": map[string]any{
+			"running":    true,
+			"pid":        state.PID,
+			"log_path":   strings.TrimSpace(state.LogPath),
+			"workspace":  strings.TrimSpace(state.Workspace),
+			"executor":   strings.TrimSpace(state.Executor),
+			"started_at": strings.TrimSpace(state.StartedAt),
+		},
+		"message": "The local daemon process is running for this platform.",
+		"next_steps": []string{
+			"Open Feishu and send a message to the personal bot.",
+			fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' to stop the local daemon.", platform),
+		},
+	}
+	if personalBot := inspectDaemonPersonalBotStatus(state); personalBot != nil {
+		data["personal_bot"] = map[string]any{
+			"configured":        personalBot.Configured,
+			"connected":         personalBot.Connected,
+			"last_connected_at": strings.TrimSpace(personalBot.LastConnectedAt),
+			"last_error":        strings.TrimSpace(personalBot.LastError),
+			"last_error_at":     strings.TrimSpace(personalBot.LastErrorAt),
+		}
+		if !personalBot.Connected {
+			data["ready"] = false
+			data["message"] = "The local daemon is running, but the personal Feishu bot is not connected yet."
+			data["next_steps"] = []string{
+				fmt.Sprintf("Inspect the daemon log at %s for the most recent Feishu connection error.", strings.TrimSpace(state.LogPath)),
+				fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' and then start it again after fixing the Feishu connection issue.", platform),
+			}
+		}
+	}
 	payload, err := json.Marshal(map[string]any{
 		"status": "success",
-		"data": map[string]any{
-			"connected": true,
-			"platform":  platform,
-			"machine": map[string]any{
-				"id":    strings.TrimSpace(state.RunnerID),
-				"name":  strings.TrimSpace(state.MachineName),
-				"state": "running",
-			},
-			"daemon": map[string]any{
-				"running":    true,
-				"pid":        state.PID,
-				"log_path":   strings.TrimSpace(state.LogPath),
-				"workspace":  strings.TrimSpace(state.Workspace),
-				"executor":   strings.TrimSpace(state.Executor),
-				"started_at": strings.TrimSpace(state.StartedAt),
-			},
-			"message": "The local daemon process is running for this platform.",
-			"next_steps": []string{
-				"Open Feishu and send a message to the personal bot.",
-				fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' to stop the local daemon.", platform),
-			},
-		},
+		"data":   data,
 	})
 	if err != nil {
 		return err
@@ -445,6 +478,9 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		Executor:    strings.ToLower(strings.TrimSpace(executorKind)),
 		Workspace:   strings.TrimSpace(workspace),
 		LogPath:     daemonLogPath(trimmedPlatform),
+		PersonalBotEnabled: strings.EqualFold(trimmedPlatform, "feishu") &&
+			strings.TrimSpace(feishuAppID) != "" &&
+			strings.TrimSpace(feishuSecret) != "",
 	}
 	if err := saveDaemonProcessState(state); err != nil {
 		return err

@@ -124,7 +124,4 @@ func registerRuntimeTasks(runtime *serverRuntime, deps serverDependencies) {
 	if deps.paymentEventsWorker != nil {
 		runtime.Register("payment-events", deps.paymentEventsWorker)
 	}
-	if deps.legacyFeishuLongConnBot != nil {
-		runtime.Register("legacy-feishu-long-connection", deps.legacyFeishuLongConnBot)
-	}
 }

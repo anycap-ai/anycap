@@ -101,13 +101,15 @@ func TestFeishuLongConnBot_NormalizeEvent(t *testing.T) {
 	}
 }
 
-func TestFeishuLongConnBot_NormalizeEventSkipsNonText(t *testing.T) {
+func TestFeishuLongConnBot_NormalizeEventAcceptsNonText(t *testing.T) {
 	bot := &FeishuLongConnBot{appID: "cli_appid"}
 
 	openID := "ou_sender"
 	senderType := "user"
 	msgType := "image"
 	chatID := "oc_chat"
+	chatType := "p2p"
+	messageID := "om_image"
 	content := `{"image_key":"img_123"}`
 
 	event := &larkim.P2MessageReceiveV1{
@@ -117,19 +119,37 @@ func TestFeishuLongConnBot_NormalizeEventSkipsNonText(t *testing.T) {
 				SenderType: &senderType,
 			},
 			Message: &larkim.EventMessage{
+				MessageId:   &messageID,
 				ChatId:      &chatID,
+				ChatType:    &chatType,
 				MessageType: &msgType,
 				Content:     &content,
 			},
 		},
 	}
 
-	_, ok, err := bot.normalizeEvent(event)
+	normalized, ok, err := bot.normalizeEvent(event)
 	if err != nil {
 		t.Fatalf("normalizeEvent() error = %v", err)
 	}
-	if ok {
-		t.Fatal("expected normalizeEvent() to skip non-text message")
+	if !ok {
+		t.Fatal("expected normalizeEvent() to accept non-text message")
+	}
+	if normalized.MessageType != "image" {
+		t.Fatalf("expected image message type, got %q", normalized.MessageType)
+	}
+	if normalized.ContentJSON != `{"image_key":"img_123"}` {
+		t.Fatalf("expected content json, got %q", normalized.ContentJSON)
+	}
+	if normalized.Message != "User sent a Feishu image message. Inspect content_json for resource identifiers." {
+		t.Fatalf("unexpected synthetic non-text message %q", normalized.Message)
+	}
+	rendered := normalized.AgentInputText()
+	if !strings.Contains(rendered, `<resource_notice>User sent a Feishu image message. Inspect content_json for resource identifiers.</resource_notice>`) {
+		t.Fatalf("expected resource notice, got %s", rendered)
+	}
+	if !strings.Contains(rendered, `<content_json>{&#34;image_key&#34;:&#34;img_123&#34;}</content_json>`) {
+		t.Fatalf("expected content json block, got %s", rendered)
 	}
 }
 

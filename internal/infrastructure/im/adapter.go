@@ -25,6 +25,7 @@ type NormalizedInboundEvent struct {
 	RootID            string
 	MessageType       string
 	Message           string
+	ContentJSON       string
 	Mentions          []NormalizedInboundMention
 	IsURLVerification bool
 	Challenge         string
@@ -70,7 +71,16 @@ func (e NormalizedInboundEvent) AgentInputText() string {
 		}
 		lines = append(lines, "  </mentions>")
 	}
-	lines = append(lines, html.EscapeString(strings.TrimSpace(e.Message)))
+	if strings.EqualFold(strings.TrimSpace(e.MessageType), "text") {
+		lines = append(lines, html.EscapeString(strings.TrimSpace(e.Message)))
+	} else {
+		if notice := strings.TrimSpace(e.Message); notice != "" {
+			lines = append(lines, fmt.Sprintf("  <resource_notice>%s</resource_notice>", html.EscapeString(notice)))
+		}
+		if raw := strings.TrimSpace(e.ContentJSON); raw != "" {
+			lines = append(lines, fmt.Sprintf("  <content_json>%s</content_json>", html.EscapeString(raw)))
+		}
+	}
 	lines = append(lines, "</feishu-message>")
 	return strings.Join(lines, "\n")
 }

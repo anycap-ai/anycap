@@ -101,16 +101,6 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 	if senderType := stringValue(event.Event.Sender.SenderType); senderType != "" && senderType != "user" {
 		return NormalizedInboundEvent{}, false, nil
 	}
-	if msgType := stringValue(event.Event.Message.MessageType); msgType != "" && msgType != "text" {
-		return NormalizedInboundEvent{}, false, nil
-	}
-
-	var content struct {
-		Text string `json:"text"`
-	}
-	if err := json.Unmarshal([]byte(stringValue(event.Event.Message.Content)), &content); err != nil {
-		return NormalizedInboundEvent{}, false, fmt.Errorf("decode feishu long connection message: %w", err)
-	}
 
 	chatID := strings.TrimSpace(stringValue(event.Event.Message.ChatId))
 	if chatID == "" {
@@ -120,8 +110,13 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 	if senderID == "" {
 		return NormalizedInboundEvent{}, false, nil
 	}
+	messageType := strings.TrimSpace(stringValue(event.Event.Message.MessageType))
+	contentJSON := strings.TrimSpace(stringValue(event.Event.Message.Content))
 	mentions := normalizeFeishuMentions(event.Event.Message.Mentions)
-	messageText := resolveMentionPlaceholders(strings.TrimSpace(content.Text), mentions)
+	messageText, err := normalizeFeishuMessageText(messageType, contentJSON, mentions)
+	if err != nil {
+		return NormalizedInboundEvent{}, false, err
+	}
 
 	return NormalizedInboundEvent{
 		Platform:    model.IMPlatformFeishu,
@@ -133,8 +128,9 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 		ThreadID:    strings.TrimSpace(stringValue(event.Event.Message.ThreadId)),
 		ParentID:    strings.TrimSpace(stringValue(event.Event.Message.ParentId)),
 		RootID:      strings.TrimSpace(stringValue(event.Event.Message.RootId)),
-		MessageType: strings.TrimSpace(stringValue(event.Event.Message.MessageType)),
+		MessageType: messageType,
 		Message:     messageText,
+		ContentJSON: contentJSON,
 		Mentions:    mentions,
 	}, true, nil
 }
@@ -283,4 +279,18 @@ func resolveMentionPlaceholders(text string, mentions []NormalizedInboundMention
 		resolved = strings.ReplaceAll(resolved, mention.Key, "@"+strings.TrimSpace(mention.Name))
 	}
 	return resolved
+}
+
+func normalizeFeishuMessageText(messageType string, contentJSON string, mentions []NormalizedInboundMention) (string, error) {
+	normalizedType := strings.TrimSpace(messageType)
+	if normalizedType == "" || strings.EqualFold(normalizedType, "text") {
+		var content struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal([]byte(contentJSON), &content); err != nil {
+			return "", fmt.Errorf("decode feishu long connection message: %w", err)
+		}
+		return resolveMentionPlaceholders(strings.TrimSpace(content.Text), mentions), nil
+	}
+	return fmt.Sprintf("User sent a Feishu %s message. Inspect content_json for resource identifiers.", normalizedType), nil
 }

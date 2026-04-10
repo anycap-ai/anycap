@@ -12,14 +12,15 @@ import (
 )
 
 type daemonProcessState struct {
-	PID        int    `json:"pid"`
-	Platform   string `json:"platform"`
-	RunnerID   string `json:"runner_id,omitempty"`
-	MachineName string `json:"machine_name,omitempty"`
-	Executor   string `json:"executor,omitempty"`
-	Workspace  string `json:"workspace,omitempty"`
-	LogPath    string `json:"log_path,omitempty"`
-	StartedAt  string `json:"started_at,omitempty"`
+	PID                int    `json:"pid"`
+	Platform           string `json:"platform"`
+	RunnerID           string `json:"runner_id,omitempty"`
+	MachineName        string `json:"machine_name,omitempty"`
+	Executor           string `json:"executor,omitempty"`
+	Workspace          string `json:"workspace,omitempty"`
+	LogPath            string `json:"log_path,omitempty"`
+	StartedAt          string `json:"started_at,omitempty"`
+	PersonalBotEnabled bool   `json:"personal_bot_enabled,omitempty"`
 }
 
 func daemonStatePath(platform string) string {

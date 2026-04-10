@@ -158,6 +158,27 @@ func TestMessageForInboundChatKeepsRawCommandText(t *testing.T) {
 	}
 }
 
+func TestMessageForInboundChatBuildsStructuredPayloadForNonTextMessage(t *testing.T) {
+	event := im.NormalizedInboundEvent{
+		Platform:    "feishu",
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		MessageID:   "om_image",
+		SenderID:    "ou_sender",
+		ChatType:    "p2p",
+		MessageType: "image",
+		Message:     "User sent a Feishu image message. Inspect content_json for resource identifiers.",
+		ContentJSON: `{"image_key":"img_123"}`,
+	}
+	got := messageForInboundChat(event)
+	if !strings.Contains(got, `<feishu-message message_id="om_image" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_sender">`) {
+		t.Fatalf("expected structured non-text payload, got %q", got)
+	}
+	if !strings.Contains(got, `<content_json>{&#34;image_key&#34;:&#34;img_123&#34;}</content_json>`) {
+		t.Fatalf("expected content_json block, got %q", got)
+	}
+}
+
 func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
@@ -238,14 +259,19 @@ func TestAgentDaemonStatusFallsBackToLocalDaemonState(t *testing.T) {
 	}
 
 	logPath := filepath.Join(tmpHome, "daemon.feishu.log")
+	if err := os.WriteFile(logPath, []byte("[Info] 2026/04/10 12:00:01.000000 connected to wss://msg-frontier.feishu.cn/ws/v2?\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
 	if err := saveDaemonProcessState(daemonProcessState{
-		PID:         os.Getpid(),
-		Platform:    "feishu",
-		RunnerID:    "run_local",
-		MachineName: "local-agent",
-		Executor:    "codex",
-		Workspace:   "/repo",
-		LogPath:     logPath,
+		PID:                os.Getpid(),
+		Platform:           "feishu",
+		RunnerID:           "run_local",
+		MachineName:        "local-agent",
+		Executor:           "codex",
+		Workspace:          "/repo",
+		LogPath:            logPath,
+		StartedAt:          "2026-04-10T12:00:00Z",
+		PersonalBotEnabled: true,
 	}); err != nil {
 		t.Fatalf("saveDaemonProcessState() error = %v", err)
 	}
@@ -280,6 +306,86 @@ func TestAgentDaemonStatusFallsBackToLocalDaemonState(t *testing.T) {
 	machine := data["machine"].(map[string]any)
 	if machine["id"] != "run_local" {
 		t.Fatalf("expected runner id run_local, got %v", machine["id"])
+	}
+	if ready, ok := data["ready"].(bool); !ok || !ready {
+		t.Fatalf("expected ready=true, got %v", data["ready"])
+	}
+	personalBot := data["personal_bot"].(map[string]any)
+	if connected, ok := personalBot["connected"].(bool); !ok || !connected {
+		t.Fatalf("expected personal bot connected, got %v", personalBot["connected"])
+	}
+}
+
+func TestAgentDaemonStatusShowsPersonalBotFailureFromLocalLog(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")); err != nil {
+		t.Fatalf("SaveCredential() error = %v", err)
+	}
+
+	originalExists := daemonProcessRunning
+	defer func() { daemonProcessRunning = originalExists }()
+	daemonProcessRunning = func(pid int) bool {
+		return pid == os.Getpid()
+	}
+
+	logPath := filepath.Join(tmpHome, "daemon.feishu.log")
+	logBody := `[Error] 2026/04/10 12:00:03.000000 connect failed, err: Post "https://open.feishu.cn/callback/ws/endpoint": tls: failed to verify certificate: SecPolicyCreateSSL error: 0
+`
+	if err := os.WriteFile(logPath, []byte(logBody), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	if err := saveDaemonProcessState(daemonProcessState{
+		PID:                os.Getpid(),
+		Platform:           "feishu",
+		RunnerID:           "run_local",
+		MachineName:        "local-agent",
+		Executor:           "codex",
+		Workspace:          "/repo",
+		LogPath:            logPath,
+		StartedAt:          "2026-04-10T12:00:00Z",
+		PersonalBotEnabled: true,
+	}); err != nil {
+		t.Fatalf("saveDaemonProcessState() error = %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/agent/runners/primary" || r.Method != http.MethodGet {
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	clientFactory := func() *httpclient.Client {
+		return httpclient.New(server.URL, httpclient.WithCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")))
+	}
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(clientFactory, stdout)
+	cmd.SetArgs([]string{"status", "--platform", "feishu"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("daemon status: %v", err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	data := payload["data"].(map[string]any)
+	if ready, ok := data["ready"].(bool); !ok || ready {
+		t.Fatalf("expected ready=false, got %v", data["ready"])
+	}
+	if !strings.Contains(strings.TrimSpace(data["message"].(string)), "personal Feishu bot is not connected") {
+		t.Fatalf("unexpected message %q", data["message"])
+	}
+	personalBot := data["personal_bot"].(map[string]any)
+	if connected, ok := personalBot["connected"].(bool); !ok || connected {
+		t.Fatalf("expected personal bot disconnected, got %v", personalBot["connected"])
+	}
+	if !strings.Contains(strings.TrimSpace(personalBot["last_error"].(string)), "tls: failed to verify certificate") {
+		t.Fatalf("unexpected last_error %q", personalBot["last_error"])
 	}
 }
 

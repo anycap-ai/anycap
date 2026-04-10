@@ -99,7 +99,7 @@ func TestBuildFeishuAdapter_ReturnsAdapterWhenDirectAPIConfigured(t *testing.T) 
 	}
 }
 
-func TestBuildLegacyFeishuLongConnBot_ReturnsBotWhenConfigured(t *testing.T) {
+func TestBuildLegacyFeishuLongConnBot_ReturnsNilEvenWhenConfigured(t *testing.T) {
 	bot := buildLegacyFeishuLongConnBot(
 		config.Config{
 			AgentControl: config.AgentControlConfig{
@@ -121,8 +121,8 @@ func TestBuildLegacyFeishuLongConnBot_ReturnsBotWhenConfigured(t *testing.T) {
 			},
 		}),
 	)
-	if bot == nil {
-		t.Fatal("expected feishu long connection bot")
+	if bot != nil {
+		t.Fatalf("expected legacy feishu long connection bot to be disabled, got %T", bot)
 	}
 }
 

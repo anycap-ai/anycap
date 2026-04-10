@@ -128,9 +128,10 @@ Deploy supports concurrent asset uploads. Sites support password-protected acces
 Current Phase 1 behavior:
 
 - Feishu is the first wired IM adapter.
-- Feishu ingress now supports two modes: local personal-bot daemon ingress and legacy server-owned shared-bot ingress. The preferred path is local daemon long connection because it does not require a public callback URL and keeps the user's bot credentials on the local machine.
+- Feishu ingress now prefers the local personal-bot daemon path. The old server-owned shared-bot long connection runtime is disabled; only its webhook/debug compatibility surfaces remain in code.
 - `/bind <token>` remains available only as a legacy/debug fallback for old shared-bot flows. It is not the main personal-bot setup path.
 - IM chat intake is conversation-first: daemon keeps command parsing on raw text, but normal chat turns now forward structured Feishu message context (`message_id`, `chat_type`, thread/reply IDs, mentions, resolved text) into the session input.
+- Personal-bot daemon ingress no longer drops non-text Feishu messages. Image/file/audio/video turns are forwarded as structured message context with `message_type`, original `content_json`, and resource-key hints, even before full resource download support exists.
 - Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
 - Feishu chat routing now prefers a per-user primary runner mapping instead of requiring per-user `bot -> runner_id` server env wiring.
 - Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.

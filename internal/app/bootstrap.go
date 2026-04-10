@@ -96,42 +96,42 @@ const (
 )
 
 type serverDependencies struct {
-	config                config.Config
-	buildInfo             buildinfo.Info
-	systemService         *systemapp.Service
-	loginService          *loginapp.Service
-	imageService          *imageapp.Service
-	videoService          *videoapp.Service
-	musicService          *musicapp.Service
-	spaceService          *spaceapp.Service
-	driveService          *driveapp.Service
-	pageService           *pageapp.Service
-	catalogService        *catalogapp.Service
-	modelRouteService     *modelrouteapp.Service
-	bindingService        *agentcontrolapp.BindingService
-	conversationService   *agentcontrolapp.ConversationService
-	taskService           *agentcontrolapp.TaskService
-	capabilitiesService   *capapp.Service
-	webService            *webapp.Service
-	feedbackService       *feedbackapp.Service
-	agentBindingRepo      port.IMBindingRepository
-	agentRunnerRepo       port.AgentRunnerRepository
-	agentConversationRepo port.AgentConversationRepository
-	agentSessionRepo      port.AgentSessionRepository
-	agentTaskRepo         port.AgentTaskRepository
-	imAdapter             *infraim.FeishuAdapter
+	config                  config.Config
+	buildInfo               buildinfo.Info
+	systemService           *systemapp.Service
+	loginService            *loginapp.Service
+	imageService            *imageapp.Service
+	videoService            *videoapp.Service
+	musicService            *musicapp.Service
+	spaceService            *spaceapp.Service
+	driveService            *driveapp.Service
+	pageService             *pageapp.Service
+	catalogService          *catalogapp.Service
+	modelRouteService       *modelrouteapp.Service
+	bindingService          *agentcontrolapp.BindingService
+	conversationService     *agentcontrolapp.ConversationService
+	taskService             *agentcontrolapp.TaskService
+	capabilitiesService     *capapp.Service
+	webService              *webapp.Service
+	feedbackService         *feedbackapp.Service
+	agentBindingRepo        port.IMBindingRepository
+	agentRunnerRepo         port.AgentRunnerRepository
+	agentConversationRepo   port.AgentConversationRepository
+	agentSessionRepo        port.AgentSessionRepository
+	agentTaskRepo           port.AgentTaskRepository
+	imAdapter               *infraim.FeishuAdapter
 	legacyFeishuLongConnBot *infraim.FeishuLongConnBot
-	apiKeyService         port.APIKeyService
-	identityTokens        port.IdentityTokenAuthenticator
-	rateLimiter           port.RateLimiter
-	rateLimitResolver     middleware.CapabilityRateLimitResolver
-	kvSyncWorker          *kvsync.Worker
-	usageSyncWorker       *usageapp.Worker
-	billingWorker         *billingapp.Worker
-	paymentEventsWorker   *paymenteventsinfra.Worker
-	idResolver            idresolver.IDResolver
-	idMapper              presenter.IDMapper
-	quotaProvider         port.StorageQuotaProvider
+	apiKeyService           port.APIKeyService
+	identityTokens          port.IdentityTokenAuthenticator
+	rateLimiter             port.RateLimiter
+	rateLimitResolver       middleware.CapabilityRateLimitResolver
+	kvSyncWorker            *kvsync.Worker
+	usageSyncWorker         *usageapp.Worker
+	billingWorker           *billingapp.Worker
+	paymentEventsWorker     *paymenteventsinfra.Worker
+	idResolver              idresolver.IDResolver
+	idMapper                presenter.IDMapper
+	quotaProvider           port.StorageQuotaProvider
 }
 
 type Server struct {
@@ -405,42 +405,42 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService.SetUsageReader(billingComp.usageReader)
 		redisClient := ratelimit.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword, cfg.RedisDB)
 		return serverDependencies{
-			config:                cfg,
-			buildInfo:             info,
-			systemService:         systemService,
-			loginService:          authComp.loginService,
-			imageService:          mediaComp.imageService,
-			videoService:          mediaComp.videoService,
-			musicService:          mediaComp.musicService,
-			spaceService:          storageComp.spaceService,
-			driveService:          storageComp.driveService,
-			pageService:           storageComp.pageService,
-			catalogService:        shared.catalogService,
-			modelRouteService:     shared.modelRouteService,
-			bindingService:        bindingService,
-			conversationService:   conversationService,
-			taskService:           taskService,
-			capabilitiesService:   mediaComp.capabilitiesService,
-			webService:            webComp.webService,
-			feedbackService:       webComp.feedbackService,
-			agentBindingRepo:      agentControlRepo,
-			agentRunnerRepo:       agentControlRepo,
-			agentConversationRepo: agentControlRepo,
-			agentSessionRepo:      agentControlRepo,
-			agentTaskRepo:         agentControlRepo,
-			imAdapter:             imAdapter,
+			config:                  cfg,
+			buildInfo:               info,
+			systemService:           systemService,
+			loginService:            authComp.loginService,
+			imageService:            mediaComp.imageService,
+			videoService:            mediaComp.videoService,
+			musicService:            mediaComp.musicService,
+			spaceService:            storageComp.spaceService,
+			driveService:            storageComp.driveService,
+			pageService:             storageComp.pageService,
+			catalogService:          shared.catalogService,
+			modelRouteService:       shared.modelRouteService,
+			bindingService:          bindingService,
+			conversationService:     conversationService,
+			taskService:             taskService,
+			capabilitiesService:     mediaComp.capabilitiesService,
+			webService:              webComp.webService,
+			feedbackService:         webComp.feedbackService,
+			agentBindingRepo:        agentControlRepo,
+			agentRunnerRepo:         agentControlRepo,
+			agentConversationRepo:   agentControlRepo,
+			agentSessionRepo:        agentControlRepo,
+			agentTaskRepo:           agentControlRepo,
+			imAdapter:               imAdapter,
 			legacyFeishuLongConnBot: buildLegacyFeishuLongConnBot(cfg, bindingService, conversationService, imAdapter),
-			apiKeyService:         authComp.apiKeyService,
-			identityTokens:        authComp.identityTokens,
-			rateLimiter:           ratelimit.NewRedisLimiter(redisClient),
-			usageSyncWorker:       mediaComp.usageSyncWorker,
-			billingWorker:         mediaComp.billingWorker,
-			paymentEventsWorker:   billingComp.paymentEventsWorker,
-			rateLimitResolver:     config.NewRateLimitProvider(cfg),
-			idResolver:            authComp.idResolver,
-			idMapper:              authComp.idMapper,
-			kvSyncWorker:          storageComp.kvSyncWorker,
-			quotaProvider:         storageComp.quotaProvider,
+			apiKeyService:           authComp.apiKeyService,
+			identityTokens:          authComp.identityTokens,
+			rateLimiter:             ratelimit.NewRedisLimiter(redisClient),
+			usageSyncWorker:         mediaComp.usageSyncWorker,
+			billingWorker:           mediaComp.billingWorker,
+			paymentEventsWorker:     billingComp.paymentEventsWorker,
+			rateLimitResolver:       config.NewRateLimitProvider(cfg),
+			idResolver:              authComp.idResolver,
+			idMapper:                authComp.idMapper,
+			kvSyncWorker:            storageComp.kvSyncWorker,
+			quotaProvider:           storageComp.quotaProvider,
 		}, nil
 	default:
 		return serverDependencies{}, fmt.Errorf("unsupported runtime mode: %s", cfg.RuntimeMode)
@@ -500,16 +500,13 @@ func buildFeishuAdapter(cfg config.Config) *infraim.FeishuAdapter {
 }
 
 func buildLegacyFeishuLongConnBot(cfg config.Config, bindingService *agentcontrolapp.BindingService, conversationService *agentcontrolapp.ConversationService, adapter *infraim.FeishuAdapter) *infraim.FeishuLongConnBot {
-	if !cfg.AgentControl.Feishu.LegacyLongConnEnabled() {
-		return nil
-	}
-	return infraim.NewFeishuLongConnBot(infraim.FeishuLongConnBotConfig{
-		AppID:               cfg.AgentControl.Feishu.AppID,
-		AppSecret:           cfg.AgentControl.Feishu.AppSecret,
-		BindingService:      bindingService,
-		ConversationService: conversationService,
-		Adapter:             adapter,
-	})
+	_ = cfg
+	_ = bindingService
+	_ = conversationService
+	_ = adapter
+	// Legacy server-owned Feishu long connections are disabled. The supported
+	// path is now the personal Feishu bot owned by the local daemon.
+	return nil
 }
 
 func buildDeviceVerificationURL(cfg config.Config) string {
