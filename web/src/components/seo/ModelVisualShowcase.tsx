@@ -1,10 +1,40 @@
 import Image from "next/image";
-import type { ModelShowcaseEntry } from "@/lib/model-showcase";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export function ModelVisualShowcase({ entry }: { entry: ModelShowcaseEntry }) {
+export interface ModelVisualShowcaseEntry {
+  modelName: string;
+  href: string;
+  sectionTitle: string;
+  intro: string;
+  promptLabel: string;
+  prompt: string;
+  caption: string;
+  note?: string;
+  signals: readonly string[];
+  images: readonly {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+    label: string;
+  }[];
+}
+
+export function ModelVisualShowcase({ entry }: { entry: ModelVisualShowcaseEntry }) {
+  return <ModelVisualShowcaseWithLabels entry={entry} />;
+}
+
+export function ModelVisualShowcaseWithLabels({
+  entry,
+  generatedExampleLabel = "Generated example",
+  signalsLabel = "Why it helps this page",
+}: {
+  entry: ModelVisualShowcaseEntry;
+  generatedExampleLabel?: string;
+  signalsLabel?: string;
+}) {
   const imageGridClass =
     entry.images.length > 1
       ? "grid gap-4 md:grid-cols-2"
@@ -13,7 +43,7 @@ export function ModelVisualShowcase({ entry }: { entry: ModelShowcaseEntry }) {
   return (
     <section>
       <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-        Generated example
+        {generatedExampleLabel}
       </p>
       <h2 className="mt-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
         {entry.sectionTitle}
@@ -64,7 +94,7 @@ export function ModelVisualShowcase({ entry }: { entry: ModelShowcaseEntry }) {
           ) : null}
 
           <p className="mt-6 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-            Why it helps this page
+            {signalsLabel}
           </p>
           <ul className="mt-3 space-y-3">
             {entry.signals.map((signal) => (

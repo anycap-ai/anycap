@@ -43,12 +43,10 @@ const aboutPageJsonLd = {
     name: siteConfig.siteName,
     url: siteConfig.url,
     sameAs: organizationSameAs,
-    email: "admin@anycap.ai",
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "admin@anycap.ai",
         url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
       },
     ],
@@ -61,14 +59,12 @@ const organizationJsonLd = {
   name: siteConfig.siteName,
   url: siteConfig.url,
   sameAs: organizationSameAs,
-  email: "admin@anycap.ai",
   description:
     `AnyCap builds agent-native capability infrastructure that lets AI agents use ${capabilitySummary} through one runtime.`,
   contactPoint: [
     {
       "@type": "ContactPoint",
       contactType: "customer support",
-      email: "admin@anycap.ai",
       url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
     },
   ],

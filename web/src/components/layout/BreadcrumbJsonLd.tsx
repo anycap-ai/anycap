@@ -56,11 +56,11 @@ export interface BreadcrumbItem {
   unlinkable?: boolean;
 }
 
-export async function BreadcrumbJsonLd({ items = [] }: { items?: BreadcrumbItem[] }) {
+export async function BreadcrumbJsonLd({ items = [] }: { items?: readonly BreadcrumbItem[] }) {
   const locale = await getRequestLocale();
   const requestPathname = await getRequestPathname();
   const publicPath = stripLocalePrefix(requestPathname).pathname;
-  const resolvedItems = getSeoBreadcrumbItems(publicPath) ?? items;
+  const resolvedItems = items.length > 0 ? items : (getSeoBreadcrumbItems(publicPath) ?? []);
 
   const localizedItems = resolvedItems.map((item, index) => {
     const isLast = index === resolvedItems.length - 1;

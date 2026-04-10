@@ -35,7 +35,7 @@ export function Modal({
       const timer = setTimeout(() => setVisible(false), 250);
       return () => clearTimeout(timer);
     }
-  }, [open]);
+  }, [open, onOpen]);
 
   if (!visible) return null;
 

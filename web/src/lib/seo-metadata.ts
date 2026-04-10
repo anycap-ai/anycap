@@ -38,8 +38,10 @@ export function shouldAllowIndexing() {
   return true;
 }
 
-export function createRobotsMetadata(): Metadata["robots"] {
-  const allowIndexing = shouldAllowIndexing();
+export function createRobotsMetadata(options?: {
+  allowIndexing?: boolean;
+}): Metadata["robots"] {
+  const allowIndexing = shouldAllowIndexing() && (options?.allowIndexing ?? true);
 
   return {
     index: allowIndexing,

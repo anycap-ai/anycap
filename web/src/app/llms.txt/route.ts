@@ -1,4 +1,4 @@
-import { landingMarkdown } from "@/lib/landing-content";
+import llmsContent from "@/content/llms";
 
 export const runtime = "edge";
 
@@ -7,12 +7,11 @@ function buildHeaders() {
     "Content-Type": "text/plain; charset=utf-8",
     "Cache-Control": "public, max-age=0, s-maxage=3600",
     "X-Content-Type-Options": "nosniff",
-    "X-Robots-Tag": "noindex, nofollow",
   });
 }
 
 export function GET() {
-  return new Response(landingMarkdown, {
+  return new Response(llmsContent, {
     headers: buildHeaders(),
   });
 }

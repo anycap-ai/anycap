@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0";
+import { LoginButton } from "@/components/auth/LoginButton";
 
 const bubbleStyles = `
 @keyframes bubble-breathe {
@@ -69,9 +69,7 @@ export function AgentBubble() {
       />
 
       {/* main bubble */}
-      <Link
-        href="/auth/login"
-        prefetch={false}
+      <LoginButton
         className="agent-bubble-main group relative block rounded-[30px] border border-[#e6e6e6] bg-white px-5 py-4 text-[#1c1f17] transition-[border-color] duration-300 ease-out hover:border-[#d0d0d0]"
         onAnimationEnd={(e) => {
           if (e.animationName === "bubble-enter") {
@@ -95,7 +93,7 @@ export function AgentBubble() {
             <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-      </Link>
+      </LoginButton>
     </div>
   );
 }

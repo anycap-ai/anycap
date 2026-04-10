@@ -1,5 +1,6 @@
 import { GeistPixelSquare } from "geist/font/pixel";
 import Link from "next/link";
+import { LoginButton } from "@/components/auth/LoginButton";
 import { Footer } from "@/components/layout/Footer";
 import { Header, humanNavLinks } from "@/components/layout/Header";
 import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
@@ -29,14 +30,12 @@ export async function SeoShell({ children }: { children: React.ReactNode }) {
         links={humanNavLinks}
         authSlot={
           <>
-            <Link
-              href="/auth/login"
-              prefetch={false}
+            <LoginButton
               className={primaryActionClass}
               style={mono}
             >
               Login
-            </Link>
+            </LoginButton>
             <Link
               href={agentHref}
               prefetch={false}

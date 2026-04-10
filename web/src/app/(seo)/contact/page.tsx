@@ -3,8 +3,6 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { ProtectedEmailText } from "@/components/ui/ProtectedEmailText";
-import { contactEmail } from "@/lib/contact";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -49,12 +47,10 @@ const contactPageJsonLd = {
     "@type": "Organization",
     name: siteConfig.siteName,
     url: siteConfig.url,
-    email: contactEmail,
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: contactEmail,
         url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
       },
     ],
@@ -98,7 +94,7 @@ const contactRoutes: readonly ContactRoute[] = [
     title: "Pricing and enterprise questions",
     detail:
       "If you need larger credit volume, invoiced billing, or product fit clarification, contact the team directly by email.",
-    ctaLabel: `Email ${contactEmail}`,
+    ctaLabel: "Email the team",
     ctaKind: "email",
     ctaSubject: "AnyCap Enterprise pricing",
   },
@@ -200,7 +196,7 @@ export default function ContactPage() {
                         <EmailActionButton
                           subject={route.ctaSubject}
                           className={buttonLinkClass}
-                          aria-label={`Email ${contactEmail}`}
+                          aria-label="Email the AnyCap team"
                         >
                           {route.ctaLabel}
                         </EmailActionButton>
@@ -231,9 +227,9 @@ export default function ContactPage() {
                 Email{" "}
                 <EmailActionButton
                   className={buttonLinkClass}
-                  aria-label={`Email ${contactEmail}`}
+                  aria-label="Email the AnyCap team"
                 >
-                  <ProtectedEmailText />
+                  the AnyCap team
                 </EmailActionButton>{" "}
                 for pricing
                 conversations, privacy requests, or any issue that should not live in a public

@@ -159,7 +159,7 @@ const sourceLinks = [
   },
   {
     label: "Asana guide to SMART goals",
-    href: "https://www.asana.com/resources/smart-goals",
+    href: "https://asana.com/resources/smart-goals",
   },
   {
     label: "Atlassian quarterly planning playbook",

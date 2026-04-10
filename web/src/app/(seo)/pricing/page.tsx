@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { LoginButton } from "@/components/auth/LoginButton";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
@@ -31,51 +32,6 @@ export const metadata: Metadata = {
     title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
     description:
       "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
-  },
-};
-
-const pricingPageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  name: "AnyCap Pricing",
-  description:
-    "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
-  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
-  dateModified: "2026-04-08",
-  mainEntity: {
-    "@type": "Product",
-    name: "AnyCap Credits",
-    description:
-      "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
-    offers: [
-      {
-        "@type": "Offer",
-        name: "Starter",
-        price: "10.00",
-        priceCurrency: "USD",
-        description: "500 credits",
-      },
-      {
-        "@type": "Offer",
-        name: "Standard",
-        price: "30.00",
-        priceCurrency: "USD",
-        description: "1,575 credits (includes 5% bonus)",
-      },
-      {
-        "@type": "Offer",
-        name: "Pro",
-        price: "100.00",
-        priceCurrency: "USD",
-        description: "5,500 credits (includes 10% bonus)",
-      },
-      {
-        "@type": "Offer",
-        name: "Enterprise",
-        description:
-          "Custom pricing for larger teams, higher credit volumes, and invoiced billing. Contact admin@anycap.ai.",
-      },
-    ],
   },
 };
 
@@ -117,6 +73,34 @@ const creditPackages = [
       "More headroom for shared agent sessions, larger media batches, and longer-running workflows where throughput matters.",
   },
 ] as const;
+
+const pricingPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "AnyCap Pricing",
+  description:
+    "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
+  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
+  dateModified: "2026-04-08",
+  mainEntity: {
+    "@type": "Product",
+    name: "AnyCap Credits",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
+    description:
+      "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
+    offers: creditPackages.map((pkg) => ({
+      "@type": "Offer",
+      name: `${pkg.name} credit pack`,
+      url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing")}#pack-${pkg.packQuery}`,
+      price: pkg.price.toFixed(2),
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      description: pkg.bonusLabel
+        ? `${pkg.credits.toLocaleString()} credits (${pkg.bonusLabel})`
+        : `${pkg.credits.toLocaleString()} credits`,
+    })),
+  },
+};
 
 const pricingPrinciples = [
   {
@@ -379,9 +363,10 @@ export default function PricingPage() {
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 {creditPackages.map((pkg) => (
-                  <Link
+                  <LoginButton
                     key={pkg.name}
-                    href={buildCreditPackHref(pkg)}
+                    returnTo={buildCreditPackHref(pkg)}
+                    id={`pack-${pkg.packQuery}`}
                     aria-label={`Buy the ${pkg.name} credit pack`}
                     className={`group relative flex h-full flex-col rounded-xl border p-6 transition-all hover:-translate-y-0.5 hover:border-[#6b7d3a] hover:shadow-[0_10px_24px_rgba(28,31,23,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6b7d3a] focus-visible:ring-offset-2 ${
                       pkg.highlight
@@ -427,7 +412,7 @@ export default function PricingPage() {
                         &rarr;
                       </span>
                     </div>
-                  </Link>
+                  </LoginButton>
                 ))}
               </div>
               <div
@@ -688,13 +673,13 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link
-                  href={defaultBillingHref}
+                <LoginButton
+                  returnTo={defaultBillingHref}
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17] cursor-pointer"
                   style={mono}
                 >
                   Buy credits
-                </Link>
+                </LoginButton>
                 <Link
                   href="/capabilities"
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"

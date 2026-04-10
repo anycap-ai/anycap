@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LoginButton } from "@/components/auth/LoginButton";
 import { ParticleAgent } from "./ParticleAgent";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
@@ -73,14 +73,12 @@ export function HumanPromoBanner() {
         >
           Your agent here. Start me with 250 bonus credits before Apr 10, and I&apos;ll show you what I can do.
         </p>
-        <Link
-          href="/auth/login"
-          prefetch={false}
+        <LoginButton
           className="hidden shrink-0 rounded-full bg-[#1c1f17] px-4 py-2 text-[12px] text-[#f4f5f0] transition-all hover:bg-[#11140e] md:inline-flex"
           style={mono}
         >
           Get started
-        </Link>
+        </LoginButton>
         <button
           type="button"
           onClick={handleDismiss}

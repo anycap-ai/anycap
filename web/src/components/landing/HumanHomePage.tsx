@@ -1,3 +1,4 @@
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { Footer } from "@/components/layout/Footer";
 import { Header, humanNavLinks } from "@/components/layout/Header";
 import { AuthNav } from "@/components/layout/AuthNav";
@@ -63,6 +64,12 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 const capabilities = ["Image", "Video", "Music", "Voice", "Vision", "Pages"];
+const popularPaths = [
+  { href: "/start", label: "Start here" },
+  { href: "/capabilities", label: "Capabilities" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/for/codex", label: "For Codex" },
+] as const;
 
 export function HumanHomePage() {
   return (
@@ -125,7 +132,11 @@ export function HumanHomePage() {
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <div className="flex w-full justify-start sm:w-auto">
-                <LazyEquipAgent style={mono} />
+                <LazyEquipAgent
+                  style={mono}
+                  containerClassName="w-full sm:w-auto"
+                  buttonClassName="w-full justify-center sm:w-auto"
+                />
               </div>
               <a
                 href={githubHref}
@@ -145,6 +156,21 @@ export function HumanHomePage() {
                   />
                 </svg>
               </a>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <span className="text-[11px] tracking-[0.6px] text-[#6b7d3a]" style={mono}>
+                Popular paths
+              </span>
+              {popularPaths.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="inline-flex rounded-full border border-[#d4dbb8] bg-[#fbfcf8] px-3 py-1.5 text-[11px] tracking-[0.5px] text-[#3f4437] transition-colors hover:border-[#6b7d3a] hover:text-[#1c1f17]"
+                  style={mono}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
 

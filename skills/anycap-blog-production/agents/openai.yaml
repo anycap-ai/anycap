@@ -1,0 +1,4 @@
+interface:
+  display_name: "AnyCap Blog Production"
+  short_description: "Turn data into AnyCap-style blog drafts"
+  default_prompt: "Use $anycap-blog-production to turn this data, research, or product input into an AnyCap-style blog post."

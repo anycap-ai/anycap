@@ -5,7 +5,7 @@ import { HumanRedirectDialog } from "@/components/landing/HumanRedirectDialog";
 import { landingMarkdown } from "@/lib/landing-content";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createAgentMetadata } from "@/lib/localized-metadata";
-import { defaultLocale, localizePublicPath } from "@/lib/site";
+import { defaultLocale, localizePublicPath, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -13,11 +13,19 @@ export async function generateMetadata(): Promise<Metadata> {
   return createAgentMetadata(defaultLocale);
 }
 
-const html = marked.parse(landingMarkdown, { async: false }) as string;
+function localizeAgentMarkdown(markdown: string, locale: SiteLocale) {
+  return markdown.replaceAll(
+    /https:\/\/anycap\.ai(\/[^\s)\]]*)?/g,
+    (match, path = "/") => `${siteConfig.url}${localizePublicPath(locale, path)}`
+  );
+}
 
 export default async function AgentEntryPage() {
   const locale = await getRequestLocale();
   const homePageHref = localizePublicPath(locale, "/");
+  const html = marked.parse(localizeAgentMarkdown(landingMarkdown, locale), {
+    async: false,
+  }) as string;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] font-mono">
