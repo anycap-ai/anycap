@@ -7,6 +7,7 @@ import type { FileId } from '@excalidraw/excalidraw/element/types';
 import { fillDefaults } from './defaults';
 import { mermaidToElements } from './mermaid';
 import { DrawWebSocket } from './collaboration';
+import { resolveUrl } from './proxy';
 import {
   clientId, clientName as initialClientName, clientColor,
   setClientName, setCursorContainer, onPeersChange,
@@ -49,7 +50,7 @@ export default function App() {
   useEffect(() => {
     async function loadInit() {
       try {
-        const resp = await fetch('init');
+        const resp = await fetch(resolveUrl('init'));
         if (resp.status === 204) {
           setInitElements([]);
           setLoading(false);
@@ -79,7 +80,7 @@ export default function App() {
               img.onerror = () => reject(new Error('Failed to load image'));
               img.src = data.image_url!;
             });
-            const imgResp = await fetch(data.image_url!);
+            const imgResp = await fetch(resolveUrl(data.image_url!));
             const blob = await imgResp.blob();
             const reader = new FileReader();
             const dataUrl: string = await new Promise((resolve) => {
@@ -259,7 +260,7 @@ export default function App() {
       );
       form.append('client_id', clientId);
 
-      const resp = await fetch('submit', { method: 'POST', body: form });
+      const resp = await fetch(resolveUrl('submit'), { method: 'POST', body: form });
       const result = await resp.json();
 
       setSaved(true);
