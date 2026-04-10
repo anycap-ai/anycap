@@ -135,6 +135,34 @@ anycap image generate \
   -o workspace-v2.png
 ```
 
+#### Multiple Reference Images
+
+Some models accept multiple reference images for style transfer, composition blending, or subject-driven generation. Pass an array of paths or URLs via JSON array syntax:
+
+```bash
+# Multiple local files (each auto-uploaded)
+anycap image generate \
+  --prompt "combine the architecture style of the first image with the color palette of the second" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./style-ref.png","./color-ref.png"]' \
+  -o blended.png
+
+# Mix of local files and URLs
+anycap image generate \
+  --prompt "a portrait in the style of the reference images" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./local-ref.png","https://example.com/style-ref.jpg"]' \
+  -o portrait-styled.png
+```
+
+Key points:
+- Use JSON array syntax `'["path1","path2"]'` -- repeating `--param images=` overwrites rather than appends.
+- Local file paths inside the array are auto-uploaded, same as single-file mode.
+- Not all models support multiple references. Check the model schema (`image models <model> schema --mode image-to-image`) to see if the `images` parameter accepts multiple items.
+- When a model does not support multiple images, it typically uses only the first image and ignores the rest.
+
 ### Flags
 
 | Flag | Required | Description |

@@ -2,7 +2,7 @@
 name: anycap-media-production
 description: "Produce media assets using AnyCap: generate images, videos, and music from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
 metadata:
-  version: 0.2.0
+  version: 0.2.1
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -66,6 +66,33 @@ anycap image generate \
 ```
 
 Reference images can be local paths or URLs. The CLI handles upload automatically.
+
+### Multiple Reference Images
+
+Some models accept multiple reference images for style transfer, composition blending, or subject-driven generation. Use JSON array syntax to pass multiple files:
+
+```bash
+# Combine style from one image with composition from another
+anycap image generate \
+  --prompt "merge the architectural style of the first image with the color palette of the second" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./style-ref.png","./color-ref.png"]' \
+  -o blended.png
+
+# Mix local files and URLs
+anycap image generate \
+  --prompt "a portrait in the style of the reference images" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./local-ref.png","https://example.com/style-ref.jpg"]' \
+  -o portrait-styled.png
+```
+
+Tips:
+- Use JSON array syntax `'["path1","path2"]'` -- repeating `--param images=` overwrites rather than appends.
+- Local file paths inside the array are auto-uploaded, same as single-file mode.
+- Not all models support multiple references. Check the model schema first. When unsupported, the model typically uses only the first image.
 
 ### Iterative Refinement with Annotation
 

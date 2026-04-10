@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.2.0
+  version: 0.2.1
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -36,6 +36,27 @@ Verify the installation:
 ```bash
 anycap status
 ```
+
+## Troubleshooting: `anycap` not found after install
+
+The install script places the binary in `~/.local/bin/` by default (non-root) and appends an `export PATH` line to the shell profile (`.bashrc` / `.zshrc`). However, the **current shell session** does not pick up profile changes automatically, so `command -v anycap` may still fail right after install.
+
+**Diagnosis and fix:**
+
+```bash
+# 1. Check if the binary actually exists
+ls -la ~/.local/bin/anycap
+
+# 2. If it exists, add to PATH for the current session
+export PATH="$HOME/.local/bin:$PATH"
+
+# 3. Verify
+anycap status
+```
+
+If `~/.local/bin/anycap` does not exist, the install may have used a different directory (e.g., `/usr/local/bin` when run as root, or a custom `ANYCAP_INSTALL_DIR`). Check the install output for the actual path.
+
+If the binary exists but a different `anycap` is resolved (e.g., an npm-installed version), use the full path `~/.local/bin/anycap` or adjust PATH ordering.
 
 ## Authentication
 
@@ -136,6 +157,7 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 |------------|-----------|------------|------------------|
 | Image | [generation.md](references/generation.md) | `generate` | 5-30s |
 | Annotate | [annotation.md](references/annotation.md) | `annotate` | Interactive |
+| Draw | [draw.md](references/draw.md) | `draw` | Interactive |
 | Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
 
@@ -146,6 +168,9 @@ If your runtime supports async execution, prefer running generation commands in 
 **Annotate** -- interactive visual feedback with real-time collaboration (image, video, audio) or single-user review (URL/iframe).
 Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. For image, video, and audio sessions, multiple users can collaborate in real-time with shared annotations and live cursors. URL mode is single-user because screen recording is the primary feedback artifact and multiple users' cursors would make it confusing. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
 
+**Draw** -- interactive whiteboard (Excalidraw) for creating and iterating on diagrams.
+Read [references/draw.md](references/draw.md) when you need to create diagrams, architecture charts, flowcharts, or wireframes collaboratively with humans. Supports Mermaid input (auto-converted to editable shapes), Excalidraw JSON, and blank canvas. The agent can push updates via `anycap draw update` without restarting the session. Use non-blocking mode (`--no-wait`) for agent workflows.
+
 ```bash
 # Blocking mode -- opens browser, waits for Done click
 anycap annotate photo.png -o annotated.png
@@ -154,6 +179,14 @@ anycap annotate output.mp4
 
 # Non-blocking mode (for agents) -- returns immediately
 anycap annotate photo.png --no-wait
+```
+
+```bash
+# Draw: open whiteboard with Mermaid diagram (non-blocking, recommended)
+anycap draw --init arch.mmd --no-wait --port 18400
+
+# Draw: push updated content to active session
+anycap draw update --session drw_xxx --init updated.mmd
 ```
 
 **Actions** -- AI-powered operations on existing content.
@@ -308,6 +341,15 @@ anycap annotate photo.png --no-wait | jq -r '.poll_command'
 
 # Poll for annotation result
 anycap annotate poll --session ann_xxxx | jq -r '.annotations[] | "#\(.id) [\(.type)]: \(.label)"'
+
+# Draw (non-blocking, for agent workflows)
+anycap draw --init arch.mmd --no-wait --port 18400 | jq -r '.poll_command'
+
+# Poll for draw result
+anycap draw poll --session drw_xxxx | jq -r '.snapshot'
+
+# Push updated diagram to active session
+anycap draw update --session drw_xxxx --init updated.mmd | jq -r '.ok'
 
 # Analyze a local image file (auto-uploaded, no drive needed)
 anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'

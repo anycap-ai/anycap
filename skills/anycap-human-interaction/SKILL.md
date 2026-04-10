@@ -1,8 +1,8 @@
 ---
 name: anycap-human-interaction
-description: "Collect structured visual feedback from humans using AnyCap's annotation tool. Covers image annotation, URL/web page review with screen recording, video review, and audio feedback. Use when you need a human to point at things, mark regions, draw on screenshots, review a web page or UI, narrate feedback over a recording, or provide any spatially-grounded visual input. Also use when you need to present work-in-progress to a human for approval or revision. Trigger on: get feedback, show to user, review UI, annotate, mark up, visual feedback, screen recording, user review, human-in-the-loop, approval flow, or interactive review."
+description: "Collect structured visual feedback from humans using AnyCap's annotation tool, or create and iterate on diagrams using the interactive whiteboard (Excalidraw). Covers image annotation, URL/web page review with screen recording, video review, audio feedback, and collaborative diagramming with Mermaid input. Use when you need a human to point at things, mark regions, draw on screenshots, review a web page or UI, narrate feedback over a recording, provide any spatially-grounded visual input, create or iterate on architecture diagrams, flowcharts, or wireframes. Also use when you need to present work-in-progress to a human for approval or revision. Trigger on: get feedback, show to user, review UI, annotate, mark up, visual feedback, screen recording, user review, human-in-the-loop, approval flow, interactive review, whiteboard, diagram, draw, flowchart, wireframe, or architecture chart."
 metadata:
-  version: 0.2.0
+  version: 0.2.1
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -407,3 +407,5 @@ Tips for iteration:
 | Design critique with stakeholders | Image Review (multi-user) | Real-time cursors and annotations keep everyone aligned |
 | Generated video needs feedback | Video Review | Pause at key moments to annotate specific frames |
 | Music/audio needs feedback | Audio Review | Annotate the canvas to mark time regions |
+| Need to create/iterate on diagrams | **Use `anycap draw` instead** | Interactive whiteboard with Mermaid input, agent can push updates |
+| Architecture chart needs human input | **Use `anycap draw` instead** | Collaborative Excalidraw editor with real-time sync |
