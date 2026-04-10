@@ -15,6 +15,12 @@ import (
 	larkws "github.com/larksuite/oapi-sdk-go/v3/ws"
 )
 
+const (
+	feishuQuotedMessageLimit = 1
+	feishuThreadHistoryLimit = 6
+	feishuChatHistoryLimit   = 6
+)
+
 type FeishuLongConnBotConfig struct {
 	AppID               string
 	AppSecret           string
@@ -139,8 +145,9 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 	if b == nil {
 		return model.ErrNotConfigured("feishu long connection bot is not configured")
 	}
+	enrichedEvent := b.enrichContext(ctx, event)
 	if b.inboundHandler != nil {
-		replyMessage, err := b.inboundHandler(ctx, event)
+		replyMessage, err := b.inboundHandler(ctx, enrichedEvent)
 		if err != nil {
 			return err
 		}
@@ -154,7 +161,7 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 			ChannelID: event.ChannelID,
 			SenderID:  event.SenderID,
 		}
-		if b.shouldUseReactionAck(event) && b.tryReactionAck(ctx, binding, event) {
+		if b.shouldUseReactionAck(enrichedEvent) && b.tryReactionAck(ctx, binding, enrichedEvent) {
 			return nil
 		}
 		if sendErr := b.adapter.SendMessage(ctx, binding, replyMessage); sendErr != nil {
@@ -181,11 +188,11 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 	}
 
 	result, err := b.conversationService.HandleInboundMessage(ctx, agentcontrolapp.InboundChatInput{
-		Platform: event.Platform,
-		BotID:    event.BotID,
-		ChatID:   event.ChannelID,
-		SenderID: event.SenderID,
-		Message:  event.Message,
+		Platform: enrichedEvent.Platform,
+		BotID:    enrichedEvent.BotID,
+		ChatID:   enrichedEvent.ChannelID,
+		SenderID: enrichedEvent.SenderID,
+		Message:  enrichedEvent.Message,
 	})
 	if err != nil {
 		return err
@@ -198,6 +205,80 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 		}
 	}
 	return nil
+}
+
+func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedInboundEvent) NormalizedInboundEvent {
+	if b == nil || b.adapter == nil {
+		return event
+	}
+	command, err := agentcontrolapp.ParseChatCommand(event.Message)
+	if err != nil || command.Action != model.AgentChatActionContinue {
+		return event
+	}
+
+	enriched := event
+	if quoted, err := b.loadQuotedMessage(ctx, event); err == nil && quoted != nil {
+		enriched.QuotedMessage = quoted
+	} else if err != nil {
+		logging.WithError(err).Warn("load feishu quoted message failed")
+	}
+	if threadHistory, err := b.loadThreadHistory(ctx, event); err == nil && len(threadHistory) > 0 {
+		enriched.ThreadHistory = threadHistory
+	} else if err != nil {
+		logging.WithError(err).Warn("load feishu thread history failed")
+	}
+	if chatHistory, err := b.loadChatHistory(ctx, event); err == nil && len(chatHistory) > 0 {
+		enriched.ChatHistory = chatHistory
+	} else if err != nil {
+		logging.WithError(err).Warn("load feishu chat history failed")
+	}
+	return enriched
+}
+
+func (b *FeishuLongConnBot) loadQuotedMessage(ctx context.Context, event NormalizedInboundEvent) (*NormalizedInboundContextMessage, error) {
+	parentID := strings.TrimSpace(event.ParentID)
+	if parentID == "" {
+		return nil, nil
+	}
+	message, err := b.adapter.GetMessage(ctx, parentID)
+	if err != nil {
+		return nil, err
+	}
+	if message == nil {
+		return nil, nil
+	}
+	normalized, ok, err := normalizeFeishuContextMessage(message, strings.TrimSpace(event.ChatType))
+	if err != nil || !ok {
+		return nil, err
+	}
+	return &normalized, nil
+}
+
+func (b *FeishuLongConnBot) loadThreadHistory(ctx context.Context, event NormalizedInboundEvent) ([]NormalizedInboundContextMessage, error) {
+	threadID := strings.TrimSpace(event.ThreadID)
+	if threadID == "" {
+		threadID = strings.TrimSpace(event.RootID)
+	}
+	if threadID == "" {
+		return nil, nil
+	}
+	items, err := b.adapter.ListMessages(ctx, "thread", threadID, feishuThreadHistoryLimit+feishuQuotedMessageLimit)
+	if err != nil {
+		return nil, err
+	}
+	return normalizeFeishuContextHistory(items, strings.TrimSpace(event.ChatType), strings.TrimSpace(event.MessageID), feishuThreadHistoryLimit)
+}
+
+func (b *FeishuLongConnBot) loadChatHistory(ctx context.Context, event NormalizedInboundEvent) ([]NormalizedInboundContextMessage, error) {
+	chatID := strings.TrimSpace(event.ChannelID)
+	if chatID == "" {
+		return nil, nil
+	}
+	items, err := b.adapter.ListMessages(ctx, "chat", chatID, feishuChatHistoryLimit+1)
+	if err != nil {
+		return nil, err
+	}
+	return normalizeFeishuContextHistory(items, strings.TrimSpace(event.ChatType), strings.TrimSpace(event.MessageID), feishuChatHistoryLimit)
 }
 
 func stringValue(value *string) string {
@@ -293,4 +374,110 @@ func normalizeFeishuMessageText(messageType string, contentJSON string, mentions
 		return resolveMentionPlaceholders(strings.TrimSpace(content.Text), mentions), nil
 	}
 	return fmt.Sprintf("User sent a Feishu %s message. Inspect content_json for resource identifiers.", normalizedType), nil
+}
+
+func normalizeFeishuContextHistory(messages []*larkim.Message, chatType string, currentMessageID string, limit int) ([]NormalizedInboundContextMessage, error) {
+	if len(messages) == 0 || limit <= 0 {
+		return nil, nil
+	}
+	normalized := make([]NormalizedInboundContextMessage, 0, minInt(len(messages), limit))
+	for _, item := range messages {
+		if item == nil {
+			continue
+		}
+		if strings.TrimSpace(stringValue(item.MessageId)) == strings.TrimSpace(currentMessageID) {
+			continue
+		}
+		contextMessage, ok, err := normalizeFeishuContextMessage(item, chatType)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
+		}
+		normalized = append(normalized, contextMessage)
+		if len(normalized) >= limit {
+			break
+		}
+	}
+	if len(normalized) == 0 {
+		return nil, nil
+	}
+	return normalized, nil
+}
+
+func normalizeFeishuContextMessage(message *larkim.Message, defaultChatType string) (NormalizedInboundContextMessage, bool, error) {
+	if message == nil {
+		return NormalizedInboundContextMessage{}, false, nil
+	}
+	messageType := strings.TrimSpace(stringValue(message.MsgType))
+	contentJSON := strings.TrimSpace(messageBodyContent(message.Body))
+	mentions := normalizeFeishuMessageMentions(message.Mentions)
+	messageText, err := normalizeFeishuMessageText(messageType, contentJSON, mentions)
+	if err != nil {
+		return NormalizedInboundContextMessage{}, false, err
+	}
+
+	senderID, senderType := normalizeFeishuSender(message.Sender)
+	return NormalizedInboundContextMessage{
+		MessageID:   strings.TrimSpace(stringValue(message.MessageId)),
+		ChannelID:   strings.TrimSpace(stringValue(message.ChatId)),
+		SenderID:    senderID,
+		SenderType:  senderType,
+		ChatType:    strings.TrimSpace(defaultChatType),
+		ThreadID:    strings.TrimSpace(stringValue(message.ThreadId)),
+		ParentID:    strings.TrimSpace(stringValue(message.ParentId)),
+		RootID:      strings.TrimSpace(stringValue(message.RootId)),
+		MessageType: messageType,
+		Message:     messageText,
+		ContentJSON: contentJSON,
+		Mentions:    mentions,
+	}, true, nil
+}
+
+func messageBodyContent(body *larkim.MessageBody) string {
+	if body == nil || body.Content == nil {
+		return ""
+	}
+	return strings.TrimSpace(*body.Content)
+}
+
+func normalizeFeishuSender(sender *larkim.Sender) (string, string) {
+	if sender == nil {
+		return "", ""
+	}
+	return strings.TrimSpace(stringValue(sender.Id)), strings.TrimSpace(stringValue(sender.SenderType))
+}
+
+func normalizeFeishuMessageMentions(raw []*larkim.Mention) []NormalizedInboundMention {
+	if len(raw) == 0 {
+		return nil
+	}
+	mentions := make([]NormalizedInboundMention, 0, len(raw))
+	for _, item := range raw {
+		if item == nil {
+			continue
+		}
+		mention := NormalizedInboundMention{
+			Key:       stringValue(item.Key),
+			OpenID:    stringValue(item.Id),
+			Name:      stringValue(item.Name),
+			TenantKey: stringValue(item.TenantKey),
+		}
+		if mention.Key == "" && mention.OpenID == "" && mention.Name == "" && mention.TenantKey == "" {
+			continue
+		}
+		mentions = append(mentions, mention)
+	}
+	if len(mentions) == 0 {
+		return nil
+	}
+	return mentions
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

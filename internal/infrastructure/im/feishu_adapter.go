@@ -36,6 +36,8 @@ type FeishuAdapter struct {
 	appID             string
 	appSecret         string
 	larkClient        *lark.Client
+	getMessage        func(context.Context, string) (*larkim.Message, error)
+	listMessages      func(context.Context, string, string, int) ([]*larkim.Message, error)
 }
 
 func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
@@ -43,7 +45,7 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 	if client == nil {
 		client = &http.Client{Timeout: 10 * time.Second}
 	}
-	return &FeishuAdapter{
+	adapter := &FeishuAdapter{
 		verificationToken: strings.TrimSpace(cfg.VerificationToken),
 		encryptKey:        strings.TrimSpace(cfg.EncryptKey),
 		replyAPI:          strings.TrimSpace(cfg.ReplyAPI),
@@ -52,6 +54,9 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 		appSecret:         strings.TrimSpace(cfg.AppSecret),
 		larkClient:        buildFeishuDirectClient(strings.TrimSpace(cfg.AppID), strings.TrimSpace(cfg.AppSecret), client),
 	}
+	adapter.getMessage = adapter.getMessageViaAPI
+	adapter.listMessages = adapter.listMessagesViaAPI
+	return adapter
 }
 
 func (a *FeishuAdapter) VerifyAndNormalize(req *http.Request) (NormalizedInboundEvent, error) {
@@ -165,6 +170,20 @@ func (a *FeishuAdapter) SendReaction(ctx context.Context, binding model.IMBindin
 	return nil
 }
 
+func (a *FeishuAdapter) GetMessage(ctx context.Context, messageID string) (*larkim.Message, error) {
+	if a == nil || a.getMessage == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	return a.getMessage(ctx, strings.TrimSpace(messageID))
+}
+
+func (a *FeishuAdapter) ListMessages(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+	if a == nil || a.listMessages == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	return a.listMessages(ctx, strings.TrimSpace(containerType), strings.TrimSpace(containerID), limit)
+}
+
 func (a *FeishuAdapter) SendCompleted(ctx context.Context, binding model.IMBinding, task model.AgentTask) error {
 	return a.sendReply(ctx, binding, fmt.Sprintf("任务已完成：%s", strings.TrimSpace(task.TaskText)))
 }
@@ -243,6 +262,71 @@ func buildFeishuDirectClient(appID, appSecret string, httpClient *http.Client) *
 		options = append(options, lark.WithHttpClient(httpClient))
 	}
 	return lark.NewClient(appID, appSecret, options...)
+}
+
+func (a *FeishuAdapter) getMessageViaAPI(ctx context.Context, messageID string) (*larkim.Message, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	if strings.TrimSpace(messageID) == "" {
+		return nil, model.ErrValidation("feishu message id is required")
+	}
+
+	req := larkim.NewGetMessageReqBuilder().
+		MessageId(strings.TrimSpace(messageID)).
+		UserIdType("open_id").
+		Build()
+	resp, err := a.larkClient.Im.V1.Message.Get(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("get feishu message: %w", err)
+	}
+	if !resp.Success() {
+		return nil, fmt.Errorf("get feishu message: code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	if resp.Data == nil || len(resp.Data.Items) == 0 || resp.Data.Items[0] == nil {
+		return nil, nil
+	}
+	return resp.Data.Items[0], nil
+}
+
+func (a *FeishuAdapter) listMessagesViaAPI(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	if strings.TrimSpace(containerType) == "" || strings.TrimSpace(containerID) == "" {
+		return nil, model.ErrValidation("feishu container type and container id are required")
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	req := larkim.NewListMessageReqBuilder().
+		ContainerIdType(strings.TrimSpace(containerType)).
+		ContainerId(strings.TrimSpace(containerID)).
+		SortType("ByCreateTimeDesc").
+		PageSize(limit).
+		Build()
+	resp, err := a.larkClient.Im.V1.Message.List(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("list feishu messages: %w", err)
+	}
+	if !resp.Success() {
+		return nil, fmt.Errorf("list feishu messages: code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	if resp.Data == nil || len(resp.Data.Items) == 0 {
+		return nil, nil
+	}
+	items := make([]*larkim.Message, 0, len(resp.Data.Items))
+	for idx := len(resp.Data.Items) - 1; idx >= 0; idx-- {
+		if resp.Data.Items[idx] == nil {
+			continue
+		}
+		items = append(items, resp.Data.Items[idx])
+	}
+	return items, nil
 }
 
 func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMBinding, message string) error {

@@ -130,7 +130,7 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 		t.Fatalf("unexpected inbound reply %q", replyMessage)
 	}
 	message, _ := inboundBody["message"].(string)
-	if !strings.Contains(message, `<feishu-message message_id="om_message" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_sender" thread_id="omt_thread" parent_id="om_parent" root_id="om_root">`) {
+	if !strings.Contains(message, `<feishu-message message_id="om_message" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_sender" sender_type="user" thread_id="omt_thread" parent_id="om_parent" root_id="om_root">`) {
 		t.Fatalf("expected structured message payload, got %v", inboundBody["message"])
 	}
 	if !strings.Contains(message, "帮 @赵晨 看这个 bug") {
@@ -171,11 +171,44 @@ func TestMessageForInboundChatBuildsStructuredPayloadForNonTextMessage(t *testin
 		ContentJSON: `{"image_key":"img_123"}`,
 	}
 	got := messageForInboundChat(event)
-	if !strings.Contains(got, `<feishu-message message_id="om_image" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_sender">`) {
+	if !strings.Contains(got, `<feishu-message message_id="om_image" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_sender" sender_type="user">`) {
 		t.Fatalf("expected structured non-text payload, got %q", got)
+	}
+	if !strings.Contains(got, `<file_info type="image" image_key="img_123" />`) {
+		t.Fatalf("expected file_info block, got %q", got)
 	}
 	if !strings.Contains(got, `<content_json>{&#34;image_key&#34;:&#34;img_123&#34;}</content_json>`) {
 		t.Fatalf("expected content_json block, got %q", got)
+	}
+}
+
+func TestMessageForInboundChatBuildsFeishuContextWhenQuotedMessageExists(t *testing.T) {
+	event := im.NormalizedInboundEvent{
+		Platform:    "feishu",
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		MessageID:   "om_text",
+		SenderID:    "ou_sender",
+		ChatType:    "p2p",
+		MessageType: "text",
+		Message:     "看看这个图",
+		QuotedMessage: &im.NormalizedInboundContextMessage{
+			MessageID:   "om_image",
+			ChannelID:   "oc_chat",
+			SenderID:    "ou_sender",
+			SenderType:  "user",
+			ChatType:    "p2p",
+			MessageType: "image",
+			Message:     "User sent a Feishu image message. Inspect content_json for resource identifiers.",
+			ContentJSON: `{"image_key":"img_123"}`,
+		},
+	}
+	got := messageForInboundChat(event)
+	if !strings.Contains(got, "<feishu-context>") {
+		t.Fatalf("expected feishu-context wrapper, got %q", got)
+	}
+	if !strings.Contains(got, "<quoted_message>") {
+		t.Fatalf("expected quoted message block, got %q", got)
 	}
 }
 
