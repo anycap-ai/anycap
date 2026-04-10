@@ -27,8 +27,6 @@ type FeishuLongConnBotConfig struct {
 	BindingService      *agentcontrolapp.BindingService
 	ConversationService *agentcontrolapp.ConversationService
 	HandleInbound       func(context.Context, NormalizedInboundEvent) (string, error)
-	SelectReaction      func(context.Context, NormalizedInboundEvent) (string, error)
-	SendReaction        func(context.Context, model.IMBinding, string, string) error
 	Adapter             *FeishuAdapter
 }
 
@@ -38,8 +36,6 @@ type FeishuLongConnBot struct {
 	bindingService      *agentcontrolapp.BindingService
 	conversationService *agentcontrolapp.ConversationService
 	inboundHandler      func(context.Context, NormalizedInboundEvent) (string, error)
-	selectReaction      func(context.Context, NormalizedInboundEvent) (string, error)
-	sendReaction        func(context.Context, model.IMBinding, string, string) error
 	adapter             *FeishuAdapter
 	client              *larkws.Client
 }
@@ -60,8 +56,6 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		bindingService:      cfg.BindingService,
 		conversationService: cfg.ConversationService,
 		inboundHandler:      cfg.HandleInbound,
-		selectReaction:      cfg.SelectReaction,
-		sendReaction:        cfg.SendReaction,
 		adapter:             cfg.Adapter,
 	}
 
@@ -155,15 +149,7 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 		if replyMessage == "" {
 			return nil
 		}
-		binding := model.IMBinding{
-			Platform:  event.Platform,
-			BotID:     event.BotID,
-			ChannelID: event.ChannelID,
-			SenderID:  event.SenderID,
-		}
-		if b.shouldUseReactionAck(enrichedEvent) && b.tryReactionAck(ctx, binding, enrichedEvent) {
-			return nil
-		}
+		binding := model.IMBinding{Platform: event.Platform, BotID: event.BotID, ChannelID: event.ChannelID, SenderID: event.SenderID}
 		if sendErr := b.adapter.SendMessage(ctx, binding, replyMessage); sendErr != nil {
 			logging.WithError(sendErr).Warn("send feishu long connection reply failed")
 		}
@@ -286,38 +272,6 @@ func stringValue(value *string) string {
 		return ""
 	}
 	return strings.TrimSpace(*value)
-}
-
-func (b *FeishuLongConnBot) shouldUseReactionAck(event NormalizedInboundEvent) bool {
-	if b == nil || b.selectReaction == nil || b.sendReaction == nil {
-		return false
-	}
-	if strings.TrimSpace(event.MessageID) == "" {
-		return false
-	}
-	command, err := agentcontrolapp.ParseChatCommand(event.Message)
-	if err != nil {
-		return false
-	}
-	return command.Action == model.AgentChatActionContinue
-}
-
-func (b *FeishuLongConnBot) tryReactionAck(ctx context.Context, binding model.IMBinding, event NormalizedInboundEvent) bool {
-	reactionType, err := b.selectReaction(ctx, event)
-	if err != nil {
-		logging.WithError(err).Warn("select feishu reaction ack failed")
-		return false
-	}
-	reactionType = NormalizeReactionEmojiType(reactionType)
-	if !IsAllowedReactionEmojiType(reactionType) {
-		logging.WithField("reaction_type", reactionType).Warn("skip feishu reaction ack because the emoji type is not allowed")
-		return false
-	}
-	if err := b.sendReaction(ctx, binding, event.MessageID, reactionType); err != nil {
-		logging.WithError(err).Warn("send feishu reaction ack failed")
-		return false
-	}
-	return true
 }
 
 func normalizeFeishuMentions(raw []*larkim.MentionEvent) []NormalizedInboundMention {

@@ -448,12 +448,9 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 	}
 
 	var executor agentcontrolapp.RunnerTaskExecutor
-	var reactionSelector func(context.Context, im.NormalizedInboundEvent) (string, error)
 	switch strings.ToLower(strings.TrimSpace(executorKind)) {
 	case "codex", "":
-		codexExecutor := newCodexExecExecutor(codexBin, workspace, codexExecMode)
-		executor = codexExecutor
-		reactionSelector = newCodexReactionSelector(codexExecutor)
+		executor = newCodexExecExecutor(codexBin, workspace, codexExecMode)
 	case "stub":
 		executor = agentcontrolapp.StubExecutor{}
 	default:
@@ -505,11 +502,9 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 			HTTPClient: &http.Client{Timeout: 10 * time.Second},
 		})
 		bot := buildDaemonIMBot(im.FeishuLongConnBotConfig{
-			AppID:          trimmedFeishuAppID,
-			AppSecret:      trimmedFeishuSecret,
-			Adapter:        adapter,
-			SelectReaction: reactionSelector,
-			SendReaction:   adapter.SendReaction,
+			AppID:     trimmedFeishuAppID,
+			AppSecret: trimmedFeishuSecret,
+			Adapter:   adapter,
 			HandleInbound: func(ctx context.Context, event im.NormalizedInboundEvent) (string, error) {
 				return httpClient.InboundIMChat(ctx, event.Platform, event.BotID, event.ChannelID, event.MessageID, event.SenderID, messageForInboundChat(event))
 			},

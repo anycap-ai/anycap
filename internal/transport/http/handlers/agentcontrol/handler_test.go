@@ -571,7 +571,7 @@ func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
 	}
 }
 
-func TestRunnerRouteReturnsQueuedReplyWhenPreviousSessionStillRunning(t *testing.T) {
+func TestRunnerRouteSuppressesImmediateReplyWhenPreviousSessionStillRunning(t *testing.T) {
 	engine, rawKey, conversations, sessions, _ := newAgentControlTestEngine(t, true)
 	lastSessionID := int64(7)
 	conversations.itemsByID = map[int64]model.AgentConversation{
@@ -617,8 +617,8 @@ func TestRunnerRouteReturnsQueuedReplyWhenPreviousSessionStillRunning(t *testing
 	if req.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", req.Code, req.Body.String())
 	}
-	if !strings.Contains(req.Body.String(), `"reply_message":"上一条还在处理中，这条消息已排队"`) {
-		t.Fatalf("expected queued reply_message in response, got %s", req.Body.String())
+	if !strings.Contains(req.Body.String(), `"reply_message":""`) {
+		t.Fatalf("expected immediate reply to be suppressed for burst follow-up, got %s", req.Body.String())
 	}
 }
 

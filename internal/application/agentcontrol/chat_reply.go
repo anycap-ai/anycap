@@ -15,7 +15,7 @@ func BuildInboundChatReply(result InboundChatResult) string {
 			return ""
 		}
 		if result.Queued {
-			return "上一条还在处理中，这条消息已排队"
+			return ""
 		}
 		return "会话已接收，正在处理中"
 	case model.AgentChatActionNew, model.AgentChatActionReset:

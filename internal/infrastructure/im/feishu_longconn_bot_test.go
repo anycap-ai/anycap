@@ -337,12 +337,8 @@ func TestFeishuLongConnBot_HandleNormalizedEventEnrichesQuotedAndHistoryContext(
 	}
 }
 
-func TestFeishuLongConnBot_HandleNormalizedEventUsesReactionAck(t *testing.T) {
-	var (
-		replyCalls int
-		gotEmoji   string
-		gotMsgID   string
-	)
+func TestFeishuLongConnBot_HandleNormalizedEventSendsTextReply(t *testing.T) {
+	var replyCalls int
 	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		replyCalls++
 		w.WriteHeader(http.StatusOK)
@@ -360,14 +356,6 @@ func TestFeishuLongConnBot_HandleNormalizedEventUsesReactionAck(t *testing.T) {
 		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
 			return "会话已接收，正在处理中", nil
 		},
-		SelectReaction: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
-			return "OnIt", nil
-		},
-		SendReaction: func(ctx context.Context, binding model.IMBinding, messageID string, emojiType string) error {
-			gotMsgID = messageID
-			gotEmoji = emojiType
-			return nil
-		},
 	})
 	if bot == nil {
 		t.Fatal("expected bot to be constructed")
@@ -384,11 +372,8 @@ func TestFeishuLongConnBot_HandleNormalizedEventUsesReactionAck(t *testing.T) {
 	if err != nil {
 		t.Fatalf("handleNormalizedEvent() error = %v", err)
 	}
-	if gotMsgID != "om_message" || gotEmoji != "OnIt" {
-		t.Fatalf("expected reaction OnIt on om_message, got message_id=%q emoji=%q", gotMsgID, gotEmoji)
-	}
-	if replyCalls != 0 {
-		t.Fatalf("expected no text reply when reaction ack succeeds, got %d", replyCalls)
+	if replyCalls != 1 {
+		t.Fatalf("expected one text reply, got %d", replyCalls)
 	}
 }
 
@@ -410,110 +395,5 @@ func buildHistoryMessage(messageID, chatID, senderID, senderType, messageType, c
 		Body: &larkim.MessageBody{
 			Content: ptrString(content),
 		},
-	}
-}
-
-func TestFeishuLongConnBot_HandleNormalizedEventFallsBackToTextWhenReactionFails(t *testing.T) {
-	var (
-		gotReplyBody map[string]string
-		reactionRuns int
-	)
-	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewDecoder(r.Body).Decode(&gotReplyBody); err != nil {
-			t.Fatalf("json.Decode() error = %v", err)
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer replyAPI.Close()
-
-	adapter := NewFeishuAdapter(FeishuAdapterConfig{
-		ReplyAPI:   replyAPI.URL,
-		HTTPClient: replyAPI.Client(),
-	})
-	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
-		AppID:     "cli_appid",
-		AppSecret: "app_secret",
-		Adapter:   adapter,
-		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
-			return "会话已接收，正在处理中", nil
-		},
-		SelectReaction: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
-			return "OnIt", nil
-		},
-		SendReaction: func(ctx context.Context, binding model.IMBinding, messageID string, emojiType string) error {
-			reactionRuns++
-			return context.DeadlineExceeded
-		},
-	})
-
-	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
-		Platform:  model.IMPlatformFeishu,
-		BotID:     "cli_appid",
-		ChannelID: "oc_chat",
-		SenderID:  "ou_sender",
-		MessageID: "om_message",
-		Message:   "帮我看这个 bug",
-	})
-	if err != nil {
-		t.Fatalf("handleNormalizedEvent() error = %v", err)
-	}
-	if reactionRuns != 1 {
-		t.Fatalf("expected reaction path once, got %d", reactionRuns)
-	}
-	if strings.TrimSpace(gotReplyBody["message"]) != "会话已接收，正在处理中" {
-		t.Fatalf("expected fallback text reply, got %+v", gotReplyBody)
-	}
-}
-
-func TestFeishuLongConnBot_HandleNormalizedEventKeepsTextReplyForCommands(t *testing.T) {
-	var (
-		gotReplyBody map[string]string
-		reactionRuns int
-	)
-	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewDecoder(r.Body).Decode(&gotReplyBody); err != nil {
-			t.Fatalf("json.Decode() error = %v", err)
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer replyAPI.Close()
-
-	adapter := NewFeishuAdapter(FeishuAdapterConfig{
-		ReplyAPI:   replyAPI.URL,
-		HTTPClient: replyAPI.Client(),
-	})
-	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
-		AppID:     "cli_appid",
-		AppSecret: "app_secret",
-		Adapter:   adapter,
-		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
-			return "会话已接收，正在处理中", nil
-		},
-		SelectReaction: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
-			reactionRuns++
-			return "OnIt", nil
-		},
-		SendReaction: func(ctx context.Context, binding model.IMBinding, messageID string, emojiType string) error {
-			reactionRuns++
-			return nil
-		},
-	})
-
-	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
-		Platform:  model.IMPlatformFeishu,
-		BotID:     "cli_appid",
-		ChannelID: "oc_chat",
-		SenderID:  "ou_sender",
-		MessageID: "om_message",
-		Message:   "/reset",
-	})
-	if err != nil {
-		t.Fatalf("handleNormalizedEvent() error = %v", err)
-	}
-	if reactionRuns != 0 {
-		t.Fatalf("expected commands to skip reaction path, got %d calls", reactionRuns)
-	}
-	if strings.TrimSpace(gotReplyBody["message"]) != "会话已接收，正在处理中" {
-		t.Fatalf("expected command text reply, got %+v", gotReplyBody)
 	}
 }

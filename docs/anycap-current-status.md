@@ -132,6 +132,7 @@ Current Phase 1 behavior:
 - `/bind <token>` remains available only as a legacy/debug fallback for old shared-bot flows. It is not the main personal-bot setup path.
 - IM chat intake is conversation-first: daemon keeps command parsing on raw text, but normal chat turns now forward structured Feishu message context (`message_id`, `chat_type`, thread/reply IDs, mentions, resolved text) into the session input, and can enrich the current turn with quoted-message context plus bounded thread/chat history before it reaches Codex.
 - Personal-bot daemon ingress no longer drops non-text Feishu messages. Image/file/audio/video turns are forwarded as structured message context with `message_type`, original `content_json`, and resource-key hints, even before full resource download support exists.
+- Personal-bot daemon ingress now uses a single immediate text receipt (`会话已接收，正在处理中`) and suppresses repeated burst follow-up receipts while the current conversation is still busy. Reaction-based immediate acknowledgements are disabled.
 - Chat control commands support `/new`, `/reset`, `/status`, `/stop`, `/fork`, and `/fire`.
 - Feishu chat routing now prefers a per-user primary runner mapping instead of requiring per-user `bot -> runner_id` server env wiring.
 - Runner execution uses polling-style session dispatch: Feishu ingress persists the next session, runner fetches it from the protected API, and reports running / committed / failed / interrupted states.

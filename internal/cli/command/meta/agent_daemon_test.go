@@ -101,12 +101,6 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	if gotCfg.Adapter == nil {
 		t.Fatal("expected feishu adapter in bot config")
 	}
-	if gotCfg.SelectReaction == nil {
-		t.Fatal("expected daemon personal bot config to include reaction selector")
-	}
-	if gotCfg.SendReaction == nil {
-		t.Fatal("expected daemon personal bot config to include reaction sender")
-	}
 	replyMessage, err := gotCfg.HandleInbound(context.Background(), im.NormalizedInboundEvent{
 		Platform:    "feishu",
 		BotID:       "cli_appid",

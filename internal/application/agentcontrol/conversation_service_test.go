@@ -413,7 +413,7 @@ func TestConversationServiceHandleOwnedInboundMessageMigratesExistingConversatio
 	}
 }
 
-func TestConversationServiceHandleOwnedInboundMessageMarksQueuedWhenPreviousSessionStillRunning(t *testing.T) {
+func TestConversationServiceHandleOwnedInboundMessageSuppressesImmediateReplyWhenPreviousSessionStillRunning(t *testing.T) {
 	now := time.Date(2026, 4, 9, 15, 50, 0, 0, time.UTC)
 	lastSessionID := int64(7)
 	conversations := &fakeConversationRepo{
@@ -489,6 +489,9 @@ func TestConversationServiceHandleOwnedInboundMessageMarksQueuedWhenPreviousSess
 	}
 	if !result.Queued {
 		t.Fatalf("expected inbound result to be marked queued, got %+v", result)
+	}
+	if reply := BuildInboundChatReply(*result); reply != "" {
+		t.Fatalf("expected immediate reply to be suppressed for burst follow-up, got %q", reply)
 	}
 }
 
