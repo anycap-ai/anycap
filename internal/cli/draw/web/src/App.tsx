@@ -36,7 +36,7 @@ export default function App() {
   const imageFileRef = useRef<any>(null);
   const lastViewRef = useRef({ scrollX: 0, scrollY: 0, zoom: 1 });
   const [toast, setToast] = useState<string | null>(null);
-  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayReason, setOverlayReason] = useState<'saved' | 'closed' | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToastMsg = useCallback((message: string) => {
@@ -222,7 +222,7 @@ export default function App() {
         };
       },
       showToastMsg,
-      () => setShowOverlay(true),
+      (reason: 'saved' | 'closed') => setOverlayReason(reason),
     );
     ws.connect();
     wsRef.current = ws;
@@ -421,8 +421,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Submitted overlay (shown when peer saves in autoClose mode) */}
-      {showOverlay && (
+      {/* Overlay (shown when session ends: peer saved or host closed) */}
+      {overlayReason && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
           zIndex: 9999, background: 'rgba(26,26,46,.85)', backdropFilter: 'blur(6px)',
@@ -430,16 +430,26 @@ export default function App() {
         }}>
           <div style={{ textAlign: 'center', color: '#ccc', fontFamily: 'system-ui' }}>
             <div style={{ marginBottom: 20, opacity: 0.9 }}>
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="22" stroke="#6b7d3a" strokeWidth="3" fill="none"/>
-                <path d="M14 24L21 31L34 18" stroke="#6b7d3a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              {overlayReason === 'saved' ? (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" r="22" stroke="#6b7d3a" strokeWidth="3" fill="none"/>
+                  <path d="M14 24L21 31L34 18" stroke="#6b7d3a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" r="22" stroke="#7a7a8a" strokeWidth="3" fill="none"/>
+                  <path d="M24 14V28" stroke="#7a7a8a" strokeWidth="3" strokeLinecap="round"/>
+                  <circle cx="24" cy="34" r="2" fill="#7a7a8a"/>
+                </svg>
+              )}
             </div>
             <div style={{ fontSize: 24, fontWeight: 600, color: '#e0e0e0', marginBottom: 10 }}>
-              Whiteboard Saved
+              {overlayReason === 'saved' ? 'Whiteboard Saved' : 'Session Closed'}
             </div>
             <div style={{ fontSize: 14, opacity: 0.7, maxWidth: 320, margin: '0 auto 16px' }}>
-              Another collaborator has saved and closed the session.
+              {overlayReason === 'saved'
+                ? 'Another collaborator has saved and closed the session.'
+                : 'The session has been closed.'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.4 }}>
               You can close this tab.

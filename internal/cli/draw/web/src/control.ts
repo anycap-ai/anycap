@@ -1,6 +1,5 @@
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { mermaidToElements, validateMermaid } from './mermaid';
-import { mergeWithPositionPreservation, computeMergeStats } from './merge';
 import { fillDefaults } from './defaults';
 
 export interface ControlMessage {
@@ -38,12 +37,15 @@ export async function handleControlMessage(
     return handleContentUpdate(msg, getElements, updateScene, addFiles);
   }
   if (msg.type === 'session_closing') {
-    // Could show a notification to the user
     return null;
   }
   return null;
 }
 
+/**
+ * Handle content_update: full replacement of the scene.
+ * Simple and reliable — no merge, just replace everything with new content.
+ */
 async function handleContentUpdate(
   msg: ControlMessage,
   getElements: GetElements,
@@ -58,7 +60,6 @@ async function handleContentUpdate(
     let newElements: ExcalidrawElement[];
 
     if (format === 'mermaid') {
-      // Validate first
       const error = await validateMermaid(content);
       if (error) {
         return {
@@ -68,34 +69,28 @@ async function handleContentUpdate(
           error,
         };
       }
-      // Convert
       newElements = await mermaidToElements(content);
     } else {
-      // Excalidraw JSON
       const parsed = JSON.parse(content);
       const rawElements = parsed.elements || parsed;
       newElements = fillDefaults(
         Array.isArray(rawElements) ? rawElements : [rawElements],
       );
-      // Apply embedded files if present
       if (parsed.files && addFiles) {
         addFiles(Object.values(parsed.files));
       }
     }
 
-    // Compute merge stats before applying
-    const currentElements = getElements();
-    const stats = computeMergeStats(currentElements, newElements);
-
-    // Merge with position preservation
-    const merged = mergeWithPositionPreservation(currentElements, newElements);
-    updateScene(merged);
+    const oldCount = getElements().length;
+    updateScene(newElements);
 
     return {
       type: 'validate_result',
       request_id: requestId,
       ok: true,
-      ...stats,
+      elements_merged: 0,
+      elements_added: newElements.length,
+      elements_removed: oldCount,
     };
   } catch (err: any) {
     return {

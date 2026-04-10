@@ -1165,7 +1165,7 @@ func generateHint(result *DrawResult) string {
 		"Use 'anycap image read' on the snapshot to understand the current state.",
 	}
 	if result.Source != "" {
-		parts = append(parts, "To iterate: edit the .mmd source and push via 'anycap draw update'. Update replaces all diagram elements with the new conversion (user-drawn annotations are preserved, but diagram element positions are reset). Alternatively, re-open the .excalidraw file with 'anycap draw --init' to start from the current visual state.")
+		parts = append(parts, "To iterate: edit the .mmd source and push via 'anycap draw update'. Update fully replaces the whiteboard content with the new conversion. Alternatively, re-open the .excalidraw file with 'anycap draw --init' to start from the current visual state.")
 	} else {
 		parts = append(parts, "The .excalidraw file can be re-opened with 'anycap draw --init' for further iteration.")
 	}

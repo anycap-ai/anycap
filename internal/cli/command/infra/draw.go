@@ -35,8 +35,8 @@ Supports blank canvas, pre-populated Excalidraw JSON (with defaults filling),
 and Mermaid diagrams (auto-converted to editable shapes).
 
 The agent can push updates to the active session via 'anycap draw update'
-without restarting. User-drawn annotations are preserved; diagram elements
-are replaced with the new conversion output.
+without restarting. Update fully replaces the whiteboard content with the
+new conversion output.
 
 Blocking mode (default): opens browser, waits for user to click Save, then outputs result.
 Non-blocking mode (--no-wait): starts a background server and returns immediately.
@@ -159,7 +159,7 @@ func runDrawNonBlocking(stdout io.Writer, stderr io.Writer, initPath, imagePath,
 
 	hint := "Show the URL to the user. They can draw, add shapes, and collaborate on the whiteboard. " +
 		"Use update_command to push new Mermaid content (validates before applying). " +
-		"UPDATE REPLACES all diagram elements with the new conversion; user-drawn annotations (freehand, sticky notes, etc.) are preserved, but any repositioning the user did on diagram elements will be reset. " +
+		"UPDATE fully replaces all whiteboard content with the new conversion. " +
 		"To iterate: read the snapshot, edit the .mmd source, then push via update_command. " +
 		"Use poll_command to retrieve the latest result. Use stop_command when done. " +
 		"Use 'anycap draw list' to recover sessions after context loss."

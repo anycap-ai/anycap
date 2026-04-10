@@ -16,7 +16,7 @@ type AddFiles = (files: any[]) => void;
 type GetViewState = () => ViewState;
 type GetAppState = () => AppStateForReconcile | null;
 type OnNotification = (message: string) => void;
-type OnOverlay = () => void;
+type OnOverlay = (reason: 'saved' | 'closed') => void;
 
 /**
  * Resolve a relative path to a full WebSocket URL,
@@ -149,14 +149,14 @@ export class DrawWebSocket {
         // ----- Notifications -----
         if (msg.type === 'submitted') {
           if (msg.autoClose) {
-            this.onOverlay?.();
+            this.onOverlay?.('saved');
           } else {
             this.onNotification?.('A collaborator saved the whiteboard.');
           }
           return;
         }
         if (msg.type === 'session_closing') {
-          this.onNotification?.('Session is closing...');
+          this.onOverlay?.('closed');
           return;
         }
 
