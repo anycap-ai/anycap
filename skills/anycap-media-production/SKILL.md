@@ -67,6 +67,33 @@ anycap image generate \
 
 Reference images can be local paths or URLs. The CLI handles upload automatically.
 
+### Multiple Reference Images
+
+Some models accept multiple reference images for style transfer, composition blending, or subject-driven generation. Use JSON array syntax to pass multiple files:
+
+```bash
+# Combine style from one image with composition from another
+anycap image generate \
+  --prompt "merge the architectural style of the first image with the color palette of the second" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./style-ref.png","./color-ref.png"]' \
+  -o blended.png
+
+# Mix local files and URLs
+anycap image generate \
+  --prompt "a portrait in the style of the reference images" \
+  --model nano-banana-2 \
+  --mode image-to-image \
+  --param images='["./local-ref.png","https://example.com/style-ref.jpg"]' \
+  -o portrait-styled.png
+```
+
+Tips:
+- Use JSON array syntax `'["path1","path2"]'` -- repeating `--param images=` overwrites rather than appends.
+- Local file paths inside the array are auto-uploaded, same as single-file mode.
+- Not all models support multiple references. Check the model schema first. When unsupported, the model typically uses only the first image.
+
 ### Iterative Refinement with Annotation
 
 When text prompts alone cannot describe the desired edit precisely ("move this", "remove that specific thing", "change the color of this area"), use the annotation workflow. For the full annotation guide -- including URL/video review, headless access, recording analysis, and multi-user collaboration -- read the `anycap-human-interaction` skill.
