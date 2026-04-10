@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -16,18 +20,26 @@ import (
 )
 
 const (
-	feishuQuotedMessageLimit = 1
-	feishuThreadHistoryLimit = 6
-	feishuChatHistoryLimit   = 6
+	feishuQuotedMessageLimit     = 1
+	feishuThreadHistoryLimit     = 6
+	feishuChatHistoryLimit       = 6
+	defaultFeishuTurnMergeWindow = 1200 * time.Millisecond
 )
 
 type FeishuLongConnBotConfig struct {
 	AppID               string
 	AppSecret           string
+	DownloadDir         string
+	TurnMergeWindow     time.Duration
 	BindingService      *agentcontrolapp.BindingService
 	ConversationService *agentcontrolapp.ConversationService
 	HandleInbound       func(context.Context, NormalizedInboundEvent) (string, error)
 	Adapter             *FeishuAdapter
+}
+
+type feishuPendingBurstTurn struct {
+	event NormalizedInboundEvent
+	timer *time.Timer
 }
 
 type FeishuLongConnBot struct {
@@ -37,6 +49,10 @@ type FeishuLongConnBot struct {
 	conversationService *agentcontrolapp.ConversationService
 	inboundHandler      func(context.Context, NormalizedInboundEvent) (string, error)
 	adapter             *FeishuAdapter
+	downloadDir         string
+	turnMergeWindow     time.Duration
+	pendingMu           sync.Mutex
+	pendingTurns        map[string]*feishuPendingBurstTurn
 	client              *larkws.Client
 }
 
@@ -57,6 +73,9 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		conversationService: cfg.ConversationService,
 		inboundHandler:      cfg.HandleInbound,
 		adapter:             cfg.Adapter,
+		downloadDir:         strings.TrimSpace(cfg.DownloadDir),
+		turnMergeWindow:     normalizeFeishuTurnMergeWindow(cfg.TurnMergeWindow),
+		pendingTurns:        map[string]*feishuPendingBurstTurn{},
 	}
 
 	eventDispatcher := dispatcher.NewEventDispatcher("", "").
@@ -131,6 +150,7 @@ func (b *FeishuLongConnBot) normalizeEvent(event *larkim.P2MessageReceiveV1) (No
 		MessageType: messageType,
 		Message:     messageText,
 		ContentJSON: contentJSON,
+		FileInfo:    extractFeishuFileInfo(messageType, contentJSON),
 		Mentions:    mentions,
 	}, true, nil
 }
@@ -139,6 +159,17 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 	if b == nil {
 		return model.ErrNotConfigured("feishu long connection bot is not configured")
 	}
+	if b.shouldMergeBurstTurn(event) {
+		b.enqueueBurstTurn(event)
+		return nil
+	}
+	if err := b.flushPendingBurstTurnForEvent(event); err != nil {
+		return err
+	}
+	return b.dispatchNormalizedEvent(ctx, event)
+}
+
+func (b *FeishuLongConnBot) dispatchNormalizedEvent(ctx context.Context, event NormalizedInboundEvent) error {
 	enrichedEvent := b.enrichContext(ctx, event)
 	if b.inboundHandler != nil {
 		replyMessage, err := b.inboundHandler(ctx, enrichedEvent)
@@ -193,6 +224,124 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 	return nil
 }
 
+func (b *FeishuLongConnBot) shouldMergeBurstTurn(event NormalizedInboundEvent) bool {
+	if b == nil || b.turnMergeWindow <= 0 {
+		return false
+	}
+	command, err := agentcontrolapp.ParseChatCommand(event.Message)
+	if err != nil || command.Action != model.AgentChatActionContinue {
+		return false
+	}
+	if strings.TrimSpace(event.ChannelID) == "" || strings.TrimSpace(event.SenderID) == "" {
+		return false
+	}
+	return true
+}
+
+func normalizeFeishuTurnMergeWindow(window time.Duration) time.Duration {
+	if window < 0 {
+		return 0
+	}
+	return window
+}
+
+func (b *FeishuLongConnBot) enqueueBurstTurn(event NormalizedInboundEvent) {
+	if b == nil {
+		return
+	}
+	key := b.burstTurnKey(event)
+	if key == "" {
+		return
+	}
+
+	b.pendingMu.Lock()
+	defer b.pendingMu.Unlock()
+
+	if existing, ok := b.pendingTurns[key]; ok && existing != nil {
+		existing.event = event
+		existing.timer.Reset(b.turnMergeWindow)
+		return
+	}
+
+	timer := time.AfterFunc(b.turnMergeWindow, func() {
+		b.flushPendingBurstTurn(key)
+	})
+	b.pendingTurns[key] = &feishuPendingBurstTurn{
+		event: event,
+		timer: timer,
+	}
+}
+
+func (b *FeishuLongConnBot) flushPendingBurstTurnForEvent(event NormalizedInboundEvent) error {
+	if b == nil {
+		return nil
+	}
+	key := b.burstTurnKey(event)
+	if key == "" {
+		return nil
+	}
+	pending := b.takePendingBurstTurn(key)
+	if pending == nil {
+		return nil
+	}
+	return b.dispatchNormalizedEvent(context.Background(), pending.event)
+}
+
+func (b *FeishuLongConnBot) flushPendingBurstTurn(key string) {
+	if b == nil {
+		return
+	}
+	pending := b.takePendingBurstTurn(key)
+	if pending == nil {
+		return
+	}
+	if err := b.dispatchNormalizedEvent(context.Background(), pending.event); err != nil {
+		logging.WithError(err).Warn("dispatch merged feishu burst turn failed")
+	}
+}
+
+func (b *FeishuLongConnBot) takePendingBurstTurn(key string) *feishuPendingBurstTurn {
+	if b == nil || strings.TrimSpace(key) == "" {
+		return nil
+	}
+	b.pendingMu.Lock()
+	defer b.pendingMu.Unlock()
+
+	pending := b.pendingTurns[key]
+	if pending == nil {
+		return nil
+	}
+	delete(b.pendingTurns, key)
+	if pending.timer != nil {
+		pending.timer.Stop()
+	}
+	return pending
+}
+
+func (b *FeishuLongConnBot) burstTurnKey(event NormalizedInboundEvent) string {
+	if b == nil {
+		return ""
+	}
+	channelID := strings.TrimSpace(event.ChannelID)
+	senderID := strings.TrimSpace(event.SenderID)
+	if channelID == "" || senderID == "" {
+		return ""
+	}
+	scope := strings.TrimSpace(event.ThreadID)
+	if scope == "" {
+		scope = strings.TrimSpace(event.RootID)
+	}
+	if scope == "" {
+		scope = channelID
+	}
+	return strings.Join([]string{
+		strings.TrimSpace(event.BotID),
+		channelID,
+		senderID,
+		scope,
+	}, "|")
+}
+
 func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedInboundEvent) NormalizedInboundEvent {
 	if b == nil || b.adapter == nil {
 		return event
@@ -203,18 +352,30 @@ func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedI
 	}
 
 	enriched := event
+	enriched.FileInfo = resolvedNormalizedFileInfo(enriched.FileInfo, enriched.MessageType, enriched.ContentJSON)
+	if fileInfo, err := b.downloadMessageResourceToLocal(ctx, enriched.MessageID, enriched.FileInfo); err == nil {
+		enriched.FileInfo = fileInfo
+	} else if err != nil {
+		logging.WithError(err).Warn("download feishu current message resource failed")
+	}
 	if quoted, err := b.loadQuotedMessage(ctx, event); err == nil && quoted != nil {
+		quoted.FileInfo = resolvedNormalizedFileInfo(quoted.FileInfo, quoted.MessageType, quoted.ContentJSON)
+		if fileInfo, downloadErr := b.downloadMessageResourceToLocal(ctx, quoted.MessageID, quoted.FileInfo); downloadErr == nil {
+			quoted.FileInfo = fileInfo
+		} else if downloadErr != nil {
+			logging.WithError(downloadErr).Warn("download feishu quoted message resource failed")
+		}
 		enriched.QuotedMessage = quoted
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu quoted message failed")
 	}
 	if threadHistory, err := b.loadThreadHistory(ctx, event); err == nil && len(threadHistory) > 0 {
-		enriched.ThreadHistory = threadHistory
+		enriched.ThreadHistory = b.downloadHistoryResources(ctx, threadHistory)
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu thread history failed")
 	}
 	if chatHistory, err := b.loadChatHistory(ctx, event); err == nil && len(chatHistory) > 0 {
-		enriched.ChatHistory = chatHistory
+		enriched.ChatHistory = b.downloadHistoryResources(ctx, chatHistory)
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu chat history failed")
 	}
@@ -385,8 +546,137 @@ func normalizeFeishuContextMessage(message *larkim.Message, defaultChatType stri
 		MessageType: messageType,
 		Message:     messageText,
 		ContentJSON: contentJSON,
+		FileInfo:    extractFeishuFileInfo(messageType, contentJSON),
 		Mentions:    mentions,
 	}, true, nil
+}
+
+func resolvedNormalizedFileInfo(current *NormalizedInboundFileInfo, messageType, contentJSON string) *NormalizedInboundFileInfo {
+	if current != nil {
+		return current
+	}
+	return extractFeishuFileInfo(messageType, contentJSON)
+}
+
+func (b *FeishuLongConnBot) downloadHistoryResources(ctx context.Context, messages []NormalizedInboundContextMessage) []NormalizedInboundContextMessage {
+	if len(messages) == 0 {
+		return messages
+	}
+	downloaded := make([]NormalizedInboundContextMessage, 0, len(messages))
+	for _, item := range messages {
+		hydrated := item
+		hydrated.FileInfo = resolvedNormalizedFileInfo(hydrated.FileInfo, hydrated.MessageType, hydrated.ContentJSON)
+		if fileInfo, err := b.downloadMessageResourceToLocal(ctx, item.MessageID, hydrated.FileInfo); err == nil {
+			hydrated.FileInfo = fileInfo
+		} else if err != nil {
+			logging.WithError(err).Warn("download feishu history message resource failed")
+		}
+		downloaded = append(downloaded, hydrated)
+	}
+	return downloaded
+}
+
+func (b *FeishuLongConnBot) downloadMessageResourceToLocal(ctx context.Context, messageID string, fileInfo *NormalizedInboundFileInfo) (*NormalizedInboundFileInfo, error) {
+	if b == nil || b.adapter == nil {
+		return fileInfo, nil
+	}
+	if strings.TrimSpace(b.downloadDir) == "" {
+		return fileInfo, nil
+	}
+	info := fileInfo
+	if info == nil {
+		return nil, nil
+	}
+	if strings.TrimSpace(info.LocalPath) != "" {
+		return info, nil
+	}
+
+	resourceType, fileKey := resolveFeishuDownloadTarget(info)
+	if resourceType == "" || fileKey == "" {
+		return info, nil
+	}
+	resource, err := b.adapter.DownloadMessageResource(ctx, messageID, fileKey, resourceType)
+	if err != nil {
+		return info, err
+	}
+	if resource == nil || len(resource.Content) == 0 {
+		return info, nil
+	}
+	if err := os.MkdirAll(b.downloadDir, 0o755); err != nil {
+		return info, err
+	}
+	localPath := filepath.Join(b.downloadDir, buildFeishuResourceFileName(messageID, fileKey, preferResourceFileName(resource.FileName, info.FileName), resourceType))
+	if err := os.WriteFile(localPath, resource.Content, 0o600); err != nil {
+		return info, err
+	}
+	hydrated := *info
+	if hydrated.FileName == "" {
+		hydrated.FileName = preferResourceFileName(resource.FileName, info.FileName)
+	}
+	hydrated.LocalPath = localPath
+	return &hydrated, nil
+}
+
+func resolveFeishuDownloadTarget(info *NormalizedInboundFileInfo) (string, string) {
+	if info == nil {
+		return "", ""
+	}
+	switch strings.ToLower(strings.TrimSpace(info.MessageType)) {
+	case "image":
+		return "image", strings.TrimSpace(info.ImageKey)
+	case "file":
+		return "file", strings.TrimSpace(info.FileKey)
+	default:
+		return "", ""
+	}
+}
+
+func preferResourceFileName(resourceFileName, fallback string) string {
+	if strings.TrimSpace(resourceFileName) != "" {
+		return strings.TrimSpace(resourceFileName)
+	}
+	return strings.TrimSpace(fallback)
+}
+
+func buildFeishuResourceFileName(messageID, fileKey, fileName, resourceType string) string {
+	baseName := sanitizeFeishuResourceName(strings.TrimSpace(strings.TrimSuffix(fileName, filepath.Ext(fileName))))
+	ext := strings.TrimSpace(filepath.Ext(fileName))
+	if baseName == "" {
+		baseName = sanitizeFeishuResourceName(fileKey)
+	}
+	if baseName == "" {
+		baseName = strings.TrimSpace(resourceType)
+	}
+	if baseName == "" {
+		baseName = "resource"
+	}
+	if ext == "" {
+		ext = ".bin"
+	}
+	return fmt.Sprintf("%s-%s%s", sanitizeFeishuResourceName(messageID), baseName, ext)
+}
+
+func sanitizeFeishuResourceName(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+	var builder strings.Builder
+	for _, r := range trimmed {
+		switch {
+		case r >= 'a' && r <= 'z':
+			builder.WriteRune(r)
+		case r >= 'A' && r <= 'Z':
+			builder.WriteRune(r)
+		case r >= '0' && r <= '9':
+			builder.WriteRune(r)
+		case r == '.', r == '-', r == '_':
+			builder.WriteRune(r)
+		default:
+			builder.WriteRune('_')
+		}
+	}
+	return strings.Trim(builder.String(), "._-")
 }
 
 func messageBodyContent(body *larkim.MessageBody) string {

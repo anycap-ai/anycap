@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -374,6 +376,163 @@ func TestFeishuLongConnBot_HandleNormalizedEventSendsTextReply(t *testing.T) {
 	}
 	if replyCalls != 1 {
 		t.Fatalf("expected one text reply, got %d", replyCalls)
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventBurstMergesConsecutiveTextMessages(t *testing.T) {
+	var (
+		mu       sync.Mutex
+		received []NormalizedInboundEvent
+		done     = make(chan struct{}, 2)
+	)
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	adapter.listMessages = func(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+		if containerType != "chat" || containerID != "oc_chat" {
+			return nil, nil
+		}
+		return []*larkim.Message{
+			buildHistoryMessage("om_1", "oc_chat", "ou_sender", "user", "text", `{"text":"你这样吧"}`),
+			buildHistoryMessage("om_2", "oc_chat", "ou_sender", "user", "text", `{"text":"你说下原因"}`),
+		}, nil
+	}
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		TurnMergeWindow: 20 * time.Millisecond,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			mu.Lock()
+			received = append(received, event)
+			mu.Unlock()
+			done <- struct{}{}
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	if err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_1",
+		ChatType:    "p2p",
+		MessageType: "text",
+		Message:     "你这样吧",
+	}); err != nil {
+		t.Fatalf("first handleNormalizedEvent() error = %v", err)
+	}
+	if err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_2",
+		ChatType:    "p2p",
+		MessageType: "text",
+		Message:     "你说下原因",
+	}); err != nil {
+		t.Fatalf("second handleNormalizedEvent() error = %v", err)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected merged inbound event to be dispatched")
+	}
+	time.Sleep(60 * time.Millisecond)
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(received) != 1 {
+		t.Fatalf("expected one merged inbound event, got %d", len(received))
+	}
+	if received[0].MessageID != "om_2" || received[0].Message != "你说下原因" {
+		t.Fatalf("expected latest text event to be dispatched, got %+v", received[0])
+	}
+	if len(received[0].ChatHistory) != 1 || received[0].ChatHistory[0].MessageID != "om_1" {
+		t.Fatalf("expected first text to appear in chat history, got %+v", received[0].ChatHistory)
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventBurstMergesImageThenText(t *testing.T) {
+	var (
+		mu       sync.Mutex
+		received []NormalizedInboundEvent
+		done     = make(chan struct{}, 2)
+	)
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	adapter.listMessages = func(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+		if containerType != "chat" || containerID != "oc_chat" {
+			return nil, nil
+		}
+		return []*larkim.Message{
+			buildHistoryMessage("om_image", "oc_chat", "ou_sender", "user", "image", `{"image_key":"img_123"}`),
+			buildHistoryMessage("om_text", "oc_chat", "ou_sender", "user", "text", `{"text":"看看这个图"}`),
+		}, nil
+	}
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		TurnMergeWindow: 20 * time.Millisecond,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			mu.Lock()
+			received = append(received, event)
+			mu.Unlock()
+			done <- struct{}{}
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	if err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_image",
+		ChatType:    "p2p",
+		MessageType: "image",
+		Message:     "User sent a Feishu image message. Inspect content_json for resource identifiers.",
+		ContentJSON: `{"image_key":"img_123"}`,
+	}); err != nil {
+		t.Fatalf("image handleNormalizedEvent() error = %v", err)
+	}
+	if err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_text",
+		ChatType:    "p2p",
+		MessageType: "text",
+		Message:     "看看这个图",
+	}); err != nil {
+		t.Fatalf("text handleNormalizedEvent() error = %v", err)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected merged media burst to be dispatched")
+	}
+	time.Sleep(60 * time.Millisecond)
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(received) != 1 {
+		t.Fatalf("expected one merged inbound event, got %d", len(received))
+	}
+	if received[0].MessageID != "om_text" || received[0].Message != "看看这个图" {
+		t.Fatalf("expected text event to be dispatched, got %+v", received[0])
+	}
+	if len(received[0].ChatHistory) != 1 || received[0].ChatHistory[0].MessageType != "image" {
+		t.Fatalf("expected image to remain in chat history, got %+v", received[0].ChatHistory)
 	}
 }
 

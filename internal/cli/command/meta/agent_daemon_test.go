@@ -77,10 +77,12 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	}
 	stdout := &bytes.Buffer{}
 	cmd := newAgentDaemonCmd(clientFactory, stdout)
+	workspace := t.TempDir()
 	cmd.SetArgs([]string{
 		"start",
 		"--name", "local-mac",
 		"--platform", "feishu",
+		"--workspace", workspace,
 		"--feishu-app-id", "cli_appid",
 		"--feishu-app-secret", "app_secret",
 		"--once",
@@ -100,6 +102,13 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	}
 	if gotCfg.Adapter == nil {
 		t.Fatal("expected feishu adapter in bot config")
+	}
+	expectedDownloadDir := filepath.Join(workspace, ".anycap", "feishu-downloads")
+	if gotCfg.DownloadDir != expectedDownloadDir {
+		t.Fatalf("expected download dir %q, got %q", expectedDownloadDir, gotCfg.DownloadDir)
+	}
+	if gotCfg.TurnMergeWindow <= 0 {
+		t.Fatalf("expected positive turn merge window, got %s", gotCfg.TurnMergeWindow)
 	}
 	replyMessage, err := gotCfg.HandleInbound(context.Background(), im.NormalizedInboundEvent{
 		Platform:    "feishu",

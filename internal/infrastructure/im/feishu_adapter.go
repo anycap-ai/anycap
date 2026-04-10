@@ -29,15 +29,21 @@ type FeishuAdapterConfig struct {
 }
 
 type FeishuAdapter struct {
-	verificationToken string
-	encryptKey        string
-	replyAPI          string
-	client            *http.Client
-	appID             string
-	appSecret         string
-	larkClient        *lark.Client
-	getMessage        func(context.Context, string) (*larkim.Message, error)
-	listMessages      func(context.Context, string, string, int) ([]*larkim.Message, error)
+	verificationToken       string
+	encryptKey              string
+	replyAPI                string
+	client                  *http.Client
+	appID                   string
+	appSecret               string
+	larkClient              *lark.Client
+	getMessage              func(context.Context, string) (*larkim.Message, error)
+	listMessages            func(context.Context, string, string, int) ([]*larkim.Message, error)
+	downloadMessageResource func(context.Context, string, string, string) (*DownloadedMessageResource, error)
+}
+
+type DownloadedMessageResource struct {
+	Content  []byte
+	FileName string
 }
 
 func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
@@ -56,6 +62,7 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 	}
 	adapter.getMessage = adapter.getMessageViaAPI
 	adapter.listMessages = adapter.listMessagesViaAPI
+	adapter.downloadMessageResource = adapter.downloadMessageResourceViaAPI
 	return adapter
 }
 
@@ -182,6 +189,13 @@ func (a *FeishuAdapter) ListMessages(ctx context.Context, containerType string, 
 		return nil, model.ErrNotConfigured("feishu direct api is not configured")
 	}
 	return a.listMessages(ctx, strings.TrimSpace(containerType), strings.TrimSpace(containerID), limit)
+}
+
+func (a *FeishuAdapter) DownloadMessageResource(ctx context.Context, messageID string, fileKey string, resourceType string) (*DownloadedMessageResource, error) {
+	if a == nil || a.downloadMessageResource == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	return a.downloadMessageResource(ctx, strings.TrimSpace(messageID), strings.TrimSpace(fileKey), strings.TrimSpace(resourceType))
 }
 
 func (a *FeishuAdapter) SendCompleted(ctx context.Context, binding model.IMBinding, task model.AgentTask) error {
@@ -363,4 +377,43 @@ func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMB
 		return fmt.Errorf("send feishu direct message: code=%d msg=%s", resp.Code, resp.Msg)
 	}
 	return nil
+}
+
+func (a *FeishuAdapter) downloadMessageResourceViaAPI(ctx context.Context, messageID string, fileKey string, resourceType string) (*DownloadedMessageResource, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	if strings.TrimSpace(messageID) == "" {
+		return nil, model.ErrValidation("feishu message id is required")
+	}
+	if strings.TrimSpace(fileKey) == "" {
+		return nil, model.ErrValidation("feishu file key is required")
+	}
+	normalizedType := strings.ToLower(strings.TrimSpace(resourceType))
+	switch normalizedType {
+	case "image", "file":
+	default:
+		return nil, model.ErrValidation("unsupported feishu resource type")
+	}
+
+	req := larkim.NewGetMessageResourceReqBuilder().
+		MessageId(strings.TrimSpace(messageID)).
+		FileKey(strings.TrimSpace(fileKey)).
+		Type(normalizedType).
+		Build()
+	resp, err := a.larkClient.Im.V1.MessageResource.Get(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("get feishu message resource: %w", err)
+	}
+	if !resp.Success() {
+		return nil, fmt.Errorf("get feishu message resource: code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	content, err := io.ReadAll(resp.File)
+	if err != nil {
+		return nil, fmt.Errorf("read feishu message resource: %w", err)
+	}
+	return &DownloadedMessageResource{
+		Content:  content,
+		FileName: strings.TrimSpace(resp.FileName),
+	}, nil
 }

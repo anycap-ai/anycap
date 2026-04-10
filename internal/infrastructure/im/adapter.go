@@ -27,6 +27,7 @@ type NormalizedInboundEvent struct {
 	MessageType       string
 	Message           string
 	ContentJSON       string
+	FileInfo          *NormalizedInboundFileInfo
 	Mentions          []NormalizedInboundMention
 	QuotedMessage     *NormalizedInboundContextMessage
 	ThreadHistory     []NormalizedInboundContextMessage
@@ -47,6 +48,7 @@ type NormalizedInboundContextMessage struct {
 	MessageType string
 	Message     string
 	ContentJSON string
+	FileInfo    *NormalizedInboundFileInfo
 	Mentions    []NormalizedInboundMention
 }
 
@@ -55,6 +57,7 @@ type NormalizedInboundFileInfo struct {
 	ImageKey    string
 	FileKey     string
 	FileName    string
+	LocalPath   string
 }
 
 func (e NormalizedInboundEvent) AgentInputText() string {
@@ -70,6 +73,7 @@ func (e NormalizedInboundEvent) AgentInputText() string {
 		MessageType: e.MessageType,
 		Message:     e.Message,
 		ContentJSON: e.ContentJSON,
+		FileInfo:    e.FileInfo,
 		Mentions:    e.Mentions,
 	}
 	if len(e.ThreadHistory) == 0 && len(e.ChatHistory) == 0 && e.QuotedMessage == nil {
@@ -150,7 +154,7 @@ func (m NormalizedInboundContextMessage) renderFeishuMessage(indent string) stri
 		}
 		lines = append(lines, indent+"  </mentions>")
 	}
-	if fileInfo := extractFeishuFileInfo(m.MessageType, m.ContentJSON); fileInfo != nil {
+	if fileInfo := m.resolvedFileInfo(); fileInfo != nil {
 		lines = append(lines, fileInfo.render(indent+"  "))
 	}
 	if strings.EqualFold(strings.TrimSpace(m.MessageType), "text") {
@@ -193,7 +197,7 @@ func (m NormalizedInboundContextMessage) renderHistoryMessage(indent string) str
 	header += ">"
 
 	lines := []string{header}
-	if fileInfo := extractFeishuFileInfo(m.MessageType, m.ContentJSON); fileInfo != nil {
+	if fileInfo := m.resolvedFileInfo(); fileInfo != nil {
 		lines = append(lines, fileInfo.render(indent+"  "))
 	}
 	if text := strings.TrimSpace(m.Message); text != "" {
@@ -213,6 +217,13 @@ func (m NormalizedInboundContextMessage) role() string {
 		return "assistant"
 	}
 	return "user"
+}
+
+func (m NormalizedInboundContextMessage) resolvedFileInfo() *NormalizedInboundFileInfo {
+	if m.FileInfo != nil {
+		return m.FileInfo
+	}
+	return extractFeishuFileInfo(m.MessageType, m.ContentJSON)
 }
 
 func extractFeishuFileInfo(messageType, contentJSON string) *NormalizedInboundFileInfo {
@@ -252,6 +263,7 @@ func (i NormalizedInboundFileInfo) render(indent string) string {
 	appendAttr("image_key", i.ImageKey)
 	appendAttr("file_key", i.FileKey)
 	appendAttr("file_name", i.FileName)
+	appendAttr("local_path", i.LocalPath)
 	return fmt.Sprintf("%s<file_info %s />", indent, strings.Join(attrs, " "))
 }
 

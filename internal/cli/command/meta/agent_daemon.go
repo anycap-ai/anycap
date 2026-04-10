@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -51,6 +52,8 @@ var (
 		return cmd.Process.Pid, nil
 	}
 )
+
+const daemonFeishuTurnMergeWindow = 1200 * time.Millisecond
 
 func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
 	var (
@@ -502,9 +505,11 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 			HTTPClient: &http.Client{Timeout: 10 * time.Second},
 		})
 		bot := buildDaemonIMBot(im.FeishuLongConnBotConfig{
-			AppID:     trimmedFeishuAppID,
-			AppSecret: trimmedFeishuSecret,
-			Adapter:   adapter,
+			AppID:           trimmedFeishuAppID,
+			AppSecret:       trimmedFeishuSecret,
+			Adapter:         adapter,
+			DownloadDir:     daemonFeishuDownloadDir(strings.TrimSpace(workspace)),
+			TurnMergeWindow: daemonFeishuTurnMergeWindow,
 			HandleInbound: func(ctx context.Context, event im.NormalizedInboundEvent) (string, error) {
 				return httpClient.InboundIMChat(ctx, event.Platform, event.BotID, event.ChannelID, event.MessageID, event.SenderID, messageForInboundChat(event))
 			},
@@ -581,4 +586,12 @@ func messageForInboundChat(event im.NormalizedInboundEvent) string {
 		return strings.TrimSpace(event.Message)
 	}
 	return event.AgentInputText()
+}
+
+func daemonFeishuDownloadDir(workspace string) string {
+	trimmedWorkspace := strings.TrimSpace(workspace)
+	if trimmedWorkspace == "" {
+		return ""
+	}
+	return filepath.Join(trimmedWorkspace, ".anycap", "feishu-downloads")
 }
