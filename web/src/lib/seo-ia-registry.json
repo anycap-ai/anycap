@@ -80,6 +80,7 @@
     { "id": "learn-how-to-make-background-white-for-product-photos", "kind": "workflow", "label": "How to Make Background White for Product Photos", "path": "/learn/how-to-make-background-white-for-product-photos", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-remove-people-from-photos", "kind": "workflow", "label": "How to Remove People from Photos", "path": "/learn/how-to-remove-people-from-photos", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-brighten-a-photo-online", "kind": "workflow", "label": "How to Brighten a Photo Online", "path": "/learn/how-to-brighten-a-photo-online", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
+    { "id": "learn-how-to-make-a-photo-into-a-drawing", "kind": "workflow", "label": "How to Make a Photo Into a Drawing", "path": "/learn/how-to-make-a-photo-into-a-drawing", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-how-to-make-memes-online", "kind": "workflow", "label": "How to Make Memes Online", "path": "/learn/how-to-make-memes-online", "eyebrow": "Use Cases", "parentId": "learn-use-cases" },
     { "id": "learn-funny-meme-drawings", "kind": "leaf", "label": "Funny Meme Drawings", "path": "/learn/funny-meme-drawings", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-memes-online" },
     { "id": "learn-easy-memes-to-draw", "kind": "leaf", "label": "Easy Memes to Draw", "path": "/learn/easy-memes-to-draw", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-memes-online" },

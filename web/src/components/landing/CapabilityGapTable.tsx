@@ -26,8 +26,9 @@ type CapabilityGapTableProps = {
   eyebrow?: string;
   title: string;
   description?: string;
-  columns: CapabilityGapColumn[];
-  rows: CapabilityGapRow[];
+  capabilityLabel?: string;
+  columns: readonly CapabilityGapColumn[];
+  rows: readonly CapabilityGapRow[];
   footnote?: string;
 };
 
@@ -59,6 +60,7 @@ export function CapabilityGapTable({
   eyebrow,
   title,
   description,
+  capabilityLabel = "Capability",
   columns,
   rows,
   footnote,
@@ -88,7 +90,7 @@ export function CapabilityGapTable({
                 className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"
                 style={mono}
               >
-                Capability
+                {capabilityLabel}
               </th>
               {columns.map((column) => (
                 <th

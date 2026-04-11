@@ -18,8 +18,17 @@ export const defaultSeoIndexedLocaleCodes = ["en"] as const satisfies readonly S
 const ptBrRolloutSeoLocales = ["en", "pt-br"] as const satisfies readonly SiteLocale[];
 
 export const seoIndexedLocaleCodesByRouteKey = {
+  "capabilities": ptBrRolloutSeoLocales,
   "capabilities-image-generation": ptBrRolloutSeoLocales,
+  "capabilities-image-understanding": ptBrRolloutSeoLocales,
   "capabilities-video-generation": ptBrRolloutSeoLocales,
+  "compare": ptBrRolloutSeoLocales,
+  "for-claude-code": ptBrRolloutSeoLocales,
+  "for-codex": ptBrRolloutSeoLocales,
+  "for-cursor": ptBrRolloutSeoLocales,
+  "for": ptBrRolloutSeoLocales,
+  "pricing": ptBrRolloutSeoLocales,
+  "start": ptBrRolloutSeoLocales,
   "guides-install-anycap": ptBrRolloutSeoLocales,
   "learn-what-is-an-ai-influencer": ptBrRolloutSeoLocales,
   "learn-ai-video-generator-from-image": ptBrRolloutSeoLocales,
@@ -31,6 +40,7 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "learn-how-to-make-background-white-for-product-photos": ptBrRolloutSeoLocales,
   "learn-how-to-remove-people-from-photos": ptBrRolloutSeoLocales,
   "learn-how-to-brighten-a-photo-online": ptBrRolloutSeoLocales,
+  "learn-how-to-make-a-photo-into-a-drawing": ptBrRolloutSeoLocales,
   "models-seedream-5": ptBrRolloutSeoLocales,
   "models-nano-banana-pro": ptBrRolloutSeoLocales,
   "models-nano-banana-2": ptBrRolloutSeoLocales,

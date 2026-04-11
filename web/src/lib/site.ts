@@ -226,6 +226,12 @@ const manualPublicRouteDefinitions = [
     priority: 0.72,
   },
   {
+    key: "learn-how-to-make-a-photo-into-a-drawing",
+    kind: "seo",
+    path: "/learn/how-to-make-a-photo-into-a-drawing",
+    priority: 0.78,
+  },
+  {
     key: "learn-how-to-make-memes-online",
     kind: "seo",
     path: "/learn/how-to-make-memes-online",
