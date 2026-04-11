@@ -1,198 +1,144 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import {
   pricingActionRows,
-  pricingCapabilitySummary,
   pricingGenerationGroups,
   type GenerationModel,
 } from "@/lib/capability-inventory";
-import { createFaqPageJsonLd } from "@/lib/schema";
-import { adjacentWorkflowSummary, getLocalizedRouteUrl, publicCapabilityLabel, siteConfig } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
+import { getPricingMetadata, getPricingPageData, PRICING_PATH } from "./content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const defaultBillingHref = "/dashboard/billing?buy=1";
-
-export const metadata: Metadata = {
-  title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
-  description:
-    "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
-  alternates: { canonical: "/pricing" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/pricing",
-    siteName: siteConfig.siteName,
-    title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
-    description:
-      "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
+const pricingGenerationModeLabels = {
+  en: {
+    "text-to-image": "text-to-image",
+    "image-to-image": "image-to-image",
+    "text-to-video": "text-to-video",
+    "image-to-video": "image-to-video",
+    "text-to-music": "text-to-music",
   },
-};
-
-const creditPackages = [
-  {
-    name: "Starter",
-    packQuery: "starter",
-    price: 10,
-    credits: 500,
-    bonus: null,
-    bonusLabel: null,
-    highlight: false,
-    bestFor: "Best for first live workflow tests",
-    description:
-      "A low-risk starting point for solo builders validating prompts, tool calls, and a first production-near agent path.",
+  "pt-br": {
+    "text-to-image": "texto-para-imagem",
+    "image-to-image": "imagem-para-imagem",
+    "text-to-video": "texto-para-vídeo",
+    "image-to-video": "imagem-para-vídeo",
+    "text-to-music": "texto-para-música",
   },
-  {
-    name: "Standard",
-    packQuery: "standard",
-    price: 30,
-    credits: 1575,
-    bonus: 75,
-    bonusLabel: "+5% bonus",
-    highlight: true,
-    bestFor: "Best for recurring weekly usage",
-    description:
-      "A balanced default when you expect repeated image, video, audio, or web runs and want fewer top-ups while iterating.",
-  },
-  {
-    name: "Pro",
-    packQuery: "pro",
-    price: 100,
-    credits: 5500,
-    bonus: 500,
-    bonusLabel: "+10% bonus",
-    highlight: false,
-    bestFor: "Best for heavier team or production workloads",
-    description:
-      "More headroom for shared agent sessions, larger media batches, and longer-running workflows where throughput matters.",
-  },
-] as const;
-
-const pricingPageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  name: "AnyCap Pricing",
-  description:
-    "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
-  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
-  dateModified: "2026-04-08",
-  mainEntity: {
-    "@type": "Product",
-    name: "AnyCap Credits",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing"),
-    description:
-      "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
-    offers: creditPackages.map((pkg) => ({
-      "@type": "Offer",
-      name: `${pkg.name} credit pack`,
-      url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, "/pricing")}#pack-${pkg.packQuery}`,
-      price: pkg.price.toFixed(2),
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-      description: pkg.bonusLabel
-        ? `${pkg.credits.toLocaleString()} credits (${pkg.bonusLabel})`
-        : `${pkg.credits.toLocaleString()} credits`,
-    })),
-  },
-};
-
-const pricingPrinciples = [
-  {
-    title: "Start free, then buy only when the workflow proves out",
-    description:
-      "Every new account starts with $5 free credit, so teams can test real image, video, audio, and web workflows before committing to a larger prepaid pack.",
-  },
-  {
-    title: "Keep one balance across the workflows agents actually need",
-    description:
-      "The same AnyCap balance can be spent across generation, analysis, search, storage, and publishing workflows instead of splitting spend across multiple provider dashboards.",
-  },
-  {
-    title: "Pay official provider rates through one consolidated billing flow",
-    description:
-      "AnyCap passes through the official model rate with no markup, then adds one purchase flow, one balance, and one transaction history for the whole runtime.",
-  },
-] as const;
-
-const purchaseChecklist = [
-  {
-    title: "1. Start from the workflow, not the model list",
-    description:
-      "Estimate the path your agent will actually run: generation, analysis, search, storage, or a mix of several steps in one job.",
-  },
-  {
-    title: "2. Price the most expensive step first",
-    description:
-      "Use the tables below to estimate the generation output or action type that will consume the largest share of credits, then treat the rest as margin.",
-  },
-  {
-    title: "3. Leave room for retries and iteration",
-    description:
-      "If the workflow will need prompt tuning, QA passes, or teammate handoffs, choose the pack that gives enough headroom to keep moving without topping up every day.",
-  },
-] as const;
-
-const enterprisePackage = {
-  name: "Enterprise",
-  headline: "Custom volume for teams and larger workflows",
-  description:
-    "For teams that need larger purchases, consolidated billing, procurement support, or invoiced billing.",
-  highlights: ["Custom credit volume", "Volume pricing", "Invoiced billing"],
-  ctaLabel: "Contact us",
-  ctaSubject: "AnyCap Enterprise pricing",
 } as const;
 
-const driveQuotas = [
-  { label: "Files per account", value: "5,000" },
-  { label: "Max file size", value: "1 GB" },
-] as const;
+const pricingGenerationGroupLabels = {
+  en: [
+    {
+      title: "Image generation",
+      description: "Charged per call. Supports text-to-image and image-to-image modes.",
+      unitLabel: "/call",
+      headers: ["Model", "Modes", "Credits / call"] as [string, string, string],
+    },
+    {
+      title: "Video generation",
+      description:
+        "Charged per second of generated output. Supports text-to-video and image-to-video modes.",
+      unitLabel: "/sec",
+      headers: ["Model", "Modes", "Credits / sec"] as [string, string, string],
+    },
+    {
+      title: "Music generation",
+      description: "Charged per second of generated audio.",
+      unitLabel: "/sec",
+      headers: ["Model", "Modes", "Credits / sec"] as [string, string, string],
+    },
+  ],
+  "pt-br": [
+    {
+      title: "Geração de imagens",
+      description: "Cobrado por chamada. Suporta modos texto-para-imagem e imagem-para-imagem.",
+      unitLabel: "/chamada",
+      headers: ["Modelo", "Modos", "Créditos / chamada"] as [string, string, string],
+    },
+    {
+      title: "Geração de vídeo",
+      description:
+        "Cobrado por segundo de saída gerada. Suporta modos texto-para-vídeo e imagem-para-vídeo.",
+      unitLabel: "/seg",
+      headers: ["Modelo", "Modos", "Créditos / seg"] as [string, string, string],
+    },
+    {
+      title: "Geração de música",
+      description: "Cobrado por segundo de áudio gerado.",
+      unitLabel: "/seg",
+      headers: ["Modelo", "Modos", "Créditos / seg"] as [string, string, string],
+    },
+  ],
+} as const;
 
-const pageQuotas = [
-  { label: "Sites per account", value: "100" },
-  { label: "Versions per site", value: "500" },
-] as const;
+const pricingActionRowsByLocale = {
+  en: pricingActionRows,
+  "pt-br": [
+    { action: "Leitura de imagem", unit: "por requisição", credits: 5 },
+    { action: "Leitura de vídeo", unit: "por requisição", credits: 10 },
+    { action: "Leitura de áudio", unit: "por requisição", credits: 10 },
+    { action: "Busca na web", unit: "por requisição", credits: 1 },
+    { action: "Busca na web (fundamentada por IA)", unit: "por requisição", credits: 5 },
+    { action: "Crawl de web", unit: "por requisição", credits: 1 },
+  ] as const,
+} as const;
 
-const faqItems = [
-  {
-    question: "Is there a free tier?",
-    answer:
-      "Every account starts with $5 free credit, which is 250 credits at the current base conversion, and no payment information is required to begin testing workflows.",
-  },
-  {
-    question: "Do credits expire?",
-    answer: "No. Purchased credits do not expire.",
-  },
-  {
-    question: "Is there a markup on model pricing?",
-    answer:
-      "No. AnyCap passes through the official provider rate for every model and capability, then consolidates usage into one balance and one billing flow.",
-  },
-  {
-    question: "Can I use the same balance across generation and actions?",
-    answer:
-      "Yes. The same AnyCap balance can be used across generation models, analysis tools, web actions, Drive storage, and Page publishing workflows.",
-  },
-  {
-    question: "How should I choose my first credit pack?",
-    answer:
-      "Starter is a good fit for first live tests, Standard is the default for recurring weekly usage, and Pro is the better fit when a team expects heavier or more continuous production workloads.",
-  },
-  {
-    question: "What capabilities are included?",
-    answer: `${pricingCapabilitySummary.join(", ")}. Drive storage and Page hosting are included at no additional credit cost.`,
-  },
-] as const;
+function translateGenerationMode(locale: SiteLocale, mode: string) {
+  const resolvedLocale = locale === "pt-br" ? "pt-br" : "en";
+  const label =
+    pricingGenerationModeLabels[resolvedLocale][mode as keyof (typeof pricingGenerationModeLabels)["en"]];
+  return label ?? mode;
+}
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
-const lastUpdatedLabel = "April 8, 2026";
+function getLocalizedPricingGenerationGroups(locale: SiteLocale): readonly {
+  title: string;
+  description: string;
+  unitLabel: string;
+  headers: [string, string, string];
+  models: GenerationModel[];
+}[] {
+  const resolvedLocale = locale === "pt-br" ? "pt-br" : "en";
+  const labels = pricingGenerationGroupLabels[resolvedLocale];
 
-function buildCreditPackHref(pack: (typeof creditPackages)[number]) {
+  return pricingGenerationGroups.map((group, index) => ({
+    title: labels[index].title,
+    description: labels[index].description,
+    unitLabel: labels[index].unitLabel,
+    headers: labels[index].headers,
+    models: group.models.map((model) => ({
+      ...model,
+      modes: model.modes.map((mode) => translateGenerationMode(locale, mode)),
+    })),
+  }));
+}
+
+function getLocalizedPricingActionRows(locale: SiteLocale) {
+  return pricingActionRowsByLocale[locale === "pt-br" ? "pt-br" : "en"];
+}
+
+type PricingPackHrefData = {
+  packQuery: string;
+  credits: number;
+  price: number;
+};
+
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  PRICING_PATH,
+  getPricingMetadata(defaultLocale),
+);
+
+function buildCreditPackHref(pack: PricingPackHrefData) {
   const params = new URLSearchParams({
     buy: "1",
     pack: pack.packQuery,
@@ -261,17 +207,21 @@ function ModelTable({
   );
 }
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const locale = await getRequestLocale();
+  const content = getPricingPageData(locale);
+  const creditsUnitLabel = locale === "pt-br" ? "créditos" : "credits";
+
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Pricing", href: "/pricing" }]} />
+      <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.pricingPageJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">
@@ -280,35 +230,28 @@ export default function PricingPage() {
           {/* ── Hero ──────────────────────────────────────────────── */}
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Pricing
+              {content.hero.eyebrow}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Simple, transparent
+              {content.hero.titleLine1}
               <br />
-              pricing.
+              {content.hero.titleLine2}
             </h1>
             <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              Start with the {publicCapabilityLabel} coding agents miss most often. AnyCap gives
-              you one prepaid balance for those workflows, then lets that same balance extend
-              across the broader runtime as your stack grows. No markup over official rates. No
-              subscription. Every new account starts with $5 free credit.
+              {content.hero.intro}
             </p>
             <div className="mt-8 max-w-[860px] rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6 md:p-7">
               <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
-                Pricing facts
+                {content.hero.factsLabel}
               </p>
               <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that,
-                the public AnyCap capability inventory is billed at the same rate as the official
-                model provider, with no subscription fee and no platform markup. The same balance
-                can also be used across {adjacentWorkflowSummary}. Credit packages are one-time
-                purchases, and larger packages include bonus credits.
+                {content.hero.factsText}
               </p>
               <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
-                Last updated {lastUpdatedLabel}
+                {content.hero.lastUpdatedLabel}
               </p>
             </div>
           </FadeIn>
@@ -321,21 +264,19 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                How AnyCap pricing works
+                {content.sectionTitles.pricingPrinciples}
               </h2>
               <p className="mb-8 max-w-[760px] text-sm leading-6 text-[#4d5145]">
-                The pricing model is intentionally simple: start free, buy one-time credit packs
-                when you need more balance, and keep that same balance available across the
-                workflows your agents already run.
+                {content.pricingPrinciplesIntro}
               </p>
               <div className="grid gap-4 md:grid-cols-3">
-                {pricingPrinciples.map((item) => (
+                {content.pricingPrinciples.map((item) => (
                   <div
                     key={item.title}
                     className="rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6"
                   >
                     <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
-                      Pricing principle
+                      {locale === "pt-br" ? "Princípio de preço" : "Pricing principle"}
                     </p>
                     <h3 className="mt-3 text-base text-[#1c1f17]" style={pixel}>
                       {item.title}
@@ -355,19 +296,22 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Credit packages
+                {content.sectionTitles.creditPackages}
               </h2>
               <p className="mb-8 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Purchase credits to use across all capabilities. Larger packages include bonus
-                credits.
+                {content.creditPackagesIntro}
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
-                {creditPackages.map((pkg) => (
+                {content.creditPackages.map((pkg) => (
                   <LoginButton
                     key={pkg.name}
                     returnTo={buildCreditPackHref(pkg)}
                     id={`pack-${pkg.packQuery}`}
-                    aria-label={`Buy the ${pkg.name} credit pack`}
+                    aria-label={
+                      locale === "pt-br"
+                        ? `Comprar o pacote de créditos ${pkg.name}`
+                        : `Buy the ${pkg.name} credit pack`
+                    }
                     className={`group relative flex h-full flex-col rounded-xl border p-6 transition-all hover:-translate-y-0.5 hover:border-[#6b7d3a] hover:shadow-[0_10px_24px_rgba(28,31,23,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6b7d3a] focus-visible:ring-offset-2 ${
                       pkg.highlight
                         ? "border-[#6b7d3a] bg-[#6b7d3a]/[0.04]"
@@ -379,7 +323,7 @@ export default function PricingPage() {
                         className="absolute -top-3 left-5 rounded-full bg-[#6b7d3a] px-3 py-0.5 text-[10px] tracking-[0.5px] text-[#f4f5f0]"
                         style={mono}
                       >
-                        Popular
+                        {content.packageStatusLabels.popular}
                       </span>
                     )}
                     <p className="mb-1 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
@@ -392,7 +336,7 @@ export default function PricingPage() {
                       ${pkg.price}
                     </p>
                     <p className="mt-3 text-sm text-[#4d5145]" style={mono}>
-                      {pkg.credits.toLocaleString()} credits
+                      {pkg.credits.toLocaleString()} {creditsUnitLabel}
                     </p>
                     {pkg.bonusLabel && (
                       <p className="mt-1 text-xs text-[#6b7d3a]" style={mono}>
@@ -407,7 +351,11 @@ export default function PricingPage() {
                       className="mt-6 flex items-center justify-between text-[11px] tracking-[0.7px] text-[#5a5e52]"
                       style={mono}
                     >
-                      <span>{pkg.highlight ? "Recommended pack" : "Continue to checkout"}</span>
+                      <span>
+                        {pkg.highlight
+                          ? content.packageStatusLabels.recommendedPack
+                          : content.packageStatusLabels.continueToCheckout}
+                      </span>
                       <span className="transition-transform group-hover:translate-x-0.5">
                         &rarr;
                       </span>
@@ -422,19 +370,19 @@ export default function PricingPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-[760px]">
                     <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
-                      {enterprisePackage.name}
+                      {content.enterprisePackage.name}
                     </p>
                     <h3
                       className="mt-2 leading-[1.08] tracking-[-0.02em] text-[#1c1f17]"
                       style={{ ...pixel, fontSize: "clamp(24px, 3.2vw, 34px)" }}
                     >
-                      {enterprisePackage.headline}
+                      {content.enterprisePackage.headline}
                     </h3>
                     <p className="mt-3 max-w-[680px] text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                      {enterprisePackage.description}
+                      {content.enterprisePackage.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {enterprisePackage.highlights.map((item) => (
+                      {content.enterprisePackage.highlights.map((item) => (
                         <span
                           key={item}
                           className="inline-flex rounded-full border border-[#ccd7ae] bg-[#f7f9f1] px-3 py-1 text-[11px] text-[#55672c]"
@@ -447,18 +395,17 @@ export default function PricingPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     <EmailActionButton
-                      subject={enterprisePackage.ctaSubject}
+                      subject={content.enterprisePackage.ctaSubject}
                       className="inline-flex cursor-pointer items-center rounded-lg border-0 bg-[#1c1f17] px-5 py-3 text-[11px] tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#6b7d3a]"
                       style={mono}
                     >
-                      {enterprisePackage.ctaLabel}
+                      {content.enterprisePackage.ctaLabel}
                     </EmailActionButton>
                   </div>
                 </div>
               </div>
               <p className="mt-4 text-sm leading-6 text-[#5a5e52]">
-                1 credit = $0.02. All packages are one-time purchases, not subscriptions. Need a
-                larger volume or invoiced billing? Contact us for enterprise pricing.
+                {content.enterpriseFootnote}
               </p>
             </section>
           </FadeIn>
@@ -471,15 +418,13 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                How to estimate your first top-up
+                {content.sectionTitles.estimateTopUp}
               </h2>
               <p className="mb-8 max-w-[760px] text-sm leading-6 text-[#4d5145]">
-                Most teams do not need a perfect forecast before buying credits. A better approach
-                is to map the workflow, price the expensive step, then pick the pack that leaves
-                room for iteration.
+                {content.estimateTopUp.intro}
               </p>
               <div className="grid gap-4 md:grid-cols-3">
-                {purchaseChecklist.map((item) => (
+                {content.estimateTopUp.checklist.map((item) => (
                   <div
                     key={item.title}
                     className="rounded-2xl border border-[#d4dbb8] bg-[#fffffc] p-6"
@@ -502,14 +447,13 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Generation models
+                {content.sectionTitles.generationModels}
               </h2>
               <p className="mb-10 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Credit rates for each generation model. We pass through the official provider rate
-                with no markup.
+                {content.generationModels.intro}
               </p>
 
-              {pricingGenerationGroups.map((group, index) => (
+              {getLocalizedPricingGenerationGroups(locale).map((group, index) => (
                 <div
                   key={group.title}
                   className={index === pricingGenerationGroups.length - 1 ? "" : "mb-12"}
@@ -527,8 +471,7 @@ export default function PricingPage() {
               ))}
 
               <p className="mt-6 text-sm leading-6 text-[#5a5e52]">
-                Credits shown are approximate. Actual cost may vary based on resolution, duration,
-                or quality settings.
+                {content.generationModels.creditsNotice}
               </p>
             </section>
           </FadeIn>
@@ -541,16 +484,19 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Actions
+                {content.sectionTitles.actions}
               </h2>
-              <p className="mb-8 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Analyze images, videos, and audio, search the web, crawl pages, and run AI-grounded web search — all at a flat per-request rate.
+              <p className="mb-3 max-w-[700px] text-sm leading-6 text-[#4d5145]">
+                {content.actions.intro}
+              </p>
+              <p className="mb-8 max-w-[700px] text-[11px] leading-5 text-[#5a5e52]" style={mono}>
+                {content.actions.includedCapabilitiesLabel}: {content.actions.includedCapabilitiesSummary}
               </p>
               <div className="overflow-x-auto rounded-xl border border-[#d4dbb8] bg-[#f9faf5]/80">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#d4dbb8]">
-                      {["Action", "Unit", "Credits"].map((header) => (
+                      {content.actions.tableHeaders.map((header) => (
                         <th
                           key={header}
                           className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"
@@ -562,7 +508,7 @@ export default function PricingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pricingActionRows.map((row) => (
+                    {getLocalizedPricingActionRows(locale).map((row) => (
                       <tr
                         key={row.action}
                         className="border-b border-[#d4dbb8]/60 last:border-b-0 bg-[#fffffc]/70"
@@ -592,22 +538,21 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-3 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Drive & Page
+                {content.sectionTitles.drivePage}
               </h2>
               <p className="mb-8 max-w-[700px] text-sm leading-6 text-[#4d5145]">
-                Cloud storage and static site hosting included with every account at no additional
-                credit cost. Storage quotas are enforced per account.
+                {content.drivePage.intro}
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-[#d4dbb8] p-6">
                   <p className="mb-4 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                    Drive
+                    {content.drivePage.driveLabel}
                   </p>
                   <p className="mb-4 text-sm leading-6 text-[#4d5145]">
-                    Cloud file storage with public URLs and sharing.
+                    {content.drivePage.driveDescription}
                   </p>
                   <div className="space-y-2.5">
-                    {driveQuotas.map((q) => (
+                    {content.drivePage.driveQuotas.map((q) => (
                       <div key={q.label} className="flex items-baseline justify-between gap-3">
                         <span className="text-sm text-[#4d5145]">{q.label}</span>
                         <span className="text-sm font-medium text-[#1c1f17]" style={mono}>
@@ -619,13 +564,13 @@ export default function PricingPage() {
                 </div>
                 <div className="rounded-xl border border-[#d4dbb8] p-6">
                   <p className="mb-4 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                    Page
+                    {content.drivePage.pageLabel}
                   </p>
                   <p className="mb-4 text-sm leading-6 text-[#4d5145]">
-                    Static site deployment and web publishing.
+                    {content.drivePage.pageDescription}
                   </p>
                   <div className="space-y-2.5">
-                    {pageQuotas.map((q) => (
+                    {content.drivePage.pageQuotas.map((q) => (
                       <div key={q.label} className="flex items-baseline justify-between gap-3">
                         <span className="text-sm text-[#4d5145]">{q.label}</span>
                         <span className="text-sm font-medium text-[#1c1f17]" style={mono}>
@@ -637,7 +582,7 @@ export default function PricingPage() {
                 </div>
               </div>
               <p className="mt-4 text-sm leading-6 text-[#5a5e52]">
-                Current limits reflect early-access preview defaults and may change.
+                {content.drivePage.limitNotice}
               </p>
             </section>
           </FadeIn>
@@ -650,10 +595,10 @@ export default function PricingPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                Common questions
+                {content.sectionTitles.faq}
               </h2>
               <div className="max-w-[820px] space-y-6">
-                {faqItems.map((item) => (
+                {content.faqItems.map((item) => (
                   <div key={item.question} className="border-l-[3px] border-[#6b7d3a] pl-5">
                     <p className="mb-1 text-sm font-bold text-[#1c1f17]" style={mono}>
                       {item.question}
@@ -678,14 +623,14 @@ export default function PricingPage() {
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17] cursor-pointer"
                   style={mono}
                 >
-                  Buy credits
+                  {content.cta.buyCredits}
                 </LoginButton>
                 <Link
                   href="/capabilities"
                   className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                   style={mono}
                 >
-                  View capabilities
+                  {content.cta.viewCapabilities}
                 </Link>
               </div>
             </section>

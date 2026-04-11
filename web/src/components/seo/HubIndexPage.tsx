@@ -3,7 +3,6 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import type { HubPageDefinition } from "@/lib/hub-pages";
-import { getSeoPageChrome } from "@/lib/seo-ia";
 import { siteConfig } from "@/lib/site";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
@@ -25,17 +24,29 @@ export function buildHubPageMetadata(page: HubPageDefinition): Metadata {
   };
 }
 
-export function HubIndexPage({ page }: { page: HubPageDefinition }) {
-  const pageChrome = getSeoPageChrome(page.path);
+export function HubIndexPage({
+  page,
+  breadcrumbItems,
+  eyebrow,
+}: {
+  page: HubPageDefinition;
+  breadcrumbItems?: readonly { name: string; href?: string }[];
+  eyebrow?: string;
+}) {
+  const resolvedBreadcrumbItems =
+    breadcrumbItems ?? [
+      { name: "Home", href: "/" },
+      { name: page.title, href: page.path },
+    ];
 
   return (
     <>
-      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
+      <BreadcrumbJsonLd items={resolvedBreadcrumbItems} />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              {pageChrome?.eyebrow ?? page.eyebrow}
+              {eyebrow ?? page.eyebrow}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

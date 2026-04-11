@@ -15,10 +15,37 @@ const passthroughPrefixes = ["/auth", "/dashboard"];
 const globalUiPrefixes = ["/auth", "/dashboard"];
 const globalUiPaths = new Set(["/"]);
 const metadataRoutePaths = new Set(["/opengraph-image", "/twitter-image"]);
+
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+const securityHeaders: Record<string, string> = {
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Content-Security-Policy": cspDirectives,
+};
 const legacyRouteRedirects = new Map<string, string>([
   ["/for-human", "/"],
   ["/capabilities/image-read", "/capabilities/image-understanding"],
 ]);
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
 
 function redirectToPath(req: NextRequest, pathname: string) {
   const redirectURL = req.nextUrl.clone();
@@ -38,7 +65,7 @@ function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
     target.headers.set(key, value);
   });
 
-  return target;
+  return applySecurityHeaders(target);
 }
 
 export async function middleware(req: NextRequest) {
@@ -127,11 +154,9 @@ export async function middleware(req: NextRequest) {
         (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
       )
     ) {
+      const notFoundUrl = new URL("/_not-found", req.nextUrl.origin);
       return applyAuthResponse(
-        new NextResponse("Not Found", {
-          status: 404,
-          headers: { "content-type": "text/plain; charset=utf-8" },
-        }),
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
         authResponse,
       );
     }

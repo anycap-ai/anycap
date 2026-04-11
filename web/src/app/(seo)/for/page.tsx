@@ -1,12 +1,19 @@
-import { HubIndexPage, buildHubPageMetadata } from "@/components/seo/HubIndexPage";
-import { hubPages } from "@/lib/hub-pages";
+import { HubIndexPage } from "@/components/seo/HubIndexPage";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale } from "@/lib/site";
+import { FOR_PATH, getForMetadata, getForPageData } from "./content";
 
 export const runtime = "edge";
 
-const page = hubPages.for;
+export const metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  FOR_PATH,
+  getForMetadata(defaultLocale),
+);
 
-export const metadata = buildHubPageMetadata(page);
-
-export default function EquipAgentsIndexPage() {
-  return <HubIndexPage page={page} />;
+export default async function EquipAgentsIndexPage() {
+  const locale = await getRequestLocale();
+  const page = getForPageData(locale);
+  return <HubIndexPage page={page} breadcrumbItems={page.breadcrumbItems} eyebrow={page.eyebrow} />;
 }

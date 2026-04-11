@@ -7,7 +7,7 @@ import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { getRequestHtmlLang } from "@/lib/request-locale";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
-import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
+import { defaultSocialImage } from "@/lib/seo-metadata";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 
 export const runtime = "edge";
@@ -46,7 +46,6 @@ export const metadata: Metadata = {
     description: siteConfig.defaultDescription,
     images: [defaultSocialImage.url],
   },
-  robots: createRobotsMetadata(),
   manifest: "/site.webmanifest",
   icons: {
     icon: [
