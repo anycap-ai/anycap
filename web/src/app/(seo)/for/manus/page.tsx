@@ -5,7 +5,7 @@ import { CapabilityGapTable } from "@/components/landing/CapabilityGapTable";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { buildAgentCapabilityGapRows } from "@/lib/capability-inventory";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -67,18 +67,7 @@ const faqItems = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
+const faqJsonLd = createFaqPageJsonLd(faqItems);
 
 const gapRows = buildAgentCapabilityGapRows("manus");
 

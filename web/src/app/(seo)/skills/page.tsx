@@ -4,6 +4,7 @@ import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import { getSeoPageChrome } from "@/lib/seo-ia";
 
 export const runtime = "edge";
@@ -136,6 +137,7 @@ export default function SkillsPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {pageChrome?.eyebrow ?? "Learn"}
             </p>
+            <ArticleByline className="mb-3" author={pageChrome?.authorLabel} />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}

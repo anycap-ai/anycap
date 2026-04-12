@@ -27,16 +27,6 @@ type SoftwareApplicationSchemaInput = {
   installUrl?: string;
 };
 
-type SoftwareSourceCodeSchemaInput = {
-  name: string;
-  description: string;
-  path: string;
-  locale?: SiteLocale;
-  codeRepository: string;
-  programmingLanguage?: string;
-  runtimePlatform?: string;
-};
-
 const organizationReference = {
   "@type": "Organization",
   name: siteConfig.siteName,
@@ -91,14 +81,12 @@ export function createTechArticleJsonLd({
 export function createFaqPageJsonLd(items: readonly FaqPageItem[]) {
   return {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: items.map((item) => ({
-      "@type": "Question",
+    "@type": "ItemList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
       name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
+      description: item.answer,
     })),
   };
 }
@@ -130,30 +118,5 @@ export function createSoftwareApplicationJsonLd({
       price: 0,
       priceCurrency: "USD",
     },
-  };
-}
-
-/** CLI / repo-style tooling: avoids Google Software App rules that require aggregateRating or review. */
-export function createSoftwareSourceCodeJsonLd({
-  name,
-  description,
-  path,
-  locale,
-  codeRepository,
-  programmingLanguage = "Go",
-  runtimePlatform = "macOS, Linux, Windows",
-}: SoftwareSourceCodeSchemaInput) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "SoftwareSourceCode",
-    name,
-    description,
-    url: buildAbsoluteUrl(path, locale),
-    codeRepository,
-    programmingLanguage,
-    runtimePlatform,
-    codeSampleType: "full (compile ready) solution",
-    author: organizationReference,
-    publisher: organizationReference,
   };
 }

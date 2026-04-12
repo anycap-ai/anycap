@@ -8,13 +8,13 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
-import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
-import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
+import { siteConfig } from "@/lib/site";
+import { createSoftwareApplicationJsonLd } from "@/lib/schema";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
 const websiteId = `${siteConfig.url}#website`;
 const homePageId = `${siteConfig.url}#home`;
-const softwareEntityId = `${siteConfig.url}#software`;
+const softwareApplicationEntityId = `${siteConfig.url}#software-application`;
 
 const homeWebPageJsonLd = {
   "@context": "https://schema.org",
@@ -38,26 +38,21 @@ const homeWebPageJsonLd = {
     url: `${siteConfig.url}/opengraph-image`,
   },
   mainEntity: {
-    "@id": softwareEntityId,
+    "@id": softwareApplicationEntityId,
   },
 };
 
-const homeSoftwareJsonLd = {
-  ...createSoftwareSourceCodeJsonLd({
+const homeSoftwareApplicationJsonLd = {
+  ...createSoftwareApplicationJsonLd({
     name: "AnyCap",
     description:
       "Open-source AI agent capability runtime for coding agents. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
     path: "/",
-    codeRepository: githubHref,
+    installUrl: `${siteConfig.url}/install.sh`,
   }),
-  "@id": softwareEntityId,
+  "@id": softwareApplicationEntityId,
   sameAs: [githubHref],
   isAccessibleForFree: true,
-  softwareHelp: {
-    "@type": "CreativeWork",
-    name: "Install AnyCap",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/guides/install-anycap"),
-  },
 };
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
@@ -80,7 +75,9 @@ export function HumanHomePage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSoftwareJsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homeSoftwareApplicationJsonLd),
+        }}
       />
 
       <Header

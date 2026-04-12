@@ -265,10 +265,10 @@ const pricingPackagesByLocale: Record<SiteLocale, readonly PricingCreditPackage[
 const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   en: {
     metadata: {
-      title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
+      title: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
       description:
         "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
-      openGraphTitle: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
+      openGraphTitle: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
       openGraphDescription:
         "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
       pageName: "AnyCap Pricing",
@@ -391,10 +391,10 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   },
   "pt-br": {
     metadata: {
-      title: "Preços do AnyCap — Capacidades pagas por uso",
+      title: "Preços do AnyCap — Pague conforme usa, sem markup",
       description:
         "Receba US$ 5 em crédito grátis e depois pague conforme usa, sem assinatura e sem markup. Use um único saldo em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação no AnyCap.",
-      openGraphTitle: "Preços do AnyCap — Capacidades pagas por uso",
+      openGraphTitle: "Preços do AnyCap — Pague conforme usa, sem markup",
       openGraphDescription:
         "Um único saldo para fluxos de imagem, vídeo, áudio, web, armazenamento e publicação. US$ 5 em crédito grátis, pague conforme usa, sem assinatura.",
       pageName: "Preços do AnyCap",
@@ -608,10 +608,10 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   },
   id: {
     metadata: {
-      title: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
+      title: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
       description:
         "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
-      openGraphTitle: "AnyCap Pricing — Pay-as-you-go Agent Capabilities",
+      openGraphTitle: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
       openGraphDescription:
         "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
       pageName: "AnyCap Pricing",

@@ -70,4 +70,5 @@ cf-deploy:
 	@cp $(ENV_FILE) .env.production.local
 	@pnpm run build:cf; rc=$$?; rm -f .env.production.local; exit $$rc
 	pnpm exec wrangler pages deploy .vercel/output/static --branch $(BRANCH)
+	@if [ "$(ENV)" = "production" ]; then INDEXNOW_PUBLISH=1 pnpm run publish:indexnow; fi
 	@echo "Deployed to $(ENV)!"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import type { HubPageDefinition } from "@/lib/hub-pages";
 import { siteConfig } from "@/lib/site";
 
@@ -48,6 +49,7 @@ export function HubIndexPage({
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {eyebrow ?? page.eyebrow}
             </p>
+            <ArticleByline className="mb-3" />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}

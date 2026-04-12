@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import { getSeoPageChrome } from "@/lib/seo-ia";
 
 export const runtime = "edge";
@@ -41,6 +42,7 @@ export default function AgentSkillsForDeveloperToolsPage() {
             <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
               {pageChrome?.eyebrow ?? "Guide"}
             </p>
+            <ArticleByline className="mb-3" author={pageChrome?.authorLabel} />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
