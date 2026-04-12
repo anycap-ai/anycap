@@ -4,7 +4,7 @@ import { getAccessToken } from "@auth0/nextjs-auth0/client";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { anycapPost } from "@/lib/auth/anycap-api";
-import { consumePendingLogin } from "@/lib/auth/session";
+import { consumePendingLogin, consumePendingLoginCookie, type PendingLoginState } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
 export type AuthProfile = {
@@ -18,10 +18,16 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
   useEffect(() => {
     (async () => {
-      const login = consumePendingLogin();
+      let login = consumePendingLogin();
+      if (!login) {
+        login = consumePendingLoginCookie();
+      }
+      if (!login) {
+        login = recoverFromURLParams(params);
+      }
 
       if (!login) {
-        window.location.assign("/?tip=login_callback_invalid");
+        window.location.assign("/?tip=login_no_state");
         return;
       }
 
@@ -30,12 +36,12 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         if (login.mode === "browser_poll" || login.mode === "cli_login") {
           if (!login.browserToken) {
-            window.location.assign("/?tip=login_callback_invalid");
+            window.location.assign("/?tip=login_no_token");
             return;
           }
           const accessToken = await getAccessToken();
           if (!accessToken) {
-            window.location.assign("/?tip=login_callback_failed");
+            window.location.assign("/?tip=login_no_access_token");
             return;
           }
           await anycapPost<{ message: string }>("/v1/auth/browser-verify", {
@@ -50,7 +56,7 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         const accessToken = await getAccessToken();
         if (!accessToken) {
-          window.location.assign("/?tip=login_callback_failed");
+          window.location.assign("/?tip=login_no_access_token");
           return;
         }
 
@@ -73,12 +79,25 @@ export function CallbackClient({ initialProfile }: { initialProfile?: AuthProfil
 
         window.location.assign(redirectTarget);
       } catch {
-        window.location.assign("/?tip=login_callback_failed");
+        window.location.assign("/?tip=login_verify_failed");
       }
     })();
   }, [initialProfile, params]);
 
   return <ProcessingOverlay message="Processing login" />;
+}
+
+function recoverFromURLParams(params: URLSearchParams): PendingLoginState | null {
+  const browserToken = params.get("browser_token");
+  const mode = params.get("mode");
+  if (!browserToken || (mode !== "cli_login" && mode !== "browser_poll")) {
+    return null;
+  }
+  return {
+    returnTo: "/auth/device/complete",
+    mode,
+    browserToken,
+  };
 }
 
 async function loadAuthProfile(): Promise<AuthProfile | null> {

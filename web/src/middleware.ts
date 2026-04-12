@@ -16,13 +16,21 @@ const globalUiPrefixes = ["/auth", "/dashboard"];
 const globalUiPaths = new Set(["/"]);
 const metadataRoutePaths = new Set(["/opengraph-image", "/twitter-image"]);
 
+const anycapApiOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_ANYCAP_API_URL || "").origin;
+  } catch {
+    return "";
+  }
+})();
+
 const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com",
+  `connect-src 'self' ${anycapApiOrigin} https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com`.trim(),
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",
