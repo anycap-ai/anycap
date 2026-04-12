@@ -28,19 +28,20 @@ type FeishuResourceActionContextResource struct {
 }
 
 type FeishuResourceActionResult struct {
-	ActionID          string                        `json:"action_id"`
-	Status            string                        `json:"status"`
-	Operation         string                        `json:"operation,omitempty"`
-	URL               string                        `json:"url,omitempty"`
-	Kind              string                        `json:"kind,omitempty"`
-	Token             string                        `json:"token,omitempty"`
-	Title             string                        `json:"title,omitempty"`
-	Headings          []FeishuDocxHeadingInspection `json:"headings,omitempty"`
-	DuplicateHeadings []string                      `json:"duplicate_headings,omitempty"`
-	Verification      *FeishuDocxHeadingInspection  `json:"verification,omitempty"`
-	VerificationError string                        `json:"verification_error,omitempty"`
-	ErrorCode         string                        `json:"error_code,omitempty"`
-	ErrorText         string                        `json:"error_text,omitempty"`
+	ActionID               string                        `json:"action_id"`
+	Status                 string                        `json:"status"`
+	Operation              string                        `json:"operation,omitempty"`
+	URL                    string                        `json:"url,omitempty"`
+	Kind                   string                        `json:"kind,omitempty"`
+	Token                  string                        `json:"token,omitempty"`
+	Title                  string                        `json:"title,omitempty"`
+	Headings               []FeishuDocxHeadingInspection `json:"headings,omitempty"`
+	DuplicateHeadings      []string                      `json:"duplicate_headings,omitempty"`
+	Verification           *FeishuDocxHeadingInspection  `json:"verification,omitempty"`
+	VerificationTextLength int                           `json:"verification_text_length,omitempty"`
+	VerificationError      string                        `json:"verification_error,omitempty"`
+	ErrorCode              string                        `json:"error_code,omitempty"`
+	ErrorText              string                        `json:"error_text,omitempty"`
 }
 
 type FeishuResourceActionExecutor func(context.Context, FeishuResourceWriteAction) (*FeishuResourceWriteResult, error)
@@ -158,6 +159,7 @@ func (h *FeishuResourceActionHelper) ExecuteOutboxAction(ctx context.Context, ac
 		result.Headings = writeResult.Headings
 		result.DuplicateHeadings = writeResult.DuplicateHeadings
 		result.Verification = writeResult.Verification
+		result.VerificationTextLength = writeResult.VerificationTextLength
 		result.VerificationError = writeResult.VerificationError
 	}
 	return result, h.writeResult(result, nil)

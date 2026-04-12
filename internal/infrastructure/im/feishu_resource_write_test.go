@@ -359,6 +359,7 @@ func TestExecuteFeishuResourceWriteInspectHeadingsUsesInjectedInspector(t *testi
 
 func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 	var gotTitle, gotMarkdown, gotSourceURL string
+	var gotVerificationDocumentID string
 	adapter := &FeishuAdapter{
 		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
 			gotTitle = title
@@ -369,6 +370,10 @@ func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 				Title:      title,
 				URL:        "https://anycap.feishu.cn/docx/DOCXnew123",
 			}, nil
+		},
+		readDocxRawContent: func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+			gotVerificationDocumentID = documentID
+			return &FeishuDocxReadResult{DocumentID: documentID, Content: "# 新文档\n\nhello"}, nil
 		},
 	}
 	action := parseFeishuResourceWriteActionJSON(t, `{
@@ -385,8 +390,35 @@ func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 	if gotTitle != "新文档" || gotMarkdown != "# 新文档\n\nhello" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
 		t.Fatalf("unexpected creator input title=%q markdown=%q sourceURL=%q", gotTitle, gotMarkdown, gotSourceURL)
 	}
-	if result.Operation != FeishuResourceWriteOperationDocxCreate || result.Token != "DOCXnew123" || result.URL != "https://anycap.feishu.cn/docx/DOCXnew123" || result.Title != "新文档" {
+	if gotVerificationDocumentID != "DOCXnew123" {
+		t.Fatalf("expected create verification read for DOCXnew123, got %q", gotVerificationDocumentID)
+	}
+	if result.Operation != FeishuResourceWriteOperationDocxCreate || result.Token != "DOCXnew123" || result.URL != "https://anycap.feishu.cn/docx/DOCXnew123" || result.Title != "新文档" || result.VerificationTextLength == 0 || result.VerificationError != "" {
 		t.Fatalf("unexpected create result %+v", result)
+	}
+}
+
+func TestExecuteFeishuResourceWriteCreateDocxKeepsSuccessWhenVerificationFails(t *testing.T) {
+	adapter := &FeishuAdapter{
+		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+			return &FeishuDocxCreateResult{DocumentID: "DOCXnew123", Title: title}, nil
+		},
+		readDocxRawContent: func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+			return nil, errors.New("raw content delayed")
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "docx.create",
+		"title": "新文档",
+		"markdown": "# 新文档\n\nhello"
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if result.Token != "DOCXnew123" || !strings.Contains(result.VerificationError, "raw content delayed") {
+		t.Fatalf("unexpected create verification result %+v", result)
 	}
 }
 

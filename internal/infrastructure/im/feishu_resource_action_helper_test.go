@@ -148,18 +148,19 @@ func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testin
 	helper := NewFeishuResourceActionHelper(root, func(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
 		gotTitle = action.Title
 		return &FeishuResourceWriteResult{
-			Operation: action.Operation,
-			URL:       "https://anycap.feishu.cn/docx/DOCXnew123",
-			Kind:      FeishuResourceKindDocx,
-			Token:     "DOCXnew123",
-			Title:     action.Title,
+			Operation:              action.Operation,
+			URL:                    "https://anycap.feishu.cn/docx/DOCXnew123",
+			Kind:                   FeishuResourceKindDocx,
+			Token:                  "DOCXnew123",
+			Title:                  action.Title,
+			VerificationTextLength: 16,
 		}, nil
 	})
 	result, err := helper.ExecuteOutboxAction(context.Background(), actionPath)
 	if err != nil {
 		t.Fatalf("ExecuteOutboxAction() error = %v", err)
 	}
-	if gotTitle != "新文档" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationDocxCreate) || result.Title != "新文档" {
+	if gotTitle != "新文档" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationDocxCreate) || result.Title != "新文档" || result.VerificationTextLength == 0 {
 		t.Fatalf("unexpected create title=%q result=%+v", gotTitle, result)
 	}
 
@@ -167,7 +168,7 @@ func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testin
 	if err != nil {
 		t.Fatalf("ReadFile(result) error = %v", err)
 	}
-	if !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXnew123"`) || !strings.Contains(string(data), `"title": "新文档"`) {
+	if !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXnew123"`) || !strings.Contains(string(data), `"title": "新文档"`) || !strings.Contains(string(data), `"verification_text_length": 16`) {
 		t.Fatalf("unexpected create result json:\n%s", string(data))
 	}
 }

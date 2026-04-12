@@ -55,15 +55,16 @@ type FeishuBitableRecordWrite struct {
 }
 
 type FeishuResourceWriteResult struct {
-	Operation         FeishuResourceWriteOperation
-	URL               string
-	Kind              FeishuResourceKind
-	Token             string
-	Title             string
-	Headings          []FeishuDocxHeadingInspection
-	DuplicateHeadings []string
-	Verification      *FeishuDocxHeadingInspection
-	VerificationError string
+	Operation              FeishuResourceWriteOperation
+	URL                    string
+	Kind                   FeishuResourceKind
+	Token                  string
+	Title                  string
+	Headings               []FeishuDocxHeadingInspection
+	DuplicateHeadings      []string
+	Verification           *FeishuDocxHeadingInspection
+	VerificationTextLength int
+	VerificationError      string
 }
 
 type FeishuDocxCreateResult struct {
@@ -226,6 +227,7 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 			result.Title = firstNonEmpty(created.Title, result.Title)
 			result.URL = strings.TrimSpace(created.URL)
 		}
+		a.populateDocxCreateVerification(ctx, result)
 		return result, nil
 	}
 	token, err := a.resolveFeishuResourceWriteToken(ctx, action)
@@ -346,6 +348,25 @@ func (a *FeishuAdapter) populateDocxHeadingWriteVerification(ctx context.Context
 		return
 	}
 	result.Verification = verification
+}
+
+func (a *FeishuAdapter) populateDocxCreateVerification(ctx context.Context, result *FeishuResourceWriteResult) {
+	if a == nil || result == nil || a.readDocxRawContent == nil {
+		return
+	}
+	documentID := strings.TrimSpace(result.Token)
+	if documentID == "" {
+		return
+	}
+	readResult, err := a.readDocxRawContent(ctx, documentID)
+	if err != nil {
+		result.VerificationError = err.Error()
+		return
+	}
+	if readResult == nil {
+		return
+	}
+	result.VerificationTextLength = len([]rune(strings.TrimSpace(readResult.Content)))
 }
 
 func (a *FeishuAdapter) appendDocxSectionViaAPI(ctx context.Context, documentID string, title string, markdown string) error {
