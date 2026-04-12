@@ -43,6 +43,12 @@ type FeishuAdapter struct {
 	readWikiNode            func(context.Context, string) (*FeishuWikiNodeResult, error)
 	readSheetPreview        func(context.Context, string, FeishuSheetReadOptions) (*FeishuSheetReadResult, error)
 	readBitablePreview      func(context.Context, string, FeishuBitableReadOptions) (*FeishuBitableReadResult, error)
+	appendDocxSection       func(context.Context, string, string, string) error
+	appendDocxMarkdown      func(context.Context, string, string) error
+	appendSheetRows         func(context.Context, string, string, [][]any) error
+	updateSheetRange        func(context.Context, string, string, [][]any) error
+	createBitableRecords    func(context.Context, string, string, []FeishuBitableRecordWrite) error
+	updateBitableRecords    func(context.Context, string, string, []FeishuBitableRecordWrite) error
 }
 
 type DownloadedMessageResource struct {
@@ -71,6 +77,12 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 	adapter.readWikiNode = adapter.readWikiNodeViaAPI
 	adapter.readSheetPreview = adapter.readSheetPreviewViaAPI
 	adapter.readBitablePreview = adapter.readBitablePreviewViaAPI
+	adapter.appendDocxSection = adapter.appendDocxSectionViaAPI
+	adapter.appendDocxMarkdown = adapter.appendDocxMarkdownViaAPI
+	adapter.appendSheetRows = adapter.appendSheetRowsViaAPI
+	adapter.updateSheetRange = adapter.updateSheetRangeViaAPI
+	adapter.createBitableRecords = adapter.createBitableRecordsViaAPI
+	adapter.updateBitableRecords = adapter.updateBitableRecordsViaAPI
 	return adapter
 }
 
