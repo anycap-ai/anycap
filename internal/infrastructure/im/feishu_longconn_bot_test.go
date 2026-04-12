@@ -464,6 +464,81 @@ func TestFeishuLongConnBot_HandleNormalizedEventWritesFeishuActionContext(t *tes
 	}
 }
 
+func TestFeishuLongConnBot_HandleNormalizedEventWritesHistoryResourceActionContext(t *testing.T) {
+	tmpDir := t.TempDir()
+	downloadDir := filepath.Join(tmpDir, ".anycap", "feishu-downloads")
+	actionDir := filepath.Join(tmpDir, ".anycap", "feishu-actions")
+	var gotEvent NormalizedInboundEvent
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	adapter.readDocxRawContent = func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+		if documentID != "DOCXtoken123" {
+			t.Fatalf("unexpected docx token %q", documentID)
+		}
+		return &FeishuDocxReadResult{
+			DocumentID: documentID,
+			Title:      "Spec",
+			Content:    "hello docx",
+		}, nil
+	}
+	adapter.getMessage = func(ctx context.Context, messageID string) (*larkim.Message, error) {
+		return nil, nil
+	}
+	adapter.listMessages = func(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+		if containerType != "chat" || containerID != "oc_chat" {
+			return nil, nil
+		}
+		return []*larkim.Message{
+			buildHistoryMessage("om_previous", "oc_chat", "ou_sender", "user", "text", `{"text":"看下 https://anycap.feishu.cn/docx/DOCXtoken123"}`),
+			buildHistoryMessage("om_followup", "oc_chat", "ou_sender", "user", "text", `{"text":"你再试试呢"}`),
+		}, nil
+	}
+
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		DownloadDir:     downloadDir,
+		ActionDir:       actionDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_followup",
+		MessageType: "text",
+		Message:     "你再试试呢",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+
+	data, readErr := os.ReadFile(filepath.Join(actionDir, "context.json"))
+	if readErr != nil {
+		t.Fatalf("ReadFile(context.json) error = %v", readErr)
+	}
+	if !strings.Contains(string(data), `"message_id": "om_followup"`) || !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXtoken123"`) {
+		t.Fatalf("expected history resource action context, got:\n%s", string(data))
+	}
+	if gotEvent.ResourceAction == nil {
+		t.Fatalf("expected resource action paths for history resource, got %+v", gotEvent)
+	}
+	rendered := gotEvent.AgentInputText()
+	if !strings.Contains(rendered, `<feishu-resource url="https://anycap.feishu.cn/docx/DOCXtoken123"`) {
+		t.Fatalf("expected history resource in agent input, got %s", rendered)
+	}
+}
+
 func TestFeishuLongConnBotProcessesFeishuActionOutboxWithAdapter(t *testing.T) {
 	actionDir := t.TempDir()
 	if err := WriteFeishuResourceActionContext(actionDir, "om_text", []NormalizedInboundResource{{

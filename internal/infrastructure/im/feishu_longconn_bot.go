@@ -381,37 +381,37 @@ func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedI
 		logging.WithError(err).Warn("download feishu current message resource failed")
 	}
 	enriched.Resources = b.readCurrentMessageResources(ctx, enriched.Message)
-	if err := b.writeFeishuActionContext(enriched.MessageID, enriched.Resources); err != nil {
-		logging.WithError(err).Warn("write feishu resource action context failed")
-	} else if len(enriched.Resources) > 0 {
-		action := b.feishuResourceActionPaths()
-		enriched.ResourceAction = action
-	}
 	if quoted, err := b.loadQuotedMessage(ctx, event); err == nil && quoted != nil {
-		quoted.FileInfo = resolvedNormalizedFileInfo(quoted.FileInfo, quoted.MessageType, quoted.ContentJSON)
-		if fileInfo, downloadErr := b.downloadMessageResourceToLocal(ctx, quoted.MessageID, quoted.FileInfo); downloadErr == nil {
-			quoted.FileInfo = fileInfo
-		} else if downloadErr != nil {
-			logging.WithError(downloadErr).Warn("download feishu quoted message resource failed")
-		}
-		enriched.QuotedMessage = quoted
+		hydrated := b.hydrateContextMessageResources(ctx, *quoted)
+		enriched.QuotedMessage = &hydrated
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu quoted message failed")
 	}
 	if threadHistory, err := b.loadThreadHistory(ctx, event); err == nil && len(threadHistory) > 0 {
-		enriched.ThreadHistory = b.downloadHistoryResources(ctx, threadHistory)
+		enriched.ThreadHistory = b.hydrateHistoryResources(ctx, threadHistory)
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu thread history failed")
 	}
 	if chatHistory, err := b.loadChatHistory(ctx, event); err == nil && len(chatHistory) > 0 {
-		enriched.ChatHistory = b.downloadHistoryResources(ctx, chatHistory)
+		enriched.ChatHistory = b.hydrateHistoryResources(ctx, chatHistory)
 	} else if err != nil {
 		logging.WithError(err).Warn("load feishu chat history failed")
+	}
+	actionResources := collectFeishuActionResources(enriched)
+	if err := b.writeFeishuActionContext(enriched.MessageID, actionResources); err != nil {
+		logging.WithError(err).Warn("write feishu resource action context failed")
+	} else if len(actionResources) > 0 {
+		action := b.feishuResourceActionPaths()
+		enriched.ResourceAction = action
 	}
 	return enriched
 }
 
 func (b *FeishuLongConnBot) readCurrentMessageResources(ctx context.Context, message string) []NormalizedInboundResource {
+	return b.readMessageResources(ctx, message)
+}
+
+func (b *FeishuLongConnBot) readMessageResources(ctx context.Context, message string) []NormalizedInboundResource {
 	if b == nil || b.adapter == nil {
 		return nil
 	}
@@ -452,6 +452,44 @@ func (b *FeishuLongConnBot) readCurrentMessageResources(ctx context.Context, mes
 		resources = append(resources, resource)
 	}
 	return resources
+}
+
+func collectFeishuActionResources(event NormalizedInboundEvent) []NormalizedInboundResource {
+	resources := make([]NormalizedInboundResource, 0, len(event.Resources))
+	seen := make(map[string]struct{})
+	add := func(items []NormalizedInboundResource) {
+		for _, resource := range items {
+			key := feishuActionResourceKey(resource)
+			if key == "" {
+				continue
+			}
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = struct{}{}
+			resources = append(resources, resource)
+		}
+	}
+	add(event.Resources)
+	if event.QuotedMessage != nil {
+		add(event.QuotedMessage.Resources)
+	}
+	for _, item := range event.ThreadHistory {
+		add(item.Resources)
+	}
+	for _, item := range event.ChatHistory {
+		add(item.Resources)
+	}
+	return resources
+}
+
+func feishuActionResourceKey(resource NormalizedInboundResource) string {
+	kind := strings.TrimSpace(string(resource.Kind))
+	token := strings.TrimSpace(resource.Token)
+	if kind == "" || token == "" {
+		return ""
+	}
+	return kind + ":" + token
 }
 
 func (b *FeishuLongConnBot) runFeishuActionWatcher(ctx context.Context) error {
@@ -746,22 +784,27 @@ func resolvedNormalizedFileInfo(current *NormalizedInboundFileInfo, messageType,
 	return extractFeishuFileInfo(messageType, contentJSON)
 }
 
-func (b *FeishuLongConnBot) downloadHistoryResources(ctx context.Context, messages []NormalizedInboundContextMessage) []NormalizedInboundContextMessage {
+func (b *FeishuLongConnBot) hydrateHistoryResources(ctx context.Context, messages []NormalizedInboundContextMessage) []NormalizedInboundContextMessage {
 	if len(messages) == 0 {
 		return messages
 	}
 	downloaded := make([]NormalizedInboundContextMessage, 0, len(messages))
 	for _, item := range messages {
-		hydrated := item
-		hydrated.FileInfo = resolvedNormalizedFileInfo(hydrated.FileInfo, hydrated.MessageType, hydrated.ContentJSON)
-		if fileInfo, err := b.downloadMessageResourceToLocal(ctx, item.MessageID, hydrated.FileInfo); err == nil {
-			hydrated.FileInfo = fileInfo
-		} else if err != nil {
-			logging.WithError(err).Warn("download feishu history message resource failed")
-		}
-		downloaded = append(downloaded, hydrated)
+		downloaded = append(downloaded, b.hydrateContextMessageResources(ctx, item))
 	}
 	return downloaded
+}
+
+func (b *FeishuLongConnBot) hydrateContextMessageResources(ctx context.Context, item NormalizedInboundContextMessage) NormalizedInboundContextMessage {
+	hydrated := item
+	hydrated.FileInfo = resolvedNormalizedFileInfo(hydrated.FileInfo, hydrated.MessageType, hydrated.ContentJSON)
+	if fileInfo, err := b.downloadMessageResourceToLocal(ctx, item.MessageID, hydrated.FileInfo); err == nil {
+		hydrated.FileInfo = fileInfo
+	} else if err != nil {
+		logging.WithError(err).Warn("download feishu context message resource failed")
+	}
+	hydrated.Resources = b.readMessageResources(ctx, hydrated.Message)
+	return hydrated
 }
 
 func (b *FeishuLongConnBot) downloadMessageResourceToLocal(ctx context.Context, messageID string, fileInfo *NormalizedInboundFileInfo) (*NormalizedInboundFileInfo, error) {
