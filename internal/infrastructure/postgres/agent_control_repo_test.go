@@ -389,3 +389,75 @@ func TestAgentControlRepo_ListUndeliveredMailboxMessages(t *testing.T) {
 		t.Fatalf("unexpected mailbox messages: %+v", items)
 	}
 }
+
+func TestAgentControlRepo_CreateConversationFollowup(t *testing.T) {
+	now := time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC)
+	db := &fakeAgentControlDB{
+		scanFn: func(dest ...any) error {
+			*(dest[0].(*int64)) = 91
+			*(dest[1].(*int64)) = 41
+			*(dest[2].(*string)) = "om_followup"
+			*(dest[3].(*string)) = "thread-1"
+			*(dest[4].(*string)) = "root-1"
+			*(dest[5].(*string)) = "om_parent"
+			*(dest[6].(*string)) = "<feishu-message>解析这张图</feishu-message>"
+			*(dest[7].(*sql.NullInt64)) = sql.NullInt64{}
+			*(dest[8].(*time.Time)) = now
+			return nil
+		},
+	}
+	repo := NewAgentControlRepo(db)
+
+	item, err := repo.CreateConversationFollowup(context.Background(), model.AgentConversationFollowup{
+		ConversationID:    41,
+		PlatformMessageID: "om_followup",
+		ThreadID:          "thread-1",
+		RootID:            "root-1",
+		ParentID:          "om_parent",
+		Payload:           "<feishu-message>解析这张图</feishu-message>",
+		CreatedAt:         now,
+	})
+	if err != nil {
+		t.Fatalf("CreateConversationFollowup() error = %v", err)
+	}
+	if item == nil || item.ID != 91 || item.PlatformMessageID != "om_followup" {
+		t.Fatalf("unexpected followup: %+v", item)
+	}
+}
+
+func TestAgentControlRepo_ListUndeliveredConversationFollowups(t *testing.T) {
+	now := time.Date(2026, 4, 12, 9, 10, 0, 0, time.UTC)
+	db := &fakeAgentControlDB{
+		rowFns: []func(dest ...any) error{
+			func(dest ...any) error {
+				*(dest[0].(*int64)) = 91
+				*(dest[1].(*int64)) = 41
+				*(dest[2].(*string)) = "om_followup"
+				*(dest[3].(*string)) = "thread-1"
+				*(dest[4].(*string)) = "root-1"
+				*(dest[5].(*string)) = "om_parent"
+				*(dest[6].(*string)) = "<feishu-message>解析这张图</feishu-message>"
+				*(dest[7].(*sql.NullInt64)) = sql.NullInt64{}
+				*(dest[8].(*time.Time)) = now
+				return nil
+			},
+		},
+	}
+	repo := NewAgentControlRepo(db)
+
+	items, err := repo.ListUndeliveredConversationFollowups(context.Background(), 41)
+	if err != nil {
+		t.Fatalf("ListUndeliveredConversationFollowups() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 91 || items[0].ParentID != "om_parent" {
+		t.Fatalf("unexpected followups: %+v", items)
+	}
+}
+
+func TestAgentControlRepo_MarkConversationFollowupsDelivered(t *testing.T) {
+	repo := NewAgentControlRepo(&fakeAgentControlDB{})
+
+	if err := repo.MarkConversationFollowupsDelivered(context.Background(), []int64{91, 92}, 101); err != nil {
+		t.Fatalf("MarkConversationFollowupsDelivered() error = %v", err)
+	}
+}

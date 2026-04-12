@@ -32,16 +32,26 @@ func (integrationFeatureProvider) EnabledFor(_ *model.Principal, _ string) (bool
 }
 
 type memoryAgentControlRepo struct {
-	tokens   map[string]model.IMBindToken
-	bindings []model.IMBinding
-	runners  map[int64]model.AgentRunner
-	tasks    map[int64]model.AgentTask
-	nextTask int64
+	tokens         map[string]model.IMBindToken
+	bindings       []model.IMBinding
+	runners        map[int64]model.AgentRunner
+	primaryRunners map[string]model.AgentPrimaryRunner
+	tasks          map[int64]model.AgentTask
+	nextTask       int64
 }
 
 func newMemoryAgentControlRepo() *memoryAgentControlRepo {
 	return &memoryAgentControlRepo{
 		tokens: map[string]model.IMBindToken{},
+		primaryRunners: map[string]model.AgentPrimaryRunner{
+			"2000000001|feishu": {
+				ID:        1,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				RunnerID:  21,
+				UpdatedAt: time.Now().UTC(),
+			},
+		},
 		runners: map[int64]model.AgentRunner{
 			21: {
 				ID:       21,
@@ -138,6 +148,15 @@ func (r *memoryAgentControlRepo) GetRunnerByID(_ context.Context, id int64) (*mo
 	return &copy, nil
 }
 
+func (r *memoryAgentControlRepo) GetPrimaryRunner(_ context.Context, userID string, platform string) (*model.AgentPrimaryRunner, error) {
+	item, ok := r.primaryRunners[userID+"|"+platform]
+	if !ok {
+		return nil, nil
+	}
+	copy := item
+	return &copy, nil
+}
+
 func (r *memoryAgentControlRepo) ListRunnersByUser(_ context.Context, userID string) ([]model.AgentRunner, error) {
 	var result []model.AgentRunner
 	for _, item := range r.runners {
@@ -146,6 +165,24 @@ func (r *memoryAgentControlRepo) ListRunnersByUser(_ context.Context, userID str
 		}
 	}
 	return result, nil
+}
+
+func (r *memoryAgentControlRepo) ClaimPrimaryRunner(_ context.Context, userID string, platform string, runnerID int64, updatedAt time.Time) (*model.AgentPrimaryRunner, error) {
+	if r.primaryRunners == nil {
+		r.primaryRunners = map[string]model.AgentPrimaryRunner{}
+	}
+	key := userID + "|" + platform
+	item := r.primaryRunners[key]
+	if item.ID == 0 {
+		item.ID = int64(len(r.primaryRunners) + 1)
+	}
+	item.UserID = userID
+	item.Platform = platform
+	item.RunnerID = runnerID
+	item.UpdatedAt = updatedAt
+	r.primaryRunners[key] = item
+	copy := item
+	return &copy, nil
 }
 
 func (r *memoryAgentControlRepo) UpdateRunnerState(_ context.Context, id int64, state string) (*model.AgentRunner, error) {

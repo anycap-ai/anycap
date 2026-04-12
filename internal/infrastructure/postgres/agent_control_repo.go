@@ -934,6 +934,93 @@ func (r *AgentControlRepo) MarkMailboxMessagesDelivered(ctx context.Context, ids
 	return nil
 }
 
+func (r *AgentControlRepo) CreateConversationFollowup(ctx context.Context, followup model.AgentConversationFollowup) (*model.AgentConversationFollowup, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("agent control repo db is not configured")
+	}
+	row := r.db.QueryRowContext(ctx, `
+		INSERT INTO agent_conversation_followups (conversation_id, platform_message_id, thread_id, root_id, parent_id, payload, delivered_to_session_id, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (conversation_id, platform_message_id) WHERE platform_message_id <> ''
+		DO UPDATE SET thread_id = EXCLUDED.thread_id,
+			root_id = EXCLUDED.root_id,
+			parent_id = EXCLUDED.parent_id,
+			payload = EXCLUDED.payload
+		RETURNING id, conversation_id, platform_message_id, thread_id, root_id, parent_id, payload, delivered_to_session_id, created_at
+	`,
+		followup.ConversationID,
+		strings.TrimSpace(followup.PlatformMessageID),
+		strings.TrimSpace(followup.ThreadID),
+		strings.TrimSpace(followup.RootID),
+		strings.TrimSpace(followup.ParentID),
+		followup.Payload,
+		nullableInt64(followup.DeliveredToSessionID),
+		followup.CreatedAt.UTC(),
+	)
+	item, err := scanAgentConversationFollowup(row)
+	if err != nil {
+		return nil, fmt.Errorf("create agent conversation followup: %w", err)
+	}
+	return item, nil
+}
+
+func (r *AgentControlRepo) ListUndeliveredConversationFollowups(ctx context.Context, conversationID int64) ([]model.AgentConversationFollowup, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("agent control repo db is not configured")
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT id, conversation_id, platform_message_id, thread_id, root_id, parent_id, payload, delivered_to_session_id, created_at
+		FROM agent_conversation_followups
+		WHERE conversation_id = $1
+		  AND delivered_to_session_id IS NULL
+		ORDER BY created_at ASC, id ASC
+	`, conversationID)
+	if err != nil {
+		return nil, fmt.Errorf("list undelivered agent conversation followups: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]model.AgentConversationFollowup, 0)
+	for rows.Next() {
+		item, scanErr := scanAgentConversationFollowup(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("scan agent conversation followup: %w", scanErr)
+		}
+		items = append(items, *item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate agent conversation followups: %w", err)
+	}
+	return items, nil
+}
+
+func (r *AgentControlRepo) MarkConversationFollowupsDelivered(ctx context.Context, ids []int64, sessionID int64) error {
+	if r == nil || r.db == nil {
+		return fmt.Errorf("agent control repo db is not configured")
+	}
+	ids = uniqueInt64(ids)
+	if len(ids) == 0 {
+		return nil
+	}
+	placeholders := make([]string, 0, len(ids))
+	args := make([]any, 0, len(ids)+1)
+	args = append(args, sessionID)
+	for idx, id := range ids {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", idx+2))
+		args = append(args, id)
+	}
+	query := fmt.Sprintf(`
+		UPDATE agent_conversation_followups
+		SET delivered_to_session_id = $1
+		WHERE id IN (%s)
+	`, strings.Join(placeholders, ", "))
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("mark agent conversation followups delivered: %w", err)
+	}
+	return nil
+}
+
 func scanIMBindToken(row rowScanner) (*model.IMBindToken, error) {
 	var (
 		item   model.IMBindToken
@@ -1166,6 +1253,31 @@ func scanAgentMailboxMessage(row rowScanner) (*model.AgentMailboxMessage, error)
 		&item.ConversationID,
 		&item.SourceSessionID,
 		&item.SourceType,
+		&item.Payload,
+		&deliveredToSessionID,
+		&item.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+	if deliveredToSessionID.Valid {
+		value := deliveredToSessionID.Int64
+		item.DeliveredToSessionID = &value
+	}
+	return &item, nil
+}
+
+func scanAgentConversationFollowup(row rowScanner) (*model.AgentConversationFollowup, error) {
+	var (
+		item                 model.AgentConversationFollowup
+		deliveredToSessionID sql.NullInt64
+	)
+	if err := row.Scan(
+		&item.ID,
+		&item.ConversationID,
+		&item.PlatformMessageID,
+		&item.ThreadID,
+		&item.RootID,
+		&item.ParentID,
 		&item.Payload,
 		&deliveredToSessionID,
 		&item.CreatedAt,

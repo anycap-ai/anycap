@@ -536,6 +536,61 @@ func TestFeishuLongConnBot_HandleNormalizedEventBurstMergesImageThenText(t *test
 	}
 }
 
+func TestFeishuLongConnBot_HandleNormalizedEventFallbackBypassesStructuredFollowup(t *testing.T) {
+	var (
+		mu       sync.Mutex
+		received []NormalizedInboundEvent
+		done     = make(chan struct{}, 1)
+	)
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         NewFeishuAdapter(FeishuAdapterConfig{}),
+		TurnMergeWindow: time.Hour,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			mu.Lock()
+			received = append(received, event)
+			mu.Unlock()
+			done <- struct{}{}
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	if err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_followup",
+		ChatType:    "p2p",
+		ThreadID:    "omt_thread",
+		ParentID:    "om_parent",
+		RootID:      "om_root",
+		MessageType: "text",
+		Message:     "这个图你解析下",
+	}); err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected structured follow-up to dispatch immediately")
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(received) != 1 {
+		t.Fatalf("expected one inbound event, got %d", len(received))
+	}
+	if received[0].MessageID != "om_followup" || received[0].ParentID != "om_parent" {
+		t.Fatalf("expected structured follow-up event, got %+v", received[0])
+	}
+}
+
 func buildHistoryMessage(messageID, chatID, senderID, senderType, messageType, content string) *larkim.Message {
 	return &larkim.Message{
 		MessageId: ptrString(messageID),

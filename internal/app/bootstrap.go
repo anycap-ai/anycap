@@ -385,6 +385,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			agentControlRepo,
 			agentControlRepo,
 			agentcontrolapp.WithConversationFixedRunnerResolver(buildFixedRunnerResolver(cfg, authComp.idResolver)),
+			agentcontrolapp.WithConversationFollowups(agentControlRepo),
 		)
 		taskService := agentcontrolapp.NewTaskService(
 			agentControlRepo,

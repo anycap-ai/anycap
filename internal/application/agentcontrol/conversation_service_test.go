@@ -226,6 +226,42 @@ func (r *fakeMailboxRepo) MarkMailboxMessagesDelivered(_ context.Context, ids []
 	return nil
 }
 
+type fakeFollowupRepo struct {
+	items   []model.AgentConversationFollowup
+	nextID  int64
+	lastIDs []int64
+}
+
+func (r *fakeFollowupRepo) CreateConversationFollowup(_ context.Context, followup model.AgentConversationFollowup) (*model.AgentConversationFollowup, error) {
+	r.nextID++
+	followup.ID = r.nextID
+	r.items = append(r.items, followup)
+	return &followup, nil
+}
+
+func (r *fakeFollowupRepo) ListUndeliveredConversationFollowups(_ context.Context, conversationID int64) ([]model.AgentConversationFollowup, error) {
+	result := make([]model.AgentConversationFollowup, 0)
+	for _, item := range r.items {
+		if item.ConversationID == conversationID && item.DeliveredToSessionID == nil {
+			result = append(result, item)
+		}
+	}
+	return result, nil
+}
+
+func (r *fakeFollowupRepo) MarkConversationFollowupsDelivered(_ context.Context, ids []int64, sessionID int64) error {
+	r.lastIDs = ids
+	for i := range r.items {
+		for _, id := range ids {
+			if r.items[i].ID == id {
+				value := sessionID
+				r.items[i].DeliveredToSessionID = &value
+			}
+		}
+	}
+	return nil
+}
+
 type fakePrimaryRunnerBinding struct {
 	UserID    string
 	Platform  string
@@ -584,6 +620,169 @@ func TestConversationServiceHandleOwnedInboundMessageDedupesDuplicateMessageID(t
 	}
 	if reply := BuildInboundChatReply(*result); reply != "" {
 		t.Fatalf("expected duplicate inbound reply to be suppressed, got %q", reply)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageEnqueuesStructuredFollowupWhenPreviousSessionStillRunning(t *testing.T) {
+	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
+	lastSessionID := int64(7)
+	imageMessage := `<feishu-message message_id="om_img" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_owner">
+  <file_info message_type="image" image_key="img_1" local_path="/tmp/img.png" />
+</feishu-message>`
+	conversation := model.AgentConversation{
+		ID:            51,
+		UserID:        "2000000001",
+		Platform:      model.IMPlatformFeishu,
+		BotID:         "cli_personal_bot",
+		ChatID:        "oc_chat",
+		RunnerID:      99,
+		Agent:         "codex",
+		Status:        model.AgentConversationStatusActive,
+		LastSessionID: &lastSessionID,
+		CreatedAt:     now.Add(-10 * time.Minute),
+		UpdatedAt:     now.Add(-5 * time.Minute),
+	}
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{51: conversation},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|cli_personal_bot|oc_chat": conversation,
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			99: {ID: 99, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 99},
+		},
+	}
+	sessions := &fakeSessionRepo{
+		created: []model.AgentSession{
+			{
+				ID:             7,
+				UserID:         "2000000001",
+				ConversationID: 51,
+				RunnerID:       99,
+				Agent:          "codex",
+				Mode:           model.AgentSessionModeContinue,
+				Status:         model.AgentSessionStatusRunning,
+				UserMessage:    stringPtr(imageMessage),
+				CreatedAt:      now.Add(-2 * time.Minute),
+				UpdatedAt:      now.Add(-1 * time.Minute),
+			},
+		},
+		nextID: 7,
+	}
+	followups := &fakeFollowupRepo{}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+		WithConversationFollowups(followups),
+	)
+	followupMessage := `<feishu-message message_id="om_followup" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner" parent_id="om_img">
+这个图你解析下
+</feishu-message>`
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:    "2000000001",
+		Platform:  model.IMPlatformFeishu,
+		BotID:     "cli_personal_bot",
+		ChatID:    "oc_chat",
+		MessageID: "om_followup",
+		SenderID:  "ou_owner",
+		Message:   followupMessage,
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if result.Session != nil {
+		t.Fatalf("expected structured followup to avoid creating a new session, got %+v", result.Session)
+	}
+	if !result.Queued || !result.FollowupQueued {
+		t.Fatalf("expected structured followup to be queued, got %+v", result)
+	}
+	if len(sessions.created) != 1 {
+		t.Fatalf("expected no new session, got %+v", sessions.created)
+	}
+	if len(followups.items) != 1 {
+		t.Fatalf("expected one followup item, got %+v", followups.items)
+	}
+	if followups.items[0].ConversationID != 51 || followups.items[0].PlatformMessageID != "om_followup" || followups.items[0].ParentID != "om_img" {
+		t.Fatalf("unexpected followup item: %+v", followups.items[0])
+	}
+	if reply := BuildInboundChatReply(*result); reply != "" {
+		t.Fatalf("expected structured followup immediate reply to be suppressed, got %q", reply)
+	}
+}
+
+func TestExtractFeishuMetadata(t *testing.T) {
+	message := `<feishu-message message_id="om_followup" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner" thread_id="omt_thread" parent_id="om_parent" root_id="om_root">
+这个图你解析下
+</feishu-message>`
+
+	metadata := extractFeishuMetadata(message)
+	if metadata["message_id"] != "om_followup" {
+		t.Fatalf("expected message_id om_followup, got %q", metadata["message_id"])
+	}
+	if metadata["thread_id"] != "omt_thread" {
+		t.Fatalf("expected thread_id omt_thread, got %q", metadata["thread_id"])
+	}
+	if metadata["parent_id"] != "om_parent" {
+		t.Fatalf("expected parent_id om_parent, got %q", metadata["parent_id"])
+	}
+	if metadata["root_id"] != "om_root" {
+		t.Fatalf("expected root_id om_root, got %q", metadata["root_id"])
+	}
+}
+
+func TestConversationServiceIsStructuredFollowupMatchesRootOrThread(t *testing.T) {
+	priorMessage := `<feishu-message message_id="om_img" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_owner" thread_id="omt_thread" root_id="om_root">
+  <file_info message_type="image" image_key="img_1" local_path="/tmp/img.png" />
+</feishu-message>`
+	conversation := model.AgentConversation{ID: 51}
+	service := NewConversationService(nil, nil, nil, &fakeSessionRepo{
+		created: []model.AgentSession{
+			{ID: 7, ConversationID: 51, UserMessage: stringPtr(priorMessage)},
+		},
+	}, nil)
+
+	rootFollowup := `<feishu-message message_id="om_followup_1" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner" root_id="om_root">
+继续解释下
+</feishu-message>`
+	if !service.isStructuredFollowup(context.Background(), conversation, rootFollowup) {
+		t.Fatal("expected root_id to match prior session")
+	}
+
+	threadFollowup := `<feishu-message message_id="om_followup_2" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner" thread_id="omt_thread">
+继续解释下
+</feishu-message>`
+	if !service.isStructuredFollowup(context.Background(), conversation, threadFollowup) {
+		t.Fatal("expected thread_id to match prior session")
+	}
+}
+
+func TestConversationServiceIsStructuredFollowupRejectsUnrelatedMessage(t *testing.T) {
+	priorMessage := `<feishu-message message_id="om_img" chat_id="oc_chat" chat_type="p2p" message_type="image" sender_open_id="ou_owner" thread_id="omt_thread" root_id="om_root">
+  <file_info message_type="image" image_key="img_1" local_path="/tmp/img.png" />
+</feishu-message>`
+	conversation := model.AgentConversation{ID: 51}
+	service := NewConversationService(nil, nil, nil, &fakeSessionRepo{
+		created: []model.AgentSession{
+			{ID: 7, ConversationID: 51, UserMessage: stringPtr(priorMessage)},
+		},
+	}, nil)
+
+	plainMessage := `<feishu-message message_id="om_plain" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner">
+新的问题
+</feishu-message>`
+	if service.isStructuredFollowup(context.Background(), conversation, plainMessage) {
+		t.Fatal("expected message without thread/reply metadata to be unrelated")
+	}
+
+	unrelatedRoot := `<feishu-message message_id="om_other" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner" root_id="om_other_root">
+新的问题
+</feishu-message>`
+	if service.isStructuredFollowup(context.Background(), conversation, unrelatedRoot) {
+		t.Fatal("expected unrelated root_id to be rejected")
 	}
 }
 
@@ -1490,6 +1689,9 @@ func TestConversationServiceCreateMailboxAutoFiresWhenConversationIsIdle(t *test
 		itemsByID: map[int64]model.AgentRunner{
 			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
 		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
 	}
 	sessions := &fakeSessionRepo{
 		created: []model.AgentSession{
@@ -1685,7 +1887,15 @@ func TestConversationServiceApplyRunnerSessionUpdateAutoFiresPendingMailbox(t *t
 		},
 		nextID: 1,
 	}
-	service := NewConversationService(nil, nil, conversations, sessions, mailbox,
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
+	}
+	service := NewConversationService(nil, runners, conversations, sessions, mailbox,
 		WithConversationClock(func() time.Time { return now }),
 	)
 
@@ -1731,5 +1941,125 @@ func TestConversationServiceApplyRunnerSessionUpdateAutoFiresPendingMailbox(t *t
 	}
 	if mailbox.items[0].DeliveredToSessionID == nil || *mailbox.items[0].DeliveredToSessionID != autoFire.ID {
 		t.Fatalf("expected mailbox delivered to auto-fire session, got %+v", mailbox.items[0].DeliveredToSessionID)
+	}
+}
+
+func TestConversationServiceApplyRunnerSessionUpdateDrainsPendingFollowupsBeforeMailbox(t *testing.T) {
+	now := time.Date(2026, 4, 12, 10, 30, 0, 0, time.UTC)
+	lastSessionID := int64(11)
+	executorRef := "thread_789"
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			1: {
+				ID:            1,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "bot_123",
+				ChatID:        "oc_chat",
+				RunnerID:      21,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-time.Hour),
+				UpdatedAt:     now.Add(-time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|bot_123|oc_chat": {
+				ID:            1,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "bot_123",
+				ChatID:        "oc_chat",
+				RunnerID:      21,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusActive,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-time.Hour),
+				UpdatedAt:     now.Add(-time.Minute),
+			},
+		},
+	}
+	sessions := &fakeSessionRepo{
+		created: []model.AgentSession{
+			{
+				ID:             11,
+				UserID:         "2000000001",
+				ConversationID: 1,
+				RunnerID:       21,
+				Agent:          "codex",
+				Mode:           model.AgentSessionModeContinue,
+				Status:         model.AgentSessionStatusRunning,
+				ExecutorRef:    &executorRef,
+				CreatedAt:      now.Add(-time.Minute),
+				UpdatedAt:      now.Add(-time.Minute),
+			},
+		},
+		nextID: 11,
+	}
+	followups := &fakeFollowupRepo{
+		items: []model.AgentConversationFollowup{
+			{
+				ID:                   1,
+				ConversationID:       1,
+				PlatformMessageID:    "om_followup",
+				ParentID:             "om_img",
+				Payload:              `<feishu-message message_id="om_followup" parent_id="om_img">你说下原因</feishu-message>`,
+				DeliveredToSessionID: nil,
+				CreatedAt:            now.Add(-10 * time.Second),
+			},
+		},
+		nextID: 1,
+	}
+	mailbox := &fakeMailboxRepo{
+		items: []model.AgentMailboxMessage{
+			{
+				ID:              1,
+				ConversationID:  1,
+				SourceSessionID: 11,
+				SourceType:      model.AgentMailboxSourceToolResult,
+				Payload:         "后台测试失败：TestX",
+				CreatedAt:       now.Add(-5 * time.Second),
+			},
+		},
+		nextID: 1,
+	}
+	service := NewConversationService(nil, nil, conversations, sessions, mailbox,
+		WithConversationClock(func() time.Time { return now }),
+		WithConversationFollowups(followups),
+	)
+
+	result, err := service.ApplyRunnerSessionUpdateDetailed(context.Background(), RunnerSessionUpdateInput{
+		SessionID:    11,
+		Status:       model.AgentSessionStatusCommitted,
+		FinalMessage: stringPtr("前台步骤完成"),
+	})
+	if err != nil {
+		t.Fatalf("ApplyRunnerSessionUpdateDetailed() error = %v", err)
+	}
+	if result.FollowupSession == nil {
+		t.Fatalf("expected detailed result to include followup session")
+	}
+	if len(sessions.created) != 2 {
+		t.Fatalf("expected exactly one followup session after commit, got %+v", sessions.created)
+	}
+	followupSession := sessions.created[1]
+	if followupSession.Mode != model.AgentSessionModeContinue {
+		t.Fatalf("expected continue followup session, got %+v", followupSession)
+	}
+	if followupSession.ExecutorRef == nil || *followupSession.ExecutorRef != executorRef {
+		t.Fatalf("expected followup session to inherit executor_ref, got %+v", followupSession.ExecutorRef)
+	}
+	if followupSession.UserMessage == nil || !strings.Contains(*followupSession.UserMessage, "你说下原因") {
+		t.Fatalf("expected followup session message to include followup payload, got %+v", followupSession.UserMessage)
+	}
+	if followups.items[0].DeliveredToSessionID == nil || *followups.items[0].DeliveredToSessionID != followupSession.ID {
+		t.Fatalf("expected followup delivered to new session, got %+v", followups.items[0].DeliveredToSessionID)
+	}
+	if mailbox.items[0].DeliveredToSessionID != nil {
+		t.Fatalf("expected mailbox to remain pending until followup finishes, got %+v", mailbox.items[0].DeliveredToSessionID)
+	}
+	if conversation, err := conversations.GetConversationByID(context.Background(), 1); err != nil || conversation.LastSessionID == nil || *conversation.LastSessionID != followupSession.ID {
+		t.Fatalf("expected conversation last session to point to followup session, conversation=%+v err=%v", conversation, err)
 	}
 }

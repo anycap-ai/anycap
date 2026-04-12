@@ -61,6 +61,12 @@ type AgentMailboxRepository interface {
 	MarkMailboxMessagesDelivered(ctx context.Context, ids []int64, sessionID int64) error
 }
 
+type AgentConversationFollowupRepository interface {
+	CreateConversationFollowup(ctx context.Context, followup model.AgentConversationFollowup) (*model.AgentConversationFollowup, error)
+	ListUndeliveredConversationFollowups(ctx context.Context, conversationID int64) ([]model.AgentConversationFollowup, error)
+	MarkConversationFollowupsDelivered(ctx context.Context, ids []int64, sessionID int64) error
+}
+
 type IMPlatformAdapter interface {
 	SendAccepted(ctx context.Context, binding model.IMBinding, task model.AgentTask) error
 	SendCompleted(ctx context.Context, binding model.IMBinding, task model.AgentTask) error

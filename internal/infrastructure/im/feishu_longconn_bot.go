@@ -205,11 +205,12 @@ func (b *FeishuLongConnBot) dispatchNormalizedEvent(ctx context.Context, event N
 	}
 
 	result, err := b.conversationService.HandleInboundMessage(ctx, agentcontrolapp.InboundChatInput{
-		Platform: enrichedEvent.Platform,
-		BotID:    enrichedEvent.BotID,
-		ChatID:   enrichedEvent.ChannelID,
-		SenderID: enrichedEvent.SenderID,
-		Message:  enrichedEvent.Message,
+		Platform:  enrichedEvent.Platform,
+		BotID:     enrichedEvent.BotID,
+		ChatID:    enrichedEvent.ChannelID,
+		MessageID: enrichedEvent.MessageID,
+		SenderID:  enrichedEvent.SenderID,
+		Message:   enrichedEvent.Message,
 	})
 	if err != nil {
 		return err
@@ -235,7 +236,16 @@ func (b *FeishuLongConnBot) shouldMergeBurstTurn(event NormalizedInboundEvent) b
 	if strings.TrimSpace(event.ChannelID) == "" || strings.TrimSpace(event.SenderID) == "" {
 		return false
 	}
+	if hasFeishuConversationStructure(event) {
+		return false
+	}
 	return true
+}
+
+func hasFeishuConversationStructure(event NormalizedInboundEvent) bool {
+	return strings.TrimSpace(event.ThreadID) != "" ||
+		strings.TrimSpace(event.ParentID) != "" ||
+		strings.TrimSpace(event.RootID) != ""
 }
 
 func normalizeFeishuTurnMergeWindow(window time.Duration) time.Duration {

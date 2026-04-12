@@ -16,6 +16,7 @@ type ConversationService struct {
 	conversations       port.AgentConversationRepository
 	sessions            port.AgentSessionRepository
 	mailbox             port.AgentMailboxRepository
+	followups           port.AgentConversationFollowupRepository
 	now                 func() time.Time
 	fixedRunnerResolver FixedRunnerResolver
 }
@@ -42,12 +43,13 @@ type OwnedInboundChatInput struct {
 }
 
 type InboundChatResult struct {
-	Chat         model.ParsedAgentChatCommand
-	Binding      *model.IMBinding
-	Conversation *model.AgentConversation
-	Session      *model.AgentSession
-	Queued       bool
-	Duplicated   bool
+	Chat           model.ParsedAgentChatCommand
+	Binding        *model.IMBinding
+	Conversation   *model.AgentConversation
+	Session        *model.AgentSession
+	Queued         bool
+	Duplicated     bool
+	FollowupQueued bool
 }
 
 type RunnerSessionUpdateInput struct {
@@ -59,6 +61,7 @@ type RunnerSessionUpdateInput struct {
 
 type RunnerSessionUpdateResult struct {
 	Session         *model.AgentSession
+	FollowupSession *model.AgentSession
 	AutoFireSession *model.AgentSession
 	Event           *model.AgentConversationEvent
 }
@@ -101,6 +104,14 @@ func WithConversationFixedRunnerResolver(resolver FixedRunnerResolver) Conversat
 	return func(s *ConversationService) {
 		if resolver != nil {
 			s.fixedRunnerResolver = resolver
+		}
+	}
+}
+
+func WithConversationFollowups(repo port.AgentConversationFollowupRepository) ConversationServiceOption {
+	return func(s *ConversationService) {
+		if repo != nil {
+			s.followups = repo
 		}
 	}
 }
@@ -163,11 +174,11 @@ func (s *ConversationService) handleResolvedInboundMessage(ctx context.Context, 
 
 	switch chat.Action {
 	case model.AgentChatActionContinue:
-		conversation, session, queued, duplicated, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), strings.TrimSpace(messageID), chat)
+		conversation, session, queued, duplicated, followupQueued, err := s.continueConversation(ctx, binding, runner, strings.TrimSpace(chatID), strings.TrimSpace(messageID), chat)
 		if err != nil {
 			return nil, err
 		}
-		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session, Queued: queued, Duplicated: duplicated}, nil
+		return &InboundChatResult{Chat: chat, Binding: &binding, Conversation: conversation, Session: session, Queued: queued, Duplicated: duplicated, FollowupQueued: followupQueued}, nil
 	case model.AgentChatActionNew, model.AgentChatActionReset:
 		conversation, session, err := s.resetConversation(ctx, binding, runner, strings.TrimSpace(chatID), chat)
 		if err != nil {
@@ -335,12 +346,26 @@ func (s *ConversationService) ApplyRunnerSessionUpdateDetailed(ctx context.Conte
 			SessionStatus:  updated.Status,
 		},
 	}
-	if (updated.Status == model.AgentSessionStatusCommitted || updated.Status == model.AgentSessionStatusFailed) && s.conversations != nil {
+	if isTerminalAgentSessionStatus(updated.Status) && s.conversations != nil {
 		conversation, err := s.conversations.GetConversationByID(ctx, updated.ConversationID)
 		if err != nil {
 			return nil, err
 		}
 		if conversation != nil && conversation.ID > 0 && conversation.LastSessionID != nil && *conversation.LastSessionID == updated.ID {
+			_, followupSession, followupItems, err := s.tryAutoFollowupConversation(ctx, *conversation)
+			if err != nil {
+				return nil, err
+			}
+			if followupSession != nil {
+				result.FollowupSession = followupSession
+				if result.Event != nil {
+					result.Event.PendingCount = len(followupItems)
+				}
+				return result, nil
+			}
+			if updated.Status == model.AgentSessionStatusInterrupted {
+				return result, nil
+			}
 			_, autoFireSession, autoFireMailbox, err := s.tryAutoFireConversation(ctx, *conversation)
 			if err != nil {
 				return nil, err
@@ -548,40 +573,49 @@ func (s *ConversationService) loadAuthorizedRunner(ctx context.Context, userID s
 	return runner, nil
 }
 
-func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, messageID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, bool, bool, error) {
+func (s *ConversationService) continueConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, messageID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, bool, bool, bool, error) {
 	conversation, err := s.conversations.GetActiveConversationByChat(ctx, binding.UserID, binding.Platform, binding.BotID, chatID)
 	if err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
 	}
 	if conversation == nil {
 		conversation, err = s.createConversation(ctx, binding, runner, chatID)
 		if err != nil {
-			return nil, nil, false, false, err
+			return nil, nil, false, false, false, err
 		}
 	}
 	conversation, err = s.ensureConversationRunner(ctx, *conversation, runner)
 	if err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
 	}
 	if existing, err := s.findDuplicateInboundSession(ctx, *conversation, messageID); err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
 	} else if existing != nil {
-		return conversation, existing, false, true, nil
+		return conversation, existing, false, true, false, nil
 	}
 	queued, err := s.isConversationBusy(ctx, *conversation)
 	if err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
+	}
+	if queued {
+		followupQueued, err := s.tryEnqueueStructuredFollowup(ctx, *conversation, messageID, chat)
+		if err != nil {
+			return nil, nil, false, false, false, err
+		}
+		if followupQueued {
+			return conversation, nil, true, false, true, nil
+		}
 	}
 
 	session, err := s.createSession(ctx, binding.UserID, *conversation, model.AgentSessionModeContinue, chat.Message, conversation.LastSessionID)
 	if err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
 	}
 	conversation, err = s.conversations.UpdateConversationLastSession(ctx, conversation.ID, session.ID)
 	if err != nil {
-		return nil, nil, false, false, err
+		return nil, nil, false, false, false, err
 	}
-	return conversation, session, queued, false, nil
+	return conversation, session, queued, false, false, nil
 }
 
 func (s *ConversationService) resetConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, error) {
@@ -744,6 +778,32 @@ func (s *ConversationService) tryAutoFireConversation(ctx context.Context, conve
 	return updatedConversation, session, items, nil
 }
 
+func (s *ConversationService) tryAutoFollowupConversation(ctx context.Context, conversation model.AgentConversation) (*model.AgentConversation, *model.AgentSession, []model.AgentConversationFollowup, error) {
+	if s == nil || s.followups == nil || s.sessions == nil {
+		return &conversation, nil, nil, nil
+	}
+	items, err := s.followups.ListUndeliveredConversationFollowups(ctx, conversation.ID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if len(items) == 0 {
+		return &conversation, nil, nil, nil
+	}
+	message, ids := buildFollowupSessionMessage(items)
+	session, err := s.createSession(ctx, conversation.UserID, conversation, model.AgentSessionModeContinue, &message, conversation.LastSessionID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if err := s.followups.MarkConversationFollowupsDelivered(ctx, ids, session.ID); err != nil {
+		return nil, nil, nil, err
+	}
+	updated, err := s.conversations.UpdateConversationLastSession(ctx, conversation.ID, session.ID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return updated, session, items, nil
+}
+
 func (s *ConversationService) forkConversation(ctx context.Context, binding model.IMBinding, runner model.AgentRunner, chatID string, chat model.ParsedAgentChatCommand) (*model.AgentConversation, *model.AgentSession, error) {
 	existing, err := s.conversations.GetActiveConversationByChat(ctx, binding.UserID, binding.Platform, binding.BotID, chatID)
 	if err != nil {
@@ -837,6 +897,66 @@ func (s *ConversationService) isConversationBusy(ctx context.Context, conversati
 	return lastSession.Status == model.AgentSessionStatusCreated || lastSession.Status == model.AgentSessionStatusRunning, nil
 }
 
+func (s *ConversationService) tryEnqueueStructuredFollowup(ctx context.Context, conversation model.AgentConversation, messageID string, chat model.ParsedAgentChatCommand) (bool, error) {
+	if s == nil || s.followups == nil || s.sessions == nil || chat.Message == nil {
+		return false, nil
+	}
+	payload := strings.TrimSpace(*chat.Message)
+	if payload == "" {
+		return false, nil
+	}
+	if !s.isStructuredFollowup(ctx, conversation, payload) {
+		return false, nil
+	}
+	metadata := extractFeishuMetadata(payload)
+	if strings.TrimSpace(messageID) != "" {
+		metadata["message_id"] = strings.TrimSpace(messageID)
+	}
+	_, err := s.followups.CreateConversationFollowup(ctx, model.AgentConversationFollowup{
+		ConversationID:    conversation.ID,
+		PlatformMessageID: strings.TrimSpace(metadata["message_id"]),
+		ThreadID:          strings.TrimSpace(metadata["thread_id"]),
+		RootID:            strings.TrimSpace(metadata["root_id"]),
+		ParentID:          strings.TrimSpace(metadata["parent_id"]),
+		Payload:           payload,
+		CreatedAt:         s.now().UTC(),
+	})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *ConversationService) isStructuredFollowup(ctx context.Context, conversation model.AgentConversation, payload string) bool {
+	metadata := extractFeishuMetadata(payload)
+	threadID := strings.TrimSpace(metadata["thread_id"])
+	rootID := strings.TrimSpace(metadata["root_id"])
+	parentID := strings.TrimSpace(metadata["parent_id"])
+	if threadID == "" && rootID == "" && parentID == "" {
+		return false
+	}
+	items, err := s.sessions.ListSessionsByConversation(ctx, conversation.ID)
+	if err != nil {
+		return false
+	}
+	for _, item := range items {
+		if item.UserMessage == nil {
+			continue
+		}
+		prior := extractFeishuMetadata(*item.UserMessage)
+		if parentID != "" && strings.TrimSpace(prior["message_id"]) == parentID {
+			return true
+		}
+		if rootID != "" && strings.TrimSpace(prior["root_id"]) == rootID {
+			return true
+		}
+		if threadID != "" && strings.TrimSpace(prior["thread_id"]) == threadID {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *ConversationService) findDuplicateInboundSession(ctx context.Context, conversation model.AgentConversation, messageID string) (*model.AgentSession, error) {
 	messageID = strings.TrimSpace(messageID)
 	if s.sessions == nil || conversation.ID <= 0 || messageID == "" {
@@ -865,11 +985,25 @@ func inboundMessageIDForSession(session model.AgentSession) string {
 }
 
 func extractFeishuMessageID(message string) string {
+	return extractFeishuMetadata(message)["message_id"]
+}
+
+func extractFeishuMetadata(message string) map[string]string {
+	return map[string]string{
+		"message_id": extractFeishuAttr(message, "message_id"),
+		"thread_id":  extractFeishuAttr(message, "thread_id"),
+		"root_id":    extractFeishuAttr(message, "root_id"),
+		"parent_id":  extractFeishuAttr(message, "parent_id"),
+	}
+}
+
+func extractFeishuAttr(message string, name string) string {
 	message = strings.TrimSpace(message)
-	if message == "" {
+	name = strings.TrimSpace(name)
+	if message == "" || name == "" {
 		return ""
 	}
-	const marker = `message_id="`
+	marker := name + `="`
 	start := strings.Index(message, marker)
 	if start < 0 {
 		return ""
@@ -944,6 +1078,50 @@ func buildFireSessionMessage(prefix *string, items []model.AgentMailboxMessage) 
 		lines = append(lines, fmt.Sprintf("%d. [%s] %s", idx+1, item.SourceType, payload))
 	}
 	return strings.Join(lines, "\n"), ids
+}
+
+func buildFollowupSessionMessage(items []model.AgentConversationFollowup) (string, []int64) {
+	lines := make([]string, 0, len(items)+2)
+	ids := make([]int64, 0, len(items))
+	lines = append(lines, "<feishu-follow-up-burst>")
+	for _, item := range items {
+		ids = append(ids, item.ID)
+		attrs := make([]string, 0, 4)
+		if value := strings.TrimSpace(item.PlatformMessageID); value != "" {
+			attrs = append(attrs, fmt.Sprintf(`message_id="%s"`, value))
+		}
+		if value := strings.TrimSpace(item.ThreadID); value != "" {
+			attrs = append(attrs, fmt.Sprintf(`thread_id="%s"`, value))
+		}
+		if value := strings.TrimSpace(item.RootID); value != "" {
+			attrs = append(attrs, fmt.Sprintf(`root_id="%s"`, value))
+		}
+		if value := strings.TrimSpace(item.ParentID); value != "" {
+			attrs = append(attrs, fmt.Sprintf(`parent_id="%s"`, value))
+		}
+		attrText := ""
+		if len(attrs) > 0 {
+			attrText = " " + strings.Join(attrs, " ")
+		}
+		lines = append(lines, fmt.Sprintf("  <item%s>", attrText))
+		payload := strings.TrimSpace(item.Payload)
+		if payload == "" {
+			payload = "(empty)"
+		}
+		lines = append(lines, payload)
+		lines = append(lines, "  </item>")
+	}
+	lines = append(lines, "</feishu-follow-up-burst>")
+	return strings.Join(lines, "\n"), ids
+}
+
+func isTerminalAgentSessionStatus(status string) bool {
+	switch strings.TrimSpace(status) {
+	case model.AgentSessionStatusCommitted, model.AgentSessionStatusFailed, model.AgentSessionStatusInterrupted:
+		return true
+	default:
+		return false
+	}
 }
 
 func conversationEventTypeFromSessionStatus(status string) string {

@@ -175,6 +175,18 @@ type AgentMailboxMessage struct {
 	CreatedAt            time.Time
 }
 
+type AgentConversationFollowup struct {
+	ID                   int64
+	ConversationID       int64
+	PlatformMessageID    string
+	ThreadID             string
+	RootID               string
+	ParentID             string
+	Payload              string
+	DeliveredToSessionID *int64
+	CreatedAt            time.Time
+}
+
 type AgentConversationEvent struct {
 	EventType      string
 	ConversationID int64
