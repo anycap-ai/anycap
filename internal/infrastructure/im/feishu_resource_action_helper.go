@@ -372,7 +372,10 @@ Create a new bitable:
   "operation": "bitable.create",
   "title": "新多维表格标题",
   "folder_token": "fldcn123",
-  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123"
+  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123",
+  "records": [
+    {"fields": {"公司": "AnyCap", "状态": "跟进中"}}
+  ]
 }
 
 Inspect headings:

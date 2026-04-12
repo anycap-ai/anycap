@@ -84,9 +84,10 @@ type FeishuSheetCreateResult struct {
 }
 
 type FeishuBitableCreateResult struct {
-	AppToken string
-	Title    string
-	URL      string
+	AppToken       string
+	DefaultTableID string
+	Title          string
+	URL            string
 }
 
 type FeishuDocxHeadingInspection struct {
@@ -314,6 +315,18 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 			result.Token = strings.TrimSpace(created.AppToken)
 			result.Title = firstNonEmpty(created.Title, result.Title)
 			result.URL = strings.TrimSpace(created.URL)
+			if len(action.Records) > 0 {
+				if a.createBitableRecords == nil {
+					return nil, model.ErrNotConfigured("feishu bitable writer is not configured")
+				}
+				tableID := strings.TrimSpace(created.DefaultTableID)
+				if tableID == "" {
+					return nil, model.ErrValidation("bitable create with records requires default_table_id")
+				}
+				if err := a.createBitableRecords(ctx, result.Token, tableID, action.Records); err != nil {
+					return nil, err
+				}
+			}
 		}
 		return result, nil
 	}
@@ -604,9 +617,10 @@ func (a *FeishuAdapter) createBitableViaAPI(ctx context.Context, title string, s
 	}
 	appToken := strings.TrimSpace(stringPtrValue(createResp.Data.App.AppToken))
 	return &FeishuBitableCreateResult{
-		AppToken: appToken,
-		Title:    firstNonEmpty(stringPtrValue(createResp.Data.App.Name), title),
-		URL:      firstNonEmpty(stringPtrValue(createResp.Data.App.Url), inferCreatedFeishuResourceURL("base", appToken, sourceURL)),
+		AppToken:       appToken,
+		DefaultTableID: strings.TrimSpace(stringPtrValue(createResp.Data.App.DefaultTableId)),
+		Title:          firstNonEmpty(stringPtrValue(createResp.Data.App.Name), title),
+		URL:            firstNonEmpty(stringPtrValue(createResp.Data.App.Url), inferCreatedFeishuResourceURL("base", appToken, sourceURL)),
 	}, nil
 }
 

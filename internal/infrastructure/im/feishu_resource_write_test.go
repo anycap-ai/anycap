@@ -124,10 +124,11 @@ func TestParseFeishuResourceWriteActionBitableCreate(t *testing.T) {
 		"operation": "bitable.create",
 		"title": "新多维表格",
 		"folder_token": "fldcn123",
-		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource",
+		"records": [{"fields": {"Company": "AnyCap"}}]
 	}`)
 
-	if action.Operation != FeishuResourceWriteOperationBitableCreate || action.Title != "新多维表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
+	if action.Operation != FeishuResourceWriteOperationBitableCreate || action.Title != "新多维表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" || len(action.Records) != 1 {
 		t.Fatalf("unexpected action %+v", action)
 	}
 }
@@ -566,6 +567,43 @@ func TestExecuteFeishuResourceWriteCreateBitableUsesInjectedCreator(t *testing.T
 	}
 }
 
+func TestExecuteFeishuResourceWriteCreateBitableWritesInitialRecords(t *testing.T) {
+	var gotAppToken, gotTableID string
+	var gotRecords []FeishuBitableRecordWrite
+	adapter := &FeishuAdapter{
+		createBitable: func(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuBitableCreateResult, error) {
+			return &FeishuBitableCreateResult{
+				AppToken:       "BASEnew123",
+				DefaultTableID: "tblnew123",
+				Title:          title,
+				URL:            "https://anycap.feishu.cn/base/BASEnew123",
+			}, nil
+		},
+		createBitableRecords: func(ctx context.Context, appToken string, tableID string, records []FeishuBitableRecordWrite) error {
+			gotAppToken = appToken
+			gotTableID = tableID
+			gotRecords = records
+			return nil
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "bitable.create",
+		"title": "新多维表格",
+		"records": [{"fields": {"Company": "AnyCap"}}]
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if gotAppToken != "BASEnew123" || gotTableID != "tblnew123" || len(gotRecords) != 1 {
+		t.Fatalf("unexpected initial records write appToken=%q tableID=%q records=%+v", gotAppToken, gotTableID, gotRecords)
+	}
+	if result.Operation != FeishuResourceWriteOperationBitableCreate || result.Token != "BASEnew123" {
+		t.Fatalf("unexpected create bitable result %+v", result)
+	}
+}
+
 func TestExecuteFeishuResourceWriteAppendSheetRowsUsesInjectedWriter(t *testing.T) {
 	var gotToken, gotRange string
 	var gotRows [][]any
@@ -896,7 +934,7 @@ func TestFeishuAdapterCreateBitableViaAPICreatesApp(t *testing.T) {
 				t.Fatalf("Decode(create bitable body) error = %v", err)
 			}
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"code":0,"data":{"app":{"app_token":"BASEnew123","name":"新多维表格","url":"https://anycap.feishu.cn/base/BASEnew123"}}}`))
+			_, _ = w.Write([]byte(`{"code":0,"data":{"app":{"app_token":"BASEnew123","name":"新多维表格","url":"https://anycap.feishu.cn/base/BASEnew123","default_table_id":"tblnew123"}}}`))
 		default:
 			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
 		}
@@ -916,7 +954,7 @@ func TestFeishuAdapterCreateBitableViaAPICreatesApp(t *testing.T) {
 	if createBody["name"] != "新多维表格" || createBody["folder_token"] != "fldcn123" {
 		t.Fatalf("unexpected create bitable body %#v", createBody)
 	}
-	if result.AppToken != "BASEnew123" || result.Title != "新多维表格" || result.URL != "https://anycap.feishu.cn/base/BASEnew123" {
+	if result.AppToken != "BASEnew123" || result.DefaultTableID != "tblnew123" || result.Title != "新多维表格" || result.URL != "https://anycap.feishu.cn/base/BASEnew123" {
 		t.Fatalf("unexpected create bitable result %+v", result)
 	}
 }
