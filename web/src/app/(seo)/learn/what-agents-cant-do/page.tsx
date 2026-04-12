@@ -7,6 +7,7 @@ import {
 } from "@/components/landing/CapabilityGapTable";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import { getSeoPageChrome } from "@/lib/seo-ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
@@ -159,9 +160,11 @@ export default function WhatAgentsCantDoPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {pageChrome?.eyebrow ?? "Learn"}
             </p>
-            <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
-              Last updated {lastUpdatedLabel}
-            </p>
+            <ArticleByline
+              className="mb-3"
+              author={pageChrome?.authorLabel}
+              updatedLabel={`Last updated ${lastUpdatedLabel}`}
+            />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}

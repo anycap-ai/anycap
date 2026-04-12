@@ -7,6 +7,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import {
   getInstallAnyCapMetadata,
   INSTALL_ANYCAP_GUIDE_PATH,
@@ -88,6 +89,7 @@ export default async function InstallAnycapPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {content.eyebrow}
             </p>
+            <ArticleByline className="mb-3" />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}

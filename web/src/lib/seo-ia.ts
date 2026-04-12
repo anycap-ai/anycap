@@ -28,6 +28,7 @@ export type SeoBreadcrumbItem = {
 export type SeoPageChrome = {
   breadcrumbItems: SeoBreadcrumbItem[];
   eyebrow: string;
+  authorLabel: string;
   node: SeoIaNode;
 };
 
@@ -84,6 +85,7 @@ export function getSeoPageChrome(pathname: string): SeoPageChrome | null {
   return {
     breadcrumbItems: getSeoBreadcrumbItems(pathname) ?? [],
     eyebrow: node.eyebrow,
+    authorLabel: "By AnyCap Team",
     node,
   };
 }

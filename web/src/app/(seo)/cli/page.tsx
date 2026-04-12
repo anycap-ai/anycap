@@ -4,13 +4,18 @@ import { siteConfig } from "@/lib/site";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { ArticleByline } from "@/components/seo/ArticleByline";
 import { getSeoPageChrome } from "@/lib/seo-ia";
-import { createSoftwareSourceCodeJsonLd } from "@/lib/schema";
+import {
+  createSoftwareApplicationJsonLd,
+} from "@/lib/schema";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const githubHref = "https://github.com/anycap-ai/anycap";
+const cliApplicationEntityId = `${siteConfig.url}#cli-application`;
 
 export const metadata: Metadata = {
   title: "AnyCap CLI | AI Agent Capability Runtime",
@@ -118,13 +123,18 @@ const nextPages = [
   },
 ];
 
-const cliSoftwareJsonLd = createSoftwareSourceCodeJsonLd({
-  name: "AnyCap CLI",
-  description:
-    "Agent-native CLI that gives AI agents one install path and one interface for capabilities like image generation, video generation, image understanding, and video analysis.",
-  path: "/cli",
-  codeRepository: "https://github.com/anycap-ai/anycap",
-});
+const cliSoftwareApplicationJsonLd = {
+  ...createSoftwareApplicationJsonLd({
+    name: "AnyCap CLI",
+    description:
+      "Agent-native CLI that gives AI agents one install path and one interface for capabilities like image generation, video generation, image understanding, and video analysis.",
+    path: "/cli",
+    installUrl: `${siteConfig.url}/install.sh`,
+  }),
+  "@id": cliApplicationEntityId,
+  sameAs: [githubHref],
+  isAccessibleForFree: true,
+};
 
 const pageChrome = getSeoPageChrome("/cli");
 
@@ -134,7 +144,7 @@ export default function CliPage() {
       <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(cliSoftwareJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(cliSoftwareApplicationJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">
@@ -143,6 +153,7 @@ export default function CliPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {pageChrome?.eyebrow ?? "CLI"}
             </p>
+            <ArticleByline className="mb-3" author={pageChrome?.authorLabel} />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
