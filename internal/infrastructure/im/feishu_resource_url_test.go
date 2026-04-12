@@ -32,6 +32,18 @@ func TestExtractFeishuResourceRefsIgnoresUnsupportedURLs(t *testing.T) {
 	}
 }
 
+func TestExtractFeishuResourceRefsStopsAtChineseTextAfterToken(t *testing.T) {
+	refs := ExtractFeishuResourceRefs("https://anycap.feishu.cn/wiki/Oa8mnSc你能阅读这篇文档不")
+
+	if len(refs) != 1 {
+		t.Fatalf("expected 1 ref, got %+v", refs)
+	}
+	assertFeishuResourceRef(t, refs[0], FeishuResourceKindWiki, "Oa8mnSc")
+	if refs[0].URL != "https://anycap.feishu.cn/wiki/Oa8mnSc" {
+		t.Fatalf("expected clean URL, got %+v", refs[0])
+	}
+}
+
 func assertFeishuResourceRef(t *testing.T, ref FeishuResourceRef, kind FeishuResourceKind, token string) {
 	t.Helper()
 	if ref.Kind != kind {

@@ -70,16 +70,38 @@ func parseFeishuResourceURL(raw string) (FeishuResourceRef, bool) {
 	if err != nil {
 		return FeishuResourceRef{}, false
 	}
-	token = strings.TrimSpace(token)
+	token = trimFeishuResourceToken(token)
 	if token == "" {
 		return FeishuResourceRef{}, false
 	}
+	parsed.Path = "/" + segments[0] + "/" + token
+	parsed.RawPath = ""
+	raw = parsed.String()
 	return FeishuResourceRef{
 		URL:   raw,
 		Kind:  kind,
 		Token: token,
 		Query: firstQueryValues(parsed.Query()),
 	}, true
+}
+
+func trimFeishuResourceToken(token string) string {
+	token = strings.TrimSpace(token)
+	for i, r := range token {
+		if isFeishuResourceTokenRune(r) {
+			continue
+		}
+		return token[:i]
+	}
+	return token
+}
+
+func isFeishuResourceTokenRune(r rune) bool {
+	return r >= 'a' && r <= 'z' ||
+		r >= 'A' && r <= 'Z' ||
+		r >= '0' && r <= '9' ||
+		r == '_' ||
+		r == '-'
 }
 
 func feishuResourceKindFromPath(segment string) (FeishuResourceKind, bool) {
