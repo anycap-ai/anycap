@@ -40,3 +40,25 @@ export function consumePendingLogin(): PendingLoginState | null {
     return null;
   }
 }
+
+const COOKIE_KEY = "anycap_pending_login";
+
+export function savePendingLoginCookie(state: PendingLoginState): void {
+  if (typeof document === "undefined") return;
+  const encoded = encodeURIComponent(JSON.stringify(state));
+  document.cookie = `${COOKIE_KEY}=${encoded}; path=/; max-age=900; samesite=lax`;
+}
+
+export function consumePendingLoginCookie(): PendingLoginState | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${COOKIE_KEY}=([^;]+)`),
+  );
+  if (!match) return null;
+  document.cookie = `${COOKIE_KEY}=; path=/; max-age=0`;
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as PendingLoginState;
+  } catch {
+    return null;
+  }
+}

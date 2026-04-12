@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { savePendingLogin } from "@/lib/auth/session";
+import { savePendingLogin, savePendingLoginCookie } from "@/lib/auth/session";
 import { ProcessingOverlay } from "@/components/ui/ProcessingOverlay";
 
 export function CLILoginClient() {
@@ -16,13 +16,16 @@ export function CLILoginClient() {
       return;
     }
 
-    savePendingLogin({
-      returnTo: "/auth/device/complete",
-      mode: "cli_login",
+    const loginState = {
+      returnTo: "/auth/device/complete" as const,
+      mode: "cli_login" as const,
       browserToken,
-    });
+    };
+    savePendingLogin(loginState);
+    savePendingLoginCookie(loginState);
 
-    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent("/auth/callback")}&connection=${encodeURIComponent("google-oauth2")}&prompt=${encodeURIComponent("login")}`;
+    const callbackWithToken = `/auth/callback?browser_token=${encodeURIComponent(browserToken)}&mode=cli_login`;
+    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent(callbackWithToken)}&connection=${encodeURIComponent("google-oauth2")}&prompt=${encodeURIComponent("login")}`;
     window.location.assign(sdkLoginURL);
   }, [params]);
 
