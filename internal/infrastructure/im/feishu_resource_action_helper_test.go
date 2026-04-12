@@ -42,6 +42,7 @@ func TestFeishuResourceActionHelperWritesContextAndInstructions(t *testing.T) {
 	}
 	for _, want := range []string{
 		"Only use URLs listed in context.json",
+		"resource created by an earlier successful create action",
 		"outbox/<action_id>.tmp",
 		"atomically rename",
 		"Inspect before positioning writes",
@@ -133,6 +134,56 @@ func TestFeishuResourceActionHelperExecutesAllowedActionAndWritesResult(t *testi
 	}
 	if !strings.Contains(string(data), `"status": "success"`) || !strings.Contains(string(data), `"token": "DOCXtoken123"`) {
 		t.Fatalf("unexpected result json:\n%s", string(data))
+	}
+}
+
+func TestFeishuResourceActionHelperAllowsWritingResourceCreatedByEarlierAction(t *testing.T) {
+	root := t.TempDir()
+	if err := WriteFeishuResourceActionContext(root, "om_text", nil); err != nil {
+		t.Fatalf("WriteFeishuResourceActionContext() error = %v", err)
+	}
+	writeFeishuActionFile(t, root, "001_create_sheet", `{
+		"operation": "sheet.create",
+		"title": "新表格"
+	}`)
+	writeFeishuActionFile(t, root, "002_update_sheet", `{
+		"operation": "sheet.update_range",
+		"url": "https://anycap.feishu.cn/sheets/SHEETnew123",
+		"range": "Sheet1!A1:B1",
+		"values": [["item", "cost"]]
+	}`)
+
+	var updated bool
+	helper := NewFeishuResourceActionHelper(root, func(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
+		switch action.Operation {
+		case FeishuResourceWriteOperationSheetCreate:
+			return &FeishuResourceWriteResult{
+				Operation: action.Operation,
+				URL:       "https://anycap.feishu.cn/sheets/SHEETnew123",
+				Kind:      FeishuResourceKindSheet,
+				Token:     "SHEETnew123",
+				Title:     action.Title,
+			}, nil
+		case FeishuResourceWriteOperationSheetUpdateRange:
+			updated = true
+			return &FeishuResourceWriteResult{
+				Operation: action.Operation,
+				URL:       action.URL,
+				Kind:      action.Ref.Kind,
+				Token:     action.Ref.Token,
+			}, nil
+		default:
+			t.Fatalf("unexpected operation %s", action.Operation)
+			return nil, nil
+		}
+	})
+
+	results, err := helper.ProcessOutboxOnce(context.Background())
+	if err != nil {
+		t.Fatalf("ProcessOutboxOnce() error = %v", err)
+	}
+	if len(results) != 2 || !updated || results[1].Status != "success" || results[1].Operation != string(FeishuResourceWriteOperationSheetUpdateRange) {
+		t.Fatalf("unexpected results=%+v updated=%v", results, updated)
 	}
 }
 

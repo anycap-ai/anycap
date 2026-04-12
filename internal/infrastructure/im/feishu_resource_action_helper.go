@@ -204,7 +204,8 @@ func (h *FeishuResourceActionHelper) requireAllowedURL(action FeishuResourceWrit
 	if action.createsNewResource() {
 		return nil
 	}
-	data, err := os.ReadFile(filepath.Join(h.root, "context.json"))
+	contextPath := filepath.Join(h.root, "context.json")
+	data, err := os.ReadFile(contextPath)
 	if err != nil {
 		return fmt.Errorf("read feishu action context: %w", err)
 	}
@@ -218,7 +219,72 @@ func (h *FeishuResourceActionHelper) requireAllowedURL(action FeishuResourceWrit
 			return nil
 		}
 	}
+	contextInfo, err := os.Stat(contextPath)
+	if err != nil {
+		return fmt.Errorf("inspect feishu action context: %w", err)
+	}
+	created, err := h.resourceCreatedByActionResult(action, contextInfo.ModTime())
+	if err != nil {
+		return err
+	}
+	if created {
+		return nil
+	}
 	return fmt.Errorf("feishu resource URL is not listed in current context.json: %s", action.URL)
+}
+
+func (h *FeishuResourceActionHelper) resourceCreatedByActionResult(action FeishuResourceWriteAction, since time.Time) (bool, error) {
+	resultsDir := filepath.Join(h.root, "results")
+	entries, err := os.ReadDir(resultsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("read feishu action results: %w", err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+			continue
+		}
+		resultPath := filepath.Join(resultsDir, entry.Name())
+		info, err := entry.Info()
+		if err != nil {
+			return false, fmt.Errorf("inspect feishu action result: %w", err)
+		}
+		if info.ModTime().Before(since) {
+			continue
+		}
+		data, err := os.ReadFile(resultPath)
+		if err != nil {
+			return false, fmt.Errorf("read feishu action result: %w", err)
+		}
+		var result FeishuResourceActionResult
+		if err := json.Unmarshal(data, &result); err != nil {
+			return false, fmt.Errorf("parse feishu action result: %w", err)
+		}
+		if result.Status != "success" {
+			continue
+		}
+		if !feishuCreateOperationResultCanAuthorizeResource(result.Operation) {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(result.Kind), string(action.Ref.Kind)) &&
+			strings.TrimSpace(result.Token) == strings.TrimSpace(action.Ref.Token) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func feishuCreateOperationResultCanAuthorizeResource(operation string) bool {
+	switch FeishuResourceWriteOperation(strings.TrimSpace(operation)) {
+	case FeishuResourceWriteOperationDocxCreate,
+		FeishuResourceWriteOperationSheetCreate,
+		FeishuResourceWriteOperationBitableCreate:
+		return true
+	default:
+		return false
+	}
 }
 
 func (h *FeishuResourceActionHelper) writeResult(result *FeishuResourceActionResult, err error) error {
@@ -273,6 +339,7 @@ Use this directory to request constrained Feishu resource actions from the local
 Rules:
 - Only use URLs listed in context.json for writes to existing Feishu resources.
 - Create operations do not require url: docx.create, sheet.create, bitable.create. Include source_url from context.json when possible so the result can infer the tenant URL.
+- A resource created by an earlier successful create action in this action context can be used by follow-up write actions using the URL/token from results/<action_id>.json.
 - Write action JSON to outbox/<action_id>.tmp first, then atomically rename it to outbox/<action_id>.json.
 - Wait for results/<action_id>.json before reporting the action result.
 - Inspect before positioning writes: use docx.inspect_headings before docx.append_under_heading or docx.replace_heading_section when you are not certain about the target heading.
