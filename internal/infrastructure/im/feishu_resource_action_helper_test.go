@@ -45,6 +45,7 @@ func TestFeishuResourceActionHelperWritesContextAndInstructions(t *testing.T) {
 		"outbox/<action_id>.tmp",
 		"atomically rename",
 		"Inspect before positioning writes",
+		`"operation": "docx.create"`,
 		`"operation": "docx.inspect_headings"`,
 		`"operation": "docx.append_under_heading"`,
 		`"operation": "docx.replace_heading_section"`,
@@ -129,6 +130,45 @@ func TestFeishuResourceActionHelperExecutesAllowedActionAndWritesResult(t *testi
 	}
 	if !strings.Contains(string(data), `"status": "success"`) || !strings.Contains(string(data), `"token": "DOCXtoken123"`) {
 		t.Fatalf("unexpected result json:\n%s", string(data))
+	}
+}
+
+func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testing.T) {
+	root := t.TempDir()
+	if err := WriteFeishuResourceActionContext(root, "om_text", nil); err != nil {
+		t.Fatalf("WriteFeishuResourceActionContext() error = %v", err)
+	}
+	actionPath := writeFeishuActionFile(t, root, "act_create", `{
+		"operation": "docx.create",
+		"title": "新文档",
+		"markdown": "# 新文档\n\nhello"
+	}`)
+
+	var gotTitle string
+	helper := NewFeishuResourceActionHelper(root, func(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
+		gotTitle = action.Title
+		return &FeishuResourceWriteResult{
+			Operation: action.Operation,
+			URL:       "https://anycap.feishu.cn/docx/DOCXnew123",
+			Kind:      FeishuResourceKindDocx,
+			Token:     "DOCXnew123",
+			Title:     action.Title,
+		}, nil
+	})
+	result, err := helper.ExecuteOutboxAction(context.Background(), actionPath)
+	if err != nil {
+		t.Fatalf("ExecuteOutboxAction() error = %v", err)
+	}
+	if gotTitle != "新文档" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationDocxCreate) || result.Title != "新文档" {
+		t.Fatalf("unexpected create title=%q result=%+v", gotTitle, result)
+	}
+
+	data, err := os.ReadFile(filepath.Join(root, "results", "act_create.json"))
+	if err != nil {
+		t.Fatalf("ReadFile(result) error = %v", err)
+	}
+	if !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXnew123"`) || !strings.Contains(string(data), `"title": "新文档"`) {
+		t.Fatalf("unexpected create result json:\n%s", string(data))
 	}
 }
 

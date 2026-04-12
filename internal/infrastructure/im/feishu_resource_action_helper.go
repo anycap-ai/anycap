@@ -34,6 +34,7 @@ type FeishuResourceActionResult struct {
 	URL               string                        `json:"url,omitempty"`
 	Kind              string                        `json:"kind,omitempty"`
 	Token             string                        `json:"token,omitempty"`
+	Title             string                        `json:"title,omitempty"`
 	Headings          []FeishuDocxHeadingInspection `json:"headings,omitempty"`
 	DuplicateHeadings []string                      `json:"duplicate_headings,omitempty"`
 	Verification      *FeishuDocxHeadingInspection  `json:"verification,omitempty"`
@@ -153,6 +154,7 @@ func (h *FeishuResourceActionHelper) ExecuteOutboxAction(ctx context.Context, ac
 		result.URL = writeResult.URL
 		result.Kind = string(writeResult.Kind)
 		result.Token = writeResult.Token
+		result.Title = writeResult.Title
 		result.Headings = writeResult.Headings
 		result.DuplicateHeadings = writeResult.DuplicateHeadings
 		result.Verification = writeResult.Verification
@@ -197,6 +199,9 @@ func (h *FeishuResourceActionHelper) ProcessOutboxOnce(ctx context.Context) ([]*
 }
 
 func (h *FeishuResourceActionHelper) requireAllowedURL(action FeishuResourceWriteAction) error {
+	if action.Operation == FeishuResourceWriteOperationDocxCreate {
+		return nil
+	}
 	data, err := os.ReadFile(filepath.Join(h.root, "context.json"))
 	if err != nil {
 		return fmt.Errorf("read feishu action context: %w", err)
@@ -264,7 +269,8 @@ func feishuResourceActionInstructions() string {
 Use this directory to request constrained Feishu resource actions from the local daemon.
 
 Rules:
-- Only use URLs listed in context.json.
+- Only use URLs listed in context.json for writes to existing Feishu resources.
+- docx.create is the only operation that does not require url. Include source_url from context.json when possible so the result can infer the tenant docx URL.
 - Write action JSON to outbox/<action_id>.tmp first, then atomically rename it to outbox/<action_id>.json.
 - Wait for results/<action_id>.json before reporting the action result.
 - Inspect before positioning writes: use docx.inspect_headings before docx.append_under_heading or docx.replace_heading_section when you are not certain about the target heading.
@@ -272,6 +278,14 @@ Rules:
 - After docx.append_under_heading or docx.replace_heading_section, read verification and verification_error from the result. verification_error is non-blocking: the write may have succeeded even if verification failed.
 
 Docx examples:
+
+Create a new docx:
+{
+  "operation": "docx.create",
+  "title": "新文档标题",
+  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123",
+  "markdown": "# 新文档标题\n\n正文内容"
+}
 
 Inspect headings:
 {
@@ -298,6 +312,7 @@ Replace a heading section:
 }
 
 Other supported operations:
+- docx.create
 - docx.append_section
 - docx.append_markdown
 - sheet.append_rows

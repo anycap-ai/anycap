@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 type FeishuResourceWriteOperation string
 
 const (
+	FeishuResourceWriteOperationDocxCreate                FeishuResourceWriteOperation = "docx.create"
 	FeishuResourceWriteOperationDocxAppendSection         FeishuResourceWriteOperation = "docx.append_section"
 	FeishuResourceWriteOperationDocxAppendMarkdown        FeishuResourceWriteOperation = "docx.append_markdown"
 	FeishuResourceWriteOperationDocxAppendUnderHeading    FeishuResourceWriteOperation = "docx.append_under_heading"
@@ -33,7 +35,9 @@ const (
 type FeishuResourceWriteAction struct {
 	Operation    FeishuResourceWriteOperation `json:"operation"`
 	URL          string                       `json:"url"`
+	SourceURL    string                       `json:"source_url,omitempty"`
 	Ref          FeishuResourceRef            `json:"-"`
+	Title        string                       `json:"title,omitempty"`
 	SectionTitle string                       `json:"section_title,omitempty"`
 	Heading      string                       `json:"heading,omitempty"`
 	HeadingLevel int                          `json:"heading_level,omitempty"`
@@ -55,10 +59,17 @@ type FeishuResourceWriteResult struct {
 	URL               string
 	Kind              FeishuResourceKind
 	Token             string
+	Title             string
 	Headings          []FeishuDocxHeadingInspection
 	DuplicateHeadings []string
 	Verification      *FeishuDocxHeadingInspection
 	VerificationError string
+}
+
+type FeishuDocxCreateResult struct {
+	DocumentID string
+	Title      string
+	URL        string
 }
 
 type FeishuDocxHeadingInspection struct {
@@ -81,17 +92,21 @@ func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, err
 	}
 	action.Operation = FeishuResourceWriteOperation(strings.TrimSpace(string(action.Operation)))
 	action.URL = strings.TrimSpace(action.URL)
+	action.SourceURL = strings.TrimSpace(action.SourceURL)
+	action.Title = strings.TrimSpace(action.Title)
 	action.SectionTitle = strings.TrimSpace(action.SectionTitle)
 	action.Heading = strings.TrimSpace(action.Heading)
 	action.Markdown = strings.TrimSpace(action.Markdown)
 	action.Range = strings.TrimSpace(action.Range)
 	action.TableID = strings.TrimSpace(action.TableID)
 
-	ref, ok := parseFeishuResourceURL(action.URL)
-	if !ok {
-		return nil, model.ErrValidation("feishu write action requires an explicit supported Feishu resource URL")
+	if action.Operation != FeishuResourceWriteOperationDocxCreate {
+		ref, ok := parseFeishuResourceURL(action.URL)
+		if !ok {
+			return nil, model.ErrValidation("feishu write action requires an explicit supported Feishu resource URL")
+		}
+		action.Ref = ref
 	}
-	action.Ref = ref
 	if err := action.Validate(); err != nil {
 		return nil, err
 	}
@@ -100,6 +115,10 @@ func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, err
 
 func (a FeishuResourceWriteAction) Validate() error {
 	switch a.Operation {
+	case FeishuResourceWriteOperationDocxCreate:
+		if strings.TrimSpace(a.Title) == "" || strings.TrimSpace(a.Markdown) == "" {
+			return model.ErrValidation("docx create requires title and markdown")
+		}
 	case FeishuResourceWriteOperationDocxAppendSection:
 		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
 			return model.ErrValidation("docx write action requires a docx or wiki URL")
@@ -188,6 +207,26 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 	}
 	if err := action.Validate(); err != nil {
 		return nil, err
+	}
+	if action.Operation == FeishuResourceWriteOperationDocxCreate {
+		if a.createDocx == nil {
+			return nil, model.ErrNotConfigured("feishu docx creator is not configured")
+		}
+		created, err := a.createDocx(ctx, action.Title, action.Markdown, action.SourceURL)
+		if err != nil {
+			return nil, err
+		}
+		result := &FeishuResourceWriteResult{
+			Operation: action.Operation,
+			Kind:      FeishuResourceKindDocx,
+			Title:     action.Title,
+		}
+		if created != nil {
+			result.Token = strings.TrimSpace(created.DocumentID)
+			result.Title = firstNonEmpty(created.Title, result.Title)
+			result.URL = strings.TrimSpace(created.URL)
+		}
+		return result, nil
 	}
 	token, err := a.resolveFeishuResourceWriteToken(ctx, action)
 	if err != nil {
@@ -355,6 +394,56 @@ func (a *FeishuAdapter) inspectDocxHeadingsViaAPI(ctx context.Context, documentI
 	}
 	result := inspectFeishuDocxHeadings(children)
 	return &result, nil
+}
+
+func (a *FeishuAdapter) createDocxViaAPI(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	title = strings.TrimSpace(title)
+	markdown = strings.TrimSpace(markdown)
+	if title == "" || markdown == "" {
+		return nil, model.ErrValidation("feishu docx create requires title and markdown")
+	}
+	createReq := larkdocx.NewCreateDocumentReqBuilder().
+		Body(larkdocx.NewCreateDocumentReqBodyBuilder().
+			Title(title).
+			Build()).
+		Build()
+	createResp, err := a.larkClient.Docx.Document.Create(ctx, createReq)
+	if err != nil {
+		return nil, classifyFeishuResourceReadError("create feishu docx", 0, err.Error(), err)
+	}
+	if !createResp.Success() {
+		return nil, classifyFeishuResourceReadError("create feishu docx", createResp.Code, createResp.Msg, nil)
+	}
+	if createResp.Data == nil || createResp.Data.Document == nil || strings.TrimSpace(stringPtrValue(createResp.Data.Document.DocumentId)) == "" {
+		return nil, model.ErrValidation("feishu docx create returned no document_id")
+	}
+	documentID := strings.TrimSpace(stringPtrValue(createResp.Data.Document.DocumentId))
+	if err := a.appendDocxMarkdownBlocksViaAPI(ctx, documentID, markdown); err != nil {
+		return nil, err
+	}
+	return &FeishuDocxCreateResult{
+		DocumentID: documentID,
+		Title:      firstNonEmpty(stringPtrValue(createResp.Data.Document.Title), title),
+		URL:        inferCreatedFeishuDocxURL(documentID, sourceURL),
+	}, nil
+}
+
+func inferCreatedFeishuDocxURL(documentID string, sourceURL string) string {
+	documentID = strings.TrimSpace(documentID)
+	if documentID == "" {
+		return ""
+	}
+	parsed, err := url.Parse(strings.TrimSpace(sourceURL))
+	if err != nil || parsed == nil || parsed.Scheme == "" || parsed.Host == "" {
+		return ""
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return ""
+	}
+	return (&url.URL{Scheme: parsed.Scheme, Host: parsed.Host, Path: "/docx/" + documentID}).String()
 }
 
 func (a *FeishuAdapter) appendDocxMarkdownBlocksAtIndexViaAPI(ctx context.Context, documentID string, markdown string, index int) error {

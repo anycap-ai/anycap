@@ -64,6 +64,19 @@ func TestParseFeishuResourceWriteActionDocxInspectHeadings(t *testing.T) {
 	}
 }
 
+func TestParseFeishuResourceWriteActionDocxCreate(t *testing.T) {
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "docx.create",
+		"title": "新文档",
+		"source_url": "https://anycap.feishu.cn/wiki/WIKInode456",
+		"markdown": "# 新文档\n\nhello"
+	}`)
+
+	if action.Operation != FeishuResourceWriteOperationDocxCreate || action.Title != "新文档" || action.SourceURL != "https://anycap.feishu.cn/wiki/WIKInode456" || action.Markdown != "# 新文档\n\nhello" {
+		t.Fatalf("unexpected action %+v", action)
+	}
+}
+
 func TestParseFeishuResourceWriteActionSheetAppendRows(t *testing.T) {
 	action := parseFeishuResourceWriteActionJSON(t, `{
 		"operation": "sheet.append_rows",
@@ -344,6 +357,39 @@ func TestExecuteFeishuResourceWriteInspectHeadingsUsesInjectedInspector(t *testi
 	}
 }
 
+func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
+	var gotTitle, gotMarkdown, gotSourceURL string
+	adapter := &FeishuAdapter{
+		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+			gotTitle = title
+			gotMarkdown = markdown
+			gotSourceURL = sourceURL
+			return &FeishuDocxCreateResult{
+				DocumentID: "DOCXnew123",
+				Title:      title,
+				URL:        "https://anycap.feishu.cn/docx/DOCXnew123",
+			}, nil
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "docx.create",
+		"title": "新文档",
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource",
+		"markdown": "# 新文档\n\nhello"
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if gotTitle != "新文档" || gotMarkdown != "# 新文档\n\nhello" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
+		t.Fatalf("unexpected creator input title=%q markdown=%q sourceURL=%q", gotTitle, gotMarkdown, gotSourceURL)
+	}
+	if result.Operation != FeishuResourceWriteOperationDocxCreate || result.Token != "DOCXnew123" || result.URL != "https://anycap.feishu.cn/docx/DOCXnew123" || result.Title != "新文档" {
+		t.Fatalf("unexpected create result %+v", result)
+	}
+}
+
 func TestExecuteFeishuResourceWriteAppendSheetRowsUsesInjectedWriter(t *testing.T) {
 	var gotToken, gotRange string
 	var gotRows [][]any
@@ -551,6 +597,71 @@ func TestFeishuAdapterAppendDocxMarkdownConvertsAndAppendsDescendants(t *testing
 	}
 	if _, ok := property["merge_info"]; ok {
 		t.Fatalf("merge_info should be stripped before descendant append, got %#v", property)
+	}
+}
+
+func TestFeishuAdapterCreateDocxViaAPICreatesAndWritesMarkdown(t *testing.T) {
+	var createBody map[string]any
+	var convertBody map[string]any
+	var descendantBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/open-apis/auth/v3/tenant_access_token/internal":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"tenant_access_token":"tenant_token","expire":7200}`))
+		case "/open-apis/docx/v1/documents":
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected create method %s", r.Method)
+			}
+			if err := json.NewDecoder(r.Body).Decode(&createBody); err != nil {
+				t.Fatalf("Decode(create body) error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"data":{"document":{"document_id":"DOCXnew123","title":"新文档"}}}`))
+		case "/open-apis/docx/v1/documents/blocks/convert":
+			if err := json.NewDecoder(r.Body).Decode(&convertBody); err != nil {
+				t.Fatalf("Decode(convert body) error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+				"code": 0,
+				"data": {
+					"first_level_block_ids": ["tmp_heading"],
+					"blocks": [
+						{"block_id": "tmp_heading", "block_type": 3, "heading1": {"elements": [{"text_run": {"content": "新文档"}}]}}
+					]
+				}
+			}`))
+		case "/open-apis/docx/v1/documents/DOCXnew123/blocks/DOCXnew123/descendant":
+			if err := json.NewDecoder(r.Body).Decode(&descendantBody); err != nil {
+				t.Fatalf("Decode(descendant body) error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"data":{"document_revision_id":1}}`))
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{
+		AppID:          "cli_appid",
+		AppSecret:      "app_secret",
+		HTTPClient:     server.Client(),
+		OpenAPIBaseURL: server.URL,
+	})
+
+	result, err := adapter.createDocxViaAPI(context.Background(), "新文档", "# 新文档", "https://anycap.feishu.cn/wiki/WIKInode456")
+	if err != nil {
+		t.Fatalf("createDocxViaAPI() error = %v", err)
+	}
+	if createBody["title"] != "新文档" || convertBody["content"] != "# 新文档" {
+		t.Fatalf("unexpected create/convert body create=%#v convert=%#v", createBody, convertBody)
+	}
+	if descendantBody["index"].(float64) != -1 {
+		t.Fatalf("unexpected descendant body %#v", descendantBody)
+	}
+	if result.DocumentID != "DOCXnew123" || result.Title != "新文档" || result.URL != "https://anycap.feishu.cn/docx/DOCXnew123" {
+		t.Fatalf("unexpected create result %+v", result)
 	}
 }
 
