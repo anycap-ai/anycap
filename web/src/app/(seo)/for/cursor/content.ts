@@ -4,6 +4,7 @@ import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const FOR_CURSOR_PATH = "/for/cursor";
+const CURSOR_POSTER_URL = "https://cdn.anycap.ai/page_resource/seo-images/cursor-capability-flow.png";
 
 const LAST_UPDATED_ISO = "2026-04-05";
 
@@ -875,7 +876,7 @@ export function getForCursorPageData(locale: SiteLocale) {
       contentUrl: "https://cdn.anycap.ai/page_resource/for_agent/for_cursor.mp4",
       uploadDate: "2026-04-03",
       duration: "PT48S",
-      thumbnailUrl: `${siteConfig.url}/opengraph-image`,
+      thumbnailUrl: CURSOR_POSTER_URL,
     },
     howToJsonLd: {
       "@context": "https://schema.org",

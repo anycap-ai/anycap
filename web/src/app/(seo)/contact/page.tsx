@@ -3,110 +3,26 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale } from "@/lib/site";
+import { CONTACT_PATH, getContactMetadata, getContactPageData } from "./content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const lastUpdatedLabel = "April 9, 2026";
-const sectionTitleClass =
-  "text-[22px] leading-8 tracking-[-0.01em] text-[#1c1f17] md:text-[26px]";
-const subTitleClass =
-  "text-[18px] leading-7 tracking-[-0.01em] text-[#1c1f17] md:text-[20px]";
 const bodyClass = "text-base leading-7 text-[#4d5145]";
 const listClass =
   "mt-5 list-disc space-y-3 pl-5 text-base leading-7 text-[#4d5145] marker:text-[#6b7d3a]";
 const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4";
 const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
-export const metadata: Metadata = {
-  title: "Contact AnyCap - Support, pricing, and issue reporting",
-  description:
-    "Contact AnyCap for install help, pricing questions, bug reports, security or privacy questions, and product feedback.",
-  alternates: { canonical: "/contact" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/contact",
-    siteName: siteConfig.siteName,
-    title: "Contact AnyCap - Support, pricing, and issue reporting",
-    description:
-      "Find the best path for AnyCap support, pricing questions, bug reports, and security or privacy requests.",
-  },
-};
-
-const contactPageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ContactPage",
-  name: "Contact AnyCap",
-  description:
-    "Contact AnyCap for support, pricing, product questions, security reporting, and privacy requests.",
-  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
-  mainEntity: {
-    "@type": "Organization",
-    name: siteConfig.siteName,
-    url: siteConfig.url,
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
-      },
-    ],
-  },
-};
-
-type ContactRoute =
-  | {
-      title: string;
-      detail: string;
-      ctaLabel: string;
-      ctaKind: "link";
-      ctaHref: string;
-    }
-  | {
-      title: string;
-      detail: string;
-      ctaLabel: string;
-      ctaKind: "email";
-      ctaSubject?: string;
-    };
-
-const contactRoutes: readonly ContactRoute[] = [
-  {
-    title: "Product support and install help",
-    detail:
-      "If you are trying to get your first workflow running, start with the install guide and include the agent, capability, and exact step that failed.",
-    ctaLabel: "Open install guide",
-    ctaKind: "link",
-    ctaHref: "/guides/install-anycap",
-  },
-  {
-    title: "Bug reports and regressions",
-    detail:
-      "For reproducible bugs, GitHub issues are the best path because they keep stack traces, environment details, and screenshots in one public thread.",
-    ctaLabel: "Open GitHub issues",
-    ctaKind: "link",
-    ctaHref: "https://github.com/anycap-ai/anycap/issues",
-  },
-  {
-    title: "Pricing and enterprise questions",
-    detail:
-      "If you need larger credit volume, invoiced billing, or product fit clarification, contact the team directly by email.",
-    ctaLabel: "Email the team",
-    ctaKind: "email",
-    ctaSubject: "AnyCap Enterprise pricing",
-  },
-] as const;
-
-const supportChecklist = [
-  "Which agent you are using, such as Claude Code, Cursor, Codex, or Manus",
-  "Which capability or page you were trying to use",
-  "The expected output and the actual result",
-  "Any relevant error message, request ID, or screenshot",
-  "Whether the problem is blocking production, evaluation, or a one-off test",
-] as const;
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  CONTACT_PATH,
+  getContactMetadata(defaultLocale),
+);
 
 function ContactLink({
   href,
@@ -119,8 +35,8 @@ function ContactLink({
     return (
       <a
         href={href}
-        target={href.startsWith("http") ? "_blank" : undefined}
-        rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+        target="_blank"
+        rel="noopener noreferrer"
         className={linkClass}
       >
         {children}
@@ -144,39 +60,43 @@ function PageSection({
 }) {
   return (
     <section className="mt-14 md:mt-16">
-      <h2 className={sectionTitleClass}>{title}</h2>
+      <h2 className="text-[22px] leading-8 tracking-[-0.01em] text-[#1c1f17] md:text-[26px]">
+        {title}
+      </h2>
       <div className="mt-5 space-y-5">{children}</div>
     </section>
   );
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const locale = await getRequestLocale();
+  const content = getContactPageData(locale);
+
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Contact", href: "/contact" }]} />
+      <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.contactPageJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[820px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              Contact
+              {content.eyebrow}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Get in touch with the AnyCap team.
+              {content.heroTitle}
             </h1>
             <p className="mt-6 max-w-[760px] text-base leading-7 text-[#4d5145] md:text-lg">
-              Use this page when you need install help, pricing clarification, product fit
-              questions, bug reporting paths, or a clear route for security and privacy requests.
+              {content.heroIntro}
             </p>
             <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
-              Last updated {lastUpdatedLabel}
+              {content.lastUpdatedLabel}
             </p>
           </FadeIn>
 
@@ -185,11 +105,13 @@ export default function ContactPage() {
           </div>
 
           <FadeIn>
-            <PageSection title="Best route by question">
+            <PageSection title={content.routesTitle}>
               <div className="space-y-6">
-                {contactRoutes.map((route) => (
+                {content.contactRoutes.map((route) => (
                   <div key={route.title}>
-                    <h3 className={subTitleClass}>{route.title}</h3>
+                    <h3 className="text-[18px] leading-7 tracking-[-0.01em] text-[#1c1f17] md:text-[20px]">
+                      {route.title}
+                    </h3>
                     <p className={`${bodyClass} mt-2`}>
                       {route.detail}{" "}
                       {route.ctaKind === "email" ? (
@@ -212,9 +134,9 @@ export default function ContactPage() {
           </FadeIn>
 
           <FadeIn>
-            <PageSection title="Include this when you reach out">
+            <PageSection title={content.checklistTitle}>
               <ul className={listClass}>
-                {supportChecklist.map((item) => (
+                {content.supportChecklist.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -222,29 +144,30 @@ export default function ContactPage() {
           </FadeIn>
 
           <FadeIn>
-            <PageSection title="Direct contact">
+            <PageSection title={content.directTitle}>
               <p className={bodyClass}>
-                Email{" "}
+                {content.directBody1}{" "}
                 <EmailActionButton
+                  subject="AnyCap support request"
                   className={buttonLinkClass}
                   aria-label="Email the AnyCap team"
                 >
                   the AnyCap team
-                </EmailActionButton>{" "}
-                for pricing
-                conversations, privacy requests, or any issue that should not live in a public
-                GitHub thread.
+                </EmailActionButton>
+                .
               </p>
               <p className={bodyClass}>
-                If the issue comes from a live workflow, you can also use the{" "}
+                {content.directBody2}{" "}
                 <ContactLink href="/cli">CLI surface</ContactLink> or route details through the
-                public <ContactLink href="https://github.com/anycap-ai/anycap/issues">GitHub issue tracker</ContactLink>.
+                public{" "}
+                <ContactLink href="https://github.com/anycap-ai/anycap/issues">
+                  GitHub issue tracker
+                </ContactLink>
+                .
               </p>
               <p className={bodyClass}>
-                For install help, start with the{" "}
-                <ContactLink href="/guides/install-anycap">install guide</ContactLink>. For product
-                and plan context, review the{" "}
-                <ContactLink href="/pricing">pricing page</ContactLink>.
+                {content.directBody3} <ContactLink href="/guides/install-anycap">install guide</ContactLink>.{" "}
+                For product and plan context, review the <ContactLink href="/pricing">pricing page</ContactLink>.
               </p>
             </PageSection>
           </FadeIn>
