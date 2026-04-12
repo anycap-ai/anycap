@@ -49,6 +49,7 @@ func TestFeishuResourceActionHelperWritesContextAndInstructions(t *testing.T) {
 		`"operation": "docx.create"`,
 		`"operation": "sheet.create"`,
 		`"operation": "bitable.create"`,
+		`"values": [["项目", "金额"], ["咖啡", 10]]`,
 		`"folder_token": "fldcn123"`,
 		`"operation": "docx.inspect_headings"`,
 		`"operation": "docx.append_under_heading"`,

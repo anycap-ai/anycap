@@ -362,7 +362,9 @@ Create a new sheet:
   "operation": "sheet.create",
   "title": "新表格标题",
   "folder_token": "fldcn123",
-  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123"
+  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123",
+  "range": "Sheet1!A1:B2",
+  "values": [["项目", "金额"], ["咖啡", 10]]
 }
 
 Create a new bitable:

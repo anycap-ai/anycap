@@ -141,6 +141,9 @@ func (a FeishuResourceWriteAction) Validate() error {
 		if strings.TrimSpace(a.Title) == "" {
 			return model.ErrValidation("sheet create requires title")
 		}
+		if len(a.Values) > 0 && strings.TrimSpace(a.Range) == "" {
+			return model.ErrValidation("sheet create with values requires range")
+		}
 	case FeishuResourceWriteOperationDocxAppendSection:
 		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
 			return model.ErrValidation("docx write action requires a docx or wiki URL")
@@ -283,6 +286,14 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 			result.Token = strings.TrimSpace(created.SpreadsheetToken)
 			result.Title = firstNonEmpty(created.Title, result.Title)
 			result.URL = strings.TrimSpace(created.URL)
+		}
+		if len(action.Values) > 0 {
+			if a.updateSheetRange == nil {
+				return nil, model.ErrNotConfigured("feishu sheet writer is not configured")
+			}
+			if err := a.updateSheetRange(ctx, result.Token, action.Range, action.Values); err != nil {
+				return nil, err
+			}
 		}
 		return result, nil
 	}

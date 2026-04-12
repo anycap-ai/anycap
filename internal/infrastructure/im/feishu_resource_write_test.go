@@ -83,10 +83,12 @@ func TestParseFeishuResourceWriteActionSheetCreate(t *testing.T) {
 		"operation": "sheet.create",
 		"title": "新表格",
 		"folder_token": "fldcn123",
-		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource",
+		"range": "Sheet1!A1:B2",
+		"values": [["item", "cost"], ["coffee", 10]]
 	}`)
 
-	if action.Operation != FeishuResourceWriteOperationSheetCreate || action.Title != "新表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
+	if action.Operation != FeishuResourceWriteOperationSheetCreate || action.Title != "新表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" || action.Range != "Sheet1!A1:B2" || len(action.Values) != 2 {
 		t.Fatalf("unexpected action %+v", action)
 	}
 }
@@ -159,6 +161,16 @@ func TestParseFeishuResourceWriteActionBitableUpdateRecords(t *testing.T) {
 func TestParseFeishuResourceWriteActionRejectsMissingURL(t *testing.T) {
 	if _, err := ParseFeishuResourceWriteAction([]byte(`{"operation":"sheet.append_rows","rows":[["x"]]}`)); err == nil {
 		t.Fatal("expected missing url to be rejected")
+	}
+}
+
+func TestParseFeishuResourceWriteActionRejectsSheetCreateValuesWithoutRange(t *testing.T) {
+	if _, err := ParseFeishuResourceWriteAction([]byte(`{
+		"operation": "sheet.create",
+		"title": "新表格",
+		"values": [["item", "cost"]]
+	}`)); err == nil {
+		t.Fatal("expected sheet create values without range to be rejected")
 	}
 }
 
@@ -480,6 +492,43 @@ func TestExecuteFeishuResourceWriteCreateSheetUsesInjectedCreator(t *testing.T) 
 		t.Fatalf("unexpected creator input title=%q sourceURL=%q folderToken=%q", gotTitle, gotSourceURL, gotFolderToken)
 	}
 	if result.Operation != FeishuResourceWriteOperationSheetCreate || result.Kind != FeishuResourceKindSheet || result.Token != "SHEETnew123" || result.URL != "https://anycap.feishu.cn/sheets/SHEETnew123" || result.Title != "新表格" {
+		t.Fatalf("unexpected create sheet result %+v", result)
+	}
+}
+
+func TestExecuteFeishuResourceWriteCreateSheetWritesInitialValues(t *testing.T) {
+	var gotUpdateToken, gotRange string
+	var gotValues [][]any
+	adapter := &FeishuAdapter{
+		createSheet: func(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuSheetCreateResult, error) {
+			return &FeishuSheetCreateResult{
+				SpreadsheetToken: "SHEETnew123",
+				Title:            title,
+				URL:              "https://anycap.feishu.cn/sheets/SHEETnew123",
+			}, nil
+		},
+		updateSheetRange: func(ctx context.Context, spreadsheetToken string, rangeStr string, values [][]any) error {
+			gotUpdateToken = spreadsheetToken
+			gotRange = rangeStr
+			gotValues = values
+			return nil
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "sheet.create",
+		"title": "新表格",
+		"range": "Sheet1!A1:B2",
+		"values": [["item", "cost"], ["coffee", 10]]
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if gotUpdateToken != "SHEETnew123" || gotRange != "Sheet1!A1:B2" || len(gotValues) != 2 {
+		t.Fatalf("unexpected initial values write token=%q range=%q values=%+v", gotUpdateToken, gotRange, gotValues)
+	}
+	if result.Operation != FeishuResourceWriteOperationSheetCreate || result.Token != "SHEETnew123" {
 		t.Fatalf("unexpected create sheet result %+v", result)
 	}
 }
