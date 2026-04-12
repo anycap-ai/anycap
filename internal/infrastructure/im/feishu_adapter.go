@@ -39,6 +39,10 @@ type FeishuAdapter struct {
 	getMessage              func(context.Context, string) (*larkim.Message, error)
 	listMessages            func(context.Context, string, string, int) ([]*larkim.Message, error)
 	downloadMessageResource func(context.Context, string, string, string) (*DownloadedMessageResource, error)
+	readDocxRawContent      func(context.Context, string) (*FeishuDocxReadResult, error)
+	readWikiNode            func(context.Context, string) (*FeishuWikiNodeResult, error)
+	readSheetPreview        func(context.Context, string, FeishuSheetReadOptions) (*FeishuSheetReadResult, error)
+	readBitablePreview      func(context.Context, string, FeishuBitableReadOptions) (*FeishuBitableReadResult, error)
 }
 
 type DownloadedMessageResource struct {
@@ -63,6 +67,10 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 	adapter.getMessage = adapter.getMessageViaAPI
 	adapter.listMessages = adapter.listMessagesViaAPI
 	adapter.downloadMessageResource = adapter.downloadMessageResourceViaAPI
+	adapter.readDocxRawContent = adapter.readDocxRawContentViaAPI
+	adapter.readWikiNode = adapter.readWikiNodeViaAPI
+	adapter.readSheetPreview = adapter.readSheetPreviewViaAPI
+	adapter.readBitablePreview = adapter.readBitablePreviewViaAPI
 	return adapter
 }
 
