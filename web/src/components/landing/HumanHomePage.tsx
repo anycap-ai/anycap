@@ -23,15 +23,17 @@ const homeWebPageJsonLd = {
   name: "AnyCap | AI Agent Capabilities Through One CLI",
   url: siteConfig.url,
   description:
-    "AnyCap gives coding agents one install path, one login, and one CLI for media generation, media understanding, web retrieval, storage, and publishing workflows.",
+    "AnyCap gives agent users one install path, one login, and one CLI for media generation, media understanding, web retrieval, storage, and publishing workflows.",
   isPartOf: {
     "@id": websiteId,
   },
   about: [
     { "@type": "Thing", name: "AI agents" },
-    { "@type": "Thing", name: "Coding agents" },
+    { "@type": "Thing", name: "Agent users" },
+    { "@type": "Thing", name: "Creators" },
+    { "@type": "Thing", name: "Power users" },
     { "@type": "Thing", name: "Agent capabilities" },
-    { "@type": "Thing", name: "Developer tools" },
+    { "@type": "Thing", name: "Capability runtimes" },
   ],
   primaryImageOfPage: {
     "@type": "ImageObject",
@@ -46,7 +48,7 @@ const homeSoftwareApplicationJsonLd = {
   ...createSoftwareApplicationJsonLd({
     name: "AnyCap",
     description:
-      "Open-source AI agent capability runtime for coding agents. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
+      "Open-source AI agent capability runtime for agent users, builders, creators, and power users. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
     path: "/",
     installUrl: `${siteConfig.url}/install.sh`,
   }),
@@ -61,7 +63,9 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 const capabilities = ["Image", "Video", "Music", "Voice", "Vision", "Pages"];
 const popularPaths = [
   { href: "/start", label: "Start here" },
+  { href: "/skills", label: "Skills" },
   { href: "/capabilities", label: "Capabilities" },
+  { href: "/guides/mcp-vs-skills", label: "MCP vs Skills" },
   { href: "/pricing", label: "Pricing" },
   { href: "/for/codex", label: "For Codex" },
 ] as const;
@@ -97,9 +101,9 @@ export function HumanHomePage() {
                 Your Agent can do anything. It just needs AnyCap.
               </span>
               <span aria-hidden>
-                <ScrambleText text="Your" speed={30} ticks={3} />{" "}
+              <ScrambleText text="Your" speed={30} ticks={3} />{" "}
                 <ScrambleText
-                  text="Agent"
+                  text="agent"
                   className="text-[#6b7d3a]"
                   style={{ fontSize: "1.08em" }}
                   speed={30}
@@ -108,7 +112,7 @@ export function HumanHomePage() {
                 <br />
                 <ScrambleText text="can" speed={30} ticks={3} />{" "}
                 <ScrambleText text="do" speed={30} ticks={3} />{" "}
-                <ScrambleText text="anything." speed={30} ticks={3} />
+                <ScrambleText text="more." speed={30} ticks={3} />
                 <br />
                 <ScrambleText text="It" speed={30} ticks={3} />{" "}
                 <ScrambleText text="just" speed={30} ticks={3} />{" "}
@@ -123,9 +127,10 @@ export function HumanHomePage() {
               </span>
             </h1>
             <p className="mt-5 max-w-[700px] text-[15px] leading-6 text-[#4d5145] sm:text-base sm:leading-7 md:text-lg">
-              Your agent can reason and code, but it can&apos;t create images, produce
-              videos, or publish sites. AnyCap gives it any capability it&apos;s
-              missing&nbsp;&mdash; with one install.
+              Your agent can reason and code, but it can&apos;t create images, produce videos,
+              search the web, inspect media, or publish pages on its own. AnyCap gives your
+              agent the missing capability layer&nbsp;&mdash; with one install, one auth flow, and
+              one CLI.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <div className="flex w-full justify-start sm:w-auto">

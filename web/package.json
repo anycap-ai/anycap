@@ -9,6 +9,7 @@
     "dev": "pnpm run sync:seo-locales && next dev --turbopack",
     "check:edge-runtime": "node ./scripts/ensure-edge-runtime.mjs",
     "check:seo-breadcrumbs": "node ./scripts/check-seo-breadcrumbs.mjs",
+    "check:seo-locale-rollout": "node ./scripts/check-seo-locale-rollout.mjs",
     "check:seo-ia": "node ./scripts/check-seo-information-architecture.mjs",
     "generate:sitemap-lastmod": "node ./scripts/generate-sitemap-lastmod.mjs",
     "publish:indexnow": "node ./scripts/publish-indexnow.mjs",

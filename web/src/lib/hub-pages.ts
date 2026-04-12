@@ -52,16 +52,21 @@ export const hubPages: Record<HubPageDefinition["key"], HubPageDefinition> = {
     path: "/guides",
     title: "Guides — Practical setup and implementation help for AnyCap",
     description:
-      "Browse AnyCap guides for installation, agent context engineering, tool wiring, and implementation patterns for developer tools.",
+      "Browse AnyCap guides for installation, agent context engineering, tool wiring, and implementation patterns for agent users, creators, and builders.",
     eyebrow: "Guides",
-    heroLines: ["Practical guides", "for agent teams."],
+    heroLines: ["Practical guides", "for agent teams and creators."],
     intro:
-      "These guides cover setup, context design, tool integration, and working patterns for teams building agents with AnyCap.",
+      "These guides cover setup, context design, tool integration, and working patterns for teams and creators using agents with AnyCap.",
     items: [
       {
         title: "Install AnyCap",
         href: "/guides/install-anycap",
         description: "Install the CLI, authenticate once, and verify the capability runtime is ready.",
+      },
+      {
+        title: "MCP vs Skills",
+        href: "/guides/mcp-vs-skills",
+        description: "Understand when you need the protocol layer, the instruction layer, or both for an agent workflow.",
       },
       {
         title: "Add Tools to Claude Code",

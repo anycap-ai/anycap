@@ -97,10 +97,10 @@ export const adjacentWorkflowSummary =
 export const roadmapCapabilitySummary = "speech, sandbox, and browser automation";
 
 export const defaultSiteDescription =
-  "AnyCap gives coding agents one install path, one auth flow, and one CLI for image generation, video generation, and vision workflows.";
+  "AnyCap gives agent users one install path, one auth flow, and one CLI for image generation, video generation, vision, search, storage, and publishing workflows.";
 
 export const defaultSocialImageAlt =
-  "AnyCap adds image, video, and vision capabilities to coding agents through one CLI.";
+  "AnyCap adds image, video, vision, search, storage, and publishing capabilities to AI agents.";
 
 export const siteConfig = {
   name: "AnyCap",
@@ -322,6 +322,7 @@ const manualPublicRouteDefinitions = [
     priority: 0.78,
   },
   { key: "guides-add-tools-to-claude-code", kind: "seo", path: "/guides/add-tools-to-claude-code", priority: 0.84 },
+  { key: "guides-mcp-vs-skills", kind: "seo", path: "/guides/mcp-vs-skills", priority: 0.86 },
   {
     key: "guides-install-anycap",
     kind: "seo",

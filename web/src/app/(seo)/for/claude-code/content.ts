@@ -12,7 +12,7 @@ export const FOR_CLAUDE_CODE_PATH = "/for/claude-code";
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
 const LAST_UPDATED_ISO = "2026-04-05";
 const DATE_PUBLISHED_ISO = "2026-04-03";
-const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
+const CLAUDE_CODE_POSTER_URL = "https://cdn.anycap.ai/page_resource/seo-images/claude-code-capability-stack.png";
 
 type GapDefinition = {
   capability: string;
@@ -245,7 +245,7 @@ function createPageContent(
     },
     demoVideo: {
       src: `${CDN_BASE}/for_claude_code2.mp4`,
-      poster: FALLBACK_THUMBNAIL_URL,
+      poster: CLAUDE_CODE_POSTER_URL,
       title: copy.demoVideoTitle,
       caption: copy.demoVideoCaption,
     },
@@ -289,7 +289,7 @@ function createPageContent(
       contentUrl: `${CDN_BASE}/for_claude_code2.mp4`,
       uploadDate: DATE_PUBLISHED_ISO,
       duration: "PT48S",
-      thumbnailUrl: FALLBACK_THUMBNAIL_URL,
+      thumbnailUrl: CLAUDE_CODE_POSTER_URL,
     },
     howToJsonLd: {
       "@context": "https://schema.org",

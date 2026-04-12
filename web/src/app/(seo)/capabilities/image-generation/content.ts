@@ -103,20 +103,21 @@ type ImageGenerationPageContent = {
 const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
   en: {
     metadata: {
-      title: "Image Generation API for AI agents - Text-to-image and image editing",
+      title: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
       description:
-        "Give AI agents image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
-      openGraphTitle: "Image Generation API for AI agents - Text-to-image and image editing",
+        "Give AI agents and creators image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
+      openGraphTitle: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
       openGraphDescription:
-        "Give AI agents image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
-      articleHeadline: "Image Generation API for AI agents - Text-to-image and image editing",
+        "Give AI agents and creators image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
+      articleHeadline: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
       articleDescription:
-        "Capability guide for using AnyCap image generation across AI agent workflows with Seedream 5, Nano Banana Pro, and Nano Banana 2.",
-      articleAbout: ["Image generation", "Text-to-image API", "Image editing API", "AnyCap"],
+        "Capability guide for using AnyCap image generation across AI agent, creator, and product workflows with Seedream 5, Nano Banana Pro, and Nano Banana 2.",
+      articleAbout: ["Image generation", "Text-to-image API", "Image editing API", "AnyCap", "Creators"],
       articleKeywords: [
         "image generation for ai agents",
         "text to image api",
         "image editing api",
+        "ai image generator",
         "seedream 5",
         "nano banana pro",
       ],
@@ -131,7 +132,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
     hero: {
       title: "Image Generation",
       intro:
-        "AnyCap image generation gives agents one CLI for text-to-image and image-to-image workflows. Agents can create net-new visuals, revise existing assets, and run image editing loops through a consistent interface instead of wiring a separate image generation API for every model or provider. That makes it a practical image generation layer for Claude Code, Cursor, Codex, and similar agent products.",
+        "AnyCap image generation gives agents, creators, and product teams one CLI for text-to-image and image-to-image workflows. You can create net-new visuals, revise existing assets, and run image editing loops through a consistent interface instead of wiring a separate image generation API for every model or provider. That makes it a practical image generation layer for Claude Code, Cursor, Codex, and anyone using agents to ship visual work faster.",
       summaryLabel: "Answer-first summary",
       summaryText:
         "Use Seedream 5 when the agent needs a stronger first-pass image, Nano Banana Pro when the workflow starts from an existing asset and needs targeted revisions, and Nano Banana 2 when speed and throughput matter more than maximizing polish on the first result.",
@@ -243,7 +244,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         code: "anycap image models",
       },
     ] as const,
-    useCasesTitle: "When agents need image generation",
+    useCasesTitle: "When agents and creators need image generation",
     useCases: [
       {
         title: "Product mockups",
@@ -254,17 +255,17 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         description: "Run text-to-image and image editing loops without leaving the agent workflow.",
       },
       {
-        title: "Content pipelines",
+        title: "Creators and marketers",
         description:
-          "Create illustrations, thumbnails, and marketing assets through one repeatable command surface.",
+          "Create illustrations, thumbnails, social posts, and marketing assets through one repeatable command surface.",
       },
       {
-        title: "Design support",
+        title: "Everyday edits",
         description:
-          "Turn briefs, screenshots, and references into first-pass visual directions for teams building with agents.",
+          "Turn briefs, screenshots, and references into first-pass visual directions, background swaps, and simple photo edits.",
       },
     ] as const,
-    relatedTitle: "Related models and guides",
+    relatedTitle: "Related models, guides, and workflows",
     relatedCards: [
       {
         eyebrow: "Model",
@@ -279,10 +280,16 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         description: "Explore a stronger fit for image editing and iterative visual refinement.",
       },
       {
-        eyebrow: "Agent page",
-        title: "For Claude Code",
-        href: "/for/claude-code",
-        description: "See how image generation fits into the broader Claude Code capability story.",
+        eyebrow: "Workflow",
+        title: "Create AI Influencer for Free",
+        href: "/learn/create-ai-influencer-for-free",
+        description: "See how image generation fits creator workflows beyond technical agent setup.",
+      },
+      {
+        eyebrow: "Workflow",
+        title: "How to Change Photo Background",
+        href: "/learn/how-to-change-photo-background",
+        description: "See how the same capability supports everyday photo edits and faster content production.",
       },
     ] as const,
     faqTitle: "FAQ",
@@ -307,6 +314,11 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         answer:
           "Both. Teams often search for an image generation API, a text-to-image API, or an image editing API, while implementation inside agent workflows often happens through the AnyCap CLI.",
       },
+      {
+        question: "Is this only for developers?",
+        answer:
+          "No. The same capability supports creators, marketers, operators, and everyday users who need product visuals, social content, thumbnails, or quick photo edits. The agent workflow is just one of the ways to reach it.",
+      },
     ] as const,
     nextStepsTitle: "Next steps",
     nextActions: [
@@ -318,6 +330,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       },
       { label: "Explore capabilities", href: "/capabilities" },
       { label: "Explore the CLI", href: "/cli" },
+      { label: "For creators", href: "/learn/create-ai-influencer-for-free" },
     ] as const,
   },
   "pt-br": {

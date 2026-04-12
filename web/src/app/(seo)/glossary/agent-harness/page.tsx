@@ -1,66 +1,53 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { defaultLocale } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { getAgentHarnessGlossaryMetadata, getAgentHarnessGlossaryPageData } from "../content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const content = getAgentHarnessGlossaryPageData(defaultLocale);
 
-export const metadata: Metadata = {
-  title: "What is an agent harness? The execution layer around AI agents",
-  description:
-    "An agent harness is the execution layer around an AI agent that provides tools, files, permissions, and runtime controls. Learn how it relates to the model and where AnyCap fits as a capability runtime.",
-  alternates: { canonical: "/glossary/agent-harness" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/glossary/agent-harness",
-    siteName: siteConfig.siteName,
-    title: "What is an agent harness? The execution layer around AI agents",
-    description:
-      "Learn what an agent harness is and where AnyCap fits as a capability runtime inside the agent stack.",
-  },
-};
-
-const definitionJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "DefinedTerm",
-  name: "Agent Harness",
-  description:
-    "The execution environment around an AI agent that provides tools, files, permissions, runtime state, and policy controls.",
-  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
-};
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  "/glossary/agent-harness",
+  getAgentHarnessGlossaryMetadata(defaultLocale),
+);
 
 export default function AgentHarnessGlossaryPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", href: "/" }, { name: "Glossary", href: "/glossary", unlinkable: true }, { name: "Agent Harness", href: "/glossary/agent-harness" }]} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definitionJsonLd) }} />
+      <BreadcrumbJsonLd items={content.breadcrumbItems} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.definitionJsonLd) }}
+      />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Glossary</p>
+            <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
+              {content.eyebrow}
+            </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
             >
-              What is an
+              {content.heroTitle[0]}
               <br />
-              agent harness?
+              {content.heroTitle[1]}
             </h1>
           </FadeIn>
 
           <FadeIn>
             <div className="mt-8 border-l-[3px] border-[#6b7d3a] pl-6 max-w-[720px]">
               <p className="text-base leading-7 text-[#4d5145] md:text-lg">
-                An agent harness is the execution layer around the model. It provides the files,
-                terminals, browser, tools, permissions, and runtime rules that turn a reasoning
-                model into a working agent system.
+                {content.intro}
               </p>
             </div>
           </FadeIn>
@@ -74,17 +61,14 @@ export default function AgentHarnessGlossaryPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="text-lg md:text-xl text-[#1c1f17] mb-6" style={{ ...pixel }}>
-                Why it matters
+                {content.whyTitle}
               </h2>
               <div className="space-y-6 max-w-[760px]">
                 <p className="text-base leading-7 text-[#4d5145]">
-                  The model decides what to do. The harness determines what it can actually do.
-                  That includes which tools exist, which files are visible, what permissions are
-                  granted, and which actions are allowed in the environment.
+                  {content.whyBody[0]}
                 </p>
                 <p className="text-base leading-7 text-[#4d5145]">
-                  AnyCap fits inside that harness as a capability runtime. It gives the harness a
-                  clean way to expose multimodal actions to the agent through one interface.
+                  {content.whyBody[1]}
                 </p>
               </div>
             </section>
@@ -95,9 +79,20 @@ export default function AgentHarnessGlossaryPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link href="/guides/what-is-agent-harness" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg" style={mono}>Harness Guide</Link>
-                <Link href="/glossary/agent-capability-runtime" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Capability Runtime</Link>
-                <Link href="/compare/anycap-vs-openai-agent-builder" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Agent Builder Compare</Link>
+                {content.relatedLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={
+                      link.variant === "primary"
+                        ? "inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+                        : "inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                    }
+                    style={mono}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </section>
           </FadeIn>

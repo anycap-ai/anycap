@@ -35,6 +35,7 @@
 
     { "id": "hub-guides", "kind": "hub", "label": "Guides", "path": "/guides", "eyebrow": "Guides", "parentId": "home" },
     { "id": "guides-install-anycap", "kind": "detail", "label": "Install AnyCap", "path": "/guides/install-anycap", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "guides-mcp-vs-skills", "kind": "detail", "label": "MCP vs Skills", "path": "/guides/mcp-vs-skills", "eyebrow": "Guides", "parentId": "hub-guides" },
     { "id": "guides-add-tools-to-claude-code", "kind": "detail", "label": "Add Tools to Claude Code", "path": "/guides/add-tools-to-claude-code", "eyebrow": "Guides", "parentId": "hub-guides" },
     { "id": "guides-context-engineering-for-agents", "kind": "detail", "label": "Context Engineering for Agents", "path": "/guides/context-engineering-for-agents", "eyebrow": "Guides", "parentId": "hub-guides" },
     { "id": "guides-agent-skills-for-developer-tools", "kind": "detail", "label": "Agent Skills for Developer Tools", "path": "/guides/agent-skills-for-developer-tools", "eyebrow": "Guides", "parentId": "hub-guides" },

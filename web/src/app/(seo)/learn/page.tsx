@@ -3,41 +3,31 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { getLearnHubContent, type LearnHubArticle, type LearnHubLink, type LearnHubSection } from "@/lib/learn-hub";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd } from "@/lib/schema";
-import { getSeoPageChrome } from "@/lib/seo-ia";
-import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
+import { defaultLocale, getLocalizedRouteUrl, siteConfig } from "@/lib/site";
+import { LEARN_PATH, getLearnMetadata, getLearnPageData } from "./content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export const metadata: Metadata = {
-  title: "Learn | AI Agent Guides, Workflows, and Explainers",
-  description:
-    "Start with coding-agent stack guides, AI product explainers, capability-gap primers, and real workflows that lead into AnyCap capabilities.",
-  alternates: { canonical: "/learn" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/learn",
-    siteName: siteConfig.siteName,
-    title: "Learn | AI Agent Guides, Workflows, and Explainers",
-    description:
-      "Use Learn when you are choosing a coding-agent stack, extending an AI product, mapping capability gaps, or browsing a real workflow example.",
-  },
-};
-
-const pageChrome = getSeoPageChrome("/learn");
+const learnPageContent = getLearnPageData(defaultLocale);
 const learnHubContent = getLearnHubContent();
-const faqJsonLd = createFaqPageJsonLd(learnHubContent.faqItems);
+const faqJsonLd = createFaqPageJsonLd(learnPageContent.faqItems);
+
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  LEARN_PATH,
+  getLearnMetadata(defaultLocale),
+);
 
 const collectionJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  name: "AnyCap Learn",
-  description:
-    "Learn hub for choosing coding-agent setups, designing AI products, mapping capability gaps, and seeing real workflow examples.",
+  name: learnPageContent.metadata.title,
+  description: learnPageContent.metadata.description,
   url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/learn"),
   hasPart: learnHubContent.allArticles.map((article) => ({
     "@type": "WebPage",
@@ -254,9 +244,9 @@ function SectionAccordion({
 
       <div className="border-t border-[#dce0d2] px-6 py-6 md:px-8 md:py-8">
         <div className="space-y-6">
-          <section className="rounded-[24px] border border-[#dce0d2] bg-[#f7f9ef] p-5 md:p-6">
+      <section className="rounded-[24px] border border-[#dce0d2] bg-[#f7f9ef] p-5 md:p-6">
             <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-              Start here
+              {learnPageContent.sectionLabels.startHere}
             </p>
             <div className="mt-4 max-w-[920px]">
               <ArticleRow article={section.featuredArticle} emphasis="featured" />
@@ -265,7 +255,7 @@ function SectionAccordion({
             {section.relatedLinks.length > 0 ? (
               <div className="mt-5 border-t border-[#dce0d2] pt-4">
                 <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  Shortcuts
+                  {learnPageContent.sectionLabels.shortcuts}
                 </p>
                 <SectionLinks links={section.relatedLinks} />
               </div>
@@ -274,13 +264,13 @@ function SectionAccordion({
 
           {section.followOnArticles.length > 0 ? (
             <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup title="Go deeper" articles={section.followOnArticles} />
+              <ArticleGroup title={learnPageContent.sectionLabels.goDeeper} articles={section.followOnArticles} />
             </div>
           ) : null}
 
           {section.supportingArticles.length > 0 ? (
             <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup title="Also useful" articles={section.supportingArticles} />
+              <ArticleGroup title={learnPageContent.sectionLabels.alsoUseful} articles={section.supportingArticles} />
             </div>
           ) : null}
 
@@ -291,12 +281,12 @@ function SectionAccordion({
 }
 
 export default function LearnIndexPage() {
-  const { hero, orientation, pathSectionIntro, adjacentHubs, faqItems, sections, allArticles } =
-    learnHubContent;
+  const { sections, allArticles } = learnHubContent;
+  const { adjacentHubs, faqItems } = learnPageContent;
 
   return (
     <>
-      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
+      <BreadcrumbJsonLd items={learnPageContent.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
@@ -314,23 +304,22 @@ export default function LearnIndexPage() {
         <div className="mx-auto max-w-[1220px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              {pageChrome?.eyebrow ?? hero.eyebrow}
+              {learnPageContent.eyebrow}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              {hero.titleLines[0]}
+              {learnPageContent.hero.titleLines[0]}
               <br />
-              {hero.titleLines[1]}
+              {learnPageContent.hero.titleLines[1]}
             </h1>
             <p className="mt-6 max-w-[820px] text-base leading-7 text-[#4d5145] md:text-lg">
-              {hero.intro}
+              {learnPageContent.hero.intro}
             </p>
 
             <p className="mt-6 text-[12px] tracking-[0.35px] text-[#6b7068]" style={mono}>
-              {sections.length} categories. {allArticles.length} curated pages. Open one category
-              below and ignore the rest for now.
+              {sections.length} categories. {allArticles.length} curated pages. {learnPageContent.hero.statsSuffix}
             </p>
           </FadeIn>
 
@@ -338,18 +327,18 @@ export default function LearnIndexPage() {
             <section className="border-y border-[#dce0d2] py-6 md:py-8">
               <div className="max-w-[820px]">
                 <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  {orientation.eyebrow}
+                  {learnPageContent.orientation.eyebrow}
                 </p>
                 <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                  {pathSectionIntro.title}
+                  {learnPageContent.pathSectionIntro.title}
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                  {orientation.description}
+                  {learnPageContent.orientation.description}
                 </p>
               </div>
 
               <ol className="mt-6 grid gap-4 md:grid-cols-3">
-                {orientation.steps.map((step) => (
+                {learnPageContent.orientation.steps.map((step) => (
                   <li key={step.step} className="list-none">
                     <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
                       {step.step}
@@ -367,10 +356,10 @@ export default function LearnIndexPage() {
           <FadeIn className="mt-12">
             <section>
               <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                {pathSectionIntro.eyebrow}
+                {learnPageContent.pathSectionIntro.eyebrow}
               </p>
               <p className="mt-3 max-w-[760px] text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                {pathSectionIntro.description}
+                {learnPageContent.pathSectionIntro.description}
               </p>
             </section>
           </FadeIn>
@@ -390,14 +379,13 @@ export default function LearnIndexPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                Need a different page type?
+                {learnPageContent.sectionLabels.needDifferentType}
               </p>
               <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                Switch to setup, vocabulary, capabilities, or comparison
+                {learnPageContent.sectionLabels.differentTypeTitle}
               </h2>
               <p className="mt-4 max-w-[760px] text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                If the question is no longer exploratory, move to the page type that matches the
-                next step instead of scanning more Learn articles.
+                {learnPageContent.sectionLabels.differentTypeBody}
               </p>
               <div className="mt-6 divide-y divide-[#dce0d2] border-y border-[#dce0d2]">
                 {adjacentHubs.map((hub) => (
@@ -425,10 +413,10 @@ export default function LearnIndexPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                FAQ
+                {learnPageContent.sectionLabels.faqEyebrow}
               </p>
               <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                Common questions before you pick a path
+                {learnPageContent.sectionLabels.faqTitle}
               </h2>
               <div className="mt-6 divide-y divide-[#dce0d2] border-y border-[#dce0d2]">
                 {faqItems.map((item, index) => (

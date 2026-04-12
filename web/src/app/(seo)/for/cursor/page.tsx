@@ -7,7 +7,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { DemoVideo } from "@/components/ui/DemoVideo";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
-import { defaultLocale, siteConfig } from "@/lib/site";
+import { defaultLocale } from "@/lib/site";
 import { getRequestLocale } from "@/lib/request-locale";
 import {
   FOR_CURSOR_PATH,
@@ -20,7 +20,7 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
-const FALLBACK_THUMBNAIL_URL = `${siteConfig.url}/opengraph-image`;
+const CURSOR_POSTER_URL = "https://cdn.anycap.ai/page_resource/seo-images/cursor-capability-flow.png";
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
@@ -74,7 +74,7 @@ export default async function ForCursorPage() {
             <div className="mt-8">
               <DemoVideo
                 src={`${CDN_BASE}/for_cursor.mp4`}
-                poster={FALLBACK_THUMBNAIL_URL}
+                poster={CURSOR_POSTER_URL}
                 title={content.demo.title}
                 autoLoop
               />

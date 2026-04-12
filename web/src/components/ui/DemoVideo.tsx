@@ -24,6 +24,7 @@ export function DemoVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -47,6 +48,8 @@ export function DemoVideo({
     const video = videoRef.current;
     if (!isVisible || !video) return;
 
+    setIsLoaded(false);
+    setHasError(false);
     video.src = src;
     video.load();
 
@@ -56,6 +59,7 @@ export function DemoVideo({
   }, [isVisible, src, autoLoop]);
 
   const handleCanPlay = useCallback(() => setIsLoaded(true), []);
+  const handleError = useCallback(() => setHasError(true), []);
 
   return (
     <div>
@@ -75,7 +79,7 @@ export function DemoVideo({
           />
         )}
 
-        {!isLoaded && (
+        {!isLoaded && !hasError && !poster && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#eaecdf]">
             <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#d4dbb8] border-t-[#6b7d3a]" />
           </div>
@@ -90,6 +94,7 @@ export function DemoVideo({
           preload="none"
           aria-label={title}
           onCanPlay={handleCanPlay}
+          onError={handleError}
           {...(!autoLoop && isVisible ? { controls: true } : {})}
         />
       </div>
