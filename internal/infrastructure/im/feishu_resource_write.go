@@ -1,9 +1,13 @@
 package im
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"sort"
 	"strings"
 
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -15,12 +19,15 @@ import (
 type FeishuResourceWriteOperation string
 
 const (
-	FeishuResourceWriteOperationDocxAppendSection    FeishuResourceWriteOperation = "docx.append_section"
-	FeishuResourceWriteOperationDocxAppendMarkdown   FeishuResourceWriteOperation = "docx.append_markdown"
-	FeishuResourceWriteOperationSheetAppendRows      FeishuResourceWriteOperation = "sheet.append_rows"
-	FeishuResourceWriteOperationSheetUpdateRange     FeishuResourceWriteOperation = "sheet.update_range"
-	FeishuResourceWriteOperationBitableCreateRecords FeishuResourceWriteOperation = "bitable.create_records"
-	FeishuResourceWriteOperationBitableUpdateRecords FeishuResourceWriteOperation = "bitable.update_records"
+	FeishuResourceWriteOperationDocxAppendSection         FeishuResourceWriteOperation = "docx.append_section"
+	FeishuResourceWriteOperationDocxAppendMarkdown        FeishuResourceWriteOperation = "docx.append_markdown"
+	FeishuResourceWriteOperationDocxAppendUnderHeading    FeishuResourceWriteOperation = "docx.append_under_heading"
+	FeishuResourceWriteOperationDocxReplaceHeadingSection FeishuResourceWriteOperation = "docx.replace_heading_section"
+	FeishuResourceWriteOperationDocxInspectHeadings       FeishuResourceWriteOperation = "docx.inspect_headings"
+	FeishuResourceWriteOperationSheetAppendRows           FeishuResourceWriteOperation = "sheet.append_rows"
+	FeishuResourceWriteOperationSheetUpdateRange          FeishuResourceWriteOperation = "sheet.update_range"
+	FeishuResourceWriteOperationBitableCreateRecords      FeishuResourceWriteOperation = "bitable.create_records"
+	FeishuResourceWriteOperationBitableUpdateRecords      FeishuResourceWriteOperation = "bitable.update_records"
 )
 
 type FeishuResourceWriteAction struct {
@@ -28,6 +35,8 @@ type FeishuResourceWriteAction struct {
 	URL          string                       `json:"url"`
 	Ref          FeishuResourceRef            `json:"-"`
 	SectionTitle string                       `json:"section_title,omitempty"`
+	Heading      string                       `json:"heading,omitempty"`
+	HeadingLevel int                          `json:"heading_level,omitempty"`
 	Markdown     string                       `json:"markdown,omitempty"`
 	Range        string                       `json:"range,omitempty"`
 	Rows         [][]any                      `json:"rows,omitempty"`
@@ -42,10 +51,27 @@ type FeishuBitableRecordWrite struct {
 }
 
 type FeishuResourceWriteResult struct {
-	Operation FeishuResourceWriteOperation
-	URL       string
-	Kind      FeishuResourceKind
-	Token     string
+	Operation         FeishuResourceWriteOperation
+	URL               string
+	Kind              FeishuResourceKind
+	Token             string
+	Headings          []FeishuDocxHeadingInspection
+	DuplicateHeadings []string
+	Verification      *FeishuDocxHeadingInspection
+	VerificationError string
+}
+
+type FeishuDocxHeadingInspection struct {
+	Level        int    `json:"level"`
+	Text         string `json:"text"`
+	Index        int    `json:"index"`
+	SectionStart int    `json:"section_start"`
+	SectionEnd   int    `json:"section_end"`
+}
+
+type FeishuDocxHeadingInspectResult struct {
+	Headings          []FeishuDocxHeadingInspection `json:"headings,omitempty"`
+	DuplicateHeadings []string                      `json:"duplicate_headings,omitempty"`
 }
 
 func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, error) {
@@ -56,6 +82,7 @@ func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, err
 	action.Operation = FeishuResourceWriteOperation(strings.TrimSpace(string(action.Operation)))
 	action.URL = strings.TrimSpace(action.URL)
 	action.SectionTitle = strings.TrimSpace(action.SectionTitle)
+	action.Heading = strings.TrimSpace(action.Heading)
 	action.Markdown = strings.TrimSpace(action.Markdown)
 	action.Range = strings.TrimSpace(action.Range)
 	action.TableID = strings.TrimSpace(action.TableID)
@@ -86,6 +113,30 @@ func (a FeishuResourceWriteAction) Validate() error {
 		}
 		if strings.TrimSpace(a.Markdown) == "" {
 			return model.ErrValidation("docx append markdown requires markdown")
+		}
+	case FeishuResourceWriteOperationDocxAppendUnderHeading:
+		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
+			return model.ErrValidation("docx write action requires a docx or wiki URL")
+		}
+		if strings.TrimSpace(a.Heading) == "" || strings.TrimSpace(a.Markdown) == "" {
+			return model.ErrValidation("docx append under heading requires heading and markdown")
+		}
+		if a.HeadingLevel < 0 || a.HeadingLevel > 9 {
+			return model.ErrValidation("docx append under heading requires heading_level between 1 and 9 when provided")
+		}
+	case FeishuResourceWriteOperationDocxReplaceHeadingSection:
+		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
+			return model.ErrValidation("docx write action requires a docx or wiki URL")
+		}
+		if strings.TrimSpace(a.Heading) == "" || strings.TrimSpace(a.Markdown) == "" {
+			return model.ErrValidation("docx replace heading section requires heading and markdown")
+		}
+		if a.HeadingLevel < 0 || a.HeadingLevel > 9 {
+			return model.ErrValidation("docx replace heading section requires heading_level between 1 and 9 when provided")
+		}
+	case FeishuResourceWriteOperationDocxInspectHeadings:
+		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
+			return model.ErrValidation("docx inspect headings action requires a docx or wiki URL")
 		}
 	case FeishuResourceWriteOperationSheetAppendRows:
 		if a.Ref.Kind != FeishuResourceKindSheet {
@@ -142,6 +193,12 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 	if err != nil {
 		return nil, err
 	}
+	result := &FeishuResourceWriteResult{
+		Operation: action.Operation,
+		URL:       action.Ref.URL,
+		Kind:      action.Ref.Kind,
+		Token:     token,
+	}
 	switch action.Operation {
 	case FeishuResourceWriteOperationDocxAppendSection:
 		if a.appendDocxSection == nil {
@@ -157,6 +214,35 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 		if err := a.appendDocxMarkdown(ctx, token, action.Markdown); err != nil {
 			return nil, err
 		}
+	case FeishuResourceWriteOperationDocxAppendUnderHeading:
+		if a.appendDocxUnderHeading == nil {
+			return nil, model.ErrNotConfigured("feishu docx writer is not configured")
+		}
+		if err := a.appendDocxUnderHeading(ctx, token, action.Heading, action.HeadingLevel, action.Markdown); err != nil {
+			return nil, err
+		}
+		a.populateDocxHeadingWriteVerification(ctx, result, token, action.Heading, action.HeadingLevel)
+	case FeishuResourceWriteOperationDocxReplaceHeadingSection:
+		if a.replaceDocxHeadingSection == nil {
+			return nil, model.ErrNotConfigured("feishu docx writer is not configured")
+		}
+		if err := a.replaceDocxHeadingSection(ctx, token, action.Heading, action.HeadingLevel, action.Markdown); err != nil {
+			return nil, err
+		}
+		a.populateDocxHeadingWriteVerification(ctx, result, token, action.Heading, action.HeadingLevel)
+	case FeishuResourceWriteOperationDocxInspectHeadings:
+		if a.inspectDocxHeadings == nil {
+			return nil, model.ErrNotConfigured("feishu docx inspector is not configured")
+		}
+		inspection, err := a.inspectDocxHeadings(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+		if inspection != nil {
+			result.Headings = inspection.Headings
+			result.DuplicateHeadings = inspection.DuplicateHeadings
+		}
+		return result, nil
 	case FeishuResourceWriteOperationSheetAppendRows:
 		if a.appendSheetRows == nil {
 			return nil, model.ErrNotConfigured("feishu sheet writer is not configured")
@@ -188,12 +274,7 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 	default:
 		return nil, model.ErrValidation("unsupported feishu write operation")
 	}
-	return &FeishuResourceWriteResult{
-		Operation: action.Operation,
-		URL:       action.Ref.URL,
-		Kind:      action.Ref.Kind,
-		Token:     token,
-	}, nil
+	return result, nil
 }
 
 func (a *FeishuAdapter) resolveFeishuResourceWriteToken(ctx context.Context, action FeishuResourceWriteAction) (string, error) {
@@ -211,13 +292,372 @@ func (a *FeishuAdapter) resolveFeishuResourceWriteToken(ctx context.Context, act
 	return strings.TrimSpace(node.ObjToken), nil
 }
 
+func (a *FeishuAdapter) populateDocxHeadingWriteVerification(ctx context.Context, result *FeishuResourceWriteResult, documentID string, heading string, headingLevel int) {
+	if a == nil || result == nil || a.inspectDocxHeadings == nil {
+		return
+	}
+	inspection, err := a.inspectDocxHeadings(ctx, documentID)
+	if err != nil {
+		result.VerificationError = err.Error()
+		return
+	}
+	verification, err := findFeishuDocxHeadingInspection(inspection, heading, headingLevel)
+	if err != nil {
+		result.VerificationError = err.Error()
+		return
+	}
+	result.Verification = verification
+}
+
 func (a *FeishuAdapter) appendDocxSectionViaAPI(ctx context.Context, documentID string, title string, markdown string) error {
-	blocks := buildFeishuDocxAppendBlocks(title, markdown)
-	return a.createDocxChildrenViaAPI(ctx, documentID, blocks)
+	return a.appendDocxMarkdownBlocksViaAPI(ctx, documentID, composeFeishuDocxSectionMarkdown(title, markdown))
 }
 
 func (a *FeishuAdapter) appendDocxMarkdownViaAPI(ctx context.Context, documentID string, markdown string) error {
-	return a.createDocxChildrenViaAPI(ctx, documentID, buildFeishuDocxAppendBlocks("", markdown))
+	return a.appendDocxMarkdownBlocksViaAPI(ctx, documentID, markdown)
+}
+
+func (a *FeishuAdapter) appendDocxMarkdownBlocksViaAPI(ctx context.Context, documentID string, markdown string) error {
+	return a.appendDocxMarkdownBlocksAtIndexViaAPI(ctx, documentID, markdown, -1)
+}
+
+func (a *FeishuAdapter) appendDocxUnderHeadingViaAPI(ctx context.Context, documentID string, heading string, headingLevel int, markdown string) error {
+	children, err := a.getDocxRootChildrenViaAPI(ctx, documentID)
+	if err != nil {
+		return err
+	}
+	index, err := docxAppendUnderHeadingIndex(children, heading, headingLevel)
+	if err != nil {
+		return err
+	}
+	return a.appendDocxMarkdownBlocksAtIndexViaAPI(ctx, documentID, markdown, index)
+}
+
+func (a *FeishuAdapter) replaceDocxHeadingSectionViaAPI(ctx context.Context, documentID string, heading string, headingLevel int, markdown string) error {
+	children, err := a.getDocxRootChildrenViaAPI(ctx, documentID)
+	if err != nil {
+		return err
+	}
+	startIndex, endIndex, err := docxHeadingSectionRange(children, heading, headingLevel)
+	if err != nil {
+		return err
+	}
+	if err := a.deleteDocxRootChildrenViaAPI(ctx, documentID, startIndex, endIndex); err != nil {
+		return err
+	}
+	return a.appendDocxMarkdownBlocksAtIndexViaAPI(ctx, documentID, markdown, startIndex)
+}
+
+func (a *FeishuAdapter) inspectDocxHeadingsViaAPI(ctx context.Context, documentID string) (*FeishuDocxHeadingInspectResult, error) {
+	children, err := a.getDocxRootChildrenViaAPI(ctx, documentID)
+	if err != nil {
+		return nil, err
+	}
+	result := inspectFeishuDocxHeadings(children)
+	return &result, nil
+}
+
+func (a *FeishuAdapter) appendDocxMarkdownBlocksAtIndexViaAPI(ctx context.Context, documentID string, markdown string, index int) error {
+	if a == nil || a.larkClient == nil {
+		return model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	if strings.TrimSpace(markdown) == "" {
+		return model.ErrValidation("feishu docx markdown is required")
+	}
+	convertReq := larkdocx.NewConvertDocumentReqBuilder().
+		Body(larkdocx.NewConvertDocumentReqBodyBuilder().
+			ContentType("markdown").
+			Content(markdown).
+			Build()).
+		Build()
+	convertResp, err := a.larkClient.Docx.Document.Convert(ctx, convertReq)
+	if err != nil {
+		return classifyFeishuResourceReadError("convert feishu docx markdown", 0, err.Error(), err)
+	}
+	if !convertResp.Success() {
+		return classifyFeishuResourceReadError("convert feishu docx markdown", convertResp.Code, convertResp.Msg, nil)
+	}
+	if convertResp.Data == nil || len(convertResp.Data.FirstLevelBlockIds) == 0 || len(convertResp.Data.Blocks) == 0 {
+		return model.ErrValidation("feishu docx markdown conversion returned no blocks")
+	}
+	stripFeishuDocxTableMergeInfo(convertResp.Data.Blocks)
+
+	descendantReq := larkdocx.NewCreateDocumentBlockDescendantReqBuilder().
+		DocumentId(documentID).
+		BlockId(documentID).
+		DocumentRevisionId(-1).
+		Body(larkdocx.NewCreateDocumentBlockDescendantReqBodyBuilder().
+			ChildrenId(convertResp.Data.FirstLevelBlockIds).
+			Descendants(convertResp.Data.Blocks).
+			Index(index).
+			Build()).
+		Build()
+	descendantResp, err := a.larkClient.Docx.DocumentBlockDescendant.Create(ctx, descendantReq)
+	if err != nil {
+		return classifyFeishuResourceReadError("append feishu docx descendants", 0, err.Error(), err)
+	}
+	if !descendantResp.Success() {
+		return classifyFeishuResourceReadError("append feishu docx descendants", descendantResp.Code, descendantResp.Msg, nil)
+	}
+	return nil
+}
+
+func (a *FeishuAdapter) getDocxRootChildrenViaAPI(ctx context.Context, documentID string) ([]*larkdocx.Block, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	var blocks []*larkdocx.Block
+	pageToken := ""
+	for {
+		reqBuilder := larkdocx.NewGetDocumentBlockChildrenReqBuilder().
+			DocumentId(documentID).
+			BlockId(documentID).
+			DocumentRevisionId(-1).
+			PageSize(500)
+		if pageToken != "" {
+			reqBuilder.PageToken(pageToken)
+		}
+		resp, err := a.larkClient.Docx.DocumentBlockChildren.Get(ctx, reqBuilder.Build())
+		if err != nil {
+			return nil, classifyFeishuResourceReadError("list feishu docx root children", 0, err.Error(), err)
+		}
+		if !resp.Success() {
+			return nil, classifyFeishuResourceReadError("list feishu docx root children", resp.Code, resp.Msg, nil)
+		}
+		if resp.Data != nil {
+			blocks = append(blocks, resp.Data.Items...)
+			if resp.Data.HasMore != nil && *resp.Data.HasMore && resp.Data.PageToken != nil && strings.TrimSpace(*resp.Data.PageToken) != "" {
+				pageToken = strings.TrimSpace(*resp.Data.PageToken)
+				continue
+			}
+		}
+		return blocks, nil
+	}
+}
+
+func (a *FeishuAdapter) deleteDocxRootChildrenViaAPI(ctx context.Context, documentID string, startIndex int, endIndex int) error {
+	if a == nil || a.larkClient == nil {
+		return model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	if startIndex < 0 || endIndex <= startIndex {
+		return model.ErrValidation("feishu docx delete range is empty")
+	}
+	req := larkdocx.NewBatchDeleteDocumentBlockChildrenReqBuilder().
+		DocumentId(documentID).
+		BlockId(documentID).
+		DocumentRevisionId(-1).
+		Body(larkdocx.NewBatchDeleteDocumentBlockChildrenReqBodyBuilder().
+			StartIndex(startIndex).
+			EndIndex(endIndex).
+			Build()).
+		Build()
+	resp, err := a.larkClient.Docx.DocumentBlockChildren.BatchDelete(ctx, req)
+	if err != nil {
+		return classifyFeishuResourceReadError("delete feishu docx section children", 0, err.Error(), err)
+	}
+	if !resp.Success() {
+		return classifyFeishuResourceReadError("delete feishu docx section children", resp.Code, resp.Msg, nil)
+	}
+	return nil
+}
+
+func docxAppendUnderHeadingIndex(blocks []*larkdocx.Block, heading string, headingLevel int) (int, error) {
+	_, endIndex, err := docxHeadingSectionBounds(blocks, heading, headingLevel)
+	if err != nil {
+		return 0, err
+	}
+	if endIndex >= len(blocks) {
+		return -1, nil
+	}
+	return endIndex, nil
+}
+
+func docxHeadingSectionRange(blocks []*larkdocx.Block, heading string, headingLevel int) (int, int, error) {
+	startIndex, endIndex, err := docxHeadingSectionBounds(blocks, heading, headingLevel)
+	if err != nil {
+		return 0, 0, err
+	}
+	if startIndex >= endIndex {
+		return 0, 0, model.ErrValidation("docx heading section is empty")
+	}
+	return startIndex, endIndex, nil
+}
+
+func docxHeadingSectionBounds(blocks []*larkdocx.Block, heading string, headingLevel int) (int, int, error) {
+	targetHeading := normalizeFeishuHeadingText(heading)
+	if targetHeading == "" {
+		return 0, 0, model.ErrValidation("docx heading section requires heading")
+	}
+	matchIndex := -1
+	matchLevel := 0
+	for i, block := range blocks {
+		level, text := feishuDocxHeading(block)
+		if level == 0 {
+			continue
+		}
+		if headingLevel > 0 && level != headingLevel {
+			continue
+		}
+		if !strings.EqualFold(normalizeFeishuHeadingText(text), targetHeading) {
+			continue
+		}
+		if matchIndex >= 0 {
+			return 0, 0, model.ErrValidation("docx heading section matched multiple headings")
+		}
+		matchIndex = i
+		matchLevel = level
+	}
+	if matchIndex < 0 {
+		return 0, 0, model.ErrValidation("docx heading section could not find heading")
+	}
+	startIndex := matchIndex + 1
+	endIndex := len(blocks)
+	for i := matchIndex + 1; i < len(blocks); i++ {
+		level, _ := feishuDocxHeading(blocks[i])
+		if level > 0 && level <= matchLevel {
+			endIndex = i
+			break
+		}
+	}
+	return startIndex, endIndex, nil
+}
+
+func inspectFeishuDocxHeadings(blocks []*larkdocx.Block) FeishuDocxHeadingInspectResult {
+	result := FeishuDocxHeadingInspectResult{}
+	counts := map[string]int{}
+	displayText := map[string]string{}
+	for i, block := range blocks {
+		level, text := feishuDocxHeading(block)
+		if level == 0 {
+			continue
+		}
+		normalizedText := normalizeFeishuHeadingText(text)
+		if normalizedText == "" {
+			continue
+		}
+		result.Headings = append(result.Headings, FeishuDocxHeadingInspection{
+			Level:        level,
+			Text:         normalizedText,
+			Index:        i,
+			SectionStart: i + 1,
+			SectionEnd:   docxSectionEndForHeadingIndex(blocks, i, level),
+		})
+		key := strings.ToLower(normalizedText)
+		counts[key]++
+		if displayText[key] == "" {
+			displayText[key] = normalizedText
+		}
+	}
+	for key, count := range counts {
+		if count > 1 {
+			result.DuplicateHeadings = append(result.DuplicateHeadings, displayText[key])
+		}
+	}
+	sort.Strings(result.DuplicateHeadings)
+	return result
+}
+
+func findFeishuDocxHeadingInspection(inspection *FeishuDocxHeadingInspectResult, heading string, headingLevel int) (*FeishuDocxHeadingInspection, error) {
+	if inspection == nil {
+		return nil, model.ErrValidation("docx heading verification is empty")
+	}
+	targetHeading := normalizeFeishuHeadingText(heading)
+	if targetHeading == "" {
+		return nil, model.ErrValidation("docx heading verification requires heading")
+	}
+	var found *FeishuDocxHeadingInspection
+	for i := range inspection.Headings {
+		current := &inspection.Headings[i]
+		if headingLevel > 0 && current.Level != headingLevel {
+			continue
+		}
+		if !strings.EqualFold(normalizeFeishuHeadingText(current.Text), targetHeading) {
+			continue
+		}
+		if found != nil {
+			return nil, model.ErrValidation("docx heading verification matched multiple headings")
+		}
+		copyValue := *current
+		found = &copyValue
+	}
+	if found == nil {
+		return nil, model.ErrValidation("docx heading verification could not find heading")
+	}
+	return found, nil
+}
+
+func docxSectionEndForHeadingIndex(blocks []*larkdocx.Block, headingIndex int, headingLevel int) int {
+	for i := headingIndex + 1; i < len(blocks); i++ {
+		level, _ := feishuDocxHeading(blocks[i])
+		if level > 0 && level <= headingLevel {
+			return i
+		}
+	}
+	return len(blocks)
+}
+
+func feishuDocxHeading(block *larkdocx.Block) (int, string) {
+	if block == nil || block.BlockType == nil {
+		return 0, ""
+	}
+	switch *block.BlockType {
+	case 3:
+		return 1, feishuDocxTextContent(block.Heading1)
+	case 4:
+		return 2, feishuDocxTextContent(block.Heading2)
+	case 5:
+		return 3, feishuDocxTextContent(block.Heading3)
+	case 6:
+		return 4, feishuDocxTextContent(block.Heading4)
+	case 7:
+		return 5, feishuDocxTextContent(block.Heading5)
+	case 8:
+		return 6, feishuDocxTextContent(block.Heading6)
+	case 9:
+		return 7, feishuDocxTextContent(block.Heading7)
+	case 10:
+		return 8, feishuDocxTextContent(block.Heading8)
+	case 11:
+		return 9, feishuDocxTextContent(block.Heading9)
+	default:
+		return 0, ""
+	}
+}
+
+func feishuDocxTextContent(text *larkdocx.Text) string {
+	if text == nil {
+		return ""
+	}
+	var builder strings.Builder
+	for _, element := range text.Elements {
+		if element == nil || element.TextRun == nil || element.TextRun.Content == nil {
+			continue
+		}
+		builder.WriteString(*element.TextRun.Content)
+	}
+	return builder.String()
+}
+
+func normalizeFeishuHeadingText(value string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(value)), " ")
+}
+
+func composeFeishuDocxSectionMarkdown(title string, markdown string) string {
+	title = strings.Join(strings.Fields(strings.TrimSpace(title)), " ")
+	markdown = strings.TrimSpace(markdown)
+	if title == "" {
+		return markdown
+	}
+	return "# " + title + "\n\n" + markdown
+}
+
+func stripFeishuDocxTableMergeInfo(blocks []*larkdocx.Block) {
+	for _, block := range blocks {
+		if block == nil || block.Table == nil || block.Table.Property == nil {
+			continue
+		}
+		block.Table.Property.MergeInfo = nil
+	}
 }
 
 func (a *FeishuAdapter) createDocxChildrenViaAPI(ctx context.Context, documentID string, blocks []*larkdocx.Block) error {
@@ -262,28 +702,71 @@ func (a *FeishuAdapter) updateSheetRangeViaAPI(ctx context.Context, spreadsheetT
 }
 
 func (a *FeishuAdapter) callSheetValuesWriteAPI(ctx context.Context, spreadsheetToken string, operation string, body map[string]any) error {
-	if a == nil || a.larkClient == nil {
+	if a == nil || a.larkClient == nil || a.client == nil {
 		return model.ErrNotConfigured("feishu direct api is not configured")
 	}
-	apiPath := fmt.Sprintf("/open-apis/sheets/v2/spreadsheets/%s/%s", spreadsheetToken, operation)
-	var resp *larkcore.ApiResp
-	var err error
-	if operation == "values" {
-		resp, err = a.larkClient.Put(ctx, apiPath, body, larkcore.AccessTokenTypeTenant)
-	} else {
-		resp, err = a.larkClient.Post(ctx, apiPath, body, larkcore.AccessTokenTypeTenant)
+	tenantToken, err := a.tenantAccessToken(ctx)
+	if err != nil {
+		return err
 	}
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("marshal feishu sheet values body: %w", err)
+	}
+	method := http.MethodPost
+	if operation == "values" {
+		method = http.MethodPut
+	}
+	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/open-apis/sheets/v2/spreadsheets/%s/%s", strings.TrimRight(a.openAPIBaseURL, "/"), strings.TrimSpace(spreadsheetToken), operation), bytes.NewReader(bodyBytes))
+	if err != nil {
+		return fmt.Errorf("build feishu sheet values request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+tenantToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return classifyFeishuResourceReadError("write feishu sheet values", 0, err.Error(), err)
 	}
+	defer resp.Body.Close()
+	raw, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return classifyFeishuResourceReadError("write feishu sheet values", 0, readErr.Error(), readErr)
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return classifyFeishuResourceReadError("write feishu sheet values", resp.StatusCode, strings.TrimSpace(string(raw)), nil)
+	}
 	var payload larkcore.CodeError
-	if err := json.Unmarshal(resp.RawBody, &payload); err != nil {
+	if err := json.Unmarshal(raw, &payload); err != nil {
 		return classifyFeishuResourceReadError("write feishu sheet values", 0, err.Error(), err)
 	}
 	if payload.Code != 0 {
 		return classifyFeishuResourceReadError("write feishu sheet values", payload.Code, payload.Msg, nil)
 	}
 	return nil
+}
+
+func (a *FeishuAdapter) tenantAccessToken(ctx context.Context) (string, error) {
+	if a == nil || a.larkClient == nil {
+		return "", model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	resp, err := a.larkClient.GetTenantAccessTokenBySelfBuiltApp(ctx, &larkcore.SelfBuiltTenantAccessTokenReq{
+		AppID:     strings.TrimSpace(a.appID),
+		AppSecret: strings.TrimSpace(a.appSecret),
+	})
+	if err != nil {
+		return "", classifyFeishuResourceReadError("get feishu tenant access token", 0, err.Error(), err)
+	}
+	if resp == nil {
+		return "", model.ErrNotConfigured("feishu tenant access token response is empty")
+	}
+	if !resp.Success() {
+		return "", classifyFeishuResourceReadError("get feishu tenant access token", resp.Code, resp.Msg, nil)
+	}
+	token := strings.TrimSpace(resp.TenantAccessToken)
+	if token == "" {
+		return "", model.ErrNotConfigured("feishu tenant access token is empty")
+	}
+	return token, nil
 }
 
 func (a *FeishuAdapter) createBitableRecordsViaAPI(ctx context.Context, appToken string, tableID string, records []FeishuBitableRecordWrite) error {

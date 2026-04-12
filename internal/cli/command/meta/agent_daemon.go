@@ -509,6 +509,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 			AppSecret:       trimmedFeishuSecret,
 			Adapter:         adapter,
 			DownloadDir:     daemonFeishuDownloadDir(strings.TrimSpace(workspace)),
+			ActionDir:       daemonFeishuActionDir(strings.TrimSpace(workspace)),
 			TurnMergeWindow: daemonFeishuTurnMergeWindow,
 			HandleInbound: func(ctx context.Context, event im.NormalizedInboundEvent) (string, error) {
 				return httpClient.InboundIMChat(ctx, event.Platform, event.BotID, event.ChannelID, event.MessageID, event.SenderID, messageForInboundChat(event))
@@ -594,4 +595,12 @@ func daemonFeishuDownloadDir(workspace string) string {
 		return ""
 	}
 	return filepath.Join(trimmedWorkspace, ".anycap", "feishu-downloads")
+}
+
+func daemonFeishuActionDir(workspace string) string {
+	trimmedWorkspace := strings.TrimSpace(workspace)
+	if trimmedWorkspace == "" {
+		return ""
+	}
+	return filepath.Join(trimmedWorkspace, ".anycap", "feishu-actions")
 }

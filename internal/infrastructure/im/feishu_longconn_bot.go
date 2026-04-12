@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/open/common-go/logging"
@@ -31,6 +32,7 @@ type FeishuLongConnBotConfig struct {
 	AppID               string
 	AppSecret           string
 	DownloadDir         string
+	ActionDir           string
 	TurnMergeWindow     time.Duration
 	BindingService      *agentcontrolapp.BindingService
 	ConversationService *agentcontrolapp.ConversationService
@@ -51,6 +53,7 @@ type FeishuLongConnBot struct {
 	inboundHandler      func(context.Context, NormalizedInboundEvent) (string, error)
 	adapter             *FeishuAdapter
 	downloadDir         string
+	actionDir           string
 	turnMergeWindow     time.Duration
 	pendingMu           sync.Mutex
 	pendingTurns        map[string]*feishuPendingBurstTurn
@@ -75,6 +78,7 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		inboundHandler:      cfg.HandleInbound,
 		adapter:             cfg.Adapter,
 		downloadDir:         strings.TrimSpace(cfg.DownloadDir),
+		actionDir:           strings.TrimSpace(cfg.ActionDir),
 		turnMergeWindow:     normalizeFeishuTurnMergeWindow(cfg.TurnMergeWindow),
 		pendingTurns:        map[string]*feishuPendingBurstTurn{},
 	}
@@ -94,6 +98,13 @@ func (b *FeishuLongConnBot) Run(ctx context.Context) error {
 	go func() {
 		errCh <- b.client.Start(ctx)
 	}()
+	if strings.TrimSpace(b.actionDir) != "" {
+		go func() {
+			if err := b.runFeishuActionWatcher(ctx); err != nil {
+				logging.WithError(err).Warn("feishu resource action watcher stopped")
+			}
+		}()
+	}
 
 	select {
 	case <-ctx.Done():
@@ -370,6 +381,12 @@ func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedI
 		logging.WithError(err).Warn("download feishu current message resource failed")
 	}
 	enriched.Resources = b.readCurrentMessageResources(ctx, enriched.Message)
+	if err := b.writeFeishuActionContext(enriched.MessageID, enriched.Resources); err != nil {
+		logging.WithError(err).Warn("write feishu resource action context failed")
+	} else if len(enriched.Resources) > 0 {
+		action := b.feishuResourceActionPaths()
+		enriched.ResourceAction = action
+	}
 	if quoted, err := b.loadQuotedMessage(ctx, event); err == nil && quoted != nil {
 		quoted.FileInfo = resolvedNormalizedFileInfo(quoted.FileInfo, quoted.MessageType, quoted.ContentJSON)
 		if fileInfo, downloadErr := b.downloadMessageResourceToLocal(ctx, quoted.MessageID, quoted.FileInfo); downloadErr == nil {
@@ -435,6 +452,88 @@ func (b *FeishuLongConnBot) readCurrentMessageResources(ctx context.Context, mes
 		resources = append(resources, resource)
 	}
 	return resources
+}
+
+func (b *FeishuLongConnBot) runFeishuActionWatcher(ctx context.Context) error {
+	if b == nil || strings.TrimSpace(b.actionDir) == "" {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Join(b.actionDir, "outbox"), 0o755); err != nil {
+		return fmt.Errorf("create feishu action outbox: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Join(b.actionDir, "results"), 0o755); err != nil {
+		return fmt.Errorf("create feishu action results: %w", err)
+	}
+	if _, err := b.processFeishuActionOutboxOnce(ctx); err != nil {
+		logging.WithError(err).Warn("process existing feishu resource actions failed")
+	}
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("create feishu action watcher: %w", err)
+	}
+	defer watcher.Close()
+
+	outboxDir := filepath.Join(b.actionDir, "outbox")
+	if err := watcher.Add(outboxDir); err != nil {
+		return fmt.Errorf("watch feishu action outbox: %w", err)
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return nil
+			}
+			if !isFeishuActionOutboxEvent(event) {
+				continue
+			}
+			if _, err := b.processFeishuActionOutboxOnce(ctx); err != nil {
+				logging.WithError(err).Warn("process feishu resource action failed")
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return nil
+			}
+			if err != nil {
+				logging.WithError(err).Warn("watch feishu resource action outbox failed")
+			}
+		}
+	}
+}
+
+func (b *FeishuLongConnBot) processFeishuActionOutboxOnce(ctx context.Context) ([]*FeishuResourceActionResult, error) {
+	if b == nil || b.adapter == nil || strings.TrimSpace(b.actionDir) == "" {
+		return nil, nil
+	}
+	helper := NewFeishuResourceActionHelper(b.actionDir, b.adapter.ExecuteFeishuResourceWrite)
+	return helper.ProcessOutboxOnce(ctx)
+}
+
+func isFeishuActionOutboxEvent(event fsnotify.Event) bool {
+	if filepath.Ext(strings.TrimSpace(event.Name)) != ".json" {
+		return false
+	}
+	return event.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Rename) != 0
+}
+
+func (b *FeishuLongConnBot) writeFeishuActionContext(messageID string, resources []NormalizedInboundResource) error {
+	if b == nil || strings.TrimSpace(b.actionDir) == "" {
+		return nil
+	}
+	return WriteFeishuResourceActionContext(b.actionDir, messageID, resources)
+}
+
+func (b *FeishuLongConnBot) feishuResourceActionPaths() *NormalizedInboundResourceAction {
+	if b == nil || strings.TrimSpace(b.actionDir) == "" {
+		return nil
+	}
+	root := strings.TrimSpace(b.actionDir)
+	return &NormalizedInboundResourceAction{
+		ContextPath: filepath.Join(root, "context.json"),
+		OutboxPath:  filepath.Join(root, "outbox"),
+		ResultsPath: filepath.Join(root, "results"),
+	}
 }
 
 func defaultFeishuResourceReadOptions() FeishuResourceReadOptions {

@@ -26,29 +26,34 @@ type FeishuAdapterConfig struct {
 	AppID             string
 	AppSecret         string
 	HTTPClient        *http.Client
+	OpenAPIBaseURL    string
 }
 
 type FeishuAdapter struct {
-	verificationToken       string
-	encryptKey              string
-	replyAPI                string
-	client                  *http.Client
-	appID                   string
-	appSecret               string
-	larkClient              *lark.Client
-	getMessage              func(context.Context, string) (*larkim.Message, error)
-	listMessages            func(context.Context, string, string, int) ([]*larkim.Message, error)
-	downloadMessageResource func(context.Context, string, string, string) (*DownloadedMessageResource, error)
-	readDocxRawContent      func(context.Context, string) (*FeishuDocxReadResult, error)
-	readWikiNode            func(context.Context, string) (*FeishuWikiNodeResult, error)
-	readSheetPreview        func(context.Context, string, FeishuSheetReadOptions) (*FeishuSheetReadResult, error)
-	readBitablePreview      func(context.Context, string, FeishuBitableReadOptions) (*FeishuBitableReadResult, error)
-	appendDocxSection       func(context.Context, string, string, string) error
-	appendDocxMarkdown      func(context.Context, string, string) error
-	appendSheetRows         func(context.Context, string, string, [][]any) error
-	updateSheetRange        func(context.Context, string, string, [][]any) error
-	createBitableRecords    func(context.Context, string, string, []FeishuBitableRecordWrite) error
-	updateBitableRecords    func(context.Context, string, string, []FeishuBitableRecordWrite) error
+	verificationToken         string
+	encryptKey                string
+	replyAPI                  string
+	client                    *http.Client
+	appID                     string
+	appSecret                 string
+	openAPIBaseURL            string
+	larkClient                *lark.Client
+	getMessage                func(context.Context, string) (*larkim.Message, error)
+	listMessages              func(context.Context, string, string, int) ([]*larkim.Message, error)
+	downloadMessageResource   func(context.Context, string, string, string) (*DownloadedMessageResource, error)
+	readDocxRawContent        func(context.Context, string) (*FeishuDocxReadResult, error)
+	readWikiNode              func(context.Context, string) (*FeishuWikiNodeResult, error)
+	readSheetPreview          func(context.Context, string, FeishuSheetReadOptions) (*FeishuSheetReadResult, error)
+	readBitablePreview        func(context.Context, string, FeishuBitableReadOptions) (*FeishuBitableReadResult, error)
+	inspectDocxHeadings       func(context.Context, string) (*FeishuDocxHeadingInspectResult, error)
+	appendDocxSection         func(context.Context, string, string, string) error
+	appendDocxMarkdown        func(context.Context, string, string) error
+	appendDocxUnderHeading    func(context.Context, string, string, int, string) error
+	replaceDocxHeadingSection func(context.Context, string, string, int, string) error
+	appendSheetRows           func(context.Context, string, string, [][]any) error
+	updateSheetRange          func(context.Context, string, string, [][]any) error
+	createBitableRecords      func(context.Context, string, string, []FeishuBitableRecordWrite) error
+	updateBitableRecords      func(context.Context, string, string, []FeishuBitableRecordWrite) error
 }
 
 type DownloadedMessageResource struct {
@@ -68,7 +73,8 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 		client:            client,
 		appID:             strings.TrimSpace(cfg.AppID),
 		appSecret:         strings.TrimSpace(cfg.AppSecret),
-		larkClient:        buildFeishuDirectClient(strings.TrimSpace(cfg.AppID), strings.TrimSpace(cfg.AppSecret), client),
+		openAPIBaseURL:    normalizeFeishuOpenAPIBaseURL(cfg.OpenAPIBaseURL),
+		larkClient:        buildFeishuDirectClient(strings.TrimSpace(cfg.AppID), strings.TrimSpace(cfg.AppSecret), client, normalizeFeishuOpenAPIBaseURL(cfg.OpenAPIBaseURL)),
 	}
 	adapter.getMessage = adapter.getMessageViaAPI
 	adapter.listMessages = adapter.listMessagesViaAPI
@@ -77,8 +83,11 @@ func NewFeishuAdapter(cfg FeishuAdapterConfig) *FeishuAdapter {
 	adapter.readWikiNode = adapter.readWikiNodeViaAPI
 	adapter.readSheetPreview = adapter.readSheetPreviewViaAPI
 	adapter.readBitablePreview = adapter.readBitablePreviewViaAPI
+	adapter.inspectDocxHeadings = adapter.inspectDocxHeadingsViaAPI
 	adapter.appendDocxSection = adapter.appendDocxSectionViaAPI
 	adapter.appendDocxMarkdown = adapter.appendDocxMarkdownViaAPI
+	adapter.appendDocxUnderHeading = adapter.appendDocxUnderHeadingViaAPI
+	adapter.replaceDocxHeadingSection = adapter.replaceDocxHeadingSectionViaAPI
 	adapter.appendSheetRows = adapter.appendSheetRowsViaAPI
 	adapter.updateSheetRange = adapter.updateSheetRangeViaAPI
 	adapter.createBitableRecords = adapter.createBitableRecordsViaAPI
@@ -283,7 +292,7 @@ func (a *FeishuAdapter) sendReply(ctx context.Context, binding model.IMBinding, 
 	return nil
 }
 
-func buildFeishuDirectClient(appID, appSecret string, httpClient *http.Client) *lark.Client {
+func buildFeishuDirectClient(appID, appSecret string, httpClient *http.Client, openAPIBaseURL string) *lark.Client {
 	if strings.TrimSpace(appID) == "" || strings.TrimSpace(appSecret) == "" {
 		return nil
 	}
@@ -295,7 +304,18 @@ func buildFeishuDirectClient(appID, appSecret string, httpClient *http.Client) *
 	if httpClient != nil {
 		options = append(options, lark.WithHttpClient(httpClient))
 	}
+	if strings.TrimSpace(openAPIBaseURL) != "" {
+		options = append(options, lark.WithOpenBaseUrl(strings.TrimRight(strings.TrimSpace(openAPIBaseURL), "/")))
+	}
 	return lark.NewClient(appID, appSecret, options...)
+}
+
+func normalizeFeishuOpenAPIBaseURL(value string) string {
+	value = strings.TrimRight(strings.TrimSpace(value), "/")
+	if value == "" {
+		return strings.TrimRight(lark.FeishuBaseUrl, "/")
+	}
+	return value
 }
 
 func (a *FeishuAdapter) getMessageViaAPI(ctx context.Context, messageID string) (*larkim.Message, error) {

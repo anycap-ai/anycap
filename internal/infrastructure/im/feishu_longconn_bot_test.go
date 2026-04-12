@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -402,6 +403,109 @@ func TestFeishuLongConnBot_HandleNormalizedEventReadsDocxResourceToArtifact(t *t
 	rendered := gotEvent.AgentInputText()
 	if !strings.Contains(rendered, "<feishu-resource") || !strings.Contains(rendered, `local_path="`) {
 		t.Fatalf("expected feishu resource block, got %s", rendered)
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventWritesFeishuActionContext(t *testing.T) {
+	tmpDir := t.TempDir()
+	downloadDir := filepath.Join(tmpDir, ".anycap", "feishu-downloads")
+	actionDir := filepath.Join(tmpDir, ".anycap", "feishu-actions")
+	var gotEvent NormalizedInboundEvent
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	disableFeishuContextHistory(adapter)
+	adapter.readDocxRawContent = func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+		return &FeishuDocxReadResult{
+			DocumentID: documentID,
+			Title:      "Spec",
+			Content:    "hello docx",
+		}, nil
+	}
+
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		DownloadDir:     downloadDir,
+		ActionDir:       actionDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_text",
+		MessageType: "text",
+		Message:     "请更新 https://anycap.feishu.cn/docx/DOCXtoken123",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+
+	data, readErr := os.ReadFile(filepath.Join(actionDir, "context.json"))
+	if readErr != nil {
+		t.Fatalf("ReadFile(context.json) error = %v", readErr)
+	}
+	if !strings.Contains(string(data), `"message_id": "om_text"`) || !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXtoken123"`) {
+		t.Fatalf("unexpected action context:\n%s", string(data))
+	}
+	rendered := gotEvent.AgentInputText()
+	if !strings.Contains(rendered, `<feishu-resource-actions context_path="`) || !strings.Contains(rendered, `outbox_path="`) || !strings.Contains(rendered, `results_path="`) {
+		t.Fatalf("expected feishu action helper paths in agent input, got %s", rendered)
+	}
+}
+
+func TestFeishuLongConnBotProcessesFeishuActionOutboxWithAdapter(t *testing.T) {
+	actionDir := t.TempDir()
+	if err := WriteFeishuResourceActionContext(actionDir, "om_text", []NormalizedInboundResource{{
+		URL:   "https://anycap.feishu.cn/docx/DOCXtoken123",
+		Kind:  FeishuResourceKindDocx,
+		Token: "DOCXtoken123",
+	}}); err != nil {
+		t.Fatalf("WriteFeishuResourceActionContext() error = %v", err)
+	}
+	writeFeishuActionFile(t, actionDir, "act_ok", `{
+		"operation": "docx.append_markdown",
+		"url": "https://anycap.feishu.cn/docx/DOCXtoken123",
+		"markdown": "hello"
+	}`)
+
+	var gotDocumentID, gotMarkdown string
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	adapter.appendDocxMarkdown = func(ctx context.Context, documentID string, markdown string) error {
+		gotDocumentID = documentID
+		gotMarkdown = markdown
+		return nil
+	}
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		ActionDir:       actionDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	results, err := bot.processFeishuActionOutboxOnce(context.Background())
+	if err != nil {
+		t.Fatalf("processFeishuActionOutboxOnce() error = %v", err)
+	}
+	if gotDocumentID != "DOCXtoken123" || gotMarkdown != "hello" || len(results) != 1 || results[0].Status != "success" {
+		t.Fatalf("unexpected action processing document=%q markdown=%q results=%+v", gotDocumentID, gotMarkdown, results)
 	}
 }
 

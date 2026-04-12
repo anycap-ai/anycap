@@ -30,6 +30,7 @@ type NormalizedInboundEvent struct {
 	FileInfo          *NormalizedInboundFileInfo
 	Mentions          []NormalizedInboundMention
 	Resources         []NormalizedInboundResource
+	ResourceAction    *NormalizedInboundResourceAction
 	QuotedMessage     *NormalizedInboundContextMessage
 	ThreadHistory     []NormalizedInboundContextMessage
 	ChatHistory       []NormalizedInboundContextMessage
@@ -38,20 +39,21 @@ type NormalizedInboundEvent struct {
 }
 
 type NormalizedInboundContextMessage struct {
-	MessageID   string
-	ChannelID   string
-	SenderID    string
-	SenderType  string
-	ChatType    string
-	ThreadID    string
-	ParentID    string
-	RootID      string
-	MessageType string
-	Message     string
-	ContentJSON string
-	FileInfo    *NormalizedInboundFileInfo
-	Mentions    []NormalizedInboundMention
-	Resources   []NormalizedInboundResource
+	MessageID      string
+	ChannelID      string
+	SenderID       string
+	SenderType     string
+	ChatType       string
+	ThreadID       string
+	ParentID       string
+	RootID         string
+	MessageType    string
+	Message        string
+	ContentJSON    string
+	FileInfo       *NormalizedInboundFileInfo
+	Mentions       []NormalizedInboundMention
+	Resources      []NormalizedInboundResource
+	ResourceAction *NormalizedInboundResourceAction
 }
 
 type NormalizedInboundFileInfo struct {
@@ -74,22 +76,29 @@ type NormalizedInboundResource struct {
 	ReadError error
 }
 
+type NormalizedInboundResourceAction struct {
+	ContextPath string
+	OutboxPath  string
+	ResultsPath string
+}
+
 func (e NormalizedInboundEvent) AgentInputText() string {
 	current := NormalizedInboundContextMessage{
-		MessageID:   e.MessageID,
-		ChannelID:   e.ChannelID,
-		SenderID:    e.SenderID,
-		SenderType:  "user",
-		ChatType:    e.ChatType,
-		ThreadID:    e.ThreadID,
-		ParentID:    e.ParentID,
-		RootID:      e.RootID,
-		MessageType: e.MessageType,
-		Message:     e.Message,
-		ContentJSON: e.ContentJSON,
-		FileInfo:    e.FileInfo,
-		Mentions:    e.Mentions,
-		Resources:   e.Resources,
+		MessageID:      e.MessageID,
+		ChannelID:      e.ChannelID,
+		SenderID:       e.SenderID,
+		SenderType:     "user",
+		ChatType:       e.ChatType,
+		ThreadID:       e.ThreadID,
+		ParentID:       e.ParentID,
+		RootID:         e.RootID,
+		MessageType:    e.MessageType,
+		Message:        e.Message,
+		ContentJSON:    e.ContentJSON,
+		FileInfo:       e.FileInfo,
+		Mentions:       e.Mentions,
+		Resources:      e.Resources,
+		ResourceAction: e.ResourceAction,
 	}
 	if len(e.ThreadHistory) == 0 && len(e.ChatHistory) == 0 && e.QuotedMessage == nil {
 		return current.renderFeishuMessage("")
@@ -174,6 +183,9 @@ func (m NormalizedInboundContextMessage) renderFeishuMessage(indent string) stri
 	}
 	if len(m.Resources) > 0 {
 		lines = append(lines, renderFeishuResources(m.Resources, indent+"  "))
+	}
+	if m.ResourceAction != nil {
+		lines = append(lines, m.ResourceAction.render(indent+"  "))
 	}
 	if strings.EqualFold(strings.TrimSpace(m.MessageType), "text") {
 		lines = append(lines, indent+html.EscapeString(strings.TrimSpace(m.Message)))
@@ -269,6 +281,24 @@ func extractFeishuFileInfo(messageType, contentJSON string) *NormalizedInboundFi
 		return nil
 	}
 	return info
+}
+
+func (a NormalizedInboundResourceAction) render(indent string) string {
+	var attrs []string
+	appendAttr := func(name, value string) {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return
+		}
+		attrs = append(attrs, fmt.Sprintf(`%s="%s"`, name, html.EscapeString(value)))
+	}
+	appendAttr("context_path", a.ContextPath)
+	appendAttr("outbox_path", a.OutboxPath)
+	appendAttr("results_path", a.ResultsPath)
+	if len(attrs) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s<feishu-resource-actions %s />", indent, strings.Join(attrs, " "))
 }
 
 func (i NormalizedInboundFileInfo) render(indent string) string {

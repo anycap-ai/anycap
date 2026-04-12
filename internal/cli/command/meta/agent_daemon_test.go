@@ -107,6 +107,10 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	if gotCfg.DownloadDir != expectedDownloadDir {
 		t.Fatalf("expected download dir %q, got %q", expectedDownloadDir, gotCfg.DownloadDir)
 	}
+	expectedActionDir := filepath.Join(workspace, ".anycap", "feishu-actions")
+	if gotCfg.ActionDir != expectedActionDir {
+		t.Fatalf("expected action dir %q, got %q", expectedActionDir, gotCfg.ActionDir)
+	}
 	if gotCfg.TurnMergeWindow <= 0 {
 		t.Fatalf("expected positive turn merge window, got %s", gotCfg.TurnMergeWindow)
 	}
