@@ -14,6 +14,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	larkdocx "github.com/larksuite/oapi-sdk-go/v3/service/docx/v1"
+	larksheets "github.com/larksuite/oapi-sdk-go/v3/service/sheets/v3"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
@@ -26,8 +27,10 @@ const (
 	FeishuResourceWriteOperationDocxAppendUnderHeading    FeishuResourceWriteOperation = "docx.append_under_heading"
 	FeishuResourceWriteOperationDocxReplaceHeadingSection FeishuResourceWriteOperation = "docx.replace_heading_section"
 	FeishuResourceWriteOperationDocxInspectHeadings       FeishuResourceWriteOperation = "docx.inspect_headings"
+	FeishuResourceWriteOperationSheetCreate               FeishuResourceWriteOperation = "sheet.create"
 	FeishuResourceWriteOperationSheetAppendRows           FeishuResourceWriteOperation = "sheet.append_rows"
 	FeishuResourceWriteOperationSheetUpdateRange          FeishuResourceWriteOperation = "sheet.update_range"
+	FeishuResourceWriteOperationBitableCreate             FeishuResourceWriteOperation = "bitable.create"
 	FeishuResourceWriteOperationBitableCreateRecords      FeishuResourceWriteOperation = "bitable.create_records"
 	FeishuResourceWriteOperationBitableUpdateRecords      FeishuResourceWriteOperation = "bitable.update_records"
 )
@@ -74,6 +77,18 @@ type FeishuDocxCreateResult struct {
 	URL        string
 }
 
+type FeishuSheetCreateResult struct {
+	SpreadsheetToken string
+	Title            string
+	URL              string
+}
+
+type FeishuBitableCreateResult struct {
+	AppToken string
+	Title    string
+	URL      string
+}
+
 type FeishuDocxHeadingInspection struct {
 	Level        int    `json:"level"`
 	Text         string `json:"text"`
@@ -103,7 +118,7 @@ func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, err
 	action.Range = strings.TrimSpace(action.Range)
 	action.TableID = strings.TrimSpace(action.TableID)
 
-	if action.Operation != FeishuResourceWriteOperationDocxCreate {
+	if !action.createsNewResource() {
 		ref, ok := parseFeishuResourceURL(action.URL)
 		if !ok {
 			return nil, model.ErrValidation("feishu write action requires an explicit supported Feishu resource URL")
@@ -121,6 +136,10 @@ func (a FeishuResourceWriteAction) Validate() error {
 	case FeishuResourceWriteOperationDocxCreate:
 		if strings.TrimSpace(a.Title) == "" || strings.TrimSpace(a.Markdown) == "" {
 			return model.ErrValidation("docx create requires title and markdown")
+		}
+	case FeishuResourceWriteOperationSheetCreate:
+		if strings.TrimSpace(a.Title) == "" {
+			return model.ErrValidation("sheet create requires title")
 		}
 	case FeishuResourceWriteOperationDocxAppendSection:
 		if a.Ref.Kind != FeishuResourceKindDocx && a.Ref.Kind != FeishuResourceKindWiki {
@@ -174,6 +193,10 @@ func (a FeishuResourceWriteAction) Validate() error {
 		if strings.TrimSpace(a.Range) == "" || len(a.Values) == 0 {
 			return model.ErrValidation("sheet update range requires range and values")
 		}
+	case FeishuResourceWriteOperationBitableCreate:
+		if strings.TrimSpace(a.Title) == "" {
+			return model.ErrValidation("bitable create requires title")
+		}
 	case FeishuResourceWriteOperationBitableCreateRecords:
 		if a.Ref.Kind != FeishuResourceKindBitable {
 			return model.ErrValidation("bitable write action requires a bitable URL")
@@ -204,6 +227,17 @@ func (a FeishuResourceWriteAction) Validate() error {
 	return nil
 }
 
+func (a FeishuResourceWriteAction) createsNewResource() bool {
+	switch a.Operation {
+	case FeishuResourceWriteOperationDocxCreate,
+		FeishuResourceWriteOperationSheetCreate,
+		FeishuResourceWriteOperationBitableCreate:
+		return true
+	default:
+		return false
+	}
+}
+
 func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
 	if a == nil {
 		return nil, model.ErrNotConfigured("feishu adapter is not configured")
@@ -230,6 +264,46 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 			result.URL = strings.TrimSpace(created.URL)
 		}
 		a.populateDocxCreateVerification(ctx, result)
+		return result, nil
+	}
+	if action.Operation == FeishuResourceWriteOperationSheetCreate {
+		if a.createSheet == nil {
+			return nil, model.ErrNotConfigured("feishu sheet creator is not configured")
+		}
+		created, err := a.createSheet(ctx, action.Title, action.SourceURL, action.FolderToken)
+		if err != nil {
+			return nil, err
+		}
+		result := &FeishuResourceWriteResult{
+			Operation: action.Operation,
+			Kind:      FeishuResourceKindSheet,
+			Title:     action.Title,
+		}
+		if created != nil {
+			result.Token = strings.TrimSpace(created.SpreadsheetToken)
+			result.Title = firstNonEmpty(created.Title, result.Title)
+			result.URL = strings.TrimSpace(created.URL)
+		}
+		return result, nil
+	}
+	if action.Operation == FeishuResourceWriteOperationBitableCreate {
+		if a.createBitable == nil {
+			return nil, model.ErrNotConfigured("feishu bitable creator is not configured")
+		}
+		created, err := a.createBitable(ctx, action.Title, action.SourceURL, action.FolderToken)
+		if err != nil {
+			return nil, err
+		}
+		result := &FeishuResourceWriteResult{
+			Operation: action.Operation,
+			Kind:      FeishuResourceKindBitable,
+			Title:     action.Title,
+		}
+		if created != nil {
+			result.Token = strings.TrimSpace(created.AppToken)
+			result.Title = firstNonEmpty(created.Title, result.Title)
+			result.URL = strings.TrimSpace(created.URL)
+		}
 		return result, nil
 	}
 	token, err := a.resolveFeishuResourceWriteToken(ctx, action)
@@ -453,13 +527,82 @@ func (a *FeishuAdapter) createDocxViaAPI(ctx context.Context, title string, mark
 	return &FeishuDocxCreateResult{
 		DocumentID: documentID,
 		Title:      firstNonEmpty(stringPtrValue(createResp.Data.Document.Title), title),
-		URL:        inferCreatedFeishuDocxURL(documentID, sourceURL),
+		URL:        inferCreatedFeishuResourceURL("docx", documentID, sourceURL),
 	}, nil
 }
 
-func inferCreatedFeishuDocxURL(documentID string, sourceURL string) string {
-	documentID = strings.TrimSpace(documentID)
-	if documentID == "" {
+func (a *FeishuAdapter) createSheetViaAPI(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuSheetCreateResult, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	title = strings.TrimSpace(title)
+	folderToken = strings.TrimSpace(folderToken)
+	if title == "" {
+		return nil, model.ErrValidation("feishu sheet create requires title")
+	}
+	spreadsheetBuilder := larksheets.NewSpreadsheetBuilder().Title(title)
+	if folderToken != "" {
+		spreadsheetBuilder.FolderToken(folderToken)
+	}
+	createReq := larksheets.NewCreateSpreadsheetReqBuilder().
+		Spreadsheet(spreadsheetBuilder.Build()).
+		Build()
+	createResp, err := a.larkClient.Sheets.Spreadsheet.Create(ctx, createReq)
+	if err != nil {
+		return nil, classifyFeishuResourceReadError("create feishu sheet", 0, err.Error(), err)
+	}
+	if !createResp.Success() {
+		return nil, classifyFeishuResourceReadError("create feishu sheet", createResp.Code, createResp.Msg, nil)
+	}
+	if createResp.Data == nil || createResp.Data.Spreadsheet == nil || strings.TrimSpace(stringPtrValue(createResp.Data.Spreadsheet.SpreadsheetToken)) == "" {
+		return nil, model.ErrValidation("feishu sheet create returned no spreadsheet_token")
+	}
+	spreadsheetToken := strings.TrimSpace(stringPtrValue(createResp.Data.Spreadsheet.SpreadsheetToken))
+	return &FeishuSheetCreateResult{
+		SpreadsheetToken: spreadsheetToken,
+		Title:            firstNonEmpty(stringPtrValue(createResp.Data.Spreadsheet.Title), title),
+		URL:              firstNonEmpty(stringPtrValue(createResp.Data.Spreadsheet.Url), inferCreatedFeishuResourceURL("sheets", spreadsheetToken, sourceURL)),
+	}, nil
+}
+
+func (a *FeishuAdapter) createBitableViaAPI(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuBitableCreateResult, error) {
+	if a == nil || a.larkClient == nil {
+		return nil, model.ErrNotConfigured("feishu direct api is not configured")
+	}
+	title = strings.TrimSpace(title)
+	folderToken = strings.TrimSpace(folderToken)
+	if title == "" {
+		return nil, model.ErrValidation("feishu bitable create requires title")
+	}
+	appBuilder := larkbitable.NewReqAppBuilder().Name(title)
+	if folderToken != "" {
+		appBuilder.FolderToken(folderToken)
+	}
+	createReq := larkbitable.NewCreateAppReqBuilder().
+		ReqApp(appBuilder.Build()).
+		Build()
+	createResp, err := a.larkClient.Bitable.App.Create(ctx, createReq)
+	if err != nil {
+		return nil, classifyFeishuResourceReadError("create feishu bitable", 0, err.Error(), err)
+	}
+	if !createResp.Success() {
+		return nil, classifyFeishuResourceReadError("create feishu bitable", createResp.Code, createResp.Msg, nil)
+	}
+	if createResp.Data == nil || createResp.Data.App == nil || strings.TrimSpace(stringPtrValue(createResp.Data.App.AppToken)) == "" {
+		return nil, model.ErrValidation("feishu bitable create returned no app_token")
+	}
+	appToken := strings.TrimSpace(stringPtrValue(createResp.Data.App.AppToken))
+	return &FeishuBitableCreateResult{
+		AppToken: appToken,
+		Title:    firstNonEmpty(stringPtrValue(createResp.Data.App.Name), title),
+		URL:      firstNonEmpty(stringPtrValue(createResp.Data.App.Url), inferCreatedFeishuResourceURL("base", appToken, sourceURL)),
+	}, nil
+}
+
+func inferCreatedFeishuResourceURL(pathPrefix string, token string, sourceURL string) string {
+	pathPrefix = strings.Trim(strings.TrimSpace(pathPrefix), "/")
+	token = strings.TrimSpace(token)
+	if pathPrefix == "" || token == "" {
 		return ""
 	}
 	parsed, err := url.Parse(strings.TrimSpace(sourceURL))
@@ -469,7 +612,7 @@ func inferCreatedFeishuDocxURL(documentID string, sourceURL string) string {
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return ""
 	}
-	return (&url.URL{Scheme: parsed.Scheme, Host: parsed.Host, Path: "/docx/" + documentID}).String()
+	return (&url.URL{Scheme: parsed.Scheme, Host: parsed.Host, Path: "/" + pathPrefix + "/" + token}).String()
 }
 
 func (a *FeishuAdapter) appendDocxMarkdownBlocksAtIndexViaAPI(ctx context.Context, documentID string, markdown string, index int) error {

@@ -46,6 +46,8 @@ func TestFeishuResourceActionHelperWritesContextAndInstructions(t *testing.T) {
 		"atomically rename",
 		"Inspect before positioning writes",
 		`"operation": "docx.create"`,
+		`"operation": "sheet.create"`,
+		`"operation": "bitable.create"`,
 		`"folder_token": "fldcn123"`,
 		`"operation": "docx.inspect_headings"`,
 		`"operation": "docx.append_under_heading"`,
@@ -173,6 +175,38 @@ func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testin
 	}
 	if !strings.Contains(string(data), `"url": "https://anycap.feishu.cn/docx/DOCXnew123"`) || !strings.Contains(string(data), `"title": "新文档"`) || !strings.Contains(string(data), `"verification_text_length": 16`) {
 		t.Fatalf("unexpected create result json:\n%s", string(data))
+	}
+}
+
+func TestFeishuResourceActionHelperExecutesSheetCreateWithoutContextURL(t *testing.T) {
+	root := t.TempDir()
+	if err := WriteFeishuResourceActionContext(root, "om_text", nil); err != nil {
+		t.Fatalf("WriteFeishuResourceActionContext() error = %v", err)
+	}
+	actionPath := writeFeishuActionFile(t, root, "act_create_sheet", `{
+		"operation": "sheet.create",
+		"title": "新表格",
+		"folder_token": "fldcn123"
+	}`)
+
+	var gotTitle, gotFolderToken string
+	helper := NewFeishuResourceActionHelper(root, func(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
+		gotTitle = action.Title
+		gotFolderToken = action.FolderToken
+		return &FeishuResourceWriteResult{
+			Operation: action.Operation,
+			URL:       "https://anycap.feishu.cn/sheets/SHEETnew123",
+			Kind:      FeishuResourceKindSheet,
+			Token:     "SHEETnew123",
+			Title:     action.Title,
+		}, nil
+	})
+	result, err := helper.ExecuteOutboxAction(context.Background(), actionPath)
+	if err != nil {
+		t.Fatalf("ExecuteOutboxAction() error = %v", err)
+	}
+	if gotTitle != "新表格" || gotFolderToken != "fldcn123" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationSheetCreate) || result.Title != "新表格" {
+		t.Fatalf("unexpected sheet create title=%q folderToken=%q result=%+v", gotTitle, gotFolderToken, result)
 	}
 }
 

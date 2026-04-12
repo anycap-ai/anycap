@@ -78,6 +78,19 @@ func TestParseFeishuResourceWriteActionDocxCreate(t *testing.T) {
 	}
 }
 
+func TestParseFeishuResourceWriteActionSheetCreate(t *testing.T) {
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "sheet.create",
+		"title": "新表格",
+		"folder_token": "fldcn123",
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+	}`)
+
+	if action.Operation != FeishuResourceWriteOperationSheetCreate || action.Title != "新表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
+		t.Fatalf("unexpected action %+v", action)
+	}
+}
+
 func TestParseFeishuResourceWriteActionSheetAppendRows(t *testing.T) {
 	action := parseFeishuResourceWriteActionJSON(t, `{
 		"operation": "sheet.append_rows",
@@ -100,6 +113,19 @@ func TestParseFeishuResourceWriteActionSheetUpdateRange(t *testing.T) {
 	}`)
 
 	if action.Operation != FeishuResourceWriteOperationSheetUpdateRange || action.Range != "grid!A1:B1" || len(action.Values) != 1 {
+		t.Fatalf("unexpected action %+v", action)
+	}
+}
+
+func TestParseFeishuResourceWriteActionBitableCreate(t *testing.T) {
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "bitable.create",
+		"title": "新多维表格",
+		"folder_token": "fldcn123",
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+	}`)
+
+	if action.Operation != FeishuResourceWriteOperationBitableCreate || action.Title != "新多维表格" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
 		t.Fatalf("unexpected action %+v", action)
 	}
 }
@@ -425,6 +451,72 @@ func TestExecuteFeishuResourceWriteCreateDocxKeepsSuccessWhenVerificationFails(t
 	}
 }
 
+func TestExecuteFeishuResourceWriteCreateSheetUsesInjectedCreator(t *testing.T) {
+	var gotTitle, gotSourceURL, gotFolderToken string
+	adapter := &FeishuAdapter{
+		createSheet: func(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuSheetCreateResult, error) {
+			gotTitle = title
+			gotSourceURL = sourceURL
+			gotFolderToken = folderToken
+			return &FeishuSheetCreateResult{
+				SpreadsheetToken: "SHEETnew123",
+				Title:            title,
+				URL:              "https://anycap.feishu.cn/sheets/SHEETnew123",
+			}, nil
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "sheet.create",
+		"title": "新表格",
+		"folder_token": "fldcn123",
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if gotTitle != "新表格" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" || gotFolderToken != "fldcn123" {
+		t.Fatalf("unexpected creator input title=%q sourceURL=%q folderToken=%q", gotTitle, gotSourceURL, gotFolderToken)
+	}
+	if result.Operation != FeishuResourceWriteOperationSheetCreate || result.Kind != FeishuResourceKindSheet || result.Token != "SHEETnew123" || result.URL != "https://anycap.feishu.cn/sheets/SHEETnew123" || result.Title != "新表格" {
+		t.Fatalf("unexpected create sheet result %+v", result)
+	}
+}
+
+func TestExecuteFeishuResourceWriteCreateBitableUsesInjectedCreator(t *testing.T) {
+	var gotTitle, gotSourceURL, gotFolderToken string
+	adapter := &FeishuAdapter{
+		createBitable: func(ctx context.Context, title string, sourceURL string, folderToken string) (*FeishuBitableCreateResult, error) {
+			gotTitle = title
+			gotSourceURL = sourceURL
+			gotFolderToken = folderToken
+			return &FeishuBitableCreateResult{
+				AppToken: "BASEnew123",
+				Title:    title,
+				URL:      "https://anycap.feishu.cn/base/BASEnew123",
+			}, nil
+		},
+	}
+	action := parseFeishuResourceWriteActionJSON(t, `{
+		"operation": "bitable.create",
+		"title": "新多维表格",
+		"folder_token": "fldcn123",
+		"source_url": "https://anycap.feishu.cn/docx/DOCXsource"
+	}`)
+
+	result, err := adapter.ExecuteFeishuResourceWrite(context.Background(), *action)
+	if err != nil {
+		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
+	}
+	if gotTitle != "新多维表格" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" || gotFolderToken != "fldcn123" {
+		t.Fatalf("unexpected creator input title=%q sourceURL=%q folderToken=%q", gotTitle, gotSourceURL, gotFolderToken)
+	}
+	if result.Operation != FeishuResourceWriteOperationBitableCreate || result.Kind != FeishuResourceKindBitable || result.Token != "BASEnew123" || result.URL != "https://anycap.feishu.cn/base/BASEnew123" || result.Title != "新多维表格" {
+		t.Fatalf("unexpected create bitable result %+v", result)
+	}
+}
+
 func TestExecuteFeishuResourceWriteAppendSheetRowsUsesInjectedWriter(t *testing.T) {
 	var gotToken, gotRange string
 	var gotRows [][]any
@@ -697,6 +789,86 @@ func TestFeishuAdapterCreateDocxViaAPICreatesAndWritesMarkdown(t *testing.T) {
 	}
 	if result.DocumentID != "DOCXnew123" || result.Title != "新文档" || result.URL != "https://anycap.feishu.cn/docx/DOCXnew123" {
 		t.Fatalf("unexpected create result %+v", result)
+	}
+}
+
+func TestFeishuAdapterCreateSheetViaAPICreatesSpreadsheet(t *testing.T) {
+	var createBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/open-apis/auth/v3/tenant_access_token/internal":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"tenant_access_token":"tenant_token","expire":7200}`))
+		case "/open-apis/sheets/v3/spreadsheets":
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected create method %s", r.Method)
+			}
+			if err := json.NewDecoder(r.Body).Decode(&createBody); err != nil {
+				t.Fatalf("Decode(create sheet body) error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"data":{"spreadsheet":{"spreadsheet_token":"SHEETnew123","title":"新表格","url":"https://anycap.feishu.cn/sheets/SHEETnew123"}}}`))
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{
+		AppID:          "cli_appid",
+		AppSecret:      "app_secret",
+		HTTPClient:     server.Client(),
+		OpenAPIBaseURL: server.URL,
+	})
+
+	result, err := adapter.createSheetViaAPI(context.Background(), "新表格", "https://anycap.feishu.cn/docx/DOCXsource", "fldcn123")
+	if err != nil {
+		t.Fatalf("createSheetViaAPI() error = %v", err)
+	}
+	if createBody["title"] != "新表格" || createBody["folder_token"] != "fldcn123" {
+		t.Fatalf("unexpected create sheet body %#v", createBody)
+	}
+	if result.SpreadsheetToken != "SHEETnew123" || result.Title != "新表格" || result.URL != "https://anycap.feishu.cn/sheets/SHEETnew123" {
+		t.Fatalf("unexpected create sheet result %+v", result)
+	}
+}
+
+func TestFeishuAdapterCreateBitableViaAPICreatesApp(t *testing.T) {
+	var createBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/open-apis/auth/v3/tenant_access_token/internal":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"tenant_access_token":"tenant_token","expire":7200}`))
+		case "/open-apis/bitable/v1/apps":
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected create method %s", r.Method)
+			}
+			if err := json.NewDecoder(r.Body).Decode(&createBody); err != nil {
+				t.Fatalf("Decode(create bitable body) error = %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"code":0,"data":{"app":{"app_token":"BASEnew123","name":"新多维表格","url":"https://anycap.feishu.cn/base/BASEnew123"}}}`))
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{
+		AppID:          "cli_appid",
+		AppSecret:      "app_secret",
+		HTTPClient:     server.Client(),
+		OpenAPIBaseURL: server.URL,
+	})
+
+	result, err := adapter.createBitableViaAPI(context.Background(), "新多维表格", "https://anycap.feishu.cn/docx/DOCXsource", "fldcn123")
+	if err != nil {
+		t.Fatalf("createBitableViaAPI() error = %v", err)
+	}
+	if createBody["name"] != "新多维表格" || createBody["folder_token"] != "fldcn123" {
+		t.Fatalf("unexpected create bitable body %#v", createBody)
+	}
+	if result.AppToken != "BASEnew123" || result.Title != "新多维表格" || result.URL != "https://anycap.feishu.cn/base/BASEnew123" {
+		t.Fatalf("unexpected create bitable result %+v", result)
 	}
 }
 

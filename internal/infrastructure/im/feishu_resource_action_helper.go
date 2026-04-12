@@ -201,7 +201,7 @@ func (h *FeishuResourceActionHelper) ProcessOutboxOnce(ctx context.Context) ([]*
 }
 
 func (h *FeishuResourceActionHelper) requireAllowedURL(action FeishuResourceWriteAction) error {
-	if action.Operation == FeishuResourceWriteOperationDocxCreate {
+	if action.createsNewResource() {
 		return nil
 	}
 	data, err := os.ReadFile(filepath.Join(h.root, "context.json"))
@@ -272,7 +272,7 @@ Use this directory to request constrained Feishu resource actions from the local
 
 Rules:
 - Only use URLs listed in context.json for writes to existing Feishu resources.
-- docx.create is the only operation that does not require url. Include source_url from context.json when possible so the result can infer the tenant docx URL.
+- Create operations do not require url: docx.create, sheet.create, bitable.create. Include source_url from context.json when possible so the result can infer the tenant URL.
 - Write action JSON to outbox/<action_id>.tmp first, then atomically rename it to outbox/<action_id>.json.
 - Wait for results/<action_id>.json before reporting the action result.
 - Inspect before positioning writes: use docx.inspect_headings before docx.append_under_heading or docx.replace_heading_section when you are not certain about the target heading.
@@ -288,6 +288,22 @@ Create a new docx:
   "folder_token": "fldcn123",
   "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123",
   "markdown": "# 新文档标题\n\n正文内容"
+}
+
+Create a new sheet:
+{
+  "operation": "sheet.create",
+  "title": "新表格标题",
+  "folder_token": "fldcn123",
+  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123"
+}
+
+Create a new bitable:
+{
+  "operation": "bitable.create",
+  "title": "新多维表格标题",
+  "folder_token": "fldcn123",
+  "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123"
 }
 
 Inspect headings:
@@ -316,6 +332,8 @@ Replace a heading section:
 
 Other supported operations:
 - docx.create
+- sheet.create
+- bitable.create
 - docx.append_section
 - docx.append_markdown
 - sheet.append_rows
