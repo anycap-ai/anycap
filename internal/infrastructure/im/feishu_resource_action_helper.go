@@ -285,6 +285,7 @@ Create a new docx:
 {
   "operation": "docx.create",
   "title": "新文档标题",
+  "folder_token": "fldcn123",
   "source_url": "https://anycap.feishu.cn/docx/DOCXtoken123",
   "markdown": "# 新文档标题\n\n正文内容"
 }

@@ -38,6 +38,7 @@ type FeishuResourceWriteAction struct {
 	SourceURL    string                       `json:"source_url,omitempty"`
 	Ref          FeishuResourceRef            `json:"-"`
 	Title        string                       `json:"title,omitempty"`
+	FolderToken  string                       `json:"folder_token,omitempty"`
 	SectionTitle string                       `json:"section_title,omitempty"`
 	Heading      string                       `json:"heading,omitempty"`
 	HeadingLevel int                          `json:"heading_level,omitempty"`
@@ -95,6 +96,7 @@ func ParseFeishuResourceWriteAction(raw []byte) (*FeishuResourceWriteAction, err
 	action.URL = strings.TrimSpace(action.URL)
 	action.SourceURL = strings.TrimSpace(action.SourceURL)
 	action.Title = strings.TrimSpace(action.Title)
+	action.FolderToken = strings.TrimSpace(action.FolderToken)
 	action.SectionTitle = strings.TrimSpace(action.SectionTitle)
 	action.Heading = strings.TrimSpace(action.Heading)
 	action.Markdown = strings.TrimSpace(action.Markdown)
@@ -213,7 +215,7 @@ func (a *FeishuAdapter) ExecuteFeishuResourceWrite(ctx context.Context, action F
 		if a.createDocx == nil {
 			return nil, model.ErrNotConfigured("feishu docx creator is not configured")
 		}
-		created, err := a.createDocx(ctx, action.Title, action.Markdown, action.SourceURL)
+		created, err := a.createDocx(ctx, action.Title, action.Markdown, action.SourceURL, action.FolderToken)
 		if err != nil {
 			return nil, err
 		}
@@ -417,19 +419,22 @@ func (a *FeishuAdapter) inspectDocxHeadingsViaAPI(ctx context.Context, documentI
 	return &result, nil
 }
 
-func (a *FeishuAdapter) createDocxViaAPI(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+func (a *FeishuAdapter) createDocxViaAPI(ctx context.Context, title string, markdown string, sourceURL string, folderToken string) (*FeishuDocxCreateResult, error) {
 	if a == nil || a.larkClient == nil {
 		return nil, model.ErrNotConfigured("feishu direct api is not configured")
 	}
 	title = strings.TrimSpace(title)
 	markdown = strings.TrimSpace(markdown)
+	folderToken = strings.TrimSpace(folderToken)
 	if title == "" || markdown == "" {
 		return nil, model.ErrValidation("feishu docx create requires title and markdown")
 	}
+	bodyBuilder := larkdocx.NewCreateDocumentReqBodyBuilder().Title(title)
+	if folderToken != "" {
+		bodyBuilder.FolderToken(folderToken)
+	}
 	createReq := larkdocx.NewCreateDocumentReqBuilder().
-		Body(larkdocx.NewCreateDocumentReqBodyBuilder().
-			Title(title).
-			Build()).
+		Body(bodyBuilder.Build()).
 		Build()
 	createResp, err := a.larkClient.Docx.Document.Create(ctx, createReq)
 	if err != nil {

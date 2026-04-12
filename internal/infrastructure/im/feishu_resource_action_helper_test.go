@@ -46,6 +46,7 @@ func TestFeishuResourceActionHelperWritesContextAndInstructions(t *testing.T) {
 		"atomically rename",
 		"Inspect before positioning writes",
 		`"operation": "docx.create"`,
+		`"folder_token": "fldcn123"`,
 		`"operation": "docx.inspect_headings"`,
 		`"operation": "docx.append_under_heading"`,
 		`"operation": "docx.replace_heading_section"`,
@@ -141,12 +142,14 @@ func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testin
 	actionPath := writeFeishuActionFile(t, root, "act_create", `{
 		"operation": "docx.create",
 		"title": "新文档",
+		"folder_token": "fldcn123",
 		"markdown": "# 新文档\n\nhello"
 	}`)
 
-	var gotTitle string
+	var gotTitle, gotFolderToken string
 	helper := NewFeishuResourceActionHelper(root, func(ctx context.Context, action FeishuResourceWriteAction) (*FeishuResourceWriteResult, error) {
 		gotTitle = action.Title
+		gotFolderToken = action.FolderToken
 		return &FeishuResourceWriteResult{
 			Operation:              action.Operation,
 			URL:                    "https://anycap.feishu.cn/docx/DOCXnew123",
@@ -160,8 +163,8 @@ func TestFeishuResourceActionHelperExecutesDocxCreateWithoutContextURL(t *testin
 	if err != nil {
 		t.Fatalf("ExecuteOutboxAction() error = %v", err)
 	}
-	if gotTitle != "新文档" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationDocxCreate) || result.Title != "新文档" || result.VerificationTextLength == 0 {
-		t.Fatalf("unexpected create title=%q result=%+v", gotTitle, result)
+	if gotTitle != "新文档" || gotFolderToken != "fldcn123" || result.Status != "success" || result.Operation != string(FeishuResourceWriteOperationDocxCreate) || result.Title != "新文档" || result.VerificationTextLength == 0 {
+		t.Fatalf("unexpected create title=%q folderToken=%q result=%+v", gotTitle, gotFolderToken, result)
 	}
 
 	data, err := os.ReadFile(filepath.Join(root, "results", "act_create.json"))

@@ -68,11 +68,12 @@ func TestParseFeishuResourceWriteActionDocxCreate(t *testing.T) {
 	action := parseFeishuResourceWriteActionJSON(t, `{
 		"operation": "docx.create",
 		"title": "新文档",
+		"folder_token": "fldcn123",
 		"source_url": "https://anycap.feishu.cn/wiki/WIKInode456",
 		"markdown": "# 新文档\n\nhello"
 	}`)
 
-	if action.Operation != FeishuResourceWriteOperationDocxCreate || action.Title != "新文档" || action.SourceURL != "https://anycap.feishu.cn/wiki/WIKInode456" || action.Markdown != "# 新文档\n\nhello" {
+	if action.Operation != FeishuResourceWriteOperationDocxCreate || action.Title != "新文档" || action.FolderToken != "fldcn123" || action.SourceURL != "https://anycap.feishu.cn/wiki/WIKInode456" || action.Markdown != "# 新文档\n\nhello" {
 		t.Fatalf("unexpected action %+v", action)
 	}
 }
@@ -358,13 +359,14 @@ func TestExecuteFeishuResourceWriteInspectHeadingsUsesInjectedInspector(t *testi
 }
 
 func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
-	var gotTitle, gotMarkdown, gotSourceURL string
+	var gotTitle, gotMarkdown, gotSourceURL, gotFolderToken string
 	var gotVerificationDocumentID string
 	adapter := &FeishuAdapter{
-		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string, folderToken string) (*FeishuDocxCreateResult, error) {
 			gotTitle = title
 			gotMarkdown = markdown
 			gotSourceURL = sourceURL
+			gotFolderToken = folderToken
 			return &FeishuDocxCreateResult{
 				DocumentID: "DOCXnew123",
 				Title:      title,
@@ -379,6 +381,7 @@ func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 	action := parseFeishuResourceWriteActionJSON(t, `{
 		"operation": "docx.create",
 		"title": "新文档",
+		"folder_token": "fldcn123",
 		"source_url": "https://anycap.feishu.cn/docx/DOCXsource",
 		"markdown": "# 新文档\n\nhello"
 	}`)
@@ -387,8 +390,8 @@ func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExecuteFeishuResourceWrite() error = %v", err)
 	}
-	if gotTitle != "新文档" || gotMarkdown != "# 新文档\n\nhello" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" {
-		t.Fatalf("unexpected creator input title=%q markdown=%q sourceURL=%q", gotTitle, gotMarkdown, gotSourceURL)
+	if gotTitle != "新文档" || gotMarkdown != "# 新文档\n\nhello" || gotSourceURL != "https://anycap.feishu.cn/docx/DOCXsource" || gotFolderToken != "fldcn123" {
+		t.Fatalf("unexpected creator input title=%q markdown=%q sourceURL=%q folderToken=%q", gotTitle, gotMarkdown, gotSourceURL, gotFolderToken)
 	}
 	if gotVerificationDocumentID != "DOCXnew123" {
 		t.Fatalf("expected create verification read for DOCXnew123, got %q", gotVerificationDocumentID)
@@ -400,7 +403,7 @@ func TestExecuteFeishuResourceWriteCreateDocxUsesInjectedCreator(t *testing.T) {
 
 func TestExecuteFeishuResourceWriteCreateDocxKeepsSuccessWhenVerificationFails(t *testing.T) {
 	adapter := &FeishuAdapter{
-		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string) (*FeishuDocxCreateResult, error) {
+		createDocx: func(ctx context.Context, title string, markdown string, sourceURL string, folderToken string) (*FeishuDocxCreateResult, error) {
 			return &FeishuDocxCreateResult{DocumentID: "DOCXnew123", Title: title}, nil
 		},
 		readDocxRawContent: func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
@@ -682,11 +685,11 @@ func TestFeishuAdapterCreateDocxViaAPICreatesAndWritesMarkdown(t *testing.T) {
 		OpenAPIBaseURL: server.URL,
 	})
 
-	result, err := adapter.createDocxViaAPI(context.Background(), "新文档", "# 新文档", "https://anycap.feishu.cn/wiki/WIKInode456")
+	result, err := adapter.createDocxViaAPI(context.Background(), "新文档", "# 新文档", "https://anycap.feishu.cn/wiki/WIKInode456", "fldcn123")
 	if err != nil {
 		t.Fatalf("createDocxViaAPI() error = %v", err)
 	}
-	if createBody["title"] != "新文档" || convertBody["content"] != "# 新文档" {
+	if createBody["title"] != "新文档" || createBody["folder_token"] != "fldcn123" || convertBody["content"] != "# 新文档" {
 		t.Fatalf("unexpected create/convert body create=%#v convert=%#v", createBody, convertBody)
 	}
 	if descendantBody["index"].(float64) != -1 {

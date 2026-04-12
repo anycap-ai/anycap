@@ -46,7 +46,7 @@ type FeishuAdapter struct {
 	readSheetPreview          func(context.Context, string, FeishuSheetReadOptions) (*FeishuSheetReadResult, error)
 	readBitablePreview        func(context.Context, string, FeishuBitableReadOptions) (*FeishuBitableReadResult, error)
 	inspectDocxHeadings       func(context.Context, string) (*FeishuDocxHeadingInspectResult, error)
-	createDocx                func(context.Context, string, string, string) (*FeishuDocxCreateResult, error)
+	createDocx                func(context.Context, string, string, string, string) (*FeishuDocxCreateResult, error)
 	appendDocxSection         func(context.Context, string, string, string) error
 	appendDocxMarkdown        func(context.Context, string, string) error
 	appendDocxUnderHeading    func(context.Context, string, string, int, string) error
