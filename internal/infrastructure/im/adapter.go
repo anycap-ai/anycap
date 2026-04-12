@@ -29,6 +29,7 @@ type NormalizedInboundEvent struct {
 	ContentJSON       string
 	FileInfo          *NormalizedInboundFileInfo
 	Mentions          []NormalizedInboundMention
+	Resources         []NormalizedInboundResource
 	QuotedMessage     *NormalizedInboundContextMessage
 	ThreadHistory     []NormalizedInboundContextMessage
 	ChatHistory       []NormalizedInboundContextMessage
@@ -50,6 +51,7 @@ type NormalizedInboundContextMessage struct {
 	ContentJSON string
 	FileInfo    *NormalizedInboundFileInfo
 	Mentions    []NormalizedInboundMention
+	Resources   []NormalizedInboundResource
 }
 
 type NormalizedInboundFileInfo struct {
@@ -58,6 +60,18 @@ type NormalizedInboundFileInfo struct {
 	FileKey     string
 	FileName    string
 	LocalPath   string
+}
+
+type NormalizedInboundResource struct {
+	URL       string
+	Kind      FeishuResourceKind
+	Token     string
+	Title     string
+	ReadMode  string
+	LocalPath string
+	ErrorCode string
+	ErrorText string
+	ReadError error
 }
 
 func (e NormalizedInboundEvent) AgentInputText() string {
@@ -75,6 +89,7 @@ func (e NormalizedInboundEvent) AgentInputText() string {
 		ContentJSON: e.ContentJSON,
 		FileInfo:    e.FileInfo,
 		Mentions:    e.Mentions,
+		Resources:   e.Resources,
 	}
 	if len(e.ThreadHistory) == 0 && len(e.ChatHistory) == 0 && e.QuotedMessage == nil {
 		return current.renderFeishuMessage("")
@@ -157,6 +172,9 @@ func (m NormalizedInboundContextMessage) renderFeishuMessage(indent string) stri
 	if fileInfo := m.resolvedFileInfo(); fileInfo != nil {
 		lines = append(lines, fileInfo.render(indent+"  "))
 	}
+	if len(m.Resources) > 0 {
+		lines = append(lines, renderFeishuResources(m.Resources, indent+"  "))
+	}
 	if strings.EqualFold(strings.TrimSpace(m.MessageType), "text") {
 		lines = append(lines, indent+html.EscapeString(strings.TrimSpace(m.Message)))
 	} else {
@@ -199,6 +217,9 @@ func (m NormalizedInboundContextMessage) renderHistoryMessage(indent string) str
 	lines := []string{header}
 	if fileInfo := m.resolvedFileInfo(); fileInfo != nil {
 		lines = append(lines, fileInfo.render(indent+"  "))
+	}
+	if len(m.Resources) > 0 {
+		lines = append(lines, renderFeishuResources(m.Resources, indent+"  "))
 	}
 	if text := strings.TrimSpace(m.Message); text != "" {
 		lines = append(lines, indent+"  "+html.EscapeString(text))
@@ -265,6 +286,41 @@ func (i NormalizedInboundFileInfo) render(indent string) string {
 	appendAttr("file_name", i.FileName)
 	appendAttr("local_path", i.LocalPath)
 	return fmt.Sprintf("%s<file_info %s />", indent, strings.Join(attrs, " "))
+}
+
+func renderFeishuResources(resources []NormalizedInboundResource, indent string) string {
+	lines := []string{indent + "<feishu-resources>"}
+	for _, resource := range resources {
+		var attrs []string
+		appendAttr := func(name, value string) {
+			value = strings.TrimSpace(value)
+			if value == "" {
+				return
+			}
+			attrs = append(attrs, fmt.Sprintf(`%s="%s"`, name, html.EscapeString(value)))
+		}
+		appendAttr("url", resource.URL)
+		appendAttr("kind", string(resource.Kind))
+		appendAttr("token", resource.Token)
+		appendAttr("title", resource.Title)
+		appendAttr("read_mode", resource.ReadMode)
+		appendAttr("local_path", resource.LocalPath)
+
+		lines = append(lines, fmt.Sprintf("%s  <feishu-resource %s>", indent, strings.Join(attrs, " ")))
+		if resource.ErrorCode != "" || resource.ErrorText != "" {
+			var errorAttrs []string
+			if code := strings.TrimSpace(resource.ErrorCode); code != "" {
+				errorAttrs = append(errorAttrs, fmt.Sprintf(`code="%s"`, html.EscapeString(code)))
+			}
+			if text := strings.TrimSpace(resource.ErrorText); text != "" {
+				errorAttrs = append(errorAttrs, fmt.Sprintf(`message="%s"`, html.EscapeString(text)))
+			}
+			lines = append(lines, fmt.Sprintf("%s    <read_error %s />", indent, strings.Join(errorAttrs, " ")))
+		}
+		lines = append(lines, indent+"  </feishu-resource>")
+	}
+	lines = append(lines, indent+"</feishu-resources>")
+	return strings.Join(lines, "\n")
 }
 
 func stringFromMap(values map[string]any, key string) string {

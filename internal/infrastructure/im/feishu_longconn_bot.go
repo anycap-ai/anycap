@@ -3,6 +3,7 @@ package im
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -368,6 +369,7 @@ func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedI
 	} else if err != nil {
 		logging.WithError(err).Warn("download feishu current message resource failed")
 	}
+	enriched.Resources = b.readCurrentMessageResources(ctx, enriched.Message)
 	if quoted, err := b.loadQuotedMessage(ctx, event); err == nil && quoted != nil {
 		quoted.FileInfo = resolvedNormalizedFileInfo(quoted.FileInfo, quoted.MessageType, quoted.ContentJSON)
 		if fileInfo, downloadErr := b.downloadMessageResourceToLocal(ctx, quoted.MessageID, quoted.FileInfo); downloadErr == nil {
@@ -390,6 +392,83 @@ func (b *FeishuLongConnBot) enrichContext(ctx context.Context, event NormalizedI
 		logging.WithError(err).Warn("load feishu chat history failed")
 	}
 	return enriched
+}
+
+func (b *FeishuLongConnBot) readCurrentMessageResources(ctx context.Context, message string) []NormalizedInboundResource {
+	if b == nil || b.adapter == nil {
+		return nil
+	}
+	refs := ExtractFeishuResourceRefs(message)
+	if len(refs) == 0 {
+		return nil
+	}
+	resources := make([]NormalizedInboundResource, 0, len(refs))
+	writer := NewFeishuResourceArtifactWriter(b.downloadDir, nil)
+	for _, ref := range refs {
+		resource := NormalizedInboundResource{
+			URL:   strings.TrimSpace(ref.URL),
+			Kind:  ref.Kind,
+			Token: strings.TrimSpace(ref.Token),
+		}
+
+		result, err := b.adapter.ReadFeishuResource(ctx, ref, defaultFeishuResourceReadOptions())
+		artifact := FeishuResourceArtifact{Ref: ref}
+		if err != nil {
+			resource.ErrorCode, resource.ErrorText = normalizeFeishuResourceReadError(err)
+			resource.ReadError = err
+			artifact.ErrorCode = resource.ErrorCode
+			artifact.ErrorText = resource.ErrorText
+			artifact.ReadMode = "error"
+		} else if result != nil {
+			resource.Title = strings.TrimSpace(result.Title)
+			resource.ReadMode = strings.TrimSpace(result.ReadMode)
+			artifact.Title = resource.Title
+			artifact.ReadMode = resource.ReadMode
+			artifact.Content = result.Content
+		}
+
+		if path, writeErr := writeFeishuResourceArtifact(writer, artifact); writeErr == nil {
+			resource.LocalPath = path
+		} else if writeErr != nil {
+			logging.WithError(writeErr).Warn("write feishu resource artifact failed")
+		}
+		resources = append(resources, resource)
+	}
+	return resources
+}
+
+func defaultFeishuResourceReadOptions() FeishuResourceReadOptions {
+	return FeishuResourceReadOptions{
+		Sheet: FeishuSheetReadOptions{
+			MaxRows:    20,
+			MaxColumns: 10,
+		},
+		Bitable: FeishuBitableReadOptions{
+			MaxRecordsPerTable: 20,
+		},
+	}
+}
+
+func normalizeFeishuResourceReadError(err error) (string, string) {
+	if err == nil {
+		return "", ""
+	}
+	var readErr *FeishuResourceReadError
+	if errors.As(err, &readErr) {
+		return strings.TrimSpace(readErr.Code), strings.TrimSpace(readErr.Error())
+	}
+	return "read_failed", strings.TrimSpace(err.Error())
+}
+
+func writeFeishuResourceArtifact(writer *FeishuResourceArtifactWriter, artifact FeishuResourceArtifact) (string, error) {
+	if writer == nil || strings.TrimSpace(writer.root) == "" {
+		return "", nil
+	}
+	result, err := writer.Write(artifact)
+	if err != nil || result == nil {
+		return "", err
+	}
+	return strings.TrimSpace(result.LocalPath), nil
 }
 
 func (b *FeishuLongConnBot) loadQuotedMessage(ctx context.Context, event NormalizedInboundEvent) (*NormalizedInboundContextMessage, error) {

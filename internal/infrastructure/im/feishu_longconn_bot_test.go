@@ -3,8 +3,10 @@ package im
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -339,6 +341,199 @@ func TestFeishuLongConnBot_HandleNormalizedEventEnrichesQuotedAndHistoryContext(
 	}
 }
 
+func TestFeishuLongConnBot_HandleNormalizedEventReadsDocxResourceToArtifact(t *testing.T) {
+	tmpDir := t.TempDir()
+	var gotEvent NormalizedInboundEvent
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	disableFeishuContextHistory(adapter)
+	adapter.readDocxRawContent = func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+		if documentID != "DOCXtoken123" {
+			t.Fatalf("unexpected docx token %q", documentID)
+		}
+		return &FeishuDocxReadResult{
+			DocumentID: documentID,
+			Title:      "Spec",
+			Content:    "hello docx",
+		}, nil
+	}
+
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		DownloadDir:     tmpDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_text",
+		MessageType: "text",
+		Message:     "看下 https://anycap.feishu.cn/docx/DOCXtoken123",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+	if len(gotEvent.Resources) != 1 {
+		t.Fatalf("expected one resource, got %+v", gotEvent.Resources)
+	}
+	resource := gotEvent.Resources[0]
+	if resource.Kind != FeishuResourceKindDocx || resource.Title != "Spec" || resource.ReadMode != "docx_raw" || strings.TrimSpace(resource.LocalPath) == "" {
+		t.Fatalf("unexpected resource %+v", resource)
+	}
+	content, readErr := os.ReadFile(resource.LocalPath)
+	if readErr != nil {
+		t.Fatalf("ReadFile() error = %v", readErr)
+	}
+	if !strings.Contains(string(content), "hello docx") {
+		t.Fatalf("expected artifact content, got:\n%s", string(content))
+	}
+	rendered := gotEvent.AgentInputText()
+	if !strings.Contains(rendered, "<feishu-resource") || !strings.Contains(rendered, `local_path="`) {
+		t.Fatalf("expected feishu resource block, got %s", rendered)
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventReadsSheetResourcePreview(t *testing.T) {
+	tmpDir := t.TempDir()
+	var gotEvent NormalizedInboundEvent
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	disableFeishuContextHistory(adapter)
+	adapter.readSheetPreview = func(ctx context.Context, spreadsheetToken string, options FeishuSheetReadOptions) (*FeishuSheetReadResult, error) {
+		if spreadsheetToken != "SHEETtoken789" {
+			t.Fatalf("unexpected sheet token %q", spreadsheetToken)
+		}
+		if options.MaxRows <= 0 || options.MaxColumns <= 0 {
+			t.Fatalf("expected bounded sheet options, got %+v", options)
+		}
+		return &FeishuSheetReadResult{
+			SpreadsheetToken: spreadsheetToken,
+			Title:            "Budget",
+			Sheets: []FeishuSheetPreview{{
+				SheetID: "grid",
+				Title:   "Q1",
+				Range:   "grid!A1:J20",
+				Values:  [][]any{{"item", "cost"}},
+			}},
+		}, nil
+	}
+
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		DownloadDir:     tmpDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_text",
+		MessageType: "text",
+		Message:     "分析 https://anycap.feishu.cn/sheets/SHEETtoken789",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+	if len(gotEvent.Resources) != 1 || gotEvent.Resources[0].ReadMode != "sheet_preview" {
+		t.Fatalf("expected sheet preview resource, got %+v", gotEvent.Resources)
+	}
+	content, readErr := os.ReadFile(gotEvent.Resources[0].LocalPath)
+	if readErr != nil {
+		t.Fatalf("ReadFile() error = %v", readErr)
+	}
+	if !strings.Contains(string(content), "Budget") || !strings.Contains(string(content), "Q1") {
+		t.Fatalf("expected sheet preview artifact, got:\n%s", string(content))
+	}
+}
+
+func TestFeishuLongConnBot_HandleNormalizedEventResourceReadErrorIsRendered(t *testing.T) {
+	tmpDir := t.TempDir()
+	var gotEvent NormalizedInboundEvent
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{})
+	disableFeishuContextHistory(adapter)
+	adapter.readDocxRawContent = func(ctx context.Context, documentID string) (*FeishuDocxReadResult, error) {
+		return nil, classifyFeishuResourceReadError("read feishu docx raw content", 99991663, "permission denied", nil)
+	}
+
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:           "cli_appid",
+		AppSecret:       "app_secret",
+		Adapter:         adapter,
+		DownloadDir:     tmpDir,
+		TurnMergeWindow: -1,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			gotEvent = event
+			return "", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	err := bot.handleNormalizedEvent(context.Background(), NormalizedInboundEvent{
+		Platform:    model.IMPlatformFeishu,
+		BotID:       "cli_appid",
+		ChannelID:   "oc_chat",
+		SenderID:    "ou_sender",
+		MessageID:   "om_text",
+		MessageType: "text",
+		Message:     "分析 https://anycap.feishu.cn/docx/NOACCESS",
+	})
+	if err != nil {
+		t.Fatalf("handleNormalizedEvent() error = %v", err)
+	}
+	if len(gotEvent.Resources) != 1 || gotEvent.Resources[0].ErrorCode != "permission_denied" {
+		t.Fatalf("expected permission error resource, got %+v", gotEvent.Resources)
+	}
+	var readErr *FeishuResourceReadError
+	if !errors.As(gotEvent.Resources[0].ReadError, &readErr) {
+		t.Fatalf("expected read error to preserve typed error, got %+v", gotEvent.Resources[0])
+	}
+	rendered := gotEvent.AgentInputText()
+	if !strings.Contains(rendered, `<read_error code="permission_denied" message="read feishu docx raw content: permission_denied: code=99991663 msg=permission denied" />`) {
+		t.Fatalf("expected read_error block, got %s", rendered)
+	}
+}
+
+func TestNormalizedInboundEventAgentInputTextOmitsResourcesWhenNone(t *testing.T) {
+	event := NormalizedInboundEvent{
+		ChannelID:   "oc_chat",
+		MessageID:   "om_text",
+		SenderID:    "ou_sender",
+		MessageType: "text",
+		Message:     "普通消息",
+	}
+
+	rendered := event.AgentInputText()
+	if strings.Contains(rendered, "<feishu-resources>") || strings.Contains(rendered, "<feishu-resource") {
+		t.Fatalf("expected no resource block, got %s", rendered)
+	}
+}
+
 func TestFeishuLongConnBot_HandleNormalizedEventSendsTextReply(t *testing.T) {
 	var replyCalls int
 	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -609,5 +804,11 @@ func buildHistoryMessage(messageID, chatID, senderID, senderType, messageType, c
 		Body: &larkim.MessageBody{
 			Content: ptrString(content),
 		},
+	}
+}
+
+func disableFeishuContextHistory(adapter *FeishuAdapter) {
+	adapter.listMessages = func(ctx context.Context, containerType string, containerID string, limit int) ([]*larkim.Message, error) {
+		return nil, nil
 	}
 }
