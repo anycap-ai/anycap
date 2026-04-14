@@ -11,6 +11,7 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 export const metadata: Metadata = {
   title: "Audio Analysis API for AI agents - Audio understanding and transcription",
@@ -243,6 +244,7 @@ export default async function AudioUnderstandingPage() {
     locale,
     about: [...content.jsonLdAbout],
     keywords: [...content.jsonLdKeywords],
+    dateModified: PAGE_LAST_MODIFIED_ISO,
   });
 
   return (

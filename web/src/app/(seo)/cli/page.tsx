@@ -31,7 +31,7 @@ export default async function CliPage() {
       <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.softwareApplicationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.pageJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">
@@ -59,6 +59,25 @@ export default async function CliPage() {
 
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {content.overviewTitle}
+              </h2>
+              <div className="max-w-[860px] space-y-4">
+                {content.overviewParagraphs.map((paragraph) => (
+                  <p key={paragraph} className="text-base leading-7 text-[#4d5145]">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

@@ -53,6 +53,17 @@ function PageSection({
 export default async function TermsPage() {
   const locale = await getRequestLocale();
   const content = getTermsPageData(locale);
+  const summaryTitle = locale === "pt-br" ? "Como ler estes termos" : "How to read these terms";
+  const summaryParagraphs =
+    locale === "pt-br"
+      ? [
+          "Esta página resume a base legal para usar o site, a CLI e os workflows relacionados ao AnyCap. Ela foi estruturada para que a pessoa consiga entender com rapidez o que está sendo oferecido, onde estão os limites de uso e como o contexto operacional do produto se conecta aos termos.",
+          "Em vez de funcionar apenas como documento de compliance, a página também serve como referência prática para operadores e compradores que querem alinhar uso, cobrança, suporte e políticas do produto em um único lugar.",
+        ]
+      : [
+          "This page summarizes the legal baseline for using the AnyCap site, CLI, and related workflows. It is structured so readers can understand what is being offered, where the usage boundaries sit, and how the product's operating context connects to the terms.",
+          "Rather than acting only as a compliance document, the page also works as a practical reference for operators and buyers who want usage, billing, support, and policy context aligned in one place.",
+        ];
 
   return (
     <>
@@ -87,6 +98,16 @@ export default async function TermsPage() {
           <div className="mt-14 md:mt-16">
             <hr className="border-t border-[#dce0d2]" />
           </div>
+
+          <FadeIn>
+            <PageSection title={summaryTitle}>
+              {summaryParagraphs.map((paragraph) => (
+                <p key={paragraph} className={bodyClass}>
+                  {paragraph}
+                </p>
+              ))}
+            </PageSection>
+          </FadeIn>
 
           <FadeIn>
             <PageSection eyebrow={content.keyTermsTitle} title={content.keyTermsTitle}>

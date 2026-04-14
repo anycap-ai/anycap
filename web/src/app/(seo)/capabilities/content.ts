@@ -44,6 +44,8 @@ type CapabilitiesPageContent = {
   heroTitleLine1: string;
   heroTitleLine2: string;
   heroParagraph: string;
+  overviewTitle: string;
+  overviewParagraphs: string[];
   gapTable: {
     eyebrow: string;
     title: string;
@@ -142,6 +144,11 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
     heroTitleLine2: "Add the capabilities it lacks.",
     heroParagraph:
       "AnyCap is an AI agent capability runtime for coding agents. Start with the public capability inventory through one CLI, one auth flow, and one install path across Claude Code, Cursor, Codex, and the rest of your agent stack. The same runtime also extends into adjacent workflows as your workflows grow.",
+    overviewTitle: "How to use the capability inventory",
+    overviewParagraphs: [
+      "The capability hub is useful when the workflow gap is clear but the exact page choice is not. It gives teams one place to scan the available runtime surface before they branch into image generation, video generation, understanding, retrieval, storage, or adjacent capability pages.",
+      "That makes the inventory page more than a feature list. It is the routing layer that helps operators connect a missing outcome in the agent workflow to the right capability page, model page, or product-specific install path.",
+    ],
     gapTable: {
       eyebrow: "Comparison",
       title: "What the common coding agents still miss",
@@ -283,6 +290,11 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
     heroTitleLine2: "Adicione as capacidades que faltam.",
     heroParagraph:
       "O AnyCap é um runtime de capacidades para agentes de IA voltados a código. Comece com o inventário público de capacidades em uma única CLI, um fluxo de autenticação e um caminho de instalação para Claude Code, Cursor, Codex e o restante da sua stack de agentes. O mesmo runtime também se estende para fluxos adjacentes conforme seus fluxos de trabalho crescem.",
+    overviewTitle: "Como usar o inventário de capacidades",
+    overviewParagraphs: [
+      "O hub de capacidades é útil quando a lacuna do workflow está clara, mas a escolha exata da página ainda não. Ele dá às equipes um lugar único para revisar a superfície do runtime antes de seguir para geração, entendimento, recuperação, armazenamento ou páginas mais específicas.",
+      "Isso faz do inventário algo maior que uma lista de features. Ele funciona como camada de roteamento para conectar um resultado que está faltando no workflow do agente à capability certa, à página de modelo certa ou ao caminho de instalação mais adequado.",
+    ],
     gapTable: {
       eyebrow: "Comparação",
       title: "O que os agentes de código mais usados ainda não têm",
@@ -424,6 +436,11 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
     heroTitleLine2: "Add the capabilities it lacks.",
     heroParagraph:
       "AnyCap is an AI agent capability runtime for coding agents. Start with the public capability inventory through one CLI, one auth flow, and one install path across Claude Code, Cursor, Codex, and the rest of your agent stack. The same runtime also extends into adjacent workflows as your workflows grow.",
+    overviewTitle: "How to use the capability inventory",
+    overviewParagraphs: [
+      "The capability hub is useful when the workflow gap is clear but the exact page choice is not. It gives teams one place to scan the available runtime surface before they branch into image generation, video generation, understanding, retrieval, storage, or adjacent capability pages.",
+      "That makes the inventory page more than a feature list. It is the routing layer that helps operators connect a missing outcome in the agent workflow to the right capability page, model page, or product-specific install path.",
+    ],
     gapTable: {
       eyebrow: "Comparison",
       title: "What the common coding agents still miss",

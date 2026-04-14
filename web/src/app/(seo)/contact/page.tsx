@@ -71,6 +71,17 @@ function PageSection({
 export default async function ContactPage() {
   const locale = await getRequestLocale();
   const content = getContactPageData(locale);
+  const summaryTitle = locale === "pt-br" ? "Quando usar esta página" : "When to use this page";
+  const summaryParagraphs =
+    locale === "pt-br"
+      ? [
+          "A página de contato existe para reduzir atrito entre intenção e encaminhamento. Em vez de empurrar todo pedido para um único endereço genérico, ela organiza os principais caminhos de suporte, produto, preços e reportes operacionais.",
+          "Isso ajuda tanto usuários finais quanto equipes avaliando o AnyCap. A pessoa consegue identificar mais rápido se deve falar com o time, abrir um issue público ou seguir para uma página que resolve a dúvida sem abrir contato direto.",
+        ]
+      : [
+          "The contact page exists to reduce friction between intent and routing. Instead of sending every request to one generic inbox, it organizes the main paths for support, product questions, pricing, and operational issue reporting.",
+          "That helps both end users and teams evaluating AnyCap. Readers can identify faster whether they should contact the team, open a public issue, or move to a product page that resolves the question without direct outreach.",
+        ];
 
   return (
     <>
@@ -103,6 +114,16 @@ export default async function ContactPage() {
           <div className="mt-14 md:mt-16">
             <hr className="border-t border-[#dce0d2]" />
           </div>
+
+          <FadeIn>
+            <PageSection title={summaryTitle}>
+              {summaryParagraphs.map((paragraph) => (
+                <p key={paragraph} className={bodyClass}>
+                  {paragraph}
+                </p>
+              ))}
+            </PageSection>
+          </FadeIn>
 
           <FadeIn>
             <PageSection title={content.routesTitle}>

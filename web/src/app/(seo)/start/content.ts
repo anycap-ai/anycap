@@ -50,6 +50,8 @@ type StartPageContent = {
     description: string;
     alt: string;
   };
+  overviewTitle: string;
+  overviewParagraphs: string[];
   sectionTitles: {
     agents: string;
     naturalLanguageStartPath: string;
@@ -179,6 +181,11 @@ const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
         "A short brand video for the start page. It pairs the 'don't switch agents' message with the idea that you can start by describing what you need in natural language.",
       alt: "A short brand video showing the AnyCap start page and natural-language setup path.",
     },
+    overviewTitle: "Why this page exists",
+    overviewParagraphs: [
+      "The start page is designed for the shortest route from intent to working capability. Instead of asking the user to study the whole product structure first, it gives them a natural-language starting point, a simple install path, and clear follow-on pages for the most common gaps.",
+      "That makes this page useful both for first-time operators and for teams sending someone else a clean onboarding link. The goal is not only to explain AnyCap. It is to reduce the friction between the first question and the first successful capability call.",
+    ],
     sectionTitles: {
       agents: "Pick your agent",
       naturalLanguageStartPath: "Natural-language start path",
@@ -285,6 +292,11 @@ const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
         "Um vídeo curto da marca para a página inicial. Ele combina a mensagem de não trocar de agente com a ideia de começar descrevendo o que você precisa em linguagem natural.",
       alt: "Vídeo curto mostrando a página inicial do AnyCap e o caminho de configuração em linguagem natural.",
     },
+    overviewTitle: "Por que esta página existe",
+    overviewParagraphs: [
+      "A página de início foi desenhada para o caminho mais curto entre intenção e capacidade funcionando. Em vez de pedir que a pessoa estude toda a estrutura do produto primeiro, ela oferece um ponto de partida em linguagem natural, um caminho simples de instalação e páginas seguintes para as lacunas mais comuns.",
+      "Isso torna a página útil tanto para quem está começando quanto para equipes que querem enviar um link de onboarding mais limpo para outra pessoa. O objetivo não é apenas explicar o AnyCap. É reduzir o atrito entre a primeira pergunta e a primeira chamada de capacidade com sucesso.",
+    ],
     sectionTitles: {
       agents: "Escolha seu agente",
       naturalLanguageStartPath: "Caminho de início em linguagem natural",

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { createSoftwareApplicationJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, getLocalizedRouteUrl, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const CLI_PATH = "/cli";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
-const cliApplicationEntityId = `${siteConfig.url}#cli-application`;
 
 type CliPageData = {
   metadata: {
@@ -18,6 +16,8 @@ type CliPageData = {
   heroTitle: [string, string];
   heroIntro: string;
   heroTagline: string;
+  overviewTitle: string;
+  overviewParagraphs: string[];
   installTitle: string;
   installIntro: string;
   commandsTitle: string;
@@ -30,7 +30,7 @@ type CliPageData = {
   stackTitle: string;
   nextPages: { eyebrow: string; title: string; href: string; summary: string }[];
   ctas: { label: string; href?: string; external?: string }[];
-  softwareApplicationJsonLd: Record<string, unknown>;
+  pageJsonLd: Record<string, unknown>;
 };
 
 const capabilities = [
@@ -60,17 +60,32 @@ const ecosystems = [
   { name: "OpenClaw", href: null },
 ] as const;
 
-function buildCliSoftwareApplicationJsonLd(locale: SiteLocale, description: string) {
+function buildCliPageJsonLd(locale: SiteLocale, name: string, description: string) {
   return {
-    ...createSoftwareApplicationJsonLd({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    url: getLocalizedRouteUrl(locale, CLI_PATH),
+    description,
+    isPartOf: {
+      "@id": `${siteConfig.url}#website`,
+    },
+    about: [
+      { "@type": "Thing", name: "AI agents" },
+      { "@type": "Thing", name: "CLI tools" },
+      { "@type": "Thing", name: "Agent capabilities" },
+      { "@type": "Thing", name: "Developer tools" },
+    ],
+    publisher: {
+      "@id": `${siteConfig.url}#organization`,
+    },
+    mainEntity: {
+      "@type": "SoftwareSourceCode",
       name: locale === "pt-br" ? "CLI do AnyCap" : "AnyCap CLI",
-      description,
-      path: CLI_PATH,
-      installUrl: `${siteConfig.url}/install.sh`,
-    }),
-    "@id": cliApplicationEntityId,
-    sameAs: [githubHref],
-    isAccessibleForFree: true,
+      codeRepository: githubHref,
+      programmingLanguage: "TypeScript",
+      runtimePlatform: "macOS, Linux, Windows",
+    },
   };
 }
 
@@ -89,6 +104,11 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     heroIntro:
       "The agent can plan the workflow. The missing layer is usually execution: one command surface for image generation, video generation, image understanding, and video analysis. AnyCap CLI gives that layer one install path, one auth flow, and one interface across Claude Code, Cursor, Codex, and similar agent products.",
     heroTagline: "Don't switch agents. Add capabilities immediately.",
+    overviewTitle: "Why the CLI matters beyond installation",
+    overviewParagraphs: [
+      "A unified CLI matters because it turns capability access into a stable operational surface. Instead of every workflow introducing a new provider SDK, dashboard, or auth pattern, the agent can reuse one predictable command layer across media, search, storage, and analysis tasks.",
+      "That also makes documentation and routing easier. Once the agent understands the CLI surface, pages across the site can focus on fit and workflow design instead of re-explaining a different execution model for every capability.",
+    ],
     installTitle: "Install once",
     installIntro:
       "CLI installation will be available when AnyCap launches publicly. The install path below is the stable entry to the runtime.",
@@ -185,8 +205,9 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       { label: "See Capability Gaps", href: "/learn/what-agents-cant-do" },
       { label: "For Claude Code", href: "/for/claude-code" },
     ],
-    softwareApplicationJsonLd: buildCliSoftwareApplicationJsonLd(
+    pageJsonLd: buildCliPageJsonLd(
       "en",
+      "AnyCap CLI | AI agent capability runtime",
       "Agent-native CLI that gives AI agents one install path and one interface for capabilities like image generation, video generation, image understanding, and video analysis.",
     ),
   },
@@ -204,6 +225,11 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     heroIntro:
       "O agente consegue planejar o fluxo. A camada que costuma faltar é a execução: uma única superfície de comandos para geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo. A CLI do AnyCap dá a essa camada um único caminho de instalação, um único fluxo de autenticação e uma única interface em Claude Code, Cursor, Codex e produtos de agentes semelhantes.",
     heroTagline: "Não troque de agente. Adicione capacidades imediatamente.",
+    overviewTitle: "Por que a CLI importa além da instalação",
+    overviewParagraphs: [
+      "Uma CLI unificada importa porque transforma o acesso a capabilities em uma superfície operacional estável. Em vez de cada workflow introduzir um novo SDK de provedor, dashboard ou padrão de autenticação, o agente pode reutilizar uma única camada de comandos em tarefas de mídia, busca, armazenamento e análise.",
+      "Isso também facilita documentação e roteamento. Quando o agente entende a superfície da CLI, as páginas do site podem focar em encaixe e desenho de workflow em vez de reexplicar um modelo de execução diferente para cada capability.",
+    ],
     installTitle: "Instale uma vez",
     installIntro:
       "A instalação da CLI estará disponível quando o AnyCap for lançado publicamente. O caminho abaixo é a entrada estável para o runtime.",
@@ -300,8 +326,9 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       { label: "Ver lacunas de capacidade", href: "/learn/what-agents-cant-do" },
       { label: "Para Claude Code", href: "/for/claude-code" },
     ],
-    softwareApplicationJsonLd: buildCliSoftwareApplicationJsonLd(
+    pageJsonLd: buildCliPageJsonLd(
       "pt-br",
+      "CLI do AnyCap | Runtime de capacidades para agentes de IA",
       "CLI nativa para agentes que dá aos agentes de IA um único caminho de instalação e uma única interface para capacidades como geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo.",
     ),
   },

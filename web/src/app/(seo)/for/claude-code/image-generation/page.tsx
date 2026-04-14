@@ -11,6 +11,7 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 type PageContent = {
   breadcrumbItems: readonly { name: string; href?: string; unlinkable?: boolean }[];
@@ -115,6 +116,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "claude code generate images",
         "image generation for claude code",
       ],
+      dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
   "pt-br": {
@@ -194,6 +196,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "claude code gerar imagens",
         "geração de imagem para claude code",
       ],
+      dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
   id: undefined as never,

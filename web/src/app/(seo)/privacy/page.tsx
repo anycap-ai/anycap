@@ -44,6 +44,17 @@ function PageSection({
 export default async function PrivacyPage() {
   const locale = await getRequestLocale();
   const content = getPrivacyPageData(locale);
+  const summaryTitle = locale === "pt-br" ? "Como usar esta política" : "How to use this policy";
+  const summaryParagraphs =
+    locale === "pt-br"
+      ? [
+          "Esta política de privacidade foi escrita para explicar quais dados podem aparecer ao longo da experiência com o AnyCap e como essas informações se relacionam com autenticação, suporte, faturamento e operação do produto.",
+          "Ela também funciona como página de referência para pessoas que precisam localizar rapidamente coleta, retenção, compartilhamento e caminhos de solicitação sem depender apenas de linguagem jurídica condensada.",
+        ]
+      : [
+          "This privacy policy is written to explain what data can appear across the AnyCap experience and how that information connects to authentication, support, billing, and product operations.",
+          "It also works as a reference page for readers who need to locate collection, retention, sharing, and request paths quickly instead of relying only on condensed legal language.",
+        ];
 
   return (
     <>
@@ -76,6 +87,16 @@ export default async function PrivacyPage() {
           <div className="mt-14 md:mt-16">
             <hr className="border-t border-[#dce0d2]" />
           </div>
+
+          <FadeIn>
+            <PageSection title={summaryTitle}>
+              {summaryParagraphs.map((paragraph) => (
+                <p key={paragraph} className={bodyClass}>
+                  {paragraph}
+                </p>
+              ))}
+            </PageSection>
+          </FadeIn>
 
           <FadeIn>
             <PageSection title={content.sections.infoTitle}>

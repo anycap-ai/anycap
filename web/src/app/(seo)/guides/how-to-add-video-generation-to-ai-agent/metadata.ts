@@ -10,10 +10,10 @@ export function getPageMetadata(locale: SiteLocale): Metadata {
   return createLocalizedMetadataForPath(locale, PATH, {
     title: isPtBr
       ? "Como adicionar geracao de video a um agente de IA - guia passo a passo"
-      : "How to Add Video Generation to an AI Agent — Step-by-Step Guide",
+      : "How to Add Video Generation to an AI Agent — Step-by-Step Setup Guide",
     description: isPtBr
       ? "Guia passo a passo para adicionar capacidades de geracao de video a qualquer agente de IA usando a CLI do AnyCap e modelos como Veo 3.1 e Kling 3.0."
-      : "Step-by-step guide to adding video generation capabilities to any AI agent using AnyCap CLI and models like Veo 3.1 and Kling 3.0.",
+      : "Step-by-step guide to adding video generation to Claude Code, Cursor, Codex, and other AI agents with AnyCap CLI, model discovery, prompt tips, and workflow examples.",
   });
 }
 

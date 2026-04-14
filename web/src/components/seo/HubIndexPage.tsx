@@ -69,6 +69,25 @@ export function HubIndexPage({
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {page.overviewTitle}
+              </h2>
+              <div className="max-w-[860px] space-y-4">
+                {page.overviewParagraphs.map((paragraph) => (
+                  <p key={paragraph} className="text-base leading-7 text-[#4d5145]">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {page.items.map((item) => (
                   <Link
@@ -83,6 +102,26 @@ export function HubIndexPage({
                   </Link>
                 ))}
               </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {page.usageTitle}
+              </h2>
+              <ul className="max-w-[860px] space-y-3">
+                {page.usagePoints.map((point) => (
+                  <li key={point} className="flex items-start gap-3 text-sm leading-6 text-[#4d5145]">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#6b7d3a]" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
             </section>
           </FadeIn>
         </div>

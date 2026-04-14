@@ -33,6 +33,35 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 - [Web crawl](https://anycap.ai/capabilities/web-crawl): Convert web pages into clean text for downstream agent work.
 - [Drive](https://anycap.ai/capabilities/drive): Storage, sharing, and artifact handoff workflows.
 
+## Models
+
+- [Veo 3.1](https://anycap.ai/models/veo-3-1): Premium text-to-video and image-to-video for agent workflows.
+- [Kling 3.0](https://anycap.ai/models/kling-3-0): Realistic motion and cinematic image-to-video workflows.
+- [Seedream 5](https://anycap.ai/models/seedream-5): Polished first-pass image generation.
+- [Nano Banana Pro](https://anycap.ai/models/nano-banana-pro): Prompt-based image editing and revision loops.
+- [Nano Banana 2](https://anycap.ai/models/nano-banana-2): Fast image generation and high-volume iteration.
+- [Seedance 1.5 Pro](https://anycap.ai/models/seedance-1-5-pro): Repeatable production-friendly video generation.
+- [ElevenLabs Music](https://anycap.ai/models/elevenlabs-music): Prompt-based soundtrack drafts for agent workflows.
+
+## Compare & Alternatives
+
+- [AnyCap vs Composio](https://anycap.ai/compare/anycap-vs-composio): Capability runtime comparison for agent teams.
+- [Fal.ai alternatives for agents](https://anycap.ai/compare/fal-ai-alternatives-for-agents): Alternatives for media generation workflows.
+- [Replicate alternatives for agents](https://anycap.ai/compare/replicate-alternatives-for-agents): Alternatives for agent media workflows.
+
+## Guides
+
+- [Agent skills for developer tools](https://anycap.ai/guides/agent-skills-for-developer-tools): How installable skill files distribute capabilities.
+- [Context engineering for agents](https://anycap.ai/guides/context-engineering-for-agents): Structuring context for reliable agent execution.
+- [How to add video generation to an AI agent](https://anycap.ai/guides/how-to-add-video-generation-to-ai-agent): Step-by-step video integration.
+- [How to add vision to an AI agent](https://anycap.ai/guides/how-to-add-vision-to-ai-agent): Step-by-step image and video analysis setup.
+- [What is an agent harness](https://anycap.ai/guides/what-is-agent-harness): The runtime layer around the agent.
+- [Workspace context engineering](https://anycap.ai/guides/workspace-context-engineering): Files, tools, and state in agent workflows.
+
+## Skills
+
+- [Skills hub](https://anycap.ai/skills): Overview of AnyCap skill distribution and setup.
+
 ## Workflows
 
 - [SMART Goal Generator](https://anycap.ai/learn/smart-goal-generator): Turn rough goals into research-backed SMART goals with citations and structured notes.
@@ -44,6 +73,13 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 - [How to Make AI Influencer Videos](https://anycap.ai/learn/how-to-make-ai-influencer-videos): Start with a still that already works, then promote it into image-to-video motion and inspect the clip before handoff.
 - [AI Video Generator from Image](https://anycap.ai/learn/ai-video-generator-from-image): Keep the source image, motion layer, QA, and delivery workflow connected instead of treating the still as disposable input.
 - [What Is an AI Influencer?](https://anycap.ai/learn/what-is-an-ai-influencer): A workflow-aware explainer on the persona, motion, distribution, and QA layers behind virtual creators.
+
+## Glossary
+
+- [Glossary](https://anycap.ai/glossary): Core AnyCap concepts and technical terms.
+- [Agent Harness](https://anycap.ai/glossary/agent-harness): The execution layer around an AI model.
+- [Context Engineering](https://anycap.ai/glossary/context-engineering): Structuring context for better agent execution.
+- [Agent Capability Runtime](https://anycap.ai/glossary/agent-capability-runtime): The runtime layer that exposes capabilities to agents.
 
 ## Product
 

@@ -18,6 +18,10 @@ export type HubPageDefinition = {
   eyebrow: string;
   heroLines: [string, string];
   intro: string;
+  overviewTitle: string;
+  overviewParagraphs: string[];
+  usageTitle: string;
+  usagePoints: string[];
   items: HubPageItem[];
 };
 
@@ -41,6 +45,17 @@ const hubBaseDefinitionsEn: HubBaseDefinitionsByKey = {
     heroLines: ["Keep the agent you use.", "Add the capabilities it lacks."],
     intro:
       "These pages show the shortest path to equip Claude Code, Cursor, Codex, and Manus with image generation, video generation, image understanding, video analysis, and related capability workflows through one runtime.",
+    overviewTitle: "How to use this hub",
+    overviewParagraphs: [
+      "This hub is useful when the user already knows which agent they want to keep and only needs the missing capability layer. Instead of replacing the coding environment, the page family focuses on extending the existing agent with image, video, vision, and retrieval workflows.",
+      "That makes the /for section a routing layer as much as an index. Each child page translates the same AnyCap runtime into the install path, workflow examples, and next steps that make sense for that specific agent ecosystem.",
+    ],
+    usageTitle: "What you will find here",
+    usagePoints: [
+      "Agent-specific setup paths for Claude Code, Cursor, Codex, and Manus.",
+      "Capability routing patterns that explain which page to visit first based on the workflow gap.",
+      "A cleaner transition from agent-native tooling into AnyCap without rebuilding the workflow around a different product.",
+    ],
   },
   guides: {
     key: "guides",
@@ -52,6 +67,17 @@ const hubBaseDefinitionsEn: HubBaseDefinitionsByKey = {
     heroLines: ["Practical guides", "for agent teams and creators."],
     intro:
       "These guides cover setup, context design, tool integration, and working patterns for teams and creators using agents with AnyCap.",
+    overviewTitle: "What these guides are for",
+    overviewParagraphs: [
+      "The guides section is where implementation intent turns into repeatable operator knowledge. It covers installation, context design, capability routing, and the patterns that help teams move from one-off experiments to stable agent workflows.",
+      "In practice, these pages work best when the user already knows the capability gap and needs an execution path, not just a feature description. That is why the guides emphasize decisions, setup order, and workflow fit rather than only product messaging.",
+    ],
+    usageTitle: "What you will find here",
+    usagePoints: [
+      "Installation and onboarding guides for AnyCap and supported agent environments.",
+      "Architecture explainers that clarify how skills, MCP, context engineering, and runtime layers fit together.",
+      "Workflow-oriented pages that show how to add generation and vision capabilities to real agents step by step.",
+    ],
   },
   glossary: {
     key: "glossary",
@@ -63,6 +89,17 @@ const hubBaseDefinitionsEn: HubBaseDefinitionsByKey = {
     heroLines: ["Shared language", "for agent systems."],
     intro:
       "Use these glossary entries to align teams on the terms behind capability runtimes, harnesses, and context design.",
+    overviewTitle: "Why this glossary exists",
+    overviewParagraphs: [
+      "Agent systems often fail at the language layer before they fail at the tooling layer. Teams use the same words to mean different things, which turns design discussions into confusion around the model, harness, runtime, or protocol layer.",
+      "The glossary gives AnyCap pages a shared reference frame. It helps readers connect conceptual terms such as context engineering, agent harnesses, and capability runtimes to the more practical pages elsewhere in the site.",
+    ],
+    usageTitle: "What you will find here",
+    usagePoints: [
+      "Concise definitions for recurring agent-system concepts.",
+      "Terminology that links conceptual pages to setup guides and comparison pages.",
+      "A cleaner vocabulary for deciding where AnyCap fits in the broader agent stack.",
+    ],
   },
   compare: {
     key: "compare",
@@ -74,6 +111,17 @@ const hubBaseDefinitionsEn: HubBaseDefinitionsByKey = {
     heroLines: ["Compare AnyCap", "to the right stack layer."],
     intro:
       "These comparisons help teams decide when a capability runtime is a better fit than stitching together model APIs, hosted builders, or human-oriented tool surfaces.",
+    overviewTitle: "How to read these comparisons",
+    overviewParagraphs: [
+      "The comparison pages are designed for buyers and builders who are choosing between adjacent layers of the stack, not only between brands. In many cases the real decision is whether the workflow needs a model API, a hosted agent builder, or a reusable capability runtime.",
+      "That is why the compare section focuses on fit, operating model, and workflow consequences. A page here should help the reader understand what problem each layer solves before they decide which product belongs in the architecture.",
+    ],
+    usageTitle: "What you will find here",
+    usagePoints: [
+      "Direct product comparisons against adjacent media APIs and agent tooling layers.",
+      "Alternative pages for teams searching for replacements that work better in agent-driven workflows.",
+      "A clearer explanation of where AnyCap belongs relative to APIs, builders, and human-facing creative tools.",
+    ],
   },
 };
 
@@ -88,6 +136,17 @@ const hubBaseDefinitionsPtBr: HubBaseDefinitionsByKey = {
     heroLines: ["Mantenha o agente que você já usa.", "Adicione as capacidades que faltam."],
     intro:
       "Estas páginas mostram o caminho mais curto para equipar Claude Code, Cursor, Codex e Manus com geração de imagem, geração de vídeo, entendimento de imagem, análise de vídeo e fluxos de capacidades relacionadas por meio de um único runtime.",
+    overviewTitle: "Como usar este hub",
+    overviewParagraphs: [
+      "Este hub é útil quando a pessoa já sabe qual agente quer manter e só precisa adicionar a camada de capacidades que está faltando. Em vez de trocar de ambiente, a família /for mostra como estender o agente atual com fluxos de imagem, vídeo, visão e recuperação.",
+      "Na prática, a seção /for funciona tanto como índice quanto como camada de roteamento. Cada página filha traduz o mesmo runtime do AnyCap para o caminho de instalação, os exemplos de workflow e os próximos passos que fazem sentido para aquele ecossistema de agente.",
+    ],
+    usageTitle: "O que você encontra aqui",
+    usagePoints: [
+      "Caminhos de setup específicos por agente para Claude Code, Cursor, Codex e Manus.",
+      "Padrões de roteamento de capacidade que ajudam a escolher a primeira página certa conforme a lacuna do workflow.",
+      "Uma transição mais limpa das ferramentas nativas do agente para o AnyCap sem reconstruir o fluxo em outro produto.",
+    ],
   },
   guides: {
     key: "guides",
@@ -99,6 +158,17 @@ const hubBaseDefinitionsPtBr: HubBaseDefinitionsByKey = {
     heroLines: ["Guias práticos", "para equipes e criadores com agentes."],
     intro:
       "Estes guias cobrem configuração, desenho de contexto, integração de ferramentas e padrões de trabalho para equipes e criadores que usam agentes com o AnyCap.",
+    overviewTitle: "Para que servem estes guias",
+    overviewParagraphs: [
+      "A seção de guias é onde intenção de implementação vira conhecimento operacional repetível. Ela cobre instalação, desenho de contexto, roteamento de capacidades e padrões que ajudam equipes a sair de experimentos pontuais para fluxos de agente mais estáveis.",
+      "Na prática, estas páginas funcionam melhor quando a pessoa já conhece a lacuna de capacidade e precisa de um caminho de execução, não apenas de uma descrição de produto. Por isso os guias enfatizam decisões, ordem de setup e encaixe no workflow.",
+    ],
+    usageTitle: "O que você encontra aqui",
+    usagePoints: [
+      "Guias de instalação e onboarding do AnyCap e dos ambientes de agente compatíveis.",
+      "Explicações de arquitetura que mostram como skills, MCP, engenharia de contexto e runtime se relacionam.",
+      "Páginas orientadas a workflow que mostram como adicionar geração e visão a agentes reais passo a passo.",
+    ],
   },
   glossary: {
     key: "glossary",
@@ -110,6 +180,17 @@ const hubBaseDefinitionsPtBr: HubBaseDefinitionsByKey = {
     heroLines: ["Linguagem compartilhada", "para sistemas de agentes."],
     intro:
       "Use estas entradas do glossário para alinhar equipes sobre os termos por trás de runtimes de capacidades, harnesses e desenho de contexto.",
+    overviewTitle: "Por que este glossário existe",
+    overviewParagraphs: [
+      "Sistemas de agentes costumam falhar na camada de linguagem antes de falhar na camada de tooling. Equipes usam as mesmas palavras para significados diferentes, e isso cria confusão sobre modelo, harness, runtime ou protocolo.",
+      "O glossário dá às páginas do AnyCap um quadro de referência compartilhado. Ele ajuda a conectar termos como engenharia de contexto, agent harness e runtime de capacidades com as páginas práticas do restante do site.",
+    ],
+    usageTitle: "O que você encontra aqui",
+    usagePoints: [
+      "Definições concisas para conceitos recorrentes em sistemas de agentes.",
+      "Terminologia que conecta páginas conceituais a guias de setup e páginas de comparação.",
+      "Um vocabulário mais limpo para decidir onde o AnyCap entra na stack de agentes.",
+    ],
   },
   compare: {
     key: "compare",
@@ -121,6 +202,17 @@ const hubBaseDefinitionsPtBr: HubBaseDefinitionsByKey = {
     heroLines: ["Compare o AnyCap", "com a camada certa da stack."],
     intro:
       "Estas comparações ajudam as equipes a decidir quando um runtime de capacidades é uma opção melhor do que juntar APIs de modelos, construtores hospedados ou superfícies de ferramentas voltadas para humanos.",
+    overviewTitle: "Como ler estas comparações",
+    overviewParagraphs: [
+      "As páginas de comparação foram feitas para pessoas que estão escolhendo entre camadas adjacentes da stack, não apenas entre marcas. Em muitos casos a decisão real é entre usar uma API de modelo, um builder hospedado ou um runtime de capacidades reutilizável.",
+      "Por isso a seção de comparação foca em encaixe, modelo operacional e consequências no workflow. Cada página deve ajudar a entender qual problema cada camada resolve antes de decidir qual produto entra na arquitetura.",
+    ],
+    usageTitle: "O que você encontra aqui",
+    usagePoints: [
+      "Comparações diretas com APIs de mídia e camadas adjacentes de tooling para agentes.",
+      "Páginas de alternativas para equipes que procuram substitutos melhores para workflows dirigidos por agentes.",
+      "Uma explicação mais clara de onde o AnyCap entra em relação a APIs, builders e ferramentas criativas voltadas a humanos.",
+    ],
   },
 };
 

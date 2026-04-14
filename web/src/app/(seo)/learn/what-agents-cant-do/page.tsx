@@ -37,6 +37,18 @@ export default async function WhatAgentsCantDoPage() {
   }));
   const updatedLabel =
     locale === "pt-br" ? "Atualizado em 7 de abril de 2026" : "Last updated April 7, 2026";
+  const overviewTitle =
+    locale === "pt-br" ? "Como usar esta página" : "How to use this page";
+  const overviewParagraphs =
+    locale === "pt-br"
+      ? [
+          "Esta página existe para transformar uma percepção vaga de limitação em uma decisão concreta de capability. Em vez de tratar o agente como totalmente capaz ou totalmente incapaz, a tabela mostra onde a lacuna está e qual camada pode fechá-la.",
+          "Na prática, isso ajuda equipes a escolher a próxima página certa com mais rapidez. Depois de identificar se a lacuna é imagem, vídeo, visão ou outro fluxo adjacente, fica mais fácil seguir para a capability, o guia ou a página de produto específica.",
+        ]
+      : [
+          "This page exists to turn a vague sense of agent limitation into a concrete capability decision. Instead of treating the agent as either fully capable or fully blocked, the table shows where the gap actually sits and which layer can close it.",
+          "In practice, that helps teams choose the next page faster. Once the missing outcome is identified as image, video, vision, or another adjacent workflow, it becomes easier to route the reader to the right capability, guide, or product-specific page.",
+        ];
 
   return (
     <>
@@ -70,6 +82,25 @@ export default async function WhatAgentsCantDoPage() {
 
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {overviewTitle}
+              </h2>
+              <div className="max-w-[860px] space-y-4">
+                {overviewParagraphs.map((paragraph) => (
+                  <p key={paragraph} className="text-base leading-7 text-[#4d5145]">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

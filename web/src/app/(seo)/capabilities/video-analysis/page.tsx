@@ -18,6 +18,7 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
@@ -40,6 +41,7 @@ export default async function VideoAnalysisPage() {
       "ai video analysis api",
       "video intelligence api",
     ],
+    dateModified: PAGE_LAST_MODIFIED_ISO,
   });
 
   return (
