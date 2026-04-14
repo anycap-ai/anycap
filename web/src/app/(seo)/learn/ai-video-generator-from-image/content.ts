@@ -363,7 +363,7 @@ const contentByLocale = {
       cards: [
         {
           title: "Superfície de capacidades confirmada",
-          body: "O status do AnyCap foi revisto em 9 de abril de 2026 antes de ampliar este workflow. Image generation, video generation, image reading, video reading, Drive e Page estavam disponíveis.",
+          body: "O status do AnyCap foi revisto em 9 de abril de 2026 antes de ampliar este workflow. Geracao de imagem, geracao de video, leitura de imagem, leitura de video, Drive e Page estavam disponiveis.",
         },
         {
           title: "Schema conferido",
@@ -437,7 +437,7 @@ const contentByLocale = {
     commands: {
       label: "Exemplos de comando",
       title: "O loop image-to-video em comandos",
-      ctaLabel: "Ver Video Generation",
+      ctaLabel: "Ver Geracao de video",
       examples: [
         {
           title: "Gere primeiro a imagem de origem",
@@ -515,17 +515,17 @@ const contentByLocale = {
           body: "Volte para a página âncora para ver o cluster completo de still, motion, QA e entrega.",
         },
         {
-          title: "Image Generation",
+          title: "Geracao de imagem",
           href: "/capabilities/image-generation",
           body: "Veja a capability que cria ou refina o still de origem antes do motion.",
         },
         {
-          title: "Video Generation",
+          title: "Geracao de video",
           href: "/capabilities/video-generation",
           body: "Veja a capability que cuida da camada de motion descrita nesta página.",
         },
         {
-          title: "Install AnyCap",
+          title: "Instalar AnyCap",
           href: "/guides/install-anycap",
           body: "Use isto quando quiser rodar localmente o workflow completo de still mais motion.",
         },

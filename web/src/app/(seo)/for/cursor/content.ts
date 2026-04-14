@@ -139,13 +139,13 @@ type CursorPageContent = {
 
 const englishContent: CursorPageContent = {
   metadata: {
-    title: "For Cursor - Cursor tools and capabilities — Add image, video, and vision with AnyCap",
+    title: "Cursor tools for image, video, and vision | AnyCap",
     description:
       "Tell Cursor 'help me install anycap.ai' and it handles the rest — skill discovery, CLI install, authentication, and immediate access to image generation, video generation, image understanding, and video analysis from natural language.",
-    openGraphTitle: "For Cursor - Cursor tools and capabilities — Add image, video, and vision with AnyCap",
+    openGraphTitle: "Cursor tools for image, video, and vision | AnyCap",
     openGraphDescription:
       "Tell Cursor 'help me install anycap.ai' and it handles the rest — skill discovery, CLI install, authentication, and immediate access to image generation, video generation, image understanding, and video analysis from natural language.",
-    articleHeadline: "For Cursor - Cursor tools and capabilities — Add image, video, and vision with AnyCap",
+    articleHeadline: "Cursor tools for image, video, and vision | AnyCap",
     articleDescription:
       "Guide to adding image generation, video generation, image understanding, and video analysis to Cursor through one capability runtime.",
     articleAbout: ["Cursor", "AnyCap CLI", "agent skills", "capability runtime"],
@@ -479,16 +479,13 @@ const englishContent: CursorPageContent = {
 
 const ptBrContent: CursorPageContent = {
   metadata: {
-    title:
-      "Para Cursor - Ferramentas e capacidades para Cursor — Adicione imagem, vídeo e visão com o AnyCap",
+    title: "Ferramentas do Cursor para imagem, vídeo e visão | AnyCap",
     description:
       'Diga ao Cursor "help me install anycap.ai" e ele cuida do resto — descoberta da skill, instalação da CLI, autenticação e acesso imediato a geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo por meio de linguagem natural.',
-    openGraphTitle:
-      "Para Cursor - Ferramentas e capacidades para Cursor — Adicione imagem, vídeo e visão com o AnyCap",
+    openGraphTitle: "Ferramentas do Cursor para imagem, vídeo e visão | AnyCap",
     openGraphDescription:
       'Diga ao Cursor "help me install anycap.ai" e ele cuida do resto — descoberta da skill, instalação da CLI, autenticação e acesso imediato a geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo por meio de linguagem natural.',
-    articleHeadline:
-      "Para Cursor - Ferramentas e capacidades para Cursor — Adicione imagem, vídeo e visão com o AnyCap",
+    articleHeadline: "Ferramentas do Cursor para imagem, vídeo e visão | AnyCap",
     articleDescription:
       "Guia de capability para adicionar geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo ao Cursor por meio de um único runtime de capacidades.",
     articleAbout: ["Cursor", "CLI do AnyCap", "skills de agente", "runtime de capacidades"],

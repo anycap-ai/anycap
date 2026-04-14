@@ -1,1 +1,5 @@
-export { default as landingMarkdown } from "@/content/landing";
+export {
+  default as landingMarkdown,
+  getLandingMarkdown,
+  landingMarkdownByLocale,
+} from "@/content/landing";

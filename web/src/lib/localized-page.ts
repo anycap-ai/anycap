@@ -3,11 +3,89 @@ import {
   createLocalizedMetadata,
   createLocalizedMetadataForPath,
 } from "@/lib/localized-metadata";
+import { getAboutMetadata } from "@/app/(seo)/about/content";
+import { getCliMetadata } from "@/app/(seo)/cli/content";
+import { getCompareMetadata } from "@/app/(seo)/compare/content";
+import { getAnyCapVsFalAiMetadata } from "@/app/(seo)/compare/anycap-vs-fal-ai/content";
+import { getAnyCapVsOpenAIAgentBuilderMetadata } from "@/app/(seo)/compare/anycap-vs-openai-agent-builder/content";
+import { getAnyCapVsReplicateMetadata } from "@/app/(seo)/compare/anycap-vs-replicate/content";
+import { getFalAiAlternativesMetadata } from "@/app/(seo)/compare/fal-ai-alternatives-for-agents/content";
+import { getReplicateAlternativesMetadata } from "@/app/(seo)/compare/replicate-alternatives-for-agents/content";
+import { getContactMetadata } from "@/app/(seo)/contact/content";
+import { getForMetadata } from "@/app/(seo)/for/content";
+import { getForCodexMetadata } from "@/app/(seo)/for/codex/content";
+import { getForCursorMetadata } from "@/app/(seo)/for/cursor/content";
+import { getGlossaryMetadata } from "@/app/(seo)/glossary/content";
+import {
+  getAgentHarnessGlossaryMetadata,
+  getContextEngineeringGlossaryMetadata,
+} from "@/app/(seo)/glossary/content";
+import { getAddToolsToClaudeCodeMetadata } from "@/app/(seo)/guides/add-tools-to-claude-code/content";
+import { getContextEngineeringForAgentsMetadata } from "@/app/(seo)/guides/context-engineering-for-agents/content";
+import { getAgentCapabilityRuntimeMetadata } from "@/app/(seo)/glossary/agent-capability-runtime/content";
+import { getGuidesMetadata } from "@/app/(seo)/guides/content";
+import { getMcpVsSkillsMetadata } from "@/app/(seo)/guides/mcp-vs-skills/content";
+import { getLearnMetadata } from "@/app/(seo)/learn/content";
+import { getAIChatbotVsAIAgentForSaaSMetadata } from "@/app/(seo)/learn/ai-chatbot-vs-ai-agent-for-saas/content";
+import { getBestAICodingAgentsMetadata } from "@/app/(seo)/learn/best-ai-for-coding-agents/content";
+import { getBestAIForClaudeCodeMetadata } from "@/app/(seo)/learn/best-ai-for-claude-code/content";
+import { getBestAICursorMetadata } from "@/app/(seo)/learn/best-ai-for-cursor/content";
+import { getWhatAgentsCantDoMetadata } from "@/app/(seo)/learn/what-agents-cant-do/content";
+import { getWhatIsTheMostAdvancedAIMetadata } from "@/app/(seo)/learn/what-is-the-most-advanced-ai/content";
+import { getSkillsMetadata } from "@/app/(seo)/skills/content";
+import { getPrivacyMetadata } from "@/app/(seo)/privacy/content";
+import { getTermsMetadata } from "@/app/(seo)/terms/content";
+import { getVideoAnalysisMetadata } from "@/app/(seo)/capabilities/video-analysis/content";
 import { isSupportedLocale, type PublicRouteKey, type SiteLocale } from "@/lib/site";
 
 export type LocalePageParams = {
   params: Promise<{ locale: string }>;
 };
+
+type LocalizedMetadataResolver = (locale: SiteLocale) => Metadata;
+
+const localizedMetadataByRouteKey: Partial<
+  Record<PublicRouteKey, LocalizedMetadataResolver>
+> = {
+  about: getAboutMetadata,
+  cli: getCliMetadata,
+  compare: getCompareMetadata,
+  "compare-anycap-vs-fal-ai": getAnyCapVsFalAiMetadata,
+  "compare-anycap-vs-openai-agent-builder":
+    getAnyCapVsOpenAIAgentBuilderMetadata,
+  "compare-anycap-vs-replicate": getAnyCapVsReplicateMetadata,
+  "compare-fal-ai-alternatives-for-agents": getFalAiAlternativesMetadata,
+  "compare-replicate-alternatives-for-agents":
+    getReplicateAlternativesMetadata,
+  contact: getContactMetadata,
+  for: getForMetadata,
+  "for-codex": getForCodexMetadata,
+  "for-cursor": getForCursorMetadata,
+  glossary: getGlossaryMetadata,
+  "glossary-agent-harness": getAgentHarnessGlossaryMetadata,
+  "glossary-agent-capability-runtime": getAgentCapabilityRuntimeMetadata,
+  "glossary-context-engineering": getContextEngineeringGlossaryMetadata,
+  guides: getGuidesMetadata,
+  "guides-add-tools-to-claude-code": getAddToolsToClaudeCodeMetadata,
+  "guides-context-engineering-for-agents":
+    getContextEngineeringForAgentsMetadata,
+  learn: getLearnMetadata,
+  "learn-ai-chatbot-vs-ai-agent-for-saas": getAIChatbotVsAIAgentForSaaSMetadata,
+  "learn-best-ai-for-claude-code": getBestAIForClaudeCodeMetadata,
+  "learn-best-ai-for-coding-agents": getBestAICodingAgentsMetadata,
+  "learn-best-ai-for-cursor": getBestAICursorMetadata,
+  "learn-what-agents-cant-do": getWhatAgentsCantDoMetadata,
+  "learn-what-is-the-most-advanced-ai": getWhatIsTheMostAdvancedAIMetadata,
+  privacy: getPrivacyMetadata,
+  skills: getSkillsMetadata,
+  terms: getTermsMetadata,
+  "capabilities-video-analysis": getVideoAnalysisMetadata,
+};
+
+const localizedMetadataByPath: Partial<Record<string, LocalizedMetadataResolver>> =
+  {
+    "/guides/mcp-vs-skills": getMcpVsSkillsMetadata,
+  };
 
 export async function getValidatedLocale(
   paramsPromise: Promise<{ locale: string }>
@@ -30,7 +108,13 @@ export async function generateLocalizedPageMetadata(
     return {};
   }
 
-  return createLocalizedMetadata(locale, routeKey, metadata);
+  const localizedMetadata = localizedMetadataByRouteKey[routeKey]?.(locale);
+
+  return createLocalizedMetadata(
+    locale,
+    routeKey,
+    localizedMetadata ?? metadata
+  );
 }
 
 export async function generateLocalizedPageMetadataForPath(
@@ -43,5 +127,11 @@ export async function generateLocalizedPageMetadataForPath(
     return {};
   }
 
-  return createLocalizedMetadataForPath(locale, pathname, metadata);
+  const localizedMetadata = localizedMetadataByPath[pathname]?.(locale);
+
+  return createLocalizedMetadataForPath(
+    locale,
+    pathname,
+    localizedMetadata ?? metadata
+  );
 }

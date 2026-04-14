@@ -524,7 +524,7 @@ const contentByLocale = {
       cards: [
         {
           title: "Superfície de capacidades confirmada",
-          body: "Uma checagem ao vivo do status do AnyCap em 9 de abril de 2026 confirmou que image generation, image editing, image reading, video generation, video reading, Drive, Page e web retrieval estavam disponíveis no ambiente atual.",
+          body: "Uma checagem ao vivo do status do AnyCap em 9 de abril de 2026 confirmou que geracao de imagem, edicao de imagem, leitura de imagem, geracao de video, leitura de video, Drive, Page e recuperacao na web estavam disponiveis no ambiente atual.",
         },
         {
           title: "Schema conferido",
@@ -710,12 +710,12 @@ const contentByLocale = {
           body: "Leia o explicador quando quiser a definição operacional antes de decidir qual ramo do workflow montar primeiro.",
         },
         {
-          title: "Install AnyCap",
+          title: "Instalar AnyCap",
           href: "/guides/install-anycap",
           body: "Vá para lá quando quiser o caminho mais curto deste artigo até um setup funcional de CLI.",
         },
         {
-          title: "Image Generation",
+          title: "Geracao de imagem",
           href: "/capabilities/image-generation",
           body: "Veja a capability que cuida dos primeiros stills, das variações de persona e da ramificação de cenas neste workflow.",
         },

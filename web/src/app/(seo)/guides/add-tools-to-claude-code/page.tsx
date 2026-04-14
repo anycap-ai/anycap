@@ -1,117 +1,61 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
-import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
-import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+import { FadeIn } from "@/components/ui/FadeIn";
+import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale } from "@/lib/site";
+import {
+  ADD_TOOLS_TO_CLAUDE_CODE_PATH,
+  getAddToolsToClaudeCodeMetadata,
+  getAddToolsToClaudeCodePageData,
+} from "./content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export const metadata: Metadata = {
-  title: "Add tools to Claude Code — Install agent capabilities",
-  description:
-    "Step-by-step guide to adding image generation, video generation, image read, and video analysis tools to Claude Code using AnyCap skills and CLI.",
-  alternates: { canonical: "/guides/add-tools-to-claude-code" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/guides/add-tools-to-claude-code",
-    siteName: siteConfig.siteName,
-    title: "Add tools to Claude Code — Install agent capabilities",
-    description:
-      "Step-by-step guide to adding image generation, video generation, image read, and video analysis tools to Claude Code using AnyCap skills and CLI.",
-  },
-};
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  ADD_TOOLS_TO_CLAUDE_CODE_PATH,
+  getAddToolsToClaudeCodeMetadata(defaultLocale),
+);
 
-const guideJsonLd = createTechArticleJsonLd({
-  headline: "Add tools to Claude Code — Install agent capabilities",
-  description:
-    "Guide to adding AnyCap-powered capabilities like image generation, video generation, image understanding, and video analysis to Claude Code.",
-  path: "/guides/add-tools-to-claude-code",
-  about: ["Claude Code", "AnyCap CLI", "Agent skills", "AI agent capabilities"],
-  keywords: ["claude code tools", "add tools to claude code", "anycap", "agent skills"],
-  datePublished: "2026-04-03",
-  dateModified: "2026-04-10",
-});
+export default async function AddToolsToClaudeCodePage() {
+  const locale = await getRequestLocale();
+  const content = getAddToolsToClaudeCodePageData(locale);
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Add tools to Claude Code",
-  description:
-    "Step-by-step guide to adding image generation, video generation, image understanding, and video analysis tools to Claude Code using AnyCap skills and CLI.",
-  step: [
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap skill",
-      text: "Run npx -y skills add anycap-ai/anycap -a claude-code -y to place the AnyCap SKILL.md file into Claude Code's skills directory.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap CLI",
-      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI binary. Alternatively use npm install -g @anycap/cli.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Log in",
-      text: "Run anycap login to authenticate. This single login covers every capability.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Discover available models",
-      text: "Run anycap image models to see available image models like Seedream 5, Nano Banana Pro, and Nano Banana 2.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Generate your first image",
-      text: "Run anycap image generate --model seedream-5 --prompt 'a minimalist product mockup' to generate your first image.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Try more capabilities",
-      text: "Use anycap image read for image understanding, anycap video read for video analysis, and anycap video generate for video generation.",
-    },
-  ],
-};
+  const guideJsonLd = createTechArticleJsonLd({
+    headline: content.metadata.title,
+    description: content.metadata.description,
+    path: ADD_TOOLS_TO_CLAUDE_CODE_PATH,
+    about: ["Claude Code", "AnyCap CLI", "Agent skills", "AI agent capabilities"],
+    keywords: ["claude code tools", "add tools to claude code", "anycap", "agent skills"],
+    datePublished: "2026-04-03",
+    dateModified: "2026-04-10",
+  });
 
-const faqItems = [
-  {
-    question: "Do I need to install anything besides the skill and CLI?",
-    answer:
-      "No. The AnyCap CLI is a single binary with no runtime dependencies. The skill file teaches Claude Code how to discover it. No additional SDKs, Docker containers, or language runtimes are required.",
-  },
-  {
-    question: "Does this work with Claude Code on all operating systems?",
-    answer:
-      "Yes. The AnyCap CLI supports macOS, Linux, and Windows. It runs in the same terminal session Claude Code uses.",
-  },
-  {
-    question: "How much does it cost to generate an image?",
-    answer:
-      "AnyCap uses pay-as-you-go pricing with no monthly fee. New users receive $5 in free credit. See the pricing page for per-model rates.",
-  },
-  {
-    question: "Can Claude Code call AnyCap automatically without my intervention?",
-    answer:
-      "Yes. Once the skill is installed and the CLI is authenticated, Claude Code can invoke any AnyCap capability in response to natural-language prompts. You can say 'generate a product mockup' and Claude Code will call the right AnyCap command.",
-  },
-] as const;
+  const howToJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: content.heroTitle,
+    description: content.metadata.description,
+    step: content.steps.map((step) => ({
+      "@type": "HowToStep",
+      name: step.title,
+      text: [step.command, step.body, step.bodyCommand].filter(Boolean).join(" "),
+    })),
+  };
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
+  const faqJsonLd = createFaqPageJsonLd(content.faqItems);
 
-export default function AddToolsToClaudeCodePage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[
-        { name: "Home", href: "/" },
-        { name: "Guides", href: "/guides", unlinkable: true },
-        { name: "Add Tools to Claude Code" },
-      ]} />
+      <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
@@ -119,21 +63,18 @@ export default function AddToolsToClaudeCodePage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Guides</p>
+            <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
+              {content.eyebrow}
+            </p>
             <ArticleByline className="mb-3" />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
             >
-              Add tools to Claude Code
+              {content.heroTitle}
             </h1>
             <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
-              Claude Code is a powerful coding agent, but it cannot generate images, create videos,
-              or analyze visual content on its own. AnyCap adds these capabilities through a skill
-              file and CLI. This guide walks through the full setup — from installing the skill to
-              generating your first image — so Claude Code can access image generation with models
-              like Seedream 5 and Nano Banana Pro, video generation with Veo 3.1, image
-              understanding, and video analysis through one interface.
+              {content.heroIntro}
             </p>
           </FadeIn>
 
@@ -141,116 +82,83 @@ export default function AddToolsToClaudeCodePage() {
             <EarlyAccessBanner />
           </FadeIn>
 
-          <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
-              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-6" style={{ ...pixel }}>What you need</h2>
-              <ul className="space-y-3 max-w-[700px]">
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  Claude Code installed and working
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  Node.js 18+ (for skills.sh and npm install)
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  A browser for the login flow
-                </li>
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {content.needTitle}
+              </h2>
+              <ul className="max-w-[700px] space-y-3">
+                {content.needItems.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm leading-6 text-[#4d5145]">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#6b7d3a]" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </section>
           </FadeIn>
 
-          <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
-
-          <div className="mt-16 md:mt-24 space-y-10 max-w-[800px]">
-            <FadeIn>
-              <p className="text-sm text-[#4d5145] leading-6 border border-[#d4dbb8] bg-[#f4f5f0]/50 px-5 py-4 max-w-[800px]">
-                The following steps reflect the current install flow for adding AnyCap tools to Claude Code.
-              </p>
-            </FadeIn>
-            {/* Step 1 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>1</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Install the AnyCap skill</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>npx -y skills add anycap-ai/anycap -a claude-code -y</p>
-              </div>
-              <p className="mt-3 text-sm text-[#4d5145]">This places the AnyCap SKILL.md file into Claude Code&apos;s skills directory so it can discover available capabilities.</p>
-            </FadeIn>
-
-            {/* Step 2 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>2</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Install the AnyCap CLI</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4 mb-3">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>curl -fsSL https://anycap.ai/install.sh | sh</p>
-              </div>
-              <p className="text-sm text-[#4d5145]">Or: <code className="text-[12px] text-[#6b7d3a]" style={mono}>npm install -g @anycap/cli</code></p>
-            </FadeIn>
-
-            {/* Step 3 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>3</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Log in</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap login</p>
-              </div>
-            </FadeIn>
-
-            {/* Step 4 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>4</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Discover available models</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap image models</p>
-              </div>
-              <p className="mt-3 text-sm text-[#4d5145]">Lists available image models: Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.</p>
-            </FadeIn>
-
-            {/* Step 5 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>5</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Generate your first image</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4">
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap image generate --model seedream-5 --prompt &quot;a minimalist product mockup&quot;</p>
-              </div>
-            </FadeIn>
-
-            {/* Step 6 */}
-            <FadeIn>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>6</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Try more capabilities</h2>
-              </div>
-              <div className="bg-[#1c1f17] px-5 py-4 mb-3">
-                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Image read</p>
-                <p className="text-[13px] text-[#d4e0a4] mb-3" style={mono}>anycap image read --url https://example.com/screenshot.png</p>
-                <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># Video analysis</p>
-                <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap video read --url https://example.com/demo.mp4</p>
-              </div>
-            </FadeIn>
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
           </div>
 
-          <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
+          <div className="mt-16 max-w-[800px] space-y-10 md:mt-24">
+            <FadeIn>
+              <p className="max-w-[800px] border border-[#d4dbb8] bg-[#f4f5f0]/50 px-5 py-4 text-sm leading-6 text-[#4d5145]">
+                {content.note}
+              </p>
+            </FadeIn>
+
+            {content.steps.map((step, index) => (
+              <FadeIn key={step.title}>
+                <div className="mb-4 flex items-center gap-3">
+                  <span
+                    className="flex h-8 w-8 items-center justify-center bg-[#6b7d3a] text-[13px] font-bold text-[#f4f5f0]"
+                    style={mono}
+                  >
+                    {index + 1}
+                  </span>
+                  <h2 className="text-lg text-[#1c1f17]" style={pixel}>
+                    {step.title}
+                  </h2>
+                </div>
+                <div className="bg-[#1c1f17] px-5 py-4">
+                  <p className="text-[13px] text-[#d4e0a4]" style={mono}>
+                    {step.command}
+                  </p>
+                </div>
+                {step.body ? (
+                  <p className="mt-3 text-sm leading-6 text-[#4d5145]">
+                    {step.body}
+                    {step.bodyCommand ? (
+                      <>
+                        {" "}
+                        <code className="text-[12px] text-[#6b7d3a]" style={mono}>
+                          {step.bodyCommand}
+                        </code>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </FadeIn>
+            ))}
+          </div>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
-              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-8" style={{ ...pixel }}>FAQ</h2>
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {content.faqTitle}
+              </h2>
               <div className="max-w-[860px] space-y-4">
-                {faqItems.map((item) => (
+                {content.faqItems.map((item) => (
                   <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
                     <h3 className="mb-2 text-[14px] font-bold text-[#1c1f17]" style={mono}>
                       {item.question}
@@ -262,13 +170,27 @@ export default function AddToolsToClaudeCodePage() {
             </section>
           </FadeIn>
 
-          <div className="mt-16 md:mt-24"><hr className="border-t border-[#d4dbb8]" /></div>
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
 
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link href="/for/claude-code" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg" style={mono}>AnyCap for Claude Code</Link>
-                <Link href="/capabilities" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Any Capability</Link>
+                {content.cta.map((item, index) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={
+                      index === 0
+                        ? "inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
+                        : "inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                    }
+                    style={mono}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
             </section>
           </FadeIn>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { createModelPageData, createModelPageMetadata } from "@/lib/seo/model-pages";
+import { type SiteLocale } from "@/lib/site";
 
 export const SEEDANCE_15_PRO_PATH = "/models/seedance-1-5-pro";
 
@@ -512,37 +512,11 @@ const contentByLocale = {
 export function getSeedance15ProMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
 
-  return {
-    title: content.metadata.title,
-    description: content.metadata.description,
-    alternates: { canonical: SEEDANCE_15_PRO_PATH },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: SEEDANCE_15_PRO_PATH,
-      siteName: siteConfig.siteName,
-      title: content.metadata.openGraphTitle,
-      description: content.metadata.openGraphDescription,
-    },
-  };
+  return createModelPageMetadata(locale, SEEDANCE_15_PRO_PATH, content.metadata);
 }
 
 export function getSeedance15ProPageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
-
-  return {
-    ...content,
-    modelGuideJsonLd: createTechArticleJsonLd({
-      headline: content.metadata.articleHeadline,
-      description: content.metadata.articleDescription,
-      path: SEEDANCE_15_PRO_PATH,
-      locale,
-      about: [...content.metadata.articleAbout],
-      keywords: [...content.metadata.articleKeywords],
-      dateModified: LAST_UPDATED_ISO,
-    }),
-    faqJsonLd: createFaqPageJsonLd(content.faqItems),
-  };
+  return createModelPageData(locale, SEEDANCE_15_PRO_PATH, contentByLocale, LAST_UPDATED_ISO);
 }
 
 export type Seedance15ProPageData = ReturnType<typeof getSeedance15ProPageData>;

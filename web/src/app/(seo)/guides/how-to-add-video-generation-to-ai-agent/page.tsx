@@ -1,31 +1,118 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export const metadata: Metadata = {
-  title: "How to Add Video Generation to an AI Agent — Step-by-Step Guide",
-  description:
-    "Step-by-step guide to adding video generation capabilities to any AI agent using AnyCap CLI and models like Veo 3.1 and Kling 3.0.",
-  alternates: { canonical: "/guides/how-to-add-video-generation-to-ai-agent" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/guides/how-to-add-video-generation-to-ai-agent",
-    siteName: siteConfig.siteName,
-    title: "How to Add Video Generation to an AI Agent — Step-by-Step Guide",
-    description:
-      "Step-by-step guide to adding video generation capabilities to any AI agent using AnyCap CLI and models like Veo 3.1 and Kling 3.0.",
+const PATH = "/guides/how-to-add-video-generation-to-ai-agent";
+
+type PageContent = {
+  eyebrow: string;
+  title: [string, string];
+  intro: string;
+  neededTitle: string;
+  neededItems: string[];
+  callout: string;
+  steps: {
+    skill: string;
+    cli: string;
+    login: string;
+    discover: string;
+    firstVideo: string;
+    workflow: string;
+  };
+  faqTitle: string;
+  ctas: {
+    claude: string;
+    video: string;
+    start: string;
+  };
+  breadcrumbLabel: string;
+};
+
+const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+  en: {
+    eyebrow: "Guides",
+    title: ["How to add video generation", "to an AI agent"],
+    intro:
+      "AI agents can write code, answer questions, and automate workflows — but they cannot create videos on their own. AnyCap adds video generation capabilities through a skill file and CLI. This guide walks through adding video generation to any AI agent, using models like Veo 3.1 and Kling 3.0 to produce AI-generated videos from text prompts.",
+    neededTitle: "What you need",
+    neededItems: [
+      "An AI agent that can run shell commands (Claude Code, Cursor, Codex, etc.)",
+      "Node.js 18+ (for skills.sh and npm install)",
+      "A browser for the one-time login flow",
+    ],
+    callout:
+      "Video generation is asynchronous — the CLI submits the request and polls until the video is ready. Your agent handles this automatically.",
+    steps: {
+      skill: "Install the AnyCap skill",
+      cli: "Install the AnyCap CLI",
+      login: "Log in",
+      discover: "Discover available video models",
+      firstVideo: "Generate your first video",
+      workflow: "Use video generation in agent workflows",
+    },
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap for Claude Code",
+      video: "Video Generation",
+      start: "Get Started",
+    },
+    breadcrumbLabel: "Add Video Generation to AI Agent",
+  },
+  "pt-br": {
+    eyebrow: "Guias",
+    title: ["Como adicionar geracao de video", "a um agente de IA"],
+    intro:
+      "Agentes de IA podem escrever codigo, responder perguntas e automatizar workflows - mas nao conseguem criar videos sozinhos. O AnyCap adiciona capacidades de geracao de video por meio de um arquivo de skill e da CLI. Este guia mostra como adicionar geracao de video a qualquer agente de IA, usando modelos como Veo 3.1 e Kling 3.0 para produzir videos a partir de prompts de texto.",
+    neededTitle: "O que voce precisa",
+    neededItems: [
+      "Um agente de IA que consiga executar comandos de shell (Claude Code, Cursor, Codex, etc.)",
+      "Node.js 18+ (para skills.sh e npm install)",
+      "Um navegador para o fluxo de login unico",
+    ],
+    callout:
+      "A geracao de video e assincrona - a CLI envia a requisicao e faz polling ate o video ficar pronto. Seu agente cuida disso automaticamente.",
+    steps: {
+      skill: "Instale a skill do AnyCap",
+      cli: "Instale a CLI do AnyCap",
+      login: "Faca login",
+      discover: "Descubra os modelos de video disponiveis",
+      firstVideo: "Gere seu primeiro video",
+      workflow: "Use a geracao de video nos workflows do agente",
+    },
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap para Claude Code",
+      video: "Geracao de Video",
+      start: "Comecar",
+    },
+    breadcrumbLabel: "Adicionar geracao de video ao agente de IA",
   },
 };
+
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const isPtBr = locale === "pt-br";
+  return createLocalizedMetadataForPath(locale, PATH, {
+    title: isPtBr
+      ? "Como adicionar geracao de video a um agente de IA - guia passo a passo"
+      : "How to Add Video Generation to an AI Agent — Step-by-Step Guide",
+    description: isPtBr
+      ? "Guia passo a passo para adicionar capacidades de geracao de video a qualquer agente de IA usando a CLI do AnyCap e modelos como Veo 3.1 e Kling 3.0."
+      : "Step-by-step guide to adding video generation capabilities to any AI agent using AnyCap CLI and models like Veo 3.1 and Kling 3.0.",
+  });
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 const guideJsonLd = createTechArticleJsonLd({
   headline: "How to Add Video Generation to an AI Agent — Step-by-Step Guide",
@@ -109,13 +196,15 @@ const faqItems = [
 
 const faqJsonLd = createFaqPageJsonLd(faqItems);
 
-export default function HowToAddVideoGenerationPage() {
+export default async function HowToAddVideoGenerationPage() {
+  const locale = await getRequestLocale();
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
   return (
     <>
       <BreadcrumbJsonLd items={[
         { name: "Home", href: "/" },
         { name: "Guides", href: "/guides", unlinkable: true },
-        { name: "Add Video Generation to AI Agent" },
+        { name: content.breadcrumbLabel },
       ]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
@@ -124,18 +213,17 @@ export default function HowToAddVideoGenerationPage() {
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
-            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>Guides</p>
+            <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>{content.eyebrow}</p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(28px, 5vw, 60px)" }}
             >
-              How to add video generation to an AI agent
+              {content.title[0]}
+              <br />
+              {content.title[1]}
             </h1>
             <p className="mt-6 max-w-[700px] text-base leading-7 text-[#4d5145] md:text-lg">
-              AI agents can write code, answer questions, and automate workflows — but they cannot
-              create videos on their own. AnyCap adds video generation capabilities through a skill
-              file and CLI. This guide walks through adding video generation to any AI agent, using
-              models like Veo 3.1 and Kling 3.0 to produce AI-generated videos from text prompts.
+              {content.intro}
             </p>
           </FadeIn>
 
@@ -147,20 +235,14 @@ export default function HowToAddVideoGenerationPage() {
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
-              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-6" style={{ ...pixel }}>What you need</h2>
+              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-6" style={{ ...pixel }}>{content.neededTitle}</h2>
               <ul className="space-y-3 max-w-[700px]">
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  An AI agent that can run shell commands (Claude Code, Cursor, Codex, etc.)
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  Node.js 18+ (for skills.sh and npm install)
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
-                  A browser for the one-time login flow
-                </li>
+                {content.neededItems.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-[#4d5145] leading-6">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6b7d3a] shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </section>
           </FadeIn>
@@ -170,8 +252,7 @@ export default function HowToAddVideoGenerationPage() {
           <div className="mt-16 md:mt-24 space-y-10 max-w-[800px]">
             <FadeIn>
               <p className="text-sm text-[#4d5145] leading-6 border border-[#d4dbb8] bg-[#f4f5f0]/50 px-5 py-4 max-w-[800px]">
-                Video generation is asynchronous — the CLI submits the request and polls until the
-                video is ready. Your agent handles this automatically.
+                {content.callout}
               </p>
             </FadeIn>
 
@@ -179,7 +260,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>1</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Install the AnyCap skill</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.skill}</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="text-[13px] text-[#6b7d3a] mb-1" style={mono}># For Claude Code</p>
@@ -194,7 +275,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>2</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Install the AnyCap CLI</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.cli}</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4 mb-3">
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>curl -fsSL https://anycap.ai/install.sh | sh</p>
@@ -206,7 +287,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>3</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Log in</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.login}</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap login</p>
@@ -218,7 +299,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>4</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Discover available video models</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.discover}</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap video models</p>
@@ -230,7 +311,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>5</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Generate your first video</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.firstVideo}</h2>
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>anycap video generate --model veo-3.1 --prompt &quot;a drone shot over a mountain lake at sunrise&quot;</p>
@@ -242,7 +323,7 @@ export default function HowToAddVideoGenerationPage() {
             <FadeIn>
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-[#f4f5f0] bg-[#6b7d3a]" style={mono}>6</span>
-                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>Use video generation in agent workflows</h2>
+                <h2 className="text-lg text-[#1c1f17]" style={{ ...pixel }}>{content.steps.workflow}</h2>
               </div>
               <p className="text-sm text-[#4d5145] leading-6 max-w-[700px]">
                 Once set up, your agent can generate videos in response to natural-language requests.
@@ -262,7 +343,7 @@ export default function HowToAddVideoGenerationPage() {
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
-              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-8" style={{ ...pixel }}>FAQ</h2>
+              <h2 className="text-lg md:text-xl text-[#1c1f17] mb-8" style={{ ...pixel }}>{content.faqTitle}</h2>
               <div className="max-w-[860px] space-y-4">
                 {faqItems.map((item) => (
                   <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
@@ -281,9 +362,9 @@ export default function HowToAddVideoGenerationPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
-                <Link href="/for/claude-code" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg" style={mono}>AnyCap for Claude Code</Link>
-                <Link href="/capabilities/video-generation" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Video Generation</Link>
-                <Link href="/start" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>Get Started</Link>
+                <Link href="/for/claude-code" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg" style={mono}>{content.ctas.claude}</Link>
+                <Link href="/capabilities/video-generation" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>{content.ctas.video}</Link>
+                <Link href="/start" className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg" style={mono}>{content.ctas.start}</Link>
               </div>
             </section>
           </FadeIn>

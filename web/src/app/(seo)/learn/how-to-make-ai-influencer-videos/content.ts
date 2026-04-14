@@ -495,7 +495,7 @@ const contentByLocale = {
     validationCards: [
       {
         title: "Superfície de capacidades confirmada",
-        body: "O status do AnyCap foi checado novamente em 9 de abril de 2026. Image generation, video generation, image reading, video reading, Drive e Page estavam disponíveis.",
+        body: "O status do AnyCap foi checado novamente em 9 de abril de 2026. Geracao de imagem, geracao de video, leitura de imagem, leitura de video, Drive e Page estavam disponiveis.",
       },
       {
         title: "Schema conferido",
@@ -563,7 +563,7 @@ const contentByLocale = {
     ],
     commandExamplesLabel: "Exemplos de comando",
     commandExamplesTitle: "O loop still-first em comandos",
-    commandExamplesCta: "Ver Video Generation",
+    commandExamplesCta: "Ver Geracao de video",
     codeExamples: [
       {
         title: "Gere o still para animar",
@@ -642,12 +642,12 @@ const contentByLocale = {
         body: "Vá para lá se ainda precisar validar a persona com baixo custo antes de gastar em movimento.",
       },
       {
-        title: "Video Generation",
+        title: "Geracao de video",
         href: "/capabilities/video-generation",
         body: "Veja a superfície pública de capacidades usada para a camada de movimento desta página.",
       },
       {
-        title: "Install AnyCap",
+        title: "Instalar AnyCap",
         href: "/guides/install-anycap",
         body: "Use esta página quando quiser rodar o workflow still-first localmente.",
       },

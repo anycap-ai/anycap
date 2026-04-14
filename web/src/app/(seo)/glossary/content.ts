@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { hubPages } from "@/lib/hub-pages";
+import {
+  getHubPageDefinition,
+  type HubPageDefinition,
+} from "@/lib/seo/hub-pages";
 import { getLocaleConfig, getLocalizedRouteUrl, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const GLOSSARY_PATH = "/glossary";
 
-type GlossaryHubPageData = typeof hubPages.glossary & {
+type GlossaryHubPageData = HubPageDefinition & {
   breadcrumbItems: readonly { name: string; href: string }[];
 };
 
@@ -26,7 +29,7 @@ type GlossaryEntryPageData = {
 };
 
 const glossaryHubContentEn: GlossaryHubPageData = {
-  ...hubPages.glossary,
+  ...getHubPageDefinition("en", "glossary"),
   breadcrumbItems: [
     { name: "Home", href: "/" },
     { name: "Glossary", href: GLOSSARY_PATH },
@@ -34,31 +37,7 @@ const glossaryHubContentEn: GlossaryHubPageData = {
 };
 
 const glossaryHubContentPtBr: GlossaryHubPageData = {
-  ...hubPages.glossary,
-  title: "Glossário — conceitos centrais por trás do AnyCap e de ferramentas para agentes",
-  description:
-    "Leia definições concisas de conceitos centrais do AnyCap e de ferramentas para agentes, como engenharia de contexto, agent harness e runtimes de capacidades.",
-  eyebrow: "Glossário",
-  heroLines: ["Linguagem compartilhada", "para sistemas de agentes."],
-  intro:
-    "Use estas entradas do glossário para alinhar equipes sobre os termos por trás de runtimes de capacidades, harnesses e desenho de contexto.",
-  items: [
-    {
-      title: "Engenharia de Contexto",
-      href: "/glossary/context-engineering",
-      description: "A prática de moldar entradas, arquivos e memória para que um agente trabalhe com confiabilidade.",
-    },
-    {
-      title: "Agent Harness",
-      href: "/glossary/agent-harness",
-      description: "O ambiente de execução que gerencia ferramentas, arquivos, prompts e travas de segurança do agente.",
-    },
-    {
-      title: "Runtime de Capacidade do Agente",
-      href: "/glossary/agent-capability-runtime",
-      description: "Uma camada de runtime que dá aos agentes uma forma estável de chamar capacidades entre provedores.",
-    },
-  ],
+  ...getHubPageDefinition("pt-br", "glossary"),
   breadcrumbItems: [
     { name: "Início", href: "/" },
     { name: "Glossário", href: GLOSSARY_PATH },

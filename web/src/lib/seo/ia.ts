@@ -1,4 +1,4 @@
-import registry from "@/lib/seo-ia-registry.json";
+import registry from "@/lib/seo/ia-registry.json";
 import { normalizePublicPath } from "@/lib/site";
 
 export type SeoIaNodeKind =

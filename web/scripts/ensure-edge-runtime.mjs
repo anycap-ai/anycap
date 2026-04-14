@@ -1,30 +1,12 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { collectFiles } from "./seo-tree.mjs";
 
 const appDir = path.join(process.cwd(), "src", "app");
 const routeEntryNames = new Set(["page.tsx", "layout.tsx", "not-found.tsx", "route.ts"]);
 const edgeRuntimePattern = /export const runtime\s*=\s*["']edge["']/;
 
-function walk(dir) {
-  const entries = readdirSync(dir);
-  const files = [];
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry);
-    const stats = statSync(fullPath);
-
-    if (stats.isDirectory()) {
-      files.push(...walk(fullPath));
-      continue;
-    }
-
-    files.push(fullPath);
-  }
-
-  return files;
-}
-
-const entryFiles = walk(appDir)
+const entryFiles = collectFiles(appDir)
   .filter((filePath) => routeEntryNames.has(path.basename(filePath)))
   .sort();
 

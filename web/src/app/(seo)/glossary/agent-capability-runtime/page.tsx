@@ -5,6 +5,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale } from "@/lib/site";
+import { getRequestLocale } from "@/lib/request-locale";
 import {
   AGENT_CAPABILITY_RUNTIME_PATH,
   getAgentCapabilityRuntimeMetadata,
@@ -16,15 +17,16 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-const content = getAgentCapabilityRuntimePageData(defaultLocale);
-
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   AGENT_CAPABILITY_RUNTIME_PATH,
   getAgentCapabilityRuntimeMetadata(defaultLocale),
 );
 
-export default function AgentCapabilityRuntimePage() {
+export default async function AgentCapabilityRuntimePage() {
+  const locale = await getRequestLocale();
+  const content = getAgentCapabilityRuntimePageData(locale);
+
   return (
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />

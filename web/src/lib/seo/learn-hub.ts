@@ -1,13 +1,8 @@
-import { getSeoIaNodes, type SeoIaNode, type SeoIaNodeKind } from "@/lib/seo-ia";
+import { getSeoIaNodes, type SeoIaNode, type SeoIaNodeKind } from "@/lib/seo/ia";
 
 export type LearnHubLink = {
   label: string;
   href: string;
-};
-
-export type LearnHubFaqItem = {
-  question: string;
-  answer: string;
 };
 
 export type LearnHubArticle = {
@@ -34,37 +29,6 @@ export type LearnHubSection = {
 };
 
 export type LearnHubContent = {
-  hero: {
-    eyebrow: string;
-    titleLines: readonly [string, string];
-    intro: string;
-  };
-  orientation: {
-    eyebrow: string;
-    title: string;
-    description: string;
-    steps: readonly {
-      step: string;
-      title: string;
-      description: string;
-    }[];
-  };
-  pathOverview: {
-    eyebrow: string;
-    title: string;
-    description: string;
-  };
-  pathSectionIntro: {
-    eyebrow: string;
-    title: string;
-    description: string;
-  };
-  adjacentHubs: readonly {
-    title: string;
-    href: string;
-    description: string;
-  }[];
-  faqItems: readonly LearnHubFaqItem[];
   sections: readonly LearnHubSection[];
   allArticles: readonly LearnHubArticle[];
 };
@@ -317,97 +281,6 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
   },
 };
 
-const learnHubHero = {
-  eyebrow: "Learn",
-  titleLines: ["Start with the question", "you are actually asking"] as const,
-  intro:
-    "Use Learn when you are choosing a coding-agent stack, extending an AI product, mapping capability gaps, or looking for a real workflow example. Each path is grouped by intent so you can move from explanation into the next step without sorting through unrelated page types first.",
-} as const;
-
-const learnHubOrientation = {
-  eyebrow: "How to use this page",
-  title: "Pick one path, start with the featured page, then only go narrower if you need it",
-  description:
-    "This page is designed to reduce choice overload. Treat each section like a curated route instead of a list of everything we have published.",
-  steps: [
-    {
-      step: "01",
-      title: "Match the question",
-      description: "Choose the path that fits what you are deciding right now, not every question you might have later.",
-    },
-    {
-      step: "02",
-      title: "Open the featured page",
-      description: "Start with the main guide or workflow before branching into narrower pages, variants, or agent-specific follow-ons.",
-    },
-    {
-      step: "03",
-      title: "Switch page type when needed",
-      description: "Move to Guides or Capabilities once the question becomes operational and you are ready to implement.",
-    },
-  ] as const,
-} as const;
-
-const learnHubPathOverview = {
-  eyebrow: "Path overview",
-  title: "Choose one path and ignore the rest for now",
-  description:
-    "Each card below maps to a focused section. Open the path that matches your current question, then use the featured page as your entry point.",
-} as const;
-
-const learnHubPathSectionIntro = {
-  eyebrow: "Browse by path",
-  title: "Start with the main page, then go narrower only if needed",
-  description:
-    "The structure below is generated from the same information architecture that powers breadcrumbs, so new pages can slot into the right path without turning the hub into a manual link dump.",
-} as const;
-
-const adjacentHubs = [
-  {
-    title: "Guides",
-    href: "/guides",
-    description: "Use Guides when you already know what you want to set up and need step-by-step implementation.",
-  },
-  {
-    title: "Glossary",
-    href: "/glossary",
-    description: "Use Glossary when the main blocker is vocabulary and you need shared language for harnesses, context, and runtimes.",
-  },
-  {
-    title: "Capabilities",
-    href: "/capabilities",
-    description: "Use Capabilities when you are past the explainer stage and want the exact product surfaces AnyCap adds.",
-  },
-  {
-    title: "Compare",
-    href: "/compare",
-    description: "Use Compare when the question starts from an alternative vendor, adjacent product, or replacement decision.",
-  },
-] as const;
-
-const faqItems = [
-  {
-    question: "Which page should I start with if I am choosing a coding-agent setup?",
-    answer:
-      "Start with Best AI for Coding Agents if you are still framing the category question. From there, move into the Claude Code or Cursor specific page once you know which workflow you care about.",
-  },
-  {
-    question: "What if I am building a SaaS assistant instead of using a coding agent?",
-    answer:
-      "Start with AI Chatbot SaaS vs AI Agent for SaaS if you are deciding what kind of system you need. Then move into Add Multimodal Capabilities to a SaaS Chatbot when the question becomes implementation.",
-  },
-  {
-    question: "Why are some pages grouped under a main workflow instead of listed flat?",
-    answer:
-      "Because some pages make more sense as a narrower follow-on after the main workflow already fits. The hub keeps those variants visually attached to the parent path so the page stays easier to scan.",
-  },
-  {
-    question: "When should I move from Learn into Guides or Capabilities?",
-    answer:
-      "Move into Guides when you are ready to set something up step by step. Move into Capabilities when you already understand the problem and want the exact surface, such as image generation, video analysis, or web crawl.",
-  },
-] as const;
-
 function hasPath(node: SeoIaNode): node is SeoIaNode & { path: string } {
   return typeof node.path === "string";
 }
@@ -590,12 +463,6 @@ export function getLearnHubContent(): LearnHubContent {
   const sections = buildSections();
 
   return {
-    hero: learnHubHero,
-    orientation: learnHubOrientation,
-    pathOverview: learnHubPathOverview,
-    pathSectionIntro: learnHubPathSectionIntro,
-    adjacentHubs,
-    faqItems,
     sections,
     allArticles: flattenUniqueArticles(sections),
   };

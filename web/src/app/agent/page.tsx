@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { marked } from "marked";
 import { HumanRedirectDialog } from "@/components/landing/HumanRedirectDialog";
-import { landingMarkdown } from "@/lib/landing-content";
+import { getLandingMarkdown } from "@/lib/landing-content";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createAgentMetadata } from "@/lib/localized-metadata";
 import { defaultLocale, localizePublicPath, siteConfig, type SiteLocale } from "@/lib/site";
@@ -12,6 +12,27 @@ export const runtime = "edge";
 export async function generateMetadata(): Promise<Metadata> {
   return createAgentMetadata(defaultLocale);
 }
+
+const localizedAgentChrome = {
+  en: {
+    humanLabel: "I'm Human ->",
+    licenseLabel: "MIT License",
+  },
+  "pt-br": {
+    humanLabel: "Sou humano ->",
+    licenseLabel: "Licenca MIT",
+  },
+  id: {
+    humanLabel: "I'm Human ->",
+    licenseLabel: "MIT License",
+  },
+} as const satisfies Record<
+  SiteLocale,
+  {
+    humanLabel: string;
+    licenseLabel: string;
+  }
+>;
 
 function localizeAgentMarkdown(markdown: string, locale: SiteLocale) {
   return markdown.replaceAll(
@@ -23,7 +44,8 @@ function localizeAgentMarkdown(markdown: string, locale: SiteLocale) {
 export default async function AgentEntryPage() {
   const locale = await getRequestLocale();
   const homePageHref = localizePublicPath(locale, "/");
-  const html = marked.parse(localizeAgentMarkdown(landingMarkdown, locale), {
+  const chrome = localizedAgentChrome[locale] ?? localizedAgentChrome.en;
+  const html = marked.parse(localizeAgentMarkdown(getLandingMarkdown(locale), locale), {
     async: false,
   }) as string;
 
@@ -46,7 +68,7 @@ export default async function AgentEntryPage() {
             prefetch={true}
             className="inline-flex items-center px-5 py-2.5 bg-[#e0e0e0] text-[#0a0a0a] text-sm font-bold rounded-lg hover:bg-white active:scale-[0.97] transition-all"
           >
-            I&apos;m Human →
+            {chrome.humanLabel}
           </Link>
         </div>
 
@@ -56,7 +78,7 @@ export default async function AgentEntryPage() {
         />
 
         <footer className="mt-10 pt-6 border-t border-[#222] text-sm text-[#666]">
-          <p>MIT License</p>
+          <p>{chrome.licenseLabel}</p>
         </footer>
       </main>
     </div>
