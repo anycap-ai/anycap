@@ -466,7 +466,7 @@ const contentByLocale = {
       cards: [
         {
           title: "Superfície de capacidades confirmada",
-          body: "O status do AnyCap foi revisado novamente em 9 de abril de 2026 antes de construir esta página. Image generation, image editing, image reading, video generation, Drive e Page estavam disponíveis.",
+          body: "O status do AnyCap foi revisado novamente em 9 de abril de 2026 antes de construir esta página. Geracao de imagem, edicao de imagem, leitura de imagem, geracao de video, Drive e Page estavam disponiveis.",
         },
         {
           title: "Schema conferido",
@@ -499,7 +499,7 @@ const contentByLocale = {
           href: "/models/nano-banana-pro",
         },
         {
-          title: "Pricing",
+          title: "Precos",
           label: "Entenda a superfície de custo",
           body: "Confira o modelo de créditos antes de escalar de stills protótipo para motion, entrega ou produção repetida de conteúdo.",
           href: "/pricing",
@@ -540,7 +540,7 @@ const contentByLocale = {
     commands: {
       label: "Exemplos de comando",
       title: "O loop de baixo custo em comandos",
-      ctaLabel: "Ver Image Generation",
+      ctaLabel: "Ver Geracao de imagem",
       examples: [
         {
           title: "Gere os primeiros stills de baixo custo",
@@ -627,17 +627,17 @@ const contentByLocale = {
           body: "Leia o explicador quando precisar da definição do conceito antes de decidir se vale a pena montar esse workflow.",
         },
         {
-          title: "Install AnyCap",
+          title: "Instalar AnyCap",
           href: "/guides/install-anycap",
           body: "Use isto quando quiser o caminho mais curto desta página até um setup funcional de CLI.",
         },
         {
-          title: "Pricing",
+          title: "Precos",
           href: "/pricing",
           body: "Veja o modelo de créditos antes de sair dos stills protótipo para um loop de conteúdo com frequência maior.",
         },
         {
-          title: "Image Generation",
+          title: "Geracao de imagem",
           href: "/capabilities/image-generation",
           body: "Explore a capability que sustenta o loop de geração e refinamento de stills realistas desta página.",
         },

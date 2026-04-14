@@ -393,10 +393,10 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       { name: "Agent Capability Runtime", href: "/glossary/agent-capability-runtime" },
     ],
     metadata: {
-      title: "What is an Agent Capability Runtime? Definition, Architecture, and Why It Matters",
+      title: "What is an Agent Capability Runtime? | AnyCap",
       description:
         "An agent capability runtime is a software layer that gives AI agents installable capabilities through one interface, one auth flow, and one install path. Learn how it differs from agent frameworks, tool platforms, and direct API integrations.",
-      openGraphTitle: "What is an Agent Capability Runtime? Definition, Architecture, and Why It Matters",
+      openGraphTitle: "What is an Agent Capability Runtime? | AnyCap",
       openGraphDescription:
         "An agent capability runtime gives AI agents installable capabilities through one interface. Learn how it differs from agent frameworks, tool integration platforms, and direct API integrations.",
     },
@@ -514,10 +514,10 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       { name: "Runtime de Capacidade do Agente", href: "/glossary/agent-capability-runtime" },
     ],
     metadata: {
-      title: "O que é um runtime de capacidade do agente? Definição, arquitetura e por que isso importa",
+      title: "O que é um runtime de capacidade do agente? | AnyCap",
       description:
         "Um runtime de capacidade do agente é uma camada de software que dá aos agentes de IA capacidades instaláveis por meio de uma interface única, um fluxo único de autenticação e um único caminho de instalação. Veja como ele difere de frameworks de agentes, plataformas de ferramentas e integrações diretas com APIs.",
-      openGraphTitle: "O que é um runtime de capacidade do agente? Definição, arquitetura e por que isso importa",
+      openGraphTitle: "O que é um runtime de capacidade do agente? | AnyCap",
       openGraphDescription:
         "Um runtime de capacidade do agente dá aos agentes de IA capacidades instaláveis por meio de uma interface única. Veja como ele difere de frameworks de agentes, plataformas de integração e integrações diretas.",
     },

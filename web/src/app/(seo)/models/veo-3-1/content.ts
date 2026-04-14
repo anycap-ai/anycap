@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ModelShowcaseEntry } from "@/lib/model-showcase";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { createModelPageData, createModelPageMetadata } from "@/lib/seo/model-pages";
+import { type SiteLocale } from "@/lib/site";
 
 export const VEO_31_PATH = "/models/veo-3-1";
 
@@ -77,13 +77,13 @@ type Veo31PageContent = {
 const contentByLocale = {
   en: {
     metadata: {
-      title: "Veo 3.1 for AI agents — Text-to-video and image-to-video through AnyCap",
+      title: "Veo 3.1 video generation for AI agents | AnyCap",
       description:
         "Use Veo 3.1 through AnyCap when AI agents need text-to-video and image-to-video generation inside a consistent capability runtime. Learn when to choose Veo 3.1, how to call it, and how it fits video workflows.",
-      openGraphTitle: "Veo 3.1 for AI agents — Text-to-video and image-to-video through AnyCap",
+      openGraphTitle: "Veo 3.1 video generation for AI agents | AnyCap",
       openGraphDescription:
         "Use Veo 3.1 through AnyCap when AI agents need text-to-video and image-to-video generation inside a consistent capability runtime.",
-      articleHeadline: "Veo 3.1 for AI agents — Text-to-video and image-to-video through AnyCap",
+      articleHeadline: "Veo 3.1 video generation for AI agents | AnyCap",
       articleDescription:
         "Guide to using Veo 3.1 through AnyCap for premium text-to-video and image-to-video generation inside AI agent runtimes.",
       articleAbout: ["Veo 3.1", "Video generation", "Image-to-video", "AnyCap", "AI agents"],
@@ -233,13 +233,13 @@ const contentByLocale = {
   },
   "pt-br": {
     metadata: {
-      title: "Veo 3.1 para agentes de IA — texto para vídeo e imagem para vídeo pelo AnyCap",
+      title: "Veo 3.1 geração de vídeo para agentes de IA | AnyCap",
       description:
         "Use o Veo 3.1 pelo AnyCap quando agentes de IA precisarem de geração de vídeo a partir de texto ou de imagem dentro de um runtime de capability consistente. Veja quando escolher o Veo 3.1, como chamá-lo e como ele se encaixa em fluxos de vídeo.",
-      openGraphTitle: "Veo 3.1 para agentes de IA — texto para vídeo e imagem para vídeo pelo AnyCap",
+      openGraphTitle: "Veo 3.1 geração de vídeo para agentes de IA | AnyCap",
       openGraphDescription:
         "Use o Veo 3.1 pelo AnyCap quando agentes de IA precisarem de geração de vídeo a partir de texto ou imagem dentro de um runtime de capability consistente.",
-      articleHeadline: "Veo 3.1 para agentes de IA — texto para vídeo e imagem para vídeo pelo AnyCap",
+      articleHeadline: "Veo 3.1 geração de vídeo para agentes de IA | AnyCap",
       articleDescription:
         "Guia para usar o Veo 3.1 pelo AnyCap para geração premium de texto para vídeo e imagem para vídeo em runtimes de agentes de IA.",
       articleAbout: ["Veo 3.1", "Geração de vídeo", "Imagem para vídeo", "AnyCap", "agentes de IA"],
@@ -548,39 +548,11 @@ const contentByLocale = {
 export function getVeo31Metadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
 
-  return {
-    title: content.metadata.title,
-    description: content.metadata.description,
-    alternates: { canonical: VEO_31_PATH },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: VEO_31_PATH,
-      siteName: siteConfig.siteName,
-      title: content.metadata.openGraphTitle,
-      description: content.metadata.openGraphDescription,
-    },
-  };
+  return createModelPageMetadata(locale, VEO_31_PATH, content.metadata);
 }
 
 export function getVeo31PageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
-
-  const modelGuideJsonLd = createTechArticleJsonLd({
-    headline: content.metadata.articleHeadline,
-    description: content.metadata.articleDescription,
-    path: VEO_31_PATH,
-    locale,
-    about: [...content.metadata.articleAbout],
-    keywords: [...content.metadata.articleKeywords],
-    dateModified: LAST_UPDATED_ISO,
-  });
-
-  return {
-    ...content,
-    modelGuideJsonLd,
-    faqJsonLd: createFaqPageJsonLd(content.faqItems),
-  };
+  return createModelPageData(locale, VEO_31_PATH, contentByLocale, LAST_UPDATED_ISO);
 }
 
 export type Veo31PageData = ReturnType<typeof getVeo31PageData>;

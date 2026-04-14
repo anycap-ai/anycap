@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { getLearnHubContent, type LearnHubArticle, type LearnHubLink, type LearnHubSection } from "@/lib/learn-hub";
+import { getLearnHubContent, type LearnHubArticle, type LearnHubLink, type LearnHubSection } from "@/lib/seo/learn-hub";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd } from "@/lib/schema";
+import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale, getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { LEARN_PATH, getLearnMetadata, getLearnPageData } from "./content";
 
@@ -13,40 +14,15 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-const learnPageContent = getLearnPageData(defaultLocale);
+type LearnPageContent = ReturnType<typeof getLearnPageData>;
+
 const learnHubContent = getLearnHubContent();
-const faqJsonLd = createFaqPageJsonLd(learnPageContent.faqItems);
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   LEARN_PATH,
   getLearnMetadata(defaultLocale),
 );
-
-const collectionJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  name: learnPageContent.metadata.title,
-  description: learnPageContent.metadata.description,
-  url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/learn"),
-  hasPart: learnHubContent.allArticles.map((article) => ({
-    "@type": "WebPage",
-    name: article.title,
-    description: article.description,
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
-  })),
-} as const;
-
-const itemListJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  itemListElement: learnHubContent.allArticles.map((article, index) => ({
-    "@type": "ListItem",
-    position: index + 1,
-    name: article.title,
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
-  })),
-} as const;
 
 function countSectionArticles(section: LearnHubSection) {
   const seen = new Set<string>();
@@ -72,7 +48,11 @@ function countSectionArticles(section: LearnHubSection) {
   return seen.size;
 }
 
-function formatArticleCount(count: number) {
+function formatArticleCount(count: number, locale: "en" | "pt-br" | "id") {
+  if (locale === "pt-br") {
+    return `${count} artigo${count === 1 ? "" : "s"}`;
+  }
+
   return `${count} article${count === 1 ? "" : "s"}`;
 }
 
@@ -148,9 +128,11 @@ function SectionLinks({ links }: { links: readonly LearnHubLink[] }) {
 function ArticleGroup({
   title,
   articles,
+  locale,
 }: {
   title: string;
   articles: readonly LearnHubArticle[];
+  locale: "en" | "pt-br" | "id";
 }) {
   if (articles.length === 0) {
     return null;
@@ -166,7 +148,7 @@ function ArticleGroup({
           className="rounded-full border border-[#d8dcd0] bg-[#fffffc] px-2.5 py-1 text-[10px] tracking-[0.35px] text-[#6b7068]"
           style={mono}
         >
-          {formatArticleCount(articles.length)}
+          {formatArticleCount(articles.length, locale)}
         </span>
       </div>
       <ol className="mt-3 divide-y divide-[#e3e7da]">
@@ -183,9 +165,13 @@ function ArticleGroup({
 function SectionAccordion({
   section,
   index,
+  locale,
+  sectionLabels,
 }: {
   section: LearnHubSection;
   index: number;
+  locale: "en" | "pt-br" | "id";
+  sectionLabels: LearnPageContent["sectionLabels"];
 }) {
   const articleCount = countSectionArticles(section);
   const sectionLabel = String(index + 1).padStart(2, "0");
@@ -211,7 +197,7 @@ function SectionAccordion({
                 className="rounded-full border border-[#d8dcd0] bg-[#fbfcf8] px-3 py-1.5 text-[11px] tracking-[0.45px] text-[#5a5e52]"
                 style={mono}
               >
-                {formatArticleCount(articleCount)}
+                {formatArticleCount(articleCount, locale)}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -244,9 +230,9 @@ function SectionAccordion({
 
       <div className="border-t border-[#dce0d2] px-6 py-6 md:px-8 md:py-8">
         <div className="space-y-6">
-      <section className="rounded-[24px] border border-[#dce0d2] bg-[#f7f9ef] p-5 md:p-6">
+            <section className="rounded-[24px] border border-[#dce0d2] bg-[#f7f9ef] p-5 md:p-6">
             <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-              {learnPageContent.sectionLabels.startHere}
+              {sectionLabels.startHere}
             </p>
             <div className="mt-4 max-w-[920px]">
               <ArticleRow article={section.featuredArticle} emphasis="featured" />
@@ -255,7 +241,7 @@ function SectionAccordion({
             {section.relatedLinks.length > 0 ? (
               <div className="mt-5 border-t border-[#dce0d2] pt-4">
                 <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  {learnPageContent.sectionLabels.shortcuts}
+                  {sectionLabels.shortcuts}
                 </p>
                 <SectionLinks links={section.relatedLinks} />
               </div>
@@ -264,13 +250,17 @@ function SectionAccordion({
 
           {section.followOnArticles.length > 0 ? (
             <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup title={learnPageContent.sectionLabels.goDeeper} articles={section.followOnArticles} />
+              <ArticleGroup title={sectionLabels.goDeeper} articles={section.followOnArticles} locale={locale} />
             </div>
           ) : null}
 
           {section.supportingArticles.length > 0 ? (
             <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup title={learnPageContent.sectionLabels.alsoUseful} articles={section.supportingArticles} />
+              <ArticleGroup
+                title={sectionLabels.alsoUseful}
+                articles={section.supportingArticles}
+                locale={locale}
+              />
             </div>
           ) : null}
 
@@ -280,9 +270,39 @@ function SectionAccordion({
   );
 }
 
-export default function LearnIndexPage() {
+export default async function LearnIndexPage() {
+  const locale = await getRequestLocale();
+  const learnPageContent = getLearnPageData(locale);
   const { sections, allArticles } = learnHubContent;
   const { adjacentHubs, faqItems } = learnPageContent;
+  const faqJsonLd = createFaqPageJsonLd(learnPageContent.faqItems);
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: learnPageContent.metadata.title,
+    description: learnPageContent.metadata.description,
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/learn"),
+    hasPart: learnHubContent.allArticles.map((article) => ({
+      "@type": "WebPage",
+      name: article.title,
+      description: article.description,
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
+    })),
+  } as const;
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: learnHubContent.allArticles.map((article, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: article.title,
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
+    })),
+  } as const;
+  const statsLine =
+    locale === "pt-br"
+      ? `${sections.length} categorias. ${allArticles.length} páginas curadas. ${learnPageContent.hero.statsSuffix}`
+      : `${sections.length} categories. ${allArticles.length} curated pages. ${learnPageContent.hero.statsSuffix}`;
 
   return (
     <>
@@ -319,7 +339,7 @@ export default function LearnIndexPage() {
             </p>
 
             <p className="mt-6 text-[12px] tracking-[0.35px] text-[#6b7068]" style={mono}>
-              {sections.length} categories. {allArticles.length} curated pages. {learnPageContent.hero.statsSuffix}
+              {statsLine}
             </p>
           </FadeIn>
 
@@ -367,7 +387,12 @@ export default function LearnIndexPage() {
           <div className="mt-8 space-y-4">
             {sections.map((section, index) => (
               <FadeIn key={section.id}>
-                <SectionAccordion section={section} index={index} />
+                <SectionAccordion
+                  section={section}
+                  index={index}
+                  locale={locale}
+                  sectionLabels={learnPageContent.sectionLabels}
+                />
               </FadeIn>
             ))}
           </div>

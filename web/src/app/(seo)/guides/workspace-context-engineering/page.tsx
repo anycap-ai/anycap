@@ -1,58 +1,154 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export const metadata: Metadata = {
-  title: "Workspace context engineering — How agents use files, tools, and state",
-  description:
-    "Workspace context engineering explains how files, terminals, tool definitions, and execution state shape what an AI agent decides to do. Learn how it affects tool routing and multimodal capability calls through AnyCap.",
-  alternates: { canonical: "/guides/workspace-context-engineering" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/guides/workspace-context-engineering",
-    siteName: siteConfig.siteName,
-    title: "Workspace context engineering — How agents use files, tools, and state",
-    description:
-      "Learn how files, tools, and execution state shape what an AI agent decides to do and how that affects capability calls through AnyCap.",
+const PATH = "/guides/workspace-context-engineering";
+
+type PageContent = {
+  eyebrow: string;
+  title: [string, string];
+  intro: string;
+  contextTitle: string;
+  contextCards: { title: string; body: string }[];
+  routingTitle: string;
+  routingBody: string[];
+  ctas: {
+    contextEngineering: string;
+    imageUnderstanding: string;
+    videoAnalysis: string;
+  };
+  breadcrumbLabel: string;
+};
+
+const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+  en: {
+    eyebrow: "Guide",
+    title: ["Workspace context", "engineering"],
+    intro:
+      "In real developer agents, context is not just prompt text. The workspace includes files, terminals, prior edits, tool permissions, and project rules. That context determines whether the agent should read code, run a command, inspect an image, or call a multimodal capability through AnyCap.",
+    contextTitle: "What counts as workspace context",
+    contextCards: [
+      {
+        title: "Project files",
+        body: "Source files, docs, configs, and generated artifacts tell the agent what kind of task it is in.",
+      },
+      {
+        title: "Execution state",
+        body: "Open terminals, running processes, and prior commands change what is safe and useful to do next.",
+      },
+      {
+        title: "Tool affordances",
+        body: "Available tools and permissions shape whether the agent can read, edit, browse, or invoke capabilities.",
+      },
+      {
+        title: "Task history",
+        body: "Previous decisions and feedback help the agent avoid repetition and pick a better next action.",
+      },
+    ],
+    routingTitle: "Why this matters for capability routing",
+    routingBody: [
+      "If the workspace shows a screenshot, a design review note, and an existing image asset, the agent should probably call an image read or editing capability. If the task history shows the team is preparing a product launch, an image generation or video generation capability may be the right next step.",
+      "AnyCap helps reduce routing complexity because multiple multimodal actions are exposed through one consistent runtime instead of many unrelated providers.",
+    ],
+    ctas: {
+      contextEngineering: "Context Engineering",
+      imageUnderstanding: "Image Understanding",
+      videoAnalysis: "Video Analysis",
+    },
+    breadcrumbLabel: "Workspace Context Engineering",
+  },
+  "pt-br": {
+    eyebrow: "Guia",
+    title: ["Context engineering", "do workspace"],
+    intro:
+      "Em agentes de desenvolvimento reais, contexto nao e apenas texto no prompt. O workspace inclui arquivos, terminais, edicoes anteriores, permissoes de ferramentas e regras do projeto. Esse contexto determina se o agente deve ler codigo, rodar um comando, inspecionar uma imagem ou chamar uma capability multimodal via AnyCap.",
+    contextTitle: "O que conta como contexto do workspace",
+    contextCards: [
+      {
+        title: "Arquivos do projeto",
+        body: "Arquivos-fonte, docs, configs e artefatos gerados dizem ao agente em que tipo de tarefa ele esta trabalhando.",
+      },
+      {
+        title: "Estado de execucao",
+        body: "Terminais abertos, processos em execucao e comandos anteriores mudam o que e seguro e util fazer em seguida.",
+      },
+      {
+        title: "Capacidades das ferramentas",
+        body: "Ferramentas disponiveis e permissoes definem se o agente pode ler, editar, navegar ou chamar capabilities.",
+      },
+      {
+        title: "Historico da tarefa",
+        body: "Decisoes anteriores e feedback ajudam o agente a evitar repeticao e escolher uma proxima acao melhor.",
+      },
+    ],
+    routingTitle: "Por que isso importa para o roteamento de capabilities",
+    routingBody: [
+      "Se o workspace mostra um screenshot, uma nota de review de design e um asset de imagem existente, o agente provavelmente deve chamar uma capability de leitura ou edicao de imagem. Se o historico da tarefa mostra que a equipe esta preparando um lancamento, uma capability de geracao de imagem ou de video pode ser o proximo passo certo.",
+      "O AnyCap ajuda a reduzir a complexidade de roteamento porque varias acoes multimodais ficam expostas por um runtime consistente, em vez de varios provedores desconectados.",
+    ],
+    ctas: {
+      contextEngineering: "Context Engineering",
+      imageUnderstanding: "Entendimento de Imagem",
+      videoAnalysis: "Analise de Video",
+    },
+    breadcrumbLabel: "Context Engineering do Workspace",
   },
 };
 
-export default function WorkspaceContextEngineeringPage() {
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const isPtBr = locale === "pt-br";
+  return createLocalizedMetadataForPath(locale, PATH, {
+    title: isPtBr
+      ? "Context engineering do workspace — como agentes usam arquivos, ferramentas e estado"
+      : "Workspace context engineering — How agents use files, tools, and state",
+    description: isPtBr
+      ? "Context engineering do workspace explica como arquivos, terminais, definicoes de ferramentas e estado de execucao moldam o que um agente de IA decide fazer. Veja como isso afeta o roteamento de ferramentas e chamadas multimodais via AnyCap."
+      : "Workspace context engineering explains how files, terminals, tool definitions, and execution state shape what an AI agent decides to do. Learn how it affects tool routing and multimodal capability calls through AnyCap.",
+  });
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
+
+export default async function WorkspaceContextEngineeringPage() {
+  const locale = await getRequestLocale();
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
   return (
     <>
       <BreadcrumbJsonLd
-        items={[{ name: "Home", href: "/" }, { name: "Guides", href: "/guides", unlinkable: true }, { name: "Workspace Context Engineering" }]}
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Guides", href: "/guides", unlinkable: true },
+          { name: content.breadcrumbLabel },
+        ]}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>
             <p className="text-[11px] text-[#6b7d3a] tracking-[0.8px] mb-4" style={mono}>
-              Guide
+              {content.eyebrow}
             </p>
             <ArticleByline className="mb-3" />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
             >
-              Workspace context
+              {content.title[0]}
               <br />
-              engineering
+              {content.title[1]}
             </h1>
             <p className="mt-6 max-w-[760px] text-base leading-7 text-[#4d5145] md:text-lg">
-              In real developer agents, context is not just prompt text. The workspace includes
-              files, terminals, prior edits, tool permissions, and project rules. That context
-              determines whether the agent should read code, run a command, inspect an image,
-              or call a multimodal capability through AnyCap.
+              {content.intro}
             </p>
           </FadeIn>
 
@@ -67,33 +163,17 @@ export default function WorkspaceContextEngineeringPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="text-lg md:text-xl text-[#1c1f17] mb-8" style={{ ...pixel }}>
-                What counts as workspace context
+                {content.contextTitle}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 max-w-[980px]">
-                <div className="border border-[#d4dbb8] p-5">
-                  <h3 className="text-[14px] font-bold text-[#1c1f17] mb-2" style={mono}>Project files</h3>
-                  <p className="text-sm text-[#4d5145] leading-6">
-                    Source files, docs, configs, and generated artifacts tell the agent what kind of task it is in.
-                  </p>
-                </div>
-                <div className="border border-[#d4dbb8] p-5">
-                  <h3 className="text-[14px] font-bold text-[#1c1f17] mb-2" style={mono}>Execution state</h3>
-                  <p className="text-sm text-[#4d5145] leading-6">
-                    Open terminals, running processes, and prior commands change what is safe and useful to do next.
-                  </p>
-                </div>
-                <div className="border border-[#d4dbb8] p-5">
-                  <h3 className="text-[14px] font-bold text-[#1c1f17] mb-2" style={mono}>Tool affordances</h3>
-                  <p className="text-sm text-[#4d5145] leading-6">
-                    Available tools and permissions shape whether the agent can read, edit, browse, or invoke capabilities.
-                  </p>
-                </div>
-                <div className="border border-[#d4dbb8] p-5">
-                  <h3 className="text-[14px] font-bold text-[#1c1f17] mb-2" style={mono}>Task history</h3>
-                  <p className="text-sm text-[#4d5145] leading-6">
-                    Previous decisions and feedback help the agent avoid repetition and pick a better next action.
-                  </p>
-                </div>
+                {content.contextCards.map((card) => (
+                  <div key={card.title} className="border border-[#d4dbb8] p-5">
+                    <h3 className="text-[14px] font-bold text-[#1c1f17] mb-2" style={mono}>
+                      {card.title}
+                    </h3>
+                    <p className="text-sm text-[#4d5145] leading-6">{card.body}</p>
+                  </div>
+                ))}
               </div>
             </section>
           </FadeIn>
@@ -105,18 +185,16 @@ export default function WorkspaceContextEngineeringPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="text-lg md:text-xl text-[#1c1f17] mb-6" style={{ ...pixel }}>
-                Why this matters for capability routing
+                {content.routingTitle}
               </h2>
-              <p className="max-w-[780px] text-base leading-7 text-[#4d5145] mb-6">
-                If the workspace shows a screenshot, a design review note, and an existing image
-                asset, the agent should probably call an image read or editing
-                capability. If the task history shows the team is preparing a product launch, an
-                image generation or video generation capability may be the right next step.
-              </p>
-              <p className="max-w-[780px] text-base leading-7 text-[#4d5145]">
-                AnyCap helps reduce routing complexity because multiple multimodal actions are
-                exposed through one consistent runtime instead of many unrelated providers.
-              </p>
+              {content.routingBody.map((paragraph, index) => (
+                <p
+                  key={paragraph}
+                  className={`max-w-[780px] text-base leading-7 text-[#4d5145] ${index === 0 ? "mb-6" : ""}`}
+                >
+                  {paragraph}
+                </p>
+              ))}
             </section>
           </FadeIn>
 
@@ -132,21 +210,21 @@ export default function WorkspaceContextEngineeringPage() {
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] bg-[#6b7d3a] hover:bg-[#1c1f17] transition-colors rounded-lg"
                   style={mono}
                 >
-                  Context Engineering
+                  {content.ctas.contextEngineering}
                 </Link>
                 <Link
                   href="/capabilities/image-understanding"
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg"
                   style={mono}
                 >
-                  Image Understanding
+                  {content.ctas.imageUnderstanding}
                 </Link>
                 <Link
                   href="/capabilities/video-analysis"
                   className="inline-block px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] border border-[#1c1f17] hover:bg-[#1c1f17] hover:text-[#f4f5f0] transition-colors rounded-lg"
                   style={mono}
                 >
-                  Video Analysis
+                  {content.ctas.videoAnalysis}
                 </Link>
               </div>
             </section>

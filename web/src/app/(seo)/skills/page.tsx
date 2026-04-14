@@ -3,7 +3,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { getSeoPageChrome } from "@/lib/seo-ia";
+import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";

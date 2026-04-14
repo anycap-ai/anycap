@@ -1,32 +1,10 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collectPageFiles } from "./seo-tree.mjs";
 
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const seoAppDir = path.join(rootDir, "src", "app", "(seo)");
-const pageFileName = "page.tsx";
-
-function collectPageFiles(dir) {
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((left, right) =>
-    left.name.localeCompare(right.name),
-  );
-  const files = [];
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      files.push(...collectPageFiles(fullPath));
-      continue;
-    }
-
-    if (entry.isFile() && entry.name === pageFileName) {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
-}
 
 function hasBreadcrumbCoverage(content) {
   return content.includes("BreadcrumbJsonLd") || content.includes("HubIndexPage");

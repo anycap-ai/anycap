@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSeoBreadcrumbItems } from "@/lib/seo-ia";
+import { getSeoBreadcrumbItems } from "@/lib/seo/ia";
 import { siteConfig } from "@/lib/site";
 import { getRequestLocale, getRequestPathname } from "@/lib/request-locale";
 import { localizePublicPath, stripLocalePrefix } from "@/lib/site";

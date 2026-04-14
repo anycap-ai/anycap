@@ -5,7 +5,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { getSeoPageChrome } from "@/lib/seo-ia";
+import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
@@ -153,18 +153,18 @@ const researchInputs = [
   "Existing internal constraints such as headcount, channel mix, and current baseline performance",
 ] as const;
 
-const sourceLinks = [
+const sourceReferences = [
   {
     label: "Stanford SMART goals worksheet",
-    href: "https://med.stanford.edu/content/dam/sm/s-spire/documents/How-to-write-SMART-Goals-v2.pdf",
+    note: "Used for the specificity, measurability, and time-bound framing in the guidance above.",
   },
   {
     label: "Asana guide to SMART goals",
-    href: "https://asana.com/resources/smart-goals",
+    note: "Used as a practical reference for structuring measurable goals and review cadence.",
   },
   {
     label: "Atlassian quarterly planning playbook",
-    href: "https://www.atlassian.com/team-playbook/plays/rolling-4-quarterly-planning",
+    note: "Used as a planning reference for quarterly cadence and milestone structure.",
   },
 ] as const;
 
@@ -547,17 +547,11 @@ export default function SmartGoalGeneratorPage() {
                 Sources and further reading
               </h2>
               <div className="space-y-3 rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-6">
-                {sourceLinks.map((source) => (
-                  <p key={source.href} className="text-sm leading-6 text-[#4d5145]">
-                    <a
-                      href={source.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"
-                    >
-                      {source.label}
-                    </a>
-                  </p>
+                {sourceReferences.map((source) => (
+                  <div key={source.label} className="text-sm leading-6 text-[#4d5145]">
+                    <p className="font-medium text-[#1c1f17]">{source.label}</p>
+                    <p>{source.note}</p>
+                  </div>
                 ))}
               </div>
             </section>

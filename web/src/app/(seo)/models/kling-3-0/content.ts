@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { createModelPageData, createModelPageMetadata } from "@/lib/seo/model-pages";
+import { type SiteLocale } from "@/lib/site";
 
 export const KLING_30_PATH = "/models/kling-3-0";
 
@@ -511,37 +511,11 @@ const contentByLocale = {
 export function getKling30Metadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
 
-  return {
-    title: content.metadata.title,
-    description: content.metadata.description,
-    alternates: { canonical: KLING_30_PATH },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: KLING_30_PATH,
-      siteName: siteConfig.siteName,
-      title: content.metadata.openGraphTitle,
-      description: content.metadata.openGraphDescription,
-    },
-  };
+  return createModelPageMetadata(locale, KLING_30_PATH, content.metadata);
 }
 
 export function getKling30PageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
-
-  return {
-    ...content,
-    modelGuideJsonLd: createTechArticleJsonLd({
-      headline: content.metadata.articleHeadline,
-      description: content.metadata.articleDescription,
-      path: KLING_30_PATH,
-      locale,
-      about: [...content.metadata.articleAbout],
-      keywords: [...content.metadata.articleKeywords],
-      dateModified: LAST_UPDATED_ISO,
-    }),
-    faqJsonLd: createFaqPageJsonLd(content.faqItems),
-  };
+  return createModelPageData(locale, KLING_30_PATH, contentByLocale, LAST_UPDATED_ISO);
 }
 
 export type Kling30PageData = ReturnType<typeof getKling30PageData>;

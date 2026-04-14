@@ -1,13 +1,12 @@
-import WhatIsAgentHarnessPage, {
-
-  metadata as baseMetadata,
-} from "@/app/(seo)/guides/what-is-agent-harness/page";
-import { generateLocalizedPageMetadata, type LocalePageParams } from "@/lib/localized-page";
+import WhatIsAgentHarnessPage from "@/app/(seo)/guides/what-is-agent-harness/page";
+import { getPageMetadata } from "@/app/(seo)/guides/what-is-agent-harness/metadata";
+import { getValidatedLocale, type LocalePageParams } from "@/lib/localized-page";
 
 export const runtime = "edge";
 
 export async function generateMetadata({ params }: LocalePageParams) {
-  return generateLocalizedPageMetadata(params, "guides-what-is-agent-harness", baseMetadata);
+  const locale = await getValidatedLocale(params);
+  return locale ? getPageMetadata(locale) : {};
 }
 
 export default function LocalizedWhatIsAgentHarnessPage() {

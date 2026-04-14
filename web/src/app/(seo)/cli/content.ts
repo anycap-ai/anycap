@@ -210,28 +210,28 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     commandsTitle: "Os primeiros comandos de que a maioria dos agentes precisa",
     capabilities: [
       {
+        ...capabilities[0],
         name: "Geração de Imagem",
         description: "Gere e edite visuais com Seedream 5, Nano Banana Pro e outros modelos.",
         status: "Disponível",
-        ...capabilities[0],
       },
       {
+        ...capabilities[1],
         name: "Geração de Vídeo",
         description: "Gere walkthroughs, clipes e saídas em movimento com Veo 3.1.",
         status: "Disponível",
-        ...capabilities[1],
       },
       {
+        ...capabilities[2],
         name: "Entendimento de Imagem",
         description: "Analise screenshots, diagramas, OCR e referências visuais através de um único runtime.",
         status: "Disponível",
-        ...capabilities[2],
       },
       {
+        ...capabilities[3],
         name: "Análise de Vídeo",
         description: "Inspecione gravações, resuma cenas e extraia inteligência estruturada de vídeo.",
         status: "Disponível",
-        ...capabilities[3],
       },
     ],
     capabilitiesCta: "Ver qualquer capacidade →",

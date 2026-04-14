@@ -1,10 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collectFiles } from "./seo-tree.mjs";
 
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const seoAppDir = path.join(rootDir, "src", "app", "(seo)");
-const siteFilePath = path.join(rootDir, "src", "lib", "site.ts");
+const routesFilePath = path.join(rootDir, "src", "lib", "seo", "routes.ts");
 const rolloutFilePath = path.join(rootDir, "src", "lib", "seo-locale-rollout.ts");
 
 const SUPPORTED_CHECK_LOCALES = ["pt-br", "id"];
@@ -31,36 +31,33 @@ function parseTargetLocales(argv) {
   return values.length > 0 ? values : ["pt-br"];
 }
 
-function walk(dir) {
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-    a.name.localeCompare(b.name),
+function extractRouteMapFromRoutes(source) {
+  const routesBlockMatch = source.match(
+    /manualSeoRouteDefinitions\s*=\s*\[([\s\S]*?)\]\s*as const/,
   );
-  const files = [];
 
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walk(fullPath));
-      continue;
-    }
-    files.push(fullPath);
+  if (!routesBlockMatch) {
+    throw new Error("Unable to extract manual SEO routes from routes.ts.");
   }
 
-  return files;
-}
-
-function extractRouteMapFromSite(source) {
+  const [, routesBlock] = routesBlockMatch;
   const map = new Map();
-  const pairRegex =
-    /key:\s*"([^"]+)"[\s\S]*?path:\s*"([^"]+)"/g;
+  const pairRegex = /key:\s*"([^"]+)"[\s\S]*?path:\s*"([^"]+)"/g;
 
-  let match = pairRegex.exec(source);
+  let match = pairRegex.exec(routesBlock);
   while (match) {
     const [, key, routePath] = match;
     if (key && routePath) {
+      if (map.has(routePath)) {
+        throw new Error(`Duplicate manual SEO route path detected: ${routePath}`);
+      }
       map.set(routePath, key);
     }
-    match = pairRegex.exec(source);
+    match = pairRegex.exec(routesBlock);
+  }
+
+  if (map.size === 0) {
+    throw new Error("Parsed zero manual SEO routes from routes.ts.");
   }
 
   return map;
@@ -106,23 +103,24 @@ function detectTranslatedLocales(content, targetLocales) {
 }
 
 function toRoutePathFromContentFile(contentFilePath) {
-  const relative = path.relative(seoAppDir, contentFilePath);
+  const relative = path.relative(path.join(rootDir, "src", "app", "(seo)"), contentFilePath);
   const routeDir = path.dirname(relative).split(path.sep).join("/");
   return routeDir ? `/${routeDir}` : "/";
 }
 
 function main() {
   const targetLocales = parseTargetLocales(process.argv.slice(2));
-  const siteSource = readFileSync(siteFilePath, "utf8");
+  const routesSource = readFileSync(routesFilePath, "utf8");
   const rolloutSource = readFileSync(rolloutFilePath, "utf8");
 
-  const routeMap = extractRouteMapFromSite(siteSource);
+  const routeMap = extractRouteMapFromRoutes(routesSource);
   const rolloutByRouteKey = extractRolloutLocalesByRouteKey(rolloutSource);
-  const contentFiles = walk(seoAppDir).filter((filePath) =>
+  const contentFiles = collectFiles(path.join(rootDir, "src", "app", "(seo)")).filter((filePath) =>
     filePath.endsWith("/content.ts"),
   );
 
-  const missing = [];
+  const missingManualRoutes = [];
+  const missingRollout = [];
 
   for (const contentFilePath of contentFiles) {
     const content = readFileSync(contentFilePath, "utf8");
@@ -134,13 +132,17 @@ function main() {
     const routePath = toRoutePathFromContentFile(contentFilePath);
     const routeKey = routeMap.get(routePath);
     if (!routeKey) {
+      missingManualRoutes.push({
+        routePath,
+        locales: translatedLocales,
+      });
       continue;
     }
 
     const configuredLocales = rolloutByRouteKey.get(routeKey) ?? [];
     for (const locale of translatedLocales) {
       if (!configuredLocales.includes(locale)) {
-        missing.push({
+        missingRollout.push({
           routeKey,
           routePath,
           locale,
@@ -149,7 +151,7 @@ function main() {
     }
   }
 
-  if (missing.length === 0) {
+  if (missingManualRoutes.length === 0 && missingRollout.length === 0) {
     console.log(
       `SEO locale rollout check passed for locales=${targetLocales.join(",")}: no translated pages are missing rollout.`,
     );
@@ -159,10 +161,23 @@ function main() {
   console.error(
     `SEO locale rollout check failed for locales=${targetLocales.join(",")}: translated pages missing rollout.`,
   );
-  for (const item of missing) {
-    console.error(
-      `- routeKey=${item.routeKey} routePath=${item.routePath} missingLocale=${item.locale}`,
-    );
+
+  if (missingManualRoutes.length > 0) {
+    console.error("Translated routes missing manual SEO route definitions:");
+    for (const item of missingManualRoutes) {
+      console.error(
+        `- routePath=${item.routePath} locales=${item.locales.join(",")} (add this route to src/lib/seo/routes.ts first)`,
+      );
+    }
+  }
+
+  if (missingRollout.length > 0) {
+    console.error("Translated routes missing locale rollout configuration:");
+    for (const item of missingRollout) {
+      console.error(
+        `- routeKey=${item.routeKey} routePath=${item.routePath} missingLocale=${item.locale}`,
+      );
+    }
   }
   process.exitCode = 1;
 }

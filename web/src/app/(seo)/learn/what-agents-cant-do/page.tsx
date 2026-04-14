@@ -5,9 +5,10 @@ import { CapabilityGapTable, type CapabilityGapRow } from "@/components/landing/
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { getSeoPageChrome } from "@/lib/seo-ia";
+import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale } from "@/lib/site";
+import { getRequestLocale } from "@/lib/request-locale";
 import {
   WHAT_AGENTS_CANT_DO_PATH,
   getWhatAgentsCantDoMetadata,
@@ -18,8 +19,6 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const pageData = getWhatAgentsCantDoPageData(defaultLocale);
-const lastUpdatedLabel = "April 7, 2026";
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
@@ -29,12 +28,16 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
 
 const pageChrome = getSeoPageChrome("/learn/what-agents-cant-do");
 
-const gapRows: CapabilityGapRow[] = pageData.table.rows.map((row) => ({
-  capability: row.capability,
-  cells: [...row.cells],
-}));
+export default async function WhatAgentsCantDoPage() {
+  const locale = await getRequestLocale();
+  const pageData = getWhatAgentsCantDoPageData(locale);
+  const gapRows: CapabilityGapRow[] = pageData.table.rows.map((row) => ({
+    capability: row.capability,
+    cells: [...row.cells],
+  }));
+  const updatedLabel =
+    locale === "pt-br" ? "Atualizado em 7 de abril de 2026" : "Last updated April 7, 2026";
 
-export default function WhatAgentsCantDoPage() {
   return (
     <>
       <BreadcrumbJsonLd items={pageData.breadcrumbItems} />
@@ -50,7 +53,7 @@ export default function WhatAgentsCantDoPage() {
             <ArticleByline
               className="mb-3"
               author={pageChrome?.authorLabel}
-              updatedLabel={`Last updated ${lastUpdatedLabel}`}
+              updatedLabel={updatedLabel}
             />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

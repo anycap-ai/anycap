@@ -29,6 +29,7 @@ const cspDirectives = [
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
+  "media-src 'self' https://cdn.anycap.ai",
   "font-src 'self' data:",
   `connect-src 'self' ${anycapApiOrigin} https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com`.trim(),
   "frame-ancestors 'self'",

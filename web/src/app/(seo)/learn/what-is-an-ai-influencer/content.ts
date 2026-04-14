@@ -532,7 +532,7 @@ const contentByLocale = {
       cards: [
         {
           title: "Superfície de capacidades confirmada",
-          body: "O status do AnyCap foi revisto em 9 de abril de 2026 antes de este explicador ser escrito. Image generation, video generation, image reading, video reading, Drive e Page estavam disponíveis.",
+          body: "O status do AnyCap foi revisto em 9 de abril de 2026 antes de este explicador ser escrito. Geracao de imagem, geracao de video, leitura de imagem, leitura de video, Drive e Page estavam disponiveis.",
         },
         {
           title: "Definição mantida operacional",
@@ -551,7 +551,7 @@ const contentByLocale = {
     commands: {
       label: "Exemplos de comando",
       title: "Monte uma pequena linha de influencers em comandos",
-      ctaLabel: "Ver Image Generation",
+      ctaLabel: "Ver Geracao de imagem",
       examples: [
         {
           title: "Gere rapidamente vários papéis em estilo influencer",
@@ -644,17 +644,17 @@ const contentByLocale = {
           body: "Vá para lá quando o conceito já estiver claro e o próximo passo for motion image-to-video.",
         },
         {
-          title: "Image Generation",
+          title: "Geracao de imagem",
           href: "/capabilities/image-generation",
           body: "Explore a capability que sustenta a camada de persona descrita nesta página.",
         },
         {
-          title: "Video Generation",
+          title: "Geracao de video",
           href: "/capabilities/video-generation",
           body: "Explore a capability que sustenta a camada de motion descrita nesta página.",
         },
         {
-          title: "Install AnyCap",
+          title: "Instalar AnyCap",
           href: "/guides/install-anycap",
           body: "Use isto quando quiser sair da definição e entrar em um workflow funcional de CLI.",
         },

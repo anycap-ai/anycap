@@ -102,11 +102,9 @@ export function createLocalizedMetadataForPath(
       description: twitterDescription ?? socialDescription,
       images: hasValues(twitterImages) ? twitterImages : [defaultSocialImage.url],
     } as Metadata["twitter"],
-    robots:
-      baseMetadata.robots ??
-      createRobotsMetadata({
-        allowIndexing: isIndexedPathForLocale,
-      }),
+    robots: createRobotsMetadata({
+      allowIndexing: isIndexedPathForLocale,
+    }),
   };
 }
 

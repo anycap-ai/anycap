@@ -6,7 +6,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { CommandCodeCard } from "@/components/ui/CommandCodeCard";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { getSeoPageChrome } from "@/lib/seo-ia";
+import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 

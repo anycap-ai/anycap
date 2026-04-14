@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ModelDetailPageContent } from "@/app/(seo)/models/veo-3-1/Veo31PageView";
 import type { ModelVisualShowcaseEntry } from "@/components/seo/ModelVisualShowcase";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { createModelPageData, createModelPageMetadata } from "@/lib/seo/model-pages";
+import { type SiteLocale } from "@/lib/site";
 
 export const NANO_BANANA_2_PATH = "/models/nano-banana-2";
 
@@ -447,37 +447,11 @@ const contentByLocale = {
 export function getNanoBanana2Metadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
 
-  return {
-    title: content.metadata.title,
-    description: content.metadata.description,
-    alternates: { canonical: NANO_BANANA_2_PATH },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: NANO_BANANA_2_PATH,
-      siteName: siteConfig.siteName,
-      title: content.metadata.openGraphTitle,
-      description: content.metadata.openGraphDescription,
-    },
-  };
+  return createModelPageMetadata(locale, NANO_BANANA_2_PATH, content.metadata);
 }
 
 export function getNanoBanana2PageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
-
-  return {
-    ...content,
-    modelGuideJsonLd: createTechArticleJsonLd({
-      headline: content.metadata.articleHeadline,
-      description: content.metadata.articleDescription,
-      path: NANO_BANANA_2_PATH,
-      locale,
-      about: [...content.metadata.articleAbout],
-      keywords: [...content.metadata.articleKeywords],
-      dateModified: LAST_UPDATED_ISO,
-    }),
-    faqJsonLd: createFaqPageJsonLd(content.faqItems as readonly FaqItem[]),
-  };
+  return createModelPageData(locale, NANO_BANANA_2_PATH, contentByLocale, LAST_UPDATED_ISO);
 }
 
 export type NanoBanana2PageData = ReturnType<typeof getNanoBanana2PageData>;

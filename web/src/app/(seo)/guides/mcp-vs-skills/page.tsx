@@ -4,7 +4,7 @@ import { ArticleByline } from "@/components/seo/ArticleByline";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
-import { getSeoPageChrome } from "@/lib/seo-ia";
+import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";

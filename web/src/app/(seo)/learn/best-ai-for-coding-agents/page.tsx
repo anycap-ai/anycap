@@ -4,6 +4,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale } from "@/lib/site";
+import { getRequestLocale } from "@/lib/request-locale";
 import {
   BEST_AI_FOR_CODING_AGENTS_PATH,
   getBestAICodingAgentsMetadata,
@@ -14,17 +15,12 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const pageData = getBestAICodingAgentsPageData(defaultLocale);
-const lastUpdatedLabel = pageData.lastUpdatedLabel;
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   BEST_AI_FOR_CODING_AGENTS_PATH,
   getBestAICodingAgentsMetadata(defaultLocale),
 );
-
-const articleJsonLd = pageData.articleJsonLd;
-const faqJsonLd = pageData.faqJsonLd;
 
 function BulletList({ items }: { items: readonly string[] }) {
   return (
@@ -39,12 +35,17 @@ function BulletList({ items }: { items: readonly string[] }) {
   );
 }
 
-export default function BestAIForCodingAgentsPage() {
+export default async function BestAIForCodingAgentsPage() {
+  const locale = await getRequestLocale();
+  const pageData = getBestAICodingAgentsPageData(locale);
+  const articleJsonLd = pageData.articleJsonLd;
+  const faqJsonLd = pageData.faqJsonLd;
+  const updatedPrefix = locale === "pt-br" ? "Atualizado em" : "Last updated";
+  const keyPointsLabel = locale === "pt-br" ? "Pontos-chave" : "Key points";
+
   return (
     <>
-      <BreadcrumbJsonLd
-        items={pageData.breadcrumbItems}
-      />
+      <BreadcrumbJsonLd items={pageData.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -61,7 +62,7 @@ export default function BestAIForCodingAgentsPage() {
               {pageData.eyebrow}
             </p>
             <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
-              Last updated {lastUpdatedLabel}
+              {updatedPrefix} {pageData.lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -92,7 +93,7 @@ export default function BestAIForCodingAgentsPage() {
 
               <div className="rounded-[28px] border border-[#d4dbb8] bg-[#f7f8ef]/80 p-6 md:p-8">
                 <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  Key points
+                  {keyPointsLabel}
                 </p>
                 <div className="mt-5">
                   <BulletList items={pageData.quickTakeaways} />

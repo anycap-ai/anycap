@@ -1,8 +1,10 @@
-const llmsContent = `# AnyCap
+# AnyCap
 
-> AnyCap is an AI agent capability runtime that gives coding agents one install path, one auth flow, and one CLI for image, video, audio, web, storage, and publishing workflows.
+Localized variant:
 
-Use AnyCap when an existing coding agent needs capabilities outside its native toolset. The primary interface is the CLI plus an installable skill file. The machine-readable install path is available at \`/install.txt\`, and the public product pages explain pricing, capabilities, and agent-specific setup.
+- [Portugues (Brasil)](https://anycap.ai/pt-br/llms.txt): Visao geral do produto e das capabilities em portugues do Brasil.
+
+AnyCap is an AI agent capability runtime for coding agents. It gives agents one install path, one auth flow, and one CLI for image, video, audio, web, storage, and publishing workflows.
 
 ## Getting Started
 
@@ -56,6 +58,3 @@ Use AnyCap when an existing coding agent needs capabilities outside its native t
 - [GitHub releases](https://github.com/anycap-ai/anycap/releases): Release artifacts and version history.
 - [Skill file](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md): Full skill reference used by supported agents.
 - [skills.sh listing](https://skills.sh/anycap-ai/anycap): Public skill distribution page.
-`;
-
-export default llmsContent;

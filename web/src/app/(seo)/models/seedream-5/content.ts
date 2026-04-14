@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ModelDetailPageContent } from "@/app/(seo)/models/veo-3-1/Veo31PageView";
 import type { ModelVisualShowcaseEntry } from "@/components/seo/ModelVisualShowcase";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { createModelPageData, createModelPageMetadata } from "@/lib/seo/model-pages";
+import { type SiteLocale } from "@/lib/site";
 
 export const SEEDREAM_5_PATH = "/models/seedream-5";
 
@@ -391,37 +391,11 @@ const contentByLocale = {
 export function getSeedream5Metadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
 
-  return {
-    title: content.metadata.title,
-    description: content.metadata.description,
-    alternates: { canonical: SEEDREAM_5_PATH },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: SEEDREAM_5_PATH,
-      siteName: siteConfig.siteName,
-      title: content.metadata.openGraphTitle,
-      description: content.metadata.openGraphDescription,
-    },
-  };
+  return createModelPageMetadata(locale, SEEDREAM_5_PATH, content.metadata);
 }
 
 export function getSeedream5PageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
-
-  return {
-    ...content,
-    modelGuideJsonLd: createTechArticleJsonLd({
-      headline: content.metadata.articleHeadline,
-      description: content.metadata.articleDescription,
-      path: SEEDREAM_5_PATH,
-      locale,
-      about: [...content.metadata.articleAbout],
-      keywords: [...content.metadata.articleKeywords],
-      dateModified: LAST_UPDATED_ISO,
-    }),
-    faqJsonLd: createFaqPageJsonLd(content.faqItems),
-  };
+  return createModelPageData(locale, SEEDREAM_5_PATH, contentByLocale, LAST_UPDATED_ISO);
 }
 
 export type Seedream5PageData = ReturnType<typeof getSeedream5PageData>;

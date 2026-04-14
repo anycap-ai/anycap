@@ -1,6 +1,8 @@
-// Machine-readable install guide for agents.
-// Keep this short, deterministic, and focused on the install path.
-const installContent = `# AnyCap Install
+# AnyCap Install
+
+Localized variant:
+
+- [Portugues (Brasil)](https://anycap.ai/pt-br/install.txt): Instrucoes de instalacao em portugues do Brasil.
 
 Use this file for installation tasks. Do not fetch the homepage for install automation.
 
@@ -10,19 +12,19 @@ Install the AnyCap CLI, install the skill file, authenticate, and verify the set
 
 ## 1. Install CLI
 
-\`\`\`bash
+```bash
 # Preferred: macOS / Linux / Windows (Git Bash)
 curl -fsSL https://anycap.ai/install.sh | sh
 
 # Alternative: npm
 npm install -g @anycap/cli
-\`\`\`
+```
 
 Prefer the shell installer when available. It avoids a Node.js dependency and matches the documented binary install path.
 
 ## 2. Install Skill
 
-\`\`\`bash
+```bash
 # Generic
 npx -y skills add anycap-ai/anycap -y
 
@@ -34,18 +36,18 @@ npx -y skills add anycap-ai/anycap -a codex -y
 
 # Cursor
 npx -y skills add anycap-ai/anycap -a cursor -y
-\`\`\`
+```
 
 Manual skill download:
 
-\`\`\`bash
-curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \\
+```bash
+curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
   --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md
-\`\`\`
+```
 
 ## 3. Authenticate
 
-\`\`\`bash
+```bash
 # Interactive
 anycap login
 
@@ -54,14 +56,14 @@ anycap login --headless
 
 # CI / token-based
 echo "$ANYCAP_API_KEY" | anycap login --with-token
-\`\`\`
+```
 
 ## 4. Verify
 
-\`\`\`bash
+```bash
 anycap status
 npx -y skills check
-\`\`\`
+```
 
 ## If you need more context
 
@@ -72,6 +74,3 @@ npx -y skills check
 - [GitHub releases](https://github.com/anycap-ai/anycap/releases): CLI binaries and release history.
 
 Last updated: 2026-04-08
-`;
-
-export default installContent;

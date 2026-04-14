@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale } from "@/lib/site";
+import { getRequestLocale } from "@/lib/request-locale";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -12,15 +13,16 @@ export const runtime = "edge";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-const content = getContextEngineeringGlossaryPageData(defaultLocale);
-
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   "/glossary/context-engineering",
   getContextEngineeringGlossaryMetadata(defaultLocale),
 );
 
-export default function ContextEngineeringGlossaryPage() {
+export default async function ContextEngineeringGlossaryPage() {
+  const locale = await getRequestLocale();
+  const content = getContextEngineeringGlossaryPageData(locale);
+
   return (
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />

@@ -1,0 +1,72 @@
+# Instalar AnyCap
+
+Use este arquivo para tarefas de instalacao. Nao busque a homepage para automacao de instalacao.
+
+## Objetivo
+
+Instalar a CLI do AnyCap, instalar o arquivo de skill, autenticar e verificar o setup.
+
+## 1. Instale a CLI
+
+```bash
+# Preferido: macOS / Linux / Windows (Git Bash)
+curl -fsSL https://anycap.ai/install.sh | sh
+
+# Alternativa: npm
+npm install -g @anycap/cli
+```
+
+Prefira o instalador via shell quando ele estiver disponivel. Ele evita a dependencia de Node.js e segue o caminho de binario documentado.
+
+## 2. Instale a Skill
+
+```bash
+# Generico
+npx -y skills add anycap-ai/anycap -y
+
+# Claude Code
+npx -y skills add anycap-ai/anycap -a claude-code -y
+
+# Codex
+npx -y skills add anycap-ai/anycap -a codex -y
+
+# Cursor
+npx -y skills add anycap-ai/anycap -a cursor -y
+```
+
+Download manual da skill:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
+  --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md
+```
+
+## 3. Autentique
+
+```bash
+# Interativo
+anycap login
+
+# SSH / headless
+anycap login --headless
+
+# CI / token
+echo "$ANYCAP_API_KEY" | anycap login --with-token
+```
+
+## 4. Verifique
+
+```bash
+anycap status
+npx -y skills check
+```
+
+## Se precisar de mais contexto
+
+- [AnyCap llms.txt](https://anycap.ai/pt-br/llms.txt): visao geral do produto e das capabilities.
+- [Guia de instalacao](https://anycap.ai/pt-br/guides/install-anycap): passo a passo legivel para humanos.
+- [Precos](https://anycap.ai/pt-br/pricing): creditos e pagamento por uso.
+- [Capabilities](https://anycap.ai/pt-br/capabilities): inventario publico de capabilities.
+- [Releases no GitHub](https://github.com/anycap-ai/anycap/releases): binarios da CLI e historico de versoes.
+
+Ultima atualizacao: 2026-04-13

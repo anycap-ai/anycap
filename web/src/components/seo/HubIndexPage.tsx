@@ -3,7 +3,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import type { HubPageDefinition } from "@/lib/hub-pages";
+import type { HubPageDefinition } from "@/lib/seo/hub-pages";
 import { siteConfig } from "@/lib/site";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
