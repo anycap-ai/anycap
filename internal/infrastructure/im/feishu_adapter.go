@@ -398,7 +398,7 @@ func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMB
 		return model.ErrValidation("feishu chat id is required")
 	}
 
-	content, err := json.Marshal(map[string]string{"text": strings.TrimSpace(message)})
+	msgType, content, err := buildFeishuOutboundMessage(message)
 	if err != nil {
 		return fmt.Errorf("marshal feishu message content: %w", err)
 	}
@@ -408,8 +408,8 @@ func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMB
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				ReceiveId(chatID).
-				MsgType("text").
-				Content(string(content)).
+				MsgType(msgType).
+				Content(content).
 				Uuid(uuid.NewString()).
 				Build(),
 		).
@@ -423,6 +423,127 @@ func (a *FeishuAdapter) sendDirectMessage(ctx context.Context, binding model.IMB
 		return fmt.Errorf("send feishu direct message: code=%d msg=%s", resp.Code, resp.Msg)
 	}
 	return nil
+}
+
+func buildFeishuOutboundMessage(message string) (string, string, error) {
+	message = strings.TrimSpace(message)
+	if !shouldUseFeishuPostMessage(message) {
+		content, err := json.Marshal(map[string]string{"text": message})
+		if err != nil {
+			return "", "", err
+		}
+		return "text", string(content), nil
+	}
+	content, err := json.Marshal(map[string]any{
+		"zh_cn": map[string]any{
+			"title":   "",
+			"content": buildFeishuPostContent(message),
+		},
+	})
+	if err != nil {
+		return "", "", err
+	}
+	return "post", string(content), nil
+}
+
+func shouldUseFeishuPostMessage(message string) bool {
+	for _, line := range strings.Split(message, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "# ") {
+			return true
+		}
+		if len(trimmed) > 3 && trimmed[0] >= '0' && trimmed[0] <= '9' && strings.Contains(trimmed, ". ") {
+			return true
+		}
+	}
+	return strings.Contains(message, "**")
+}
+
+func buildFeishuPostContent(message string) [][]map[string]any {
+	var content [][]map[string]any
+	for _, rawLine := range strings.Split(message, "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" {
+			continue
+		}
+		line, boldLine := normalizeFeishuPostLine(line)
+		elements := buildFeishuPostTextElements(line)
+		if boldLine {
+			for _, element := range elements {
+				element["style"] = []string{"bold"}
+			}
+		}
+		content = append(content, elements)
+	}
+	if len(content) == 0 {
+		content = append(content, []map[string]any{{"tag": "text", "text": strings.TrimSpace(message)}})
+	}
+	return content
+}
+
+func normalizeFeishuPostLine(line string) (string, bool) {
+	switch {
+	case strings.HasPrefix(line, "- "):
+		return "• " + strings.TrimSpace(strings.TrimPrefix(line, "- ")), false
+	case strings.HasPrefix(line, "* "):
+		return "• " + strings.TrimSpace(strings.TrimPrefix(line, "* ")), false
+	case strings.HasPrefix(line, "# "):
+		return strings.TrimSpace(strings.TrimPrefix(line, "# ")), true
+	default:
+		return line, false
+	}
+}
+
+func buildFeishuPostTextElements(line string) []map[string]any {
+	var elements []map[string]any
+	for {
+		start, token := nextFeishuInlineMarkdownToken(line)
+		if start < 0 {
+			if line != "" {
+				elements = append(elements, map[string]any{"tag": "text", "text": line})
+			}
+			break
+		}
+		if start > 0 {
+			elements = append(elements, map[string]any{"tag": "text", "text": line[:start]})
+		}
+		rest := line[start+len(token):]
+		end := strings.Index(rest, token)
+		if end < 0 {
+			elements = append(elements, map[string]any{"tag": "text", "text": line[start:]})
+			break
+		}
+		formattedText := rest[:end]
+		if formattedText != "" {
+			element := map[string]any{"tag": "text", "text": formattedText}
+			if token == "**" {
+				element["style"] = []string{"bold"}
+			}
+			elements = append(elements, element)
+		}
+		line = rest[end+len(token):]
+	}
+	if len(elements) == 0 {
+		return []map[string]any{{"tag": "text", "text": ""}}
+	}
+	return elements
+}
+
+func nextFeishuInlineMarkdownToken(line string) (int, string) {
+	bold := strings.Index(line, "**")
+	code := strings.Index(line, "`")
+	switch {
+	case bold < 0 && code < 0:
+		return -1, ""
+	case bold < 0:
+		return code, "`"
+	case code < 0:
+		return bold, "**"
+	case bold <= code:
+		return bold, "**"
+	default:
+		return code, "`"
+	}
 }
 
 func (a *FeishuAdapter) downloadMessageResourceViaAPI(ctx context.Context, messageID string, fileKey string, resourceType string) (*DownloadedMessageResource, error) {

@@ -130,6 +130,58 @@ func TestFeishuAdapterSendReplyFormatsLifecycleMessages(t *testing.T) {
 	}
 }
 
+func TestBuildFeishuOutboundMessageUsesTextForPlainMessage(t *testing.T) {
+	msgType, content, err := buildFeishuOutboundMessage("你好")
+	if err != nil {
+		t.Fatalf("buildFeishuOutboundMessage() error = %v", err)
+	}
+	if msgType != "text" {
+		t.Fatalf("expected text msg type, got %q", msgType)
+	}
+	var payload map[string]string
+	if err := json.Unmarshal([]byte(content), &payload); err != nil {
+		t.Fatalf("Unmarshal(text content) error = %v", err)
+	}
+	if payload["text"] != "你好" {
+		t.Fatalf("unexpected text payload %+v", payload)
+	}
+}
+
+func TestBuildFeishuOutboundMessageUsesPostForMarkdownMessage(t *testing.T) {
+	msgType, content, err := buildFeishuOutboundMessage("记得，**昨天**做了这些：\n\n- 阅读飞书文档\n- 创建 `sheet`")
+	if err != nil {
+		t.Fatalf("buildFeishuOutboundMessage() error = %v", err)
+	}
+	if msgType != "post" {
+		t.Fatalf("expected post msg type, got %q content=%s", msgType, content)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(content), &payload); err != nil {
+		t.Fatalf("Unmarshal(post content) error = %v", err)
+	}
+	zhCN := payload["zh_cn"].(map[string]any)
+	lines := zhCN["content"].([]any)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 rich text lines, got %#v", lines)
+	}
+	firstLine := lines[0].([]any)
+	if firstLine[1].(map[string]any)["text"] != "昨天" {
+		t.Fatalf("expected bold segment for 昨天, got %#v", firstLine)
+	}
+	style := firstLine[1].(map[string]any)["style"].([]any)
+	if len(style) != 1 || style[0] != "bold" {
+		t.Fatalf("expected bold style, got %#v", firstLine[1])
+	}
+	secondLine := lines[1].([]any)
+	if !strings.HasPrefix(secondLine[0].(map[string]any)["text"].(string), "• ") {
+		t.Fatalf("expected bullet line, got %#v", secondLine)
+	}
+	thirdLine := lines[2].([]any)
+	if strings.Contains(thirdLine[0].(map[string]any)["text"].(string), "`") {
+		t.Fatalf("expected inline code backticks to be stripped, got %#v", thirdLine)
+	}
+}
+
 func feishuSignature(timestamp, nonce, encryptKey, body string) string {
 	sum := sha256.Sum256([]byte(timestamp + nonce + encryptKey + body))
 	return hex.EncodeToString(sum[:])
