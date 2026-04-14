@@ -14,7 +14,7 @@ const protectedPaths = ["/dashboard"];
 const passthroughPrefixes = ["/auth", "/dashboard"];
 const globalUiPrefixes = ["/auth", "/dashboard"];
 const globalUiPaths = new Set(["/"]);
-const metadataRoutePaths = new Set(["/opengraph-image", "/twitter-image"]);
+const metadataRoutePaths = new Set(["/twitter-image"]);
 
 const anycapApiOrigin = (() => {
   try {
@@ -42,6 +42,7 @@ const securityHeaders: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "SAMEORIGIN",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   "Content-Security-Policy": cspDirectives,
 };
 const legacyRouteRedirects = new Map<string, string>([
@@ -80,6 +81,10 @@ function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
 export async function middleware(req: NextRequest) {
   const authResponse = await auth0.middleware(req);
   const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
+
+  if (req.nextUrl.pathname !== "/" && req.nextUrl.pathname.endsWith("/")) {
+    return applyAuthResponse(redirectToPath(req, normalizedPath), authResponse);
+  }
 
   if (
     req.nextUrl.pathname.startsWith("/api/auth/") ||

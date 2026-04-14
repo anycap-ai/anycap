@@ -9,12 +9,10 @@ import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
 import { siteConfig } from "@/lib/site";
-import { createSoftwareApplicationJsonLd } from "@/lib/schema";
 
 const githubHref = "https://github.com/anycap-ai/anycap";
 const websiteId = `${siteConfig.url}#website`;
 const homePageId = `${siteConfig.url}#home`;
-const softwareApplicationEntityId = `${siteConfig.url}#software-application`;
 
 const homeWebPageJsonLd = {
   "@context": "https://schema.org",
@@ -37,24 +35,8 @@ const homeWebPageJsonLd = {
   ],
   primaryImageOfPage: {
     "@type": "ImageObject",
-    url: `${siteConfig.url}/opengraph-image`,
+    url: `${siteConfig.url}/opengraph-image.png`,
   },
-  mainEntity: {
-    "@id": softwareApplicationEntityId,
-  },
-};
-
-const homeSoftwareApplicationJsonLd = {
-  ...createSoftwareApplicationJsonLd({
-    name: "AnyCap",
-    description:
-      "Open-source AI agent capability runtime for agent users, builders, creators, and power users. AnyCap gives one CLI and one auth flow for image generation, video generation, music generation, image understanding, video analysis, audio understanding, web search, grounded web search, web crawl, drive storage, page publishing, and file download.",
-    path: "/",
-    installUrl: `${siteConfig.url}/install.sh`,
-  }),
-  "@id": softwareApplicationEntityId,
-  sameAs: [githubHref],
-  isAccessibleForFree: true,
 };
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
@@ -76,12 +58,6 @@ export function HumanHomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeWebPageJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(homeSoftwareApplicationJsonLd),
-        }}
       />
 
       <Header

@@ -22,6 +22,8 @@ type SkillsPageData = {
   heroTitle: [string, string];
   heroIntro: string;
   heroTagline: string;
+  overviewTitle: string;
+  overviewParagraphs: string[];
   relationshipTitle: string;
   relationshipRows: { label: string; summary: string }[];
   relatedTitle: string;
@@ -105,6 +107,11 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     heroIntro:
       "The agent may know how to code, but it does not automatically know how to discover, install, authenticate, and invoke your capability runtime. A skill is the instruction layer that closes that gap. It tells Claude Code, Cursor, Codex, and similar agent users how to connect to AnyCap without turning every setup into a manual integration job.",
     heroTagline: "Keep the agent. Teach it the missing runtime.",
+    overviewTitle: "Why skills matter in practice",
+    overviewParagraphs: [
+      "Skills matter because agents need more than raw tool access. They need an explicit description of how a capability fits into the workflow, when it should be used, and which install or auth steps have to happen first.",
+      "For AnyCap, skills are also a distribution strategy. They let the same capability runtime appear consistently across multiple agent products without rebuilding the entire operator experience every time a new environment is added.",
+    ],
     relationshipTitle: "What a skill adds to the workflow",
     relationshipRows: [
       {
@@ -207,6 +214,11 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     heroIntro:
       "O agente pode saber programar, mas não sabe automaticamente como descobrir, instalar, autenticar e invocar o seu runtime de capacidades. Uma skill é a camada de instrução que fecha essa lacuna. Ela mostra ao Claude Code, Cursor, Codex e usuários de agentes semelhantes como se conectar ao AnyCap sem transformar cada setup em um trabalho manual de integração.",
     heroTagline: "Mantenha o agente. Ensine o runtime que está faltando.",
+    overviewTitle: "Por que skills importam na prática",
+    overviewParagraphs: [
+      "Skills importam porque agentes precisam de mais do que acesso bruto a ferramentas. Eles precisam de uma descrição explícita de como a capability entra no workflow, quando ela deve ser usada e quais passos de instalação ou autenticação precisam acontecer primeiro.",
+      "Para o AnyCap, skills também são uma estratégia de distribuição. Elas permitem que o mesmo runtime de capacidades apareça de forma consistente em vários produtos de agente sem reconstruir toda a experiência operacional sempre que um novo ambiente é adicionado.",
+    ],
     relationshipTitle: "O que uma skill adiciona ao fluxo",
     relationshipRows: [
       {

@@ -117,6 +117,25 @@ export default async function StartPage() {
 
           <FadeIn>
             <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {content.overviewTitle}
+              </h2>
+              <div className="max-w-[860px] space-y-4">
+                {content.overviewParagraphs.map((paragraph) => (
+                  <p key={paragraph} className="text-base leading-7 text-[#4d5145]">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
                 {content.sectionTitles.agents}
               </h2>

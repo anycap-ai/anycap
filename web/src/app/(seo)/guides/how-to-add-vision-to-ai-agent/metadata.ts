@@ -10,10 +10,10 @@ export function getPageMetadata(locale: SiteLocale): Metadata {
   return createLocalizedMetadataForPath(locale, PATH, {
     title: isPtBr
       ? "Como adicionar capacidades de visao a um agente de IA - imagem e video"
-      : "How to Add Vision Capabilities to an AI Agent — Image and Video Understanding",
+      : "How to Add Vision Capabilities to an AI Agent — Image and Video Understanding Guide",
     description: isPtBr
       ? "Guia passo a passo para adicionar capacidades de entendimento de imagem e analise de video a qualquer agente de IA usando a CLI do AnyCap. Dê ao seu agente olhos."
-      : "Step-by-step guide to adding image understanding and video analysis capabilities to any AI agent using AnyCap CLI. Give your agent eyes.",
+      : "Learn how to add image understanding and video analysis to Claude Code, Cursor, Codex, and other AI agents using AnyCap CLI, with setup steps, examples, and workflow patterns.",
   });
 }
 

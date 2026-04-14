@@ -4,29 +4,22 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { WebCrawlDemo } from "@/components/landing/WebCrawlDemo";
 import { createTechArticleJsonLd } from "@/lib/schema";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig } from "@/lib/site";
+import { defaultLocale } from "@/lib/site";
+import { getWebCrawlMetadata, WEB_CRAWL_PATH } from "./content";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
-export const metadata: Metadata = {
-  title: "Web Crawl API for AI agents - Content extraction and Markdown conversion",
-  description:
-    "Give AI agents web crawl through AnyCap. Convert web pages to clean Markdown and content-ready output through one CLI instead of wiring a separate crawl or extraction API.",
-  alternates: { canonical: "/capabilities/web-crawl" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/capabilities/web-crawl",
-    siteName: siteConfig.siteName,
-    title: "Web Crawl API for AI agents - Content extraction and Markdown conversion",
-    description:
-      "Add web crawl and content extraction to AI agents with one CLI and one capability runtime.",
-  },
-};
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  WEB_CRAWL_PATH,
+  getWebCrawlMetadata(defaultLocale),
+);
 
 type PageContent = {
   breadcrumb: { name: string; href?: string }[];
@@ -216,6 +209,7 @@ export default async function WebCrawlPage() {
     locale,
     about: [...content.jsonLdAbout],
     keywords: [...content.jsonLdKeywords],
+    dateModified: PAGE_LAST_MODIFIED_ISO,
   });
 
   return (

@@ -11,6 +11,7 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 export const metadata: Metadata = {
   title: "Drive for AI agents - Shared storage, file organization, and public URLs",
@@ -216,6 +217,7 @@ export default async function DriveCapabilityPage() {
     locale,
     about: [...content.jsonLdAbout],
     keywords: [...content.jsonLdKeywords],
+    dateModified: PAGE_LAST_MODIFIED_ISO,
   });
 
   return (

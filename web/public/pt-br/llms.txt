@@ -29,6 +29,35 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 - [Web crawl](https://anycap.ai/pt-br/capabilities/web-crawl): converta paginas em texto limpo para workflows de agentes.
 - [Drive](https://anycap.ai/pt-br/capabilities/drive): armazenamento, compartilhamento e handoff de artefatos.
 
+## Modelos
+
+- [Veo 3.1](https://anycap.ai/pt-br/models/veo-3-1): texto para video e imagem para video premium para agentes.
+- [Kling 3.0](https://anycap.ai/pt-br/models/kling-3-0): movimento realista e fluxos cinematograficos de imagem para video.
+- [Seedream 5](https://anycap.ai/pt-br/models/seedream-5): geracao de imagem polida de primeira passagem.
+- [Nano Banana Pro](https://anycap.ai/pt-br/models/nano-banana-pro): edicao de imagem guiada por prompt e loops de revisao.
+- [Nano Banana 2](https://anycap.ai/pt-br/models/nano-banana-2): geracao de imagem rapida e iteracao em alto volume.
+- [Seedance 1.5 Pro](https://anycap.ai/pt-br/models/seedance-1-5-pro): geracao de video repetivel e amigavel para producao.
+- [ElevenLabs Music](https://anycap.ai/pt-br/models/elevenlabs-music): rascunhos de trilha sonora baseados em prompt para agentes.
+
+## Comparacoes e alternativas
+
+- [AnyCap vs Composio](https://anycap.ai/pt-br/compare/anycap-vs-composio): comparacao de runtime de capacidades para equipes de agentes.
+- [Alternativas ao Fal.ai para agentes](https://anycap.ai/pt-br/compare/fal-ai-alternatives-for-agents): alternativas para workflows de geracao de midia.
+- [Alternativas ao Replicate para agentes](https://anycap.ai/pt-br/compare/replicate-alternatives-for-agents): alternativas para workflows de midia em agentes.
+
+## Guias
+
+- [Skills de agentes para ferramentas de desenvolvimento](https://anycap.ai/pt-br/guides/agent-skills-for-developer-tools): como skill files distribuem capacidades.
+- [Context engineering para agentes](https://anycap.ai/pt-br/guides/context-engineering-for-agents): estruturando contexto para execucao confiavel.
+- [Como adicionar geracao de video a um agente de IA](https://anycap.ai/pt-br/guides/how-to-add-video-generation-to-ai-agent): integracao passo a passo.
+- [Como adicionar visao a um agente de IA](https://anycap.ai/pt-br/guides/how-to-add-vision-to-ai-agent): configuracao passo a passo para imagem e video.
+- [O que e um agent harness](https://anycap.ai/pt-br/guides/what-is-agent-harness): a camada de runtime ao redor do agente.
+- [Workspace context engineering](https://anycap.ai/pt-br/guides/workspace-context-engineering): arquivos, ferramentas e estado em workflows de agentes.
+
+## Skills
+
+- [Hub de skills](https://anycap.ai/pt-br/skills): visao geral da distribuicao e configuracao de skills do AnyCap.
+
 ## Produto
 
 - [Contato](https://anycap.ai/pt-br/contact): suporte, bugs e demandas enterprise.
@@ -41,3 +70,10 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 - [Releases no GitHub](https://github.com/anycap-ai/anycap/releases): binarios e historico de versoes.
 - [Skill file](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md): referencia completa da skill.
 - [skills.sh listing](https://skills.sh/anycap-ai/anycap): pagina publica de distribuicao da skill.
+
+## Glossario
+
+- [Glossario](https://anycap.ai/pt-br/glossary): conceitos e termos tecnicos centrais do AnyCap.
+- [Agent Harness](https://anycap.ai/pt-br/glossary/agent-harness): camada de execucao ao redor de um modelo de IA.
+- [Context Engineering](https://anycap.ai/pt-br/glossary/context-engineering): estrutura de contexto para melhor execucao de agentes.
+- [Agent Capability Runtime](https://anycap.ai/pt-br/glossary/agent-capability-runtime): camada de runtime que expoe capabilities aos agentes.

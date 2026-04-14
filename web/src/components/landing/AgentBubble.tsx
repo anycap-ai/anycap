@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0";
 import { LoginButton } from "@/components/auth/LoginButton";
 
@@ -52,7 +53,7 @@ const bubbleStyles = `
 export function AgentBubble() {
   const { user, isLoading } = useUser();
 
-  if (isLoading || user) return null;
+  if (isLoading) return null;
 
   return (
     <div className="absolute right-[112px] top-4 z-20 hidden max-w-[320px] xl:block">
@@ -69,31 +70,61 @@ export function AgentBubble() {
       />
 
       {/* main bubble */}
-      <LoginButton
-        className="agent-bubble-main group relative block rounded-[30px] border border-[#e6e6e6] bg-white px-5 py-4 text-[#1c1f17] transition-[border-color] duration-300 ease-out hover:border-[#d0d0d0]"
-        onAnimationEnd={(e) => {
-          if (e.animationName === "bubble-enter") {
-            e.currentTarget.classList.add("entered");
-          }
-        }}
-      >
-        <div
-          aria-hidden
-          className="absolute bottom-[-10px] right-[88px] h-5 w-5 rotate-45 rounded-[8px] border-r border-b border-[#e6e6e6] bg-white shadow-[6px_8px_14px_rgba(0,0,0,0.05)]"
-        />
-        <p className="text-[15px] font-semibold leading-[1.35] text-[#182012]">
-          Let me show you what I can do<span className="text-[#5f7a29]">.</span>
-        </p>
-        <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
-          250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Apr 10</span>.
-        </p>
-        <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
-          Try it free
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="translate-x-0 transition-transform duration-300 group-hover:translate-x-1">
-            <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-      </LoginButton>
+      {user ? (
+        <Link
+          href="/dashboard"
+          prefetch={false}
+          className="agent-bubble-main group relative block rounded-[30px] border border-[#e6e6e6] bg-white px-5 py-4 text-[#1c1f17] transition-[border-color] duration-300 ease-out hover:border-[#d0d0d0]"
+          onAnimationEnd={(e) => {
+            if (e.animationName === "bubble-enter") {
+              e.currentTarget.classList.add("entered");
+            }
+          }}
+        >
+          <div
+            aria-hidden
+            className="absolute bottom-[-10px] right-[88px] h-5 w-5 rotate-45 rounded-[8px] border-r border-b border-[#e6e6e6] bg-white shadow-[6px_8px_14px_rgba(0,0,0,0.05)]"
+          />
+          <p className="text-[15px] font-semibold leading-[1.35] text-[#182012]">
+            Let me show you what I can do<span className="text-[#5f7a29]">.</span>
+          </p>
+          <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
+            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Apr 30</span>.
+          </p>
+          <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
+            Go to dashboard
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="translate-x-0 transition-transform duration-300 group-hover:translate-x-1">
+              <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </Link>
+      ) : (
+        <LoginButton
+          className="agent-bubble-main group relative block rounded-[30px] border border-[#e6e6e6] bg-white px-5 py-4 text-[#1c1f17] transition-[border-color] duration-300 ease-out hover:border-[#d0d0d0]"
+          onAnimationEnd={(e) => {
+            if (e.animationName === "bubble-enter") {
+              e.currentTarget.classList.add("entered");
+            }
+          }}
+        >
+          <div
+            aria-hidden
+            className="absolute bottom-[-10px] right-[88px] h-5 w-5 rotate-45 rounded-[8px] border-r border-b border-[#e6e6e6] bg-white shadow-[6px_8px_14px_rgba(0,0,0,0.05)]"
+          />
+          <p className="text-[15px] font-semibold leading-[1.35] text-[#182012]">
+            Let me show you what I can do<span className="text-[#5f7a29]">.</span>
+          </p>
+          <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
+            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Apr 30</span>.
+          </p>
+          <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
+            Try it free
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="translate-x-0 transition-transform duration-300 group-hover:translate-x-1">
+              <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </LoginButton>
+      )}
     </div>
   );
 }

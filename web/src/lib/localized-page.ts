@@ -36,6 +36,7 @@ import { getSkillsMetadata } from "@/app/(seo)/skills/content";
 import { getPrivacyMetadata } from "@/app/(seo)/privacy/content";
 import { getTermsMetadata } from "@/app/(seo)/terms/content";
 import { getVideoAnalysisMetadata } from "@/app/(seo)/capabilities/video-analysis/content";
+import { getWebCrawlMetadata } from "@/app/(seo)/capabilities/web-crawl/content";
 import { isSupportedLocale, type PublicRouteKey, type SiteLocale } from "@/lib/site";
 
 export type LocalePageParams = {
@@ -80,6 +81,7 @@ const localizedMetadataByRouteKey: Partial<
   skills: getSkillsMetadata,
   terms: getTermsMetadata,
   "capabilities-video-analysis": getVideoAnalysisMetadata,
+  "capabilities-web-crawl": getWebCrawlMetadata,
 };
 
 const localizedMetadataByPath: Partial<Record<string, LocalizedMetadataResolver>> =

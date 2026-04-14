@@ -8,6 +8,12 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export function VideoGenerationPageView({ content }: { content: VideoGenerationPageData }) {
+  const isPtBr = content.eyebrow.toLowerCase().includes("capacidade");
+  const overviewTitle = isPtBr ? "Por que esta página de capability importa" : "Why this capability page matters";
+  const overviewBody =
+    isPtBr
+      ? "Uma página dedicada de capability ajuda equipes a decidir quando geração de vídeo deve virar uma ação do agente em vez de permanecer apenas como intenção de produto. Isso é útil para ligar casos de uso, decisões de modelo, exemplos de chamada e próximos passos operacionais em um mesmo lugar."
+      : "A dedicated capability page helps teams decide when video generation should become an agent action rather than remain only a product idea. It links use cases, model decisions, command examples, and operational next steps in one place so the workflow is easier to route and reuse.";
   return (
     <>
       <script
@@ -51,6 +57,22 @@ export function VideoGenerationPageView({ content }: { content: VideoGenerationP
 
           <FadeIn className="mt-10">
             <VideoGenDemo lines={content.demo.lines} labels={content.demo.labels} />
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {overviewTitle}
+              </h2>
+              <div className="max-w-[860px] space-y-4">
+                <p className="text-base leading-7 text-[#4d5145]">{content.hero.summaryText}</p>
+                <p className="text-base leading-7 text-[#4d5145]">{overviewBody}</p>
+              </div>
+            </section>
           </FadeIn>
 
           <div className="mt-16 md:mt-24">

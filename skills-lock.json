@@ -4,17 +4,37 @@
     "anycap-ai-tool-seo": {
       "source": "anycap-ai/anycap",
       "sourceType": "github",
-      "computedHash": "23cc914ab0ff2f040b95b877b4c19925e0485d40311e6b90ed7684a93d99a1fc"
+      "computedHash": "4694e9a2b3cfbeba3b5e0c0395f31c030e1cb71422e2c72d2a8644579cdd42e8"
+    },
+    "anycap-blog-production": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "8c390850ddd0ffe188f053936df1c1c109a6489cdf90e963f608e4e940492317"
     },
     "anycap-cli": {
       "source": "anycap-ai/anycap",
       "sourceType": "github",
-      "computedHash": "e4b7758db7f8901ccf24648d46be06bcc28909acbffa224fa9329f75bc5e797e"
+      "computedHash": "4b58e9b1f50ca1a993dea9755653056af57fc5544c821353e444bcbe19bd6886"
     },
     "anycap-deepresearch": {
       "source": "anycap-ai/anycap",
       "sourceType": "github",
-      "computedHash": "256be3e9780541a424ff7b7c11849bbee5a7ae561bbf4c16776b13e5b15d0082"
+      "computedHash": "a4d72c1b905ef214b7c8d04ab87b7d385e0330ec8655d7c36c3818048936b2a4"
+    },
+    "anycap-human-interaction": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "8fd446b3cbf2a16e7398f15cbe83785d9778e40f0a22318cf77053b4f7ff1da2"
+    },
+    "anycap-media-production": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "5ad66e37c6b241693f8efb1c1bc050c1708f6d14aaa8ab3f4fd3b58bfc585015"
+    },
+    "anycap-social-meme-workflows": {
+      "source": "anycap-ai/anycap",
+      "sourceType": "github",
+      "computedHash": "789bd31f27dc85aca20f77fa6ff12166231d9c03adab1a906f31fcab1c47e083"
     }
   }
 }

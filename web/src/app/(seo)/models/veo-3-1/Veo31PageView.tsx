@@ -50,12 +50,32 @@ export interface ModelDetailPageContent {
   faqTitle: string;
   faqItems: readonly { question: string; answer: string }[];
   nextActions: readonly { label: string; href: string; primary?: boolean }[];
+  modelGuideJsonLd?: Record<string, unknown>;
+  faqJsonLd?: Record<string, unknown>;
 };
 
 export function Veo31PageView({ content }: { content: ModelDetailPageContent }) {
+  const isPtBr = content.eyebrow.toLowerCase().includes("modelo");
+  const overviewTitle = isPtBr ? "Por que esta página de modelo importa" : "Why this model page matters";
+  const overviewBody2 = isPtBr
+    ? "Uma página dedicada de modelo ajuda equipes a decidir se esse modelo deve entrar no workflow antes de conectar prompts ou chamadas de capability a uma tarefa do agente. Isso é especialmente útil quando vários modelos adjacentes parecem resolver o mesmo problema, mas diferem em qualidade de movimento, encaixe de estilo, força de edição ou tradeoffs operacionais."
+    : "A dedicated model page helps teams decide whether this model belongs in the workflow before they start wiring prompts or capability calls into an agent task. That is especially useful when several adjacent models can appear to solve the same problem but differ in motion quality, style fit, editing strength, or operational tradeoffs.";
   return (
-    <article className="px-6 md:px-12 lg:px-20">
-      <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
+    <>
+      {content.modelGuideJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(content.modelGuideJsonLd) }}
+        />
+      ) : null}
+      {content.faqJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
+        />
+      ) : null}
+      <article className="px-6 md:px-12 lg:px-20">
+        <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
         <FadeIn>
           <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
             {content.eyebrow}
@@ -86,6 +106,24 @@ export function Veo31PageView({ content }: { content: ModelDetailPageContent }) 
             generatedExampleLabel={content.showcaseLabels.generatedExampleLabel}
             signalsLabel={content.showcaseLabels.signalsLabel}
           />
+        </FadeIn>
+
+        <div className="mt-16 md:mt-24">
+          <hr className="border-t border-[#d4dbb8]" />
+        </div>
+
+        <FadeIn>
+          <section className="mt-16 md:mt-24">
+            <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+              {overviewTitle}
+            </h2>
+            <div className="max-w-[860px] space-y-4">
+              <p className="text-base leading-7 text-[#4d5145]">
+                {content.metadata.articleDescription}
+              </p>
+              <p className="text-base leading-7 text-[#4d5145]">{overviewBody2}</p>
+            </div>
+          </section>
         </FadeIn>
 
         <div className="mt-16 md:mt-24">
@@ -279,7 +317,8 @@ export function Veo31PageView({ content }: { content: ModelDetailPageContent }) 
             </div>
           </section>
         </FadeIn>
-      </div>
-    </article>
+        </div>
+      </article>
+    </>
   );
 }

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { defaultSocialImageAlt } from "@/lib/site";
 
 export const defaultSocialImage = {
-  url: "/opengraph-image",
+  url: "/opengraph-image.png",
   width: 1200,
   height: 630,
   alt: defaultSocialImageAlt,

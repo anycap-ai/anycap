@@ -16,17 +16,6 @@ type FaqPageItem = {
   answer: string;
 };
 
-type SoftwareApplicationSchemaInput = {
-  name: string;
-  description: string;
-  path: string;
-  locale?: SiteLocale;
-  applicationCategory?: string;
-  operatingSystem?: string;
-  downloadUrl?: string;
-  installUrl?: string;
-};
-
 const organizationReference = {
   "@type": "Organization",
   name: siteConfig.siteName,
@@ -51,6 +40,8 @@ export function createTechArticleJsonLd({
   datePublished,
   dateModified,
 }: ArticleSchemaInput) {
+  const resolvedDatePublished = datePublished ?? dateModified;
+
   return {
     "@context": "https://schema.org",
     "@type": "TechArticle",
@@ -73,7 +64,7 @@ export function createTechArticleJsonLd({
           keywords: keywords.join(", "),
         }
       : {}),
-    ...(datePublished ? { datePublished } : {}),
+    ...(resolvedDatePublished ? { datePublished: resolvedDatePublished } : {}),
     ...(dateModified ? { dateModified } : {}),
   };
 }
@@ -81,42 +72,14 @@ export function createTechArticleJsonLd({
 export function createFaqPageJsonLd(items: readonly FaqPageItem[]) {
   return {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
       name: item.question,
-      description: item.answer,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
     })),
-  };
-}
-
-export function createSoftwareApplicationJsonLd({
-  name,
-  description,
-  path,
-  locale,
-  applicationCategory = "DeveloperApplication",
-  operatingSystem = "macOS, Linux, Windows",
-  downloadUrl,
-  installUrl,
-}: SoftwareApplicationSchemaInput) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name,
-    applicationCategory,
-    operatingSystem,
-    url: buildAbsoluteUrl(path, locale),
-    description,
-    author: organizationReference,
-    publisher: organizationReference,
-    ...(downloadUrl ? { downloadUrl } : {}),
-    ...(installUrl ? { installUrl } : {}),
-    offers: {
-      "@type": "Offer",
-      price: 0,
-      priceCurrency: "USD",
-    },
   };
 }
