@@ -153,6 +153,84 @@ func TestAgentDaemonStartBuildsLocalFeishuBotWhenCredentialsProvided(t *testing.
 	}
 }
 
+func TestAgentDaemonStartBuildsLocalFeishuBotFromEnvironment(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("ANYCAP_NO_KEYRING", "1")
+	t.Setenv("FEISHU_APP_ID", "cli_env_appid")
+	t.Setenv("FEISHU_APP_SECRET", "env_app_secret")
+	if err := cliconfig.SaveCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")); err != nil {
+		t.Fatalf("SaveCredential() error = %v", err)
+	}
+
+	originalBuild := buildDaemonIMBot
+	defer func() { buildDaemonIMBot = originalBuild }()
+
+	var gotCfg im.FeishuLongConnBotConfig
+	buildDaemonIMBot = func(cfg im.FeishuLongConnBotConfig) daemonIMBot {
+		gotCfg = cfg
+		return stubDaemonIMBot{}
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/agent/runners/register" && r.Method == http.MethodPost:
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123","name":"local-mac","platform":"feishu","state":"idle","created_at":"2026-04-09T12:00:00Z","updated_at":"2026-04-09T12:00:00Z","user_id":"u_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/claim-primary" && r.Method == http.MethodPost:
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123","name":"local-mac","platform":"feishu","state":"idle","created_at":"2026-04-09T12:00:00Z","updated_at":"2026-04-09T12:00:00Z","user_id":"u_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/heartbeat" && r.Method == http.MethodPost:
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"success","data":{"id":"run_123"}}`))
+		case r.URL.Path == "/v1/agent/runners/run_123/sessions/next" && r.Method == http.MethodGet:
+			w.WriteHeader(http.StatusNoContent)
+		case r.URL.Path == "/v1/agent/runners/run_123/tasks/next" && r.Method == http.MethodGet:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	clientFactory := func() *httpclient.Client {
+		return httpclient.New(server.URL, httpclient.WithCredential(cliconfig.NewAPIKeyCredential("sk-agent-test")))
+	}
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(clientFactory, stdout)
+	cmd.SetArgs([]string{
+		"start",
+		"--name", "local-mac",
+		"--platform", "feishu",
+		"--workspace", t.TempDir(),
+		"--once",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("daemon start: %v", err)
+	}
+	if gotCfg.AppID != "cli_env_appid" {
+		t.Fatalf("expected app id from environment, got %q", gotCfg.AppID)
+	}
+	if gotCfg.AppSecret != "env_app_secret" {
+		t.Fatalf("expected app secret from environment, got %q", gotCfg.AppSecret)
+	}
+}
+
+func TestResolveDaemonFeishuCredentialsFallsBackToLegacyAnyCapEnv(t *testing.T) {
+	t.Setenv("ANYCAP_FEISHU_APP_ID", "legacy_appid")
+	t.Setenv("ANYCAP_FEISHU_APP_SECRET", "legacy_secret")
+
+	appID, appSecret := resolveDaemonFeishuCredentials("", "")
+
+	if appID != "legacy_appid" {
+		t.Fatalf("expected legacy app id, got %q", appID)
+	}
+	if appSecret != "legacy_secret" {
+		t.Fatalf("expected legacy app secret, got %q", appSecret)
+	}
+}
+
 func TestMessageForInboundChatKeepsRawCommandText(t *testing.T) {
 	event := im.NormalizedInboundEvent{
 		Message:   "/reset",

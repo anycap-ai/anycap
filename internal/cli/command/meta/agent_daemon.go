@@ -454,6 +454,7 @@ func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind,
 }
 
 func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Client, stdout io.Writer, name, platform string, once bool, pollEvery time.Duration, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace, feishuAppID, feishuSecret string) error {
+	feishuAppID, feishuSecret = resolveDaemonFeishuCredentials(feishuAppID, feishuSecret)
 	httpClient := &runnerServeHTTPClient{client: clientFactory()}
 	trimmedPlatform := strings.TrimSpace(platform)
 	reg, err := httpClient.Register(cmd.Context(), strings.TrimSpace(name), strings.TrimSpace(platform))
@@ -615,4 +616,20 @@ func daemonFeishuActionDir(workspace string) string {
 		return ""
 	}
 	return filepath.Join(trimmedWorkspace, ".anycap", "feishu-actions")
+}
+
+func resolveDaemonFeishuCredentials(appID, appSecret string) (string, string) {
+	if strings.TrimSpace(appID) == "" {
+		appID = os.Getenv("FEISHU_APP_ID")
+	}
+	if strings.TrimSpace(appID) == "" {
+		appID = os.Getenv("ANYCAP_FEISHU_APP_ID")
+	}
+	if strings.TrimSpace(appSecret) == "" {
+		appSecret = os.Getenv("FEISHU_APP_SECRET")
+	}
+	if strings.TrimSpace(appSecret) == "" {
+		appSecret = os.Getenv("ANYCAP_FEISHU_APP_SECRET")
+	}
+	return strings.TrimSpace(appID), strings.TrimSpace(appSecret)
 }
