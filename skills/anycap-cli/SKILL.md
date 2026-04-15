@@ -122,7 +122,16 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 
 ## Agent Daemon (Feishu Chat)
 
-When the human wants to chat with a local coding agent from Feishu, follow this exact order.
+When the human wants to chat with the current local coding agent from Feishu, start the AnyCap Feishu daemon for them. Treat these as trigger phrases:
+
+- "用飞书跟你聊天"
+- "开启飞书 IM 模式"
+- "把你接到我的飞书 bot 上"
+- "用 AnyCap 启动飞书机器人"
+- "用飞书跟当前 agent 聊天"
+- "start AnyCap Feishu daemon"
+
+Do not explain daemon internals first. Execute the setup flow below, asking only for missing required information.
 
 First make sure the human already has a **personal Feishu app bot**:
 
@@ -131,6 +140,21 @@ First make sure the human already has a **personal Feishu app bot**:
 - long connection event delivery enabled
 - message receive permissions granted
 - App ID and App Secret available locally
+
+Use the current working directory as `--workspace` unless the human provides a different repository path.
+
+Infer the executor from the current agent runtime:
+
+- Codex runtime -> `--executor codex`
+- Claude Code runtime -> `--executor claude_code`
+- If unsure, ask one concise question: "Use Codex or Claude Code as the local executor?"
+
+Read Feishu credentials from environment first:
+
+- `FEISHU_APP_ID`
+- `FEISHU_APP_SECRET`
+
+If either value is missing, ask the human for only the missing value(s), or ask them to export the env vars and tell you when ready. Never write App Secret values into docs, code, logs, memory files, or final summaries. Do not echo secrets back to the human.
 
 ```bash
 anycap status
@@ -173,7 +197,11 @@ After startup, verify which local machine is currently connected:
 anycap agent daemon status --platform feishu
 ```
 
-Then tell the human to go back to Feishu and send a normal message to their personal bot.
+Then tell the human to go back to Feishu and send a normal message to their personal bot. Use a concise success message like:
+
+```text
+飞书机器人已经连上当前本地 agent。现在去飞书给你的 personal bot 发普通消息即可。
+```
 
 Do not tell the human to:
 

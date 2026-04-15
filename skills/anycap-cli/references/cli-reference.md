@@ -168,7 +168,18 @@ feedback = true
 
 ### Preferred local Feishu daemon flow
 
-Use this order for the chat-style Feishu agent flow:
+Use this order for the chat-style Feishu agent flow. Start this flow automatically when the human says things like:
+
+- "用飞书跟你聊天"
+- "开启飞书 IM 模式"
+- "把你接到我的飞书 bot 上"
+- "用 AnyCap 启动飞书机器人"
+- "用飞书跟当前 agent 聊天"
+- "start AnyCap Feishu daemon"
+
+Do not make the human assemble the daemon command manually. Use the current working directory as `--workspace` unless the human provides another repository path. Infer the executor from the current runtime: Codex uses `--executor codex`; Claude Code uses `--executor claude_code`. If unsure, ask whether to use Codex or Claude Code.
+
+Read Feishu credentials from `FEISHU_APP_ID` and `FEISHU_APP_SECRET` first. If either is missing, ask only for the missing value(s), or ask the human to export them and confirm. Never write App Secret values into docs, code, logs, memory files, or final summaries. Do not echo secrets back to the human.
 
 ```bash
 anycap status
@@ -219,7 +230,7 @@ Check which local machine is currently connected:
 anycap agent daemon status --platform feishu
 ```
 
-After startup, ask the human to go back to Feishu and send a normal message to their personal bot.
+After startup, ask the human to go back to Feishu and send a normal message to their personal bot. Keep the final user-facing message short, for example: `飞书机器人已经连上当前本地 agent。现在去飞书给你的 personal bot 发普通消息即可。`
 
 ### Legacy / Debug Compatibility
 
