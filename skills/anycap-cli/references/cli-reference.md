@@ -203,11 +203,13 @@ Use Claude Code instead of Codex when that is the desired local agent:
 anycap agent daemon start --platform feishu --executor claude_code --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
-When the human explicitly wants Codex to bypass sandbox and approval restrictions for local-network or VPN-only access, add:
+When the human explicitly wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, add:
 
 ```bash
 anycap agent daemon start --platform feishu --executor codex --codex-exec-mode danger-full-access --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
+
+The default Codex mode is `safe`, which maps to Codex `--full-auto`. That automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
 
 For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human explicitly wants broader execution, pass Claude Code permission/tool flags:
 
@@ -221,7 +223,7 @@ This command will:
 - claims it as the current user's primary Feishu runner
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
 - starts the normal polling loop for sessions/tasks
-- uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided
+- uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
 - uses Claude Code `claude -p --output-format json` when `--executor claude_code`, and persists Claude Code `session_id` for follow-up turns
 
 Check which local machine is currently connected:
