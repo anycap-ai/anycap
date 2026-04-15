@@ -284,6 +284,83 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 	}
 }
 
+func TestAgentDaemonStartBackgroundPassesClaudeCodeOptions(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	originalExecutable := daemonExecutable
+	originalSpawn := spawnDaemonProcess
+	originalExists := daemonProcessRunning
+	defer func() {
+		daemonExecutable = originalExecutable
+		spawnDaemonProcess = originalSpawn
+		daemonProcessRunning = originalExists
+	}()
+
+	daemonExecutable = func() (string, error) {
+		return "/tmp/anycap", nil
+	}
+	daemonProcessRunning = func(pid int) bool {
+		return pid == 4321
+	}
+	spawnDaemonProcess = func(executable string, args []string, logPath string) (int, error) {
+		if executable != "/tmp/anycap" {
+			t.Fatalf("unexpected executable %q", executable)
+		}
+		argsText := strings.Join(args, " ")
+		if !strings.Contains(argsText, "--executor claude_code") {
+			t.Fatalf("expected claude_code executor in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--claude-bin /opt/bin/claude") {
+			t.Fatalf("expected claude bin in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--claude-permission-mode bypassPermissions") {
+			t.Fatalf("expected claude permission mode in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--claude-allowed-tools Read,Edit,Bash") {
+			t.Fatalf("expected claude allowed tools in args, got %v", args)
+		}
+		if err := saveDaemonProcessState(daemonProcessState{
+			PID:         4321,
+			Platform:    "feishu",
+			RunnerID:    "run_local",
+			MachineName: "local-agent",
+			Executor:    "claude_code",
+			Workspace:   "/repo",
+			LogPath:     logPath,
+		}); err != nil {
+			t.Fatalf("saveDaemonProcessState() error = %v", err)
+		}
+		return 4321, nil
+	}
+
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(func() *httpclient.Client { return nil }, stdout)
+	cmd.SetArgs([]string{
+		"start",
+		"--platform", "feishu",
+		"--executor", "claude_code",
+		"--workspace", "/repo",
+		"--claude-bin", "/opt/bin/claude",
+		"--claude-permission-mode", "bypassPermissions",
+		"--claude-allowed-tools", "Read,Edit,Bash",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("daemon start background: %v", err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	data := payload["data"].(map[string]any)
+	daemon := data["daemon"].(map[string]any)
+	if daemon["executor"].(string) != "claude_code" {
+		t.Fatalf("expected claude_code daemon executor, got %v", daemon["executor"])
+	}
+}
+
 func TestAgentDaemonStatusFallsBackToLocalDaemonState(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

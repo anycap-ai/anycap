@@ -235,3 +235,125 @@ printf 'fresh' > "$out"
 		t.Fatalf("expected full-auto to be absent in danger mode, got %q", argsText)
 	}
 }
+
+func TestClaudeCodeExecExecutorExecuteSessionCapturesSessionIDAndResumes(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "claude-stub.sh")
+	argsPath := filepath.Join(tmpDir, "claude-args.txt")
+	script := `#!/bin/sh
+args_log="` + argsPath + `"
+printf '%s\n' "$@" > "$args_log"
+resume_id=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --resume|-r)
+      resume_id="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [ -n "$resume_id" ]; then
+  printf '{"type":"result","subtype":"success","result":"resumed","session_id":"%s"}\n' "$resume_id"
+else
+  printf '{"type":"result","subtype":"success","result":"fresh","session_id":"session_123"}\n'
+fi
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newClaudeCodeExecExecutor(scriptPath, tmpDir, "acceptEdits", "Read,Edit")
+	message := "继续修复 parser panic"
+
+	fresh, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_123",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession(fresh) error = %v", err)
+	}
+	if fresh.ExecutorRef == nil || *fresh.ExecutorRef != "session_123" {
+		t.Fatalf("unexpected fresh executor ref %+v", fresh.ExecutorRef)
+	}
+	if fresh.FinalMessage == nil || *fresh.FinalMessage != "fresh" {
+		t.Fatalf("unexpected fresh final message %+v", fresh.FinalMessage)
+	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if !strings.Contains(argsText, "--permission-mode\nacceptEdits\n") {
+		t.Fatalf("expected permission mode in args, got %q", argsText)
+	}
+	if !strings.Contains(argsText, "--allowedTools\nRead,Edit\n") {
+		t.Fatalf("expected allowed tools in args, got %q", argsText)
+	}
+
+	resumeID := "session_123"
+	resumed, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_124",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+		ExecutorRef: &resumeID,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession(resume) error = %v", err)
+	}
+	if resumed.ExecutorRef == nil || *resumed.ExecutorRef != "session_123" {
+		t.Fatalf("unexpected resumed executor ref %+v", resumed.ExecutorRef)
+	}
+	if resumed.FinalMessage == nil || *resumed.FinalMessage != "resumed" {
+		t.Fatalf("unexpected resumed final message %+v", resumed.FinalMessage)
+	}
+	argsBody, err = os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText = string(argsBody)
+	if !strings.Contains(argsText, "--resume\nsession_123\n") {
+		t.Fatalf("expected resume id in args, got %q", argsText)
+	}
+}
+
+func TestClaudeCodeExecExecutorExecuteSessionHonorsContextCancellation(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "claude-stub.sh")
+	script := `#!/bin/sh
+sleep 10
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newClaudeCodeExecExecutor(scriptPath, tmpDir, "", "")
+	message := "继续修复 parser panic"
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := executor.ExecuteSession(ctx, agentcontrolapp.RunnerSession{
+			ID:          "ags_123",
+			RunnerID:    "run_123",
+			UserMessage: &message,
+		})
+		done <- err
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context canceled, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("executor did not stop after context cancellation")
+	}
+}

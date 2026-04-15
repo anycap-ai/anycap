@@ -186,10 +186,22 @@ Start the local agent on the target repository:
 anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
+Use Claude Code instead of Codex when that is the desired local agent:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
 When the human explicitly wants Codex to bypass sandbox and approval restrictions for local-network or VPN-only access, add:
 
 ```bash
 anycap agent daemon start --platform feishu --executor codex --codex-exec-mode danger-full-access --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human explicitly wants broader execution, pass Claude Code permission/tool flags:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
 This command will:
@@ -199,6 +211,7 @@ This command will:
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
 - starts the normal polling loop for sessions/tasks
 - uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided
+- uses Claude Code `claude -p --output-format json` when `--executor claude_code`, and persists Claude Code `session_id` for follow-up turns
 
 Check which local machine is currently connected:
 
@@ -214,10 +227,12 @@ Only use the commands below when the human is explicitly debugging an older shar
 
 ```bash
 anycap agent runners serve --name local-mac --platform feishu --executor codex --workspace /path/to/repo
+anycap agent runners serve --name local-mac --platform feishu --executor claude_code --workspace /path/to/repo
 ```
 
 - `agent runners serve` is still useful for debugging and operator workflows, but `agent daemon start` is the main user-facing path.
 - `agent runners serve` also accepts `--codex-exec-mode danger-full-access` when debugging local execution outside the default Codex sandbox.
+- `agent runners serve` also accepts `--claude-permission-mode`, `--claude-allowed-tools`, and `--claude-bin` when debugging Claude Code execution.
 - `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
 - Do not use these legacy flows as the primary setup path for a personal Feishu bot daemon.
 

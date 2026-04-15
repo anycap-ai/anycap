@@ -148,10 +148,23 @@ Then start the local Feishu agent on the target repository:
 anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
+Claude Code is also supported as the local executor:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
 If the human wants Codex to run in a less restricted environment for local-network or VPN-only resources, explicitly add:
 
 ```bash
 --codex-exec-mode danger-full-access
+```
+
+For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human explicitly wants broader local execution, use Claude Code's permission/tool flags, for example:
+
+```bash
+--claude-permission-mode bypassPermissions
+--claude-allowed-tools Read,Edit,Bash
 ```
 
 After startup, verify which local machine is currently connected:
@@ -184,6 +197,7 @@ Main notes:
 - The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
 - `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
 - Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions.
+- `--executor claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
 
 ## Legacy / Debug Only
 
