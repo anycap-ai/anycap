@@ -37,6 +37,27 @@ Verify the installation:
 anycap status
 ```
 
+## Troubleshooting: `anycap` not found after install
+
+The install script places the binary in `~/.local/bin/` by default (non-root) and appends an `export PATH` line to the shell profile (`.bashrc` / `.zshrc`). However, the **current shell session** does not pick up profile changes automatically, so `command -v anycap` may still fail right after install.
+
+**Diagnosis and fix:**
+
+```bash
+# 1. Check if the binary actually exists
+ls -la ~/.local/bin/anycap
+
+# 2. If it exists, add to PATH for the current session
+export PATH="$HOME/.local/bin:$PATH"
+
+# 3. Verify
+anycap status
+```
+
+If `~/.local/bin/anycap` does not exist, the install may have used a different directory (e.g., `/usr/local/bin` when run as root, or a custom `ANYCAP_INSTALL_DIR`). Check the install output for the actual path.
+
+If the binary exists but a different `anycap` is resolved (e.g., an npm-installed version), use the full path `~/.local/bin/anycap` or adjust PATH ordering.
+
 ## Authentication
 
 Three methods, depending on environment:
@@ -101,7 +122,16 @@ Read [references/cli-reference.md](references/cli-reference.md) for all availabl
 
 ## Agent Daemon (Feishu Chat)
 
-When the human wants to chat with a local coding agent from Feishu, follow this exact order.
+When the human wants to chat with the current local coding agent from Feishu, start the AnyCap Feishu daemon for them. Treat these as trigger phrases:
+
+- "用飞书跟你聊天"
+- "开启飞书 IM 模式"
+- "把你接到我的飞书 bot 上"
+- "用 AnyCap 启动飞书机器人"
+- "用飞书跟当前 agent 聊天"
+- "start AnyCap Feishu daemon"
+
+Do not explain daemon internals first. Execute the setup flow below, asking only for missing required information.
 
 First make sure the human already has a **personal Feishu app bot**:
 
@@ -110,6 +140,21 @@ First make sure the human already has a **personal Feishu app bot**:
 - long connection event delivery enabled
 - message receive permissions granted
 - App ID and App Secret available locally
+
+Use the current working directory as `--workspace` unless the human provides a different repository path.
+
+Infer the executor from the current agent runtime:
+
+- Codex runtime -> `--executor codex`
+- Claude Code runtime -> `--executor claude_code`
+- If unsure, ask one concise question: "Use Codex or Claude Code as the local executor?"
+
+Read Feishu credentials from environment first:
+
+- `FEISHU_APP_ID`
+- `FEISHU_APP_SECRET`
+
+If either value is missing, ask the human for only the missing value(s), or ask them to export the env vars and tell you when ready. Never write App Secret values into docs, code, logs, memory files, or final summaries. Do not echo secrets back to the human.
 
 ```bash
 anycap status
@@ -127,11 +172,28 @@ Then start the local Feishu agent on the target repository:
 anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
 
-If the human wants Codex to run in a less restricted environment for local-network or VPN-only resources, explicitly add:
+Claude Code is also supported as the local executor:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+If the human wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, explicitly add:
 
 ```bash
 --codex-exec-mode danger-full-access
 ```
+
+Reason: the default Codex mode is `safe`, which maps to Codex `--full-auto`. This automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
+
+For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, use Claude Code's broader permission/tool flags, for example:
+
+```bash
+--claude-permission-mode bypassPermissions
+--claude-allowed-tools Read,Edit,Bash
+```
+
+Reason: the daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
 
 After startup, verify which local machine is currently connected:
 
@@ -139,7 +201,11 @@ After startup, verify which local machine is currently connected:
 anycap agent daemon status --platform feishu
 ```
 
-Then tell the human to go back to Feishu and send a normal message to their personal bot.
+Then tell the human to go back to Feishu and send a normal message to their personal bot. Use a concise success message like:
+
+```text
+飞书机器人已经连上当前本地 agent。现在去飞书给你的 personal bot 发普通消息即可。
+```
 
 Do not tell the human to:
 
@@ -162,7 +228,9 @@ Main notes:
 - If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
 - The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
 - `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
-- Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions.
+- Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions, including when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Codex.
+- `--executor claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
+- For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
 
 ## Legacy / Debug Only
 
