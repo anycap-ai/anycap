@@ -29,6 +29,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 - [Image understanding](https://anycap.ai/capabilities/image-understanding): Vision and screenshot analysis workflows.
 - [Video analysis](https://anycap.ai/capabilities/video-analysis): Video inspection and understanding workflows.
 - [Audio understanding](https://anycap.ai/capabilities/audio-understanding): Audio transcription and understanding workflows.
+- [Web search](https://anycap.ai/capabilities/web-search): Retrieval workflows that return ranked sources instead of synthesized answers.
 - [Grounded web search](https://anycap.ai/capabilities/grounded-web-search): Search workflows that return synthesized answers with citations.
 - [Web crawl](https://anycap.ai/capabilities/web-crawl): Convert web pages into clean text for downstream agent work.
 - [Drive](https://anycap.ai/capabilities/drive): Storage, sharing, and artifact handoff workflows.
@@ -46,17 +47,25 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 ## Compare & Alternatives
 
 - [AnyCap vs Composio](https://anycap.ai/compare/anycap-vs-composio): Capability runtime comparison for agent teams.
+- [AnyCap vs OpenAI Agent Builder](https://anycap.ai/compare/anycap-vs-openai-agent-builder): Agent runtime comparison for teams choosing between orchestration layers.
+- [AnyCap vs Replicate](https://anycap.ai/compare/anycap-vs-replicate): Model inference platform comparison for agent workflows.
+- [AnyCap vs fal.ai](https://anycap.ai/compare/anycap-vs-fal-ai): Media generation platform comparison for agent workflows.
 - [Fal.ai alternatives for agents](https://anycap.ai/compare/fal-ai-alternatives-for-agents): Alternatives for media generation workflows.
 - [Replicate alternatives for agents](https://anycap.ai/compare/replicate-alternatives-for-agents): Alternatives for agent media workflows.
+- [AnyCap vs OpenClaw Image Generation](https://anycap.ai/compare/anycap-vs-openclaw-image-generation): Image generation comparison for agent teams.
+- [AnyCap vs OpenClaw Video Generation](https://anycap.ai/compare/anycap-vs-openclaw-video-generation): Video generation comparison for agent teams.
 
 ## Guides
 
 - [Agent skills for developer tools](https://anycap.ai/guides/agent-skills-for-developer-tools): How installable skill files distribute capabilities.
+- [Add tools to Claude Code](https://anycap.ai/guides/add-tools-to-claude-code): Add capabilities to Claude Code with one install path.
 - [Context engineering for agents](https://anycap.ai/guides/context-engineering-for-agents): Structuring context for reliable agent execution.
+- [Install AnyCap](https://anycap.ai/guides/install-anycap): Step-by-step install, auth, and verification flow for the CLI.
+- [MCP vs Skills](https://anycap.ai/guides/mcp-vs-skills): Compare MCP servers and skill files as agent integration paths.
+- [How to add image generation to an AI agent](https://anycap.ai/guides/how-to-add-image-generation-to-ai-agent): Step-by-step image integration.
 - [How to add video generation to an AI agent](https://anycap.ai/guides/how-to-add-video-generation-to-ai-agent): Step-by-step video integration.
 - [How to add vision to an AI agent](https://anycap.ai/guides/how-to-add-vision-to-ai-agent): Step-by-step image and video analysis setup.
 - [What is an agent harness](https://anycap.ai/guides/what-is-agent-harness): The runtime layer around the agent.
-- [Workspace context engineering](https://anycap.ai/guides/workspace-context-engineering): Files, tools, and state in agent workflows.
 
 ## Skills
 
@@ -90,6 +99,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 
 ## Optional
 
+- [GitHub organization](https://github.com/anycap-ai): Primary profile for AnyCap repositories and release activity.
 - [GitHub repository](https://github.com/anycap-ai/anycap): Public codebase for the runtime, website, and skill files.
 - [GitHub releases](https://github.com/anycap-ai/anycap/releases): Release artifacts and version history.
 - [Skill file](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md): Full skill reference used by supported agents.

@@ -205,7 +205,92 @@ const ptBr: AddToolsToClaudeCodePageData = {
 const contentByLocale: Record<SiteLocale, AddToolsToClaudeCodePageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id: {
+    metadata: {
+      title: "Tambahkan tool ke Claude Code — Instal kapabilitas agen",
+      description:
+        "Panduan langkah demi langkah untuk menambahkan tool pembuatan gambar, pembuatan video, baca gambar, dan analisis video ke Claude Code menggunakan skills dan CLI AnyCap.",
+      openGraphTitle: "Tambahkan tool ke Claude Code — Instal kapabilitas agen",
+      openGraphDescription:
+        "Panduan langkah demi langkah untuk menambahkan tool pembuatan gambar, pembuatan video, baca gambar, dan analisis video ke Claude Code menggunakan skills dan CLI AnyCap.",
+    },
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Panduan", href: "/guides", unlinkable: true },
+      { name: "Tambahkan Tool ke Claude Code" },
+    ],
+    eyebrow: "Panduan",
+    heroTitle: "Tambahkan tool ke Claude Code",
+    heroIntro:
+      "Claude Code adalah agen coding yang kuat, tetapi ia tidak bisa menghasilkan gambar, membuat video, atau menganalisis konten visual sendirian. AnyCap menambahkan kapabilitas itu melalui file skill dan CLI. Panduan ini membahas seluruh setup, mulai dari pemasangan skill sampai pembuatan gambar pertama, supaya Claude Code bisa mengakses pembuatan gambar dengan model seperti Seedream 5 dan Nano Banana Pro, pembuatan video dengan Veo 3.1, pemahaman gambar, dan analisis video melalui satu interface.",
+    needTitle: "Yang Anda perlukan",
+    needItems: [
+      "Claude Code sudah terpasang dan berfungsi",
+      "Node.js 18+ (untuk skills.sh dan npm install)",
+      "Browser untuk alur login",
+    ],
+    note: "Langkah-langkah berikut mencerminkan alur instalasi terbaru untuk menambahkan tool AnyCap ke Claude Code.",
+    steps: [
+      {
+        title: "Pasang skill AnyCap",
+        command: "npx -y skills add anycap-ai/anycap -a claude-code -y",
+        body:
+          "Ini menempatkan file SKILL.md AnyCap ke direktori skills Claude Code agar Claude Code bisa menemukan kapabilitas yang tersedia.",
+      },
+      {
+        title: "Pasang CLI AnyCap",
+        command: "curl -fsSL https://anycap.ai/install.sh | sh",
+        body: "Atau:",
+        bodyCommand: "npm install -g @anycap/cli",
+      },
+      {
+        title: "Login",
+        command: "anycap login",
+      },
+      {
+        title: "Temukan model yang tersedia",
+        command: "anycap image models",
+        body: "Menampilkan model gambar yang tersedia: Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.",
+      },
+      {
+        title: "Buat gambar pertama Anda",
+        command: 'anycap image generate --model seedream-5 --prompt "a minimalist product mockup"',
+      },
+      {
+        title: "Coba kapabilitas lain",
+        command: "anycap image read --url https://example.com/screenshot.png",
+        body: "Baca gambar / analisis video",
+        bodyCommand: "anycap video read --url https://example.com/demo.mp4",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apakah saya perlu memasang apa pun selain skill dan CLI?",
+        answer:
+          "Tidak. CLI AnyCap adalah binary tunggal tanpa dependensi runtime. File skill mengajarkan Claude Code cara menemukannya. Tidak perlu SDK tambahan, container Docker, atau runtime bahasa lain.",
+      },
+      {
+        question: "Apakah ini bekerja dengan Claude Code di semua sistem operasi?",
+        answer:
+          "Ya. CLI AnyCap mendukung macOS, Linux, dan Windows. Ia berjalan di sesi terminal yang sama dengan yang dipakai Claude Code.",
+      },
+      {
+        question: "Berapa biaya untuk membuat gambar?",
+        answer:
+          "AnyCap memakai harga pay-as-you-go tanpa biaya bulanan. Pengguna baru mendapat kredit gratis senilai US$5. Lihat halaman harga untuk tarif per model.",
+      },
+      {
+        question: "Bisakah Claude Code memanggil AnyCap secara otomatis tanpa campur tangan saya?",
+        answer:
+          "Ya. Setelah skill terpasang dan CLI terautentikasi, Claude Code bisa memanggil kapabilitas AnyCap apa pun sebagai respons terhadap prompt bahasa alami. Anda bisa bilang 'buat mockup produk' dan Claude Code akan menjalankan perintah AnyCap yang tepat.",
+      },
+    ],
+    cta: [
+      { label: "AnyCap untuk Claude Code", href: "/for/claude-code" },
+      { label: "Lihat Kapabilitas", href: "/capabilities" },
+    ],
+  },
 };
 
 export function getAddToolsToClaudeCodeMetadata(locale: SiteLocale): Metadata {

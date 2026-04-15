@@ -299,10 +299,143 @@ const contentByLocale: Record<SiteLocale, WebSearchPageData> = {
       ],
     }),
   },
-  id: {} as WebSearchPageData,
+  id: {
+    metadata: {
+      title: "API Pencarian Web untuk agen AI, peneliti, dan tim - Pencarian terstruktur lewat satu CLI",
+      description:
+        "Berikan pencarian web kepada agen AI, peneliti, dan tim lewat AnyCap. Jalankan pencarian web terstruktur dengan filter domain, kontrol kebaruan, dan crawl halaman opsional melalui satu CLI, tanpa perlu merangkai API pencarian terpisah.",
+      openGraphTitle:
+        "API Pencarian Web untuk agen AI, peneliti, dan tim - Pencarian terstruktur lewat satu CLI",
+      openGraphDescription:
+        "Tambahkan pencarian web ke agen AI dengan satu CLI, satu alur autentikasi, dan satu runtime kapabilitas.",
+    },
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Pencarian Web" },
+    ],
+    eyebrow: "Kapabilitas",
+    heroTitle: "Pencarian Web",
+    heroIntro:
+      "Pencarian web AnyCap memberi agen, peneliti, dan tim API pencarian web terstruktur melalui satu CLI. Workflow ini bisa mengambil kumpulan hasil, membatasi domain tepercaya, memfilter berdasarkan kebaruan, dan menarik isi halaman ke dalam workflow tanpa bergantung pada ekstensi browser terpisah atau integrasi pencarian khusus vendor. Itu membuat pencarian web jauh lebih mudah dipadukan dengan runtime AnyCap lainnya.",
+    heroImageAlt:
+      "Ilustrasi editorial yang menunjukkan hasil pencarian web mengalir ke jawaban berbasis bukti dan langkah crawl",
+    usageTitle: "Penggunaan CLI",
+    usageExamples: [
+      { title: "Pencarian web umum", code: usageExamples[0].code },
+      { title: "Cepat, hanya judul dan URL", code: usageExamples[1].code },
+      { title: "Batasi domain", code: usageExamples[2].code },
+      { title: "Hanya hasil terbaru", code: usageExamples[3].code },
+    ],
+    useCasesTitle: "Saat agen membutuhkan pencarian web",
+    useCases: [
+      "Temukan halaman, dokumentasi, atau referensi yang relevan sebelum agen menulis atau memperbarui kode.",
+      "Cari web dengan hasil terstruktur, bukan membuka workflow pencarian berbasis browser.",
+      "Batasi pencarian ke domain tepercaya saat tim membutuhkan retrieval yang lebih dapat diprediksi.",
+      "Tarik isi halaman langsung ke workflow ketika yang dibutuhkan lebih dari sekadar URL dan cuplikan.",
+      "Dukung workflow riset, konten, dan operasional yang membutuhkan daftar sumber, bukan jawaban akhir.",
+    ],
+    workflowTitle: "Biasanya workflow berjalan seperti ini",
+    workflowSteps: [
+      {
+        title: "Langkah 1",
+        body: "Mulai dengan pencarian terstruktur ketika agen belum tahu sumbernya. Ini memberi Anda kumpulan hasil, bukan jawaban spekulatif, dan biasanya itulah langkah awal terbaik untuk riset, pemindaian kompetitif, dan pelacakan rilis.",
+      },
+      {
+        title: "Langkah 2",
+        body: "Gunakan pencarian berbasis bukti ketika agen perlu mengubah bukti menjadi jawaban dengan sitasi. Gunakan crawl ketika URL exact sudah diketahui dan Anda hanya perlu isi halaman tanpa fase discovery tambahan.",
+      },
+      {
+        title: "Langkah 3",
+        body: "Serahkan kumpulan hasil kembali ke agen atau tim sebagai catatan sumber, sitasi, atau paket bukti singkat. Itu membuat pencarian web menjadi input untuk pekerjaan berikutnya, bukan fitur buntu yang berhenti di hasil pencarian.",
+      },
+    ],
+    strengthsTitle: "Di mana ia unggul dan di mana tidak",
+    strengthCards: [
+      {
+        title: "Discovery",
+        body: 'Pencarian web unggul ketika jawabannya dimulai dengan "carikan sumbernya" alih-alih "beri saya jawabannya". Ini langkah awal yang tepat ketika agen butuh opsi.',
+      },
+      {
+        title: "Verifikasi",
+        body: "Pencarian web juga unggul ketika tim peduli pada kebaruan, kepercayaan domain, atau daftar sumber yang terbatas. Itu biasanya kasus-kasus yang membuat pencarian browser generik terasa terlalu longgar untuk kerja produksi.",
+      },
+      {
+        title: "Serah terima",
+        body: "Nilainya berkurang jika Anda berhenti di hasil pencarian. Hasil yang berguna adalah paket sumber yang bisa diteruskan oleh agen, editor, atau manusia lain tanpa mengulang pekerjaan yang sama.",
+      },
+    ],
+    relatedTitle: "Halaman terkait",
+    relatedPages: [
+      {
+        eyebrow: "Kapabilitas terkait",
+        title: "Pencarian Web Berbasis Bukti",
+        href: "/capabilities/grounded-web-search",
+        body: "Naik ke jawaban dengan sitasi ketika workflow membutuhkan sintesis, bukan sekadar retrieval.",
+      },
+      {
+        eyebrow: "Kapabilitas terkait",
+        title: "Crawl Web",
+        href: "/capabilities/web-crawl",
+        body: "Gunakan crawl ketika URL sudah diketahui dan workflow hanya membutuhkan isi halaman.",
+      },
+      {
+        eyebrow: "Harga",
+        title: "Harga",
+        href: "/pricing",
+        body: "Lihat model kredit untuk pencarian web, jawaban berbasis bukti, dan permintaan crawl.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang memungkinkan agen lakukan dengan pencarian web AnyCap?",
+        answer:
+          "Ini memberi agen API pencarian web terstruktur melalui CLI. Tim bisa mencari berdasarkan kueri, memfilter menurut domain atau tanggal, dan opsional mengambil isi halaman penuh tanpa merangkai tool browser atau penyedia pencarian terpisah.",
+      },
+      {
+        question: "Mengapa pencarian web punya halaman kapabilitas sendiri?",
+        answer:
+          "Karena bahasa pasar di area ini berbentuk API. Permintaan biasanya muncul sebagai web search API, search API for AI agents, atau real-time web search API, bukan istilah kapabilitas generik.",
+      },
+      {
+        question: "Apa bedanya dengan pencarian web berbasis bukti?",
+        answer:
+          "Pencarian web mengembalikan hasil pencarian terstruktur. Pencarian berbasis bukti mensintesis jawaban dengan sitasi. Keduanya memakai keluarga perintah yang sama, tetapi menyelesaikan pekerjaan yang berbeda.",
+      },
+      {
+        question: "Kapan tim sebaiknya memakai pencarian standar terlebih dulu?",
+        answer:
+          "Saat tujuannya adalah discovery, retrieval, atau mengumpulkan kumpulan hasil. Kalau agen perlu memeriksa halaman kandidat sendiri, pencarian standar adalah titik awal yang lebih bersih.",
+      },
+      {
+        question: "Apakah ini hanya untuk developer?",
+        answer:
+          "Tidak. Pencarian web berguna untuk peneliti, tim konten, operator, dan workflow support yang butuh daftar sumber tepercaya, pemindaian kompetitif, atau pengumpulan referensi live dengan cepat.",
+      },
+    ],
+    capabilityGuideJsonLd: createTechArticleJsonLd({
+      headline:
+        "API Pencarian Web untuk agen AI, peneliti, dan tim - Pencarian terstruktur lewat satu CLI",
+      description:
+        "Panduan kapabilitas untuk menambahkan pencarian web ke agen AI melalui AnyCap, termasuk pencarian umum, filter domain, filter kebaruan, dan crawl opsional.",
+      path: WEB_SEARCH_PATH,
+      about: [
+        "API pencarian web",
+        "Search API untuk agen AI",
+        "Pencarian web real-time",
+        "AnyCap",
+        "Workflow riset",
+      ],
+      keywords: [
+        "api pencarian web",
+        "search api untuk agen ai",
+        "real time web search api",
+        "web search api ai agents",
+      ],
+    }),
+  },
 };
-
-contentByLocale.id = contentByLocale.en;
 
 export function getWebSearchMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

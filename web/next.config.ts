@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   trailingSlash: false,
+  async redirects() {
+    return [
+      {
+        source: "/:path+/",
+        destination: "/:path+",
+        statusCode: 301,
+      },
+    ];
+  },
   async headers() {
     return [
       {

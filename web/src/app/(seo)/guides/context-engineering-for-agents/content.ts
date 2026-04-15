@@ -40,7 +40,7 @@ const en: ContextEngineeringForAgentsPageData = {
   eyebrow: "Guide",
   heroTitle: "Context engineering for agents",
   heroIntro:
-    "Context engineering is the practice of shaping what an AI agent sees and how it interprets its environment. It goes beyond prompt wording. The agent also depends on workspace state, tool definitions, capability availability, prior steps, and execution rules. That is what determines whether it stays in text or calls a capability through a runtime like AnyCap.",
+    "Context engineering is the practice of shaping what an AI agent can see, what it can trust, and what it should do next during a live task. It is not only prompt wording. The agent also depends on workspace state, tool definitions, capability availability, previous steps, permission boundaries, and runtime policies that control execution. Those inputs determine whether the agent should keep reasoning in text, ask for missing data, or call a concrete capability at the right moment. In multimodal workflows, this decision quality matters more than style. A strong model can still fail if context is noisy, incomplete, or contradictory. Good context engineering keeps decision signals explicit so the agent can move from intent to action through a stable runtime such as AnyCap. When teams formalize this layer, they usually see fewer retries, cleaner tool selection, and faster completion on complex cross-modal tasks.",
   pillarsTitle: "The three practical layers",
   pillars: [
     {
@@ -58,8 +58,8 @@ const en: ContextEngineeringForAgentsPageData = {
   ],
   whyItMattersTitle: "Why it matters for multimodal agents",
   whyItMatters: [
-    "A multimodal agent does not just need a good prompt. It needs enough context to know when to inspect an image, generate a mockup, read a video, or keep reasoning in text.",
-    "This is where AnyCap fits. Instead of giving the agent many unrelated APIs, a capability runtime exposes image generation, video generation, image understanding, and video analysis through one interface.",
+    "A multimodal agent does not only need a good prompt. It needs enough context to decide when visual inspection is necessary, when generation is required, and when text reasoning is sufficient. Without that decision context, the agent either over-calls tools and wastes budget, or stays in text too long and misses the action needed to complete the task. The quality of outputs depends on this routing step.",
+    "This is where AnyCap fits in practice. Instead of exposing many unrelated APIs with different credentials and response shapes, a capability runtime gives the agent one execution surface for image generation, video generation, image understanding, and video analysis. With a consistent runtime and clearer context signals, the agent can choose the right capability faster and produce workflows that are easier for teams to debug and repeat.",
   ],
   patternTitle: "A simple decision pattern",
   patternSteps: [
@@ -92,7 +92,7 @@ const ptBr: ContextEngineeringForAgentsPageData = {
   eyebrow: "Guia",
   heroTitle: "Engenharia de contexto para agentes",
   heroIntro:
-    "Engenharia de contexto é a prática de moldar o que um agente de IA vê e como ele interpreta o ambiente. Isso vai além do texto do prompt. O agente também depende do estado do workspace, das definições de ferramenta, da disponibilidade de capacidades, dos passos anteriores e das regras de execução. É isso que determina se ele fica no texto ou chama uma capacidade através de um runtime como o AnyCap.",
+    "Engenharia de contexto é a prática de moldar o que um agente de IA consegue ver, no que ele pode confiar e qual ação deve tomar em cada etapa da execução. Isso vai além do texto do prompt. O agente também depende do estado do workspace, das definições de ferramenta, da disponibilidade de capacidades, dos passos anteriores, dos limites de permissão e das regras de runtime. Esses sinais determinam se ele deve continuar raciocinando em texto, pedir dados adicionais ou chamar uma capacidade no momento certo. Em fluxos multimodais, esse ponto decide qualidade e custo. Um modelo forte ainda falha quando o contexto está ruidoso ou incompleto. Boa engenharia de contexto mantém os sinais claros para transformar intenção em execução estável com um runtime como o AnyCap.",
   pillarsTitle: "As três camadas práticas",
   pillars: [
     {
@@ -110,8 +110,8 @@ const ptBr: ContextEngineeringForAgentsPageData = {
   ],
   whyItMattersTitle: "Por que isso importa para agentes multimodais",
   whyItMatters: [
-    "Um agente multimodal não precisa só de um bom prompt. Ele precisa de contexto suficiente para saber quando inspecionar uma imagem, gerar um mockup, ler um vídeo ou continuar raciocinando em texto.",
-    "É aqui que o AnyCap entra. Em vez de dar ao agente várias APIs soltas, um runtime de capacidades expõe geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo por uma única interface.",
+    "Um agente multimodal não precisa só de um bom prompt. Ele precisa de contexto suficiente para decidir quando deve inspecionar uma imagem, quando precisa gerar um mockup, quando um vídeo deve ser analisado e quando basta continuar no texto. Sem esse contexto de decisão, o agente pode chamar ferramentas demais e aumentar custo, ou ficar tempo demais no texto e não concluir o trabalho.",
+    "É aqui que o AnyCap entra na operação real. Em vez de expor várias APIs isoladas, com credenciais e formatos diferentes, um runtime de capacidades oferece uma superfície única para geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo. Com runtime consistente e sinais de contexto melhores, o agente escolhe a ação certa com mais previsibilidade e o time consegue reproduzir e depurar o fluxo com menos fricção.",
   ],
   patternTitle: "Um padrão simples de decisão",
   patternSteps: [
@@ -130,7 +130,57 @@ const ptBr: ContextEngineeringForAgentsPageData = {
 const contentByLocale: Record<SiteLocale, ContextEngineeringForAgentsPageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id: {
+    metadata: {
+      title: "Rekayasa konteks untuk agen — Bagaimana panggilan kapabilitas ditentukan",
+      description:
+        "Rekayasa konteks membentuk apa yang dilihat agen AI, apa yang diingat, dan apa yang diputuskan untuk dilakukan. Pelajari bagaimana hal ini memengaruhi panggilan kapabilitas, workflow multimodal, dan mengapa AnyCap cocok sebagai layer runtime untuk eksekusi agen.",
+      openGraphTitle: "Rekayasa konteks untuk agen — Bagaimana panggilan kapabilitas ditentukan",
+      openGraphDescription:
+        "Pelajari bagaimana rekayasa konteks memengaruhi panggilan kapabilitas, workflow multimodal, dan mengapa AnyCap cocok sebagai layer runtime untuk eksekusi agen.",
+    },
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Panduan", href: "/guides", unlinkable: true },
+      { name: "Rekayasa Konteks untuk Agen" },
+    ],
+    eyebrow: "Panduan",
+    heroTitle: "Rekayasa konteks untuk agen",
+    heroIntro:
+      "Rekayasa konteks adalah praktik membentuk apa yang bisa dilihat agen AI, sinyal mana yang harus dipercaya, dan aksi apa yang harus diambil pada setiap langkah eksekusi. Ini bukan cuma soal kalimat prompt. Agen juga bergantung pada status workspace, definisi tool, ketersediaan kapabilitas, langkah sebelumnya, batas izin, dan aturan runtime yang mengontrol eksekusi. Dari sinilah agen memutuskan apakah tetap bernalar di teks, meminta data tambahan, atau memanggil kapabilitas pada waktu yang tepat. Dalam workflow multimodal, kualitas keputusan ini menentukan hasil akhir. Model yang kuat tetap bisa gagal kalau konteks berantakan atau tidak lengkap. Rekayasa konteks yang baik menjaga sinyal tetap jelas agar intent bisa berubah menjadi eksekusi stabil lewat runtime seperti AnyCap.",
+    pillarsTitle: "Tiga lapisan praktis",
+    pillars: [
+      {
+        title: "Apa yang bisa dilihat agen",
+        body: "System prompt, file workspace, pesan sebelumnya, definisi tool, dan batasan eksekusi semuanya membentuk ruang aksi.",
+      },
+      {
+        title: "Apa yang bisa dilakukan agen",
+        body: "Kapabilitas hanya berguna kalau disajikan dengan cara yang bisa ditemukan dan dipercaya agen saat eksekusi.",
+      },
+      {
+        title: "Kapan agen harus berpindah dari teks ke aksi",
+        body: "Rekayasa konteks yang baik membantu agen memutuskan kapan cukup berpikir dan kapan harus memanggil pembuatan gambar, analisis video, atau kapabilitas lain.",
+      },
+    ],
+    whyItMattersTitle: "Mengapa ini penting untuk agen multimodal",
+    whyItMatters: [
+      "Agen multimodal bukan cuma butuh prompt yang bagus. Ia butuh konteks yang cukup untuk memutuskan kapan harus memeriksa gambar, kapan perlu membuat mockup, kapan video harus dianalisis, dan kapan cukup lanjut bernalar dalam teks. Tanpa konteks keputusan ini, agen bisa terlalu sering memanggil tool dan membuang biaya, atau terlalu lama di teks sehingga tugas tidak selesai.",
+      "Di sinilah AnyCap menjadi penting untuk eksekusi nyata. Alih-alih memberi agen banyak API terpisah dengan kredensial dan format respons berbeda, runtime kapabilitas menyediakan satu surface untuk pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video. Dengan runtime yang konsisten dan sinyal konteks yang lebih jelas, agen memilih aksi yang tepat lebih cepat dan workflow menjadi lebih mudah diulang serta di-debug oleh tim.",
+    ],
+    patternTitle: "Pola keputusan sederhana",
+    patternSteps: [
+      "Hanya butuh teks? tetap di prompt",
+      "Butuh gambar baru? anycap image generate",
+      "Butuh memeriksa screenshot? anycap image read",
+      "Butuh meninjau rekaman? anycap video read",
+    ],
+    cta: [
+      { label: "Runtime Kapabilitas", href: "/glossary/agent-capability-runtime" },
+      { label: "Pembuatan Gambar", href: "/capabilities/image-generation" },
+      { label: "Analisis Video", href: "/capabilities/video-analysis" },
+    ],
+  },
 };
 
 export function getContextEngineeringForAgentsMetadata(locale: SiteLocale): Metadata {

@@ -61,7 +61,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
   eyebrow: "Glossary",
   heroTitle: ["What is", "context engineering?"],
   intro:
-    "Context engineering is the practice of shaping the information and action space an AI agent uses during execution. It includes prompts, workspace files, tool definitions, runtime state, permissions, and prior steps.",
+    "Context engineering is the practice of shaping the information and action space an AI agent uses during live execution, not just during prompt drafting. It includes prompts, workspace files, tool definitions, runtime state, permission boundaries, prior steps, and operational constraints that influence decision quality. In production workflows, these signals determine whether an agent selects the right tool at the right time, asks for missing data, or continues reasoning in text. Strong context engineering reduces avoidable tool calls, lowers failure loops, and makes behavior more reproducible across runs. Without it, even a capable model can make poor execution choices because critical state is missing, ambiguous, or presented too late. This is why high-performing agent teams treat context design as core infrastructure rather than copywriting. It functions as execution architecture, not just communication style, especially in multimodal workflows with strict reliability goals.",
   definitionJsonLd: {
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
@@ -72,8 +72,8 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
   },
   whyTitle: "Why it matters",
   whyBody: [
-    "A capable agent needs more than a strong model. It also needs the right context to know what tools exist, what files matter, and what actions are allowed. Without that, it may miss the right tool call or act at the wrong time.",
-    "For AnyCap, context engineering matters because it determines when an agent should invoke image generation, video generation, image read, or video analysis through the capability runtime.",
+    "A capable agent needs more than a strong model. It needs the right context to understand what tools exist, which files are authoritative, what actions are allowed, and what success should look like for the current step. If those signals are weak, the agent may skip the right tool call, select the wrong capability, or trigger actions too early. Good context engineering improves reliability because it aligns model reasoning with execution reality.",
+    "For AnyCap, context engineering directly affects capability invocation quality. It determines when an agent should call image generation, video generation, image read, or video analysis through the runtime, and when it should remain in text. Better context means fewer blind calls, cleaner multimodal routing, and more predictable outcomes for teams operating across agent environments.",
   ],
   relatedLinks: [
     { label: "Context Guide", href: "/guides/context-engineering-for-agents", variant: "primary" },
@@ -99,7 +99,7 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
   eyebrow: "Glossário",
   heroTitle: ["O que é", "engenharia de contexto?"],
   intro:
-    "Engenharia de contexto é a prática de moldar o espaço de informação e de ações que um agente de IA usa durante a execução. Isso inclui prompts, arquivos do workspace, definições de ferramentas, estado do runtime, permissões e passos anteriores.",
+    "Engenharia de contexto é a prática de moldar o espaço de informação e de ação que um agente de IA usa durante a execução real, e não apenas no texto do prompt inicial. Ela inclui prompts, arquivos do workspace, definições de ferramentas, estado do runtime, limites de permissão, passos anteriores e restrições operacionais que influenciam decisões. Em fluxos de produção, esses sinais determinam se o agente escolhe a ferramenta certa no momento certo, pede dados ausentes ou continua no raciocínio textual. Sem esse cuidado, até modelos fortes cometem erros de execução porque o estado crítico aparece incompleto, ambíguo ou tarde demais.",
   definitionJsonLd: {
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
@@ -110,8 +110,8 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
   },
   whyTitle: "Por que isso importa",
   whyBody: [
-    "Um agente capaz precisa de mais do que um modelo forte. Ele também precisa do contexto certo para saber quais ferramentas existem, quais arquivos importam e quais ações são permitidas. Sem isso, ele pode deixar de chamar a ferramenta certa ou agir na hora errada.",
-    "Para o AnyCap, a engenharia de contexto importa porque determina quando um agente deve invocar geração de imagem, geração de vídeo, leitura de imagem ou análise de vídeo por meio do runtime de capacidades.",
+    "Um agente capaz precisa de mais do que um modelo forte. Ele precisa do contexto correto para entender quais ferramentas existem, quais arquivos são fonte de verdade, quais ações estão autorizadas e qual resultado representa sucesso naquela etapa. Quando esses sinais estão fracos, o agente pode ignorar a ferramenta certa, escolher a capacidade errada ou agir cedo demais. Boa engenharia de contexto aumenta previsibilidade porque alinha raciocínio com realidade de execução.",
+    "No AnyCap, engenharia de contexto impacta diretamente a qualidade da invocação de capacidades. Ela define quando o agente deve chamar geração de imagem, geração de vídeo, leitura de imagem ou análise de vídeo pelo runtime, e quando deve continuar no texto. Com contexto melhor, há menos chamadas cegas, roteamento multimodal mais limpo e resultados mais reproduzíveis entre diferentes ambientes de agente.",
   ],
   relatedLinks: [
     { label: "Guia de Contexto", href: "/guides/context-engineering-for-agents", variant: "primary" },
@@ -137,7 +137,7 @@ const agentHarnessContentEn: GlossaryEntryPageData = {
   eyebrow: "Glossary",
   heroTitle: ["What is an", "agent harness?"],
   intro:
-    "An agent harness is the execution layer around the model. It provides the files, terminals, browser, tools, permissions, and runtime rules that turn a reasoning model into a working agent system.",
+    "An agent harness is the execution layer around the model that turns reasoning output into real operations. It provides files, terminals, browser control, tool routing, permission boundaries, and runtime rules that determine what actions are possible at each step. The model decides what should happen; the harness governs what can happen safely and predictably in the environment. This layer is critical for production reliability because it controls access, sequencing, and failure handling across tool calls. Without a well-defined harness, agent behavior becomes fragile, hard to audit, and difficult to reproduce across teams or runs.",
   definitionJsonLd: {
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
@@ -148,8 +148,8 @@ const agentHarnessContentEn: GlossaryEntryPageData = {
   },
   whyTitle: "Why it matters",
   whyBody: [
-    "The model decides what to do. The harness determines what it can actually do. That includes which tools exist, which files are visible, what permissions are granted, and which actions are allowed in the environment.",
-    "AnyCap fits inside that harness as a capability runtime. It gives the harness a clean way to expose multimodal actions to the agent through one interface.",
+    "The model decides what to do, but the harness determines what it can actually do in practice. That includes which tools are discoverable, which files are visible, what permissions are granted, and which action sequences are allowed in the execution environment. This separation is what makes policy, safety, and observability enforceable without degrading model flexibility.",
+    "AnyCap fits inside that harness as a capability runtime. It gives the harness a clean, consistent way to expose multimodal actions through one interface, rather than stitching separate provider integrations into every workflow. The result is clearer operational boundaries, easier debugging, and faster reuse across different agent shells.",
   ],
   relatedLinks: [
     { label: "Harness Guide", href: "/guides/what-is-agent-harness", variant: "primary" },
@@ -175,7 +175,7 @@ const agentHarnessContentPtBr: GlossaryEntryPageData = {
   eyebrow: "Glossário",
   heroTitle: ["O que é um", "agent harness?"],
   intro:
-    "Um agent harness é a camada de execução ao redor do modelo. Ele fornece arquivos, terminais, navegador, ferramentas, permissões e regras de runtime que transformam um modelo de raciocínio em um sistema de agente em funcionamento.",
+    "Um agent harness é a camada de execução ao redor do modelo que transforma raciocínio em operação real. Ele fornece arquivos, terminais, navegador, roteamento de ferramentas, limites de permissão e regras de runtime que definem o que é possível em cada etapa. O modelo decide o que deveria acontecer; o harness governa o que pode acontecer com segurança e previsibilidade no ambiente. Essa camada é essencial para confiabilidade em produção porque controla acesso, sequência e tratamento de falhas entre chamadas de ferramenta. Sem um harness bem definido, o comportamento do agente fica frágil, difícil de auditar e difícil de reproduzir entre equipes.",
   definitionJsonLd: {
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
@@ -186,8 +186,8 @@ const agentHarnessContentPtBr: GlossaryEntryPageData = {
   },
   whyTitle: "Por que isso importa",
   whyBody: [
-    "O modelo decide o que fazer. O harness determina o que ele realmente pode fazer. Isso inclui quais ferramentas existem, quais arquivos estão visíveis, quais permissões foram concedidas e quais ações são permitidas no ambiente.",
-    "O AnyCap entra dentro desse harness como um runtime de capacidades. Ele oferece uma forma limpa de expor ações multimodais ao agente por meio de uma única interface.",
+    "O modelo decide o que fazer, mas o harness determina o que ele realmente pode fazer na prática. Isso inclui quais ferramentas estão descobríveis, quais arquivos estão visíveis, quais permissões foram concedidas e quais sequências de ação são aceitas no ambiente de execução. Essa separação é o que permite aplicar política, segurança e observabilidade sem reduzir a flexibilidade do modelo.",
+    "O AnyCap entra nesse harness como runtime de capacidades. Ele oferece um caminho consistente para expor ações multimodais por uma única interface, em vez de costurar integrações separadas por provedor em cada fluxo. O resultado é fronteira operacional mais clara, depuração mais simples e reutilização mais rápida entre diferentes shells de agente.",
   ],
   relatedLinks: [
     { label: "Guia de Harness", href: "/guides/what-is-agent-harness", variant: "primary" },

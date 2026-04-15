@@ -304,10 +304,114 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       "Página central para skills instaláveis do AnyCap que ensinam agentes de IA a descobrir e usar capacidades por meio de um único runtime.",
     ),
   },
-  id: {} as SkillsPageData,
+  id: {
+    metadata: {
+      title: "AnyCap Skills | Ajari agen AI cara memakai kapabilitas",
+      description:
+        "Skill mengajarkan Claude Code, Cursor, Codex, dan pengguna agen serupa cara menemukan, memasang, mengautentikasi, dan memanggil AnyCap. Ini adalah layer instruksi yang mengubah agen menjadi runner workflow multimodal.",
+      openGraphTitle: "AnyCap Skills | Ajari agen AI cara memakai kapabilitas",
+      openGraphDescription:
+        "Pelajari bagaimana AnyCap skills menghubungkan pengguna agen ke CLI, runtime, dan stack kapabilitas.",
+    },
+    eyebrow: "Pelajari",
+    heroTitle: [
+      "Skills mengajarkan agen Anda",
+      "cara memakai kapabilitas yang tidak dibawanya sejak awal.",
+    ],
+    heroIntro:
+      "Agen mungkin tahu cara menulis kode, tetapi ia tidak otomatis tahu cara menemukan, memasang, mengautentikasi, dan memanggil runtime kapabilitas Anda. Skill adalah layer instruksi yang menutup celah itu. Ia memberi tahu Claude Code, Cursor, Codex, dan pengguna agen serupa cara terhubung ke AnyCap tanpa mengubah setiap setup menjadi pekerjaan integrasi manual.",
+    heroTagline: "Pertahankan agennya. Ajari runtime yang hilang.",
+    overviewTitle: "Mengapa skills penting dalam praktik",
+    overviewParagraphs: [
+      "Skills penting karena agen butuh lebih dari sekadar akses tool mentah. Mereka butuh deskripsi eksplisit tentang bagaimana sebuah kapabilitas masuk ke workflow, kapan ia harus dipakai, dan langkah instalasi atau autentikasi apa yang harus dilakukan dulu.",
+      "Bagi AnyCap, skills juga merupakan strategi distribusi. Mereka membuat runtime kapabilitas yang sama muncul secara konsisten di banyak produk agen tanpa harus membangun ulang pengalaman operator setiap kali lingkungan baru ditambahkan.",
+    ],
+    relationshipTitle: "Apa yang ditambahkan skill ke workflow",
+    relationshipRows: [
+      {
+        label: "Skill",
+        summary: "Layer instruksi yang mengajari agen kapabilitas apa yang hilang dan bagaimana memasang serta memanggilnya.",
+      },
+      {
+        label: "CLI",
+        summary: "Surface eksekusi yang benar-benar dijalankan agen atau operator, seperti `anycap image generate`.",
+      },
+      {
+        label: "Kapabilitas",
+        summary: "Aksi konkret yang diekspos lewat runtime, misalnya pembuatan gambar, pemahaman gambar, atau analisis video.",
+      },
+      {
+        label: "Tool",
+        summary: "Surface eksekusi generik. Skill bisa mendeskripsikan tool, tetapi itu bukan runtime kapabilitas itu sendiri.",
+      },
+    ],
+    relatedTitle: "Bacaan terkait",
+    supportedTitle: "Di mana skills masuk",
+    supportedLabel: "Didukung",
+    plannedLabel: "Direncanakan",
+    supportedTargets: [...supportedTargets],
+    installTitle: "Tiga cara memasang skill",
+    installPatterns: [
+      {
+        title: "Pasang lewat skills.sh",
+        note: "Paling cocok ketika ekosistem agen sudah mendukung skills sebagai format distribusi.",
+        code: installPatterns[0].code,
+      },
+      {
+        title: "Pasang lewat CLI AnyCap",
+        note: "Berguna ketika Anda ingin runtime meletakkan file skill di target directory yang jelas.",
+        code: installPatterns[1].code,
+      },
+      {
+        title: "Pasang manual",
+        note: "Jalur fallback ketika Anda ingin kontrol langsung atas lokasi file skill.",
+        code: installPatterns[2].code,
+      },
+    ],
+    notTitle: "Apa yang bukan skills",
+    notParagraphs: [
+      "Skill bukan hal yang sama dengan MCP, A2A, atau protokol agen lain. Protokol itu menjelaskan bagaimana sistem berkomunikasi. Skill menjelaskan bagaimana agen harus memasang dan memakai runtime kapabilitas di dalam lingkungan eksekusinya.",
+      "Skill juga bukan kapabilitas itu sendiri. Ia adalah layer instruksi yang mengarahkan agen ke runtime, CLI, dan perintah konkret yang bisa dipanggil setelah jalur instalasi selesai.",
+    ],
+    nextTitle: "Ke mana selanjutnya",
+    nextPages: [
+      {
+        eyebrow: "Panduan",
+        title: "MCP vs Skills",
+        href: "/guides/mcp-vs-skills",
+        summary: "Bandingkan layer protokol dengan layer instruksi sebelum Anda memutuskan cara menghubungkan AnyCap ke stack agen Anda.",
+      },
+      {
+        eyebrow: "Pelajari",
+        title: "Mengapa satu CLI itu penting",
+        href: "/cli",
+        summary: "Gunakan ini ketika Anda ingin melihat bagaimana surface perintah tetap stabil di workflow gambar, video, dan visi.",
+      },
+      {
+        eyebrow: "Pelajari",
+        title: "Apa yang tidak bisa dilakukan agen",
+        href: "/learn/what-agents-cant-do",
+        summary: "Gunakan ini ketika Anda ingin narasi celah kapabilitas sebelum memilih halaman produk atau kapabilitas berikutnya.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Pasang AnyCap",
+        href: "/guides/install-anycap",
+        summary: "Gunakan ini ketika Anda ingin jalur instalasi paling singkat setelah memahami cara kerja layer instruksi.",
+      },
+    ],
+    ctas: [
+      { label: "Pasang AnyCap", href: "/guides/install-anycap" },
+      { label: "Mengapa Satu CLI Penting", href: "/cli" },
+      { label: "Lihat Celah Kapabilitas", href: "/learn/what-agents-cant-do" },
+    ],
+    skillsHubJsonLd: buildSkillsHubJsonLd(
+      "id",
+      "AnyCap Skills",
+      "Halaman hub untuk AnyCap skills yang bisa dipasang dan mengajarkan agen AI cara menemukan serta memakai kapabilitas melalui satu runtime.",
+    ),
+  },
 };
-
-contentByLocale.id = contentByLocale.en;
 
 export function getSkillsMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

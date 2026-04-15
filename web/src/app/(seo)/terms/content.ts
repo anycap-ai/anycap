@@ -299,7 +299,63 @@ const contentByLocale: Record<SiteLocale, TermsPageData> = {
   id: {} as TermsPageData,
 };
 
-contentByLocale.id = contentByLocale.en;
+contentByLocale.id = {
+  ...contentByLocale.en,
+  metadata: {
+    title: "Ketentuan Layanan | AnyCap",
+    description:
+      "Baca ketentuan dasar AnyCap yang mencakup akses produk, penggunaan yang diperbolehkan, penyedia pihak ketiga, surface penagihan, dan perubahan layanan.",
+    openGraphTitle: "Ketentuan Layanan | AnyCap",
+    openGraphDescription:
+      "Baca ketentuan dasar AnyCap yang mencakup akses, penggunaan yang diperbolehkan, penyedia pihak ketiga, dan perubahan layanan.",
+  },
+  breadcrumbItems: [
+    { name: "Home", href: "/" },
+    { name: "Ketentuan", href: "/terms" },
+  ],
+  eyebrow: "Ketentuan",
+  heroTitle: "Ketentuan layanan untuk AnyCap",
+  heroIntro:
+    "Ketentuan dasar ini menjelaskan apa yang disediakan AnyCap, apa yang tetap menjadi tanggung jawab Anda dalam workflow agen, dan kapan AnyCap dapat mengubah, membatasi, atau melindungi layanan.",
+  lastUpdatedLabel: "9 April 2026",
+  keyTermsTitle: "Dasar praktisnya",
+  keyTerms: [
+    {
+      title: "Hanya workflow yang diizinkan",
+      body: "Gunakan AnyCap hanya dengan prompt, file, URL, dan instruksi yang Anda berwenang untuk proses melalui workflow agen yang diminta.",
+    },
+    {
+      title: "Keputusan ada di tangan Anda",
+      body: "Anda tetap bertanggung jawab atas input yang dikirim, penggunaan output di hilir, dan apakah workflow tersebut sesuai dengan kebijakan, kontrak, dan kebutuhan kepatuhan Anda.",
+    },
+    {
+      title: "Kapabilitas bisa berkembang",
+      body: "Model, route, limit, antarmuka, dan ketersediaan penyedia dapat berubah seiring AnyCap dan sistem upstream berkembang.",
+    },
+    {
+      title: "Kami boleh melindungi layanan",
+      body: "AnyCap dapat mengukur, membatasi, mengantre, menolak, atau menangguhkan penggunaan bila diperlukan untuk pencegahan penyalahgunaan, penegakan penagihan, kepatuhan hukum, stabilitas platform, atau keamanan.",
+    },
+  ],
+  coreTermsTitle: "Aturan operasional di sekitar AnyCap",
+  footerTitle: "Pastikan workflow cocok untuk tim Anda",
+  footerIntro:
+    "AnyCap dibangun untuk workflow agen, bukan sebagai jaminan bahwa setiap model, penyedia, atau route akan tetap sama selamanya. Tim yang menggunakan platform ini di produksi sebaiknya meninjau asumsi penanganan data, standar review output, ekspektasi billing, dan persyaratan procurement atau kepatuhan sebelum memperluas penggunaan.",
+  footerBody1:
+    "Baca halaman ini bersama kebijakan privasi, halaman harga, dan halaman about agar dasar legalnya selaras dengan produk dan konteks operasional.",
+  footerBody2:
+    "Jika tim Anda butuh klarifikasi sebelum rollout yang lebih luas, email tim AnyCap atau gunakan halaman kontak.",
+  footerBody3: "",
+  termsPageJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Ketentuan Layanan AnyCap",
+    description:
+      "Ketentuan layanan untuk AnyCap, mencakup akses, penggunaan yang diperbolehkan, penyedia pihak ketiga, surface penagihan, dan perubahan layanan.",
+    url: "https://anycap.ai/terms",
+    dateModified: "2026-04-09",
+  },
+};
 
 export function getTermsMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

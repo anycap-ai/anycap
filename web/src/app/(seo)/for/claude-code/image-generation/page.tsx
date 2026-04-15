@@ -116,6 +116,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "claude code generate images",
         "image generation for claude code",
       ],
+      datePublished: PAGE_LAST_MODIFIED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },

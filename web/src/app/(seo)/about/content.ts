@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { organizationId, organizationSameAs } from "@/lib/organization";
+import { createFaqPageJsonLd } from "@/lib/schema";
 import { capabilitySummary, getLocaleConfig, getLocalizedRouteUrl, roadmapCapabilitySummary, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const ABOUT_PATH = "/about";
@@ -31,6 +33,9 @@ type AboutPageData = {
   notCards: { title: string; body: string }[];
   principlesTitle: string;
   principles: string[];
+  faqTitle: string;
+  faqItems: { question: string; answer: string }[];
+  faqJsonLd: Record<string, unknown>;
   contactTitle: string;
   contactPaths: { label: string; href: string; detail: string }[];
   trustTitle: string;
@@ -39,11 +44,41 @@ type AboutPageData = {
   organizationJsonLd: Record<string, unknown>;
 };
 
-const organizationSameAs = [
-  "https://github.com/anycap-ai/anycap",
-  "https://github.com/anycap-ai/anycap/releases",
-  "https://skills.sh/anycap-ai/anycap",
-] as const;
+const aboutFaqItemsEn = [
+  {
+    question: "What does AnyCap add if my agent already writes code?",
+    answer:
+      "Code generation solves planning and implementation, but many production workflows still fail at capability execution. An agent may produce correct code and still fail when it needs to render images, generate videos, inspect visual output, or move artifacts between tools with stable authentication. AnyCap adds that missing execution layer with one install path, one auth flow, and one command surface. Teams keep the agent they already trust while reducing provider-specific glue code. In practice, this lowers setup time, reduces brittle integrations, and keeps multimodal workflows reproducible across environments.",
+  },
+  {
+    question: "Is AnyCap an agent framework, or a runtime around existing agents?",
+    answer:
+      "AnyCap is a runtime around existing agents, not a replacement framework. You still use Claude Code, Cursor, Codex, or another planning layer for reasoning and task decomposition. AnyCap focuses on capabilities that sit outside base model reasoning, such as media generation and multimodal analysis. This separation keeps responsibilities clear: the agent decides what to do, and AnyCap provides a stable way to execute that decision through capabilities. The result is a cleaner architecture where teams can upgrade models, prompts, or providers without rewriting every integration from scratch.",
+  },
+  {
+    question: "How should teams evaluate AnyCap before production rollout?",
+    answer:
+      "Start with one real workflow that currently breaks because capability setup is fragmented. Install AnyCap through the public guide, run auth once, and execute the same workflow end to end through the CLI. Compare three things: setup time, failure modes, and reproducibility across teammates. During evaluation, keep request logs, errors, and screenshots so the team can review where the runtime removed friction and where gaps remain. A good pilot is usually small but representative: one agent, one capability chain, one measurable output. If that path becomes predictable, rollout decisions become much clearer.",
+  },
+];
+
+const aboutFaqItemsPtBr = [
+  {
+    question: "O que o AnyCap adiciona se meu agente ja escreve codigo?",
+    answer:
+      "Geracao de codigo resolve planejamento e implementacao, mas muitos workflows reais ainda quebram na execucao de capabilities. Um agente pode produzir codigo correto e mesmo assim falhar quando precisa renderizar imagens, gerar videos, inspecionar saidas visuais ou mover artefatos entre ferramentas com autenticacao estavel. O AnyCap adiciona essa camada de execucao com um unico caminho de instalacao, um unico fluxo de auth e uma unica superficie de comando. O time mantem o agente que ja usa, reduz cola especifica por provedor e torna workflows multimodais mais previsiveis.",
+  },
+  {
+    question: "AnyCap e um framework de agente ou um runtime ao redor de agentes existentes?",
+    answer:
+      "AnyCap e um runtime ao redor de agentes existentes, nao um framework que substitui seu stack atual. Voce continua com Claude Code, Cursor, Codex ou outro agente para raciocinio e planejamento. O foco do AnyCap fica na camada de capabilities fora do modelo base, como geracao de midia e analise multimodal. Essa separacao deixa responsabilidades claras: o agente decide o que fazer e o AnyCap fornece um caminho estavel para executar essa decisao. O resultado e uma arquitetura mais limpa, em que trocar modelo ou provedor nao exige reescrever toda a integracao.",
+  },
+  {
+    question: "Como avaliar o AnyCap antes de levar para producao?",
+    answer:
+      "Comece por um workflow real que hoje quebra por causa de setup fragmentado de capabilities. Instale o AnyCap pelo guia publico, autentique uma vez e rode o mesmo fluxo ponta a ponta pela CLI. Compare tres indicadores: tempo de setup, tipos de falha e reproducibilidade entre membros do time. Durante o teste, registre logs, erros e screenshots para revisar onde o runtime reduziu atrito e onde ainda existem lacunas. Um bom piloto e pequeno, mas representativo: um agente, uma cadeia de capability e uma saida mensuravel. Se esse caminho ficar previsivel, a decisao de rollout fica objetiva.",
+  },
+];
 
 const contentByLocale: Record<SiteLocale, AboutPageData> = {
   en: {
@@ -61,7 +96,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     ],
     eyebrow: "About",
     heroTitle: ["AnyCap builds capability", "infrastructure for agents."],
-    heroIntro: `We focus on the layer between a reasoning agent and the capabilities it still needs to do real work: ${capabilitySummary}. The idea is simple. Keep the agent you already use. Add the missing capability runtime around it. ${roadmapCapabilitySummary} remain on the roadmap.`,
+    heroIntro: `AnyCap is focused on the execution layer between a reasoning agent and the capabilities needed to finish real work: ${capabilitySummary}. Most agents can plan and write, but still break when a workflow crosses media generation, visual inspection, or multi-step capability handoff. Our approach is simple: keep the agent you already trust, then add one capability runtime around it so install, auth, and command behavior stay predictable across tasks. This gives teams a stable integration surface instead of provider-specific glue code, while leaving room to expand as ${roadmapCapabilitySummary} move from roadmap to production.`,
     companyFactsTitle: "Company facts",
     companyFacts: [
       { label: "Company", value: "AnyCap" },
@@ -71,7 +106,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       { label: "Shipping surfaces", value: "CLI, web app, edge delivery, skill distribution" },
       { label: "Official repository", value: "github.com/anycap-ai/anycap" },
       { label: "License", value: "MIT" },
-      { label: "Last updated", value: "2026-04-08" },
+      { label: "Last updated", value: "2026-04-15" },
     ],
     teamTitle: "How the team ships",
     teamCards: [
@@ -112,6 +147,11 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     referencesTitle: "Public references",
     publicReferences: [
       {
+        label: "GitHub organization",
+        href: "https://github.com/anycap-ai",
+        detail: "Primary organization profile for repositories, releases, and public issue tracking.",
+      },
+      {
         label: "GitHub repository",
         href: "https://github.com/anycap-ai/anycap",
         detail: "Primary public codebase for the runtime, website, and skill files.",
@@ -139,9 +179,9 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     ],
     whatIsTitle: "What AnyCap is",
     whatIsBody1:
-      "AnyCap is an agent-native capability runtime. It gives AI agents a consistent way to install, authenticate, and use capabilities that do not belong inside the base reasoning model.",
+      "AnyCap is an agent-native capability runtime that gives AI agents a consistent way to install, authenticate, and execute capabilities that do not belong inside base model reasoning. Instead of wiring a different SDK and credential flow for every missing capability, teams can expose one stable execution surface to the agent. That surface is intentionally practical: the same runtime works for setup, invocation, and handoff, so operators can trace what happened when workflows succeed or fail.",
     whatIsBody2:
-      "We care about the capability layer because that is where real workflows usually break. The agent can decide what to do, but it still cannot render the image, generate the video, inspect the screenshot, or move between those workflows through one stable interface.",
+      "We focus on the capability layer because this is where production workflows usually break. The agent may decide what to do correctly, but still fail when it needs to render an image, generate a video, inspect a screenshot, or move outputs between tools through one reliable interface. AnyCap turns those fragmented steps into a coherent runtime path. Teams can evaluate workflows end to end with fewer hidden dependencies, fewer one-off adapters, and a clearer operating model for shipping multimodal work.",
     whyTitle: "Why it exists",
     whyCards: [
       {
@@ -185,6 +225,9 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       "One command surface instead of capability-specific interfaces",
       "Built for agents first, then made understandable for humans",
     ],
+    faqTitle: "FAQ",
+    faqItems: [...aboutFaqItemsEn],
+    faqJsonLd: createFaqPageJsonLd(aboutFaqItemsEn),
     contactTitle: "Contact and reporting paths",
     contactPaths: [
       {
@@ -221,12 +264,18 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     aboutPageJsonLd: {
       "@context": "https://schema.org",
       "@type": "AboutPage",
+      "@id": getLocalizedRouteUrl("en", "/about"),
       name: "About AnyCap",
       description:
         `About page for AnyCap, an AI agent capability runtime that adds ${capabilitySummary} through one interface.`,
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/about"),
+      url: getLocalizedRouteUrl("en", "/about"),
+      inLanguage: "en",
+      isPartOf: {
+        "@id": `${siteConfig.url}#website`,
+      },
       mainEntity: {
         "@type": "Organization",
+        "@id": organizationId,
         name: siteConfig.siteName,
         url: siteConfig.url,
         sameAs: organizationSameAs,
@@ -242,9 +291,14 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     organizationJsonLd: {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": organizationId,
       name: siteConfig.siteName,
       url: siteConfig.url,
       sameAs: organizationSameAs,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteConfig.url}/anycap-mark.svg`,
+      },
       description:
         `AnyCap builds agent-native capability infrastructure that lets AI agents use ${capabilitySummary} through one runtime.`,
       contactPoint: [
@@ -271,7 +325,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     ],
     eyebrow: "Sobre",
     heroTitle: ["O AnyCap constrói", "infraestrutura de capacidades para agentes."],
-    heroIntro: `Nós focamos na camada entre um agente de raciocínio e as capacidades que ele ainda precisa para fazer trabalho real: ${capabilitySummary}. A ideia é simples. Mantenha o agente que você já usa. Adicione o runtime de capacidades faltante em volta dele. ${roadmapCapabilitySummary} continuam no roadmap.`,
+    heroIntro: `O AnyCap foca na camada de execucao entre um agente de raciocinio e as capabilities necessarias para concluir trabalho real: ${capabilitySummary}. Muitos agentes planejam e codam bem, mas ainda quebram quando um fluxo cruza geracao de midia, analise visual e handoff entre etapas. A proposta e direta: mantenha o agente que voce ja usa e adicione um runtime de capabilities ao redor dele para estabilizar instalacao, auth e execucao. Assim, o time ganha uma superficie previsivel em vez de cola especifica por provedor, enquanto ${roadmapCapabilitySummary} avancam do roadmap para uso pratico.`,
     companyFactsTitle: "Fatos da empresa",
     companyFacts: [
       { label: "Empresa", value: "AnyCap" },
@@ -281,7 +335,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       { label: "Superfícies de entrega", value: "CLI, app web, edge delivery, distribuição de skills" },
       { label: "Repositório oficial", value: "github.com/anycap-ai/anycap" },
       { label: "Licença", value: "MIT" },
-      { label: "Atualizado em", value: "2026-04-08" },
+      { label: "Atualizado em", value: "2026-04-15" },
     ],
     teamTitle: "Como o time entrega",
     teamCards: [
@@ -322,6 +376,11 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     referencesTitle: "Referências públicas",
     publicReferences: [
       {
+        label: "Organização no GitHub",
+        href: "https://github.com/anycap-ai",
+        detail: "Perfil principal da organização com repositórios, releases e trilhas públicas de issues.",
+      },
+      {
         label: "Repositório GitHub",
         href: "https://github.com/anycap-ai/anycap",
         detail: "Base pública principal para runtime, website e arquivos de skill.",
@@ -349,9 +408,9 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     ],
     whatIsTitle: "O que o AnyCap é",
     whatIsBody1:
-      "O AnyCap é um runtime de capacidades nativo para agentes. Ele dá aos agentes de IA uma forma consistente de instalar, autenticar e usar capacidades que não pertencem ao modelo base de raciocínio.",
+      "O AnyCap e um runtime de capabilities nativo para agentes que oferece um caminho consistente para instalar, autenticar e executar recursos que nao pertencem ao modelo base de raciocinio. Em vez de conectar um SDK e um fluxo de credencial diferente para cada capability faltante, o time expoe uma unica superficie de execucao ao agente. Essa superficie foi desenhada para operacao real: setup, invocacao e handoff no mesmo runtime, com trilhas de verificacao quando um workflow acerta ou falha.",
     whatIsBody2:
-      "A gente se importa com a camada de capacidades porque é aí que os fluxos reais costumam quebrar. O agente pode decidir o que fazer, mas ainda não consegue renderizar a imagem, gerar o vídeo, inspecionar a screenshot ou alternar entre esses fluxos por meio de uma interface estável.",
+      "A gente prioriza a camada de capabilities porque e nela que workflows reais costumam quebrar. O agente pode decidir corretamente o que fazer, mas ainda falhar ao renderizar imagem, gerar video, inspecionar screenshot ou mover resultados entre ferramentas por uma interface estavel. O AnyCap transforma esses passos fragmentados em um caminho unico de runtime. Isso reduz adaptadores one-off, encurta o tempo de setup e deixa mais claro como operar fluxos multimodais com previsibilidade.",
     whyTitle: "Por que ele existe",
     whyCards: [
       {
@@ -395,6 +454,9 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       "Uma superfície de comando em vez de interfaces específicas de capacidade",
       "Feito primeiro para agentes, depois tornado compreensível para humanos",
     ],
+    faqTitle: "FAQ",
+    faqItems: [...aboutFaqItemsPtBr],
+    faqJsonLd: createFaqPageJsonLd(aboutFaqItemsPtBr),
     contactTitle: "Canais de contato e reporte",
     contactPaths: [
       {
@@ -431,12 +493,18 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     aboutPageJsonLd: {
       "@context": "https://schema.org",
       "@type": "AboutPage",
+      "@id": getLocalizedRouteUrl("pt-br", "/about"),
       name: "Sobre o AnyCap",
       description:
         `Página sobre o AnyCap, um runtime de capacidades para agentes de IA que adiciona ${capabilitySummary} por meio de uma única interface.`,
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/about"),
+      url: getLocalizedRouteUrl("pt-br", "/about"),
+      inLanguage: "pt-BR",
+      isPartOf: {
+        "@id": `${siteConfig.url}#website`,
+      },
       mainEntity: {
         "@type": "Organization",
+        "@id": organizationId,
         name: siteConfig.siteName,
         url: siteConfig.url,
         sameAs: organizationSameAs,
@@ -444,7 +512,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
           {
             "@type": "ContactPoint",
             contactType: "customer support",
-            url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+            url: getLocalizedRouteUrl("pt-br", "/contact"),
           },
         ],
       },
@@ -452,9 +520,14 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     organizationJsonLd: {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": organizationId,
       name: siteConfig.siteName,
       url: siteConfig.url,
       sameAs: organizationSameAs,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteConfig.url}/anycap-mark.svg`,
+      },
       description:
         `O AnyCap constrói infraestrutura de capacidades nativa para agentes que permite que agentes de IA usem ${capabilitySummary} por meio de um único runtime.`,
       contactPoint: [

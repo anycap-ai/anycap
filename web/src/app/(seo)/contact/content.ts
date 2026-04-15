@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { organizationId, organizationSameAs } from "@/lib/organization";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const CONTACT_PATH = "/contact";
@@ -116,8 +117,10 @@ const contentByLocale: Record<SiteLocale, ContactPageData> = {
       url: "https://anycap.ai/contact",
       mainEntity: {
         "@type": "Organization",
+        "@id": organizationId,
         name: siteConfig.siteName,
         url: siteConfig.url,
+        sameAs: organizationSameAs,
         contactPoint: [
           {
             "@type": "ContactPoint",
@@ -194,16 +197,18 @@ const contentByLocale: Record<SiteLocale, ContactPageData> = {
       name: "Contate o AnyCap",
       description:
         "Contato do AnyCap para suporte, preço, dúvidas de produto, reporte de segurança e pedidos de privacidade.",
-      url: "https://anycap.ai/contact",
+      url: "https://anycap.ai/pt-br/contact",
       mainEntity: {
         "@type": "Organization",
+        "@id": organizationId,
         name: siteConfig.siteName,
         url: siteConfig.url,
+        sameAs: organizationSameAs,
         contactPoint: [
           {
             "@type": "ContactPoint",
             contactType: "customer support",
-            url: "https://anycap.ai/contact",
+            url: "https://anycap.ai/pt-br/contact",
           },
         ],
       },
@@ -212,7 +217,93 @@ const contentByLocale: Record<SiteLocale, ContactPageData> = {
   id: {} as ContactPageData,
 };
 
-contentByLocale.id = contentByLocale.en;
+const contactRoutesId: readonly ContactRoute[] = [
+  {
+    title: "Dukungan produk dan bantuan instalasi",
+    detail:
+      "Kalau Anda sedang mencoba menjalankan workflow pertama, mulai dari panduan instalasi dan sertakan agen, capability, serta langkah persis yang gagal.",
+    ctaLabel: "Buka panduan instalasi",
+    ctaKind: "link",
+    ctaHref: "/guides/install-anycap",
+  },
+  {
+    title: "Laporan bug dan regresi",
+    detail:
+      "Untuk bug yang bisa direproduksi, issue GitHub adalah jalur terbaik karena stack trace, detail lingkungan, dan screenshot tetap berada di satu thread publik.",
+    ctaLabel: "Buka issue GitHub",
+    ctaKind: "link",
+    ctaHref: "https://github.com/anycap-ai/anycap/issues",
+  },
+  {
+    title: "Pertanyaan harga dan enterprise",
+    detail:
+      "Kalau Anda membutuhkan volume kredit yang lebih besar, penagihan invois, atau klarifikasi kecocokan produk, hubungi tim secara langsung lewat email.",
+    ctaLabel: "Kirim email ke tim",
+    ctaKind: "email",
+    ctaSubject: "AnyCap Enterprise pricing",
+  },
+];
+
+const checklistId = [
+  "Agen yang Anda gunakan, misalnya Claude Code, Cursor, Codex, atau Manus",
+  "Capability atau halaman yang sedang Anda coba gunakan",
+  "Hasil yang diharapkan dan hasil yang benar-benar terjadi",
+  "Pesan error, request ID, atau screenshot yang relevan",
+  "Apakah masalahnya menghambat produksi, evaluasi, atau uji coba sekali pakai",
+] as const;
+
+contentByLocale.id = {
+  metadata: {
+    title: "Hubungi AnyCap - Dukungan, harga, dan pelaporan masalah",
+    description:
+      "Hubungi AnyCap untuk bantuan instalasi, pertanyaan harga, laporan bug, pertanyaan keamanan atau privasi, dan masukan produk.",
+    openGraphTitle: "Hubungi AnyCap - Dukungan, harga, dan pelaporan masalah",
+    openGraphDescription:
+      "Temukan jalur terbaik untuk dukungan AnyCap, pertanyaan harga, laporan bug, serta permintaan keamanan atau privasi.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Kontak", href: "/contact" },
+  ],
+  eyebrow: "Kontak",
+  heroTitle: "Hubungi tim AnyCap.",
+  heroIntro:
+    "Gunakan halaman ini ketika Anda membutuhkan bantuan instalasi, penjelasan harga, pertanyaan kecocokan produk, jalur pelaporan bug, atau rute yang jelas untuk permintaan keamanan dan privasi.",
+  lastUpdatedLabel: "9 April 2026",
+  routesTitle: "Jalur terbaik berdasarkan pertanyaan",
+  contactRoutes: contactRoutesId,
+  checklistTitle: "Sertakan ini saat menghubungi kami",
+  supportChecklist: checklistId,
+  directTitle: "Kontak langsung",
+  directBody1:
+    "Kirim email ke tim AnyCap untuk percakapan harga, permintaan privasi, atau masalah apa pun yang sebaiknya tidak dibahas di thread GitHub publik.",
+  directBody2:
+    "Kalau masalahnya berasal dari workflow yang sedang berjalan, Anda juga bisa memakai surface CLI atau mencatat detailnya di issue tracker GitHub publik.",
+  directBody3:
+    "Untuk bantuan instalasi, mulai dari panduan instalasi. Untuk konteks produk dan paket, tinjau halaman harga.",
+  contactPageJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: "Hubungi AnyCap",
+    description:
+      "Hubungi AnyCap untuk dukungan, harga, pertanyaan produk, laporan keamanan, dan permintaan privasi.",
+    url: "https://anycap.ai/id/contact",
+    mainEntity: {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: siteConfig.siteName,
+      url: siteConfig.url,
+      sameAs: organizationSameAs,
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          url: "https://anycap.ai/id/contact",
+        },
+      ],
+    },
+  },
+};
 
 export function getContactMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

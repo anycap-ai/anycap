@@ -245,6 +245,7 @@ export default async function GroundedWebSearchPage() {
     locale,
     about: [...content.jsonLdAbout],
     keywords: [...content.jsonLdKeywords],
+    datePublished: PAGE_LAST_MODIFIED_ISO,
     dateModified: PAGE_LAST_MODIFIED_ISO,
   });
 

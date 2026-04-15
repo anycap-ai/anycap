@@ -219,12 +219,135 @@ const guideLookupPtBr: ModelGuideLookup = {
   },
 };
 
+const modelGroupsId: ModelGroupCard[] = [
+  {
+    category: "Pembuatan gambar",
+    items: [
+      {
+        name: "Seedream 5",
+        href: "/models/seedream-5",
+        description: "Pilihan default yang kuat untuk tugas pembuatan gambar pertama yang rapi.",
+      },
+      {
+        name: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        description: "Lebih cocok untuk putaran revisi dan pengeditan gambar berbasis prompt.",
+      },
+      {
+        name: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        description: "Lebih cepat untuk pembuatan gambar skala besar dan iterasi volume tinggi.",
+      },
+    ],
+  },
+  {
+    category: "Pembuatan video",
+    items: [
+      {
+        name: "Veo 3.1",
+        href: "/models/veo-3-1",
+        description: "Model pembuatan video saat ini untuk alur teks ke video melalui AnyCap.",
+      },
+      {
+        name: "Kling 3.0",
+        href: "/models/kling-3-0",
+        description: "Pilihan kuat untuk gerakan realistis dan alur gambar ke video yang sinematik.",
+      },
+      {
+        name: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        description: "Pilihan andal untuk kerja video yang ramah produksi dan image-to-video yang konsisten.",
+      },
+    ],
+  },
+  {
+    category: "Pembuatan musik",
+    items: [
+      {
+        name: "ElevenLabs Music",
+        href: "/models/elevenlabs-music",
+        description: "Model musik berbasis prompt untuk draf soundtrack di dalam runtime agen yang sama.",
+      },
+    ],
+  },
+];
+
+const guideLookupId: ModelGuideLookup = {
+  "Seedream 5": {
+    href: "/models/seedream-5",
+    bestFor: "Pembuatan gambar pertama yang rapi dari prompt teks.",
+  },
+  "Nano Banana Pro": {
+    href: "/models/nano-banana-pro",
+    bestFor: "Pengeditan gambar yang terarah dan putaran revisi dari visual yang sudah ada.",
+  },
+  "Nano Banana 2": {
+    href: "/models/nano-banana-2",
+    bestFor: "Pembuatan gambar yang cepat, skala besar, dan iterasi berulang dalam volume tinggi.",
+  },
+  "Veo 3.1": {
+    href: "/models/veo-3-1",
+    bestFor: "Output text-to-video premium saat versi pertama perlu terlihat lebih kuat.",
+  },
+  "Kling 3.0": {
+    href: "/models/kling-3-0",
+    bestFor: "Gerakan sinematik dan alur image-to-video yang fleksibel.",
+  },
+  "Seedance 1.5 Pro": {
+    href: "/models/seedance-1-5-pro",
+    bestFor: "Alur video yang stabil, ramah produksi, dan pekerjaan image-to-video yang berulang.",
+  },
+  "ElevenLabs Music": {
+    href: "/models/elevenlabs-music",
+    bestFor: "Draf soundtrack berbasis prompt di dalam runtime agen yang sama.",
+  },
+};
+
 function localizePricingGroups(locale: SiteLocale): PricingGenerationGroup[] {
-  if (locale !== "pt-br") {
+  if (locale !== "pt-br" && locale !== "id") {
     return pricingGenerationGroups;
   }
 
   return pricingGenerationGroups.map((group) => {
+    if (locale === "id") {
+      if (group.title === "Image generation") {
+        return {
+          ...group,
+          title: "Pembuatan gambar",
+          description: "Dikenakan per panggilan. Mendukung mode text-to-image dan image-to-image.",
+          headers: ["Model", "Mode", "Kredit / panggilan"],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes.map((mode) => (mode === "text-to-image" ? "teks ke gambar" : "gambar ke gambar")),
+          })),
+        };
+      }
+
+      if (group.title === "Video generation") {
+        return {
+          ...group,
+          title: "Pembuatan video",
+          description: "Dikenakan per detik output yang dihasilkan. Mendukung mode text-to-video dan image-to-video.",
+          headers: ["Model", "Mode", "Kredit / dtk"],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes.map((mode) => (mode === "text-to-video" ? "teks ke video" : "gambar ke video")),
+          })),
+        };
+      }
+
+      return {
+        ...group,
+        title: "Pembuatan musik",
+        description: "Dikenakan per detik audio yang dihasilkan.",
+        headers: ["Model", "Mode", "Kredit / dtk"],
+        models: group.models.map((model) => ({
+          ...model,
+          modes: ["teks ke musik"],
+        })),
+      };
+    }
+
     if (group.title === "Image generation") {
       return {
         ...group,
@@ -330,6 +453,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "seedream 5 vs nano banana 2",
         "veo 3.1 vs kling 3.0",
       ],
+      datePublished: lastUpdatedIso,
       dateModified: lastUpdatedIso,
     }),
   },
@@ -398,12 +522,81 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "seedream 5 vs nano banana 2",
         "veo 3.1 vs kling 3.0",
       ],
+      datePublished: lastUpdatedIso,
       dateModified: lastUpdatedIso,
     }),
   },
   id: undefined as never,
 };
-contentByLocale.id = contentByLocale.en;
+contentByLocale.id = {
+  breadcrumbItems: [
+    { name: "Home", href: "/" },
+    { name: "Model", href: "/models" },
+  ],
+  eyebrow: "Model",
+  lastUpdatedLabel: "5 April 2026",
+  heroTitle: ["Pilih model yang tepat", "untuk pekerjaan agen."],
+  heroIntro:
+    "AnyCap menampilkan model multimodal melalui satu runtime kapabilitas dan satu CLI. Halaman ini membantu tim memilih model yang tepat untuk alur kerja agen tertentu, bukan memperlakukan setiap permintaan gambar atau video dengan cara yang sama.",
+  summaryEyebrow: "Ringkasan langsung ke inti",
+  summaryBody:
+    "Katalog model publik AnyCap saat ini mencakup model pembuatan gambar untuk output awal dan putaran revisi, model pembuatan video untuk pekerjaan gerakan yang lebih premium atau ramah produksi, serta model musik berbasis prompt untuk draf soundtrack. Pilihan yang tepat biasanya bergantung pada apakah pekerjaan dimulai dari prompt kosong atau aset yang sudah ada, seberapa rapi hasil pertama yang dibutuhkan, dan seberapa penting kecepatan atau efisiensi biaya di alur kerja.",
+  chooseTitle: "Cara memilih model yang tepat",
+  chooseItems: [
+    "Mulailah dari jenis output: gambar, video, atau musik.",
+    "Lalu tentukan apakah tugas membutuhkan hasil awal yang lebih rapi, iterasi yang lebih cepat, atau revisi dari aset yang sudah ada.",
+    "Gunakan halaman panduan model saat pilihannya bergantung pada gaya gerak, alur pengeditan, atau tradeoff biaya.",
+  ],
+  visualGuideTitle: "Panduan visual",
+  visualGuideAlt: "Ikhtisar ilustratif kategori model gambar, video, dan musik di dalam hub model AnyCap.",
+  visualGuideBody:
+    "Ilustrasi ini adalah peta visual cepat dari katalog saat ini: model gambar di satu sisi, model video di sisi lain, dan pembuatan musik sebagai jalur kapabilitas terpisah di dalam runtime agen yang sama. Ilustrasi ini dibuat dengan Nano Banana 2 agar bahasa visual halaman tetap selaras dengan katalog model itu sendiri.",
+  comparisonTitle: "Perbandingan model saat ini",
+  comparisonIntro:
+    "Ini adalah model publik saat ini yang diekspos melalui AnyCap. Rentang kredit berasal dari inventaris harga yang sama yang dipakai di halaman harga, sehingga hub dan halaman harga tetap selaras.",
+  modelGroups: modelGroupsId,
+  pricingGroups: localizePricingGroups("id"),
+  guideLookup: guideLookupId,
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Bagaimana memilih antara Seedream 5, Nano Banana Pro, dan Nano Banana 2?",
+      answer:
+        "Gunakan Seedream 5 ketika alurnya membutuhkan gambar awal yang lebih kuat dari prompt, Nano Banana Pro ketika pekerjaan dimulai dari gambar yang sudah ada dan perlu revisi, dan Nano Banana 2 ketika kecepatan, throughput, atau iterasi berulang lebih penting.",
+    },
+    {
+      question: "Bagaimana memilih antara Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro?",
+      answer:
+        "Gunakan Veo 3.1 ketika versi video pertama perlu terlihat lebih premium dari brief teks, Kling 3.0 ketika alurnya lebih menekankan gerakan sinematik atau kerja image-to-video yang fleksibel, dan Seedance 1.5 Pro ketika tim menginginkan default yang lebih stabil dan berorientasi produksi.",
+    },
+    {
+      question: "Apakah semua model AnyCap memakai CLI dan alur autentikasi yang sama?",
+      answer:
+        "Ya. AnyCap menampilkan model-model ini melalui runtime kapabilitas, CLI, dan alur autentikasi yang sama, jadi tim tidak perlu jalur integrasi penyedia yang terpisah untuk setiap halaman model di sini.",
+    },
+  ],
+  footerCtas: {
+    capability: "Kapabilitas apa pun",
+    context: "Panduan konteks",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Model — Model multimodal yang tersedia melalui AnyCap",
+    description:
+      "Hub perbandingan untuk model multimodal yang tersedia melalui AnyCap, termasuk model gambar, video, dan musik, dengan panduan alur kerja dan rentang kredit saat ini.",
+    path: "/models",
+    about: ["Model AnyCap", "Pembuatan gambar", "Pembuatan video", "Pembuatan musik"],
+    keywords: [
+      "model anycap",
+      "model pembuatan gambar",
+      "model pembuatan video",
+      "model pembuatan musik",
+      "seedream 5 vs nano banana 2",
+      "veo 3.1 vs kling 3.0",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+};
 
 export const metadata: Metadata = {
   title: "Models — Multimodal models available through AnyCap",
@@ -444,7 +637,7 @@ export default async function ModelsPage() {
               {content.eyebrow}
             </p>
             <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
-              {locale === "pt-br" ? "Atualizado em" : "Last updated"} {content.lastUpdatedLabel}
+              {locale === "id" ? "Terakhir diperbarui" : locale === "pt-br" ? "Atualizado em" : "Last updated"} {content.lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -538,7 +731,7 @@ export default async function ModelsPage() {
                       <table className="w-full text-left">
                         <thead>
                           <tr className="border-b border-[#d4dbb8]">
-                            {[group.headers[0], group.headers[1], group.headers[2], locale === "pt-br" ? "Melhor uso" : "Best for"].map((header) => (
+                            {[group.headers[0], group.headers[1], group.headers[2], locale === "id" ? "Paling cocok untuk" : locale === "pt-br" ? "Melhor uso" : "Best for"].map((header) => (
                               <th
                                 key={header}
                                 className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"

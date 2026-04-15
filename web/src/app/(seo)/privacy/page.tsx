@@ -44,17 +44,27 @@ function PageSection({
 export default async function PrivacyPage() {
   const locale = await getRequestLocale();
   const content = getPrivacyPageData(locale);
-  const summaryTitle = locale === "pt-br" ? "Como usar esta política" : "How to use this policy";
+  const summaryTitle =
+    locale === "id"
+      ? "Cara memakai kebijakan ini"
+      : locale === "pt-br"
+        ? "Como usar esta política"
+        : "How to use this policy";
   const summaryParagraphs =
-    locale === "pt-br"
+    locale === "id"
       ? [
-          "Esta política de privacidade foi escrita para explicar quais dados podem aparecer ao longo da experiência com o AnyCap e como essas informações se relacionam com autenticação, suporte, faturamento e operação do produto.",
-          "Ela também funciona como página de referência para pessoas que precisam localizar rapidamente coleta, retenção, compartilhamento e caminhos de solicitação sem depender apenas de linguagem jurídica condensada.",
+          "Kebijakan privasi ini ditulis untuk menjelaskan data apa saja yang bisa muncul selama pengalaman menggunakan AnyCap dan bagaimana informasi tersebut terhubung dengan autentikasi, dukungan, penagihan, dan operasi produk.",
+          "Halaman ini juga berfungsi sebagai referensi bagi pembaca yang perlu menemukan jalur pengumpulan, retensi, berbagi, dan permintaan dengan cepat tanpa bergantung hanya pada bahasa hukum yang dipadatkan.",
         ]
-      : [
-          "This privacy policy is written to explain what data can appear across the AnyCap experience and how that information connects to authentication, support, billing, and product operations.",
-          "It also works as a reference page for readers who need to locate collection, retention, sharing, and request paths quickly instead of relying only on condensed legal language.",
-        ];
+      : locale === "pt-br"
+        ? [
+            "Esta política de privacidade foi escrita para explicar quais dados podem aparecer ao longo da experiência com o AnyCap e como essas informações se relacionam com autenticação, suporte, faturamento e operação do produto.",
+            "Ela também funciona como página de referência para pessoas que precisam localizar coleta, retenção, compartilhamento e caminhos de solicitação sem depender apenas de linguagem jurídica condensada.",
+          ]
+        : [
+            "This privacy policy is written to explain what data can appear across the AnyCap experience and how that information connects to authentication, support, billing, and product operations.",
+            "It also works as a reference page for readers who need to locate collection, retention, sharing, and request paths quickly instead of relying only on condensed legal language.",
+          ];
 
   return (
     <>
@@ -136,28 +146,28 @@ export default async function PrivacyPage() {
               <p className={bodyClass}>
                 {content.sections.requestText1}{" "}
                 <EmailActionButton subject="AnyCap privacy request" className={buttonLinkClass}>
-                  the AnyCap team
+                  {locale === "id" ? "tim AnyCap" : "the AnyCap team"}
                 </EmailActionButton>{" "}
-                or use the{" "}
+                {locale === "id" ? "atau gunakan" : "or use the"}{" "}
                 <Link href="/contact" className={linkClass}>
-                  contact page
+                  {locale === "id" ? "halaman kontak" : "contact page"}
                 </Link>
                 .
               </p>
               <p className={bodyClass}>
                 {content.sections.requestText2}{" "}
                 <Link href="/terms" className={linkClass}>
-                  Terms of Service
+                  {locale === "id" ? "Ketentuan Layanan" : "Terms of Service"}
                 </Link>
-                , the{" "}
+                {locale === "id" ? ", halaman" : ", the"}{" "}
                 <Link href="/pricing" className={linkClass}>
-                  pricing
+                  {locale === "id" ? "harga" : "pricing"}
                 </Link>{" "}
-                page, and the{" "}
+                {locale === "id" ? "halaman, dan" : "page, and the"}{" "}
                 <Link href="/about" className={linkClass}>
-                  about
+                  {locale === "id" ? "halaman about" : "about"}
                 </Link>{" "}
-                page.
+                {locale === "id" ? "halaman." : "page."}
               </p>
             </PageSection>
           </FadeIn>

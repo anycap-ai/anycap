@@ -5,6 +5,7 @@ import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
+import { organizationId, organizationSameAs } from "@/lib/organization";
 import { getRequestHtmlLang } from "@/lib/request-locale";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { defaultSocialImage } from "@/lib/seo-metadata";
@@ -62,16 +63,10 @@ export const metadata: Metadata = {
   },
 };
 
-const organizationSameAs = [
-  "https://github.com/anycap-ai/anycap",
-  "https://github.com/anycap-ai/anycap/releases",
-  "https://skills.sh/anycap-ai/anycap",
-] as const;
-
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": `${siteConfig.url}#organization`,
+  "@id": organizationId,
   name: "AnyCap",
   url: siteConfig.url,
   logo: {
@@ -96,7 +91,7 @@ const websiteJsonLd = {
   name: siteConfig.siteName,
   url: siteConfig.url,
   publisher: {
-    "@id": `${siteConfig.url}#organization`,
+    "@id": organizationId,
   },
 };
 

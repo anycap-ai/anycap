@@ -25,6 +25,7 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 - [Entendimento de imagem](https://anycap.ai/pt-br/capabilities/image-understanding): visao, screenshots e analise de imagens.
 - [Analise de video](https://anycap.ai/pt-br/capabilities/video-analysis): inspecao e entendimento de video.
 - [Entendimento de audio](https://anycap.ai/pt-br/capabilities/audio-understanding): transcricao e entendimento de audio.
+- [Busca na web](https://anycap.ai/pt-br/capabilities/web-search): resultados ranqueados com fontes para workflows de pesquisa.
 - [Busca na web com grounding](https://anycap.ai/pt-br/capabilities/grounded-web-search): respostas sintetizadas com citacoes.
 - [Web crawl](https://anycap.ai/pt-br/capabilities/web-crawl): converta paginas em texto limpo para workflows de agentes.
 - [Drive](https://anycap.ai/pt-br/capabilities/drive): armazenamento, compartilhamento e handoff de artefatos.
@@ -42,8 +43,13 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 ## Comparacoes e alternativas
 
 - [AnyCap vs Composio](https://anycap.ai/pt-br/compare/anycap-vs-composio): comparacao de runtime de capacidades para equipes de agentes.
+- [AnyCap vs OpenAI Agent Builder](https://anycap.ai/pt-br/compare/anycap-vs-openai-agent-builder): comparacao para times avaliando camadas de orquestracao.
+- [AnyCap vs Replicate](https://anycap.ai/pt-br/compare/anycap-vs-replicate): comparacao com plataforma de inferencia para workflows de agentes.
+- [AnyCap vs fal.ai](https://anycap.ai/pt-br/compare/anycap-vs-fal-ai): comparacao com plataforma de geracao de midia para agentes.
 - [Alternativas ao Fal.ai para agentes](https://anycap.ai/pt-br/compare/fal-ai-alternatives-for-agents): alternativas para workflows de geracao de midia.
 - [Alternativas ao Replicate para agentes](https://anycap.ai/pt-br/compare/replicate-alternatives-for-agents): alternativas para workflows de midia em agentes.
+- [AnyCap vs OpenClaw Image Generation](https://anycap.ai/pt-br/compare/anycap-vs-openclaw-image-generation): comparacao de geracao de imagem para equipes de agentes.
+- [AnyCap vs OpenClaw Video Generation](https://anycap.ai/pt-br/compare/anycap-vs-openclaw-video-generation): comparacao de geracao de video para equipes de agentes.
 
 ## Guias
 
@@ -60,12 +66,14 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 
 ## Produto
 
+- [Sobre](https://anycap.ai/pt-br/about): o que o AnyCap e, o que ele nao e e por que existe.
 - [Contato](https://anycap.ai/pt-br/contact): suporte, bugs e demandas enterprise.
 - [Privacidade](https://anycap.ai/pt-br/privacy): politica publica de privacidade.
 - [Termos](https://anycap.ai/pt-br/terms): termos publicos de servico.
 
 ## Opcional
 
+- [Organizacao no GitHub](https://github.com/anycap-ai): perfil principal da organizacao AnyCap.
 - [Repositorio GitHub](https://github.com/anycap-ai/anycap): codigo publico do runtime, site e skill files.
 - [Releases no GitHub](https://github.com/anycap-ai/anycap/releases): binarios e historico de versoes.
 - [Skill file](https://github.com/anycap-ai/anycap/blob/main/skills/anycap-cli/SKILL.md): referencia completa da skill.

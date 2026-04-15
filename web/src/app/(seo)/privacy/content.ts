@@ -161,10 +161,71 @@ const contentByLocale: Record<SiteLocale, PrivacyPageData> = {
       dateModified: "2026-04-09",
     },
   },
-  id: {} as PrivacyPageData,
+  id: {
+      metadata: {
+        title: "Kebijakan Privasi | AnyCap",
+        description:
+          "Pelajari bagaimana AnyCap menangani data akun, log penggunaan, konten yang dikirim, analytics, penyedia pihak ketiga, dan permintaan privasi.",
+        openGraphTitle: "Kebijakan Privasi | AnyCap",
+        openGraphDescription:
+          "Pelajari bagaimana AnyCap menangani data akun, catatan penggunaan dan penagihan, konten yang dikirim, analytics, dan permintaan privasi.",
+      },
+      breadcrumbItems: [
+        { name: "Home", href: "/" },
+        { name: "Privasi", href: "/privacy" },
+      ],
+      eyebrow: "Privasi",
+      heroTitle: "Kebijakan privasi untuk AnyCap",
+      heroIntro:
+        "Kebijakan ini menjelaskan data apa yang ditangani AnyCap, mengapa data tersebut digunakan, kapan data dapat dibagikan ke penyedia layanan, dan bagaimana menghubungi tim untuk pertanyaan privasi.",
+      lastUpdatedLabel: "9 April 2026",
+      sections: {
+        infoTitle: "Informasi yang mungkin dikumpulkan AnyCap",
+        infoIntro:
+          "Tergantung pada alur kerja dan surface produk yang Anda gunakan, AnyCap dapat menangani kategori informasi berikut:",
+        infoCategories: [
+          "Detail akun dan autentikasi, seperti identitas yang diperlukan untuk masuk dan mengelola akses.",
+          "Catatan penagihan, kredit, dan penggunaan yang dibutuhkan untuk menjalankan alur pay-as-you-go dan riwayat transaksi.",
+          "Prompt, file, URL, output, dan data workflow yang Anda kirim saat menggunakan fitur generasi, pengambilan data, penyimpanan, atau publikasi.",
+          "Metadata perangkat, browser, dan permintaan yang dipakai untuk keamanan, pencegahan penyalahgunaan, keandalan, dan troubleshooting.",
+          "Komunikasi yang Anda kirim ke AnyCap, termasuk permintaan dukungan, laporan issue, dan feedback.",
+        ],
+        useTitle: "Bagaimana informasi digunakan",
+        useCases: [
+          "Mengautentikasi pengguna dan menjalankan surface produk yang Anda minta untuk dipakai.",
+          "Meneruskan permintaan ke sistem AnyCap dan penyedia model atau infrastruktur pihak ketiga yang relevan.",
+          "Mengukur penggunaan, kredit, peristiwa penagihan, dan kesehatan operasional.",
+          "Menyelidiki gangguan, penyalahgunaan, penipuan, bug, dan insiden keamanan.",
+          "Meningkatkan kualitas produk, dukungan, dan dokumentasi.",
+          "Memenuhi kewajiban hukum dan menegakkan aturan platform.",
+        ],
+        sharingTitle: "Berbagi, retensi, dan keamanan",
+        sharingCategories: [
+          "Penyedia infrastruktur, autentikasi, hosting, analytics, dan pembayaran yang membantu menjalankan layanan.",
+          "Penyedia model atau kapabilitas ketika suatu workflow mengharuskan AnyCap mengirim prompt, file, atau data permintaan terkait ke upstream untuk memenuhi permintaan Anda.",
+          "Penasihat, afiliasi, atau otoritas ketika diperlukan untuk kepatuhan, proses hukum, atau respons keamanan.",
+        ],
+        retentionText:
+          "AnyCap menyimpan data hanya selama yang secara wajar diperlukan untuk operasi produk, keamanan, dukungan, penagihan, kepatuhan, dan pencatatan bisnis yang sah. Retensi dapat bervariasi menurut jenis data, lingkungan, dan kewajiban hukum.",
+        securityText:
+          "Kami menggunakan langkah administratif, teknis, dan organisasional untuk mengurangi akses tidak sah, penyalahgunaan, atau pengungkapan. Tidak ada sistem yang bisa menjamin keamanan sempurna, jadi hindari mengirim informasi yang tidak ingin Anda proses melalui workflow yang diminta.",
+        requestTitle: "Pertanyaan dan permintaan privasi",
+        requestText1:
+          "Jika Anda perlu bertanya tentang data akun, konten yang dikirim, permintaan penghapusan, atau hal privasi lain, email tim AnyCap atau gunakan halaman kontak.",
+        requestText2:
+          "Kebijakan ini sebaiknya dibaca bersama dengan Terms of Service, halaman harga, dan halaman about.",
+      },
+      privacyPageJsonLd: {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Kebijakan Privasi AnyCap",
+        description:
+          "Kebijakan privasi untuk AnyCap, termasuk data akun, konten yang dikirim, analytics, penyedia pihak ketiga, dan kontak.",
+        url: "https://anycap.ai/privacy",
+        dateModified: "2026-04-09",
+      },
+  },
 };
-
-contentByLocale.id = contentByLocale.en;
 
 export function getPrivacyMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

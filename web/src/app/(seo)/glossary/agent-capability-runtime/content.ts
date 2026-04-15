@@ -431,8 +431,8 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     lastUpdatedLabel: "April 10, 2026",
     heroTitle: ["What is an agent", "capability runtime?"],
     heroBody: [
-      "An agent capability runtime is a software layer that gives AI agents installable capabilities through a single interface. Instead of requiring separate SDKs, authentication flows, and APIs for each capability, a capability runtime provides one install path, one auth flow, and one command surface for everything the agent needs beyond its built-in reasoning loop.",
-      "The term describes a specific architectural layer in the agent stack. An agent handles reasoning, planning, and code execution. A harness manages the agent lifecycle. A capability runtime sits below both and supplies the actual capabilities: generation, understanding, retrieval, storage, and publishing.",
+      "An agent capability runtime is a software layer that gives AI agents installable capabilities through one consistent interface. Instead of requiring separate SDKs, authentication flows, response formats, and lifecycle handling for every capability, the runtime provides one install path, one auth flow, and one command surface for what the agent needs beyond its built-in reasoning loop. This matters when workflows cross multiple providers, because integration complexity grows faster than model quality improvements. A runtime absorbs that complexity so teams can focus on task completion, not glue code maintenance.",
+      "The term names a specific architectural layer in the agent stack. An agent handles reasoning, planning, and code execution. A harness manages lifecycle, permissions, and tool routing. A capability runtime sits below both and supplies concrete actions such as generation, understanding, retrieval, storage, and publishing through an agent-native contract. With this separation, teams can evolve models, prompts, and providers without rewriting execution logic every time capability requirements expand.",
     ],
     sectionLabels: {
       architecture: "Architecture",
@@ -444,7 +444,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     },
     architectureHeading: "Where a capability runtime fits in the agent stack",
     architectureIntro:
-      "An agent stack has multiple layers. Each layer has a distinct responsibility. A capability runtime occupies the layer between the harness and the model/provider APIs. It unifies capabilities that would otherwise be scattered across providers.",
+      "An agent stack has multiple layers, and each layer exists to solve a different class of problems. A capability runtime occupies the layer between the harness and model/provider APIs, where execution consistency matters most. Its role is to unify capabilities that would otherwise be scattered across providers, each with different auth models, request contracts, and failure semantics. By centralizing that layer, teams reduce operational drift and keep agent behavior more predictable as workflows grow in modality and complexity. This is also the layer where teams gain leverage: one runtime update can improve many workflows without touching every agent integration separately. In practical operations, this usually means lower onboarding cost, cleaner incident boundaries, and fewer regressions when provider behavior changes. It also creates a stable contract for platform teams to enforce policy without blocking delivery speed.",
     architectureTable: baseArchitectureRows,
     architectureClosing:
       "The key insight is that capabilities are not the same as the agent, and they are not the same as the model API. A capability runtime is a dedicated layer that bridges the gap between what the agent can do natively and what the workflow actually requires.",
@@ -454,11 +454,11 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     problemSignals: problemSignalsEn,
     comparisonHeading: "How it differs from other approaches",
     comparisonIntro:
-      "A capability runtime is not the only way to give agents new abilities. Each approach below solves a different slice of the problem. The right choice depends on how many capabilities the workflow needs, how many providers it spans, and how much integration overhead the team can absorb.",
+      "A capability runtime is not the only way to give agents new abilities, but it solves a specific execution problem that other approaches often leave open. Frameworks orchestrate reasoning loops, tool platforms maximize integration breadth, and direct APIs maximize low-level control. A capability runtime optimizes for consistent operational delivery across multimodal actions in agent environments. The best choice depends on workflow breadth, provider count, and how much integration overhead your team can absorb without slowing product delivery. In practice, teams with high cross-modal repetition usually benefit most from this layer. The value compounds when multiple agent products need the same capabilities with the same reliability expectations. This becomes especially visible when one workflow must run unchanged across different harnesses and release cycles. It is the difference between repeated reintegration and reusable execution infrastructure.",
     approachComparisons: baseApproachComparisons,
     scopeHeading: "What capabilities a runtime typically includes",
     scopeIntro:
-      "A capability runtime covers capabilities that sit outside the agent's built-in reasoning loop but are frequently needed inside agent workflows. These typically fall into four categories.",
+      "A capability runtime covers capabilities that sit outside the agent's built-in reasoning loop but are repeatedly required inside real workflows. The goal is not to replace reasoning, but to make non-reasoning actions available through a stable execution layer. In practice, most runtime inventories group naturally into four categories so teams can reason about coverage, identify gaps, and expand capability access without redesigning their orchestration model each time a new task type appears. This category framing also makes roadmap planning clearer because teams can prioritize by workflow impact instead of provider marketing. It helps product and engineering teams align on what to add next based on execution bottlenecks, not hype cycles. As capability count grows, this structure prevents inventory sprawl from degrading agent reliability or slowing cross-team adoption. It also keeps documentation and implementation language aligned across teams.",
     capabilityCategories: capabilityCategoriesEn,
     designHeading: "Key design principles of a capability runtime",
     designPrinciples: [
@@ -552,8 +552,8 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     lastUpdatedLabel: "10 de abril de 2026",
     heroTitle: ["O que é um runtime de", "capacidade do agente?"],
     heroBody: [
-      "Um runtime de capacidade do agente é uma camada de software que dá aos agentes de IA capacidades instaláveis por meio de uma interface única. Em vez de exigir SDKs, fluxos de autenticação e APIs separados para cada capacidade, o runtime oferece um caminho de instalação, um fluxo de autenticação e uma superfície de comandos para tudo o que o agente precisa além do seu loop de raciocínio nativo.",
-      "O termo descreve uma camada arquitetural específica na stack de agentes. Um agente lida com raciocínio, planejamento e execução de código. Um harness gerencia o ciclo de vida do agente. Um runtime de capacidades fica abaixo dos dois e fornece as capacidades reais: geração, entendimento, recuperação, armazenamento e publicação.",
+      "Um runtime de capacidade do agente é uma camada de software que entrega capacidades instaláveis por uma interface única para agentes de IA. Em vez de exigir SDKs, fluxos de autenticação, formatos de resposta e tratamento de erro separados para cada capability, o runtime oferece um caminho de instalação, um fluxo de autenticação e uma superfície de comandos consistente para tudo o que fica fora do loop nativo de raciocínio. Isso reduz o custo de integração quando o workflow atravessa vários provedores e evita que o time gaste mais energia em glue code do que em resultado.",
+      "O termo descreve uma camada arquitetural específica na stack de agentes. O agente cuida de raciocínio, planejamento e execução de código. O harness cuida de ciclo de vida, permissões e roteamento. O runtime de capacidades fica abaixo dos dois e fornece ações concretas como geração, entendimento, recuperação, armazenamento e publicação por um contrato nativo para agentes. Com essa separação, o time consegue evoluir modelo, prompt e provedor sem reescrever a base de execução a cada nova necessidade.",
     ],
     sectionLabels: {
       architecture: "Arquitetura",
@@ -565,7 +565,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     },
     architectureHeading: "Onde um runtime de capacidades se encaixa na stack de agentes",
     architectureIntro:
-      "Uma stack de agentes tem várias camadas. Cada camada tem uma responsabilidade distinta. Um runtime de capacidades ocupa a camada entre o harness e as APIs do modelo/provedor. Ele unifica capacidades que, de outra forma, ficariam espalhadas por vários provedores.",
+      "Uma stack de agentes possui várias camadas, cada uma responsável por resolver um tipo diferente de problema. O runtime de capacidades ocupa a faixa entre o harness e as APIs de modelo/provedor, exatamente onde consistência de execução se torna crítica. Sua função é unificar capacidades que normalmente ficam espalhadas em provedores com autenticação, contratos e comportamento de falha diferentes. Ao centralizar essa camada, o time reduz deriva operacional e mantém comportamento do agente mais previsível conforme o workflow cresce em modalidades. Esse também é o ponto de maior alavanca: uma melhoria no runtime pode beneficiar muitos fluxos sem retrabalho em cada integração.",
     architectureTable: baseArchitectureRows.map((row) => {
       if (row.layer === "Agent (reasoning layer)") {
         return {
@@ -605,7 +605,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     problemSignals: problemSignalsPtBr,
     comparisonHeading: "Como ele difere de outras abordagens",
     comparisonIntro:
-      "Um runtime de capacidades não é a única forma de dar novas habilidades aos agentes. Cada abordagem abaixo resolve uma fatia diferente do problema. A escolha certa depende de quantas capacidades o fluxo precisa, quantos provedores ele atravessa e quanto overhead de integração o time consegue absorver.",
+      "Um runtime de capacidades não é a única forma de ampliar habilidades dos agentes, mas resolve um problema de execução que outras abordagens geralmente deixam em aberto. Frameworks ajudam na orquestração do raciocínio, plataformas de integração ampliam cobertura de ferramentas e APIs diretas dão controle fino de infraestrutura. O runtime de capacidades otimiza entrega operacional consistente de ações multimodais dentro do ambiente do agente. A escolha correta depende da amplitude do fluxo, do número de provedores e do overhead de integração que o time consegue absorver sem desacelerar entrega. Em prática de produto, times com repetição alta de tarefas multimodais tendem a capturar mais valor nessa camada.",
     approachComparisons: baseApproachComparisons.map((row) => {
       if (row.approach === "Direct API integration") {
         return {
@@ -662,7 +662,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     }),
     scopeHeading: "Quais capacidades um runtime normalmente inclui",
     scopeIntro:
-      "Um runtime de capacidades cobre capacidades que ficam fora do loop de raciocínio nativo do agente, mas que são frequentemente necessárias em fluxos com agentes. Normalmente elas se dividem em quatro categorias.",
+      "Um runtime de capacidades cobre ações que ficam fora do loop nativo de raciocínio do agente, mas aparecem com alta frequência em fluxos reais. O objetivo não é substituir raciocínio, e sim tornar ações não nativas acessíveis por uma camada de execução estável e reutilizável. Na prática, o inventário costuma se organizar em quatro categorias, o que ajuda o time a enxergar cobertura, priorizar lacunas e expandir capabilities sem redesenhar a orquestração toda vez que surge um novo tipo de tarefa. Esse enquadramento também facilita priorização de roadmap por impacto operacional, em vez de seguir apenas tendência de provedor.",
     capabilityCategories: capabilityCategoriesPtBr,
     designHeading: "Princípios de design de um runtime de capacidades",
     designPrinciples: [

@@ -111,10 +111,10 @@ const en: ComparePageData = {
   lastUpdatedLabel: "April 8, 2026",
   heroTitle: ["AnyCap vs", "fal.ai"],
   heroIntro:
-    "AnyCap vs fal.ai is a question about what layer you want to own. fal.ai is strong when your backend needs queue-backed media APIs, webhook control, and direct endpoint integration. AnyCap is stronger when your agents already exist and need a portable runtime that bundles multimodal capability access with storage and publishing workflows.",
+    "AnyCap vs fal.ai is a question about which layer your team wants to own. fal.ai is strongest when your backend needs queue-backed media APIs, direct endpoint control, webhook verification, and explicit job-state handling in application code. That model is ideal for product teams that already run their own orchestration, retries, and asset pipelines. AnyCap is stronger when agents already exist and the missing layer is operational capability access inside those agent workflows. Instead of rebuilding media integrations for each shell, teams use one runtime that packages multimodal execution with storage and publishing paths. The decision is less about raw model quality and more about where integration complexity should live in your architecture. In most cases, this decision also determines which team owns incident response for failed media tasks. Clarifying that ownership early prevents expensive rework when workflows scale.",
   answerFirstSummaryLabel: "Answer-first summary",
   answerFirstSummaryBody:
-    "Choose fal.ai when your product stack needs direct media endpoints, queue-backed async execution, and webhook-driven control. Choose AnyCap when your developers already work through agents and want those agents to gain media, web, storage, and publishing capabilities through one runtime instead of another low-level API project.",
+    "Choose fal.ai when your product stack needs direct media endpoints, queue-backed asynchronous execution, webhook-driven lifecycle control, and backend ownership of request orchestration. Choose AnyCap when your developers already work through agents and want those agents to gain media, web, storage, and publishing capabilities through one shared runtime. In that scenario, runtime standardization usually beats another low-level API integration because auth, commands, and artifact handling stay consistent across environments. The practical rule is simple: backend-centric media infrastructure points to fal.ai, agent-centric execution portability points to AnyCap. If the team cannot map ownership cleanly, the architecture is probably mixing both layers in one workflow. Split responsibilities first, then compare implementation cost, delivery speed, and incident complexity, including operational burden for retries, artifact retention, and post-failure recovery paths. This sequence prevents teams from optimizing the wrong layer.",
   comparisonTitle: "Side-by-side comparison",
   comparisonHeaders: { dimension: "Dimension", anycap: "AnyCap", fal: "fal.ai" },
   comparisonRows: [
@@ -277,27 +277,27 @@ const en: ComparePageData = {
     {
       question: "Is fal.ai a direct AnyCap replacement?",
       answer:
-        "No. fal.ai is a generative media API platform. AnyCap is a broader capability runtime for existing agents. The overlap is mainly around image and video generation, but the product category is different.",
+        "No. fal.ai is a generative media API platform optimized for backend-controlled inference jobs, while AnyCap is a broader capability runtime for agents already operating in developer tools. The overlap is mainly image and video generation, but the category is different: one is media infrastructure, the other is agent execution infrastructure. Choosing between them depends on whether your bottleneck is API orchestration in app code or capability access in agent workflows.",
     },
     {
       question: "What is the biggest workflow difference between AnyCap and fal.ai?",
       answer:
-        "fal.ai expects your application stack to own the request lifecycle, webhook handling, and artifact pipeline. AnyCap packages that capability access into a CLI-first runtime for agents and adds storage and publishing workflows around the result.",
+        "fal.ai expects your application stack to own request lifecycle management, webhook handling, retries, and artifact routing after generation. AnyCap packages capability access into a CLI-first runtime that agents can invoke directly, then extends the workflow with storage and publishing paths in the same operational surface. The core difference is where workflow complexity is implemented: custom backend code with fal.ai, shared runtime semantics with AnyCap.",
     },
     {
       question: "Does fal.ai support both sync and async inference?",
       answer:
-        "Yes. fal's public docs describe direct synchronous requests, queue-backed async inference, and webhooks for completion notifications. That is one of the clearest reasons to pick fal when backend control matters.",
+        "Yes. fal's public docs describe direct synchronous requests, queue-backed asynchronous inference, and webhook notifications for completion. That combination is one of the clearest reasons teams choose fal.ai when backend control matters and workloads cannot rely on blocking calls. It is particularly valuable when product systems need queue visibility, callback integrity, and predictable post-processing behavior.",
     },
     {
       question: "When is AnyCap the cleaner choice?",
       answer:
-        "When the team already uses agents in developer tools and wants those agents to gain multimodal execution plus artifact delivery through one runtime rather than another direct API integration project.",
+        "AnyCap is cleaner when the team already uses agents in developer tools and wants multimodal execution plus artifact delivery without launching another direct API integration project. One runtime can standardize install, auth, invocation, and handoff across multiple agent shells. That reduces integration drift and makes it easier to keep workflows consistent as teams add more capabilities over time.",
     },
     {
       question: "What is the simplest rule of thumb?",
       answer:
-        "If you need a media API, choose fal.ai. If you need your agents to complete cross-modal work in one runtime, choose AnyCap.",
+        "If you need a media API layer with queue and webhook control in backend code, choose fal.ai. If you need existing agents to complete cross-modal work inside one execution runtime, choose AnyCap. When teams are undecided, mapping where lifecycle ownership should live, backend application or agent runtime, usually clarifies the choice quickly.",
     },
   ],
   ctas: [
@@ -325,9 +325,9 @@ const ptBr: ComparePageData = {
   },
   lastUpdatedLabel: "8 de abril de 2026",
   heroIntro:
-    "AnyCap vs fal.ai é uma pergunta sobre qual camada você quer assumir. O fal.ai é forte quando o backend precisa de APIs de mídia com fila, controle por webhook e integração direta com endpoints. O AnyCap é mais forte quando os agentes já existem e precisam de um runtime portátil que combina acesso multimodal com armazenamento e publicação.",
+    "AnyCap vs fal.ai é uma decisão sobre qual camada seu time quer controlar. O fal.ai é mais forte quando o backend precisa de APIs de mídia com fila, integração direta com endpoints, verificação de webhook e controle explícito de estado dos jobs no código da aplicação. Esse modelo é ideal para times que já operam sua própria orquestração, retries e pipeline de ativos. O AnyCap é mais forte quando os agentes já existem e a lacuna principal está no acesso operacional a capacidades dentro desses workflows. Em vez de reconstruir integrações por shell, a equipe usa um runtime único que combina execução multimodal com armazenamento e publicação na mesma superfície operacional.",
   answerFirstSummaryBody:
-    "Escolha o fal.ai quando o stack do produto precisa de endpoints diretos de mídia, execução assíncrona com fila e controle orientado por webhooks. Escolha o AnyCap quando seus desenvolvedores já trabalham por meio de agentes e querem que esses agentes ganhem capacidades de mídia, web, armazenamento e publicação por meio de um runtime único, em vez de mais um projeto de API de baixo nível.",
+    "Escolha o fal.ai quando o stack do produto precisa de endpoints diretos de mídia, execução assíncrona com fila, controle de ciclo de vida por webhook e propriedade de backend sobre a orquestração. Escolha o AnyCap quando seus desenvolvedores já operam por agentes e querem que esses agentes ganhem capacidades de mídia, web, armazenamento e publicação por meio de um runtime compartilhado. Nesse cenário, padronizar runtime costuma ser melhor do que abrir outro projeto de API de baixo nível, porque autenticação, comandos e entrega de artefatos ficam consistentes entre ambientes.",
   comparisonRows: [
     {
       dimension: "Função principal",
@@ -482,27 +482,27 @@ const ptBr: ComparePageData = {
     {
       question: "O fal.ai substitui o AnyCap diretamente?",
       answer:
-        "Não. O fal.ai é uma plataforma de API generativa de mídia. O AnyCap é um runtime de capacidades mais amplo para agentes já existentes. A sobreposição principal é em geração de imagem e vídeo, mas a categoria do produto é diferente.",
+        "Não. O fal.ai é uma plataforma de API generativa de mídia focada em jobs controlados pelo backend, enquanto o AnyCap é um runtime de capacidades mais amplo para agentes já existentes. Existe sobreposição em imagem e vídeo, mas a categoria é diferente: infraestrutura de mídia versus infraestrutura de execução para agentes. A escolha depende de onde está o gargalo principal do seu stack.",
     },
     {
       question: "Qual é a maior diferença de workflow entre AnyCap e fal.ai?",
       answer:
-        "O fal.ai espera que o stack da aplicação assuma o ciclo de vida da requisição, o tratamento de webhook e o pipeline de artefatos. O AnyCap empacota esse acesso em um runtime CLI-first para agentes e adiciona fluxos de armazenamento e publicação ao redor do resultado.",
+        "O fal.ai espera que o stack da aplicação assuma ciclo de vida da requisição, tratamento de webhook, retries e pipeline de artefatos após a geração. O AnyCap empacota acesso a capabilities em um runtime CLI-first que o agente invoca diretamente e ainda adiciona fluxos de armazenamento e publicação no mesmo ambiente operacional. A diferenca central é onde a complexidade fica: backend customizado com fal.ai ou runtime compartilhado com AnyCap.",
     },
     {
       question: "O fal.ai suporta inferência síncrona e assíncrona?",
       answer:
-        "Sim. A documentação pública descreve requisições síncronas diretas, inferência assíncrona com fila e webhooks para notificações de conclusão. Esse é um dos motivos mais claros para escolher o fal quando controle de backend importa.",
+        "Sim. A documentação pública do fal.ai descreve requisições síncronas diretas, inferência assíncrona com fila e webhooks para notificações de conclusão. Esse conjunto é um dos motivos mais claros para adotá-lo quando controle de backend realmente importa e o produto depende de jobs longos com eventos de finalização confiáveis.",
     },
     {
       question: "Quando o AnyCap é a escolha mais simples?",
       answer:
-        "Quando a equipe já usa agentes em ferramentas de desenvolvimento e quer que esses agentes ganhem execução multimodal e entrega de artefatos por meio de um runtime único, em vez de outro projeto de integração direta com API.",
+        "O AnyCap costuma ser a escolha mais simples quando a equipe já usa agentes em ferramentas de desenvolvimento e quer ampliar execução multimodal sem abrir outro projeto de integração direta por API. Um runtime único padroniza instalação, autenticação, invocação e handoff de artefatos entre shells de agente. Isso reduz fricção operacional e acelera rollout de novos fluxos.",
     },
     {
       question: "Qual é a regra mais simples de decisão?",
       answer:
-        "Se você precisa de uma API de mídia, escolha o fal.ai. Se você precisa que seus agentes concluam trabalho cross-modal em um runtime único, escolha o AnyCap.",
+        "Se você precisa de uma API de mídia com controle de fila e webhook no backend, escolha o fal.ai. Se você precisa que seus agentes concluam trabalho cross-modal em um runtime único e portátil, escolha o AnyCap. Quando houver dúvida, mapear onde a responsabilidade de ciclo de vida deve morar, aplicação ou runtime de agente, costuma resolver a decisão com rapidez.",
     },
   ],
   ctas: [
