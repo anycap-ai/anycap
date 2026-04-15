@@ -238,7 +238,18 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		},
 	})
 
-	return &Server{config: cfg, buildInfo: info, httpServer: httpServer, runtime: runtime}
+	adminHTTPServer := transporthttp.NewRouter(transporthttp.RouterConfig{
+		Addr:        deps.config.AdminHTTPAddr,
+		Middlewares: httpMiddlewares,
+		V1: []transporthttp.RouteRegistrar{
+			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
+				protected := group.Group("", rateLimitMiddleware)
+				modelRouteHandler.RegisterRoutes(protected)
+			}),
+		},
+	})
+
+	return &Server{config: cfg, buildInfo: info, httpServer: httpServer, adminHTTPServer: adminHTTPServer, runtime: runtime}
 }
 
 func buildServerFeatures(cfg config.Config) map[string]bool {
