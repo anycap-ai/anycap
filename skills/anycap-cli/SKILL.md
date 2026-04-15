@@ -186,12 +186,14 @@ If the human wants the Feishu bot to make Codex call AnyCap capabilities, access
 
 Reason: the default Codex mode is `safe`, which maps to Codex `--full-auto`. This automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
 
-For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human explicitly wants broader local execution, use Claude Code's permission/tool flags, for example:
+For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, use Claude Code's broader permission/tool flags, for example:
 
 ```bash
 --claude-permission-mode bypassPermissions
 --claude-allowed-tools Read,Edit,Bash
 ```
+
+Reason: the daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
 
 After startup, verify which local machine is currently connected:
 
@@ -228,6 +230,7 @@ Main notes:
 - `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
 - Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions, including when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Codex.
 - `--executor claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
+- For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
 
 ## Legacy / Debug Only
 

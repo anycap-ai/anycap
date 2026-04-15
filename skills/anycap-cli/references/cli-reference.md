@@ -211,11 +211,13 @@ anycap agent daemon start --platform feishu --executor codex --codex-exec-mode d
 
 The default Codex mode is `safe`, which maps to Codex `--full-auto`. That automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
 
-For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human explicitly wants broader execution, pass Claude Code permission/tool flags:
+For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, pass broader Claude Code permission/tool flags:
 
 ```bash
 anycap agent daemon start --platform feishu --executor claude_code --claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
 ```
+
+The daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
 
 This command will:
 
@@ -224,7 +226,7 @@ This command will:
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
 - starts the normal polling loop for sessions/tasks
 - uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
-- uses Claude Code `claude -p --output-format json` when `--executor claude_code`, and persists Claude Code `session_id` for follow-up turns
+- uses Claude Code `claude -p --output-format json` when `--executor claude_code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
 
 Check which local machine is currently connected:
 
