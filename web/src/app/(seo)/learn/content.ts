@@ -276,108 +276,108 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
   id: {
     breadcrumbItems: [
       { name: "Home", href: "/" },
-      { name: "Learn", href: LEARN_PATH },
+      { name: "Pelajari", href: LEARN_PATH },
     ],
-    eyebrow: "Learn",
+    eyebrow: "Pelajari",
     metadata: {
-      title: "Learn | AI Agent Guides, Workflows, and Explainers",
+      title: "Pelajari | Panduan agen AI, alur kerja, dan penjelasan",
       description:
-        "Start with coding-agent stack guides, AI product explainers, capability-gap primers, and real workflows that lead into AnyCap capabilities.",
-      openGraphTitle: "Learn | AI Agent Guides, Workflows, and Explainers",
+        "Mulai dengan panduan stack agen coding, penjelasan produk AI, pengantar celah kemampuan, dan alur kerja nyata yang mengarah ke kemampuan AnyCap.",
+      openGraphTitle: "Pelajari | Panduan agen AI, alur kerja, dan penjelasan",
       openGraphDescription:
-        "Use Learn when you are choosing a coding-agent stack, extending an AI product, mapping capability gaps, or browsing a real workflow example.",
+        "Gunakan Pelajari saat Anda memilih stack agen coding, memperluas produk AI, memetakan celah kemampuan, atau melihat contoh alur kerja nyata.",
     },
     hero: {
-      eyebrow: "Learn",
-      titleLines: ["Start with the question", "you are actually asking"],
+      eyebrow: "Pelajari",
+      titleLines: ["Mulai dari pertanyaan", "yang benar-benar Anda ajukan"],
       intro:
-        "Use Learn when you are choosing a coding-agent stack, extending an AI product, mapping capability gaps, or looking for a real workflow example. Each path is grouped by intent so you can move from explanation into the next step without sorting through unrelated page types first.",
+        "Gunakan Pelajari saat Anda memilih stack agen coding, memperluas produk AI, memetakan celah kemampuan, atau mencari contoh alur kerja nyata. Setiap jalur dikelompokkan berdasarkan niat agar Anda bisa berpindah dari penjelasan ke langkah berikutnya tanpa harus memilah jenis halaman yang tidak relevan terlebih dahulu.",
       statsPrefix: "",
-      statsSuffix: "Open one category below and ignore the rest for now.",
+      statsSuffix: "Buka satu kategori di bawah ini dan abaikan yang lain untuk saat ini.",
     },
     orientation: {
-      eyebrow: "How to use this page",
-      title: "Pick one path, start with the featured page, then only go narrower if you need it",
+      eyebrow: "Cara memakai halaman ini",
+      title: "Pilih satu jalur, mulai dari halaman unggulan, lalu persempit hanya jika perlu",
       description:
-        "This page is designed to reduce choice overload. Treat each section like a curated route instead of a list of everything we have published.",
+        "Halaman ini dirancang untuk mengurangi kebingungan memilih. Anggap setiap bagian sebagai rute yang dikurasi, bukan daftar semua yang pernah kami terbitkan.",
       steps: [
         {
           step: "01",
-          title: "Match the question",
-          description: "Choose the path that fits what you are deciding right now, not every question you might have later.",
+          title: "Cocokkan dengan pertanyaan",
+          description: "Pilih jalur yang sesuai dengan keputusan yang sedang Anda ambil sekarang, bukan semua pertanyaan yang mungkin muncul nanti.",
         },
         {
           step: "02",
-          title: "Open the featured page",
-          description: "Start with the main guide or workflow before branching into narrower pages, variants, or agent-specific follow-ons.",
+          title: "Buka halaman unggulan",
+          description: "Mulai dari panduan atau alur utama sebelum bercabang ke halaman yang lebih sempit, variasi, atau tindak lanjut khusus agen.",
         },
         {
           step: "03",
-          title: "Switch page type when needed",
-          description: "Move to Guides or Capabilities once the question becomes operational and you are ready to implement.",
+          title: "Ganti jenis halaman saat perlu",
+          description: "Pindah ke Panduan atau Kapabilitas ketika pertanyaannya sudah operasional dan Anda siap menerapkan.",
         },
       ],
     },
     pathSectionIntro: {
-      eyebrow: "Browse by path",
-      title: "Start with the main page, then go narrower only if needed",
+      eyebrow: "Telusuri berdasarkan jalur",
+      title: "Mulai dari halaman utama, lalu persempit hanya bila perlu",
       description:
-        "The structure below is generated from the same information architecture that powers breadcrumbs, so new pages can slot into the right path without turning the hub into a manual link dump.",
+        "Struktur di bawah ini dihasilkan dari arsitektur informasi yang sama yang dipakai breadcrumb, sehingga halaman baru bisa masuk ke jalur yang tepat tanpa mengubah hub menjadi daftar tautan manual.",
     },
     sectionLabels: {
-      startHere: "Start here",
-      shortcuts: "Shortcuts",
-      goDeeper: "Go deeper",
-      alsoUseful: "Also useful",
-      needDifferentType: "Need a different page type?",
-      differentTypeTitle: "Switch to setup, vocabulary, capabilities, or comparison",
+      startHere: "Mulai di sini",
+      shortcuts: "Pintasan",
+      goDeeper: "Lebih dalam",
+      alsoUseful: "Juga berguna",
+      needDifferentType: "Butuh tipe halaman yang berbeda?",
+      differentTypeTitle: "Beralih ke setup, istilah, kapabilitas, atau perbandingan",
       differentTypeBody:
-        "If the question is no longer exploratory, move to the page type that matches the next step instead of scanning more Learn articles.",
+        "Jika pertanyaannya sudah tidak lagi eksploratif, pindah ke tipe halaman yang sesuai dengan langkah berikutnya alih-alih terus menelusuri artikel Pelajari.",
       faqEyebrow: "FAQ",
-      faqTitle: "Common questions before you pick a path",
+      faqTitle: "Pertanyaan umum sebelum Anda memilih jalur",
     },
     adjacentHubs: [
       {
-        title: "Guides",
+        title: "Panduan",
         href: "/guides",
-        description: "Use Guides when you already know what you want to set up and need step-by-step implementation.",
+        description: "Gunakan Panduan saat Anda sudah tahu apa yang ingin disiapkan dan butuh implementasi langkah demi langkah.",
       },
       {
-        title: "Glossary",
+        title: "Glosarium",
         href: "/glossary",
-        description: "Use Glossary when the main blocker is vocabulary and you need shared language for harnesses, context, and runtimes.",
+        description: "Gunakan Glosarium saat hambatan utamanya adalah istilah dan Anda butuh bahasa yang sama untuk harness, konteks, dan runtime.",
       },
       {
-        title: "Capabilities",
+        title: "Kapabilitas",
         href: "/capabilities",
-        description: "Use Capabilities when you are past the explainer stage and want the exact product surfaces AnyCap adds.",
+        description: "Gunakan Kapabilitas saat Anda sudah melewati tahap penjelasan dan ingin surface produk yang tepat yang ditambahkan AnyCap.",
       },
       {
-        title: "Compare",
+        title: "Bandingkan",
         href: "/compare",
-        description: "Use Compare when the question starts from an alternative vendor, adjacent product, or replacement decision.",
+        description: "Gunakan Bandingkan saat pertanyaan dimulai dari vendor alternatif, produk yang berdekatan, atau keputusan pengganti.",
       },
     ],
     faqItems: [
       {
-        question: "Which page should I start with if I am choosing a coding-agent setup?",
+        question: "Halaman mana yang harus saya buka dulu jika sedang memilih stack agen coding?",
         answer:
-          "Start with Best AI for Coding Agents if you are still framing the category question. From there, move into the Claude Code or Cursor specific page once you know which workflow you care about.",
+          "Mulailah dari Best AI for Coding Agents jika Anda masih merumuskan kategori. Setelah itu, pindah ke halaman khusus Claude Code atau Cursor ketika Anda sudah tahu alur kerja mana yang penting.",
       },
       {
-        question: "What if I am building a SaaS assistant instead of using a coding agent?",
+        question: "Bagaimana kalau saya membangun asisten SaaS, bukan memakai agen coding?",
         answer:
-          "Start with AI Chatbot SaaS vs AI Agent for SaaS if you are deciding what kind of system you need. Then move into Add Multimodal Capabilities to a SaaS Chatbot when the question becomes implementation.",
+          "Mulailah dari AI Chatbot SaaS vs AI Agent for SaaS jika Anda sedang memutuskan jenis sistem yang dibutuhkan. Lalu lanjut ke Add Multimodal Capabilities to a SaaS Chatbot ketika pertanyaannya sudah menjadi implementasi.",
       },
       {
-        question: "Why are some pages grouped under a main workflow instead of listed flat?",
+        question: "Mengapa beberapa halaman dikelompokkan di bawah alur utama, bukan ditampilkan datar?",
         answer:
-          "Because some pages make more sense as a narrower follow-on after the main workflow already fits. The hub keeps those variants visually attached to the parent path so the page stays easier to scan.",
+          "Karena beberapa halaman lebih masuk akal sebagai tindak lanjut yang lebih sempit setelah alur utamanya cocok. Hub menjaga variasi itu tetap terhubung secara visual dengan jalur induknya agar lebih mudah dipindai.",
       },
       {
-        question: "When should I move from Learn into Guides or Capabilities?",
+        question: "Kapan saya harus pindah dari Pelajari ke Panduan atau Kapabilitas?",
         answer:
-          "Move into Guides when you are ready to set something up step by step. Move into Capabilities when you already understand the problem and want the exact surface, such as image generation, video analysis, or web crawl.",
+          "Pindah ke Panduan saat Anda siap menyiapkan sesuatu langkah demi langkah. Pindah ke Kapabilitas saat Anda sudah memahami masalahnya dan ingin surface yang tepat, seperti pembuatan gambar, analisis video, atau web crawl.",
       },
     ],
   },

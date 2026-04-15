@@ -115,10 +115,10 @@ const en: ComparePageData = {
   lastUpdatedLabel: "April 8, 2026",
   heroTitle: ["AnyCap vs", "Replicate"],
   heroIntro:
-    "AnyCap vs Replicate is a stack-layer decision, not a same-category fight. Replicate is a strong fit when your application backend needs direct control over model inference, prediction lifecycles, deployments, and webhooks. AnyCap is the stronger fit when your agents already exist and the missing layer is capability access across image, video, search, storage, and publishing.",
+    "AnyCap vs Replicate is a stack-layer decision, not a same-category fight. Replicate is strongest when your application backend needs explicit control over model inference, prediction lifecycles, hardware-backed deployments, request IDs, and webhook-driven completion events. That is the right pattern when your product team owns queue orchestration, retry policy, and downstream asset routing inside application code. AnyCap is stronger when agents already exist in tools such as Codex, Cursor, or Claude Code and the missing layer is operational capability access. Instead of adding another provider-specific integration project, teams install one runtime and give agents a shared interface for generation, understanding, retrieval, storage, and publishing so multimodal work can actually finish end to end. The architectural choice is mainly about execution ownership: backend-managed prediction pipelines versus runtime-managed agent capabilities. Once ownership is clear, tool selection usually becomes straightforward and faster to defend in technical review.",
   answerFirstSummaryLabel: "Answer-first summary",
   answerFirstSummaryBody:
-    "Choose Replicate when the product needs model APIs, prediction objects, sync or async execution, and webhook-driven backend workflows. Choose AnyCap when the agent is already chosen and you want one runtime that equips it with multimodal capabilities plus artifact delivery instead of another provider integration project.",
+    "Choose Replicate when your product architecture is centered on backend-owned model jobs: direct API calls, prediction objects, synchronous and asynchronous execution modes, webhook callbacks, and deployment-level control. Choose AnyCap when the agent shell is already chosen and your bottleneck is capability execution inside agent workflows rather than backend inference plumbing. In that case, one runtime usually beats multiple ad hoc integrations because it standardizes auth, commands, and artifact handoff across image, video, search, storage, and publishing. The practical rule is simple: backend-centric inference platform needs Replicate; agent-centric execution layer needs AnyCap. If one architecture review cannot clearly pick a side, the team is usually mixing two different layers of responsibility. Separate those layers first, then reassess cost, speed, and operational risk with each option, including who owns monitoring, incident response, and long-term integration maintenance after launch.",
   comparisonTitle: "Side-by-side comparison",
   comparisonHeaders: { dimension: "Dimension", anycap: "AnyCap", replicate: "Replicate" },
   comparisonRows: [
@@ -307,27 +307,27 @@ const en: ComparePageData = {
     {
       question: "Is Replicate a direct replacement for AnyCap?",
       answer:
-        "No. Replicate is a model API platform. AnyCap is a capability runtime for existing agents. Teams compare them when they are deciding whether the missing layer is app-level inference infrastructure or agent-level capability access.",
+        "No. Replicate is a model API platform built for backend-managed inference flows, while AnyCap is a capability runtime designed for agents that already exist in developer environments. Teams compare them because both can appear in multimodal roadmaps, but they solve different architectural gaps. If your missing layer is application-level prediction infrastructure, Replicate is usually the fit. If your missing layer is agent-level capability access and delivery, AnyCap is usually the fit.",
     },
     {
       question: "What is the biggest workflow difference between AnyCap and Replicate?",
       answer:
-        "Replicate expects your application or script to own the prediction lifecycle. AnyCap expects the agent workflow to stay in one CLI-first runtime that already includes capability access plus artifact delivery paths.",
+        "Replicate expects your application stack to own the prediction lifecycle directly: create requests, track status, handle async callbacks, and decide what happens after outputs arrive. AnyCap keeps the workflow centered in one CLI-first runtime that agents can call during execution without rewriting each capability as a separate provider integration. In practice, the difference is where complexity lives: backend orchestration in your app with Replicate, or standardized agent execution with AnyCap.",
     },
     {
       question: "Does Replicate support async jobs and webhooks?",
       answer:
-        "Yes. Replicate's public docs describe synchronous and asynchronous prediction modes, prediction IDs, and webhook notifications for completed outputs. That is one of its clearest strengths as a backend inference layer.",
+        "Yes. Replicate's public documentation describes synchronous and asynchronous prediction modes, prediction IDs, status polling, and webhook notifications for completed outputs. That feature set is a major reason teams choose it as an inference layer when they need queue-aware processing and explicit backend ownership. It is especially useful when workloads are long-running and application logic depends on completion events instead of blocking calls.",
     },
     {
       question: "When is AnyCap the cleaner choice?",
       answer:
-        "When the team already has agents in Codex, Cursor, Claude Code, or similar environments and wants those agents to gain a broader capability surface quickly without building a separate inference and artifact pipeline.",
+        "AnyCap is usually cleaner when your team already operates through agents in environments like Codex, Cursor, or Claude Code and wants those agents to gain capabilities quickly without building a separate inference and artifact pipeline per provider. One runtime can standardize install, auth, invocation, and delivery paths across multimodal actions. That reduces integration drift and makes cross-agent operations easier to maintain as workflows expand.",
     },
     {
       question: "What is the simplest rule of thumb?",
       answer:
-        "If your product backend needs model APIs, choose Replicate. If your agents need a shared runtime so they can actually finish multimodal work, choose AnyCap.",
+        "If your product backend needs model APIs and explicit control over prediction jobs, choose Replicate. If your agents need a shared runtime so they can execute and deliver multimodal work without repeated provider glue code, choose AnyCap. When teams are unsure, mapping where execution complexity should live, backend code or agent runtime, usually makes the decision obvious within one architecture review.",
     },
   ],
   ctas: [
@@ -355,9 +355,9 @@ const ptBr: ComparePageData = {
   },
   lastUpdatedLabel: "8 de abril de 2026",
   heroIntro:
-    "AnyCap vs Replicate é uma decisão de camada de stack, não um duelo entre produtos equivalentes. O Replicate funciona melhor quando o backend da aplicação precisa de controle direto sobre inferência de modelos, ciclo de vida de predictions, deployments e webhooks. O AnyCap é a escolha mais forte quando os agentes já existem e a camada que falta é acesso a capacidades como imagem, vídeo, busca, armazenamento e publicação.",
+    "AnyCap vs Replicate é uma decisão de camada de stack, não um duelo entre produtos equivalentes. O Replicate é mais forte quando o backend da aplicação precisa controlar inferência de modelos de forma explícita, incluindo ciclo de vida de predictions, deployments, IDs de execução e conclusão por webhook. Esse caminho funciona bem quando o time de produto já opera filas, retries e roteamento de artefatos dentro do próprio código. O AnyCap é mais forte quando os agentes já existem em ferramentas como Codex, Cursor ou Claude Code e a lacuna principal é acesso operacional a capacidades. Em vez de abrir outro projeto de integração por provedor, a equipe instala um runtime único e equipa os agentes com geração, entendimento, retrieval, armazenamento e publicação por uma interface compartilhada.",
   answerFirstSummaryBody:
-    "Escolha o Replicate quando o produto precisa de APIs de modelos, objetos de prediction, execução síncrona ou assíncrona e workflows de backend guiados por webhook. Escolha o AnyCap quando o agente já foi definido e você quer um runtime único que o equipa com capacidades multimodais e entrega de artefatos, em vez de mais um projeto de integração com provedor.",
+    "Escolha o Replicate quando a arquitetura do produto é centrada em jobs de inferência controlados pelo backend: chamadas diretas de API, objetos de prediction, execução síncrona e assíncrona, callbacks por webhook e controle de deployment. Escolha o AnyCap quando a shell do agente já foi definida e o gargalo está na execução de capacidades dentro do workflow do agente, não na infraestrutura de inferência da aplicação. Nesse cenário, um runtime único costuma ser melhor do que várias integrações ad hoc porque padroniza autenticação, comandos e entrega de artefatos entre imagem, vídeo, busca, armazenamento e publicação.",
   comparisonRows: [
     {
       dimension: "Função principal",
@@ -537,27 +537,27 @@ const ptBr: ComparePageData = {
     {
       question: "O Replicate substitui o AnyCap diretamente?",
       answer:
-        "Não. O Replicate é uma plataforma de API de modelos. O AnyCap é um runtime de capacidades para agentes já existentes. As equipes comparam os dois quando precisam decidir se a camada que falta é infraestrutura de inferência da aplicação ou acesso a capacidades no nível do agente.",
+        "Não. O Replicate é uma plataforma de API de modelos para fluxos de inferência controlados no backend, enquanto o AnyCap é um runtime de capacidades para agentes que já estão em uso nas ferramentas de desenvolvimento. As equipes comparam os dois porque ambos aparecem em roadmaps multimodais, mas cada um resolve uma lacuna diferente. Se falta infraestrutura de prediction no app, Replicate tende a ser o encaixe. Se falta execução de capacidades no agente, AnyCap tende a ser mais direto.",
     },
     {
       question: "Qual é a maior diferença de workflow entre AnyCap e Replicate?",
       answer:
-        "O Replicate espera que sua aplicação ou script assuma o ciclo de vida da prediction. O AnyCap espera que o fluxo do agente permaneça em um runtime CLI-first que já inclui acesso a capacidades e caminhos de entrega de artefatos.",
+        "O Replicate espera que sua aplicação assuma o ciclo de vida completo da prediction: criar requisições, acompanhar status, tratar callbacks e decidir o destino dos outputs. O AnyCap mantém o fluxo dentro de um runtime CLI-first que o agente pode chamar durante a execução, sem transformar cada capability em uma integração separada de provedor. Na prática, a diferença principal é onde a complexidade operacional fica: backend da aplicação com Replicate, runtime compartilhado de agente com AnyCap.",
     },
     {
       question: "O Replicate suporta jobs assíncronos e webhooks?",
       answer:
-        "Sim. A documentação pública do Replicate descreve modos de prediction síncronos e assíncronos, IDs de prediction e notificações por webhook para outputs concluídos. Esse é um dos pontos fortes mais claros da plataforma como camada de inferência de backend.",
+        "Sim. A documentação pública do Replicate descreve modos síncrono e assíncrono, IDs de prediction, polling de status e notificações por webhook para outputs concluídos. Esse conjunto é um dos motivos centrais para adotá-lo como camada de inferência quando a equipe precisa de processamento orientado a fila e controle explícito de backend. O valor aumenta em workloads longos, nos quais eventos de conclusão são melhores que chamadas bloqueantes.",
     },
     {
       question: "Quando o AnyCap é a escolha mais simples?",
       answer:
-        "Quando a equipe já usa agentes em ferramentas de desenvolvimento e quer que esses agentes ganhem capacidade multimodal e entrega de artefatos por meio de um runtime único, sem outro projeto de integração com API.",
+        "O AnyCap costuma ser mais simples quando a equipe já opera agentes em ferramentas de desenvolvimento e quer ampliar capacidades sem abrir um projeto novo de integração por API. Um runtime compartilhado padroniza instalação, autenticação, invocação e entrega entre ações multimodais. Isso reduz deriva de integração, melhora previsibilidade entre agentes e acelera rollout para fluxos que precisam ir além de geração isolada.",
     },
     {
       question: "Qual é a regra mais simples de decisão?",
       answer:
-        "Se o backend do produto precisa de APIs de modelo, escolha o Replicate. Se seus agentes precisam de um runtime compartilhado para realmente concluir trabalho multimodal, escolha o AnyCap.",
+        "Se o backend do produto precisa de APIs de modelo e controle explícito de jobs, escolha o Replicate. Se seus agentes precisam de um runtime compartilhado para executar e entregar trabalho multimodal sem multiplicar glue code por provedor, escolha o AnyCap. Quando há dúvida, mapear onde a complexidade deve morar, backend da aplicação ou runtime de agente, normalmente resolve a decisão rapidamente.",
     },
   ],
 };

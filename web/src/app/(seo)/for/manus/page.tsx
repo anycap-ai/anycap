@@ -290,6 +290,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
         "manus image generation",
         "manus agent skills",
       ],
+      datePublished: PAGE_LAST_MODIFIED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
     howToJsonLd: {

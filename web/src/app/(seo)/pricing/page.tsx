@@ -34,6 +34,13 @@ const pricingGenerationModeLabels = {
     "image-to-video": "imagem-para-vídeo",
     "text-to-music": "texto-para-música",
   },
+  id: {
+    "text-to-image": "teks-ke-gambar",
+    "image-to-image": "gambar-ke-gambar",
+    "text-to-video": "teks-ke-video",
+    "image-to-video": "gambar-ke-video",
+    "text-to-music": "teks-ke-musik",
+  },
 } as const;
 
 const pricingGenerationGroupLabels = {
@@ -79,6 +86,27 @@ const pricingGenerationGroupLabels = {
       headers: ["Modelo", "Modos", "Créditos / seg"] as [string, string, string],
     },
   ],
+  id: [
+    {
+      title: "Pembuatan gambar",
+      description: "Dikenakan per panggilan. Mendukung mode teks-ke-gambar dan gambar-ke-gambar.",
+      unitLabel: "/panggilan",
+      headers: ["Model", "Mode", "Kredit / panggilan"] as [string, string, string],
+    },
+    {
+      title: "Pembuatan video",
+      description:
+        "Dikenakan per detik output yang dihasilkan. Mendukung mode teks-ke-video dan gambar-ke-video.",
+      unitLabel: "/detik",
+      headers: ["Model", "Mode", "Kredit / detik"] as [string, string, string],
+    },
+    {
+      title: "Pembuatan musik",
+      description: "Dikenakan per detik audio yang dihasilkan.",
+      unitLabel: "/detik",
+      headers: ["Model", "Mode", "Kredit / detik"] as [string, string, string],
+    },
+  ],
 } as const;
 
 const pricingActionRowsByLocale = {
@@ -91,10 +119,18 @@ const pricingActionRowsByLocale = {
     { action: "Busca na web (fundamentada por IA)", unit: "por requisição", credits: 5 },
     { action: "Crawl de web", unit: "por requisição", credits: 1 },
   ] as const,
+  id: [
+    { action: "Pembacaan gambar", unit: "per permintaan", credits: 5 },
+    { action: "Pembacaan video", unit: "per permintaan", credits: 10 },
+    { action: "Pembacaan audio", unit: "per permintaan", credits: 10 },
+    { action: "Pencarian web", unit: "per permintaan", credits: 1 },
+    { action: "Pencarian web (di-grounding AI)", unit: "per permintaan", credits: 5 },
+    { action: "Crawl web", unit: "per permintaan", credits: 1 },
+  ] as const,
 } as const;
 
 function translateGenerationMode(locale: SiteLocale, mode: string) {
-  const resolvedLocale = locale === "pt-br" ? "pt-br" : "en";
+  const resolvedLocale = locale === "pt-br" || locale === "id" ? locale : "en";
   const label =
     pricingGenerationModeLabels[resolvedLocale][mode as keyof (typeof pricingGenerationModeLabels)["en"]];
   return label ?? mode;
@@ -107,7 +143,7 @@ function getLocalizedPricingGenerationGroups(locale: SiteLocale): readonly {
   headers: [string, string, string];
   models: GenerationModel[];
 }[] {
-  const resolvedLocale = locale === "pt-br" ? "pt-br" : "en";
+  const resolvedLocale = locale === "pt-br" || locale === "id" ? locale : "en";
   const labels = pricingGenerationGroupLabels[resolvedLocale];
 
   return pricingGenerationGroups.map((group, index) => ({
@@ -123,7 +159,7 @@ function getLocalizedPricingGenerationGroups(locale: SiteLocale): readonly {
 }
 
 function getLocalizedPricingActionRows(locale: SiteLocale) {
-  return pricingActionRowsByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  return pricingActionRowsByLocale[locale === "pt-br" || locale === "id" ? locale : "en"];
 }
 
 type PricingPackHrefData = {
@@ -210,7 +246,7 @@ function ModelTable({
 export default async function PricingPage() {
   const locale = await getRequestLocale();
   const content = getPricingPageData(locale);
-  const creditsUnitLabel = locale === "pt-br" ? "créditos" : "credits";
+  const creditsUnitLabel = locale === "pt-br" ? "créditos" : locale === "id" ? "kredit" : "credits";
 
   return (
     <>
@@ -276,7 +312,7 @@ export default async function PricingPage() {
                     className="rounded-2xl border border-[#d4dbb8] bg-[#fbfcf8] p-6"
                   >
                     <p className="text-[11px] tracking-[0.7px] text-[#6b7d3a]" style={mono}>
-                      {locale === "pt-br" ? "Princípio de preço" : "Pricing principle"}
+                      {locale === "id" ? "Prinsip harga" : locale === "pt-br" ? "Princípio de preço" : "Pricing principle"}
                     </p>
                     <h3 className="mt-3 text-base text-[#1c1f17]" style={pixel}>
                       {item.title}
@@ -308,9 +344,11 @@ export default async function PricingPage() {
                     returnTo={buildCreditPackHref(pkg)}
                     id={`pack-${pkg.packQuery}`}
                     aria-label={
-                      locale === "pt-br"
-                        ? `Comprar o pacote de créditos ${pkg.name}`
-                        : `Buy the ${pkg.name} credit pack`
+                      locale === "id"
+                        ? `Beli paket kredit ${pkg.name}`
+                        : locale === "pt-br"
+                          ? `Comprar o pacote de créditos ${pkg.name}`
+                          : `Buy the ${pkg.name} credit pack`
                     }
                     className={`group relative flex h-full flex-col rounded-xl border p-6 transition-all hover:-translate-y-0.5 hover:border-[#6b7d3a] hover:shadow-[0_10px_24px_rgba(28,31,23,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6b7d3a] focus-visible:ring-offset-2 ${
                       pkg.highlight

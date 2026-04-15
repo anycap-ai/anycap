@@ -177,7 +177,7 @@ export default async function StartPage() {
                 {content.universalSteps.map((step, index) => (
                   <div key={step.title} className="border-l-[3px] border-[#6b7d3a] pl-6">
                     <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                      {locale === "pt-br" ? "Etapa" : "Step"} {index + 1}
+                      {locale === "id" ? "Langkah" : locale === "pt-br" ? "Etapa" : "Step"} {index + 1}
                     </p>
                     <h3 className="mb-3 text-[15px] font-bold text-[#1c1f17]" style={mono}>
                       {step.title}

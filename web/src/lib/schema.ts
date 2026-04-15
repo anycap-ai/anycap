@@ -1,3 +1,4 @@
+import { organizationId, organizationSameAs } from "@/lib/organization";
 import { defaultLocale, localizePublicPath, siteConfig, type SiteLocale } from "@/lib/site";
 
 type ArticleSchemaInput = {
@@ -18,8 +19,10 @@ type FaqPageItem = {
 
 const organizationReference = {
   "@type": "Organization",
+  "@id": organizationId,
   name: siteConfig.siteName,
   url: siteConfig.url,
+  sameAs: organizationSameAs,
 } as const;
 
 function buildAbsoluteUrl(path: string, locale: SiteLocale = defaultLocale) {

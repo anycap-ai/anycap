@@ -388,6 +388,137 @@ const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
       thumbnailUrl: START_VIDEO_THUMBNAIL_URL,
     },
   },
+  id: {
+    metadata: {
+      title: "Mulai dengan AnyCap — Jangan ganti agen, tambahkan kemampuan sekarang",
+      description:
+        "Mulai dengan AnyCap dalam hitungan menit. Pilih Claude Code, Cursor, atau Codex, lalu minta dengan bahasa alami untuk memasang satu skill dan satu CLI serta menambahkan kemampuan gambar, video, dan penglihatan tanpa mengganti agen.",
+      openGraphTitle: "Mulai dengan AnyCap — Jangan ganti agen, tambahkan kemampuan sekarang",
+      openGraphDescription:
+        "Pilih agen Anda, minta dengan bahasa alami, lalu tambahkan kemampuan gambar, video, dan penglihatan melalui satu CLI.",
+      pageName: "Mulai dengan AnyCap",
+      pageDescription:
+        "Halaman mulai cepat untuk memasang AnyCap dengan meminta agen Anda dalam bahasa alami dan memilih jalur onboarding yang tepat untuk Claude Code, Cursor, atau Codex.",
+    },
+    breadcrumbItems: [
+      { name: "Home", href: "/" },
+      { name: "Mulai", href: START_PATH },
+    ],
+    hero: {
+      eyebrow: "Mulai",
+      titleLine1: "Jangan ganti agen.",
+      titleLine2: "Tambahkan kemampuan sekarang.",
+      intro:
+        "AnyCap adalah jalur tercepat dari agen coding yang sudah mampu menjadi agen multimodal yang mampu. Pilih agen yang sudah Anda pakai, lalu beri tahu apa yang Anda butuhkan dalam bahasa alami. Agen dapat memasang satu skill dan satu CLI untuk Anda, lalu menambahkan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video melalui antarmuka perintah yang sama.",
+      lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+      naturalLanguageEyebrow: "Bahasa alami dulu",
+      naturalLanguageLead: "Cukup katakan apa yang Anda inginkan, misalnya",
+      naturalLanguageNote:
+        "Jalur yang paling mulus adalah meminta dengan bahasa sederhana dan membiarkan agen menangani setup, login, dan panggilan kemampuan dari sana.",
+    },
+    video: {
+      sectionEyebrow: "Tonton",
+      title: "Lihat alur kerja bahasa alami secara langsung",
+      description:
+        "Video singkat merek untuk halaman mulai. Video ini menggabungkan pesan 'jangan ganti agen' dengan gagasan bahwa Anda bisa mulai dengan menjelaskan apa yang Anda butuhkan dalam bahasa alami.",
+      alt: "Video singkat yang menampilkan halaman mulai AnyCap dan jalur setup bahasa alami.",
+    },
+    overviewTitle: "Mengapa halaman ini ada",
+    overviewParagraphs: [
+      "Halaman mulai dirancang untuk jalur tercepat dari niat ke kemampuan yang benar-benar berjalan. Alih-alih meminta pengguna mempelajari seluruh struktur produk terlebih dahulu, halaman ini memberi titik awal bahasa alami, jalur instalasi yang sederhana, dan halaman lanjutan yang jelas untuk celah yang paling umum.",
+      "Itu membuat halaman ini berguna baik untuk operator baru maupun untuk tim yang ingin mengirim tautan onboarding yang rapi kepada orang lain. Tujuannya bukan hanya menjelaskan AnyCap, tetapi juga mengurangi gesekan antara pertanyaan pertama dan panggilan kemampuan pertama yang berhasil.",
+    ],
+    sectionTitles: {
+      agents: "Pilih agen Anda",
+      naturalLanguageStartPath: "Jalur awal bahasa alami",
+      gapEntrances: "Mulai dari celah yang perlu Anda tutup",
+      watch: "Lihat alur bahasa alami secara langsung",
+    },
+    cardEyebrow: "Jalur agen",
+    agentOptions: agentOptions.map((option) => ({
+      ...option,
+      description:
+        option.name === "Claude Code"
+          ? "Jalur awal terbaik jika Anda ingin halaman instalasi yang paling kuat dan onboarding kemampuan yang paling dalam."
+          : option.name === "Cursor"
+            ? "Gunakan ini jika alur kerja agen Anda sudah berada di Cursor dan Anda ingin lapisan kemampuan yang sama di sana."
+            : "Cocok saat Anda ingin menambahkan kemampuan gambar, video, dan penglihatan ke Codex tanpa menghubungkan SDK penyedia secara manual.",
+    })),
+    universalSteps: universalSteps.map((step) => ({
+      ...step,
+      title:
+        step.title === "Ask your agent to get you started"
+          ? "Minta agen Anda untuk memulai"
+          : step.title === "Install the CLI"
+            ? "Pasang CLI"
+            : "Masuk sekali",
+      note:
+        step.title === "Ask your agent to get you started"
+          ? "Claude Code, Cursor, atau Codex dapat menerima permintaan bahasa sederhana dan mengubahnya menjadi alur setup untuk Anda."
+          : step.title === "Install the CLI"
+            ? "Atau pasang lewat npm jika Anda lebih suka jalur manajer paket."
+            : "Autentikasi hanya dilakukan sekali dan berlaku untuk semua kemampuan, jadi Anda bisa terus bertanya dalam bahasa alami setelah setup.",
+    })),
+    gapEntrances: gapEntrances.map((entry) => ({
+      ...entry,
+      eyebrow:
+        entry.eyebrow === "Claude Code"
+          ? "Claude Code"
+          : entry.eyebrow === "Problem intent"
+            ? "Intensi masalah"
+            : "Hub kemampuan",
+      title:
+        entry.title === "Add image generation to Claude Code"
+          ? "Tambahkan pembuatan gambar ke Claude Code"
+          : entry.title === "Add video generation to Claude Code"
+            ? "Tambahkan pembuatan video ke Claude Code"
+            : entry.title === "What agents still can't do"
+              ? "Apa yang masih belum bisa dilakukan agen"
+              : "Jelajahi kemampuan apa pun",
+      summary:
+        entry.title === "Add image generation to Claude Code"
+          ? "Halaman berikutnya terbaik jika celahnya adalah visual, mockup, atau aset kreatif."
+          : entry.title === "Add video generation to Claude Code"
+            ? "Halaman berikutnya terbaik jika celahnya adalah demo, walkthrough, atau klip sosial."
+            : entry.title === "What agents still can't do"
+              ? "Gunakan ini saat Anda ingin narasi kekurangan dan landing page yang tepat untuk setiap kemampuan yang hilang."
+              : "Gunakan ini saat Anda sudah tahu ingin API gambar, video, atau penglihatan untuk agen Anda.",
+    })),
+    ctas: {
+      startWithClaudeCode: "Mulai dengan Claude Code",
+      universalInstallGuide: "Panduan instalasi universal",
+      seeCapabilityGaps: "Lihat celah kemampuan",
+      installAnycap: "Pasang AnyCap",
+      viewCapabilities: "Lihat kemampuan",
+      forClaudeCode: "Untuk Claude Code",
+    },
+    pageJsonLd: createTechArticleJsonLd({
+      headline: "Mulai dengan AnyCap — Jangan ganti agen, tambahkan kemampuan sekarang",
+      description:
+        "Halaman mulai cepat untuk memasang AnyCap dengan meminta agen Anda dalam bahasa alami dan memilih jalur onboarding yang tepat untuk Claude Code, Cursor, atau Codex.",
+      path: START_PATH,
+      about: ["AnyCap CLI", "agen AI", "Claude Code", "Cursor", "Codex"],
+      keywords: [
+        "mulai dengan anycap",
+        "pasang anycap",
+        "tambahkan kemampuan ke claude code",
+        "alat cursor",
+        "alat codex",
+      ],
+      dateModified: lastUpdatedIso,
+    }),
+    videoJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: "Mulai dengan AnyCap",
+      description:
+        "Video merek berdurasi 25 detik untuk halaman mulai, menampilkan posisi 'jangan ganti agen' dan gagasan bahwa Anda bisa mulai dengan meminta dalam bahasa alami.",
+      contentUrl: START_VIDEO_SRC,
+      uploadDate: lastUpdatedIso,
+      duration: "PT25S",
+      thumbnailUrl: START_VIDEO_THUMBNAIL_URL,
+    },
+  },
 };
 
 export function getStartMetadata(locale: SiteLocale): Metadata {

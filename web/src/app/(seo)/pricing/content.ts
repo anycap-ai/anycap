@@ -608,126 +608,126 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   },
   id: {
     metadata: {
-      title: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
+      title: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup, kredit gratis $5",
       description:
-        "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
-      openGraphTitle: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
+        "Dapatkan kredit gratis $5, lalu bayar sesuai pemakaian tanpa langganan dan tanpa markup. Gunakan satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi di AnyCap.",
+      openGraphTitle: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup, kredit gratis $5",
       openGraphDescription:
-        "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
-      pageName: "AnyCap Pricing",
+        "Satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi. Kredit gratis $5, bayar sesuai pemakaian, tanpa langganan.",
+      pageName: "Harga AnyCap",
       pageDescription:
-        "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
+        "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
     },
     breadcrumbItems: [
       { name: "Home", href: "/" },
-      { name: "Pricing", href: "/pricing" },
+      { name: "Harga", href: "/pricing" },
     ],
     hero: {
-      eyebrow: "Pricing",
-      titleLine1: "Simple, transparent",
-      titleLine2: "pricing.",
+      eyebrow: "Harga",
+      titleLine1: "Harga sederhana dan",
+      titleLine2: "transparan.",
       intro:
-        "Start with the AI agent capabilities coding agents miss most often. AnyCap gives you one prepaid balance for those workflows, then lets that same balance extend across the broader runtime as your stack grows. No markup over official rates. No subscription. Every new account starts with $5 free credit.",
-      factsLabel: "Pricing facts",
+        "Mulailah dari kapabilitas agen AI yang paling sering tidak dimiliki agen coding. AnyCap memberi Anda satu saldo prabayar untuk alur kerja tersebut, lalu membiarkan saldo yang sama dipakai di runtime yang lebih luas saat stack Anda bertumbuh. Tanpa markup di atas tarif resmi. Tanpa langganan. Setiap akun baru dimulai dengan kredit gratis $5.",
+      factsLabel: "Fakta harga",
       factsText:
-        "AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that, the public AnyCap capability inventory is billed at the same rate as the official model provider, with no subscription fee and no platform markup. The same balance can also be used across image, video, audio, web, storage, and publishing workflows. Credit packages are one-time purchases, and larger packages include bonus credits.",
-      lastUpdatedLabel: "Last updated April 8, 2026",
+        "AnyCap memakai kredit prabayar. Akun baru menerima kredit gratis $5. Setelah itu, inventaris kapabilitas publik AnyCap ditagih dengan tarif yang sama seperti penyedia model resmi, tanpa biaya langganan dan tanpa markup platform. Saldo yang sama juga dapat digunakan di alur gambar, video, audio, web, penyimpanan, dan publikasi. Paket kredit dibeli satu kali, dan paket yang lebih besar mencakup kredit bonus.",
+      lastUpdatedLabel: "Terakhir diperbarui 8 April 2026",
     },
     sectionTitles: {
-      pricingPrinciples: "How AnyCap pricing works",
-      creditPackages: "Credit packages",
-      estimateTopUp: "How to estimate your first top-up",
-      generationModels: "Generation models",
-      actions: "Actions",
+      pricingPrinciples: "Cara kerja harga AnyCap",
+      creditPackages: "Paket kredit",
+      estimateTopUp: "Cara memperkirakan isi ulang pertama",
+      generationModels: "Model generasi",
+      actions: "Aksi",
       drivePage: "Drive & Page",
-      faq: "Common questions",
+      faq: "Pertanyaan umum",
     },
     pricingPrinciplesIntro:
-      "The pricing model is intentionally simple: start free, buy one-time credit packs when you need more balance, and keep that same balance available across the workflows your agents already run.",
+      "Model harga ini sengaja dibuat sederhana: mulai gratis, beli paket kredit satu kali saat Anda butuh saldo lebih, dan pertahankan saldo yang sama untuk alur kerja yang sudah dijalankan agen Anda.",
     pricingPrinciples: pricingPrinciplesEn,
     creditPackages: pricingPackagesByLocale.en,
     creditPackagesIntro:
-      "Purchase credits to use across all capabilities. Larger packages include bonus credits.",
+      "Beli kredit untuk dipakai di semua kapabilitas. Paket yang lebih besar menyertakan kredit bonus.",
     packageStatusLabels: {
-      popular: "Popular",
-      recommendedPack: "Recommended pack",
-      continueToCheckout: "Continue to checkout",
+      popular: "Populer",
+      recommendedPack: "Paket yang direkomendasikan",
+      continueToCheckout: "Lanjut ke checkout",
     },
     enterprisePackage: {
       name: "Enterprise",
-      headline: "Custom volume for teams and larger workflows",
+      headline: "Volume khusus untuk tim dan alur kerja yang lebih besar",
       description:
-        "For teams that need larger purchases, consolidated billing, procurement support, or invoiced billing.",
-      highlights: ["Custom credit volume", "Volume pricing", "Invoiced billing"],
-      ctaLabel: "Contact us",
-      ctaSubject: "AnyCap Enterprise pricing",
+        "Untuk tim yang butuh pembelian lebih besar, billing terpusat, dukungan procurement, atau penagihan invoice.",
+      highlights: ["Volume kredit khusus", "Harga per volume", "Penagihan invoice"],
+      ctaLabel: "Hubungi kami",
+      ctaSubject: "Harga Enterprise AnyCap",
     },
     enterpriseFootnote:
-      "1 credit = $0.02. All packages are one-time purchases, not subscriptions. Need a larger volume or invoiced billing? Contact us for enterprise pricing.",
+      "1 kredit = $0,02. Semua paket dibeli satu kali, bukan langganan. Butuh volume lebih besar atau billing invoice? Hubungi kami untuk harga enterprise.",
     estimateTopUp: {
       intro:
-        "Most teams do not need a perfect forecast before buying credits. A better approach is to map the workflow, price the expensive step, then pick the pack that leaves room for iteration.",
+        "Kebanyakan tim tidak butuh prakiraan yang sempurna sebelum membeli kredit. Cara yang lebih baik adalah memetakan alurnya, menghitung bagian yang paling mahal, lalu memilih paket yang memberi ruang untuk iterasi.",
       checklist: checklistEn,
     },
     generationModels: {
       intro:
-        "Credit rates for each generation model. We pass through the official provider rate with no markup.",
+        "Tarif kredit untuk setiap model generasi. Kami meneruskan tarif resmi penyedia tanpa markup.",
       creditsNotice:
-        "Credits shown are approximate. Actual cost may vary based on resolution, duration, or quality settings.",
+        "Kredit yang ditampilkan bersifat perkiraan. Biaya aktual dapat berubah tergantung resolusi, durasi, atau pengaturan kualitas.",
     },
     actions: {
       intro:
-        "Analyze images, videos, and audio, search the web, crawl pages, and run AI-grounded web search — all at a flat per-request rate.",
-      includedCapabilitiesLabel: "Included capabilities",
+        "Analisis gambar, video, dan audio, cari web, crawl halaman, dan jalankan pencarian web yang di-grounding AI, semuanya dengan tarif tetap per permintaan.",
+      includedCapabilitiesLabel: "Kapabilitas yang termasuk",
       includedCapabilitiesSummary: pricingCapabilitySummaryTextEn,
-      tableHeaders: ["Action", "Unit", "Credits"],
+      tableHeaders: ["Aksi", "Unit", "Kredit"],
     },
     drivePage: {
       intro:
-        "Cloud storage and static site hosting included with every account at no additional credit cost. Storage quotas are enforced per account.",
+        "Penyimpanan cloud dan hosting situs statis disertakan di setiap akun tanpa biaya kredit tambahan. Kuota penyimpanan diterapkan per akun.",
       driveLabel: "Drive",
-      driveDescription: "Cloud file storage with public URLs and sharing.",
+      driveDescription: "Penyimpanan file cloud dengan URL publik dan berbagi.",
       pageLabel: "Page",
-      pageDescription: "Static site deployment and web publishing.",
-      limitNotice: "Current limits reflect early-access preview defaults and may change.",
+      pageDescription: "Deploy situs statis dan publikasi web.",
+      limitNotice: "Batas saat ini mengikuti default pratinjau early access dan dapat berubah.",
       driveQuotas: [
-        { label: "Files per account", value: "5,000" },
-        { label: "Max file size", value: "1 GB" },
+        { label: "File per akun", value: "5.000" },
+        { label: "Ukuran file maks", value: "1 GB" },
       ],
       pageQuotas: [
-        { label: "Sites per account", value: "100" },
-        { label: "Versions per site", value: "500" },
+        { label: "Situs per akun", value: "100" },
+        { label: "Versi per situs", value: "500" },
       ],
     },
     faqItems: faqItemsEn,
     cta: {
-      buyCredits: "Buy credits",
-      viewCapabilities: "View capabilities",
+      buyCredits: "Beli kredit",
+      viewCapabilities: "Lihat kapabilitas",
     },
     pricingPageJsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "AnyCap Pricing",
+      name: "Harga AnyCap",
       description:
-        "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
+        "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
       url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
       dateModified: "2026-04-08",
       mainEntity: {
         "@type": "Product",
-        name: "AnyCap Credits",
+        name: "Kredit AnyCap",
         url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
         description:
-          "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
+          "Kredit bayar sesuai pemakaian untuk kapabilitas agen AI yang paling sering tidak dimiliki agen coding, dengan satu saldo di runtime AnyCap yang lebih luas.",
         offers: pricingPackagesByLocale.en.map((pkg) => ({
           "@type": "Offer",
-          name: `${pkg.name} credit pack`,
+          name: `${pkg.name} paket kredit`,
           url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
           price: pkg.price.toFixed(2),
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
           description: pkg.bonusLabel
-            ? `${pkg.credits.toLocaleString()} credits (${pkg.bonusLabel})`
-            : `${pkg.credits.toLocaleString()} credits`,
+            ? `${pkg.credits.toLocaleString()} kredit (${pkg.bonusLabel})`
+            : `${pkg.credits.toLocaleString()} kredit`,
         })),
       },
     },

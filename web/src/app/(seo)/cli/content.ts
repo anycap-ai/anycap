@@ -332,10 +332,128 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       "CLI nativa para agentes que dá aos agentes de IA um único caminho de instalação e uma única interface para capacidades como geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo.",
     ),
   },
-  id: {} as CliPageData,
+  id: {
+    metadata: {
+      title: "AnyCap CLI | Runtime kapabilitas untuk agen AI",
+      description:
+        "Agen Anda bisa merencanakan pekerjaan, tetapi tetap membutuhkan surface perintah untuk pembuatan gambar, pembuatan video, pemahaman gambar, analisis video, pencarian, dan publikasi. AnyCap CLI memberi lapisan kapabilitas itu satu jalur instalasi, satu alur autentikasi, dan satu interface.",
+      openGraphTitle: "AnyCap CLI | Runtime kapabilitas untuk agen AI",
+      openGraphDescription:
+        "Satu CLI untuk workflow gambar, video, visi, pencarian, dan publikasi di Claude Code, Cursor, Codex, dan lingkungan agen serupa.",
+    },
+    eyebrow: "CLI",
+    heroTitle: ["Satu CLI untuk kapabilitas", "yang masih dibutuhkan agen Anda."],
+    heroIntro:
+      "Agen bisa merencanakan workflow. Lapisan yang sering hilang adalah eksekusi: satu surface perintah untuk pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video. AnyCap CLI memberi lapisan itu satu jalur instalasi, satu alur autentikasi, dan satu interface di Claude Code, Cursor, Codex, dan produk agen serupa.",
+    heroTagline: "Tidak perlu ganti agen. Tambahkan kapabilitas sekarang juga.",
+    overviewTitle: "Mengapa CLI ini penting selain untuk instalasi",
+    overviewParagraphs: [
+      "CLI terpadu penting karena ia mengubah akses kapabilitas menjadi surface operasional yang stabil. Alih-alih setiap workflow membawa SDK penyedia, dashboard, atau pola autentikasi baru, agen bisa memakai satu lapisan perintah yang konsisten untuk tugas media, pencarian, penyimpanan, dan analisis.",
+      "Ini juga membuat dokumentasi dan routing lebih sederhana. Begitu agen memahami surface CLI, halaman-halaman di situs bisa fokus pada kecocokan dan desain workflow, bukan mengulang model eksekusi yang berbeda untuk setiap kapabilitas.",
+    ],
+    installTitle: "Pasang sekali",
+    installIntro:
+      "Instalasi CLI akan tersedia saat AnyCap diluncurkan secara publik. Jalur instalasi di bawah adalah pintu masuk yang stabil ke runtime.",
+    commandsTitle: "Perintah pertama yang paling sering dibutuhkan agen",
+    capabilities: [
+      {
+        name: "Pembuatan Gambar",
+        description: "Buat dan edit visual dengan Seedream 5, Nano Banana Pro, dan lainnya.",
+        status: "Tersedia",
+        ...capabilities[0],
+      },
+      {
+        name: "Pembuatan Video",
+        description: "Buat walkthrough, klip, dan output motion dengan Veo 3.1.",
+        status: "Tersedia",
+        ...capabilities[1],
+      },
+      {
+        name: "Pemahaman Gambar",
+        description: "Analisis screenshot, diagram, OCR, dan referensi visual lewat satu runtime.",
+        status: "Tersedia",
+        ...capabilities[2],
+      },
+      {
+        name: "Analisis Video",
+        description: "Tinjau rekaman, rangkum adegan, dan ekstrak intelijen video terstruktur.",
+        status: "Tersedia",
+        ...capabilities[3],
+      },
+    ],
+    capabilitiesCta: "Lihat kapabilitas apa pun →",
+    reasonsTitle: "Mengapa satu CLI itu penting",
+    reasons: [
+      {
+        title: "Jaga surface perintah tetap stabil",
+        description:
+          "Tanpa CLI terpadu, setiap kapabilitas baru berubah menjadi SDK baru, dashboard baru, atau script shell baru. AnyCap menjaga lapisan eksekusi tetap konsisten.",
+      },
+      {
+        title: "Login sekali saja",
+        description:
+          "Autentikasi terjadi sekali dan berlaku untuk workflow gambar, video, dan visi alih-alih terpecah-pecah di banyak penyedia.",
+      },
+      {
+        title: "Pindah antar agen tanpa belajar ulang runtime",
+        description:
+          "Perintah yang sama bisa dipakai di Claude Code, Cursor, Codex, dan lingkungan agen serupa tanpa memaksa model mental baru setiap kali.",
+      },
+    ],
+    ecosystemsLabel: "Tersedia di berbagai produk agen",
+    ecosystems: [...ecosystems],
+    stackTitle: "Pahami bagian stack lainnya",
+    nextPages: [
+      {
+        eyebrow: "Kapabilitas",
+        title: "Pembuatan Gambar",
+        href: "/capabilities/image-generation",
+        summary: "Lihat lebih dalam text-to-image, image editing, model yang didukung, dan workflow CLI yang sebenarnya.",
+      },
+      {
+        eyebrow: "Kapabilitas",
+        title: "Pembuatan Video",
+        href: "/capabilities/video-generation",
+        summary: "Lihat bagaimana text-to-video dan image-to-video masuk ke surface perintah agen yang sama.",
+      },
+      {
+        eyebrow: "Pelajari",
+        title: "Apa yang tidak bisa dilakukan agen",
+        href: "/learn/what-agents-cant-do",
+        summary: "Mulai dari sini jika Anda ingin narasi berbasis kekurangan dan jalur terpendek ke setiap kapabilitas yang hilang.",
+      },
+      {
+        eyebrow: "Pelajari",
+        title: "Bagaimana skills bekerja",
+        href: "/skills",
+        summary: "Gunakan ini untuk memahami bagaimana layer instruksi menghubungkan agen ke CLI dan runtime.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "MCP vs Skills",
+        href: "/guides/mcp-vs-skills",
+        summary: "Gunakan ini untuk memisahkan layer protokol dari layer instruksi sebelum Anda menghubungkan AnyCap.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Engineering konteks",
+        href: "/guides/context-engineering-for-agents",
+        summary: "Gunakan ini untuk memahami kapan agen harus memanggil kapabilitas alih-alih tetap di dalam prompt.",
+      },
+    ],
+    ctas: [
+      { label: "Lihat di GitHub", external: githubHref },
+      { label: "Mulai", href: "/start" },
+      { label: "Lihat Celah Kapabilitas", href: "/learn/what-agents-cant-do" },
+      { label: "Untuk Claude Code", href: "/for/claude-code" },
+    ],
+    pageJsonLd: buildCliPageJsonLd(
+      "id",
+      "AnyCap CLI | Runtime kapabilitas untuk agen AI",
+      "CLI yang ramah agen dan memberi agen AI satu jalur instalasi serta satu interface untuk kapabilitas seperti pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video.",
+    ),
+  },
 };
-
-contentByLocale.id = contentByLocale.en;
 
 export function getCliMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

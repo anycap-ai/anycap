@@ -216,9 +216,101 @@ const hubBaseDefinitionsPtBr: HubBaseDefinitionsByKey = {
   },
 };
 
+const hubBaseDefinitionsId: HubBaseDefinitionsByKey = {
+  for: {
+    key: "for",
+    path: "/for",
+    title: "Lengkapi Agen | Tambahkan Kapabilitas yang Hilang ke Agen AI",
+    description:
+      "Pilih agen yang Anda pakai dan tambahkan lapisan kapabilitas yang tidak mereka bawa dari awal. Lengkapi Claude Code, Cursor, Codex, dan Manus dengan alur gambar, video, visi, dan pengambilan data melalui AnyCap.",
+    eyebrow: "Lengkapi Agen",
+    heroLines: ["Pertahankan agen yang Anda pakai.", "Tambahkan kapabilitas yang hilang."],
+    intro:
+      "Halaman-halaman ini menunjukkan jalur tercepat untuk melengkapi Claude Code, Cursor, Codex, dan Manus dengan pembuatan gambar, pembuatan video, pemahaman gambar, analisis video, dan alur kapabilitas terkait melalui satu runtime.",
+    overviewTitle: "Cara memakai hub ini",
+    overviewParagraphs: [
+      "Hub ini berguna ketika pengguna sudah tahu agen mana yang ingin dipertahankan dan hanya perlu lapisan kapabilitas yang hilang. Alih-alih mengganti lingkungan coding, keluarga halaman ini fokus memperluas agen yang sudah ada dengan alur gambar, video, visi, dan pengambilan data.",
+      "Itu membuat bagian /for berfungsi sebagai lapisan routing sekaligus indeks. Setiap halaman anak menerjemahkan runtime AnyCap yang sama ke jalur instalasi, contoh workflow, dan langkah berikutnya yang masuk akal untuk ekosistem agen tertentu.",
+    ],
+    usageTitle: "Apa yang akan Anda temukan di sini",
+    usagePoints: [
+      "Jalur setup khusus agen untuk Claude Code, Cursor, Codex, dan Manus.",
+      "Pola routing kapabilitas yang menjelaskan halaman mana yang perlu dibuka lebih dulu berdasarkan celah workflow.",
+      "Transisi yang lebih bersih dari tooling bawaan agen ke AnyCap tanpa membangun ulang workflow di sekitar produk lain.",
+    ],
+  },
+  guides: {
+    key: "guides",
+    path: "/guides",
+    title: "Panduan — Bantuan setup dan implementasi praktis untuk AnyCap",
+    description:
+      "Jelajahi panduan AnyCap untuk instalasi, engineering konteks agen, integrasi tool, dan pola implementasi untuk pengguna, kreator, dan builder.",
+    eyebrow: "Panduan",
+    heroLines: ["Panduan praktis", "untuk tim agen dan kreator."],
+    intro:
+      "Panduan ini mencakup setup, desain konteks, integrasi tool, dan pola kerja untuk tim dan kreator yang memakai agen dengan AnyCap.",
+    overviewTitle: "Untuk apa panduan ini",
+    overviewParagraphs: [
+      "Bagian panduan adalah tempat niat implementasi berubah menjadi pengetahuan operator yang bisa diulang. Bagian ini mencakup instalasi, desain konteks, routing kapabilitas, dan pola yang membantu tim berpindah dari eksperimen sekali pakai ke workflow agen yang stabil.",
+      "Dalam praktiknya, halaman-halaman ini paling berguna saat pengguna sudah tahu celah kapabilitasnya dan membutuhkan jalur eksekusi, bukan sekadar deskripsi fitur. Karena itu panduan menekankan keputusan, urutan setup, dan kecocokan workflow, bukan hanya pesan produk.",
+    ],
+    usageTitle: "Apa yang akan Anda temukan di sini",
+    usagePoints: [
+      "Panduan instalasi dan onboarding untuk AnyCap dan lingkungan agen yang didukung.",
+      "Penjelasan arsitektur yang menjernihkan hubungan antara skills, MCP, engineering konteks, dan lapisan runtime.",
+      "Halaman berorientasi workflow yang menunjukkan cara menambahkan kapabilitas generasi dan visi ke agen nyata langkah demi langkah.",
+    ],
+  },
+  glossary: {
+    key: "glossary",
+    path: "/glossary",
+    title: "Glosarium — Konsep inti di balik AnyCap dan tooling agen",
+    description:
+      "Baca definisi ringkas untuk konsep inti AnyCap dan tooling agen seperti engineering konteks, agent harness, dan runtime kapabilitas.",
+    eyebrow: "Glosarium",
+    heroLines: ["Bahasa bersama", "untuk sistem agen."],
+    intro:
+      "Gunakan entri glosarium ini untuk menyelaraskan tim tentang istilah di balik runtime kapabilitas, harness, dan desain konteks.",
+    overviewTitle: "Mengapa glosarium ini ada",
+    overviewParagraphs: [
+      "Sistem agen sering gagal di lapisan bahasa sebelum gagal di lapisan tooling. Tim memakai kata yang sama untuk arti yang berbeda, dan itu membuat diskusi desain jadi kabur soal model, harness, runtime, atau protokol.",
+      "Glosarium memberi halaman AnyCap kerangka referensi bersama. Ini membantu pembaca menghubungkan istilah seperti engineering konteks, agent harness, dan runtime kapabilitas dengan halaman praktis lainnya di situs.",
+    ],
+    usageTitle: "Apa yang akan Anda temukan di sini",
+    usagePoints: [
+      "Definisi ringkas untuk konsep yang sering muncul dalam sistem agen.",
+      "Terminologi yang menghubungkan halaman konseptual ke panduan setup dan halaman perbandingan.",
+      "Kosakata yang lebih jelas untuk menentukan posisi AnyCap di stack agen yang lebih luas.",
+    ],
+  },
+  compare: {
+    key: "compare",
+    path: "/compare",
+    title: "Bandingkan — AnyCap vs tooling agen dan platform API media",
+    description:
+      "Bandingkan AnyCap dengan tooling agen lain, API model, dan platform media agar tim bisa memilih lapisan stack yang tepat.",
+    eyebrow: "Bandingkan",
+    heroLines: ["Bandingkan AnyCap", "dengan lapisan stack yang tepat."],
+    intro:
+      "Perbandingan ini membantu tim memutuskan kapan runtime kapabilitas lebih cocok daripada merangkai API model, builder terkelola, atau surface tool yang ditujukan untuk manusia.",
+    overviewTitle: "Cara membaca perbandingan ini",
+    overviewParagraphs: [
+      "Halaman perbandingan dirancang untuk pembeli dan builder yang memilih di antara lapisan-lapisan stack yang berdekatan, bukan hanya antara merek. Dalam banyak kasus, keputusan sebenarnya adalah apakah workflow membutuhkan API model, builder terkelola, atau runtime kapabilitas yang bisa dipakai ulang.",
+      "Karena itu bagian compare fokus pada kecocokan, model operasional, dan konsekuensi workflow. Setiap halaman di sini harus membantu pembaca memahami masalah apa yang diselesaikan tiap lapisan sebelum mereka memutuskan produk mana yang masuk arsitektur.",
+    ],
+    usageTitle: "Apa yang akan Anda temukan di sini",
+    usagePoints: [
+      "Perbandingan langsung terhadap API media dan lapisan tooling agen yang berdekatan.",
+      "Halaman alternatif untuk tim yang mencari pengganti yang lebih cocok untuk workflow berbasis agen.",
+      "Penjelasan yang lebih jelas tentang posisi AnyCap terhadap API, builder, dan tooling kreatif yang ditujukan untuk manusia.",
+    ],
+  },
+};
+
 const hubBaseDefinitionsByLocale: Partial<Record<SiteLocale, HubBaseDefinitionsByKey>> = {
   en: hubBaseDefinitionsEn,
   "pt-br": hubBaseDefinitionsPtBr,
+  id: hubBaseDefinitionsId,
 };
 
 const hubItemCopyEn: HubItemCopyByHubPath = {
@@ -443,9 +535,121 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
   },
 };
 
+const hubItemCopyId: HubItemCopyByHubPath = {
+  "/for": {
+    "/for/claude-code": {
+      title: "Claude Code",
+      description: "Tambahkan alur gambar, video, dan visi ke Claude Code melalui satu jalur instalasi.",
+    },
+    "/for/cursor": {
+      title: "Cursor",
+      description: "Lengkapi Cursor dengan pembuatan gambar, pembuatan video, dan kemampuan analisis visual.",
+    },
+    "/for/codex": {
+      title: "Codex",
+      description: "Tambahkan kapabilitas multimodal ke Codex tanpa menghubungkan SDK penyedia secara terpisah.",
+    },
+    "/for/manus": {
+      title: "Manus",
+      description: "Berikan Manus runtime kapabilitas terpadu untuk tugas gambar, video, dan visi.",
+    },
+  },
+  "/guides": {
+    "/guides/install-anycap": {
+      title: "Pasang AnyCap",
+      description: "Pasang CLI, autentikasi sekali, dan verifikasi bahwa runtime kapabilitas sudah siap.",
+    },
+    "/guides/mcp-vs-skills": {
+      title: "MCP vs Skills",
+      description: "Pahami kapan Anda membutuhkan lapisan protokol, lapisan instruksi, atau keduanya untuk workflow agen.",
+    },
+    "/guides/add-tools-to-claude-code": {
+      title: "Tambahkan Tool ke Claude Code",
+      description: "Hubungkan AnyCap ke Claude Code agar agen bisa memanggil tool multimodal secara langsung.",
+    },
+    "/guides/context-engineering-for-agents": {
+      title: "Engineering Konteks untuk Agen",
+      description: "Susun prompt, file, dan konteks kerja agar agen tetap terarah dan berguna.",
+    },
+    "/guides/agent-skills-for-developer-tools": {
+      title: "Skill Agen untuk Tool Developer",
+      description: "Gunakan skill yang bisa dipakai ulang untuk menjaga workflow agen tetap konsisten di berbagai proyek.",
+    },
+    "/guides/workspace-context-engineering": {
+      title: "Engineering Konteks Workspace",
+      description: "Rancang konteks di level workspace agar agen coding jangka panjang tetap terarah.",
+    },
+    "/guides/what-is-agent-harness": {
+      title: "Apa itu Agent Harness?",
+      description: "Pahami lapisan eksekusi yang mengubah akses tool menjadi perilaku agen yang andal.",
+    },
+    "/guides/how-to-add-image-generation-to-ai-agent": {
+      title: "Cara Menambahkan Pembuatan Gambar ke Agen AI",
+      description: "Tambahkan workflow pembuatan gambar ke agen AI tanpa merangkai SDK penyedia yang terpisah secara manual.",
+    },
+    "/guides/how-to-add-video-generation-to-ai-agent": {
+      title: "Cara Menambahkan Pembuatan Video ke Agen AI",
+      description: "Tambahkan workflow pembuatan video ke agen AI melalui satu lapisan kapabilitas, bukan wiring API media satu per satu.",
+    },
+    "/guides/how-to-add-vision-to-ai-agent": {
+      title: "Cara Menambahkan Vision ke Agen AI",
+      description: "Tambahkan pembacaan gambar dan analisis visual ke agen AI melalui surface kapabilitas yang stabil.",
+    },
+  },
+  "/glossary": {
+    "/glossary/context-engineering": {
+      title: "Engineering Konteks",
+      description: "Praktik membentuk input, file, dan memori agar agen bisa bekerja dengan andal.",
+    },
+    "/glossary/agent-harness": {
+      title: "Agent Harness",
+      description: "Lingkungan eksekusi yang mengelola tool, file, prompt, dan pagar keamanan agen.",
+    },
+    "/glossary/agent-capability-runtime": {
+      title: "Runtime Kapabilitas Agen",
+      description: "Lapisan runtime yang memberi agen cara stabil untuk memanggil kapabilitas lintas penyedia.",
+    },
+  },
+  "/compare": {
+    "/compare/anycap-vs-composio": {
+      title: "AnyCap vs Composio",
+      description: "Bandingkan desain runtime kapabilitas dengan integrasi bergaya konektor aplikasi.",
+    },
+    "/compare/anycap-vs-openai-agent-builder": {
+      title: "AnyCap vs OpenAI Agent Builder",
+      description: "Lihat di mana AnyCap cocok berdampingan dengan workflow membangun agen yang dikelola.",
+    },
+    "/compare/anycap-vs-replicate": {
+      title: "AnyCap vs Replicate",
+      description: "Bandingkan runtime kapabilitas agen dengan API inferensi model dan platform deployment.",
+    },
+    "/compare/anycap-vs-fal-ai": {
+      title: "AnyCap vs fal.ai",
+      description: "Bandingkan akses kapabilitas lintas agen dengan stack API media generatif yang berbasis antrean.",
+    },
+    "/compare/anycap-vs-openclaw-image-generation": {
+      title: "AnyCap vs OpenClaw (Gambar)",
+      description: "Bandingkan pembuatan gambar native agen dengan antarmuka editing gambar AI untuk manusia.",
+    },
+    "/compare/anycap-vs-openclaw-video-generation": {
+      title: "AnyCap vs OpenClaw (Video)",
+      description: "Bandingkan pembuatan video native agen dengan antarmuka pembuatan video AI untuk manusia.",
+    },
+    "/compare/replicate-alternatives-for-agents": {
+      title: "Alternatif Replicate untuk Agen",
+      description: "Bandingkan alternatif untuk Replicate ketika tujuan utamanya adalah kapabilitas yang bisa dipakai agen, bukan hanya endpoint inferensi model.",
+    },
+    "/compare/fal-ai-alternatives-for-agents": {
+      title: "Alternatif fal.ai untuk Agen",
+      description: "Bandingkan alternatif untuk fal.ai ketika workflow membutuhkan runtime kapabilitas yang bisa dipakai langsung oleh agen.",
+    },
+  },
+};
+
 const hubItemCopyByLocale: Partial<Record<SiteLocale, HubItemCopyByHubPath>> = {
   en: hubItemCopyEn,
   "pt-br": hubItemCopyPtBr,
+  id: hubItemCopyId,
 };
 
 function getHubBaseDefinition(locale: SiteLocale, key: HubPageKey): HubPageBaseDefinition {

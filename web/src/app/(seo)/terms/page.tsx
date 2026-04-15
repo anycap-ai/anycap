@@ -53,17 +53,27 @@ function PageSection({
 export default async function TermsPage() {
   const locale = await getRequestLocale();
   const content = getTermsPageData(locale);
-  const summaryTitle = locale === "pt-br" ? "Como ler estes termos" : "How to read these terms";
+  const summaryTitle =
+    locale === "id"
+      ? "Cara membaca ketentuan ini"
+      : locale === "pt-br"
+        ? "Como ler estes termos"
+        : "How to read these terms";
   const summaryParagraphs =
-    locale === "pt-br"
+    locale === "id"
       ? [
-          "Esta página resume a base legal para usar o site, a CLI e os workflows relacionados ao AnyCap. Ela foi estruturada para que a pessoa consiga entender com rapidez o que está sendo oferecido, onde estão os limites de uso e como o contexto operacional do produto se conecta aos termos.",
-          "Em vez de funcionar apenas como documento de compliance, a página também serve como referência prática para operadores e compradores que querem alinhar uso, cobrança, suporte e políticas do produto em um único lugar.",
+          "Halaman ini merangkum dasar hukum untuk memakai situs AnyCap, CLI, dan workflow terkait. Susunannya dibuat agar pembaca bisa cepat memahami apa yang ditawarkan, di mana batas penggunaan berada, dan bagaimana konteks operasional produk terhubung dengan ketentuan.",
+          "Alih-alih hanya menjadi dokumen kepatuhan, halaman ini juga berfungsi sebagai referensi praktis bagi operator dan pembeli yang ingin menyelaraskan penggunaan, penagihan, dukungan, dan konteks kebijakan produk di satu tempat.",
         ]
-      : [
-          "This page summarizes the legal baseline for using the AnyCap site, CLI, and related workflows. It is structured so readers can understand what is being offered, where the usage boundaries sit, and how the product's operating context connects to the terms.",
-          "Rather than acting only as a compliance document, the page also works as a practical reference for operators and buyers who want usage, billing, support, and policy context aligned in one place.",
-        ];
+      : locale === "pt-br"
+        ? [
+            "Esta página resume a base legal para usar o site, a CLI e os workflows relacionados ao AnyCap. Ela foi estruturada para que a pessoa consiga entender com rapidez o que está sendo oferecido, onde estão os limites de uso e como o contexto operacional do produto se conecta aos termos.",
+            "Em vez de funcionar apenas como documento de compliance, a página também serve como referência prática para operadores e compradores que querem alinhar uso, cobrança, suporte e políticas do produto em um único lugar.",
+          ]
+        : [
+            "This page summarizes the legal baseline for using the AnyCap site, CLI, and related workflows. It is structured so readers can understand what is being offered, where the usage boundaries sit, and how the product's operating context connects to the terms.",
+            "Rather than acting only as a compliance document, the page also works as a practical reference for operators and buyers who want usage, billing, support, and policy context aligned in one place.",
+          ];
 
   return (
     <>
@@ -149,26 +159,28 @@ export default async function TermsPage() {
               <p className={bodyClass}>
                 {content.footerBody1}{" "}
                 <Link href="/privacy" className={linkClass}>
-                  privacy policy
+                  {locale === "id" ? "kebijakan privasi" : "privacy policy"}
                 </Link>
-                ,{" "}
+                {locale === "id" ? ", " : ", "}{" "}
                 <Link href="/pricing" className={linkClass}>
-                  pricing
+                  {locale === "id" ? "harga" : "pricing"}
                 </Link>
-                , and{" "}
+                {locale === "id" ? ", dan " : ", and "}{" "}
                 <Link href="/about" className={linkClass}>
-                  about
+                  {locale === "id" ? "about" : "about"}
                 </Link>{" "}
-                pages so the legal baseline matches the product and operating context.
+                {locale === "id"
+                  ? "halaman agar dasar hukumnya selaras dengan produk dan konteks operasional."
+                  : "pages so the legal baseline matches the product and operating context."}
               </p>
               <p className={bodyClass}>
                 {content.footerBody2}{" "}
                 <EmailActionButton subject="AnyCap terms question" className={buttonLinkClass}>
-                  the AnyCap team
+                  {locale === "id" ? "tim AnyCap" : "the AnyCap team"}
                 </EmailActionButton>{" "}
-                or use the{" "}
+                {locale === "id" ? "atau gunakan" : "or use the"}{" "}
                 <Link href="/contact" className={linkClass}>
-                  contact page
+                  {locale === "id" ? "halaman kontak" : "contact page"}
                 </Link>
                 .
               </p>

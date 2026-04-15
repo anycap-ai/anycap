@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
+import { FeaturedOnBadge } from "@/components/ui/FeaturedOnBadge";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
@@ -11,6 +12,9 @@ export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const featuredOnHref = "https://goodaitools.com/search?q=anycap";
+const featuredOnBadgeSrc = "https://goodaitools.com/assets/images/badge.png";
+const featuredOnBadgeAlt = "Featured on Good AI Tools";
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
@@ -60,6 +64,10 @@ export default async function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.organizationJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
+      />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
@@ -79,7 +87,7 @@ export default async function AboutPage() {
               {content.heroIntro}
             </p>
             <p className="mt-4 text-[11px] text-[#5a5e52]" style={mono}>
-              Last updated 2026-04-08
+              Last updated 2026-04-15
             </p>
           </FadeIn>
 
@@ -261,6 +269,28 @@ export default async function AboutPage() {
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                {content.faqTitle}
+              </h2>
+              <div className="max-w-[900px] space-y-4">
+                {content.faqItems.map((item) => (
+                  <div key={item.question} className="rounded-xl border border-[#d4dbb8] p-6">
+                    <h3 className="mb-3 text-sm font-bold leading-6 text-[#1c1f17]" style={mono}>
+                      {item.question}
+                    </h3>
+                    <p className="text-sm leading-6 text-[#4d5145]">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </FadeIn>
+
+          <div className="mt-16 md:mt-24">
+            <hr className="border-t border-[#d4dbb8]" />
+          </div>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
                 {content.contactTitle}
               </h2>
               <div className="grid gap-4 lg:grid-cols-3">
@@ -299,6 +329,17 @@ export default async function AboutPage() {
                   </div>
                 ))}
               </div>
+            </section>
+          </FadeIn>
+
+          <FadeIn>
+            <section className="mt-16 md:mt-24">
+              <FeaturedOnBadge
+                href={featuredOnHref}
+                badgeSrc={featuredOnBadgeSrc}
+                badgeAlt={featuredOnBadgeAlt}
+                description="A quiet placement for third-party badges without interrupting the page flow."
+              />
             </section>
           </FadeIn>
         </div>

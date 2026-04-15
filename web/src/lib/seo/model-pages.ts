@@ -57,6 +57,7 @@ export function createModelPageData<C extends Record<SiteLocale, ModelPageBaseCo
       locale,
       about: [...content.metadata.articleAbout],
       keywords: [...content.metadata.articleKeywords],
+      datePublished: lastUpdatedIso,
       dateModified: lastUpdatedIso,
     }),
     faqJsonLd: createFaqPageJsonLd(content.faqItems),

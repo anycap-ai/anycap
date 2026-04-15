@@ -198,7 +198,90 @@ const ptBr: VideoAnalysisPageData = {
 const contentByLocale: Record<SiteLocale, VideoAnalysisPageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id: {
+    metadata: {
+      title: "API Analisis Video untuk Agen AI | AnyCap",
+      description:
+        "Berikan analisis video kepada agen AI lewat AnyCap. Analisis rekaman, rangkum adegan, dan ekstrak intelijen video melalui satu perintah CLI di Claude Code, Cursor, dan lainnya.",
+      openGraphTitle: "API Analisis Video untuk Agen AI | AnyCap",
+      openGraphDescription:
+        "Berikan analisis video kepada agen AI lewat AnyCap. Analisis rekaman, rangkum adegan, dan ekstrak intelijen video melalui satu perintah CLI di Claude Code, Cursor, dan lainnya.",
+    },
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Analisis Video" },
+    ],
+    eyebrow: "Kapabilitas",
+    heroTitle: "Analisis Video",
+    heroIntro:
+      "Analisis video AnyCap memungkinkan agen AI memahami konten video melalui satu perintah CLI. Agen dapat merangkum rekaman, mengekstrak peristiwa penting, mengidentifikasi konteks visual, dan menjalankan tugas pemahaman video tanpa harus mengelola stack intelijen video terpisah. Kapabilitas ini bekerja di Claude Code, Cursor, Codex, dan produk agen lainnya melalui alur autentikasi dan surface perintah yang sama dengan bagian AnyCap lainnya.",
+    usageTitle: "Penggunaan CLI",
+    usageExamples: [
+      { title: "Analisis video remote", code: "anycap actions video-read --url https://example.com/demo.mp4" },
+      { title: "Analisis video lokal", code: "anycap actions video-read --file ./recording.mp4" },
+      {
+        title: "Minta ringkasan yang fokus",
+        code: 'anycap actions video-read --url https://example.com/demo.mp4 --instruction "Ringkas peristiwa utama dan transisi UI"',
+      },
+    ],
+    scenariosTitle: "Saat agen membutuhkan analisis video",
+    scenarios: [
+      { title: "Reproduksi bug", body: "Analisis rekaman layar untuk memahami laporan bug dan langkah reproduksinya." },
+      { title: "Tinjau demo", body: "Rangkum demo produk dan rekaman walkthrough untuk dokumentasi dan handoff." },
+      { title: "Analisis konten", body: "Ekstrak momen penting, transisi, dan konteks visual dari materi rekaman." },
+      { title: "Otomatisasi QA", body: "Verifikasi perilaku UI dalam sesi pengujian yang direkam sebagai bagian dari QA berbasis agen." },
+    ],
+    relatedTitle: "Halaman terkait",
+    relatedPages: [
+      {
+        label: "Kapabilitas terkait",
+        title: "Pemahaman Gambar",
+        body: "Padukan pemahaman gambar dan video ketika workflow mencakup screenshot dan sesi rekaman.",
+        href: "/capabilities/image-understanding",
+      },
+      {
+        label: "Halaman agen",
+        title: "Untuk Claude Code",
+        body: "Lihat bagaimana analisis video masuk ke cerita kapabilitas Claude Code yang lebih luas.",
+        href: "/for/claude-code",
+      },
+      {
+        label: "CLI",
+        title: "AnyCap CLI",
+        body: "Jelajahi bagaimana surface CLI yang sama menangani workflow analisis dan generasi.",
+        href: "/cli",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang memungkinkan agen lakukan dengan analisis video AnyCap?",
+        answer:
+          "Ini memberi agen satu interface untuk pemahaman video di rekaman layar, demo produk, dan walkthrough visual. Itu mencakup ringkasan adegan, ekstraksi peristiwa penting, dan tugas intelijen video yang terfokus melalui surface CLI yang sama.",
+      },
+      {
+        question: "Kenapa perintah CLI memakai video-read sementara halaman ini menyebut analisis video?",
+        answer:
+          "Halaman ini memakai bahasa pasar yang dicari tim, sedangkan CLI memakai nama perintah yang singkat, `anycap actions video-read`. Keduanya merujuk pada surface kapabilitas yang sama.",
+      },
+      {
+        question: "Kapan sebaiknya ini dipandang sebagai pemahaman video atau intelijen video?",
+        answer:
+          "Istilah-istilah itu menggambarkan kebutuhan praktis yang sama: mengubah konten video menjadi konteks yang bisa dipakai agen. Analisis video adalah nama halaman, sedangkan pemahaman video dan intelijen video adalah istilah pencarian dan evaluasi yang umum.",
+      },
+      {
+        question: "Apakah ini pada dasarnya API analisis video untuk workflow agen?",
+        answer:
+          "Ya. Tim bisa memikirkannya sebagai API analisis video yang diekspos melalui CLI AnyCap, sehingga lebih mudah dipakai di workflow agen dibanding merangkai stack khusus vendor yang terpisah.",
+      },
+    ],
+    cta: [
+      { label: "Lihat di GitHub", href: "https://github.com/anycap-ai/anycap" },
+      { label: "Lihat Kapabilitas", href: "/capabilities" },
+      { label: "Jelajahi CLI", href: "/cli" },
+    ],
+  },
 };
 
 export function getVideoAnalysisMetadata(locale: SiteLocale): Metadata {

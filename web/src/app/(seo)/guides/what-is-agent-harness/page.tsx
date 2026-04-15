@@ -43,7 +43,7 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     eyebrow: "Guide",
     title: ["What is an", "agent harness?"],
     intro:
-      "An agent harness is the execution layer around an AI model. It gives the agent access to files, terminals, tools, browser actions, permissions, and runtime policies. The model may decide what to do, but the harness defines what it can actually do in the real world.",
+      "An agent harness is the execution layer around an AI model that turns reasoning into real actions. It provides access to files, terminals, tools, browser actions, permission boundaries, and runtime policies that control what is allowed during a task. The model may decide what should happen next, but the harness decides what can actually happen in production. This distinction is critical: planning quality depends on the model, while execution safety, observability, and repeatability depend on the harness. In modern agent products, harness design is often the difference between a demo that works once and a workflow that teams can run every day without fragile manual glue. It is also where teams enforce governance and debugging standards so agent behavior remains auditable as task complexity grows. In short, the harness is the contract between model intent and trustworthy execution.",
     comparisonTitle: "Agent model vs agent harness",
     comparisonHeaders: ["Layer", "Role", "Example"],
     comparisonRows: [
@@ -69,8 +69,8 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     ],
     fitTitle: "Where AnyCap fits",
     fitBody: [
-      "AnyCap is not the model itself and not the entire harness. It sits inside the harness as a capability runtime. That means it gives the harness a consistent way to expose multimodal actions to the agent.",
-      "This is an important distinction. The harness provides the execution environment. AnyCap provides the multimodal capability layer the harness can surface to the agent with one CLI, one auth flow, and one interface.",
+      "AnyCap is not the model itself and it is not the full harness. It sits inside the harness as a capability runtime that supplies the actions the model cannot perform on its own. That means the harness can expose multimodal operations through a stable contract instead of wiring a different provider integration for every new task. In practical terms, the agent keeps its familiar reasoning environment while gaining a consistent path to image generation, video generation, media understanding, retrieval, storage, and publishing when those actions are needed.",
+      "This distinction matters for architecture decisions. The harness is responsible for lifecycle control, permissions, tool routing, and execution policy. AnyCap is responsible for packaging capabilities so those policies can be applied consistently across multimodal actions. Together, they reduce integration drift: teams keep one CLI surface, one authentication flow, and one operational model across different agent shells. That makes debugging clearer, onboarding faster, and capability upgrades less expensive over time.",
     ],
     ctas: {
       capabilityRuntime: "Capability Runtime",
@@ -83,7 +83,7 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     eyebrow: "Guia",
     title: ["O que e um", "agent harness?"],
     intro:
-      "Um agent harness e a camada de execucao ao redor de um modelo de IA. Ele da ao agente acesso a arquivos, terminais, ferramentas, acoes no navegador, permissoes e politicas de runtime. O modelo pode decidir o que fazer, mas o harness define o que ele realmente consegue fazer no mundo real.",
+      "Um agent harness e a camada de execucao ao redor de um modelo de IA que transforma raciocinio em acao real. Ele oferece acesso a arquivos, terminais, ferramentas, acoes no navegador, limites de permissao e politicas de runtime que controlam o que pode ser feito durante a tarefa. O modelo decide o que deveria acontecer; o harness define o que realmente pode acontecer em producao. Essa diferenca e central: a qualidade do plano vem do modelo, mas seguranca, observabilidade e repetibilidade da execucao vem do harness. Em produtos modernos de agentes, o desenho do harness costuma separar um demo pontual de um workflow confiavel para uso diario.",
     comparisonTitle: "Modelo do agente vs agent harness",
     comparisonHeaders: ["Camada", "Papel", "Exemplo"],
     comparisonRows: [
@@ -109,8 +109,8 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     ],
     fitTitle: "Onde o AnyCap entra",
     fitBody: [
-      "O AnyCap nao e o proprio modelo e tambem nao e o harness inteiro. Ele fica dentro do harness como um runtime de capabilities. Isso significa que ele da ao harness uma forma consistente de expor acoes multimodais ao agente.",
-      "Essa distincao importa. O harness fornece o ambiente de execucao. O AnyCap fornece a camada multimodal que o harness pode expor ao agente com uma unica CLI, um unico fluxo de autenticacao e uma unica interface.",
+      "O AnyCap nao e o proprio modelo e tambem nao e o harness completo. Ele entra dentro do harness como runtime de capabilities, fornecendo as acoes que o modelo sozinho nao executa. Assim, o harness expoe operacoes multimodais por um contrato estavel, em vez de montar uma integracao diferente para cada provedor e cada tarefa. Na pratica, o agente continua no ambiente de raciocinio que o time ja usa, mas ganha um caminho consistente para geracao de imagem, geracao de video, entendimento de midia, retrieval, armazenamento e publicacao.",
+      "Essa separacao melhora decisoes de arquitetura. O harness cuida de ciclo de vida, permissoes, roteamento de ferramentas e politicas de execucao. O AnyCap cuida de empacotar capabilities para que essas politicas sejam aplicadas de forma uniforme entre acoes multimodais. Juntos, os dois reduzem deriva de integracao: uma CLI, um fluxo de autenticacao e um modelo operacional unico entre diferentes shells de agente. Isso acelera onboarding, simplifica depuracao e reduz custo de evolucao do stack.",
     ],
     ctas: {
       capabilityRuntime: "Runtime de Capabilities",
