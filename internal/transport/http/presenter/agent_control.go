@@ -25,6 +25,7 @@ type AgentRunnerDTO struct {
 	UserID         string  `json:"user_id"`
 	Name           string  `json:"name"`
 	Platform       string  `json:"platform"`
+	Agent          string  `json:"agent"`
 	FixedBindingID *string `json:"fixed_binding_id,omitempty"`
 	State          string  `json:"state"`
 	LastHeartbeat  *string `json:"last_heartbeat,omitempty"`
@@ -218,6 +219,7 @@ func PresentAgentRunners(ctx context.Context, mapper IDMapper, runners []model.A
 			UserID:    userID,
 			Name:      item.Name,
 			Platform:  item.Platform,
+			Agent:     runnerAgentForPresentation(item),
 			State:     item.State,
 			CreatedAt: item.CreatedAt.UTC().Format(TimeLayout),
 			UpdatedAt: item.UpdatedAt.UTC().Format(TimeLayout),
@@ -236,6 +238,13 @@ func PresentAgentRunners(ctx context.Context, mapper IDMapper, runners []model.A
 		result = append(result, dto)
 	}
 	return result, nil
+}
+
+func runnerAgentForPresentation(runner model.AgentRunner) string {
+	if runner.Agent == "" {
+		return model.AgentRunnerAgentCodex
+	}
+	return runner.Agent
 }
 
 func PresentAgentTask(ctx context.Context, mapper IDMapper, task *model.AgentTask) (AgentTaskDTO, error) {

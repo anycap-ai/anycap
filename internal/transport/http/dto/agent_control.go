@@ -15,6 +15,7 @@ type IMBindTokenResponse struct {
 type RegisterRunnerRequest struct {
 	Name     string `json:"name"`
 	Platform string `json:"platform"`
+	Agent    string `json:"agent,omitempty"`
 }
 
 type RunnerHeartbeatRequest struct {

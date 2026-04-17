@@ -591,6 +591,83 @@ func TestAgentDaemonStartBackgroundPassesClaudeCodeOptions(t *testing.T) {
 	}
 }
 
+func TestAgentDaemonStartBackgroundPassesCursorOptions(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	originalExecutable := daemonExecutable
+	originalSpawn := spawnDaemonProcess
+	originalExists := daemonProcessRunning
+	defer func() {
+		daemonExecutable = originalExecutable
+		spawnDaemonProcess = originalSpawn
+		daemonProcessRunning = originalExists
+	}()
+
+	daemonExecutable = func() (string, error) {
+		return "/tmp/anycap", nil
+	}
+	daemonProcessRunning = func(pid int) bool {
+		return pid == 4321
+	}
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
+		if executable != "/tmp/anycap" {
+			t.Fatalf("unexpected executable %q", executable)
+		}
+		argsText := strings.Join(args, " ")
+		if !strings.Contains(argsText, "--executor cursor") {
+			t.Fatalf("expected cursor executor in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-bin /opt/bin/cursor-agent") {
+			t.Fatalf("expected cursor bin in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-model gpt-5") {
+			t.Fatalf("expected cursor model in args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-force") {
+			t.Fatalf("expected cursor force in args, got %v", args)
+		}
+		if err := saveDaemonProcessState(daemonProcessState{
+			PID:         4321,
+			Platform:    "feishu",
+			RunnerID:    "run_local",
+			MachineName: "local-agent",
+			Executor:    "cursor",
+			Workspace:   "/repo",
+			LogPath:     logPath,
+		}); err != nil {
+			t.Fatalf("saveDaemonProcessState() error = %v", err)
+		}
+		return 4321, nil
+	}
+
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(func() *httpclient.Client { return nil }, stdout)
+	cmd.SetArgs([]string{
+		"start",
+		"--platform", "feishu",
+		"--executor", "cursor",
+		"--workspace", "/repo",
+		"--cursor-bin", "/opt/bin/cursor-agent",
+		"--cursor-model", "gpt-5",
+		"--cursor-force",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("daemon start background: %v", err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	data := payload["data"].(map[string]any)
+	daemon := data["daemon"].(map[string]any)
+	if daemon["executor"].(string) != "cursor" {
+		t.Fatalf("expected cursor daemon executor, got %v", daemon["executor"])
+	}
+}
+
 func TestAgentDaemonStatusFallsBackToLocalDaemonState(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

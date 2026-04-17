@@ -177,7 +177,7 @@ Use this order for the chat-style Feishu agent flow. Start this flow automatical
 - "用飞书跟当前 agent 聊天"
 - "start AnyCap Feishu daemon"
 
-Do not make the human assemble the low-level daemon command manually. Use the current working directory as `--workspace` unless the human provides another repository path. Infer the local agent from the current runtime: Codex uses `--agent codex`; Claude Code uses `--agent claude_code`. If unsure, ask whether to use Codex or Claude Code.
+Do not make the human assemble the low-level daemon command manually. Use the current working directory as `--workspace` unless the human provides another repository path. Infer the local agent from the current runtime: Codex uses `--agent codex`; Claude Code uses `--agent claude_code`; Cursor uses `--agent cursor`. If unsure, ask whether to use Codex, Claude Code, or Cursor.
 
 Read Feishu credentials from the local connection credential store first. The store is written by `anycap connect credentials set feishu` and lives in the AnyCap config dir with mode 0600.
 
@@ -219,6 +219,12 @@ Use Claude Code instead of Codex when that is the desired local agent:
 anycap connect feishu --agent claude_code --workspace /path/to/repo
 ```
 
+Use Cursor Agent instead of Codex when that is the desired local agent:
+
+```bash
+anycap connect feishu --agent cursor --workspace /path/to/repo
+```
+
 When the human explicitly wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, add:
 
 ```bash
@@ -235,6 +241,14 @@ anycap connect feishu --agent claude_code --claude-permission-mode bypassPermiss
 
 The daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
 
+For Cursor Agent, pass an explicit model when needed:
+
+```bash
+anycap connect feishu --agent cursor --cursor-model <model> --workspace /path/to/repo
+```
+
+The user-facing connect path runs Cursor Agent non-interactively with `cursor-agent -p --output-format json --trust --force` and persists Cursor Agent `session_id` for follow-up turns. Tell the human that this lets Cursor Agent execute local commands and network requests unless Cursor explicitly denies them. The lower-level `agent daemon start --executor cursor` path still requires explicit `--cursor-force` when debugging direct daemon execution.
+
 This command will:
 
 - registers a local runner
@@ -243,6 +257,7 @@ This command will:
 - starts the normal polling loop for sessions/tasks
 - uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
 - uses Claude Code `claude -p --output-format json` when `--agent claude_code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
+- uses Cursor Agent `cursor-agent -p --output-format json --trust --force` when `--agent cursor`, and persists Cursor Agent `session_id` for follow-up turns; use `--cursor-model <model>` for explicit model selection and tell the human about the broader local command/network permission
 
 Check which local machine is currently connected:
 
@@ -265,6 +280,7 @@ anycap agent daemon credentials show-feishu
 ```bash
 anycap agent runners serve --name local-mac --platform feishu --executor codex --workspace /path/to/repo
 anycap agent runners serve --name local-mac --platform feishu --executor claude_code --workspace /path/to/repo
+anycap agent runners serve --name local-mac --platform feishu --executor cursor --workspace /path/to/repo
 ```
 
 - `connect` is the main user-facing path.
@@ -272,6 +288,7 @@ anycap agent runners serve --name local-mac --platform feishu --executor claude_
 - `agent runners serve` is still useful for debugging and operator workflows.
 - `agent runners serve` also accepts `--codex-exec-mode danger-full-access` when debugging local execution outside the default Codex sandbox.
 - `agent runners serve` also accepts `--claude-permission-mode`, `--claude-allowed-tools`, and `--claude-bin` when debugging Claude Code execution.
+- `agent runners serve` also accepts `--cursor-bin`, `--cursor-model`, and `--cursor-force` when debugging Cursor Agent execution.
 - `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
 - Do not use these legacy flows as the primary setup path for a personal Feishu bot daemon.
 

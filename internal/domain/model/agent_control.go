@@ -25,6 +25,13 @@ const (
 )
 
 const (
+	AgentRunnerAgentCodex      = "codex"
+	AgentRunnerAgentClaudeCode = "claude_code"
+	AgentRunnerAgentCursor     = "cursor"
+	AgentRunnerAgentStub       = "stub"
+)
+
+const (
 	AgentTaskStatusQueued     = "queued"
 	AgentTaskStatusDispatched = "dispatched"
 	AgentTaskStatusRunning    = "running"
@@ -99,6 +106,7 @@ type AgentRunner struct {
 	UserID        string
 	Name          string
 	Platform      string
+	Agent         string
 	FixedBinding  *int64
 	State         string
 	LastHeartbeat *time.Time

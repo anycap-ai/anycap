@@ -34,7 +34,7 @@ type AgentConversationRepository interface {
 	GetConversationByID(ctx context.Context, id int64) (*model.AgentConversation, error)
 	GetActiveConversationByChat(ctx context.Context, userID string, platform string, botID string, chatID string) (*model.AgentConversation, error)
 	ListConversationsByUser(ctx context.Context, userID string) ([]model.AgentConversation, error)
-	UpdateConversationRunner(ctx context.Context, id int64, runnerID int64) (*model.AgentConversation, error)
+	UpdateConversationRunner(ctx context.Context, id int64, runnerID int64, agent string) (*model.AgentConversation, error)
 	UpdateConversationLastSession(ctx context.Context, id int64, lastSessionID int64) (*model.AgentConversation, error)
 	ArchiveConversation(ctx context.Context, id int64) (*model.AgentConversation, error)
 }

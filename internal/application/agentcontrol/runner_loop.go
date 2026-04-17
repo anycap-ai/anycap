@@ -13,6 +13,7 @@ type RunnerRegistration struct {
 	ID       string
 	Name     string
 	Platform string
+	Agent    string
 }
 
 type RunnerTask struct {
@@ -58,7 +59,7 @@ type RunnerLoopSummary struct {
 }
 
 type RunnerLoopClient interface {
-	Register(ctx context.Context, name string, platform string) (*RunnerRegistration, error)
+	Register(ctx context.Context, name string, platform string, agent string) (*RunnerRegistration, error)
 	Heartbeat(ctx context.Context, runnerID string, state string) error
 	NextSession(ctx context.Context, runnerID string) (*RunnerSession, error)
 	GetSession(ctx context.Context, runnerID string, sessionID string) (*RunnerSession, error)
@@ -78,6 +79,7 @@ type RunnerLoop struct {
 	runnerID             string
 	runnerName           string
 	platform             string
+	agent                string
 	once                 bool
 	pollInterval         time.Duration
 	sessionWatchInterval time.Duration
@@ -137,6 +139,12 @@ func WithLoopRunnerPlatform(platform string) RunnerLoopOption {
 	}
 }
 
+func WithLoopRunnerAgent(agent string) RunnerLoopOption {
+	return func(l *RunnerLoop) {
+		l.agent = strings.ToLower(strings.TrimSpace(agent))
+	}
+}
+
 func WithLoopOnce(once bool) RunnerLoopOption {
 	return func(l *RunnerLoop) {
 		l.once = once
@@ -167,7 +175,7 @@ func (l *RunnerLoop) Run(ctx context.Context) (RunnerLoopSummary, error) {
 		if strings.TrimSpace(l.runnerName) == "" || strings.TrimSpace(l.platform) == "" {
 			return RunnerLoopSummary{}, model.ErrValidation("runner name and platform are required when runner id is not provided")
 		}
-		reg, err := l.client.Register(ctx, l.runnerName, l.platform)
+		reg, err := l.client.Register(ctx, l.runnerName, l.platform, l.agent)
 		if err != nil {
 			return RunnerLoopSummary{}, err
 		}
@@ -181,7 +189,22 @@ func (l *RunnerLoop) Run(ctx context.Context) (RunnerLoopSummary, error) {
 	for {
 		processed, succeeded, err := l.runIteration(ctx)
 		if err != nil {
-			return summary, err
+			if l.once {
+				return summary, err
+			}
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				if ctxErr == context.Canceled || ctxErr == context.DeadlineExceeded {
+					return summary, nil
+				}
+				return summary, ctxErr
+			}
+			if sleepErr := l.sleep(ctx, l.pollInterval); sleepErr != nil {
+				if sleepErr == context.Canceled || sleepErr == context.DeadlineExceeded {
+					return summary, nil
+				}
+				return summary, sleepErr
+			}
+			continue
 		}
 		if processed {
 			summary.TasksProcessed++

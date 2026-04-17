@@ -11,10 +11,12 @@ import (
 
 type fakeRunnerLoopClient struct {
 	registerResp   *RunnerRegistration
+	heartbeatErrs  []error
 	nextSessions   []*RunnerSession
 	nextTasks      []*RunnerTask
 	sessionByID    map[string][]*RunnerSession
 	heartbeats     []string
+	registerAgents []string
 	sessionUpdates []runnerSessionUpdateCall
 	updates        []runnerTaskUpdateCall
 }
@@ -34,15 +36,21 @@ type runnerTaskUpdateCall struct {
 	idempotencyKey string
 }
 
-func (c *fakeRunnerLoopClient) Register(_ context.Context, name string, platform string) (*RunnerRegistration, error) {
+func (c *fakeRunnerLoopClient) Register(_ context.Context, name string, platform string, agent string) (*RunnerRegistration, error) {
+	c.registerAgents = append(c.registerAgents, agent)
 	if c.registerResp != nil {
 		return c.registerResp, nil
 	}
-	return &RunnerRegistration{ID: "run_123", Name: name, Platform: platform}, nil
+	return &RunnerRegistration{ID: "run_123", Name: name, Platform: platform, Agent: agent}, nil
 }
 
 func (c *fakeRunnerLoopClient) Heartbeat(_ context.Context, _ string, state string) error {
 	c.heartbeats = append(c.heartbeats, state)
+	if len(c.heartbeatErrs) > 0 {
+		err := c.heartbeatErrs[0]
+		c.heartbeatErrs = c.heartbeatErrs[1:]
+		return err
+	}
 	return nil
 }
 
@@ -142,6 +150,7 @@ func TestRunnerLoopRunOnceProcessesSessionBeforeTask(t *testing.T) {
 	},
 		WithLoopRunnerName("mac-mini"),
 		WithLoopRunnerPlatform("feishu"),
+		WithLoopRunnerAgent("cursor"),
 		WithLoopOnce(true),
 	)
 
@@ -154,6 +163,9 @@ func TestRunnerLoopRunOnceProcessesSessionBeforeTask(t *testing.T) {
 	}
 	if len(client.sessionUpdates) != 2 {
 		t.Fatalf("expected 2 session updates, got %d", len(client.sessionUpdates))
+	}
+	if len(client.registerAgents) != 1 || client.registerAgents[0] != "cursor" {
+		t.Fatalf("expected cursor runner registration agent, got %+v", client.registerAgents)
 	}
 	if client.sessionUpdates[0].status != model.AgentSessionStatusRunning || client.sessionUpdates[1].status != model.AgentSessionStatusCommitted {
 		t.Fatalf("unexpected session updates %+v", client.sessionUpdates)
@@ -270,6 +282,42 @@ func TestRunnerLoopRunOnceMarksFailedTask(t *testing.T) {
 	}
 	if client.updates[1].errorMessage == nil || *client.updates[1].errorMessage != "executor failed" {
 		t.Fatalf("expected executor failed message, got %+v", client.updates[1].errorMessage)
+	}
+}
+
+func TestRunnerLoopRunRetriesTransientIterationErrorInLoopMode(t *testing.T) {
+	client := &fakeRunnerLoopClient{
+		registerResp:  &RunnerRegistration{ID: "run_123", Name: "mac-mini", Platform: "feishu"},
+		heartbeatErrs: []error{errors.New("connection reset by peer")},
+		nextTasks: []*RunnerTask{
+			{ID: "agt_123", RunnerID: "run_123", TaskText: "fix parser panic"},
+		},
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	sleepCalls := 0
+	loop := NewRunnerLoop(client, &fakeRunnerExecutor{},
+		WithLoopRunnerName("mac-mini"),
+		WithLoopRunnerPlatform("feishu"),
+		WithLoopPollInterval(10*time.Millisecond),
+		WithLoopSleep(func(context.Context, time.Duration) error {
+			sleepCalls++
+			if sleepCalls >= 2 {
+				cancel()
+				return context.Canceled
+			}
+			return nil
+		}),
+	)
+
+	summary, err := loop.Run(ctx)
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if summary.TasksProcessed != 1 || summary.TasksSucceeded != 1 || summary.TasksFailed != 0 {
+		t.Fatalf("unexpected summary %+v", summary)
+	}
+	if len(client.updates) != 2 {
+		t.Fatalf("expected task to be processed after transient error, got updates %+v", client.updates)
 	}
 }
 

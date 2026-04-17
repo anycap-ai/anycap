@@ -41,6 +41,9 @@ func newConnectFeishuCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 		claudeBin            string
 		claudePermissionMode string
 		claudeAllowedTools   string
+		cursorBin            string
+		cursorModel          string
+		cursorForce          bool
 	)
 
 	cmd := &cobra.Command{
@@ -52,14 +55,15 @@ func newConnectFeishuCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 			if err != nil {
 				return err
 			}
+			effectiveCursorForce := cursorForce || executorKind == "cursor"
 			if !once && !foreground {
-				return startDaemonInBackground(cmd, stdout, "feishu", strings.TrimSpace(name), executorKind, strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(workspace), "", "")
+				return startDaemonInBackground(cmd, stdout, "feishu", strings.TrimSpace(name), executorKind, strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(cursorBin), strings.TrimSpace(cursorModel), effectiveCursorForce, strings.TrimSpace(workspace), "", "")
 			}
-			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), "feishu", once, pollEvery, executorKind, strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(workspace), "", "")
+			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), "feishu", once, pollEvery, executorKind, strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(cursorBin), strings.TrimSpace(cursorModel), effectiveCursorForce, strings.TrimSpace(workspace), "", "")
 		},
 	}
 	cmd.Flags().StringVar(&name, "name", "local-agent", "Local connection name")
-	cmd.Flags().StringVar(&agentKind, "agent", "codex", "Local agent: codex, claude_code, or stub")
+	cmd.Flags().StringVar(&agentKind, "agent", "codex", "Local agent: codex, claude_code, cursor, or stub")
 	cmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to the local agent")
 	cmd.Flags().BoolVar(&once, "once", false, "Run exactly one poll iteration")
 	cmd.Flags().BoolVar(&foreground, "foreground", false, "Run the connection in the current foreground process")
@@ -70,6 +74,9 @@ func newConnectFeishuCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	cmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --agent=claude_code")
 	cmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	cmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
+	cmd.Flags().StringVar(&cursorBin, "cursor-bin", "cursor-agent", "Path to the Cursor Agent CLI binary when --agent=cursor")
+	cmd.Flags().StringVar(&cursorModel, "cursor-model", "", "Optional Cursor Agent model passed to --model")
+	cmd.Flags().BoolVar(&cursorForce, "cursor-force", false, "Pass --force to Cursor Agent to allow commands unless explicitly denied; enabled automatically for --agent=cursor")
 	return cmd
 }
 
@@ -179,6 +186,8 @@ func normalizeConnectAgent(agent string) (string, error) {
 		return "codex", nil
 	case "claude", "claude_code", "claude-code":
 		return "claude_code", nil
+	case "cursor", "cursor_agent", "cursor-agent":
+		return "cursor", nil
 	case "stub":
 		return "stub", nil
 	default:

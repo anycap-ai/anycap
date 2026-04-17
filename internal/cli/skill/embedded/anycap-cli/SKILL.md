@@ -147,7 +147,8 @@ Infer the local agent from the current runtime:
 
 - Codex runtime -> `--agent codex`
 - Claude Code runtime -> `--agent claude_code`
-- If unsure, ask one concise question: "Use Codex or Claude Code as the local agent?"
+- Cursor runtime -> `--agent cursor`
+- If unsure, ask one concise question: "Use Codex, Claude Code, or Cursor as the local agent?"
 
 Read Feishu credentials from the local daemon credential store first:
 
@@ -192,6 +193,14 @@ Claude Code is also supported as the local executor:
 anycap connect feishu --agent claude_code --workspace /path/to/repo
 ```
 
+Cursor Agent is also supported as the local executor:
+
+```bash
+anycap connect feishu --agent cursor --workspace /path/to/repo
+```
+
+The user-facing `connect feishu --agent cursor` path enables Cursor Agent `--force` automatically so URL access and shell-backed network checks can run non-interactively. Always tell the human that this lets Cursor Agent execute local commands and network requests unless Cursor explicitly denies them.
+
 If the human wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, explicitly add:
 
 ```bash
@@ -208,6 +217,8 @@ For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the h
 ```
 
 Reason: the daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
+
+For Cursor Agent, the user-facing connect path runs `cursor-agent -p --output-format json --trust --force`. Use `--cursor-model <model>` for explicit model selection. The lower-level `agent daemon start --executor cursor` path still requires explicit `--cursor-force` when force-allow command behavior is desired.
 
 After startup, verify which local machine is currently connected:
 
@@ -245,6 +256,8 @@ Main notes:
 - Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions, including when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Codex.
 - `--agent claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
 - For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
+- `--agent cursor` runs Cursor Agent with `cursor-agent -p --output-format json --trust --force` and persists Cursor Agent `session_id` as `executor_ref` for follow-up turns.
+- For Cursor Agent, use `--cursor-model <model>` for explicit model selection. Tell the human that Cursor Agent runs with `--force` on the user-facing connect path and may execute local commands or network requests unless Cursor explicitly denies them.
 
 ## Legacy / Debug Only
 

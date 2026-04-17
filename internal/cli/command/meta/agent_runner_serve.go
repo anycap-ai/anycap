@@ -20,10 +20,11 @@ type runnerServeHTTPClient struct {
 	client *httpclient.Client
 }
 
-func (c *runnerServeHTTPClient) Register(ctx context.Context, name string, platform string) (*agentcontrolapp.RunnerRegistration, error) {
+func (c *runnerServeHTTPClient) Register(ctx context.Context, name string, platform string, agent string) (*agentcontrolapp.RunnerRegistration, error) {
 	resp, err := c.client.PostJSON(ctx, api.AgentRunnersPath+"/register", map[string]any{
 		"name":     strings.TrimSpace(name),
 		"platform": strings.TrimSpace(platform),
+		"agent":    strings.TrimSpace(agent),
 	})
 	if err != nil {
 		return nil, err
@@ -33,6 +34,7 @@ func (c *runnerServeHTTPClient) Register(ctx context.Context, name string, platf
 			ID       string `json:"id"`
 			Name     string `json:"name"`
 			Platform string `json:"platform"`
+			Agent    string `json:"agent"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(resp.Body, &envelope); err != nil {
@@ -42,6 +44,7 @@ func (c *runnerServeHTTPClient) Register(ctx context.Context, name string, platf
 		ID:       strings.TrimSpace(envelope.Data.ID),
 		Name:     strings.TrimSpace(envelope.Data.Name),
 		Platform: strings.TrimSpace(envelope.Data.Platform),
+		Agent:    strings.TrimSpace(envelope.Data.Agent),
 	}, nil
 }
 
@@ -249,6 +252,9 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 		claudeBin            string
 		claudePermissionMode string
 		claudeAllowedTools   string
+		cursorBin            string
+		cursorModel          string
+		cursorForce          bool
 		workspace            string
 		stubResult           string
 		stubDelay            time.Duration
@@ -290,6 +296,9 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 			case "claude", "claude_code", "claude-code":
 				executor = newClaudeCodeExecExecutor(claudeBin, workspace, claudePermissionMode, claudeAllowedTools)
 				executorName = "claude_code"
+			case "cursor", "cursor_agent", "cursor-agent":
+				executor = newCursorAgentExecExecutor(cursorBin, workspace, cursorModel, cursorForce)
+				executorName = "cursor"
 			default:
 				return fmt.Errorf("unsupported executor %q", executorKind)
 			}
@@ -300,6 +309,7 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 				agentcontrolapp.WithLoopRunnerID(strings.TrimSpace(runnerID)),
 				agentcontrolapp.WithLoopRunnerName(strings.TrimSpace(name)),
 				agentcontrolapp.WithLoopRunnerPlatform(strings.TrimSpace(platform)),
+				agentcontrolapp.WithLoopRunnerAgent(executorName),
 				agentcontrolapp.WithLoopOnce(once),
 				agentcontrolapp.WithLoopPollInterval(pollEvery),
 			)
@@ -333,12 +343,15 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 	cmd.Flags().StringVar(&runnerID, "runner-id", "", "Existing runner ID to reuse instead of registering")
 	cmd.Flags().BoolVar(&once, "once", false, "Run exactly one poll iteration")
 	cmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
-	cmd.Flags().StringVar(&executorKind, "executor", "stub", "Runner executor: stub, codex, or claude_code")
+	cmd.Flags().StringVar(&executorKind, "executor", "stub", "Runner executor: stub, codex, claude_code, or cursor")
 	cmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
 	cmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	cmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude_code")
 	cmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	cmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
+	cmd.Flags().StringVar(&cursorBin, "cursor-bin", "cursor-agent", "Path to the Cursor Agent CLI binary when --executor=cursor")
+	cmd.Flags().StringVar(&cursorModel, "cursor-model", "", "Optional Cursor Agent model passed to --model")
+	cmd.Flags().BoolVar(&cursorForce, "cursor-force", false, "Pass --force to Cursor Agent to allow commands unless explicitly denied")
 	cmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to the local executor")
 	cmd.Flags().StringVar(&stubResult, "stub-result", "success", "Stub executor result: success or failed")
 	cmd.Flags().DurationVar(&stubDelay, "stub-delay", 0, "Optional stub executor delay")
