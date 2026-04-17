@@ -162,21 +162,19 @@ Move personal bot config to the daemon.
 Suggested daemon inputs:
 
 ```bash
-anycap agent daemon start \
-  --platform feishu \
-  --executor codex \
-  --workspace /path/to/repo \
-  --feishu-app-id cli_xxx \
-  --feishu-app-secret yyy
+anycap connect credentials set feishu --app-id <FEISHU_APP_ID> --app-secret <FEISHU_APP_SECRET>
+
+anycap connect feishu \
+  --agent codex \
+  --workspace /path/to/repo
 ```
 
 Longer-term options:
 
-- local daemon config file
-- OS keychain / credential store
-- interactive `anycap agent daemon setup feishu`
+- OS keychain integration for daemon-specific credentials
+- interactive `anycap connect setup feishu`
 
-But v1 can start with explicit flags or local config.
+But v1 can start with local daemon credential storage.
 
 ## 9. Chat Flow
 

@@ -839,7 +839,7 @@ func TestAgentDaemonStatusReportsNextStepsWhenNoPrimaryRunner(t *testing.T) {
 	if !strings.Contains(stdout.String(), `"connected":false`) {
 		t.Fatalf("expected connected=false in output, got %s", stdout.String())
 	}
-	if !strings.Contains(stdout.String(), `anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo`) {
+	if !strings.Contains(stdout.String(), `anycap connect feishu --agent codex --workspace /path/to/repo`) {
 		t.Fatalf("expected startup next step in output, got %s", stdout.String())
 	}
 }

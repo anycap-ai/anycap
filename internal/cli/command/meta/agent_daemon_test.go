@@ -231,6 +231,98 @@ func TestResolveDaemonFeishuCredentialsFallsBackToLegacyAnyCapEnv(t *testing.T) 
 	}
 }
 
+func TestResolveDaemonFeishuCredentialsFallsBackToStoredCredentials(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	if err := cliconfig.SaveAgentDaemonFeishuCredentials(cliconfig.AgentDaemonFeishuCredentials{
+		AppID:     "stored_appid",
+		AppSecret: "stored_secret",
+	}); err != nil {
+		t.Fatalf("SaveAgentDaemonFeishuCredentials() error = %v", err)
+	}
+
+	appID, appSecret := resolveDaemonFeishuCredentials("", "")
+
+	if appID != "stored_appid" {
+		t.Fatalf("expected stored app id, got %q", appID)
+	}
+	if appSecret != "stored_secret" {
+		t.Fatalf("expected stored app secret, got %q", appSecret)
+	}
+}
+
+func TestAgentDaemonCredentialsSetFeishuStoresSecretFromStdin(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(
+		func() *httpclient.Client { return nil },
+		stdout,
+		strings.NewReader("app_secret\n"),
+	)
+	cmd.SetArgs([]string{"credentials", "set-feishu", "--app-id", "cli_appid", "--app-secret-stdin"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("credentials set-feishu: %v", err)
+	}
+	if strings.Contains(stdout.String(), "app_secret") {
+		t.Fatalf("expected output to avoid secret, got %s", stdout.String())
+	}
+	got, err := cliconfig.LoadAgentDaemonFeishuCredentials()
+	if err != nil {
+		t.Fatalf("LoadAgentDaemonFeishuCredentials() error = %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected stored credentials")
+	}
+	if got.AppID != "cli_appid" {
+		t.Fatalf("expected app id cli_appid, got %q", got.AppID)
+	}
+	if got.AppSecret != "app_secret" {
+		t.Fatalf("expected app secret app_secret, got %q", got.AppSecret)
+	}
+}
+
+func TestAgentDaemonCredentialsSetFeishuStoresCredentialsFromFlags(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(
+		func() *httpclient.Client { return nil },
+		stdout,
+		strings.NewReader(""),
+	)
+	cmd.SetArgs([]string{
+		"credentials",
+		"set-feishu",
+		"--app-id", "cli_appid",
+		"--app-secret", "app_secret",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("credentials set-feishu: %v", err)
+	}
+	if strings.Contains(stdout.String(), "app_secret") {
+		t.Fatalf("expected output to avoid secret, got %s", stdout.String())
+	}
+	got, err := cliconfig.LoadAgentDaemonFeishuCredentials()
+	if err != nil {
+		t.Fatalf("LoadAgentDaemonFeishuCredentials() error = %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected stored credentials")
+	}
+	if got.AppID != "cli_appid" {
+		t.Fatalf("expected app id cli_appid, got %q", got.AppID)
+	}
+	if got.AppSecret != "app_secret" {
+		t.Fatalf("expected app secret app_secret, got %q", got.AppSecret)
+	}
+}
+
 func TestMessageForInboundChatKeepsRawCommandText(t *testing.T) {
 	event := im.NormalizedInboundEvent{
 		Message:   "/reset",
@@ -316,7 +408,7 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 	daemonProcessRunning = func(pid int) bool {
 		return pid == 4321
 	}
-	spawnDaemonProcess = func(executable string, args []string, logPath string) (int, error) {
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
 		if executable != "/tmp/anycap" {
 			t.Fatalf("unexpected executable %q", executable)
 		}
@@ -362,6 +454,66 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 	}
 }
 
+func TestAgentDaemonStartBackgroundPassesFeishuCredentialsViaEnvironment(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	originalExecutable := daemonExecutable
+	originalSpawn := spawnDaemonProcess
+	originalExists := daemonProcessRunning
+	defer func() {
+		daemonExecutable = originalExecutable
+		spawnDaemonProcess = originalSpawn
+		daemonProcessRunning = originalExists
+	}()
+
+	daemonExecutable = func() (string, error) {
+		return "/tmp/anycap", nil
+	}
+	daemonProcessRunning = func(pid int) bool {
+		return pid == 4321
+	}
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
+		argsText := strings.Join(args, " ")
+		if strings.Contains(argsText, "--feishu-app-id") || strings.Contains(argsText, "--feishu-app-secret") || strings.Contains(argsText, "app_secret") {
+			t.Fatalf("expected Feishu credentials to stay out of daemon argv, got %v", args)
+		}
+		envText := strings.Join(env, "\n")
+		if !strings.Contains(envText, "FEISHU_APP_ID=cli_appid") {
+			t.Fatalf("expected FEISHU_APP_ID in child env, got %v", env)
+		}
+		if !strings.Contains(envText, "FEISHU_APP_SECRET=app_secret") {
+			t.Fatalf("expected FEISHU_APP_SECRET in child env, got %v", env)
+		}
+		if err := saveDaemonProcessState(daemonProcessState{
+			PID:         4321,
+			Platform:    "feishu",
+			RunnerID:    "run_local",
+			MachineName: "local-agent",
+			Executor:    "codex",
+			Workspace:   "/repo",
+			LogPath:     logPath,
+		}); err != nil {
+			t.Fatalf("saveDaemonProcessState() error = %v", err)
+		}
+		return 4321, nil
+	}
+
+	stdout := &bytes.Buffer{}
+	cmd := newAgentDaemonCmd(func() *httpclient.Client { return nil }, stdout)
+	cmd.SetArgs([]string{
+		"start",
+		"--platform", "feishu",
+		"--workspace", "/repo",
+		"--feishu-app-id", "cli_appid",
+		"--feishu-app-secret", "app_secret",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("daemon start background: %v", err)
+	}
+}
+
 func TestAgentDaemonStartBackgroundPassesClaudeCodeOptions(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
@@ -381,7 +533,7 @@ func TestAgentDaemonStartBackgroundPassesClaudeCodeOptions(t *testing.T) {
 	daemonProcessRunning = func(pid int) bool {
 		return pid == 4321
 	}
-	spawnDaemonProcess = func(executable string, args []string, logPath string) (int, error) {
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
 		if executable != "/tmp/anycap" {
 			t.Fatalf("unexpected executable %q", executable)
 		}
