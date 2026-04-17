@@ -132,8 +132,8 @@ git commit -m "feat: run personal feishu bot ingress in daemon"
 
 Add tests proving:
 
-- `daemon start` accepts `--feishu-app-id`
-- `daemon start` accepts `--feishu-app-secret`
+- `daemon credentials set-feishu` stores App ID/App Secret locally
+- `daemon start` reads stored Feishu daemon credentials
 - help/usage reflects the personal bot model
 
 **Step 2: Run the CLI tests to verify failure**

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAgentCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cobra.Command {
+func NewAgentCmd(clientFactory func() *httpclient.Client, stdin io.Reader, stdout io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "agent",
 		Short: "Run the daemon-first local agent flow, plus legacy/debug agent controls",
@@ -18,7 +18,7 @@ func NewAgentCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *cob
 
 	cmd.AddCommand(
 		newAgentIMBindingsCmd(clientFactory, stdout),
-		newAgentDaemonCmd(clientFactory, stdout),
+		newAgentDaemonCmd(clientFactory, stdout, stdin),
 		newAgentRunnersCmd(clientFactory, stdout),
 		newAgentConversationsCmd(clientFactory, stdout),
 		newAgentTaskCmd(clientFactory, stdout),
