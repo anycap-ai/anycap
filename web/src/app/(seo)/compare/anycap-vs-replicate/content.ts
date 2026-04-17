@@ -562,10 +562,300 @@ const ptBr: ComparePageData = {
   ],
 };
 
+const id: ComparePageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Bandingkan", href: "/compare", unlinkable: true },
+    { name: "AnyCap vs Replicate" },
+  ],
+  eyebrow: "Bandingkan",
+  metadata: {
+    title: "AnyCap vs Replicate — runtime kemampuan agen vs platform API model",
+    description:
+      "Bandingkan AnyCap dan Replicate. Replicate adalah platform inferensi dan deployment model yang dibangun di sekitar prediksi, webhook, dan backend aplikasi. AnyCap adalah runtime kemampuan lintas-agen untuk Codex, Cursor, Claude Code, dan alur kerja agen serupa.",
+    openGraphTitle: "AnyCap vs Replicate — runtime kemampuan agen vs platform API model",
+    openGraphDescription:
+      "Lihat kapan Replicate menjadi lapisan API model yang tepat dan kapan AnyCap menjadi lapisan kemampuan yang lebih ringkas di sekitar agen yang sudah ada.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AnyCap vs Replicate — runtime kemampuan agen vs platform API model",
+    description:
+      "Panduan perbandingan bagi tim yang memutuskan apakah mereka memerlukan platform inferensi model Replicate atau runtime kemampuan lintas-agen AnyCap.",
+    path: ANYCAP_VS_REPLICATE_PATH,
+    locale: "id",
+    about: [
+      "AnyCap",
+      "Replicate",
+      "Runtime kemampuan agen",
+      "API inferensi model",
+      "Alur kerja webhook",
+    ],
+    keywords: [
+      "anycap vs replicate",
+      "alternatif replicate untuk agen",
+      "replicate vs anycap",
+      "api model vs runtime kemampuan",
+      "replicate untuk agen coding",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apakah Replicate pengganti langsung untuk AnyCap?",
+      answer:
+        "Tidak. Replicate adalah platform API model. AnyCap adalah runtime kemampuan untuk agen yang sudah ada. Tim membandingkannya ketika memutuskan apakah lapisan yang hilang adalah infrastruktur inferensi tingkat aplikasi atau akses kemampuan tingkat agen.",
+    },
+    {
+      question: "Apa perbedaan alur kerja terbesar antara AnyCap dan Replicate?",
+      answer:
+        "Replicate mengharapkan aplikasi atau skrip Anda memiliki siklus hidup prediksi. AnyCap mengharapkan alur kerja agen tetap dalam satu runtime berbasis CLI yang sudah mencakup akses kemampuan ditambah jalur pengiriman artefak.",
+    },
+    {
+      question: "Apakah Replicate mendukung pekerjaan async dan webhook?",
+      answer:
+        "Ya. Dokumentasi publik Replicate menjelaskan mode prediksi sinkron dan asinkron, ID prediksi, serta notifikasi webhook untuk output yang selesai. Itu salah satu kekuatan terjelasnya sebagai lapisan inferensi backend.",
+    },
+    {
+      question: "Kapan AnyCap menjadi pilihan yang lebih ringkas?",
+      answer:
+        "Ketika tim sudah memiliki agen di Codex, Cursor, Claude Code, atau lingkungan serupa dan ingin agen tersebut memperoleh permukaan kemampuan yang lebih luas dengan cepat tanpa membangun pipeline inferensi dan artefak terpisah.",
+    },
+    {
+      question: "Apa aturan praktis paling sederhana?",
+      answer:
+        "Jika backend produk Anda memerlukan API model, pilih Replicate. Jika agen Anda memerlukan runtime bersama agar benar-benar menyelesaikan pekerjaan multimodal, pilih AnyCap.",
+    },
+  ]),
+  lastUpdatedLabel: "8 April 2026",
+  heroTitle: ["AnyCap vs", "Replicate"],
+  heroIntro:
+    "AnyCap vs Replicate adalah keputusan lapisan stack, bukan pertarungan kategori yang sama. Replicate paling kuat ketika backend aplikasi Anda memerlukan kontrol eksplisit atas inferensi model, siklus hidup prediksi, deployment berbasis perangkat keras, ID permintaan, dan peristiwa penyelesaian yang didorong webhook. Itu pola yang tepat ketika tim produk Anda memiliki orkestrasi antrean, kebijakan coba ulang, dan perutean aset hilir di dalam kode aplikasi. AnyCap lebih kuat ketika agen sudah ada di alat seperti Codex, Cursor, atau Claude Code dan lapisan yang hilang adalah akses kemampuan operasional. Alih-alih menambahkan proyek integrasi khusus penyedia lain, tim memasang satu runtime dan memberi agen antarmuka bersama untuk generasi, pemahaman, pengambilan, penyimpanan, dan publikasi sehingga pekerjaan multimodal benar-benar bisa selesai dari ujung ke ujung. Pilihan arsitektur utamanya tentang kepemilikan eksekusi: pipeline prediksi yang dikelola backend versus kemampuan agen yang dikelola runtime. Setelah kepemilikan jelas, pemilihan alat biasanya menjadi lugas dan lebih mudah dipertahankan dalam tinjauan teknis.",
+  answerFirstSummaryLabel: "Ringkasan jawaban dulu",
+  answerFirstSummaryBody:
+    "Pilih Replicate ketika arsitektur produk Anda berpusat pada tugas model yang dimiliki backend: panggilan API langsung, objek prediksi, mode eksekusi sinkron dan asinkron, callback webhook, serta kontrol tingkat deployment. Pilih AnyCap ketika shell agen sudah dipilih dan hambatan Anda adalah eksekusi kemampuan di dalam alur kerja agen, bukan perpipaan inferensi backend. Dalam kasus itu, satu runtime biasanya mengalahkan beberapa integrasi ad hoc karena menstandarkan autentikasi, perintah, dan serah terima artefak untuk gambar, video, pencarian, penyimpanan, dan publikasi. Aturan praktisnya sederhana: platform inferensi berpusat backend memerlukan Replicate; lapisan eksekusi berpusat agen memerlukan AnyCap. Jika satu tinjauan arsitektur tidak bisa memilih sisi dengan jelas, tim biasanya mencampur dua lapisan tanggung jawab berbeda. Pisahkan lapisan itu dulu, lalu tinjau ulang biaya, kecepatan, dan risiko operasional untuk setiap opsi, termasuk siapa yang memiliki pemantauan, respons insiden, dan pemeliharaan integrasi jangka panjang setelah peluncuran.",
+  comparisonTitle: "Perbandingan berdampingan",
+  comparisonHeaders: { dimension: "Dimensi", anycap: "AnyCap", replicate: "Replicate" },
+  comparisonRows: [
+    {
+      dimension: "Tugas utama",
+      anycap:
+        "Runtime kemampuan agen yang memberi agen yang sudah ada lapisan eksekusi bersama untuk media, web, penyimpanan, dan publikasi.",
+      replicate:
+        "Platform API model dan deployment untuk menjalankan model komunitas, model resmi, dan deployment khusus melalui prediksi.",
+    },
+    {
+      dimension: "Target integrasi",
+      anycap:
+        "Claude Code, Cursor, Codex, OpenClaw, Manus, dan shell agen serupa yang memerlukan satu lapisan kemampuan bersama.",
+      replicate:
+        "Backend Anda sendiri, alur kerja produk, atau skrip yang memanggil API inferensi secara langsung dan mengelola siklus hidup permintaan sendiri.",
+    },
+    {
+      dimension: "Model eksekusi",
+      anycap:
+        "Satu CLI, satu alur autentikasi, dan satu permukaan perintah untuk gambar, video, musik, pemahaman, pencarian, penyimpanan, dan publikasi.",
+      replicate:
+        "API prediksi dengan mode sinkron dan asinkron, polling status, ID prediksi, dan penyelesaian berbasis webhook untuk pekerjaan yang lebih panjang.",
+    },
+    {
+      dimension: "Permukaan model",
+      anycap: "Lapisan kemampuan kurasi yang menjaga antarmuka agen konsisten di seluruh kemampuan yang didukung.",
+      replicate:
+        "Platform inferensi luas di mana tim memilih model, versi, atau deployment pribadi tertentu dan menghubungkan API tersebut ke stack mereka sendiri.",
+    },
+    {
+      dimension: "Penanganan artefak",
+      anycap:
+        "Drive dan Page menjaga output dapat dibagikan dari permukaan produk yang sama, sehingga generasi dapat mengalir ke penyimpanan dan publikasi tanpa layanan lain.",
+      replicate:
+        "Objek prediksi dan URL web tersedia, tetapi penyimpanan aset permanen, berbagi, dan publikasi tetap menjadi keputusan stack produk Anda.",
+    },
+    {
+      dimension: "Paling cocok",
+      anycap:
+        "Terbaik ketika shell agen sudah dipilih dan lapisan yang hilang adalah akses kemampuan ditambah alur kerja pengiriman.",
+      replicate:
+        "Terbaik ketika tim membangun backend aplikasi kustom di sekitar inferensi model, deployment, dan orkestrasi webhook.",
+    },
+  ],
+  benchmarkTitle: "Tolok ukur praktis: nol hingga gambar pertama",
+  benchmarkIntro:
+    "Tabel di bawah membandingkan apa yang diperlukan untuk beralih dari pengaturan nol hingga menghasilkan gambar pertama dalam alur kerja agen Claude Code, Cursor, atau Codex.",
+  benchmarkHeaders: { metric: "Metrik", anycap: "AnyCap", replicate: "Replicate" },
+  benchmarkRows: [
+    {
+      metric: "Perintah hingga gambar pertama",
+      anycap: "3 (pasang + login + generate)",
+      replicate: "pip install + pengaturan kunci API + skrip Python + pencarian versi model",
+    },
+    {
+      metric: "Alur autentikasi yang diperlukan",
+      anycap: "1 (login AnyCap)",
+      replicate: "1 token API, tetapi versioning model dan skema input berbeda per model",
+    },
+    {
+      metric: "Integrasi agen yang diperlukan",
+      anycap: "Penemuan otomatis file skill",
+      replicate: "Skrip Python kustom atau pembungkus API",
+    },
+    {
+      metric: "Menambahkan video setelah gambar",
+      anycap: "CLI yang sama, autentikasi yang sama: `anycap video generate`",
+      replicate: "Temukan model video, pelajari skema inputnya, tambahkan kode prediksi baru",
+    },
+    {
+      metric: "Kredit gratis untuk memulai",
+      anycap: "$5 kredit gratis, tanpa kartu",
+      replicate: "Bayar per prediksi, harga bervariasi menurut model dan tingkat perangkat keras",
+    },
+  ],
+  strengthsTitleLeft: "Mengapa tim memilih AnyCap",
+  strengthsTitleRight: "Mengapa tim memilih Replicate",
+  strengthsLeft: [
+    "Satu permukaan runtime dapat melengkapi beberapa lingkungan agen tanpa membangun ulang integrasi media dari awal di masing-masing.",
+    "Inventaris kemampuan publik melampaui generasi menjadi pemahaman, pengambilan web, penyimpanan, dan publikasi, yang berguna ketika agen harus menyelesaikan seluruh tugas.",
+    "Itu membuat AnyCap lebih cocok untuk kesederhanaan operasional dan penggunaan ulang lintas agen daripada sekadar API media.",
+  ],
+  strengthsRight: [
+    "Dokumentasi Replicate secara eksplisit mendukung alur prediksi sinkron dan asinkron, yang berguna ketika tim produk memerlukan kontrol tingkat permintaan.",
+    "Dokumentasi publik membedakan model komunitas, model resmi, dan deployment khusus, cocok kuat untuk tim yang membangun infrastruktur produk di sekitar pilihan model.",
+    "Dukungan webhook menjadikan Replicate blok bangunan backend yang rapi untuk aplikasi yang sudah memiliki sistem tugas dan pipeline artefak sendiri.",
+  ],
+  useCasesTitle: "Paling cocok menurut kasus penggunaan",
+  useCases: [
+    {
+      eyebrow: "Pilih AnyCap jika",
+      title: "Runtime perlu mengikuti tim di berbagai produk agen.",
+      body:
+        "AnyCap lebih kuat ketika lapisan kemampuan yang sama harus berfungsi di Codex, Cursor, Claude Code, atau shell agen lain tanpa membangun ulang stack untuk setiap lingkungan.",
+    },
+    {
+      eyebrow: "Pilih Replicate jika",
+      title: "Backend produk Anda ingin kontrol eksplisit atas tugas media.",
+      body:
+        "Replicate lebih cocok ketika status antrean, penanganan webhook, dan integrasi endpoint langsung menjadi bagian dari arsitektur produk Anda sendiri dan Anda tidak memerlukan lapisan runtime agen yang lebih luas.",
+    },
+    {
+      eyebrow: "Pilih AnyCap jika",
+      title: "Alur kerja mencakup pengiriman, bukan hanya generasi.",
+      body:
+        "AnyCap lebih kuat ketika artefak harus menjadi tautan berbagi, halaman yang dihosting, atau input agen lain tepat setelah generasi, alih-alih berhenti pada satu respons API.",
+    },
+    {
+      eyebrow: "Pilih Replicate jika",
+      title: "Pekerjaan utamanya infrastruktur model.",
+      body:
+        "Replicate adalah pilihan yang rapi ketika tim Anda terutama peduli pada akses model langsung, keandalan eksekusi asinkron, dan primitif backend berfokus media, bukan alur pencarian, penyimpanan, atau publikasi.",
+    },
+  ],
+  methodTitle: "Bagaimana perbandingan ini ditinjau",
+  methodBody: [
+    "Sisi Replicate pada halaman ini ditinjau terhadap dokumentasi publik yang tersedia pada 8 April 2026. Klaim di sini sengaja sempit dan dapat diverifikasi: Replicate mendukung alur create-prediction, penanganan permintaan sinkron dan asinkron, webhook, dan deployment khusus.",
+    "Sisi AnyCap didasarkan pada halaman AnyCap yang dipublikasikan untuk CLI, alur instalasi, runtime kemampuan, Drive, dan harga. Halaman ini hanya menggunakan klaim publik yang sudah terlihat di permukaan produk.",
+  ],
+  methodologyNoteLabel: "Catatan metodologi",
+  methodologyNoteBody:
+    "Halaman ini membandingkan kecocokan lapisan, bukan keluasan produk total. Jika Replicate mengubah perilaku prediksi atau deployment nanti, atau AnyCap mengubah inventaris kemampuannya, halaman harus diperbarui agar tetap mengacu pada dokumentasi publik terkini.",
+  sourceTitle: "Catatan sumber",
+  sourceLinks: [
+    {
+      label: "Replicate create a prediction",
+      href: "https://replicate.com/docs/topics/predictions/create-a-prediction",
+      note: "Endpoint prediksi, mode sinkron vs asinkron, ID prediksi, dan URL web.",
+    },
+    {
+      label: "Replicate receive webhooks",
+      href: "https://replicate.com/docs/topics/webhooks/receive-webhook/",
+      note: "Perilaku webhook untuk prediksi yang selesai dan peristiwa output.",
+    },
+    {
+      label: "Replicate custom deployments",
+      href: "https://replicate.com/docs/guides/deploy-a-custom-model",
+      note: "Jalur deployment khusus ketika tim menginginkan kontrol model tingkat produksi.",
+    },
+    {
+      label: "Ringkasan CLI AnyCap",
+      href: "/cli",
+      note: "Satu CLI dan satu alur autentikasi di berbagai lingkungan agen.",
+    },
+    {
+      label: "AnyCap Drive",
+      href: "/capabilities/drive",
+      note: "Alur penyimpanan dan tautan berbagi untuk artefak yang perlu bertahan lebih dari satu eksekusi.",
+    },
+    {
+      label: "Pasang AnyCap",
+      href: "/guides/install-anycap",
+      note: "Jalur pengaturan yang dipublikasikan untuk Codex, Cursor, Claude Code, dan produk agen terkait.",
+    },
+  ],
+  relatedTitle: "Halaman terkait",
+  relatedPages: [
+    {
+      href: "/glossary/agent-capability-runtime",
+      eyebrow: "Glosarium",
+      title: "Runtime kemampuan agen",
+      body: "Baca definisi kategori yang menjelaskan mengapa AnyCap dan Replicate bukan lapisan yang sama.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Bandingkan",
+      title: "AnyCap vs fal.ai",
+      body: "Bandingkan AnyCap dengan platform API media lain yang lebih kuat pada alur generasi berbasis antrean.",
+    },
+    {
+      href: "/capabilities/drive",
+      eyebrow: "Produk",
+      title: "AnyCap Drive",
+      body: "Lihat lapisan penyimpanan dan berbagi yang membuat AnyCap lebih dari pembungkus API langsung.",
+    },
+    {
+      href: "/guides/install-anycap",
+      eyebrow: "Mulai di sini",
+      title: "Pasang AnyCap",
+      body: "Validasi runtime langsung di alur kerja agen Anda sendiri alih-alih tetap dalam mode perbandingan.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah Replicate pengganti langsung untuk AnyCap?",
+      answer:
+        "Tidak. Replicate adalah platform API model yang dibangun untuk alur inferensi yang dikelola backend, sementara AnyCap adalah runtime kemampuan untuk agen yang sudah ada di lingkungan pengembang. Tim membandingkannya karena keduanya bisa muncul dalam peta jalan multimodal, tetapi mereka menutup celah arsitektur yang berbeda. Jika lapisan yang hilang adalah infrastruktur prediksi tingkat aplikasi, Replicate biasanya cocok. Jika lapisan yang hilang adalah akses kemampuan tingkat agen dan pengiriman, AnyCap biasanya cocok.",
+    },
+    {
+      question: "Apa perbedaan alur kerja terbesar antara AnyCap dan Replicate?",
+      answer:
+        "Replicate mengharapkan stack aplikasi Anda memiliki siklus hidup prediksi secara langsung: membuat permintaan, melacak status, menangani callback asinkron, dan memutuskan apa yang terjadi setelah output tiba. AnyCap menjaga alur kerja berpusat pada satu runtime berbasis CLI yang dapat dipanggil agen selama eksekusi tanpa menulis ulang setiap kemampuan sebagai integrasi penyedia terpisah. Dalam praktik, perbedaannya adalah di mana kompleksitas berada: orkestrasi backend di aplikasi Anda dengan Replicate, atau eksekusi agen yang distandarkan dengan AnyCap.",
+    },
+    {
+      question: "Apakah Replicate mendukung pekerjaan async dan webhook?",
+      answer:
+        "Ya. Dokumentasi publik Replicate menjelaskan mode prediksi sinkron dan asinkron, ID prediksi, polling status, dan notifikasi webhook untuk output yang selesai. Set fitur itu adalah alasan utama tim memilihnya sebagai lapisan inferensi ketika mereka memerlukan pemrosesan sadar antrean dan kepemilikan backend eksplisit. Ini terutama berguna ketika beban kerja berjalan lama dan logika aplikasi bergantung pada peristiwa penyelesaian alih-alih panggilan yang memblokir.",
+    },
+    {
+      question: "Kapan AnyCap menjadi pilihan yang lebih ringkas?",
+      answer:
+        "AnyCap biasanya lebih ringkas ketika tim Anda sudah beroperasi melalui agen di lingkungan seperti Codex, Cursor, atau Claude Code dan ingin agen tersebut memperoleh kemampuan dengan cepat tanpa membangun pipeline inferensi dan artefak terpisah per penyedia. Satu runtime dapat menstandarkan pemasangan, autentikasi, pemanggilan, dan jalur pengiriman di berbagai tindakan multimodal. Itu mengurangi drift integrasi dan membuat operasi lintas agen lebih mudah dipelihara seiring berkembangnya alur kerja.",
+    },
+    {
+      question: "Apa aturan praktis paling sederhana?",
+      answer:
+        "Jika backend produk Anda memerlukan API model dan kontrol eksplisit atas tugas prediksi, pilih Replicate. Jika agen Anda memerlukan runtime bersama agar dapat mengeksekusi dan mengirimkan pekerjaan multimodal tanpa mengulang kode perantara penyedia, pilih AnyCap. Ketika tim tidak yakin, memetakan di mana kompleksitas eksekusi seharusnya berada, kode backend atau runtime agen, biasanya membuat keputusan jelas dalam satu tinjauan arsitektur.",
+    },
+  ],
+  ctas: [
+    { href: "/guides/install-anycap", label: "Pasang AnyCap", variant: "primary" },
+    { href: "/cli", label: "Ringkasan CLI", variant: "secondary" },
+    { href: "/for/codex", label: "Lihat kasus penggunaan agen", variant: "secondary" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ComparePageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id,
 };
 
 export function getAnyCapVsReplicateMetadata(locale: SiteLocale): Metadata {

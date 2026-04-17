@@ -5,7 +5,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { AudioReadDemo } from "@/components/landing/AudioReadDemo";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig } from "@/lib/site";
+import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -13,21 +13,54 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
-export const metadata: Metadata = {
-  title: "Audio Analysis API for AI agents - Audio understanding and transcription",
-  description:
-    "Give AI agents audio understanding through AnyCap. Analyze recordings, transcribe spoken content, and extract audio context through one CLI command instead of wiring a separate audio analysis stack.",
-  alternates: { canonical: "/capabilities/audio-understanding" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/capabilities/audio-understanding",
-    siteName: siteConfig.siteName,
+const metadataByLocale: Record<
+  SiteLocale,
+  { title: string; description: string; openGraphTitle: string; openGraphDescription: string }
+> = {
+  en: {
     title: "Audio Analysis API for AI agents - Audio understanding and transcription",
     description:
+      "Give AI agents audio understanding through AnyCap. Analyze recordings, transcribe spoken content, and extract audio context through one CLI command instead of wiring a separate audio analysis stack.",
+    openGraphTitle: "Audio Analysis API for AI agents - Audio understanding and transcription",
+    openGraphDescription:
       "Add audio understanding, transcription, and audio analysis to AI agents with one CLI.",
   },
+  "pt-br": {
+    title: "API de analise de audio para agentes de IA - entendimento de audio e transcricao",
+    description:
+      "Dê entendimento de audio para agentes de IA com AnyCap. Analise gravacoes, transcreva conteudo falado e extraia contexto por um unico comando de CLI, sem montar uma stack separada.",
+    openGraphTitle: "API de analise de audio para agentes de IA - entendimento de audio e transcricao",
+    openGraphDescription:
+      "Adicione entendimento de audio, transcricao e analise de audio a agentes de IA com uma unica CLI.",
+  },
+  id: {
+    title: "API analisis audio untuk agen AI - pemahaman audio dan transkripsi",
+    description:
+      "Berikan pemahaman audio ke agen AI melalui AnyCap. Analisis rekaman, transkripsikan percakapan, dan ambil konteks audio lewat satu perintah CLI tanpa merangkai stack analisis audio terpisah.",
+    openGraphTitle: "API analisis audio untuk agen AI - pemahaman audio dan transkripsi",
+    openGraphDescription:
+      "Tambahkan pemahaman audio, transkripsi, dan analisis audio ke agen AI lewat satu CLI.",
+  },
 };
+
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
+  return {
+    title: localizedMetadata.title,
+    description: localizedMetadata.description,
+    alternates: { canonical: "/capabilities/audio-understanding" },
+    openGraph: {
+      type: "website",
+      locale: getLocaleConfig(locale).ogLocale,
+      url: "/capabilities/audio-understanding",
+      siteName: siteConfig.siteName,
+      title: localizedMetadata.openGraphTitle,
+      description: localizedMetadata.openGraphDescription,
+    },
+  };
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 type PageContent = {
   breadcrumb: { name: string; href?: string }[];
@@ -53,7 +86,7 @@ type PageContent = {
   jsonLdKeywords: readonly string[];
 };
 
-const contentByLocale = {
+const contentByLocale: Record<SiteLocale, PageContent> = {
   en: {
     breadcrumb: [
       { name: "Home", href: "/" },
@@ -232,11 +265,100 @@ const contentByLocale = {
       "speech to text api",
     ],
   },
+  id: {
+    breadcrumb: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Pemahaman Audio" },
+    ],
+    eyebrow: "Kapabilitas",
+    title: "Pemahaman Audio",
+    intro:
+      "AnyCap memberi agen lapisan pemahaman audio yang konsisten untuk meeting, podcast, wawancara, dan voice note. Daripada merangkai API analisis audio atau stack transkripsi terpisah untuk setiap workflow, agen mendapat satu surface perintah untuk mengekstrak konteks percakapan, ringkasan, dan poin terstruktur melalui runtime yang sama dengan kapabilitas lain.",
+    usageHeading: "Penggunaan CLI",
+    usageExamples: [
+      {
+        title: "Analisis rekaman lokal",
+        code: "anycap actions audio-read --file ./meeting.mp3",
+      },
+      {
+        title: "Ringkas cuplikan podcast",
+        code:
+          'anycap actions audio-read --url https://example.com/podcast.mp3 --instruction "Ringkas topik utama dan action item"',
+      },
+      {
+        title: "Ekstrak isi percakapan",
+        code:
+          'anycap actions audio-read --file ./interview.wav --instruction "Transkripsikan kutipan penting dan klaim narasumber"',
+      },
+    ],
+    useCasesHeading: "Kapan agen butuh pemahaman audio",
+    useCases: [
+      "Mentranskripsikan meeting, wawancara, dan cuplikan podcast langsung di workflow agen.",
+      "Mengambil action item dan ringkasan dari percakapan sebelum membuat dokumen tindak lanjut.",
+      "Meninjau panggilan support atau voice note di runtime yang sama dengan analisis gambar dan video.",
+      "Mengubah file audio menjadi konteks terstruktur yang bisa dipakai ulang untuk riset, perencanaan, atau pelaporan.",
+    ],
+    relatedHeading: "Halaman terkait",
+    relatedPages: [
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Pricing",
+        body: "Lihat harga pemahaman audio bersama gambar, video, search, dan crawl.",
+      },
+      {
+        href: "/capabilities/video-analysis",
+        eyebrow: "Kapabilitas terkait",
+        title: "Analisis Video",
+        body: "Gabungkan analisis audio dan video saat rekaman memuat konteks visual sekaligus percakapan.",
+      },
+      {
+        href: "/cli",
+        eyebrow: "CLI",
+        title: "AnyCap CLI",
+        body: "Lihat surface perintah yang menjaga transkripsi dan analisis tetap dalam satu runtime.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang bisa dilakukan agen dengan pemahaman audio AnyCap?",
+        answer:
+          "Agen mendapat satu antarmuka untuk analisis audio dari meeting, podcast, wawancara, dan voice note. Secara praktik, ini berarti satu surface CLI untuk transkripsi, ringkasan, dan tanya-jawab terarah dari konten audio.",
+      },
+      {
+        question: "Apakah halaman ini memang membahas API analisis audio?",
+        answer:
+          "Ya. Pemahaman audio adalah label kapabilitasnya, sementara API analisis audio, API transkripsi audio, dan speech-to-text API adalah istilah pasar yang biasanya dipakai tim saat evaluasi.",
+      },
+      {
+        question: "Kenapa pemahaman audio sebaiknya satu runtime dengan analisis gambar dan video?",
+        answer:
+          "Karena banyak workflow menggabungkan beberapa tipe media. Runtime tunggal memudahkan agen berpindah dari screenshot ke rekaman lalu ke file audio tanpa ganti tools atau alur autentikasi.",
+      },
+      {
+        question: "Apakah ini menggantikan text-to-speech?",
+        answer:
+          "Tidak. Pemahaman audio fokus pada membaca dan menganalisis audio. Text-to-speech adalah kapabilitas output suara yang berbeda dan berada pada tema SEO lain.",
+      },
+    ],
+    jsonLdHeadline: "API analisis audio untuk agen AI - pemahaman audio dan transkripsi",
+    jsonLdDescription:
+      "Panduan kapabilitas untuk menambahkan pemahaman audio ke agen AI melalui AnyCap, termasuk rekaman, transkripsi, ringkasan, dan workflow analisis audio.",
+    jsonLdAbout: ["Analisis audio", "Pemahaman audio", "API transkripsi", "AnyCap"],
+    jsonLdKeywords: [
+      "api analisis audio",
+      "pemahaman audio untuk agen ai",
+      "api transkripsi audio",
+      "speech to text api",
+    ],
+  },
 } as const;
 
 export default async function AudioUnderstandingPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? contentByLocale.en;
+  const content = contentByLocale[locale] ?? contentByLocale.en;
   const capabilityGuideJsonLd = createTechArticleJsonLd({
     headline: content.jsonLdHeadline,
     description: content.jsonLdDescription,

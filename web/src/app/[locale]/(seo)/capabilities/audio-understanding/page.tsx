@@ -1,12 +1,12 @@
-import AudioUnderstandingPage, {
-  metadata as baseMetadata,
-} from "@/app/(seo)/capabilities/audio-understanding/page";
-import { generateLocalizedPageMetadata, type LocalePageParams } from "@/lib/localized-page";
+import AudioUnderstandingPage from "@/app/(seo)/capabilities/audio-understanding/page";
+import { getPageMetadata } from "@/app/(seo)/capabilities/audio-understanding/metadata";
+import { getValidatedLocale, type LocalePageParams } from "@/lib/localized-page";
 
 export const runtime = "edge";
 
 export async function generateMetadata({ params }: LocalePageParams) {
-  return generateLocalizedPageMetadata(params, "capabilities-audio-understanding", baseMetadata);
+  const locale = await getValidatedLocale(params);
+  return locale ? getPageMetadata(locale) : {};
 }
 
 export default function LocalizedAudioUnderstandingPage() {

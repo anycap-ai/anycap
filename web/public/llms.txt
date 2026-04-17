@@ -36,6 +36,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 
 ## Models
 
+- [Models overview](https://anycap.ai/models): Multimodal model catalog and model-selection guidance for agent workflows.
 - [Veo 3.1](https://anycap.ai/models/veo-3-1): Premium text-to-video and image-to-video for agent workflows.
 - [Kling 3.0](https://anycap.ai/models/kling-3-0): Realistic motion and cinematic image-to-video workflows.
 - [Seedream 5](https://anycap.ai/models/seedream-5): Polished first-pass image generation.
@@ -46,6 +47,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 
 ## Compare & Alternatives
 
+- [Compare overview](https://anycap.ai/compare): Hub page for direct comparisons and alternatives in the agent tooling stack.
 - [AnyCap vs Composio](https://anycap.ai/compare/anycap-vs-composio): Capability runtime comparison for agent teams.
 - [AnyCap vs OpenAI Agent Builder](https://anycap.ai/compare/anycap-vs-openai-agent-builder): Agent runtime comparison for teams choosing between orchestration layers.
 - [AnyCap vs Replicate](https://anycap.ai/compare/anycap-vs-replicate): Model inference platform comparison for agent workflows.

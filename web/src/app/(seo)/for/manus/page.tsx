@@ -8,9 +8,10 @@ import {
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { buildAgentCapabilityGapRows } from "@/lib/capability-inventory";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -18,21 +19,17 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/for/manus", {
   title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
   description:
     "Manus is strong at autonomous workflows, but teams still need a dedicated runtime for image generation, video generation, image understanding, and video analysis. AnyCap adds those capabilities through one skill, one login, and one CLI.",
-  alternates: { canonical: "/for/manus" },
   openGraph: {
     type: "website",
-    locale: siteConfig.locale,
-    url: "/for/manus",
-    siteName: siteConfig.siteName,
     title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
     description:
       "Add a dedicated image, video, and vision runtime to Manus without replacing the agent workflow you already use.",
   },
-};
+});
 
 const gapRowsEn = buildAgentCapabilityGapRows("manus");
 
@@ -159,7 +156,6 @@ type PageContent = {
   faqItems: readonly { question: string; answer: string }[];
   footerCtas: { primary: string; cli: string; skills: string };
   integrationGuideJsonLd: Record<string, unknown>;
-  howToJsonLd: Record<string, unknown>;
 };
 
 const contentByLocale: Record<SiteLocale, PageContent> = {
@@ -293,30 +289,6 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       datePublished: PAGE_LAST_MODIFIED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
-    howToJsonLd: {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      name: "Add image, video, and vision capabilities to Manus",
-      description:
-        "Install the AnyCap skill and CLI to give Manus access to image generation, video generation, image understanding, and video analysis.",
-      step: [
-        {
-          "@type": "HowToStep",
-          name: "Install the skill",
-          text: "Run npx -y skills add anycap-ai/anycap -y to give Manus a durable entry point into the AnyCap runtime.",
-        },
-        {
-          "@type": "HowToStep",
-          name: "Install the CLI",
-          text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the AnyCap CLI.",
-        },
-        {
-          "@type": "HowToStep",
-          name: "Log in and verify",
-          text: "Run anycap login && anycap status to authenticate and confirm the setup.",
-        },
-      ],
-    },
   },
   "pt-br": {
     breadcrumbItems: [
@@ -447,30 +419,6 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       ],
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
-    howToJsonLd: {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      name: "Adicione capacidades de imagem, vídeo e visão ao Manus",
-      description:
-        "Instale a skill e a CLI do AnyCap para dar ao Manus acesso a geração de imagem, geração de vídeo, entendimento de imagem e análise de vídeo.",
-      step: [
-        {
-          "@type": "HowToStep",
-          name: "Instale a skill",
-          text: "Execute npx -y skills add anycap-ai/anycap -y para dar ao Manus uma entrada durável no runtime do AnyCap.",
-        },
-        {
-          "@type": "HowToStep",
-          name: "Instale a CLI",
-          text: "Execute curl -fsSL https://anycap.ai/install.sh | sh para instalar a CLI do AnyCap.",
-        },
-        {
-          "@type": "HowToStep",
-          name: "Faça login e verifique",
-          text: "Execute anycap login && anycap status para autenticar e confirmar a configuração.",
-        },
-      ],
-    },
   },
   id: undefined as never,
 };
@@ -491,10 +439,6 @@ export default async function ForManusPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.howToJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">

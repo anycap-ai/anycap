@@ -191,7 +191,6 @@ type ForClaudeCodePageContent = ForClaudeCodeCopy & {
   };
   integrationGuideJsonLd: Record<string, unknown>;
   videoObjectJsonLd: Record<string, unknown>;
-  howToJsonLd: Record<string, unknown>;
   faqJsonLd: Record<string, unknown>;
 };
 
@@ -290,17 +289,6 @@ function createPageContent(
       uploadDate: DATE_PUBLISHED_ISO,
       duration: "PT48S",
       thumbnailUrl: CLAUDE_CODE_POSTER_URL,
-    },
-    howToJsonLd: {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      name: copy.installTitle,
-      description: copy.installIntro,
-      step: copy.installSteps.map((step) => ({
-        "@type": "HowToStep",
-        name: step.title,
-        text: `${step.title}: ${step.note}`,
-      })),
     },
     faqJsonLd,
   };
@@ -827,10 +815,323 @@ const ptBrCopy: ForClaudeCodeCopy = {
   footerLastUpdatedLabel: "Atualizado em 5 de abril de 2026",
 };
 
+const idCopy: ForClaudeCodeCopy = {
+  metadata: {
+    title: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+    description:
+      "Tambahkan pembuatan gambar, pembuatan video, dan kemampuan visi ke Claude Code lewat satu pemasangan skill, satu CLI, dan satu alur autentikasi dengan AnyCap.",
+    openGraphTitle: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+    openGraphDescription:
+      "Berikan Claude Code satu jalur pemasangan untuk alur gambar, video, dan visi melalui AnyCap.",
+    articleHeadline: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+    articleDescription:
+      "Panduan menambahkan alur pembuatan gambar, pembuatan video, dan visi ke Claude Code melalui satu runtime kemampuan.",
+    articleAbout: ["Claude Code", "AnyCap CLI", "skill agen", "runtime kemampuan"],
+    articleKeywords: [
+      "alat claude code",
+      "menambahkan alat ke claude code",
+      "kemampuan claude code",
+      "pembuatan gambar claude code",
+      "pembuatan video claude code",
+      "visi claude code",
+    ],
+  },
+  breadcrumbHome: "Beranda",
+  heroEyebrow: "Untuk Claude Code",
+  heroLastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
+  heroTitleLine1: "Claude Code bisa menulis kode.",
+  heroTitleLine2: "Ia masih butuh kemampuan gambar, video, dan visi.",
+  heroIntroLinkText: "Claude Code",
+  heroIntroAfterLink:
+    " sangat kuat dalam perencanaan, refaktor, dan eksekusi kode. Celahnya muncul ketika alur kerja membutuhkan gambar, video, audio, atau analisis visual—misalnya visual produk, video walkthrough, pemahaman tangkapan layar, atau tinjauan rekaman—semua itu bukan bagian bawaan Claude Code saat ini.",
+  heroCalloutPrefix: "Cukup katakan ke Claude Code apa yang Anda butuhkan—misalnya ",
+  heroCalloutExample: "bantu saya menginstal anycap.ai",
+  heroCalloutSuffix:
+    ". Claude Code akan menemukan skill, memasang CLI, mengautentikasi, dan memanggil kemampuan yang tepat—semuanya di sesi terminal yang sama, tanpa perintah manual dari Anda.",
+  heroMicrocopy: "Bahasa alami. Tanpa langkah manual. Kemampuan langsung siap.",
+  heroCtas: {
+    primary: "Mulai",
+    imageGeneration: "Pembuatan gambar",
+    videoGeneration: "Pembuatan video",
+  },
+  demoVideoTitle: "Pasang dan gunakan AnyCap dengan Claude Code",
+  demoVideoCaption:
+    "Lihat Claude Code memasang AnyCap dari prompt bahasa alami—penemuan skill, penyiapan CLI, autentikasi, dan pembuatan gambar pertama dalam satu alur tanpa putus.",
+  installEyebrow: "Mulai",
+  installTitle: "Cukup minta. Claude Code yang menyelesaikan sisanya.",
+  installIntro:
+    "Tanpa hafalan perintah, tanpa penyiapan manual. Beri tahu Claude Code kebutuhan Anda dalam bahasa alami; Claude Code akan menemukan skill AnyCap, memasang CLI, mengautentikasi, dan mulai mengirimkan hasil—semua di sesi terminal yang sama.",
+  installPromptLabel: "Yang Anda katakan ke Claude Code",
+  installPromptText: "Bantu saya menginstal anycap.ai",
+  installPromptExplanation:
+    "Claude Code membaca prompt, menemukan skill AnyCap, memasang CLI, mengautentikasi, dan siap memanggil anycap image generate, anycap video generate, atau kemampuan lain—secara otomatis.",
+  installManualSummary: "Lebih suka memasang manual? Berikut tiga langkahnya.",
+  installSteps: [
+    {
+      subtitle: "Langkah 1",
+      title: "Pasang skill",
+      code: "npx -y skills add anycap-ai/anycap -a claude-code -y",
+      note: "Ini mengajarkan Claude Code cara menemukan dan memanggil runtime kemampuan AnyCap.",
+    },
+    {
+      subtitle: "Langkah 2",
+      title: "Pasang CLI",
+      code: "curl -fsSL https://anycap.ai/install.sh | sh",
+      note: "CLI adalah satu binary tanpa dependensi runtime—berjalan langsung di sesi terminal Claude Code.",
+    },
+    {
+      subtitle: "Langkah 3",
+      title: "Masuk dan verifikasi",
+      code: "anycap login && anycap status",
+      note: "Setelah autentikasi, Claude Code dapat berpindah antar kemampuan gambar, video, dan visi tanpa kredensial baru atau bolak-balik ke dashboard.",
+    },
+  ],
+  installWalkthroughPrefix: "Untuk panduan lengkap, lihat",
+  installWalkthroughLinkLabel: "panduan pemasangan",
+  whyEyebrow: "Mengapa cocok",
+  whyTitle: "Dirancang untuk cara kerja Claude Code",
+  whyIntro:
+    "AnyCap terpasang rapi di Claude Code karena didesain untuk batasan yang sama: eksekusi terminal lokal, akses sistem berkas, dan penemuan berbasis skill.",
+  whyCards: [
+    {
+      title: "Eksekusi terminal lokal",
+      body:
+        "Claude Code berjalan langsung di terminal Anda di samping basis kode. CLI AnyCap adalah binary tanpa dependensi yang terpasang dan terautentikasi di sesi yang sama, sehingga kemampuan tersedia tanpa meninggalkan terminal.",
+    },
+    {
+      title: "Integrasi sistem berkas",
+      body:
+        "Claude Code punya akses langsung ke berkas proyek Anda. AnyCap mengembalikan path berkas dan URL CDN yang bisa disimpan Claude Code ke direktori proyek, disematkan di markdown, atau diteruskan ke alat lain.",
+    },
+    {
+      title: "Satu kredensial untuk semua kemampuan",
+      body:
+        "Tanpa lapisan runtime, menambahkan pembuatan gambar, video, dan visi berarti tiga set kredensial penyedia terpisah. AnyCap menyatukannya dalam satu login yang mencakup seluruh stack.",
+    },
+  ],
+  realEyebrow: "Alur kerja nyata",
+  realTitle: "Sesil Claude Code + AnyCap terlihat seperti ini",
+  realIntro:
+    "Ini perintah dan keluaran CLI yang nyata. Setiap contoh berjalan langsung di sesi terminal Claude Code—tanpa alat eksternal, dashboard, atau tab browser.",
+  realWorkflowExamples: [
+    {
+      title: "Pembuatan gambar — teks ke gambar",
+      command:
+        'anycap image generate --model seedream-5 --prompt "dashboard SaaS minimal di latar terang, UI bersih, sudut membulat" -o dashboard-hero.png',
+      outputLines: [
+        "Membuat gambar dengan seedream-5...",
+        "Gambar disimpan ke dashboard-hero.png (1024x1024, 487KB)",
+        "URL CDN: https://cdn.anycap.ai/...",
+      ],
+    },
+    {
+      title: "Pemahaman gambar — analisis tangkapan layar",
+      command:
+        'anycap image read --file ./bug-screenshot.png --prompt "Masalah UI apa yang Anda lihat?"',
+      outputLines: [
+        "Overlay modal memotong tombol kirim pada lebar viewport di bawah 640px. Tombol sebagian tersembunyi di balik tepi bawah kontainer dialog. Ini tampak seperti masalah overflow CSS pada elemen induk .modal-body.",
+      ],
+    },
+    {
+      title: "Pembuatan video — klip demo",
+      command:
+        'anycap video generate --model veo-3-1 --prompt "pengembang mengetik di terminal gelap, kamera maju halus, pencahayaan meja ambient"',
+      outputLines: [
+        "Membuat video dengan veo-3-1...",
+        "Video siap (8s, 1080p, 12.4MB)",
+        "URL CDN: https://cdn.anycap.ai/...",
+      ],
+    },
+  ],
+  gapEyebrow: "Celah kemampuan",
+  gapTitle: "Yang Anda dapatkan setelah satu percakapan",
+  gapDescription:
+    "Claude Code tetap fokus pada kode dan eksekusi terminal sementara AnyCap mengisi celah pembuatan, analisis, pencarian, penyimpanan, dan publikasi di luar permukaan bawaannya.",
+  gapColumns: [
+    { label: "Claude Code saja" },
+    { label: "Tambahkan dengan AnyCap", accent: true },
+    { label: "Langkah berikutnya terbaik" },
+  ],
+  gapRows: [
+    {
+      capability: "Pembuatan gambar",
+      cells: [
+        { label: "Tidak ada keluaran gambar dari terminal", tone: "muted" },
+        { label: "Hasilkan visual dan mockup lewat anycap image generate", tone: "accent" },
+        { label: "Halaman Pembuatan Gambar", href: "/capabilities/image-generation" },
+      ],
+    },
+    {
+      capability: "Pembuatan video",
+      cells: [
+        { label: "Tidak ada alat video di alur CLI", tone: "muted" },
+        { label: "Buat walkthrough dan klip lewat anycap video generate", tone: "accent" },
+        { label: "Halaman Pembuatan Video", href: "/capabilities/video-generation" },
+      ],
+    },
+    {
+      capability: "Pembuatan musik",
+      cells: [
+        { label: "Tidak ada pembuatan musik di alur CLI", tone: "muted" },
+        { label: "Buat trek latar lewat runtime musik AnyCap", tone: "accent" },
+        { label: "Halaman Pembuatan Musik", href: "/capabilities/music-generation" },
+      ],
+    },
+    {
+      capability: "Pemahaman gambar",
+      cells: [
+        { label: "Tidak ada runtime visi terpadu", tone: "muted" },
+        { label: "Baca tangkapan layar, diagram, dan referensi visual", tone: "accent" },
+        { label: "Halaman Pemahaman Gambar", href: "/capabilities/image-understanding" },
+      ],
+    },
+    {
+      capability: "Analisis video",
+      cells: [
+        { label: "Membutuhkan penyiapan penyedia terpisah", tone: "muted" },
+        { label: "Periksa rekaman dari CLI yang sama", tone: "accent" },
+        { label: "Halaman Analisis Video", href: "/capabilities/video-analysis" },
+      ],
+    },
+    {
+      capability: "Pemahaman audio",
+      cells: [
+        { label: "Tidak ada runtime analisis audio terpadu", tone: "muted" },
+        { label: "Transkripsikan dan analisis audio lewat satu runtime", tone: "accent" },
+        { label: "Halaman Pemahaman Audio", href: "/capabilities/audio-understanding" },
+      ],
+    },
+    {
+      capability: "Pencarian web",
+      cells: [
+        { label: "Pencarian bergantung pada alat eksternal", tone: "muted" },
+        { label: "Cari web dari lapisan kemampuan yang sama", tone: "accent" },
+        { label: "Halaman Pencarian Web", href: "/capabilities/web-search" },
+      ],
+    },
+    {
+      capability: "Pencarian web dengan grounding",
+      cells: [
+        { label: "Tidak ada alur pencarian grounded di loop tugas", tone: "muted" },
+        { label: "Jalankan pencarian grounded saat jawaban membutuhkan kutipan sumber", tone: "accent" },
+        { label: "Halaman Pencarian Web Grounded", href: "/capabilities/grounded-web-search" },
+      ],
+    },
+    {
+      capability: "Perayapan web",
+      cells: [
+        { label: "Tidak ada runtime crawl yang dapat dipakai ulang", tone: "muted" },
+        { label: "Jelajahi halaman dan ekstrak konten dari satu CLI", tone: "accent" },
+        { label: "Halaman Perayapan Web", href: "/capabilities/web-crawl" },
+      ],
+    },
+    {
+      capability: "Penyimpanan Drive",
+      cells: [
+        { label: "Tidak ada lapisan penyimpanan aset bersama", tone: "muted" },
+        { label: "Simpan keluaran dengan URL publik di AnyCap Drive", tone: "accent" },
+        { label: "Halaman Harga", href: "/pricing" },
+      ],
+    },
+    {
+      capability: "Hosting halaman",
+      cells: [
+        { label: "Tidak ada permukaan publikasi halaman bawaan", tone: "muted" },
+        { label: "Terbitkan halaman sederhana lewat AnyCap Page", tone: "accent" },
+        { label: "Halaman Harga", href: "/pricing" },
+      ],
+    },
+    {
+      capability: "Satu alur autentikasi",
+      cells: [
+        { label: "Manajemen kredensial per penyedia", tone: "muted" },
+        { label: "Satu akun di seluruh stack kemampuan", tone: "accent" },
+        { label: "Halaman Mulai", href: "/start" },
+      ],
+    },
+  ],
+  capabilityCardsTitle: "Mulai dari kemampuan pertama yang belum ada",
+  capabilityCards: [
+    {
+      eyebrow: "Keluaran kreatif",
+      title: "Pembuatan gambar",
+      href: "/capabilities/image-generation",
+      summary:
+        "Halaman berikutnya yang paling pas ketika Claude Code butuh visual, mockup, aset peluncuran, atau keluaran gambar lain.",
+      command: "anycap image generate",
+    },
+    {
+      eyebrow: "Keluaran gerak",
+      title: "Pembuatan video",
+      href: "/capabilities/video-generation",
+      summary:
+        "Halaman berikutnya yang paling pas ketika Claude Code butuh demo, walkthrough, atau keluaran video pendek.",
+      command: "anycap video generate",
+    },
+    {
+      eyebrow: "Visi",
+      title: "Pemahaman gambar",
+      href: "/capabilities/image-understanding",
+      summary:
+        "Halaman berikutnya yang paling pas ketika Claude Code perlu menafsirkan tangkapan layar, diagram, OCR, atau umpan balik desain.",
+      command: "anycap image read",
+    },
+    {
+      eyebrow: "Analisis",
+      title: "Analisis video",
+      href: "/capabilities/video-analysis",
+      summary:
+        "Halaman berikutnya yang paling pas ketika Claude Code perlu memeriksa rekaman dan mengekstrak detail terstruktur.",
+      command: "anycap video read",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah Claude Code bisa membuat gambar sendiri?",
+      answer:
+        "Tidak. Claude Code berfokus pada penalaran kode, perencanaan, dan eksekusi terminal. Tidak ada runtime pembuatan gambar bawaan. AnyCap menambahkan kemampuan itu lewat satu pemasangan skill dan satu CLI, sehingga Claude Code dapat menghasilkan visual tanpa meninggalkan sesi terminal atau menyambungkan penyedia gambar terpisah.",
+    },
+    {
+      question: "Mengapa memakai AnyCap alih-alih menyambungkan penyedia langsung?",
+      answer:
+        "Menyambungkan API gambar, video, dan visi secara terpisah berarti mengelola tiga set kredensial, SDK, dan alur autentikasi. AnyCap menyatukannya dalam satu CLI dan satu login yang bisa dipanggil Claude Code langsung dari terminal. Satu pemasangan skill menggantikan banyak integrasi penyedia.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Claude Code?",
+      answer:
+        "Tidak. AnyCap bukan agen. Ini runtime kemampuan yang berjalan di samping Claude Code. Anda tetap memakai Claude Code untuk kode, perencanaan, dan eksekusi terminal, dan menambahkan alat gambar, video, dan visi yang tidak dibawa bawaan. AnyCap memperluas Claude Code—bukan bersaing dengannya.",
+    },
+    {
+      question: "Apa jalur tercepat untuk menambahkan alat ke Claude Code?",
+      answer:
+        "Cukup katakan ke Claude Code 'Bantu saya menginstal anycap.ai' dalam bahasa alami. Claude Code akan menemukan skill, memasang CLI, mengautentikasi, dan siap membuat gambar atau video segera. Tanpa hafalan perintah. Jika Anda lebih suka kontrol manual, Anda juga bisa memasang skill dan CLI sendiri dalam tiga langkah.",
+    },
+    {
+      question: "Apakah AnyCap berjalan di dalam terminal Claude Code?",
+      answer:
+        "Ya. CLI AnyCap adalah satu binary tanpa dependensi eksternal. CLI berjalan langsung di sesi terminal Claude Code, mengirim permintaan ke server AnyCap, dan mengembalikan path berkas atau URL yang bisa dipakai Claude Code di langkah berikutnya, disematkan ke kode, atau disimpan ke direktori proyek.",
+    },
+  ],
+  siblingEyebrow: "Juga tersedia untuk",
+  siblingAgents: [
+    { label: "Codex", href: "/for/codex" },
+    { label: "Cursor", href: "/for/cursor" },
+    { label: "Manus", href: "/for/manus" },
+  ],
+  footerCtas: {
+    addToolsToClaudeCode: "Tambahkan alat ke Claude Code",
+    getStarted: "Mulai",
+    whyOneCliMatters: "Mengapa satu CLI penting",
+    howSkillsFit: "Cara skill cocok",
+  },
+  footerLastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
+};
+
 const contentByLocale = {
   en: createPageContent(englishCopy, "en"),
   "pt-br": createPageContent(ptBrCopy, "pt-br"),
-  id: createPageContent(englishCopy, "id"),
+  id: createPageContent(idCopy, "id"),
 } as const satisfies Record<SiteLocale, ForClaudeCodePageContent>;
 
 export function getForClaudeCodeMetadata(locale: SiteLocale): Metadata {

@@ -941,10 +941,391 @@ const portugueseContent = {
   },
 } satisfies PageContent;
 
+const indonesianContent = {
+  metadata: {
+    title: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+    description:
+      "Pasang satu skill, beri tahu Codex apa yang Anda butuhkan, dan biarkan AnyCap menyediakan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat satu CLI.",
+    openGraphTitle: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+    openGraphDescription:
+      "Pasang satu skill, beri tahu Codex apa yang Anda butuhkan, dan biarkan AnyCap menyediakan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat satu CLI.",
+    articleHeadline: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+    articleDescription:
+      "Panduan menambahkan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video ke OpenAI Codex melalui satu runtime kemampuan.",
+    articleAbout: ["Codex", "AnyCap CLI", "skill agen", "runtime kemampuan"],
+    articleKeywords: [
+      "alat codex",
+      "menambahkan alat ke codex",
+      "kemampuan codex",
+      "codex pembuatan gambar",
+      "codex alat cli",
+      "codex seedream 5 vs nano banana 2",
+      "codex veo 3.1 vs kling 3.0",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Perlengkapi Agen", href: "/for" },
+    { name: "Codex", href: FOR_CODEX_PATH },
+  ],
+  hero: {
+    eyebrow: "Untuk Codex",
+    lastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
+    titleLine1: "Codex kuat untuk kode dan kerja terminal.",
+    titleLine2: "Ia masih membutuhkan alat gambar, video, dan visi.",
+    videoSrc: VIDEO_SRC,
+    videoPosterUrl: VIDEO_POSTER_URL,
+    videoTitle: "Pasang dan gunakan AnyCap dengan Codex",
+    videoDescription:
+      "Lihat Codex memasang AnyCap dari perintah bahasa alami — penemuan skill, pengaturan CLI, autentikasi, dan pembuatan gambar pertama dalam satu alur tanpa putus.",
+    introPrefix: "",
+    introLinkLabel: "Codex",
+    introSuffix:
+      " unggul dalam kode, penalaran, dan eksekusi terminal. Celah muncul ketika alur kerja membutuhkan gambar, video, audio, atau kemampuan analisis visual, seperti visual produk, video panduan, pemahaman tangkapan layar, atau tinjauan rekaman — semua itu bukan alat Codex saat ini.",
+    followupParagraph:
+      "Setelah menambahkan skill AnyCap, cukup beri tahu Codex apa yang Anda butuhkan dalam bahasa sehari-hari. Codex membaca skill, memasang CLI, mengautentikasi, dan memanggil kemampuan yang tepat — semuanya di sesi terminalnya sendiri, tanpa pengaturan manual dari Anda.",
+    valueLine: "Satu skill. Pemasangan bahasa alami. Kemampuan langsung siap.",
+    docsUrl: CODEX_DOCS_URL,
+    ctas: {
+      getStarted: "Mulai",
+      imageGeneration: "Pembuatan Gambar",
+      videoAnalysis: "Analisis Video",
+    },
+  },
+  install: {
+    eyebrow: "Memulai",
+    titleLine1: "Tambahkan skill sekali.",
+    titleLine2: "Lalu cukup minta Codex dalam bahasa alami.",
+    description:
+      "Satu-satunya langkah bootstrap adalah menambahkan skill AnyCap. Setelah itu, Anda cukup memberi tahu Codex apa yang harus dilakukan dalam bahasa sehari-hari. Codex membaca skill, memasang CLI, mengautentikasi, dan mulai mengirimkan hasil di sesi terminal yang sama tanpa pengaturan tambahan dari Anda.",
+    runOnceLabel: "Jalankan sekali",
+    code: SKILL_INSTALL_COMMAND,
+    note: "Ini mengajarkan Codex cara menemukan dan memanggil runtime AnyCap tanpa mengubah cara Anda sudah bekerja.",
+    detailsSummary: "Lebih suka memasang manual? Berikut tiga langkahnya.",
+    steps: [
+      {
+        title: "Pasang skill",
+        subtitle: "Langkah 1",
+        code: SKILL_INSTALL_COMMAND,
+        note: "Ini mengajarkan Codex cara menemukan dan memanggil runtime AnyCap.",
+      },
+      {
+        title: "Pasang CLI",
+        subtitle: "Langkah 2",
+        code: CLI_INSTALL_COMMAND,
+        note: "CLI adalah satu biner tanpa dependensi runtime — berjalan di dalam sandbox Codex sebagai alat terminal standar.",
+      },
+      {
+        title: "Masuk dan verifikasi",
+        subtitle: "Langkah 3",
+        code: VERIFY_COMMAND,
+        note: "Setelah autentikasi, Codex dapat berpindah antar kemampuan gambar, video, dan visi tanpa kredensial baru atau jeda ke dasbor.",
+      },
+    ],
+    guideLeadIn: "Untuk panduan lengkap, lihat ",
+    guideLinkLabel: "panduan pemasangan",
+    guideUrl: "/guides/install-anycap",
+  },
+  whyItFits: {
+    eyebrow: "Mengapa cocok",
+    title: "Dibuat untuk cara Codex sudah bekerja",
+    description:
+      "AnyCap terpasang rapi ke Codex karena dirancang untuk batasan yang sama: VM tersandbox, keluaran hanya terminal, dan lingkungan tugas sementara.",
+    cards: [
+      {
+        title: "Eksekusi tersandbox",
+        description:
+          "Codex menjalankan setiap tugas di VM cloud terisolasi. CLI AnyCap adalah biner tanpa dependensi yang terpasang dan mengautentikasi di dalam sandbox itu, sehingga tidak ada pengaturan tingkat host yang bocor antar tugas.",
+      },
+      {
+        title: "Keluaran asli terminal",
+        description:
+          "Codex tidak punya GUI — setiap hasil berupa teks di terminal. AnyCap mengembalikan path file dan URL CDN yang dapat Codex gunakan di langkah berikutnya, disematkan di markdown, atau diteruskan ke alat hilir.",
+      },
+      {
+        title: "Satu kredensial, semua kemampuan",
+        description:
+          "Tanpa lapisan runtime, menambahkan pembuatan gambar, pembuatan video, dan visi berarti tiga kredensial penyedia terpisah per sandbox. AnyCap menggabungkannya menjadi satu login yang mencakup seluruh tumpukan.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja nyata",
+    title: "Sesi Codex + AnyCap terlihat seperti ini",
+    description:
+      "Ini perintah dan keluaran CLI nyata. Setiap contoh berjalan langsung di sesi terminal Codex — tanpa alat eksternal, dasbor, atau tab browser.",
+    panels: [
+      {
+        title: "Pembuatan gambar — teks ke gambar",
+        command:
+          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
+        outputLines: [
+          "Membuat gambar dengan seedream-5...",
+          "Gambar disimpan ke dashboard-hero.png (1024x1024, 487KB)",
+          "URL CDN: https://cdn.anycap.ai/...",
+        ],
+      },
+      {
+        title: "Pemahaman gambar — analisis tangkapan layar",
+        command:
+          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
+        outputLines: [
+          "Lapisan modal memotong tombol kirim pada lebar viewport di bawah 640px.",
+          "Tombol sebagian tersembunyi di balik tepi bawah wadah dialog.",
+          "Ini tampak seperti masalah overflow CSS pada elemen induk .modal-body.",
+        ],
+      },
+      {
+        title: "Pembuatan video — klip demo",
+        command:
+          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
+        outputLines: [
+          "Membuat video dengan veo-3-1...",
+          "Video siap (8s, 1080p, 12.4MB)",
+          "URL CDN: https://cdn.anycap.ai/...",
+        ],
+      },
+    ],
+  },
+  gapTable: {
+    eyebrow: "Celah kemampuan",
+    title: "Apa yang Anda dapatkan setelah tiga perintah itu",
+    description:
+      "Codex tetap fokus pada kode dan eksekusi terminal sementara AnyCap mengisi celah pembuatan, analisis, pencarian, penyimpanan, dan penerbitan yang berada di luar area permukaan tersandbox-nya.",
+    columns: {
+      capability: "Kemampuan",
+      codexAlone: "Hanya Codex",
+      addWithAnyCap: "Tambah dengan AnyCap",
+      bestNextStep: "Langkah terbaik berikutnya",
+    },
+    rows: makeGapRows([
+      {
+        capability: "Pembuatan gambar",
+        codexGap: "Tidak ada keluaran gambar dari sandbox",
+        anycapValue: "Hasilkan visual dan mockup lewat anycap image generate",
+        nextStepLabel: "Halaman Pembuatan Gambar",
+        nextStepHref: "/capabilities/image-generation",
+      },
+      {
+        capability: "Pembuatan video",
+        codexGap: "Tidak ada alat video di loop terminal",
+        anycapValue: "Buat panduan dan klip lewat anycap video generate",
+        nextStepLabel: "Halaman Pembuatan Video",
+        nextStepHref: "/capabilities/video-generation",
+      },
+      {
+        capability: "Pemahaman gambar",
+        codexGap: "Tidak ada runtime visi terpadu",
+        anycapValue: "Baca tangkapan layar, diagram, dan referensi visual",
+        nextStepLabel: "Halaman Pemahaman Gambar",
+        nextStepHref: "/capabilities/image-understanding",
+      },
+      {
+        capability: "Analisis video",
+        codexGap: "Membutuhkan penyedia terpisah per tugas",
+        anycapValue: "Periksa rekaman dari CLI yang sama",
+        nextStepLabel: "Halaman Analisis Video",
+        nextStepHref: "/capabilities/video-analysis",
+      },
+      {
+        capability: "Pemahaman audio",
+        codexGap: "Tidak ada runtime analisis audio terpadu",
+        anycapValue: "Transkripsikan dan analisis audio lewat satu runtime",
+        nextStepLabel: "Halaman Pemahaman Audio",
+        nextStepHref: "/capabilities/audio-understanding",
+      },
+      {
+        capability: "Pencarian web",
+        codexGap: "Pencarian bergantung pada alat eksternal",
+        anycapValue: "Cari di web dari lapisan kemampuan yang sama",
+        nextStepLabel: "Halaman Pencarian Web",
+        nextStepHref: "/capabilities/web-search",
+      },
+      {
+        capability: "Pencarian web berbasis sumber",
+        codexGap: "Tidak ada alur pencarian berbasis sumber di loop terminal",
+        anycapValue: "Jalankan pencarian berbasis sumber saat jawaban membutuhkan kutipan",
+        nextStepLabel: "Halaman Pencarian Web Berbasis Sumber",
+        nextStepHref: "/capabilities/grounded-web-search",
+      },
+      {
+        capability: "Perayapan web",
+        codexGap: "Tidak ada runtime perayapan yang dapat digunakan ulang",
+        anycapValue: "Merayapi halaman dan mengekstrak konten dari satu CLI",
+        nextStepLabel: "Halaman Perayapan Web",
+        nextStepHref: "/capabilities/web-crawl",
+      },
+      {
+        capability: "Penyimpanan Drive",
+        codexGap: "Tidak ada lapisan penyimpanan aset bersama",
+        anycapValue: "Simpan keluaran dengan URL publik di AnyCap Drive",
+        nextStepLabel: "Halaman harga",
+        nextStepHref: "/pricing",
+      },
+      {
+        capability: "Hosting halaman",
+        codexGap: "Tidak ada permukaan penerbitan halaman bawaan",
+        anycapValue: "Terbitkan halaman sederhana lewat AnyCap Page",
+        nextStepLabel: "Halaman harga",
+        nextStepHref: "/pricing",
+      },
+      {
+        capability: "Satu alur autentikasi",
+        codexGap: "Pengaturan kredensial baru per sandbox",
+        anycapValue: "Satu login untuk seluruh tumpukan kemampuan",
+        nextStepLabel: "Halaman Mulai",
+        nextStepHref: "/start",
+      },
+    ]),
+  },
+  capabilityCardsTitle: "Mulai dari kemampuan pertama yang belum ada",
+  capabilityCards: [
+    {
+      eyebrow: "Keluaran kreatif",
+      title: "Pembuatan Gambar",
+      href: "/capabilities/image-generation",
+      summary: "Halaman berikutnya terbaik ketika Codex membutuhkan visual, mockup, aset peluncuran, atau keluaran gambar lain.",
+      command: "anycap image generate",
+    },
+    {
+      eyebrow: "Keluaran gerak",
+      title: "Pembuatan Video",
+      href: "/capabilities/video-generation",
+      summary: "Halaman berikutnya terbaik ketika Codex membutuhkan demo, panduan, atau keluaran video pendek.",
+      command: "anycap video generate",
+    },
+    {
+      eyebrow: "Visi",
+      title: "Pemahaman Gambar",
+      href: "/capabilities/image-understanding",
+      summary: "Halaman berikutnya terbaik ketika Codex perlu menafsirkan tangkapan layar, diagram, OCR, atau umpan balik desain.",
+      command: "anycap image read",
+    },
+    {
+      eyebrow: "Analisis",
+      title: "Analisis Video",
+      href: "/capabilities/video-analysis",
+      summary: "Halaman berikutnya terbaik ketika Codex perlu memeriksa rekaman dan mengekstrak detail terstruktur.",
+      command: "anycap video read",
+    },
+  ],
+  modelSection: {
+    title: "Lalu pilih model yang cocok dengan pekerjaan terminal",
+    introLead:
+      "Tugas Codex sering menjadi pertanyaan perbandingan model setelah kemampuan tersedia. Keputusan gambar umum adalah ",
+    imageModelLinkText: "Seedream 5",
+    imageModelVsText: " vs ",
+    imageModelSecondLinkText: "Nano Banana 2",
+    videoLead: ", sementara keputusan video biasanya menjadi ",
+    videoVsText: " vs ",
+    videoSecondLinkText: "Kling 3.0",
+    introSuffix: ". Halaman model ini membantu Codex memilih sebelum menghasilkan apa pun.",
+    cards: [
+      {
+        eyebrow: "Model gambar",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        summary: "Model gambar pertama terbaik ketika Codex membutuhkan keluaran halus dari prompt di dalam sandbox.",
+        comparison: "Bandingkan dengan Nano Banana 2 ketika tugasnya kecepatan vs polesan.",
+      },
+      {
+        eyebrow: "Model gambar",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        summary: "Terbaik untuk iterasi cepat ketika Codex membutuhkan lebih banyak varian, draf, atau throughput dari pembuatan gambar.",
+        comparison: "Bandingkan dengan Seedream 5 dan Nano Banana Pro untuk pertimbangan alur kerja.",
+      },
+      {
+        eyebrow: "Model video",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        summary: "Model video premium terbaik untuk Codex ketika alur membutuhkan lulusan sinematik pertama yang lebih bersih.",
+        comparison: "Bandingkan dengan Kling 3.0 dan Seedance 1.5 Pro untuk gaya gerak dan kesesuaian produksi.",
+      },
+    ],
+  },
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Bisakah Codex membuat gambar sendiri?",
+      answer:
+        "Tidak. Codex berfokus pada penalaran kode dan eksekusi terminal di dalam VM tersandbox. Tidak ada runtime pembuatan gambar bawaan. AnyCap menambahkan kemampuan itu lewat satu pemasangan skill dan satu CLI, sehingga Codex dapat menghasilkan visual tanpa meninggalkan alur kerja berbasis terminal.",
+    },
+    {
+      question: "Mengapa memakai AnyCap alih-alih menyambungkan penyedia langsung?",
+      answer:
+        "Tugas Codex berjalan di sandbox cloud terisolasi dan sementara. Menyambungkan API gambar, API video, dan API visi terpisah di setiap tugas berarti pengaturan kredensial dan pemasangan SDK berulang. AnyCap menggabungkannya menjadi satu CLI dan satu login yang bertahan antar sesi Codex.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Codex?",
+      answer:
+        "Tidak. AnyCap bukan agen. Ini adalah runtime kemampuan yang berjalan di samping Codex. Anda tetap memakai Codex untuk kode, perencanaan, dan eksekusi terminal, dan menambahkan alat gambar, video, dan visi yang tidak dibawa Codex.",
+    },
+    {
+      question: "Apa jalur tercepat untuk menambahkan alat ke Codex?",
+      answer:
+        "Tambahkan skill AnyCap sekali, lalu jelaskan apa yang Anda butuhkan dalam bahasa alami. Codex membaca skill, memasang CLI, mengautentikasi, dan memanggil kemampuan yang tepat secara otomatis. Jika Anda lebih suka kontrol manual, Anda juga dapat memasang CLI dan masuk sendiri dalam tiga langkah.",
+    },
+    {
+      question: "Apakah AnyCap berfungsi di dalam sandbox Codex?",
+      answer:
+        "Ya. CLI AnyCap adalah satu biner tanpa dependensi eksternal. Berjalan di dalam sandbox Codex, mengirim permintaan API ke server AnyCap, dan mengembalikan path file atau URL yang dapat Codex gunakan di langkah terminal berikutnya.",
+    },
+    {
+      question: "Model gambar mana yang paling cocok untuk Codex: Seedream 5, Nano Banana 2, atau Nano Banana Pro?",
+      answer:
+        "Untuk Codex, Seedream 5 lebih kuat ketika tugas membutuhkan hasil lulusan pertama yang halus, Nano Banana 2 lebih baik untuk iterasi cepat dan pembuatan bergaya batch, dan Nano Banana Pro lebih cocok ketika Codex membutuhkan penyuntingan terarah pada gambar yang ada.",
+    },
+    {
+      question: "Model video mana yang paling cocok untuk Codex: Veo 3.1, Kling 3.0, atau Seedance 1.5 Pro?",
+      answer:
+        "Untuk Codex, Veo 3.1 adalah default premium, Kling 3.0 lebih cocok untuk gerak yang lebih sinematik, dan Seedance 1.5 Pro adalah pilihan yang lebih stabil untuk alur kerja produksi gambar-ke-video yang dapat diulang.",
+    },
+  ],
+  siblingAgents: {
+    eyebrow: "Juga tersedia untuk",
+    agents: [
+      { label: "Claude Code", href: "/for/claude-code" },
+      { label: "Cursor", href: "/for/cursor" },
+      { label: "Manus", href: "/for/manus" },
+    ],
+  },
+  ctaButtons: {
+    primary: "Mulai",
+    secondary: "Mengapa Satu CLI Penting",
+    tertiary: "Bagaimana Skill Cocok",
+  },
+  footerNote: "Terakhir diperbarui April 2026",
+  videoObject: {
+    name: "Pasang dan gunakan AnyCap dengan Codex",
+    description:
+      "Lihat Codex memasang AnyCap dari perintah bahasa alami — penemuan skill, pengaturan CLI, autentikasi, dan pembuatan gambar pertama dalam satu alur tanpa putus.",
+  },
+  howTo: {
+    name: "Tambahkan kemampuan gambar, video, dan visi ke Codex",
+    description:
+      "Pasang skill AnyCap agar Codex dapat mengatur CLI dan mengautentikasi secara otomatis melalui bahasa alami. Langkah manual juga tersedia.",
+    steps: [
+      {
+        name: "Pasang skill AnyCap",
+        text: `Jalankan ${SKILL_INSTALL_COMMAND}. Ini satu-satunya langkah manual — setelah ini, Codex dapat memasang CLI dan mengautentikasi sendiri ketika Anda menjelaskan tugas.`,
+      },
+      {
+        name: "Beritahu Codex apa yang Anda butuhkan",
+        text: "Jelaskan tugas dalam bahasa alami, misalnya 'bantu saya memasang AnyCap dan membuat mockup produk' atau 'buat mockup produk'. Codex membaca skill, memasang CLI, mengautentikasi, dan memanggil kemampuan AnyCap yang tepat secara otomatis.",
+      },
+      {
+        name: "(Opsional) Pasang manual",
+        text: `Jika Anda lebih suka kontrol manual: jalankan ${CLI_INSTALL_COMMAND} untuk memasang CLI, lalu ${VERIFY_COMMAND} untuk mengautentikasi.`,
+      },
+    ],
+  },
+} satisfies PageContent;
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: englishContent,
   "pt-br": portugueseContent,
-  id: englishContent,
+  id: indonesianContent,
 };
 
 function getContent(locale: SiteLocale): PageContent {
@@ -997,17 +1378,6 @@ export function getForCodexPageData(locale: SiteLocale) {
       uploadDate: "2026-04-03",
       duration: "PT48S",
       thumbnailUrl: content.hero.videoPosterUrl,
-    },
-    howToJsonLd: {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      name: content.howTo.name,
-      description: content.howTo.description,
-      step: content.howTo.steps.map((step) => ({
-        "@type": "HowToStep",
-        name: step.name,
-        text: step.text,
-      })),
     },
   };
 }

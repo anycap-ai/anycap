@@ -329,10 +329,139 @@ const ptBrContent: ImageUnderstandingPageContent = {
   ],
 };
 
+const idContent: ImageUnderstandingPageContent = {
+  metadata: {
+    title: "API pemahaman gambar untuk agen AI - visi, OCR, dan analisis gambar",
+    description:
+      "Berikan agen AI kemampuan memahami gambar lewat AnyCap. Analisis tangkapan layar, diagram, foto, grafik, dan visual berat teks dengan satu perintah CLI tanpa menyambungkan stack visi atau analisis gambar terpisah.",
+    openGraphTitle: "API pemahaman gambar untuk agen AI - visi, OCR, dan analisis gambar",
+    openGraphDescription:
+      "Tambahkan pemahaman gambar, OCR, dan analisis gambar ke agen AI dengan satu CLI dan satu runtime kemampuan.",
+    articleHeadline: "API pemahaman gambar untuk agen AI - visi, OCR, dan analisis gambar",
+    articleDescription:
+      "Panduan kemampuan untuk menambahkan pemahaman gambar ke agen AI melalui AnyCap, termasuk tangkapan layar, diagram, OCR, dan analisis grafik.",
+    articleAbout: ["Pemahaman gambar", "Visi untuk agen AI", "OCR", "AnyCap"],
+    articleKeywords: [
+      "pemahaman gambar untuk agen ai",
+      "api visi untuk agen",
+      "api analisis gambar",
+      "api pengenalan gambar",
+      "api ocr",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Kemampuan", href: "/capabilities" },
+    { name: "Pemahaman gambar", href: IMAGE_UNDERSTANDING_PATH },
+  ],
+  eyebrow: "Kemampuan",
+  lastUpdatedLabel: "Terakhir diperbarui 11 April 2026",
+  hero: {
+    title: "Pemahaman gambar",
+    intro:
+      "AnyCap memberi agen lapisan pemahaman gambar yang konsisten untuk tangkapan layar, diagram, grafik, dan referensi visual. Alih-alih menyambungkan API visi atau analisis gambar yang berbeda untuk setiap alur kerja, agen mendapat satu permukaan perintah untuk analisis visual, OCR, dan ekstraksi konteks di Claude Code, Cursor, Codex, dan sisa stack Anda.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Gunakan pemahaman gambar ketika agen perlu mendeskripsikan, mengklasifikasi, atau bernalar tentang gambar sebelum bertindak. Alur yang sama berlaku untuk tangkapan layar, referensi desain, grafik, dan visual yang banyak teksnya.",
+  },
+  namingNote: {
+    label: "Catatan penamaan",
+    text:
+      "Halaman memakai bahasa pasar yang selaras dengan niat pencarian. Perintah CLI tetap `anycap actions image-read`.",
+  },
+  usageTitle: "Penggunaan CLI",
+  usageExamples: [
+    {
+      title: "Menganalisis tangkapan layar jarak jauh",
+      code: "anycap actions image-read --url https://example.com/screenshot.png",
+    },
+    {
+      title: "Memeriksa diagram lokal",
+      code: "anycap actions image-read --file ./architecture-diagram.png",
+    },
+    {
+      title: "Mengajukan pertanyaan terfokus",
+      code:
+        'anycap actions image-read --url https://example.com/chart.png --instruction "Tren apa yang berubah setelah Q2?"',
+    },
+  ],
+  useCasesTitle: "Kapan agen membutuhkan pemahaman gambar",
+  useCases: [
+    "Memahami status UI dan tangkapan layar bug tanpa keluar dari alur kerja agen.",
+    "Membaca diagram arsitektur dan bagan alir sebelum menghasilkan kode atau dokumentasi.",
+    "Mengekstrak detail terstruktur dari grafik, tabel, atau tangkapan layar dengan teks tertanam.",
+    "Mereview aset visual, gambar produk, dan referensi desain lewat satu runtime.",
+  ],
+  relatedTitle: "Halaman terkait",
+  relatedCards: [
+    {
+      eyebrow: "Kemampuan",
+      title: "Generasi gambar",
+      href: "/capabilities/image-generation",
+      description:
+        "Padukan pemahaman gambar dengan generasi gambar ketika alur kerja membutuhkan analisis sekaligus pembuatan keluaran.",
+    },
+    {
+      eyebrow: "Kemampuan",
+      title: "Analisis video",
+      href: "/capabilities/video-analysis",
+      description:
+        "Gunakan ini ketika alur kerja mencakup tangkapan layar dan rekaman serta agen membutuhkan kedua mode visual.",
+    },
+    {
+      eyebrow: "Halaman agen",
+      title: "Untuk Claude Code",
+      href: "/for/claude-code",
+      description:
+        "Lihat bagaimana pemahaman gambar masuk ke narasi kemampuan Claude Code secara keseluruhan.",
+    },
+  ],
+  faqTitle: "Pertanyaan yang sering diajukan",
+  faqItems: [
+    {
+      question: "Apa yang bisa dilakukan agen dengan pemahaman gambar AnyCap?",
+      answer:
+        "Ini memberi agen satu antarmuka untuk analisis visual pada tangkapan layar, diagram, gambar produk, grafik, dan teks hasil pindaian. Dalam praktiknya berarti satu permukaan API visi untuk deskripsi, OCR, perbandingan, dan menjawab pertanyaan terfokus.",
+    },
+    {
+      question: "Apakah ini bisa berperan seperti AI yang mendeskripsikan gambar?",
+      answer:
+        "Ya. Runtime yang sama dapat mendeskripsikan tangkapan layar, diagram, foto produk, grafik, dan referensi visual lainnya dalam bahasa sederhana sebelum agen memutuskan langkah berikutnya.",
+    },
+    {
+      question: "Mengapa halaman ini bernama pemahaman gambar sementara perintah CLI-nya image-read?",
+      answer:
+        "Halaman memakai bahasa yang ramah pencarian dan selaras dengan cara tim mendeskripsikan masalahnya, sementara CLI mempertahankan nama perintah yang lebih ringkas `anycap actions image-read`.",
+    },
+    {
+      question: "Kapan tim sebaiknya memikirkannya sebagai API visi atau API analisis gambar?",
+      answer:
+        "Keduanya valid. Pemahaman gambar adalah nama kemampuan, sementara API visi dan API analisis gambar adalah istilah pasar yang sering dipakai ketika orang ingin OCR, interpretasi tangkapan layar, pembacaan grafik, atau penalaran visual dalam alur kerja agen.",
+    },
+    {
+      question: "Apakah ini juga berfungsi sebagai API OCR untuk alur kerja agen?",
+      answer:
+        "Ya. OCR adalah salah satu tugas praktis di dalam kemampuan pemahaman gambar, terutama untuk tangkapan layar, teks hasil pindaian, diagram, dasbor, dan grafik yang perlu dibaca agen sebelum bertindak.",
+    },
+  ],
+  nextStepsTitle: "Langkah berikutnya",
+  nextActions: [
+    {
+      label: "Lihat di GitHub",
+      href: "https://github.com/anycap-ai/anycap",
+      external: true,
+      primary: true,
+    },
+    { label: "Jelajahi kemampuan", href: "/capabilities" },
+    { label: "Jelajahi CLI", href: "/cli" },
+    { label: "Apa yang tidak bisa dilakukan agen", href: "/learn/what-agents-cant-do" },
+  ],
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, ImageUnderstandingPageContent>;
 
 function getContent(locale: SiteLocale): ImageUnderstandingPageContent {

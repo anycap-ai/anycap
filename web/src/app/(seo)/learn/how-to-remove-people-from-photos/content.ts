@@ -714,10 +714,307 @@ const ptBrContent: RemovePeoplePageContent = {
   },
 };
 
+const idContent: RemovePeoplePageContent = {
+  metadata: {
+    title: "Cara Menghapus Orang dari Foto dengan Agen AI",
+    description:
+      "Gunakan AnyCap untuk menghapus orang yang tidak diinginkan dari foto, memeriksa adegan yang direkonstruksi, dan menjaga hasil tetap dipakai alih-alih menerima bercak buram.",
+    openGraphTitle: "Cara Menghapus Orang dari Foto dengan Agen AI",
+    openGraphDescription:
+      "Panduan alur kerja untuk menghapus satu orang dari foto lewat pengeditan gambar AnyCap dan pemahaman gambar sambil menjaga sisanya tetap koheren.",
+    articleHeadline: "Cara Menghapus Orang dari Foto dengan Agen AI",
+    articleDescription:
+      "Alur praktis untuk menghapus orang dari foto melalui pengeditan gambar AnyCap ditambah QA gambar.",
+    articleAbout: [
+      "Menghapus orang",
+      "Menghapus objek",
+      "Pembersihan foto perjalanan",
+      "Pengeditan gambar",
+      "Pemahaman gambar",
+      "Agen AI",
+    ],
+    articleKeywords: [
+      "menghapus orang dari foto",
+      "hapus orang dari foto",
+      "hapus orang dari gambar",
+      "pembersihan foto ai",
+      "hapus orang tidak diinginkan dari foto",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Belajar", href: "/learn" },
+    {
+      name: "Cara menghapus orang dari foto",
+      href: HOW_TO_REMOVE_PEOPLE_FROM_PHOTOS_PATH,
+    },
+  ],
+  eyebrow: "Belajar",
+  lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+  hero: {
+    titleLine1: "Cara menghapus orang dari foto",
+    titleLine2: "tanpa merusak latar menjadi buram",
+    introBeforeFirstLink:
+      "Jika Anda ingin menghapus seseorang dari foto, pekerjaan yang berguna bukan sekadar menghapus area berbentuk tubuh. Yang penting adalah merekonstruksi adegan agar gambar masih terasa seperti satu foto yang meyakinkan. Di situlah",
+    firstLinkLabel: "generasi gambar AnyCap",
+    introBetweenLinks: "ditambah",
+    secondLinkLabel: "pemahaman gambar",
+    introAfterSecondLink:
+      "memberi agen alur kerja yang lebih kuat daripada penghapus ajaib sekali klik.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Alur menghapus orang yang berguna adalah rekonstruksi ditambah QA. AnyCap memungkinkan agen menghapus orang yang tidak diinginkan, memeriksa latar yang diperbaiki, dan memutuskan apakah bingkai siap dipakai ulang untuk listing, posting blog, atau set foto perjalanan.",
+  },
+  proof: {
+    eyebrow: "Bukti yang dihasilkan",
+    title: "Pembersihan mirador wisata nyata, bukan mockup",
+    intro:
+      "Halaman ini memakai pasangan bukti nyata yang dihasilkan dengan AnyCap. Bingkai kiri adalah foto mirador asli dengan dua subjek latar depan. Bingkai kanan menghapus wanita berjaket merah sambil mempertahankan wisatawan yang tersisa, pagar batu, dan pemandangan laut agar tetap koheren.",
+    promptLabel: "Prompt edit yang dipakai dengan AnyCap",
+    prompt:
+      "hapus sepenuhnya wanita berjaket merah, biarkan pria berkemeja putih persis di posisinya, rekonstruksi pagar batu secara alami di belakangnya, pertahankan tebing laut dan pencahayaan matahari terbenam, tanpa orang tambahan, tanpa teks, tanpa watermark",
+    signalsLabel: "Mengapa bukti ini penting",
+    signals: [
+      "Ini menunjukkan masalah rekonstruksi nyata, bukan crop sepele atau regenerasi penuh.",
+      "Pagar yang diperbaiki dan garis pantai membuat pembersihan terbaca sekilas.",
+      "Ini mendemonstrasikan klaim AnyCap yang jujur: penghapusan ditambah inspeksi, bukan penghapusan buta.",
+    ],
+    caption:
+      "Gambar kiri adalah foto asli. Gambar kanan adalah hasil AnyCap dengan satu orang dihapus dan adegan direkonstruksi dari sumber gambar yang sama.",
+    images: [
+      {
+        src: `${PAGE_RESOURCE_BASE}/pt-br-remove-people-source-2026-04-10.png`,
+        alt: "Foto mirador pesisir saat matahari terbenam dengan wanita berjaket merah dan pria berkemeja putih di pagar batu.",
+        width: 1200,
+        height: 896,
+        label: "Foto sumber",
+        frameVariant: "plain",
+      },
+      {
+        src: `${PAGE_RESOURCE_BASE}/pt-br-remove-people-result-2026-04-10.png`,
+        alt: "Foto mirador yang sama setelah wanita berjaket merah dihapus dan pagar batu direkonstruksi.",
+        width: 1200,
+        height: 896,
+        label: "Hasil edit",
+        frameVariant: "plain",
+      },
+    ],
+  },
+  quickAnswer: {
+    eyebrow: "Jawaban singkat",
+    title: "Bagian sulitnya adalah perbaikan adegan, bukan sekadar penghapusan",
+    intro:
+      "Alat penghapus orang dinilai dari apakah orang yang tidak diinginkan hilang. Dalam praktik, pertanyaan berguna adalah apakah bingkai masih terlihat utuh setelah penghapusan. Itulah sebabnya alur yang lebih kuat adalah hapus ditambah rekonstruksi ditambah QA.",
+    takeaways: [
+      "Prompt harus menyebutkan siapa yang harus hilang dan bagian foto mana yang harus tetap sama persis.",
+      "Area yang diperbaiki lebih penting daripada tindakan hapus sendiri karena isian buruk membuat edit terlihat jelas.",
+      "Alur yang baik bercabang ke pembersihan kedua ketika pagar, garis horizon, atau tekstur berulang masih terlihat aneh.",
+    ],
+    cards: [
+      {
+        title: "Foto perjalanan",
+        body: "Terbaik ketika satu turis atau pejalan kaki tambahan merusak foto pemandang yang sebenarnya berguna.",
+      },
+      {
+        title: "Listing dan foto properti",
+        body: "Berguna ketika adegan sudah tepat tetapi satu orang membuat gambar terasa berlebihan, mengganggu, atau tidak bisa dipakai.",
+      },
+      {
+        title: "Pemakaian ulang sosial dan editorial",
+        body: "Kuat ketika Anda ingin mempertahankan komposisi foto asli tetapi membersihkan satu subjek yang mengganggu sebelum menerbitkan.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja",
+    title: "Lima langkah dari bingkai ramai ke foto yang lebih bersih",
+    stepLabel: "Langkah",
+    steps: [
+      {
+        title: "Mulai dari foto yang sudah berfungsi",
+        body: "Gunakan gambar yang benar-benar ingin Anda simpan. Alur ini terkuat ketika komposisi dan pencahayaan sudah baik dan hanya satu subjek yang perlu pergi.",
+      },
+      {
+        title: "Sebutkan orang yang akan dihapus dengan tepat",
+        body: "Deskripsikan pakaian, posisi, dan lokasi relatif agar edit tidak bergeser ke subjek yang salah.",
+      },
+      {
+        title: "Lindungi bagian yang harus tetap",
+        body: "Sebutkan apa yang harus tetap utuh, seperti horizon, pagar, subjek utama, atau pembingkaian kamera.",
+      },
+      {
+        title: "Periksa zona yang diperbaiki dengan teliti",
+        body: "Cari tepi rusak, tekstur kloning, pagar melengkung, atau ketidakcocokan cahaya di tempat orang itu berdiri.",
+      },
+      {
+        title: "Jalankan pass kedua hanya jika perlu",
+        body: "Jika artefak kecil tersisa, gunakan prompt pembersihan yang lebih ketat alih-alih menghasilkan ulang seluruh foto dari awal.",
+      },
+    ],
+  },
+  comparison: {
+    eyebrow: "Mengapa alur kerja penting",
+    title: "Penghapusan sekali klik versus alur kerja agen",
+    shallowLabel: "Penghapus sekali klik",
+    workflowLabel: "Alur kerja AnyCap",
+    rows: [
+      {
+        lens: "Tujuan utama",
+        shallow:
+          "Membuat orang yang tidak diinginkan hilang cepat, meskipun area yang diperbaiki terlihat jelas sintetis.",
+        workflow: "Menghapus orang dan menjaga adegan cukup meyakinkan untuk dipakai ulang tanpa malu.",
+      },
+      {
+        lens: "Apa yang tetap dilindungi",
+        shallow: "Biasanya kurang dispesifikasi, sehingga subjek di dekatnya atau struktur latar bisa bergeser.",
+        workflow: "Prompt menyebut orang yang dihapus dan detail adegan yang harus tetap tidak berubah.",
+      },
+      {
+        lens: "Kendali mutu",
+        shallow: "Pengguna memeriksa bingkai akhir secara visual dan berharap tidak ada yang rusak halus.",
+        workflow:
+          "Agen dapat memeriksa hasil dengan pembacaan gambar dan memutuskan apakah pass pembersihan yang lebih ketat diperlukan.",
+      },
+    ],
+  },
+  modelChoice: {
+    eyebrow: "Pilihan model",
+    title: "Stack AnyCap saat ini untuk alur penghapusan orang",
+    cards: [
+      {
+        label: "Pass pertama terbaik",
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Pilihan pertama terbaik ketika Anda sudah punya foto sumber dan ingin edit penghapusan orang yang lebih kuat tanpa kehilangan adegan sekitarnya.",
+      },
+      {
+        label: "Iterasi cepat",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        body: "Berguna ketika Anda ingin beberapa variasi pembersihan dengan cepat dan bisa menukar sedikit kesetiaan untuk percabangan lebih cepat.",
+      },
+      {
+        label: "Lapisan QA",
+        title: "Image Understanding",
+        href: "/capabilities/image-understanding",
+        body: "Gunakan pembacaan gambar AnyCap setelah edit untuk memeriksa apakah bingkai yang tersisa masih koheren dan bebas artefak.",
+      },
+    ],
+  },
+  validation: {
+    eyebrow: "Apa yang divalidasi",
+    title: "Empat pemeriksaan sebelum Anda menyebut foto selesai",
+    cards: [
+      {
+        title: "Kesinambungan latar",
+        body: "Lihat persis area di mana orang yang dihapus berdiri dan pastikan isian cocok dengan pola batu, jalan, langit, atau air di sekitarnya.",
+      },
+      {
+        title: "Subjek yang dilindungi masih utuh",
+        body: "Jika satu orang tetap dalam bingkai, pastikan pose, pakaian, skala, dan detail tepi tidak melengkung oleh edit.",
+      },
+      {
+        title: "Pencahayaan tetap konsisten",
+        body: "Area yang diperbaiki harus mengikuti arah matahari terbenam, bayangan, atau cahaya dalam ruangan yang sama seperti foto asli.",
+      },
+      {
+        title: "Tanpa sisa AI yang terlihat",
+        body: "Periksa tekstur duplikat, pagar patah, anggota tubuh yang diciptakan, teks acak, atau artefak watermark sebelum ekspor.",
+      },
+    ],
+  },
+  cli: {
+    eyebrow: "Contoh CLI",
+    title: "Perintah contoh yang selaras dengan skema saat ini",
+    examples: [
+      {
+        title: "Menghapus satu orang dari foto",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "remove the woman in the red jacket completely, keep the man in the white shirt exactly where he is, reconstruct the stone railing naturally behind her, preserve the ocean overlook and sunset light, no text, no watermark" \\
+  --param images=./source-overlook.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o cleaned-overlook.png`,
+      },
+      {
+        title: "Menjalankan pass perbaikan lebih ketat jika artefak tersisa",
+        code: `anycap image generate \\
+  --model nano-banana-2 \\
+  --mode image-to-image \\
+  --prompt "keep the same man and the same coastline, refine only the stone railing and path where the removed person stood, remove any duplicated texture or broken edge, no text, no watermark" \\
+  --param images=./cleaned-overlook.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o cleaned-overlook-pass-2.png`,
+      },
+      {
+        title: "QA bingkai yang diperbaiki",
+        code: `anycap actions image-read \\
+  --file ./cleaned-overlook.png \\
+  --instruction "Describe the image, confirm whether only one foreground traveler remains, and mention any visible artifact in the repaired railing, path, or coastline. Also call out any visible text or watermark."`,
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Pertanyaan yang biasanya menyusul",
+    items: [
+      {
+        question: "Bisakah AnyCap menghapus satu orang tetapi mempertahankan orang lain dalam foto yang sama?",
+        answer:
+          "Ya. Prompt harus mengidentifikasi dengan jelas orang yang dihapus dan subjek yang harus tetap. Alur kerja paling baik ketika orang yang dilindungi dideskripsikan eksplisit dengan posisi, pakaian, atau peran dalam bingkai.",
+      },
+      {
+        question: "Apakah ini lebih baik dari penghapus ajaib di ponsel?",
+        answer:
+          "Lebih baik ketika edit cukup penting untuk diperiksa. Penghapus ponsel mungkin cukup untuk draf santai, tetapi AnyCap lebih kuat ketika Anda ingin rekonstruksi yang lebih bersih dan pass QA sebelum memakai ulang gambar.",
+      },
+      {
+        question: "Foto seperti apa yang paling sulit untuk penghapusan orang?",
+        answer:
+          "Kerumunan padat, pola berulang, dan adegan di mana orang yang dihapus menutup struktur penting lebih sulit. Pagar, teks, wajah, dan garis perspektif kuat adalah tempat Anda harus paling hati-hati memeriksa hasilnya.",
+      },
+      {
+        question: "Bisakah saya memakai alur yang sama untuk menghapus emoji atau objek juga?",
+        answer:
+          "Biasanya ya. Alur image-to-image yang sama ditambah QA dapat disesuaikan untuk menghapus emoji, tanda, tas, atau objek tidak diinginkan lainnya selama prompt dengan jelas melindungi bagian adegan yang harus tetap.",
+      },
+    ],
+  },
+  nextMove: {
+    eyebrow: "Langkah berikutnya",
+    title: "Lanjutkan dari alur kerja yang cocok dengan edit berikutnya",
+    cards: [
+      {
+        title: "Cara mencerahkan foto secara daring",
+        href: "/learn/how-to-brighten-a-photo-online",
+        body: "Ke sini ketika komposisi sudah benar dan masalah berikutnya adalah bayangan keras atau underexposure, bukan orang yang mengganggu.",
+      },
+      {
+        title: "Cara mengubah latar belakang foto",
+        href: "/learn/how-to-change-photo-background",
+        body: "Gunakan ini ketika orang tetap tetapi lingkungan di sekitar subjek perlu berubah.",
+      },
+      {
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Baca halaman model ketika Anda ingin model edit terbaik saat ini untuk alur pembersihan dari foto sumber.",
+      },
+      {
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
+        body: "Mulai di sini ketika Anda ingin CLI siap sebelum mencoba alur yang sama pada gambar Anda sendiri.",
+      },
+    ],
+  },
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, RemovePeoplePageContent>;
 
 function getContent(locale: SiteLocale): RemovePeoplePageContent {

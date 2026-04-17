@@ -388,10 +388,185 @@ const ptBr: FalAiAlternativesPageData = {
   ],
 };
 
+const id: FalAiAlternativesPageData = {
+  metadata: {
+    title: "Alternatif fal.ai terbaik untuk agen AI (2026) — gambar, video, dan visi",
+    description:
+      "Bandingkan alternatif fal.ai terbaik untuk alur kerja agen AI. Lihat bagaimana AnyCap, Replicate, Hugging Face, dan lainnya menangani pembuatan gambar, pembuatan video, dan visi untuk Claude Code, Cursor, dan Codex.",
+    openGraphTitle: "Alternatif fal.ai terbaik untuk agen AI (2026)",
+    openGraphDescription:
+      "Bandingkan alternatif fal.ai untuk alur gambar, video, dan visi yang ramah agen. Nilai pengalaman instalasi, model autentikasi, dan kompatibilitas dengan agen.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Perbandingan", href: "/compare", unlinkable: true },
+    { name: "Alternatif fal.ai untuk agen" },
+  ],
+  eyebrow: "Perbandingan",
+  lastUpdatedLabel: "10 April 2026",
+  heroTitle: ["Alternatif fal.ai teratas", "untuk alur kerja agen AI"],
+  heroIntro:
+    "fal.ai adalah platform inferensi serverless cepat untuk model media generatif. Namun jika alur Anda berjalan di dalam agen AI seperti Claude Code, Cursor, atau Codex, Anda mungkin memerlukan jenis alat lain — yang terpasang ke agen, mengautentikasi sekali, dan menyediakan kemampuan melalui antarmuka yang sama yang sudah dipakai agen.",
+  tableTitle: "fal.ai vs AnyCap sekilas",
+  tableColumns: { dimension: "Dimensi", falai: "fal.ai", anycap: "AnyCap" },
+  comparisonDimensions: [
+    {
+      dimension: "Kompatibilitas agen",
+      falai: "SDK Python dan REST API; memerlukan integrasi kustom per agen",
+      anycap: "Berjalan di Claude Code, Cursor, dan Codex lewat file skill dan satu CLI",
+    },
+    {
+      dimension: "Pengalaman instalasi",
+      falai: "pip install fal-client + pengaturan kunci API",
+      anycap: "Satu file skill + satu biner CLI + satu login",
+    },
+    {
+      dimension: "Kekuatan utama",
+      falai: "Cold start sangat cepat dan inferensi GPU serverless",
+      anycap: "Antarmuka ramah agen dengan satu autentikasi untuk semua kemampuan",
+    },
+    {
+      dimension: "Cakupan kemampuan",
+      falai: "Pembuatan gambar, pembuatan video, audio (tergantung model)",
+      anycap: "Gambar, video, musik, visi, pencarian, crawl, penyimpanan, dan penerbitan halaman",
+    },
+    {
+      dimension: "Model harga",
+      falai: "Penagihan GPU per detik, bervariasi menurut model dan perangkat keras",
+      anycap: "Bayar sesuai pemakaian dengan $5 kredit gratis, tanpa biaya bulanan",
+    },
+  ],
+  alternativesTitle: "Alternatif yang dibandingkan",
+  alternatives: [
+    {
+      name: "AnyCap",
+      category: "Runtime kemampuan untuk agen",
+      focus: "Dibuat untuk agen AI. Satu CLI, satu autentikasi, semua kemampuan.",
+      strengths: [
+        "Satu jalur instalasi untuk gambar, video, visi, pencarian, penyimpanan, dan penerbitan",
+        "Berjalan di Claude Code, Cursor, dan Codex lewat file skill",
+        "Satu login mencakup seluruh tumpukan kemampuan",
+        "Antarmuka CLI-first yang dirancang untuk alur kerja agen berbasis terminal",
+      ],
+      considerations: [
+        "Kurasi model, bukan pustaka model terbuka",
+        "Dirancang untuk agen — bukan untuk pipeline inferensi backend kustom",
+      ],
+      bestFor:
+        "Tim yang memakai agen pengkodean dan membutuhkan kemampuan multimodal tanpa integrasi per penyedia",
+      href: "/start",
+      cta: "Mulai dengan AnyCap",
+    },
+    {
+      name: "Replicate",
+      category: "Platform API model dan deployment",
+      focus: "Menjalankan model komunitas dan resmi lewat prediksi dan webhook.",
+      strengths: [
+        "Ribuan model komunitas dan resmi",
+        "Deployment khusus untuk beban produksi",
+        "Penemuan model dan ekosistem komunitas yang kuat",
+      ],
+      considerations: [
+        "Setiap model punya versi dan skema input sendiri",
+        "Tidak ada antarmuka ramah agen atau instalasi berbasis skill",
+        "Cold start pada model komunitas bisa lambat",
+      ],
+      bestFor: "Pengembang yang membangun backend kustom dan membutuhkan pustaka model yang luas",
+      href: "/compare/anycap-vs-replicate",
+      cta: "Lihat AnyCap vs Replicate",
+    },
+    {
+      name: "Hugging Face Inference API",
+      category: "Hub model + endpoint inferensi",
+      focus: "Akses ke ekosistem model terbuka terbesar dengan inferensi terkelola.",
+      strengths: [
+        "Pustaka model terbuka terbesar yang tersedia",
+        "Tingkat gratis untuk eksperimen",
+        "Endpoint inferensi khusus untuk produksi",
+      ],
+      considerations: [
+        "Cold start di tingkat gratis bisa signifikan",
+        "Kualitas bervariasi antar model komunitas",
+        "Memerlukan pekerjaan integrasi per model",
+      ],
+      bestFor: "Peneliti dan tim yang menginginkan pilihan model seluas mungkin",
+    },
+    {
+      name: "WaveSpeed AI",
+      category: "API inferensi cepat",
+      focus: "Kecepatan inferensi dioptimalkan dengan akses eksklusif ke beberapa model.",
+      strengths: [
+        "Mengklaim waktu inferensi tercepat pada beberapa benchmark",
+        "Akses eksklusif ke beberapa varian model yang dioptimalkan",
+        "REST API sederhana",
+      ],
+      considerations: [
+        "Pilihan model lebih sempit dibanding Replicate atau Hugging Face",
+        "Tidak ada jalur integrasi ramah agen",
+        "Platform lebih baru dengan validasi komunitas lebih sedikit",
+      ],
+      bestFor: "Tim yang memprioritaskan kecepatan inferensi di atas faktor lain",
+    },
+    {
+      name: "Leonardo.Ai API",
+      category: "API pembuatan media visual-first",
+      focus: "API pembuatan gambar dan video dengan fokus alat kreatif.",
+      strengths: [
+        "Model kuat berorientasi kreatif dan desain",
+        "Pembuatan gambar dan video lewat satu API",
+        "Dokumentasi pengembang yang baik",
+      ],
+      considerations: [
+        "Berfokus pada media visual — tanpa visi, pencarian, atau penyimpanan",
+        "Memerlukan pengelolaan kunci API dan integrasi kustom",
+        "Tidak ada antarmuka ramah agen",
+      ],
+      bestFor: "Tim kreatif dan produk yang membutuhkan API pembuatan media visual berkualitas tinggi",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah AnyCap pengganti langsung fal.ai?",
+      answer:
+        "Keduanya untuk kasus penggunaan berbeda. fal.ai adalah platform inferensi serverless bagi pengembang yang memanggil API model dari kode kustom. AnyCap adalah runtime kemampuan untuk agen AI. Jika Anda membutuhkan inferensi GPU cepat untuk pipeline kustom, fal.ai kuat. Jika Anda ingin agen seperti Claude Code atau Cursor membuat gambar dan video lewat satu antarmuka, AnyCap lebih cocok.",
+    },
+    {
+      question: "Mana yang lebih cepat untuk pembuatan gambar?",
+      answer:
+        "fal.ai dioptimalkan khusus untuk kecepatan inferensi dan mengklaim cold start sangat cepat. AnyCap mengoptimalkan pengalaman alur kerja agen — instal sekali, autentikasi sekali, gunakan semua kemampuan. Untuk alur ramah agen, waktu total dari nol hingga gambar pertama mencakup pengaturan, bukan hanya inferensi.",
+    },
+    {
+      question: "Bisakah saya pindah dari fal.ai ke AnyCap tanpa mengubah agen?",
+      answer:
+        "Ya. AnyCap terpasang sebagai file skill dan biner CLI yang bekerja bersama agen yang sudah ada. Anda tidak perlu mengubah agen itu sendiri — cukup instal skill dan CLI, autentikasi, lalu agen dapat memanggil kemampuan lewat antarmuka baru.",
+    },
+  ],
+  relatedTitle: "Perbandingan terkait",
+  relatedComparisons: [
+    {
+      href: "/compare/anycap-vs-replicate",
+      eyebrow: "Perbandingan",
+      title: "AnyCap vs Replicate",
+      body: "Perbandingan mendalam 1:1 antara AnyCap dan Replicate.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Perbandingan",
+      title: "AnyCap vs fal.ai",
+      body: "Bandingkan runtime kemampuan agen dengan platform inferensi serverless.",
+    },
+  ],
+  cta: [
+    { href: "/start", label: "Mulai" },
+    { href: "/capabilities", label: "Lihat kemampuan" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, FalAiAlternativesPageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id,
 };
 
 export function getFalAiAlternativesMetadata(locale: SiteLocale): Metadata {

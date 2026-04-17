@@ -1,32 +1,29 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { getRequestLocale } from "@/lib/request-locale";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/compare/anycap-vs-composio", {
   title: "AnyCap vs Composio — Agent capability comparison",
   description:
     "Compare AnyCap and Composio for giving AI agents capabilities. AnyCap is an agent-native capability runtime with one CLI; Composio is a tool integration platform. See how they differ in approach, scope, and agent workflow fit.",
-  alternates: { canonical: "/compare/anycap-vs-composio" },
   openGraph: {
     type: "website",
-    locale: siteConfig.locale,
-    url: "/compare/anycap-vs-composio",
-    siteName: siteConfig.siteName,
     title: "AnyCap vs Composio — Agent capability comparison",
     description:
       "Compare AnyCap and Composio for giving AI agents capabilities. AnyCap is an agent-native capability runtime with one CLI; Composio is a tool integration platform.",
   },
-};
+});
 
 type ComparisonRow = {
   dimension: string;

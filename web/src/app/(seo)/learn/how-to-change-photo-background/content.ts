@@ -722,10 +722,309 @@ const ptBrContent: ChangePhotoBackgroundPageContent = {
   },
 };
 
+const idContent: ChangePhotoBackgroundPageContent = {
+  metadata: {
+    title: "Cara Mengganti Latar Foto dengan Agen AI",
+    description:
+      "Gunakan AnyCap untuk mengganti latar foto tanpa kehilangan subjek, memeriksa revisi, dan bercabang ke versi putih, studio, atau adegan kontekstual dari gambar sumber yang sama.",
+    openGraphTitle: "Cara Mengganti Latar Foto dengan Agen AI",
+    openGraphDescription:
+      "Panduan alur kerja mengganti latar foto melalui AnyCap sambil menjaga subjek cukup konsisten untuk alur produk, dokumentasi, dan konten.",
+    articleHeadline: "Cara Mengganti Latar Foto dengan Agen AI",
+    articleDescription:
+      "Alur praktis mengganti latar foto melalui pengeditan gambar AnyCap sambil mempertahankan subjek asli.",
+    articleAbout: [
+      "Penggantian latar",
+      "Pengeditan foto",
+      "Pengeditan gambar-ke-gambar",
+      "Agen AI",
+      "Foto produk",
+    ],
+    articleKeywords: [
+      "cara mengganti background foto",
+      "ganti latar gambar",
+      "ubah background foto",
+      "pengganti latar foto",
+      "alur penggantian latar belakang",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Learn", href: "/learn" },
+    {
+      name: "Cara Mengganti Latar Foto",
+      href: HOW_TO_CHANGE_PHOTO_BACKGROUND_PATH,
+    },
+  ],
+  eyebrow: "Learn",
+  lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+  hero: {
+    titleLine1: "Cara mengganti latar foto",
+    titleLine2: "tanpa kehilangan subjek asli",
+    introBeforeFirstLink:
+      "Jika Anda ingin mengganti latar foto, pekerjaan sebenarnya bukan hanya membuat adegan lama hilang. Yang penting adalah mempertahankan subjek yang sama sambil memindahkannya ke lingkungan baru yang tetap terlihat masuk akal. Di situlah",
+    firstLinkLabel: "pembuatan gambar AnyCap",
+    introBetweenLinks: "ditambah",
+    secondLinkLabel: "pemahaman gambar",
+    introAfterSecondLink:
+      "memberi agen alur kerja yang lebih kuat daripada pengganti satu klik generik.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Alur penggantian latar foto yang berguna menjaga subjek stabil dan hanya mengubah lingkungan di sekelilingnya. AnyCap membantu agen menjalankan siklus itu di satu tempat: edit dari foto sumber, periksa apakah revisi masih terlihat seperti aset yang sama, dan bercabang ke gaya latar yang tepat dibutuhkan tujuan akhir.",
+  },
+  proof: {
+    eyebrow: "Bukti yang dihasilkan",
+    title: "Satu foto sumber, satu adegan penggantian yang lebih bersih",
+    intro:
+      "Halaman ini memakai pasangan bukti before-and-after nyata. Bingkai kiri adalah foto meja asli. Bingkai kanan adalah revisi AnyCap yang mempertahankan sepatu yang sama tetapi memindahkannya ke suasana studio yang lebih bersih.",
+    promptLabel: "Prompt edit yang dipakai dengan AnyCap",
+    prompt:
+      "preserve the same off-white running shoe, replace the entire desk, notebook, mug, plant, and window scene with a clean warm cream studio backdrop and a minimal low pedestal, keep the shoe realistic and centered, add soft editorial side light and a subtle grounded shadow, premium product photo, no text, no watermark",
+    signalsLabel: "Mengapa bukti ini penting",
+    signals: [
+      "Mengubah janji utama halaman menjadi konkret: pekerjaan berguna adalah mengganti lingkungan tanpa menyimpang jauh dari subjek sumber.",
+      "Pasangan bukti menunjukkan mengapa penggantian latar berbeda dari ekspor potongan sederhana atau regenerasi penuh.",
+      "Memberi halaman bukti first-party bahwa alur edit bisa berpindah dari foto sumber yang ramai ke hasil bergaya produk yang lebih bersih.",
+    ],
+    caption:
+      "Gambar kiri adalah foto sumber asli. Gambar kanan adalah revisi penggantian latar AnyCap yang dihasilkan dari aset sumber yang sama untuk halaman ini.",
+    images: [
+      {
+        src: `${PAGE_RESOURCE_BASE}/how-to-make-image-transparent-source.webp`,
+        alt: "Foto produk sumber sepatu lari warna off-white di atas meja kayu berantakan dekat tanaman dan mug kopi.",
+        width: 2304,
+        height: 1728,
+        label: "Gambar sumber",
+        frameVariant: "plain",
+      },
+      {
+        src: `${PAGE_RESOURCE_BASE}/how-to-change-photo-background-result.webp`,
+        alt: "Sepatu lari off-white yang sama diletakkan di pedestal krem minimal dengan latar studio hangat setelah latar foto diganti.",
+        width: 2304,
+        height: 1728,
+        label: "Hasil penggantian latar",
+        frameVariant: "plain",
+      },
+    ],
+  },
+  quickAnswer: {
+    eyebrow: "Jawaban singkat",
+    title: "Pertahankan subjek, ganti hanya lingkungan",
+    intro:
+      "Banyak alat pengganti latar memperlakukan gambar seperti draf sekali pakai. Itu bukan pilihan terbaik ketika produk, orang, atau tangkapan layar asli sudah penting. Alur yang lebih kuat adalah mempertahankan subjek yang sama dan merevisi sekelilingnya.",
+    takeaways: [
+      "Mengganti latar foto paling kuat ketika prompt menyebutkan apa yang harus tetap, bukan hanya apa yang harus dihapus.",
+      "Alur yang berguna adalah pelestarian subjek ditambah penggantian lingkungan, lalu QA pencahayaan, skala, dan konsistensi tepi.",
+      "Gambar sumber yang sama bisa bercabang ke versi studio putih, bidikan pedestal bergaya, atau adegan kontekstual tergantung di mana aset akan dipakai.",
+    ],
+    cards: [
+      {
+        title: "Studio putih",
+        body: "Terbaik untuk katalog, marketplace, dan slot foto dengan persyaratan kepatuhan di mana latar seharusnya hilang sebagai keputusan.",
+      },
+      {
+        title: "Pedestal atau gradien",
+        body: "Terbaik untuk halaman produk, dokumentasi, dan konten bergaya editorial di mana gambar harus terlihat lebih bersih dari sumber mentah tetapi tetap premium.",
+      },
+      {
+        title: "Adegan kontekstual",
+        body: "Terbaik ketika latar harus membantu menjual suasana, kasus penggunaan, atau bingkai kampanye alih-alih sekadar minggir.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja",
+    title: "Lima langkah dari foto ramai ke suasana yang lebih bersih",
+    stepLabel: "Langkah",
+    steps: [
+      {
+        title: "Pilih gambar yang memang penting",
+        body: "Mulai dari foto yang benar-benar ingin Anda pakai ulang. Alur ini lebih baik ketika subjek sudah tepat dan hanya lingkungan sekelilingnya yang perlu berubah.",
+      },
+      {
+        title: "Jelaskan lingkungan target dengan jelas",
+        body: "Beri tahu model apakah tujuannya foto marketplace putih, pedestal studio lembut, atau adegan kontekstual. Sasaran latar harus konkret.",
+      },
+      {
+        title: "Pertahankan subjek sambil mengganti adegan",
+        body: "Gunakan pengeditan gambar-ke-gambar dan ulangi batasan pelestarian subjek. Pekerjaannya bukan mendesain ulang produk, melainkan mengubah suasana di sekelilingnya.",
+      },
+      {
+        title: "Periksa koherensi, bukan hanya kebersihan",
+        body: "Periksa apakah skala, bayangan, dan perspektif masih terasa masuk akal. Penggantian yang bersih tetap bisa gagal jika lingkungan baru terlihat lepas dari subjek.",
+      },
+      {
+        title: "Bercabang ke versi yang dibutuhkan saluran",
+        body: "Dari sumber yang sama, Anda bisa membuat gambar listing latar putih, visual halaman studio yang lebih lembut, atau arah kampanye yang lebih ekspresif.",
+      },
+    ],
+  },
+  comparison: {
+    eyebrow: "Perbandingan",
+    title: "Mengapa penggantian bukan sama dengan regenerasi",
+    shallowLabel: "Default dangkal",
+    workflowLabel: "Alur kerja AnyCap",
+    rows: [
+      {
+        lens: "Apa yang berubah",
+        shallow: "Semuanya diregenerasi dan produk bisa ikut bergeser.",
+        workflow: "Hanya lingkungan yang berubah sementara subjek dijaga sedekat mungkin dengan sumber.",
+      },
+      {
+        lens: "Kualitas output",
+        shallow: "Latar berbeda, tetapi gambar tidak lagi terasa seperti foto yang sama.",
+        workflow: "Hasilnya masih terbaca sebagai aset yang sama, hanya ditempatkan di suasana yang lebih cocok dengan saluran.",
+      },
+      {
+        lens: "Jalur pakai ulang",
+        shallow: "Anda menyelesaikan satu gambar, lalu memulai dari awal untuk setiap konteks baru.",
+        workflow: "Satu gambar sumber bisa bercabang ke varian putih, studio, atau kontekstual sesuai kebutuhan.",
+      },
+      {
+        lens: "Standar QA",
+        shallow: "Latar baru terlihat lebih bagus, jadi pekerjaan dianggap selesai.",
+        workflow: "Agen juga memeriksa apakah subjek, skala, dan pencahayaan masih terasa koheren setelah edit.",
+      },
+    ],
+  },
+  modelChoice: {
+    eyebrow: "Pilihan model",
+    title: "Pilih model berdasarkan apakah sumber sudah ada",
+    cards: [
+      {
+        title: "Nano Banana Pro",
+        label: "Pilihan pertama terbaik untuk penggantian latar",
+        body: "Gunakan ini ketika foto sumber sudah ada dan pekerjaan utamanya adalah mempertahankan subjek yang sama sambil hanya mengubah adegan sekelilingnya.",
+        href: "/models/nano-banana-pro",
+      },
+      {
+        title: "Nano Banana 2",
+        label: "Terbaik untuk loop varian lebih cepat",
+        body: "Gunakan ini ketika Anda ingin menguji beberapa arah latar dengan cepat sebelum memutuskan jalur visual halaman atau listing.",
+        href: "/models/nano-banana-2",
+      },
+      {
+        title: "Seedream 5",
+        label: "Terbaik ketika foto sumber belum ada",
+        body: "Gunakan ini ketika Anda masih membutuhkan gambar produk first-pass yang lebih kuat sebelum penggantian atau pembersihan latar dimulai.",
+        href: "/models/seedream-5",
+      },
+    ],
+  },
+  validation: {
+    eyebrow: "Validasi langsung",
+    title: "Apa yang kami periksa pada alur langsung",
+    cards: [
+      {
+        title: "Permukaan kemampuan dikonfirmasi",
+        body: "Selama produksi halaman pada 9 April 2026, pemeriksaan status AnyCap langsung mengonfirmasi pembuatan gambar, pengeditan gambar, pemahaman gambar, Drive, Page, dan pengambilan web tersedia di lingkungan saat ini.",
+      },
+      {
+        title: "Skema dikonfirmasi",
+        body: "Skema gambar-ke-gambar saat ini untuk Nano Banana Pro diperiksa langsung dan memakai parameter `images` untuk aset sumber.",
+      },
+      {
+        title: "Pasangan bukti dihasilkan",
+        body: "Bukti before-and-after di halaman ini dihasilkan melalui AnyCap dari aset sumber yang sama, bukan dirakit dari gambar yang tidak berhubungan.",
+      },
+      {
+        title: "QA penggantian diperiksa",
+        body: "Pemahaman gambar dipakai untuk memastikan penggantian latar studio masih mempertahankan sepatu yang sama dan tidak memperkenalkan teks atau artefak watermark yang terlihat.",
+      },
+    ],
+  },
+  cli: {
+    eyebrow: "Contoh CLI",
+    title: "Contoh perintah untuk alur penggantian",
+    examples: [
+      {
+        title: "Ganti latar dengan suasana studio hangat",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "pertahankan subjek yang sama, ganti meja dan ruangan dengan backdrop studio krem hangat dan pedestal sederhana, pertahankan pencahayaan realistis dan bayangan lekat tanah, tanpa teks, tanpa watermark" \\
+  --param images=./source-photo.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o pengganti-latar-studio.png`,
+      },
+      {
+        title: "Bercabang ke versi latar putih",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "pertahankan subjek yang sama, ganti lingkungan dengan latar studio putih bersih, foto produk siap-marketplace di tengah, tanpa teks, tanpa watermark" \\
+  --param images=./source-photo.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o versi-latar-putih.png`,
+      },
+      {
+        title: "QA hasil penggantian",
+        code: `anycap actions image-read \\
+  --file ./pengganti-latar-studio.png \\
+  --instruction "Jelaskan gambar, konfirmasi apakah subjek yang sama dipertahankan, dan sebutkan teks terlihat, watermark, atau ketidakcocokan latar yang aneh."`,
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Pertanyaan yang biasanya muncul berikutnya",
+    items: [
+      {
+        question: "Apakah mengganti latar foto sama dengan membuatnya transparan?",
+        answer:
+          "Tidak. Versi transparan menghapus lingkungan agar subjek bisa ditempatkan di tempat lain nanti. Versi dengan latar terganti sudah memilih lingkungan baru, seperti studio putih, setup pedestal, atau adegan yang lebih cocok dengan halaman atau listing.",
+      },
+      {
+        question: "Kapan saya harus memakai latar putih alih-alih penggantian bergaya?",
+        answer:
+          "Pakai putih ketika tujuannya marketplace, katalog, atau didorong kepatuhan. Pakai penggantian bergaya ketika gambar perlu terasa lebih editorial, dipimpin produk, atau sadar konteks di halaman arahan, dokumen, atau aset konten.",
+      },
+      {
+        question: "Model AnyCap mana yang harus saya pakai dulu untuk penggantian latar?",
+        answer:
+          "Gunakan Nano Banana Pro dulu ketika Anda sudah punya gambar sumber dan pekerjaannya adalah mempertahankan subjek sambil hanya mengganti lingkungan. Gunakan Nano Banana 2 ketika Anda ingin iterasi lebih cepat ke beberapa arah latar. Gunakan Seedream 5 ketika Anda masih membutuhkan gambar produk asli sebelum edit dimulai.",
+      },
+      {
+        question: "Bisakah AnyCap membantu memeriksa apakah penggantian masih terlihat masuk akal?",
+        answer:
+          "Ya. Setelah pembuatan, Anda bisa memakai pemahaman gambar AnyCap untuk memeriksa apakah identitas subjek yang sama dipertahankan, apakah suasana baru terasa koheren, dan apakah ada teks terlihat, watermark, atau geseran prompt.",
+      },
+    ],
+  },
+  nextMove: {
+    eyebrow: "Langkah berikutnya",
+    title: "Lanjut ke alur yang cocok dengan tujuan",
+    cards: [
+      {
+        title: "Cara Membuat Gambar Transparan",
+        href: "/learn/how-to-make-image-transparent",
+        body: "Mulai di sini ketika latar harus dihapus dulu alih-alih langsung diganti.",
+      },
+      {
+        title: "Pembuatan Gambar",
+        href: "/capabilities/image-generation",
+        body: "Lihat permukaan gambar AnyCap persis yang mendukung penggantian latar dan alur gambar-ke-gambar lainnya.",
+      },
+      {
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Pelajari lebih dalam model yang saat ini paling cocok untuk siklus revisi dengan pelestarian subjek terkuat.",
+      },
+      {
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
+        body: "Lanjut ke sini ketika Anda ingin jalur terpendek dari halaman ini ke pengaturan CLI yang berfungsi.",
+      },
+    ],
+  },
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, ChangePhotoBackgroundPageContent>;
 
 function getContent(locale: SiteLocale): ChangePhotoBackgroundPageContent {

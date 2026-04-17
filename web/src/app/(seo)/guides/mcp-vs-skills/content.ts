@@ -401,12 +401,192 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       },
     ]),
   },
-  id: {} as McpVsSkillsPageData,
+  id: {
+    metadata: {
+      title: "MCP vs Skills: lapisan mana yang harus dipakai agen AI Anda?",
+      description:
+        "Bandingkan MCP dan skills untuk agen AI. MCP menstandarkan penemuan dan pemanggilan alat, sementara skills mengajarkan agen cara menginstal, mengautentikasi, dan memakai runtime seperti AnyCap.",
+      openGraphTitle: "MCP vs Skills: lapisan mana yang harus dipakai agen AI Anda?",
+      openGraphDescription:
+        "Bandingkan MCP dan skills untuk agen AI. MCP menstandarkan penemuan dan pemanggilan alat, sementara skills mengajarkan agen cara menginstal, mengautentikasi, dan memakai runtime seperti AnyCap.",
+    },
+    eyebrow: "Panduan",
+    heroTitle: ["MCP vs Skills", "Lapisan mana yang harus dipakai agen Anda?"],
+    heroIntro:
+      "MCP menstandarkan cara agen menemukan dan memanggil alat. Skills mengajarkan agen cara menginstal, mengautentikasi, dan memakai runtime kemampuan di dalam alur kerjanya. Jika masalahnya adalah gesekan saat setup, biasanya skills menang. Jika masalahnya adalah penemuan dan interoperabilitas, biasanya MCP menang. Jika Anda ingin distribusi dan transport sekaligus, AnyCap cocok dengan kedua pendekatan.",
+    heroImageAlt:
+      "Ilustrasi editorial yang menampilkan MCP, Skills, dan Keduanya sebagai pola lapisan pada tumpukan agen",
+    comparisonTitle: "Perbedaan praktisnya",
+    comparisonRows: [
+      {
+        layer: "MCP",
+        summary: "Protokol untuk mengekspos alat, sumber daya, dan prompt dengan cara yang standar.",
+        bestFor: "Menghubungkan agen ke alat dengan penemuan dan pemanggilan yang dapat diprediksi.",
+        anyCap: "Pakai saat AnyCap harus berada di balik batas protokol yang jelas.",
+      },
+      {
+        layer: "Skills",
+        summary: "Lapisan instruksi yang mengajarkan agen cara menginstal dan memakai suatu kemampuan.",
+        bestFor: "Mendistribusikan setup kemampuan ke Claude Code, Cursor, Codex, dan agen serupa.",
+        anyCap: "Pakai saat Anda ingin AnyCap terasa asli di dalam alur kerja agen.",
+      },
+      {
+        layer: "Keduanya",
+        summary: "Protokol menangani sambungan; skill menangani adopsi.",
+        bestFor: "Tim yang ingin lapisan transport stabil dan jalur onboarding yang mulus.",
+        anyCap: "Pakai keduanya saat Anda ingin AnyCap mudah didistribusikan dan mudah dioperasikan.",
+      },
+    ],
+    changeTitle: "Apa yang berubah di tiap lapisan",
+    changeCards: [
+      {
+        title: "MCP mengubah transport",
+        paragraphs: [
+          "MCP memberi agen cara standar untuk mengetahui kemampuan alat dan cara memanggilnya. Integrasi jadi lebih mudah dipahami, terutama saat kemampuan yang sama harus jalan di banyak klien, runtime, atau penyedia.",
+          "Secara praktis, MCP paling berguna saat tim ingin mengurangi penyimpangan integrasi. Antarmuka jadi eksplisit, dan tiap klien bisa berbicara ke kemampuan yang sama tanpa membuat kontrak ad hoc sendiri.",
+        ],
+      },
+      {
+        title: "Skills mengubah adopsi",
+        paragraphs: [
+          "Skills mengajarkan agen cara menemukan, menginstal, mengautentikasi, dan memakai kemampuan di dunia nyata. Nilainya besar saat tantangannya bukan protokolnya, melainkan banyaknya setup yang harus diingat pengguna.",
+          "Itulah sebabnya skills menjadi lapisan distribusi yang kuat untuk AnyCap. Kemampuan terasa bagian dari agen, bukan sistem terpisah yang harus diselaraskan pengguna secara manual.",
+        ],
+      },
+    ],
+    decisionTitle: "Aturan praktis untuk memutuskan",
+    decisionIntro:
+      "Jika harus memutuskan dengan cepat, mulai dari masalah yang benar-benar Anda selesaikan. Saat bottleneck-nya onboarding, biasanya skills menang. Saat bottleneck-nya penemuan atau transport yang distandarkan, biasanya MCP menang. Saat bottleneck-nya adopsi di banyak agen atau tim, memakai keduanya sering jadi jalan paling tidak menyakitkan. Ini terutama benar bila Anda ingin AnyCap terasa bagian dari alur kerja agen, bukan integrasi sampingan yang harus diingat untuk dipelihara.",
+    decisionCards: [
+      {
+        title: "Mulai dari skills",
+        body: "Pilih skills saat Anda ingin agen mempelajari jalur setup dalam bahasa natural. Ini pilihan yang lebih rapi untuk Claude Code, Cursor, Codex, atau lingkungan di mana pengguna mengharapkan agen menemukan alur yang tepat tanpa membaca spesifikasi protokol dulu.",
+      },
+      {
+        title: "Mulai dari MCP",
+        body: "Pilih MCP saat masalahnya adalah transport alat, penemuan, atau interoperabilitas. Jika stack Anda sudah menstandarkan MCP, memulai dari situ menjaga lapisan integrasi tetap dapat diprediksi dan menempatkan AnyCap di balik antarmuka yang mapan.",
+      },
+      {
+        title: "Pakai keduanya",
+        body: "Pakai keduanya saat Anda ingin kompatibilitas selebar mungkin dan onboarding semulus mungkin. MCP menangani sambungan, sementara skills membuat kemampuan mudah dipahami oleh orang yang benar-benar memakai agen.",
+      },
+    ],
+    exampleTitle: "Contoh playbook",
+    exampleCards: [
+      {
+        title: "Prototipe cepat",
+        body: "Jika Anda memvalidasi alur baru, mulai dari skills. Onboarding lebih cepat dan cerita untuk orang yang pertama kali mencoba kemampuan lebih jelas.",
+      },
+      {
+        title: "Standarkan antarmuka",
+        body: "Jika kemampuan yang sama harus jalan di banyak produk, mulai dari MCP. Anda mendapat satu kontrak transport dan permukaan alat lebih dapat diprediksi seiring pertumbuhan integrasi.",
+      },
+      {
+        title: "Skalakan adopsi",
+        body: "Jika tujuannya meluncurkan AnyCap ke banyak tim dan agen, pakai keduanya. MCP menjaga protokol konsisten sementara skills membuat peluncuran mudah dipahami dan diulang.",
+      },
+    ],
+    mistakesTitle: "Kesalahan yang sering dilakukan tim",
+    mistakes: [
+      "Kesalahan pertama memperlakukan MCP dan skills seperti produk yang bersaing. Bukan begitu. Keduanya menyelesaikan lapisan berdekatan dari masalah yang sama: satu soal protokol, satu soal instruksi dan onboarding.",
+      "Kesalahan kedua merekayasa transport berlebihan sebelum alur kerja pengguna jelas. Jika tim tidak bisa menjelaskan pekerjaan harian yang harus dilakukan agen, pekerjaan protokol biasanya datang terlalu dini dan memperlambat adopsi.",
+      "Kesalahan ketiga membuat agen menghafal proses setup manual. Skill bisa membungkus jalur itu sekali dan menjaganya konsisten di Claude Code, Cursor, Codex, dan lingkungan lain yang membutuhkan runtime yang sama.",
+    ],
+    ruleTitle: "Kaidah praktis",
+    ruleBody:
+      "Jika tim sering berkata, “kami butuh cara bersih mengekspos kemampuan ini,” mulai dari MCP. Jika mereka sering berkata, “kami butuh cara agar agen benar-benar memakai ini tanpa dokumen setup panjang,” mulai dari skills. Jika kedua pernyataan benar, jawaban terbaik biasanya merancang kemampuan sekali lalu menyajikannya lewat kedua lapisan.",
+    scenariosTitle: "Skenario umum",
+    scenarios: [
+      {
+        title: "Pilih MCP dulu",
+        body: "Pilih MCP saat masalah utama penyambungan alat. Ini lebih cocok bila Anda sudah punya banyak klien atau penyedia dan ingin satu kontrak bersih untuk penemuan, pemanggilan, dan interoperabilitas.",
+      },
+      {
+        title: "Pilih skills dulu",
+        body: "Pilih skills saat masalah terbesar adalah onboarding. Anda ingin Claude Code, Cursor, Codex, atau agen lain memahami cara menginstal dan memakai runtime tanpa orkestrasi ekstra atau spesifikasi protokol terpisah.",
+      },
+      {
+        title: "Pakai keduanya jika memungkinkan",
+        body: "Pakai keduanya saat Anda butuh transport yang distandarkan dan narasi instruksi yang kuat. MCP menjaga antarmuka tetap dapat diprediksi sementara skills membuat setup dan pengalaman operator jelas bagi orang yang memakai agen.",
+      },
+    ],
+    nextTitle: "Langkah berikutnya",
+    nextPages: [
+      {
+        eyebrow: "Produk",
+        title: "Skills",
+        href: "/skills",
+        body: "Lihat bagaimana lapisan instruksi masuk ke cerita distribusi AnyCap.",
+      },
+      {
+        eyebrow: "Produk",
+        title: "CLI",
+        href: "/cli",
+        body: "Lihat permukaan perintah yang pada akhirnya dituju MCP dan skills.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Menambahkan alat ke Claude Code",
+        href: "/guides/add-tools-to-claude-code",
+        body: "Dari konsep ke setup dengan alur instalasi yang konkret.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apakah MCP lebih baik daripada skills?",
+        answer:
+          "Tidak otomatis. MCP lebih baik saat Anda butuh penyambungan alat yang distandarkan. Skills lebih baik saat Anda butuh agen memahami cara menginstal, mengautentikasi, dan memakai kemampuan dalam pekerjaan sehari-hari. Keduanya menyelesaikan lapisan berbeda di stack, jadi jawaban yang tepat bergantung pada bottleneck yang ingin Anda hilangkan.",
+      },
+      {
+        question: "Bisakah AnyCap bekerja dengan MCP dan skills?",
+        answer:
+          "Ya. AnyCap bisa dijelaskan lewat skills untuk onboarding agen dan juga berada di balik integrasi berbasis protokol saat alur membutuhkan lapisan itu. Pilihan yang tepat bergantung pada apakah Anda butuh distribusi, transport, atau keduanya.",
+      },
+      {
+        question: "Kapan saya harus memilih skills dulu?",
+        answer:
+          "Pilih skills dulu saat Anda ingin jalur cepat bagi Claude Code, Cursor, Codex, atau agen serupa untuk menemukan dan memakai AnyCap tanpa pekerjaan orkestrasi tambahan. Jika gesekan setup masalah utamanya, skills biasanya membawa nilai lebih cepat.",
+      },
+      {
+        question: "Kapan saya harus memilih MCP dulu?",
+        answer:
+          "Pilih MCP dulu saat lingkungan Anda sudah menstandarkan MCP dan Anda terutama butuh protokol bersih untuk penemuan dan pemanggilan alat. Jika interoperabilitas adalah tujuan, MCP biasanya titik awal yang lebih baik.",
+      },
+      {
+        question: "Apakah saya perlu MCP dan skills sekaligus?",
+        answer:
+          "Tidak selalu. Jika Anda hanya mengirim ke satu permukaan agen dan alur setup sudah jelas, satu lapisan mungkin cukup. Pakai keduanya saat Anda butuh kompatibilitas protokol dan onboarding yang ramah manusia pada saat yang sama.",
+      },
+      {
+        question: "Lapisan mana yang harus saya bangun dulu?",
+        answer:
+          "Bangun lapisan yang menghilangkan bottleneck terbesar Anda saat ini. Jika pengguna tidak bisa memulai, mulai dari skills. Jika permukaan integrasi masalah lebih besar, mulai dari MCP. Jika adopsi tersebar di banyak agen, rencanakan keduanya sejak awal.",
+      },
+    ],
+    guideJsonLd: createTechArticleJsonLd({
+      headline: "MCP vs Skills: lapisan mana yang harus dipakai agen Anda?",
+      description:
+        "Panduan praktis memilih antara MCP dan skills saat menghubungkan AnyCap ke alur kerja agen.",
+      path: MCP_VS_SKILLS_PATH,
+      about: ["MCP", "skills", "AnyCap", "agen AI"],
+      keywords: ["mcp vs skills", "skills vs mcp", "mcp skills", "anycap"],
+      datePublished: "2026-04-12",
+      dateModified: "2026-04-12",
+    }),
+    faqJsonLd: createFaqPageJsonLd([
+      {
+        question: "Apakah MCP lebih baik daripada skills?",
+        answer:
+          "Tidak otomatis. MCP lebih baik saat Anda butuh penyambungan alat yang distandarkan. Skills lebih baik saat Anda butuh agen memahami cara menginstal, mengautentikasi, dan memakai kemampuan dalam pekerjaan sehari-hari. Keduanya menyelesaikan lapisan berbeda di stack, jadi jawaban yang tepat bergantung pada bottleneck yang ingin Anda hilangkan.",
+      },
+    ]),
+  },
 };
 
-contentByLocale.id = contentByLocale.en;
 contentByLocale.en.faqJsonLd = createFaqPageJsonLd(contentByLocale.en.faqItems);
 contentByLocale["pt-br"].faqJsonLd = createFaqPageJsonLd(contentByLocale["pt-br"].faqItems);
+contentByLocale.id.faqJsonLd = createFaqPageJsonLd(contentByLocale.id.faqItems);
 
 export function getMcpVsSkillsMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

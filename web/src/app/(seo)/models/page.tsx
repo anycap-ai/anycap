@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -598,21 +599,17 @@ contentByLocale.id = {
   }),
 };
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/models", {
   title: "Models — Multimodal models available through AnyCap",
   description:
     "Explore the multimodal models available through AnyCap, including Seedream 5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Kling 3.0, Seedance 1.5 Pro, and ElevenLabs Music.",
-  alternates: { canonical: "/models" },
   openGraph: {
     type: "website",
-    locale: siteConfig.locale,
-    url: "/models",
-    siteName: siteConfig.siteName,
     title: "Models — Multimodal models available through AnyCap",
     description:
       "Explore the multimodal models available through AnyCap and learn which model fits each agent workflow.",
   },
-};
+});
 
 export default async function ModelsPage() {
   const locale = await getRequestLocale();

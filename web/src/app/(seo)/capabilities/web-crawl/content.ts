@@ -29,12 +29,12 @@ const metadataByLocale: Record<SiteLocale, WebCrawlMetadataContent> = {
       "Adicione web crawl e extração de conteúdo a agentes de IA com uma única CLI e um único runtime de capacidades.",
   },
   id: {
-    title: "Web Crawl API for AI agents - Content extraction and Markdown conversion",
+    title: "API Web Crawl untuk agen AI - Ekstraksi konten dan konversi Markdown",
     description:
-      "Give AI agents web crawl through AnyCap. Convert web pages to clean Markdown and content-ready output through one CLI instead of wiring a separate crawl or extraction API.",
-    openGraphTitle: "Web Crawl API for AI agents - Content extraction and Markdown conversion",
+      "Berikan web crawl ke agen AI lewat AnyCap. Ubah halaman web menjadi Markdown yang bersih dan output siap pakai melalui satu CLI, tanpa perlu merangkai API crawl atau ekstraksi terpisah.",
+    openGraphTitle: "API Web Crawl untuk agen AI - Ekstraksi konten dan konversi Markdown",
     openGraphDescription:
-      "Add web crawl and content extraction to AI agents with one CLI and one capability runtime.",
+      "Tambahkan web crawl dan ekstraksi konten ke agen AI dengan satu CLI dan satu runtime kapabilitas.",
   },
 };
 

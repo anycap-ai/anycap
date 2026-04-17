@@ -512,10 +512,273 @@ const ptBr: ComparePageData = {
   ],
 };
 
+const id: ComparePageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Perbandingan", href: "/compare", unlinkable: true },
+    { name: "AnyCap vs fal.ai" },
+  ],
+  eyebrow: "Perbandingan",
+  metadata: {
+    title: "AnyCap vs fal.ai — runtime lintas-agent vs stack API media generatif",
+    description:
+      "Bandingkan AnyCap dan fal.ai. fal.ai adalah platform API media generatif dengan panggilan sinkron, inferensi async berbasis antrean, webhook, dan autentikasi kunci API. AnyCap adalah runtime kemampuan lintas-agent yang membungkus alur kerja multimodal untuk Codex, Cursor, Claude Code, dan lingkungan agent serupa.",
+    openGraphTitle: "AnyCap vs fal.ai — runtime lintas-agent vs stack API media generatif",
+    openGraphDescription:
+      "Lihat kapan fal.ai cocok sebagai lapisan API media dan kapan AnyCap lebih kuat sebagai runtime di sekitar agent yang sudah ada.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AnyCap vs fal.ai — runtime lintas-agent vs stack API media generatif",
+    description:
+      "Panduan perbandingan bagi tim yang memutuskan apakah memerlukan platform API media fal.ai atau runtime kemampuan lintas-agent AnyCap.",
+    path: ANYCAP_VS_FAL_AI_PATH,
+    about: [
+      "AnyCap",
+      "fal.ai",
+      "Runtime kemampuan agent",
+      "API media generatif",
+      "Alur kerja webhook",
+    ],
+    keywords: [
+      "anycap vs fal ai",
+      "alternatif fal ai untuk agent",
+      "fal ai vs anycap",
+      "api media vs runtime kemampuan",
+      "fal ai untuk coding agent",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apakah fal.ai pengganti langsung AnyCap?",
+      answer:
+        "Tidak. fal.ai adalah platform API media generatif. AnyCap adalah runtime kemampuan yang lebih luas untuk agent yang sudah ada. Tumpang-tindih utamanya ada pada pembuatan gambar dan video, tetapi kategori produknya berbeda.",
+    },
+    {
+      question: "Apa perbedaan alur kerja terbesar antara AnyCap dan fal.ai?",
+      answer:
+        "fal.ai menganggap stack aplikasi Anda yang memiliki siklus hidup permintaan, penanganan webhook, dan pipeline artefak. AnyCap membungkus akses kemampuan ke runtime berbasis CLI untuk agent dan menambahkan penyimpanan serta alur penerbitan di sekitar hasil.",
+    },
+    {
+      question: "Apakah fal.ai mendukung inferensi sinkron dan async?",
+      answer:
+        "Ya. Dokumen publik fal menjelaskan permintaan sinkron langsung, inferensi async berbasis antrean, dan webhook untuk notifikasi selesai. Itu salah satu alasan paling jelas memilih fal ketika kontrol backend penting.",
+    },
+    {
+      question: "Kapan AnyCap pilihan yang lebih rapi?",
+      answer:
+        "Ketika tim sudah memakai agent di alat pengembang dan ingin agent tersebut mendapat eksekusi multimodal plus pengiriman artefak melalui satu runtime, bukan proyek integrasi API langsung lain.",
+    },
+    {
+      question: "Apa aturan praktis paling sederhana?",
+      answer:
+        "Jika Anda memerlukan API media, pilih fal.ai. Jika Anda memerlukan agent menyelesaikan pekerjaan lintas-modal dalam satu runtime, pilih AnyCap.",
+    },
+  ]),
+  lastUpdatedLabel: "8 April 2026",
+  heroTitle: ["AnyCap vs", "fal.ai"],
+  heroIntro:
+    "AnyCap vs fal.ai adalah pertanyaan tentang lapisan mana yang ingin dimiliki tim. fal.ai paling kuat ketika backend memerlukan API media berbasis antrean, kontrol endpoint langsung, verifikasi webhook, dan penanganan status job eksplisit di kode aplikasi. Model itu ideal untuk tim produk yang sudah menjalankan orkestrasi, percobaan ulang, dan pipeline aset sendiri. AnyCap lebih kuat ketika agent sudah ada dan yang kurang adalah akses kemampuan operasional di dalam alur kerja agent tersebut. Alih-alih membangun ulang integrasi media untuk setiap shell, tim memakai satu runtime yang membungkus eksekusi multimodal dengan jalur penyimpanan dan penerbitan. Keputusan ini kurang tentang kualitas model mentah dan lebih tentang di mana kompleksitas integrasi seharusnya berada dalam arsitektur. Dalam banyak kasus, keputusan ini juga menentukan tim mana yang memiliki tanggung jawab insiden untuk tugas media yang gagal. Menjernihkan kepemilikan itu di awal mencegah pembangunan ulang yang mahal ketika alur kerja bertambah besar.",
+  answerFirstSummaryLabel: "Ringkasan jawaban dulu",
+  answerFirstSummaryBody:
+    "Pilih fal.ai ketika stack produk memerlukan endpoint media langsung, eksekusi async berbasis antrean, kontrol siklus hidup berbasis webhook, dan kepemilikan backend atas orkestrasi permintaan. Pilih AnyCap ketika pengembang sudah bekerja melalui agent dan ingin agent tersebut mendapat media, web, penyimpanan, dan kemampuan penerbitan melalui satu runtime bersama. Dalam skenario itu, standarisasi runtime biasanya mengalahkan integrasi API tingkat rendah lainnya karena autentikasi, perintah, dan penanganan artefak tetap konsisten antar lingkungan. Aturan praktisnya sederhana: infrastruktur media berpusat pada backend mengarah ke fal.ai, portabilitas eksekusi berpusat pada agent mengarah ke AnyCap. Jika tim tidak dapat memetakan kepemilikan dengan jelas, arsitektur mungkin mencampur kedua lapisan dalam satu alur kerja. Pisahkan tanggung jawab dulu, lalu bandingkan biaya implementasi, kecepatan pengiriman, dan kompleksitas insiden, termasuk beban operasional untuk percobaan ulang, retensi artefak, dan pemulihan setelah kegagalan. Urutan ini mencegah tim mengoptimalkan lapisan yang salah.",
+  comparisonTitle: "Perbandingan berdampingan",
+  comparisonHeaders: { dimension: "Dimensi", anycap: "AnyCap", fal: "fal.ai" },
+  comparisonRows: [
+    {
+      dimension: "Tugas utama",
+      anycap:
+        "Runtime kemampuan agent yang memberi agent yang ada lapisan eksekusi bersama untuk media, web, penyimpanan, dan penerbitan.",
+      fal:
+        "Platform API media generatif berpusat pada endpoint model, inferensi async berbasis antrean, webhook, dan integrasi yang dikendalikan pengembang.",
+    },
+    {
+      dimension: "Siklus hidup permintaan",
+      anycap:
+        "Satu CLI dan satu alur autentikasi mengabstraksikan siklus hidup permintaan sehingga agent tetap dalam permukaan kemampuan yang stabil.",
+      fal:
+        "fal mendukung panggilan sinkron langsung, permintaan async berbasis antrean, dan penyelesaian webhook—ideal ketika backend ingin kontrol eksplisit atas siklus hidup.",
+    },
+    {
+      dimension: "Target integrasi",
+      anycap:
+        "Codex, Cursor, Claude Code, Manus, OpenClaw, dan permukaan agent lain yang memerlukan runtime portabel alih-alih proyek SDK lain.",
+      fal:
+        "Backend produk, pelari alur kerja, atau kode aplikasi kustom yang akan memanggil endpoint model langsung dengan autentikasi `FAL_KEY`.",
+    },
+    {
+      dimension: "Lingkup kemampuan",
+      anycap:
+        "Gambar, video, musik, pemahaman media, pengambilan web berbasis bukti, penyimpanan Drive, dan penerbitan Page melalui satu antarmuka.",
+      fal:
+        "Endpoint media generatif mutakhir dengan primitif async yang kuat, tetapi penyimpanan artefak, pencarian, dan penerbitan tetap menjadi tanggung jawab sisa stack Anda.",
+    },
+    {
+      dimension: "Alur kerja artefak",
+      anycap:
+        "Generasi dapat langsung berpindah ke penyimpanan terhosting, tautan berbagi, dan halaman statis tanpa keluar dari permukaan produk.",
+      fal:
+        "API mengembalikan keluaran dan status antrean, tetapi manajemen aset tahan lama dan pengiriman publik tetap tanggung jawab aplikasi.",
+    },
+    {
+      dimension: "Paling cocok",
+      anycap: "Terbaik ketika tim menginginkan pengalaman operator berpusat pada agent dan portabilitas lintas-agent.",
+      fal:
+        "Terbaik ketika tim menginginkan blok bangunan API berfokus pada media dengan visibilitas antrean, verifikasi webhook, dan kepemilikan backend langsung.",
+    },
+  ],
+  strengthsTitleLeft: "Mengapa tim memilih AnyCap",
+  strengthsTitleRight: "Mengapa tim memilih fal.ai",
+  strengthsLeft: [
+    "Satu permukaan runtime dapat melengkapi banyak lingkungan agent tanpa membangun ulang integrasi media dari nol di masing-masing.",
+    "Inventaris kemampuan publik melampaui generasi ke pemahaman, pengambilan web, penyimpanan, dan penerbitan—berguna ketika agent harus menyelesaikan seluruh tugas.",
+    "Itu membuat AnyCap lebih cocok untuk kesederhanaan operator dan penggunaan ulang lintas-agent daripada API media saja.",
+  ],
+  strengthsRight: [
+    "Dokumen fal secara eksplisit merekomendasikan inferensi async berbasis antrean untuk penggunaan produksi yang andal dan mencadangkan panggilan sinkron untuk beban kerja pemblokiran singkat.",
+    "Dukungan webhook dijelaskan secara rinci, termasuk perilaku percobaan ulang dan panduan verifikasi tanda tangan—berharga bagi tim yang membangun pipeline job media sendiri.",
+    "Autentikasi berbasis kunci dan kunci API lingkup tim menjadikan fal blok infrastruktur media yang kuat ketika stack Anda sudah memiliki sisa alur kerja.",
+  ],
+  useCasesTitle: "Paling cocok menurut kasus penggunaan",
+  useCases: [
+    {
+      eyebrow: "Pilih AnyCap jika",
+      title: "Runtime harus ikut tim di berbagai produk agent.",
+      body:
+        "AnyCap lebih kuat ketika lapisan kemampuan yang sama harus berfungsi di Codex, Cursor, Claude Code, atau shell agent lain tanpa membangun ulang stack untuk setiap lingkungan.",
+    },
+    {
+      eyebrow: "Pilih fal.ai jika",
+      title: "Backend produk ingin kontrol eksplisit atas job media.",
+      body:
+        "fal lebih cocok ketika status antrean, penanganan webhook, dan integrasi endpoint langsung merupakan bagian dari arsitektur produk Anda sendiri dan Anda tidak memerlukan lapisan runtime agent yang lebih luas.",
+    },
+    {
+      eyebrow: "Pilih AnyCap jika",
+      title: "Alur kerja mencakup pengiriman, bukan hanya generasi.",
+      body:
+        "AnyCap lebih kuat ketika artefak harus menjadi tautan berbagi, halaman terhosting, atau masukan agent lain tepat setelah generasi, alih-alih berhenti pada satu respons API.",
+    },
+    {
+      eyebrow: "Pilih fal.ai jika",
+      title: "Pekerjaan utamanya infrastruktur media.",
+      body:
+        "fal adalah pilihan yang rapi ketika tim terutama peduli pada akses model langsung, keandalan eksekusi async, dan primitif backend berfokus pada media—bukan alur pencarian, penyimpanan, atau penerbitan.",
+    },
+  ],
+  methodTitle: "Bagaimana perbandingan ini ditinjau",
+  methodBody: [
+    "Sisi fal.ai pada halaman ini ditinjau terhadap dokumen publik yang tersedia pada 8 April 2026. Klaim di sini sengaja sempit dan dapat diverifikasi: fal mendukung permintaan sinkron, inferensi async berbasis antrean, webhook, dan autentikasi kunci API.",
+    "Sisi AnyCap didasarkan pada halaman AnyCap yang dipublikasikan untuk CLI, alur instalasi, runtime kemampuan, Drive, dan harga. Halaman ini hanya memakai klaim publik yang sudah terlihat di permukaan produk.",
+  ],
+  methodologyNoteLabel: "Catatan metodologi",
+  methodologyNoteBody:
+    "Halaman ini membandingkan kecocokan lapisan, bukan luas produk secara keseluruhan. Jika fal.ai mengubah perilaku endpoint model nanti, atau AnyCap mengubah inventaris kemampuan, halaman ini harus diperbarui agar tetap mengacu pada dokumentasi publik terkini.",
+  sourceTitle: "Catatan sumber",
+  sourceLinks: [
+    {
+      label: "Inferensi sinkron fal",
+      href: "https://fal.ai/docs/model-apis/model-endpoints/synchronous-requests",
+      note: "Panggilan `run` langsung, `subscribe`, dan kapan permintaan pemblokiran masuk akal.",
+    },
+    {
+      label: "Inferensi async fal",
+      href: "https://fal.ai/docs/model-apis/model-endpoints/queue",
+      note: "Penanganan permintaan berbasis antrean untuk beban kerja produksi.",
+    },
+    {
+      label: "Webhook fal",
+      href: "https://fal.ai/docs/model-endpoints/webhooks",
+      note: "Pengiriman webhook, percobaan ulang, dan panduan verifikasi tanda tangan.",
+    },
+    {
+      label: "Autentikasi fal",
+      href: "https://fal.ai/docs/documentation/setting-up/authentication",
+      note: "Penyiapan kunci API, kunci lingkup tim, dan ekspektasi autentikasi.",
+    },
+    {
+      label: "Pembuatan gambar AnyCap",
+      href: "/capabilities/image-generation",
+      note: "Permukaan pembuatan gambar publik yang diekspos melalui runtime AnyCap.",
+    },
+    {
+      label: "Drive AnyCap",
+      href: "/capabilities/drive",
+      note: "Alur penyimpanan dan tautan berbagi yang melampaui pembuatan media saja.",
+    },
+    {
+      label: "Instal AnyCap",
+      href: "/guides/install-anycap",
+      note: "Alur penyiapan yang dipublikasikan untuk lingkungan agent yang memerlukan runtime portabel.",
+    },
+  ],
+  relatedTitle: "Halaman terkait",
+  relatedPages: [
+    {
+      href: "/compare/anycap-vs-replicate",
+      eyebrow: "Perbandingan",
+      title: "AnyCap vs Replicate",
+      body: "Bandingkan AnyCap dengan platform inferensi dan deployment model dengan semantik job media serupa.",
+    },
+    {
+      href: "/capabilities/video-generation",
+      eyebrow: "Produk",
+      title: "Pembuatan video",
+      body: "Lihat alur video publik yang didapat agent melalui AnyCap saat ini.",
+    },
+    {
+      href: "/capabilities/image-generation",
+      eyebrow: "Produk",
+      title: "Pembuatan gambar",
+      body: "Pelajari lebih dalam bagaimana runtime AnyCap mengekspos model gambar melalui satu permukaan perintah.",
+    },
+    {
+      href: "/guides/install-anycap",
+      eyebrow: "Mulai di sini",
+      title: "Instal AnyCap",
+      body: "Validasi runtime langsung di alur kerja agent Anda alih-alih tetap dalam mode perbandingan.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah fal.ai pengganti langsung AnyCap?",
+      answer:
+        "Tidak. fal.ai adalah platform API media generatif yang dioptimalkan untuk job inferensi yang dikendalikan backend, sedangkan AnyCap adalah runtime kemampuan yang lebih luas untuk agent yang sudah beroperasi di alat pengembang. Tumpang-tindih utamanya adalah pembuatan gambar dan video, tetapi kategorinya berbeda: yang satu infrastruktur media, yang lain infrastruktur eksekusi agent. Memilih di antara keduanya bergantung pada apakah bottleneck Anda adalah orkestrasi API di kode aplikasi atau akses kemampuan di alur kerja agent.",
+    },
+    {
+      question: "Apa perbedaan alur kerja terbesar antara AnyCap dan fal.ai?",
+      answer:
+        "fal.ai menganggap stack aplikasi Anda memiliki manajemen siklus hidup permintaan, penanganan webhook, percobaan ulang, dan perutean artefak setelah generasi. AnyCap membungkus akses kemampuan ke runtime berbasis CLI yang dapat dipanggil agent secara langsung, lalu memperluas alur kerja dengan jalur penyimpanan dan penerbitan di permukaan operasional yang sama. Perbedaan intinya adalah di mana kompleksitas alur kerja diimplementasikan: kode backend kustom dengan fal.ai, atau semantik runtime bersama dengan AnyCap.",
+    },
+    {
+      question: "Apakah fal.ai mendukung inferensi sinkron dan async?",
+      answer:
+        "Ya. Dokumen publik fal menjelaskan permintaan sinkron langsung, inferensi async berbasis antrean, dan notifikasi webhook untuk penyelesaian. Kombinasi itu salah satu alasan paling jelas tim memilih fal.ai ketika kontrol backend penting dan beban kerja tidak dapat mengandalkan panggilan pemblokiran. Ini sangat berharga ketika sistem produk memerlukan visibilitas antrean, integritas callback, dan perilaku pascaproses yang dapat diprediksi.",
+    },
+    {
+      question: "Kapan AnyCap pilihan yang lebih rapi?",
+      answer:
+        "AnyCap lebih rapi ketika tim sudah memakai agent di alat pengembang dan ingin eksekusi multimodal plus pengiriman artefak tanpa meluncurkan proyek integrasi API langsung lain. Satu runtime dapat menstandarkan instalasi, autentikasi, pemanggilan, dan serah terima di berbagai shell agent. Itu mengurangi drift integrasi dan memudahkan menjaga konsistensi alur kerja seiring bertambahnya kemampuan.",
+    },
+    {
+      question: "Apa aturan praktis paling sederhana?",
+      answer:
+        "Jika Anda memerlukan lapisan API media dengan kontrol antrean dan webhook di kode backend, pilih fal.ai. Jika Anda memerlukan agent yang ada menyelesaikan pekerjaan lintas-modal di dalam satu runtime eksekusi, pilih AnyCap. Ketika tim ragu, memetakan di mana kepemilikan siklus hidup seharusnya berada—aplikasi backend atau runtime agent—biasanya menjernihkan pilihan dengan cepat.",
+    },
+  ],
+  ctas: [
+    { href: "/guides/install-anycap", label: "Instal AnyCap", variant: "primary" },
+    { href: "/capabilities/image-generation", label: "Pembuatan gambar", variant: "secondary" },
+    { href: "/capabilities/video-generation", label: "Pembuatan video", variant: "secondary" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ComparePageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id,
 };
 
 export function getAnyCapVsFalAiMetadata(locale: SiteLocale): Metadata {
