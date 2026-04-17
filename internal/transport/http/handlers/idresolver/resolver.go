@@ -25,6 +25,12 @@ type IDResolver interface {
 	ResolvePageSiteID(ctx context.Context, externalID string) (int64, error)
 	ResolvePageVersionID(ctx context.Context, externalID string) (int64, error)
 	ResolveModelRouteID(ctx context.Context, externalID string) (int64, error)
+	ResolveIMBindingID(ctx context.Context, externalID string) (int64, error)
+	ResolveRunnerID(ctx context.Context, externalID string) (int64, error)
+	ResolveAgentConversationID(ctx context.Context, externalID string) (int64, error)
+	ResolveAgentTaskID(ctx context.Context, externalID string) (int64, error)
+	ResolveAgentSessionID(ctx context.Context, externalID string) (int64, error)
+	ResolveAgentMailboxMessageID(ctx context.Context, externalID string) (int64, error)
 }
 
 // PassthroughIDResolver is a no-DB resolver that just parses int64 from strings.
@@ -44,6 +50,24 @@ func (PassthroughIDResolver) ResolvePageVersionID(_ context.Context, raw string)
 	return passthroughResolve(raw)
 }
 func (PassthroughIDResolver) ResolveModelRouteID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveIMBindingID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveRunnerID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveAgentConversationID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveAgentTaskID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveAgentSessionID(_ context.Context, raw string) (int64, error) {
+	return passthroughResolve(raw)
+}
+func (PassthroughIDResolver) ResolveAgentMailboxMessageID(_ context.Context, raw string) (int64, error) {
 	return passthroughResolve(raw)
 }
 
@@ -85,6 +109,24 @@ func (m *PostgresExternalIDMapper) ResolvePageVersionID(ctx context.Context, ext
 
 func (m *PostgresExternalIDMapper) ResolveModelRouteID(ctx context.Context, externalID string) (int64, error) {
 	return m.resolveInternalIDByExternalID(ctx, "anycap_model_routes", externalID, externalid.PrefixModelRoute, "")
+}
+func (m *PostgresExternalIDMapper) ResolveIMBindingID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "im_bindings", externalID, externalid.PrefixIMBinding, "")
+}
+func (m *PostgresExternalIDMapper) ResolveRunnerID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "agent_runners", externalID, externalid.PrefixRunner, "")
+}
+func (m *PostgresExternalIDMapper) ResolveAgentConversationID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "agent_conversations", externalID, externalid.PrefixAgentConversation, "")
+}
+func (m *PostgresExternalIDMapper) ResolveAgentTaskID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "agent_tasks", externalID, externalid.PrefixAgentTask, "")
+}
+func (m *PostgresExternalIDMapper) ResolveAgentSessionID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "agent_sessions", externalID, externalid.PrefixAgentSession, "")
+}
+func (m *PostgresExternalIDMapper) ResolveAgentMailboxMessageID(ctx context.Context, externalID string) (int64, error) {
+	return m.resolveInternalIDByExternalID(ctx, "agent_mailbox_messages", externalID, externalid.PrefixAgentMailboxMessage, "")
 }
 
 // --- IDMapper methods (outbound) ---
@@ -131,6 +173,24 @@ func (m *PostgresExternalIDMapper) ResolvePageVersionExternalIDs(ctx context.Con
 
 func (m *PostgresExternalIDMapper) ResolveModelRouteExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
 	return m.resolveExternalIDsByInt64IDs(ctx, "anycap_model_routes", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveIMBindingExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "im_bindings", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveRunnerExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "agent_runners", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveAgentConversationExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "agent_conversations", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveAgentTaskExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "agent_tasks", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveAgentSessionExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "agent_sessions", "id", "external_id", "", internalIDs)
+}
+func (m *PostgresExternalIDMapper) ResolveAgentMailboxMessageExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {
+	return m.resolveExternalIDsByInt64IDs(ctx, "agent_mailbox_messages", "id", "external_id", "", internalIDs)
 }
 
 func (m *PostgresExternalIDMapper) ResolveSpaceExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error) {

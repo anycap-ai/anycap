@@ -14,6 +14,12 @@ type IDMapper interface {
 	ResolvePageSiteExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
 	ResolvePageVersionExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
 	ResolveModelRouteExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveIMBindingExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveRunnerExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveAgentConversationExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveAgentTaskExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveAgentSessionExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
+	ResolveAgentMailboxMessageExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
 	ResolveSpaceExternalIDs(ctx context.Context, internalIDs []int64) (map[int64]string, error)
 	ResolveUserExternalIDs(ctx context.Context, internalUserIDs []string) (map[string]string, error)
 	ResolveUserExternalID(ctx context.Context, internalUserID string) (string, error)
@@ -37,6 +43,24 @@ func (PassthroughIDMapper) ResolvePageVersionExternalIDs(_ context.Context, ids 
 	return int64ToStringMap(ids), nil
 }
 func (PassthroughIDMapper) ResolveModelRouteExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveIMBindingExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveRunnerExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveAgentConversationExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveAgentTaskExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveAgentSessionExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
+	return int64ToStringMap(ids), nil
+}
+func (PassthroughIDMapper) ResolveAgentMailboxMessageExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {
 	return int64ToStringMap(ids), nil
 }
 func (PassthroughIDMapper) ResolveSpaceExternalIDs(_ context.Context, ids []int64) (map[int64]string, error) {

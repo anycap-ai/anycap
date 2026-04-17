@@ -164,6 +164,93 @@ feedback = true
 
 ## Utility Commands
 
+## Agent Commands
+
+### Preferred local Feishu daemon flow
+
+Use this order for the chat-style Feishu agent flow. Start this flow automatically when the human says things like:
+
+- "用飞书跟你聊天"
+- "开启飞书 IM 模式"
+- "把你接到我的飞书 bot 上"
+- "用 AnyCap 启动飞书机器人"
+- "用飞书跟当前 agent 聊天"
+- "start AnyCap Feishu daemon"
+
+Do not make the human assemble the daemon command manually. Use the current working directory as `--workspace` unless the human provides another repository path. Infer the executor from the current runtime: Codex uses `--executor codex`; Claude Code uses `--executor claude_code`. If unsure, ask whether to use Codex or Claude Code.
+
+Read Feishu credentials from `FEISHU_APP_ID` and `FEISHU_APP_SECRET` first. If either is missing, ask only for the missing value(s), or ask the human to export them and confirm. Never write App Secret values into docs, code, logs, memory files, or final summaries. Do not echo secrets back to the human.
+
+```bash
+anycap status
+```
+
+If the CLI is not authenticated:
+
+```bash
+anycap login
+```
+
+Start the local agent on the target repository:
+
+```bash
+anycap agent daemon start --platform feishu --executor codex --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+Use Claude Code instead of Codex when that is the desired local agent:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+When the human explicitly wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, add:
+
+```bash
+anycap agent daemon start --platform feishu --executor codex --codex-exec-mode danger-full-access --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+The default Codex mode is `safe`, which maps to Codex `--full-auto`. That automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
+
+For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, pass broader Claude Code permission/tool flags:
+
+```bash
+anycap agent daemon start --platform feishu --executor claude_code --claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash --workspace /path/to/repo --feishu-app-id <app_id> --feishu-app-secret <app_secret>
+```
+
+The daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
+
+This command will:
+
+- registers a local runner
+- claims it as the current user's primary Feishu runner
+- starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
+- starts the normal polling loop for sessions/tasks
+- uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
+- uses Claude Code `claude -p --output-format json` when `--executor claude_code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
+
+Check which local machine is currently connected:
+
+```bash
+anycap agent daemon status --platform feishu
+```
+
+After startup, ask the human to go back to Feishu and send a normal message to their personal bot. Keep the final user-facing message short, for example: `飞书机器人已经连上当前本地 agent。现在去飞书给你的 personal bot 发普通消息即可。`
+
+### Legacy / Debug Compatibility
+
+Only use the commands below when the human is explicitly debugging an older shared-bot deployment or direct runner wiring.
+
+```bash
+anycap agent runners serve --name local-mac --platform feishu --executor codex --workspace /path/to/repo
+anycap agent runners serve --name local-mac --platform feishu --executor claude_code --workspace /path/to/repo
+```
+
+- `agent runners serve` is still useful for debugging and operator workflows, but `agent daemon start` is the main user-facing path.
+- `agent runners serve` also accepts `--codex-exec-mode danger-full-access` when debugging local execution outside the default Codex sandbox.
+- `agent runners serve` also accepts `--claude-permission-mode`, `--claude-allowed-tools`, and `--claude-bin` when debugging Claude Code execution.
+- `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
+- Do not use these legacy flows as the primary setup path for a personal Feishu bot daemon.
+
 ### download
 
 Save a remote file locally. Commonly used after `image generate` when `-o` was not specified.

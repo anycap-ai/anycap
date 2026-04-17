@@ -119,6 +119,7 @@ type Config struct {
 	UsageSyncBatchSize      int
 	Artifact                ArtifactConfig
 	Api302                  Api302Config
+	AgentControl            AgentControlConfig
 	// Storage quota
 	StorageQuotaDConfEnabled bool
 	StorageQuotaDConfGroup   string
@@ -235,8 +236,52 @@ type Api302Config struct {
 	BaseURL string
 }
 
+type AgentControlConfig struct {
+	// Feishu holds server-side shared-bot compatibility config.
+	// The preferred path is now personal bot ingress owned by the local daemon.
+	Feishu       AgentControlFeishuConfig
+	FixedRunners []AgentControlFixedRunnerConfig
+}
+
+type AgentControlFeishuConfig struct {
+	VerificationToken string
+	EncryptKey        string
+	ReplyAPI          string
+	AppID             string
+	AppSecret         string
+	LongConnEnabled   bool
+}
+
+type AgentControlFixedRunnerConfig struct {
+	Platform string `json:"platform"`
+	BotID    string `json:"bot_id"`
+	RunnerID string `json:"runner_id"`
+}
+
 func (c Api302Config) Enabled() bool {
 	return c.APIKey != ""
+}
+
+func (c AgentControlFeishuConfig) WebhookEnabled() bool {
+	return strings.TrimSpace(c.VerificationToken) != "" &&
+		strings.TrimSpace(c.EncryptKey) != ""
+}
+
+func (c AgentControlFeishuConfig) DirectAPIEnabled() bool {
+	return strings.TrimSpace(c.AppID) != "" &&
+		strings.TrimSpace(c.AppSecret) != ""
+}
+
+func (c AgentControlFeishuConfig) LegacyLongConnEnabled() bool {
+	return c.LongConnEnabled && c.DirectAPIEnabled()
+}
+
+func (c AgentControlFeishuConfig) OutboundEnabled() bool {
+	return c.DirectAPIEnabled() || strings.TrimSpace(c.ReplyAPI) != ""
+}
+
+func (c AgentControlFeishuConfig) Enabled() bool {
+	return c.WebhookEnabled() || c.OutboundEnabled()
 }
 
 type ArtifactConfig struct {
@@ -381,6 +426,12 @@ func LoadFromEnv() (Config, error) {
 		return Config{}, err
 	}
 	cfg.Credit = creditCfg
+
+	agentControlCfg, err := loadAgentControlConfig()
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.AgentControl = agentControlCfg
 
 	creditPacks, err := loadCreditPacksConfig()
 	if err != nil {
@@ -555,6 +606,43 @@ func loadPaymentEventsConfig() PaymentEventsConfig {
 		BizID:         getEnv("ANYCAP_PAYMENT_EVENTS_BIZ_ID", ""),
 		Tags:          splitCSVEnv("ANYCAP_PAYMENT_EVENTS_TAGS"),
 	}
+}
+
+func loadAgentControlConfig() (AgentControlConfig, error) {
+	cfg := AgentControlConfig{
+		Feishu: AgentControlFeishuConfig{
+			VerificationToken: getEnv("ANYCAP_AGENT_CONTROL_FEISHU_VERIFICATION_TOKEN", ""),
+			EncryptKey:        getEnv("ANYCAP_AGENT_CONTROL_FEISHU_ENCRYPT_KEY", ""),
+			ReplyAPI:          getEnv("ANYCAP_AGENT_CONTROL_FEISHU_REPLY_API", ""),
+			AppID:             getEnv("ANYCAP_AGENT_CONTROL_FEISHU_APP_ID", ""),
+			AppSecret:         getEnv("ANYCAP_AGENT_CONTROL_FEISHU_APP_SECRET", ""),
+			LongConnEnabled:   getEnvBool("ANYCAP_AGENT_CONTROL_FEISHU_LONG_CONNECTION_ENABLED", false),
+		},
+	}
+
+	raw := strings.TrimSpace(os.Getenv("ANYCAP_AGENT_CONTROL_FIXED_RUNNERS_JSON"))
+	if raw == "" {
+		return cfg, nil
+	}
+
+	var items []AgentControlFixedRunnerConfig
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return AgentControlConfig{}, fmt.Errorf("parse ANYCAP_AGENT_CONTROL_FIXED_RUNNERS_JSON: %w", err)
+	}
+
+	cfg.FixedRunners = make([]AgentControlFixedRunnerConfig, 0, len(items))
+	for _, item := range items {
+		if strings.TrimSpace(item.Platform) == "" || strings.TrimSpace(item.BotID) == "" || strings.TrimSpace(item.RunnerID) == "" {
+			return AgentControlConfig{}, fmt.Errorf("ANYCAP_AGENT_CONTROL_FIXED_RUNNERS_JSON entries require platform, bot_id, runner_id")
+		}
+		cfg.FixedRunners = append(cfg.FixedRunners, AgentControlFixedRunnerConfig{
+			Platform: strings.ToLower(strings.TrimSpace(item.Platform)),
+			BotID:    strings.TrimSpace(item.BotID),
+			RunnerID: strings.TrimSpace(item.RunnerID),
+		})
+	}
+
+	return cfg, nil
 }
 
 func loadCreditPacksConfig() ([]CreditPackConfig, error) {

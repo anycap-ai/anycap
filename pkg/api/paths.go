@@ -145,3 +145,81 @@ const (
 // --- Telemetry ---
 
 const TelemetryPath = "/v1/telemetry"
+
+// --- Agent control ---
+
+const (
+	AgentBindingsPath      = "/v1/agent/im-bindings"
+	AgentBindTokenPath     = "/v1/agent/im-bindings/token"
+	AgentRunnersPath       = "/v1/agent/runners"
+	AgentConversationsPath = "/v1/agent/conversations"
+	AgentTasksPath         = "/v1/agent/tasks"
+)
+
+func AgentBindingPath(bindingID string) string {
+	return AgentBindingsPath + "/" + url.PathEscape(bindingID)
+}
+
+func AgentTaskPath(taskID string) string {
+	return AgentTasksPath + "/" + url.PathEscape(taskID)
+}
+
+func AgentConversationPath(conversationID string) string {
+	return AgentConversationsPath + "/" + url.PathEscape(conversationID)
+}
+
+func AgentConversationSessionsPath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/sessions"
+}
+
+func AgentConversationMailboxPath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/mailbox"
+}
+
+func AgentConversationStopPath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/stop"
+}
+
+func AgentConversationResetPath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/reset"
+}
+
+func AgentConversationForkPath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/fork"
+}
+
+func AgentConversationFirePath(conversationID string) string {
+	return AgentConversationPath(conversationID) + "/fire"
+}
+
+func AgentTaskCancelPath(taskID string) string {
+	return AgentTaskPath(taskID) + "/cancel"
+}
+
+func AgentRunnerNextTaskPath(runnerID string) string {
+	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/tasks/next"
+}
+
+func AgentRunnerNextSessionPath(runnerID string) string {
+	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/sessions/next"
+}
+
+func AgentRunnerClaimPrimaryPath(runnerID string) string {
+	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/claim-primary"
+}
+
+func AgentRunnerPrimaryPath(platform string) string {
+	return AgentRunnersPath + "/primary?platform=" + url.QueryEscape(platform)
+}
+
+func AgentIMInboundPath() string {
+	return "/v1/agent/im/inbound"
+}
+
+func AgentRunnerSessionPath(runnerID string, sessionID string) string {
+	return AgentRunnersPath + "/" + url.PathEscape(runnerID) + "/sessions/" + url.PathEscape(sessionID)
+}
+
+func AgentRunnerSessionStatusPath(runnerID string, sessionID string) string {
+	return AgentRunnerSessionPath(runnerID, sessionID)
+}

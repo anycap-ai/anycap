@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
@@ -35,6 +36,93 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	}
 	if got := deps.rateLimitResolver.ResolveCapabilityRateLimitRPM("image.generate"); got != 60 {
 		t.Fatalf("expected default rate limit resolver value 60, got %d", got)
+	}
+}
+
+func TestBuildFixedRunnerResolver_ResolvesConfiguredBotToRunner(t *testing.T) {
+	resolver := buildFixedRunnerResolver(config.Config{
+		AgentControl: config.AgentControlConfig{
+			FixedRunners: []config.AgentControlFixedRunnerConfig{
+				{
+					Platform: "feishu",
+					BotID:    "cli_bot",
+					RunnerID: "21",
+				},
+			},
+		},
+	}, idresolver.PassthroughIDResolver{})
+	if resolver == nil {
+		t.Fatal("expected fixed runner resolver")
+	}
+
+	id, err := resolver(model.IMPlatformFeishu, "cli_bot")
+	if err != nil {
+		t.Fatalf("resolver() error = %v", err)
+	}
+	if id != 21 {
+		t.Fatalf("expected runner id 21, got %d", id)
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsNilWhenConfigMissing(t *testing.T) {
+	if adapter := buildFeishuAdapter(config.Config{}); adapter != nil {
+		t.Fatalf("expected nil adapter when config missing, got %T", adapter)
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsAdapterWhenConfigured(t *testing.T) {
+	adapter := buildFeishuAdapter(config.Config{
+		AgentControl: config.AgentControlConfig{
+			Feishu: config.AgentControlFeishuConfig{
+				VerificationToken: "verify_token",
+				EncryptKey:        "encrypt_key",
+				ReplyAPI:          "https://reply.anycap.dev",
+			},
+		},
+	})
+	if adapter == nil {
+		t.Fatal("expected configured feishu adapter")
+	}
+}
+
+func TestBuildFeishuAdapter_ReturnsAdapterWhenDirectAPIConfigured(t *testing.T) {
+	adapter := buildFeishuAdapter(config.Config{
+		AgentControl: config.AgentControlConfig{
+			Feishu: config.AgentControlFeishuConfig{
+				AppID:     "cli_appid",
+				AppSecret: "cli_secret",
+			},
+		},
+	})
+	if adapter == nil {
+		t.Fatal("expected configured feishu adapter")
+	}
+}
+
+func TestBuildLegacyFeishuLongConnBot_ReturnsNilEvenWhenConfigured(t *testing.T) {
+	bot := buildLegacyFeishuLongConnBot(
+		config.Config{
+			AgentControl: config.AgentControlConfig{
+				Feishu: config.AgentControlFeishuConfig{
+					AppID:           "cli_appid",
+					AppSecret:       "cli_secret",
+					LongConnEnabled: true,
+				},
+			},
+		},
+		&agentcontrolapp.BindingService{},
+		&agentcontrolapp.ConversationService{},
+		buildFeishuAdapter(config.Config{
+			AgentControl: config.AgentControlConfig{
+				Feishu: config.AgentControlFeishuConfig{
+					AppID:     "cli_appid",
+					AppSecret: "cli_secret",
+				},
+			},
+		}),
+	)
+	if bot != nil {
+		t.Fatalf("expected legacy feishu long connection bot to be disabled, got %T", bot)
 	}
 }
 

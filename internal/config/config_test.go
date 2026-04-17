@@ -117,6 +117,55 @@ func TestLoadFromEnv_ReadsArtifactConfig(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnv_ReadsAgentControlConfig(t *testing.T) {
+	clearLegacyPGConfig(t)
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_VERIFICATION_TOKEN", "verify_token")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_ENCRYPT_KEY", "encrypt_key")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_REPLY_API", "https://reply.anycap.dev")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_APP_ID", "cli_appid")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_APP_SECRET", "cli_secret")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FEISHU_LONG_CONNECTION_ENABLED", "true")
+	t.Setenv("ANYCAP_AGENT_CONTROL_FIXED_RUNNERS_JSON", `[{"platform":"feishu","bot_id":"cli_bot","runner_id":"run_123"}]`)
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+	if cfg.AgentControl.Feishu.VerificationToken != "verify_token" {
+		t.Fatalf("expected feishu verification token, got %q", cfg.AgentControl.Feishu.VerificationToken)
+	}
+	if cfg.AgentControl.Feishu.EncryptKey != "encrypt_key" {
+		t.Fatalf("expected feishu encrypt key, got %q", cfg.AgentControl.Feishu.EncryptKey)
+	}
+	if cfg.AgentControl.Feishu.ReplyAPI != "https://reply.anycap.dev" {
+		t.Fatalf("expected feishu reply api, got %q", cfg.AgentControl.Feishu.ReplyAPI)
+	}
+	if cfg.AgentControl.Feishu.AppID != "cli_appid" {
+		t.Fatalf("expected feishu app id, got %q", cfg.AgentControl.Feishu.AppID)
+	}
+	if cfg.AgentControl.Feishu.AppSecret != "cli_secret" {
+		t.Fatalf("expected feishu app secret, got %q", cfg.AgentControl.Feishu.AppSecret)
+	}
+	if !cfg.AgentControl.Feishu.LongConnEnabled {
+		t.Fatal("expected feishu long connection enabled")
+	}
+	if !cfg.AgentControl.Feishu.LegacyLongConnEnabled() {
+		t.Fatal("expected feishu legacy long connection enabled")
+	}
+	if len(cfg.AgentControl.FixedRunners) != 1 {
+		t.Fatalf("expected 1 fixed runner mapping, got %d", len(cfg.AgentControl.FixedRunners))
+	}
+	if cfg.AgentControl.FixedRunners[0].Platform != "feishu" {
+		t.Fatalf("expected fixed runner platform feishu, got %q", cfg.AgentControl.FixedRunners[0].Platform)
+	}
+	if cfg.AgentControl.FixedRunners[0].BotID != "cli_bot" {
+		t.Fatalf("expected fixed runner bot_id cli_bot, got %q", cfg.AgentControl.FixedRunners[0].BotID)
+	}
+	if cfg.AgentControl.FixedRunners[0].RunnerID != "run_123" {
+		t.Fatalf("expected fixed runner id run_123, got %q", cfg.AgentControl.FixedRunners[0].RunnerID)
+	}
+}
+
 func TestLoadFromEnv_ReadsPasswordPepper(t *testing.T) {
 	clearLegacyPGConfig(t)
 	t.Setenv("ANYCAP_PASSWORD_PEPPER", "pepper-value")

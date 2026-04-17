@@ -25,6 +25,12 @@ const (
 	PrefixFeedback      = "fb_"
 	PrefixUsageEvent    = "uevt_"
 	PrefixProviderRun   = "prun_"
+	PrefixIMBinding     = "imb_"
+	PrefixRunner        = "run_"
+	PrefixAgentConversation   = "agc_"
+	PrefixAgentTask     = "agt_"
+	PrefixAgentSession  = "ags_"
+	PrefixAgentMailboxMessage = "agm_"
 )
 
 const randomCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
