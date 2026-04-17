@@ -63,7 +63,7 @@ func newConnectFeishuCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 		},
 	}
 	cmd.Flags().StringVar(&name, "name", "local-agent", "Local connection name")
-	cmd.Flags().StringVar(&agentKind, "agent", "codex", "Local agent: codex, claude_code, cursor, or stub")
+	cmd.Flags().StringVar(&agentKind, "agent", "codex", "Local agent: codex, claude-code, cursor, or stub")
 	cmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to the local agent")
 	cmd.Flags().BoolVar(&once, "once", false, "Run exactly one poll iteration")
 	cmd.Flags().BoolVar(&foreground, "foreground", false, "Run the connection in the current foreground process")
@@ -71,7 +71,7 @@ func newConnectFeishuCmd(clientFactory func() *httpclient.Client, stdout io.Writ
 	cmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
 	cmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --agent=codex")
 	cmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
-	cmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --agent=claude_code")
+	cmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --agent=claude-code")
 	cmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	cmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
 	cmd.Flags().StringVar(&cursorBin, "cursor-bin", "cursor-agent", "Path to the Cursor Agent CLI binary when --agent=cursor")

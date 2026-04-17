@@ -106,10 +106,10 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 	startCmd.Flags().BoolVar(&foreground, "foreground", false, "Run the daemon in the current foreground process")
 	_ = startCmd.Flags().MarkHidden("foreground")
 	startCmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
-	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex, claude_code, cursor, or stub")
+	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex, claude-code, cursor, or stub")
 	startCmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
 	startCmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
-	startCmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude_code")
+	startCmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude-code")
 	startCmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	startCmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
 	startCmd.Flags().StringVar(&cursorBin, "cursor-bin", "cursor-agent", "Path to the Cursor Agent CLI binary when --executor=cursor")
@@ -326,7 +326,7 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 				"Open Feishu and send a message to the bot to start a task.",
 				"Run 'anycap connect credentials show feishu' to confirm local Feishu credentials are configured.",
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine if the personal bot is not connected yet.", platform),
-				fmt.Sprintf("Use '--agent claude_code' instead of codex if this %s bot should run Claude Code locally.", platform),
+				fmt.Sprintf("Use '--agent claude-code' instead of codex if this %s bot should run Claude Code locally.", platform),
 				fmt.Sprintf("Use '--agent cursor' instead of codex if this %s bot should run Cursor Agent locally.", platform),
 				fmt.Sprintf("Add '--codex-exec-mode danger-full-access' only when the human explicitly wants Codex to bypass sandbox restrictions on the local machine for %s.", platform),
 			},
@@ -524,7 +524,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 			"next_steps": []string{
 				"Run 'anycap connect credentials set feishu --app-id <app_id> --app-secret <app_secret>' once from your terminal if local Feishu credentials are not configured yet.",
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine you want to receive chat tasks.", platform),
-				"Use '--agent claude_code' instead of codex if this bot should run Claude Code locally.",
+				"Use '--agent claude-code' instead of codex if this bot should run Claude Code locally.",
 				"Use '--agent cursor' instead of codex if this bot should run Cursor Agent locally.",
 				"Add '--codex-exec-mode danger-full-access' only if the human explicitly wants unrestricted local Codex execution.",
 				fmt.Sprintf("Run 'anycap connect status %s' again after startup to confirm the connection.", platform),

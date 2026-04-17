@@ -37,7 +37,7 @@ func TestConnectFeishuStartsBackgroundDaemonWithAgentFlag(t *testing.T) {
 			t.Fatalf("expected connect to delegate to foreground daemon, got %v", args)
 		}
 		if !strings.Contains(argsText, "--executor claude_code") {
-			t.Fatalf("expected --agent claude_code to map to daemon executor, got %v", args)
+			t.Fatalf("expected --agent claude-code to map to daemon executor, got %v", args)
 		}
 		if !strings.Contains(argsText, "--workspace /repo") {
 			t.Fatalf("expected workspace in daemon args, got %v", args)
@@ -58,7 +58,7 @@ func TestConnectFeishuStartsBackgroundDaemonWithAgentFlag(t *testing.T) {
 
 	stdout := &bytes.Buffer{}
 	cmd := NewConnectCmd(func() *httpclient.Client { return nil }, strings.NewReader(""), stdout)
-	cmd.SetArgs([]string{"feishu", "--agent", "claude_code", "--workspace", "/repo"})
+	cmd.SetArgs([]string{"feishu", "--agent", "claude-code", "--workspace", "/repo"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("connect feishu: %v", err)
