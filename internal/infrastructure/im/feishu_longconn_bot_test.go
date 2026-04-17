@@ -276,6 +276,56 @@ func TestFeishuLongConnBot_HandleNormalizedEventUsesInboundHandler(t *testing.T)
 	}
 }
 
+func TestFeishuLongConnBot_HandleNormalizedEventDropsDuplicateMessageID(t *testing.T) {
+	var (
+		replyCalls   int
+		inboundCalls int
+	)
+	replyAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		replyCalls++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer replyAPI.Close()
+
+	adapter := NewFeishuAdapter(FeishuAdapterConfig{
+		ReplyAPI:   replyAPI.URL,
+		HTTPClient: replyAPI.Client(),
+	})
+	bot := NewFeishuLongConnBot(FeishuLongConnBotConfig{
+		AppID:     "cli_appid",
+		AppSecret: "app_secret",
+		Adapter:   adapter,
+		HandleInbound: func(ctx context.Context, event NormalizedInboundEvent) (string, error) {
+			inboundCalls++
+			return "会话已接收，正在处理中", nil
+		},
+	})
+	if bot == nil {
+		t.Fatal("expected bot to be constructed")
+	}
+
+	event := NormalizedInboundEvent{
+		Platform:  model.IMPlatformFeishu,
+		BotID:     "cli_appid",
+		ChannelID: "oc_chat",
+		SenderID:  "ou_sender",
+		MessageID: "om_message",
+		Message:   "帮我看这个 bug",
+	}
+	if err := bot.handleNormalizedEvent(context.Background(), event); err != nil {
+		t.Fatalf("first handleNormalizedEvent() error = %v", err)
+	}
+	if err := bot.handleNormalizedEvent(context.Background(), event); err != nil {
+		t.Fatalf("duplicate handleNormalizedEvent() error = %v", err)
+	}
+	if inboundCalls != 1 {
+		t.Fatalf("expected duplicate message to be ignored before inbound handler, got %d calls", inboundCalls)
+	}
+	if replyCalls != 1 {
+		t.Fatalf("expected duplicate message to avoid second ack reply, got %d replies", replyCalls)
+	}
+}
+
 func TestFeishuLongConnBot_HandleNormalizedEventEnrichesQuotedAndHistoryContext(t *testing.T) {
 	var gotEvent NormalizedInboundEvent
 	adapter := NewFeishuAdapter(FeishuAdapterConfig{})

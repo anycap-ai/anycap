@@ -578,20 +578,22 @@ func (s *ConversationService) continueConversation(ctx context.Context, binding 
 	if err != nil {
 		return nil, nil, false, false, false, err
 	}
+	if conversation != nil {
+		conversation, err = s.ensureConversationRunner(ctx, *conversation, runner)
+		if err != nil {
+			return nil, nil, false, false, false, err
+		}
+	}
+	if existingConversation, existing, err := s.findDuplicateInboundSessionByChat(ctx, binding, chatID, messageID); err != nil {
+		return nil, nil, false, false, false, err
+	} else if existing != nil {
+		return existingConversation, existing, false, true, false, nil
+	}
 	if conversation == nil {
 		conversation, err = s.createConversation(ctx, binding, runner, chatID)
 		if err != nil {
 			return nil, nil, false, false, false, err
 		}
-	}
-	conversation, err = s.ensureConversationRunner(ctx, *conversation, runner)
-	if err != nil {
-		return nil, nil, false, false, false, err
-	}
-	if existing, err := s.findDuplicateInboundSession(ctx, *conversation, messageID); err != nil {
-		return nil, nil, false, false, false, err
-	} else if existing != nil {
-		return conversation, existing, false, true, false, nil
 	}
 	queued, err := s.isConversationBusy(ctx, *conversation)
 	if err != nil {
@@ -955,6 +957,33 @@ func (s *ConversationService) isStructuredFollowup(ctx context.Context, conversa
 		}
 	}
 	return false
+}
+
+func (s *ConversationService) findDuplicateInboundSessionByChat(ctx context.Context, binding model.IMBinding, chatID string, messageID string) (*model.AgentConversation, *model.AgentSession, error) {
+	messageID = strings.TrimSpace(messageID)
+	if s == nil || s.conversations == nil || s.sessions == nil || messageID == "" {
+		return nil, nil, nil
+	}
+	conversations, err := s.conversations.ListConversationsByUser(ctx, binding.UserID)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, conversation := range conversations {
+		if strings.TrimSpace(conversation.Platform) != strings.TrimSpace(binding.Platform) ||
+			strings.TrimSpace(conversation.BotID) != strings.TrimSpace(binding.BotID) ||
+			strings.TrimSpace(conversation.ChatID) != strings.TrimSpace(chatID) {
+			continue
+		}
+		session, err := s.findDuplicateInboundSession(ctx, conversation, messageID)
+		if err != nil {
+			return nil, nil, err
+		}
+		if session != nil {
+			copy := conversation
+			return &copy, session, nil
+		}
+	}
+	return nil, nil, nil
 }
 
 func (s *ConversationService) findDuplicateInboundSession(ctx context.Context, conversation model.AgentConversation, messageID string) (*model.AgentSession, error) {

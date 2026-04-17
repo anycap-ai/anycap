@@ -2,7 +2,6 @@ package agentcontrol
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -64,8 +63,14 @@ func (r *fakeConversationRepo) GetActiveConversationByChat(_ context.Context, us
 	return &copy, nil
 }
 
-func (r *fakeConversationRepo) ListConversationsByUser(_ context.Context, _ string) ([]model.AgentConversation, error) {
-	return nil, errors.New("unexpected ListConversationsByUser call")
+func (r *fakeConversationRepo) ListConversationsByUser(_ context.Context, userID string) ([]model.AgentConversation, error) {
+	result := make([]model.AgentConversation, 0)
+	for _, item := range r.itemsByID {
+		if strings.TrimSpace(item.UserID) == strings.TrimSpace(userID) {
+			result = append(result, item)
+		}
+	}
+	return result, nil
 }
 
 func (r *fakeConversationRepo) UpdateConversationLastSession(_ context.Context, id int64, lastSessionID int64) (*model.AgentConversation, error) {
@@ -717,6 +722,87 @@ func TestConversationServiceHandleOwnedInboundMessageDedupesDuplicateMessageID(t
 	}
 	if len(sessions.created) != 1 {
 		t.Fatalf("expected no new session to be created, got %d sessions", len(sessions.created))
+	}
+	if reply := BuildInboundChatReply(*result); reply != "" {
+		t.Fatalf("expected duplicate inbound reply to be suppressed, got %q", reply)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageDedupesArchivedConversationMessageID(t *testing.T) {
+	now := time.Date(2026, 4, 10, 4, 37, 28, 0, time.UTC)
+	lastSessionID := int64(7)
+	originalMessage := `<feishu-message message_id="om_replayed" chat_id="oc_chat" chat_type="p2p" message_type="text" sender_open_id="ou_owner">
+哈咯
+</feishu-message>`
+	existingSession := model.AgentSession{
+		ID:             7,
+		UserID:         "2000000001",
+		ConversationID: 51,
+		RunnerID:       99,
+		Agent:          "codex",
+		Mode:           model.AgentSessionModeContinue,
+		Status:         model.AgentSessionStatusCommitted,
+		UserMessage:    stringPtr(originalMessage),
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			51: {
+				ID:            51,
+				UserID:        "2000000001",
+				Platform:      model.IMPlatformFeishu,
+				BotID:         "cli_personal_bot",
+				ChatID:        "oc_chat",
+				RunnerID:      99,
+				Agent:         "codex",
+				Status:        model.AgentConversationStatusArchived,
+				LastSessionID: &lastSessionID,
+				CreatedAt:     now.Add(-10 * time.Minute),
+				UpdatedAt:     now.Add(-5 * time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			99: {ID: 99, UserID: "2000000001", Platform: model.IMPlatformFeishu},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 99},
+		},
+	}
+	sessions := &fakeSessionRepo{
+		created: []model.AgentSession{existingSession},
+		nextID:  7,
+	}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now.Add(20 * time.Second) }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:    "2000000001",
+		Platform:  model.IMPlatformFeishu,
+		BotID:     "cli_personal_bot",
+		ChatID:    "oc_chat",
+		MessageID: "om_replayed",
+		SenderID:  "ou_owner",
+		Message:   originalMessage,
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if !result.Duplicated {
+		t.Fatalf("expected archived inbound result to be marked duplicated, got %+v", result)
+	}
+	if result.Conversation == nil || result.Conversation.ID != 51 || result.Session == nil || result.Session.ID != 7 {
+		t.Fatalf("expected archived conversation/session to be reused for duplicate, got %+v", result)
+	}
+	if len(conversations.created) != 0 {
+		t.Fatalf("expected duplicate archived inbound to avoid creating conversation, got %+v", conversations.created)
+	}
+	if len(sessions.created) != 1 {
+		t.Fatalf("expected duplicate archived inbound to avoid creating session, got %d sessions", len(sessions.created))
 	}
 	if reply := BuildInboundChatReply(*result); reply != "" {
 		t.Fatalf("expected duplicate inbound reply to be suppressed, got %q", reply)
