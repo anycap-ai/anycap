@@ -85,7 +85,7 @@ func (r *fakeConversationRepo) UpdateConversationLastSession(_ context.Context, 
 	return &copy, nil
 }
 
-func (r *fakeConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+func (r *fakeConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64, agent string) (*model.AgentConversation, error) {
 	if r.updateRunnerErr != nil {
 		return nil, r.updateRunnerErr
 	}
@@ -94,6 +94,7 @@ func (r *fakeConversationRepo) UpdateConversationRunner(_ context.Context, id in
 		return nil, nil
 	}
 	item.RunnerID = runnerID
+	item.Agent = agent
 	r.itemsByID[id] = item
 	if r.activeByChatKey != nil && item.Status == model.AgentConversationStatusActive {
 		r.activeByChatKey[item.UserID+"|"+item.Platform+"|"+item.BotID+"|"+item.ChatID] = item
@@ -357,6 +358,105 @@ func TestConversationServiceHandleOwnedInboundMessageCreatesConversationAndSessi
 	}
 	if result.Chat.Action != model.AgentChatActionContinue {
 		t.Fatalf("expected continue action, got %q", result.Chat.Action)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageUsesRunnerAgent(t *testing.T) {
+	now := time.Date(2026, 4, 17, 16, 45, 0, 0, time.UTC)
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu, Agent: "cursor"},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
+	}
+	conversations := &fakeConversationRepo{}
+	sessions := &fakeSessionRepo{}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "哈咯",
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if result.Conversation == nil || result.Conversation.Agent != "cursor" {
+		t.Fatalf("expected cursor conversation agent, got %+v", result.Conversation)
+	}
+	if result.Session == nil || result.Session.Agent != "cursor" {
+		t.Fatalf("expected cursor session agent, got %+v", result.Session)
+	}
+}
+
+func TestConversationServiceHandleOwnedInboundMessageUpdatesExistingConversationAgent(t *testing.T) {
+	now := time.Date(2026, 4, 17, 16, 50, 0, 0, time.UTC)
+	conversations := &fakeConversationRepo{
+		itemsByID: map[int64]model.AgentConversation{
+			51: {
+				ID:        51,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				BotID:     "cli_personal_bot",
+				ChatID:    "oc_chat",
+				RunnerID:  21,
+				Agent:     "codex",
+				Status:    model.AgentConversationStatusActive,
+				CreatedAt: now.Add(-10 * time.Minute),
+				UpdatedAt: now.Add(-5 * time.Minute),
+			},
+		},
+		activeByChatKey: map[string]model.AgentConversation{
+			"2000000001|feishu|cli_personal_bot|oc_chat": {
+				ID:        51,
+				UserID:    "2000000001",
+				Platform:  model.IMPlatformFeishu,
+				BotID:     "cli_personal_bot",
+				ChatID:    "oc_chat",
+				RunnerID:  21,
+				Agent:     "codex",
+				Status:    model.AgentConversationStatusActive,
+				CreatedAt: now.Add(-10 * time.Minute),
+				UpdatedAt: now.Add(-5 * time.Minute),
+			},
+		},
+	}
+	runners := &fakeRunnerRepo{
+		itemsByID: map[int64]model.AgentRunner{
+			21: {ID: 21, UserID: "2000000001", Platform: model.IMPlatformFeishu, Agent: "cursor"},
+		},
+		primaryByUserPlatform: map[string]fakePrimaryRunnerBinding{
+			"2000000001|feishu": {UserID: "2000000001", Platform: model.IMPlatformFeishu, RunnerID: 21},
+		},
+	}
+	sessions := &fakeSessionRepo{}
+	service := NewConversationService(nil, runners, conversations, sessions, &fakeMailboxRepo{},
+		WithConversationClock(func() time.Time { return now }),
+	)
+
+	result, err := service.HandleOwnedInboundMessage(context.Background(), OwnedInboundChatInput{
+		UserID:   "2000000001",
+		Platform: model.IMPlatformFeishu,
+		BotID:    "cli_personal_bot",
+		ChatID:   "oc_chat",
+		SenderID: "ou_owner",
+		Message:  "继续",
+	})
+	if err != nil {
+		t.Fatalf("HandleOwnedInboundMessage() error = %v", err)
+	}
+	if result.Conversation == nil || result.Conversation.Agent != "cursor" {
+		t.Fatalf("expected existing conversation agent to update to cursor, got %+v", result.Conversation)
+	}
+	if result.Session == nil || result.Session.Agent != "cursor" {
+		t.Fatalf("expected cursor session agent, got %+v", result.Session)
 	}
 }
 

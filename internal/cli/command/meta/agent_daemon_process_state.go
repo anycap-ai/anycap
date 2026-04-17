@@ -17,6 +17,7 @@ type daemonProcessState struct {
 	RunnerID           string `json:"runner_id,omitempty"`
 	MachineName        string `json:"machine_name,omitempty"`
 	Executor           string `json:"executor,omitempty"`
+	CursorForce        bool   `json:"cursor_force,omitempty"`
 	Workspace          string `json:"workspace,omitempty"`
 	LogPath            string `json:"log_path,omitempty"`
 	StartedAt          string `json:"started_at,omitempty"`

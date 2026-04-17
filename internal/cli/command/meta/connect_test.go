@@ -75,6 +75,88 @@ func TestConnectFeishuStartsBackgroundDaemonWithAgentFlag(t *testing.T) {
 	}
 }
 
+func TestConnectFeishuStartsCursorAgentWithDefaultCursorForce(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	originalExecutable := daemonExecutable
+	originalSpawn := spawnDaemonProcess
+	originalExists := daemonProcessRunning
+	defer func() {
+		daemonExecutable = originalExecutable
+		spawnDaemonProcess = originalSpawn
+		daemonProcessRunning = originalExists
+	}()
+
+	daemonExecutable = func() (string, error) {
+		return "/tmp/anycap", nil
+	}
+	daemonProcessRunning = func(pid int) bool {
+		return pid == 4321
+	}
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
+		argsText := strings.Join(args, " ")
+		if !strings.Contains(argsText, "agent daemon start --foreground --platform feishu") {
+			t.Fatalf("expected connect to delegate to foreground daemon, got %v", args)
+		}
+		if !strings.Contains(argsText, "--executor cursor") {
+			t.Fatalf("expected --agent cursor to map to daemon executor, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-bin /opt/bin/cursor-agent") {
+			t.Fatalf("expected cursor bin in daemon args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-model gpt-5") {
+			t.Fatalf("expected cursor model in daemon args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--cursor-force") {
+			t.Fatalf("expected cursor force in daemon args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--workspace /repo") {
+			t.Fatalf("expected workspace in daemon args, got %v", args)
+		}
+		if err := saveDaemonProcessState(daemonProcessState{
+			PID:         4321,
+			Platform:    "feishu",
+			RunnerID:    "run_local",
+			MachineName: "local-agent",
+			Executor:    "cursor",
+			CursorForce: true,
+			Workspace:   "/repo",
+			LogPath:     logPath,
+		}); err != nil {
+			t.Fatalf("saveDaemonProcessState() error = %v", err)
+		}
+		return 4321, nil
+	}
+
+	stdout := &bytes.Buffer{}
+	cmd := NewConnectCmd(func() *httpclient.Client { return nil }, strings.NewReader(""), stdout)
+	cmd.SetArgs([]string{
+		"feishu",
+		"--agent", "cursor",
+		"--workspace", "/repo",
+		"--cursor-bin", "/opt/bin/cursor-agent",
+		"--cursor-model", "gpt-5",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("connect feishu: %v", err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	data := payload["data"].(map[string]any)
+	daemon := data["daemon"].(map[string]any)
+	if daemon["executor"].(string) != "cursor" {
+		t.Fatalf("expected cursor daemon executor, got %v", daemon["executor"])
+	}
+	if !strings.Contains(data["warning"].(string), "Cursor Agent is running with --force") {
+		t.Fatalf("expected cursor force warning, got %v", data["warning"])
+	}
+}
+
 func TestConnectStatusFeishuReadsPrimaryRunner(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

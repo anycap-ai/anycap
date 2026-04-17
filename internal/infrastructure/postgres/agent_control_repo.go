@@ -220,14 +220,15 @@ func (r *AgentControlRepo) CreateRunner(ctx context.Context, runner model.AgentR
 	}
 
 	row := r.db.QueryRowContext(ctx, `
-		INSERT INTO agent_runners (external_id, user_id, name, platform, fixed_binding_id, state, last_heartbeat, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, user_id, name, platform, fixed_binding_id, state, last_heartbeat, created_at, updated_at
+		INSERT INTO agent_runners (external_id, user_id, name, platform, agent, fixed_binding_id, state, last_heartbeat, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id, user_id, name, platform, agent, fixed_binding_id, state, last_heartbeat, created_at, updated_at
 	`,
 		externalid.Generate(externalid.PrefixRunner),
 		userID,
 		strings.TrimSpace(runner.Name),
 		strings.TrimSpace(runner.Platform),
+		strings.TrimSpace(runner.Agent),
 		nullableInt64(runner.FixedBinding),
 		strings.TrimSpace(runner.State),
 		nullableTime(runner.LastHeartbeat),
@@ -247,7 +248,7 @@ func (r *AgentControlRepo) GetRunnerByID(ctx context.Context, id int64) (*model.
 		return nil, fmt.Errorf("agent control repo db is not configured")
 	}
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, user_id, name, platform, fixed_binding_id, state, last_heartbeat, created_at, updated_at
+		SELECT id, user_id, name, platform, agent, fixed_binding_id, state, last_heartbeat, created_at, updated_at
 		FROM agent_runners
 		WHERE id = $1
 	`, id)
@@ -293,7 +294,7 @@ func (r *AgentControlRepo) ListRunnersByUser(ctx context.Context, userID string)
 		return nil, err
 	}
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, user_id, name, platform, fixed_binding_id, state, last_heartbeat, created_at, updated_at
+		SELECT id, user_id, name, platform, agent, fixed_binding_id, state, last_heartbeat, created_at, updated_at
 		FROM agent_runners
 		WHERE user_id = $1
 		ORDER BY id DESC
@@ -348,7 +349,7 @@ func (r *AgentControlRepo) UpdateRunnerState(ctx context.Context, id int64, stat
 		SET state = $2,
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, user_id, name, platform, fixed_binding_id, state, last_heartbeat, created_at, updated_at
+		RETURNING id, user_id, name, platform, agent, fixed_binding_id, state, last_heartbeat, created_at, updated_at
 	`, id, strings.TrimSpace(state))
 	item, err := scanAgentRunner(row)
 	if err != nil {
@@ -496,17 +497,18 @@ func (r *AgentControlRepo) UpdateConversationLastSession(ctx context.Context, id
 	return item, nil
 }
 
-func (r *AgentControlRepo) UpdateConversationRunner(ctx context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+func (r *AgentControlRepo) UpdateConversationRunner(ctx context.Context, id int64, runnerID int64, agent string) (*model.AgentConversation, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("agent control repo db is not configured")
 	}
 	row := r.db.QueryRowContext(ctx, `
 		UPDATE agent_conversations
 		SET runner_id = $2,
+			agent = $3,
 			updated_at = NOW()
 		WHERE id = $1
 		RETURNING id, user_id, platform, bot_id, chat_id, runner_id, agent, status, last_session_id, created_at, updated_at
-	`, id, runnerID)
+	`, id, runnerID, strings.TrimSpace(agent))
 	item, err := scanAgentConversation(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1084,6 +1086,7 @@ func scanAgentRunner(row rowScanner) (*model.AgentRunner, error) {
 		&userID,
 		&item.Name,
 		&item.Platform,
+		&item.Agent,
 		&fixedBinding,
 		&item.State,
 		&lastHeartbeat,
@@ -1093,6 +1096,9 @@ func scanAgentRunner(row rowScanner) (*model.AgentRunner, error) {
 		return nil, err
 	}
 	item.UserID = strconv.FormatInt(userID, 10)
+	if strings.TrimSpace(item.Agent) == "" {
+		item.Agent = model.AgentRunnerAgentCodex
+	}
 	if fixedBinding.Valid {
 		value := fixedBinding.Int64
 		item.FixedBinding = &value

@@ -847,7 +847,7 @@ func (s *ConversationService) createConversation(ctx context.Context, binding mo
 		BotID:     binding.BotID,
 		ChatID:    chatID,
 		RunnerID:  runner.ID,
-		Agent:     "codex",
+		Agent:     conversationAgentForRunner(runner),
 		Status:    model.AgentConversationStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -1017,11 +1017,12 @@ func extractFeishuAttr(message string, name string) string {
 }
 
 func (s *ConversationService) ensureConversationRunner(ctx context.Context, conversation model.AgentConversation, runner model.AgentRunner) (*model.AgentConversation, error) {
-	if conversation.RunnerID == runner.ID {
+	agent := conversationAgentForRunner(runner)
+	if conversation.RunnerID == runner.ID && strings.TrimSpace(conversation.Agent) == agent {
 		copy := conversation
 		return &copy, nil
 	}
-	updated, err := s.conversations.UpdateConversationRunner(ctx, conversation.ID, runner.ID)
+	updated, err := s.conversations.UpdateConversationRunner(ctx, conversation.ID, runner.ID, agent)
 	if err != nil {
 		return nil, err
 	}
@@ -1029,6 +1030,14 @@ func (s *ConversationService) ensureConversationRunner(ctx context.Context, conv
 		return nil, model.ErrNotFound("agent conversation not found")
 	}
 	return updated, nil
+}
+
+func conversationAgentForRunner(runner model.AgentRunner) string {
+	value := strings.ToLower(strings.TrimSpace(runner.Agent))
+	if value == "" {
+		return model.AgentRunnerAgentCodex
+	}
+	return value
 }
 
 func trimOptionalMessage(message *string) *string {

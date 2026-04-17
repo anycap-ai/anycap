@@ -357,3 +357,134 @@ sleep 10
 		t.Fatal("executor did not stop after context cancellation")
 	}
 }
+
+func TestCursorAgentExecExecutorExecuteSessionCapturesSessionIDAndResumes(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "cursor-agent-stub.sh")
+	argsPath := filepath.Join(tmpDir, "cursor-agent-args.txt")
+	script := `#!/bin/sh
+args_log="` + argsPath + `"
+printf '%s\n' "$@" > "$args_log"
+resume_id=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --resume)
+      resume_id="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [ -n "$resume_id" ]; then
+  printf '{"type":"result","subtype":"success","is_error":false,"result":"resumed","session_id":"%s"}\n' "$resume_id"
+else
+  printf '{"type":"result","subtype":"success","is_error":false,"result":"fresh","session_id":"cursor_session_123"}\n'
+fi
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newCursorAgentExecExecutor(scriptPath, tmpDir, "gpt-5", true)
+	message := "继续修复 parser panic"
+
+	fresh, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_123",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession(fresh) error = %v", err)
+	}
+	if fresh.ExecutorRef == nil || *fresh.ExecutorRef != "cursor_session_123" {
+		t.Fatalf("unexpected fresh executor ref %+v", fresh.ExecutorRef)
+	}
+	if fresh.FinalMessage == nil || *fresh.FinalMessage != "fresh" {
+		t.Fatalf("unexpected fresh final message %+v", fresh.FinalMessage)
+	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if !strings.Contains(argsText, "-p\n"+message+"\n") {
+		t.Fatalf("expected print prompt in args, got %q", argsText)
+	}
+	if !strings.Contains(argsText, "--output-format\njson\n") {
+		t.Fatalf("expected json output format in args, got %q", argsText)
+	}
+	if !strings.Contains(argsText, "--trust\n") {
+		t.Fatalf("expected workspace trust flag in args, got %q", argsText)
+	}
+	if !strings.Contains(argsText, "--model\ngpt-5\n") {
+		t.Fatalf("expected model in args, got %q", argsText)
+	}
+	if !strings.Contains(argsText, "--force\n") {
+		t.Fatalf("expected force flag in args, got %q", argsText)
+	}
+
+	resumeID := "cursor_session_123"
+	resumed, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_124",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+		ExecutorRef: &resumeID,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession(resume) error = %v", err)
+	}
+	if resumed.ExecutorRef == nil || *resumed.ExecutorRef != "cursor_session_123" {
+		t.Fatalf("unexpected resumed executor ref %+v", resumed.ExecutorRef)
+	}
+	if resumed.FinalMessage == nil || *resumed.FinalMessage != "resumed" {
+		t.Fatalf("unexpected resumed final message %+v", resumed.FinalMessage)
+	}
+	argsBody, err = os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText = string(argsBody)
+	if !strings.Contains(argsText, "--resume\ncursor_session_123\n") {
+		t.Fatalf("expected resume id in args, got %q", argsText)
+	}
+}
+
+func TestCursorAgentExecExecutorExecuteSessionHonorsContextCancellation(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "cursor-agent-stub.sh")
+	script := `#!/bin/sh
+sleep 10
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newCursorAgentExecExecutor(scriptPath, tmpDir, "", false)
+	message := "继续修复 parser panic"
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := executor.ExecuteSession(ctx, agentcontrolapp.RunnerSession{
+			ID:          "ags_123",
+			RunnerID:    "run_123",
+			UserMessage: &message,
+		})
+		done <- err
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context canceled, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("executor did not stop after context cancellation")
+	}
+}

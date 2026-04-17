@@ -28,6 +28,7 @@ type Client struct {
 type RegisterRequest struct {
 	Name     string `json:"name"`
 	Platform string `json:"platform"`
+	Agent    string `json:"agent,omitempty"`
 }
 
 type HeartbeatRequest struct {

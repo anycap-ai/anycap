@@ -242,11 +242,19 @@ func (h *RunnerHandler) RegisterRunner(c context.Context, ctx *app.RequestContex
 		ctx.JSON(status, payload)
 		return
 	}
+	agent, err := normalizeRunnerAgent(req.Agent)
+	if err != nil {
+		status, payload := dto.MapDomainError(err)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
 	now := h.now()
 	runner, err := h.runners.CreateRunner(c, model.AgentRunner{
 		UserID:    principal.UserID,
 		Name:      strings.TrimSpace(req.Name),
 		Platform:  platform,
+		Agent:     agent,
 		State:     model.AgentRunnerStateIdle,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -275,6 +283,24 @@ func normalizeRunnerPlatform(raw string) (string, error) {
 		return model.IMPlatformTelegram, nil
 	default:
 		return "", model.ErrValidation("unsupported im platform")
+	}
+}
+
+func normalizeRunnerAgent(raw string) (string, error) {
+	value := strings.ToLower(strings.TrimSpace(raw))
+	switch value {
+	case "":
+		return model.AgentRunnerAgentCodex, nil
+	case "codex":
+		return model.AgentRunnerAgentCodex, nil
+	case "claude", "claude_code", "claude-code":
+		return model.AgentRunnerAgentClaudeCode, nil
+	case "cursor", "cursor_agent", "cursor-agent":
+		return model.AgentRunnerAgentCursor, nil
+	case "stub":
+		return model.AgentRunnerAgentStub, nil
+	default:
+		return "", model.ErrValidation("unsupported runner agent")
 	}
 }
 

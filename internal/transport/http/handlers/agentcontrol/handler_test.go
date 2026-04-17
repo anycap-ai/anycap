@@ -225,12 +225,13 @@ func (r *testConversationRepo) UpdateConversationLastSession(_ context.Context, 
 	return &copy, nil
 }
 
-func (r *testConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64) (*model.AgentConversation, error) {
+func (r *testConversationRepo) UpdateConversationRunner(_ context.Context, id int64, runnerID int64, agent string) (*model.AgentConversation, error) {
 	item, ok := r.itemsByID[id]
 	if !ok {
 		return nil, nil
 	}
 	item.RunnerID = runnerID
+	item.Agent = agent
 	r.itemsByID[id] = item
 	if item.Status == model.AgentConversationStatusActive {
 		r.activeByChatKey[item.UserID+"|"+item.Platform+"|"+item.BotID+"|"+item.ChatID] = item

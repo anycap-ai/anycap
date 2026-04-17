@@ -76,6 +76,9 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		claudeBin            string
 		claudePermissionMode string
 		claudeAllowedTools   string
+		cursorBin            string
+		cursorModel          string
+		cursorForce          bool
 		workspace            string
 		feishuAppID          string
 		feishuSecret         string
@@ -92,9 +95,9 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 		Short: "Start the local agent and connect this machine to your Feishu chat",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !once && !foreground {
-				return startDaemonInBackground(cmd, stdout, strings.TrimSpace(platform), strings.TrimSpace(name), strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
+				return startDaemonInBackground(cmd, stdout, strings.TrimSpace(platform), strings.TrimSpace(name), strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(cursorBin), strings.TrimSpace(cursorModel), cursorForce, strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
 			}
-			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), strings.TrimSpace(platform), once, pollEvery, strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
+			return runDaemonForeground(cmd, clientFactory, stdout, strings.TrimSpace(name), strings.TrimSpace(platform), once, pollEvery, strings.TrimSpace(executorKind), strings.TrimSpace(codexBin), strings.TrimSpace(codexExecMode), strings.TrimSpace(claudeBin), strings.TrimSpace(claudePermissionMode), strings.TrimSpace(claudeAllowedTools), strings.TrimSpace(cursorBin), strings.TrimSpace(cursorModel), cursorForce, strings.TrimSpace(workspace), strings.TrimSpace(feishuAppID), strings.TrimSpace(feishuSecret))
 		},
 	}
 	startCmd.Flags().StringVar(&name, "name", "local-agent", "Local runner name")
@@ -103,12 +106,15 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 	startCmd.Flags().BoolVar(&foreground, "foreground", false, "Run the daemon in the current foreground process")
 	_ = startCmd.Flags().MarkHidden("foreground")
 	startCmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
-	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex, claude_code, or stub")
+	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex, claude_code, cursor, or stub")
 	startCmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
 	startCmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	startCmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude_code")
 	startCmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	startCmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
+	startCmd.Flags().StringVar(&cursorBin, "cursor-bin", "cursor-agent", "Path to the Cursor Agent CLI binary when --executor=cursor")
+	startCmd.Flags().StringVar(&cursorModel, "cursor-model", "", "Optional Cursor Agent model passed to --model")
+	startCmd.Flags().BoolVar(&cursorForce, "cursor-force", false, "Pass --force to Cursor Agent to allow commands unless explicitly denied")
 	startCmd.Flags().StringVar(&workspace, "workspace", "", "Workspace directory passed to the local executor")
 	startCmd.Flags().StringVar(&feishuAppID, "feishu-app-id", "", "Deprecated: use 'agent daemon credentials set-feishu'")
 	startCmd.Flags().StringVar(&feishuSecret, "feishu-app-secret", "", "Deprecated: use 'agent daemon credentials set-feishu'")
@@ -321,6 +327,7 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 				"Run 'anycap connect credentials show feishu' to confirm local Feishu credentials are configured.",
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine if the personal bot is not connected yet.", platform),
 				fmt.Sprintf("Use '--agent claude_code' instead of codex if this %s bot should run Claude Code locally.", platform),
+				fmt.Sprintf("Use '--agent cursor' instead of codex if this %s bot should run Cursor Agent locally.", platform),
 				fmt.Sprintf("Add '--codex-exec-mode danger-full-access' only when the human explicitly wants Codex to bypass sandbox restrictions on the local machine for %s.", platform),
 			},
 		},
@@ -334,6 +341,9 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 			"workspace":  strings.TrimSpace(state.Workspace),
 			"executor":   strings.TrimSpace(state.Executor),
 			"started_at": strings.TrimSpace(state.StartedAt),
+		}
+		if strings.EqualFold(strings.TrimSpace(state.Executor), "cursor") && state.CursorForce {
+			payload["data"].(map[string]any)["warning"] = cursorForceWarning()
 		}
 		if personalBot := inspectDaemonPersonalBotStatus(state); personalBot != nil {
 			payload["data"].(map[string]any)["personal_bot"] = map[string]any{
@@ -474,6 +484,9 @@ func writeLocalDaemonStatus(stdout io.Writer, platform string, state *daemonProc
 			fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' to stop the local daemon.", platform),
 		},
 	}
+	if strings.EqualFold(strings.TrimSpace(state.Executor), "cursor") && state.CursorForce {
+		data["warning"] = cursorForceWarning()
+	}
 	if personalBot := inspectDaemonPersonalBotStatus(state); personalBot != nil {
 		data["personal_bot"] = map[string]any{
 			"configured":        personalBot.Configured,
@@ -512,6 +525,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 				"Run 'anycap connect credentials set feishu --app-id <app_id> --app-secret <app_secret>' once from your terminal if local Feishu credentials are not configured yet.",
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine you want to receive chat tasks.", platform),
 				"Use '--agent claude_code' instead of codex if this bot should run Claude Code locally.",
+				"Use '--agent cursor' instead of codex if this bot should run Cursor Agent locally.",
 				"Add '--codex-exec-mode danger-full-access' only if the human explicitly wants unrestricted local Codex execution.",
 				fmt.Sprintf("Run 'anycap connect status %s' again after startup to confirm the connection.", platform),
 			},
@@ -523,7 +537,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 	return output.WriteJSON(stdout, payload)
 }
 
-func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace, feishuAppID, feishuSecret string) error {
+func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, cursorBin, cursorModel string, cursorForce bool, workspace, feishuAppID, feishuSecret string) error {
 	executable, err := daemonExecutable()
 	if err != nil {
 		return err
@@ -538,7 +552,7 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 	_ = removeDaemonProcessState(platform)
 
 	resolvedFeishuAppID, resolvedFeishuSecret := resolveDaemonFeishuCredentials(feishuAppID, feishuSecret)
-	args := buildDaemonForegroundArgs(cmd, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace)
+	args := buildDaemonForegroundArgs(cmd, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, cursorBin, cursorModel, cursorForce, workspace)
 	env := buildDaemonForegroundEnv(resolvedFeishuAppID, resolvedFeishuSecret)
 	logPath := daemonLogPath(platform)
 	pid, err := spawnDaemonProcess(executable, args, env, logPath)
@@ -558,22 +572,26 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 		time.Sleep(100 * time.Millisecond)
 	}
 
+	data := map[string]any{
+		"connected": true,
+		"platform":  platform,
+		"daemon": map[string]any{
+			"running":  true,
+			"pid":      pid,
+			"log_path": logPath,
+		},
+		"message": "The local daemon is starting in the background.",
+		"next_steps": []string{
+			fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm the daemon is fully connected.", platform),
+			fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' when you want to stop the background daemon.", platform),
+		},
+	}
+	if strings.EqualFold(strings.TrimSpace(executorKind), "cursor") && cursorForce {
+		data["warning"] = cursorForceWarning()
+	}
 	payload, err := json.Marshal(map[string]any{
 		"status": "success",
-		"data": map[string]any{
-			"connected": true,
-			"platform":  platform,
-			"daemon": map[string]any{
-				"running":  true,
-				"pid":      pid,
-				"log_path": logPath,
-			},
-			"message": "The local daemon is starting in the background.",
-			"next_steps": []string{
-				fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm the daemon is fully connected.", platform),
-				fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' when you want to stop the background daemon.", platform),
-			},
-		},
+		"data":   data,
 	})
 	if err != nil {
 		return err
@@ -581,7 +599,7 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 	return output.WriteJSON(stdout, payload)
 }
 
-func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace string) []string {
+func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, cursorBin, cursorModel string, cursorForce bool, workspace string) []string {
 	args := make([]string, 0, 20)
 	if root := cmd.Root(); root != nil {
 		if endpointFlag := root.PersistentFlags().Lookup("endpoint"); endpointFlag != nil {
@@ -609,6 +627,15 @@ func buildDaemonForegroundArgs(cmd *cobra.Command, platform, name, executorKind,
 	if claudeAllowedTools != "" {
 		args = append(args, "--claude-allowed-tools", claudeAllowedTools)
 	}
+	if cursorBin != "" {
+		args = append(args, "--cursor-bin", cursorBin)
+	}
+	if cursorModel != "" {
+		args = append(args, "--cursor-model", cursorModel)
+	}
+	if cursorForce {
+		args = append(args, "--cursor-force")
+	}
 	if workspace != "" {
 		args = append(args, "--workspace", workspace)
 	}
@@ -626,11 +653,17 @@ func buildDaemonForegroundEnv(feishuAppID, feishuSecret string) []string {
 	return env
 }
 
-func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Client, stdout io.Writer, name, platform string, once bool, pollEvery time.Duration, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace, feishuAppID, feishuSecret string) error {
+func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Client, stdout io.Writer, name, platform string, once bool, pollEvery time.Duration, executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, cursorBin, cursorModel string, cursorForce bool, workspace, feishuAppID, feishuSecret string) error {
 	feishuAppID, feishuSecret = resolveDaemonFeishuCredentials(feishuAppID, feishuSecret)
 	httpClient := &runnerServeHTTPClient{client: clientFactory()}
 	trimmedPlatform := strings.TrimSpace(platform)
-	reg, err := httpClient.Register(cmd.Context(), strings.TrimSpace(name), strings.TrimSpace(platform))
+
+	executor, executorName, err := newAgentRunnerExecutor(executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, cursorBin, cursorModel, cursorForce, workspace)
+	if err != nil {
+		return err
+	}
+
+	reg, err := httpClient.Register(cmd.Context(), strings.TrimSpace(name), strings.TrimSpace(platform), executorName)
 	if err != nil {
 		return err
 	}
@@ -638,11 +671,6 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		return fmt.Errorf("runner registration response missing runner id")
 	}
 	if err := httpClient.ClaimPrimary(cmd.Context(), reg.ID); err != nil {
-		return err
-	}
-
-	executor, executorName, err := newAgentRunnerExecutor(executorKind, codexBin, codexExecMode, claudeBin, claudePermissionMode, claudeAllowedTools, workspace)
-	if err != nil {
 		return err
 	}
 
@@ -662,6 +690,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		RunnerID:    reg.ID,
 		MachineName: strings.TrimSpace(reg.Name),
 		Executor:    executorName,
+		CursorForce: strings.EqualFold(executorName, "cursor") && cursorForce,
 		Workspace:   strings.TrimSpace(workspace),
 		LogPath:     daemonLogPath(trimmedPlatform),
 		PersonalBotEnabled: strings.EqualFold(trimmedPlatform, "feishu") &&
@@ -717,6 +746,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		agentcontrolapp.WithLoopRunnerID(reg.ID),
 		agentcontrolapp.WithLoopRunnerName(strings.TrimSpace(reg.Name)),
 		agentcontrolapp.WithLoopRunnerPlatform(strings.TrimSpace(reg.Platform)),
+		agentcontrolapp.WithLoopRunnerAgent(executorName),
 		agentcontrolapp.WithLoopOnce(once),
 		agentcontrolapp.WithLoopPollInterval(pollEvery),
 	)
@@ -730,38 +760,46 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 	if err != nil {
 		return err
 	}
+	data := map[string]any{
+		"connected": true,
+		"platform":  trimmedPlatform,
+		"machine": map[string]any{
+			"id":    summary.RunnerID,
+			"name":  strings.TrimSpace(name),
+			"state": "connected",
+		},
+		"daemon": map[string]any{
+			"running":  true,
+			"pid":      os.Getpid(),
+			"log_path": daemonLogPath(trimmedPlatform),
+		},
+		"executor":        executorName,
+		"workspace":       strings.TrimSpace(workspace),
+		"tasks_processed": summary.TasksProcessed,
+		"tasks_succeeded": summary.TasksSucceeded,
+		"tasks_failed":    summary.TasksFailed,
+		"mode":            modeLabel(once),
+		"message":         "The local machine is connected and ready to receive chat tasks from Feishu.",
+		"next_steps": []string{
+			"Open Feishu and send a message to the bot to start a task.",
+			fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm which local machine is currently connected.", trimmedPlatform),
+		},
+	}
+	if strings.EqualFold(executorName, "cursor") && cursorForce {
+		data["warning"] = cursorForceWarning()
+	}
 	payload, err := json.Marshal(map[string]any{
 		"status": "success",
-		"data": map[string]any{
-			"connected": true,
-			"platform":  trimmedPlatform,
-			"machine": map[string]any{
-				"id":    summary.RunnerID,
-				"name":  strings.TrimSpace(name),
-				"state": "connected",
-			},
-			"daemon": map[string]any{
-				"running":  true,
-				"pid":      os.Getpid(),
-				"log_path": daemonLogPath(trimmedPlatform),
-			},
-			"executor":        executorName,
-			"workspace":       strings.TrimSpace(workspace),
-			"tasks_processed": summary.TasksProcessed,
-			"tasks_succeeded": summary.TasksSucceeded,
-			"tasks_failed":    summary.TasksFailed,
-			"mode":            modeLabel(once),
-			"message":         "The local machine is connected and ready to receive chat tasks from Feishu.",
-			"next_steps": []string{
-				"Open Feishu and send a message to the bot to start a task.",
-				fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm which local machine is currently connected.", trimmedPlatform),
-			},
-		},
+		"data":   data,
 	})
 	if err != nil {
 		return err
 	}
 	return output.WriteJSON(stdout, payload)
+}
+
+func cursorForceWarning() string {
+	return "Cursor Agent is running with --force, so it may execute local commands and network requests unless Cursor explicitly denies them."
 }
 
 func messageForInboundChat(event im.NormalizedInboundEvent) string {
