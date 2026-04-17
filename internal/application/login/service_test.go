@@ -73,6 +73,10 @@ func (f *fakeLoginAPIKeyService) DeleteAPIKey(_ context.Context, _, _ string) er
 	return nil
 }
 
+func (f *fakeLoginAPIKeyService) UpdateAPIKey(_ context.Context, _, _ string, _ model.APIKeyUpdate) (model.APIKey, error) {
+	return model.APIKey{}, nil
+}
+
 func (f *fakeLoginCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
 	return model.Balance{}, nil
 }

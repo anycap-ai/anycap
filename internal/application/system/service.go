@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -327,16 +328,178 @@ func (s *Service) ListAPIKeys(ctx context.Context, principal *model.Principal) (
 
 	items := make([]model.ManagedAPIKey, 0, len(keys))
 	for _, key := range keys {
-		items = append(items, model.ManagedAPIKey{
-			ID:           key.ID,
-			Name:         key.Name,
-			Status:       key.Status,
-			LastUsedAt:   key.LastUsedAt,
-			CreatedAt:    key.CreatedAt,
-			UsageSummary: summaries[key.ID],
-		})
+		items = append(items, toManagedAPIKey(key, summaries[key.ID]))
 	}
 	return model.APIKeyListResult{Items: items}, nil
+}
+
+const (
+	apiKeyMaxNameLen      = 64
+	apiKeyMaxTTLDays      = 3650
+	apiKeyReservedNameCLI = "cli"
+)
+
+var apiKeyNamePattern = regexp.MustCompile(`^[a-zA-Z0-9._-]{1,64}$`)
+
+// CreateAPIKeyInput captures dashboard create-key input.
+type CreateAPIKeyInput struct {
+	Name          string
+	ExpiresInDays int
+}
+
+// UpdateAPIKeyInput captures dashboard update-key input. At least one of
+// Name / ExpiresInDays / NeverExpires must be set.
+type UpdateAPIKeyInput struct {
+	Name          *string
+	ExpiresInDays *int
+	NeverExpires  bool
+}
+
+// CreateAPIKeyResult is returned by Service.CreateAPIKey.
+type CreateAPIKeyResult struct {
+	APIKey model.ManagedAPIKey
+	RawKey string
+}
+
+func (s *Service) CreateAPIKey(ctx context.Context, principal *model.Principal, input CreateAPIKeyInput) (CreateAPIKeyResult, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.create_api_key")
+	if principal == nil || principal.UserID == "" {
+		return CreateAPIKeyResult{}, model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		logger.Error("api key service not configured")
+		return CreateAPIKeyResult{}, model.ErrInternal
+	}
+	name := strings.TrimSpace(input.Name)
+	if !apiKeyNamePattern.MatchString(name) {
+		return CreateAPIKeyResult{}, model.ErrValidation("name must match ^[a-zA-Z0-9._-]{1,64}$")
+	}
+	if strings.EqualFold(name, apiKeyReservedNameCLI) {
+		return CreateAPIKeyResult{}, model.ErrValidation("name 'cli' is reserved for the CLI login flow")
+	}
+	if input.ExpiresInDays < 0 || input.ExpiresInDays > apiKeyMaxTTLDays {
+		return CreateAPIKeyResult{}, model.ErrValidation(fmt.Sprintf("expires_in_days must be between 0 and %d", apiKeyMaxTTLDays))
+	}
+
+	existing, err := s.apiKeys.ListAPIKeys(ctx, principal.UserID)
+	if err != nil {
+		logger.WithError(err).Error("list api keys for conflict check failed")
+		return CreateAPIKeyResult{}, err
+	}
+	for _, key := range existing {
+		if key.DeletedAt != nil {
+			continue
+		}
+		if key.Status != model.APIKeyStatusActive {
+			continue
+		}
+		if strings.EqualFold(key.Name, name) {
+			return CreateAPIKeyResult{}, model.ErrConflict("an active api key with this name already exists")
+		}
+	}
+
+	var created model.CreatedAPIKey
+	if input.ExpiresInDays > 0 {
+		ttl := time.Duration(input.ExpiresInDays) * 24 * time.Hour
+		created, err = s.apiKeys.CreateAPIKeyWithTTL(ctx, principal.UserID, name, ttl)
+	} else {
+		created, err = s.apiKeys.CreateAPIKey(ctx, principal.UserID, name)
+	}
+	if err != nil {
+		logger.WithError(err).Error("create api key failed")
+		return CreateAPIKeyResult{}, err
+	}
+	return CreateAPIKeyResult{
+		APIKey: toManagedAPIKey(created.APIKey, model.APIKeyUsageSummary{}),
+		RawKey: created.RawKey,
+	}, nil
+}
+
+func (s *Service) UpdateAPIKey(ctx context.Context, principal *model.Principal, keyID string, input UpdateAPIKeyInput) (model.ManagedAPIKey, error) {
+	logger := logging.WithContext(ctx).WithField("flow", "system.update_api_key")
+	if principal == nil || principal.UserID == "" || keyID == "" {
+		return model.ManagedAPIKey{}, model.ErrAuthInvalid
+	}
+	if s.apiKeys == nil {
+		logger.Error("api key service not configured")
+		return model.ManagedAPIKey{}, model.ErrInternal
+	}
+	if input.NeverExpires && input.ExpiresInDays != nil {
+		return model.ManagedAPIKey{}, model.ErrValidation("expires_in_days and never_expires are mutually exclusive")
+	}
+	if input.Name == nil && input.ExpiresInDays == nil && !input.NeverExpires {
+		return model.ManagedAPIKey{}, model.ErrValidation("at least one of name / expires_in_days / never_expires must be set")
+	}
+
+	var patch model.APIKeyUpdate
+
+	if input.Name != nil {
+		name := strings.TrimSpace(*input.Name)
+		if !apiKeyNamePattern.MatchString(name) {
+			return model.ManagedAPIKey{}, model.ErrValidation("name must match ^[a-zA-Z0-9._-]{1,64}$")
+		}
+		if strings.EqualFold(name, apiKeyReservedNameCLI) {
+			return model.ManagedAPIKey{}, model.ErrValidation("name 'cli' is reserved")
+		}
+		// Reject duplicate name conflicts within same user (excluding self).
+		existing, err := s.apiKeys.ListAPIKeys(ctx, principal.UserID)
+		if err != nil {
+			logger.WithError(err).Error("list api keys for rename conflict check failed")
+			return model.ManagedAPIKey{}, err
+		}
+		for _, key := range existing {
+			if key.ID == keyID || key.DeletedAt != nil || key.Status != model.APIKeyStatusActive {
+				continue
+			}
+			if strings.EqualFold(key.Name, name) {
+				return model.ManagedAPIKey{}, model.ErrConflict("an active api key with this name already exists")
+			}
+		}
+		patch.Name = &name
+	}
+
+	if input.NeverExpires {
+		patch.ClearExpiry = true
+	} else if input.ExpiresInDays != nil {
+		days := *input.ExpiresInDays
+		if days < 0 || days > apiKeyMaxTTLDays {
+			return model.ManagedAPIKey{}, model.ErrValidation(fmt.Sprintf("expires_in_days must be between 0 and %d", apiKeyMaxTTLDays))
+		}
+		if days == 0 {
+			patch.ClearExpiry = true
+		} else {
+			expiresAt := time.Now().UTC().Add(time.Duration(days) * 24 * time.Hour)
+			patch.ExpiresAt = &expiresAt
+		}
+	}
+
+	updated, err := s.apiKeys.UpdateAPIKey(ctx, principal.UserID, keyID, patch)
+	if err != nil {
+		logger.WithField("key_id", keyID).WithError(err).Error("update api key failed")
+		return model.ManagedAPIKey{}, err
+	}
+
+	summary := model.APIKeyUsageSummary{}
+	if s.usage != nil {
+		summaries, sumErr := s.usage.SummarizeUsageByAPIKey(ctx, principal.UserID, model.UsageQuery{})
+		if sumErr == nil {
+			summary = summaries[updated.ID]
+		}
+	}
+	return toManagedAPIKey(updated, summary), nil
+}
+
+func toManagedAPIKey(key model.APIKey, summary model.APIKeyUsageSummary) model.ManagedAPIKey {
+	return model.ManagedAPIKey{
+		ID:           key.ID,
+		Name:         key.Name,
+		KeyPrefix:    key.KeyPrefix,
+		Status:       key.Status,
+		ExpiresAt:    key.ExpiresAt,
+		LastUsedAt:   key.LastUsedAt,
+		CreatedAt:    key.CreatedAt,
+		UsageSummary: summary,
+	}
 }
 
 func (s *Service) DisableAPIKey(ctx context.Context, principal *model.Principal, keyID string) error {

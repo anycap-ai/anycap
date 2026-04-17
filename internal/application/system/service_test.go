@@ -137,6 +137,10 @@ func (f *fakeAPIKeyService) DeleteAPIKey(_ context.Context, userID, keyID string
 	return nil
 }
 
+func (f *fakeAPIKeyService) UpdateAPIKey(_ context.Context, _, _ string, _ model.APIKeyUpdate) (model.APIKey, error) {
+	return model.APIKey{}, nil
+}
+
 func (f *fakeUsageReader) SummarizeUsageByUser(_ context.Context, _ string, _ model.UsageQuery) (model.UsageSummaryResult, error) {
 	return f.summary, nil
 }

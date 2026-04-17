@@ -24,3 +24,11 @@ type CreatedAPIKey struct {
 	APIKey APIKey `json:"api_key"`
 	RawKey string `json:"raw_key"`
 }
+
+// APIKeyUpdate describes a partial update to an API key.
+// At least one of Name / ExpiresAt / ClearExpiry must be set.
+type APIKeyUpdate struct {
+	Name        *string
+	ExpiresAt   *time.Time
+	ClearExpiry bool
+}

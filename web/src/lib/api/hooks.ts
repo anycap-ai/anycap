@@ -4,8 +4,10 @@ import { getAccessToken } from "@auth0/nextjs-auth0/client";
 import useSWR from "swr";
 import { anycapDelete, anycapGet, anycapPatch, anycapPost, anycapPut } from "./client";
 import type {
+  ApiKeyListResult,
   Balance,
   BillingCheckoutResult,
+  CreateApiKeyResult,
   CreditPackListResult,
   DashboardSummary,
   DriveAccessLinksResult,
@@ -14,12 +16,14 @@ import type {
   DriveNodeListResult,
   DriveShareView,
   LogsResult,
+  ManagedApiKey,
   PageVersion,
   PageVersionListResult,
   PagePreviewHostResult,
   PageVersionPresignResult,
   PageSite,
   PageSiteListResult,
+  UpdateApiKeyResult,
   User,
 } from "./types";
 
@@ -251,4 +255,36 @@ export async function rollbackClonePageVersion(pageID: string, sourceVersionID: 
 
 export async function unpublishPageSite(pageID: string) {
   return postWithAccessToken<PageSite>(`/v1/pages/${pageID}/unpublish`, {});
+}
+
+export function useApiKeys() {
+  return useSWR<ApiKeyListResult>("/v1/api-keys", fetchWithAccessToken);
+}
+
+export async function createApiKey(input: { name: string; expires_in_days?: number }) {
+  const body: Record<string, unknown> = { name: input.name };
+  if (input.expires_in_days !== undefined) {
+    body.expires_in_days = input.expires_in_days;
+  }
+  return postWithAccessToken<CreateApiKeyResult>("/v1/api-keys", body);
+}
+
+export async function updateApiKey(
+  id: string,
+  patch: { name?: string; expires_in_days?: number; never_expires?: boolean },
+) {
+  const body: Record<string, unknown> = {};
+  if (patch.name !== undefined) body.name = patch.name;
+  if (patch.expires_in_days !== undefined) body.expires_in_days = patch.expires_in_days;
+  if (patch.never_expires !== undefined) body.never_expires = patch.never_expires;
+  const result = await patchWithAccessToken<UpdateApiKeyResult>(`/v1/api-keys/${id}`, body);
+  return result.api_key as ManagedApiKey;
+}
+
+export async function disableApiKey(id: string) {
+  return postWithAccessToken<{ id: string; disabled: boolean }>(`/v1/api-keys/${id}/disable`, {});
+}
+
+export async function deleteApiKey(id: string) {
+  return deleteWithAccessToken<{ id: string; deleted: boolean }>(`/v1/api-keys/${id}`);
 }

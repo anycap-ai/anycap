@@ -20,6 +20,9 @@ const navSections: NavItem[][] = [
     { label: "Drive", href: "/dashboard/drive" },
     { label: "Pages", href: "/dashboard/pages" },
   ],
+  [
+    { label: "API keys", href: "/dashboard/api-keys" },
+  ],
 ];
 
 const allItems = navSections.flat();
