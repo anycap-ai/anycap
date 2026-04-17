@@ -59,6 +59,8 @@ func (h *Handler) RegisterProtectedRoutes(group *route.RouterGroup) {
 	group.POST("/billing/checkout", h.BillingCheckout)
 	group.GET("/logs", h.Logs)
 	group.GET("/api-keys", h.APIKeys)
+	group.POST("/api-keys", h.CreateAPIKey)
+	group.PATCH("/api-keys/:id", h.UpdateAPIKey)
 	group.POST("/api-keys/:id/disable", h.DisableAPIKey)
 	group.DELETE("/api-keys/:id", h.DeleteAPIKey)
 	group.GET("/usage/summary", h.UsageSummary)
@@ -560,6 +562,95 @@ func (h *Handler) DeleteAPIKey(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
 		"id":      keyID,
 		"deleted": true,
+	}))
+}
+
+type createAPIKeyRequest struct {
+	Name          string `json:"name"`
+	ExpiresInDays int    `json:"expires_in_days"`
+}
+
+type updateAPIKeyRequest struct {
+	Name          *string `json:"name,omitempty"`
+	ExpiresInDays *int    `json:"expires_in_days,omitempty"`
+	NeverExpires  bool    `json:"never_expires,omitempty"`
+}
+
+func (h *Handler) CreateAPIKey(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "system.create_api_key")
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		logger.Warn("missing principal for create api key")
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	var req createAPIKeyRequest
+	if len(ctx.Request.Body()) > 0 {
+		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+			return
+		}
+	}
+	result, err := h.service.CreateAPIKey(c, principal, systemapp.CreateAPIKeyInput{
+		Name:          req.Name,
+		ExpiresInDays: req.ExpiresInDays,
+	})
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		logger.WithFields(logging.Fields{
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("create api key failed")
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(consts.StatusCreated, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
+		"api_key": result.APIKey,
+		"raw_key": result.RawKey,
+	}))
+}
+
+func (h *Handler) UpdateAPIKey(c context.Context, ctx *app.RequestContext) {
+	logger := logging.WithContext(c).WithField("flow", "system.update_api_key")
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok {
+		logger.Warn("missing principal for update api key")
+		status, payload := dto.MapDomainError(model.ErrAuthInvalid)
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	keyID := ctx.Param("id")
+	var req updateAPIKeyRequest
+	if len(ctx.Request.Body()) > 0 {
+		if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
+			handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
+			return
+		}
+	}
+	updated, err := h.service.UpdateAPIKey(c, principal, keyID, systemapp.UpdateAPIKeyInput{
+		Name:          req.Name,
+		ExpiresInDays: req.ExpiresInDays,
+		NeverExpires:  req.NeverExpires,
+	})
+	if err != nil {
+		middleware.ReportError(ctx, err)
+		status, payload := dto.MapDomainError(err)
+		logger.WithFields(logging.Fields{
+			"key_id":      keyID,
+			"status_code": status,
+			"error_code":  payload.Error.Code,
+		}).WithError(err).Error("update api key failed")
+		payload.ID = trace.GetTraceID(c)
+		ctx.JSON(status, payload)
+		return
+	}
+	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), map[string]any{
+		"api_key": updated,
 	}))
 }
 

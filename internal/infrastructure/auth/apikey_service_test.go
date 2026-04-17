@@ -53,6 +53,14 @@ func (f *fakeAPIKeyRepo) SoftDeleteByUserID(_ context.Context, userID, keyID str
 	return nil
 }
 
+func (f *fakeAPIKeyRepo) UpdateByUserID(_ context.Context, _, _ string, _ *string, _ *time.Time, _ bool) error {
+	return nil
+}
+
+func (f *fakeAPIKeyRepo) FindByID(_ context.Context, _, _ string) (model.APIKey, error) {
+	return f.found, nil
+}
+
 func TestRepositoryAPIKeyService_CreateAPIKey(t *testing.T) {
 	repo := &fakeAPIKeyRepo{}
 	service := NewRepositoryAPIKeyService(repo, nil, func() time.Time {

@@ -13,7 +13,9 @@ type APIKeyUsageSummary struct {
 type ManagedAPIKey struct {
 	ID           string             `json:"id"`
 	Name         string             `json:"name"`
+	KeyPrefix    string             `json:"key_prefix"`
 	Status       string             `json:"status"`
+	ExpiresAt    *time.Time         `json:"expires_at,omitempty"`
 	LastUsedAt   *time.Time         `json:"last_used_at,omitempty"`
 	CreatedAt    time.Time          `json:"created_at"`
 	UsageSummary APIKeyUsageSummary `json:"usage_summary"`

@@ -19,7 +19,7 @@ type AuthError struct {
 }
 
 func (e *AuthError) Error() string {
-	return "not authenticated or API key expired, run 'anycap login' to authenticate (use 'anycap login --headless' in environments without a browser)"
+	return "not authenticated or credential expired, run 'anycap login' to authenticate (use 'anycap login --headless' in environments without a browser)"
 }
 
 // APIError is returned when the server responds with a 4xx/5xx error.

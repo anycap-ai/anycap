@@ -172,6 +172,38 @@ export type PageVersionListResult = {
   total: number;
 };
 
+export type ApiKeyUsageSummary = {
+  usage_count: number;
+  success_count: number;
+  failure_count: number;
+  cost: number;
+  last_action?: string;
+};
+
+export type ManagedApiKey = {
+  id: string;
+  name: string;
+  key_prefix: string;
+  status: "active" | "disabled" | string;
+  expires_at?: string | null;
+  last_used_at?: string | null;
+  created_at: string;
+  usage_summary: ApiKeyUsageSummary;
+};
+
+export type ApiKeyListResult = {
+  items: ManagedApiKey[];
+};
+
+export type CreateApiKeyResult = {
+  api_key: ManagedApiKey;
+  raw_key: string;
+};
+
+export type UpdateApiKeyResult = {
+  api_key: ManagedApiKey;
+};
+
 export type PageVersionPresignResult = {
   upload_session_id: string;
   version_id: string;

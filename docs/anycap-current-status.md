@@ -278,7 +278,7 @@ Distributed via GitHub. Agents install with `anycap skill install`.
 | Usage | Usage statistics |
 | Logs | Detailed call logs |
 | Billing | Credit balance, modal-based credit pack purchase, transactions, payment result feedback |
-| API Keys | Create, disable, delete API keys |
+| API Keys | Create, rename, set expiry (1-3650 days or never), renew expiry, disable, and delete keys. CLI-managed key (`cli`) is read-only here. |
 | Drive | Visual file browser |
 | Pages | Site management with version history, published Open, and verified version Preview |
 | Playground | Interactive capability testing |

@@ -13,11 +13,13 @@ import (
 type APIKeyRepository interface {
 	Insert(ctx context.Context, key model.APIKey) error
 	FindByPrefix(ctx context.Context, prefix string) (model.APIKey, error)
+	FindByID(ctx context.Context, userID, keyID string) (model.APIKey, error)
 	TouchLastUsedAt(ctx context.Context, keyID string, usedAt time.Time) error
 	Revoke(ctx context.Context, keyID string) error
 	ListByUserID(ctx context.Context, userID string) ([]model.APIKey, error)
 	DisableByUserID(ctx context.Context, userID, keyID string) error
 	SoftDeleteByUserID(ctx context.Context, userID, keyID string) error
+	UpdateByUserID(ctx context.Context, userID, keyID string, name *string, expiresAt *time.Time, clearExpiry bool) error
 }
 
 type RepositoryAPIKeyService struct {
@@ -99,4 +101,11 @@ func (s *RepositoryAPIKeyService) DisableAPIKey(ctx context.Context, userID, key
 
 func (s *RepositoryAPIKeyService) DeleteAPIKey(ctx context.Context, userID, keyID string) error {
 	return s.repo.SoftDeleteByUserID(ctx, userID, keyID)
+}
+
+func (s *RepositoryAPIKeyService) UpdateAPIKey(ctx context.Context, userID, keyID string, patch model.APIKeyUpdate) (model.APIKey, error) {
+	if err := s.repo.UpdateByUserID(ctx, userID, keyID, patch.Name, patch.ExpiresAt, patch.ClearExpiry); err != nil {
+		return model.APIKey{}, err
+	}
+	return s.repo.FindByID(ctx, userID, keyID)
 }

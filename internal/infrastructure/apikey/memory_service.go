@@ -162,3 +162,24 @@ func (s *MemoryService) DeleteAPIKey(_ context.Context, userID, keyID string) er
 	s.byID[keyID] = record
 	return nil
 }
+
+func (s *MemoryService) UpdateAPIKey(_ context.Context, userID, keyID string, patch model.APIKeyUpdate) (model.APIKey, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, ok := s.byID[keyID]
+	if !ok || record.apiKey.UserID != userID || record.apiKey.DeletedAt != nil {
+		return model.APIKey{}, model.ErrAuthInvalid
+	}
+	if patch.Name != nil {
+		record.apiKey.Name = *patch.Name
+	}
+	if patch.ClearExpiry {
+		record.apiKey.ExpiresAt = nil
+	} else if patch.ExpiresAt != nil {
+		expiresAt := patch.ExpiresAt.UTC()
+		record.apiKey.ExpiresAt = &expiresAt
+	}
+	s.byID[keyID] = record
+	return record.apiKey, nil
+}
