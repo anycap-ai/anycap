@@ -335,8 +335,14 @@ build:cli:
       git tag "${TAG}"
       goreleaser release --clean --skip=publish
   artifacts:
+    # Only forward archives + checksums to release:github. The raw
+    # per-platform binary directories under dist/ (anycap_<os>_<arch>/anycap)
+    # are large (UI assets are embedded) and uploading the whole dist/
+    # tripped the GitLab coordinator's request size limit (HTTP 413).
     paths:
-      - dist/
+      - dist/anycap_*.tar.gz
+      - dist/anycap_*.zip
+      - dist/checksums.txt
     expire_in: 1 day
   rules:
     - if: '$RELEASE_CLI == "true"'
