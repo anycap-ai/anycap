@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -146,7 +146,7 @@ Use the current working directory as `--workspace` unless the human provides a d
 Infer the local agent from the current runtime:
 
 - Codex runtime -> `--agent codex`
-- Claude Code runtime -> `--agent claude_code`
+- Claude Code runtime -> `--agent claude-code`
 - Cursor runtime -> `--agent cursor`
 - If unsure, ask one concise question: "Use Codex, Claude Code, or Cursor as the local agent?"
 
@@ -190,7 +190,7 @@ anycap connect feishu --agent codex --workspace /path/to/repo
 Claude Code is also supported as the local executor:
 
 ```bash
-anycap connect feishu --agent claude_code --workspace /path/to/repo
+anycap connect feishu --agent claude-code --workspace /path/to/repo
 ```
 
 Cursor Agent is also supported as the local executor:
@@ -254,7 +254,7 @@ Main notes:
 - The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
 - `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
 - Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions, including when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Codex.
-- `--agent claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
+- `--agent claude-code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
 - For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
 - `--agent cursor` runs Cursor Agent with `cursor-agent -p --output-format json --trust --force` and persists Cursor Agent `session_id` as `executor_ref` for follow-up turns.
 - For Cursor Agent, use `--cursor-model <model>` for explicit model selection. Tell the human that Cursor Agent runs with `--force` on the user-facing connect path and may execute local commands or network requests unless Cursor explicitly denies them.
