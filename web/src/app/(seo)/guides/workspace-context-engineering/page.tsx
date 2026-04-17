@@ -31,7 +31,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
     eyebrow: "Guide",
     title: ["Workspace context", "engineering"],
@@ -104,17 +104,67 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     },
     breadcrumbLabel: "Context Engineering do Workspace",
   },
+  id: {
+    eyebrow: "Panduan",
+    title: ["Rekayasa konteks", "workspace"],
+    intro:
+      "Dalam agen developer nyata, konteks bukan cuma teks prompt. Workspace mencakup file, terminal, edit sebelumnya, izin tool, dan aturan proyek. Konteks itu menentukan apakah agen harus membaca kode, menjalankan perintah, meninjau gambar, atau memanggil capability multimodal lewat AnyCap.",
+    contextTitle: "Apa saja yang termasuk konteks workspace",
+    contextCards: [
+      {
+        title: "File proyek",
+        body: "File source, dokumentasi, konfigurasi, dan artefak hasil build memberi sinyal jenis tugas yang sedang dikerjakan agen.",
+      },
+      {
+        title: "Status eksekusi",
+        body: "Terminal terbuka, proses yang sedang berjalan, dan riwayat perintah mengubah tindakan berikutnya yang aman dan berguna.",
+      },
+      {
+        title: "Kemampuan tool",
+        body: "Tool dan izin yang tersedia menentukan apakah agen bisa membaca, mengedit, browsing, atau memanggil capabilities.",
+      },
+      {
+        title: "Riwayat tugas",
+        body: "Keputusan sebelumnya dan umpan balik membantu agen menghindari pengulangan dan memilih langkah berikutnya yang lebih tepat.",
+      },
+    ],
+    routingTitle: "Kenapa ini penting untuk routing capability",
+    routingBody: [
+      "Jika workspace menampilkan screenshot, catatan review desain, dan aset gambar yang sudah ada, agen biasanya perlu memanggil capability baca atau edit gambar. Jika riwayat tugas menunjukkan tim sedang menyiapkan peluncuran produk, capability image generation atau video generation bisa jadi langkah berikutnya yang tepat.",
+      "AnyCap membantu menurunkan kompleksitas routing karena banyak aksi multimodal diekspos lewat satu runtime yang konsisten, bukan banyak provider yang tidak saling terhubung.",
+    ],
+    ctas: {
+      contextEngineering: "Context Engineering",
+      imageUnderstanding: "Pemahaman Gambar",
+      videoAnalysis: "Analisis Video",
+    },
+    breadcrumbLabel: "Rekayasa Konteks Workspace",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
-  const isPtBr = locale === "pt-br";
+  if (locale === "pt-br") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title:
+        "Context engineering do workspace — como agentes usam arquivos, ferramentas e estado",
+      description:
+        "Context engineering do workspace explica como arquivos, terminais, definicoes de ferramentas e estado de execucao moldam o que um agente de IA decide fazer. Veja como isso afeta o roteamento de ferramentas e chamadas multimodais via AnyCap.",
+    });
+  }
+
+  if (locale === "id") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title:
+        "Rekayasa konteks workspace - bagaimana agen memakai file, tool, dan status eksekusi",
+      description:
+        "Rekayasa konteks workspace menjelaskan bagaimana file, terminal, definisi tool, dan status eksekusi membentuk keputusan agen AI. Pelajari dampaknya pada routing tool dan pemanggilan capability multimodal lewat AnyCap.",
+    });
+  }
+
   return createLocalizedMetadataForPath(locale, PATH, {
-    title: isPtBr
-      ? "Context engineering do workspace — como agentes usam arquivos, ferramentas e estado"
-      : "Workspace context engineering — How agents use files, tools, and state",
-    description: isPtBr
-      ? "Context engineering do workspace explica como arquivos, terminais, definicoes de ferramentas e estado de execucao moldam o que um agente de IA decide fazer. Veja como isso afeta o roteamento de ferramentas e chamadas multimodais via AnyCap."
-      : "Workspace context engineering explains how files, terminals, tool definitions, and execution state shape what an AI agent decides to do. Learn how it affects tool routing and multimodal capability calls through AnyCap.",
+    title: "Workspace context engineering — How agents use files, tools, and state",
+    description:
+      "Workspace context engineering explains how files, terminals, tool definitions, and execution state shape what an AI agent decides to do. Learn how it affects tool routing and multimodal capability calls through AnyCap.",
   });
 }
 
@@ -122,7 +172,7 @@ export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 export default async function WorkspaceContextEngineeringPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content = contentByLocale[locale] ?? contentByLocale.en;
   return (
     <>
       <BreadcrumbJsonLd

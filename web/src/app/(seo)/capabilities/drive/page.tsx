@@ -5,7 +5,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { DriveDemo } from "@/components/landing/DriveDemo";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig } from "@/lib/site";
+import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -13,21 +13,54 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
-export const metadata: Metadata = {
-  title: "Drive for AI agents - Shared storage, file organization, and public URLs",
-  description:
-    "Give AI agents a shared drive through AnyCap. Store generated outputs, organize assets, and create public URLs through one interface instead of stitching storage into each workflow.",
-  alternates: { canonical: "/capabilities/drive" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/capabilities/drive",
-    siteName: siteConfig.siteName,
+const metadataByLocale: Record<
+  SiteLocale,
+  { title: string; description: string; openGraphTitle: string; openGraphDescription: string }
+> = {
+  en: {
     title: "Drive for AI agents - Shared storage, file organization, and public URLs",
     description:
+      "Give AI agents a shared drive through AnyCap. Store generated outputs, organize assets, and create public URLs through one interface instead of stitching storage into each workflow.",
+    openGraphTitle: "Drive for AI agents - Shared storage, file organization, and public URLs",
+    openGraphDescription:
       "Add shared storage and file delivery to AI agent workflows with AnyCap Drive.",
   },
+  "pt-br": {
+    title: "Drive para agentes de IA - armazenamento compartilhado e URLs publicas",
+    description:
+      "Dê aos agentes um drive compartilhado com AnyCap para armazenar resultados, organizar ativos e gerar URLs publicas sem reintegrar armazenamento em cada fluxo.",
+    openGraphTitle: "Drive para agentes de IA - armazenamento compartilhado e URLs publicas",
+    openGraphDescription:
+      "Adicione armazenamento compartilhado e entrega de arquivos aos workflows de agentes com AnyCap Drive.",
+  },
+  id: {
+    title: "Drive untuk agen AI - penyimpanan bersama, organisasi file, dan URL publik",
+    description:
+      "Berikan drive bersama ke agen AI melalui AnyCap. Simpan output generasi, rapikan aset, dan buat URL publik lewat satu antarmuka tanpa merangkai sistem storage terpisah per workflow.",
+    openGraphTitle: "Drive untuk agen AI - penyimpanan bersama, organisasi file, dan URL publik",
+    openGraphDescription:
+      "Tambahkan penyimpanan bersama dan distribusi file ke workflow agen AI dengan AnyCap Drive.",
+  },
 };
+
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
+  return {
+    title: localizedMetadata.title,
+    description: localizedMetadata.description,
+    alternates: { canonical: "/capabilities/drive" },
+    openGraph: {
+      type: "website",
+      locale: getLocaleConfig(locale).ogLocale,
+      url: "/capabilities/drive",
+      siteName: siteConfig.siteName,
+      title: localizedMetadata.openGraphTitle,
+      description: localizedMetadata.openGraphDescription,
+    },
+  };
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 type PageContent = {
   breadcrumb: { name: string; href?: string }[];
@@ -48,7 +81,7 @@ type PageContent = {
   jsonLdKeywords: readonly string[];
 };
 
-const contentByLocale = {
+const contentByLocale: Record<SiteLocale, PageContent> = {
   en: {
     breadcrumb: [
       { name: "Home", href: "/" },
@@ -205,11 +238,89 @@ const contentByLocale = {
       "urls publicas para resultados de agentes",
     ],
   },
+  id: {
+    breadcrumb: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Drive" },
+    ],
+    eyebrow: "Kapabilitas",
+    title: "Drive",
+    intro:
+      "AnyCap Drive memberi agen ruang bersama untuk menyimpan output, menata aset, dan membagikan URL publik. Daripada memperlakukan storage sebagai produk terpisah yang harus diintegrasikan ulang di setiap workflow, Drive menjadikan persistensi bagian dari lapisan kapabilitas yang sama dengan generation, analysis, dan retrieval.",
+    usageHeading: "Penggunaan CLI",
+    usageExamples: [
+      { title: "Unggah file hasil", code: "anycap drive upload launch.mp4" },
+      { title: "Bagikan aset tersimpan", code: "anycap drive share dn_xKmP123" },
+      { title: "Lihat daftar file di drive", code: "anycap drive list" },
+    ],
+    useCasesHeading: "Kapan agen membutuhkan drive",
+    useCases: [
+      "Simpan gambar, video, audio, dan dokumen hasil generasi dalam satu lokasi yang bisa diakses agen.",
+      "Buat URL publik untuk hasil kerja tanpa menempelkan produk storage terpisah ke setiap workflow.",
+      "Atur aset yang bisa dipakai ulang agar sesi dan agen berbeda tetap bekerja dari kumpulan file yang sama.",
+      "Jadikan delivery bagian dari runtime yang sama dengan generation, analysis, dan retrieval.",
+    ],
+    relatedHeading: "Halaman terkait",
+    relatedPages: [
+      {
+        href: "/capabilities/video-generation",
+        eyebrow: "Kapabilitas terkait",
+        title: "Generasi Video",
+        body: "Video hasil generasi lebih berguna saat workflow bisa menyimpan dan membagikannya.",
+      },
+      {
+        href: "/capabilities/image-generation",
+        eyebrow: "Kapabilitas terkait",
+        title: "Generasi Gambar",
+        body: "Simpan visual hasil generasi dan gambar referensi sebagai pustaka aset yang bisa dipakai ulang.",
+      },
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Pricing",
+        body: "Lihat bagaimana penyimpanan Drive terhubung dengan stack produk AnyCap lainnya.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Kenapa drive penting sebagai kapabilitas agen?",
+        answer:
+          "Karena generation hanya separuh alur kerja. Agen juga butuh tempat menyimpan output, mengambilnya lagi nanti, dan membagikan link ke pengguna atau sistem lanjutan tanpa membangun storage ulang di tiap proyek.",
+      },
+      {
+        question: "Apa yang didapat tim dari AnyCap Drive?",
+        answer:
+          "Tim mendapat lapisan penyimpanan bersama untuk output generasi dan aset referensi, plus link publik saat file perlu keluar dari runtime agen ke pengguna atau sistem lain.",
+      },
+      {
+        question: "Apa bedanya drive dengan generation atau search?",
+        answer:
+          "Generation membuat aset, search mencari informasi, sedangkan drive menjaga artefak tetap tersedia setelah aksi selesai. Drive adalah lapisan storage dan delivery yang membuat output agen bisa dipertahankan.",
+      },
+      {
+        question: "Kapan tim sebaiknya memakai drive?",
+        answer:
+          "Gunakan drive saat agen perlu menyimpan artefak, mengatur input-output, atau mengembalikan link file yang stabil alih-alih file lokal yang sementara.",
+      },
+    ],
+    jsonLdHeadline: "Drive untuk agen AI - penyimpanan bersama, organisasi file, dan URL publik",
+    jsonLdDescription:
+      "Panduan kapabilitas untuk menambahkan penyimpanan bersama ke agen AI melalui AnyCap Drive, termasuk organisasi file dan workflow distribusi publik.",
+    jsonLdAbout: ["Drive untuk agen AI", "Penyimpanan agen", "Berbagi file", "AnyCap Drive"],
+    jsonLdKeywords: [
+      "drive untuk agen ai",
+      "penyimpanan agen",
+      "penyimpanan file untuk agen ai",
+      "url publik untuk output agen",
+    ],
+  },
 } as const;
 
 export default async function DriveCapabilityPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? contentByLocale.en;
+  const content = contentByLocale[locale] ?? contentByLocale.en;
   const capabilityGuideJsonLd = createTechArticleJsonLd({
     headline: content.jsonLdHeadline,
     description: content.jsonLdDescription,

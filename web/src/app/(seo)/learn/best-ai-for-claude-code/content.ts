@@ -505,7 +505,235 @@ const ptBr: BestAIForClaudeCodePageData = {
   ],
 };
 
-const id = en;
+const id: BestAIForClaudeCodePageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Belajar", href: "/learn", unlinkable: true },
+    { name: "AI terbaik untuk Claude Code" },
+  ],
+  eyebrow: "Belajar",
+  metadata: {
+    title: "AI terbaik untuk Claude Code | Claude Code + kemampuan",
+    description:
+      "AI terbaik untuk Claude Code biasanya adalah setup yang menjaga alur kerja native-terminal Claude Code tetap utuh, sambil menambahkan kemampuan gambar, video, dan visi yang belum dimilikinya.",
+    openGraphTitle: "AI terbaik untuk Claude Code | Claude Code + kemampuan",
+    openGraphDescription:
+      "Panduan pemilihan untuk tim yang memutuskan apakah setup Claude Code terbaik adalah Claude Code saja, Claude Code plus alat ad hoc, atau Claude Code plus satu capability runtime.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AI terbaik untuk Claude Code: setup yang tepat biasanya Claude Code ditambah kemampuan",
+    description:
+      "Panduan pemilihan untuk tim yang memutuskan apakah setup Claude Code terbaik adalah Claude Code saja, Claude Code plus alat ad hoc, atau Claude Code plus satu capability runtime.",
+    path: BEST_AI_FOR_CLAUDE_CODE_PATH,
+    about: ["Claude Code", "Agen coding", "Kemampuan AI", "Image generation", "Video generation", "Agent capability runtime"],
+    keywords: [
+      "ai terbaik untuk claude code",
+      "tools terbaik untuk claude code",
+      "kemampuan claude code",
+      "menambahkan tools ke claude code",
+      "alur terminal claude code",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apa AI terbaik untuk Claude Code saat ini?",
+      answer:
+        "Jika yang dimaksud pekerjaan coding native-terminal, Claude Code mungkin sudah menjadi fondasi yang tepat. Jika yang dimaksud alur kerja lengkap di sekitar coding, setup terbaik sering kali adalah Claude Code ditambah kemampuan yang masih kurang.",
+    },
+    {
+      question: "Apakah AI terbaik untuk Claude Code selalu model yang berbeda?",
+      answer:
+        "Tidak selalu. Terkadang keuntungan lebih besar datang dari menambahkan kemampuan media dan visi di sekitar Claude Code, bukan mengganti agen intinya.",
+    },
+    {
+      question: "Apa yang biasanya pecah lebih dulu dalam alur Claude Code?",
+      answer:
+        "Titik putus pertama biasanya bukan kualitas reasoning. Melainkan saat alur kerja harus memeriksa screenshot, menganalisis rekaman, atau menghasilkan gambar dan video yang tidak disediakan Claude Code sebagai built-in runtime.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Claude Code?",
+      answer:
+        "Tidak. AnyCap memperluas Claude Code. Perannya menambahkan image generation, video generation, image understanding, dan video analysis di sekitar agen yang sudah Anda gunakan.",
+    },
+    {
+      question: "Apa cara tercepat mencoba Claude Code ditambah kemampuan?",
+      answer:
+        "Mulai dari panduan Add Tools to Claude Code, lalu uji satu jalur konkret seperti Claude Code image generation atau Claude Code video generation. Itu memberi pemeriksaan alur nyata tanpa mengganti agen.",
+    },
+  ]),
+  lastUpdatedLabel: "7 April 2026",
+  heroTitle: ["AI terbaik untuk", "Claude Code"],
+  heroIntro:
+    "AI terbaik untuk Claude Code biasanya bukan pertanyaan tentang mengganti Claude Code sama sekali. Ini pertanyaan apakah alur kerja Anda masih cocok dengan loop native-terminal atau pekerjaan sudah bergantung pada screenshot, rekaman, output media, dan artefak yang tidak disediakan Claude Code sendiri.",
+  quickAnswerLabel: "Jawaban singkat",
+  quickAnswerTitle: "Setup Claude Code terbaik biasanya menjaga Claude Code sebagai inti native-terminal.",
+  quickAnswerBody:
+    "Ini menjaga loop reasoning dan coding tetap utuh sambil memperluas apa yang benar-benar bisa diselesaikan alur kerja. Bagi banyak tim, ini lebih praktis daripada memperkenalkan permukaan agen baru hanya karena tugas sebentar keluar dari terminal dan menjadi multimodal.",
+  quickTakeawaysLabel: "Poin utama",
+  quickTakeaways: [
+    "Claude Code sudah mencakup loop terminal inti untuk perencanaan, pengeditan, eksekusi shell, dan pekerjaan repo.",
+    "Titik putus nyata pertama biasanya bukan kualitas coding. Melainkan saat alur kerja harus menghasilkan atau memeriksa gambar, video, screenshot, atau rekaman.",
+    "Bagi banyak tim, langkah terbaik adalah mempertahankan Claude Code dan menambahkan satu capability runtime alih-alih mengganti agen.",
+  ],
+  evaluationLabel: "Yang perlu dievaluasi",
+  evaluationTitle: "Mulai dengan bertanya apakah alur kerja masih cocok dengan loop native-terminal",
+  evaluationCards: [
+    {
+      title: "Seberapa native-terminal pekerjaannya",
+      body:
+        "Jika alur kerja sebagian besar perencanaan kode, diff, debugging, perbaikan tes, dan eksekusi shell, pertanyaan intinya apakah Claude Code sudah cukup kuat untuk tim Anda. Sering kali memang sudah.",
+    },
+    {
+      title: "Seberapa sering input visual muncul",
+      body:
+        "Bentuknya berubah saat pekerjaan software berawal dari screenshot, diagram, rekaman, atau bukti QA visual. Di situlah AI terbaik untuk Claude Code berhenti menjadi sekadar pertanyaan model.",
+    },
+    {
+      title: "Seberapa sering hasil harus keluar dari terminal",
+      body:
+        "Stack yang hanya mengedit kode tidak cukup saat hasil akhir harus menjadi artefak yang bisa direview, dibagikan, dipublikasikan, atau diserahkan ke tim lain.",
+    },
+    {
+      title: "Seberapa besar sprawl setup yang bisa Anda toleransi",
+      body:
+        "Stack teoritis terbaik belum tentu stack praktis terbaik. Provider terpisah, kredensial, dan skrip pembantu bisa dengan cepat menjadi beban pemeliharaan di sekitar Claude Code.",
+    },
+  ],
+  stackLabel: "Tiga pola setup",
+  stackTitle: "Kebanyakan tim yang mengevaluasi Claude Code sebenarnya memilih seberapa jauh memperluas terminal",
+  stackCards: [
+    {
+      title: "Hanya Claude Code",
+      label: "Terbaik saat pekerjaan tetap native-terminal",
+      body:
+        "Ini jalur paling sederhana saat pekerjaan tetap dekat dengan kode, tes, log, file, dan perintah shell. Nilainya datang dari reasoning kuat di dalam loop coding yang digerakkan terminal.",
+    },
+    {
+      title: "Claude Code plus skrip provider ad hoc",
+      label: "Bisa jalan, tetapi utang operasional bertambah",
+      body:
+        "Anda bisa menambel image API di sini, video API di sana, dan skrip analisis visual nanti. Masalahnya alur kerja mulai terpecah antar key, provider, dan permukaan setup.",
+    },
+    {
+      title: "Claude Code plus capability runtime",
+      label: "Terbaik saat terminal butuh kemampuan di luar",
+      body:
+        "Ini setup yang dibuat AnyCap. Anda mempertahankan Claude Code untuk kode, perencanaan, dan eksekusi terminal, lalu menambahkan image generation, video generation, image understanding, dan video analysis lewat satu runtime.",
+    },
+  ],
+  capabilityLabel: "Kemampuan pertama untuk ditambahkan",
+  capabilityTitle: "Ini biasanya celah pertama yang muncul setelah pekerjaan repo murni",
+  capabilityCards: [
+    {
+      title: "Pembuatan gambar untuk Claude Code",
+      href: "/for/claude-code/image-generation",
+      body:
+        "Gunakan jalur ini saat Claude Code perlu menghasilkan visual, mockup produk, atau aset peluncuran, bukan hanya mendeskripsikannya.",
+    },
+    {
+      title: "Pembuatan video untuk Claude Code",
+      href: "/for/claude-code/video-generation",
+      body:
+        "Gunakan jalur ini saat alur kerja butuh demo, walkthrough, atau motion asset pendek dalam setup agen yang sama.",
+    },
+    {
+      title: "Pemahaman gambar (image understanding)",
+      href: "/capabilities/image-understanding",
+      body:
+        "Gunakan ini saat Claude Code perlu memeriksa screenshot, diagram, referensi, atau input QA visual.",
+    },
+    {
+      title: "Analisis video (video analysis)",
+      href: "/capabilities/video-analysis",
+      body:
+        "Gunakan ini saat bug, masalah produk, atau bukti alur hidup di rekaman, bukan di log teks.",
+    },
+  ],
+  decisionLabel: "Cara memutuskan",
+  decisionTitle: "Tanyakan hal ini sebelum mengganti alur kerja yang sudah Anda sukai",
+  decisionRows: [
+    {
+      question: "Kapan Claude Code saja sudah cukup?",
+      answer:
+        "Claude Code sering cukup saat alur kerja tetap di dalam codebase dan tugas utama adalah reasoning, pengeditan, pengujian, dan eksekusi terminal.",
+    },
+    {
+      question: "Kapan saya butuh lebih dari Claude Code?",
+      answer:
+        "Anda butuh lebih dari Claude Code saat tugas memerlukan output gambar, output video, interpretasi screenshot, QA visual, analisis rekaman, atau hasil yang harus keluar dari terminal sebagai artefak.",
+    },
+    {
+      question: "Haruskah saya mengganti Claude Code atau memperluasnya?",
+      answer:
+        "Biasanya perluas. Bagi banyak tim, langkah lebih baik adalah mempertahankan Claude Code dan menambahkan kemampuan yang tidak dibawa default, daripada memperkenalkan permukaan agen baru dan melatih ulang alur kerja.",
+    },
+    {
+      question: "Apa cara tercepat menguji setup yang lebih baik?",
+      answer:
+        "Mulai dari panduan Add Tools to Claude Code atau langsung ke Claude Code image generation atau video generation. Itu memungkinkan Anda menguji gap kemampuan tanpa mengganti agen inti.",
+    },
+  ],
+  nextMoveLabel: "Langkah berikutnya",
+  nextMoveTitle: "Dari panduan pemilihan ini menuju jalur Claude Code yang Anda butuhkan",
+  nextMoveCards: [
+    {
+      title: "Menambahkan tools ke Claude Code",
+      href: "/guides/add-tools-to-claude-code",
+      body: "Gunakan ini saat Anda siap menguji jalur setup yang lebih pendek daripada membaca penjelasan lain.",
+    },
+    {
+      title: "Mulai dari pembuatan gambar",
+      href: "/for/claude-code/image-generation",
+      body: "Langkah berikut terbaik saat output pertama yang hilang adalah visual, gambar konsep, atau mockup produk.",
+    },
+    {
+      title: "Mulai dari pembuatan video",
+      href: "/for/claude-code/video-generation",
+      body: "Langkah berikut terbaik saat output pertama yang hilang adalah klip demo, walkthrough, atau motion asset.",
+    },
+    {
+      title: "Apa AI paling canggih saat ini?",
+      href: "/learn/what-is-the-most-advanced-ai",
+      body: "Buka di sini saat pertanyaannya tentang frontier secara keseluruhan, bukan khusus Claude Code.",
+    },
+    {
+      title: "Lihat hub Claude Code",
+      href: "/for/claude-code",
+      body: "Pindah ke sini saat Anda ingin landing page utama Claude Code, bukan panduan pemilihan bergaya Learn.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Pertanyaan di balik kata kunci",
+  faqItems: [
+    {
+      question: "Apa AI terbaik untuk Claude Code saat ini?",
+      answer:
+        "Jika yang dimaksud pekerjaan coding native-terminal, Claude Code mungkin sudah menjadi fondasi yang tepat. Jika yang dimaksud alur kerja lengkap di sekitar coding, setup terbaik sering kali adalah Claude Code ditambah kemampuan yang masih kurang.",
+    },
+    {
+      question: "Apakah AI terbaik untuk Claude Code selalu model yang berbeda?",
+      answer:
+        "Tidak selalu. Terkadang keuntungan lebih besar datang dari menambahkan kemampuan media dan visi di sekitar Claude Code, bukan mengganti agen intinya.",
+    },
+    {
+      question: "Apa yang biasanya pecah lebih dulu dalam alur Claude Code?",
+      answer:
+        "Titik putus pertama biasanya bukan kualitas reasoning. Melainkan saat alur kerja harus memeriksa screenshot, menganalisis rekaman, atau menghasilkan gambar dan video yang tidak disediakan Claude Code sebagai built-in runtime.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Claude Code?",
+      answer:
+        "Tidak. AnyCap memperluas Claude Code. Perannya menambahkan image generation, video generation, image understanding, dan video analysis di sekitar agen yang sudah Anda gunakan.",
+    },
+    {
+      question: "Apa cara tercepat mencoba Claude Code ditambah kemampuan?",
+      answer:
+        "Mulai dari panduan Add Tools to Claude Code, lalu uji satu jalur konkret seperti Claude Code image generation atau Claude Code video generation. Itu memberi pemeriksaan alur nyata tanpa mengganti agen.",
+    },
+  ],
+};
 
 const contentByLocale: Record<SiteLocale, BestAIForClaudeCodePageData> = {
   en,

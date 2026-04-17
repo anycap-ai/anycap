@@ -714,10 +714,309 @@ const ptBrContent: BrightenPhotoPageContent = {
   },
 };
 
+const idContent: BrightenPhotoPageContent = {
+  metadata: {
+    title: "Cara Mencerahkan Foto secara Daring dengan Agen AI",
+    description:
+      "Gunakan AnyCap untuk mencerahkan foto underexposure, melembutkan bayangan keras, dan memeriksa apakah subjek masih terlihat alami sebelum Anda menerbitkan hasilnya.",
+    openGraphTitle: "Cara Mencerahkan Foto secara Daring dengan Agen AI",
+    openGraphDescription:
+      "Panduan alur kerja untuk mencerahkan foto secara daring melalui pengeditan gambar AnyCap dan pemahaman gambar sambil mempertahankan subjek dan komposisi yang sama.",
+    articleHeadline: "Cara Mencerahkan Foto secara Daring dengan Agen AI",
+    articleDescription:
+      "Alur praktis untuk mencerahkan foto secara daring melalui AnyCap dengan pelestarian cahaya alami dan QA.",
+    articleAbout: [
+      "Mencerahkan foto daring",
+      "Peningkatan foto",
+      "Pembersihan bayangan",
+      "Pengeditan potret",
+      "Pemahaman gambar",
+      "Agen AI",
+    ],
+    articleKeywords: [
+      "mencerahkan foto online",
+      "perbaiki foto gelap ai",
+      "terangkan gambar online",
+      "perbaiki foto underexposure",
+      "alur pencerah foto",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Belajar", href: "/learn" },
+    {
+      name: "Cara mencerahkan foto secara daring",
+      href: HOW_TO_BRIGHTEN_A_PHOTO_ONLINE_PATH,
+    },
+  ],
+  eyebrow: "Belajar",
+  lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+  hero: {
+    titleLine1: "Cara mencerahkan foto secara daring",
+    titleLine2: "tanpa membuat subjek terlihat kusam",
+    introBeforeFirstLink:
+      "Jika Anda ingin mencerahkan foto secara daring, pekerjaan yang berguna bukan sekadar menaikkan eksposur. Tujuan sebenarnya adalah memulihkan gambar yang lebih gelap sambil menjaga kulit, latar, dan suasana keseluruhan tetap meyakinkan. Di situlah",
+    firstLinkLabel: "generasi gambar AnyCap",
+    introBetweenLinks: "ditambah",
+    secondLinkLabel: "pemahaman gambar",
+    introAfterSecondLink:
+      "membentuk alur kerja yang lebih kuat daripada penggeser kecerahan generik.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Alur pencerahan yang berguna berarti peningkatan terkendali ditambah QA. AnyCap membantu agen mencerahkan foto gelap, melembutkan bayangan keras, dan memeriksa apakah hasilnya masih terasa seperti orang yang sama dalam adegan yang sama, bukan edit yang berlebihan.",
+  },
+  proof: {
+    eyebrow: "Bukti yang dihasilkan",
+    title: "Koreksi potret cahaya rendah nyata",
+    intro:
+      "Halaman ini memakai pasangan bukti sebelum-sesudah nyata yang dihasilkan dengan AnyCap. Bingkai kiri adalah potret yang lebih gelap dengan strip cahaya dan bayangan keras di wajah. Bingkai kanan mencerahkan foto dan melembutkan kontras keras sambil mempertahankan subjek, pose, dan ruangan yang sama.",
+    promptLabel: "Prompt edit yang dipakai dengan AnyCap",
+    prompt:
+      "terangkan potret dalam ruangan ini secara alami, angkat midtone dan eksposur wajah, redam bayangan keras di wajah, pertahankan wanita yang sama, pose, pembingkaian jendela, tekstur sweter, dan detail ruangan, cahaya siang yang realistis, tanpa teks, tanpa watermark",
+    signalsLabel: "Mengapa bukti ini penting",
+    signals: [
+      "Ini menunjukkan alur koreksi nyata, bukan demo penggeser stok sintetis.",
+      "Hasil mempertahankan pembingkaian potret yang sama, sehingga perbaikan pencahayaan mudah dinilai.",
+      "Ini mendukung klaim AnyCap yang lebih jujur di awal: mencerahkan foto sambil menjaga realisme, lalu memeriksa hasilnya.",
+    ],
+    caption:
+      "Gambar kiri adalah potret sumber yang lebih gelap. Gambar kanan adalah hasil pencerahan AnyCap yang dihasilkan dari file yang sama.",
+    images: [
+      {
+        src: `${PAGE_RESOURCE_BASE}/pt-br-brighten-photo-source-2026-04-10.png`,
+        alt: "Potret dalam ruangan seorang wanita di dekat jendela dengan strip diagonal keras cahaya dan bayangan di wajahnya.",
+        width: 1200,
+        height: 896,
+        label: "Foto sumber",
+        frameVariant: "plain",
+      },
+      {
+        src: `${PAGE_RESOURCE_BASE}/pt-br-brighten-photo-result-2026-04-10.png`,
+        alt: "Potret dalam ruangan yang sama setelah foto diterangkan dan bayangan wajah dilembutkan.",
+        width: 1200,
+        height: 896,
+        label: "Hasil yang diterangkan",
+        frameVariant: "plain",
+      },
+    ],
+  },
+  quickAnswer: {
+    eyebrow: "Jawaban singkat",
+    title: "Pencerahan hanya berguna ketika foto masih terasa nyata",
+    intro:
+      "Penggeser eksposur cepat bisa membuat foto lebih terang sekaligus lebih buruk. Pertanyaan berguna adalah apakah edit memulihkan visibilitas tanpa meratakan kulit, memotong highlight, atau membuat ruangan tampak palsu. Itulah sebabnya alur yang lebih baik adalah mencerahkan ditambah memeriksa.",
+    takeaways: [
+      "Prompt harus menyebutkan jenis perubahan kecerahan yang Anda inginkan dan apa yang harus tetap stabil dalam bingkai.",
+      "Pemulihan midtone dan pelembutan bayangan biasanya lebih penting daripada sekadar menaikkan kecerahan global.",
+      "Alur yang baik memeriksa apakah hasil yang lebih terang masih terlihat seperti orang yang sama dalam cahaya yang sama, bukan potret generasi yang berbeda.",
+    ],
+    cards: [
+      {
+        title: "Penyelamatan potret",
+        body: "Terbaik ketika wajah underexposure atau sebagian dalam bayangan tetapi ekspresi dan komposisi sudah layak dipertahankan.",
+      },
+      {
+        title: "Koreksi cahaya jendela",
+        body: "Berguna ketika sinar cahaya kuat membuat strip keras yang menyulitkan pemakaian ulang foto.",
+      },
+      {
+        title: "Pemakaian ulang konten dan profil",
+        body: "Kuat ketika gambar perlu terlihat lebih bersih untuk dokumen, bio, profil sosial, atau blok landing page tanpa terlihat berlebihan diedit.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja",
+    title: "Lima langkah dari sumber gelap ke gambar yang siap dipublikasikan",
+    stepLabel: "Langkah",
+    steps: [
+      {
+        title: "Pertahankan gambar yang sudah punya momen yang tepat",
+        body: "Mulai dari foto yang ekspresi, pose, dan pembingkaiannya ingin Anda pertahankan. Alur ini tentang koreksi, bukan penggantian.",
+      },
+      {
+        title: "Jelaskan masalah pencahayaan secara tepat",
+        body: "Sebutkan underexposure, bayangan wajah keras, backlight, atau cahaya dalam ruangan redup agar edit menyelesaikan masalah yang benar.",
+      },
+      {
+        title: "Lindungi identitas subjek",
+        body: "Ulangi bahwa orang yang sama, pose, pakaian, dan ruangan harus tetap stabil sementara kecerahan berubah.",
+      },
+      {
+        title: "Periksa realisme setelah edit",
+        body: "Pastikan warna kulit, cahaya jendela, dan kedalaman ruangan masih terasa alami dan tidak diratakan menjadi tampilan kusam.",
+      },
+      {
+        title: "Cabangkan ke pass kedua jika perlu",
+        body: "Jika perbaikan pencerahan pertama terlalu lembut atau terlalu agresif, jalankan prompt susulan yang lebih sempit alih-alih mulai dari nol.",
+      },
+    ],
+  },
+  comparison: {
+    eyebrow: "Mengapa alur kerja penting",
+    title: "Penggeser kecerahan versus alur kerja agen",
+    shallowLabel: "Penggeser generik",
+    workflowLabel: "Alur kerja AnyCap",
+    rows: [
+      {
+        lens: "Tujuan utama",
+        shallow:
+          "Membuat seluruh gambar lebih terang, meskipun highlight terpotong dan kulit kehilangan nuansa.",
+        workflow:
+          "Memulihkan visibilitas sambil menjaga foto tetap dikenali, meyakinkan, dan siap dipakai di saluran.",
+      },
+      {
+        lens: "Cara perbaikan dijelaskan",
+        shallow: "Sebagian besar numerik, dengan sedikit kontrol atas apa yang harus tetap tidak berubah.",
+        workflow:
+          "Prompt dapat menjelaskan masalah pencahayaan yang tepat dan detail adegan yang harus tetap stabil.",
+      },
+      {
+        lens: "Kendali mutu",
+        shallow: "Pengguna menilai hasil penggeser secara visual dan berhenti di situ.",
+        workflow:
+          "Agen dapat memeriksa hasil dengan pembacaan gambar dan memutuskan apakah pass pelembutan bayangan yang lebih ketat diperlukan.",
+      },
+    ],
+  },
+  modelChoice: {
+    eyebrow: "Pilihan model",
+    title: "Stack AnyCap saat ini untuk alur pencerahan foto",
+    cards: [
+      {
+        label: "Pass pertama terbaik",
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Opsi pertama terkuat ketika Anda sudah punya foto sumber dan ingin koreksi alami dengan pelestarian identitas dan komposisi yang lebih baik.",
+      },
+      {
+        label: "Iterasi cepat",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        body: "Berguna ketika Anda ingin variasi pass cepat untuk versi sedikit lebih terang, lebih lembut, atau lebih seimbang kontrasnya.",
+      },
+      {
+        label: "Lapisan QA",
+        title: "Image Understanding",
+        href: "/capabilities/image-understanding",
+        body: "Gunakan pembacaan gambar setelah generasi untuk memastikan foto yang lebih terang masih terlihat alami dan bebas artefak.",
+      },
+    ],
+  },
+  validation: {
+    eyebrow: "Apa yang divalidasi",
+    title: "Empat pemeriksaan sebelum Anda mengekspor versi yang lebih terang",
+    cards: [
+      {
+        title: "Subjek yang sama tetap ada",
+        body: "Pastikan edit mempertahankan wajah, gaya rambut, pose, dan ekspresi yang sama alih-alih bergeser ke potret yang sedikit berbeda.",
+      },
+      {
+        title: "Bayangan dilembutkan, bukan dihapus secara tidak realistis",
+        body: "Tujuannya biasanya visibilitas yang lebih baik, bukan wajah datar tanpa arah cahaya sama sekali.",
+      },
+      {
+        title: "Highlight masih terasa terkendali",
+        body: "Periksa area jendela, pantulan kulit, dan kain terang agar koreksi tidak terpotong menjadi kusam berlebihan.",
+      },
+      {
+        title: "Tanpa sisa AI yang terlihat",
+        body: "Cari mata terdistorsi, kulit kusam, jari rusak, teks acak, atau artefak watermark sebelum memakai ulang gambar.",
+      },
+    ],
+  },
+  cli: {
+    eyebrow: "Contoh CLI",
+    title: "Perintah contoh yang selaras dengan skema saat ini",
+    examples: [
+      {
+        title: "Mencerahkan potret gelap secara alami",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "terangkan potret dalam ruangan ini secara alami, angkat midtone dan eksposur wajah, redam bayangan keras di wajah, pertahankan wanita yang sama, pose, pembingkaian jendela, tekstur sweter, dan detail ruangan, cahaya siang yang realistis, tanpa teks, tanpa watermark" \\
+  --param images=./portrait-dark.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o portrait-brightened.png`,
+      },
+      {
+        title: "Jalankan pass bayangan lebih lembut jika perlu",
+        code: `anycap image generate \\
+  --model nano-banana-2 \\
+  --mode image-to-image \\
+  --prompt "pertahankan potret dan komposisi yang sama, hanya kurangi bayangan wajah keras yang tersisa dan terangkan lembut area pipi dan mata, pertahankan warna kulit realistis dan cahaya jendela, tanpa teks, tanpa watermark" \\
+  --param images=./portrait-brightened.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o portrait-brightened-pass-2.png`,
+      },
+      {
+        title: "QA gambar yang dikoreksi",
+        code: `anycap actions image-read \\
+  --file ./portrait-brightened.png \\
+  --instruction "Deskripsikan potret tersebut, konfirmasi apakah orang dan pembingkaian yang sama dipertahankan, dan sebutkan adanya highlight yang kelebihan paparan, detail wajah yang rusak, teks terlihat, atau watermark."`,
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Pertanyaan yang biasanya menyusul",
+    items: [
+      {
+        question: "Apakah mencerahkan foto sama dengan menghapus bayangan?",
+        answer:
+          "Tidak persis. Mencerahkan foto adalah tujuan koreksi yang lebih luas yang dapat mencakup menaikkan eksposur, membuka bayangan, dan memulihkan visibilitas. Menghapus bayangan sepenuhnya lebih sempit dan sering memerlukan alur kerja yang lebih spesifik.",
+      },
+      {
+        question: "Mengapa memakai alur kerja agen alih-alih penggeser kecerahan?",
+        answer:
+          "Karena hasil yang berguna bukan sekadar file yang lebih terang. Ini file yang lebih terang yang masih terlihat seperti subjek yang sama di ruangan yang sama. Alur AnyCap memungkinkan Anda mendefinisikan koreksi dengan kata-kata, lalu memeriksa apakah hasilnya tetap meyakinkan.",
+      },
+      {
+        question: "Foto seperti apa yang cocok untuk alur ini?",
+        answer:
+          "Potret di dekat jendela, foto dalam ruangan dengan cahaya arah keras, dan gambar konten underexposure adalah kandidat kuat. Ini paling baik ketika komposisi asli sudah layak diselamatkan.",
+      },
+      {
+        question: "Bisakah AnyCap memberi tahu saya apakah hasilnya terlihat berlebihan diedit?",
+        answer:
+          "Ya. Setelah generasi, Anda dapat memakai pembacaan gambar untuk mendeskripsikan foto yang dikoreksi dan menunjukkan highlight terpotong, tekstur kulit aneh, artefak terlihat, atau tanda lain bahwa edit perlu diperhalus.",
+      },
+    ],
+  },
+  nextMove: {
+    eyebrow: "Langkah berikutnya",
+    title: "Lanjutkan dari edit berikutnya yang Anda butuhkan",
+    cards: [
+      {
+        title: "Cara menghapus orang dari foto",
+        href: "/learn/how-to-remove-people-from-photos",
+        body: "Ke sini ketika masalah utama adalah orang yang mengganggu dalam bingkai, bukan underexposure atau cahaya keras.",
+      },
+      {
+        title: "Cara mengubah latar belakang foto",
+        href: "/learn/how-to-change-photo-background",
+        body: "Gunakan ini ketika subjek dan eksposur sudah baik tetapi lingkungan di sekitar foto perlu berubah.",
+      },
+      {
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Baca halaman model ketika Anda ingin model terkuat saat ini untuk peningkatan dan pembersihan dari foto sumber.",
+      },
+      {
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
+        body: "Mulai di sini jika Anda ingin CLI siap sebelum menguji alur koreksi yang sama pada foto Anda sendiri.",
+      },
+    ],
+  },
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, BrightenPhotoPageContent>;
 
 function getContent(locale: SiteLocale): BrightenPhotoPageContent {

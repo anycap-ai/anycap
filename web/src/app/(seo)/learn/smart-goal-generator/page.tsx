@@ -5,9 +5,10 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { ArticleByline } from "@/components/seo/ArticleByline";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getSeoPageChrome } from "@/lib/seo/ia";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { siteConfig } from "@/lib/site";
+import { defaultLocale } from "@/lib/site";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/use-case";
 
@@ -18,21 +19,21 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 const lastUpdatedLabel = "April 7, 2026";
 const lastUpdatedIso = "2026-04-07";
 
-export const metadata: Metadata = {
-  title: "AI SMART Goal Generator for Codex, Cursor, and Claude Code",
-  description:
-    "Use AnyCap with Codex, Cursor, or Claude Code to turn rough quarterly goals into research-backed SMART goals with citations, structured notes, and publishable output.",
-  alternates: { canonical: "/learn/smart-goal-generator" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/learn/smart-goal-generator",
-    siteName: siteConfig.siteName,
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  "/learn/smart-goal-generator",
+  {
     title: "AI SMART Goal Generator for Codex, Cursor, and Claude Code",
     description:
-      "See how AnyCap turns coding agents into a deep-research SMART goal writer through grounded search, crawl, and publish workflows.",
+      "Use AnyCap with Codex, Cursor, or Claude Code to turn rough quarterly goals into research-backed SMART goals with citations, structured notes, and publishable output.",
+    openGraph: {
+      type: "website",
+      title: "AI SMART Goal Generator for Codex, Cursor, and Claude Code",
+      description:
+        "See how AnyCap turns coding agents into a deep-research SMART goal writer through grounded search, crawl, and publish workflows.",
+    },
   },
-};
+);
 
 const articleJsonLd = createTechArticleJsonLd({
   headline: "AI SMART Goal Generator for Codex, Cursor, and Claude Code",

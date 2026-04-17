@@ -44,7 +44,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
     eyebrow: "Guides",
     title: ["How to add vision capabilities", "to an AI agent"],
@@ -183,6 +183,75 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     },
     breadcrumbLabel: "Adicionar visao ao agente de IA",
   },
+  id: {
+    eyebrow: "Panduan",
+    title: ["Cara menambahkan kapabilitas vision", "ke agen AI"],
+    intro: [
+      "Sebagian besar agen AI bekerja dengan teks dan kode, tetapi belum bisa melihat sampai Anda memberi surface visual. AnyCap menambahkan image understanding dan video analysis agar agen bisa meninjau screenshot, mengecek desain, merangkum demo, dan bernalar dari bukti visual di workflow yang sama.",
+      "Panduan ini membahas setup image read dan video read untuk agen seperti Claude Code, Cursor, dan Codex. Instalasinya sederhana, tetapi nilai utamanya muncul setelah aktif: agen bisa bergerak dari reasoning berbasis teks ke inspeksi visual, ekstraksi informasi, dan tugas QA.",
+      "Setelah dikonfigurasi, agen Anda dapat memperlakukan screenshot, mockup UI, atau rekaman demo sebagai input terstruktur. Ini membuka workflow baru untuk triase bug, review aksesibilitas, riset kompetitor, draft release notes, dan validasi desain.",
+    ],
+    neededTitle: "Yang perlu disiapkan",
+    neededItems: [
+      "Agen AI yang bisa menjalankan command shell, seperti Claude Code, Cursor, atau Codex",
+      "Node.js 18+ untuk mendukung skills.sh dan npm install",
+      "Browser untuk alur login satu kali",
+      "Gambar atau video yang akan dianalisis, baik berupa URL maupun file lokal yang bisa diunggah dulu",
+    ],
+    callout:
+      "Kapabilitas vision biasanya hadir sebagai dua command: image read untuk gambar statis dan video read untuk analisis temporal. Keduanya mengembalikan output teks terstruktur yang bisa dipakai agen untuk reasoning, ringkasan, atau langkah lanjutan.",
+    steps: {
+      skill: "Instal skill AnyCap",
+      cli: "Instal AnyCap CLI",
+      login: "Login",
+      image: "Gunakan image understanding",
+      video: "Gunakan video analysis",
+      combine: "Gabungkan vision ke workflow agen",
+    },
+    useCasesTitle: "Use case paling bernilai untuk vision",
+    useCases: [
+      {
+        title: "Review UI dan QA",
+        body: "Minta agen memeriksa screenshot untuk regresi layout, isu aksesibilitas, teks terpotong, atau bug visual sebelum rilis.",
+      },
+      {
+        title: "Review desain dan brand",
+        body: "Minta agen membandingkan mockup dengan guideline brand, mengekstrak teks yang terlihat, atau merangkum hierarki dan komposisi layout.",
+      },
+      {
+        title: "Pemahaman video",
+        body: "Berikan demo produk, rekaman pengguna, atau materi iklan agar agen merangkum scene, mengambil momen penting, lalu mengubahnya menjadi catatan atau tiket.",
+      },
+    ],
+    interpretationTitle: "Cara memanfaatkan output vision secara efektif",
+    interpretationBody: [
+      "Fitur vision paling berguna saat hasil analisis masuk ke workflow yang lebih besar, bukan berhenti di caption satu kali. Contohnya, agen membaca screenshot, menemukan isu aksesibilitas, lalu membuka file kode untuk menyarankan perbaikan.",
+      "Hal yang sama berlaku untuk video. Ringkasan per scene menjadi jauh lebih bernilai ketika agen mengubahnya menjadi release notes, checklist QA, atau daftar poin produk yang belum dijelaskan. Intinya bukan sekadar mendeskripsikan visual, tetapi membantu agen mengambil keputusan berbasis bukti visual.",
+      "Dalam praktik, prompt yang fokus memberi hasil lebih baik daripada prompt generik. Pertanyaan seperti 'Apa isi gambar ini?' tetap berguna, tetapi pertanyaan seperti 'Masalah onboarding apa yang menghambat user baru di screenshot ini?' memberi frame evaluasi yang lebih tajam.",
+    ],
+    mistakesTitle: "Kesalahan setup dan penggunaan yang sering terjadi",
+    mistakes: [
+      {
+        title: "Lupa langkah upload untuk file lokal",
+        body: "Jika input belum tersedia lewat URL, agen harus mengunggah file terlebih dahulu lalu memakai URL hasil upload pada command read.",
+      },
+      {
+        title: "Menggunakan prompt terlalu umum untuk review kompleks",
+        body: "Prompt yang terlalu luas memberi jawaban luas. Pertanyaan spesifik tentang aksesibilitas, hierarki informasi, atau urutan fitur menghasilkan output yang lebih bisa ditindaklanjuti.",
+      },
+      {
+        title: "Memperlakukan vision sebagai tugas terpisah",
+        body: "Dampak terbesar muncul saat agen menggunakan analisis visual untuk mendorong langkah berikutnya, misalnya membuat bug report, menulis catatan, atau mengusulkan perubahan kode.",
+      },
+    ],
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap untuk Claude Code",
+      capability: "Semua Kapabilitas",
+      start: "Mulai",
+    },
+    breadcrumbLabel: "Tambah vision ke agen AI",
+  },
 };
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);
@@ -267,18 +336,107 @@ const faqItems = [
   },
 ] as const;
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
+const idFaqItems = [
+  {
+    question: "Apa perbedaan image read dan video read?",
+    answer:
+      "Image read menganalisis satu frame visual dan mengembalikan detail terstruktur seperti objek, teks yang terlihat, layout, dan konteks. Video read menambahkan dimensi waktu sehingga output mencakup scene, aksi, urutan, dan momen penting sepanjang video.",
+  },
+  {
+    question: "Format gambar dan video apa yang didukung?",
+    answer:
+      "Untuk gambar, workflow umumnya mendukung JPEG, PNG, WebP, dan GIF. Untuk video, format yang umum adalah MP4, WebM, dan MOV. Pola paling aman adalah memakai URL yang stabil atau biarkan agen mengunggah file lokal terlebih dulu.",
+  },
+  {
+    question: "Apakah kapabilitas vision bisa dipakai untuk file lokal?",
+    answer:
+      "Bisa. Jika file masih lokal, agen dapat mengunggahnya dulu lalu meneruskan URL hasil upload ke command image read atau video read. Pola upload-lalu-analisis ini justru bagian penting yang diotomasi skill.",
+  },
+  {
+    question: "Use case awal terbaik untuk vision di agen apa saja?",
+    answer:
+      "Use case awal yang kuat meliputi screenshot QA, review aksesibilitas, ekstraksi informasi dari mockup UI, ringkasan demo produk, dan perbandingan visual terhadap standar desain atau brand.",
+  },
+] as const;
+
+const localizedStepCopy = {
+  en: {
+    breadcrumbHome: "Home",
+    breadcrumbGuides: "Guides",
+    skillForClaude: "# For Claude Code",
+    skillForCursor: "# For Cursor",
+    skillBody:
+      "This installs the AnyCap skill so your agent can discover image and video analysis without improvising the workflow from scratch. The skill explains commands, setup, and the situations where vision should be used.",
+    cliPrefix: "Or use ",
+    cliSuffix:
+      ". The CLI is the runtime surface that executes image and video reads after the skill tells the agent how to call them.",
+    loginBody:
+      "This authenticates the CLI once so the agent can use visual understanding together with other AnyCap capabilities in the same session.",
+    imageReadLabel: "# Analyze an image from a URL",
+    imagePromptLabel: "# Analyze with a specific question",
+    imagePromptValue: "What accessibility issues do you see?",
+    imageBody:
+      "The command returns structured details about visible text, objects, layout, and context. Focused prompts usually make the output much more useful for real product work.",
+    videoReadLabel: "# Analyze a video",
+    videoPromptLabel: "# Analyze with a focused prompt",
+    videoPromptValue: "List each feature shown in order",
+    videoBody:
+      "Video analysis returns scene-level structure, key moments, and temporal relationships, which makes it useful for demos, user recordings, and competitive analysis.",
+    workflowLabel: "# UI review workflow",
+    workflowPrompt1: "\"Look at this screenshot and identify any UI issues\"",
+    workflowLabel2: "# Video summary workflow",
+    workflowPrompt2: "\"Watch this demo video and write release notes\"",
+    workflowLabel3: "# Combined generation plus vision",
+    workflowPrompt3: "\"Generate a hero image, then analyze it for brand consistency\"",
+    workflowBody:
+      "The agent can orchestrate upload, analysis, interpretation, and follow-up actions without forcing the user to manage each step manually.",
+  },
+  id: {
+    breadcrumbHome: "Beranda",
+    breadcrumbGuides: "Panduan",
+    skillForClaude: "# Untuk Claude Code",
+    skillForCursor: "# Untuk Cursor",
+    skillBody:
+      "Langkah ini menginstal skill AnyCap agar agen Anda bisa menemukan workflow image dan video analysis tanpa menyusun alurnya dari nol. Skill menjelaskan command, setup, dan kapan kapabilitas vision sebaiknya dipakai.",
+    cliPrefix: "Atau gunakan ",
+    cliSuffix:
+      ". CLI adalah surface runtime yang menjalankan image read dan video read setelah skill memberi tahu agen cara memanggilnya.",
+    loginBody:
+      "Perintah ini mengautentikasi CLI satu kali sehingga agen dapat memakai pemahaman visual bersama kapabilitas AnyCap lain dalam sesi yang sama.",
+    imageReadLabel: "# Analisis gambar dari URL",
+    imagePromptLabel: "# Analisis dengan pertanyaan spesifik",
+    imagePromptValue: "Masalah aksesibilitas apa yang terlihat?",
+    imageBody:
+      "Perintah ini mengembalikan detail terstruktur tentang teks yang terlihat, objek, layout, dan konteks. Prompt yang fokus biasanya memberi hasil yang jauh lebih berguna untuk pekerjaan produk nyata.",
+    videoReadLabel: "# Analisis video",
+    videoPromptLabel: "# Analisis dengan prompt terfokus",
+    videoPromptValue: "Daftarkan setiap fitur yang ditampilkan sesuai urutan",
+    videoBody:
+      "Video analysis mengembalikan struktur per scene, momen penting, dan hubungan antarbagian waktu, sehingga cocok untuk demo, rekaman pengguna, dan analisis kompetitor.",
+    workflowLabel: "# Workflow review UI",
+    workflowPrompt1: "\"Lihat screenshot ini dan identifikasi masalah UI\"",
+    workflowLabel2: "# Workflow ringkasan video",
+    workflowPrompt2: "\"Tonton video demo ini lalu tulis release notes\"",
+    workflowLabel3: "# Workflow gabungan generasi + vision",
+    workflowPrompt3: "\"Buat hero image lalu analisis konsistensinya terhadap guideline brand\"",
+    workflowBody:
+      "Agen dapat mengorkestrasi upload, analisis, interpretasi, dan aksi lanjutan tanpa memaksa pengguna mengelola setiap langkah secara manual.",
+  },
+} as const;
 
 export default async function HowToAddVisionPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
+  const localizedFaqItems = locale === "id" ? idFaqItems : faqItems;
+  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
+  const stepCopy = locale === "id" ? localizedStepCopy.id : localizedStepCopy.en;
 
   return (
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: "Home", href: "/" },
-          { name: "Guides", href: "/guides", unlinkable: true },
+          { name: stepCopy.breadcrumbHome, href: "/" },
+          { name: stepCopy.breadcrumbGuides, href: "/guides", unlinkable: true },
           { name: content.breadcrumbLabel },
         ]}
       />
@@ -356,22 +514,20 @@ export default async function HowToAddVisionPage() {
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # For Claude Code
+                  {stepCopy.skillForClaude}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
                   npx -y skills add anycap-ai/anycap -a claude-code -y
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # For Cursor
+                  {stepCopy.skillForCursor}
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
                   npx -y skills add anycap-ai/anycap -a cursor -y
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                This installs the AnyCap skill so your agent can discover image and video analysis
-                without improvising the workflow from scratch. The skill explains commands, setup,
-                and the situations where vision should be used.
+                {stepCopy.skillBody}
               </p>
             </FadeIn>
 
@@ -390,9 +546,9 @@ export default async function HowToAddVisionPage() {
                 </p>
               </div>
               <p className="text-sm leading-6 text-[#4d5145]">
-                Or use <code className="text-[12px] text-[#6b7d3a]" style={mono}>npm install -g @anycap/cli</code>.
-                The CLI is the runtime surface that executes image and video reads after the skill tells
-                the agent how to call them.
+                {stepCopy.cliPrefix}
+                <code className="text-[12px] text-[#6b7d3a]" style={mono}>npm install -g @anycap/cli</code>
+                {stepCopy.cliSuffix}
               </p>
             </FadeIn>
 
@@ -411,8 +567,7 @@ export default async function HowToAddVisionPage() {
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                This authenticates the CLI once so the agent can use visual understanding together
-                with other AnyCap capabilities in the same session.
+                {stepCopy.loginBody}
               </p>
             </FadeIn>
 
@@ -427,21 +582,20 @@ export default async function HowToAddVisionPage() {
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Analyze an image from a URL
+                  {stepCopy.imageReadLabel}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
                   anycap image read --url https://example.com/screenshot.png
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Analyze with a specific question
+                  {stepCopy.imagePromptLabel}
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                  anycap image read --url https://example.com/ui.png --prompt &quot;What accessibility issues do you see?&quot;
+                  {`anycap image read --url https://example.com/ui.png --prompt "${stepCopy.imagePromptValue}"`}
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                The command returns structured details about visible text, objects, layout, and context.
-                Focused prompts usually make the output much more useful for real product work.
+                {stepCopy.imageBody}
               </p>
             </FadeIn>
 
@@ -456,21 +610,20 @@ export default async function HowToAddVisionPage() {
               </div>
               <div className="bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Analyze a video
+                  {stepCopy.videoReadLabel}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
                   anycap video read --url https://example.com/demo.mp4
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Analyze with a focused prompt
+                  {stepCopy.videoPromptLabel}
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                  anycap video read --url https://example.com/demo.mp4 --prompt &quot;List each feature shown in order&quot;
+                  {`anycap video read --url https://example.com/demo.mp4 --prompt "${stepCopy.videoPromptValue}"`}
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                Video analysis returns scene-level structure, key moments, and temporal relationships,
-                which makes it useful for demos, user recordings, and competitive analysis.
+                {stepCopy.videoBody}
               </p>
             </FadeIn>
 
@@ -489,27 +642,26 @@ export default async function HowToAddVisionPage() {
               </p>
               <div className="mt-3 bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # UI review workflow
+                  {stepCopy.workflowLabel}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
-                  &quot;Look at this screenshot and identify any UI issues&quot;
+                  {stepCopy.workflowPrompt1}
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Video summary workflow
+                  {stepCopy.workflowLabel2}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
-                  &quot;Watch this demo video and write release notes&quot;
+                  {stepCopy.workflowPrompt2}
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Combined generation plus vision
+                  {stepCopy.workflowLabel3}
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                  &quot;Generate a hero image, then analyze it for brand consistency&quot;
+                  {stepCopy.workflowPrompt3}
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                The agent can orchestrate upload, analysis, interpretation, and follow-up actions
-                without forcing the user to manage each step manually.
+                {stepCopy.workflowBody}
               </p>
             </FadeIn>
           </div>
@@ -587,7 +739,7 @@ export default async function HowToAddVisionPage() {
                 {content.faqTitle}
               </h2>
               <div className="max-w-[860px] space-y-4">
-                {faqItems.map((item) => (
+                {localizedFaqItems.map((item) => (
                   <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
                     <h3 className="mb-2 text-[14px] font-bold text-[#1c1f17]" style={mono}>
                       {item.question}

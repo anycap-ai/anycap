@@ -450,7 +450,208 @@ const ptBr: WhatIsTheMostAdvancedAIPageData = {
   ],
 };
 
-const id = en;
+const id: WhatIsTheMostAdvancedAIPageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Belajar", href: "/learn", unlinkable: true },
+    { name: "Apa AI paling canggih?" },
+  ],
+  eyebrow: "Belajar",
+  metadata: {
+    title: "Apa AI Paling Canggih? Mengapa jawaban sebenarnya bukan satu model",
+    description:
+      "Tidak ada satu AI paling canggih untuk setiap pekerjaan. Bandingkan kecerdasan model, sistem multimodal, dan eksekusi tugas dunia nyata sebelum memilih stack.",
+    openGraphTitle: "Apa AI Paling Canggih? Mengapa jawaban sebenarnya bukan satu model",
+    openGraphDescription:
+      "AI paling canggih bergantung pada tugasnya. Lihat mengapa eksekusi dunia nyata bergantung pada kualitas model dan sistem di sekelilingnya.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Apa AI Paling Canggih? Mengapa jawaban sebenarnya bukan satu model",
+    description:
+      "Penjelasan praktis tentang mengapa AI paling canggih bergantung pada penalaran, keluaran multimodal, dan eksekusi — serta mengapa jawaban sebenarnya biasanya sebuah sistem, bukan satu model.",
+    path: WHAT_IS_THE_MOST_ADVANCED_AI_PATH,
+    about: ["Model AI", "Agen AI", "AI multimodal", "Runtime kemampuan agen", "Agen pengkodean"],
+    keywords: [
+      "apa ai paling canggih",
+      "ai paling canggih",
+      "model ai paling canggih",
+      "sistem ai canggih",
+      "alat ai multimodal",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apa AI paling canggih saat ini?",
+      answer:
+        "Tidak ada satu jawaban permanen. Pemimpin untuk penalaran bisa berbeda dari sistem terbaik untuk pembuatan media, pemahaman visual, atau eksekusi agen.",
+    },
+    {
+      question: "Apakah AI paling canggih selalu AI terbaik untuk pekerjaan?",
+      answer:
+        "Belum tentu. Untuk pekerjaan nyata, AI yang paling berguna biasanya menggabungkan kualitas model dengan akses ke kemampuan yang tepat di sekitar model.",
+    },
+    {
+      question: "Apakah AnyCap sendiri adalah model AI?",
+      answer:
+        "Tidak. AnyCap adalah runtime kemampuan di sekitar agen dan asisten. Perannya adalah membantu mereka membuat, memeriksa, dan mengirimkan keluaran melalui satu jalur instalasi dan satu antarmuka CLI.",
+    },
+    {
+      question: "Apa yang harus saya optimalkan jika saya memakai AI dalam alur kerja agen?",
+      answer:
+        "Optimalkan penyelesaian tugas, bukan sekadar prestise benchmark. Model kuat tanpa lapisan kemampuan yang bisa dipakai sering kalah dari model sedikit lebih lemah yang benar-benar bisa menyelesaikan pekerjaan.",
+    },
+  ]),
+  lastUpdatedLabel: "7 April 2026",
+  heroTitle: ["Apa AI paling", "canggih", "?"],
+  heroIntro:
+    "Jawaban jujurnya adalah tidak ada satu pemenang untuk setiap jenis pekerjaan. Jika yang Anda maksud penalaran mentah, satu model frontier bisa memimpin. Jika yang Anda maksud keluaran gambar atau video, sistem lain bisa lebih kuat. Jika yang Anda maksud pekerjaan yang benar-benar selesai, AI paling canggih biasanya adalah model kuat yang terhubung ke runtime, alat, dan lapisan pengiriman di sekelilingnya.",
+  quickTakeawaysLabel: "Poin utama",
+  quickTakeaways: [
+    "Tidak ada satu pemenang permanen untuk setiap tugas AI.",
+    "Model penalaran terkuat belum tentu sistem terkuat untuk gambar, video, atau eksekusi agen.",
+    "Untuk pekerjaan nyata, susunan paling canggih biasanya adalah model kuat ditambah runtime dan lapisan pengiriman yang membuatnya bisa bertindak.",
+  ],
+  evaluationLabel: "Mengapa satu jawaban gagal",
+  evaluationTitle: '"Paling canggih" berubah tergantung apa yang Anda butuhkan dari AI',
+  evaluationCards: [
+    {
+      title: "Penalaran dan perencanaan",
+      body:
+        "Jika yang Anda maksud kualitas berantai pemikiran, bantuan pengkodean, atau analisis panjang, daftar pendek biasanya dari model frontier terbaru laboratorium besar. Itu satu definisi AI canggih, tapi bukan satu-satunya.",
+    },
+    {
+      title: "Pembuatan multimodal",
+      body:
+        "Jika Anda butuh keluaran gambar atau video, sistem generasi khusus lebih penting daripada benchmark teks murni. AI paling canggih untuk pekerjaan media bisa berbeda dari AI paling canggih untuk penalaran.",
+    },
+    {
+      title: "Pemahaman visual",
+      body:
+        "Sebuah model bisa sangat bagus menulis dan tetap lemah membaca tangkapan layar, diagram, atau rekaman. AI canggih untuk produksi sering berarti alur kerja penglihatan dan analisis yang lebih kuat, bukan hanya kecerdasan teks.",
+    },
+    {
+      title: "Penyelesaian tugas",
+      body:
+        "Model hanya sebagian dari sistem. Untuk menyelesaikan pekerjaan nyata, agen sering membutuhkan alat untuk membuat aset, memeriksa berkas, dan mengembalikan keluaran dalam bentuk yang bisa dipakai manusia.",
+    },
+  ],
+  stackLabel: "Kerangka yang lebih berguna",
+  stackTitle: "Dalam praktiknya, AI canggih adalah stack, bukan satu skor benchmark",
+  stackIntro:
+    "Inilah celah antara headline AI dan realitas produksi. Orang membandingkan kecerdasan model dulu, tapi tim biasanya merasakan sakitnya belakangan: agen bisa menjelaskan tugas, namun tidak bisa membuat gambar, memeriksa rekaman, atau menyerahkan sesuatu yang bisa dipakai. Itulah mengapa percakapan nyata harus menyertakan sistem di sekitar model.",
+  stackLayers: [
+    {
+      title: "Model dasar",
+      body:
+        "Ini bagian yang biasanya dibandingkan dulu: kualitas penalaran mentah, kinerja pengkodean, luas pengetahuan, dan kemampuan multimodal.",
+    },
+    {
+      title: "Runtime kemampuan",
+      body:
+        "Ini lapisan yang memberi agen kekuatan yang bisa dipakai di sekitar model, seperti pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video.",
+    },
+    {
+      title: "Lapisan pengiriman",
+      body:
+        "Bahkan AI kuat butuh cara mengirimkan hasil. Sistem yang paling berguna bisa berpindah dari penalaran ke keluaran yang bisa ditinjau, dibagikan, atau dipublikasikan.",
+    },
+  ],
+  capabilityLabel: "Di mana AnyCap berada",
+  capabilityTitle: "AnyCap bukan model frontier. Itu runtime kemampuan di sekitar sistem.",
+  capabilityIntro:
+    "Pembedaan itu penting. AnyCap tidak berusaha memenangkan perlombaan \"model terbaik\" sendirian. Perannya adalah membantu agen dan asisten berpindah dari penalaran ke tindakan melalui satu jalur instalasi, satu alur autentikasi, dan satu antarmuka CLI. Untuk tim yang sudah memakai alur kerja yang mereka sukai, itu sering lebih berguna daripada ganti platform hanya mengejar model mana yang tampak terkuat bulan ini.",
+  capabilityCards: [
+    {
+      title: "Pembuatan gambar",
+      href: "/capabilities/image-generation",
+      body: "Buat mockup, konsep, dan aset visual alih-alih berhenti pada instruksi teks tentang apa yang harus dibuat.",
+    },
+    {
+      title: "Pembuatan video",
+      href: "/capabilities/video-generation",
+      body: "Ubah prompt menjadi demo, aset gerak, atau penjelasan singkat ketika jawaban statis tidak cukup.",
+    },
+    {
+      title: "Pemahaman gambar",
+      href: "/capabilities/image-understanding",
+      body: "Baca tangkapan layar, diagram, referensi, dan masukan QA visual melalui alur kerja agen yang sama.",
+    },
+    {
+      title: "Analisis video",
+      href: "/capabilities/video-analysis",
+      body: "Periksa rekaman dan jelaskan apa yang terjadi alih-alih memperlakukan video sebagai blob tak terlihat di luar alur kerja.",
+    },
+  ],
+  selectionLabel: "Cara memilih",
+  selectionTitle: 'Ajukan pertanyaan yang lebih baik daripada "AI mana nomor satu?"',
+  selectionRows: [
+    {
+      question: "Siapa yang punya model penalaran terkuat saat ini?",
+      answer:
+        "Lihat perbandingan model frontier terbaru, tapi siapkan diri bahwa jawabannya sering berubah. Ini pertanyaan peringkat model, bukan pertanyaan alur kerja lengkap.",
+    },
+    {
+      question: "Apa AI paling canggih untuk pekerjaan nyata?",
+      answer:
+        "Jawaban yang lebih baik adalah stack: kecerdasan model kuat ditambah kemampuan yang dibutuhkan untuk membuat, memeriksa, dan mengirimkan keluaran.",
+    },
+    {
+      question: "Apa yang paling penting untuk alur kerja agen dunia nyata?",
+      answer:
+        "Yang paling penting adalah apakah sistem bisa menyelesaikan tugas, bukan apakah satu model memuncaki benchmark. Itu biasanya berarti kualitas model ditambah lapisan kemampuan dan pengiriman yang tepat di sekelilingnya.",
+    },
+  ],
+  nextMoveLabel: "Langkah berikutnya",
+  nextMoveTitle: "Lanjutkan dari penjelasan ini ke halaman dengan niat lebih tinggi",
+  nextMoveCards: [
+    {
+      title: "Mulai dari celah kemampuan",
+      href: "/learn/what-agents-cant-do",
+      body: "Gunakan halaman ini jika pertanyaan sebenarnya adalah apa yang bisa dan tidak bisa dilakukan agen sebelum menambah kemampuan eksternal.",
+    },
+    {
+      title: "Lihat pusat kemampuan",
+      href: "/capabilities",
+      body: "Jelajahi alur kerja praktis yang dibangun AnyCap untuk ditambahkan di sekitar agen pengkodean.",
+    },
+    {
+      title: "Perlengkapi agen yang sudah Anda pakai",
+      href: "/for",
+      body: "Lihat bagaimana lapisan kemampuan cocok dengan agen yang sudah Anda pakai alih-alih memaksa pergantian platform.",
+    },
+    {
+      title: "Ambil jalur produk terpendek",
+      href: "/start",
+      body: "Setelah lewat fase riset, gunakan jalur cepat untuk berpindah dari membaca ke pengaturan.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Pertanyaan di balik kata kunci",
+  faqItems: [
+    {
+      question: "Apa AI paling canggih saat ini?",
+      answer:
+        "Tidak ada satu jawaban permanen. Pemimpin untuk penalaran bisa berbeda dari sistem terbaik untuk pembuatan media, pemahaman visual, atau eksekusi agen.",
+    },
+    {
+      question: "Apakah AI paling canggih selalu AI terbaik untuk pekerjaan?",
+      answer:
+        "Belum tentu. Untuk pekerjaan nyata, AI yang paling berguna biasanya menggabungkan kualitas model dengan akses ke kemampuan yang tepat di sekitar model.",
+    },
+    {
+      question: "Apakah AnyCap sendiri adalah model AI?",
+      answer:
+        "Tidak. AnyCap adalah runtime kemampuan di sekitar agen dan asisten. Perannya adalah membantu mereka membuat, memeriksa, dan mengirimkan keluaran melalui satu jalur instalasi dan satu antarmuka CLI.",
+    },
+    {
+      question: "Apa yang harus saya optimalkan jika saya memakai AI dalam alur kerja agen?",
+      answer:
+        "Optimalkan penyelesaian tugas, bukan sekadar prestise benchmark. Model kuat tanpa lapisan kemampuan yang bisa dipakai sering kalah dari model sedikit lebih lemah yang benar-benar bisa menyelesaikan pekerjaan.",
+    },
+  ],
+};
 
 const contentByLocale: Record<SiteLocale, WhatIsTheMostAdvancedAIPageData> = {
   en,

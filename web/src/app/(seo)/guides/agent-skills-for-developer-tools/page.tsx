@@ -20,6 +20,8 @@ const agentTargets = ["Claude Code", "Cursor", "Codex", "OpenCode", "OpenClaw"];
 const pageChrome = getSeoPageChrome("/guides/agent-skills-for-developer-tools");
 
 type PageContent = {
+  breadcrumbItems: { name: string; href?: string }[];
+  authorLabel: string;
   eyebrow: string;
   title: [string, string];
   intro: string[];
@@ -32,6 +34,7 @@ type PageContent = {
   fitTitle: string;
   fitCards: { title: string; body: string }[];
   compareTitle: string;
+  compareHeaders: { topic: string; skills: string; native: string; mcp: string };
   compareRows: { label: string; skills: string; native: string; mcp: string }[];
   workflowTitle: string;
   workflowBody: string[];
@@ -41,6 +44,7 @@ type PageContent = {
   patternTitle: string;
   installLabel: string;
   switchLabel: string;
+  patternBody: string;
   ctas: {
     install: string;
     claude: string;
@@ -48,8 +52,14 @@ type PageContent = {
   };
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
+    breadcrumbItems: pageChrome?.breadcrumbItems ?? [
+      { name: "Home", href: "/" },
+      { name: "Guides", href: "/guides" },
+      { name: "Agent skills for developer tools" },
+    ],
+    authorLabel: pageChrome?.authorLabel ?? "By AnyCap Team",
     eyebrow: pageChrome?.eyebrow ?? "Guide",
     title: ["Agent skills", "for developer tools"],
     intro: [
@@ -113,6 +123,7 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
       },
     ],
     compareTitle: "Skills vs native tools vs MCP",
+    compareHeaders: { topic: "Topic", skills: "Skills", native: "Native tools", mcp: "MCP" },
     compareRows: [
       {
         label: "Primary job",
@@ -158,6 +169,8 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     patternTitle: "AnyCap distribution pattern",
     installLabel: "# Install through skills.sh",
     switchLabel: "# Or switch the agent target",
+    patternBody:
+      "In practice, the only thing that changes across targets is the installation surface. The underlying AnyCap runtime stays the same, which is what makes skills an efficient packaging and distribution mechanism for multimodal agent capabilities.",
     ctas: {
       install: "Install AnyCap",
       claude: "For Claude Code",
@@ -165,6 +178,12 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     },
   },
   "pt-br": {
+    breadcrumbItems: [
+      { name: "Inicio", href: "/" },
+      { name: "Guias", href: "/guides" },
+      { name: "Skills de agentes para ferramentas de desenvolvimento" },
+    ],
+    authorLabel: "Por equipe AnyCap",
     eyebrow: "Guia",
     title: ["Skills de agentes", "para ferramentas de desenvolvimento"],
     intro: [
@@ -228,6 +247,7 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
       },
     ],
     compareTitle: "Skills vs ferramentas nativas vs MCP",
+    compareHeaders: { topic: "Topico", skills: "Skills", native: "Ferramentas nativas", mcp: "MCP" },
     compareRows: [
       {
         label: "Papel principal",
@@ -273,32 +293,176 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     patternTitle: "Padrao de distribuicao do AnyCap",
     installLabel: "# Instale via skills.sh",
     switchLabel: "# Ou troque o alvo do agente",
+    patternBody:
+      "Na pratica, a unica mudanca entre os alvos e a superficie de instalacao. O runtime do AnyCap permanece o mesmo, o que torna skills um mecanismo eficiente de empacotamento e distribuicao para capabilities multimodais de agentes.",
     ctas: {
       install: "Instalar AnyCap",
       claude: "Para Claude Code",
       codex: "Para Codex",
     },
   },
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Panduan", href: "/guides" },
+      { name: "Skill agent untuk developer tools" },
+    ],
+    authorLabel: "Oleh tim AnyCap",
+    eyebrow: "Panduan",
+    title: ["Skill agent", "untuk developer tools"],
+    intro: [
+      "Skill agent adalah berkas instruksi yang mengajarkan agen AI cara menemukan, menginstal, mengautentikasi, dan memanggil kapabilitas. Skill penting karena agen developer tidak hanya butuh tool. Mereka butuh panduan yang konsisten untuk menjalankan tool di lingkungan eksekusi nyata.",
+      "Skill yang baik menutup celah antara kapabilitas yang tersedia dan kapabilitas yang benar-benar dipakai. Daripada memaksa agen menebak command dari dokumentasi yang tersebar, skill menjelaskan fungsi kapabilitas, kapan dipanggil, argumen apa yang dipakai, dan setup apa yang wajib dilakukan lebih dulu.",
+      "Itulah kenapa AnyCap memakai skill sebagai lapisan distribusi di Claude Code, Cursor, Codex, dan produk sejenis. Satu runtime kapabilitas cukup dipasang sekali, lalu diekspos secara konsisten ke banyak agen developer melalui file skill yang spesifik per produk.",
+    ],
+    whyTitle: "Kenapa skill penting",
+    whyCards: [
+      {
+        title: "Discovery lebih jelas",
+        body: "Agen bisa tahu kapabilitas tersedia tanpa harus membongkar docs khusus produk atau menebak dari nama paket.",
+      },
+      {
+        title: "Setup bisa diulang",
+        body: "Instalasi dan autentikasi tersimpan dalam satu file, jadi workflow tetap stabil di mesin, repo, dan produk agen yang berbeda.",
+      },
+      {
+        title: "Pemanggilan lebih aman",
+        body: "Contoh di skill menunjukkan kapan kapabilitas dipakai, bentuk command yang bisa diulang, serta prompt atau flag yang diharapkan.",
+      },
+    ],
+    whatTitle: "Apa fungsi nyata skill",
+    whatBody: [
+      "Skill bukan sekadar metadata. Skill memberi agen model kerja tentang posisi kapabilitas di dalam workflow. Biasanya ini mencakup langkah instalasi, autentikasi, contoh command, kondisi pemicu, batas input, dan bentuk output yang diharapkan.",
+      "Ini penting karena agen coding modern memang kuat di reasoning, tetapi tetap butuh rel operasional. Saat kapabilitas hanya ditulis dalam dokumentasi panjang, agen sering melewatkan edge case, skip auth, atau memilih command yang salah. Skill menurunkan tingkat gagal itu dengan membuat alur pemakaian menjadi eksplisit.",
+      "Di AnyCap, artinya runtime multimodal yang sama bisa dipakai ulang untuk image generation, video generation, music, atau vision, sementara tiap produk agen mendapat instruksi dalam format yang sudah dipahami produk tersebut.",
+    ],
+    anatomyTitle: "Isi file skill yang benar-benar berguna",
+    anatomyItems: [
+      {
+        title: "Ringkasan kapabilitas",
+        body: "Penjelasan singkat tentang fungsi kapabilitas, hasil yang diaktifkan, dan pola request yang seharusnya memicu kapabilitas.",
+      },
+      {
+        title: "Langkah instalasi dan auth",
+        body: "Command instalasi, autentikasi sekali pakai, kebutuhan environment, dan prasyarat akun bila ada.",
+      },
+      {
+        title: "Contoh pemanggilan",
+        body: "Command konkret yang bisa langsung disalin atau diadaptasi agen, termasuk nama model, flag, handling URL, dan pola prompt umum.",
+      },
+      {
+        title: "Aturan pengambilan keputusan",
+        body: "Panduan kapan memakai kapabilitas dibanding tetap di teks, kapan perlu minta klarifikasi, dan kapan kapabilitas sebaiknya tidak dipanggil.",
+      },
+    ],
+    fitTitle: "Posisi skill dalam alur kerja",
+    fitCards: [
+      {
+        title: "Discovery",
+        body: "Agen memahami kapabilitas apa yang tersedia dan hasil apa yang bisa dibawa ke workflow coding, desain, dan riset.",
+      },
+      {
+        title: "Instalasi",
+        body: "Skill menjelaskan cara pasang runtime, cara autentikasi, dan dependency yang harus siap dulu.",
+      },
+      {
+        title: "Invocation",
+        body: "Agen mendapatkan contoh dan pola penggunaan yang bisa dipakai ulang saat eksekusi, bukan mengarang sintaks command dari nol.",
+      },
+    ],
+    compareTitle: "Skill vs tool native vs MCP",
+    compareHeaders: { topic: "Topik", skills: "Skill", native: "Tool native", mcp: "MCP" },
+    compareRows: [
+      {
+        label: "Peran utama",
+        skills: "Mengajarkan agen cara memakai kapabilitas secara end to end.",
+        native: "Menyediakan aksi bawaan produk seperti search, edit, atau terminal.",
+        mcp: "Menyediakan API live atau sumber data lewat protokol standar.",
+      },
+      {
+        label: "Paling cocok untuk",
+        skills: "Alur instalasi, auth, pola pemakaian, dan panduan pemilihan tool.",
+        native: "Operasi inti yang sudah disediakan dan dikelola langsung oleh produk.",
+        mcp: "Integrasi dinamis yang perlu request/response terstruktur saat runtime.",
+      },
+      {
+        label: "Batas utama",
+        skills: "Skill mendeskripsikan penggunaan, tetapi tidak menggantikan runtime dasarnya.",
+        native: "Biasanya spesifik ke satu produk dan sulit dibagikan lintas agen.",
+        mcp: "MCP menyelesaikan transport, bukan onboarding. Agen tetap butuh panduan kapan memakainya.",
+      },
+    ],
+    workflowTitle: "Bagaimana AnyCap memakai skill sebagai lapisan distribusi",
+    workflowBody: [
+      "AnyCap memisahkan eksekusi kapabilitas dari discovery kapabilitas. CLI dan runtime menangani kerja multimodal yang sesungguhnya, sementara skill menjelaskan ke agen cara mengakses runtime itu di lingkungannya sendiri.",
+      "Desain ini membuat distribusi jauh lebih ringan. Daripada membangun permukaan integrasi terpisah untuk setiap produk agen, AnyCap mengirim runtime yang konsisten plus lapisan tipis instruksi khusus agen. Hasilnya rollout lebih cepat, duplikasi kode lebih sedikit, dan perilaku agen lebih prediktif di workflow nyata.",
+      "Perawatan juga lebih sederhana. Saat kapabilitas baru ditambahkan, runtime bisa tetap stabil sementara file skill diperbarui dengan contoh baru, aturan pemicu, dan pilihan model terbaru.",
+    ],
+    examplesTitle: "Contoh praktis",
+    examples: [
+      {
+        title: "Image generation",
+        body: "Agen coding yang menyiapkan aset peluncuran bisa membaca skill, memasang runtime AnyCap, autentikasi sekali, lalu memanggil image generation saat user meminta hero art atau ilustrasi produk.",
+      },
+      {
+        title: "Video generation",
+        body: "Agen yang menyiapkan rilis dapat berpindah dari menulis release notes ke membuat demo video singkat karena skill menjelaskan command yang dipakai dan cara polling async berjalan.",
+      },
+      {
+        title: "Vision analysis",
+        body: "Agen review UI bisa mengunggah screenshot, menjalankan analisis gambar, lalu memakai output terstruktur untuk menemukan masalah aksesibilitas atau merangkum regresi layout.",
+      },
+    ],
+    faqTitle: "FAQ",
+    patternTitle: "Pola distribusi AnyCap",
+    installLabel: "# Instal lewat skills.sh",
+    switchLabel: "# Atau ganti target agen",
+    patternBody:
+      "Dalam praktiknya, yang berubah antar target hanya permukaan instalasi. Runtime AnyCap di bawahnya tetap sama. Itu yang membuat skill efisien sebagai mekanisme packaging dan distribusi untuk kapabilitas agen multimodal.",
+    ctas: {
+      install: "Instal AnyCap",
+      claude: "Untuk Claude Code",
+      codex: "Untuk Codex",
+    },
+  },
 };
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);
 
-const guideJsonLd = createTechArticleJsonLd({
-  headline: "Agent skills for developer tools — How agent capabilities are distributed",
-  description:
-    "Learn how agent skills work in Claude Code, Cursor, and Codex, what skill files contain, and how AnyCap distributes multimodal capabilities across developer agents.",
-  path: "/guides/agent-skills-for-developer-tools",
-  about: ["Agent skills", "Developer tools", "Claude Code", "Cursor", "Codex", "AnyCap"],
-  keywords: [
-    "agent skills for developer tools",
-    "what are agent skills",
-    "claude code skills",
-    "codex skills",
-    "cursor skills",
-  ],
-  datePublished: "2026-04-14",
-  dateModified: "2026-04-14",
-});
+const guideJsonLdByLocale = {
+  en: createTechArticleJsonLd({
+    headline: "Agent skills for developer tools — How agent capabilities are distributed",
+    description:
+      "Learn how agent skills work in Claude Code, Cursor, and Codex, what skill files contain, and how AnyCap distributes multimodal capabilities across developer agents.",
+    path: "/guides/agent-skills-for-developer-tools",
+    about: ["Agent skills", "Developer tools", "Claude Code", "Cursor", "Codex", "AnyCap"],
+    keywords: [
+      "agent skills for developer tools",
+      "what are agent skills",
+      "claude code skills",
+      "codex skills",
+      "cursor skills",
+    ],
+    datePublished: "2026-04-14",
+    dateModified: "2026-04-14",
+  }),
+  id: createTechArticleJsonLd({
+    headline: "Skill agent untuk developer tools — Cara kapabilitas agent didistribusikan",
+    description:
+      "Pelajari cara kerja skill agent di Claude Code, Cursor, dan Codex, isi file skill yang penting, serta bagaimana AnyCap mendistribusikan kapabilitas multimodal lintas agen developer.",
+    path: "/guides/agent-skills-for-developer-tools",
+    about: ["Skill agent", "Developer tools", "Claude Code", "Cursor", "Codex", "AnyCap"],
+    keywords: [
+      "skill agent untuk developer tools",
+      "apa itu skill agent",
+      "skill claude code",
+      "skill codex",
+      "skill cursor",
+    ],
+    datePublished: "2026-04-14",
+    dateModified: "2026-04-14",
+  }),
+} as const;
 
 const faqItems = [
   {
@@ -323,15 +487,40 @@ const faqItems = [
   },
 ] as const;
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
+const idFaqItems = [
+  {
+    question: "Apa itu skill agent?",
+    answer:
+      "Skill agent adalah berkas instruksi yang memberi tahu agen AI fungsi kapabilitas, cara instalasi, cara autentikasi, kapan harus dipanggil, dan contoh command yang bisa dipakai ulang saat eksekusi.",
+  },
+  {
+    question: "Apa bedanya skill dan MCP?",
+    answer:
+      "Skill menjelaskan workflow dan pemilihan tool. MCP mengekspos tool serta data live lewat protokol. Dalam praktiknya, MCP menyediakan permukaan kapabilitas, sedangkan skill mengajari agen kapan dan bagaimana permukaan itu dipakai dengan benar.",
+  },
+  {
+    question: "Kenapa agen developer masih butuh skill kalau sudah bisa menjalankan command shell?",
+    answer:
+      "Akses shell memberi kekuatan eksekusi mentah, tetapi tidak memberi instruksi operasional yang andal. Skill mengurangi kesalahan dengan mengemas langkah instalasi, autentikasi, aturan pemicu, dan contoh command dalam format yang bisa diikuti berulang kali.",
+  },
+  {
+    question: "Kenapa AnyCap mendistribusikan kapabilitas lewat skill?",
+    answer:
+      "Karena skill memungkinkan AnyCap mengekspos satu runtime multimodal ke banyak produk agen tanpa membangun ulang integrasi untuk tiap produk. Runtime tetap konsisten, sementara instruksi disesuaikan dengan target agen.",
+  },
+] as const;
 
 export default async function AgentSkillsForDeveloperToolsPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const normalizedLocale = locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en";
+  const content = contentByLocale[normalizedLocale];
+  const localizedFaqItems = normalizedLocale === "id" ? idFaqItems : faqItems;
+  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
+  const guideJsonLd = normalizedLocale === "id" ? guideJsonLdByLocale.id : guideJsonLdByLocale.en;
 
   return (
     <>
-      <BreadcrumbJsonLd items={pageChrome?.breadcrumbItems} />
+      <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
@@ -341,7 +530,7 @@ export default async function AgentSkillsForDeveloperToolsPage() {
             <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {content.eyebrow}
             </p>
-            <ArticleByline className="mb-3" author={pageChrome?.authorLabel} />
+            <ArticleByline className="mb-3" author={content.authorLabel} />
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
               style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
@@ -458,16 +647,16 @@ export default async function AgentSkillsForDeveloperToolsPage() {
                   <thead>
                     <tr className="border-b border-[#d4dbb8] bg-[#f4f5f0]/70">
                       <th className="px-4 py-3 text-[12px] text-[#1c1f17]" style={mono}>
-                        Topic
+                        {content.compareHeaders.topic}
                       </th>
                       <th className="px-4 py-3 text-[12px] text-[#1c1f17]" style={mono}>
-                        Skills
+                        {content.compareHeaders.skills}
                       </th>
                       <th className="px-4 py-3 text-[12px] text-[#1c1f17]" style={mono}>
-                        Native tools
+                        {content.compareHeaders.native}
                       </th>
                       <th className="px-4 py-3 text-[12px] text-[#1c1f17]" style={mono}>
-                        MCP
+                        {content.compareHeaders.mcp}
                       </th>
                     </tr>
                   </thead>
@@ -553,9 +742,7 @@ export default async function AgentSkillsForDeveloperToolsPage() {
                 </p>
               </div>
               <p className="mt-4 max-w-[820px] text-sm leading-6 text-[#4d5145]">
-                In practice, the only thing that changes across targets is the installation surface.
-                The underlying AnyCap runtime stays the same, which is what makes skills an efficient
-                packaging and distribution mechanism for multimodal agent capabilities.
+                {content.patternBody}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {agentTargets.map((target) => (
@@ -581,7 +768,7 @@ export default async function AgentSkillsForDeveloperToolsPage() {
                 {content.faqTitle}
               </h2>
               <div className="max-w-[860px] space-y-4">
-                {faqItems.map((item) => (
+                {localizedFaqItems.map((item) => (
                   <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
                     <h3 className="mb-2 text-[14px] font-bold text-[#1c1f17]" style={mono}>
                       {item.question}

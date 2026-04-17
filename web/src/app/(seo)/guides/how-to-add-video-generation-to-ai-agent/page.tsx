@@ -44,7 +44,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
     eyebrow: "Guides",
     title: ["How to add video generation", "to an AI agent"],
@@ -183,6 +183,75 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     },
     breadcrumbLabel: "Adicionar geracao de video ao agente de IA",
   },
+  id: {
+    eyebrow: "Panduan",
+    title: ["Cara menambahkan generasi video", "ke agen AI"],
+    intro: [
+      "Agen AI bisa menulis kode, menjawab pertanyaan, dan mengotomasi workflow, tetapi tidak bisa membuat video sendiri. AnyCap menambahkan kapabilitas generasi video lewat file skill dan CLI agar agen bisa menemukan model, mengirim job, dan menunggu hasil tanpa keluar dari workflow.",
+      "Panduan ini menjelaskan cara menambahkan generasi video ke agen AI apa pun, termasuk Claude Code, Cursor, dan Codex. Isinya mencakup setup, discovery model, struktur prompt, dan workflow asinkron yang mengubah permintaan bahasa alami menjadi aset video siap pakai.",
+      "Tujuan praktisnya sederhana: setelah setup, agen Anda bisa memperlakukan generasi video seperti panggilan tool biasa. Pengguna cukup meminta demo produk, konsep motion, atau klip sosial singkat, lalu agen menjalankan alur end-to-end.",
+    ],
+    neededTitle: "Yang perlu disiapkan",
+    neededItems: [
+      "Agen AI yang bisa menjalankan perintah shell (Claude Code, Cursor, Codex, dan tool sejenis)",
+      "Node.js 18+ untuk skills.sh dan alur instalasi berbasis npm",
+      "Browser untuk alur login sekali saja",
+      "Prompt yang jelas atau gambar referensi untuk uji generasi pertama",
+    ],
+    callout:
+      "Generasi video bersifat asinkron. CLI mengirim request, melakukan polling sampai job selesai, lalu mengembalikan URL hasil. Setelah setup, agen bisa mengelola polling ini otomatis.",
+    steps: {
+      skill: "Instal skill AnyCap",
+      cli: "Instal AnyCap CLI",
+      login: "Login",
+      discover: "Temukan model video yang tersedia",
+      firstVideo: "Buat video pertama Anda",
+      workflow: "Gunakan generasi video dalam workflow agen",
+    },
+    useCasesTitle: "Kasus penggunaan paling umum",
+    useCases: [
+      {
+        title: "Demo produk",
+        body: "Ubah release notes atau ringkasan fitur menjadi video demo singkat yang bisa dibuat agen saat persiapan launch.",
+      },
+      {
+        title: "Eksperimen marketing",
+        body: "Minta agen membuat beberapa variasi singkat untuk konsep iklan, animasi hero, atau teaser sosial tanpa keluar dari workflow terminal.",
+      },
+      {
+        title: "Handoff desain",
+        body: "Animasikan mockup statis menjadi video walkthrough agar tim bisa meninjau gerak dan narasi lebih awal di siklus desain.",
+      },
+    ],
+    promptsTitle: "Cara mendapatkan output video yang lebih baik",
+    promptsBody: [
+      "Kualitas prompt lebih menentukan pada video dibanding banyak tugas teks karena model harus menebak komposisi shot, gerakan, durasi, dan kontinuitas visual. Prompt pendek dan samar tetap bisa jalan, tetapi prompt terstruktur biasanya jauh lebih konsisten.",
+      "Untuk hasil terbaik, beri tahu agen tentang subjek, gerakan kamera, adegan, pencahayaan, tone, dan durasi. Jika sudah ada arahan visual, gunakan gambar referensi agar video tetap terikat pada layout atau art direction yang jelas.",
+      "Pola yang aman adalah meminta agen membuat draf prompt dulu, Anda review, lalu agen menjalankan command generation. Alur tetap kolaboratif tanpa kehilangan otomasi.",
+    ],
+    mistakesTitle: "Kesalahan setup dan workflow yang sering terjadi",
+    mistakes: [
+      {
+        title: "Melewatkan discovery model",
+        body: "Setiap model punya kekuatan, durasi, dan gaya gerak yang berbeda. Menjalankan anycap video models lebih dulu membantu agen memilih model yang sesuai kebutuhan.",
+      },
+      {
+        title: "Menggunakan prompt yang terlalu umum",
+        body: "Permintaan seperti 'buat video produk' biasanya terlalu luas. Tambahkan konteks adegan, pacing, arah kamera, dan tujuan akhir agar prompt agen lebih kuat.",
+      },
+      {
+        title: "Menganggap generasi video sebagai command sinkron",
+        body: "Job video butuh waktu. Agen harus mengirim request, terus polling, lalu lanjut workflow hanya setelah URL hasil tersedia.",
+      },
+    ],
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap untuk Claude Code",
+      video: "Generasi Video",
+      start: "Mulai",
+    },
+    breadcrumbLabel: "Tambah generasi video ke agen AI",
+  },
 };
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);
@@ -267,11 +336,78 @@ const faqItems = [
   },
 ] as const;
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
-
 export default async function HowToAddVideoGenerationPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content =
+    contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
+  const localizedFaqItems =
+    locale === "id"
+      ? [
+          {
+            question: "Model video apa saja yang didukung AnyCap?",
+            answer:
+              "AnyCap memberi akses ke beberapa model generasi video seperti Veo 3.1, Kling 3.0, dan lainnya. Jalankan anycap video models untuk melihat opsi yang tersedia lalu pilih berdasarkan gaya gerak, durasi, dan target output.",
+          },
+          {
+            question: "Berapa lama proses generasi video?",
+            answer:
+              "Generasi video berjalan asinkron. CLI mengirim request lalu polling sampai selesai. Banyak job selesai dalam puluhan detik sampai beberapa menit, tergantung model, antrean, dan pengaturan. Agen bisa menangani loop tunggu ini otomatis.",
+          },
+          {
+            question: "Apakah bisa membuat video dari gambar referensi?",
+            answer:
+              "Bisa. Beberapa model mendukung image-to-video. Unggah gambar referensi lewat AnyCap Drive atau berikan path aset yang relevan agar agen bisa menjaga gerakan tetap sesuai frame awal.",
+          },
+          {
+            question: "Apakah ini hanya untuk Claude Code?",
+            answer:
+              "Tidak. Semua agen yang bisa menjalankan command shell dapat memakai generasi video AnyCap, termasuk Cursor, Codex, dan tool sejenis. Instal target skill yang sesuai dan alur lainnya hampir sama.",
+          },
+        ]
+      : faqItems;
+  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
+  const localizedCopy =
+    locale === "id"
+      ? {
+          skillBody:
+            "Perintah ini menaruh skill AnyCap ke direktori skills agen Anda. File ini memberi instruksi yang bisa ditemukan agen untuk generasi video, jadi agen tahu command apa yang harus dijalankan tanpa menebak dari dokumentasi.",
+          cliBody:
+            "Atau gunakan npm install -g @anycap/cli. CLI adalah surface eksekusi yang benar-benar mengirim dan melacak job multimodal.",
+          loginBody:
+            "Ini membuka alur autentikasi lewat browser. Satu kali login sudah mencakup generasi video dan kapabilitas AnyCap lainnya, jadi workflow agen lebih sederhana.",
+          discoverBody:
+            "Perintah ini menampilkan model video yang tersedia dan sebaiknya dijalankan sebelum run pertama. Agen bisa memakai output ini untuk memilih model yang tepat alih-alih selalu hardcode model yang sama.",
+          firstVideoBody:
+            "CLI akan mengirim request lalu polling sampai video siap. Setelah job selesai, CLI mengembalikan URL hasil agar agen bisa lanjut ke langkah posting, embed, atau review.",
+          workflowBody:
+            "Setelah setup selesai, agen bisa membuat video langsung dari permintaan bahasa alami. Agen dapat memilih model, menyusun prompt, mengirim job generation, lalu menunggu hasil tanpa pengawasan command-per-command.",
+          askLabel: "# Minta langsung ke agen Anda",
+          refLabel: "# Atau buat dari gambar referensi",
+          askPrompt: "\"Buat video demo produk berdurasi 5 detik untuk fitur baru kami\"",
+          refPrompt: "\"Animasikan mockup ini menjadi walkthrough onboarding singkat\"",
+          workflowFooter:
+            "Agen membaca skill, memakai CLI sebagai runtime, dan mengelola alur generasi asinkron dari awal sampai akhir.",
+        }
+      : {
+          skillBody:
+            "This places the AnyCap skill into your agent's skills directory. The file gives the agent discoverable instructions for video generation so it knows which commands to run instead of improvising from docs.",
+          cliBody:
+            "Or use npm install -g @anycap/cli. The CLI is the execution surface that actually submits and tracks multimodal jobs.",
+          loginBody:
+            "This opens the browser-based auth flow. One login covers video generation and the rest of the AnyCap capability set, which keeps agent workflows simpler later on.",
+          discoverBody:
+            "This lists the available video models and is worth doing before the first run. Agents can use that output to match the request to the best available model instead of hardcoding the same choice every time.",
+          firstVideoBody:
+            "The CLI submits the request and polls until the video is ready. Once the job finishes, it returns the resulting URL so the agent can continue with posting, embedding, or review steps.",
+          workflowBody:
+            "Once setup is complete, your agent can generate videos from natural-language requests. It can select a model, draft a prompt, submit the generation job, and wait for completion without manual command-by-command supervision.",
+          askLabel: "# Ask your agent naturally",
+          refLabel: "# Or generate from a reference image",
+          askPrompt: "\"Create a 5-second product demo video for our new feature\"",
+          refPrompt: "\"Animate this mockup into a short onboarding walkthrough\"",
+          workflowFooter:
+            "The agent reads the skill, uses the CLI as the runtime, and manages the asynchronous generation flow end to end.",
+        };
 
   return (
     <>
@@ -369,9 +505,7 @@ export default async function HowToAddVideoGenerationPage() {
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                This places the AnyCap skill into your agent&apos;s skills directory. The file gives
-                the agent discoverable instructions for video generation so it knows which commands
-                to run instead of improvising from docs.
+                {localizedCopy.skillBody}
               </p>
             </FadeIn>
 
@@ -390,8 +524,9 @@ export default async function HowToAddVideoGenerationPage() {
                 </p>
               </div>
               <p className="text-sm leading-6 text-[#4d5145]">
-                Or use <code className="text-[12px] text-[#6b7d3a]" style={mono}>npm install -g @anycap/cli</code>.
-                The CLI is the execution surface that actually submits and tracks multimodal jobs.
+                {localizedCopy.cliBody.split("npm install -g @anycap/cli")[0]}
+                <code className="text-[12px] text-[#6b7d3a]" style={mono}>npm install -g @anycap/cli</code>
+                {localizedCopy.cliBody.split("npm install -g @anycap/cli")[1]}
               </p>
             </FadeIn>
 
@@ -410,8 +545,7 @@ export default async function HowToAddVideoGenerationPage() {
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                This opens the browser-based auth flow. One login covers video generation and the rest
-                of the AnyCap capability set, which keeps agent workflows simpler later on.
+                {localizedCopy.loginBody}
               </p>
             </FadeIn>
 
@@ -430,9 +564,7 @@ export default async function HowToAddVideoGenerationPage() {
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                This lists the available video models and is worth doing before the first run. Agents
-                can use that output to match the request to the best available model instead of hardcoding
-                the same choice every time.
+                {localizedCopy.discoverBody}
               </p>
             </FadeIn>
 
@@ -451,9 +583,7 @@ export default async function HowToAddVideoGenerationPage() {
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                The CLI submits the request and polls until the video is ready. Once the job finishes,
-                it returns the resulting URL so the agent can continue with posting, embedding, or
-                review steps.
+                {localizedCopy.firstVideoBody}
               </p>
             </FadeIn>
 
@@ -467,27 +597,24 @@ export default async function HowToAddVideoGenerationPage() {
                 </h2>
               </div>
               <p className="max-w-[760px] text-sm leading-6 text-[#4d5145]">
-                Once setup is complete, your agent can generate videos from natural-language requests.
-                It can select a model, draft a prompt, submit the generation job, and wait for completion
-                without manual command-by-command supervision.
+                {localizedCopy.workflowBody}
               </p>
               <div className="mt-3 bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Ask your agent naturally
+                  {localizedCopy.askLabel}
                 </p>
                 <p className="mb-3 text-[13px] text-[#d4e0a4]" style={mono}>
-                  &quot;Create a 5-second product demo video for our new feature&quot;
+                  {localizedCopy.askPrompt}
                 </p>
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
-                  # Or generate from a reference image
+                  {localizedCopy.refLabel}
                 </p>
                 <p className="text-[13px] text-[#d4e0a4]" style={mono}>
-                  &quot;Animate this mockup into a short onboarding walkthrough&quot;
+                  {localizedCopy.refPrompt}
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#4d5145]">
-                The agent reads the skill, uses the CLI as the runtime, and manages the asynchronous
-                generation flow end to end.
+                {localizedCopy.workflowFooter}
               </p>
             </FadeIn>
           </div>
@@ -565,7 +692,7 @@ export default async function HowToAddVideoGenerationPage() {
                 {content.faqTitle}
               </h2>
               <div className="max-w-[860px] space-y-4">
-                {faqItems.map((item) => (
+                {localizedFaqItems.map((item) => (
                   <div key={item.question} className="rounded-xl border border-[#d4dbb8] bg-[#fffffc]/70 p-5">
                     <h3 className="mb-2 text-[14px] font-bold text-[#1c1f17]" style={mono}>
                       {item.question}

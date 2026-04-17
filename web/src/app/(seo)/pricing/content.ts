@@ -37,6 +37,9 @@ const pricingCapabilitySummaryTextEn =
 const pricingCapabilitySummaryTextPtBr =
   "Geração de imagens, Geração de vídeo, Geração de música, Entendimento de imagens, Análise de vídeo, Entendimento de áudio, Busca na web, Busca na web fundamentada, Crawl de web";
 
+const pricingCapabilitySummaryTextId =
+  "Generasi gambar, Generasi video, Generasi musik, Pemahaman gambar, Analisis video, Pemahaman audio, Pencarian web, Pencarian web ter-grounding, Crawl web";
+
 type PricingPageContent = {
   metadata: {
     title: string;
@@ -180,6 +183,42 @@ const checklistEn: readonly PricingChecklistItem[] = [
   },
 ];
 
+const pricingPrinciplesId: readonly PricingPrinciple[] = [
+  {
+    title: "Mulai gratis, lalu beli hanya ketika alur kerja sudah terbukti",
+    description:
+      "Setiap akun baru dimulai dengan kredit gratis $5, sehingga tim dapat menguji alur gambar, video, audio, dan web nyata sebelum berkomitmen pada paket prabayar yang lebih besar.",
+  },
+  {
+    title: "Pertahankan satu saldo untuk semua alur kerja yang benar-benar dibutuhkan agen",
+    description:
+      "Saldo AnyCap yang sama dapat dipakai untuk generasi, analisis, pencarian, penyimpanan, dan alur publikasi, tanpa harus membagi pengeluaran di banyak dasbor penyedia.",
+  },
+  {
+    title: "Bayar tarif resmi penyedia melalui satu alur penagihan terpusat",
+    description:
+      "AnyCap meneruskan tarif model resmi tanpa markup, lalu menambahkan satu alur pembelian, satu saldo, dan satu riwayat transaksi untuk seluruh runtime.",
+  },
+];
+
+const checklistId: readonly PricingChecklistItem[] = [
+  {
+    title: "1. Mulai dari alur kerja, bukan daftar model",
+    description:
+      "Perkirakan jalur yang benar-benar akan dijalankan agen Anda: generasi, analisis, pencarian, penyimpanan, atau gabungan beberapa langkah dalam satu pekerjaan.",
+  },
+  {
+    title: "2. Hargai langkah termahal lebih dulu",
+    description:
+      "Gunakan tabel di bawah untuk memperkirakan keluaran generasi atau jenis aksi yang akan memakan porsi kredit terbesar, lalu anggap sisanya sebagai cadangan.",
+  },
+  {
+    title: "3. Sisakan ruang untuk percobaan ulang dan iterasi",
+    description:
+      "Jika alur kerja membutuhkan penyesuaian prompt, QA, atau serah terima antar rekan, pilih paket yang memberi cukup ruang agar tetap jalan tanpa isi ulang setiap hari.",
+  },
+];
+
 const faqItemsEn: readonly PricingFaqItem[] = [
   {
     question: "Is there a free tier?",
@@ -208,6 +247,37 @@ const faqItemsEn: readonly PricingFaqItem[] = [
   {
     question: "What capabilities are included?",
     answer: `${pricingCapabilitySummaryTextEn}. Drive storage and Page hosting are included at no additional credit cost.`,
+  },
+];
+
+const faqItemsId: readonly PricingFaqItem[] = [
+  {
+    question: "Apakah ada tingkat gratis?",
+    answer:
+      "Setiap akun dimulai dengan kredit gratis $5, setara 250 kredit pada konversi dasar saat ini, dan tidak perlu informasi pembayaran untuk mulai menguji alur kerja.",
+  },
+  {
+    question: "Apakah kredit kedaluwarsa?",
+    answer: "Tidak. Kredit yang dibeli tidak kedaluwarsa.",
+  },
+  {
+    question: "Apakah ada markup pada harga model?",
+    answer:
+      "Tidak. AnyCap meneruskan tarif resmi penyedia untuk setiap model dan kapabilitas, lalu menggabungkan pemakaian ke dalam satu saldo dan satu alur penagihan.",
+  },
+  {
+    question: "Bisakah saya memakai saldo yang sama untuk generasi dan aksi?",
+    answer:
+      "Ya. Saldo AnyCap yang sama dapat dipakai untuk model generasi, alat analisis, aksi web, penyimpanan Drive, dan alur publikasi Page.",
+  },
+  {
+    question: "Bagaimana memilih paket kredit pertama?",
+    answer:
+      "Starter cocok untuk uji langsung pertama, Standard menjadi pilihan default untuk pemakaian mingguan berulang, dan Pro lebih pas bila tim mengharapkan beban produksi yang lebih berat atau lebih berkelanjutan.",
+  },
+  {
+    question: "Kapabilitas apa saja yang termasuk?",
+    answer: `${pricingCapabilitySummaryTextId}. Penyimpanan Drive dan hosting Page disertakan tanpa biaya kredit tambahan.`,
   },
 ];
 
@@ -246,19 +316,19 @@ const pricingPackagesByLocale: Record<SiteLocale, readonly PricingCreditPackage[
   })),
   id: creditPackages.map((pkg) => ({
     ...pkg,
-    bonusLabel: pkg.bonus ? `+${pkg.bonus / 10}% bonus` : null,
+    bonusLabel: pkg.bonus ? `+${pkg.bonus / 10}% kredit bonus` : null,
     bestFor:
       pkg.name === "Starter"
-        ? "Best for first live workflow tests"
+        ? "Cocok untuk uji alur kerja langsung pertama"
         : pkg.name === "Standard"
-          ? "Best for recurring weekly usage"
-          : "Best for heavier team or production workloads",
+          ? "Cocok untuk pemakaian mingguan berulang"
+          : "Cocok untuk beban kerja tim atau produksi yang lebih berat",
     description:
       pkg.name === "Starter"
-        ? "A low-risk starting point for solo builders validating prompts, tool calls, and a first production-near agent path."
+        ? "Titik awal berisiko rendah bagi pengembang solo untuk memvalidasi prompt, panggilan alat, dan jalur agen pertama yang mendekati produksi."
         : pkg.name === "Standard"
-          ? "A balanced default when you expect repeated image, video, audio, or web runs and want fewer top-ups while iterating."
-          : "More headroom for shared agent sessions, larger media batches, and longer-running workflows where throughput matters.",
+          ? "Pilihan seimbang saat Anda mengharapkan banyak eksekusi gambar, video, audio, atau web berulang dan ingin lebih jarang isi ulang saat beriterasi."
+          : "Lebih banyak ruang untuk sesi agen bersama, batch media lebih besar, dan alur kerja berjalan lebih lama di mana throughput penting.",
   })),
 };
 
@@ -619,7 +689,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
         "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
     },
     breadcrumbItems: [
-      { name: "Home", href: "/" },
+      { name: "Beranda", href: "/" },
       { name: "Harga", href: "/pricing" },
     ],
     hero: {
@@ -644,8 +714,8 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
     },
     pricingPrinciplesIntro:
       "Model harga ini sengaja dibuat sederhana: mulai gratis, beli paket kredit satu kali saat Anda butuh saldo lebih, dan pertahankan saldo yang sama untuk alur kerja yang sudah dijalankan agen Anda.",
-    pricingPrinciples: pricingPrinciplesEn,
-    creditPackages: pricingPackagesByLocale.en,
+    pricingPrinciples: pricingPrinciplesId,
+    creditPackages: pricingPackagesByLocale.id,
     creditPackagesIntro:
       "Beli kredit untuk dipakai di semua kapabilitas. Paket yang lebih besar menyertakan kredit bonus.",
     packageStatusLabels: {
@@ -667,7 +737,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
     estimateTopUp: {
       intro:
         "Kebanyakan tim tidak butuh prakiraan yang sempurna sebelum membeli kredit. Cara yang lebih baik adalah memetakan alurnya, menghitung bagian yang paling mahal, lalu memilih paket yang memberi ruang untuk iterasi.",
-      checklist: checklistEn,
+      checklist: checklistId,
     },
     generationModels: {
       intro:
@@ -679,7 +749,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       intro:
         "Analisis gambar, video, dan audio, cari web, crawl halaman, dan jalankan pencarian web yang di-grounding AI, semuanya dengan tarif tetap per permintaan.",
       includedCapabilitiesLabel: "Kapabilitas yang termasuk",
-      includedCapabilitiesSummary: pricingCapabilitySummaryTextEn,
+      includedCapabilitiesSummary: pricingCapabilitySummaryTextId,
       tableHeaders: ["Aksi", "Unit", "Kredit"],
     },
     drivePage: {
@@ -699,7 +769,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
         { label: "Versi per situs", value: "500" },
       ],
     },
-    faqItems: faqItemsEn,
+    faqItems: faqItemsId,
     cta: {
       buyCredits: "Beli kredit",
       viewCapabilities: "Lihat kapabilitas",
@@ -718,7 +788,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
         url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
         description:
           "Kredit bayar sesuai pemakaian untuk kapabilitas agen AI yang paling sering tidak dimiliki agen coding, dengan satu saldo di runtime AnyCap yang lebih luas.",
-        offers: pricingPackagesByLocale.en.map((pkg) => ({
+        offers: pricingPackagesByLocale.id.map((pkg) => ({
           "@type": "Offer",
           name: `${pkg.name} paket kredit`,
           url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
@@ -731,7 +801,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
         })),
       },
     },
-    faqJsonLd: createFaqPageJsonLd(faqItemsEn),
+    faqJsonLd: createFaqPageJsonLd(faqItemsId),
   },
 };
 

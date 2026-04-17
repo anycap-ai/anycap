@@ -566,7 +566,262 @@ const ptBr: BestAIForCursorPageData = {
   ],
 };
 
-const id = en;
+const id: BestAIForCursorPageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Belajar", href: "/learn", unlinkable: true },
+    { name: "AI terbaik untuk Cursor" },
+  ],
+  eyebrow: "Belajar",
+  metadata: {
+    title: "AI terbaik untuk Cursor: pengaturan yang tepat biasanya Cursor ditambah kemampuan",
+    description:
+      "AI terbaik untuk Cursor biasanya adalah pengaturan yang menjaga alur kerja asli editor Cursor tetap utuh sambil menambahkan lapisan visual, video, dan pilihan model yang belum dimilikinya.",
+    openGraphTitle: "AI terbaik untuk Cursor: pengaturan yang tepat biasanya Cursor ditambah kemampuan",
+    openGraphDescription:
+      "Panduan pembelian bagi tim yang memutuskan apakah pengaturan Cursor terbaik adalah Cursor saja, Cursor ditambah tab penyedia terpisah, atau Cursor ditambah satu runtime kemampuan dengan pilihan model.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AI terbaik untuk Cursor: pengaturan yang tepat biasanya Cursor ditambah kemampuan",
+    description:
+      "Panduan pembelian bagi tim yang memutuskan apakah pengaturan Cursor terbaik adalah Cursor saja, Cursor ditambah tab penyedia terpisah, atau Cursor ditambah satu runtime kemampuan dengan pilihan model.",
+    path: BEST_AI_FOR_CURSOR_PATH,
+    about: ["Cursor", "Agen pengkodean", "Kemampuan AI", "Generasi gambar", "Generasi video", "Runtime kemampuan agen"],
+    keywords: [
+      "ai terbaik untuk cursor",
+      "alat ai terbaik untuk cursor",
+      "kemampuan cursor",
+      "alur kerja visual cursor",
+      "generasi mockup cursor",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apa AI terbaik untuk Cursor saat ini?",
+      answer:
+        "Jika yang dimaksud pekerjaan pengkodean inti, Cursor mungkin sudah menjadi fondasi yang tepat untuk tim Anda. Jika yang dimaksud alur kerja lengkap di sekitar pengkodean, pengaturan terbaik seringkali Cursor ditambah kemampuan dan opsi model yang masih kurang.",
+    },
+    {
+      question: "Apakah AI terbaik untuk Cursor selalu model yang berbeda?",
+      answer:
+        "Tidak selalu. Terkadang keuntungan lebih besar datang dari menambahkan kemampuan media dan visi di sekitar Cursor daripada mengganti lingkungan pengkodean inti itu sendiri.",
+    },
+    {
+      question: "Apa yang biasanya patah lebih dulu di sekitar Cursor?",
+      answer:
+        "Titik patahan pertama biasanya pekerjaan produk visual: mockup, visual peluncuran, debugging tangkapan layar, demo, atau analisis rekaman. Itulah tugas yang menarik alur kerja melampaui apa yang Cursor berikan sendiri.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Cursor?",
+      answer:
+        "Tidak. AnyCap memperluas Cursor. Perannya adalah menambahkan generasi gambar, generasi video, pemahaman gambar, dan analisis video di sekitar lingkungan pengkodean yang sudah Anda gunakan.",
+    },
+  ]),
+  lastUpdatedLabel: "7 April 2026",
+  heroTitle: ["AI terbaik untuk", "Cursor"],
+  heroIntro:
+    "AI terbaik untuk Cursor biasanya bukan pertanyaan tentang meninggalkan Cursor. Ini pertanyaan apakah alur kerja asli editor masih cukup atau pekerjaan telah menjadi visual, dapat dibagikan, dan sensitif terhadap model dengan cara yang memerlukan lapisan kemampuan di sekitar editor.",
+  quickAnswerLabel: "Jawaban singkat",
+  quickAnswerTitle:
+    "Pengaturan Cursor terbaik biasanya mempertahankan Cursor sebagai inti asli editor dan menambahkan lapisan visual yang hilang di sekitarnya.",
+  quickAnswerBody:
+    "Ini menjaga siklus pengkodean tetap utuh sambil memperluas apa yang benar-benar dapat diselesaikan alur kerja. Bagi banyak tim, itu lebih berguna daripada mengganti lingkungan inti hanya karena tugas sebentar keluar dari editor dan menjadi visual atau multimodal.",
+  quickTakeawaysLabel: "Poin utama",
+  quickTakeaways: [
+    "Cursor sudah kuat ketika pekerjaan tetap dalam siklus edit-jalankan-tinjau.",
+    "Titik patahan pertama biasanya muncul pada pekerjaan produk visual: mockup, tangkapan layar, demo, dan rekaman.",
+    "Bagi pengguna Cursor, keputusan berikutnya sering model atau kemampuan mana yang ditambahkan, bukan agen baru mana yang diadopsi.",
+  ],
+  evaluationLabel: "Yang perlu dievaluasi",
+  evaluationTitle: "Mulai dengan bertanya seberapa besar pekerjaan yang masih cocok dengan siklus editor",
+  evaluationCards: [
+    {
+      title: "Seberapa besar pekerjaan yang tetap di editor",
+      body:
+        "Ketika tugas utamanya navigasi kode, pengeditan, diff, debugging, dan eksekusi lokal, pertanyaan utamanya adalah apakah Cursor sudah memberi tim Anda siklus pengkodean yang tepat. Seringkali sudah.",
+    },
+    {
+      title: "Seberapa visual alur kerja menjadi",
+      body:
+        "Jawabannya berubah ketika pekerjaan memerlukan mockup produk, visual peluncuran, klip demo, inspeksi tangkapan layar, atau analisis rekaman. Pada titik itu, AI terbaik untuk Cursor bukan hanya pertanyaan model pengkodean.",
+    },
+    {
+      title: "Seberapa sering keluaran menjadi artefak yang dapat dibagikan",
+      body:
+        "Stack yang hanya mengedit kode tidak cukup ketika hasil harus menjadi artefak yang dapat ditinjau, dibagikan, atau dipublikasikan oleh rekan kerja atau pemangku kepentingan.",
+    },
+    {
+      title: "Seberapa penting pilihan model dan kontrol peralatan",
+      body:
+        "Pengaturan praktis terbaik seringkali yang menghindari penyebaran penyedia sambil tetap memberi model gambar dan video yang tepat untuk tugas. Layanan terpisah dapat dengan cepat menjadi utang integrasi di sekitar Cursor.",
+    },
+  ],
+  stackLabel: "Tiga pola pengaturan",
+  stackTitle: "Sebagian besar tim yang mengevaluasi Cursor sebenarnya memilih seberapa jauh siklus editor dapat diregangkan",
+  stackCards: [
+    {
+      title: "Hanya Cursor",
+      label: "Terbaik ketika kode dan eksekusi lokal adalah tugasnya",
+      body:
+        "Ini jalur paling sederhana ketika alur kerja tetap di dalam pekerjaan repositori, eksekusi lokal, dan iterasi kode. Nilainya datang dari lingkungan pengkodean itu sendiri, bukan dari tugas media atau analisis eksternal.",
+    },
+    {
+      title: "Cursor ditambah tab penyedia terpisah",
+      label: "Berfungsi, tetapi alur kerja keluar dari editor",
+      body:
+        "Anda dapat menghubungkan penyedia gambar, video, dan analisis secara terpisah, tetapi setiap tugas tambahan meningkatkan penyebaran kredensial, drift prompt, dan pemeliharaan di sekitar alur kerja editor.",
+    },
+    {
+      title: "Cursor ditambah runtime kemampuan",
+      label: "Terbaik ketika alur kerja menjadi visual atau multimedia",
+      body:
+        "Di sinilah AnyCap cocok. Anda mempertahankan Cursor untuk kode, pengeditan, dan alur kerja terminal terintegrasi, lalu menambahkan generasi gambar, generasi video, pemahaman gambar, dan analisis video melalui satu runtime.",
+    },
+  ],
+  capabilityLabel: "Alur kerja pertama untuk ditambahkan",
+  capabilityTitle: "Ini biasanya alur kerja visual pertama yang muncul di sekitar Cursor",
+  capabilityCards: [
+    {
+      title: "Visual peluncuran dan mockup",
+      href: "/capabilities/image-generation",
+      body:
+        "Gunakan jalur ini ketika Cursor memerlukan visual produk yang halus, konsep halaman arahan, atau mockup alih-alih hanya menjelaskan apa yang harus dibuat desainer.",
+    },
+    {
+      title: "Klip demo dan walkthrough",
+      href: "/capabilities/video-generation",
+      body:
+        "Gunakan jalur ini ketika alur kerja memerlukan demo, walkthrough, atau aset gerak pendek dari proses yang sama yang berpusat pada editor.",
+    },
+    {
+      title: "Debugging tangkapan layar dan QA visual",
+      href: "/capabilities/image-understanding",
+      body:
+        "Gunakan ini ketika Cursor perlu menafsirkan tangkapan layar, diagram, masukan OCR, atau bukti QA visual dalam siklus debugging yang sama.",
+    },
+    {
+      title: "Tinjauan rekaman dan analisis isu",
+      href: "/capabilities/video-analysis",
+      body:
+        "Gunakan ini ketika bug, isu kegunaan, atau bukti alur kerja ada dalam rekaman alih-alih log teks.",
+    },
+  ],
+  modelLabel: "Pilihan model",
+  modelTitle: "Jika Anda mempertahankan Cursor, pertanyaan berikutnya sering model mana yang cocok dengan alur kerja",
+  modelIntro:
+    "Pengguna Cursor sering menghadapi keputusan kedua setelah menambahkan kemampuan: model gambar atau video mana yang benar-benar cocok dengan pekerjaan. Itu masalah berbeda dari memilih editor itu sendiri.",
+  modelCards: [
+    {
+      title: "Seedream 5",
+      href: "/models/seedream-5",
+      body: "Model gambar babak pertama terbaik ketika Cursor memerlukan mockup halus, visual peluncuran, atau konsep visual yang lebih bersih.",
+    },
+    {
+      title: "Nano Banana 2",
+      href: "/models/nano-banana-2",
+      body: "Terbaik ketika Cursor memerlukan iterasi lebih cepat di banyak varian visual dan siklus kreatif yang lebih ringan.",
+    },
+    {
+      title: "Veo 3.1",
+      href: "/models/veo-3-1",
+      body: "Model video premium terbaik untuk Cursor ketika alur kerja memerlukan klip demo halus atau keluaran gerak sinematik.",
+    },
+    {
+      title: "Kling 3.0",
+      href: "/models/kling-3-0",
+      body: "Terbaik ketika gerak perlu terasa lebih bergaya atau sinematik daripada walkthrough produk standar.",
+    },
+  ],
+  decisionLabel: "Cara memutuskan",
+  decisionTitle: "Tanyakan hal ini sebelum membangun ulang alur kerja yang sudah ditangani Cursor dengan baik",
+  decisionRows: [
+    {
+      question: "Kapan Cursor saja sudah cukup?",
+      answer:
+        "Cursor sering cukup ketika alur kerja berpusat pada kode, eksekusi terminal, dan penalaran repositori lokal. Dalam kasus itu, nilai utama ada di dalam editor dan siklus pengkodean.",
+    },
+    {
+      question: "Kapan saya harus menambahkan kemampuan alih-alih mengganti lingkungan?",
+      answer:
+        "Tambahkan kemampuan ketika pekerjaan memerlukan keluaran gambar, keluaran video, interpretasi tangkapan layar, QA visual, atau analisis rekaman. Itu masalah lapisan kemampuan, bukan alasan untuk meninggalkan siklus editor sepenuhnya.",
+    },
+    {
+      question: "Kapan pilihan model di dalam lapisan kemampuan penting?",
+      answer:
+        "Pilihan model penting setelah alur kerja menjadi visual. Pada titik itu, Anda mungkin menginginkan satu model gambar untuk mockup halus, lainnya untuk iterasi cepat, dan model video terpisah untuk demo atau walkthrough.",
+    },
+    {
+      question: "Haruskah saya mengganti Cursor untuk menutup celah itu?",
+      answer:
+        "Biasanya tidak. Bagi banyak tim, langkah yang lebih baik adalah mempertahankan Cursor dan menambahkan kemampuan yang tidak disertakan alih-alih memperkenalkan permukaan agen baru dan melatih ulang alur kerja.",
+    },
+  ],
+  nextMoveLabel: "Langkah berikutnya",
+  nextMoveTitle: "Lanjutkan dari panduan pembelian ini ke halaman alur kerja atau model Cursor yang paling relevan",
+  nextMoveCards: [
+    {
+      title: "Lihat pusat Cursor",
+      href: "/for/cursor",
+      body: "Pergi ke sini ketika Anda ingin halaman utama Cursor alih-alih panduan evaluasi gaya Belajar.",
+    },
+    {
+      title: "Mulai dengan pemahaman tangkapan layar",
+      href: "/capabilities/image-understanding",
+      body: "Langkah berikut terbaik ketika alur kerja pertama yang patah adalah debugging tangkapan layar, QA visual, atau umpan balik desain.",
+    },
+    {
+      title: "Bandingkan model gambar",
+      href: "/models/seedream-5",
+      body: "Langkah berikut terbaik ketika pertanyaan sebenarnya adalah model gambar mana yang cocok untuk mockup dan visual peluncuran Cursor.",
+    },
+    {
+      title: "Bandingkan model video",
+      href: "/models/veo-3-1",
+      body: "Langkah berikut terbaik ketika pertanyaan sebenarnya adalah model video mana yang cocok untuk demo, walkthrough, atau gerak produk sinematik.",
+    },
+    {
+      title: "Apa AI paling canggih?",
+      href: "/learn/what-is-the-most-advanced-ai",
+      body: "Pergi ke sini ketika pertanyaannya tentang frontier secara keseluruhan, bukan hanya Cursor secara khusus.",
+    },
+    {
+      title: "Pasang runtime",
+      href: "/guides/install-anycap",
+      body: "Gunakan panduan instalasi ketika Anda siap beralih dari evaluasi ke langkah pengaturan nyata.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Pertanyaan di balik kata kunci",
+  faqItems: [
+    {
+      question: "Apa AI terbaik untuk Cursor saat ini?",
+      answer:
+        "Jika yang dimaksud pekerjaan pengkodean inti, Cursor mungkin sudah menjadi fondasi yang tepat untuk tim Anda. Jika yang dimaksud alur kerja lengkap di sekitar pengkodean, pengaturan terbaik seringkali Cursor ditambah kemampuan dan opsi model yang masih kurang.",
+    },
+    {
+      question: "Apakah AI terbaik untuk Cursor selalu model yang berbeda?",
+      answer:
+        "Tidak selalu. Terkadang keuntungan lebih besar datang dari menambahkan kemampuan media dan visi di sekitar Cursor daripada mengganti lingkungan pengkodean inti itu sendiri.",
+    },
+    {
+      question: "Apa yang biasanya patah lebih dulu di sekitar Cursor?",
+      answer:
+        "Titik patahan pertama biasanya pekerjaan produk visual: mockup, visual peluncuran, debugging tangkapan layar, demo, atau analisis rekaman. Itulah tugas yang menarik alur kerja melampaui apa yang Cursor berikan sendiri.",
+    },
+    {
+      question: "Model mana yang harus saya tambahkan lebih dulu untuk Cursor?",
+      answer:
+        "Jika pekerjaan dimulai dengan visual halus, mulai dengan Seedream 5. Jika Anda memerlukan iterasi visual lebih cepat, mulai dengan Nano Banana 2. Jika pekerjaan dimulai dengan demo produk atau gerak, lihat Veo 3.1 atau Kling 3.0 terlebih dahulu.",
+    },
+    {
+      question: "Apakah AnyCap menggantikan Cursor?",
+      answer:
+        "Tidak. AnyCap memperluas Cursor. Perannya adalah menambahkan generasi gambar, generasi video, pemahaman gambar, dan analisis video di sekitar lingkungan pengkodean yang sudah Anda gunakan.",
+    },
+  ],
+};
 
 const contentByLocale: Record<SiteLocale, BestAIForCursorPageData> = {
   en,

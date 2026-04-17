@@ -716,10 +716,305 @@ const ptBrContent: TransparentImagePageContent = {
   },
 };
 
+const idContent: TransparentImagePageContent = {
+  metadata: {
+    title: "Cara Membuat Gambar Transparan dengan Agen AI",
+    description:
+      "Gunakan AnyCap untuk mengubah gambar yang sudah ada menjadi potongan PNG transparan, memeriksa tepinya dengan pemahaman gambar, dan menjaga aset tetap bisa dipakai ulang untuk produk, dokumentasi, dan alur konten.",
+    openGraphTitle: "Cara Membuat Gambar Transparan dengan Agen AI",
+    openGraphDescription:
+      "Panduan alur kerja memakai AnyCap untuk menghapus latar, memeriksa potongan, dan menjaga aset akhir tetap bisa dipakai ulang alih-alih berhenti di satu klik penghapus latar.",
+    articleHeadline: "Cara Membuat Gambar Transparan dengan Agen AI",
+    articleDescription:
+      "Alur praktis untuk mengubah gambar yang sudah ada menjadi potongan dengan latar transparan melalui pengeditan dan pemahaman gambar AnyCap.",
+    articleAbout: [
+      "Latar transparan",
+      "Penghapusan latar belakang",
+      "Pengeditan gambar",
+      "Pemahaman gambar",
+      "Agen AI",
+      "Potongan produk",
+    ],
+    articleKeywords: [
+      "cara membuat gambar transparan",
+      "cara membuat background transparan",
+      "png transparan",
+      "hapus background gambar",
+      "alur penghapus latar belakang",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Learn", href: "/learn" },
+    {
+      name: "Cara Membuat Gambar Transparan",
+      href: HOW_TO_MAKE_IMAGE_TRANSPARENT_PATH,
+    },
+  ],
+  eyebrow: "Learn",
+  lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+  hero: {
+    titleLine1: "Cara membuat gambar transparan",
+    titleLine2: "tanpa memperlakukannya seperti ekspor sekali pakai",
+    introBeforeFirstLink:
+      "Jika Anda ingin membuat gambar transparan, pertanyaan yang berguna bukan apakah ada penghapus latar lain. Yang penting adalah apakah agen Anda bisa mengisolasi subjek, memeriksa tepinya, dan menjaga aset akhir tetap bisa dipakai ulang untuk dokumentasi, halaman produk, dan alur konten. Di situlah",
+    firstLinkLabel: "pembuatan gambar AnyCap",
+    introBetweenLinks: "ditambah",
+    secondLinkLabel: "pemahaman gambar",
+    introAfterSecondLink: "mengubah alur kerjanya.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Alur gambar transparan yang berguna bukan sekadar penghapusan latar. Ini ekstraksi subjek, pemeriksaan tepi, dan penggunaan ulang output. AnyCap membantu agen menjalankan siklus itu di satu tempat: edit gambar, periksa hasilnya, dan bercabang ke versi yang dibutuhkan tujuan—baik potongan transparan maupun varian latar putih.",
+  },
+  proof: {
+    eyebrow: "Bukti yang dihasilkan",
+    title: "Gambar sumber masuk, potongan transparan keluar",
+    intro:
+      "Halaman ini memakai blok bukti before-and-after nyata, bukan stok seni. Bingkai kiri adalah gambar sumber. Bingkai kanan adalah PNG transparan nyata yang dihasilkan dari aset sumber yang sama sehingga langkah isolasi terlihat sekilas.",
+    promptLabel: "Prompt edit yang dipakai dengan AnyCap",
+    prompt:
+      "remove the entire desk background and return only the same running shoe as a clean product cutout on a transparent background, preserve the exact shoe shape, laces, sole texture, and stitching, remove the mug and plant completely, no floor shadow, no extra objects, blank label, no text, no watermark",
+    signalsLabel: "Mengapa bukti ini penting",
+    signals: [
+      "Mengubah klaim utama halaman menjadi sesuatu yang visual: penghapusan latar lebih berguna ketika subjek tetap terlihat cukup bersih untuk dipakai ulang.",
+      "Pratinjau pola kotak-kotak membuat langkah isolasi subjek mudah dibaca tanpa memaksa pembaca membayangkan apa yang berubah.",
+      "Menunjukkan mengapa alur AnyCap bukan hanya satu langkah ekspor, tetapi juga langkah QA dan penggunaan ulang.",
+    ],
+    caption:
+      "Gambar kiri adalah draf sumber. Gambar kanan adalah potongan PNG transparan akhir yang dihasilkan dari aset sumber yang sama untuk halaman ini.",
+    images: [
+      {
+        src: `${PAGE_RESOURCE_BASE}/how-to-make-image-transparent-source.webp`,
+        alt: "Foto produk sumber sepatu lari warna off-white di atas meja kayu berantakan dekat tanaman dan mug kopi.",
+        width: 2304,
+        height: 1728,
+        label: "Gambar sumber",
+        frameVariant: "plain",
+      },
+      {
+        src: `${PAGE_RESOURCE_BASE}/how-to-make-image-transparent-cutout-true-final.png`,
+        alt: "Potongan PNG transparan dari sepatu lari off-white yang sama dengan latar belakang sepenuhnya dihapus.",
+        width: 2400,
+        height: 1792,
+        label: "Potongan PNG transparan",
+        frameVariant: "checkerboard",
+      },
+    ],
+  },
+  quickAnswer: {
+    eyebrow: "Jawaban singkat",
+    title: "Jawaban praktisnya adalah ekstraksi ditambah QA",
+    intro:
+      "Membuat gambar transparan sering dibingkai sebagai satu klik. Pada praktiknya, bagian yang berguna adalah apakah subjek bertahan setelah pembersihan cukup baik untuk dipakai di langkah berikutnya. Itulah sebabnya alur yang lebih baik adalah ekstraksi ditambah pemeriksaan, bukan sekadar ekspor.",
+    takeaways: [
+      "Sebagian besar pekerjaan `gambar transparan` pada dasarnya ekstraksi subjek ditambah QA tepi, bukan sekadar satu klik di situs penghapus latar.",
+      "Alur AnyCap terkuat adalah merevisi gambar sumber, memeriksa output dengan pemahaman gambar, dan menjaga file akhir tetap bisa dipakai ulang sebagai potongan siap-PNG.",
+      "Alur yang sama bisa bercabang ke versi latar putih, penggantian latar, atau aset produk bersih untuk dokumentasi dan listing.",
+    ],
+    cards: [
+      {
+        title: "Latar transparan",
+        body: "Terbaik ketika aset yang sama perlu dipakai di banyak permukaan nanti, seperti dokumentasi, deck, listing produk, atau tata letak halaman dengan perlakuan latar sendiri.",
+      },
+      {
+        title: "Latar putih",
+        body: "Terbaik ketika tujuan membutuhkan gambar bergaya marketplace, tampilan katalog, atau hasil studio bersih di mana transparansi tidak menambah nilai ekstra.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja",
+    title: "Lima langkah dari gambar sumber ke aset yang bisa dipakai ulang",
+    stepLabel: "Langkah",
+    steps: [
+      {
+        title: "Mulai dari gambar sumber yang sebenarnya",
+        body: "Gunakan foto produk, tangkapan layar, atau draf visual yang memang ingin Anda pakai ulang. Pekerjaan yang paling cocok di sini adalah pembersihan potongan, bukan membuat subjek pengganti acak.",
+      },
+      {
+        title: "Minta potongan dengan latar transparan",
+        body: "Jalankan edit gambar-ke-gambar yang mempertahankan subjek tetapi menghapus meja, ruangan, atau adegan di sekitarnya. Prompt harus menyebutkan apa yang harus tetap ada, bukan hanya apa yang harus hilang.",
+      },
+      {
+        title: "Periksa tepi dengan pemahaman gambar",
+        body: "Periksa sisa fragmen di sekitar rambut, tali sepatu, jari, kaca, atau tepi kemasan. Intinya bukan hanya latar hilang, tetapi subjek masih terlihat bisa dipakai.",
+      },
+      {
+        title: "Bercabang ke versi yang dibutuhkan tujuan",
+        body: "Dari sumber yang sama, Anda bisa mempertahankan potongan transparan, membuat gambar marketplace latar putih, atau mengganti latar sepenuhnya untuk konteks baru.",
+      },
+      {
+        title: "Pakai ulang aset di alur berikutnya",
+        body: "Simpan output secara lokal untuk dokumentasi dan halaman, atau serahkan ke langkah AnyCap lain ketika Anda membutuhkan penyimpanan, publikasi halaman, atau revisi gambar lanjutan.",
+      },
+    ],
+  },
+  comparison: {
+    eyebrow: "Perbandingan",
+    title: "Mengapa ini lebih kuat dari pola pikir penghapus satu klik",
+    shallowLabel: "Default dangkal",
+    workflowLabel: "Alur kerja AnyCap",
+    rows: [
+      {
+        lens: "Apa yang dianggap sukses",
+        shallow: "Tombol ekspor berfungsi.",
+        workflow: "Subjek terisolasi bersih, tepi masih kuat, dan aset bisa dipakai di langkah berikutnya.",
+      },
+      {
+        lens: "Kontrol kualitas",
+        shallow: "Anda melihat sekilas dan berharap potongannya cukup baik.",
+        workflow: "Agen bisa memeriksa potongan dan menemukan sisa fragmen latar atau kerusakan tepi yang aneh.",
+      },
+      {
+        lens: "Edit lanjutan",
+        shallow: "Anda sering harus memulai ulang di alat lain untuk latar putih atau adegan baru.",
+        workflow: "Siklus edit gambar AnyCap yang sama bisa bercabang ke versi transparan, latar putih, atau penggantian latar.",
+      },
+      {
+        lens: "Dapat dipakai ulang",
+        shallow: "Output diperlakukan seperti unduhan akhir.",
+        workflow: "Aset tetap dalam alur agen yang lebih luas untuk dokumentasi, listing, publikasi, dan revisi berikutnya.",
+      },
+    ],
+  },
+  modelChoice: {
+    eyebrow: "Pilihan model",
+    title: "Pilih model berdasarkan titik awal pekerjaan",
+    cards: [
+      {
+        title: "Nano Banana Pro",
+        label: "Pilihan pertama terbaik untuk potongan",
+        body: "Gunakan ini ketika gambar sumber sudah ada dan pekerjaan sebenarnya adalah mempertahankan subjek sambil membersihkan atau menghapus latar.",
+        href: "/models/nano-banana-pro",
+      },
+      {
+        title: "Nano Banana 2",
+        label: "Terbaik untuk iterasi lebih cepat",
+        body: "Gunakan ini ketika Anda ingin beberapa pass pembersihan dengan cepat atau ketika alur bisa bercabang ke beberapa varian produk atau konten.",
+        href: "/models/nano-banana-2",
+      },
+      {
+        title: "Seedream 5",
+        label: "Terbaik ketika Anda masih membutuhkan gambar sumber",
+        body: "Gunakan ini ketika belum ada aset awal dan Anda ingin gambar produk first-pass yang lebih kuat sebelum alur potongan dimulai.",
+        href: "/models/seedream-5",
+      },
+    ],
+  },
+  validation: {
+    eyebrow: "Validasi langsung",
+    title: "Apa yang kami periksa pada alur langsung",
+    cards: [
+      {
+        title: "Permukaan kemampuan dikonfirmasi",
+        body: "Selama produksi halaman pada 9 April 2026, pemeriksaan status AnyCap langsung mengonfirmasi pembuatan gambar, pengeditan gambar, pemahaman gambar, Drive, Page, dan pengambilan web tersedia di lingkungan saat ini.",
+      },
+      {
+        title: "Skema dikonfirmasi",
+        body: "Nano Banana Pro dan Nano Banana 2 diperiksa terhadap skema langsung, dan alur gambar-ke-gambar saat ini memakai parameter `images` alih-alih tebakan prompt lama.",
+      },
+      {
+        title: "Gambar bukti dihasilkan",
+        body: "Gambar sumber dan potongan yang ditampilkan di halaman ini dihasilkan selama alur langsung melalui AnyCap, bukan dibuat palsu setelahnya di alat desain terpisah.",
+      },
+      {
+        title: "Output diperiksa",
+        body: "File potongan akhir diverifikasi sebagai PNG RGBA dengan saluran alpha nyata, lalu dikomposit ke latar terang dan diperiksa melalui pemahaman gambar untuk memastikan tepi terlihat bersih tanpa halo hijau yang terlihat.",
+      },
+    ],
+  },
+  cli: {
+    eyebrow: "Contoh CLI",
+    title: "Contoh perintah yang cocok dengan skema saat ini",
+    examples: [
+      {
+        title: "Buat potongan transparan",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "hapus latar belakang dan kembalikan hanya subjek yang sama di latar transparan, pertahankan bentuk dan tepi persisnya, tanpa objek tambahan, tanpa teks, tanpa watermark" \\
+  --param images=./source-product.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o potongan-transparan.png`,
+      },
+      {
+        title: "Buat versi latar putih dari sumber yang sama",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "ganti latar dengan backdrop studio putih bersih, pertahankan subjek dan tepi persisnya, foto produk siap-marketplace di tengah, tanpa teks, tanpa watermark" \\
+  --param images=./source-product.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o produk-latar-putih.png`,
+      },
+      {
+        title: "QA potongan dengan pemahaman gambar",
+        code: `anycap actions image-read \\
+  --file ./potongan-transparan.png \\
+  --instruction "Jelaskan gambar, sebutkan apakah tepi subjek terlihat bersih, dan sebutkan sisa fragmen latar, teks terlihat, atau watermark."`,
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Pertanyaan yang biasanya muncul berikutnya",
+    items: [
+      {
+        question: "Apakah membuat gambar transparan sama dengan membuat latar putih?",
+        answer:
+          "Tidak. Gambar transparan mempertahankan latar yang dihapus agar aset bisa dipakai di permukaan berbeda nanti. Versi latar putih lebih baik ketika tujuan membutuhkan foto katalog atau marketplace yang bersih.",
+      },
+      {
+        question: "Model AnyCap mana yang harus saya pakai dulu untuk penghapusan latar?",
+        answer:
+          "Gunakan Nano Banana Pro dulu ketika Anda sudah punya gambar sumber dan ingin subjek dipertahankan melalui edit gambar-ke-gambar. Gunakan Nano Banana 2 ketika kecepatan dan beberapa pass pembersihan lebih penting daripada satu revisi terkuat. Gunakan Seedream 5 hanya ketika Anda masih perlu membuat gambar sumber itu sendiri.",
+      },
+      {
+        question: "Mengapa memakai alur agen alih-alih penghapus satu klik?",
+        answer:
+          "Karena pekerjaan biasanya tidak berakhir di `latar dihapus`. Anda sering perlu memeriksa tepi, memastikan tidak ada sisa berantakan, membuat versi latar putih untuk saluran lain, dan memakai ulang aset di dokumentasi, halaman, atau listing produk.",
+      },
+      {
+        question: "Bisakah AnyCap memeriksa apakah potongan benar-benar terlihat bersih?",
+        answer:
+          "Ya. Setelah pembuatan, Anda bisa memakai pemahaman gambar AnyCap untuk memeriksa hasil dan bertanya apakah tepi subjek utuh, apakah masih ada fragmen latar, dan apakah ada teks atau watermark yang terlihat.",
+      },
+    ],
+  },
+  nextMove: {
+    eyebrow: "Langkah berikutnya",
+    title: "Pelajari lebih dalam dari alur yang cocok",
+    cards: [
+      {
+        title: "Cara Mengganti Latar Foto",
+        href: "/learn/how-to-change-photo-background",
+        body: "Lanjut ke sini ketika langkah berikutnya adalah mengganti latar yang dihapus dengan studio, pedestal, atau adegan kontekstual.",
+      },
+      {
+        title: "Cara Membuat Latar Putih untuk Foto Produk",
+        href: "/learn/how-to-make-background-white-for-product-photos",
+        body: "Gunakan alur lanjutan ini ketika potongan transparan perlu menjadi aset marketplace atau katalog bergaya latar putih.",
+      },
+      {
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Pelajari lebih dalam model yang saat ini paling cocok untuk alur potongan dengan pelestarian subjek terkuat.",
+      },
+      {
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
+        body: "Lanjut ke sini ketika Anda ingin jalur terpendek dari halaman ini ke pengaturan CLI yang berfungsi.",
+      },
+    ],
+  },
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, TransparentImagePageContent>;
 
 function getContent(locale: SiteLocale): TransparentImagePageContent {

@@ -38,7 +38,7 @@ type PageContent = {
   bylineAuthor?: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
     eyebrow: "Guide",
     title: ["What is an", "agent harness?"],
@@ -119,17 +119,69 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
     },
     breadcrumbLabel: "O que e Agent Harness?",
   },
+  id: {
+    eyebrow: "Panduan",
+    title: ["Apa itu", "agent harness?"],
+    intro:
+      "Agent harness adalah lapisan eksekusi di sekitar model AI yang mengubah penalaran menjadi aksi nyata. Harness memberi akses ke file, terminal, tools, aksi browser, batas izin, dan kebijakan runtime yang menentukan apa yang boleh dilakukan selama tugas berjalan. Model bisa memutuskan langkah berikutnya, tetapi harness menentukan apa yang benar-benar bisa dieksekusi di production. Perbedaan ini krusial: kualitas rencana bergantung pada model, sedangkan keamanan eksekusi, observability, dan repeatability bergantung pada harness. Di produk agen modern, desain harness sering menjadi pembeda antara demo sekali jalan dan workflow yang bisa dipakai tim setiap hari tanpa glue code rapuh.",
+    comparisonTitle: "Model agen vs agent harness",
+    comparisonHeaders: ["Layer", "Peran", "Contoh"],
+    comparisonRows: [
+      {
+        layer: "Model",
+        role: "Penalaran, perencanaan, dan generasi bahasa",
+        example:
+          "LLM memutuskan apakah perlu membaca file, bertanya, atau memanggil capability",
+      },
+      {
+        layer: "Harness",
+        role: "Permukaan eksekusi dan batas keamanan",
+        example:
+          "File, shell, browser, permission, kontrak tool, dan kebijakan workflow",
+      },
+      {
+        layer: "Capability runtime",
+        role: "Lapisan capability terkurasi yang bisa diekspos harness",
+        example:
+          "AnyCap menyediakan image generation, video generation, image read, dan video analysis lewat satu interface",
+        accent: true,
+      },
+    ],
+    fitTitle: "Posisi AnyCap",
+    fitBody: [
+      "AnyCap bukan model itu sendiri dan bukan harness penuh. AnyCap berada di dalam harness sebagai capability runtime yang menyediakan aksi yang tidak bisa dijalankan model sendirian. Dengan begitu, harness bisa mengekspos operasi multimodal melalui kontrak yang stabil, bukan merangkai integrasi provider berbeda untuk setiap tugas baru. Secara praktis, agen tetap memakai lingkungan penalaran yang familiar, tetapi mendapat jalur konsisten ke image generation, video generation, media understanding, retrieval, storage, dan publishing saat dibutuhkan.",
+      "Pemisahan ini penting untuk keputusan arsitektur. Harness bertanggung jawab atas lifecycle control, permission, routing tool, dan kebijakan eksekusi. AnyCap bertanggung jawab mengemas capabilities agar kebijakan itu bisa diterapkan konsisten lintas aksi multimodal. Kombinasi keduanya mengurangi integration drift: tim mempertahankan satu permukaan CLI, satu alur autentikasi, dan satu model operasional di berbagai agent shell. Dampaknya adalah onboarding lebih cepat, debugging lebih jelas, dan biaya upgrade capability lebih rendah dari waktu ke waktu.",
+    ],
+    ctas: {
+      capabilityRuntime: "Capability Runtime",
+      workspaceContext: "Konteks Workspace",
+      comparePage: "Halaman Perbandingan",
+    },
+    breadcrumbLabel: "Apa itu Agent Harness?",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
-  const isPtBr = locale === "pt-br";
+  if (locale === "pt-br") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title: "O que e um agent harness? A camada de runtime ao redor do agente",
+      description:
+        "Um agent harness e a camada de execucao que da a um agente de IA ferramentas, estado do workspace, permissoes e controles de runtime. Veja como ele difere do modelo em si e onde o AnyCap entra nessa pilha.",
+    });
+  }
+
+  if (locale === "id") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title: "Apa itu agent harness? Lapisan runtime di sekitar agen AI",
+      description:
+        "Agent harness adalah lapisan eksekusi yang memberi agen AI akses ke tool, status workspace, permission, dan kontrol runtime. Pelajari bedanya dengan model itu sendiri serta posisi AnyCap di dalam stack ini.",
+    });
+  }
+
   return createLocalizedMetadataForPath(locale, PATH, {
-    title: isPtBr
-      ? "O que e um agent harness? A camada de runtime ao redor do agente"
-      : "What is an agent harness? The runtime layer around the agent",
-    description: isPtBr
-      ? "Um agent harness e a camada de execucao que da a um agente de IA ferramentas, estado do workspace, permissoes e controles de runtime. Veja como ele difere do modelo em si e onde o AnyCap entra nessa pilha."
-      : "An agent harness is the surrounding execution layer that gives an AI agent tools, workspace state, permissions, and runtime controls. Learn how it differs from the model itself and where AnyCap fits in the stack.",
+    title: "What is an agent harness? The runtime layer around the agent",
+    description:
+      "An agent harness is the surrounding execution layer that gives an AI agent tools, workspace state, permissions, and runtime controls. Learn how it differs from the model itself and where AnyCap fits in the stack.",
   });
 }
 
@@ -137,7 +189,7 @@ export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 export default async function WhatIsAgentHarnessPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content = contentByLocale[locale] ?? contentByLocale.en;
   return (
     <>
       <BreadcrumbJsonLd

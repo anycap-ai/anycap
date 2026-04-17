@@ -413,10 +413,200 @@ const ptBr: ReplicateAlternativesPageData = {
   ],
 };
 
+const id: ReplicateAlternativesPageData = {
+  metadata: {
+    title: "Alternatif Replicate terbaik untuk agen AI (2026) — gambar, video, dan visi",
+    description:
+      "Bandingkan alternatif Replicate terbaik untuk alur kerja agen AI. Lihat bagaimana AnyCap, fal.ai, Hugging Face, dan lainnya menangani pembuatan gambar, pembuatan video, dan visi untuk Claude Code, Cursor, dan Codex.",
+    openGraphTitle: "Alternatif Replicate terbaik untuk agen AI (2026)",
+    openGraphDescription:
+      "Bandingkan alternatif Replicate untuk alur gambar, video, dan visi yang ramah agen. Nilai pengalaman instalasi, model autentikasi, dan kompatibilitas agen.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Bandingkan", href: "/compare", unlinkable: true },
+    { name: "Alternatif Replicate untuk agen" },
+  ],
+  eyebrow: "Bandingkan",
+  lastUpdatedLabel: "10 April 2026",
+  heroTitle: ["Alternatif Replicate teratas", "untuk alur kerja agen AI"],
+  heroIntro:
+    "Replicate adalah platform inferensi model yang kuat, tetapi dibuat untuk pengembang yang memanggil API model dari kode kustom. Jika alur kerja Anda berjalan di dalam agen AI seperti Claude Code, Cursor, atau Codex, Anda mungkin memerlukan jenis alat lain — yang terpasang ke agen, mengautentikasi sekali, dan menyediakan kemampuan melalui antarmuka yang sama yang sudah digunakan agen.",
+  tableTitle: "Replicate vs AnyCap sekilas",
+  tableIntro:
+    "Sebelum membandingkan semua alternatif, berikut perbedaan Replicate dan AnyCap pada dimensi yang paling penting untuk alur kerja agen.",
+  tableColumns: { dimension: "Dimensi", replicate: "Replicate", anycap: "AnyCap" },
+  comparisonDimensions: [
+    {
+      dimension: "Kompatibilitas agen",
+      replicate: "REST API dan SDK Python; memerlukan integrasi kustom per agen",
+      anycap: "Berjalan di Claude Code, Cursor, Codex melalui file skill dan satu CLI",
+    },
+    {
+      dimension: "Pengalaman instalasi",
+      replicate: "pip install replicate + API key per model",
+      anycap: "Satu file skill + satu biner CLI + satu login",
+    },
+    {
+      dimension: "Pemilihan model",
+      replicate: "Ribuan model komunitas dan resmi",
+      anycap: "Model terkurasi (Seedream 5, Nano Banana Pro, Veo 3.1, Kling 3.0, dll.)",
+    },
+    {
+      dimension: "Cakupan kemampuan",
+      replicate: "Terutama inferensi model (gambar, video, audio, teks)",
+      anycap: "Gambar, video, musik, visi, pencarian, crawl, penyimpanan, publikasi halaman",
+    },
+    {
+      dimension: "Model autentikasi",
+      replicate: "Satu token API, tetapi setiap model punya versi dan skema sendiri",
+      anycap: "Satu login, satu CLI, semua kemampuan melalui antarmuka yang sama",
+    },
+    {
+      dimension: "Model harga",
+      replicate: "Harga per prediksi bervariasi menurut model dan perangkat keras",
+      anycap: "Bayar sesuai pemakaian dengan kredit gratis $5, tanpa biaya bulanan",
+    },
+  ],
+  alternativesTitle: "Alternatif yang dibandingkan",
+  alternatives: [
+    {
+      name: "AnyCap",
+      category: "Runtime kemampuan untuk agen",
+      focus: "Dibangun untuk agen AI. Satu CLI, satu autentikasi, semua kemampuan.",
+      strengths: [
+        "Satu jalur instalasi untuk gambar, video, visi, pencarian, penyimpanan, dan publikasi",
+        "Berjalan di Claude Code, Cursor, Codex, dan produk agen lain melalui file skill",
+        "Satu login mencakup seluruh tumpukan kemampuan — tanpa API key per model",
+        "Antarmuka berbasis CLI yang dirancang untuk alur kerja agen native terminal",
+      ],
+      considerations: [
+        "Pemilihan model terkurasi, bukan pustaka model terbuka",
+        "Desain native untuk agen — tidak dibuat untuk pipeline backend kustom",
+      ],
+      bestFor:
+        "Tim yang menggunakan agen pengkodean dan membutuhkan kemampuan multimodal tanpa integrasi per penyedia",
+      href: "/start",
+      cta: "Mulai dengan AnyCap",
+    },
+    {
+      name: "fal.ai",
+      category: "Platform inferensi serverless",
+      focus: "Inferensi serverless cepat untuk model media generatif.",
+      strengths: [
+        "Waktu cold start sangat cepat untuk model gambar dan video",
+        "Harga per detik tanpa biaya menganggur",
+        "SDK Python dan REST API untuk integrasi kustom",
+      ],
+      considerations: [
+        "Memerlukan integrasi API per model dalam kode Anda",
+        "Tidak ada penemuan agen bawaan atau instalasi berbasis skill",
+        "Autentikasi dan penagihan terpisah dari penyedia kemampuan lain",
+      ],
+      bestFor:
+        "Pengembang yang membangun backend atau pipeline kustom yang membutuhkan inferensi GPU serverless cepat",
+      href: "/compare/anycap-vs-fal-ai",
+      cta: "Lihat AnyCap vs fal.ai",
+    },
+    {
+      name: "Hugging Face Inference API",
+      category: "Hub model + endpoint inferensi",
+      focus: "Akses ke ekosistem model terbuka terbesar dengan inferensi terkelola.",
+      strengths: [
+        "Pustaka model sangat besar — komunitas dan resmi",
+        "Tingkat gratis untuk eksperimen",
+        "Ekosistem kuat untuk penemuan dan evaluasi model",
+      ],
+      considerations: [
+        "Cold start di tingkat gratis bisa lambat",
+        "Kualitas sangat bervariasi antar model komunitas",
+        "Tidak ada autentikasi terpadu di berbagai jenis model",
+      ],
+      bestFor:
+        "Peneliti dan tim yang ingin akses ke pemilihan model terluas dan nyaman mengelola kualitas model sendiri",
+    },
+    {
+      name: "RunPod",
+      category: "Cloud GPU + inferensi serverless",
+      focus: "Komputasi GPU terjangkau untuk deployment model kustom.",
+      strengths: [
+        "Harga GPU kompetitif",
+        "Mendukung kontainer Docker kustom dan deployment model",
+        "Cocok untuk tim yang sudah punya ComfyUI atau pipeline kustom",
+      ],
+      considerations: [
+        "Memerlukan pengelolaan infrastruktur untuk produksi",
+        "Tidak ada antarmuka native agen atau penemuan berbasis skill",
+        "Anda mengelola pemilihan model, skalabilitas, dan keandalan",
+      ],
+      bestFor:
+        "Tim yang ingin komputasi GPU mentah dan sudah memiliki infrastruktur serving model sendiri",
+    },
+    {
+      name: "OpenAI Image API (DALL-E / GPT Image)",
+      category: "API model first-party",
+      focus: "Model pembuatan gambar OpenAI melalui API mereka.",
+      strengths: [
+        "Pengakuan merek kuat dan dokumentasi baik",
+        "Model GPT Image menghasilkan kualitas tinggi",
+        "Integrasi native dengan SDK agen OpenAI",
+      ],
+      considerations: [
+        "Hanya mencakup pembuatan gambar — tanpa video, visi, pencarian, atau penyimpanan",
+        "Terikat pada ekosistem model OpenAI",
+        "Harga bisa lebih tinggi dari penyedia khusus untuk volume tinggi",
+      ],
+      bestFor: "Tim yang sudah di ekosistem OpenAI dan hanya membutuhkan pembuatan gambar",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah AnyCap pengganti langsung untuk Replicate?",
+      answer:
+        "Tidak persis. Replicate adalah platform inferensi model untuk pengembang yang membangun backend kustom. AnyCap adalah runtime kemampuan untuk agen AI. Jika Anda perlu memanggil model tertentu dari kode Anda sendiri dengan kontrol halus, Replicate adalah alat yang tepat. Jika Anda membutuhkan agen seperti Claude Code atau Cursor untuk membuat gambar, membuat video, dan menganalisis konten visual melalui satu antarmuka, AnyCap lebih cocok.",
+    },
+    {
+      question: "Bisakah saya menggunakan model Replicate melalui AnyCap?",
+      answer:
+        "AnyCap mengkurasi pemilihan modelnya sendiri daripada mem-proxy pustaka model Replicate. Model gambar saat ini mencakup Seedream 5 dan Nano Banana Pro; model video mencakup Veo 3.1 dan Kling 3.0. Trade-off-nya adalah lebih sedikit model tetapi pengalaman native agen yang lebih konsisten.",
+    },
+    {
+      question: "Mana yang lebih murah untuk pembuatan gambar?",
+      answer:
+        "Harga bergantung pada model spesifik dan volume. AnyCap menawarkan $5 kredit gratis dan harga bayar sesuai pemakaian tanpa biaya bulanan. Replicate mengenakan biaya per prediksi dengan tarif yang bervariasi menurut model dan GPU. Untuk alur kerja agen, total biaya juga mencakup waktu integrasi — pendekatan instalasi tunggal AnyCap dapat mengurangi overhead penyiapan secara signifikan.",
+    },
+    {
+      question: "Bagaimana jika saya membutuhkan model yang tidak ditawarkan AnyCap?",
+      answer:
+        "Anda dapat menggunakan Replicate, Hugging Face, atau fal.ai untuk model di luar pilihan terkurasi AnyCap. AnyCap tidak mengunci Anda pada set modelnya — ini satu lapisan dalam tumpukan Anda, bukan pengganti setiap API model.",
+    },
+  ],
+  relatedTitle: "Perbandingan terkait",
+  relatedComparisons: [
+    {
+      href: "/compare/anycap-vs-replicate",
+      eyebrow: "Bandingkan",
+      title: "AnyCap vs Replicate",
+      body: "Perbandingan mendalam 1:1 antara AnyCap dan Replicate.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Bandingkan",
+      title: "AnyCap vs fal.ai",
+      body: "Bandingkan runtime kemampuan agen dengan platform inferensi serverless.",
+    },
+  ],
+  cta: [
+    { href: "/start", label: "Mulai" },
+    { href: "/capabilities", label: "Lihat kemampuan" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ReplicateAlternativesPageData> = {
   en,
   "pt-br": ptBr,
-  id: en,
+  id,
 };
 
 export function getReplicateAlternativesMetadata(locale: SiteLocale): Metadata {

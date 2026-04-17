@@ -5,7 +5,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { GroundedSearchDemo } from "@/components/landing/GroundedSearchDemo";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig } from "@/lib/site";
+import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -13,21 +13,54 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
-export const metadata: Metadata = {
-  title: "Grounded Web Search for AI agents - Answers with citations through one CLI",
-  description:
-    "Give AI agents grounded web search through AnyCap. Get synthesized answers with citations from live web search through one CLI instead of building a separate grounded search flow.",
-  alternates: { canonical: "/capabilities/grounded-web-search" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/capabilities/grounded-web-search",
-    siteName: siteConfig.siteName,
+const metadataByLocale: Record<
+  SiteLocale,
+  { title: string; description: string; openGraphTitle: string; openGraphDescription: string }
+> = {
+  en: {
     title: "Grounded Web Search for AI agents - Answers with citations through one CLI",
     description:
+      "Give AI agents grounded web search through AnyCap. Get synthesized answers with citations from live web search through one CLI instead of building a separate grounded search flow.",
+    openGraphTitle: "Grounded Web Search for AI agents - Answers with citations through one CLI",
+    openGraphDescription:
       "Add citation-backed grounded web search to AI agents with one CLI and one capability runtime.",
   },
+  "pt-br": {
+    title: "Busca na web com grounding para agentes de IA - respostas com citacoes em uma CLI",
+    description:
+      "Dê aos agentes busca na web com grounding com AnyCap. Obtenha respostas sintetizadas com citacoes de pesquisa ao vivo em uma unica CLI.",
+    openGraphTitle: "Busca na web com grounding para agentes de IA - respostas com citacoes em uma CLI",
+    openGraphDescription:
+      "Adicione grounded web search com citacoes aos agentes de IA em uma unica capability runtime.",
+  },
+  id: {
+    title: "Grounded Web Search untuk agen AI - jawaban bersitasi lewat satu CLI",
+    description:
+      "Berikan grounded web search ke agen AI dengan AnyCap. Dapatkan jawaban sintesis dengan sitasi dari pencarian web live lewat satu CLI tanpa membangun flow terpisah.",
+    openGraphTitle: "Grounded Web Search untuk agen AI - jawaban bersitasi lewat satu CLI",
+    openGraphDescription:
+      "Tambahkan grounded web search berbasis sitasi ke agen AI melalui satu CLI dan satu capability runtime.",
+  },
 };
+
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
+  return {
+    title: localizedMetadata.title,
+    description: localizedMetadata.description,
+    alternates: { canonical: "/capabilities/grounded-web-search" },
+    openGraph: {
+      type: "website",
+      locale: getLocaleConfig(locale).ogLocale,
+      url: "/capabilities/grounded-web-search",
+      siteName: siteConfig.siteName,
+      title: localizedMetadata.openGraphTitle,
+      description: localizedMetadata.openGraphDescription,
+    },
+  };
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 type PageContent = {
   breadcrumb: { name: string; href?: string }[];
@@ -48,7 +81,7 @@ type PageContent = {
   jsonLdKeywords: readonly string[];
 };
 
-const contentByLocale = {
+const contentByLocale: Record<SiteLocale, PageContent> = {
   en: {
     breadcrumb: [
       { name: "Home", href: "/" },
@@ -233,11 +266,103 @@ const contentByLocale = {
       "grounded search api",
     ],
   },
+  id: {
+    breadcrumb: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Grounded Web Search" },
+    ],
+    eyebrow: "Kapabilitas",
+    title: "Grounded Web Search",
+    intro:
+      "Grounded web search dari AnyCap memberi agen jawaban bersitasi lewat satu CLI. Daripada menyusun pipeline retrieval terpisah plus lapisan sintesis jawaban, tim bisa mengajukan pertanyaan, menerima jawaban sintetis, dan tetap menjaga atribusi sumber di runtime yang sama. Ini sangat berguna untuk riset, audit, dan workflow agen yang sensitif terhadap informasi terbaru.",
+    usageHeading: "Penggunaan CLI",
+    usageExamples: [
+      {
+        title: "Tanya-jawab dengan grounding",
+        code: 'anycap search --prompt "What are the latest changes in Go 1.25?"',
+      },
+      {
+        title: "Perbandingan dengan sitasi",
+        code: 'anycap search --prompt "Compare React vs Vue in terms of performance"',
+      },
+      {
+        title: "Ambil teks jawaban saja",
+        code: 'anycap search --prompt "What is context engineering?" | jq -r \'\.data.content\'',
+      },
+      {
+        title: "Daftar sumber sitasi",
+        code:
+          'anycap search --prompt "latest Go releases" | jq -r \'\.data.search_metadata.sources[] | "\\(.title): \\(.uri)"\'',
+      },
+    ],
+    useCasesHeading: "Kapan agen membutuhkan grounded web search",
+    useCases: [
+      "Menjawab pertanyaan riset saat workflow membutuhkan output sintesis, bukan daftar hasil mentah.",
+      "Memberikan sitasi dan atribusi sumber untuk riset, pelaporan, dan workflow yang menuntut kepercayaan tinggi.",
+      "Memakai grounded search di dalam loop agen tanpa merakit retrieval dan sintesis jawaban secara manual.",
+      "Menangani pertanyaan yang sensitif terhadap kebaruan data ketika tim membutuhkan jawaban plus dukungan sumber yang jelas.",
+    ],
+    relatedHeading: "Halaman terkait",
+    relatedPages: [
+      {
+        href: "/capabilities/web-search",
+        eyebrow: "Kapabilitas terkait",
+        title: "Web Search",
+        body: "Mulai dari sini saat workflow memerlukan retrieval dan pemilihan hasil sebelum proses sintesis.",
+      },
+      {
+        href: "/capabilities/web-crawl",
+        eyebrow: "Kapabilitas terkait",
+        title: "Web Crawl",
+        body: "Gunakan crawl saat URL sumber sudah diketahui dan workflow hanya butuh konten halaman.",
+      },
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Pricing",
+        body: "Bandingkan biaya kredit antara web search standar dan grounded search di halaman pricing.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang bisa dilakukan agen dengan grounded web search?",
+        answer:
+          "Agen bisa mengajukan pertanyaan lalu menerima jawaban sintetis yang didasarkan pada hasil pencarian web live beserta sitasi. Ini berbeda dari web search standar yang hanya mengembalikan daftar halaman untuk dianalisis sendiri.",
+      },
+      {
+        question: "Bahasa pencarian apa yang tepat untuk halaman ini?",
+        answer:
+          "Istilah yang paling relevan adalah grounded web search, AI grounded search, search with citations, dan grounded search API. Frasa ini lebih tepat menggambarkan pekerjaan nyata dibanding label pencarian yang terlalu umum.",
+      },
+      {
+        question: "Kapan tim harus memilih grounded search dibanding web search standar?",
+        answer:
+          "Gunakan grounded search saat agen membutuhkan jawaban langsung beserta sitasi. Gunakan web search standar saat agen perlu meninjau set hasil, memilih sumber, atau melakukan ekstraksi lanjutan sendiri.",
+      },
+      {
+        question: "Kenapa ini bernilai khusus untuk agen AI?",
+        answer:
+          "Karena grounded search menyatukan retrieval dan generasi jawaban dalam satu langkah runtime sambil mempertahankan atribusi sumber. Ini sangat cocok untuk workflow riset, audit, dan dukungan keputusan.",
+      },
+    ],
+    jsonLdHeadline: "Grounded Web Search untuk agen AI - jawaban bersitasi lewat satu CLI",
+    jsonLdDescription:
+      "Panduan kapabilitas untuk menambahkan grounded web search ke agen AI melalui AnyCap, termasuk jawaban berbasis sitasi dan sintesis pencarian web live.",
+    jsonLdAbout: ["Grounded search", "Pencarian bersitasi", "AI grounded search", "AnyCap"],
+    jsonLdKeywords: [
+      "grounded web search",
+      "ai grounded search",
+      "search with citations",
+      "grounded search api",
+    ],
+  },
 } as const;
 
 export default async function GroundedWebSearchPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? contentByLocale.en;
+  const content = contentByLocale[locale] ?? contentByLocale.en;
   const capabilityGuideJsonLd = createTechArticleJsonLd({
     headline: content.jsonLdHeadline,
     description: content.jsonLdDescription,

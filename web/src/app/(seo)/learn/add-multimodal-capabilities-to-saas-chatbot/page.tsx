@@ -94,7 +94,7 @@ type PageContent = {
   articleKeywords: readonly string[];
 };
 
-const contentByLocale: Record<"en" | "pt-br", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   en: {
     eyebrow: "Learn",
     title: ["Add multimodal capabilities", "to a SaaS chatbot"],
@@ -565,10 +565,245 @@ const contentByLocale: Record<"en" | "pt-br", PageContent> = {
       "chatbot com suporte a imagem e video",
     ],
   },
+  id: {
+    eyebrow: "Panduan",
+    title: ["Tambahkan kapabilitas multimodal", "ke chatbot SaaS"],
+    intro:
+      "Banyak chatbot SaaS terasa cukup berguna sampai pengguna mengirim screenshot, meminta konteks web terkini, atau berharap sistem mengembalikan aset nyata alih-alih jawaban teks. Di titik itu, prompt tuning saja tidak cukup. Anda butuh lapisan kapabilitas yang lebih rapi di sekitar workflow chatbot.",
+    updatedPrefix: "Terakhir diperbarui",
+    updatedLabel: "7 April 2026",
+    summaryEyebrow: "Ringkasan cepat",
+    summaryTitle:
+      "Jalan paling bersih bukan menambah kompleksitas prompt, melainkan menambahkan runtime untuk kemampuan yang belum ada.",
+    summaryBody:
+      "Dalam praktik, sebagian besar tim sebaiknya mempertahankan pengalaman chat yang sudah ada lalu menambahkan kapabilitas secara bertahap: mulai dari pemahaman visual, lanjutkan ke web retrieval live, tambah media generation hanya jika produk benar-benar membutuhkannya, lalu siapkan lapisan delivery agar output bisa keluar dari chat thread. Di titik ini capability runtime biasanya jauh lebih berguna daripada menempelkan integrasi provider satu per satu.",
+    quickTakeawaysEyebrow: "Poin penting",
+    quickTakeaways: [
+      "Tambahkan kapabilitas multimodal secara berlapis, bukan lewat panggilan provider acak yang terpisah.",
+      "Mulai dari input dan output yang paling sering bikin friksi: screenshot, konteks web, generasi media, dan hasil yang bisa dibagikan.",
+      "Pola paling rapi adalah chat interface + orchestration + capability runtime + output layer.",
+    ],
+    multimodalEyebrow: "Arti multimodal",
+    multimodalTitle: "Chatbot multimodal tidak hanya menjawab. Ia bisa membaca, mengambil, membuat, dan mengirim hasil.",
+    modalityCards: [
+      {
+        title: "Pemahaman gambar",
+        body: "Chatbot dapat memeriksa screenshot, diagram, state UI produk, dan referensi visual tanpa memaksa pengguna menjelaskan semuanya lewat teks.",
+      },
+      {
+        title: "Pemahaman video",
+        body: "Sistem dapat bernalar dari rekaman layar, demo, dan klip singkat saat masalahnya bergantung pada urutan waktu, bukan frame statis.",
+      },
+      {
+        title: "Generasi media",
+        body: "Workflow dapat mengembalikan gambar atau video sebagai output saat pengguna butuh aset, bukan sekadar saran tertulis.",
+      },
+      {
+        title: "Konteks web",
+        body: "Asisten dapat menarik informasi eksternal terbaru lewat search dan crawl, bukan hanya mengandalkan knowledge layer internal.",
+      },
+    ],
+    stackEyebrow: "Pola stack",
+    stackTitle: "Pola implementasinya sederhana: pertahankan chat layer, lalu upgrade sistem di sekelilingnya",
+    stackIntro:
+      "Tim SaaS sering terlalu fokus ke interface dan kurang merancang jalur eksekusi. Sistem yang lebih rapi memisahkan percakapan yang terlihat pengguna dari orchestration logic, capability runtime, dan output layer. Dengan begitu produk bisa tumbuh tanpa mengubah setiap modalitas baru menjadi cabang pengecualian.",
+    stackLayers: [
+      {
+        title: "Permukaan chat",
+        body: "Pertahankan interface yang sudah dipahami pengguna. Chat layer mengumpulkan permintaan, memperjelas intent, serta menampilkan progres dan hasil.",
+      },
+      {
+        title: "Lapisan orkestrasi",
+        body: "Di sini Anda menentukan tool atau kapabilitas mana yang dipanggil, bagaimana state disimpan, dan kapan perlu bertanya lanjutan sebelum task dijalankan.",
+      },
+      {
+        title: "Capability runtime",
+        body: "Lapisan ini menangani kemampuan inti di sekitar model: generasi gambar/video, pemahaman gambar/video, web search, web crawl, dan output delivery.",
+      },
+      {
+        title: "Lapisan delivery",
+        body: "Output akhir sering perlu keluar dari chat thread sebagai file, tautan share, atau halaman terbit. Rencanakan dari awal, jangan jadi tambahan belakangan.",
+      },
+    ],
+    rolloutEyebrow: "Urutan rollout",
+    rolloutTitle: "Tambahkan kapabilitas dalam urutan yang paling cepat menghilangkan friksi pengguna",
+    rolloutSteps: [
+      {
+        step: "Langkah 1",
+        title: "Mulai dari input pengguna yang paling bermasalah",
+        body: "Untuk banyak asisten SaaS, kegagalan pertama muncul saat pengguna mengirim screenshot. Pengguna menunjukkan layar error atau UI, tetapi chatbot tidak bisa melihat konteksnya. Karena itu, pemahaman gambar biasanya jadi kapabilitas pertama yang paling tepat ditambahkan.",
+      },
+      {
+        step: "Langkah 2",
+        title: "Tambahkan web retrieval live untuk informasi yang cepat berubah",
+        body: "Jika jawaban bergantung pada dokumentasi terbaru, harga, halaman kompetitor, atau referensi eksternal, retrieval statis tidak cukup. Tambahkan search dan crawl sebelum menambah prompt engineering.",
+      },
+      {
+        step: "Langkah 3",
+        title: "Tambahkan generation hanya jika produk memang perlu mengembalikan aset",
+        body: "Image dan video generation sangat kuat, tetapi sebaiknya menyusul setelah jelas bahwa pengguna benar-benar mengharapkan output media. Kalau terlalu cepat, Anda menambah biaya dan kompleksitas sebelum dibutuhkan.",
+      },
+      {
+        step: "Langkah 4",
+        title: "Siapkan jalur output yang nyata",
+        body: "Saat asisten mulai mengembalikan hasil yang lebih kaya, pengguna butuh link, file, atau halaman host. Rancang output layer lebih awal agar alur berakhir pada hasil yang benar-benar bisa dipakai.",
+      },
+    ],
+    avoidEyebrow: "Yang perlu dihindari",
+    avoidTitle: "Integrasi tempelan acak lebih cepat menambah utang produk daripada menambah nilai",
+    tradeoffHeaders: ["Dimensi", "Pola bolt-on", "Pola capability runtime"],
+    tradeoffRows: [
+      {
+        dimension: "Pola integrasi",
+        boltOn: "Setiap modalitas baru menjadi pengecualian spesifik provider.",
+        runtime: "Semua kapabilitas berada di belakang satu runtime surface yang konsisten.",
+      },
+      {
+        dimension: "Desain prompt",
+        boltOn: "Prompt terus menanggung kompleksitas sistem dan edge case.",
+        runtime: "Prompt tetap fokus ke intent, sementara runtime menangani eksekusi tool.",
+      },
+      {
+        dimension: "Overhead operasional",
+        boltOn: "Tim harus mengelola API, auth flow, dan format respons yang terpisah.",
+        runtime: "Asisten dapat memakai ulang satu lapisan kapabilitas di banyak workflow.",
+      },
+      {
+        dimension: "Konsistensi produk",
+        boltOn: "Pengalaman pengguna terasa berbeda setiap kali jalur tool baru ditambahkan.",
+        runtime: "Asisten tetap terasa sebagai satu sistem walau kapabilitas terus bertambah.",
+      },
+      {
+        dimension: "Delivery output",
+        boltOn: "Hasil sering berhenti di chat thread.",
+        runtime: "Hasil bisa bergerak ke file, link, atau artefak terbit.",
+      },
+    ],
+    productEyebrow: "Contoh produk",
+    productTitle: "Tiga kasus umum saat request fitur berubah menjadi keputusan arsitektur",
+    useCaseCards: [
+      {
+        title: "Triase screenshot untuk support",
+        body: "Pengguna mengirim screenshot UI yang bermasalah. Asisten membaca gambar, mencocokkan dengan pola produk, lalu memberi jawaban yang lebih relevan dibanding troubleshooting generik.",
+      },
+      {
+        title: "Asisten riset untuk customer success",
+        body: "Workflow melakukan pencarian ke docs bantuan live atau sumber eksternal, crawl halaman penting, lalu merangkum perubahan untuk operator.",
+      },
+      {
+        title: "Asisten growth atau launch",
+        body: "Produk mengubah permintaan menjadi visual launch, klip demo, dan output yang bisa dibagikan, bukan berhenti di daftar rekomendasi.",
+      },
+    ],
+    fitEyebrow: "Posisi AnyCap",
+    fitTitle: "AnyCap memberi chatbot atau agen lapisan kapabilitas di sekitar model",
+    fitBody:
+      "Inilah titik implementasi praktis dari halaman ini. Anda tidak perlu mengganti nama produk atau membangun ulang interface hanya untuk menambah perilaku yang lebih kaya. Anda butuh runtime yang mampu menangani input multimodal, output multimodal, tugas web live, dan workflow delivery lewat satu surface yang konsisten.",
+    capabilityCards: [
+      {
+        title: "Pemahaman gambar",
+        href: "/capabilities/image-understanding",
+        body: "Baca screenshot, diagram, dan referensi visual dalam workflow yang sama.",
+      },
+      {
+        title: "Analisis video",
+        href: "/capabilities/video-analysis",
+        body: "Periksa rekaman saat masalah bergantung pada urutan dan pergerakan.",
+      },
+      {
+        title: "Web search",
+        href: "/capabilities/web-search",
+        body: "Tarik informasi live saat knowledge layer internal saja belum cukup.",
+      },
+      {
+        title: "Web crawl",
+        href: "/capabilities/web-crawl",
+        body: "Ubah halaman web menjadi markdown yang bisa dipakai atau konteks agen terstruktur.",
+      },
+      {
+        title: "Generasi gambar",
+        href: "/capabilities/image-generation",
+        body: "Kembalikan aset visual saat produk harus membuat, bukan hanya menjelaskan.",
+      },
+      {
+        title: "Drive",
+        href: "/capabilities/drive",
+        body: "Ubah output kaya menjadi file dan link shareable yang benar-benar bisa dipakai manusia.",
+      },
+    ],
+    nextMoveEyebrow: "Langkah lanjutan",
+    nextMoveTitle: "Lanjutkan dari arsitektur ke halaman produk dan setup implementasi",
+    nextMoveCards: [
+      {
+        title: "Cek keputusan arsitektur dulu",
+        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        body: "Gunakan halaman ini jika Anda masih perlu memastikan apakah produk Anda seharusnya chatbot biasa atau workflow agen.",
+      },
+      {
+        title: "Petakan gap kapabilitas",
+        href: "/learn/what-agents-cant-do",
+        body: "Gunakan halaman ini untuk memahami dengan cepat titik kegagalan saat chat saja tidak lagi cukup.",
+      },
+      {
+        title: "Lihat surface kapabilitas",
+        href: "/capabilities",
+        body: "Buka Capabilities saat Anda ingin melihat halaman produk konkret di balik pola stack pada panduan ini.",
+      },
+      {
+        title: "Masuk ke jalur instalasi",
+        href: "/guides/install-anycap",
+        body: "Gunakan panduan instalasi saat Anda siap beralih dari keputusan arsitektur ke implementasi.",
+      },
+    ],
+    faqEyebrow: "FAQ",
+    faqTitle: "Pertanyaan implementasi yang sering muncul",
+    faqItems: [
+      {
+        question: "Apa arti multimodal untuk chatbot SaaS?",
+        answer:
+          "Artinya sistem dapat bekerja dengan lebih dari teks. Biasanya ini mencakup screenshot, gambar, video, halaman web live, serta format output yang lebih kaya seperti file atau link share.",
+      },
+      {
+        question: "Apakah semua modalitas harus ditambahkan sekaligus?",
+        answer:
+          "Tidak. Mulai dari input atau output yang paling menimbulkan friksi. Untuk banyak produk SaaS, urutannya biasanya pemahaman screenshot dulu, lalu konteks web live, lalu media generation jika memang dibutuhkan.",
+      },
+      {
+        question: "Bisakah saya mempertahankan pengalaman chatbot sekarang sambil menambah kapabilitas ini?",
+        answer:
+          "Bisa, dan biasanya itu jalur terbaik. Pertahankan interface dan orkestrasi yang sudah cocok, lalu tambahkan runtime untuk mengisi kapabilitas yang masih kurang.",
+      },
+      {
+        question: "Di pola implementasi ini, AnyCap berada di bagian mana?",
+        answer:
+          "AnyCap berada di capability runtime layer. Ia memberi alur gambar, video, web, storage, dan delivery lewat satu surface kapabilitas, bukan melalui banyak integrasi yang tidak saling terhubung.",
+      },
+    ],
+    breadcrumbHome: "Beranda",
+    breadcrumbSection: "Panduan",
+    breadcrumbLabel: "Tambahkan kapabilitas multimodal ke chatbot SaaS",
+    articleHeadline: "Cara menambahkan kapabilitas multimodal ke chatbot SaaS",
+    articleDescription:
+      "Panduan implementasi untuk tim SaaS yang ingin memperluas chatbot dengan workflow gambar, video, web, dan delivery melalui capability runtime.",
+    articleAbout: [
+      "AI multimodal",
+      "Chatbot SaaS AI",
+      "Arsitektur SaaS",
+      "Agen AI",
+      "Agent capability runtime",
+    ],
+    articleKeywords: [
+      "multimodal chatbot",
+      "chatbot saas",
+      "menambahkan kapabilitas multimodal ke chatbot",
+      "chatbot ai multimodal saas",
+      "chatbot dengan dukungan gambar dan video",
+    ],
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
   return createLocalizedMetadataForPath(locale, PATH, {
     title: content.articleHeadline,
     description: content.articleDescription,
@@ -604,7 +839,7 @@ function BulletList({ items }: { items: readonly string[] }) {
 
 export default async function AddMultimodalCapabilitiesToSaaSChatbotPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : "en"];
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
   const articleJsonLd = getArticleJsonLd(content);
   const faqJsonLd = createFaqPageJsonLd([...content.faqItems]);
 

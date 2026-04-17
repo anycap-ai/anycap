@@ -6,7 +6,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { MusicGenDemo } from "@/components/landing/MusicGenDemo";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -79,10 +79,18 @@ const models: Record<SiteLocale, readonly MusicGenerationModel[]> = {
       bestFor: "Rascunhos de trilha sonora por prompt e música de fundo dentro do mesmo runtime de agente",
     },
   ],
-  id: [],
+  id: [
+    {
+      name: "ElevenLabs Music",
+      href: "/models/elevenlabs-music",
+      modelId: "elevanlabs-music",
+      modes: "teks-ke-musik",
+      bestFor: "Draf soundtrack berbasis prompt dan musik latar di runtime agen yang sama",
+    },
+  ],
 };
 
-const contentByLocale = {
+const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
   en: {
     breadcrumbItems: [
       { name: "Home", href: "/" },
@@ -287,28 +295,162 @@ const contentByLocale = {
       ],
     },
   },
-  id: undefined as never,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Kapabilitas", href: "/capabilities" },
+      { name: "Generasi Musik", href: "/capabilities/music-generation" },
+    ],
+    lastUpdatedLabel: "5 April 2026",
+    eyebrow: "Kapabilitas",
+    title: "Generasi Musik",
+    intro:
+      "Fitur generasi musik di AnyCap memberi agen satu CLI untuk workflow musik berbasis prompt. Agen bisa membuat musik latar, draf instrumental, dan konsep soundtrack lewat satu antarmuka, tanpa merangkai API teks-ke-musik terpisah. Ini memudahkan tim menjaga workflow musik tetap satu alur dengan generasi gambar, generasi video, dan analisis media.",
+    summaryEyebrow: "Ringkasan cepat",
+    summaryBody:
+      "Saat ini AnyCap menyediakan generasi musik berbasis prompt melalui ElevenLabs Music. Gunakan saat agen yang sama sudah membuat visual atau klip dan juga butuh draf soundtrack cepat tanpa pindah ke toolchain audio lain.",
+    modelSectionTitle: "Model yang didukung",
+    tableHeaders: ["Model", "ID Model", "Mode", "Cocok untuk"],
+    usageTitle: "Penggunaan CLI",
+    usageExamples: [
+      {
+        title: "Generasi musik berbasis prompt",
+        code: 'anycap music generate --prompt "lofi night drive with soft synths and a steady pulse" --model elevanlabs-music -o track.mp3',
+      },
+      {
+        title: "Generasi instrumental",
+        code: 'anycap music generate --prompt "minimal ambient soundtrack with no vocals" --model elevanlabs-music -o ambient.mp3',
+      },
+      {
+        title: "Lihat model musik yang tersedia",
+        code: "anycap music models",
+      },
+    ],
+    useCasesTitle: "Kapan agen butuh generasi musik",
+    useCases: [
+      "Membuat musik latar untuk demo produk, video rilis, dan konten changelog.",
+      "Membuat loop instrumental untuk prototipe, trailer, dan workflow marketing ringan.",
+      "Menjaga generasi musik tetap di workflow CLI yang sama dengan tugas gambar, video, dan analisis.",
+      "Membuat draf audio dengan cepat sebelum memutuskan apakah proyek perlu produksi tingkat lanjut.",
+    ],
+    relatedPagesTitle: "Halaman terkait",
+    relatedPages: [
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Pricing",
+        body: "Lihat penggunaan kredit untuk generasi musik bersama seluruh stack kapabilitas lainnya.",
+      },
+      {
+        href: "/models/elevenlabs-music",
+        eyebrow: "Model",
+        title: "ElevenLabs Music",
+        body: "Pelajari panduan model untuk workflow soundtrack berbasis prompt lewat AnyCap.",
+      },
+      {
+        href: "/capabilities/video-generation",
+        eyebrow: "Kapabilitas terkait",
+        title: "Generasi Video",
+        body: "Padukan pembuatan soundtrack dengan workflow video saat agen membuat klip pendek.",
+      },
+      {
+        href: "/cli",
+        eyebrow: "CLI",
+        title: "AnyCap CLI",
+        body: "Lihat surface perintah yang menyatukan musik, gambar, video, dan analisis dalam satu runtime.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apa yang bisa dilakukan agen dengan generasi musik AnyCap?",
+        answer:
+          "Agen mendapat satu surface perintah untuk generasi musik berbasis prompt. Tim bisa membuat track draf, latar instrumental, dan output audio berbasis style tanpa integrasi API generasi musik terpisah.",
+      },
+      {
+        question: "Halaman ini membahas API generasi musik atau workflow CLI?",
+        answer:
+          "Keduanya. Tim sering mencari kata kunci API generasi musik atau API teks-ke-musik, sementara eksekusi agen biasanya berjalan lewat AnyCap CLI.",
+      },
+      {
+        question: "Istilah pasar apa yang paling cocok untuk kapabilitas ini?",
+        answer:
+          "Istilah pendukung yang paling relevan adalah API generasi musik, API teks-ke-musik, dan AI music API. Label kapabilitas yang paling jelas tetap generasi musik, sementara frasa API sesuai pola pencarian tim.",
+      },
+      {
+        question: "Kapan generasi musik sebaiknya tetap di runtime yang sama dengan kapabilitas lain?",
+        answer:
+          "Saat agen yang sama sudah menangani visual, demo, atau aset produk. Menjaga generasi musik di runtime yang sama membuat transisi dari gambar dan video ke soundtrack lebih cepat tanpa ganti alat.",
+      },
+    ],
+    modelBestFor: "Draf soundtrack berbasis prompt dan musik latar di runtime agen yang sama",
+    capabilityGuide: {
+      headline: "API generasi musik untuk agen AI - teks-ke-musik lewat satu CLI",
+      description:
+        "Panduan kapabilitas untuk menambahkan generasi musik ke agen AI melalui AnyCap, termasuk pembuatan track berbasis prompt dan workflow instrumental.",
+      about: ["Generasi musik", "API teks-ke-musik", "AI music API", "AnyCap"],
+      keywords: [
+        "api generasi musik",
+        "api teks ke musik",
+        "generasi musik untuk agen ai",
+        "ai music api",
+      ],
+    },
+  },
 };
 
 const localizedContentByLocale: Record<SiteLocale, MusicGenerationPageContent> =
   contentByLocale as Record<SiteLocale, MusicGenerationPageContent>;
-localizedContentByLocale.id = localizedContentByLocale.en;
 
-export const metadata: Metadata = {
-  title: "Music Generation API for AI agents - Text-to-music through one CLI",
-  description:
-    "Give AI agents music generation through AnyCap. Generate instrumental tracks and custom music prompts through one CLI instead of wiring a separate music generation API.",
-  alternates: { canonical: "/capabilities/music-generation" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/capabilities/music-generation",
-    siteName: siteConfig.siteName,
+const metadataByLocale: Record<
+  SiteLocale,
+  { title: string; description: string; openGraphTitle: string; openGraphDescription: string }
+> = {
+  en: {
     title: "Music Generation API for AI agents - Text-to-music through one CLI",
     description:
+      "Give AI agents music generation through AnyCap. Generate instrumental tracks and custom music prompts through one CLI instead of wiring a separate music generation API.",
+    openGraphTitle: "Music Generation API for AI agents - Text-to-music through one CLI",
+    openGraphDescription:
       "Add music generation to AI agents with one CLI, one auth flow, and one capability runtime.",
   },
+  "pt-br": {
+    title: "API de geração de música para agentes de IA - Texto para música em uma única CLI",
+    description:
+      "Dê geração de música para agentes de IA com AnyCap. Gere faixas instrumentais e prompts musicais personalizados por uma única CLI, sem integrar uma API separada de geração de música.",
+    openGraphTitle: "API de geração de música para agentes de IA - Texto para música em uma única CLI",
+    openGraphDescription:
+      "Adicione geração de música a agentes de IA com uma CLI, um fluxo de autenticação e um runtime de capacidades.",
+  },
+  id: {
+    title: "API generasi musik untuk agen AI - teks-ke-musik lewat satu CLI",
+    description:
+      "Tambahkan generasi musik ke agen AI lewat AnyCap. Buat track instrumental dan prompt musik kustom melalui satu CLI tanpa perlu merangkai API generasi musik terpisah.",
+    openGraphTitle: "API generasi musik untuk agen AI - teks-ke-musik lewat satu CLI",
+    openGraphDescription:
+      "Tambahkan generasi musik ke agen AI dengan satu CLI, satu alur autentikasi, dan satu runtime kapabilitas.",
+  },
 };
+
+function getPageMetadata(locale: SiteLocale): Metadata {
+  const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
+
+  return {
+    title: localizedMetadata.title,
+    description: localizedMetadata.description,
+    alternates: { canonical: "/capabilities/music-generation" },
+    openGraph: {
+      type: "website",
+      locale: getLocaleConfig(locale).ogLocale,
+      url: "/capabilities/music-generation",
+      siteName: siteConfig.siteName,
+      title: localizedMetadata.openGraphTitle,
+      description: localizedMetadata.openGraphDescription,
+    },
+  };
+}
+
+export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 export default async function MusicGenerationPage() {
   const locale = await getRequestLocale();
@@ -343,7 +485,12 @@ export default async function MusicGenerationPage() {
               {content.eyebrow}
             </p>
             <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
-              {locale === "pt-br" ? "Atualizado em" : "Last updated"} {content.lastUpdatedLabel}
+              {locale === "pt-br"
+                ? "Atualizado em"
+                : locale === "id"
+                  ? "Diperbarui"
+                  : "Last updated"}{" "}
+              {content.lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"

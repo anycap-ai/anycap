@@ -564,10 +564,253 @@ const ptBrContent: PhotoToDrawingPageContent = {
   ],
 };
 
+const idContent: PhotoToDrawingPageContent = {
+  metadata: {
+    title: "Cara mengubah foto menjadi gambar bergaya menggambar dengan agen AI",
+    description:
+      "Gunakan AnyCap untuk mengubah foto yang sudah ada menjadi sketsa, kartun, bergaya anime, atau karikatur lewat satu alur image-to-image, bukan banyak aplikasi terpisah.",
+    openGraphTitle: "Cara mengubah foto menjadi gambar bergaya menggambar dengan agen AI",
+    openGraphDescription:
+      "Panduan alur kerja untuk mengonversi foto menjadi gambar bergaya menggambar dengan AnyCap sambil menjaga subjek tetap dikenali dan output tetap bisa dipakai ulang.",
+    articleHeadline: "Cara mengubah foto menjadi gambar bergaya menggambar dengan agen AI",
+    articleDescription:
+      "Alur praktis untuk mengonversi foto yang sudah ada menjadi gambar bergaya menggambar melalui pengeditan gambar AnyCap.",
+    articleAbout: [
+      "Foto ke gambar menggambar",
+      "Konversi ke sketsa",
+      "Gaya kartun",
+      "Gaya anime",
+      "Karikatur",
+      "Agen AI",
+    ],
+    articleKeywords: [
+      "cara mengubah foto menjadi gambar",
+      "foto ke gambar ai",
+      "ubah foto jadi sketsa",
+      "generator foto kartun",
+      "efek foto anime",
+      "generator karikatur online",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Learn", href: "/learn" },
+    {
+      name: "Cara mengubah foto menjadi gambar menggambar",
+      href: HOW_TO_MAKE_A_PHOTO_INTO_A_DRAWING_PATH,
+    },
+  ],
+  eyebrow: "Learn",
+  lastUpdatedLabel: "Terakhir diperbarui 11 April 2026",
+  hero: {
+    title: "Cara mengubah foto menjadi gambar menggambar",
+    intro:
+      "Jika Anda ingin mengubah foto menjadi gambar menggambar, pertanyaan yang berguna bukan apakah ada filter lain. Yang penting adalah apakah agen bisa mempertahankan subjek, memilih keluarga gaya, dan menjaga hasil tetap bisa dipakai ulang untuk posting sosial, foto profil, concept art, atau grafis editorial ringan. Di situlah AnyCap memberi alur kerja lebih banyak kontrol daripada aplikasi sekali klik.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Gunakan pengeditan image-to-image ketika Anda sudah punya foto sumber. Minta model mempertahankan subjek, tentukan keluarga gaya yang Anda inginkan, dan periksa hasilnya sebelum mempublikasikan. Pola yang sama mencakup output sketsa, kartun, anime, karikatur, dan gambar garis kasar.",
+  },
+  styleFamiliesTitle: "Pilih keluarga gaya, bukan sekadar efek",
+  styleFamilies: [
+    {
+      eyebrow: "Sketch",
+      title: "Gambar pensil atau tinta",
+      body:
+        "Terbaik ketika Anda ingin gambar garis bersih, potret bergaya tangan, atau sketsa sederhana yang tetap membuat kemiripan asli mudah dibaca.",
+    },
+    {
+      eyebrow: "Cartoon",
+      title: "Gaya kartun atau komik",
+      body:
+        "Terbaik ketika gambar harus terasa lebih ceria, dengan bentuk disederhanakan, garis luar lebih tegas, dan nada yang lebih ringan dan ramah untuk internet.",
+    },
+    {
+      eyebrow: "Anime",
+      title: "Konversi bergaya anime",
+      body:
+        "Terbaik ketika hasil akhir harus terlihat seperti ilustrasi bergaya, bukan edit foto literal, terutama untuk penggunaan sosial atau berbasis fandom.",
+    },
+    {
+      eyebrow: "Caricature",
+      title: "Karikatur yang dilebih-lebihkan",
+      body:
+        "Terbaik ketika tujuannya adalah potret lucu yang tetap membuat subjek dikenali sambil melebih-lebihkan ekspresi, proporsi, atau sikap.",
+    },
+  ],
+  workflowTitle: "Lima langkah dari foto ke hasil bergaya menggambar",
+  workflowSteps: [
+    {
+      title: "Mulai dari foto yang memang penting",
+      body:
+        "Gunakan gambar sumber nyata yang ingin Anda ubah. Semakin jelas subjeknya, semakin mudah menjaga gambar akhir tetap terbaca dan bisa dipakai ulang.",
+    },
+    {
+      title: "Pilih keluarga gaya sebelum menulis prompt",
+      body:
+        "Tentukan apakah Anda ingin sketsa, kartun, anime, karikatur, atau hasil gambar garis kasar. Keputusan gaya harus didahulukan agar model tidak menebak-nebak maksud Anda.",
+    },
+    {
+      title: "Jalankan pengeditan image-to-image",
+      body:
+        "Gunakan foto sebagai gambar referensi dan minta efek menggambar secara eksplisit. Ini menjaga transformasi terikat pada sumber, bukan melayang ke ilustrasi acak.",
+    },
+    {
+      title: "Periksa drift identitas dan kualitas garis",
+      body:
+        "Tinjau apakah wajah, pose, pakaian, atau objek penting masih terlihat seperti foto asli. Lalu periksa apakah garis, bayangan, dan garis luar sesuai gaya yang Anda minta.",
+    },
+    {
+      title: "Cabangkan ke kasus penggunaan akhir yang tepat",
+      body:
+        "Dari sumber yang sama, Anda bisa menghasilkan gambar profil, posting sosial, sketsa konsep, atau varian bergaya komik tanpa membangun ulang prompt dari nol.",
+    },
+  ],
+  comparisonTitle: "Mengapa ini lebih kuat daripada aplikasi efek foto generik",
+  comparisonRows: [
+    {
+      lens: "Kontrol subjek",
+      shallow:
+        "Aplikasi mengubah foto, tetapi wajah atau objek bisa bergeser dengan cara yang sulit diprediksi.",
+      workflow:
+        "Agen menjaga gambar sumber dalam loop dan meminta model mempertahankan subjek yang sama sambil hanya mengubah gaya visual.",
+    },
+    {
+      lens: "Presisi gaya",
+      shallow:
+        "Hasilnya terlihat 'artistik' tetapi tidak jelas apakah sketsa, kartun, anime, atau karikatur.",
+      workflow:
+        "Keluarga gaya eksplisit, sehingga halaman bisa menjelaskan dan memakai ulang jenis output persis yang orang cari.",
+    },
+    {
+      lens: "Pemakaian ulang",
+      shallow: "Anda mengekspor satu gambar jadi dan memulai lagi jika ingin versi lain.",
+      workflow:
+        "Foto yang sama bisa bercabang ke beberapa keluarga gaya atau varian khusus saluran dari satu alur kerja.",
+    },
+    {
+      lens: "Pengiriman",
+      shallow: "Anda mengunduh gambar lalu membagikannya secara manual ke tempat lain.",
+      workflow:
+        "Agen bisa menyimpan file secara lokal, menyimpannya di Drive, atau meneruskannya ke alur konten yang lebih luas.",
+    },
+  ],
+  modelChoiceTitle: "Pilih model berdasarkan alur kerja, bukan hype",
+  modelCards: [
+    {
+      title: "Nano Banana Pro",
+      label: "Pilihan pertama terbaik untuk remix foto sumber",
+      body:
+        "Gunakan ini ketika foto sudah ada dan tugas utamanya adalah mempertahankan subjek sambil menerapkan gaya menggambar yang jelas.",
+      href: "/models/nano-banana-pro",
+    },
+    {
+      title: "Nano Banana 2",
+      label: "Terbaik untuk eksplorasi gaya cepat",
+      body:
+        "Gunakan ini ketika Anda ingin menguji arah sketsa, kartun, anime, atau karikatur dengan cepat sebelum memilih tampilan akhir.",
+      href: "/models/nano-banana-2",
+    },
+    {
+      title: "Seedream 5",
+      label: "Terbaik ketika Anda masih perlu gambar sumber",
+      body:
+        "Gunakan ini ketika foto awal belum ada dan Anda perlu gambar tahap pertama yang lebih kuat sebelum menerapkan transformasi menggambar.",
+      href: "/models/seedream-5",
+    },
+  ],
+  cliTitle: "Contoh CLI",
+  cliExamples: [
+    {
+      title: "Ubah foto menjadi sketsa bersih",
+      code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "ubah foto ini menjadi sketsa pensil bersih, pertahankan subjek yang sama, jaga garis luar tetap terbaca, gunakan bayangan ringan, tanpa objek tambahan, tanpa teks, tanpa watermark" \\
+  --param images=./source-photo.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o photo-sketch.png`,
+    },
+    {
+      title: "Ubah foto menjadi kartun",
+      code: `anycap image generate \\
+  --model nano-banana-2 \\
+  --mode image-to-image \\
+  --prompt "ubah foto ini menjadi ilustrasi kartun, pertahankan identitas subjek yang sama, gunakan garis luar tebal, bentuk disederhanakan, warna cerah tetapi terkendali, tanpa teks, tanpa watermark" \\
+  --param images=./source-photo.png \\
+  --param aspect_ratio=1:1 \\
+  --param resolution=2k \\
+  -o photo-cartoon.png`,
+    },
+    {
+      title: "QA output bergaya menggambar",
+      code: `anycap actions image-read \\
+  --file ./photo-sketch.png \\
+  --instruction "Jelaskan keluarga gayanya, konfirmasi apakah subjek yang sama dipertahankan, dan sebutkan apakah hasilnya lebih terbaca sebagai sketsa, kartun, anime, atau karikatur."`,
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question:
+        "Apakah ini sama dengan yang dimaksud orang ketika mencari 'cara mengubah foto menjadi gambar di ChatGPT'?",
+      answer:
+        "Ya. Maksud pencarian sama, tetapi alur yang lebih andal adalah memperlakukannya sebagai pengeditan image-to-image, mempertahankan subjek sumber, memilih keluarga gaya secara eksplisit, dan melakukan QA pada hasil sebelum mempublikasikan.",
+    },
+    {
+      question: "Apakah ini juga bisa membuat versi kartun, anime, dan karikatur?",
+      answer:
+        "Ya. Itu hanya keluarga gaya berbeda di atas alur transformasi yang sama. Kuncinya adalah menyebutkan gaya yang Anda inginkan, bukan membiarkan model menebak sendiri.",
+    },
+    {
+      question: "Model mana yang harus saya pakai dulu?",
+      answer:
+        "Gunakan Nano Banana Pro terlebih dahulu ketika foto sudah ada dan Anda ingin remix yang lebih kuat mempertahankan subjek. Gunakan Nano Banana 2 ketika Anda ingin bergerak cepat melintasi beberapa gaya visual. Gunakan Seedream 5 ketika Anda masih perlu membuat gambar sumber terlebih dahulu.",
+    },
+    {
+      question: "Bisakah saya memakai hasilnya untuk foto profil atau posting sosial?",
+      answer:
+        "Ya. Alur ini sangat berguna untuk foto profil, posting sosial, branding kreator, dan visual editorial ringan karena gambar akhir menjaga subjek tetap mudah dikenali sambil mengubah gaya.",
+    },
+    {
+      question: "Apakah aplikasi efek foto sekali klik sudah cukup?",
+      answer:
+        "Cukup untuk edit sekadar coba-coba, tetapi tidak untuk alur yang bisa diulang. AnyCap lebih baik ketika Anda ingin kontrol atas foto sumber, keluarga gaya, langkah QA, dan jalur pengiriman akhir.",
+    },
+  ],
+  nextStepsTitle: "Langkah berikutnya",
+  nextStepCards: [
+    {
+      title: "Pembuatan gambar",
+      body:
+        "Lihat halaman kemampuan yang mendukung alur image-to-image di balik transformasi ini.",
+      href: "/capabilities/image-generation",
+    },
+    {
+      title: "Pemahaman gambar",
+      body:
+        "Gunakan ini ketika Anda juga perlu agen memeriksa apakah output bergaya menggambar masih mempertahankan subjek sumber.",
+      href: "/capabilities/image-understanding",
+    },
+    {
+      title: "Cara Mengganti Latar Foto",
+      body:
+        "Pindah ke sini ketika langkah berikutnya adalah mengganti lingkungan foto, bukan mengubah subjek menjadi gambar menggambar.",
+      href: "/learn/how-to-change-photo-background",
+    },
+    {
+      title: "Cara Membuat Gambar Transparan",
+      body:
+        "Gunakan alur lanjutan ini ketika Anda ingin subjek diisolasi untuk dipakai ulang sebelum menata gaya atau mempublikasikan.",
+      href: "/learn/how-to-make-image-transparent",
+    },
+  ],
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, PhotoToDrawingPageContent>;
 
 function getContent(locale: SiteLocale): PhotoToDrawingPageContent {

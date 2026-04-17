@@ -817,10 +817,353 @@ const ptBrContent: CursorPageContent = {
   },
 };
 
+const idContent: CursorPageContent = {
+  metadata: {
+    title: "Alat Cursor untuk gambar, video, dan visi | AnyCap",
+    description:
+      'Katakan pada Cursor "help me install anycap.ai" dan sisanya ditangani — penemuan skill, instalasi CLI, autentikasi, serta akses langsung ke pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat bahasa alami.',
+    openGraphTitle: "Alat Cursor untuk gambar, video, dan visi | AnyCap",
+    openGraphDescription:
+      'Katakan pada Cursor "help me install anycap.ai" dan sisanya ditangani — penemuan skill, instalasi CLI, autentikasi, serta akses langsung ke pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat bahasa alami.',
+    articleHeadline: "Alat Cursor untuk gambar, video, dan visi | AnyCap",
+    articleDescription:
+      "Panduan menambahkan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video ke Cursor melalui satu runtime kemampuan.",
+    articleAbout: ["Cursor", "CLI AnyCap", "skill agen", "runtime kemampuan"],
+    articleKeywords: [
+      "alat cursor",
+      "menambahkan alat ke cursor",
+      "kemampuan cursor",
+      "cursor pembuatan gambar",
+      "cursor pembuatan video",
+      "cursor pemahaman gambar",
+      "cursor analisis video",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Lengkapi agen", href: "/for", unlinkable: true },
+    { name: "Cursor" },
+  ],
+  pageEyebrow: "Untuk Cursor",
+  lastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
+  hero: {
+    titleLine1: "Cursor kuat untuk kode dan pengeditan workspace.",
+    titleLine2: "Namun masih membutuhkan kemampuan gambar, video, dan visi.",
+    videoDescription:
+      "Lihat Cursor memasang AnyCap dari perintah bahasa alami — penemuan skill, pengaturan CLI, autentikasi, dan pembuatan gambar pertama dalam satu alur tanpa putus.",
+    cursorIntroSuffix:
+      " unggul dalam pembuatan kode, refaktor, dan pengeditan yang memahami workspace. Celah muncul saat alur kerja butuh visual produk, video panduan, pemahaman tangkapan layar, atau tinjauan rekaman — semuanya belum menjadi alat bawaan Cursor hari ini.",
+    promptSentence:
+      'Cukup katakan ke Cursor apa yang dibutuhkan — misalnya "help me install anycap.ai". Cursor menemukan skill, memasang CLI, mengautentikasi, dan memanggil kemampuan yang tepat — semuanya dalam alur editor dan terminal yang sama, tanpa memaksa pengaturan terpisah per penyedia.',
+    promptTagline: "Bahasa alami. Tanpa langkah manual. Kemampuan langsung siap.",
+    ctas: {
+      primary: "Mulai",
+      secondary: "Pembuatan gambar",
+      tertiary: "Pembuatan video",
+    },
+  },
+  demo: {
+    title: "Pasang dan gunakan AnyCap dengan Cursor",
+    description:
+      "Lihat Cursor memasang AnyCap dari perintah bahasa alami — penemuan skill, pengaturan CLI, autentikasi, dan pembuatan gambar pertama dalam satu alur tanpa putus.",
+  },
+  install: {
+    eyebrow: "Memulai",
+    title: 'Katakan pada Cursor "help me install anycap.ai". Selesai.',
+    intro:
+      "Cursor dapat menemukan skill AnyCap, memasang CLI, mengautentikasi, dan memanggil kemampuan sendiri. Cukup jelaskan tugas dalam bahasa alami — Cursor menjalankan pengaturan dan mulai mengirimkan hasil dalam alur workspace yang sama. Tidak perlu menyambungkan banyak penyedia.",
+    whatToTypeLabel: "Yang diketik di Cursor",
+    installPrompt: "help me install anycap.ai",
+    afterSetup:
+      'Setelah pengaturan, katakan pada Cursor misalnya "generate a product mockup image" — Cursor akan memanggil anycap image generate secara otomatis. Jika ingin kendali perintah langsung, buka langkah pemasangan manual di bawah.',
+    manualToggleLabel: "Lebih suka memasang manual? Berikut tiga langkahnya.",
+    steps: [
+      {
+        title: "Pasang skill",
+        subtitle: "Langkah 1",
+        code: "npx -y skills add anycap-ai/anycap -a cursor -y",
+        note:
+          "Ini mengajarkan Cursor cara menemukan dan memanggil runtime AnyCap tanpa mengubah cara kerja yang sudah biasa digunakan.",
+      },
+      {
+        title: "Pasang CLI",
+        subtitle: "Langkah 2",
+        code: "curl -fsSL https://anycap.ai/install.sh | sh",
+        note:
+          "CLI adalah satu biner tanpa dependensi runtime, sehingga berjalan rapi di terminal terintegrasi Cursor.",
+      },
+      {
+        title: "Masuk dan verifikasi",
+        subtitle: "Langkah 3",
+        code: "anycap login && anycap status",
+        note:
+          "Setelah autentikasi, Cursor dapat berpindah antar kemampuan gambar, video, dan visi tanpa kredensial baru atau putar ke dasbor.",
+      },
+    ],
+    guideLinkPrefix: "Untuk panduan lengkap, lihat ",
+    guideLinkLabel: "panduan pemasangan",
+    guideLinkSuffix: ".",
+  },
+  whyItFits: {
+    eyebrow: "Mengapa cocok",
+    title: "Dirancang untuk cara Cursor bekerja",
+    intro:
+      "AnyCap terpasang rapi di Cursor karena dirancang untuk batasan yang sama: alur berbasis editor, eksekusi di terminal terintegrasi, dan konteks berbasis proyek.",
+    cards: [
+      {
+        title: "Eksekusi di terminal terintegrasi",
+        description:
+          "Cursor sudah bekerja lewat kode plus terminal. CLI AnyCap adalah biner tanpa dependensi yang terpasang dan terautentikasi di sesi terminal yang sama, sehingga kemampuan tersedia tanpa keluar dari alur editor.",
+      },
+      {
+        title: "Keluaran yang memahami workspace",
+        description:
+          "Cursor punya akses langsung ke repositori dan file sekitarnya. AnyCap mengembalikan path file dan URL CDN yang bisa disimpan ke folder proyek, dirangkai ke dokumentasi, atau diteruskan ke skrip dan langkah build berikutnya.",
+      },
+      {
+        title: "Satu kredensial, semua kemampuan",
+        description:
+          "Tanpa lapisan runtime, menambahkan pembuatan gambar, video, dan visi berarti mengelola kredensial penyedia terpisah dalam alur proyek yang sama. AnyCap menyatukannya dalam satu login yang mencakup seluruh tumpukan.",
+      },
+    ],
+  },
+  capabilityGap: {
+    eyebrow: "Celah kemampuan",
+    title: "Yang didapat setelah satu pemasangan skill",
+    description:
+      "Cursor tetap fokus pada kode dan pengeditan workspace sementara AnyCap mengisi celah pembuatan, analisis, pencarian, penyimpanan, dan publikasi di luar area bawaannya.",
+    columns: [
+      { label: "Cursor saja" },
+      { label: "Tambah dengan AnyCap", accent: true },
+      { label: "Langkah berikutnya terbaik" },
+    ],
+    rows: [
+      {
+        capability: "Pembuatan gambar",
+        cells: [
+          { label: "Tidak ada keluaran gambar dari terminal", tone: "muted" },
+          { label: "Buat visual dan mockup lewat anycap image generate", tone: "accent" },
+          { label: "Halaman pembuatan gambar", href: "/capabilities/image-generation" },
+        ],
+      },
+      {
+        capability: "Pembuatan video",
+        cells: [
+          { label: "Tidak ada alat video di alur CLI", tone: "muted" },
+          { label: "Buat panduan dan klip lewat anycap video generate", tone: "accent" },
+          { label: "Halaman pembuatan video", href: "/capabilities/video-generation" },
+        ],
+      },
+      {
+        capability: "Pembuatan musik",
+        cells: [
+          { label: "Tidak ada pembuatan musik di alur CLI", tone: "muted" },
+          { label: "Buat trek latar melalui runtime musik AnyCap", tone: "accent" },
+          { label: "Halaman pembuatan musik", href: "/capabilities/music-generation" },
+        ],
+      },
+      {
+        capability: "Pemahaman gambar",
+        cells: [
+          { label: "Tidak ada runtime visi terpadu", tone: "muted" },
+          { label: "Baca tangkapan layar, diagram, dan referensi visual", tone: "accent" },
+          { label: "Halaman pemahaman gambar", href: "/capabilities/image-understanding" },
+        ],
+      },
+      {
+        capability: "Analisis video",
+        cells: [
+          { label: "Perlu pengaturan penyedia terpisah", tone: "muted" },
+          { label: "Periksa rekaman dari CLI yang sama", tone: "accent" },
+          { label: "Halaman analisis video", href: "/capabilities/video-analysis" },
+        ],
+      },
+      {
+        capability: "Pemahaman audio",
+        cells: [
+          { label: "Tidak ada runtime analisis audio terpadu", tone: "muted" },
+          { label: "Transkrip dan analisis audio lewat satu runtime", tone: "accent" },
+          { label: "Halaman pemahaman audio", href: "/capabilities/audio-understanding" },
+        ],
+      },
+      {
+        capability: "Pencarian web",
+        cells: [
+          { label: "Pencarian bergantung pada alat eksternal", tone: "muted" },
+          { label: "Cari web dari lapisan kemampuan yang sama", tone: "accent" },
+          { label: "Halaman pencarian web", href: "/capabilities/web-search" },
+        ],
+      },
+      {
+        capability: "Pencarian web berbasis bukti",
+        cells: [
+          { label: "Tidak ada alur pencarian berbasis bukti di loop tugas", tone: "muted" },
+          { label: "Jalankan grounded search saat jawaban butuh kutipan sumber", tone: "accent" },
+          { label: "Halaman pencarian web berbasis bukti", href: "/capabilities/grounded-web-search" },
+        ],
+      },
+      {
+        capability: "Perayapan web",
+        cells: [
+          { label: "Tidak ada runtime crawl yang dapat dipakai ulang", tone: "muted" },
+          { label: "Crawl halaman dan ekstrak konten dari satu CLI", tone: "accent" },
+          { label: "Halaman perayapan web", href: "/capabilities/web-crawl" },
+        ],
+      },
+      {
+        capability: "Penyimpanan Drive",
+        cells: [
+          { label: "Tidak ada lapisan penyimpanan aset bersama", tone: "muted" },
+          { label: "Simpan keluaran dengan URL publik di AnyCap Drive", tone: "accent" },
+          { label: "Halaman harga", href: "/pricing" },
+        ],
+      },
+      {
+        capability: "Hosting halaman",
+        cells: [
+          { label: "Tidak ada permukaan publikasi halaman bawaan", tone: "muted" },
+          { label: "Terbitkan halaman sederhana lewat AnyCap Page", tone: "accent" },
+          { label: "Halaman harga", href: "/pricing" },
+        ],
+      },
+      {
+        capability: "Satu alur autentikasi",
+        cells: [
+          { label: "Kredensial per penyedia terpisah", tone: "muted" },
+          { label: "Satu login untuk seluruh tumpukan kemampuan", tone: "accent" },
+          { label: "Halaman memulai", href: "/start" },
+        ],
+      },
+    ],
+  },
+  capabilityCards: {
+    title: "Mulai dari kemampuan pertama yang belum ada",
+    cards: [
+      {
+        eyebrow: "Keluaran kreatif",
+        title: "Pembuatan gambar",
+        href: "/capabilities/image-generation",
+        summary:
+          "Halaman berikutnya terbaik saat Cursor butuh visual, mockup, aset peluncuran, atau keluaran gambar lainnya.",
+        command: "anycap image generate",
+      },
+      {
+        eyebrow: "Keluaran gerak",
+        title: "Pembuatan video",
+        href: "/capabilities/video-generation",
+        summary: "Halaman berikutnya terbaik saat Cursor butuh demo, panduan, atau keluaran video pendek.",
+        command: "anycap video generate",
+      },
+      {
+        eyebrow: "Visi",
+        title: "Pemahaman gambar",
+        href: "/capabilities/image-understanding",
+        summary:
+          "Halaman berikutnya terbaik saat Cursor perlu menafsirkan tangkapan layar, diagram, OCR, atau umpan balik desain.",
+        command: "anycap image read",
+      },
+      {
+        eyebrow: "Analisis",
+        title: "Analisis video",
+        href: "/capabilities/video-analysis",
+        summary: "Halaman berikutnya terbaik saat Cursor perlu memeriksa rekaman dan mengekstrak detail terstruktur.",
+        command: "anycap video read",
+      },
+    ],
+  },
+  modelSelection: {
+    title: "Lalu pilih modelnya, bukan hanya kemampuannya",
+    introPrefix:
+      "Pengguna Cursor sering mencari perbandingan model, bukan sekadar kemampuan. Pilihan gambar biasanya ",
+    imageModelConnector: " vs ",
+    introMiddle: ", sementara pilihan video biasanya ",
+    videoModelConnector: " vs ",
+    outro: ". Panduan ini membantu Cursor memilih model yang tepat sebelum memanggil CLI.",
+    cards: [
+      {
+        eyebrow: "Model gambar",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        summary:
+          "Model gambar babak pertama terbaik untuk mockup Cursor yang halus, visual peluncuran, dan konsep visual yang lebih bersih.",
+        comparison: "Bandingkan dengan Nano Banana 2 saat pertanyaannya kecepatan vs polesan akhir.",
+      },
+      {
+        eyebrow: "Model gambar",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        summary: "Terbaik untuk iterasi cepat saat Cursor butuh banyak varian visual atau pembuatan konten berulang.",
+        comparison: "Bandingkan dengan Seedream 5 dan Nano Banana Pro untuk kesesuaian alur kerja.",
+      },
+      {
+        eyebrow: "Model video",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        summary: "Model video premium terbaik untuk Cursor saat tugas membutuhkan keluaran sinematik kelas atas.",
+        comparison: "Bandingkan dengan Kling 3.0 dan Seedance 1.5 Pro untuk gaya gerak dan pertimbangan alur kerja.",
+      },
+    ],
+  },
+  faq: {
+    title: "Pertanyaan umum",
+    items: [
+      {
+        question: "Apakah Cursor bisa membuat gambar sendiri?",
+        answer:
+          "Tidak. Cursor sangat baik untuk pengodean, refaktor, dan pengeditan yang memahami workspace, tetapi tidak dilengkapi runtime pembuatan gambar bawaan. AnyCap menambahkan kemampuan itu lewat satu pemasangan skill dan satu CLI, sehingga Cursor dapat menghasilkan visual tanpa keluar dari alur editor dan terminal yang sudah dipakai.",
+      },
+      {
+        question: "Mengapa memakai AnyCap alih-alih menyambungkan penyedia secara langsung?",
+        answer:
+          "Menyambungkan API gambar, video, dan visi terpisah ke Cursor berarti mengelola banyak SDK, kredensial, dan perintah di proyek yang sama. AnyCap menyatukannya dalam satu CLI dan satu login, sehingga Cursor mendapat satu lapisan kemampuan alih-alih beberapa pengaturan penyedia yang terpisah.",
+      },
+      {
+        question: "Apakah AnyCap menggantikan Cursor?",
+        answer:
+          "Tidak. AnyCap bukan IDE atau agen pengodean. Ini adalah runtime kemampuan yang berjalan bersama Cursor. Cursor tetap untuk kode, perencanaan, dan pengeditan, sementara alat gambar, video, dan visi yang tidak dibawa Cursor ditambahkan lewat AnyCap.",
+      },
+      {
+        question: "Jalur tercepat untuk menambahkan alat ke Cursor?",
+        answer:
+          'Cukup katakan ke Cursor apa yang dibutuhkan dalam bahasa alami, misalnya "help me install anycap.ai". Cursor dapat menemukan skill, memasang CLI, mengautentikasi, dan memanggil kemampuan yang tepat secara otomatis. Jika lebih suka kendali manual, jalur tiga langkah di bawah tetap tersedia.',
+      },
+      {
+        question: "Apakah AnyCap berjalan di dalam alur kerja Cursor?",
+        answer:
+          "Ya. CLI AnyCap adalah satu biner tanpa dependensi eksternal. CLI berjalan di terminal terintegrasi Cursor, mengirim permintaan API ke server AnyCap, dan mengembalikan path file atau URL yang bisa dipakai Cursor di langkah berikutnya, disimpan ke proyek, atau diteruskan ke alat lain.",
+      },
+      {
+        question: "Model gambar mana yang paling cocok untuk Cursor: Seedream 5, Nano Banana 2, atau Nano Banana Pro?",
+        answer:
+          "Untuk alur di Cursor, Seedream 5 adalah model gambar babak pertama yang lebih kuat, Nano Banana 2 lebih cepat untuk iterasi volume tinggi, dan Nano Banana Pro lebih pas saat alur dimulai dari gambar yang ada dan butuh revisi terarah.",
+      },
+      {
+        question: "Model video mana yang paling cocok untuk Cursor: Veo 3.1, Kling 3.0, atau Seedance 1.5 Pro?",
+        answer:
+          "Untuk Cursor, Veo 3.1 adalah pilihan premium default, Kling 3.0 cocok untuk gerak yang lebih sinematik, dan Seedance 1.5 Pro andal untuk image-to-video yang stabil dan alur kerja yang ramah produksi.",
+      },
+    ],
+  },
+  siblingAgents: {
+    eyebrow: "Juga tersedia untuk",
+    labels: [
+      { label: "Claude Code", href: "/for/claude-code" },
+      { label: "Codex", href: "/for/codex" },
+      { label: "Manus", href: "/for/manus" },
+    ],
+    ctas: {
+      primary: "Mulai",
+      secondary: "Mengapa satu CLI penting",
+      tertiary: "Bagaimana skill cocok",
+    },
+    footerNote: "Terakhir diperbarui Apr 2026",
+  },
+};
+
 const contentByLocale: Record<SiteLocale, CursorPageContent> = {
   en: englishContent,
   "pt-br": ptBrContent,
-  id: englishContent,
+  id: idContent,
 };
 
 function getCursorContent(locale: SiteLocale): CursorPageContent {
@@ -874,50 +1217,6 @@ export function getForCursorPageData(locale: SiteLocale) {
       uploadDate: "2026-04-03",
       duration: "PT48S",
       thumbnailUrl: CURSOR_POSTER_URL,
-    },
-    howToJsonLd: {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      name: content.metadata.articleHeadline,
-      description:
-        locale === "pt-br"
-          ? "Diga ao Cursor para instalar o AnyCap por meio de linguagem natural. As etapas manuais também ficam disponíveis se você preferir controle direto por comando."
-          : "Tell Cursor to install AnyCap through natural language. Manual steps are also available if you prefer direct command control.",
-      step: [
-        {
-          "@type": "HowToStep",
-          name:
-            locale === "pt-br"
-              ? "Peça ao Cursor para instalar o AnyCap"
-              : "Ask Cursor to install AnyCap",
-          text:
-            locale === "pt-br"
-              ? 'Diga ao Cursor "help me install anycap.ai". O Cursor pode descobrir a skill, instalar a CLI, autenticar e configurar o runtime de capacidades a partir de linguagem natural.'
-              : 'Tell Cursor "help me install anycap.ai". Cursor can discover the skill, install the CLI, authenticate, and set up the capability runtime from natural language.',
-        },
-        {
-          "@type": "HowToStep",
-          name:
-            locale === "pt-br"
-              ? "Diga ao Cursor o que você precisa"
-              : "Tell Cursor what you need",
-          text:
-            locale === "pt-br"
-              ? 'Descreva a tarefa em linguagem natural, como "generate a product mockup image". O Cursor chama a capability certa do AnyCap automaticamente a partir do mesmo fluxo do workspace.'
-              : 'Describe the task in natural language, such as "generate a product mockup image". Cursor calls the right AnyCap capability automatically from the same workspace flow.',
-        },
-        {
-          "@type": "HowToStep",
-          name:
-            locale === "pt-br"
-              ? "Opcional: instale manualmente"
-              : "(Optional) Install manually",
-          text:
-            locale === "pt-br"
-              ? "Se você preferir controle manual: rode curl -fsSL https://anycap.ai/install.sh | sh para instalar a CLI e depois execute anycap login && anycap status para autenticar."
-              : "If you prefer manual control: run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI, then run anycap login && anycap status to authenticate.",
-        },
-      ],
     },
   };
 }

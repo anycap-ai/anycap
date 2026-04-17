@@ -94,18 +94,71 @@ function extractRolloutLocalesByRouteKey(source) {
   return rolloutByRouteKey;
 }
 
+function escapeForRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasConcreteLocaleTranslation(content, locale) {
+  const escapedLocale = escapeForRegex(locale);
+  const localeObjectLabel = locale.includes("-")
+    ? `["']${escapedLocale}["']`
+    : `(?:["']${escapedLocale}["']|\\b${escapedLocale}\\b)`;
+  const localeObjectPattern = new RegExp(`${localeObjectLabel}\\s*:\\s*\\{`);
+  const localeSwitchPattern = new RegExp(`locale\\s*===\\s*["']${escapedLocale}["']`);
+  const localeFactoryPattern = new RegExp(`\\(\\s*["']${escapedLocale}["']\\s*\\)`);
+  const hasLocaleSignal =
+    localeObjectPattern.test(content) ||
+    localeSwitchPattern.test(content) ||
+    localeFactoryPattern.test(content);
+
+  if (!hasLocaleSignal) {
+    return false;
+  }
+
+  if (locale === "id") {
+    const idFallbackPatterns = [
+      /id\s*:\s*undefined\s+as\s+never/,
+      /localizedContentByLocale\.id\s*=\s*localizedContentByLocale\.en/,
+      /contentByLocale\.id\s*=\s*contentByLocale\.en/,
+    ];
+
+    if (idFallbackPatterns.some((pattern) => pattern.test(content))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function detectTranslatedLocales(content, targetLocales) {
-  return targetLocales.filter(
-    (locale) =>
-      new RegExp(`["']${locale}["']\\s*:`).test(content) ||
-      new RegExp(`\\b${locale.replace("-", "\\-")}\\s*:`).test(content),
-  );
+  return targetLocales.filter((locale) => hasConcreteLocaleTranslation(content, locale));
 }
 
 function toRoutePathFromContentFile(contentFilePath) {
   const relative = path.relative(path.join(rootDir, "src", "app", "(seo)"), contentFilePath);
   const routeDir = path.dirname(relative).split(path.sep).join("/");
   return routeDir ? `/${routeDir}` : "/";
+}
+
+function readRouteSourceByPath(routePath) {
+  const routeDirPath = path.join(rootDir, "src", "app", "(seo)", routePath.replace(/^\//, ""));
+  const candidateFiles = ["content.ts", "page.tsx", "metadata.ts"];
+  const existingFiles = candidateFiles
+    .map((name) => path.join(routeDirPath, name))
+    .filter((filePath) => {
+      try {
+        readFileSync(filePath, "utf8");
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+  if (existingFiles.length === 0) {
+    return "";
+  }
+
+  return existingFiles.map((filePath) => readFileSync(filePath, "utf8")).join("\n");
 }
 
 function main() {
@@ -121,6 +174,7 @@ function main() {
 
   const missingManualRoutes = [];
   const missingRollout = [];
+  const rolloutWithoutTranslation = [];
 
   for (const contentFilePath of contentFiles) {
     const content = readFileSync(contentFilePath, "utf8");
@@ -151,7 +205,36 @@ function main() {
     }
   }
 
-  if (missingManualRoutes.length === 0 && missingRollout.length === 0) {
+  const strictTranslationLocales = new Set(["id"]);
+
+  for (const [routePath, routeKey] of routeMap.entries()) {
+    const configuredLocales = rolloutByRouteKey.get(routeKey) ?? [];
+    const routeSource = readRouteSourceByPath(routePath);
+
+    for (const locale of targetLocales) {
+      if (!configuredLocales.includes(locale)) {
+        continue;
+      }
+
+      if (!strictTranslationLocales.has(locale)) {
+        continue;
+      }
+
+      if (!hasConcreteLocaleTranslation(routeSource, locale)) {
+        rolloutWithoutTranslation.push({
+          routeKey,
+          routePath,
+          locale,
+        });
+      }
+    }
+  }
+
+  if (
+    missingManualRoutes.length === 0 &&
+    missingRollout.length === 0 &&
+    rolloutWithoutTranslation.length === 0
+  ) {
     console.log(
       `SEO locale rollout check passed for locales=${targetLocales.join(",")}: no translated pages are missing rollout.`,
     );
@@ -176,6 +259,15 @@ function main() {
     for (const item of missingRollout) {
       console.error(
         `- routeKey=${item.routeKey} routePath=${item.routePath} missingLocale=${item.locale}`,
+      );
+    }
+  }
+
+  if (rolloutWithoutTranslation.length > 0) {
+    console.error("Routes rolled out for locale but missing concrete translation:");
+    for (const item of rolloutWithoutTranslation) {
+      console.error(
+        `- routeKey=${item.routeKey} routePath=${item.routePath} missingConcreteLocale=${item.locale}`,
       );
     }
   }

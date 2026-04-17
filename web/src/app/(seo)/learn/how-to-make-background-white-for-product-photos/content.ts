@@ -726,10 +726,310 @@ const ptBrContent: WhiteBackgroundPageContent = {
   },
 };
 
+const idContent: WhiteBackgroundPageContent = {
+  metadata: {
+    title: "Cara membuat latar belakang putih untuk foto produk dengan agen AI",
+    description:
+      "Gunakan AnyCap untuk mengubah foto produk yang ramai menjadi gambar listing dengan latar putih sambil mempertahankan subjek asli dan memeriksa hasil sebelum diekspor.",
+    openGraphTitle: "Cara membuat latar belakang putih untuk foto produk dengan agen AI",
+    openGraphDescription:
+      "Panduan alur kerja untuk mengubah foto produk yang ada menjadi gambar listing dengan latar putih melalui AnyCap tanpa kehilangan subjek asli.",
+    articleHeadline: "Cara membuat latar belakang putih untuk foto produk dengan agen AI",
+    articleDescription:
+      "Alur kerja praktis untuk mengonversi foto produk yang ada menjadi gambar katalog dengan latar putih melalui pengeditan gambar AnyCap.",
+    articleAbout: [
+      "Latar belakang putih",
+      "Foto produk",
+      "Gambar katalog",
+      "Pengeditan e-commerce",
+      "Agen AI",
+    ],
+    articleKeywords: [
+      "cara membuat latar belakang putih foto produk",
+      "foto produk latar belakang putih",
+      "gambar produk e-commerce latar putih",
+      "foto listing marketplace",
+      "edit foto produk latar putih",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Learn", href: "/learn" },
+    {
+      name: "Cara membuat latar belakang putih untuk foto produk",
+      href: HOW_TO_MAKE_BACKGROUND_WHITE_FOR_PRODUCT_PHOTOS_PATH,
+    },
+  ],
+  eyebrow: "Learn",
+  lastUpdatedLabel: "Terakhir diperbarui 10 April 2026",
+  hero: {
+    titleLine1: "Cara membuat latar belakang putih",
+    titleLine2: "untuk foto produk",
+    introBeforeLink:
+      "Jika tujuannya adalah marketplace, katalog, atau slot gambar bergaya kepatuhan lainnya, pertanyaannya biasanya bukan apakah foto bisa dibuat lebih menarik. Melainkan apakah produk dapat dipertahankan sementara kekacauan gaya hidup di sekitarnya diganti dengan setup putih netral. Di situlah",
+    introLinkLabel: "pembuatan gambar AnyCap",
+    introAfterLink: "memberi agen alur kerja foto produk yang lebih bersih.",
+    summaryLabel: "Ringkasan jawaban dulu",
+    summaryText:
+      "Alur kerja latar putih yang berguna mempertahankan produk asli dan hanya menyederhanakan lingkungan di sekitarnya. AnyCap membantu agen mengedit dari foto sumber, memeriksa hasilnya, dan menjaga output selaras dengan saluran yang mengharapkan gambar produk netral, bukan adegan editorial.",
+  },
+  proof: {
+    eyebrow: "Bukti yang dihasilkan",
+    title: "Satu foto produk sumber, satu versi listing dengan latar putih",
+    intro:
+      "Halaman ini memakai pasangan bukti before-after nyata. Bingkai kiri adalah foto meja yang ramai. Bingkai kanan adalah revisi AnyCap yang mempertahankan sepatu yang sama tetapi mengubah lingkungan menjadi gambar listing dengan latar putih.",
+    promptLabel: "Prompt edit yang dipakai dengan AnyCap",
+    prompt:
+      "preserve the same off-white running shoe, replace the desk, notebook, mug, plant, and window with a seamless pure white studio background, centered ecommerce product photo, soft grounded shadow, clean edge separation, realistic materials, no text, no watermark",
+    signalsLabel: "Mengapa bukti ini penting",
+    signals: [
+      "Ini menunjukkan mengapa pembersihan latar putih adalah pekerjaan yang lebih sempit daripada penggantian latar generik.",
+      "Pasangan bukti membuat kasus penggunaan bergaya marketplace konkret alih-alih hanya nasihat abstrak.",
+      "Ini menunjukkan bahwa agen dapat berpindah dari foto sumber kehidupan sehari-hari ke hasil bergaya katalog yang lebih bersih tanpa menukar identitas produk.",
+    ],
+    caption:
+      "Gambar kiri adalah foto produk sumber. Gambar kanan adalah revisi latar putih AnyCap yang dihasilkan dari aset sumber yang sama untuk halaman ini.",
+    images: [
+      {
+        src: `${CDN_BASE}/how-to-make-image-transparent-source.webp`,
+        alt: "Foto produk sumber sepatu lari warna krem di atas meja kayu yang ramai dekat tanaman dan mug kopi.",
+        width: 2304,
+        height: 1728,
+        label: "Gambar sumber",
+        frameVariant: "plain",
+      },
+      {
+        src: `${CDN_BASE}/how-to-make-background-white-product-result-1600.png`,
+        alt: "Sepatu lari warna krem yang sama di tengah latar studio putih mulus dengan bayangan lembut untuk foto produk bergaya katalog.",
+        width: 1600,
+        height: 1195,
+        label: "Hasil latar putih",
+        frameVariant: "plain",
+      },
+    ],
+  },
+  quickAnswer: {
+    eyebrow: "Jawaban singkat",
+    title: "Latar putih adalah keputusan saluran",
+    intro:
+      "Gambar produk dengan latar putih biasanya bukan tentang membuat foto lebih dramatis. Ini tentang memenuhi ekspektasi saluran yang menginginkan visual produk netral, berulang, dan mudah dibandingkan. Itulah sebabnya alur kerja ini lebih sempit daripada pengganti latar umum.",
+    takeaways: [
+      "Foto produk dengan latar putih biasanya tentang kesesuaian saluran, bukan sekadar estetika.",
+      "Alur kerja yang kuat adalah mempertahankan produk asli sambil menghapus meja, ruangan, dan kekacauan gaya hidup di sekitarnya.",
+      "Gambar sumber yang sama masih bisa bercabang ke versi latar putih, transparan, atau adegan bergaya tergantung tujuan akhir.",
+    ],
+    options: [
+      {
+        title: "Slot marketplace",
+        body: "Terbaik ketika tujuan menginginkan gambar produk sederhana dan konsisten yang meminimalkan perbedaan styling antar katalog.",
+      },
+      {
+        title: "Dokumen produk internal",
+        body: "Terbaik ketika gambar harus tetap netral dan mudah dipakai ulang di dokumen, spesifikasi, atau materi operasional lainnya.",
+      },
+      {
+        title: "Halaman perbandingan",
+        body: "Terbaik ketika gambar perlu berdampingan dengan beberapa produk lain tanpa salah satunya membawa perlakuan latar yang jauh lebih bergaya.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Alur kerja",
+    title: "Lima langkah dari sumber gaya hidup ke gambar listing",
+    stepLabel: "Langkah",
+    steps: [
+      {
+        title: "Mulai dengan gambar produk nyata",
+        body: "Gunakan foto produk yang sudah penting untuk listing, dokumen, atau alur katalog Anda. Ini bukan tempat terbaik untuk menghasilkan ulang subjek dari nol.",
+      },
+      {
+        title: "Minta latar putih secara eksplisit",
+        body: "Katakan `white studio background` atau `marketplace-ready product photo` secara langsung. Putih harus menjadi persyaratan eksplisit, bukan tebakan pembersihan yang samar.",
+      },
+      {
+        title: "Jaga identitas produk tetap stabil",
+        body: "Ulangi batasan pelestarian subjek agar model memperlakukan barang sebagai tetap sambil hanya menyederhanakan lingkungan di sekitarnya.",
+      },
+      {
+        title: "Periksa tepi dan perilaku bayangan",
+        body: "Hasilnya harus terasa bersih tanpa terlihat terpotong buruk. Perhatikan tali sepatu, sol, tepi kemasan, dan apakah bayangan di dasar masih terasa masuk akal.",
+      },
+      {
+        title: "Ekspor versi yang diharapkan saluran",
+        body: "Dari sumber yang sama, Anda masih bisa bercabang ke versi transparan atau bergaya nanti, tetapi gambar listing dengan latar putih harus tetap output paling netral dalam set tersebut.",
+      },
+    ],
+  },
+  comparison: {
+    eyebrow: "Perbandingan",
+    title: "Mengapa ini berbeda dari pembersihan generik",
+    shallowLabel: "Default dangkal",
+    workflowLabel: "Alur kerja AnyCap",
+    rows: [
+      {
+        lens: "Kesesuaian tujuan",
+        shallow: "Produk terlihat lebih bersih, tetapi halaman tidak menjelaskan mengapa putih penting.",
+        workflow:
+          "Halaman menjelaskan bahwa putih biasanya jalur yang tepat untuk slot gambar katalog, marketplace, dan bergaya kepatuhan.",
+      },
+      {
+        lens: "Apa yang berubah",
+        shallow: "Alat mengedit gambar tanpa batasan kuat untuk mempertahankan produk.",
+        workflow:
+          "Subjek tetap terjangkar sementara lingkungan yang ramai diganti dengan setup putih netral.",
+      },
+      {
+        lens: "Pemakaian ulang aset",
+        shallow: "Foto yang diedit menjadi ekspor satu kali.",
+        workflow:
+          "Sumber yang sama dapat bercabang ke varian putih, transparan, atau adegan bergaya tergantung saluran berikutnya.",
+      },
+      {
+        lens: "Standar QA",
+        shallow: "Latar belakang putih, jadi pekerjaan terasa selesai.",
+        workflow:
+          "Agen juga memeriksa konsistensi subjek, kualitas tepi, dan apakah hasilnya masih terlihat setingkat foto produk.",
+      },
+    ],
+  },
+  modelChoice: {
+    eyebrow: "Pilihan model",
+    title: "Pilih model berdasarkan titik awal pembersihan",
+    cards: [
+      {
+        title: "Nano Banana Pro",
+        label: "Pilihan pertama terbaik untuk pembersihan listing",
+        body: "Gunakan ini ketika foto sumber sudah ada dan tugas utamanya adalah mempertahankan produk sambil mengonversi adegan menjadi setup putih netral.",
+        href: "/models/nano-banana-pro",
+      },
+      {
+        title: "Nano Banana 2",
+        label: "Terbaik untuk varian listing yang lebih cepat",
+        body: "Gunakan ini ketika Anda ingin loop lebih cepat di beberapa arah latar putih atau pembingkaian produk yang sedikit berbeda.",
+        href: "/models/nano-banana-2",
+      },
+      {
+        title: "Seedream 5",
+        label: "Terbaik ketika foto sumber masih belum ada",
+        body: "Gunakan ini ketika Anda memerlukan gambar produk asli terlebih dahulu dan baru kemudian ingin bercabang ke pembersihan latar putih.",
+        href: "/models/seedream-5",
+      },
+    ],
+  },
+  validation: {
+    eyebrow: "Validasi langsung",
+    title: "Apa yang kami periksa pada alur kerja live",
+    cards: [
+      {
+        title: "Permukaan kemampuan dikonfirmasi",
+        body: "Selama produksi halaman pada 10 April 2026, pemeriksaan status AnyCap live mengonfirmasi pembuatan gambar, pengeditan gambar, dan pembacaan gambar tersedia di lingkungan saat ini.",
+      },
+      {
+        title: "Skema dikonfirmasi",
+        body: "Skema image-to-image live Nano Banana Pro diperiksa dan parameter aset sumber saat ini adalah `images`.",
+      },
+      {
+        title: "Pasangan bukti dihasilkan",
+        body: "Gambar before-after di halaman ini dihasilkan melalui AnyCap dari foto produk sumber yang sama alih-alih dirakit dari contoh yang tidak terkait.",
+      },
+      {
+        title: "Hasil diperiksa",
+        body: "Pembacaan gambar dipakai untuk mengonfirmasi bahwa hasil latar putih mempertahankan sepatu yang sama dan tidak memperkenalkan teks atau artefak watermark yang terlihat.",
+      },
+    ],
+  },
+  cli: {
+    eyebrow: "Contoh CLI",
+    title: "Contoh perintah untuk pembersihan produk dengan latar putih",
+    examples: [
+      {
+        title: "Ubah foto sumber menjadi gambar listing dengan latar putih",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "preserve the same product, replace the room with a pure white studio background, centered ecommerce product photo, soft grounded shadow, no text, no watermark" \\
+  --param images=./source-product.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o white-background-product.png`,
+      },
+      {
+        title: "Cabang dari sumber yang sama ke versi transparan",
+        code: `anycap image generate \\
+  --model nano-banana-pro \\
+  --mode image-to-image \\
+  --prompt "remove the background and keep only the same product as a clean cutout preview, preserve edges and materials, no text, no watermark" \\
+  --param images=./source-product.png \\
+  --param aspect_ratio=4:3 \\
+  --param resolution=2k \\
+  -o transparent-product-cutout.png`,
+      },
+      {
+        title: "QA hasil latar putih",
+        code: `anycap actions image-read \\
+  --file ./white-background-product.png \\
+  --instruction "Describe the image, confirm whether the same product is preserved, and mention any visible text, watermark, or edge problems."`,
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Pertanyaan yang biasanya menyusul",
+    items: [
+      {
+        question: "Kapan latar putih lebih baik daripada transparansi?",
+        answer:
+          "Gunakan putih ketika tujuannya adalah katalog, marketplace, atau saluran lain yang mengharapkan gambar produk bersih tanpa keputusan styling yang masih terbuka. Gunakan transparansi ketika aset masih perlu ditempatkan di beberapa permukaan berbeda nanti.",
+      },
+      {
+        question: "Kapan latar putih lebih baik daripada adegan studio bergaya?",
+        answer:
+          "Gunakan putih ketika konsistensi, kepatuhan, atau netralitas visual lebih penting daripada suasana. Gunakan adegan bergaya ketika halaman membutuhkan pembingkaian editorial lebih kuat atau sinyal cerita produk yang lebih kuat.",
+      },
+      {
+        question: "Model AnyCap mana yang harus saya pakai dulu untuk edit produk latar putih?",
+        answer:
+          "Gunakan Nano Banana Pro terlebih dahulu ketika foto produk sumber sudah ada dan tugasnya adalah mempertahankan barang asli sambil menyederhanakan lingkungan. Gunakan Nano Banana 2 ketika Anda ingin iterasi lebih cepat atau beberapa varian listing. Gunakan Seedream 5 ketika Anda masih memerlukan foto produk asli sebelum pembersihan dimulai.",
+      },
+      {
+        question: "Bisakah AnyCap membantu memeriksa apakah hasilnya masih terlihat siap marketplace?",
+        answer:
+          "Ya. Setelah pembuatan, Anda dapat memakai pembacaan gambar AnyCap untuk memeriksa apakah produk yang sama dipertahankan, apakah tepi masih terlihat bersih, dan apakah ada teks atau watermark terlihat yang diperkenalkan.",
+      },
+    ],
+  },
+  nextMove: {
+    eyebrow: "Langkah berikutnya",
+    title: "Lanjut ke alur kerja yang benar-benar dibutuhkan saluran",
+    cards: [
+      {
+        title: "Cara mengubah latar foto",
+        href: "/learn/how-to-change-photo-background",
+        body: "Gunakan alur kerja yang lebih luas ini ketika targetnya adalah adegan studio atau penggantian kontekstual alih-alih putih murni.",
+      },
+      {
+        title: "Cara membuat gambar transparan",
+        href: "/learn/how-to-make-image-transparent",
+        body: "Gunakan ini ketika tujuan menginginkan produk diisolasi untuk dipakai ulang di beberapa tata letak berbeda nanti.",
+      },
+      {
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Pelajari lebih dalam model yang saat ini cocok untuk loop revisi pelestarian sumber terkuat untuk pembersihan produk.",
+      },
+      {
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
+        body: "Pindah ke sini ketika Anda ingin jalur terpendek dari halaman ini ke pengaturan CLI yang berfungsi.",
+      },
+    ],
+  },
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
 } satisfies Record<SiteLocale, WhiteBackgroundPageContent>;
 
 function getContent(locale: SiteLocale): WhiteBackgroundPageContent {

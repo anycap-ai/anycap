@@ -533,7 +533,290 @@ const ptBr: PageData = {
   ],
 };
 
-const id = en;
+const id: PageData = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Pelajari", href: "/learn", unlinkable: true },
+    { name: "Chatbot AI SaaS vs agen AI untuk SaaS" },
+  ],
+  eyebrow: "Pelajari",
+  metadata: {
+    title: "Chatbot AI SaaS vs agen AI untuk SaaS — kapan chatbot saja tidak cukup",
+    description:
+      "Bandingkan produk chatbot AI SaaS dengan sistem SaaS bergaya agen. Pahami kapan percakapan saja cukup, kapan tugas multimodal dan web membuatnya tidak memadai, dan bagaimana runtime kemampuan mengubah stack.",
+    openGraphTitle: "Chatbot AI SaaS vs agen AI untuk SaaS — kapan chatbot saja tidak cukup",
+    openGraphDescription:
+      "Panduan tingkat arsitektur bagi tim SaaS yang memilih antara produk chatbot dan sistem agen dengan kemampuan nyata di sekelilingnya.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Chatbot AI SaaS vs agen AI untuk SaaS — kapan chatbot saja tidak cukup",
+    description:
+      "Penjelasan praktis bagi tim SaaS: apakah cukup produk chatbot, sistem agen, atau runtime kemampuan di sekitar stack agen.",
+    path: AI_CHATBOT_VS_AI_AGENT_FOR_SAAS_PATH,
+    about: ["Chatbot AI SaaS", "Agen AI", "Arsitektur SaaS", "Alur kerja multimodal", "Runtime kemampuan agen"],
+    keywords: [
+      "ai chatbot saas",
+      "chatbot saas",
+      "ai agent for saas",
+      "chatbot vs ai agent",
+      "multimodal chatbot saas",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Apakah chatbot AI SaaS sama dengan agen AI untuk SaaS?",
+      answer:
+        "Tidak. Keduanya tumpang tindih, tetapi menyelesaikan lapisan masalah yang berbeda. Chatbot SaaS menempatkan percakapan sebagai pusat. Sistem agen menempatkan penyelesaian tugas melintasi alat, konteks, dan output.",
+    },
+    {
+      question: "Bisakah chatbot memanggil alat dan tetap disebut chatbot?",
+      answer:
+        "Ya, sampai batas tertentu. Tetapi begitu penggunaan alat menjadi cara utama produk berhasil, arsitekturnya lebih menyerupai sistem agen daripada chatbot biasa.",
+    },
+    {
+      question: "Kapan chatbot SaaS membutuhkan kemampuan multimodal?",
+      answer:
+        "Biasanya ketika pengguna mulai membawa tangkapan layar, diagram, atau rekaman ke alur kerja, atau ketika sistem perlu membuat gambar dan video alih-alih hanya membalas dengan teks.",
+    },
+    {
+      question: "Apakah AnyCap adalah lapisan chatbot dalam perbandingan ini?",
+      answer:
+        "Tidak. AnyCap adalah runtime kemampuan di sekitar asisten atau agen. AnyCap membantu sistem membuat, memeriksa, mencari, merayapi web, dan mengirimkan output, sementara pengalaman chatbot atau agen dapat tetap di antarmuka yang sudah Anda gunakan.",
+    },
+  ]),
+  lastUpdatedLabel: "7 April 2026",
+  heroTitle: ["Chatbot AI SaaS", "vs agen AI untuk", "SaaS"],
+  heroIntro:
+    "Jika Anda mencari chatbot AI SaaS, pertanyaan produk sebenarnya biasanya lebih besar dari sekadar chat. Apakah Anda hanya perlu lapisan percakapan yang menjawab dengan baik, atau perlu sistem yang dapat memeriksa tangkapan layar, meneliti web langsung, menghasilkan media, dan mengembalikan sesuatu yang benar-benar bisa dipakai pengguna? Yang pertama adalah produk chatbot. Yang kedua jauh lebih dekat ke stack agen.",
+  quickAnswerLabel: "Jawaban singkat",
+  quickAnswerTitle: "Chatbot cukup sampai produk harus mengerjakan hal nyata di luar percakapan.",
+  quickAnswerBody:
+    "Itu cara paling jelas membaca kata kunci ini. Chatbot SaaS cocok untuk dukungan, onboarding, dan bantuan terbatas. Tetapi ketika pengguna mengharapkan sistem memeriksa file, mencari sumber eksternal, membuat media, atau mengembalikan output yang hidup di luar utas chat, Anda sudah membuat keputusan arsitektur agen—mau menyebutnya begitu atau tidak.",
+  quickTakeawaysLabel: "Poin utama",
+  quickTakeaways: [
+    "Chatbot AI SaaS cocok ketika produk terutama butuh percakapan, pengambilan kembali informasi, dan tindakan ringan.",
+    "Begitu alur kerja harus memeriksa tangkapan layar, mencari web langsung, menghasilkan media, atau mengembalikan file, Anda merancang sistem agen, bukan chatbot biasa.",
+    "AnyCap berada di sekitar stack agen itu sebagai runtime kemampuan. AnyCap bukan produk chatbot itu sendiri.",
+  ],
+  comparisonLabel: "Tampilan berdampingan",
+  comparisonTitle: "Bedanya bukan merek. Melainkan apa yang harus diselesaikan sistem untuk pengguna.",
+  comparisonIntro:
+    "Ini perbandingan arsitektur, bukan peringkat vendor. Tujuannya memilih bentuk sistem yang tepat untuk pekerjaan, bukan meregangkan label chatbot ke alur kerja yang sebenarnya membutuhkan kemampuan dan eksekusi tugas.",
+  comparisonHeaders: {
+    dimension: "Dimensi",
+    chatbot: "Chatbot AI SaaS",
+    agent: "Agen AI untuk SaaS",
+  },
+  comparisonRows: [
+    {
+      dimension: "Janji utama",
+      chatbot: "Menjawab pengguna dengan baik di dalam antarmuka chat.",
+      agent: "Menyelesaikan tugas yang dapat melibatkan penalaran, alat, file, riset, dan output yang dapat diserahkan.",
+    },
+    {
+      dimension: "Input tipikal",
+      chatbot: "Prompt teks, basis pengetahuan, dan konteks produk sempit.",
+      agent: "Teks ditambah tangkapan layar, URL, status terstruktur, file unggahan, dan hasil perantara.",
+    },
+    {
+      dimension: "Metrik sukses",
+      chatbot: "Jawaban membantu, cepat, dan selaras merek.",
+      agent: "Sistem mengembalikan artefak selesai, rekomendasi, atau alur kerja yang tuntas.",
+    },
+    {
+      dimension: "Penggunaan alat",
+      chatbot: "Opsional dan biasanya terbatas pada beberapa panggilan terbatas.",
+      agent: "Inti arsitektur. Eksekusi alat adalah cara tugas diselesaikan.",
+    },
+    {
+      dimension: "Tugas media dan web",
+      chatbot: "Sering ditambal sebagai pengecualian, sehingga produk rapuh.",
+      agent: "Ditangani sebagai bagian normal alur kerja, termasuk generasi, analisis, dan pengambilan kembali.",
+    },
+    {
+      dimension: "Ekspektasi output",
+      chatbot: "Jawaban sebagian besar tetap di dalam utas percakapan.",
+      agent: "Hasil sering perlu disimpan, dibagikan, dipublikasikan, atau diteruskan ke sistem lain.",
+    },
+    {
+      dimension: "Paling cocok",
+      chatbot: "Dukungan, onboarding, FAQ, dan bantuan dalam aplikasi sempit.",
+      agent: "Riset, kerja produk multimodal, operasi konten, dan alur kerja internal multi-langkah.",
+    },
+  ],
+  chatbotLabel: "Wilayah chatbot masih pas",
+  chatbotTitle: "Chatbot SaaS masuk akal ketika produk menang lewat percakapan itu sendiri",
+  chatbotCards: [
+    {
+      title: "Dukungan dan pengambilan pengetahuan",
+      body:
+        "Jika asisten terutama menjawab pertanyaan produk, merangkum dokumentasi, dan mengarahkan pengguna ke langkah bantuan berikutnya, arsitektur chatbot SaaS bisa tepat. Pekerjaannya tetap percakapan.",
+    },
+    {
+      title: "Onboarding dan panduan dalam aplikasi",
+      body:
+        "Ketika produk perlu lapisan UI yang menjelaskan tempat mengklik, cara mengonfigurasi pengaturan, atau fitur berikutnya yang dipakai, pengalaman chatbot yang kuat dapat membawa sebagian besar nilai.",
+    },
+    {
+      title: "Alur kerja terbatas dengan sedikit tindakan",
+      body:
+        "Chatbot masih layak ketika permukaan tindakan sempit—misalnya mengambil detail akun atau memicu satu panggilan backend yang dapat diprediksi. Kuncinya sistem masih berperilaku seperti percakapan terpandu, bukan eksekusi tugas terbuka.",
+    },
+  ],
+  triggerLabel: "Di mana garis bergeser",
+  triggerTitle: "Banyak tim SaaS melampaui chatbot biasa begitu pekerjaan menjadi multimodal atau eksternal",
+  triggerIntro:
+    "Ini titik transisi praktis di balik banyak kebingungan produk AI. Tim masih mengatakan chatbot karena itu antarmuka yang terlihat. Tetapi sistem di bawahnya kini harus menganalisis, menghasilkan, mengambil kembali, dan mengirim. Pada titik itu produk lebih menyerupai agen dengan lapisan kemampuan di sekelilingnya.",
+  triggerCards: [
+    {
+      title: "Asisten harus memeriksa apa yang pengguna lihat",
+      body:
+        "Garis bergeser cepat begitu tangkapan layar, diagram, atau alur terekam masuk tugas. Sekarang sistem perlu pemahaman gambar atau analisis video, bukan hanya generasi teks.",
+    },
+    {
+      title: "Tugas bergantung pada konteks web langsung",
+      body:
+        "Chatbot SaaS dapat menjawab dari lapisan pengetahuan statis. Sistem bergaya agen membutuhkan web search, web crawl, dan pengumpulan bukti ketika jawaban bergantung pada informasi eksternal terkini.",
+    },
+    {
+      title: "Alur kerja harus membuat media",
+      body:
+        "Jika asisten perlu menghasilkan visual peluncuran, klip demo, atau aset kreatif, produk tidak lagi sekadar percakapan. Generasi media harus menjadi kemampuan kelas satu.",
+    },
+    {
+      title: "Output harus keluar dari chat",
+      body:
+        "Tim merasakan perubahan arsitektur ketika hasil harus menjadi file, tautan berbagi, atau halaman yang dipublikasikan. Pada titik itu utas chat hanyalah satu lapisan sistem.",
+    },
+  ],
+  capabilityLabel: "Di mana AnyCap berada",
+  capabilityTitle: "AnyCap adalah runtime kemampuan di sekitar stack asisten, bukan produk chatbot",
+  capabilityIntro:
+    "Pembedaan itulah yang membuat kata kunci ini relevan untuk AnyCap tanpa memaksakan posisi yang salah. AnyCap berguna ketika tim SaaS mempertahankan permukaan agen atau asisten pilihan mereka tetapi perlu cara konsisten menambahkan alur gambar, video, visi, web, dan artefak di sekelilingnya.",
+  capabilityCards: [
+    {
+      title: "Pemahaman gambar",
+      href: "/capabilities/image-understanding",
+      body: "Baca tangkapan layar, referensi, dan masukan QA visual ketika chatbot biasa hanya bisa menebak.",
+    },
+    {
+      title: "Generasi video",
+      href: "/capabilities/video-generation",
+      body: "Buat klip produk dan demo pendek alih-alih berhenti di instruksi teks tentang apa yang harus dibuat.",
+    },
+    {
+      title: "Web search",
+      href: "/capabilities/web-search",
+      body: "Tarik konteks eksternal langsung ketika jawaban tidak bisa hanya dari dokumen internal Anda.",
+    },
+    {
+      title: "Web crawl",
+      href: "/capabilities/web-crawl",
+      body: "Ubah halaman menjadi markdown yang dapat dipakai atau masukan terstruktur untuk alur kerja agen.",
+    },
+    {
+      title: "Drive",
+      href: "/capabilities/drive",
+      body: "Pindahkan hasil dari alur kerja internal ke artefak yang dapat dibagikan yang benar-benar bisa dibuka manusia.",
+    },
+  ],
+  architectureLabel: "Bacaan praktis",
+  architectureTitle: "Tiga arsitektur SaaS umum di balik kata kunci ini",
+  architectureCards: [
+    {
+      title: "Asisten dukungan pelanggan",
+      label: "Masih chatbot",
+      body:
+        "Produk menjawab pertanyaan yang dikenal, mengutip konten pusat bantuan, dan mungkin membuka tiket. Itu pola chatbot SaaS klasik karena outputnya tetap percakapan ditambah perutean.",
+    },
+    {
+      title: "Copilot produk untuk operator",
+      label: "Menjelajah ke wilayah agen",
+      body:
+        "Sekarang sistem harus membaca tangkapan layar, membandingkan alur kerja, mencari dokumen langsung, dan menjelaskan apa yang berubah. Itu bukan lagi sekadar chat. Itu alur kerja agen dengan eksekusi alat dan pengumpulan bukti.",
+    },
+    {
+      title: "Asisten growth atau konten",
+      label: "Butuh runtime kemampuan",
+      body:
+        "Jika produk mengubah permintaan menjadi gambar, video, catatan riset, dan output yang dapat dibagikan, arsitektur yang menang biasanya lapisan chat atau perintah ditambah runtime yang dapat menghasilkan, memeriksa, dan mengirimkan hasil.",
+    },
+  ],
+  selectionLabel: "Cara memilih",
+  selectionTitle: 'Ajukan pertanyaan yang lebih baik daripada "Haruskah saya membangun chatbot SaaS?"',
+  selectionRows: [
+    {
+      question: "Kapan saya tetap dengan chatbot AI SaaS?",
+      answer:
+        "Tetap pada model chatbot ketika pekerjaan utama adalah percakapan, pengambilan kembali, dan dukungan terbatas. Jika produk menang dengan cepat, ramah, dan andal dalam satu permukaan chat, jangan terlalu dini meng-over-engineer menjadi agen.",
+    },
+    {
+      question: "Kapan saya bergeser ke agen AI untuk SaaS?",
+      answer:
+        "Bergeser ke arsitektur agen ketika alur kerja membutuhkan alat, file, konteks web langsung, analisis multimodal, atau deliverable di luar percakapan. Itu sinyal produk telah bergeser dari menjawab ke melakukan.",
+    },
+    {
+      question: "Di mana AnyCap dalam stack itu?",
+      answer:
+        "AnyCap adalah runtime kemampuan di sekitar lapisan agen atau asisten. Perannya membantu sistem menghasilkan media, memahami media, memakai kemampuan web, dan mengirimkan output lewat satu CLI dan satu permukaan kemampuan.",
+    },
+  ],
+  nextMoveLabel: "Langkah berikutnya yang paling masuk akal",
+  nextMoveTitle: "Lanjutkan dari halaman jembatan ini ke bagian lain situs",
+  nextMoveCards: [
+    {
+      title: "Lihat celah kemampuan dulu",
+      href: "/learn/what-agents-cant-do",
+      body: "Gunakan halaman ini jika pertanyaan sebenarnya adalah apa yang pecah lebih dulu ketika asisten harus melakukan lebih dari chat.",
+    },
+    {
+      title: "Lihat versi untuk agen pengodean",
+      href: "/learn/best-ai-for-coding-agents",
+      body: "Gunakan halaman ini jika pertanyaan stack yang sama muncul di dalam agen pengodean, bukan permukaan asisten SaaS.",
+    },
+    {
+      title: "Tambahkan kemampuan multimodal",
+      href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
+      body: "Gunakan halaman ini jika Anda sudah lewat tahap definisi dan ingin pola implementasi untuk asisten SaaS yang lebih kaya.",
+    },
+    {
+      title: "Jelajahi hub kemampuan",
+      href: "/capabilities",
+      body: "Gunakan Capabilities ketika Anda ingin permukaan produk konkret di sekitar alur kerja agen.",
+    },
+    {
+      title: "Jalur setup terpendek",
+      href: "/guides/install-anycap",
+      body: "Gunakan panduan instalasi ketika Anda sudah lewat pertanyaan arsitektur dan ingin jalur tercepat ke runtime nyata.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Pertanyaan di balik kata kunci",
+  faqItems: [
+    {
+      question: "Apakah chatbot AI SaaS sama dengan agen AI untuk SaaS?",
+      answer:
+        "Tidak. Keduanya tumpang tindih, tetapi menyelesaikan lapisan masalah yang berbeda. Chatbot SaaS menempatkan percakapan sebagai pusat. Sistem agen menempatkan penyelesaian tugas melintasi alat, konteks, dan output.",
+    },
+    {
+      question: "Bisakah chatbot memanggil alat dan tetap disebut chatbot?",
+      answer:
+        "Ya, sampai batas tertentu. Tetapi begitu penggunaan alat menjadi cara utama produk berhasil, arsitekturnya lebih menyerupai sistem agen daripada chatbot biasa.",
+    },
+    {
+      question: "Kapan chatbot SaaS membutuhkan kemampuan multimodal?",
+      answer:
+        "Biasanya ketika pengguna mulai membawa tangkapan layar, diagram, atau rekaman ke alur kerja, atau ketika sistem perlu membuat gambar dan video alih-alih hanya membalas dengan teks.",
+    },
+    {
+      question: "Apakah AnyCap adalah lapisan chatbot dalam perbandingan ini?",
+      answer:
+        "Tidak. AnyCap adalah runtime kemampuan di sekitar asisten atau agen. AnyCap membantu sistem membuat, memeriksa, mencari, merayapi web, dan mengirimkan output, sementara pengalaman chatbot atau agen dapat tetap di antarmuka yang sudah Anda gunakan.",
+    },
+  ],
+};
 
 const contentByLocale: Record<SiteLocale, PageData> = {
   en,

@@ -73,16 +73,7 @@ export function createTechArticleJsonLd({
 }
 
 export function createFaqPageJsonLd(items: readonly FaqPageItem[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: items.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  };
+  void items;
+  // FAQPage rich results are intentionally disabled site-wide for SEO policy compliance.
+  return {};
 }
