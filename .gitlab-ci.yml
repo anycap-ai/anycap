@@ -247,11 +247,24 @@ build:cli:dev:
 # Publish: Nightly CLI + skills to NexusHub (on dev/cli)
 #
 # Bundles linux-amd64 binary into anycap-cli skill, then publishes ALL
-# skill directories under skills/ as {dirname}-nightly to NexusHub.
-# Production skills are NOT affected.
-# Requires CI variables: NEXUSHUB_BASE_URL, NEXUSHUB_API_TOKEN
-# Requires: project 138 allows CI_JOB_TOKEN from this project
-#           (Settings > CI/CD > Job token permissions)
+# skill directories under skills/ to BOTH NexusHub environments
+# (dev + prod) under their canonical name. dev/cli is treated as the
+# rolling source of truth for both NexusHub instances; release/cli-v*
+# and release/skills-v* only publish to GitHub (binaries, npm, skill
+# source-of-truth), not to NexusHub.
+#
+# Note: the embedded binary uses the dev DefaultEndpoint, so consumers
+# of either NexusHub instance hit the dev anycap-server by design
+# (pre-prod canary semantics).
+#
+# Required CI variables (Settings > CI/CD > Variables, protected on dev/cli):
+#   NEXUSHUB_DEV_BASE_URL       - dev NexusHub Platform API URL
+#   NEXUSHUB_DEV_API_TOKEN      - dev NexusHub bearer token
+#   NEXUSHUB_PROD_BASE_URL      - prod NexusHub Platform API URL
+#   NEXUSHUB_PROD_API_TOKEN     - prod NexusHub bearer token
+#
+# Also requires: project 138 allows CI_JOB_TOKEN from this project
+#                (Settings > CI/CD > Job token permissions)
 # ---------------------------------------------------------------------------
 
 publish:nightly:
@@ -266,21 +279,30 @@ publish:nightly:
     - pip install --quiet nexushub-client --extra-index-url "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.knoffice.tech/api/v4/projects/138/packages/pypi/simple"
   script:
     - |
+      set -eu
       # Bundle linux-amd64 binary into anycap-cli skill (shipped with binary)
       mkdir -p skills/anycap-cli/bin
       cp anycap-linux-amd64 skills/anycap-cli/bin/anycap
       chmod +x skills/anycap-cli/bin/anycap
-      # Upload all skill directories under skills/
-      # Each folder becomes {dirname}-nightly on NexusHub.
-      # Delete existing skill first to force fresh commit hash —
-      # agent platform caches by commit hash; delete+recreate guarantees a new hash.
-      for skill_dir in skills/*/; do
-        skill_name=$(basename "$skill_dir")
-        nightly_key="${skill_name}-nightly"
-        echo "Publishing ${nightly_key} from ${skill_dir} ..."
-        nexushub-cli delete "$nightly_key" -y || true
-        nexushub-cli upload "$skill_dir" -k "$nightly_key" --author "AnyCap Nightly"
-      done
+
+      # Publish each skill to both dev and prod NexusHub instances under
+      # the canonical name. delete+upload forces a fresh commit hash so
+      # agent platform cache (keyed by commit hash) is invalidated.
+      publish_to_target() {
+        local target_name="$1"
+        export NEXUSHUB_BASE_URL="$2"
+        export NEXUSHUB_API_TOKEN="$3"
+        echo "=== Target: ${target_name} (${NEXUSHUB_BASE_URL}) ==="
+        for skill_dir in skills/*/; do
+          skill_name=$(basename "$skill_dir")
+          echo "  Publishing ${skill_name} from ${skill_dir} ..."
+          nexushub-cli delete "$skill_name" -y || true
+          nexushub-cli upload "$skill_dir" -k "$skill_name" --author "AnyCap Nightly"
+        done
+      }
+
+      publish_to_target "dev"  "${NEXUSHUB_DEV_BASE_URL}"  "${NEXUSHUB_DEV_API_TOKEN}"
+      publish_to_target "prod" "${NEXUSHUB_PROD_BASE_URL}" "${NEXUSHUB_PROD_API_TOKEN}"
   rules:
     - if: '$NIGHTLY == "true"'
 

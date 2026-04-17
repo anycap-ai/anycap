@@ -316,7 +316,7 @@ Pipeline is configured in `.gitlab-ci.yml`, using the shared `engineering/ci` Go
 |---|---|
 | `main` / MR to main | lint + test |
 | `feat*` / `fix*` / `chore*` | lint + test |
-| `dev/cli` | nightly CLI build (goreleaser snapshot) + publish `anycap-cli-nightly` to NexusHub |
+| `dev/cli` | nightly CLI build (goreleaser snapshot) + publish each `skills/*` (binary bundled in `anycap-cli`) to BOTH NexusHub instances (dev + prod) under canonical names. dev/cli is the rolling source of truth for both. |
 | `release/cli-v<semver>` | goreleaser cross-compile, GitHub release |
 | `release/skills-v<semver>` | sync skills + install.sh to GitHub |
 | `build/server` | Docker build server image only |
@@ -381,6 +381,15 @@ Manual deploy is also available via `web/Makefile` as a fallback (see `make cf-d
 ### Skills
 
 The CLI skill lives in `skills/anycap-cli/`. `SKILL.md` is the main entry point; detailed capability docs are in `references/` and loaded on demand. Distributed via the GitHub repo from the latest `main` branch.
+
+**NexusHub distribution:** Skills under `skills/*` are continuously published from `dev/cli` to **both** NexusHub instances (dev + prod) under their canonical names. Both instances receive the exact same nightly content (same skill files, same `anycap-cli` binary). Prod NexusHub treating dev/cli HEAD as a pre-prod canary is intentional. The bundled `anycap-cli` binary keeps the dev `DefaultEndpoint`, so consumers of either NexusHub instance hit the dev `anycap-server` by design.
+
+The `release/cli-v*` and `release/skills-v*` flows do **not** publish to NexusHub — they only feed GitHub (binaries, npm, skill source-of-truth).
+
+Required GitLab CI variables (Settings > CI/CD > Variables, Protected on `dev/cli`, Masked):
+
+- `NEXUSHUB_DEV_BASE_URL` / `NEXUSHUB_DEV_API_TOKEN`
+- `NEXUSHUB_PROD_BASE_URL` / `NEXUSHUB_PROD_API_TOKEN`
 
 ## SEO
 
