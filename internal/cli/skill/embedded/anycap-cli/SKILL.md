@@ -37,6 +37,27 @@ Verify the installation:
 anycap status
 ```
 
+## Troubleshooting: `anycap` not found after install
+
+The install script places the binary in `~/.local/bin/` by default (non-root) and appends an `export PATH` line to the shell profile (`.bashrc` / `.zshrc`). However, the **current shell session** does not pick up profile changes automatically, so `command -v anycap` may still fail right after install.
+
+**Diagnosis and fix:**
+
+```bash
+# 1. Check if the binary actually exists
+ls -la ~/.local/bin/anycap
+
+# 2. If it exists, add to PATH for the current session
+export PATH="$HOME/.local/bin:$PATH"
+
+# 3. Verify
+anycap status
+```
+
+If `~/.local/bin/anycap` does not exist, the install may have used a different directory (e.g., `/usr/local/bin` when run as root, or a custom `ANYCAP_INSTALL_DIR`). Check the install output for the actual path.
+
+If the binary exists but a different `anycap` is resolved (e.g., an npm-installed version), use the full path `~/.local/bin/anycap` or adjust PATH ordering.
+
 ## Authentication
 
 Three methods, depending on environment:
