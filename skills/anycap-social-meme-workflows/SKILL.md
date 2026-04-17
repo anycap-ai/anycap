@@ -2,7 +2,7 @@
 name: anycap-social-meme-workflows
 description: "Create meme-style images, funny meme drawings, captioned photos, and lightweight social visuals with AnyCap. Use when an agent needs to turn a joke, reaction, campaign hook, quote, or screenshot into a meme image, funny doodle-style meme drawing, captioned image, or short meme-video concept. Combines AnyCap image generation and editing with deterministic local text overlay, optional video generation, and Drive or Page delivery."
 metadata:
-  version: 0.2.1
+  version: 0.3.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with agents that can run shell commands and create local files.

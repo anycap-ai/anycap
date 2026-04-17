@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.2.1
+  version: 0.3.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -119,6 +119,156 @@ export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
 - `ANYCAP_CONFIG_DIR` redirects all CLI state (config, credentials, update markers) to the specified path. Relative paths are resolved to absolute paths automatically.
 
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
+
+## Agent Daemon (Feishu Chat)
+
+When the human wants to chat with the current local coding agent from Feishu, start the AnyCap Feishu daemon for them. Treat these as trigger phrases:
+
+- "用飞书跟你聊天"
+- "开启飞书 IM 模式"
+- "把你接到我的飞书 bot 上"
+- "用 AnyCap 启动飞书机器人"
+- "用飞书跟当前 agent 聊天"
+- "start AnyCap Feishu daemon"
+
+Do not explain daemon internals first. Execute the setup flow below, asking only for missing required information.
+
+First make sure the human already has a **personal Feishu app bot**:
+
+- created in Feishu Open Platform
+- robot capability enabled
+- long connection event delivery enabled
+- message receive permissions granted
+- App ID and App Secret available locally
+
+Use the current working directory as `--workspace` unless the human provides a different repository path.
+
+Infer the local agent from the current runtime:
+
+- Codex runtime -> `--agent codex`
+- Claude Code runtime -> `--agent claude_code`
+- Cursor runtime -> `--agent cursor`
+- If unsure, ask one concise question: "Use Codex, Claude Code, or Cursor as the local agent?"
+
+Read Feishu credentials from the local daemon credential store first:
+
+- stored by `anycap connect credentials set feishu`
+- file location: AnyCap config dir, mode 0600
+
+Reason: if the human exports `FEISHU_APP_ID` and `FEISHU_APP_SECRET` after the coding agent process has already started, this agent will not inherit those variables. The shared local credential file is the stable bridge between the human's terminal and the agent-started daemon.
+
+Check credential status without printing secrets:
+
+```bash
+anycap connect credentials show feishu
+```
+
+If credentials are missing, ask the human to run this in their own terminal and tell you when it is done. Never ask the human to paste App Secret values into chat. Never write App Secret values into docs, code, logs, memory files, command history, or final summaries. Do not echo secrets back to the human.
+
+Human terminal setup:
+
+```bash
+anycap connect credentials set feishu --app-id <FEISHU_APP_ID> --app-secret <FEISHU_APP_SECRET>
+```
+
+```bash
+anycap status
+```
+
+If the CLI is not authenticated, run:
+
+```bash
+anycap login
+```
+
+Then start the local Feishu agent on the target repository:
+
+```bash
+anycap connect feishu --agent codex --workspace /path/to/repo
+```
+
+Claude Code is also supported as the local executor:
+
+```bash
+anycap connect feishu --agent claude_code --workspace /path/to/repo
+```
+
+Cursor Agent is also supported as the local executor:
+
+```bash
+anycap connect feishu --agent cursor --workspace /path/to/repo
+```
+
+The user-facing `connect feishu --agent cursor` path enables Cursor Agent `--force` automatically so URL access and shell-backed network checks can run non-interactively. Always tell the human that this lets Cursor Agent execute local commands and network requests unless Cursor explicitly denies them.
+
+If the human wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, explicitly add:
+
+```bash
+--codex-exec-mode danger-full-access
+```
+
+Reason: the default Codex mode is `safe`, which maps to Codex `--full-auto`. This automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
+
+For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, use Claude Code's broader permission/tool flags, for example:
+
+```bash
+--claude-permission-mode bypassPermissions
+--claude-allowed-tools Read,Edit,Bash
+```
+
+Reason: the daemon runs Claude Code non-interactively with no TTY for permission prompts. `acceptEdits` can be enough for editing, but shell commands and networked CLI calls may fail or block unless the required tools are explicitly allowed or permissions are bypassed.
+
+For Cursor Agent, the user-facing connect path runs `cursor-agent -p --output-format json --trust --force`. Use `--cursor-model <model>` for explicit model selection. The lower-level `agent daemon start --executor cursor` path still requires explicit `--cursor-force` when force-allow command behavior is desired.
+
+After startup, verify which local machine is currently connected:
+
+```bash
+anycap connect status feishu
+```
+
+Then tell the human to go back to Feishu and send a normal message to their personal bot. Use a concise success message like:
+
+```text
+飞书机器人已经连上当前本地 agent。现在去飞书给你的 personal bot 发普通消息即可。
+```
+
+Do not tell the human to:
+
+- start `agent runners serve` manually
+- copy a `runner_id`
+- edit server env to bind bot -> runner
+- use `/bind` as the normal setup flow
+- configure the server-side shared Feishu bot unless they are explicitly debugging a legacy deployment
+
+Helpful commands:
+
+```bash
+anycap connect status feishu
+anycap agent runners list
+```
+
+Main notes:
+
+- `anycap connect stop feishu` stops the local background connection for Feishu.
+- If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
+- The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
+- `--codex-exec-mode safe` is the default and maps to Codex `--full-auto`.
+- Only use `--codex-exec-mode danger-full-access` when the human explicitly wants the local Codex process to bypass sandbox/approval restrictions, including when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Codex.
+- `--agent claude_code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
+- For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
+- `--agent cursor` runs Cursor Agent with `cursor-agent -p --output-format json --trust --force` and persists Cursor Agent `session_id` as `executor_ref` for follow-up turns.
+- For Cursor Agent, use `--cursor-model <model>` for explicit model selection. Tell the human that Cursor Agent runs with `--force` on the user-facing connect path and may execute local commands or network requests unless Cursor explicitly denies them.
+
+## Legacy / Debug Only
+
+`anycap agent daemon ...` remains available for debugging and compatibility, but `anycap connect ...` is the primary user-facing path.
+
+Only use this section when the human is explicitly debugging an older shared-bot deployment.
+
+- `anycap agent runners serve` is the low-level/debug path.
+- `anycap agent im-bindings ...` is only for legacy/debug flows.
+- `/bind` is a legacy/debug compatibility path.
+- Treat server-side shared-bot webhook/long-connection setup as legacy compatibility only, not the preferred setup path.
 
 ## Capabilities
 

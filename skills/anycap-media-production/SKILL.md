@@ -2,7 +2,7 @@
 name: anycap-media-production
 description: "Produce media assets using AnyCap: generate images, videos, and music from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
 metadata:
-  version: 0.2.1
+  version: 0.3.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
