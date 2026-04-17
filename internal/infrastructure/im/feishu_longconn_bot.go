@@ -26,6 +26,7 @@ const (
 	feishuThreadHistoryLimit     = 6
 	feishuChatHistoryLimit       = 6
 	defaultFeishuTurnMergeWindow = 1200 * time.Millisecond
+	defaultFeishuMessageDedupTTL = 30 * time.Minute
 )
 
 type FeishuLongConnBotConfig struct {
@@ -57,6 +58,8 @@ type FeishuLongConnBot struct {
 	turnMergeWindow     time.Duration
 	pendingMu           sync.Mutex
 	pendingTurns        map[string]*feishuPendingBurstTurn
+	seenMu              sync.Mutex
+	seenMessages        map[string]time.Time
 	client              *larkws.Client
 }
 
@@ -81,6 +84,7 @@ func NewFeishuLongConnBot(cfg FeishuLongConnBotConfig) *FeishuLongConnBot {
 		actionDir:           strings.TrimSpace(cfg.ActionDir),
 		turnMergeWindow:     normalizeFeishuTurnMergeWindow(cfg.TurnMergeWindow),
 		pendingTurns:        map[string]*feishuPendingBurstTurn{},
+		seenMessages:        map[string]time.Time{},
 	}
 
 	eventDispatcher := dispatcher.NewEventDispatcher("", "").
@@ -171,6 +175,9 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 	if b == nil {
 		return model.ErrNotConfigured("feishu long connection bot is not configured")
 	}
+	if b.shouldDropDuplicateMessage(event) {
+		return nil
+	}
 	if b.shouldMergeBurstTurn(event) {
 		b.enqueueBurstTurn(event)
 		return nil
@@ -179,6 +186,45 @@ func (b *FeishuLongConnBot) handleNormalizedEvent(ctx context.Context, event Nor
 		return err
 	}
 	return b.dispatchNormalizedEvent(ctx, event)
+}
+
+func (b *FeishuLongConnBot) shouldDropDuplicateMessage(event NormalizedInboundEvent) bool {
+	key := b.messageDedupKey(event)
+	if key == "" {
+		return false
+	}
+	now := time.Now().UTC()
+	expiresAt := now.Add(defaultFeishuMessageDedupTTL)
+
+	b.seenMu.Lock()
+	defer b.seenMu.Unlock()
+
+	for existingKey, existingExpiresAt := range b.seenMessages {
+		if !existingExpiresAt.After(now) {
+			delete(b.seenMessages, existingKey)
+		}
+	}
+	if seenExpiresAt, ok := b.seenMessages[key]; ok && seenExpiresAt.After(now) {
+		return true
+	}
+	b.seenMessages[key] = expiresAt
+	return false
+}
+
+func (b *FeishuLongConnBot) messageDedupKey(event NormalizedInboundEvent) string {
+	if b == nil {
+		return ""
+	}
+	botID := strings.TrimSpace(event.BotID)
+	if botID == "" {
+		botID = strings.TrimSpace(b.appID)
+	}
+	channelID := strings.TrimSpace(event.ChannelID)
+	messageID := strings.TrimSpace(event.MessageID)
+	if botID == "" || channelID == "" || messageID == "" {
+		return ""
+	}
+	return strings.Join([]string{botID, channelID, messageID}, "|")
 }
 
 func (b *FeishuLongConnBot) dispatchNormalizedEvent(ctx context.Context, event NormalizedInboundEvent) error {
