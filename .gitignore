@@ -19,3 +19,6 @@ __pycache__/
 
 # Packaged skills
 *.skill
+
+# Local clone of the anycap CLI repo (do not embed)
+/anycap/
