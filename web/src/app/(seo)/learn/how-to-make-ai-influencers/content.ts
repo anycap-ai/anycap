@@ -29,8 +29,7 @@ const PERSONA_PACK_IMAGES = [
   },
 ] as const;
 
-const contentByLocale = {
-  en: {
+const enContent = {
     metadata: {
       title: "How to Make AI Influencers with an AI Agent",
       description:
@@ -375,7 +374,10 @@ const contentByLocale = {
         },
       ],
     },
-  },
+} as const;
+
+const contentByLocale = {
+  en: enContent,
   "pt-br": {
     metadata: {
       title: "Como criar influencers de IA com um agente de IA",
@@ -1068,6 +1070,7 @@ const contentByLocale = {
       ],
     },
   },
+  de: enContent,
 } as const;
 
 export function getHowToMakeAIInfluencersMetadata(locale: SiteLocale): Metadata {

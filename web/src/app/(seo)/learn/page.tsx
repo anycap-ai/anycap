@@ -6,7 +6,7 @@ import { getLearnHubContent, type LearnHubArticle, type LearnHubLink, type Learn
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { defaultLocale, getLocalizedRouteUrl, siteConfig } from "@/lib/site";
+import { defaultLocale, getLocalizedRouteUrl, siteConfig, type SiteLocale } from "@/lib/site";
 import { LEARN_PATH, getLearnMetadata, getLearnPageData } from "./content";
 
 export const runtime = "edge";
@@ -48,9 +48,13 @@ function countSectionArticles(section: LearnHubSection) {
   return seen.size;
 }
 
-function formatArticleCount(count: number, locale: "en" | "pt-br" | "id") {
+function formatArticleCount(count: number, locale: SiteLocale) {
   if (locale === "pt-br") {
     return `${count} artigo${count === 1 ? "" : "s"}`;
+  }
+
+  if (locale === "de") {
+    return `${count} Artikel`;
   }
 
   return `${count} article${count === 1 ? "" : "s"}`;
@@ -132,7 +136,7 @@ function ArticleGroup({
 }: {
   title: string;
   articles: readonly LearnHubArticle[];
-  locale: "en" | "pt-br" | "id";
+  locale: SiteLocale;
 }) {
   if (articles.length === 0) {
     return null;
@@ -170,7 +174,7 @@ function SectionAccordion({
 }: {
   section: LearnHubSection;
   index: number;
-  locale: "en" | "pt-br" | "id";
+  locale: SiteLocale;
   sectionLabels: LearnPageContent["sectionLabels"];
 }) {
   const articleCount = countSectionArticles(section);

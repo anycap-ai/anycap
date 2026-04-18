@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-export const runtime = "edge";
-
 export const metadata: Metadata = {
   robots: {
     index: false,

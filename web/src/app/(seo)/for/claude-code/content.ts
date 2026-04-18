@@ -10,7 +10,7 @@ import type { CapabilityGapRow } from "@/components/landing/CapabilityGapTable";
 export const FOR_CLAUDE_CODE_PATH = "/for/claude-code";
 
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/for_agent";
-const LAST_UPDATED_ISO = "2026-04-05";
+const LAST_UPDATED_ISO = "2026-04-17";
 const DATE_PUBLISHED_ISO = "2026-04-03";
 const CLAUDE_CODE_POSTER_URL = "https://cdn.anycap.ai/page_resource/seo-images/claude-code-capability-stack.png";
 
@@ -296,17 +296,19 @@ function createPageContent(
 
 const englishCopy: ForClaudeCodeCopy = {
   metadata: {
-    title: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
+    title: "Claude Code Opus 4.7 + AnyCap — Image, Video, and Vision in One Agent",
     description:
-      "Add image generation, video generation, and vision to Claude Code through one skill install, one CLI, and one auth flow with AnyCap.",
-    openGraphTitle: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
+      "Claude Code on Opus 4.7 + AnyCap is insane. Add image generation, video generation, vision, and audio to Claude Code through one skill, one CLI, and one login.",
+    openGraphTitle: "Claude Code Opus 4.7 + AnyCap — Image, Video, and Vision in One Agent",
     openGraphDescription:
-      "Give Claude Code one install path for image, video, and vision workflows through AnyCap.",
-    articleHeadline: "Claude Code Tools — Add Image, Video, and Vision with AnyCap",
+      "Opus 4.7 brings Anthropic's strongest reasoning. AnyCap fills every modality gap — image, video, vision, audio — through one CLI Opus 4.7 already controls.",
+    articleHeadline: "Claude Code Opus 4.7 + AnyCap — Image, Video, and Vision in One Agent",
     articleDescription:
-      "Guide to adding image generation, video generation, and vision workflows to Claude Code through one capability runtime.",
-    articleAbout: ["Claude Code", "AnyCap CLI", "agent skills", "capability runtime"],
+      "Guide to pairing Claude Code on Claude Opus 4.7 with AnyCap for image generation, video generation, vision, and audio workflows through one capability runtime.",
+    articleAbout: ["Claude Code", "Claude Opus 4.7", "AnyCap CLI", "agent skills", "capability runtime"],
     articleKeywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 tools",
       "claude code tools",
       "add tools to claude code",
       "claude code capabilities",
@@ -317,12 +319,12 @@ const englishCopy: ForClaudeCodeCopy = {
   },
   breadcrumbHome: "Home",
   heroEyebrow: "For Claude Code",
-  heroLastUpdatedLabel: "Last updated April 5, 2026",
-  heroTitleLine1: "Claude Code can code.",
-  heroTitleLine2: "It still needs image, video, and vision capabilities.",
+  heroLastUpdatedLabel: "Last updated April 17, 2026 — Updated for Claude Opus 4.7",
+  heroTitleLine1: "Claude Code on Opus 4.7 + AnyCap is insane.",
+  heroTitleLine2: "One agent, every modality, zero glue code.",
   heroIntroLinkText: "Claude Code",
   heroIntroAfterLink:
-    " is excellent at planning, refactoring, and code execution. The gap appears when the workflow needs image, video, audio, or visual-analysis capabilities, like product visuals, walkthrough videos, screenshot understanding, or recording review — none of those are Claude Code tools today.",
+    " — now powered by Claude Opus 4.7 — is the strongest reasoning and coding agent Anthropic has shipped. It plans long, edits surgically, and runs tools without losing the thread. What it still cannot do is generate an image, render a video, or look at a screenshot. That is the entire gap. AnyCap fills it through one skill, one CLI, and one login — image generation (Seedream 5, Nano Banana Pro), video generation (Veo 3.1, Seedance 1.5 Pro, Kling 3.0), image understanding, video analysis, and audio transcription, all behind the same agent surface Opus 4.7 already controls. The result feels insane: ask for a launch visual, a walkthrough video, or a screenshot review in plain English, and Opus 4.7 chains the right capability without you ever leaving the terminal.",
   heroCalloutPrefix: "Just tell Claude Code what you need — like ",
   heroCalloutExample: "help me install anycap.ai",
   heroCalloutSuffix:
@@ -508,17 +510,19 @@ const englishCopy: ForClaudeCodeCopy = {
 
 const ptBrCopy: ForClaudeCodeCopy = {
   metadata: {
-    title: "Ferramentas para Claude Code — Adicione imagem, vídeo e visão com o AnyCap",
+    title: "Claude Code Opus 4.7 + AnyCap — Imagem, vídeo e visão em um só agente",
     description:
-      "Adicione geração de imagem, geração de vídeo e visão ao Claude Code por meio de uma única instalação de skill, uma única CLI e um único fluxo de autenticação com o AnyCap.",
-    openGraphTitle: "Ferramentas para Claude Code — Adicione imagem, vídeo e visão com o AnyCap",
+      "Claude Code no Opus 4.7 + AnyCap é absurdo. Adicione geração de imagem, geração de vídeo, visão e áudio ao Claude Code por uma skill, uma CLI e um login.",
+    openGraphTitle: "Claude Code Opus 4.7 + AnyCap — Imagem, vídeo e visão em um só agente",
     openGraphDescription:
-      "Dê ao Claude Code um único caminho de instalação para fluxos de imagem, vídeo e visão por meio do AnyCap.",
-    articleHeadline: "Ferramentas para Claude Code — Adicione imagem, vídeo e visão com o AnyCap",
+      "Opus 4.7 traz o raciocínio mais forte da Anthropic. AnyCap fecha cada lacuna de modalidade — imagem, vídeo, visão, áudio — por uma CLI que o Opus 4.7 já controla.",
+    articleHeadline: "Claude Code Opus 4.7 + AnyCap — Imagem, vídeo e visão em um só agente",
     articleDescription:
-      "Guia de capability para adicionar fluxos de geração de imagem, geração de vídeo e visão ao Claude Code por meio de um único runtime.",
-    articleAbout: ["Claude Code", "AnyCap CLI", "skills de agente", "runtime de capabilities"],
+      "Guia para usar o Claude Code no Claude Opus 4.7 com AnyCap em fluxos de geração de imagem, geração de vídeo, visão e áudio por um único runtime de capabilities.",
+    articleAbout: ["Claude Code", "Claude Opus 4.7", "AnyCap CLI", "skills de agente", "runtime de capabilities"],
     articleKeywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 ferramentas",
       "ferramentas para claude code",
       "adicionar ferramentas ao claude code",
       "capabilities do claude code",
@@ -529,12 +533,12 @@ const ptBrCopy: ForClaudeCodeCopy = {
   },
   breadcrumbHome: "Início",
   heroEyebrow: "Para Claude Code",
-  heroLastUpdatedLabel: "Atualizado em 5 de abril de 2026",
-  heroTitleLine1: "O Claude Code programa.",
-  heroTitleLine2: "Mas ainda precisa de capacidades de imagem, vídeo e visão.",
+  heroLastUpdatedLabel: "Atualizado em 17 de abril de 2026 — Atualizado para o Claude Opus 4.7",
+  heroTitleLine1: "Claude Code com Opus 4.7 + AnyCap é absurdo.",
+  heroTitleLine2: "Um agente, todas as modalidades, zero glue code.",
   heroIntroLinkText: "Claude Code",
   heroIntroAfterLink:
-    " é excelente em planejamento, refatoração e execução de código. A lacuna aparece quando o fluxo precisa de capacidades de imagem, vídeo ou análise visual, como visuais de produto, vídeos de walkthrough, compreensão de screenshots ou revisão de gravações — nenhuma dessas são ferramentas do Claude Code hoje.",
+    " — agora com Claude Opus 4.7 — é o agente de raciocínio e código mais forte que a Anthropic já lançou. Planeja em longa duração, edita com precisão cirúrgica e usa ferramentas sem perder o fio da meada. O que ele ainda não faz é gerar imagem, renderizar vídeo ou olhar para uma captura de tela. Essa é toda a lacuna. O AnyCap fecha tudo isso por uma skill, uma CLI e um login: geração de imagem (Seedream 5, Nano Banana Pro), geração de vídeo (Veo 3.1, Seedance 1.5 Pro, Kling 3.0), entendimento de imagem, análise de vídeo e transcrição de áudio, todos atrás da mesma superfície de agente que o Opus 4.7 já controla. O resultado é absurdo: peça em português um visual de lançamento, um vídeo walkthrough ou uma revisão de screenshot e o Opus 4.7 encadeia a capability certa — sem você sair do terminal.",
   heroCalloutPrefix: "Apenas diga ao Claude Code o que você precisa — como ",
   heroCalloutExample: "me ajude a instalar o anycap.ai",
   heroCalloutSuffix:
@@ -817,17 +821,19 @@ const ptBrCopy: ForClaudeCodeCopy = {
 
 const idCopy: ForClaudeCodeCopy = {
   metadata: {
-    title: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+    title: "Claude Code Opus 4.7 + AnyCap — Gambar, video, dan visi dalam satu agen",
     description:
-      "Tambahkan pembuatan gambar, pembuatan video, dan kemampuan visi ke Claude Code lewat satu pemasangan skill, satu CLI, dan satu alur autentikasi dengan AnyCap.",
-    openGraphTitle: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+      "Claude Code di Opus 4.7 + AnyCap itu gila. Tambahkan pembuatan gambar, pembuatan video, visi, dan audio ke Claude Code lewat satu skill, satu CLI, dan satu login.",
+    openGraphTitle: "Claude Code Opus 4.7 + AnyCap — Gambar, video, dan visi dalam satu agen",
     openGraphDescription:
-      "Berikan Claude Code satu jalur pemasangan untuk alur gambar, video, dan visi melalui AnyCap.",
-    articleHeadline: "Alat Claude Code — Tambahkan gambar, video, dan visi dengan AnyCap",
+      "Opus 4.7 membawa reasoning paling kuat dari Anthropic. AnyCap menutup setiap celah modalitas — gambar, video, visi, audio — lewat satu CLI yang sudah dikendalikan Opus 4.7.",
+    articleHeadline: "Claude Code Opus 4.7 + AnyCap — Gambar, video, dan visi dalam satu agen",
     articleDescription:
-      "Panduan menambahkan alur pembuatan gambar, pembuatan video, dan visi ke Claude Code melalui satu runtime kemampuan.",
-    articleAbout: ["Claude Code", "AnyCap CLI", "skill agen", "runtime kemampuan"],
+      "Panduan memasangkan Claude Code di Claude Opus 4.7 dengan AnyCap untuk alur pembuatan gambar, pembuatan video, visi, dan audio melalui satu runtime kemampuan.",
+    articleAbout: ["Claude Code", "Claude Opus 4.7", "AnyCap CLI", "skill agen", "runtime kemampuan"],
     articleKeywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 alat",
       "alat claude code",
       "menambahkan alat ke claude code",
       "kemampuan claude code",
@@ -838,12 +844,12 @@ const idCopy: ForClaudeCodeCopy = {
   },
   breadcrumbHome: "Beranda",
   heroEyebrow: "Untuk Claude Code",
-  heroLastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
-  heroTitleLine1: "Claude Code bisa menulis kode.",
-  heroTitleLine2: "Ia masih butuh kemampuan gambar, video, dan visi.",
+  heroLastUpdatedLabel: "Terakhir diperbarui 17 April 2026 — Diperbarui untuk Claude Opus 4.7",
+  heroTitleLine1: "Claude Code di Opus 4.7 + AnyCap itu gila.",
+  heroTitleLine2: "Satu agen, semua modalitas, tanpa glue code.",
   heroIntroLinkText: "Claude Code",
   heroIntroAfterLink:
-    " sangat kuat dalam perencanaan, refaktor, dan eksekusi kode. Celahnya muncul ketika alur kerja membutuhkan gambar, video, audio, atau analisis visual—misalnya visual produk, video walkthrough, pemahaman tangkapan layar, atau tinjauan rekaman—semua itu bukan bagian bawaan Claude Code saat ini.",
+    " — kini ditenagai Claude Opus 4.7 — adalah agen reasoning dan coding terkuat yang pernah dirilis Anthropic. Ia merencanakan jangka panjang, mengedit secara presisi, dan memakai tool tanpa kehilangan alur. Yang masih belum bisa ia lakukan adalah menghasilkan gambar, merender video, atau melihat tangkapan layar. Itulah seluruh celahnya. AnyCap menutup semuanya melalui satu skill, satu CLI, dan satu login: pembuatan gambar (Seedream 5, Nano Banana Pro), pembuatan video (Veo 3.1, Seedance 1.5 Pro, Kling 3.0), pemahaman gambar, analisis video, dan transkripsi audio—semua di balik permukaan agen yang sudah dikendalikan Opus 4.7. Hasilnya benar-benar gila: minta visual peluncuran, video walkthrough, atau review screenshot dalam bahasa alami, dan Opus 4.7 merangkai capability yang tepat tanpa Anda meninggalkan terminal.",
   heroCalloutPrefix: "Cukup katakan ke Claude Code apa yang Anda butuhkan—misalnya ",
   heroCalloutExample: "bantu saya menginstal anycap.ai",
   heroCalloutSuffix:
@@ -1128,10 +1134,225 @@ const idCopy: ForClaudeCodeCopy = {
   footerLastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
 };
 
+const deCopy: ForClaudeCodeCopy = {
+  metadata: {
+    title: "Claude Code Opus 4.7 + AnyCap – Bild, Video und Vision in einem Agent",
+    description:
+      "Claude Code auf Opus 4.7 + AnyCap – die starke Kombination. Erweitern Sie Claude Code um Bildgenerierung, Videogenerierung, Vision und Audio über einen Skill, eine CLI und ein Login.",
+    openGraphTitle: "Claude Code Opus 4.7 + AnyCap – Bild, Video und Vision in einem Agent",
+    openGraphDescription:
+      "Opus 4.7 bringt Anthropics stärkstes Reasoning. AnyCap schließt jede Modalitätslücke – Bild, Video, Vision, Audio – über eine CLI, die Opus 4.7 bereits steuert.",
+    articleHeadline: "Claude Code Opus 4.7 + AnyCap – Bild, Video und Vision in einem Agent",
+    articleDescription:
+      "Anleitung, um Claude Code auf Claude Opus 4.7 mit AnyCap für Bildgenerierung, Videogenerierung, Vision und Audio-Workflows über eine einzige Capability-Runtime zu kombinieren.",
+    articleAbout: ["Claude Code", "Claude Opus 4.7", "AnyCap CLI", "Agent-Skills", "Capability-Runtime"],
+    articleKeywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 tools",
+      "claude code tools",
+      "tools zu claude code hinzufügen",
+      "claude code capabilities",
+      "claude code bildgenerierung",
+      "claude code videogenerierung",
+      "claude code vision",
+    ],
+  },
+  breadcrumbHome: "Startseite",
+  heroEyebrow: "Für Claude Code",
+  heroLastUpdatedLabel: "Zuletzt aktualisiert am 17. April 2026 – Aktualisiert für Claude Opus 4.7",
+  heroTitleLine1: "Claude Code auf Opus 4.7 + AnyCap – die starke Kombination.",
+  heroTitleLine2: "Ein Agent, jede Modalität, kein Glue-Code.",
+  heroIntroLinkText: "Claude Code",
+  heroIntroAfterLink:
+    " – jetzt angetrieben von Claude Opus 4.7 – ist der stärkste Reasoning- und Coding-Agent, den Anthropic je veröffentlicht hat. Er plant langfristig, editiert chirurgisch präzise und nutzt Tools, ohne den roten Faden zu verlieren. Was er noch immer nicht kann: ein Bild generieren, ein Video rendern oder einen Screenshot betrachten. Genau das ist die Lücke. AnyCap schließt sie über einen Skill, eine CLI und ein Login – Bildgenerierung (Seedream 5, Nano Banana Pro), Videogenerierung (Veo 3.1, Seedance 1.5 Pro, Kling 3.0), Bildverständnis, Videoanalyse und Audio-Transkription, alles hinter derselben Agent-Oberfläche, die Opus 4.7 bereits steuert. Das Ergebnis ist beeindruckend: Bitten Sie in einfacher Sprache um ein Launch-Visual, ein Walkthrough-Video oder ein Screenshot-Review, und Opus 4.7 verkettet die richtige Capability – ohne dass Sie das Terminal verlassen.",
+  heroCalloutPrefix: "Sagen Sie Claude Code einfach, was Sie brauchen – etwa ",
+  heroCalloutExample: "hilf mir, anycap.ai zu installieren",
+  heroCalloutSuffix:
+    ". Es findet den Skill, installiert die CLI, authentifiziert sich und ruft die richtige Capability auf – alles innerhalb Ihrer Terminal-Sitzung, ohne manuelle Befehle von Ihnen.",
+  heroMicrocopy: "Natürliche Sprache. Null manuelle Schritte. Sofortige Capabilities.",
+  heroCtas: {
+    primary: "Loslegen",
+    imageGeneration: "Bildgenerierung",
+    videoGeneration: "Videogenerierung",
+  },
+  demoVideoTitle: "AnyCap mit Claude Code installieren und nutzen",
+  demoVideoCaption:
+    "Sehen Sie, wie Claude Code AnyCap aus einem Prompt in natürlicher Sprache installiert – Skill-Discovery, CLI-Setup, Authentifizierung und erste Bildgenerierung in einem ununterbrochenen Ablauf.",
+  installEyebrow: "Loslegen",
+  installTitle: "Fragen Sie einfach. Claude Code erledigt den Rest.",
+  installIntro:
+    "Keine Befehle zum Auswendiglernen, kein manuelles Setup. Sagen Sie Claude Code in natürlicher Sprache, was Sie brauchen, und es findet den AnyCap-Skill, installiert die CLI, authentifiziert sich und liefert Ergebnisse — alles in derselben Terminal-Sitzung.",
+  installPromptLabel: "Was Sie zu Claude Code sagen",
+  installPromptText: "Hilf mir, anycap.ai zu installieren",
+  installPromptExplanation:
+    "Claude Code liest den Prompt, findet den AnyCap-Skill, installiert die CLI, authentifiziert sich und ist bereit, anycap image generate, anycap video generate oder jede andere capability aufzurufen — automatisch.",
+  installManualSummary: "Lieber manuell installieren? Hier sind die drei Schritte.",
+  installSteps: [
+    {
+      subtitle: "Schritt 1",
+      title: "Skill installieren",
+      code: "npx -y skills add anycap-ai/anycap -a claude-code -y",
+      note: "Damit lernt Claude Code, wie es die AnyCap-Capability-Runtime findet und aufruft.",
+    },
+    {
+      subtitle: "Schritt 2",
+      title: "CLI installieren",
+      code: "curl -fsSL https://anycap.ai/install.sh | sh",
+      note: "Die CLI ist eine einzelne Binary ohne Runtime-Abhängigkeiten – sie läuft direkt in der Terminal-Sitzung von Claude Code.",
+    },
+    {
+      subtitle: "Schritt 3",
+      title: "Anmelden und verifizieren",
+      code: "anycap login && anycap status",
+      note: "Nach der Authentifizierung kann Claude Code zwischen Bild-, Video- und Vision-Capabilities wechseln, ohne neue Anmeldedaten oder Dashboard-Umwege.",
+    },
+  ],
+  installWalkthroughPrefix: "Eine vollständige Anleitung finden Sie im",
+  installWalkthroughLinkLabel: "Installationsleitfaden",
+  whyEyebrow: "Warum es passt",
+  whyTitle: "Gebaut für die Art, wie Claude Code bereits arbeitet",
+  whyIntro:
+    "AnyCap installiert sich sauber in Claude Code, weil es für dieselben Rahmenbedingungen entworfen wurde: lokale Terminal-Ausführung, Dateisystem-Zugriff und skill-basierte Discovery.",
+  whyCards: [
+    {
+      title: "Lokale Terminal-Ausführung",
+      body:
+        "Claude Code läuft direkt in Ihrem Terminal neben Ihrer Codebasis. Die AnyCap CLI ist eine abhängigkeitsfreie Binary, die sich in derselben Sitzung installiert und authentifiziert, sodass Capabilities verfügbar sind, ohne das Terminal zu verlassen.",
+    },
+    {
+      title: "Dateisystem-Integration",
+      body:
+        "Claude Code hat direkten Zugriff auf Ihre Projektdateien. AnyCap liefert Dateipfade und CDN-URLs zurück, die Claude Code in Projektverzeichnissen speichern, in Markdown einbetten oder an nachgelagertes Tooling übergeben kann.",
+    },
+    {
+      title: "Ein Credential, jede Capability",
+      body:
+        "Ohne eine Runtime-Schicht bedeutet das Hinzufügen von Bildgenerierung, Videogenerierung und Vision drei separate Provider-Credentials. AnyCap konsolidiert sie zu einem Login, der den gesamten Stack abdeckt.",
+    },
+  ],
+  realEyebrow: "Realer Workflow",
+  realTitle: "Wie eine Sitzung mit Claude Code + AnyCap aussieht",
+  realIntro:
+    "Das sind echte CLI-Befehle und Ausgaben. Jedes Beispiel läuft direkt innerhalb der Claude-Code-Terminal-Sitzung – ohne externe Tools, Dashboards oder Browser-Tabs.",
+  realWorkflowExamples: [
+    {
+      title: "Bildgenerierung – Text zu Bild",
+      command:
+        'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
+      outputLines: [
+        "Generating image with seedream-5...",
+        "Image saved to dashboard-hero.png (1024x1024, 487KB)",
+        "CDN URL: https://cdn.anycap.ai/...",
+      ],
+    },
+    {
+      title: "Bildverständnis – Screenshot-Analyse",
+      command:
+        'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
+      outputLines: [
+        "The modal overlay clips the submit button at viewport widths below 640px. The button is partially hidden behind the bottom edge of the dialog container. This appears to be a CSS overflow issue on the parent .modal-body element.",
+      ],
+    },
+    {
+      title: "Videogenerierung – Demo-Clip",
+      command:
+        'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
+      outputLines: [
+        "Generating video with veo-3-1...",
+        "Video ready (8s, 1080p, 12.4MB)",
+        "CDN URL: https://cdn.anycap.ai/...",
+      ],
+    },
+  ],
+  gapEyebrow: "Capability-Lücke",
+  gapTitle: "Was Sie nach einer Konversation bekommen",
+  gapDescription:
+    "Claude Code bleibt auf Code und Terminal-Ausführung fokussiert, während AnyCap die Lücken in Generierung, Analyse, Suche, Speicherung und Veröffentlichung schließt, die außerhalb seiner eingebauten Oberfläche liegen.",
+  gapColumns: [
+    { label: "Claude Code allein" },
+    { label: "Mit AnyCap hinzufügen", accent: true },
+    { label: "Bester nächster Schritt" },
+  ],
+  gapRows: buildAgentCapabilityGapRows("claude-code"),
+  capabilityCardsTitle: "Beginnen Sie mit der ersten fehlenden Capability",
+  capabilityCards: [
+    {
+      eyebrow: "Kreative Ausgabe",
+      title: "Bildgenerierung",
+      href: "/capabilities/image-generation",
+      summary: "Beste nächste Seite, wenn Claude Code Visuals, Mockups, Launch-Assets oder andere Bildausgaben benötigt.",
+      command: "anycap image generate",
+    },
+    {
+      eyebrow: "Bewegungsausgabe",
+      title: "Videogenerierung",
+      href: "/capabilities/video-generation",
+      summary: "Beste nächste Seite, wenn Claude Code Demos, Walkthroughs oder Kurzvideos benötigt.",
+      command: "anycap video generate",
+    },
+    {
+      eyebrow: "Vision",
+      title: "Bildverständnis",
+      href: "/capabilities/image-understanding",
+      summary: "Beste nächste Seite, wenn Claude Code Screenshots, Diagramme, OCR oder Design-Feedback interpretieren muss.",
+      command: "anycap image read",
+    },
+    {
+      eyebrow: "Analyse",
+      title: "Videoanalyse",
+      href: "/capabilities/video-analysis",
+      summary: "Beste nächste Seite, wenn Claude Code Aufnahmen prüfen und strukturierte Details extrahieren muss.",
+      command: "anycap video read",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Kann Claude Code von sich aus Bilder generieren?",
+      answer:
+        "Nein. Claude Code konzentriert sich auf Code-Reasoning, Planung und Terminal-Ausführung. Es hat keine eingebaute Bildgenerierungs-Runtime. AnyCap fügt diese Capability über eine Skill-Installation und eine CLI hinzu, sodass Claude Code Visuals erzeugen kann, ohne die Terminal-Sitzung zu verlassen oder einen separaten Bild-Provider anzubinden.",
+    },
+    {
+      question: "Warum AnyCap statt Provider direkt anbinden?",
+      answer:
+        "Eine separate Bild-API, Video-API und Vision-API anzubinden bedeutet, drei Sätze von Anmeldedaten, SDKs und Authentifizierungsabläufen zu verwalten. AnyCap konsolidiert das in einer CLI und einem Login, das Claude Code direkt aus Ihrem Terminal aufrufen kann. Eine Skill-Installation ersetzt mehrere Provider-Integrationen.",
+    },
+    {
+      question: "Ersetzt AnyCap Claude Code?",
+      answer:
+        "Nein. AnyCap ist kein Agent. Es ist eine Capability-Runtime, die neben Claude Code läuft. Sie behalten Claude Code für Code, Planung und Terminal-Ausführung und ergänzen die Bild-, Video- und Vision-Tools, die nicht mitgeliefert werden. AnyCap erweitert Claude Code – es konkurriert nie mit ihm.",
+    },
+    {
+      question: "Was ist der schnellste Weg, Tools zu Claude Code hinzuzufügen?",
+      answer:
+        "Sagen Sie Claude Code einfach in natürlicher Sprache 'hilf mir, anycap.ai zu installieren'. Es findet den Skill, installiert die CLI, authentifiziert sich und ist sofort bereit, Bilder oder Videos zu erzeugen. Keine Befehle zum Auswendiglernen. Wenn Sie manuelle Kontrolle bevorzugen, können Sie den Skill und die CLI auch in drei Schritten selbst installieren.",
+    },
+    {
+      question: "Funktioniert AnyCap im Claude Code Terminal?",
+      answer:
+        "Ja. Die AnyCap CLI ist eine einzelne Binary ohne externe Abhängigkeiten. Sie läuft direkt in der Terminal-Sitzung von Claude Code, sendet API-Anfragen an den AnyCap-Server und liefert Dateipfade oder URLs zurück, die Claude Code in nachfolgenden Schritten nutzen, in Code einbetten oder in Ihrem Projektverzeichnis speichern kann.",
+    },
+  ],
+  siblingEyebrow: "Auch verfügbar für",
+  siblingAgents: [
+    { label: "Codex", href: "/for/codex" },
+    { label: "Cursor", href: "/for/cursor" },
+    { label: "Manus", href: "/for/manus" },
+  ],
+  footerCtas: {
+    addToolsToClaudeCode: "Tools zu Claude Code hinzufügen",
+    getStarted: "Loslegen",
+    whyOneCliMatters: "Warum eine CLI zählt",
+    howSkillsFit: "Wie Skills passen",
+  },
+  footerLastUpdatedLabel: "Zuletzt aktualisiert am 5. April 2026",
+};
+
 const contentByLocale = {
   en: createPageContent(englishCopy, "en"),
   "pt-br": createPageContent(ptBrCopy, "pt-br"),
   id: createPageContent(idCopy, "id"),
+  de: createPageContent(deCopy, "de"),
 } as const satisfies Record<SiteLocale, ForClaudeCodePageContent>;
 
 export function getForClaudeCodeMetadata(locale: SiteLocale): Metadata {

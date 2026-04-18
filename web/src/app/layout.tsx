@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
-import { LazyGlobalTipToast } from "@/components/ui/LazyGlobalTipToast";
-import { GrainOverlay } from "@/components/ui/GrainOverlay";
+import { GlobalUiChrome } from "@/components/layout/GlobalUiChrome";
 import { organizationId, organizationSameAs } from "@/lib/organization";
-import { getRequestHtmlLang } from "@/lib/request-locale";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { defaultSocialImage } from "@/lib/seo-metadata";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
-
-export const runtime = "edge";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -164,17 +159,13 @@ const preHydrationCleanupScript = `
   })();
 `;
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const headerStore = await headers();
-  const htmlLang = await getRequestHtmlLang();
-  const showGlobalUi = headerStore.get("x-anycap-global-ui") === "1";
-
   return (
-    <html lang={htmlLang} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -196,9 +187,8 @@ export default async function RootLayout({
         style={{ fontFamily: "sans-serif" }}
       >
         <GoogleAnalytics />
-        {showGlobalUi ? <LazyGlobalTipToast /> : null}
+        <GlobalUiChrome />
         {children}
-        {showGlobalUi ? <GrainOverlay /> : null}
       </body>
     </html>
   );

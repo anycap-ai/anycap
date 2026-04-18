@@ -123,8 +123,7 @@ type LocalizedPageContent = {
   nextMoveCards: NextMoveCard[];
 };
 
-const contentByLocale = {
-  en: {
+const enContent: LocalizedPageContent = {
     metadata: {
       title: "How to Make AI Influencer Videos with an AI Agent",
       description:
@@ -390,7 +389,10 @@ const contentByLocale = {
         body: "Use Drive when the finished clip needs a shareable link for human review.",
       },
     ],
-  },
+};
+
+const contentByLocale = {
+  en: enContent,
   "pt-br": {
     metadata: {
       title: "Como criar vídeos de influenciador com IA usando um agente de IA",
@@ -925,6 +927,7 @@ const contentByLocale = {
       },
     ],
   },
+  de: enContent,
 } satisfies Record<SiteLocale, LocalizedPageContent>;
 
 function getContent(locale: SiteLocale): LocalizedPageContent {

@@ -862,6 +862,282 @@ const contentByLocale = {
       { label: "Ringkasan CLI", href: "/cli" },
     ] as const satisfies readonly NextAction[],
   },
+  de: {
+    metadata: {
+      title: "AnyCap installieren — Setup-Anleitung mit natürlicher Sprache und CLI",
+      description:
+        "Installieren Sie AnyCap mit einem Prompt in natürlicher Sprache in unterstützten KI-Agenten oder folgen Sie dem manuellen CLI- und Skill-Setup. Funktioniert mit Claude Code, Cursor, Codex und mehr.",
+      openGraphTitle: "AnyCap installieren — Setup-Anleitung mit natürlicher Sprache und CLI",
+      openGraphDescription:
+        "Installieren Sie AnyCap mit einem Prompt in natürlicher Sprache in unterstützten KI-Agenten oder folgen Sie dem manuellen CLI- und Skill-Setup. Funktioniert mit Claude Code, Cursor, Codex und mehr.",
+      articleHeadline: "AnyCap installieren — Setup-Anleitung mit natürlicher Sprache und CLI",
+      articleDescription:
+        "Anleitung zur Installation von AnyCap über natürliche Sprache in unterstützten Agenten oder über den manuellen Pfad mit CLI und Skill.",
+      articleAbout: [
+        "AnyCap CLI",
+        "KI-Agenten",
+        "Agent-Skills",
+        "Installation in natürlicher Sprache",
+      ],
+      articleKeywords: [
+        "anycap installieren",
+        "anycap cli",
+        "agent skills",
+        "ki-agent setup",
+        "installation in natürlicher sprache",
+        "help me install anycap.ai",
+      ],
+    },
+    howTo: {
+      name: "AnyCap für KI-Agenten installieren",
+      description:
+        "Installieren Sie AnyCap mit einem Prompt in natürlicher Sprache in unterstützten Agenten oder nutzen Sie den manuellen Pfad mit CLI- und Skill-Befehlen.",
+      steps: [
+        {
+          name: "Bitten Sie Ihren Agenten, AnyCap zu installieren",
+          text: "Sagen Sie in unterstützten Agenten wie Claude Code oder Cursor „help me install anycap.ai“. Der Agent kann den Skill entdecken, die CLI installieren, sich authentifizieren und das Setup automatisch verifizieren.",
+        },
+        {
+          name: "Nutzen Sie bei Bedarf den manuellen Setup-Pfad",
+          text: "Wenn Sie direkte Kontrolle wünschen, installieren Sie die CLI mit curl -fsSL https://anycap.ai/install.sh | sh oder npm install -g @anycap/cli, installieren Sie den Skill mit npx -y skills add anycap-ai/anycap -y und führen Sie dann anycap login und anycap status aus.",
+        },
+        {
+          name: "Nutzen Sie Ihre erste Capability",
+          text: "Nach dem Setup können Sie entweder Ihren Agenten in natürlicher Sprache fragen oder AnyCap direkt mit Befehlen wie anycap image generate oder anycap image read aufrufen.",
+        },
+      ],
+    },
+    faqItems: [
+      {
+        question: "Kann ich AnyCap mit natürlicher Sprache installieren?",
+        answer:
+          "Ja. In unterstützten Coding-Agenten wie Claude Code und Cursor können Sie „help me install anycap.ai“ sagen und den Agenten die Skill-Erkennung, das CLI-Setup, die Authentifizierung und die Verifizierung übernehmen lassen. Wenn Sie direkte Befehlskontrolle bevorzugen, ist der manuelle Pfad auf dieser Seite weiterhin verfügbar.",
+      },
+      {
+        question: "Brauche ich die AnyCap CLI weiterhin, wenn ich natürliche Sprache verwende?",
+        answer:
+          "Ja. Natürliche Sprache ist die Steuerungsoberfläche, aber die AnyCap CLI bleibt die Runtime, die lokal installiert wird, die Authentifizierung speichert und Capabilities wie Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse ausführt.",
+      },
+      {
+        question: "Welchen Skill-Installationsbefehl sollte ich verwenden?",
+        answer:
+          "Verwenden Sie npx -y skills add anycap-ai/anycap -a <agent> -y, wenn Sie den Host-Agenten kennen, etwa claude-code, cursor oder codex. Verwenden Sie den generischen Befehl npx -y skills add anycap-ai/anycap -y, wenn Sie einen breiteren Standardpfad wünschen, oder anycap skill install --target, wenn Sie manuelle Kontrolle über das Ziel benötigen.",
+      },
+    ],
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Anleitungen", href: "/guides" },
+      { name: "AnyCap installieren", href: INSTALL_ANYCAP_GUIDE_PATH },
+    ],
+    eyebrow: "Anleitung",
+    lastUpdatedLabel: "Zuletzt aktualisiert am 9. April 2026",
+    hero: {
+      title: "AnyCap installieren",
+      fastestPathIntro: "Schnellster aktueller Pfad: Bitten Sie Ihren Agent um",
+      prompt: "help me install anycap.ai",
+      intro: [
+        { type: "text", text: "Der schnellste AnyCap-Setup-Flow heute ist natürliche Sprache. In unterstützten Agenten wie " },
+        { type: "link", text: "Claude Code", href: "/for/claude-code" },
+        { type: "text", text: " oder " },
+        { type: "link", text: "Cursor", href: "/for/cursor" },
+        {
+          type: "text",
+          text: " können Sie den Agenten bitten, AnyCap zu installieren, und ihn die Skill-Erkennung, das CLI-Setup, die Authentifizierung und die Verifizierung übernehmen lassen. Wenn Sie direkte Befehlskontrolle bevorzugen, enthält diese Seite auch den vollständigen manuellen Installationspfad vom CLI-Binary bis zum ersten Capability-Aufruf.",
+        },
+      ] as const,
+    },
+    prerequisitesTitle: "Voraussetzungen",
+    prerequisites: [
+      "Ein kompatibler Coding-Agent, falls Sie den Installationspfad mit natürlicher Sprache nutzen möchten",
+      "macOS, Linux oder Windows (Git Bash)",
+      "Node.js 18+ (bei Installation über npm oder skills.sh)",
+      "Ein Browser für den Login-Flow",
+    ],
+    setupNotice:
+      "Natürliche Sprache ist der schnellste aktuelle Setup-Pfad in unterstützten Agenten. Manuelle CLI- und Skill-Befehle bleiben unten für direkte Kontrolle oder nicht unterstützte Umgebungen verfügbar.",
+    steps: [
+      {
+        number: "1",
+        title: "Schnellster Pfad: Bitten Sie Ihren Agenten, AnyCap zu installieren",
+        description: [
+          { type: "text", text: "In unterstützten Agenten kann dies Skill-Erkennung, CLI-Installation, Authentifizierung, Verifizierung und Ihren ersten Capability-Aufruf auslösen, ohne dass Sie sich Befehle merken müssen. Beginnen Sie hier, wenn Sie " },
+          { type: "link", text: "Claude Code", href: "/for/claude-code" },
+          { type: "text", text: " oder " },
+          { type: "link", text: "Cursor", href: "/for/cursor" },
+          { type: "text", text: " verwenden. Wenn Sie explizite Terminal-Kontrolle wünschen, fahren Sie mit den manuellen Schritten unten fort." },
+        ],
+        codeBlocks: [
+          {
+            label: "# Beispiel-Prompt",
+            code: "help me install anycap.ai",
+          },
+        ],
+      },
+      {
+        number: "2",
+        title: "CLI manuell installieren",
+        description: [
+          { type: "text", text: "Binaries sind auch verfügbar auf " },
+          {
+            type: "link",
+            text: "GitHub Releases",
+            href: "https://github.com/anycap-ai/anycap/releases",
+            external: true,
+          },
+          { type: "text", text: "." },
+        ],
+        codeBlocks: [
+          {
+            label: "# Installationsskript (empfohlen)",
+            code: "curl -fsSL https://anycap.ai/install.sh | sh",
+          },
+          {
+            label: "# Oder über npm",
+            code: "npm install -g @anycap/cli",
+          },
+        ],
+      },
+      {
+        number: "3",
+        title: "Anmelden",
+        description: [
+          {
+            type: "text",
+            text: "Dies öffnet einen Browser zur Authentifizierung. Nach dem Login werden die Anmeldedaten sicher auf Ihrem Rechner gespeichert.",
+          },
+        ],
+        codeBlocks: [
+          {
+            label: "# Login",
+            code: "anycap login",
+          },
+        ],
+      },
+      {
+        number: "4",
+        title: "Skill-Datei manuell installieren",
+        description: [
+          {
+            type: "text",
+            text: "Skills bringen KI-Agenten bei, AnyCap-Capabilities zu entdecken und aufzurufen. Verwenden Sie den agent-spezifischen ",
+          },
+          { type: "code", text: "skills add" },
+          {
+            type: "text",
+            text: "-Befehl, wenn Sie den Host-Agenten kennen. Verwenden Sie den generischen Zielpfad, wenn Sie manuelle Kontrolle über den Speicherort der Skill-Datei benötigen.",
+          },
+        ],
+        codeBlocks: [
+          {
+            label: "# skills.sh (generisch)",
+            code: "npx -y skills add anycap-ai/anycap -y",
+          },
+          {
+            label: "# skills.sh (agent-spezifisch)",
+            code: [
+              "npx -y skills add anycap-ai/anycap -a claude-code -y",
+              "npx -y skills add anycap-ai/anycap -a cursor -y",
+              "npx -y skills add anycap-ai/anycap -a codex -y",
+            ].join("\n"),
+          },
+          {
+            label: "# Oder über AnyCap CLI",
+            code: "anycap skill install --target ~/.agents/skills/anycap-cli/",
+          },
+          {
+            label: "# Oder manuell",
+            code: "curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md",
+          },
+        ],
+      },
+      {
+        number: "5",
+        title: "Verifizieren",
+        description: [
+          {
+            type: "text",
+            text: "Dies bestätigt CLI-Version, Authentifizierungsstatus, Serververbindung und Skill-Installation.",
+          },
+        ],
+        codeBlocks: [
+          {
+            label: "# Setup verifizieren",
+            code: ["anycap status", "npx -y skills check"].join("\n"),
+          },
+        ],
+      },
+      {
+        number: "6",
+        title: "Nutzen Sie Ihre erste Capability",
+        description: [],
+        codeBlocks: [
+          {
+            label: "# Oder fragen Sie Ihren Agenten",
+            code: "generate a product mockup image with AnyCap",
+          },
+          {
+            label: "# Ein Bild verstehen",
+            code: "anycap image read --url https://example.com/photo.jpg",
+          },
+          {
+            label: "# Ein Bild generieren",
+            code: 'anycap image generate --model seedream-5 --prompt "a sunset over mountains"',
+          },
+        ],
+      },
+    ] as const satisfies readonly InstallStep[],
+    troubleshootingTitle: "Häufige Probleme",
+    troubleshootingItems: [
+      {
+        title: "Installation in natürlicher Sprache funktioniert in meinem Agenten nicht",
+        description: [
+          { type: "text", text: "Verwenden Sie die manuellen CLI- und Skill-Schritte auf dieser Seite oder folgen Sie einer agent-spezifischen Anleitung für " },
+          { type: "link", text: "Claude Code", href: "/for/claude-code" },
+          { type: "text", text: ", " },
+          { type: "link", text: "Cursor", href: "/for/cursor" },
+          { type: "text", text: " oder " },
+          { type: "link", text: "Codex", href: "/for/codex" },
+          { type: "text", text: "." },
+        ],
+      },
+      {
+        title: "Installationsskript schlägt unter macOS fehl",
+        description: [
+          { type: "text", text: "Versuchen Sie die Installation über npm: " },
+          { type: "code", text: "npm install -g @anycap/cli" },
+        ],
+      },
+      {
+        title: "Login öffnet keinen Browser",
+        description: [
+          { type: "text", text: "Verwenden Sie den Device-Code-Flow: " },
+          { type: "code", text: "anycap login --headless" },
+        ],
+      },
+      {
+        title: "Berechtigung verweigert",
+        description: [
+          {
+            type: "text",
+            text: "Stellen Sie sicher, dass das Installationsverzeichnis beschreibbar ist, oder verwenden Sie npm mit einem nutzerseitigen globalen Präfix.",
+          },
+        ],
+      },
+    ] as const satisfies readonly TroubleshootingItem[],
+    faqTitle: "Häufige Fragen",
+    nextStepsTitle: "Nächste Schritte",
+    nextActions: [
+      {
+        label: "Auf GitHub ansehen",
+        href: "https://github.com/anycap-ai/anycap",
+        external: true,
+        primary: true,
+      },
+      { label: "Für Claude Code", href: "/for/claude-code" },
+      { label: "Alle Capabilities", href: "/capabilities" },
+      { label: "CLI-Übersicht", href: "/cli" },
+    ] as const satisfies readonly NextAction[],
+  },
 } as const;
 
 export function getInstallAnyCapMetadata(locale: SiteLocale): Metadata {

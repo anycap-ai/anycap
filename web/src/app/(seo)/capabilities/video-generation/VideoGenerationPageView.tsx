@@ -8,12 +8,20 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 export function VideoGenerationPageView({ content }: { content: VideoGenerationPageData }) {
-  const isPtBr = content.eyebrow.toLowerCase().includes("capacidade");
-  const overviewTitle = isPtBr ? "Por que esta página de capability importa" : "Why this capability page matters";
+  const eyebrowLower = content.eyebrow.toLowerCase();
+  const isPtBr = eyebrowLower.includes("capacidade");
+  const isDe = content.lastUpdatedLabel.toLowerCase().includes("aktualisiert");
+  const overviewTitle = isPtBr
+    ? "Por que esta página de capability importa"
+    : isDe
+      ? "Warum diese Capability-Seite wichtig ist"
+      : "Why this capability page matters";
   const overviewBody =
     isPtBr
       ? "Uma página dedicada de capability ajuda equipes a decidir quando geração de vídeo deve virar uma ação do agente em vez de permanecer apenas como intenção de produto. Isso é útil para ligar casos de uso, decisões de modelo, exemplos de chamada e próximos passos operacionais em um mesmo lugar."
-      : "A dedicated capability page helps teams decide when video generation should become an agent action rather than remain only a product idea. It links use cases, model decisions, command examples, and operational next steps in one place so the workflow is easier to route and reuse.";
+      : isDe
+        ? "Eine dedizierte Capability-Seite hilft Teams zu entscheiden, wann Videogenerierung zu einer Agenten-Aktion werden sollte, statt nur eine Produktidee zu bleiben. Sie verbindet Use Cases, Modell-Entscheidungen, Befehlsbeispiele und operative nächste Schritte an einem Ort, damit der Workflow leichter zu routen und wiederzuverwenden ist."
+        : "A dedicated capability page helps teams decide when video generation should become an agent action rather than remain only a product idea. It links use cases, model decisions, command examples, and operational next steps in one place so the workflow is easier to route and reuse.";
   return (
     <>
       <script
@@ -53,6 +61,32 @@ export function VideoGenerationPageView({ content }: { content: VideoGenerationP
 
           <FadeIn className="mt-8">
             <EarlyAccessBanner />
+          </FadeIn>
+
+          <FadeIn className="mt-8">
+            <div className="max-w-[920px] rounded-xl border border-[#6b7d3a]/40 bg-[#f0f4dc] p-6 md:p-8">
+              <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                {content.opusCallout.eyebrow}
+              </p>
+              <h2 className="mb-3 text-base text-[#1c1f17] md:text-lg" style={pixel}>
+                {content.opusCallout.title}
+              </h2>
+              <p className="text-sm leading-6 text-[#4d5145] md:text-[15px]">
+                {content.opusCallout.body}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {content.opusCallout.ctas.map((cta) => (
+                  <Link
+                    key={cta.label}
+                    href={cta.href}
+                    className="inline-block rounded-lg border border-[#1c1f17] px-5 py-2 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                    style={mono}
+                  >
+                    {cta.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </FadeIn>
 
           <FadeIn className="mt-10">

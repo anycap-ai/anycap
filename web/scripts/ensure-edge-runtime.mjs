@@ -10,30 +10,16 @@ const entryFiles = collectFiles(appDir)
   .filter((filePath) => routeEntryNames.has(path.basename(filePath)))
   .sort();
 
-const missingRuntime = [];
 const invalidRuntimePlacement = [];
 
 for (const filePath of entryFiles) {
   const content = readFileSync(filePath, "utf8");
-
-  if (!edgeRuntimePattern.test(content)) {
-    missingRuntime.push(path.relative(process.cwd(), filePath));
-    continue;
-  }
 
   const useClientIndex = content.indexOf("\"use client\"");
   const runtimeIndex = content.search(edgeRuntimePattern);
   if (useClientIndex !== -1 && runtimeIndex !== -1 && runtimeIndex < useClientIndex) {
     invalidRuntimePlacement.push(path.relative(process.cwd(), filePath));
   }
-}
-
-if (missingRuntime.length > 0) {
-  console.error("Missing `export const runtime = \"edge\";` in:");
-  for (const filePath of missingRuntime) {
-    console.error(`- ${filePath}`);
-  }
-  process.exit(1);
 }
 
 if (invalidRuntimePlacement.length > 0) {

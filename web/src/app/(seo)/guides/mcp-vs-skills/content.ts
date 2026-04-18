@@ -582,11 +582,193 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       },
     ]),
   },
+  de: {
+    metadata: {
+      title: "MCP vs. Skills: Welche Schicht sollte Ihr KI-Agent nutzen?",
+      description:
+        "Vergleichen Sie MCP und Skills für KI-Agenten. MCP standardisiert Tool-Discovery und -Aufruf, während Skills Agenten beibringen, eine Runtime wie AnyCap zu installieren, zu authentifizieren und zu nutzen.",
+      openGraphTitle: "MCP vs. Skills: Welche Schicht sollte Ihr KI-Agent nutzen?",
+      openGraphDescription:
+        "Vergleichen Sie MCP und Skills für KI-Agenten. MCP standardisiert Tool-Discovery und -Aufruf, während Skills Agenten beibringen, eine Runtime wie AnyCap zu installieren, zu authentifizieren und zu nutzen.",
+    },
+    eyebrow: "Anleitungen",
+    heroTitle: ["MCP vs. Skills", "Welche Schicht sollte Ihr Agent nutzen?"],
+    heroIntro:
+      "MCP standardisiert, wie Agenten Tools entdecken und aufrufen. Skills bringen dem Agenten bei, wie er eine Capability-Runtime in seinem Workflow installiert, authentifiziert und nutzt. Wenn Setup-Reibung das Problem ist, gewinnen meist Skills. Wenn Discovery und Interoperabilität das Problem sind, gewinnt meist MCP. Wenn Sie sowohl Distribution als auch Transport möchten, passt AnyCap sauber in beide Geschichten.",
+    heroImageAlt:
+      "Editorial-Illustration, die MCP, Skills und beide als geschichtete Agenten-Stack-Muster zeigt",
+    comparisonTitle: "Der praktische Unterschied",
+    comparisonRows: [
+      {
+        layer: "MCP",
+        summary: "Ein Protokoll, um Tools, Ressourcen und Prompts auf standardisierte Weise bereitzustellen.",
+        bestFor: "Einen Agenten mit Tools verbinden, mit vorhersagbarer Discovery und Invocation.",
+        anyCap: "Nutzen Sie es, wenn AnyCap hinter einer sauberen Protokollgrenze sitzen soll.",
+      },
+      {
+        layer: "Skills",
+        summary: "Eine Instruktionsschicht, die dem Agenten beibringt, eine Capability zu installieren und zu nutzen.",
+        bestFor: "Capability-Setup über Claude Code, Cursor, Codex und ähnliche Agenten verteilen.",
+        anyCap: "Nutzen Sie es, wenn AnyCap sich nativ im Agenten-Workflow anfühlen soll.",
+      },
+      {
+        layer: "Beide",
+        summary: "Das Protokoll übernimmt das Wiring, der Skill übernimmt die Adoption.",
+        bestFor: "Teams, die eine stabile Transport-Schicht und einen reibungsarmen Onboarding-Pfad wollen.",
+        anyCap: "Nutzen Sie beide, wenn AnyCap leicht zu verteilen und leicht zu betreiben sein soll.",
+      },
+    ],
+    changeTitle: "Was jede Schicht verändert",
+    changeCards: [
+      {
+        title: "MCP verändert den Transport",
+        paragraphs: [
+          "MCP gibt dem Agenten eine standardisierte Möglichkeit zu erkennen, was ein Tool kann und wie es aufgerufen wird. Das macht Integrationen leichter nachvollziehbar, besonders wenn dieselbe Capability über mehrere Clients, Runtimes oder Provider hinweg funktionieren muss.",
+          "In der Praxis ist MCP am nützlichsten, wenn Ihr Team Integrationsdrift reduzieren will. Die Schnittstelle wird explizit, und jeder Client kann mit derselben Capability sprechen, ohne einen eigenen Ad-hoc-Vertrag zu erfinden.",
+        ],
+      },
+      {
+        title: "Skills verändern die Adoption",
+        paragraphs: [
+          "Skills bringen dem Agenten bei, wie er eine Capability in der echten Welt entdeckt, installiert, authentifiziert und nutzt. Sie sind besonders wertvoll, wenn die Herausforderung nicht das Protokoll selbst ist, sondern die Menge an Setup, die ein Nutzer sich merken muss.",
+          "Deshalb sind Skills eine so starke Distributionsschicht für AnyCap. Sie lassen die Capability wie einen Teil des Agenten wirken, statt wie ein separates System, das der Nutzer manuell synchron halten muss.",
+        ],
+      },
+    ],
+    decisionTitle: "Eine praktische Entscheidungsregel",
+    decisionIntro:
+      "Wenn Sie schnell entscheiden müssen, beginnen Sie mit dem tatsächlichen Problem. Wenn der Engpass Onboarding ist, gewinnen meist Skills. Wenn der Engpass standardisierte Discovery oder Transport ist, gewinnt meist MCP. Wenn der Engpass Adoption über mehrere Agenten oder Teams ist, ist beides oft der schmerzärmste Weg. Das gilt besonders, wenn AnyCap Teil des Agenten-Workflows sein soll, statt einer Sidecar-Integration, die jemand manuell pflegen muss.",
+    decisionCards: [
+      {
+        title: "Mit Skills beginnen",
+        body: "Wählen Sie Skills, wenn der Agent den Setup-Pfad in einfacher Sprache lernen soll. Das ist die sauberere Wahl für Claude Code, Cursor, Codex oder jede Umgebung, in der der Nutzer erwartet, dass der Agent den richtigen Workflow findet, ohne erst eine Protokoll-Spezifikation zu lesen.",
+      },
+      {
+        title: "Mit MCP beginnen",
+        body: "Wählen Sie MCP, wenn das Problem Tool-Transport, Discovery oder Interoperabilität ist. Wenn Ihr Stack bereits auf MCP standardisiert, hält ein MCP-First-Ansatz die Integrationsschicht vorhersagbar und lässt AnyCap hinter einer etablierten Schnittstelle sitzen.",
+      },
+      {
+        title: "Beide nutzen",
+        body: "Nutzen Sie beide, wenn Sie maximale Kompatibilität und reibungsärmstes Onboarding wollen. MCP übernimmt das Wiring, während Skills die Capability für die Person, die den Agenten tatsächlich nutzt, lesbar macht.",
+      },
+    ],
+    exampleTitle: "Beispiel-Playbooks",
+    exampleCards: [
+      {
+        title: "Schnell prototypen",
+        body: "Wenn Sie einen neuen Workflow validieren, beginnen Sie mit Skills. Sie bekommen schnelleres Onboarding und eine klarere Geschichte für den Erstnutzer der Capability.",
+      },
+      {
+        title: "Schnittstelle standardisieren",
+        body: "Wenn dieselbe Capability über mehrere Produkte funktionieren muss, beginnen Sie mit MCP. Es gibt Ihnen einen Transport-Vertrag und hält die Tool-Oberfläche vorhersagbarer, während die Integration wächst.",
+      },
+      {
+        title: "Adoption skalieren",
+        body: "Wenn das Ziel ist, AnyCap über Teams und Agenten auszurollen, nutzen Sie beide. MCP hält das Protokoll konsistent, während Skills den Rollout leichter verständlich und wiederholbar machen.",
+      },
+    ],
+    mistakesTitle: "Was Teams meist falsch machen",
+    mistakes: [
+      "Der erste Fehler ist, MCP und Skills wie konkurrierende Produkte zu behandeln. Sind sie nicht. Sie lösen benachbarte Schichten desselben Problems: eine ist Protokoll, die andere ist Instruktion und Onboarding.",
+      "Der zweite Fehler ist, Transport zu überengineeren, bevor jemand einen klaren Nutzer-Workflow hat. Wenn das Team nicht erklären kann, welche tägliche Aufgabe der Agent erledigen soll, kommt Protokoll-Arbeit meist zu früh und bremst die Adoption.",
+      "Der dritte Fehler ist, den Agenten einen manuellen Setup-Prozess auswendig lernen zu lassen. Ein Skill kann den Pfad einmal verpacken und konsistent über Claude Code, Cursor, Codex und andere Umgebungen halten, die dieselbe Runtime brauchen.",
+    ],
+    ruleTitle: "Faustregel",
+    ruleBody:
+      "Wenn Ihr Team ständig sagt: „Wir brauchen einen sauberen Weg, diese Capability bereitzustellen“, beginnen Sie mit MCP. Wenn es ständig sagt: „Wir brauchen einen Weg, dass der Agent das tatsächlich nutzt, ohne lange Setup-Doku“, beginnen Sie mit Skills. Wenn beide Aussagen zutreffen, ist die beste Antwort meist, die Capability einmal zu entwerfen und über beide Schichten zu präsentieren.",
+    scenariosTitle: "Häufige Szenarien",
+    scenarios: [
+      {
+        title: "MCP zuerst wählen",
+        body: "Wählen Sie MCP, wenn das Hauptproblem Tool-Wiring ist. Das passt besser, wenn Sie bereits mehrere Clients oder Provider haben und einen sauberen Vertrag für Discovery, Invocation und Interoperabilität wollen.",
+      },
+      {
+        title: "Skills zuerst wählen",
+        body: "Wählen Sie Skills, wenn das größte Problem Onboarding ist. Sie wollen, dass Claude Code, Cursor, Codex oder ein anderer Agent versteht, wie die Runtime installiert und genutzt wird, ohne zusätzliche Orchestrierung oder eine separate Protokoll-Spezifikation.",
+      },
+      {
+        title: "Beide nutzen, wenn möglich",
+        body: "Nutzen Sie beide, wenn Sie standardisierten Transport und eine starke Instruktionsgeschichte brauchen. MCP hält die Schnittstelle vorhersagbar, während Skills das Setup und die Operator-Erfahrung für die Person, die den Agenten nutzt, offensichtlich machen.",
+      },
+    ],
+    nextTitle: "Nächste Schritte",
+    nextPages: [
+      {
+        eyebrow: "Produkt",
+        title: "Skills",
+        href: "/skills",
+        body: "Sehen Sie, wie die Instruktionsschicht in die AnyCap-Distributionsgeschichte passt.",
+      },
+      {
+        eyebrow: "Produkt",
+        title: "CLI",
+        href: "/cli",
+        body: "Sehen Sie die Befehlsoberfläche, auf die MCP und Skills letztlich zeigen.",
+      },
+      {
+        eyebrow: "Anleitung",
+        title: "Tools zu Claude Code hinzufügen",
+        href: "/guides/add-tools-to-claude-code",
+        body: "Vom Konzept zum Setup mit einem konkreten Installationsfluss.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Ist MCP besser als Skills?",
+        answer:
+          "Nicht standardmäßig. MCP ist besser, wenn Sie standardisiertes Tool-Wiring brauchen. Skills sind besser, wenn der Agent verstehen soll, wie er die Capability im Alltag installiert, authentifiziert und nutzt. Sie lösen unterschiedliche Schichten des Stacks, die richtige Antwort hängt also vom Engpass ab, den Sie beseitigen wollen.",
+      },
+      {
+        question: "Kann AnyCap mit MCP und Skills arbeiten?",
+        answer:
+          "Ja. AnyCap kann über Skills für das Agenten-Onboarding beschrieben werden und auch hinter protokollbasierten Integrationen sitzen, wenn ein Workflow diese Schicht braucht. Die richtige Wahl hängt davon ab, ob Sie Distribution, Transport oder beides brauchen.",
+      },
+      {
+        question: "Wann sollte ich zuerst Skills wählen?",
+        answer:
+          "Wählen Sie zuerst Skills, wenn Sie einen schnellen Pfad für Claude Code, Cursor, Codex oder ähnliche Agenten wollen, AnyCap ohne zusätzliche Orchestrierungsarbeit zu entdecken und zu nutzen. Wenn Setup-Reibung das Hauptproblem ist, bringen Skills meist schneller Wert.",
+      },
+      {
+        question: "Wann sollte ich zuerst MCP wählen?",
+        answer:
+          "Wählen Sie zuerst MCP, wenn Ihre Umgebung bereits auf MCP standardisiert und Sie hauptsächlich ein sauberes Protokoll für Tool-Discovery und -Aufruf brauchen. Wenn Interoperabilität das Ziel ist, ist MCP meist der bessere Ausgangspunkt.",
+      },
+      {
+        question: "Brauche ich beides, MCP und Skills?",
+        answer:
+          "Nicht immer. Wenn Sie auf eine Agentenoberfläche ausliefern und der Setup-Flow bereits klar ist, kann eine Schicht ausreichen. Nutzen Sie beide, wenn Sie Protokollkompatibilität und benutzerfreundliches Onboarding gleichzeitig brauchen.",
+      },
+      {
+        question: "Welche Schicht sollte ich zuerst bauen?",
+        answer:
+          "Bauen Sie die Schicht, die Ihren größten aktuellen Engpass beseitigt. Wenn Nutzer nicht starten können, beginnen Sie mit Skills. Wenn die Integrationsoberfläche das größere Problem ist, beginnen Sie mit MCP. Wenn Adoption über mehrere Agenten verteilt ist, planen Sie beide von Anfang an.",
+      },
+    ],
+    guideJsonLd: createTechArticleJsonLd({
+      headline: "MCP vs. Skills: Welche Schicht sollte Ihr Agent nutzen?",
+      description:
+        "Praktische Anleitung zur Wahl zwischen MCP und Skills beim Anbinden von AnyCap an einen Agenten-Workflow.",
+      path: MCP_VS_SKILLS_PATH,
+      about: ["MCP", "skills", "AnyCap", "KI-Agenten"],
+      keywords: ["mcp vs skills", "agent skills vs mcp", "mcp skills", "anycap"],
+      datePublished: "2026-04-12",
+      dateModified: "2026-04-12",
+    }),
+    faqJsonLd: createFaqPageJsonLd([
+      {
+        question: "Ist MCP besser als Skills?",
+        answer:
+          "Nicht standardmäßig. MCP ist besser, wenn Sie standardisiertes Tool-Wiring brauchen. Skills sind besser, wenn der Agent verstehen soll, wie er die Capability im Alltag installiert, authentifiziert und nutzt.",
+      },
+    ]),
+  },
 };
 
 contentByLocale.en.faqJsonLd = createFaqPageJsonLd(contentByLocale.en.faqItems);
 contentByLocale["pt-br"].faqJsonLd = createFaqPageJsonLd(contentByLocale["pt-br"].faqItems);
 contentByLocale.id.faqJsonLd = createFaqPageJsonLd(contentByLocale.id.faqItems);
+contentByLocale.de.faqJsonLd = createFaqPageJsonLd(contentByLocale.de.faqItems);
 
 export function getMcpVsSkillsMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

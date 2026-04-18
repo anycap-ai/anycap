@@ -33,6 +33,13 @@ const contentByLocale: Record<SiteLocale, ComparePageData> = {
       { name: "Compare", href: COMPARE_PATH },
     ],
   },
+  de: {
+    ...getHubPageDefinition("de", "compare"),
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Vergleich", href: COMPARE_PATH },
+    ],
+  },
 };
 
 export function getCompareMetadata(locale: SiteLocale): Metadata {

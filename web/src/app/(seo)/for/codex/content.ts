@@ -1322,10 +1322,392 @@ const indonesianContent = {
   },
 } satisfies PageContent;
 
+const germanContent = {
+  metadata: {
+    title: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+    description:
+      "Installieren Sie einen Skill, sagen Sie Codex, was Sie brauchen, und lassen Sie AnyCap Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine CLI bereitstellen.",
+    openGraphTitle: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+    openGraphDescription:
+      "Installieren Sie einen Skill, sagen Sie Codex, was Sie brauchen, und lassen Sie AnyCap Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine CLI bereitstellen.",
+    articleHeadline: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+    articleDescription:
+      "Anleitung zum Hinzufügen von Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse zu OpenAI Codex über eine einzige Capability-Runtime.",
+    articleAbout: ["Codex", "AnyCap CLI", "Agent-Skills", "Capability-Runtime"],
+    articleKeywords: [
+      "codex tools",
+      "tools zu codex hinzufügen",
+      "codex capabilities",
+      "codex bildgenerierung",
+      "codex cli tools",
+      "codex seedream 5 vs nano banana 2",
+      "codex veo 3.1 vs kling 3.0",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Agenten ausstatten", href: "/for" },
+    { name: "Codex", href: FOR_CODEX_PATH },
+  ],
+  hero: {
+    eyebrow: "Für Codex",
+    lastUpdatedLabel: "Zuletzt aktualisiert am 5. April 2026",
+    titleLine1: "Codex ist stark in Code und Terminal-Arbeit.",
+    titleLine2: "Es braucht weiterhin Tools für Bild, Video und Vision.",
+    videoSrc: VIDEO_SRC,
+    videoPosterUrl: VIDEO_POSTER_URL,
+    videoTitle: "AnyCap mit Codex installieren und nutzen",
+    videoDescription:
+      "Sehen Sie, wie Codex AnyCap aus einem Prompt in natürlicher Sprache installiert – Skill-Discovery, CLI-Setup, Authentifizierung und erste Bildgenerierung in einem ununterbrochenen Ablauf.",
+    introPrefix: "",
+    introLinkLabel: "Codex",
+    introSuffix:
+      " ist exzellent in Code, Reasoning und Terminal-Ausführung. Die Lücke zeigt sich, wenn der Workflow Bild-, Video-, Audio- oder visuelle Analyse-Capabilities braucht, etwa Produkt-Visuals, Walkthrough-Videos, Screenshot-Verständnis oder Aufnahme-Reviews – keines davon gehört heute zu den Codex-Tools.",
+    followupParagraph:
+      "Nachdem Sie den AnyCap-Skill hinzugefügt haben, sagen Sie Codex einfach in einfacher Sprache, was Sie brauchen. Es liest den Skill, installiert die CLI, authentifiziert sich und ruft die richtige Capability auf – alles in der eigenen Terminal-Sitzung, ohne manuelle Einrichtung von Ihnen.",
+    valueLine: "Ein Skill. Installation per natürlicher Sprache. Sofortige Capabilities.",
+    docsUrl: CODEX_DOCS_URL,
+    ctas: {
+      getStarted: "Loslegen",
+      imageGeneration: "Bildgenerierung",
+      videoAnalysis: "Videoanalyse",
+    },
+  },
+  install: {
+    eyebrow: "Loslegen",
+    titleLine1: "Skill einmal hinzufügen.",
+    titleLine2: "Dann einfach Codex in natürlicher Sprache fragen.",
+    description:
+      "Der einzige Bootstrap-Schritt ist das Hinzufügen des AnyCap-Skills. Danach können Sie Codex einfach in einfacher Sprache sagen, was zu tun ist. Codex liest den Skill, installiert die CLI, authentifiziert sich und beginnt, Ergebnisse in derselben Terminal-Sitzung zu liefern, ohne zusätzliche Einrichtung von Ihnen.",
+    runOnceLabel: "Einmal ausführen",
+    code: SKILL_INSTALL_COMMAND,
+    note: "Damit lernt Codex, die AnyCap-Runtime zu finden und aufzurufen, ohne dass Sie Ihre Arbeitsweise ändern müssen.",
+    detailsSummary: "Lieber manuell installieren? Hier sind die drei Schritte.",
+    steps: [
+      {
+        title: "Skill installieren",
+        subtitle: "Schritt 1",
+        code: SKILL_INSTALL_COMMAND,
+        note: "Damit lernt Codex, die AnyCap-Runtime zu finden und aufzurufen.",
+      },
+      {
+        title: "CLI installieren",
+        subtitle: "Schritt 2",
+        code: CLI_INSTALL_COMMAND,
+        note: "Die CLI ist eine einzelne Binary ohne Runtime-Abhängigkeiten – sie läuft in der Codex-Sandbox als Standard-Terminal-Tool.",
+      },
+      {
+        title: "Anmelden und verifizieren",
+        subtitle: "Schritt 3",
+        code: VERIFY_COMMAND,
+        note: "Nach der Authentifizierung kann Codex zwischen Bild-, Video- und Vision-Capabilities wechseln, ohne neue Anmeldedaten oder Dashboard-Umwege.",
+      },
+    ],
+    guideLeadIn: "Eine vollständige Anleitung finden Sie im ",
+    guideLinkLabel: "Installationsleitfaden",
+    guideUrl: "/guides/install-anycap",
+  },
+  whyItFits: {
+    eyebrow: "Warum es passt",
+    title: "Gebaut für die Art, wie Codex bereits arbeitet",
+    description:
+      "AnyCap installiert sich sauber in Codex, weil es für dieselben Rahmenbedingungen entworfen wurde: gesandboxte VMs, terminal-only Output und kurzlebige Task-Umgebungen.",
+    cards: [
+      {
+        title: "Gesandboxte Ausführung",
+        description:
+          "Codex führt jede Aufgabe in einer isolierten Cloud-VM aus. Die AnyCap CLI ist eine abhängigkeitsfreie Binary, die sich in dieser Sandbox installiert und authentifiziert, sodass keine Host-Einstellungen zwischen Aufgaben durchsickern.",
+      },
+      {
+        title: "Terminal-native Ausgabe",
+        description:
+          "Codex hat keine GUI – jedes Ergebnis ist Text im Terminal. AnyCap liefert Dateipfade und CDN-URLs zurück, die Codex an nachfolgende Schritte übergeben, in Markdown einbetten oder an nachgelagertes Tooling weitergeben kann.",
+      },
+      {
+        title: "Ein Credential, jede Capability",
+        description:
+          "Ohne eine Runtime-Schicht bedeutet das Hinzufügen von Bildgenerierung, Videogenerierung und Vision drei separate Provider-Credentials pro Sandbox. AnyCap konsolidiert sie zu einem Login, der den gesamten Stack abdeckt.",
+      },
+    ],
+  },
+  workflow: {
+    eyebrow: "Realer Workflow",
+    title: "Wie eine Sitzung mit Codex + AnyCap aussieht",
+    description:
+      "Das sind echte CLI-Befehle und Ausgaben. Jedes Beispiel läuft direkt innerhalb der Codex-Terminal-Sitzung – ohne externe Tools, Dashboards oder Browser-Tabs.",
+    panels: [
+      {
+        title: "Bildgenerierung – Text zu Bild",
+        command:
+          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
+        outputLines: [
+          "Generating image with seedream-5...",
+          "Image saved to dashboard-hero.png (1024x1024, 487KB)",
+          "CDN URL: https://cdn.anycap.ai/...",
+        ],
+      },
+      {
+        title: "Bildverständnis – Screenshot-Analyse",
+        command:
+          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
+        outputLines: [
+          "The modal overlay clips the submit button at viewport widths below 640px.",
+          "The button is partially hidden behind the bottom edge of the dialog container.",
+          "This appears to be a CSS overflow issue on the parent .modal-body element.",
+        ],
+      },
+      {
+        title: "Videogenerierung – Demo-Clip",
+        command:
+          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
+        outputLines: [
+          "Generating video with veo-3-1...",
+          "Video ready (8s, 1080p, 12.4MB)",
+          "CDN URL: https://cdn.anycap.ai/...",
+        ],
+      },
+    ],
+  },
+  gapTable: {
+    eyebrow: "Capability-Lücke",
+    title: "Was Sie nach diesen drei Befehlen bekommen",
+    description:
+      "Codex bleibt auf Code und Terminal-Ausführung fokussiert, während AnyCap die Lücken in Generierung, Analyse, Suche, Speicherung und Veröffentlichung schließt, die außerhalb seiner gesandboxten Oberfläche liegen.",
+    columns: {
+      capability: "Capability",
+      codexAlone: "Codex allein",
+      addWithAnyCap: "Mit AnyCap hinzufügen",
+      bestNextStep: "Bester nächster Schritt",
+    },
+    rows: makeGapRows([
+      {
+        capability: "Bildgenerierung",
+        codexGap: "Keine Bildausgabe aus der Sandbox",
+        anycapValue: "Visuals und Mockups via anycap image generate erzeugen",
+        nextStepLabel: "Seite Bildgenerierung",
+        nextStepHref: "/capabilities/image-generation",
+      },
+      {
+        capability: "Videogenerierung",
+        codexGap: "Kein Video-Tooling im Terminal-Loop",
+        anycapValue: "Walkthroughs und Clips via anycap video generate erstellen",
+        nextStepLabel: "Seite Videogenerierung",
+        nextStepHref: "/capabilities/video-generation",
+      },
+      {
+        capability: "Bildverständnis",
+        codexGap: "Keine einheitliche Vision-Runtime",
+        anycapValue: "Screenshots, Diagramme und visuelle Referenzen lesen",
+        nextStepLabel: "Seite Bildverständnis",
+        nextStepHref: "/capabilities/image-understanding",
+      },
+      {
+        capability: "Videoanalyse",
+        codexGap: "Erfordert separaten Provider pro Aufgabe",
+        anycapValue: "Aufnahmen über dieselbe CLI inspizieren",
+        nextStepLabel: "Seite Videoanalyse",
+        nextStepHref: "/capabilities/video-analysis",
+      },
+      {
+        capability: "Audioverständnis",
+        codexGap: "Keine einheitliche Audio-Analyse-Runtime",
+        anycapValue: "Audio über eine Runtime transkribieren und analysieren",
+        nextStepLabel: "Seite Audioverständnis",
+        nextStepHref: "/capabilities/audio-understanding",
+      },
+      {
+        capability: "Web-Suche",
+        codexGap: "Suche hängt von externem Tooling ab",
+        anycapValue: "Aus derselben Capability-Schicht im Web suchen",
+        nextStepLabel: "Seite Web-Suche",
+        nextStepHref: "/capabilities/web-search",
+      },
+      {
+        capability: "Grounded Web-Suche",
+        codexGap: "Kein Grounded-Search-Flow im Terminal-Loop",
+        anycapValue: "Grounded Search ausführen, wenn die Antwort Quellen braucht",
+        nextStepLabel: "Seite Grounded Web-Suche",
+        nextStepHref: "/capabilities/grounded-web-search",
+      },
+      {
+        capability: "Web-Crawl",
+        codexGap: "Keine wiederverwendbare Crawl-Runtime",
+        anycapValue: "Seiten crawlen und Inhalte aus einer CLI extrahieren",
+        nextStepLabel: "Seite Web-Crawl",
+        nextStepHref: "/capabilities/web-crawl",
+      },
+      {
+        capability: "Drive-Speicher",
+        codexGap: "Keine gemeinsame Asset-Storage-Schicht",
+        anycapValue: "Outputs mit öffentlichen URLs in AnyCap Drive speichern",
+        nextStepLabel: "Pricing-Seite",
+        nextStepHref: "/pricing",
+      },
+      {
+        capability: "Page-Hosting",
+        codexGap: "Keine eingebaute Page-Publishing-Oberfläche",
+        anycapValue: "Einfache Seiten über AnyCap Page veröffentlichen",
+        nextStepLabel: "Pricing-Seite",
+        nextStepHref: "/pricing",
+      },
+      {
+        capability: "Ein Auth-Flow",
+        codexGap: "Frische Credential-Einrichtung pro Sandbox",
+        anycapValue: "Ein Login über den gesamten Capability-Stack",
+        nextStepLabel: "Loslegen-Seite",
+        nextStepHref: "/start",
+      },
+    ]),
+  },
+  capabilityCardsTitle: "Beginnen Sie mit der ersten fehlenden Capability",
+  capabilityCards: [
+    {
+      eyebrow: "Kreative Ausgabe",
+      title: "Bildgenerierung",
+      href: "/capabilities/image-generation",
+      summary: "Beste nächste Seite, wenn Codex Visuals, Mockups, Launch-Assets oder andere Bildausgaben benötigt.",
+      command: "anycap image generate",
+    },
+    {
+      eyebrow: "Bewegungsausgabe",
+      title: "Videogenerierung",
+      href: "/capabilities/video-generation",
+      summary: "Beste nächste Seite, wenn Codex Demos, Walkthroughs oder Kurzvideos benötigt.",
+      command: "anycap video generate",
+    },
+    {
+      eyebrow: "Vision",
+      title: "Bildverständnis",
+      href: "/capabilities/image-understanding",
+      summary: "Beste nächste Seite, wenn Codex Screenshots, Diagramme, OCR oder Design-Feedback interpretieren muss.",
+      command: "anycap image read",
+    },
+    {
+      eyebrow: "Analyse",
+      title: "Videoanalyse",
+      href: "/capabilities/video-analysis",
+      summary: "Beste nächste Seite, wenn Codex Aufnahmen prüfen und strukturierte Details extrahieren muss.",
+      command: "anycap video read",
+    },
+  ],
+  modelSection: {
+    title: "Wählen Sie dann das Modell, das zum Terminal-Job passt",
+    introLead:
+      "Codex-Aufgaben werden oft zu Modellvergleichsfragen, sobald die Capability vorhanden ist. Die übliche Bildentscheidung ist ",
+    imageModelLinkText: "Seedream 5",
+    imageModelVsText: " vs ",
+    imageModelSecondLinkText: "Nano Banana 2",
+    videoLead: ", während Videoentscheidungen meist zu ",
+    videoVsText: " vs ",
+    videoSecondLinkText: "Kling 3.0",
+    introSuffix: " werden. Diese Modellseiten helfen Codex bei der Wahl, bevor irgendetwas generiert wird.",
+    cards: [
+      {
+        eyebrow: "Bildmodell",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        summary: "Bestes First-Pass-Bildmodell, wenn Codex eine polierte Ausgabe aus einem Prompt in der Sandbox braucht.",
+        comparison: "Vergleichen Sie mit Nano Banana 2, wenn es um Geschwindigkeit vs. Politur geht.",
+      },
+      {
+        eyebrow: "Bildmodell",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        summary: "Geeignet für schnelle Iteration, wenn Codex mehr Varianten, Drafts oder Durchsatz aus der Bildgenerierung braucht.",
+        comparison: "Vergleichen Sie mit Seedream 5 und Nano Banana Pro für Workflow-Tradeoffs.",
+      },
+      {
+        eyebrow: "Videomodell",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        summary: "Bestes Premium-Videomodell für Codex, wenn der Workflow einen saubereren cinematischen First Pass braucht.",
+        comparison: "Vergleichen Sie mit Kling 3.0 und Seedance 1.5 Pro für Bewegungsstil und Produktionspassung.",
+      },
+    ],
+  },
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Kann Codex von sich aus Bilder generieren?",
+      answer:
+        "Nein. Codex konzentriert sich auf Code-Reasoning und Terminal-Ausführung in einer gesandboxten VM. Es hat keine eingebaute Bildgenerierungs-Runtime. AnyCap fügt diese Capability über eine Skill-Installation und eine CLI hinzu, sodass Codex Visuals erzeugen kann, ohne den terminal-first Workflow zu verlassen.",
+    },
+    {
+      question: "Warum AnyCap statt Provider direkt anbinden?",
+      answer:
+        "Codex-Aufgaben laufen in isolierten, kurzlebigen Cloud-Sandboxes. Eine separate Bild-API, Video-API und Vision-API in jede Aufgabe zu verkabeln, bedeutet wiederholte Credential-Einrichtung und SDK-Installation. AnyCap konsolidiert das in einer CLI und einem Login, die über Codex-Sitzungen hinweg bestehen.",
+    },
+    {
+      question: "Ersetzt AnyCap Codex?",
+      answer:
+        "Nein. AnyCap ist kein Agent. Es ist eine Capability-Runtime, die neben Codex läuft. Sie behalten Codex für Code, Planung und Terminal-Ausführung und ergänzen die Bild-, Video- und Vision-Tools, die nicht mitgeliefert werden.",
+    },
+    {
+      question: "Was ist der schnellste Weg, Tools zu Codex hinzuzufügen?",
+      answer:
+        "Fügen Sie den AnyCap-Skill einmal hinzu und beschreiben Sie dann in natürlicher Sprache, was Sie brauchen. Codex liest den Skill, installiert die CLI, authentifiziert sich und ruft die richtige Capability automatisch auf. Wenn Sie manuelle Kontrolle bevorzugen, können Sie die CLI auch in drei Schritten selbst installieren und sich anmelden.",
+    },
+    {
+      question: "Funktioniert AnyCap in der Codex-Sandbox?",
+      answer:
+        "Ja. Die AnyCap CLI ist eine einzelne Binary ohne externe Abhängigkeiten. Sie läuft in der Codex-Sandbox, sendet API-Anfragen an den AnyCap-Server und liefert Dateipfade oder URLs zurück, die Codex in nachfolgenden Terminal-Schritten nutzen kann.",
+    },
+    {
+      question: "Welches Bildmodell passt am besten zu Codex: Seedream 5, Nano Banana 2 oder Nano Banana Pro?",
+      answer:
+        "Für Codex ist Seedream 5 das stärkere Modell, wenn die Aufgabe ein poliertes First-Pass-Ergebnis braucht, Nano Banana 2 ist besser für schnellere Iteration und Batch-artige Generierung, und Nano Banana Pro passt besser, wenn Codex gezielte Bearbeitungen an einem bestehenden Bild benötigt.",
+    },
+    {
+      question: "Welches Videomodell passt am besten zu Codex: Veo 3.1, Kling 3.0 oder Seedance 1.5 Pro?",
+      answer:
+        "Für Codex ist Veo 3.1 der Premium-Standard, Kling 3.0 passt besser zu cinematischer Bewegung, und Seedance 1.5 Pro ist die stabilere Wahl für wiederholbare Bild-zu-Video-Produktions-Workflows.",
+    },
+  ],
+  siblingAgents: {
+    eyebrow: "Auch verfügbar für",
+    agents: [
+      { label: "Claude Code", href: "/for/claude-code" },
+      { label: "Cursor", href: "/for/cursor" },
+      { label: "Manus", href: "/for/manus" },
+    ],
+  },
+  ctaButtons: {
+    primary: "Loslegen",
+    secondary: "Warum eine CLI zählt",
+    tertiary: "Wie Skills passen",
+  },
+  footerNote: "Zuletzt aktualisiert April 2026",
+  videoObject: {
+    name: "AnyCap mit Codex installieren und nutzen",
+    description:
+      "Sehen Sie, wie Codex AnyCap aus einem Prompt in natürlicher Sprache installiert – Skill-Discovery, CLI-Setup, Authentifizierung und erste Bildgenerierung in einem ununterbrochenen Ablauf.",
+  },
+  howTo: {
+    name: "Bild-, Video- und Vision-Capabilities zu Codex hinzufügen",
+    description:
+      "Installieren Sie den AnyCap-Skill, damit Codex die CLI einrichten und sich automatisch über natürliche Sprache authentifizieren kann. Manuelle Schritte sind ebenfalls verfügbar.",
+    steps: [
+      {
+        name: "AnyCap-Skill installieren",
+        text: `Führen Sie ${SKILL_INSTALL_COMMAND} aus. Dies ist der einzige manuelle Schritt – danach kann Codex die CLI installieren und sich selbst authentifizieren, sobald Sie eine Aufgabe beschreiben.`,
+      },
+      {
+        name: "Codex sagen, was Sie brauchen",
+        text: "Beschreiben Sie die Aufgabe in natürlicher Sprache, etwa 'hilf mir, AnyCap zu installieren und ein Produkt-Mockup zu generieren' oder 'generiere ein Produkt-Mockup'. Codex liest den Skill, installiert die CLI, authentifiziert sich und ruft die richtige AnyCap-Capability automatisch auf.",
+      },
+      {
+        name: "(Optional) Manuell installieren",
+        text: `Wenn Sie manuelle Kontrolle bevorzugen: Führen Sie ${CLI_INSTALL_COMMAND} aus, um die CLI zu installieren, dann ${VERIFY_COMMAND}, um sich zu authentifizieren.`,
+      },
+    ],
+  },
+} satisfies PageContent;
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: englishContent,
   "pt-br": portugueseContent,
   id: indonesianContent,
+  de: germanContent,
 };
 
 function getContent(locale: SiteLocale): PageContent {

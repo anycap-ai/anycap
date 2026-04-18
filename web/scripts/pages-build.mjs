@@ -9,6 +9,7 @@ const nextDir = path.join(rootDir, ".next");
 const vercelOutputDir = path.join(rootDir, ".vercel", "output");
 const functionsDir = path.join(rootDir, ".vercel", "output", "functions");
 const workerDir = path.join(rootDir, ".vercel", "output", "static", "_worker.js");
+const localizedFunctionsDir = path.join(workerDir, "__next-on-pages-dist__", "functions", "[locale]");
 const notFoundFunctions = ["_not-found.func", "_not-found.rsc.func"];
 const removableWorkerArtifacts = ["nop-build-log.json"];
 
@@ -57,6 +58,17 @@ function removeWorkerArtifacts() {
   }
 }
 
+function removeLocalizedFunctions() {
+  if (!existsSync(localizedFunctionsDir)) {
+    return;
+  }
+
+  rmSync(localizedFunctionsDir, { recursive: true, force: true });
+  console.log(
+    `Removed localized route functions at ${path.relative(rootDir, localizedFunctionsDir)}`
+  );
+}
+
 removeBuildDirectory(nextDir);
 removeBuildDirectory(vercelOutputDir);
 
@@ -68,4 +80,5 @@ try {
   runNextOnPages(["--skip-build"]);
 }
 
+removeLocalizedFunctions();
 removeWorkerArtifacts();

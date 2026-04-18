@@ -1030,6 +1030,7 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
+  de: enContent,
 } satisfies Record<SiteLocale, WhiteBackgroundPageContent>;
 
 function getContent(locale: SiteLocale): WhiteBackgroundPageContent {

@@ -16,7 +16,14 @@ ENV ?= preview
 ENV_FILE := .env.$(ENV)
 BRANCH := $(if $(filter production,$(ENV)),main,preview)
 
-.PHONY: cf-up-env cf-deploy
+.PHONY: cf-up-env cf-deploy seo-precheck
+
+seo-precheck:
+	@echo "==> Syncing SEO locale routes..."
+	@pnpm run sync:seo-locales
+	@echo "==> Running production build (matches Cloudflare Pages)..."
+	@pnpm run build
+	@echo "✅ SEO precheck passed. Safe to push."
 
 cf-up-env:
 	@if [ "$(ENV)" != "preview" ] && [ "$(ENV)" != "production" ]; then \

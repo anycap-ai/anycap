@@ -823,10 +823,267 @@ const id: BestAIForCursorPageData = {
   ],
 };
 
+const de: BestAIForCursorPageData = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Lernen", href: "/learn", unlinkable: true },
+    { name: "Beste KI für Cursor" },
+  ],
+  eyebrow: "Lernen",
+  metadata: {
+    title: "Beste KI für Cursor: das richtige Setup ist meist Cursor plus Kapazitäten",
+    description:
+      "Die beste KI für Cursor ist meist das Setup, das den editor-nativen Workflow von Cursor intakt hält und die fehlende visuelle, Video- und Modellauswahl-Schicht ergänzt.",
+    openGraphTitle: "Beste KI für Cursor: das richtige Setup ist meist Cursor plus Kapazitäten",
+    openGraphDescription:
+      "Ein Käufer-Leitfaden für Teams, die entscheiden, ob das beste Cursor-Setup Cursor allein, Cursor plus verstreute Provider-Tabs oder Cursor plus eine Capability Runtime mit Modellauswahl ist.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Beste KI für Cursor: das richtige Setup ist meist Cursor plus Kapazitäten",
+    description:
+      "Ein Käufer-Leitfaden für Teams, die entscheiden, ob das beste Cursor-Setup Cursor allein, Cursor plus verstreute Provider-Tabs oder Cursor plus eine Capability Runtime mit Modellauswahl ist.",
+    path: BEST_AI_FOR_CURSOR_PATH,
+    about: ["Cursor", "Coding-Agenten", "KI-Kapazitäten", "Bildgenerierung", "Videogenerierung", "Agent Capability Runtime"],
+    keywords: [
+      "beste ki für cursor",
+      "beste ki-tools für cursor",
+      "cursor kapazitäten",
+      "cursor visueller workflow",
+      "cursor mockup-generierung",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Was ist aktuell die beste KI für Cursor?",
+      answer:
+        "Wenn Sie die Kern-Coding-Arbeit meinen, ist Cursor möglicherweise bereits die richtige Grundlage für Ihr Team. Wenn Sie den gesamten Workflow rund ums Coding meinen, ist das beste Setup oft Cursor plus die Kapazitäten und Modelloptionen, die ihm noch fehlen.",
+    },
+    {
+      question: "Ist die beste KI für Cursor immer ein anderes Modell?",
+      answer:
+        "Nicht immer. Manchmal kommt der größere Gewinn daher, Medien- und Vision-Kapazitäten rund um Cursor zu ergänzen, statt die Kern-Coding-Umgebung zu wechseln.",
+    },
+    {
+      question: "Was bricht rund um Cursor meist zuerst?",
+      answer:
+        "Der erste Bruchpunkt ist meist visuelle Produktarbeit: Mockups, Launch-Visuals, Screenshot-Debugging, Demos oder Aufzeichnungsanalyse. Diese Aufgaben ziehen den Workflow über das hinaus, was Cursor allein bietet.",
+    },
+    {
+      question: "Ersetzt AnyCap Cursor?",
+      answer:
+        "Nein. AnyCap erweitert Cursor. Seine Rolle ist es, Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse rund um die Coding-Umgebung zu ergänzen, die Sie bereits nutzen.",
+    },
+  ]),
+  lastUpdatedLabel: "7. April 2026",
+  heroTitle: ["Beste KI für", "Cursor"],
+  heroIntro:
+    "Die beste KI für Cursor ist meist keine Frage des Verlassens von Cursor. Es ist die Frage, ob der editor-native Workflow noch ausreicht oder ob die Arbeit so visuell, teilbar und modellsensitiv geworden ist, dass eine Capability-Schicht rund um den Editor nötig wird.",
+  quickAnswerLabel: "Kurzantwort",
+  quickAnswerTitle: "Das beste Cursor-Setup behält Cursor meist als editor-nativen Kern und ergänzt die fehlende visuelle Schicht drumherum.",
+  quickAnswerBody:
+    "Das hält den Coding-Loop intakt und erweitert, was der Workflow tatsächlich abschließen kann. Für viele Teams ist das nützlicher, als die Kern-Umgebung zu wechseln, nur weil die Aufgabe kurz den Editor verlässt und visuell oder multimodal wird.",
+  quickTakeawaysLabel: "Kernpunkte",
+  quickTakeaways: [
+    "Cursor ist bereits stark, wenn die Arbeit innerhalb des Edit-Run-Review-Loops bleibt.",
+    "Der erste Bruchpunkt zeigt sich meist in visueller Produktarbeit: Mockups, Screenshots, Demos und Aufzeichnungen.",
+    "Für Cursor-Nutzer ist die nächste Entscheidung oft, welche Kapazität oder welches Modell ergänzt wird, nicht welcher neue Agent übernommen wird.",
+  ],
+  evaluationLabel: "Was zu evaluieren ist",
+  evaluationTitle: "Beginnen Sie mit der Frage, wie viel der Arbeit noch in den Editor-Loop passt",
+  evaluationCards: [
+    {
+      title: "Wie viel der Arbeit im Editor bleibt",
+      body:
+        "Wenn die Aufgabe überwiegend Code-Navigation, Edits, Diffs, Debugging und lokale Ausführung ist, lautet die Hauptfrage, ob Cursor Ihrem Team bereits den richtigen Coding-Loop gibt. Oft tut es das.",
+    },
+    {
+      title: "Wie visuell der Workflow geworden ist",
+      body:
+        "Die Antwort ändert sich, wenn die Arbeit Produkt-Mockups, Launch-Visuals, Demo-Clips, Screenshot-Inspektion oder Aufzeichnungsanalyse benötigt. An diesem Punkt ist die beste KI für Cursor nicht mehr nur eine Frage des Coding-Modells.",
+    },
+    {
+      title: "Wie oft der Output ein teilbares Artefakt wird",
+      body:
+        "Ein Stack, der nur Code editiert, reicht nicht aus, wenn das Ergebnis zu einem Artefakt werden muss, das ein Teammitglied oder Stakeholder reviewen, teilen oder veröffentlichen kann.",
+    },
+    {
+      title: "Wie wichtig Modellauswahl und Tool-Kontrolle sind",
+      body:
+        "Das beste praktische Setup ist oft jenes, das Provider-Wildwuchs vermeidet und gleichzeitig das richtige Bild- und Video-Modell für die Aufgabe bietet. Separate Services können überraschend schnell zu Integrations-Schulden rund um Cursor werden.",
+    },
+  ],
+  stackLabel: "Drei Setup-Muster",
+  stackTitle: "Die meisten Teams, die Cursor evaluieren, entscheiden in Wahrheit, wie weit der Editor-Loop dehnbar ist",
+  stackCards: [
+    {
+      title: "Nur Cursor",
+      label: "Beste Wahl, wenn Code und lokale Ausführung die Aufgabe sind",
+      body:
+        "Das ist der einfachste Pfad, wenn der Workflow innerhalb von Repository-Arbeit, lokaler Ausführung und Code-Iteration bleibt. Der Wert kommt aus der Coding-Umgebung selbst, nicht aus externen Medien- oder Analyseaufgaben.",
+    },
+    {
+      title: "Cursor plus verstreute Provider-Tabs",
+      label: "Funktioniert, doch der Workflow verlässt den Editor",
+      body:
+        "Sie können Bild-, Video- und Analyse-Provider separat anbinden, doch jede zusätzliche Aufgabe erhöht Credential-Wildwuchs, Prompt-Drift und Wartung rund um den Editor-Workflow.",
+    },
+    {
+      title: "Cursor plus eine Capability Runtime",
+      label: "Beste Wahl, wenn der Workflow visuell oder multimedial wird",
+      body:
+        "Hier passt AnyCap. Sie behalten Cursor für Code, Editing und Workflows mit integriertem Terminal und ergänzen Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine einzige Runtime.",
+    },
+  ],
+  capabilityLabel: "Erste Workflows, die ergänzt werden",
+  capabilityTitle: "Das sind meist die ersten visuellen Workflows, die rund um Cursor auftauchen",
+  capabilityCards: [
+    {
+      title: "Launch-Visuals und Mockups",
+      href: "/capabilities/image-generation",
+      body:
+        "Geeignet, wenn Cursor polierte Produkt-Visuals, Landingpage-Konzepte oder Mockups braucht, statt nur zu beschreiben, was ein Designer erstellen soll.",
+    },
+    {
+      title: "Demo-Clips und Walkthroughs",
+      href: "/capabilities/video-generation",
+      body:
+        "Geeignet, wenn der Workflow Demos, Walkthroughs oder kurze Motion-Assets aus demselben editor-zentrierten Prozess benötigt.",
+    },
+    {
+      title: "Screenshot-Debugging und visuelle QA",
+      href: "/capabilities/image-understanding",
+      body:
+        "Geeignet, wenn Cursor Screenshots, Diagramme, OCR-Inputs oder visuelle QA-Beweise im selben Debugging-Loop interpretieren muss.",
+    },
+    {
+      title: "Aufzeichnungsreview und Issue-Analyse",
+      href: "/capabilities/video-analysis",
+      body:
+        "Geeignet, wenn der Bug, das Usability-Problem oder der Workflow-Beweis in einer Aufzeichnung lebt statt in einem Text-Log.",
+    },
+  ],
+  modelLabel: "Modellauswahl",
+  modelTitle: "Wenn Sie Cursor behalten, ist die nächste Frage oft, welches Modell zum Workflow passt",
+  modelIntro:
+    "Cursor-Nutzer treffen nach dem Hinzufügen von Kapazitäten oft eine zweite Entscheidung: welches Bild- oder Video-Modell tatsächlich zur Arbeit passt. Das ist ein anderes Problem als die Wahl des Editors.",
+  modelCards: [
+    {
+      title: "Seedream 5",
+      href: "/models/seedream-5",
+      body: "Bestes Bildmodell für den ersten Pass, wenn Cursor polierte Mockups, Launch-Visuals oder klarere visuelle Konzepte benötigt.",
+    },
+    {
+      title: "Nano Banana 2",
+      href: "/models/nano-banana-2",
+      body: "Beste Wahl, wenn Cursor schnellere Iteration über viele visuelle Varianten und leichtere Kreativ-Loops braucht.",
+    },
+    {
+      title: "Veo 3.1",
+      href: "/models/veo-3-1",
+      body: "Bestes Premium-Videomodell für Cursor, wenn der Workflow polierte Demo-Clips oder cinematischen Motion-Output benötigt.",
+    },
+    {
+      title: "Kling 3.0",
+      href: "/models/kling-3-0",
+      body: "Beste Wahl, wenn die Bewegung stilisierter oder cinematischer wirken soll als ein Standard-Produkt-Walkthrough.",
+    },
+  ],
+  decisionLabel: "Wie Sie entscheiden",
+  decisionTitle: "Stellen Sie diese Fragen, bevor Sie einen Workflow neu bauen, den Cursor bereits gut handhabt",
+  decisionRows: [
+    {
+      question: "Wann reicht Cursor allein bereits aus?",
+      answer:
+        "Cursor reicht oft aus, wenn der Workflow auf Code, Terminal-Ausführung und lokales Repo-Reasoning zentriert bleibt. Dann liegt der Hauptwert im Editor- und Coding-Loop.",
+    },
+    {
+      question: "Wann sollte ich Kapazitäten hinzufügen, statt die Umgebung zu wechseln?",
+      answer:
+        "Ergänzen Sie Kapazitäten, wenn die Arbeit Bildoutput, Videooutput, Screenshot-Interpretation, visuelle QA oder Aufzeichnungsanalyse benötigt. Das sind Probleme der Capability-Schicht, kein Grund, den Editor-Loop ganz aufzugeben.",
+    },
+    {
+      question: "Wann zählt Modellauswahl innerhalb der Capability-Schicht?",
+      answer:
+        "Modellauswahl zählt, sobald der Workflow visuell wird. Dann möchten Sie eventuell ein Bildmodell für polierte Mockups, ein anderes für schnelle Iteration und ein separates Videomodell für Demos oder Walkthroughs.",
+    },
+    {
+      question: "Soll ich Cursor ersetzen, um diese Lücke zu schließen?",
+      answer:
+        "Meist nicht. Für viele Teams ist es besser, Cursor zu behalten und die fehlenden Kapazitäten zu ergänzen, statt eine neue Agent-Oberfläche einzuführen und den Workflow neu zu lernen.",
+    },
+  ],
+  nextMoveLabel: "Beste nächste Schritte",
+  nextMoveTitle: "Wechseln Sie von diesem Käufer-Leitfaden zur relevantesten Cursor-Workflow- oder Modellseite",
+  nextMoveCards: [
+    {
+      title: "Den Cursor-Hub ansehen",
+      href: "/for/cursor",
+      body: "Hierhin, wenn Sie die zentrale Cursor-Landingpage wollen statt eines Evaluations-Leitfadens im Lernen-Stil.",
+    },
+    {
+      title: "Mit Screenshot-Verständnis starten",
+      href: "/capabilities/image-understanding",
+      body: "Bester nächster Schritt, wenn der erste gebrochene Workflow Screenshot-Debugging, visuelle QA oder Design-Feedback ist.",
+    },
+    {
+      title: "Bildmodelle vergleichen",
+      href: "/models/seedream-5",
+      body: "Bester nächster Schritt, wenn die echte Frage lautet, welches Bildmodell zu Cursor-Mockups und Launch-Visuals passt.",
+    },
+    {
+      title: "Videomodelle vergleichen",
+      href: "/models/veo-3-1",
+      body: "Bester nächster Schritt, wenn die echte Frage lautet, welches Videomodell zu Demos, Walkthroughs oder cinematischer Produktbewegung passt.",
+    },
+    {
+      title: "Was ist die fortschrittlichste KI?",
+      href: "/learn/what-is-the-most-advanced-ai",
+      body: "Hierhin, wenn die Frage die Frontier insgesamt betrifft, nicht nur Cursor.",
+    },
+    {
+      title: "Die Runtime installieren",
+      href: "/guides/install-anycap",
+      body: "Nutzen Sie den Installationsleitfaden, wenn Sie von der Evaluation zu echten Setup-Schritten übergehen wollen.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Fragen hinter dem Keyword",
+  faqItems: [
+    {
+      question: "Was ist aktuell die beste KI für Cursor?",
+      answer:
+        "Wenn Sie die Kern-Coding-Arbeit meinen, ist Cursor möglicherweise bereits die richtige Grundlage für Ihr Team. Wenn Sie den gesamten Workflow rund ums Coding meinen, ist das beste Setup oft Cursor plus die Kapazitäten und Modelloptionen, die ihm noch fehlen.",
+    },
+    {
+      question: "Ist die beste KI für Cursor immer ein anderes Modell?",
+      answer:
+        "Nicht immer. Manchmal kommt der größere Gewinn daher, Medien- und Vision-Kapazitäten rund um Cursor zu ergänzen, statt die Kern-Coding-Umgebung zu wechseln.",
+    },
+    {
+      question: "Was bricht rund um Cursor meist zuerst?",
+      answer:
+        "Der erste Bruchpunkt ist meist visuelle Produktarbeit: Mockups, Launch-Visuals, Screenshot-Debugging, Demos oder Aufzeichnungsanalyse. Diese Aufgaben ziehen den Workflow über das hinaus, was Cursor allein bietet.",
+    },
+    {
+      question: "Welches Modell sollte ich für Cursor zuerst hinzufügen?",
+      answer:
+        "Wenn die Arbeit mit polierten Visuals beginnt, starten Sie mit Seedream 5. Wenn Sie schnellere visuelle Iteration brauchen, starten Sie mit Nano Banana 2. Wenn die Arbeit mit Produktdemos oder Motion beginnt, sehen Sie sich zuerst Veo 3.1 oder Kling 3.0 an.",
+    },
+    {
+      question: "Ersetzt AnyCap Cursor?",
+      answer:
+        "Nein. AnyCap erweitert Cursor. Seine Rolle ist es, Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse rund um die Coding-Umgebung zu ergänzen, die Sie bereits nutzen.",
+    },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, BestAIForCursorPageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getBestAICursorMetadata(locale: SiteLocale): Metadata {

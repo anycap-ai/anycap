@@ -458,10 +458,140 @@ const idContent: ImageUnderstandingPageContent = {
   ],
 };
 
+const deContent: ImageUnderstandingPageContent = {
+  metadata: {
+    title: "Bildverständnis-API für KI-Agenten – Vision, OCR und Bildanalyse",
+    description:
+      "Geben Sie KI-Agenten Bildverständnis über AnyCap. Analysieren Sie Screenshots, Diagramme, Fotos, Charts und textlastige Visuals über einen CLI-Befehl, ohne einen separaten Vision- oder Bildanalyse-Stack zu verdrahten.",
+    openGraphTitle: "Bildverständnis-API für KI-Agenten – Vision, OCR und Bildanalyse",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Bildverständnis, OCR und Bildanalyse über eine CLI und eine Capability-Runtime aus.",
+    articleHeadline: "Bildverständnis-API für KI-Agenten – Vision, OCR und Bildanalyse",
+    articleDescription:
+      "Capability-Leitfaden zum Hinzufügen von Bildverständnis zu KI-Agenten über AnyCap, einschließlich Screenshots, Diagrammen, OCR und Chart-Analyse.",
+    articleAbout: ["Bildverständnis", "Vision für KI-Agenten", "OCR", "AnyCap"],
+    articleKeywords: [
+      "bildverständnis für ki-agenten",
+      "vision api für agenten",
+      "image analysis api",
+      "image recognition api",
+      "ocr api",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Capabilities", href: "/capabilities" },
+    { name: "Bildverständnis", href: IMAGE_UNDERSTANDING_PATH },
+  ],
+  eyebrow: "Capabilities",
+  lastUpdatedLabel: "Zuletzt aktualisiert am 11. April 2026",
+  hero: {
+    title: "Bildverständnis",
+    intro:
+      "AnyCap gibt Agenten eine konsistente Bildverständnis-Schicht für Screenshots, Diagramme, Charts und visuelle Referenzen. Statt für jeden Workflow eine andere Vision-API oder Bildanalyse-API zu verdrahten, erhält der Agent eine einzige Befehlsoberfläche für visuelle Analyse, OCR und Kontextextraktion über Claude Code, Cursor, Codex und den Rest Ihres Stacks hinweg.",
+    summaryLabel: "Kurz vorab",
+    summaryText:
+      "Setzen Sie auf Bildverständnis, wenn der Agent ein Bild beschreiben, klassifizieren oder darüber argumentieren muss, bevor er handelt. Derselbe Flow funktioniert für Screenshots, Designreferenzen, Charts und textlastige Visuals.",
+  },
+  namingNote: {
+    label: "Hinweis zur Benennung",
+    text:
+      "Die Seite verwendet Marktsprache, die zur Suchintention passt. Der CLI-Befehl bleibt `anycap actions image-read`.",
+  },
+  usageTitle: "CLI-Nutzung",
+  usageExamples: [
+    {
+      title: "Einen Remote-Screenshot analysieren",
+      code: "anycap actions image-read --url https://example.com/screenshot.png",
+    },
+    {
+      title: "Ein lokales Diagramm prüfen",
+      code: "anycap actions image-read --file ./architecture-diagram.png",
+    },
+    {
+      title: "Eine fokussierte Frage stellen",
+      code:
+        'anycap actions image-read --url https://example.com/chart.png --instruction "Welche Trendänderungen gibt es nach Q2?"',
+    },
+  ],
+  useCasesTitle: "Wann Agenten Bildverständnis brauchen",
+  useCases: [
+    "UI-Zustände und Bug-Screenshots verstehen, ohne den Agenten-Workflow zu verlassen.",
+    "Architektur-Diagramme und Flowcharts lesen, bevor Code oder Docs generiert werden.",
+    "Strukturierte Details aus Charts, Tabellen oder Screenshots mit eingebettetem Text extrahieren.",
+    "Visuelle Assets, Produktbilder und Designreferenzen über eine einzige Runtime prüfen.",
+  ],
+  relatedTitle: "Verwandte Seiten",
+  relatedCards: [
+    {
+      eyebrow: "Capability",
+      title: "Bildgenerierung",
+      href: "/capabilities/image-generation",
+      description:
+        "Kombinieren Sie Bildverständnis mit Bildgenerierung, wenn der Workflow sowohl Analyse als auch Output-Erstellung benötigt.",
+    },
+    {
+      eyebrow: "Capability",
+      title: "Videoanalyse",
+      href: "/capabilities/video-analysis",
+      description:
+        "Verwenden Sie das, wenn der Workflow Screenshots und Aufnahmen umfasst und der Agent beide visuellen Modi braucht.",
+    },
+    {
+      eyebrow: "Agenten-Seite",
+      title: "Für Claude Code",
+      href: "/for/claude-code",
+      description:
+        "So fügt sich Bildverständnis in die umfassende Capability-Story von Claude Code ein.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Was können Agenten mit dem Bildverständnis von AnyCap tun?",
+      answer:
+        "Es gibt Agenten eine einzige Schnittstelle für visuelle Analyse über Screenshots, Diagramme, Produktbilder, Charts und gescannten Text. In der Praxis bedeutet das eine einzige Vision-API-Oberfläche für Beschreibung, OCR, Vergleich und fokussierte Beantwortung von Fragen.",
+    },
+    {
+      question: "Kann das wie eine Bildbeschreibungs-KI funktionieren?",
+      answer:
+        "Ja. Dieselbe Runtime kann Screenshots, Diagramme, Produktfotos, Charts und andere visuelle Referenzen in einfacher Sprache beschreiben, bevor der Agent entscheidet, was als Nächstes zu tun ist.",
+    },
+    {
+      question: "Warum heißt die Seite Bildverständnis, wenn der CLI-Befehl image-read ist?",
+      answer:
+        "Die Seite verwendet suchfreundliche Sprache, die zur Beschreibung des Problems durch Teams passt, während die CLI den kompakteren Befehlsnamen `anycap actions image-read` behält.",
+    },
+    {
+      question: "Wann sollten Teams das als Vision-API oder Bildanalyse-API verstehen?",
+      answer:
+        "Beide Begriffe sind gültig. Bildverständnis ist der Capability-Name, während Vision-API und Bildanalyse-API die Marktbegriffe sind, die Menschen oft verwenden, wenn sie OCR, Screenshot-Interpretation, Chart-Lesen oder visuelle Argumentation in Agenten-Workflows wollen.",
+    },
+    {
+      question: "Funktioniert das auch als OCR-API für Agenten-Workflows?",
+      answer:
+        "Ja. OCR ist eine der praktischen Aufgaben innerhalb der Bildverständnis-Capability, besonders für Screenshots, gescannten Text, Diagramme, Dashboards und Charts, die Agenten vor dem Handeln lesen müssen.",
+    },
+  ],
+  nextStepsTitle: "Nächste Schritte",
+  nextActions: [
+    {
+      label: "Auf GitHub ansehen",
+      href: "https://github.com/anycap-ai/anycap",
+      external: true,
+      primary: true,
+    },
+    { label: "Capabilities erkunden", href: "/capabilities" },
+    { label: "CLI erkunden", href: "/cli" },
+    { label: "Was Agenten nicht können", href: "/learn/what-agents-cant-do" },
+  ],
+};
+
 const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
+  de: deContent,
 } satisfies Record<SiteLocale, ImageUnderstandingPageContent>;
 
 function getContent(locale: SiteLocale): ImageUnderstandingPageContent {

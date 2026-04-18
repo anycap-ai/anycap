@@ -442,6 +442,143 @@ const contentByLocale = {
       { label: "Nano Banana Pro", href: "/models/nano-banana-pro" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Nano Banana 2 für KI-Agenten – Schnelle Bildgenerierung über AnyCap",
+      description:
+        "Nutzen Sie Nano Banana 2 über AnyCap, wenn KI-Agenten schnelle Text-zu-Bild-Generierung, skalierbare Bildbearbeitung und visuelle Iteration in hohem Volumen über eine einzige CLI brauchen.",
+      openGraphTitle: "Nano Banana 2 für KI-Agenten – Schnelle Bildgenerierung über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Nano Banana 2 über AnyCap für schnelle Text-zu-Bild- und Bild-zu-Bild-Workflows in Agenten-Runtimes.",
+      articleHeadline: "Nano Banana 2 für KI-Agenten – Schnelle Bildgenerierung über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Nano Banana 2 über AnyCap für schnelle Text-zu-Bild- und Bild-zu-Bild-Workflows in KI-Agenten-Runtimes.",
+      articleAbout: ["Nano Banana 2", "Bildgenerierung", "AnyCap", "KI-Agenten"],
+      articleKeywords: [
+        "nano banana 2",
+        "nano banana 2 api",
+        "seedream 5 vs nano banana 2",
+        "bildgenerierungs-api",
+        "anycap",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Nano Banana 2", href: NANO_BANANA_2_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "Nano Banana 2",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Nano Banana 2 ist das schnellere, besser skalierbare Bildmodell im aktuellen AnyCap-Bildstack. Es passt gut, wenn ein Agent viele visuelle Entwürfe schnell erzeugen oder überarbeiten muss, statt auf einen einzelnen polierten Erstdurchlauf zu optimieren. Über AnyCap bleibt es in derselben CLI und Runtime wie Seedream 5, Nano Banana Pro, Videogenerierung und nachgelagerte Analyseschritte.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Nano Banana 2",
+      href: NANO_BANANA_2_PATH,
+      sectionTitle: "Generiertes Beispiel für Iteration in hohem Volumen",
+      intro:
+        "Das Beispiel unten unterstreicht die Geschwindigkeitsstärke von Nano Banana 2. Statt eines einzelnen Hero-Shots zeigt es ein Variantenboard – näher daran, wie Teams schnelle Stapel von Marketing-Konzepten durchgehen.",
+      promptLabel: "Mit AnyCap verwendeter Prompt",
+      prompt:
+        "Triptychon desselben Produkt-Hero-Bilds eines matten Graphit-Laptops in drei visuellen Richtungen, cremeweißer Studiohintergrund, drei Panels nebeneinander, deutliche Variation bei Akzentlicht und Kartenstil, sauberes Review-Board-Layout, keine Labels, keine Klebezettel, kein Text, keine Typografie, kein Wasserzeichen",
+      caption:
+        "Dieses Drei-Varianten-Review-Board wurde mit Nano Banana 2 über AnyCap generiert, um zu zeigen, wie das Modell zu schnellen Variations- und Review-Loops passt.",
+      signals: [
+        "Macht Durchsatz und Ideen-Geschwindigkeit auf einen Blick deutlich – nicht nur im Text.",
+        "Spiegelt die Rolle des Modells in echten Workflows wider, in denen mehrere brauchbare Entwürfe wichtiger sind als ein einzelnes perfektes Frame.",
+        "Bringt ein markanteres Multimedia-Asset ein als eine generische Stock-Illustration.",
+      ],
+      images: [
+        {
+          src: SHOWCASE_IMAGE_SRC,
+          alt: "Sauberes Drei-Panel-Review-Board mit einem matten Graphit-Laptop in drei visuellen Richtungen vor einem cremeweißen Studiohintergrund.",
+          width: 1376,
+          height: 768,
+          label: "Nano Banana 2-Output",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Nano Banana 2 wählen sollten",
+    useCases: [
+      "Schnelle Text-zu-Bild-Generierung für visuelle Workflows in hohem Volumen",
+      "Bild-zu-Bild-Iterationsschleifen, in denen Latenz genauso wichtig ist wie Qualität",
+      "Marketing-Assets, Produkt-Mockups, Storyboards und wiederholbare Content-Generierung",
+      "Teams, die Seedream 5 vs. Nano Banana 2 oder Nano Banana Pro vs. Nano Banana 2 in Sachen Durchsatz vergleichen",
+    ],
+    callSectionTitle: "Nano Banana 2 über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Schnell einen Bildentwurf generieren",
+        code:
+          'anycap image generate --model nano-banana-2 --prompt "clean product hero illustration on an off-white background" -o draft.png',
+      },
+      {
+        label: "Aus einem Referenzbild iterieren",
+        code:
+          'anycap image generate --model nano-banana-2 --mode image-to-image --prompt "turn this into a cleaner launch visual with softer shadows" --param reference_image_urls=\'["./input.png"]\' -o variant.png',
+      },
+      {
+        label: "Modell-Schema einsehen",
+        code: "anycap image models nano-banana-2 schema --operation generate --mode text-to-image",
+      },
+    ],
+    comparisonTitle: "Nano Banana 2 vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Nano Banana 2",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary: "Schnelle, skalierbare Bildgenerierung und iterative Bearbeitung über größere Prompt-Mengen",
+        alternative:
+          "Setzen Sie auf Seedream 5 für einen polierten Erstdurchlauf oder auf Nano Banana Pro für anspruchsvollere Überarbeitungsschleifen",
+      },
+      {
+        dimension: "Rolle im Workflow",
+        primary: "Hocheffizienter Standard für wiederkehrende Generierungs- und Bearbeitungsaufgaben",
+        alternative:
+          "Greifen Sie zu einem Schwestermodell, wenn der Workflow eher qualitäts- als geschwindigkeitsorientiert ist",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary: "Einen Prompt schnell in ein brauchbares Asset verwandeln und anschließend iterieren oder Varianten in Stapeln erzeugen",
+        alternative:
+          "Wechseln Sie zu Nano Banana Pro oder Seedream 5, wenn der Entwurf einen polierteren Feinschliff braucht",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Nano Banana 2 am besten?",
+        answer:
+          "Nano Banana 2 eignet sich am besten für schnelle, skalierbare Bildgenerierung und Bild-zu-Bild-Iteration, wenn Agenten mehr Geschwindigkeit und Durchsatz für viele visuelle Aufgaben brauchen.",
+      },
+      {
+        question: "Wie rufen Agenten Nano Banana 2 über AnyCap auf?",
+        answer:
+          "Agenten rufen es mit der AnyCap-CLI über anycap image generate --model nano-banana-2 mit einem Text-Prompt oder im Bild-zu-Bild-Modus auf.",
+      },
+      {
+        question: "Soll ich Seedream 5 oder Nano Banana 2 verwenden?",
+        answer:
+          "Setzen Sie auf Seedream 5, wenn ein polierter Erstdurchlauf das Hauptziel ist. Setzen Sie auf Nano Banana 2, wenn der Workflow schnellere Iteration, mehr Varianten oder Bildgenerierung mit niedrigerer Latenz im großen Maßstab erfordert.",
+      },
+    ],
+    nextActions: [
+      { label: "Bildgenerierung", href: "/capabilities/image-generation", primary: true },
+      { label: "Seedream 5", href: "/models/seedream-5" },
+      { label: "Nano Banana Pro", href: "/models/nano-banana-pro" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, LocaleContent>;
 
 export function getNanoBanana2Metadata(locale: SiteLocale): Metadata {

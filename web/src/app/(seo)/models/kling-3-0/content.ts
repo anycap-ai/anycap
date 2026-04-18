@@ -506,6 +506,145 @@ const contentByLocale = {
       { label: "Seedance 1.5 Pro", href: "/models/seedance-1-5-pro" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Kling 3.0 für KI-Agenten – Videogenerierung über AnyCap",
+      description:
+        "Nutzen Sie Kling 3.0 über AnyCap, wenn KI-Agenten realistische Bewegung, cineastische Szenengenerierung und Bild-zu-Video-Workflows über eine einzige CLI brauchen.",
+      openGraphTitle: "Kling 3.0 für KI-Agenten – Videogenerierung über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Kling 3.0 über AnyCap für Text-zu-Video- und Bild-zu-Video-Workflows in einer einzigen Agenten-Runtime.",
+      articleHeadline: "Kling 3.0 für KI-Agenten – Videogenerierung über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Kling 3.0 über AnyCap für realistische Text-zu-Video- und Bild-zu-Video-Workflows in KI-Agenten-Runtimes.",
+      articleAbout: ["Kling 3.0", "Videogenerierung", "AnyCap", "KI-Agenten"],
+      articleKeywords: ["kling 3.0", "kling 3.0 api", "bild zu video", "videogenerierung", "anycap"],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Kling 3.0", href: KLING_30_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "Kling 3.0",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Kling 3.0 passt gut, wenn ein Agent realistische Bewegung und cineastische Szenengenerierung über eine einzige Video-Runtime braucht. Über AnyCap können Teams Kling 3.0 in derselben CLI und im selben Auth-Flow verwenden, den sie bereits für Veo 3.1, Seedance 1.5 Pro, Bildgenerierung und nachgelagerte Analyseaufgaben einsetzen.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Kling 3.0",
+      href: KLING_30_PATH,
+      sectionTitle: "Illustratives Keyframe für realistische Bewegung und Szenenkontinuität",
+      intro:
+        "Kling 3.0 wird oft für realistische Bewegung und cineastische Bild-zu-Video-Arbeit gewählt. Dieses Standbild zeigt, wie ein stimmungsvolles, bewegungsfähiges Szenen-Briefing für genau diese Aufgabe aussieht.",
+      promptLabel: "Illustrativer Standbild-Prompt",
+      prompt:
+        "Cineastische, regennasse Straßenszene bei Nacht, einzelne Person unter einem transparenten Regenschirm, spiegelndes Pflaster, abstrakte Lichtspuren, realistisches, stimmungsvolles Standbild mit deutlicher Bewegungsandeutung, keine Ladenschilder, keine Plakatwände, kein Text, kein Wasserzeichen",
+      caption:
+        "Dieses begleitende Standbild wurde über AnyCap generiert, damit sich die Kling-3.0-Seite stärker an einem realen Szenen-Briefing orientiert, statt nur Funktionen aufzuzählen.",
+      note:
+        "Kling 3.0 erzeugt Video, nicht ein einzelnes Frame. Das Bild unten dient als visueller Stellvertreter für die Art cineastischer Quellszenen, die Teams animieren können.",
+      signals: [
+        "Macht die Positionierung als Modell für realistische Bewegung greifbarer als reiner Text.",
+        "Stützt die Erklärung von Bild-zu-Video, indem sie von einer Szene ausgeht, die bereits Bewegung andeutet.",
+        "Bringt eigene Multimedia-Inhalte ein, die diese Seite von dünneren Modell-Übersichten abheben.",
+      ],
+      images: [
+        {
+          src: KLING_SHOWCASE_IMAGE_SRC,
+          alt: "Regnerische Neon-Straßenszene bei Nacht mit einer einzelnen Person unter einem transparenten Regenschirm und Spiegelungen auf nassem Pflaster.",
+          width: 1376,
+          height: 768,
+          label: "Begleitendes Keyframe",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Kling 3.0 wählen sollten",
+    useCases: [
+      "Realistische Bewegung und cineastische Szenengenerierung",
+      "Bild-zu-Video-Workflows, die stärkere visuelle Kontinuität brauchen",
+      "Agenten-gesteuerte Video-Entwürfe für Demos, Anzeigen und kurze Produkt-Clips",
+      "Teams, die Kling 3.0 in derselben Runtime wie Veo 3.1 und Seedance 1.5 Pro nutzen wollen",
+    ],
+    callSectionTitle: "Kling 3.0 über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Einen neuen Clip generieren",
+        code:
+          'anycap video generate --model kling-3.0 --prompt "a cinematic street scene in the rain with neon reflections" -o kling-scene.mp4',
+      },
+      {
+        label: "Ein Referenzbild animieren",
+        code:
+          'anycap video generate --model kling-3.0 --mode image-to-video --prompt "slow push-in with subtle environmental motion" --param images=\'["./frame.jpg"]\' -o kling-animated.mp4',
+      },
+    ],
+    workflowTitle: "Position im Workflow",
+    workflowParagraph:
+      "In einem Agenten-Workflow dient Kling 3.0 oft als Generierungsschritt, der einen Prompt oder ein Referenz-Frame in einen bewegungsreichen Entwurf verwandelt. Das Ergebnis kann anschließend in Review, Packaging oder Folgeanalyse fließen, ohne die AnyCap-Runtime zu verlassen.",
+    workflowCards: [
+      {
+        eyebrow: "Vorgelagert",
+        body: "Kontextgestaltung, Prompt-Aufbau, Auswahl von Referenz-Frames und Szenenplanung.",
+      },
+      {
+        eyebrow: "Nachgelagert",
+        body: "Review, Clip-Packaging, Videoanalyse und Distribution im restlichen Agenten-Stack.",
+      },
+    ],
+    comparisonTitle: "Kling 3.0 vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Kling 3.0",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary: "Realistische Bewegung, cineastische Szenen und flexibler Bild-zu-Video-Output",
+        alternative: "Wählen Sie Veo 3.1 für Premium-Cineastik oder Seedance 1.5 Pro für stabilere Produktions-Workflows",
+      },
+      {
+        dimension: "Rolle im Workflow",
+        primary: "Kreatives Generierungsmodell für neue Clips und animierte Standbilder",
+        alternative: "Greifen Sie zu einem Schwestermodell, wenn der Workflow auf einen anderen Bewegungsstil oder ein anderes Kostenziel ausgerichtet ist",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary: "Einen Prompt oder ein Referenz-Frame in einen bewegten Szenen-Entwurf verwandeln",
+        alternative: "Den Output nach der Generierung in Videoanalyse, Review oder Packaging weiterleiten",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Kling 3.0 am besten?",
+        answer:
+          "Kling 3.0 ist eine starke Wahl für realistische Bewegung, cineastischen visuellen Stil und Bild-zu-Video-Workflows, in denen Agenten mehr als einen einfachen Clip-Entwurf brauchen.",
+      },
+      {
+        question: "Wie rufen Agenten Kling 3.0 über AnyCap auf?",
+        answer:
+          "Agenten rufen es mit der AnyCap-CLI über anycap video generate --model kling-3.0 mit einem Prompt oder im Bild-zu-Video-Modus auf.",
+      },
+      {
+        question: "Soll ich Kling 3.0 oder Veo 3.1 verwenden?",
+        answer:
+          "Setzen Sie auf Kling 3.0, wenn der Workflow auf realistische Bewegung und flexible Bild-zu-Video-Iteration zielt. Setzen Sie auf Veo 3.1, wenn ein cineastischer Premium-Erstdurchlauf Priorität hat.",
+      },
+    ],
+    nextActions: [
+      { label: "Videogenerierung", href: "/capabilities/video-generation", primary: true },
+      { label: "Veo 3.1", href: "/models/veo-3-1" },
+      { label: "Seedance 1.5 Pro", href: "/models/seedance-1-5-pro" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, Kling30PageContent>;
 
 export function getKling30Metadata(locale: SiteLocale): Metadata {

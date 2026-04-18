@@ -33,6 +33,13 @@ const contentByLocale: Record<SiteLocale, GuidesPageData> = {
       { name: "Guides", href: GUIDES_PATH },
     ],
   },
+  de: {
+    ...getHubPageDefinition("de", "guides"),
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Leitfäden", href: GUIDES_PATH },
+    ],
+  },
 };
 
 export function getGuidesMetadata(locale: SiteLocale): Metadata {

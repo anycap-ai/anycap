@@ -360,6 +360,121 @@ const contentByLocale: Record<SiteLocale, LocaleContent> = {
       { label: "CLI AnyCap", href: "/cli" },
     ],
   },
+  de: {
+    metadata: {
+      title: "ElevenLabs Music für KI-Agenten – Text-zu-Musik über AnyCap",
+      description:
+        "Nutzen Sie ElevenLabs Music über AnyCap, wenn KI-Agenten prompt-basierte Soundtrack-Generierung in derselben CLI und Capability-Runtime wie Bild- und Video-Workflows brauchen.",
+      openGraphTitle: "ElevenLabs Music für KI-Agenten – Text-zu-Musik über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie ElevenLabs Music über AnyCap für prompt-basierte Musikgenerierung in Agenten-Workflows.",
+      articleHeadline: "ElevenLabs Music für KI-Agenten – Text-zu-Musik über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von ElevenLabs Music über AnyCap für prompt-basierte Soundtrack-Generierung in KI-Agenten-Workflows.",
+      articleAbout: ["ElevenLabs Music", "Musikgenerierung", "AnyCap", "KI-Agenten"],
+      articleKeywords: [
+        "elevenlabs music",
+        "elevenlabs music api",
+        "text to music api",
+        "musikgenerierung",
+        "anycap",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "ElevenLabs Music", href: ELEVENLABS_MUSIC_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "ElevenLabs Music",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "ElevenLabs Music ist eine praktische Wahl, wenn ein Agent einen Prompt in einen brauchbaren Soundtrack-Entwurf verwandeln soll, ohne den restlichen AnyCap-Workflow zu verlassen. Die Text-zu-Musik-Generierung läuft in derselben Runtime wie Bildgenerierung, Videogenerierung und nachgelagerte Medien-Review-Aufgaben.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum dies dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "ElevenLabs Music",
+      href: ELEVENLABS_MUSIC_PATH,
+      sectionTitle: "Illustratives Cover-Artwork für einen soundtrack-zentrierten Workflow",
+      intro:
+        "Seiten zur Musikgenerierung können besonders dünn wirken, weil das Ergebnis Audio ist – also nichts, was ein Crawler sehen kann. Dieses begleitende Cover-Visual gibt der Seite einen stärkeren Stimmungsanker rund um das Soundtrack-Briefing.",
+      promptLabel: "Illustrativer Cover-Prompt",
+      prompt:
+        "Cover-Artwork für einen Ambient-Electronic-Soundtrack: leuchtendes Wellenform-Band über warmem Papierkorn mit sanftem grün-blauem Dunst, elegante abstrakte Bewegung, hochwertige Album-Art-Komposition, kein lesbarer Text, kein Wasserzeichen",
+      caption:
+        "Dieses abstrakte Cover-Visual wurde über AnyCap generiert, um der ElevenLabs-Music-Seite ein eigenes Multimedia-Asset an die Seite zu stellen, das mit dem Soundtrack-Prompt verknüpft ist.",
+      note:
+        "Das Bild ist ein begleitendes Stimmungsvisual für den Audio-Workflow. Es wird nicht als Musik-Output präsentiert, hilft aber dabei, Tonalität und Anwendungsfall der Seite schneller zu vermitteln.",
+      signals: [
+        "Verleiht einer ansonsten textlastigen Audio-Seite einen eigenständigen visuellen Anker.",
+        "Passt besser zur Soundtrack-Entwurfs-Positionierung als ein generisches Stock-Musik-Icon.",
+        "Verbessert die Scanbarkeit und KI-Zitierbarkeit, indem der Prompt mit einem konkreten Artefakt verknüpft wird.",
+      ],
+      images: [
+        {
+          src: SHOWCASE_IMAGE_SRC,
+          alt: "Abstraktes Ambient-Musik-Cover mit leuchtendem Wellenform-Band über warmem Papierkorn und sanftem grün-blauem Dunst.",
+          width: 2560,
+          height: 1440,
+          label: "Begleitendes Cover-Visual",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten ElevenLabs Music wählen sollten",
+    useCases: [
+      "Hintergrund-Tracks für Demo-Videos, Launch-Clips und Changelog-Inhalte",
+      "Prompt-basierte Soundtrack-Generierung in derselben Runtime wie Bild- und Video-Aufgaben",
+      "Schnelle erste Musik-Entwürfe vor einer aufwendigeren Produktionsübergabe",
+      "Teams, die Musikgenerierung über anycap music models entdecken wollen statt über eine separate Integration",
+    ],
+    callSectionTitle: "ElevenLabs Music über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Den passenden Modelleintrag finden",
+        code: "anycap music models",
+      },
+      {
+        label: "Einen Soundtrack-Entwurf generieren",
+        code:
+          'anycap music generate --model elevanlabs-music --prompt "uplifting ambient soundtrack with soft synths and a steady pulse" -o soundtrack.mp3',
+      },
+    ],
+    workflowTitle: "Katalog-Hinweis",
+    workflowCards: [
+      {
+        eyebrow: "Aktuelle Modell-ID in AnyCap",
+        body: "Diese Seite verwendet den marktüblichen Namen ElevenLabs Music, weil Teams genau danach suchen. Im aktuellen AnyCap-Katalog lautet die Modell-ID elevanlabs-music.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich ElevenLabs Music am besten?",
+        answer:
+          "ElevenLabs Music ist eine starke Wahl für prompt-basierte Soundtrack-Generierung, wenn ein Agent schnell einen Originaltrack im selben Workflow wie die visuelle Asset-Generierung braucht.",
+      },
+      {
+        question: "Wie finden Agenten das ElevenLabs-Music-Modell in AnyCap?",
+        answer:
+          "Starten Sie mit anycap music models. Im aktuellen Katalog lautet das öffentliche Label ElevenLabs Music, die Modell-ID erscheint als elevanlabs-music.",
+      },
+      {
+        question: "Warum wird die Modell-ID separat vom Seitentitel genannt?",
+        answer:
+          "Der Seitentitel verwendet den marktüblichen Modellnamen, nach dem Menschen suchen, während das CLI-Beispiel die aktuelle Katalog-ID hervorhebt, damit der Befehl in AnyCap reproduzierbar bleibt.",
+      },
+    ],
+    nextActions: [
+      { label: "Musikgenerierung", href: "/capabilities/music-generation", primary: true },
+      { label: "Preise", href: "/pricing" },
+      { label: "AnyCap CLI", href: "/cli" },
+    ],
+  },
 };
 
 export function getElevenLabsMusicMetadata(locale: SiteLocale): Metadata {

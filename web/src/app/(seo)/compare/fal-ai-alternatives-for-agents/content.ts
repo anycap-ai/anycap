@@ -563,10 +563,185 @@ const id: FalAiAlternativesPageData = {
   ],
 };
 
+const de: FalAiAlternativesPageData = {
+  metadata: {
+    title: "Top fal.ai-Alternativen für KI-Agenten (2026) — Bild, Video und Bildverständnis",
+    description:
+      "Vergleichen Sie die besten fal.ai-Alternativen für KI-Agent-Workflows. Sehen Sie, wie AnyCap, Replicate, Hugging Face und andere Bildgenerierung, Videogenerierung und Bildverständnis für Claude Code, Cursor und Codex handhaben.",
+    openGraphTitle: "Top fal.ai-Alternativen für KI-Agenten (2026)",
+    openGraphDescription:
+      "Vergleichen Sie fal.ai-Alternativen für agent-native Bild-, Video- und Bildverständnis-Workflows. Bewerten Sie Installation, Auth-Modell und Agent-Kompatibilität.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Vergleich", href: "/compare", unlinkable: true },
+    { name: "fal.ai-Alternativen für Agents" },
+  ],
+  eyebrow: "Vergleich",
+  lastUpdatedLabel: "10. April 2026",
+  heroTitle: ["Top fal.ai-Alternativen", "für KI-Agent-Workflows"],
+  heroIntro:
+    "fal.ai ist eine schnelle Serverless-Inferenzplattform für generative Medienmodelle. Wenn Ihr Workflow jedoch in einem KI-Agenten wie Claude Code, Cursor oder Codex läuft, brauchen Sie möglicherweise ein anderes Tool — eines, das sich in den Agenten installiert, einmal authentifiziert und Capabilities über dieselbe Schnittstelle bereitstellt, die der Agent bereits nutzt.",
+  tableTitle: "fal.ai vs AnyCap auf einen Blick",
+  tableColumns: { dimension: "Dimension", falai: "fal.ai", anycap: "AnyCap" },
+  comparisonDimensions: [
+    {
+      dimension: "Agent-Kompatibilität",
+      falai: "Python-SDK und REST-API; erfordert eigene Integration pro Agent",
+      anycap: "Funktioniert in Claude Code, Cursor und Codex über Skill-Dateien und eine CLI",
+    },
+    {
+      dimension: "Installationserlebnis",
+      falai: "pip install fal-client + API-Key-Setup",
+      anycap: "Eine Skill-Datei + ein CLI-Binary + ein Login",
+    },
+    {
+      dimension: "Hauptstärke",
+      falai: "Sehr schnelle Cold Starts und serverless GPU-Inferenz",
+      anycap: "Agent-native Schnittstelle mit einer Auth über alle Capabilities",
+    },
+    {
+      dimension: "Capability-Umfang",
+      falai: "Bildgenerierung, Videogenerierung, Audio (modellabhängig)",
+      anycap: "Bild, Video, Musik, Bildverständnis, Suche, Crawl, Speicher, Page-Publishing",
+    },
+    {
+      dimension: "Preismodell",
+      falai: "GPU-Abrechnung pro Sekunde, variiert nach Modell und Hardware",
+      anycap: "Pay-as-you-go mit $5 kostenlosem Guthaben, keine monatliche Gebühr",
+    },
+  ],
+  alternativesTitle: "Verglichene Alternativen",
+  alternatives: [
+    {
+      name: "AnyCap",
+      category: "Agent-Capability-Runtime",
+      focus: "Gebaut für KI-Agenten. Eine CLI, eine Auth, jede Capability.",
+      strengths: [
+        "Einheitlicher Installationspfad für Bild, Video, Bildverständnis, Suche, Speicher und Publishing",
+        "Funktioniert in Claude Code, Cursor und Codex über Skill-Dateien",
+        "Ein Login deckt den gesamten Capability-Stack ab",
+        "CLI-first-Schnittstelle, entworfen für terminal-native Agent-Workflows",
+      ],
+      considerations: [
+        "Kuratierte Modellauswahl statt offener Modellbibliothek",
+        "Agent-natives Design — nicht für eigene Backend-Inferenz-Pipelines gebaut",
+      ],
+      bestFor: "Teams, die Coding-Agents nutzen und multimodale Capabilities ohne anbieterspezifische Integration benötigen",
+      href: "/start",
+      cta: "Mit AnyCap starten",
+    },
+    {
+      name: "Replicate",
+      category: "Modell-API- und Deployment-Plattform",
+      focus: "Community- und offizielle Modelle über Predictions und Webhooks ausführen.",
+      strengths: [
+        "Tausende Community- und offizielle Modelle",
+        "Dedizierte Deployments für Produktions-Workloads",
+        "Starke Modell-Discovery und Community-Ökosystem",
+      ],
+      considerations: [
+        "Jedes Modell hat eigene Versionierung und Input-Schema",
+        "Keine agent-native Schnittstelle oder Skill-basierte Installation",
+        "Cold Starts bei Community-Modellen können langsam sein",
+      ],
+      bestFor: "Entwickler, die eigene Backends bauen und Zugriff auf eine breite Modellbibliothek brauchen",
+      href: "/compare/anycap-vs-replicate",
+      cta: "AnyCap vs Replicate ansehen",
+    },
+    {
+      name: "Hugging Face Inference API",
+      category: "Modell-Hub + Inferenz-Endpoints",
+      focus: "Zugang zum größten Open-Model-Ökosystem mit verwalteter Inferenz.",
+      strengths: [
+        "Größte verfügbare Open-Model-Bibliothek",
+        "Free Tier für Experimente",
+        "Dedizierte Inferenz-Endpoints für Produktion",
+      ],
+      considerations: [
+        "Cold Starts im Free Tier können erheblich sein",
+        "Qualität variiert über Community-Modelle hinweg",
+        "Erfordert Integrationsarbeit pro Modell",
+      ],
+      bestFor: "Forschende und Teams, die die breitestmögliche Modellauswahl wollen",
+    },
+    {
+      name: "WaveSpeed AI",
+      category: "Schnelle Inferenz-API",
+      focus: "Optimierte Inferenzgeschwindigkeit mit exklusivem Modellzugang.",
+      strengths: [
+        "Beansprucht in bestimmten Benchmarks die schnellsten Inferenzzeiten",
+        "Exklusiver Zugang zu einigen optimierten Modellvarianten",
+        "Einfache REST-API",
+      ],
+      considerations: [
+        "Engere Modellauswahl als Replicate oder Hugging Face",
+        "Kein agent-nativer Integrationspfad",
+        "Neuere Plattform mit weniger Community-Validierung",
+      ],
+      bestFor: "Teams, die Inferenzgeschwindigkeit über alles andere stellen",
+    },
+    {
+      name: "Leonardo.Ai API",
+      category: "Visual-first Medien-API",
+      focus: "API für Bild- und Videogenerierung mit Fokus auf Kreativ-Tooling.",
+      strengths: [
+        "Starke kreativ- und designorientierte Modelle",
+        "Bild- und Videogenerierung über eine API",
+        "Gute Entwicklerdokumentation",
+      ],
+      considerations: [
+        "Fokus auf visuelle Medien — keine Bildverständnis-, Such- oder Speicher-Capabilities",
+        "Erfordert API-Key-Verwaltung und eigene Integration",
+        "Keine agent-native Schnittstelle",
+      ],
+      bestFor: "Kreativ-Teams und Produkte, die hochwertige visuelle Medien-APIs benötigen",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Ist AnyCap ein direkter Ersatz für fal.ai?",
+      answer:
+        "Sie bedienen unterschiedliche Anwendungsfälle. fal.ai ist eine Serverless-Inferenzplattform für Entwickler, die Modell-APIs aus eigenem Code aufrufen. AnyCap ist eine Capability-Runtime für KI-Agenten. Wenn Sie schnelle GPU-Inferenz für eigene Pipelines brauchen, ist fal.ai stark. Wenn Sie möchten, dass Agenten wie Claude Code oder Cursor Bilder und Videos über eine Schnittstelle erzeugen, passt AnyCap besser.",
+    },
+    {
+      question: "Was ist schneller bei der Bildgenerierung?",
+      answer:
+        "fal.ai ist gezielt auf Inferenzgeschwindigkeit optimiert und beansprucht sehr schnelle Cold-Start-Zeiten. AnyCap optimiert das Agent-Workflow-Erlebnis — einmal installieren, einmal authentifizieren, jede Capability nutzen. Für agent-native Workflows umfasst die Gesamtzeit von Null bis zum ersten Bild auch das Setup, nicht nur die Inferenz.",
+    },
+    {
+      question: "Kann ich von fal.ai zu AnyCap wechseln, ohne meinen Agenten zu ändern?",
+      answer:
+        "Ja. AnyCap installiert sich als Skill-Datei und CLI-Binary, die neben Ihrem bestehenden Agenten funktionieren. Sie müssen den Agenten selbst nicht ändern — installieren Sie einfach Skill und CLI, authentifizieren Sie sich, und der Agent kann Capabilities über die neue Schnittstelle aufrufen.",
+    },
+  ],
+  relatedTitle: "Verwandte Vergleiche",
+  relatedComparisons: [
+    {
+      href: "/compare/anycap-vs-replicate",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs Replicate",
+      body: "Tiefer 1:1-Vergleich von AnyCap und Replicate.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs fal.ai",
+      body: "Vergleichen Sie eine Agent-Capability-Runtime mit einer Serverless-Inferenzplattform.",
+    },
+  ],
+  cta: [
+    { href: "/start", label: "Loslegen" },
+    { href: "/capabilities", label: "Capabilities ansehen" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, FalAiAlternativesPageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getFalAiAlternativesMetadata(locale: SiteLocale): Metadata {

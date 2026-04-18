@@ -381,6 +381,114 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
       },
     ],
   },
+  de: {
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Lernen", href: LEARN_PATH },
+    ],
+    eyebrow: "Lernen",
+    metadata: {
+      title: "Lernen | Leitfäden, Workflows und Erklärungen rund um KI-Agenten",
+      description:
+        "Starten Sie mit Stack-Leitfäden für Coding-Agenten, KI-Produkterklärungen, Einführungen zu Kapazitätslücken und realen Workflows, die in AnyCap-Kapazitäten münden.",
+      openGraphTitle: "Lernen | Leitfäden, Workflows und Erklärungen rund um KI-Agenten",
+      openGraphDescription:
+        "Nutzen Sie den Lernbereich, wenn Sie einen Stack für Coding-Agenten auswählen, ein KI-Produkt erweitern, Kapazitätslücken kartieren oder ein reales Workflow-Beispiel suchen.",
+    },
+    hero: {
+      eyebrow: "Lernen",
+      titleLines: ["Beginnen Sie mit der Frage,", "die Sie tatsächlich stellen"],
+      intro:
+        "Nutzen Sie den Lernbereich, wenn Sie einen Stack für Coding-Agenten auswählen, ein KI-Produkt erweitern, Kapazitätslücken kartieren oder ein reales Workflow-Beispiel suchen. Jeder Pfad ist nach Intent gruppiert, damit Sie von der Erklärung in den nächsten Schritt wechseln, ohne vorher irrelevante Seitentypen aussortieren zu müssen.",
+      statsPrefix: "",
+      statsSuffix: "Öffnen Sie unten eine Kategorie und ignorieren Sie den Rest vorerst.",
+    },
+    orientation: {
+      eyebrow: "So nutzen Sie diese Seite",
+      title: "Wählen Sie einen Pfad, starten Sie mit der Hauptseite und gehen Sie nur bei Bedarf in die Tiefe",
+      description:
+        "Diese Seite ist darauf ausgelegt, Auswahlüberlastung zu reduzieren. Behandeln Sie jeden Abschnitt als kuratierte Route statt als Liste aller jemals veröffentlichten Inhalte.",
+      steps: [
+        {
+          step: "01",
+          title: "Frage zuordnen",
+          description: "Wählen Sie den Pfad, der zu der Entscheidung passt, die Sie gerade treffen, nicht zu jeder denkbaren späteren Frage.",
+        },
+        {
+          step: "02",
+          title: "Hauptseite öffnen",
+          description: "Starten Sie mit dem Haupt-Guide oder Workflow, bevor Sie in engere Seiten, Varianten oder agent-spezifische Folgeseiten verzweigen.",
+        },
+        {
+          step: "03",
+          title: "Seitentyp wechseln, wenn nötig",
+          description: "Gehen Sie zu Guides oder Capabilities, sobald die Frage operativ wird und Sie zur Implementierung bereit sind.",
+        },
+      ],
+    },
+    pathSectionIntro: {
+      eyebrow: "Nach Pfad durchsuchen",
+      title: "Starten Sie mit der Hauptseite und gehen Sie nur bei Bedarf in die Tiefe",
+      description:
+        "Die folgende Struktur wird aus derselben Information Architecture generiert, die auch die Breadcrumbs speist – neue Seiten landen so im richtigen Pfad, ohne dass der Hub zu einer manuellen Linksammlung wird.",
+    },
+    sectionLabels: {
+      startHere: "Hier starten",
+      shortcuts: "Shortcuts",
+      goDeeper: "Tiefer gehen",
+      alsoUseful: "Ebenfalls nützlich",
+      needDifferentType: "Brauchen Sie einen anderen Seitentyp?",
+      differentTypeTitle: "Wechseln Sie zu Setup, Vokabular, Kapazitäten oder Vergleich",
+      differentTypeBody:
+        "Wenn die Frage nicht mehr explorativ ist, wechseln Sie zum Seitentyp, der zum nächsten Schritt passt, statt weitere Lernartikel zu scannen.",
+      faqEyebrow: "FAQ",
+      faqTitle: "Häufige Fragen, bevor Sie einen Pfad wählen",
+    },
+    adjacentHubs: [
+      {
+        title: "Leitfäden",
+        href: "/guides",
+        description: "Nutzen Sie die Leitfäden, wenn Sie schon wissen, was Sie aufsetzen wollen, und eine schrittweise Implementierung brauchen.",
+      },
+      {
+        title: "Glossar",
+        href: "/glossary",
+        description: "Nutzen Sie das Glossar, wenn der Hauptblocker Vokabular ist und Sie eine gemeinsame Sprache für Harnesses, Kontext und Runtimes brauchen.",
+      },
+      {
+        title: "Kapazitäten",
+        href: "/capabilities",
+        description: "Nutzen Sie die Kapazitäten-Übersicht, wenn Sie über die Erklärphase hinaus sind und die genauen Produktoberflächen wollen, die AnyCap ergänzt.",
+      },
+      {
+        title: "Vergleich",
+        href: "/compare",
+        description: "Nutzen Sie den Vergleich, wenn die Frage von einem alternativen Anbieter, einem benachbarten Produkt oder einer Ablösungsentscheidung ausgeht.",
+      },
+    ],
+    faqItems: [
+      {
+        question: "Mit welcher Seite sollte ich starten, wenn ich ein Setup für einen Coding-Agenten auswähle?",
+        answer:
+          "Starten Sie mit „Beste KI für Coding-Agenten”, wenn Sie noch die Kategoriefrage einrahmen. Wechseln Sie dann zur Claude-Code- oder Cursor-spezifischen Seite, sobald Sie wissen, welcher Workflow zählt.",
+      },
+      {
+        question: "Was, wenn ich einen SaaS-Assistenten baue, statt einen Coding-Agenten zu nutzen?",
+        answer:
+          "Starten Sie mit „KI-Chatbot-SaaS vs. KI-Agent für SaaS”, wenn Sie entscheiden, welche Art System Sie brauchen. Wechseln Sie dann zu „Multimodale Kapazitäten in einen SaaS-Chatbot integrieren”, sobald die Frage zur Implementierung wird.",
+      },
+      {
+        question: "Warum sind manche Seiten unter einem Haupt-Workflow gruppiert statt flach gelistet?",
+        answer:
+          "Weil manche Seiten erst als engere Folgeseite Sinn ergeben, nachdem der Haupt-Workflow bereits passt. Der Hub hält diese Varianten visuell mit dem übergeordneten Pfad verbunden, damit die Seite scannbar bleibt.",
+      },
+      {
+        question: "Wann sollte ich vom Lernbereich zu den Leitfäden oder Kapazitäten wechseln?",
+        answer:
+          "Wechseln Sie zu den Leitfäden, wenn Sie etwas schrittweise aufsetzen wollen. Wechseln Sie zu den Kapazitäten, wenn Sie das Problem schon verstehen und die genaue Oberfläche wollen – etwa Bildgenerierung, Videoanalyse oder Web-Crawl.",
+      },
+    ],
+  },
 };
 
 export function getLearnMetadata(locale: SiteLocale): Metadata {

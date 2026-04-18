@@ -181,6 +181,57 @@ const contentByLocale: Record<SiteLocale, ContextEngineeringForAgentsPageData> =
       { label: "Analisis Video", href: "/capabilities/video-analysis" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Context Engineering für KI-Agenten — Wie Capability-Aufrufe entschieden werden",
+      description:
+        "Context Engineering bestimmt, was ein KI-Agent sieht, sich merkt und tut. Erfahren Sie, wie es Capability-Aufrufe und multimodale Workflows beeinflusst und warum AnyCap als Runtime-Schicht für die Agentenausführung passt.",
+      openGraphTitle: "Context Engineering für KI-Agenten — Wie Capability-Aufrufe entschieden werden",
+      openGraphDescription:
+        "Erfahren Sie, wie Context Engineering Capability-Aufrufe und multimodale Workflows beeinflusst und warum AnyCap als Runtime-Schicht für die Agentenausführung passt.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Anleitungen", href: "/guides", unlinkable: true },
+      { name: "Context Engineering für KI-Agenten" },
+    ],
+    eyebrow: "Anleitung",
+    heroTitle: "Context Engineering für KI-Agenten",
+    heroIntro:
+      "Context Engineering ist die Praxis, zu gestalten, was ein KI-Agent sehen, was er vertrauen und was er als Nächstes tun soll, während eine Aufgabe live läuft. Es geht nicht nur um Prompt-Formulierungen. Der Agent hängt auch von Workspace-Status, Tool-Definitionen, Capability-Verfügbarkeit, vorherigen Schritten, Berechtigungsgrenzen und Runtime-Richtlinien ab, die die Ausführung steuern. Diese Eingaben bestimmen, ob der Agent weiter im Text reasonen, fehlende Daten anfordern oder im richtigen Moment eine konkrete Capability aufrufen soll. In multimodalen Workflows zählt diese Entscheidungsqualität mehr als der Stil. Ein starkes Modell kann scheitern, wenn der Kontext verrauscht, unvollständig oder widersprüchlich ist. Gutes Context Engineering hält Entscheidungssignale explizit, sodass der Agent über eine stabile Runtime wie AnyCap von Intent zu Action übergehen kann. Wenn Teams diese Schicht formalisieren, sehen sie meist weniger Retries, sauberere Tool-Auswahl und schnellere Fertigstellung bei komplexen cross-modalen Aufgaben.",
+    pillarsTitle: "Die drei praktischen Schichten",
+    pillars: [
+      {
+        title: "Was der Agent sehen kann",
+        body: "System-Prompt, Workspace-Dateien, vorherige Nachrichten, Tool-Definitionen und Ausführungsbeschränkungen formen den Aktionsraum.",
+      },
+      {
+        title: "Was der Agent tun kann",
+        body: "Capabilities sind nur dann nützlich, wenn sie so verfügbar gemacht werden, dass der Agent sie während der Ausführung entdecken und ihnen vertrauen kann.",
+      },
+      {
+        title: "Wann der Agent von Text zu Action wechseln soll",
+        body: "Gutes Context Engineering hilft dem Agenten zu entscheiden, wann Reasoning ausreicht und wann er Bildgenerierung, Videoanalyse oder eine andere Capability aufrufen sollte.",
+      },
+    ],
+    whyItMattersTitle: "Warum es für multimodale Agenten wichtig ist",
+    whyItMatters: [
+      "Ein multimodaler Agent braucht nicht nur einen guten Prompt. Er braucht genug Kontext, um zu entscheiden, wann visuelle Inspektion notwendig ist, wann Generierung erforderlich ist und wann Text-Reasoning ausreicht. Ohne diesen Entscheidungskontext ruft der Agent entweder zu oft Tools auf und verschwendet Budget, oder bleibt zu lange im Text und verpasst die nötige Action. Die Output-Qualität hängt von diesem Routing-Schritt ab.",
+      "Genau hier passt AnyCap in der Praxis. Statt vieler unverbundener APIs mit unterschiedlichen Credentials und Response-Formaten gibt eine Capability-Runtime dem Agenten eine einheitliche Ausführungsoberfläche für Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse. Mit konsistenter Runtime und klareren Kontextsignalen wählt der Agent die richtige Capability schneller aus und erzeugt Workflows, die für Teams leichter zu debuggen und zu wiederholen sind.",
+    ],
+    patternTitle: "Ein einfaches Entscheidungsmuster",
+    patternSteps: [
+      "Nur Text nötig? Bleiben Sie im Prompt",
+      "Neues Bild nötig? anycap image generate",
+      "Screenshot prüfen? anycap image read",
+      "Aufnahme analysieren? anycap video read",
+    ],
+    cta: [
+      { label: "Capability-Runtime", href: "/glossary/agent-capability-runtime" },
+      { label: "Bildgenerierung", href: "/capabilities/image-generation" },
+      { label: "Videoanalyse", href: "/capabilities/video-analysis" },
+    ],
+  },
 };
 
 export function getContextEngineeringForAgentsMetadata(locale: SiteLocale): Metadata {

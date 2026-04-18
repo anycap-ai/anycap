@@ -36,6 +36,14 @@ const metadataByLocale: Record<SiteLocale, WebCrawlMetadataContent> = {
     openGraphDescription:
       "Tambahkan web crawl dan ekstraksi konten ke agen AI dengan satu CLI dan satu runtime kapabilitas.",
   },
+  de: {
+    title: "Web-Crawl-API für KI-Agenten – Content-Extraktion und Markdown-Konvertierung",
+    description:
+      "Geben Sie KI-Agenten Web Crawl über AnyCap. Wandeln Sie Webseiten über eine einzige CLI in sauberes Markdown und einsatzbereiten Content um, statt eine separate Crawl- oder Extraktions-API zu verdrahten.",
+    openGraphTitle: "Web-Crawl-API für KI-Agenten – Content-Extraktion und Markdown-Konvertierung",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Web Crawl und Content-Extraktion über eine CLI und eine Capability-Runtime aus.",
+  },
 };
 
 export function getWebCrawlMetadata(locale: SiteLocale): Metadata {

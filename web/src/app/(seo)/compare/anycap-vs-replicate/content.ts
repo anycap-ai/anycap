@@ -852,10 +852,301 @@ const id: ComparePageData = {
   ],
 };
 
+const de: ComparePageData = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Vergleich", href: "/compare", unlinkable: true },
+    { name: "AnyCap vs Replicate" },
+  ],
+  eyebrow: "Vergleich",
+  metadata: {
+    title: "AnyCap vs Replicate — Agent Capability Runtime vs Modell-API-Plattform",
+    description:
+      "Vergleichen Sie AnyCap und Replicate. Replicate ist eine Plattform für Modell-Inferenz und Deployment, aufgebaut um Predictions, Webhooks und Anwendungs-Backends. AnyCap ist ein agentenübergreifendes Capability Runtime für Codex, Cursor, Claude Code und ähnliche Agent-Workflows.",
+    openGraphTitle: "AnyCap vs Replicate — Agent Capability Runtime vs Modell-API-Plattform",
+    openGraphDescription:
+      "Sehen Sie, wann Replicate die richtige Modell-API-Schicht ist und wann AnyCap die schlankere Capability-Schicht für vorhandene Agents bildet.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AnyCap vs Replicate — Agent Capability Runtime vs Modell-API-Plattform",
+    description:
+      "Vergleichsleitfaden für Teams, die entscheiden, ob sie die Modell-Inferenzplattform Replicate oder das agentenübergreifende Capability Runtime AnyCap benötigen.",
+    path: ANYCAP_VS_REPLICATE_PATH,
+    locale: "de",
+    about: [
+      "AnyCap",
+      "Replicate",
+      "Agent Capability Runtime",
+      "Model Inference API",
+      "Webhook-Workflows",
+    ],
+    keywords: [
+      "anycap vs replicate",
+      "replicate alternative für agents",
+      "replicate vs anycap",
+      "model api vs capability runtime",
+      "replicate für coding agents",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Ist Replicate ein direkter Ersatz für AnyCap?",
+      answer:
+        "Nein. Replicate ist eine Modell-API-Plattform. AnyCap ist eine Capability-Runtime für vorhandene Agents. Teams vergleichen beide, wenn sie entscheiden, ob die fehlende Schicht eine Inferenzinfrastruktur auf Anwendungsebene oder ein Capability-Zugang auf Agent-Ebene ist.",
+    },
+    {
+      question: "Was ist der größte Workflow-Unterschied zwischen AnyCap und Replicate?",
+      answer:
+        "Replicate erwartet, dass Ihre Anwendung oder Ihr Skript den Prediction-Lebenszyklus übernimmt. AnyCap erwartet, dass der Agent-Workflow in einer CLI-first Runtime bleibt, die Capability-Zugang plus Artefakt-Auslieferung bereits umfasst.",
+    },
+    {
+      question: "Unterstützt Replicate Async-Jobs und Webhooks?",
+      answer:
+        "Ja. Die öffentliche Dokumentation von Replicate beschreibt synchrone und asynchrone Prediction-Modi, Prediction-IDs und Webhook-Benachrichtigungen für abgeschlossene Outputs. Das ist eine seiner deutlichsten Stärken als Backend-Inferenzschicht.",
+    },
+    {
+      question: "Wann ist AnyCap die schlankere Wahl?",
+      answer:
+        "Wenn das Team bereits Agents in Codex, Cursor, Claude Code oder ähnlichen Umgebungen einsetzt und diesen Agents schnell eine breitere Capability-Oberfläche geben möchte, ohne eine separate Inferenz- und Artefakt-Pipeline aufzubauen.",
+    },
+    {
+      question: "Was ist die einfachste Faustregel?",
+      answer:
+        "Wenn Ihr Produkt-Backend Modell-APIs benötigt, wählen Sie Replicate. Wenn Ihre Agents eine gemeinsame Runtime brauchen, um multimodale Arbeit tatsächlich abzuschließen, wählen Sie AnyCap.",
+    },
+  ]),
+  lastUpdatedLabel: "8. April 2026",
+  heroTitle: ["AnyCap vs", "Replicate"],
+  heroIntro:
+    "AnyCap vs Replicate ist eine Entscheidung über Stack-Schichten, kein Duell innerhalb derselben Kategorie. Replicate ist am stärksten, wenn Ihr Anwendungs-Backend explizite Kontrolle über Modell-Inferenz, Prediction-Lebenszyklen, hardwarebasierte Deployments, Request-IDs und webhook-gesteuerte Abschlussereignisse benötigt. Das ist das richtige Muster, wenn Ihr Produktteam Queue-Orchestrierung, Retry-Policy und Asset-Routing innerhalb des Anwendungscodes verantwortet. AnyCap ist stärker, wenn bereits Agents in Tools wie Codex, Cursor oder Claude Code existieren und die fehlende Schicht der operative Capability-Zugang ist. Statt ein weiteres anbieterspezifisches Integrationsprojekt zu starten, installieren Teams eine Runtime und geben Agents eine gemeinsame Schnittstelle für Generierung, Verständnis, Retrieval, Speicherung und Publishing, damit multimodale Arbeit tatsächlich Ende-zu-Ende abgeschlossen werden kann. Die Architekturentscheidung dreht sich primär um Ausführungsverantwortung: backendverwaltete Prediction-Pipelines versus runtime-verwaltete Agent-Capabilities. Sobald die Verantwortung klar ist, wird die Tool-Auswahl meist geradlinig und im Technical Review leichter zu verteidigen.",
+  answerFirstSummaryLabel: "Antwort zuerst",
+  answerFirstSummaryBody:
+    "Wählen Sie Replicate, wenn Ihre Produktarchitektur auf backend-verantwortete Modell-Jobs ausgerichtet ist: direkte API-Aufrufe, Prediction-Objekte, synchrone und asynchrone Ausführungsmodi, Webhook-Callbacks und Deployment-Kontrolle. Wählen Sie AnyCap, wenn die Agent-Shell bereits gewählt ist und Ihr Engpass die Capability-Ausführung innerhalb der Agent-Workflows ist und nicht die Backend-Inferenz-Verkabelung. In diesem Fall schlägt eine Runtime meist mehrere Ad-hoc-Integrationen, weil sie Auth, Befehle und Artefakt-Übergabe für Bild, Video, Suche, Speicher und Publishing standardisiert. Die praktische Regel ist einfach: backend-zentrierte Inferenzplattform braucht Replicate; agent-zentrierte Ausführungsschicht braucht AnyCap. Wenn ein Architektur-Review nicht klar eine Seite wählen kann, mischt das Team meist zwei verschiedene Verantwortungsschichten. Trennen Sie diese Schichten zuerst und bewerten Sie dann Kosten, Geschwindigkeit und operatives Risiko jeder Option neu, einschließlich der Verantwortung für Monitoring, Incident-Response und langfristige Integrationspflege nach dem Launch.",
+  comparisonTitle: "Side-by-Side-Vergleich",
+  comparisonHeaders: { dimension: "Dimension", anycap: "AnyCap", replicate: "Replicate" },
+  comparisonRows: [
+    {
+      dimension: "Hauptaufgabe",
+      anycap:
+        "Agent-Capability-Runtime, die vorhandenen Agents eine gemeinsame Ausführungsschicht für Medien, Web, Speicher und Publishing gibt.",
+      replicate:
+        "Modell-API- und Deployment-Plattform für Community-Modelle, offizielle Modelle und dedizierte Deployments über Predictions.",
+    },
+    {
+      dimension: "Integrationsziel",
+      anycap:
+        "Claude Code, Cursor, Codex, OpenClaw, Manus und ähnliche Agent-Shells, die eine gemeinsame Capability-Schicht benötigen.",
+      replicate:
+        "Ihr eigenes Backend, Produkt-Workflow oder Skript, das eine Inferenz-API direkt aufruft und den Request-Lebenszyklus selbst verwaltet.",
+    },
+    {
+      dimension: "Ausführungsmodell",
+      anycap:
+        "Eine CLI, ein Auth-Flow und eine Befehlsoberfläche für Bild, Video, Musik, Verständnis, Suche, Speicher und Publishing.",
+      replicate:
+        "Predictions-API mit Sync- und Async-Modi, Status-Polling, Prediction-IDs und webhook-gesteuertem Abschluss für längere Jobs.",
+    },
+    {
+      dimension: "Modell-Oberfläche",
+      anycap: "Kuratierte Capability-Schicht, die die Agent-Schnittstelle über die unterstützten Capabilities konsistent hält.",
+      replicate:
+        "Breite Inferenzplattform, auf der Teams bestimmte Modelle, Versionen oder private Deployments wählen und diese APIs in den eigenen Stack integrieren.",
+    },
+    {
+      dimension: "Artefakt-Handhabung",
+      anycap:
+        "Drive und Page halten Outputs aus derselben Produktoberfläche teilbar, sodass Generierung ohne weiteren Service in Speicher und Publishing fließt.",
+      replicate:
+        "Prediction-Objekte und Web-URLs sind verfügbar, aber dauerhafte Asset-Speicherung, Sharing und Publishing bleiben Entscheidungen Ihres Produkt-Stacks.",
+    },
+    {
+      dimension: "Beste Eignung",
+      anycap:
+        "Geeignet, wenn die Agent-Shell bereits gewählt ist und die fehlende Schicht Capability-Zugang plus Auslieferungs-Workflows ist.",
+      replicate:
+        "Geeignet, wenn das Team ein eigenes Anwendungs-Backend rund um Modell-Inferenz, Deployments und Webhook-Orchestrierung baut.",
+    },
+  ],
+  benchmarkTitle: "Praktischer Benchmark: von Null bis zum ersten Bild",
+  benchmarkIntro:
+    "Die folgende Tabelle vergleicht, was nötig ist, um vom Null-Setup bis zur Generierung des ersten Bildes in einem Claude Code-, Cursor- oder Codex-Agent-Workflow zu kommen.",
+  benchmarkHeaders: { metric: "Metrik", anycap: "AnyCap", replicate: "Replicate" },
+  benchmarkRows: [
+    {
+      metric: "Befehle bis zum ersten Bild",
+      anycap: "3 (install + login + generate)",
+      replicate: "pip install + API-Key-Setup + Python-Skript + Modellversions-Lookup",
+    },
+    {
+      metric: "Erforderliche Auth-Flows",
+      anycap: "1 (AnyCap-Login)",
+      replicate: "1 API-Token, aber Modellversionierung und Input-Schema unterscheiden sich pro Modell",
+    },
+    {
+      metric: "Erforderliche Agent-Integration",
+      anycap: "Skill-Datei-Auto-Discovery",
+      replicate: "Eigenes Python-Skript oder API-Wrapper",
+    },
+    {
+      metric: "Video nach Bild hinzufügen",
+      anycap: "Gleiche CLI, gleiche Auth: `anycap video generate`",
+      replicate: "Videomodell finden, Input-Schema lernen, neuen Prediction-Code hinzufügen",
+    },
+    {
+      metric: "Startguthaben kostenlos",
+      anycap: "$5 kostenloses Guthaben, keine Karte erforderlich",
+      replicate: "Pay-per-Prediction, Preise variieren je nach Modell und Hardware-Stufe",
+    },
+  ],
+  strengthsTitleLeft: "Warum Teams AnyCap wählen",
+  strengthsTitleRight: "Warum Teams Replicate wählen",
+  strengthsLeft: [
+    "Eine Runtime-Oberfläche kann mehrere Agent-Umgebungen ausstatten, ohne Medien-Integrationen jeweils neu aufzubauen.",
+    "Das öffentliche Capability-Inventar geht über Generierung hinaus in Verständnis, Web-Retrieval, Speicher und Publishing, was hilft, wenn ein Agent die gesamte Aufgabe abschließen muss.",
+    "Damit eignet sich AnyCap besser für operative Einfachheit und agentenübergreifende Wiederverwendung als eine reine Medien-API.",
+  ],
+  strengthsRight: [
+    "Die Replicate-Dokumentation unterstützt explizit synchrone und asynchrone Prediction-Flows, was hilfreich ist, wenn das Produktteam Request-Level-Kontrolle benötigt.",
+    "Die öffentliche Dokumentation unterscheidet Community-Modelle, offizielle Modelle und dedizierte Deployments, was stark zu Teams passt, die Produktinfrastruktur um Modellauswahl bauen.",
+    "Webhook-Unterstützung macht Replicate zu einem sauberen Backend-Baustein für Anwendungen, die bereits ein eigenes Job-System und eine Asset-Pipeline besitzen.",
+  ],
+  useCasesTitle: "Beste Eignung nach Anwendungsfall",
+  useCases: [
+    {
+      eyebrow: "Wählen Sie AnyCap, wenn",
+      title: "Die Runtime mit dem Team über Agent-Produkte hinweg mitwandern soll.",
+      body:
+        "AnyCap ist stärker, wenn dieselbe Capability-Schicht in Codex, Cursor, Claude Code oder einer anderen Agent-Shell funktionieren soll, ohne den Stack pro Umgebung neu aufzubauen.",
+    },
+    {
+      eyebrow: "Wählen Sie Replicate, wenn",
+      title: "Ihr Produkt-Backend explizite Kontrolle über Medien-Jobs will.",
+      body:
+        "Replicate passt besser, wenn Queue-Status, Webhook-Handling und direkte Endpoint-Integration Teil Ihrer eigenen Produktarchitektur sind und Sie keine breitere Agent-Runtime-Schicht benötigen.",
+    },
+    {
+      eyebrow: "Wählen Sie AnyCap, wenn",
+      title: "Der Workflow Auslieferung umfasst, nicht nur Generierung.",
+      body:
+        "AnyCap ist stärker, wenn das Artefakt direkt nach der Generierung zu einem Share-Link, einer gehosteten Seite oder einem weiteren Agent-Input werden muss, statt bei einer einzigen API-Antwort zu stoppen.",
+    },
+    {
+      eyebrow: "Wählen Sie Replicate, wenn",
+      title: "Die Arbeit hauptsächlich Modell-Infrastruktur ist.",
+      body:
+        "Replicate ist eine saubere Wahl, wenn Ihr Team primär an direktem Modellzugang, asynchroner Ausführungssicherheit und medienorientierten Backend-Primitiven interessiert ist und nicht an Such-, Speicher- oder Publishing-Workflows.",
+    },
+  ],
+  methodTitle: "Wie dieser Vergleich überprüft wurde",
+  methodBody: [
+    "Die Replicate-Seite dieses Artikels wurde anhand der am 8. April 2026 verfügbaren öffentlichen Dokumentation überprüft. Die Aussagen sind bewusst eng und nachvollziehbar gehalten: Replicate unterstützt Create-Prediction-Flows, synchrone und asynchrone Request-Verarbeitung, Webhooks und eigene Deployments.",
+    "Die AnyCap-Seite des Vergleichs basiert auf den veröffentlichten AnyCap-Seiten zu CLI, Installations-Flow, Capability-Runtime, Drive und Pricing. Die Seite verwendet nur öffentliche Aussagen, die bereits in der Produktoberfläche sichtbar sind.",
+  ],
+  methodologyNoteLabel: "Methodik-Hinweis",
+  methodologyNoteBody:
+    "Diese Seite vergleicht Schichteneignung, nicht die gesamte Produktbreite. Wenn Replicate später das Prediction- oder Deployment-Verhalten ändert oder AnyCap sein Capability-Inventar ändert, sollte die Seite aktualisiert werden, um an die aktuelle öffentliche Dokumentation gebunden zu bleiben.",
+  sourceTitle: "Quellenhinweise",
+  sourceLinks: [
+    {
+      label: "Replicate create a prediction",
+      href: "https://replicate.com/docs/topics/predictions/create-a-prediction",
+      note: "Prediction-Endpoints, Sync- vs. Async-Modi, Prediction-IDs und Web-URLs.",
+    },
+    {
+      label: "Replicate receive webhooks",
+      href: "https://replicate.com/docs/topics/webhooks/receive-webhook/",
+      note: "Webhook-Verhalten für abgeschlossene Predictions und Output-Events.",
+    },
+    {
+      label: "Replicate custom deployments",
+      href: "https://replicate.com/docs/guides/deploy-a-custom-model",
+      note: "Dedizierter Deployment-Pfad, wenn Teams produktionsreife Modellkontrolle wünschen.",
+    },
+    {
+      label: "AnyCap CLI Übersicht",
+      href: "/cli",
+      note: "Eine CLI und ein Auth-Flow über mehrere Agent-Umgebungen.",
+    },
+    {
+      label: "AnyCap Drive",
+      href: "/capabilities/drive",
+      note: "Speicher- und Share-Link-Workflows für Artefakte, die einen Run überdauern müssen.",
+    },
+    {
+      label: "AnyCap installieren",
+      href: "/guides/install-anycap",
+      note: "Veröffentlichter Setup-Pfad für Codex, Cursor, Claude Code und verwandte Agent-Produkte.",
+    },
+  ],
+  relatedTitle: "Verwandte Seiten",
+  relatedPages: [
+    {
+      href: "/glossary/agent-capability-runtime",
+      eyebrow: "Glossar",
+      title: "Agent-Capability-Runtime",
+      body: "Lesen Sie die Kategoriedefinition, die erklärt, warum AnyCap und Replicate nicht dieselbe Schicht sind.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs fal.ai",
+      body: "Vergleichen Sie AnyCap mit einer weiteren Medien-API-Plattform, die bei queue-basierten Generierungs-Workflows stärker ist.",
+    },
+    {
+      href: "/capabilities/drive",
+      eyebrow: "Produkt",
+      title: "AnyCap Drive",
+      body: "Sehen Sie sich die Speicher- und Sharing-Schicht an, die AnyCap mehr macht als einen direkten API-Wrapper.",
+    },
+    {
+      href: "/guides/install-anycap",
+      eyebrow: "Hier starten",
+      title: "AnyCap installieren",
+      body: "Validieren Sie die Runtime direkt in Ihrem eigenen Agent-Workflow, statt im Vergleichsmodus zu bleiben.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Ist Replicate ein direkter Ersatz für AnyCap?",
+      answer:
+        "Nein. Replicate ist eine Modell-API-Plattform, gebaut für backend-verwaltete Inferenz-Flows, während AnyCap eine Capability-Runtime für Agents ist, die bereits in Entwickler-Umgebungen existieren. Teams vergleichen beide, weil beide in multimodalen Roadmaps auftauchen können, aber sie schließen unterschiedliche Architekturlücken. Wenn Ihre fehlende Schicht eine Prediction-Infrastruktur auf Anwendungsebene ist, passt meist Replicate. Wenn die fehlende Schicht Capability-Zugang und Auslieferung auf Agent-Ebene ist, passt meist AnyCap.",
+    },
+    {
+      question: "Was ist der größte Workflow-Unterschied zwischen AnyCap und Replicate?",
+      answer:
+        "Replicate erwartet, dass Ihr Anwendungs-Stack den Prediction-Lebenszyklus direkt verantwortet: Requests erstellen, Status verfolgen, Async-Callbacks behandeln und entscheiden, was nach Output-Eintreffen passiert. AnyCap hält den Workflow in einer CLI-first Runtime, die Agents während der Ausführung aufrufen können, ohne jede Capability als separate Anbieter-Integration neu zu schreiben. In der Praxis liegt der Unterschied dort, wo Komplexität wohnt: Backend-Orchestrierung in Ihrer App mit Replicate oder standardisierte Agent-Ausführung mit AnyCap.",
+    },
+    {
+      question: "Unterstützt Replicate Async-Jobs und Webhooks?",
+      answer:
+        "Ja. Die öffentliche Dokumentation von Replicate beschreibt synchrone und asynchrone Prediction-Modi, Prediction-IDs, Status-Polling und Webhook-Benachrichtigungen für abgeschlossene Outputs. Dieses Feature-Set ist ein Hauptgrund, warum Teams es als Inferenzschicht wählen, wenn sie queue-bewusste Verarbeitung und explizite Backend-Verantwortung benötigen. Besonders nützlich ist es bei langlaufenden Workloads, deren Anwendungslogik von Abschlussereignissen statt blockierenden Aufrufen abhängt.",
+    },
+    {
+      question: "Wann ist AnyCap die schlankere Wahl?",
+      answer:
+        "AnyCap ist meist schlanker, wenn Ihr Team bereits über Agents in Umgebungen wie Codex, Cursor oder Claude Code arbeitet und diesen Agents schnell Capabilities geben möchte, ohne pro Anbieter eine eigene Inferenz- und Artefakt-Pipeline zu bauen. Eine Runtime kann Installation, Auth, Aufruf und Auslieferung über multimodale Aktionen hinweg standardisieren. Das reduziert Integrations-Drift und macht agentenübergreifende Operationen leichter wartbar, wenn Workflows wachsen.",
+    },
+    {
+      question: "Was ist die einfachste Faustregel?",
+      answer:
+        "Wenn Ihr Produkt-Backend Modell-APIs und explizite Kontrolle über Prediction-Jobs benötigt, wählen Sie Replicate. Wenn Ihre Agents eine gemeinsame Runtime brauchen, um multimodale Arbeit ohne wiederholten Anbieter-Glue-Code auszuführen und auszuliefern, wählen Sie AnyCap. Wenn Teams unsicher sind, klärt eine Karte darüber, wo Ausführungskomplexität liegen sollte – Backend-Code oder Agent-Runtime –, die Entscheidung meist in einem Architektur-Review.",
+    },
+  ],
+  ctas: [
+    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/cli", label: "CLI-Übersicht", variant: "secondary" },
+    { href: "/for/codex", label: "Agent-Anwendungsfälle ansehen", variant: "secondary" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ComparePageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getAnyCapVsReplicateMetadata(locale: SiteLocale): Metadata {

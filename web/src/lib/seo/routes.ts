@@ -31,6 +31,12 @@ export const manualSeoRouteDefinitions = [
     priority: 0.86,
   },
   {
+    key: "for-claude-code-opus-4-7",
+    kind: "seo",
+    path: "/for/claude-code/opus-4-7",
+    priority: 0.92,
+  },
+  {
     key: "learn-what-agents-cant-do",
     kind: "seo",
     path: "/learn/what-agents-cant-do",
@@ -163,6 +169,12 @@ export const manualSeoRouteDefinitions = [
     priority: 0.8,
   },
   {
+    key: "learn-claude-opus-4-7-capabilities",
+    kind: "seo",
+    path: "/learn/claude-opus-4-7-capabilities",
+    priority: 0.8,
+  },
+  {
     key: "learn-add-multimodal-capabilities-to-saas-chatbot",
     kind: "seo",
     path: "/learn/add-multimodal-capabilities-to-saas-chatbot",
@@ -247,6 +259,42 @@ export const manualSeoRouteDefinitions = [
   },
   { key: "capabilities-drive", kind: "seo", path: "/capabilities/drive", priority: 0.7 },
   { key: "skills", kind: "seo", path: "/skills", priority: 0.72 },
+  {
+    key: "skills-anycap-media-production",
+    kind: "seo",
+    path: "/skills/anycap-media-production",
+    priority: 0.68,
+  },
+  {
+    key: "skills-anycap-human-interaction",
+    kind: "seo",
+    path: "/skills/anycap-human-interaction",
+    priority: 0.66,
+  },
+  {
+    key: "skills-anycap-deepresearch",
+    kind: "seo",
+    path: "/skills/anycap-deepresearch",
+    priority: 0.68,
+  },
+  {
+    key: "skills-anycap-blog-production",
+    kind: "seo",
+    path: "/skills/anycap-blog-production",
+    priority: 0.66,
+  },
+  {
+    key: "skills-anycap-ai-tool-seo",
+    kind: "seo",
+    path: "/skills/anycap-ai-tool-seo",
+    priority: 0.66,
+  },
+  {
+    key: "skills-anycap-social-meme-workflows",
+    kind: "seo",
+    path: "/skills/anycap-social-meme-workflows",
+    priority: 0.66,
+  },
   { key: "models", kind: "seo", path: "/models", priority: 0.72 },
   {
     key: "guides-context-engineering-for-agents",
@@ -288,6 +336,12 @@ export const manualSeoRouteDefinitions = [
     key: "guides-how-to-add-vision-to-ai-agent",
     kind: "seo",
     path: "/guides/how-to-add-vision-to-ai-agent",
+    priority: 0.7,
+  },
+  {
+    key: "guides-claude-opus-4-7-image-video-workflow",
+    kind: "seo",
+    path: "/guides/claude-opus-4-7-image-video-workflow",
     priority: 0.7,
   },
   {
@@ -397,5 +451,17 @@ export const manualSeoRouteDefinitions = [
     kind: "seo",
     path: "/glossary/agent-capability-runtime",
     priority: 0.5,
+  },
+  {
+    key: "glossary-model-context-protocol",
+    kind: "seo",
+    path: "/glossary/model-context-protocol",
+    priority: 0.6,
+  },
+  {
+    key: "glossary-agentic-workflow",
+    kind: "seo",
+    path: "/glossary/agentic-workflow",
+    priority: 0.6,
   },
 ] as const satisfies readonly ManualSeoRouteDefinition[];

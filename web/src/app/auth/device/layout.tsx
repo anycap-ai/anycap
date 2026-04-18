@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { GeistPixelSquare } from "geist/font/pixel";
 import { LazyGrainOverlay } from "@/components/ui/LazyGrainOverlay";
 
-export const runtime = "edge";
-
 export const metadata: Metadata = {
   robots: {
     index: false,

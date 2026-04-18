@@ -22,7 +22,7 @@ const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/for/manus", {
   title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
   description:
-    "Manus is strong at autonomous workflows, but teams still need a dedicated runtime for image generation, video generation, image understanding, and video analysis. AnyCap adds those capabilities through one skill, one login, and one CLI.",
+    "Manus handles autonomous execution. AnyCap adds the missing runtime for image generation, video generation, vision, and audio — one skill, one login, one CLI.",
   openGraph: {
     type: "website",
     title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
@@ -128,6 +128,105 @@ const gapRowsPtBr: CapabilityGapRow[] = [
       { label: "O acesso às capacidades varia por tarefa", tone: "muted" },
       { label: "Um login para toda a stack de capacidades", tone: "accent" },
       { label: "Página Começar", href: "/start" },
+    ],
+  },
+];
+
+const gapRowsDe: CapabilityGapRow[] = [
+  {
+    capability: "Bildgenerierung",
+    cells: [
+      { label: "Allgemeiner Flow", tone: "muted" },
+      { label: "Visuals und Mockups via anycap image generate erzeugen", tone: "accent" },
+      { label: "Bildgenerierungs-Seite", href: "/capabilities/image-generation" },
+    ],
+  },
+  {
+    capability: "Videogenerierung",
+    cells: [
+      { label: "Setup pro Aufgabe", tone: "muted" },
+      { label: "Walkthroughs und Clips via anycap video generate erstellen", tone: "accent" },
+      { label: "Videogenerierungs-Seite", href: "/capabilities/video-generation" },
+    ],
+  },
+  {
+    capability: "Musikgenerierung",
+    cells: [
+      { label: "Provider-Setup pro Aufgabe", tone: "muted" },
+      { label: "Hintergrundtracks über die AnyCap-Music-Runtime erstellen", tone: "accent" },
+      { label: "Musikgenerierungs-Seite", href: "/capabilities/music-generation" },
+    ],
+  },
+  {
+    capability: "Bildverständnis",
+    cells: [
+      { label: "Visuelles Reasoning ad hoc", tone: "muted" },
+      { label: "Screenshots, Diagramme und visuelle Referenzen lesen", tone: "accent" },
+      { label: "Bildverständnis-Seite", href: "/capabilities/image-understanding" },
+    ],
+  },
+  {
+    capability: "Videoanalyse",
+    cells: [
+      { label: "Ad-hoc-Review-Flow", tone: "muted" },
+      { label: "Recordings aus derselben CLI inspizieren", tone: "accent" },
+      { label: "Videoanalyse-Seite", href: "/capabilities/video-analysis" },
+    ],
+  },
+  {
+    capability: "Audioverständnis",
+    cells: [
+      { label: "Ad-hoc-Audio-Review", tone: "muted" },
+      { label: "Audio über eine Runtime transkribieren und analysieren", tone: "accent" },
+      { label: "Audioverständnis-Seite", href: "/capabilities/audio-understanding" },
+    ],
+  },
+  {
+    capability: "Web-Suche",
+    cells: [
+      { label: "Verhalten variiert je Aufgabe", tone: "muted" },
+      { label: "Das Web aus derselben Capability-Schicht durchsuchen", tone: "accent" },
+      { label: "Web-Suche-Seite", href: "/capabilities/web-search" },
+    ],
+  },
+  {
+    capability: "Grounded Web-Suche",
+    cells: [
+      { label: "Grounded Search variiert je Aufgabe", tone: "muted" },
+      { label: "Grounded Search ausführen, wenn die Antwort Quellenangaben braucht", tone: "accent" },
+      { label: "Grounded-Web-Suche-Seite", href: "/capabilities/grounded-web-search" },
+    ],
+  },
+  {
+    capability: "Web-Crawl",
+    cells: [
+      { label: "Crawl-Setup variiert je Aufgabe", tone: "muted" },
+      { label: "Seiten crawlen und Inhalte über eine CLI extrahieren", tone: "accent" },
+      { label: "Web-Crawl-Seite", href: "/capabilities/web-crawl" },
+    ],
+  },
+  {
+    capability: "Drive-Speicher",
+    cells: [
+      { label: "Speicher hängt vom jeweiligen Flow ab", tone: "muted" },
+      { label: "Outputs mit öffentlichen URLs in AnyCap Drive ablegen", tone: "accent" },
+      { label: "Preisseite", href: "/pricing" },
+    ],
+  },
+  {
+    capability: "Page-Hosting",
+    cells: [
+      { label: "Veröffentlichung variiert je Aufgabe", tone: "muted" },
+      { label: "Einfache Seiten über AnyCap Page veröffentlichen", tone: "accent" },
+      { label: "Preisseite", href: "/pricing" },
+    ],
+  },
+  {
+    capability: "Ein Auth-Flow",
+    cells: [
+      { label: "Capability-Zugriff variiert je Aufgabe", tone: "muted" },
+      { label: "Ein Login für den gesamten Capability-Stack", tone: "accent" },
+      { label: "Loslegen-Seite", href: "/start" },
     ],
   },
 ];
@@ -421,6 +520,138 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
   id: undefined as never,
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Agenten ausstatten", href: "/for", unlinkable: true },
+      { name: "Manus" },
+    ],
+    heroEyebrow: "Für Manus",
+    heroTitle: [
+      "Manus kann planen, browsen und Arbeit liefern.",
+      "Es braucht weiterhin eine dedizierte capability runtime.",
+    ],
+    heroIntro:
+      "Manus ist hervorragend in autonomer, browser-getriebener, mehrstufiger Ausführung. Die Lücke zeigt sich, sobald ein Workflow wiederholbare Bildgenerierung, Videogenerierung, Bildverständnis oder Videoanalyse benötigt, ohne jede Aufgabe in ein neues Provider-Setup zu verwandeln. AnyCap ergänzt diese fehlende Runtime über eine Skill, ein Login und eine CLI – Sie behalten Manus und erweitern, was es zuverlässig liefern kann.",
+    heroMicrocopy: "Behalten Sie Manus. Standardisieren Sie die Capability-Schicht.",
+    heroCtas: {
+      primary: "Loslegen",
+      image: "Bildgenerierung",
+      video: "Videoanalyse",
+    },
+    table: {
+      eyebrow: "Capability-Lücke",
+      title: "Wo Manus von einer dedizierten Runtime profitiert",
+      description:
+        "Manus kann auf autonome Ausführung fokussiert bleiben, während AnyCap Generierung, Analyse, Suche, Speicher und Publishing aufgabenübergreifend standardisiert.",
+      capabilityLabel: "Capability",
+      columns: [
+        { label: "Manus allein" },
+        { label: "Mit AnyCap ergänzen", accent: true },
+        { label: "Bester nächster Schritt" },
+      ],
+      footnote:
+        "Diese Seite ist der Manus-Hub. Bis es weitere Manus-spezifische Deep-Pages gibt, leiten die Folgeschritte zu den Capability-Seiten oder zur Preisseite, die jede Lücke am schnellsten schließen.",
+      rows: gapRowsDe,
+    },
+    installTitle: "In 3 Schritten installieren",
+    installSteps: [
+      {
+        title: "Skill installieren",
+        subtitle: "Schritt 1",
+        code: "npx -y skills add anycap-ai/anycap -y",
+        note: "Manus unterstützt wiederverwendbare Skills. Damit erhält Manus einen dauerhaften Einstiegspunkt in die AnyCap-Runtime, statt denselben Capability-Stack in jeder Aufgabe neu zu erklären.",
+      },
+      {
+        title: "CLI installieren",
+        subtitle: "Schritt 2",
+        code: "curl -fsSL https://anycap.ai/install.sh | sh",
+        note: "Die CLI wird zur stabilen Ausführungsoberfläche für Bild-, Video- und Vision-Workloads über alle Manus-Aufgaben hinweg.",
+      },
+      {
+        title: "Anmelden und prüfen",
+        subtitle: "Schritt 3",
+        code: "anycap login && anycap status",
+        note: "Nach der Authentifizierung kann Manus dieselbe Capability-Runtime wiederverwenden, ohne bei jeder neuen Aufgabe ein frisches Provider-Setup zu benötigen.",
+      },
+    ],
+    capabilityCardsTitle: "Beginnen Sie mit der ersten fehlenden Capability",
+    capabilityCards: [
+      {
+        eyebrow: "Kreative Ausgabe",
+        title: "Bildgenerierung",
+        href: "/capabilities/image-generation",
+        summary: "Beste Folgeseite, wenn Manus Visuals, Mockups, Launch-Assets oder andere wiederholbare Bildausgaben braucht.",
+        command: "anycap image generate",
+      },
+      {
+        eyebrow: "Bewegte Ausgabe",
+        title: "Videogenerierung",
+        href: "/capabilities/video-generation",
+        summary: "Beste Folgeseite, wenn der Workflow Demos, Explainer, Walkthrough-Clips oder Bewegtbild-Ausgaben braucht.",
+        command: "anycap video generate",
+      },
+      {
+        eyebrow: "Vision",
+        title: "Bildverständnis",
+        href: "/capabilities/image-understanding",
+        summary: "Beste Folgeseite, wenn Manus Screenshots, Diagramme, OCR oder visuelle QA-Inputs inspizieren soll.",
+        command: "anycap image read",
+      },
+      {
+        eyebrow: "Analyse",
+        title: "Videoanalyse",
+        href: "/capabilities/video-analysis",
+        summary: "Beste Folgeseite, wenn Manus Recordings reviewen und strukturierte Details aus Videos extrahieren soll.",
+        command: "anycap video read",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Warum AnyCap zu Manus hinzufügen?",
+        answer:
+          "Manus ist stark in autonomer End-to-End-Ausführung. AnyCap ergänzt eine dedizierte Runtime für Bild-, Video- und Vision-Workloads, sodass diese Capabilities wiederverwendbar, vorhersehbar und einfacher aufgabenübergreifend zu routen bleiben.",
+      },
+      {
+        question: "Ersetzt AnyCap Manus?",
+        answer:
+          "Nein. Ziel ist, Manus zu behalten und eine stabile Capability-Schicht für Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse zu ergänzen.",
+      },
+      {
+        question: "Kann Manus AnyCap über eine Skill nutzen?",
+        answer:
+          "Ja. Installieren Sie die AnyCap-Skill, installieren Sie die CLI, melden Sie sich einmal an, und Manus kann dieselbe Capability-Schicht über mehrere Workflows aufrufen.",
+      },
+      {
+        question: "Womit sollte ich für Manus-Workflows starten?",
+        answer:
+          "Die meisten Teams beginnen mit der ersten fehlenden Capability im Workflow: Bildgenerierung für Assets, Bildverständnis für Screenshots, Videogenerierung für Demos oder Videoanalyse für Recordings.",
+      },
+    ],
+    footerCtas: {
+      primary: "Loslegen",
+      cli: "Warum eine CLI zählt",
+      skills: "Wie Skills passen",
+    },
+    integrationGuideJsonLd: createTechArticleJsonLd({
+      headline: "Manus-Tools und Capabilities – Bild, Video und Vision mit AnyCap ergänzen",
+      description:
+        "Leitfaden, um Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine einzige Capability-Runtime zu Manus hinzuzufügen.",
+      path: "/for/manus",
+      locale: "de",
+      about: ["Manus", "AnyCap CLI", "Agent-Skills", "Capability-Runtime"],
+      keywords: [
+        "Manus-Tools",
+        "Manus-Skills",
+        "Manus-Capabilities",
+        "Manus Bildgenerierung",
+        "Manus Agent-Skills",
+      ],
+      datePublished: PAGE_LAST_MODIFIED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
 };
 contentByLocale.id = contentByLocale.en;
 

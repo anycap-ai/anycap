@@ -88,6 +88,15 @@ const models: Record<SiteLocale, readonly MusicGenerationModel[]> = {
       bestFor: "Draf soundtrack berbasis prompt dan musik latar di runtime agen yang sama",
     },
   ],
+  de: [
+    {
+      name: "ElevenLabs Music",
+      href: "/models/elevenlabs-music",
+      modelId: "elevanlabs-music",
+      modes: "text-to-music",
+      bestFor: "Prompt-basierte Soundtrack-Entwürfe und Hintergrundmusik in derselben Agenten-Runtime",
+    },
+  ],
 };
 
 const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
@@ -397,6 +406,108 @@ const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
       ],
     },
   },
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Musikgenerierung", href: "/capabilities/music-generation" },
+    ],
+    lastUpdatedLabel: "5. April 2026",
+    eyebrow: "Capabilities",
+    title: "Musikgenerierung",
+    intro:
+      "Mit der AnyCap-Musikgenerierung erhalten Agenten eine CLI für Prompt-basierte Musik-Workflows. Agenten können Hintergrund-Tracks, Instrumental-Entwürfe und Soundtrack-Konzepte über eine Schnittstelle erstellen, statt eine separate Text-to-Music-API zu verdrahten. So lässt sich Musikgenerierung in denselben Agenten-Workflow integrieren, der bereits Bildgenerierung, Videogenerierung und Medienanalyse abdeckt.",
+    summaryEyebrow: "Kurz vorab",
+    summaryBody:
+      "AnyCap stellt aktuell Prompt-basierte Musikgenerierung über ElevenLabs Music bereit. Setzen Sie sie ein, wenn derselbe Agent, der bereits Visuals oder Clips erzeugt, auch einen schnellen Soundtrack-Entwurf braucht, ohne in eine separate Audio-Toolchain zu wechseln.",
+    modelSectionTitle: "Unterstütztes Modell",
+    tableHeaders: ["Modell", "Modell-ID", "Modi", "Geeignet für"],
+    usageTitle: "CLI-Nutzung",
+    usageExamples: [
+      {
+        title: "Prompt-basierte Musikgenerierung",
+        code: 'anycap music generate --prompt "lofi night drive with soft synths and a steady pulse" --model elevanlabs-music -o track.mp3',
+      },
+      {
+        title: "Instrumental-Generierung",
+        code: 'anycap music generate --prompt "minimal ambient soundtrack with no vocals" --model elevanlabs-music -o ambient.mp3',
+      },
+      {
+        title: "Musikmodelle entdecken",
+        code: "anycap music models",
+      },
+    ],
+    useCasesTitle: "Wann Agenten Musikgenerierung brauchen",
+    useCases: [
+      "Hintergrund-Tracks für Produkt-Demos, Launch-Videos und Changelog-Inhalte erzeugen.",
+      "Instrumental-Loops für Prototypen, Trailer und schlanke Marketing-Workflows erstellen.",
+      "Musikgenerierung im selben CLI-Workflow halten wie Bild-, Video- und Analyseaufgaben.",
+      "Schnell Audio-Entwürfe produzieren, bevor entschieden wird, ob ein Projekt eine aufwendigere Produktion benötigt.",
+    ],
+    relatedPagesTitle: "Verwandte Seiten",
+    relatedPages: [
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Preise",
+        body: "Sehen Sie den Credit-Verbrauch für Musikgenerierung neben dem Rest des Capability-Stacks.",
+      },
+      {
+        href: "/models/elevenlabs-music",
+        eyebrow: "Modell",
+        title: "ElevenLabs Music",
+        body: "Lesen Sie den Modell-Leitfaden für Prompt-basierte Soundtrack-Generierung über AnyCap.",
+      },
+      {
+        href: "/capabilities/video-generation",
+        eyebrow: "Verwandte Capability",
+        title: "Videogenerierung",
+        body: "Kombinieren Sie Soundtrack-Generierung mit Video-Workflows, wenn der Agent kurze Clips erstellt.",
+      },
+      {
+        href: "/cli",
+        eyebrow: "CLI",
+        title: "AnyCap CLI",
+        body: "Erkunden Sie die breitere Befehlsoberfläche, die Musik, Bild, Video und Analyse in einer Runtime hält.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Was ermöglicht die AnyCap-Musikgenerierung Agenten?",
+        answer:
+          "Sie gibt Agenten eine einzige Befehlsoberfläche für Prompt-basierte Musikgenerierung. Teams können Track-Entwürfe, Instrumental-Hintergründe und stilbasierte Audio-Outputs erstellen, ohne eine separate Musikgenerierungs-API zu integrieren.",
+      },
+      {
+        question: "Geht es auf dieser Seite um eine Musikgenerierungs-API oder einen CLI-Workflow?",
+        answer:
+          "Beides. Teams suchen oft nach einer Musikgenerierungs-API oder Text-to-Music-API, während die Agenten-Ausführung meist über die AnyCap-CLI läuft.",
+      },
+      {
+        question: "Welche Marktbegriffe passen am besten zu dieser Capability?",
+        answer:
+          "Die besten unterstützenden Begriffe sind Musikgenerierungs-API, Text-to-Music-API und AI-Music-API. Musikgenerierung ist das klarste Capability-Label, während die API-Formulierung dem Suchverhalten von Teams entspricht.",
+      },
+      {
+        question: "Wann sollte Musikgenerierung in derselben Runtime wie andere Capabilities laufen?",
+        answer:
+          "Wenn derselbe Agent bereits Visuals, Demos oder Produkt-Assets erstellt. Musikgenerierung in derselben Runtime zu halten erleichtert den Übergang von Bild- und Videogenerierung zur Soundtrack-Generierung, ohne das Tool zu wechseln.",
+      },
+    ],
+    modelBestFor: "Prompt-basierte Soundtrack-Entwürfe und Hintergrundmusik in derselben Agenten-Runtime",
+    capabilityGuide: {
+      headline: "Musikgenerierungs-API für KI-Agenten – Text-to-Music über eine CLI",
+      description:
+        "Capability-Leitfaden zum Hinzufügen von Musikgenerierung zu KI-Agenten über AnyCap, einschließlich Prompt-basierter Track-Generierung und Instrumental-Workflows.",
+      about: ["Musikgenerierung", "Text-to-music API", "AI music API", "AnyCap"],
+      keywords: [
+        "music generation api",
+        "text to music api",
+        "musikgenerierung für ki-agenten",
+        "ai music api",
+      ],
+    },
+  },
 };
 
 const localizedContentByLocale: Record<SiteLocale, MusicGenerationPageContent> =
@@ -429,6 +540,14 @@ const metadataByLocale: Record<
     openGraphTitle: "API generasi musik untuk agen AI - teks-ke-musik lewat satu CLI",
     openGraphDescription:
       "Tambahkan generasi musik ke agen AI dengan satu CLI, satu alur autentikasi, dan satu runtime kapabilitas.",
+  },
+  de: {
+    title: "Musikgenerierungs-API für KI-Agenten – Text-to-Music über eine CLI",
+    description:
+      "Geben Sie KI-Agenten Musikgenerierung über AnyCap. Erzeugen Sie Instrumental-Tracks und individuelle Musik-Prompts über eine einzige CLI, statt eine separate Musikgenerierungs-API zu verdrahten.",
+    openGraphTitle: "Musikgenerierungs-API für KI-Agenten – Text-to-Music über eine CLI",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Musikgenerierung über eine CLI, einen Auth-Flow und eine Capability-Runtime aus.",
   },
 };
 
@@ -489,7 +608,9 @@ export default async function MusicGenerationPage() {
                 ? "Atualizado em"
                 : locale === "id"
                   ? "Diperbarui"
-                  : "Last updated"}{" "}
+                  : locale === "de"
+                    ? "Zuletzt aktualisiert"
+                    : "Last updated"}{" "}
               {content.lastUpdatedLabel}
             </p>
             <h1

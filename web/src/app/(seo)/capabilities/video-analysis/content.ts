@@ -282,6 +282,90 @@ const contentByLocale: Record<SiteLocale, VideoAnalysisPageData> = {
       { label: "Jelajahi CLI", href: "/cli" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Videoanalyse-API für KI-Agenten | AnyCap",
+      description:
+        "Geben Sie KI-Agenten Videoanalyse über AnyCap. Analysieren Sie Aufnahmen, fassen Sie Szenen zusammen und extrahieren Sie Video-Intelligence über einen CLI-Befehl in Claude Code, Cursor und mehr.",
+      openGraphTitle: "Videoanalyse-API für KI-Agenten | AnyCap",
+      openGraphDescription:
+        "Geben Sie KI-Agenten Videoanalyse über AnyCap. Analysieren Sie Aufnahmen, fassen Sie Szenen zusammen und extrahieren Sie Video-Intelligence über einen CLI-Befehl in Claude Code, Cursor und mehr.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Videoanalyse" },
+    ],
+    eyebrow: "Capabilities",
+    heroTitle: "Videoanalyse",
+    heroIntro:
+      "Mit der AnyCap-Videoanalyse können KI-Agenten Video-Inhalte über einen CLI-Befehl verstehen. Agenten fassen Aufnahmen zusammen, extrahieren Schlüsselereignisse, erkennen visuellen Kontext und bearbeiten Videoverständnis-Aufgaben, ohne einen separaten Video-Intelligence-Stack zu verwalten. Die Capability funktioniert in Claude Code, Cursor, Codex und anderen Agenten-Produkten über denselben Auth-Flow und dieselbe Befehlsoberfläche wie der Rest von AnyCap.",
+    usageTitle: "CLI-Nutzung",
+    usageExamples: [
+      { title: "Ein Remote-Video analysieren", code: "anycap actions video-read --url https://example.com/demo.mp4" },
+      { title: "Ein lokales Video analysieren", code: "anycap actions video-read --file ./recording.mp4" },
+      {
+        title: "Eine fokussierte Zusammenfassung anfordern",
+        code: 'anycap actions video-read --url https://example.com/demo.mp4 --instruction "Fasse die wichtigsten Ereignisse und UI-Übergänge zusammen"',
+      },
+    ],
+    scenariosTitle: "Wann Agenten Videoanalyse brauchen",
+    scenarios: [
+      { title: "Bug-Reproduktion", body: "Bildschirmaufnahmen analysieren, um Bug-Reports und Reproduktionsschritte zu verstehen." },
+      { title: "Demo-Review", body: "Produkt-Demos und Walkthrough-Aufnahmen für Docs und Handoffs zusammenfassen." },
+      { title: "Content-Analyse", body: "Schlüsselmomente, Übergänge und visuellen Kontext aus aufgenommenem Material extrahieren." },
+      { title: "QA-Automation", body: "UI-Verhalten in aufgenommenen Test-Sessions als Teil agentengesteuerter QA verifizieren." },
+    ],
+    relatedTitle: "Verwandte Seiten",
+    relatedPages: [
+      {
+        label: "Verwandte Capability",
+        title: "Bildverständnis",
+        body: "Bild- und Videoverständnis kombinieren, wenn Workflows Screenshots und aufgenommene Sessions umfassen.",
+        href: "/capabilities/image-understanding",
+      },
+      {
+        label: "Agenten-Seite",
+        title: "Für Claude Code",
+        body: "So fügt sich Videoanalyse in die umfassende Capability-Story von Claude Code ein.",
+        href: "/for/claude-code",
+      },
+      {
+        label: "CLI",
+        title: "AnyCap CLI",
+        body: "Erkunden Sie, wie dieselbe CLI-Oberfläche Analyse- und Generierungs-Workflows abdeckt.",
+        href: "/cli",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Was ermöglicht die AnyCap-Videoanalyse Agenten?",
+        answer:
+          "Sie gibt Agenten eine einzige Schnittstelle für Videoverständnis über Bildschirmaufnahmen, Produkt-Demos und visuelle Walkthroughs hinweg. Das beinhaltet Szenen-Zusammenfassungen, Schlüsselereignis-Extraktion und fokussierte Video-Intelligence-Aufgaben über dieselbe CLI-Oberfläche.",
+      },
+      {
+        question: "Warum verwendet der CLI-Befehl video-read, während die Seite von Videoanalyse spricht?",
+        answer:
+          "Die Seite verwendet die Marktsprache, nach der Teams suchen, während die CLI den prägnanten Befehlsnamen `anycap actions video-read` nutzt. Beide verweisen auf dieselbe Capability-Oberfläche.",
+      },
+      {
+        question: "Wann sollten Teams das als Videoverständnis oder Video-Intelligence verstehen?",
+        answer:
+          "Diese Begriffe beschreiben dasselbe praktische Bedürfnis: Video-Inhalte in nutzbaren Kontext für einen Agenten zu verwandeln. Videoanalyse ist der Seitenname, während Videoverständnis und Video-Intelligence gängige Such- und Bewertungsbegriffe sind.",
+      },
+      {
+        question: "Ist das im Grunde eine Videoanalyse-API für Agenten-Workflows?",
+        answer:
+          "Ja. Teams können es als Videoanalyse-API verstehen, die über die AnyCap-CLI verfügbar gemacht wird – das macht die Nutzung in Agenten-Workflows einfacher, als einen separaten anbieterspezifischen Stack zu verdrahten.",
+      },
+    ],
+    cta: [
+      { label: "Auf GitHub ansehen", href: "https://github.com/anycap-ai/anycap" },
+      { label: "Capabilities ansehen", href: "/capabilities" },
+      { label: "CLI erkunden", href: "/cli" },
+    ],
+  },
 };
 
 export function getVideoAnalysisMetadata(locale: SiteLocale): Metadata {

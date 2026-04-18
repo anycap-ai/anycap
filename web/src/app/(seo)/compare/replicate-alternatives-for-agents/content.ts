@@ -603,10 +603,197 @@ const id: ReplicateAlternativesPageData = {
   ],
 };
 
+const de: ReplicateAlternativesPageData = {
+  metadata: {
+    title: "Top Replicate-Alternativen für KI-Agenten (2026) — Bild, Video und Bildverständnis",
+    description:
+      "Vergleichen Sie die besten Replicate-Alternativen für KI-Agent-Workflows. Sehen Sie, wie AnyCap, fal.ai, Hugging Face und andere Bildgenerierung, Videogenerierung und Bildverständnis für Claude Code, Cursor und Codex handhaben.",
+    openGraphTitle: "Top Replicate-Alternativen für KI-Agenten (2026)",
+    openGraphDescription:
+      "Vergleichen Sie Replicate-Alternativen für agent-native Bild-, Video- und Bildverständnis-Workflows. Bewerten Sie Installation, Auth-Modell und Agent-Kompatibilität.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Vergleich", href: "/compare", unlinkable: true },
+    { name: "Replicate-Alternativen für Agents" },
+  ],
+  eyebrow: "Vergleich",
+  lastUpdatedLabel: "10. April 2026",
+  heroTitle: ["Top Replicate-Alternativen", "für KI-Agent-Workflows"],
+  heroIntro:
+    "Replicate ist eine starke Modell-Inferenzplattform, wurde aber für Entwickler gebaut, die Modell-APIs aus eigenem Code aufrufen. Wenn Ihr Workflow in einem KI-Agenten wie Claude Code, Cursor oder Codex läuft, brauchen Sie eventuell ein anderes Tool — eines, das sich in den Agenten installiert, einmal authentifiziert und Capabilities über dieselbe Schnittstelle bereitstellt, die der Agent bereits nutzt.",
+  tableTitle: "Replicate vs AnyCap auf einen Blick",
+  tableIntro:
+    "Bevor wir alle Alternativen vergleichen, sehen Sie hier, wie sich Replicate und AnyCap in den für Agent-Workflows wichtigsten Dimensionen unterscheiden.",
+  tableColumns: { dimension: "Dimension", replicate: "Replicate", anycap: "AnyCap" },
+  comparisonDimensions: [
+    {
+      dimension: "Agent-Kompatibilität",
+      replicate: "REST-API und Python-SDK; erfordert eigene Integration pro Agent",
+      anycap: "Funktioniert in Claude Code, Cursor und Codex über Skill-Dateien und eine CLI",
+    },
+    {
+      dimension: "Installationserlebnis",
+      replicate: "pip install replicate + API-Key pro Modell",
+      anycap: "Eine Skill-Datei + ein CLI-Binary + ein Login",
+    },
+    {
+      dimension: "Modellauswahl",
+      replicate: "Tausende Community- und offizielle Modelle",
+      anycap: "Kuratierte Modelle (Seedream 5, Nano Banana Pro, Veo 3.1, Kling 3.0 usw.)",
+    },
+    {
+      dimension: "Capability-Umfang",
+      replicate: "Primär Modell-Inferenz (Bild, Video, Audio, Text)",
+      anycap: "Bild, Video, Musik, Bildverständnis, Suche, Crawl, Speicher, Page-Publishing",
+    },
+    {
+      dimension: "Auth-Modell",
+      replicate: "Ein API-Token, aber jedes Modell hat eigene Versionierung und Schema",
+      anycap: "Ein Login, eine CLI, jede Capability über dieselbe Schnittstelle",
+    },
+    {
+      dimension: "Preismodell",
+      replicate: "Preise pro Prediction variieren nach Modell und Hardware",
+      anycap: "Pay-as-you-go mit $5 kostenlosem Guthaben, keine monatliche Gebühr",
+    },
+  ],
+  alternativesTitle: "Verglichene Alternativen",
+  alternatives: [
+    {
+      name: "AnyCap",
+      category: "Agent-Capability-Runtime",
+      focus: "Gebaut für KI-Agenten. Eine CLI, eine Auth, jede Capability.",
+      strengths: [
+        "Einheitlicher Installationspfad für Bild, Video, Bildverständnis, Suche, Speicher und Publishing",
+        "Funktioniert in Claude Code, Cursor, Codex und anderen Agent-Produkten über Skill-Dateien",
+        "Ein Login deckt den gesamten Capability-Stack ab — keine API-Keys pro Modell",
+        "CLI-first-Schnittstelle, entworfen für terminal-native Agent-Workflows",
+      ],
+      considerations: [
+        "Kuratierte Modellauswahl statt offener Modellbibliothek",
+        "Agent-natives Design — nicht für eigene Backend-Pipelines gebaut",
+      ],
+      bestFor: "Teams, die Coding-Agents nutzen und multimodale Capabilities ohne anbieterspezifische Integration benötigen",
+      href: "/start",
+      cta: "Mit AnyCap starten",
+    },
+    {
+      name: "fal.ai",
+      category: "Serverless-Inferenzplattform",
+      focus: "Schnelle serverless Inferenz für generative Medienmodelle.",
+      strengths: [
+        "Sehr schnelle Cold-Start-Zeiten für Bild- und Videomodelle",
+        "Pay-per-Sekunde-Preise ohne Idle-Kosten",
+        "Python-SDK und REST-API für eigene Integration",
+      ],
+      considerations: [
+        "Erfordert API-Integration pro Modell in Ihrem Code",
+        "Kein eingebautes Agent-Discovery oder Skill-basierte Installation",
+        "Separate Auth und Abrechnung gegenüber anderen Capability-Anbietern",
+      ],
+      bestFor: "Entwickler, die eigene Backends oder Pipelines bauen und schnelle serverless GPU-Inferenz brauchen",
+      href: "/compare/anycap-vs-fal-ai",
+      cta: "AnyCap vs fal.ai ansehen",
+    },
+    {
+      name: "Hugging Face Inference API",
+      category: "Modell-Hub + Inferenz-Endpoints",
+      focus: "Zugang zum größten Open-Model-Ökosystem mit verwalteter Inferenz.",
+      strengths: [
+        "Riesige Modellbibliothek — Community- und offizielle Modelle",
+        "Free Tier für Experimente",
+        "Starkes Ökosystem für Modell-Discovery und -Evaluation",
+      ],
+      considerations: [
+        "Cold Starts im Free Tier können langsam sein",
+        "Qualität variiert deutlich über Community-Modelle hinweg",
+        "Keine einheitliche Auth über verschiedene Modelltypen",
+      ],
+      bestFor: "Forschende und Teams, die die breiteste Modellauswahl wollen und bereit sind, Modellqualität selbst zu managen",
+    },
+    {
+      name: "RunPod",
+      category: "GPU-Cloud + Serverless-Inferenz",
+      focus: "Günstige GPU-Compute-Ressourcen für eigene Modell-Deployments.",
+      strengths: [
+        "Wettbewerbsfähige GPU-Preise",
+        "Unterstützt eigene Docker-Container und Modell-Deployments",
+        "Gut für Teams mit bestehenden ComfyUI- oder Custom-Pipelines",
+      ],
+      considerations: [
+        "Erfordert Infrastrukturmanagement für Produktionseinsatz",
+        "Keine agent-native Schnittstelle oder Skill-basiertes Discovery",
+        "Sie verwalten Modellauswahl, Skalierung und Zuverlässigkeit selbst",
+      ],
+      bestFor: "Teams, die rohe GPU-Compute wollen und bereits eine eigene Model-Serving-Infrastruktur haben",
+    },
+    {
+      name: "OpenAI Image API (DALL-E / GPT Image)",
+      category: "First-Party Modell-API",
+      focus: "Bildgenerierungsmodelle von OpenAI über deren API.",
+      strengths: [
+        "Starke Markenbekanntheit und Dokumentation",
+        "GPT-Image-Modell liefert hochwertige Ergebnisse",
+        "Native Integration mit OpenAI Agent-SDKs",
+      ],
+      considerations: [
+        "Deckt nur Bildgenerierung ab — kein Video, kein Bildverständnis, keine Suche oder Speicher",
+        "An das OpenAI-Modell-Ökosystem gebunden",
+        "Preise können bei hohem Volumen höher sein als bei spezialisierten Anbietern",
+      ],
+      bestFor: "Teams im OpenAI-Ökosystem, die ausschließlich Bildgenerierung benötigen",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Ist AnyCap ein direkter Ersatz für Replicate?",
+      answer:
+        "Nicht ganz. Replicate ist eine Modell-Inferenzplattform für Entwickler, die eigene Backends bauen. AnyCap ist eine Capability-Runtime für KI-Agenten. Wenn Sie bestimmte Modelle aus eigenem Code mit feiner Kontrolle aufrufen müssen, ist Replicate das richtige Tool. Wenn Sie möchten, dass Agenten wie Claude Code oder Cursor Bilder erzeugen, Videos erstellen und visuelle Inhalte über eine Schnittstelle analysieren, passt AnyCap besser.",
+    },
+    {
+      question: "Kann ich Replicate-Modelle über AnyCap nutzen?",
+      answer:
+        "AnyCap kuratiert eine eigene Modellauswahl, anstatt Replicates Modellbibliothek zu proxen. Aktuelle Bildmodelle sind unter anderem Seedream 5 und Nano Banana Pro; Videomodelle umfassen Veo 3.1 und Kling 3.0. Der Trade-off: weniger Modelle, dafür ein konsistenteres agent-natives Erlebnis.",
+    },
+    {
+      question: "Was ist günstiger für Bildgenerierung?",
+      answer:
+        "Die Preise hängen vom Modell und Volumen ab. AnyCap bietet $5 kostenloses Guthaben und Pay-as-you-go ohne monatliche Gebühr. Replicate berechnet pro Prediction zu Sätzen, die je nach Modell und GPU variieren. Bei Agent-Workflows umfasst die Gesamtkostenrechnung auch die Integrationszeit — der Single-Install-Ansatz von AnyCap kann den Setup-Aufwand deutlich reduzieren.",
+    },
+    {
+      question: "Was, wenn ich ein Modell brauche, das AnyCap nicht anbietet?",
+      answer:
+        "Sie können Replicate, Hugging Face oder fal.ai für Modelle außerhalb der kuratierten AnyCap-Auswahl nutzen. AnyCap bindet Sie nicht an seinen Modellsatz — es ist eine Schicht in Ihrem Stack, kein Ersatz für jede Modell-API.",
+    },
+  ],
+  relatedTitle: "Verwandte Vergleiche",
+  relatedComparisons: [
+    {
+      href: "/compare/anycap-vs-replicate",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs Replicate",
+      body: "Tiefer 1:1-Vergleich von AnyCap und Replicate.",
+    },
+    {
+      href: "/compare/anycap-vs-fal-ai",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs fal.ai",
+      body: "Vergleichen Sie eine Agent-Capability-Runtime mit einer Serverless-Inferenzplattform.",
+    },
+  ],
+  cta: [
+    { href: "/start", label: "Loslegen" },
+    { href: "/capabilities", label: "Capabilities ansehen" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ReplicateAlternativesPageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getReplicateAlternativesMetadata(locale: SiteLocale): Metadata {

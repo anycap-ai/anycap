@@ -297,6 +297,7 @@ const contentByLocale: Record<SiteLocale, TermsPageData> = {
     },
   },
   id: {} as TermsPageData,
+  de: {} as TermsPageData,
 };
 
 contentByLocale.id = {
@@ -352,6 +353,139 @@ contentByLocale.id = {
     name: "Ketentuan Layanan AnyCap",
     description:
       "Ketentuan layanan untuk AnyCap, mencakup akses, penggunaan yang diperbolehkan, penyedia pihak ketiga, surface penagihan, dan perubahan layanan.",
+    url: "https://anycap.ai/terms",
+    dateModified: "2026-04-09",
+  },
+};
+
+const coreTermsDe: readonly TermsSection[] = [
+  {
+    kicker: "Geltungsbereich",
+    title: "Was diese Bedingungen abdecken",
+    bullets: [
+      "AnyCap stellt einen Capability-Runtime für KI-Agents, zugehörige Web-Surfaces, Installationspfade, Abrechnungs-Surfaces und Support-Materialien für agent-geführte Workflows bereit.",
+      "Die Nutzung beliebiger Teile des Service bedeutet, dass Sie diesen öffentlichen Basisbedingungen sowie den bei einem Workflow, Plan oder bei einer kostenpflichtigen Surface angezeigten Preis- oder Produkthinweisen zustimmen.",
+      "Wenn Sie eine separate, unterschriebene Vereinbarung mit AnyCap haben, gilt diese schriftliche Vereinbarung im Konfliktfall vorrangig vor dieser öffentlichen Seite.",
+    ],
+  },
+  {
+    kicker: "Zugang",
+    title: "Accounts, Credentials und lokale Umgebungen",
+    bullets: [
+      "Halten Sie Accounts, API-Keys, Agent-Credentials und verbundene lokale Umgebungen sicher und angemessen kontrolliert.",
+      "Sie sind für Aktivitäten verantwortlich, die über Ihren Account oder Ihre Credentials erfolgen, sofern sie nicht direkt von AnyCap verursacht wurden.",
+      "Umgehen Sie keine Quota-Kontrollen, Zugriffsbeschränkungen, Plan-Limits, Abrechnungslogik oder Sicherheitsvorkehrungen.",
+    ],
+  },
+  {
+    kicker: "Inputs",
+    title: "Prompts, Dateien, URLs und Berechtigung zur Nutzung",
+    bullets: [
+      "Sie bleiben verantwortlich für Prompts, Dateien, URLs, Anweisungen und Drittdaten, die Sie über AnyCap übermitteln.",
+      "Übermitteln Sie nur Inhalte, die Sie verarbeiten dürfen und die rechtmäßig durch den angeforderten Workflow gesendet werden können.",
+      "Bevor Sie Produktionsdaten senden, prüfen Sie, dass die Nutzung von AnyCap mit Ihren internen Richtlinien, Kundenzusagen und regulatorischen Pflichten vereinbar ist.",
+    ],
+  },
+  {
+    kicker: "Outputs",
+    title: "Review, Verifizierung und Downstream-Nutzung",
+    bullets: [
+      "Outputs können ohne menschliche Prüfung und Validierung unvollständig, ungenau, anstößig, verzögert, nicht verfügbar oder für einen bestimmten Zweck ungeeignet sein.",
+      "Sie sind dafür verantwortlich, wie Outputs in nachgelagerten Systemen genutzt, gespeichert, veröffentlicht, geteilt oder als Grundlage herangezogen werden.",
+      "AnyCap garantiert nicht, dass derselbe Prompt, dieselbe Route, derselbe Provider oder dieselbe Modellwahl dauerhaft verfügbar bleibt oder identische Ergebnisse über die Zeit liefert.",
+    ],
+  },
+  {
+    kicker: "Anbieter",
+    title: "Drittanbieter-Routing und Capability-Änderungen",
+    bullets: [
+      "AnyCap kann sich auf Drittanbieter für Modelle, Hosting, Storage, Authentifizierung, Analytics, Zahlung oder andere Infrastruktur verlassen, um Anfragen zu erfüllen.",
+      "Um einen Workflow auszuführen, können relevante Request-Daten bei Bedarf an diese Upstream-Anbieter zur Verarbeitung, Auslieferung oder Servicebetrieb gesendet werden.",
+      "Capabilities können hinzugefügt, entfernt, überarbeitet, pausiert oder eingestellt werden, einschließlich Änderungen an Modellen, Routen, Limits, UI-Surfaces und Verfügbarkeit.",
+    ],
+  },
+  {
+    kicker: "Abrechnung",
+    title: "Credits, Preise und Nutzungskontrollen",
+    bullets: [
+      "Kostenpflichtige Nutzung richtet sich nach den zum Zeitpunkt des Kaufs oder Zugriffs angezeigten Preis-, Credit-Pack- und Plan-Informationen.",
+      "Werbe-Credits, kostenfreie Nutzung, Feature-Verfügbarkeit und Packaging können sich im Laufe der Zeit ändern und unterliegen ggf. plan-spezifischen Limits oder Berechtigungs-Regeln.",
+      "AnyCap kann Requests anhand von Credits, Plan-Stufe, Provider-Beschränkungen, operativer Last sowie Missbrauchs- oder Risikosignalen messen, drosseln, einreihen, deckeln oder ablehnen.",
+    ],
+  },
+  {
+    kicker: "Schutz",
+    title: "Akzeptable Nutzung und Durchsetzung",
+    bullets: [
+      "Sie dürfen AnyCap nicht nutzen, um gegen Gesetze zu verstoßen, Drittservices zu missbrauchen, die Plattform-Stabilität zu stören, ohne Berechtigung nach Schwachstellen zu suchen oder klar schädliche, irreführende oder unautorisierte Aktivitäten zu unterstützen.",
+      "AnyCap kann mutmaßlichen Missbrauch untersuchen und den Zugriff einschränken, aussetzen oder beenden, sofern dies für Service-Schutz, Missbrauchsprävention, gesetzliche Compliance oder Sicherheitsreaktion vernünftig erforderlich ist.",
+      "Wir können Workflows, Accounts oder Zugriffspfade entfernen oder ablehnen, die ein unverhältnismäßiges operatives, rechtliches, finanzielles oder Vertrauensrisiko für die Plattform schaffen.",
+    ],
+  },
+  {
+    kicker: "Grenzen",
+    title: "Disclaimer und Haftungsgrenzen",
+    bullets: [
+      "AnyCap wird auf einer as-available- und as-evolving-Basis bereitgestellt, ohne Garantie für unterbrechungsfreien Betrieb, Provider-Kontinuität oder Eignung für einen bestimmten Workflow.",
+      "Im maximal gesetzlich zulässigen Umfang schließt AnyCap implizite Gewährleistungen aus und haftet nicht für indirekte, beiläufige, besondere, Folge- oder Strafschäden, die aus der Nutzung des Service entstehen.",
+      "Nichts auf dieser Seite stellt Rechtsberatung dar; Teams mit Procurement-, Vertrags- oder regulatorischen Anforderungen sollten vor dem Skalieren der Produktivnutzung eine eigene Prüfung durchführen.",
+    ],
+  },
+];
+
+contentByLocale.de = {
+  metadata: {
+    title: "Nutzungsbedingungen | AnyCap",
+    description:
+      "Lesen Sie die AnyCap-Basisbedingungen zu Produktzugang, akzeptabler Nutzung, Drittanbietern, Abrechnungs-Surfaces und Service-Änderungen.",
+    openGraphTitle: "Nutzungsbedingungen | AnyCap",
+    openGraphDescription:
+      "Lesen Sie die AnyCap-Basisbedingungen zu Zugang, akzeptabler Nutzung, Drittanbietern und Service-Änderungen.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Nutzungsbedingungen", href: "/terms" },
+  ],
+  eyebrow: "Nutzungsbedingungen",
+  heroTitle: "Service-Bedingungen für AnyCap",
+  heroIntro:
+    "Diese Basisbedingungen erklären, was AnyCap bereitstellt, wofür Sie in Agent-Workflows weiterhin verantwortlich bleiben und wann AnyCap den Service ändern, einschränken oder schützen darf.",
+  lastUpdatedLabel: "9. April 2026",
+  keyTermsTitle: "Die praktische Basis",
+  keyTerms: [
+    {
+      title: "Nur autorisierte Workflows",
+      body: "Nutzen Sie AnyCap nur mit Prompts, Dateien, URLs und Anweisungen, die Sie über den angeforderten Agent-Workflow verarbeiten dürfen.",
+    },
+    {
+      title: "Sie tragen die Entscheidungen",
+      body: "Sie bleiben verantwortlich für eingereichte Inputs, die nachgelagerte Nutzung von Outputs und dafür, ob der Workflow zu Ihren Richtlinien, Verträgen und Compliance-Anforderungen passt.",
+    },
+    {
+      title: "Capabilities können sich weiterentwickeln",
+      body: "Modelle, Routen, Limits, Schnittstellen und Provider-Verfügbarkeit können sich ändern, während AnyCap und Upstream-Systeme weiterentwickelt werden.",
+    },
+    {
+      title: "Wir dürfen den Service schützen",
+      body: "AnyCap kann Nutzung messen, ratenbegrenzen, einreihen, ablehnen oder aussetzen, wenn das für Missbrauchsprävention, Abrechnungs-Enforcement, gesetzliche Compliance, Plattform-Stabilität oder Sicherheit erforderlich ist.",
+    },
+  ],
+  coreTermsTitle: "Die operativen Regeln rund um AnyCap",
+  coreTerms: coreTermsDe,
+  footerTitle: "Stellen Sie sicher, dass der Workflow zu Ihrem Team passt",
+  footerIntro:
+    "AnyCap ist für Agent-Workflows gebaut und keine Garantie dafür, dass jedes Modell, jeder Provider oder jede Route dauerhaft unverändert bleibt. Teams, die die Plattform produktiv nutzen, sollten ihre Annahmen zur Datenverarbeitung, Output-Review-Standards, Abrechnungs-Erwartungen und etwaige Procurement- oder Compliance-Anforderungen vor dem Skalieren der Nutzung prüfen.",
+  footerBody1:
+    "Lesen Sie diese Seite zusammen mit der Datenschutzerklärung, der Preisseite und der Über-Seite, damit die rechtliche Basis zum Produkt und zum operativen Kontext passt.",
+  footerBody2:
+    "Wenn Ihr Team vor einem breiteren Rollout Klärung benötigt, schreiben Sie dem AnyCap-Team eine E-Mail oder nutzen Sie die Kontaktseite.",
+  footerBody3: "",
+  termsPageJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "AnyCap Nutzungsbedingungen",
+    description:
+      "Nutzungsbedingungen für AnyCap, einschließlich Zugang, akzeptabler Nutzung, Drittanbietern, Abrechnungs-Surfaces und Service-Änderungen.",
     url: "https://anycap.ai/terms",
     dateModified: "2026-04-09",
   },

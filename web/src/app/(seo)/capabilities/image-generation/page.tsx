@@ -69,6 +69,32 @@ export default async function ImageGenerationPage() {
             <EarlyAccessBanner />
           </FadeIn>
 
+          <FadeIn className="mt-8">
+            <div className="max-w-[920px] rounded-xl border border-[#6b7d3a]/40 bg-[#f0f4dc] p-6 md:p-8">
+              <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+                {content.opusCallout.eyebrow}
+              </p>
+              <h2 className="mb-3 text-base text-[#1c1f17] md:text-lg" style={pixel}>
+                {content.opusCallout.title}
+              </h2>
+              <p className="text-sm leading-6 text-[#4d5145] md:text-[15px]">
+                {content.opusCallout.body}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {content.opusCallout.ctas.map((cta) => (
+                  <Link
+                    key={cta.label}
+                    href={cta.href}
+                    className="inline-block rounded-lg border border-[#1c1f17] px-5 py-2 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
+                    style={mono}
+                  >
+                    {cta.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </FadeIn>
+
           <FadeIn className="mt-10">
             <ImageGenDemo lines={content.demo.lines} labels={content.demo.labels} />
           </FadeIn>

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+
+const PATH = "/guides/how-to-add-image-generation-to-ai-agent";
 
 const metadataByLocale: Record<
   SiteLocale,
@@ -29,24 +32,32 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Pelajari setup AnyCap CLI, pemilihan model, dan workflow praktis agar agen AI dapat membuat gambar secara konsisten.",
   },
+  de: {
+    title: "Bildgenerierung zu einem KI-Agenten hinzufügen — Schritt-für-Schritt-Anleitung",
+    description:
+      "Schritt-für-Schritt-Anleitung zum Hinzufügen von Bildgenerierungs-Capabilities zu jedem KI-Agenten — Claude Code, Cursor oder Codex — mit der AnyCap CLI und Modellen wie Seedream 5 und Nano Banana Pro.",
+    openGraphTitle: "Bildgenerierung zu einem KI-Agenten hinzufügen — Schritt-für-Schritt-Anleitung",
+    openGraphDescription:
+      "Lernen Sie das AnyCap-CLI-Setup, die Modellauswahl und praktische Workflows kennen, damit KI-Agenten Bilder konsistent generieren können.",
+  },
 };
 
 export function getPageMetadata(locale: SiteLocale): Metadata {
   const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
 
-  return {
+  return createLocalizedMetadataForPath(locale, PATH, {
     title: localizedMetadata.title,
     description: localizedMetadata.description,
-    alternates: { canonical: "/guides/how-to-add-image-generation-to-ai-agent" },
+    alternates: { canonical: PATH },
     openGraph: {
       type: "website",
       locale: getLocaleConfig(locale).ogLocale,
-      url: "/guides/how-to-add-image-generation-to-ai-agent",
+      url: PATH,
       siteName: siteConfig.siteName,
       title: localizedMetadata.openGraphTitle,
       description: localizedMetadata.openGraphDescription,
     },
-  };
+  });
 }
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);

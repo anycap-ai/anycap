@@ -45,7 +45,7 @@ const en: AddToolsToClaudeCodePageData = {
   eyebrow: "Guides",
   heroTitle: "Add tools to Claude Code",
   heroIntro:
-    "Claude Code is a powerful coding agent, but it cannot generate images, create videos, or analyze visual content on its own. AnyCap adds these capabilities through a skill file and CLI. This guide walks through the full setup — from installing the skill to generating your first image — so Claude Code can access image generation with models like Seedream 5 and Nano Banana Pro, video generation with Veo 3.1, image understanding, and video analysis through one interface.",
+    "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Pair it with AnyCap and the combo is borderline insane: the same terminal session reaches Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, plus image and video understanding, with one CLI and one login. This guide walks through the full setup — from installing the skill to generating your first image — so Opus 4.7 + AnyCap can do all of it through one interface, with zero glue code between them.",
   needTitle: "What you need",
   needItems: [
     "Claude Code installed and working",
@@ -132,7 +132,7 @@ const ptBr: AddToolsToClaudeCodePageData = {
   eyebrow: "Guias",
   heroTitle: "Adicionar ferramentas ao Claude Code",
   heroIntro:
-    "O Claude Code é um agente de código poderoso, mas não gera imagens, não cria vídeos e não analisa conteúdo visual sozinho. O AnyCap adiciona essas capacidades por meio de um arquivo de skill e da CLI. Este guia mostra todo o setup, da instalação da skill até a geração da primeira imagem, para que o Claude Code acesse geração de imagem com modelos como Seedream 5 e Nano Banana Pro, geração de vídeo com Veo 3.1, entendimento de imagem e análise de vídeo por uma única interface.",
+    "O Claude Code agora roda no Claude Opus 4.7 — o agente de raciocínio e código mais forte que a Anthropic já lançou. Combine com o AnyCap e o resultado é absurdo: a mesma sessão de terminal alcança Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, mais entendimento de imagem e análise de vídeo, com uma única CLI e um único login. Este guia mostra todo o setup, da instalação da skill até a geração da primeira imagem, para que Opus 4.7 + AnyCap entreguem tudo isso por uma única interface, sem nenhuma cola entre eles.",
   needTitle: "O que você precisa",
   needItems: [
     "Claude Code instalado e funcionando",
@@ -222,7 +222,7 @@ const contentByLocale: Record<SiteLocale, AddToolsToClaudeCodePageData> = {
     eyebrow: "Panduan",
     heroTitle: "Tambahkan tool ke Claude Code",
     heroIntro:
-      "Claude Code adalah agen coding yang kuat, tetapi ia tidak bisa menghasilkan gambar, membuat video, atau menganalisis konten visual sendirian. AnyCap menambahkan kapabilitas itu melalui file skill dan CLI. Panduan ini membahas seluruh setup, mulai dari pemasangan skill sampai pembuatan gambar pertama, supaya Claude Code bisa mengakses pembuatan gambar dengan model seperti Seedream 5 dan Nano Banana Pro, pembuatan video dengan Veo 3.1, pemahaman gambar, dan analisis video melalui satu interface.",
+      "Claude Code kini menjalankan Claude Opus 4.7. Opus 4.7 lebih kuat untuk reasoning dan coding, tetapi tetap tidak bisa menghasilkan gambar, membuat video, atau menganalisis konten visual sendirian. AnyCap menambahkan kapabilitas itu melalui file skill dan CLI. Panduan ini membahas seluruh setup, mulai dari pemasangan skill sampai pembuatan gambar pertama, supaya Claude Code di Opus 4.7 bisa mengakses pembuatan gambar dengan model seperti Seedream 5 dan Nano Banana Pro, pembuatan video dengan Veo 3.1, pemahaman gambar, dan analisis video melalui satu interface.",
     needTitle: "Yang Anda perlukan",
     needItems: [
       "Claude Code sudah terpasang dan berfungsi",
@@ -289,6 +289,92 @@ const contentByLocale: Record<SiteLocale, AddToolsToClaudeCodePageData> = {
     cta: [
       { label: "AnyCap untuk Claude Code", href: "/for/claude-code" },
       { label: "Lihat Kapabilitas", href: "/capabilities" },
+    ],
+  },
+  de: {
+    metadata: {
+      title: "Tools zu Claude Code hinzufügen — Agent-Capabilities installieren",
+      description:
+        "Schritt-für-Schritt-Anleitung zum Hinzufügen von Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse als Tools zu Claude Code mit AnyCap Skills und CLI.",
+      openGraphTitle: "Tools zu Claude Code hinzufügen — Agent-Capabilities installieren",
+      openGraphDescription:
+        "Schritt-für-Schritt-Anleitung zum Hinzufügen von Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse als Tools zu Claude Code mit AnyCap Skills und CLI.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Anleitungen", href: "/guides", unlinkable: true },
+      { name: "Tools zu Claude Code hinzufügen" },
+    ],
+    eyebrow: "Anleitungen",
+    heroTitle: "Tools zu Claude Code hinzufügen",
+    heroIntro:
+      "Claude Code läuft jetzt auf Claude Opus 4.7 — dem stärksten Reasoning- und Coding-Agent, den Anthropic je veröffentlicht hat. Kombinieren Sie ihn mit AnyCap und das Ergebnis ist beeindruckend: Dieselbe Terminal-Sitzung erreicht Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0 sowie Bild- und Videoverständnis — mit einer CLI und einem Login. Diese Anleitung führt Sie durch das gesamte Setup — von der Skill-Installation bis zur ersten Bildgenerierung — sodass Opus 4.7 + AnyCap alles über eine Schnittstelle erledigen kann, ohne Glue-Code dazwischen.",
+    needTitle: "Was Sie benötigen",
+    needItems: [
+      "Claude Code installiert und funktionsfähig",
+      "Node.js 18+ (für skills.sh und npm install)",
+      "Einen Browser für den Login-Flow",
+    ],
+    note: "Die folgenden Schritte spiegeln den aktuellen Installationsfluss zum Hinzufügen von AnyCap-Tools zu Claude Code wider.",
+    steps: [
+      {
+        title: "AnyCap Skill installieren",
+        command: "npx -y skills add anycap-ai/anycap -a claude-code -y",
+        body:
+          "Dies legt die AnyCap SKILL.md-Datei im Skills-Verzeichnis von Claude Code ab, sodass verfügbare Capabilities erkannt werden können.",
+      },
+      {
+        title: "AnyCap CLI installieren",
+        command: "curl -fsSL https://anycap.ai/install.sh | sh",
+        body: "Oder:",
+        bodyCommand: "npm install -g @anycap/cli",
+      },
+      {
+        title: "Anmelden",
+        command: "anycap login",
+      },
+      {
+        title: "Verfügbare Modelle entdecken",
+        command: "anycap image models",
+        body: "Listet verfügbare Bildmodelle auf: Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.",
+      },
+      {
+        title: "Generieren Sie Ihr erstes Bild",
+        command: 'anycap image generate --model seedream-5 --prompt "a minimalist product mockup"',
+      },
+      {
+        title: "Probieren Sie weitere Capabilities aus",
+        command: "anycap image read --url https://example.com/screenshot.png",
+        body: "Bildverständnis / Videoanalyse",
+        bodyCommand: "anycap video read --url https://example.com/demo.mp4",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Muss ich außer Skill und CLI noch etwas installieren?",
+        answer:
+          "Nein. Die AnyCap CLI ist ein einzelnes Binary ohne Runtime-Abhängigkeiten. Die Skill-Datei bringt Claude Code bei, wie es sie findet. Es sind keine zusätzlichen SDKs, Docker-Container oder Sprach-Runtimes nötig.",
+      },
+      {
+        question: "Funktioniert das mit Claude Code auf allen Betriebssystemen?",
+        answer:
+          "Ja. Die AnyCap CLI unterstützt macOS, Linux und Windows. Sie läuft in derselben Terminal-Sitzung wie Claude Code.",
+      },
+      {
+        question: "Wie viel kostet es, ein Bild zu generieren?",
+        answer:
+          "AnyCap nutzt nutzungsbasierte Preise ohne monatliche Gebühr. Neue Nutzer erhalten 5 USD Startguthaben. Modellbezogene Tarife finden Sie auf der Preisseite.",
+      },
+      {
+        question: "Kann Claude Code AnyCap automatisch ohne mein Zutun aufrufen?",
+        answer:
+          "Ja. Sobald der Skill installiert und die CLI authentifiziert ist, kann Claude Code jede AnyCap-Capability als Reaktion auf Prompts in natürlicher Sprache aufrufen. Sie können „Generiere ein Produkt-Mockup“ sagen und Claude Code ruft den richtigen AnyCap-Befehl auf.",
+      },
+    ],
+    cta: [
+      { label: "AnyCap für Claude Code", href: "/for/claude-code" },
+      { label: "Alle Capabilities", href: "/capabilities" },
     ],
   },
 };

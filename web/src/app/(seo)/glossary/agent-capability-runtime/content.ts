@@ -329,6 +329,95 @@ const problemSignalsPtBr = [
   },
 ] as const;
 
+const faqItemsDe = [
+  {
+    question: "Was ist ein Agent Capability Runtime?",
+    answer:
+      "Ein Agent Capability Runtime ist eine Softwareschicht, die KI-Agenten installierbare Capabilities wie Bildgenerierung, Videogenerierung, Bildverständnis, Videoanalyse, Web Search und Web Crawl über eine einzige Schnittstelle bereitstellt. Er bietet einen Installationspfad, einen Auth-Flow und eine Kommando-Oberfläche für jede Capability, die der Agent benötigt, statt separater Provider-Integrationen.",
+  },
+  {
+    question: "Wie unterscheidet sich ein Capability Runtime von einem Agent Framework?",
+    answer:
+      "Ein Agent Framework wie LangChain, CrewAI oder AutoGen liefert die Reasoning Loop, das Memory und die Orchestrierung zum Bau von Agenten. Ein Capability Runtime ersetzt das Framework nicht. Er stellt die tatsächlichen Capabilities bereit, die die Agenten des Frameworks aufrufen können. Beide arbeiten auf unterschiedlichen Ebenen des Stacks.",
+  },
+  {
+    question: "Wie unterscheidet sich ein Capability Runtime von einer Tool-Integrationsplattform?",
+    answer:
+      "Eine Tool-Integrationsplattform wie Composio oder Zapier verbindet Agenten über SDK-Integrationen und Per-Tool-OAuth mit Hunderten von Drittdiensten. Ein Capability Runtime konzentriert sich darauf, kuratierte, hochwertige Capabilities über eine CLI und einen Auth-Flow auszuliefern. Der Trade-off ist Breite versus Tiefe.",
+  },
+  {
+    question: "Warum nicht einfach Provider-APIs direkt aufrufen?",
+    answer:
+      "Direkte API-Integration bietet volle Kontrolle, erfordert aber separate Authentifizierung, Fehlerbehandlung, Rate-Limiting und Response-Normalisierung pro Provider. Wenn ein Agent Bildgenerierung von einem Provider, Videogenerierung von einem anderen und Vision von einem dritten benötigt, multipliziert sich der Integrationsaufwand. Ein Capability Runtime absorbiert diese Komplexität in eine einzige Schnittstelle.",
+  },
+  {
+    question: "Welche Capabilities umfasst ein Agent Capability Runtime typischerweise?",
+    answer:
+      "Häufige Capabilities sind Bildgenerierung, Videogenerierung, Bildverständnis, Videoanalyse, Audio-Transkription, Web Search, Web Crawl, Cloud-Speicher und statisches Page-Publishing. Der genaue Umfang hängt vom Runtime ab.",
+  },
+  {
+    question: "Ist AnyCap der einzige Agent Capability Runtime?",
+    answer:
+      "AnyCap ist das erste Produkt, das den Begriff Agent Capability Runtime als primäre Kategorie verwendet. Andere Produkte lösen Teile desselben Problems, aber keines kombiniert ein Install, ein Auth und eine CLI über den gesamten Capability-Stack so wie ein dedizierter Capability Runtime.",
+  },
+  {
+    question: "Ersetzt ein Capability Runtime den KI-Agenten?",
+    answer:
+      "Nein. Ein Capability Runtime ist kein Agent. Er läuft neben dem Agenten und stellt die Capabilities bereit, die der Agent nicht mitbringt. Der Agent übernimmt Reasoning, Planung und Code-Ausführung. Der Runtime übernimmt alles ausserhalb der eingebauten Oberfläche des Agenten.",
+  },
+  {
+    question: "Wie steht MCP zu einem Capability Runtime?",
+    answer:
+      "MCP ist ein Kommunikationsprotokoll, das standardisiert, wie Agenten Tools entdecken und aufrufen. Ein Capability Runtime kann seine Capabilities über MCP exponieren, aber MCP allein liefert die Capabilities nicht. Es liefert die Verdrahtung, während der Runtime die Implementierungen, Authentifizierung und Auslieferung bündelt.",
+  },
+] as const;
+
+const capabilityCategoriesDe = [
+  {
+    category: "Generierung",
+    capabilities: "Bildgenerierung, Videogenerierung, Musikgenerierung",
+    agentUse: "Visuals, Demos, Produkt-Mockups, Marketing-Assets und Hintergrund-Tracks erstellen",
+  },
+  {
+    category: "Verständnis",
+    capabilities: "Bildverständnis, Videoanalyse, Audio-Transkription",
+    agentUse: "Screenshots interpretieren, Aufnahmen analysieren, Diagramme lesen, strukturierte Daten aus Medien extrahieren",
+  },
+  {
+    category: "Web-Retrieval",
+    capabilities: "Web Search, Web Crawl",
+    agentUse: "Recherche, Faktenprüfung, Wettbewerbsanalyse, Doku-Suche, Evidenzsammlung",
+  },
+  {
+    category: "Auslieferung",
+    capabilities: "Cloud-Speicher, statisches Page-Publishing",
+    agentUse: "Generierte Assets mit Menschen teilen, Ergebnisse als Webseiten veröffentlichen, Artefakte für die Weiterverarbeitung speichern",
+  },
+] as const;
+
+const problemSignalsDe = [
+  {
+    signal: "Der Agent muss ein Bild-, Video- oder Audio-Artefakt erzeugen",
+    without: "Erfordert eine separate Image-API-Integration, separate Credentials und individuelle Fehlerbehandlung",
+    with: "Ein CLI-Befehl: anycap image generate, anycap video generate oder anycap music generate",
+  },
+  {
+    signal: "Der Agent muss einen Screenshot, ein Diagramm oder eine Aufnahme interpretieren",
+    without: "Erfordert eine Vision-API, ggf. eine Transkriptions-API, jede mit eigenem Auth und SDK",
+    with: "Ein CLI-Befehl: anycap image read, anycap video read oder anycap audio read",
+  },
+  {
+    signal: "Der Workflow umfasst drei oder mehr Capability-Provider",
+    without: "Drei API-Key-Sets, drei SDKs, drei Fehlerbehandlungs-Patterns, drei Billing-Dashboards",
+    with: "Ein Login, eine CLI, eine Billing-Oberfläche",
+  },
+  {
+    signal: "Ein neues Agent-Produkt benötigt dieselben Capabilities wie das vorherige",
+    without: "Jeden Provider für den neuen Agenten neu integrieren, Glue Code neu schreiben, Auth-Flows neu testen",
+    with: "Dieselbe Skill-Datei und CLI installieren - die Capabilities übertragen sich sofort auf den neuen Agenten",
+  },
+] as const;
+
 const relatedPages = [
   {
     eyebrow: "Glossary",
@@ -749,6 +838,247 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     },
   },
   id: undefined as unknown as AgentCapabilityRuntimePageData,
+  de: {
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Glossar", href: "/glossary", unlinkable: true },
+      { name: "Agent Capability Runtime", href: "/glossary/agent-capability-runtime" },
+    ],
+    metadata: {
+      title: "Was ist ein Agent Capability Runtime? | AnyCap",
+      description:
+        "Ein Agent Capability Runtime ist eine Softwareschicht, die KI-Agenten installierbare Capabilities über eine einzige Schnittstelle, einen Auth-Flow und einen Installationspfad bereitstellt. Erfahren Sie, wie er sich von Agent Frameworks, Tool-Plattformen und direkten API-Integrationen unterscheidet.",
+      openGraphTitle: "Was ist ein Agent Capability Runtime? | AnyCap",
+      openGraphDescription:
+        "Ein Agent Capability Runtime gibt KI-Agenten installierbare Capabilities über eine einzige Schnittstelle. Erfahren Sie, wie er sich von Agent Frameworks, Tool-Integrationsplattformen und direkten API-Integrationen unterscheidet.",
+    },
+    definitionJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "DefinedTerm",
+      name: "Agent Capability Runtime",
+      description:
+        "Eine Softwareschicht, die KI-Agenten installierbare Capabilities über eine einzige Schnittstelle bereitstellt, statt separate Integrationen für jede Capability zu erfordern.",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Was ist ein Agent Capability Runtime? Definition, Architektur und warum es wichtig ist",
+      description:
+        "Tiefgehender Leitfaden zu Agent Capability Runtimes: was sie sind, wie sie sich von Agent Frameworks und Tool-Plattformen unterscheiden, welche Architekturprobleme sie lösen und wann Teams einen einführen sollten.",
+      path: AGENT_CAPABILITY_RUNTIME_PATH,
+      about: ["Agent Capability Runtime", "KI-Agenten", "Multimodale KI", "Agent-Architektur", "Tool-Integration"],
+      keywords: [
+        "agent capability runtime",
+        "ki capability runtime",
+        "ki agent runtime",
+        "agent tools",
+        "agent capabilities",
+        "multimodaler agent",
+        "agent-architektur",
+      ],
+      datePublished: "2026-04-03",
+      dateModified: "2026-04-10",
+    }),
+    faqJsonLd: buildFaqJsonLd(faqItemsDe),
+    eyebrow: "Glossar",
+    lastUpdatedLabel: "10. April 2026",
+    heroTitle: ["Was ist ein Agent", "Capability Runtime?"],
+    heroBody: [
+      "Ein Agent Capability Runtime ist eine Softwareschicht, die KI-Agenten installierbare Capabilities über eine einheitliche Schnittstelle bereitstellt. Statt für jede Capability separate SDKs, Auth-Flows, Response-Formate und Lifecycle-Handling zu fordern, bietet der Runtime einen Installationspfad, einen Auth-Flow und eine Kommando-Oberfläche für alles, was der Agent jenseits seiner eingebauten Reasoning Loop benötigt. Das ist entscheidend, wenn Workflows mehrere Provider umspannen, weil Integrationskomplexität schneller waechst als Modellqualität. Ein Runtime absorbiert diese Komplexität, damit Teams sich auf Aufgaben statt auf Glue-Code-Pflege konzentrieren können.",
+      "Der Begriff benennt eine spezifische Architekturschicht im Agent-Stack. Ein Agent übernimmt Reasoning, Planung und Code-Ausführung. Ein Harness verwaltet Lifecycle, Berechtigungen und Tool-Routing. Ein Capability Runtime liegt unter beiden und liefert konkrete Aktionen wie Generierung, Verständnis, Retrieval, Speicherung und Publishing über einen agent-nativen Vertrag. Mit dieser Trennung können Teams Modelle, Prompts und Provider weiterentwickeln, ohne die Ausführungslogik bei jeder neuen Capability-Anforderung neu zu schreiben.",
+    ],
+    sectionLabels: {
+      architecture: "Architektur",
+      motivation: "Motivation",
+      comparison: "Vergleich",
+      scope: "Umfang",
+      design: "Design",
+      example: "Beispiel",
+    },
+    architectureHeading: "Wo ein Capability Runtime im Agent-Stack sitzt",
+    architectureIntro:
+      "Ein Agent-Stack besteht aus mehreren Schichten, von denen jede eine eigene Problemklasse löst. Ein Capability Runtime besetzt die Schicht zwischen Harness und Modell-/Provider-APIs, also genau dort, wo Ausführungskonsistenz am wichtigsten ist. Seine Aufgabe ist es, Capabilities zu vereinheitlichen, die sonst über Provider mit unterschiedlichen Auth-Modellen, Request-Verträgen und Fehler-Semantiken verstreut wären. Durch die Zentralisierung dieser Schicht reduziert das Team operativen Drift und hält das Agent-Verhalten vorhersagbarer, während Workflows in Modalität und Komplexität wachsen. Hier liegt auch der grösste Hebel: Ein Runtime-Update kann viele Workflows verbessern, ohne jede einzelne Agent-Integration anfassen zu müssen. In der Praxis bedeutet das geringere Onboarding-Kosten, sauberere Incident-Grenzen und weniger Regressionen bei Provider-Änderungen. Es schafft zudem einen stabilen Vertrag, über den Plattform-Teams Policies durchsetzen können, ohne die Auslieferungsgeschwindigkeit zu bremsen.",
+    architectureTable: baseArchitectureRows.map((row) => {
+      if (row.layer === "Agent (reasoning layer)") {
+        return {
+          layer: "Agent (Reasoning-Schicht)",
+          role: "Plant, schlussfolgert, schreibt Code, führt Shell-Befehle aus, verwaltet die Konversation",
+          examples: "Claude Code, Cursor, Codex, OpenCode, individuelle LangChain-Agenten",
+        };
+      }
+
+      if (row.layer === "Harness (execution layer)") {
+        return {
+          layer: "Harness (Ausführungsschicht)",
+          role: "Verwaltet den Agent-Lifecycle: Tool-Routing, Berechtigungen, Context Window, Skill-Discovery",
+          examples: "Eingebauter Harness von Claude Code, Agent-Modus von Cursor, OpenAI Codex Sandbox",
+        };
+      }
+
+      if (row.layer === "Capability runtime") {
+        return {
+          layer: "Capability Runtime",
+          role: "Liefert installierbare Capabilities (Generierung, Verständnis, Suche, Speicherung) über eine einheitliche Schnittstelle",
+          examples: "AnyCap",
+        };
+      }
+
+      return {
+        layer: "Modell- / Provider-APIs",
+        role: "Stellen einzelne Modell-Inferenz-Endpoints für spezifische Aufgaben bereit",
+        examples: "OpenAI API, Google Gemini API, Replicate, fal.ai, ElevenLabs",
+      };
+    }),
+    architectureClosing:
+      "Die zentrale Erkenntnis: Capabilities sind nicht dasselbe wie der Agent, und sie sind nicht dasselbe wie die Modell-API. Ein Capability Runtime ist eine dedizierte Schicht, die die Lücke zwischen den nativen Fähigkeiten des Agenten und dem schließt, was der Workflow tatsaechlich verlangt.",
+    motivationHeading: "Welches Problem ein Capability Runtime löst",
+    motivationIntro:
+      "Ohne einen Capability Runtime bedeutet jede neue Capability in einem Agent-Workflow eine separate Integration. Die folgende Tabelle zeigt, was sich ändert, wenn ein Runtime diese Integrationsarbeit absorbiert.",
+    problemSignals: problemSignalsDe,
+    comparisonHeading: "Wie er sich von anderen Ansätzen unterscheidet",
+    comparisonIntro:
+      "Ein Capability Runtime ist nicht der einzige Weg, Agenten neue Fähigkeiten zu geben, aber er löst ein spezifisches Ausführungsproblem, das andere Ansätze oft offen lassen. Frameworks orchestrieren Reasoning Loops, Tool-Plattformen maximieren Integrationsbreite und direkte APIs maximieren Low-Level-Kontrolle. Ein Capability Runtime optimiert konsistente operative Auslieferung über multimodale Aktionen in Agent-Umgebungen. Die richtige Wahl hängt von Workflow-Breite, Provider-Anzahl und dem Integrations-Overhead ab, den Ihr Team absorbieren kann, ohne die Produktauslieferung zu verlangsamen. In der Praxis profitieren Teams mit hoher modalübergreifender Wiederholung am meisten von dieser Schicht. Der Wert verstaerkt sich, wenn mehrere Agent-Produkte dieselben Capabilities mit denselben Zuverlässigkeitserwartungen benötigen. Besonders sichtbar wird das, wenn ein Workflow unverändert über verschiedene Harnesses und Release-Zyklen laufen muss. Es ist der Unterschied zwischen wiederholter Reintegration und wiederverwendbarer Ausführungs-Infrastruktur.",
+    approachComparisons: baseApproachComparisons.map((row) => {
+      if (row.approach === "Direct API integration") {
+        return {
+          approach: "Direkte API-Integration",
+          what: "Direkter Aufruf der REST- oder SDK-API jedes Providers für Bildgenerierung, Videogenerierung, Vision usw.",
+          install: "SDK-Installation und API-Key-Einrichtung pro Provider",
+          auth: "Separate Credentials pro Provider",
+          tradeoff: "Volle Kontrolle über jeden Provider, aber der Integrationsaufwand multipliziert sich mit jeder neuen Capability",
+          bestFor: "Teams, die nur eine Capability von einem Provider benötigen und maximale Kontrolle wollen",
+        };
+      }
+
+      if (row.approach === "Agent framework") {
+        return {
+          approach: "Agent Framework",
+          what: "Liefert die Reasoning Loop, Memory, Tool-Orchestrierung und Agent-Lifecycle-Verwaltung",
+          install: "Framework-Installation (pip, npm usw.)",
+          auth: "Das Framework verwaltet Tool-Aufrufe; Tools benötigen weiterhin eigenes Auth",
+          tradeoff: "Starke Orchestrierung, aber das Framework liefert die Capabilities nicht selbst - es ruft sie nur auf",
+          bestFor: "Teams, die individuelle Agent-Architekturen von Grund auf bauen",
+        };
+      }
+
+      if (row.approach === "Tool integration platform") {
+        return {
+          approach: "Tool-Integrationsplattform",
+          what: "Verbindet Agenten via SDK-Integrationen und Managed OAuth mit über 100 Drittdiensten",
+          install: "SDK-Integration in den Anwendungscode",
+          auth: "Managed Per-Tool-OAuth und API-Key-Ablage",
+          tradeoff: "Sehr breite Abdeckung, aber jedes Tool bleibt eine separate Integrationsoberflaeche hinter der Plattform",
+          bestFor: "Teams, die Zugriff auf CRM, E-Mail, Kalender und SaaS-Tools für ihre Agenten brauchen",
+        };
+      }
+
+      if (row.approach === "MCP server") {
+        return {
+          approach: "MCP-Server",
+          what: "Stellt ein einzelnes Tool oder Tool-Set über den Model Context Protocol Standard bereit",
+          install: "MCP-Server-Setup pro Tool oder Capability",
+          auth: "Variiert je nach MCP-Server-Implementierung",
+          tradeoff: "Protokoll-Standard für Agent-Tool-Kommunikation, aber jeder Server ist ein separater Prozess",
+          bestFor: "Teams, die Agent-Produkte erweitern, die MCP nativ unterstützen (Claude Desktop, Cursor usw.)",
+        };
+      }
+
+      return {
+        approach: "Capability Runtime",
+        what: "Eine Installation, ein Auth, jede Capability über eine konsistente, agent-native Schnittstelle",
+        install: "Eine Skill-Datei + ein CLI-Binary",
+        auth: "Ein Login deckt den gesamten Capability-Stack ab",
+        tradeoff: "Agent-nativ und konsistent, aber Capabilities sind kuratiert statt offen",
+        bestFor: "Teams, die multimodale Capabilities innerhalb von Agent-Workflows benötigen",
+      };
+    }),
+    scopeHeading: "Welche Capabilities ein Runtime typischerweise umfasst",
+    scopeIntro:
+      "Ein Capability Runtime deckt Capabilities ab, die ausserhalb der eingebauten Reasoning Loop des Agenten liegen, aber in echten Workflows wiederholt benötigt werden. Ziel ist nicht, Reasoning zu ersetzen, sondern Nicht-Reasoning-Aktionen über eine stabile Ausführungsschicht verfügbar zu machen. In der Praxis gruppieren sich die meisten Runtime-Inventare natuerlich in vier Kategorien, sodass Teams über Abdeckung nachdenken, Lücken erkennen und Capability-Zugriff erweitern können, ohne ihr Orchestrierungsmodell bei jedem neuen Aufgabentyp neu zu entwerfen. Diese Kategorisierung macht auch Roadmap-Planung klarer, weil Teams nach Workflow-Impact statt nach Provider-Marketing priorisieren können. Sie hilft Produkt- und Engineering-Teams, sich darauf zu einigen, was als nächstes hinzugefuegt werden soll - basierend auf Ausführungsengpässen, nicht auf Hype-Zyklen. Mit wachsender Capability-Anzahl verhindert diese Struktur, dass Inventar-Wildwuchs die Agent-Zuverlässigkeit oder die teamübergreifende Adoption beeintraechtigt. Sie hält zudem Dokumentation und Implementierungssprache über Teams hinweg konsistent.",
+    capabilityCategories: capabilityCategoriesDe,
+    designHeading: "Zentrale Designprinzipien eines Capability Runtimes",
+    designPrinciples: [
+      {
+        title: "Ein Installationspfad",
+        body:
+          "Agenten sollten nicht für jede Capability ein separates Paket entdecken, herunterladen und konfigurieren müssen. Ein Capability Runtime wird einmal installiert und stellt jede Capability über dasselbe Binary oder dieselbe Skill-Datei bereit.",
+      },
+      {
+        title: "Ein Auth-Flow",
+        body:
+          "Authentifizierung sollte einmal stattfinden und für jede Capability gelten. Agenten sollten keine separaten API-Keys, OAuth-Tokens oder Billing-Konten pro Provider verwalten.",
+      },
+      {
+        title: "Agent-native Schnittstelle",
+        body:
+          "Die Schnittstelle sollte zur Arbeitsweise der Agenten passen. Für terminal-native Agenten heißt das eine CLI. Für SDK-basierte Agenten kann es eine Library sein.",
+      },
+      {
+        title: "Provider-Abstraktion",
+        body:
+          "Der Runtime abstrahiert Provider-Unterschiede weg. Wenn das Bildgenerierungs-Modell wechselt, bleibt das Aufrufmuster des Agenten gleich. Modellauswahl ist ein Parameter, keine Reintegration.",
+      },
+      {
+        title: "Portabilitaet über Agenten hinweg",
+        body:
+          "Capabilities sollten mitgehen, wenn Teams den Agenten wechseln. Wenn ein Team von Claude Code zu Cursor oder Codex wechselt, sollte derselbe Capability Runtime weiter funktionieren, ohne Provider neu integrieren zu müssen.",
+      },
+    ],
+    exampleHeading: "AnyCap als Capability Runtime",
+    exampleBody: [
+      "AnyCap ist ein agent-nativer Capability Runtime, von Tag eins für Agent-Workflows gebaut. Er setzt die obigen Designprinzipien um: eine Skill-Datei-Installation, ein CLI-Binary, ein Login und eine Kommando-Oberfläche für jede Capability.",
+      "Heute bietet AnyCap Bildgenerierung, Videogenerierung, Musikgenerierung, Bildverständnis, Videoanalyse, Audio-Verständnis, Web Search, grounded Web Search, Web Crawl, Drive-Speicher und Page-Publishing. Es funktioniert über Skill-Dateien mit Claude Code, Cursor, Codex und anderen Agent-Produkten.",
+    ],
+    exampleCallout: "curl -fsSL https://anycap.ai/install.sh | sh && anycap login",
+    examplePostscript:
+      "Danach ist jede Capability über anycap <capability> <operation> in jedem unterstützten Agent-Produkt verfügbar.",
+    faqHeading: "FAQ",
+    faqItems: faqItemsDe as unknown as { question: string; answer: string }[],
+    relatedHeading: "Verwandte Seiten",
+    relatedPages: [
+      {
+        eyebrow: "Glossar",
+        title: "Was ist Context Engineering?",
+        href: "/glossary/context-engineering",
+        summary: "Wie Agenten die Informationen verwalten, die sie dem Modell zur Inferenzzeit zuführen.",
+      },
+      {
+        eyebrow: "Glossar",
+        title: "Was ist ein Agent Harness?",
+        href: "/glossary/agent-harness",
+        summary: "Die Ausführungsschicht, die Tool-Routing, Berechtigungen und Agent-Lifecycle verwaltet.",
+      },
+      {
+        eyebrow: "Guide",
+        title: "Context Engineering für Agenten",
+        href: "/guides/context-engineering-for-agents",
+        summary: "Praktische Strategien zur Kuratierung des richtigen Kontexts in Agent-Workflows.",
+      },
+      {
+        eyebrow: "Guide",
+        title: "Agent Skills für Developer Tools",
+        href: "/guides/agent-skills-for-developer-tools",
+        summary: "Wie Skill-Dateien Agenten erlauben, Capabilities ohne manuelle Konfiguration zu entdecken und aufzurufen.",
+      },
+      {
+        eyebrow: "Vergleich",
+        title: "AnyCap vs Composio",
+        href: "/compare/anycap-vs-composio",
+        summary: "Wie sich ein Capability Runtime mit einer Tool-Integrationsplattform vergleicht.",
+      },
+      {
+        eyebrow: "Vergleich",
+        title: "AnyCap vs Replicate",
+        href: "/compare/anycap-vs-replicate",
+        summary: "Wie sich ein Capability Runtime mit einer Modell-Inferenz-Plattform vergleicht.",
+      },
+    ],
+    ctas: {
+      primary: "Capabilities ansehen",
+      secondary: "CLI-Übersicht",
+      tertiary: "Loslegen",
+      github: "Auf GitHub ansehen",
+    },
+  },
 };
 
 export function getAgentCapabilityRuntimeMetadata(locale: SiteLocale): Metadata {

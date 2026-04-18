@@ -29,6 +29,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan pemahaman audio, transkripsi, dan analisis audio ke agen AI lewat satu CLI.",
   },
+  de: {
+    title: "Audioanalyse-API für KI-Agenten – Audioverständnis und Transkription",
+    description:
+      "Geben Sie KI-Agenten Audioverständnis über AnyCap. Analysieren Sie Aufnahmen, transkribieren Sie gesprochene Inhalte und extrahieren Sie Audio-Kontext über einen einzigen CLI-Befehl, statt einen separaten Audio-Analyse-Stack zu verdrahten.",
+    openGraphTitle: "Audioanalyse-API für KI-Agenten – Audioverständnis und Transkription",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Audioverständnis, Transkription und Audioanalyse über eine einzige CLI aus.",
+  },
 };
 
 export function getPageMetadata(locale: SiteLocale): Metadata {

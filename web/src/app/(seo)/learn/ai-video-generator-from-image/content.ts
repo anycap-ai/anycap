@@ -6,8 +6,7 @@ export const AI_VIDEO_GENERATOR_FROM_IMAGE_PATH = "/learn/ai-video-generator-fro
 
 const LAST_UPDATED_ISO = "2026-04-09";
 
-const contentByLocale = {
-  en: {
+const enContent = {
     metadata: {
       title: "AI Video Generator from Image with an AI Agent",
       description:
@@ -271,7 +270,10 @@ const contentByLocale = {
         },
       ],
     },
-  },
+} as const;
+
+const contentByLocale = {
+  en: enContent,
   "pt-br": {
     metadata: {
       title: "Gerador de vídeo por IA a partir de imagem com um agente de IA",
@@ -802,6 +804,7 @@ const contentByLocale = {
       ],
     },
   },
+  de: enContent,
 } as const;
 
 export function getAiVideoGeneratorFromImageMetadata(locale: SiteLocale): Metadata {

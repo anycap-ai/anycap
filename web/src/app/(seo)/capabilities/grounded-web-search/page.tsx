@@ -41,6 +41,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan grounded web search berbasis sitasi ke agen AI melalui satu CLI dan satu capability runtime.",
   },
+  de: {
+    title: "Grounded Web Search für KI-Agenten – Antworten mit Quellenangaben über eine CLI",
+    description:
+      "Geben Sie KI-Agenten Grounded Web Search über AnyCap. Erhalten Sie synthetisierte Antworten mit Quellenangaben aus der Live-Websuche über eine einzige CLI, statt einen separaten Grounded-Search-Flow zu bauen.",
+    openGraphTitle: "Grounded Web Search für KI-Agenten – Antworten mit Quellenangaben über eine CLI",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Grounded Web Search inklusive Quellenbelegen über eine CLI und eine Capability-Runtime aus.",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
@@ -351,6 +359,98 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     jsonLdDescription:
       "Panduan kapabilitas untuk menambahkan grounded web search ke agen AI melalui AnyCap, termasuk jawaban berbasis sitasi dan sintesis pencarian web live.",
     jsonLdAbout: ["Grounded search", "Pencarian bersitasi", "AI grounded search", "AnyCap"],
+    jsonLdKeywords: [
+      "grounded web search",
+      "ai grounded search",
+      "search with citations",
+      "grounded search api",
+    ],
+  },
+  de: {
+    breadcrumb: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Grounded Web Search" },
+    ],
+    eyebrow: "Capabilities",
+    title: "Grounded Web Search",
+    intro:
+      "AnyCap Grounded Web Search liefert Agenten Antworten mit Quellenbelegen über eine einzige CLI. Statt eine separate Retrieval-Pipeline und eine Antwortschicht zusammenzustellen, kann ein Team eine Frage stellen, eine synthetisierte Antwort erhalten und die Quellenangabe in derselben Runtime bewahren. Das macht Grounded Search besonders nützlich für Recherche, Audit und aktualitätssensitive Agenten-Workflows.",
+    usageHeading: "CLI-Nutzung",
+    usageExamples: [
+      {
+        title: "Frage-Antwort mit Grounding",
+        code: 'anycap search --prompt "What are the latest changes in Go 1.25?"',
+      },
+      {
+        title: "Vergleich mit Quellenangaben",
+        code: 'anycap search --prompt "Compare React vs Vue in terms of performance"',
+      },
+      {
+        title: "Antworttext extrahieren",
+        code: 'anycap search --prompt "What is context engineering?" | jq -r \'\.data.content\'',
+      },
+      {
+        title: "Zitierte Quellen auflisten",
+        code:
+          'anycap search --prompt "latest Go releases" | jq -r \'\.data.search_metadata.sources[] | "\\(.title): \\(.uri)"\'',
+      },
+    ],
+    useCasesHeading: "Wann Agenten Grounded Web Search benötigen",
+    useCases: [
+      "Rechercheaufgaben beantworten, wenn der Workflow synthetisierten Output statt einer rohen Ergebnisliste benötigt.",
+      "Quellenangaben und Belegketten für Recherche, Reporting und vertrauenskritische Workflows zurückliefern.",
+      "Grounded Search im Agenten-Loop nutzen, ohne Retrieval und Antwortsynthese manuell zu bauen.",
+      "Aktualitätssensitive Fragen behandeln, wenn Teams sowohl eine Antwort als auch sichtbare Quellenbelege benötigen.",
+    ],
+    relatedHeading: "Verwandte Seiten",
+    relatedPages: [
+      {
+        href: "/capabilities/web-search",
+        eyebrow: "Verwandte Capability",
+        title: "Websuche",
+        body: "Beginnen Sie hier, wenn der Workflow Retrieval und Ergebnisauswahl vor der Synthese benötigt.",
+      },
+      {
+        href: "/capabilities/web-crawl",
+        eyebrow: "Verwandte Capability",
+        title: "Web Crawl",
+        body: "Verwenden Sie Crawl, wenn die Quell-URL bekannt ist und der Workflow nur den Seiteninhalt braucht.",
+      },
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Preise",
+        body: "Vergleichen Sie die Credit-Kosten für Standard-Suche und Grounded Search auf der Preise-Seite.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Was ermöglicht Grounded Web Search Agenten?",
+        answer:
+          "Agenten können eine Frage stellen und eine synthetisierte Antwort erhalten, die in Live-Websuchergebnissen verankert ist und Quellenangaben enthält. Das unterscheidet sich von der Standard-Suche, die nur eine Liste von Seiten zurückgibt, die der Agent selbst prüfen muss.",
+      },
+      {
+        question: "Welche Suchsprache sollte diese Seite ansprechen?",
+        answer:
+          "Die besten unterstützenden Begriffe sind grounded web search, AI grounded search, search with citations und grounded search API. Diese Phrasen treffen die eigentliche Aufgabe besser als ein generisches Such-Label.",
+      },
+      {
+        question: "Wann sollten Teams Grounded Search der Standard-Websuche vorziehen?",
+        answer:
+          "Verwenden Sie Grounded Search, wenn der Agent eine direkte Antwort mit Quellen benötigt. Standard-Websuche eignet sich, wenn der Agent ein Ergebnisset selbst sichten, Quellen auswählen oder eigene Extraktion durchführen muss.",
+      },
+      {
+        question: "Warum ist das speziell für KI-Agenten wertvoll?",
+        answer:
+          "Weil Grounded Search Retrieval und Antwortgenerierung in einen einzigen Runtime-Schritt kombiniert und dabei die Quellenangaben erhält. Das passt sehr gut zu Recherche-, Audit- und Decision-Support-Workflows.",
+      },
+    ],
+    jsonLdHeadline: "Grounded Web Search für KI-Agenten – Antworten mit Quellenangaben über eine CLI",
+    jsonLdDescription:
+      "Capability-Leitfaden zum Hinzufügen von Grounded Web Search zu KI-Agenten über AnyCap, inklusive Antworten mit Quellenbelegen und Live-Web-Synthese.",
+    jsonLdAbout: ["Grounded search", "Search with citations", "AI grounded search", "AnyCap"],
     jsonLdKeywords: [
       "grounded web search",
       "ai grounded search",

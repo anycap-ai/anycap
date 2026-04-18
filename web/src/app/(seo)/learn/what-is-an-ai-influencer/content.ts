@@ -12,8 +12,7 @@ const ROLE_EXAMPLE_IMAGES = {
   reviewer: `${PAGE_RESOURCE_BASE}/how-to-make-ai-influencer-videos-product-demo.png`,
 } as const;
 
-const contentByLocale = {
-  en: {
+const enContent = {
     metadata: {
       title: "What Is an AI Influencer?",
       description:
@@ -336,7 +335,10 @@ const contentByLocale = {
         },
       ],
     },
-  },
+} as const;
+
+const contentByLocale = {
+  en: enContent,
   "pt-br": {
     metadata: {
       title: "O que é um AI influencer?",
@@ -985,6 +987,7 @@ const contentByLocale = {
       ],
     },
   },
+  de: enContent,
 } as const;
 
 export function getWhatIsAnAIInfluencerMetadata(locale: SiteLocale): Metadata {

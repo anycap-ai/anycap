@@ -507,6 +507,145 @@ const contentByLocale = {
       { label: "Veo 3.1", href: "/models/veo-3-1" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Seedance 1.5 Pro für KI-Agenten – Videogenerierung über AnyCap",
+      description:
+        "Nutzen Sie Seedance 1.5 Pro über AnyCap, wenn KI-Agenten verlässliche Text-zu-Video- und Bild-zu-Video-Workflows über eine einzige CLI und eine Capability-Runtime benötigen.",
+      openGraphTitle: "Seedance 1.5 Pro für KI-Agenten – Videogenerierung über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Seedance 1.5 Pro über AnyCap für produktionsfreundliche Text-zu-Video- und Bild-zu-Video-Workflows.",
+      articleHeadline: "Seedance 1.5 Pro für KI-Agenten – Videogenerierung über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Seedance 1.5 Pro über AnyCap für wiederholbare Text-zu-Video- und Bild-zu-Video-Workflows in KI-Agenten-Runtimes.",
+      articleAbout: ["Seedance 1.5 Pro", "Videogenerierung", "AnyCap", "KI-Agenten"],
+      articleKeywords: ["seedance 1.5 pro", "seedance 1.5 pro api", "bild zu video", "text zu video", "anycap"],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Seedance 1.5 Pro", href: SEEDANCE_15_PRO_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "Seedance 1.5 Pro",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Seedance 1.5 Pro ist ein praktischer Standard, wenn ein Agent verlässliche Videogenerierung benötigt, ohne in einen separaten Provider-Workflow zu verzweigen. Über AnyCap können Teams Seedance 1.5 Pro über dieselbe CLI nutzen, die sie bereits für Veo 3.1, Kling 3.0, Bildgenerierung und nachgelagerte Review-Aufgaben verwenden.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Seedance 1.5 Pro",
+      href: SEEDANCE_15_PRO_PATH,
+      sectionTitle: "Illustratives Standbild für einen stabileren Produktions-Workflow",
+      intro:
+        "Seedance 1.5 Pro wird auf dieser Seite als verlässlicher Standard für wiederholbare Teamarbeit beschrieben. Dieses Standbild verwendet ein saubereres kommerzielles Storyboard-Setup, um zu dieser produktionsfreundlichen Positionierung zu passen.",
+      promptLabel: "Illustrativer Standbild-Prompt",
+      prompt:
+        "clean product reveal stage with a smartphone floating above layered cards, parallax-friendly composition, soft studio lighting, steady commercial storyboard still, off-white and charcoal palette, no text, no watermark",
+      caption:
+        "Dieses begleitende Standbild wurde über AnyCap generiert, um die Art stabiler Produkt-Visual-Briefings zu zeigen, die zur Rolle von Seedance 1.5 Pro in einem Team-Workflow passt.",
+      note:
+        "Das Bild fungiert als Planungsartefakt, nicht als Aussage über das fertige Video selbst. Es macht die Bild-zu-Video-Use-Cases der Seite konkreter.",
+      signals: [
+        "Stützt visuell die Botschaft der Seite über wiederholbare, produktionsfreundliche Motion-Briefings.",
+        "Macht die Use-Cases Screenshot-zu-Video und Produkt-Demo auf einen Blick leichter verständlich.",
+        "Fügt eigenes Multimedia hinzu, ohne überzustrapazieren, was ein statisches Frame über Bewegungsqualität beweisen kann.",
+      ],
+      images: [
+        {
+          src: SEEDANCE_SHOWCASE_IMAGE_SRC,
+          alt: "Sauberes Produkt-Reveal-Standbild mit einem schwebenden Smartphone über gestapelten Karten in weichem Studiolicht.",
+          width: 1376,
+          height: 768,
+          label: "Begleitendes Keyframe",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Seedance 1.5 Pro wählen sollten",
+    useCases: [
+      "Produktionsfreundliche Bild-zu-Video-Workflows, die stabile visuelle Kontinuität benötigen",
+      "Text-zu-Video-Aufgaben, bei denen der Agent einen verlässlichen Standard statt eines Stil-Experiments benötigt",
+      "Produkt-Demos, Launch-Visuals und Erklärvideos, die aus Screenshots oder Referenz-Frames aufgebaut werden",
+      "Teams, die ein wiederholbares Modell über Planung, Generierung und Überarbeitungsschleifen hinweg möchten",
+    ],
+    callSectionTitle: "Seedance 1.5 Pro über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Aus einem Text-Prompt generieren",
+        code:
+          'anycap video generate --model seedance-1.5-pro --prompt "a clean product reveal with subtle camera motion" -o seedance-demo.mp4',
+      },
+      {
+        label: "Ein Referenzbild animieren",
+        code:
+          'anycap video generate --model seedance-1.5-pro --mode image-to-video --prompt "turn this still into a soft parallax movement" --param images=\'["./mockup.jpg"]\' -o seedance-animated.mp4',
+      },
+    ],
+    workflowTitle: "Position im Workflow",
+    workflowParagraph:
+      "In einem Agenten-Workflow ist Seedance 1.5 Pro üblicherweise das Standard-Produktionsmodell für kurze Clips, die aus Prompts oder Standbildern generiert werden. Das Ergebnis kann anschließend in Videoanalyse, Dokumentation oder Asset-Packaging übergehen, ohne den Provider-Kontext zu wechseln.",
+    workflowCards: [
+      {
+        eyebrow: "Vorgelagert",
+        body: "Planung, Prompt-Engineering, Referenz-Frame-Auswahl und Storyboard-Vorbereitung.",
+      },
+      {
+        eyebrow: "Nachgelagert",
+        body: "Review, Folgebearbeitungen, Packaging und Analyse im restlichen Agenten-Stack.",
+      },
+    ],
+    comparisonTitle: "Seedance 1.5 Pro vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Seedance 1.5 Pro",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary: "Verlässliche Videogenerierung und starker Bild-zu-Video-Output für wiederholbare Team-Workflows",
+        alternative: "Wählen Sie Kling 3.0 für stärkeren cineastischen Bewegungsstil oder Veo 3.1 für Premium-Erstdurchlauf-Output",
+      },
+      {
+        dimension: "Rolle im Workflow",
+        primary: "Standard-Produktionsmodell für kurze Videos, die aus Prompts oder Standbildern erzeugt werden",
+        alternative: "Nutzen Sie ein Schwestermodell, wenn die Aufgabe experimenteller oder stark stilgetrieben ist",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary: "Ein Standbild, Mockup oder Screenshot in einen kurzen, reviewfähigen Clip animieren",
+        alternative: "Das Ergebnis nach der Generierung in Videoanalyse, Dokumentation oder Asset-Packaging weiterleiten",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Seedance 1.5 Pro am besten?",
+        answer:
+          "Seedance 1.5 Pro passt gut zu verlässlichen Bild-zu-Video- und Text-zu-Video-Workflows, in denen Agenten wiederholbaren Output und solide Bewegungsqualität benötigen.",
+      },
+      {
+        question: "Wie rufen Agenten Seedance 1.5 Pro über AnyCap auf?",
+        answer:
+          "Agenten können es mit der AnyCap CLI über anycap video generate --model seedance-1.5-pro für Text-zu-Video- oder Bild-zu-Video-Modus aufrufen.",
+      },
+      {
+        question: "Soll ich Seedance 1.5 Pro oder Kling 3.0 verwenden?",
+        answer:
+          "Verwenden Sie Seedance 1.5 Pro, wenn die Priorität auf einem stabilen Produktions-Workflow und starkem Bild-zu-Video-Output liegt. Verwenden Sie Kling 3.0, wenn der Workflow stärkeren cineastischen Bewegungsstil oder explorativere Generierung möchte.",
+      },
+    ],
+    nextActions: [
+      { label: "Videogenerierung", href: "/capabilities/video-generation", primary: true },
+      { label: "Kling 3.0", href: "/models/kling-3-0" },
+      { label: "Veo 3.1", href: "/models/veo-3-1" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, Seedance15ProPageContent>;
 
 export function getSeedance15ProMetadata(locale: SiteLocale): Metadata {

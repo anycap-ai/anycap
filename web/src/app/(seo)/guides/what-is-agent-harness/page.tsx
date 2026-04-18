@@ -38,7 +38,7 @@ type PageContent = {
   bylineAuthor?: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
+const contentByLocale: Record<SiteLocale, PageContent> = {
   en: {
     eyebrow: "Guide",
     title: ["What is an", "agent harness?"],
@@ -159,6 +159,46 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
     },
     breadcrumbLabel: "Apa itu Agent Harness?",
   },
+  de: {
+    eyebrow: "Anleitung",
+    title: ["Was ist ein", "Agent-Harness?"],
+    intro:
+      "Ein Agent-Harness ist die Ausführungsschicht um ein KI-Modell, die Reasoning in echte Aktionen verwandelt. Er bietet Zugriff auf Dateien, Terminals, Tools, Browser-Aktionen, Berechtigungsgrenzen und Runtime-Richtlinien, die steuern, was während einer Aufgabe erlaubt ist. Das Modell entscheidet vielleicht, was als Nächstes passieren soll, aber der Harness entscheidet, was tatsächlich in der Produktion passieren kann. Diese Unterscheidung ist entscheidend: Planungsqualität hängt vom Modell ab, während Ausführungssicherheit, Observability und Reproduzierbarkeit vom Harness abhängen. In modernen Agentenprodukten ist das Harness-Design oft der Unterschied zwischen einer Demo, die einmal funktioniert, und einem Workflow, den Teams täglich ohne fragilen manuellen Glue-Code laufen lassen können. Hier setzen Teams auch Governance- und Debugging-Standards durch, damit Agentenverhalten auditierbar bleibt, während die Aufgabenkomplexität wächst. Kurz: Der Harness ist der Vertrag zwischen Modell-Intent und vertrauenswürdiger Ausführung.",
+    comparisonTitle: "Agentenmodell vs. Agent-Harness",
+    comparisonHeaders: ["Schicht", "Rolle", "Beispiel"],
+    comparisonRows: [
+      {
+        layer: "Modell",
+        role: "Reasoning, Planung, Sprachgenerierung",
+        example:
+          "Das LLM entscheidet, ob es eine Datei lesen, eine Frage stellen oder eine Capability aufrufen soll",
+      },
+      {
+        layer: "Harness",
+        role: "Ausführungsoberfläche und Sicherheitsgrenzen",
+        example:
+          "Dateien, Shell, Browser, Berechtigungen, Tool-Verträge und Workflow-Richtlinien",
+      },
+      {
+        layer: "Capability-Runtime",
+        role: "Kuratierte Capability-Schicht, die der Harness bereitstellen kann",
+        example:
+          "AnyCap bietet Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine Schnittstelle",
+        accent: true,
+      },
+    ],
+    fitTitle: "Wo AnyCap einzuordnen ist",
+    fitBody: [
+      "AnyCap ist nicht das Modell selbst und nicht der vollständige Harness. Es sitzt im Harness als Capability-Runtime, die die Aktionen liefert, die das Modell allein nicht ausführen kann. Damit kann der Harness multimodale Operationen über einen stabilen Vertrag bereitstellen, statt für jede neue Aufgabe eine andere Provider-Integration zu verkabeln. Praktisch bleibt der Agent in seiner gewohnten Reasoning-Umgebung und gewinnt einen konsistenten Pfad zu Bildgenerierung, Videogenerierung, Medienverständnis, Retrieval, Storage und Publishing, wenn diese Aktionen benötigt werden.",
+      "Diese Unterscheidung ist wichtig für Architekturentscheidungen. Der Harness ist verantwortlich für Lifecycle-Kontrolle, Berechtigungen, Tool-Routing und Ausführungsrichtlinien. AnyCap ist verantwortlich, Capabilities so zu verpacken, dass diese Richtlinien konsistent über multimodale Aktionen angewendet werden können. Zusammen reduzieren sie Integrationsdrift: Teams behalten eine CLI-Oberfläche, einen Authentifizierungsfluss und ein Betriebsmodell über verschiedene Agent-Shells. Das macht Debugging klarer, Onboarding schneller und Capability-Upgrades langfristig günstiger.",
+    ],
+    ctas: {
+      capabilityRuntime: "Capability-Runtime",
+      workspaceContext: "Workspace-Kontext",
+      comparePage: "Vergleichsseite",
+    },
+    breadcrumbLabel: "Was ist ein Agent-Harness?",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
@@ -175,6 +215,14 @@ function getPageMetadata(locale: SiteLocale): Metadata {
       title: "Apa itu agent harness? Lapisan runtime di sekitar agen AI",
       description:
         "Agent harness adalah lapisan eksekusi yang memberi agen AI akses ke tool, status workspace, permission, dan kontrol runtime. Pelajari bedanya dengan model itu sendiri serta posisi AnyCap di dalam stack ini.",
+    });
+  }
+
+  if (locale === "de") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title: "Was ist ein Agent-Harness? Die Runtime-Schicht um den Agenten",
+      description:
+        "Ein Agent-Harness ist die umgebende Ausführungsschicht, die einem KI-Agenten Tools, Workspace-Status, Berechtigungen und Runtime-Kontrollen gibt. Erfahren Sie, wie er sich vom Modell unterscheidet und wo AnyCap im Stack einzuordnen ist.",
     });
   }
 

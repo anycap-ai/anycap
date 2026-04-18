@@ -1015,6 +1015,7 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
+  de: enContent,
 } satisfies Record<SiteLocale, RemovePeoplePageContent>;
 
 function getContent(locale: SiteLocale): RemovePeoplePageContent {

@@ -5,13 +5,15 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
+const PAGE_LAST_MODIFIED_ISO = "2026-04-17";
+const PAGE_PUBLISHED_ISO = "2026-04-13";
 
 type PageContent = {
   breadcrumbItems: readonly { name: string; href?: string; unlinkable?: boolean }[];
@@ -48,11 +50,11 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     ],
     eyebrow: "Claude Code x Image Generation",
     titleLines: [
-      "Claude Code can't generate images by itself.",
-      "AnyCap adds image generation.",
+      "Opus 4.7 + AnyCap = image generation inside Claude Code.",
+      "One prompt away. No new SDK. No context switch.",
     ],
     intro:
-      "If the missing workflow is product visuals, mockups, thumbnails, or creative assets, this is the shortest path. Keep Claude Code for the reasoning and code. Add Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2 through one capability runtime.",
+      "Claude Code on Opus 4.7 reasons better than ever — but it still ships with no image model. Pair it with AnyCap and you get Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2 behind the same agent surface, in the same terminal session, on the same login. Ask Opus 4.7 for a launch visual, a product mockup, a thumbnail, or an iteration on an existing reference, and it picks the right model and runs it. The combo is borderline insane: the strongest coding agent Anthropic has shipped, plus image generation, with zero glue code between them.",
     ctas: {
       primary: "Get Started",
       secondary: "Add Tools to Claude Code",
@@ -105,18 +107,20 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       },
     ],
     articleJsonLd: createTechArticleJsonLd({
-      headline: "Claude Code image generation — Add image generation to Claude Code",
+      headline: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
       description:
-        "Targeted landing page for adding image generation to Claude Code through AnyCap and models like Seedream 5 and Nano Banana Pro.",
+        "How to add image generation to Claude Code on Claude Opus 4.7 through AnyCap with Seedream 5, Nano Banana Pro, and other current image models.",
       path: "/for/claude-code/image-generation",
-      about: ["Claude Code", "Image generation", "Seedream 5", "Nano Banana Pro"],
+      about: ["Claude Code", "Claude Opus 4.7", "Image generation", "Seedream 5", "Nano Banana Pro"],
       keywords: [
+        "claude code opus 4.7 image generation",
+        "claude opus 4.7 image generation",
         "claude code image generation",
         "add image generation to claude code",
         "claude code generate images",
         "image generation for claude code",
       ],
-      datePublished: PAGE_LAST_MODIFIED_ISO,
+      datePublished: PAGE_PUBLISHED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
@@ -129,11 +133,11 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     ],
     eyebrow: "Claude Code x Geração de Imagem",
     titleLines: [
-      "Claude Code não gera imagens sozinho.",
-      "AnyCap adiciona geração de imagem.",
+      "Opus 4.7 + AnyCap = geração de imagem dentro do Claude Code.",
+      "A um prompt de distância. Sem novo SDK. Sem trocar de contexto.",
     ],
     intro:
-      "Se o fluxo que falta é visual de produto, mockup, thumbnail ou ativo criativo, este é o caminho mais curto. Mantenha o Claude Code para raciocínio e código. Adicione Seedream 5, Seedream 4.5, Nano Banana Pro e Nano Banana 2 por um único runtime de capacidades.",
+      "O Claude Code no Opus 4.7 raciocina melhor do que nunca — mas ainda não traz nenhum modelo de imagem. Combine com o AnyCap e você ganha Seedream 5, Seedream 4.5, Nano Banana Pro e Nano Banana 2 atrás da mesma superfície de agente, na mesma sessão de terminal, no mesmo login. Peça ao Opus 4.7 um visual de lançamento, um mockup de produto, uma thumbnail ou uma iteração sobre uma referência existente — ele escolhe o modelo certo e roda. A combinação chega a ser absurda: o agente de código mais forte que a Anthropic já lançou, com geração de imagem, sem nenhuma cola entre eles.",
     ctas: {
       primary: "Começar",
       secondary: "Adicionar ferramentas ao Claude Code",
@@ -201,24 +205,107 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
   id: undefined as never,
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Agenten ausstatten", href: "/for", unlinkable: true },
+      { name: "Claude Code", href: "/for/claude-code" },
+      { name: "Bildgenerierung" },
+    ],
+    eyebrow: "Claude Code x Bildgenerierung",
+    titleLines: [
+      "Opus 4.7 + AnyCap = Bildgenerierung in Claude Code.",
+      "Einen Prompt entfernt. Kein neues SDK. Kein Kontextwechsel.",
+    ],
+    intro:
+      "Claude Code auf Opus 4.7 reasoniert besser als je zuvor – aber es liefert noch immer kein Bildmodell mit. Kombinieren Sie es mit AnyCap und Sie erhalten Seedream 5, Seedream 4.5, Nano Banana Pro und Nano Banana 2 hinter derselben Agent-Oberfläche, in derselben Terminal-Sitzung, mit demselben Login. Bitten Sie Opus 4.7 um ein Launch-Visual, ein Produkt-Mockup, ein Thumbnail oder eine Iteration auf einer bestehenden Referenz, und es wählt das richtige Modell aus und führt es aus. Die Kombination ist beeindruckend: der stärkste Coding-Agent, den Anthropic je veröffentlicht hat, kombiniert mit Bildgenerierung – ohne Glue-Code dazwischen.",
+    ctas: {
+      primary: "Loslegen",
+      secondary: "Tools zu Claude Code hinzufügen",
+    },
+    installTitle: "Installationspfad",
+    installStepPrefix: "Schritt",
+    modelTitle: "Wählen Sie das richtige Bildmodell",
+    commandTitle: "Erste Befehle zum Ausprobieren",
+    textToImageLabel: "Text zu Bild",
+    imageEditingLabel: "Bildbearbeitung",
+    faqTitle: "FAQ",
+    footerCtas: {
+      back: "Zurück zum Claude-Code-Hub",
+      capability: "Capability Bildgenerierung",
+      video: "Videogenerierung in Claude Code",
+    },
+    faqItems: [
+      {
+        question: "Kann Claude Code von sich aus Bilder generieren?",
+        answer:
+          "Nicht als eingebaute Capability. AnyCap fügt Claude Code Bildgenerierung über einen Installationspfad und eine CLI hinzu.",
+      },
+      {
+        question: "Welche Bildmodelle sind über AnyCap verfügbar?",
+        answer:
+          "Der aktuelle Bildgenerierungs-Stack umfasst Seedream 5, Seedream 4.5, Nano Banana Pro und Nano Banana 2.",
+      },
+      {
+        question: "Brauche ich für Bildbearbeitung einen anderen Workflow?",
+        answer:
+          "Nein. Derselbe AnyCap-Bildbefehl deckt sowohl Text-zu-Bild- als auch Bild-zu-Bild-Workflows ab, je nach Modell und verwendeten Flags.",
+      },
+    ],
+    modelCards: [
+      {
+        name: "Seedream 5",
+        summary: "Beste erste Wahl für polierte Text-zu-Bild-Ergebnisse.",
+      },
+      {
+        name: "Seedream 4.5",
+        summary: "Eine starke Alternative, wenn Sie eine weitere text-zentrierte Bildgenerierungs-Option möchten.",
+      },
+      {
+        name: "Nano Banana Pro",
+        summary: "Beste Wahl, wenn Claude Code von einem bestehenden Bild ausgeht und iterative Bearbeitung benötigt.",
+      },
+      {
+        name: "Nano Banana 2",
+        summary: "Eine weitere bearbeitungsorientierte Option für Bild-zu-Bild-Workflows.",
+      },
+    ],
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Claude Code Opus 4.7 Bildgenerierung – Seedream 5 + Nano Banana via AnyCap",
+      description:
+        "Wie man Claude Code auf Claude Opus 4.7 Bildgenerierung über AnyCap mit Seedream 5, Nano Banana Pro und anderen aktuellen Bildmodellen hinzufügt.",
+      path: "/for/claude-code/image-generation",
+      about: ["Claude Code", "Claude Opus 4.7", "Bildgenerierung", "Seedream 5", "Nano Banana Pro"],
+      keywords: [
+        "claude code opus 4.7 bildgenerierung",
+        "claude opus 4.7 bildgenerierung",
+        "claude code bildgenerierung",
+        "bildgenerierung zu claude code hinzufügen",
+        "claude code bilder generieren",
+        "bildgenerierung für claude code",
+      ],
+      datePublished: PAGE_PUBLISHED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
 };
 contentByLocale.id = contentByLocale.en;
 
-export const metadata: Metadata = {
-  title: "Claude Code image generation — Add image generation to Claude Code",
-  description:
-    "Claude Code does not ship with image generation. AnyCap adds image generation through one skill, one CLI, and models like Seedream 5 and Nano Banana Pro.",
-  alternates: { canonical: "/for/claude-code/image-generation" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/for/claude-code/image-generation",
-    siteName: siteConfig.siteName,
-    title: "Claude Code image generation — Add image generation to Claude Code",
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  "/for/claude-code/image-generation",
+  {
+    title: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
     description:
-      "Add image generation to Claude Code without switching agents or wiring separate image APIs.",
-  },
-};
+      "Claude Code on Opus 4.7 + AnyCap is insane for image work. Generate product visuals, mockups, and thumbnails through Seedream 5, Nano Banana Pro, and more — one CLI, one login, no context switch.",
+    openGraph: {
+      type: "website",
+      title: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
+      description:
+        "Add image generation to Claude Code on Opus 4.7 without switching agents or wiring separate image APIs.",
+    },
+  }
+);
 
 export default async function ClaudeCodeImageGenerationPage() {
   const locale = await getRequestLocale();

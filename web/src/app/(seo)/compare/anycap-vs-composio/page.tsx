@@ -334,8 +334,10 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
   id: undefined as never,
+  de: undefined as never,
 };
 contentByLocale.id = contentByLocale.en;
+contentByLocale.de = contentByLocale.en;
 
 export default async function AnycapVsComposioPage() {
   const locale = await getRequestLocale();

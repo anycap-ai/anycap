@@ -29,6 +29,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan generasi musik ke agen AI dengan satu CLI, satu alur autentikasi, dan satu runtime kapabilitas.",
   },
+  de: {
+    title: "Musikgenerierungs-API für KI-Agenten – Text-to-Music über eine CLI",
+    description:
+      "Geben Sie KI-Agenten Musikgenerierung über AnyCap. Erzeugen Sie Instrumental-Tracks und individuelle Musik-Prompts über eine einzige CLI, statt eine separate Musikgenerierungs-API zu verdrahten.",
+    openGraphTitle: "Musikgenerierungs-API für KI-Agenten – Text-to-Music über eine CLI",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Musikgenerierung über eine CLI, einen Auth-Flow und eine Capability-Runtime aus.",
+  },
 };
 
 export function getPageMetadata(locale: SiteLocale): Metadata {

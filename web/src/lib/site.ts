@@ -10,7 +10,7 @@ const LOCALE_HEADER = "x-anycap-locale";
 const REQUEST_PATHNAME_HEADER = "x-anycap-pathname";
 const DEFAULT_LOCALE = "en";
 
-export const supportedLocales = [DEFAULT_LOCALE, "pt-br", "id"] as const;
+export const supportedLocales = [DEFAULT_LOCALE, "pt-br", "id", "de"] as const;
 
 export type SiteLocale = (typeof supportedLocales)[number];
 
@@ -74,6 +74,11 @@ export const localeConfig = {
     htmlLang: "id",
     ogLocale: "id_ID",
     label: "Bahasa Indonesia",
+  },
+  de: {
+    htmlLang: "de",
+    ogLocale: "de_DE",
+    label: "Deutsch",
   },
 } as const satisfies Record<
   SiteLocale,
