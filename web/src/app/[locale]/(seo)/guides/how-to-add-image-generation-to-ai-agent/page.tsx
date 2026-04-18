@@ -9,6 +9,6 @@ export async function generateMetadata({ params }: LocalePageParams) {
   return locale ? getPageMetadata(locale) : {};
 }
 
-export default function LocalizedPage() {
+export default function LocalizedHowToAddImageGenerationPage() {
   return <PageComponent />;
 }

@@ -4,13 +4,15 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { siteConfig, type SiteLocale } from "@/lib/site";
+import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
+import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
+const PAGE_LAST_MODIFIED_ISO = "2026-04-17";
+const PAGE_PUBLISHED_ISO = "2026-04-13";
 
 type PageContent = {
   breadcrumbItems: readonly { name: string; href?: string; unlinkable?: boolean }[];
@@ -46,11 +48,11 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     ],
     eyebrow: "Claude Code x Video Generation",
     titleLines: [
-      "Claude Code can't generate video by itself.",
-      "AnyCap adds video generation.",
+      "Opus 4.7 + AnyCap = video generation inside Claude Code.",
+      "Veo 3.1, Seedance, Kling — same agent, same CLI, no glue code.",
     ],
     intro:
-      "If the missing workflow is demos, walkthroughs, social clips, or motion prototypes, this is the shortest path. Keep Claude Code for the reasoning and build steps. Add Veo 3.1 through the same capability runtime that already handles image and vision workflows.",
+      "Claude Code on Opus 4.7 can plan and execute long, multi-step work — but it cannot render a single frame of video. Pair it with AnyCap and the same agent surface reaches Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 directly. Ask Opus 4.7 for a launch teaser, a product walkthrough, a social clip, or an image-to-video iteration on an existing visual, and it picks the right model, calls it, and hands the result back into the conversation. The combo is genuinely insane: the strongest reasoning agent Anthropic has shipped, plus production-grade video, with zero new SDKs to wire up.",
     ctas: {
       primary: "Get Started",
       secondary: "Add Tools to Claude Code",
@@ -91,18 +93,20 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       },
     ],
     articleJsonLd: createTechArticleJsonLd({
-      headline: "Claude Code video generation — Add video generation to Claude Code",
+      headline: "Claude Code Opus 4.7 video generation — Veo 3.1, Seedance, Kling via AnyCap",
       description:
-        "Targeted landing page for adding video generation to Claude Code through AnyCap and Veo 3.1.",
+        "How to add video generation to Claude Code on Claude Opus 4.7 through AnyCap with Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 — one CLI, one login, no extra SDK.",
       path: "/for/claude-code/video-generation",
-      about: ["Claude Code", "Video generation", "Veo 3.1", "AnyCap"],
+      about: ["Claude Code", "Claude Opus 4.7", "Video generation", "Veo 3.1", "Seedance", "Kling", "AnyCap"],
       keywords: [
+        "claude code opus 4.7 video generation",
+        "claude opus 4.7 video generation",
         "claude code video generation",
         "add video generation to claude code",
         "claude code generate video",
         "video generation for claude code",
       ],
-      datePublished: PAGE_LAST_MODIFIED_ISO,
+      datePublished: PAGE_PUBLISHED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
@@ -115,11 +119,11 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     ],
     eyebrow: "Claude Code x Geração de Vídeo",
     titleLines: [
-      "Claude Code não gera vídeo sozinho.",
-      "AnyCap adiciona geração de vídeo.",
+      "Opus 4.7 + AnyCap = geração de vídeo dentro do Claude Code.",
+      "Veo 3.1, Seedance, Kling — mesmo agente, mesma CLI, sem cola.",
     ],
     intro:
-      "Se o fluxo que falta é demo, walkthrough, clipe social ou protótipo em movimento, este é o caminho mais curto. Mantenha o Claude Code para raciocínio e execução. Adicione Veo 3.1 pelo mesmo runtime de capacidades que já cuida de fluxos de imagem e visão.",
+      "O Claude Code no Opus 4.7 planeja e executa trabalho longo, em vários passos — mas não renderiza um único frame de vídeo. Combine com o AnyCap e a mesma superfície de agente alcança Veo 3.1, Seedance 1.5 Pro e Kling 3.0 diretamente. Peça ao Opus 4.7 um teaser de lançamento, um walkthrough de produto, um clipe social ou uma iteração image-to-video sobre um visual existente — ele escolhe o modelo certo, chama e devolve o resultado para a conversa. A combinação é absurda: o agente de raciocínio mais forte que a Anthropic já lançou, somado a vídeo de produção, sem nenhum SDK novo para fiar.",
     ctas: {
       primary: "Começar",
       secondary: "Adicionar ferramentas ao Claude Code",
@@ -160,39 +164,113 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       },
     ],
     articleJsonLd: createTechArticleJsonLd({
-      headline: "Geração de vídeo no Claude Code — Adicione geração de vídeo ao Claude Code",
+      headline: "Geração de vídeo no Claude Code Opus 4.7 — Veo 3.1, Seedance e Kling via AnyCap",
       description:
-        "Página focada em adicionar geração de vídeo ao Claude Code com AnyCap e Veo 3.1.",
+        "Como adicionar geração de vídeo ao Claude Code no Opus 4.7 via AnyCap com Veo 3.1, Seedance 1.5 Pro e Kling 3.0 — uma CLI, um login, sem SDK extra.",
       path: "/for/claude-code/video-generation",
-      about: ["Claude Code", "Geração de vídeo", "Veo 3.1", "AnyCap"],
+      about: ["Claude Code", "Claude Opus 4.7", "Geração de vídeo", "Veo 3.1", "Seedance", "Kling", "AnyCap"],
       keywords: [
+        "claude code opus 4.7 geração de vídeo",
+        "claude opus 4.7 geração de vídeo",
         "geração de vídeo claude code",
         "adicionar geração de vídeo ao claude code",
         "claude code gerar vídeo",
         "geração de vídeo para claude code",
       ],
+      datePublished: PAGE_PUBLISHED_ISO,
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
   id: undefined as never,
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Agenten ausstatten", href: "/for", unlinkable: true },
+      { name: "Claude Code", href: "/for/claude-code" },
+      { name: "Videogenerierung" },
+    ],
+    eyebrow: "Claude Code x Videogenerierung",
+    titleLines: [
+      "Opus 4.7 + AnyCap = Videogenerierung in Claude Code.",
+      "Veo 3.1, Seedance, Kling – derselbe Agent, dieselbe CLI, kein Glue-Code.",
+    ],
+    intro:
+      "Claude Code auf Opus 4.7 kann lange, mehrstufige Arbeit planen und ausführen – aber es kann kein einziges Videoframe rendern. Kombinieren Sie es mit AnyCap und dieselbe Agent-Oberfläche erreicht Veo 3.1, Seedance 1.5 Pro und Kling 3.0 direkt. Bitten Sie Opus 4.7 um einen Launch-Teaser, ein Produkt-Walkthrough, einen Social-Clip oder eine Bild-zu-Video-Iteration eines bestehenden Visuals, und es wählt das richtige Modell, ruft es auf und liefert das Ergebnis zurück in die Konversation. Die Kombination ist beeindruckend: der stärkste Reasoning-Agent, den Anthropic je veröffentlicht hat, kombiniert mit produktionsreifem Video – ohne neue SDKs zu verkabeln.",
+    ctas: {
+      primary: "Loslegen",
+      secondary: "Tools zu Claude Code hinzufügen",
+    },
+    installTitle: "Installationspfad",
+    installStepPrefix: "Schritt",
+    commandTitle: "Erster Befehl zum Ausprobieren",
+    commandBody:
+      "Es geht nicht nur um den Video-Aufruf selbst. Es geht darum, dass der Agent Videogenerierung über dieselbe Runtime erreicht, die er bereits für Bild- und Vision-Aufgaben nutzt.",
+    useCasesTitle: "Wann diese Capability zählt",
+    useCases: [
+      "Produkt-Walkthroughs und Demo-Clips, die direkt aus Claude-Code-Workflows generiert werden.",
+      "Launch- oder Social-Visuals, die Bewegung statt eines einzelnen Frames brauchen.",
+      "Konzeptvalidierung, wenn der Agent einen Ablauf zeigen muss, nicht nur beschreiben.",
+      "Ein konsistenter Erweiterungspfad von Bildgenerierung zu Videogenerierung ohne ein weiteres SDK.",
+    ],
+    faqTitle: "FAQ",
+    footerCtas: {
+      back: "Zurück zum Claude-Code-Hub",
+      capability: "Capability Videogenerierung",
+      image: "Bildgenerierung in Claude Code",
+    },
+    faqItems: [
+      {
+        question: "Kann Claude Code von sich aus Videos generieren?",
+        answer:
+          "Nicht als eingebaute Capability-Schicht. AnyCap fügt Claude Code Videogenerierung über einen Installationspfad und eine CLI hinzu.",
+      },
+      {
+        question: "Welches Videomodell ist heute verfügbar?",
+        answer:
+          "Die aktuelle Videogenerierungs-Seite hebt Veo 3.1 hervor, und das AnyCap-Pricing listet auch Seedance 1.5 Pro und Kling 3.0.",
+      },
+      {
+        question: "Warum Videogenerierung über AnyCap statt über ein separates SDK?",
+        answer:
+          "Weil dieselbe Runtime und derselbe Auth-Flow auch Bildgenerierung, Bildverständnis und Videoanalyse abdecken können, ohne die Arbeitsweise des Agenten zu ändern.",
+      },
+    ],
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Claude Code Opus 4.7 Videogenerierung – Veo 3.1, Seedance, Kling via AnyCap",
+      description:
+        "Wie man Claude Code auf Claude Opus 4.7 Videogenerierung über AnyCap mit Veo 3.1, Seedance 1.5 Pro und Kling 3.0 hinzufügt – eine CLI, ein Login, kein zusätzliches SDK.",
+      path: "/for/claude-code/video-generation",
+      about: ["Claude Code", "Claude Opus 4.7", "Videogenerierung", "Veo 3.1", "Seedance", "Kling", "AnyCap"],
+      keywords: [
+        "claude code opus 4.7 videogenerierung",
+        "claude opus 4.7 videogenerierung",
+        "claude code videogenerierung",
+        "videogenerierung zu claude code hinzufügen",
+        "claude code video generieren",
+        "videogenerierung für claude code",
+      ],
+      datePublished: PAGE_PUBLISHED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
 };
 contentByLocale.id = contentByLocale.en;
 
-export const metadata: Metadata = {
-  title: "Claude Code video generation — Add video generation to Claude Code",
-  description:
-    "Claude Code does not ship with video generation. AnyCap adds video generation through one skill, one CLI, and current video models including Veo 3.1.",
-  alternates: { canonical: "/for/claude-code/video-generation" },
-  openGraph: {
-    type: "website",
-    locale: siteConfig.locale,
-    url: "/for/claude-code/video-generation",
-    siteName: siteConfig.siteName,
-    title: "Claude Code video generation — Add video generation to Claude Code",
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  "/for/claude-code/video-generation",
+  {
+    title: "Claude Code Opus 4.7 video generation — Veo 3.1 + Seedance + Kling via AnyCap",
     description:
-      "Add video generation to Claude Code without leaving the agent workflow or wiring another provider stack.",
-  },
-};
+      "Claude Code on Opus 4.7 + AnyCap is insane for video. Generate launch teasers, product walkthroughs, and image-to-video iterations through Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 — one CLI, one login, no extra SDK.",
+    openGraph: {
+      type: "website",
+      title: "Claude Code Opus 4.7 video generation — Veo 3.1 + Seedance + Kling via AnyCap",
+      description:
+        "Add video generation to Claude Code on Opus 4.7 without switching agents or wiring separate video APIs.",
+    },
+  }
+);
 
 export default async function ClaudeCodeVideoGenerationPage() {
   const locale = await getRequestLocale();

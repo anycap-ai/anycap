@@ -19,6 +19,8 @@ import { getGlossaryMetadata } from "@/app/(seo)/glossary/content";
 import {
   getAgentHarnessGlossaryMetadata,
   getContextEngineeringGlossaryMetadata,
+  getMcpGlossaryMetadata,
+  getAgenticWorkflowGlossaryMetadata,
 } from "@/app/(seo)/glossary/content";
 import { getAddToolsToClaudeCodeMetadata } from "@/app/(seo)/guides/add-tools-to-claude-code/content";
 import { getContextEngineeringForAgentsMetadata } from "@/app/(seo)/guides/context-engineering-for-agents/content";
@@ -66,6 +68,8 @@ const localizedMetadataByRouteKey: Partial<
   "glossary-agent-harness": getAgentHarnessGlossaryMetadata,
   "glossary-agent-capability-runtime": getAgentCapabilityRuntimeMetadata,
   "glossary-context-engineering": getContextEngineeringGlossaryMetadata,
+  "glossary-model-context-protocol": getMcpGlossaryMetadata,
+  "glossary-agentic-workflow": getAgenticWorkflowGlossaryMetadata,
   guides: getGuidesMetadata,
   "guides-add-tools-to-claude-code": getAddToolsToClaudeCodeMetadata,
   "guides-context-engineering-for-agents":

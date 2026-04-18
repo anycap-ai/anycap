@@ -200,6 +200,55 @@ export default async function SkillsPage() {
             <hr className="border-t border-[#d4dbb8]" />
           </div>
 
+          {content.skillsCatalog && content.skillsCatalogTitle && (
+            <>
+              <FadeIn>
+                <section className="mt-16 md:mt-24">
+                  <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                    {content.skillsCatalogTitle}
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {content.skillsCatalog.map((skill) =>
+                      skill.href ? (
+                        <Link
+                          key={skill.slug}
+                          href={skill.href}
+                          className="border border-[#d4dbb8] p-5 transition-colors hover:border-[#6b7d3a]"
+                        >
+                          <p className="mb-2 text-[13px] font-bold text-[#1c1f17]" style={mono}>
+                            {skill.name}
+                          </p>
+                          <p className="mb-4 text-sm leading-6 text-[#4d5145]">{skill.description}</p>
+                          <div className="bg-[#1c1f17] px-4 py-3">
+                            <p className="break-all text-[11px] text-[#d4e0a4]" style={mono}>
+                              {skill.installCode}
+                            </p>
+                          </div>
+                        </Link>
+                      ) : (
+                        <div key={skill.slug} className="border border-[#d4dbb8] p-5">
+                          <p className="mb-2 text-[13px] font-bold text-[#1c1f17]" style={mono}>
+                            {skill.name}
+                          </p>
+                          <p className="mb-4 text-sm leading-6 text-[#4d5145]">{skill.description}</p>
+                          <div className="bg-[#1c1f17] px-4 py-3">
+                            <p className="break-all text-[11px] text-[#d4e0a4]" style={mono}>
+                              {skill.installCode}
+                            </p>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
+              </FadeIn>
+
+              <div className="mt-16 md:mt-24">
+                <hr className="border-t border-[#d4dbb8]" />
+              </div>
+            </>
+          )}
+
           <FadeIn>
             <section className="mt-16 md:mt-24">
               <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>

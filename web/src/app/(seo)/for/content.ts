@@ -33,6 +33,13 @@ const contentByLocale: Record<SiteLocale, ForPageData> = {
       { name: "Equip Agents", href: FOR_PATH },
     ],
   },
+  de: {
+    ...getHubPageDefinition("de", "for"),
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Agenten ausstatten", href: FOR_PATH },
+    ],
+  },
 };
 
 export function getForMetadata(locale: SiteLocale): Metadata {

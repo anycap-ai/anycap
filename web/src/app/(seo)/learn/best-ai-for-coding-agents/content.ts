@@ -50,6 +50,12 @@ const quickTakeawaysPtBr = [
   "Se o fluxo cruza capturas de tela, gravações, geração de mídia ou entregáveis, a melhor configuração vira uma decisão de stack, não uma simples classificação.",
 ] as const;
 
+const quickTakeawaysDe = [
+  "Die meisten Teams vermischen drei Entscheidungen: das beste Basismodell, den besten plattformspezifischen Workflow und die beste Capability-Schicht rund um den Agenten.",
+  "Wenn die Aufgabe innerhalb von Code bleibt, zählen Modellqualität und Editing-Erfahrung am meisten.",
+  "Wenn die Arbeit in Screenshots, Aufzeichnungen, Mediengenerierung oder Deliverables übergeht, wird das beste Setup zu einer Stack-Entscheidung statt zu einer simplen Ranking-Frage.",
+] as const;
+
 const contentByLocale: Record<SiteLocale, BestAICodingAgentsPageData> = {
   en: {
     breadcrumbItems: [
@@ -397,6 +403,122 @@ const contentByLocale: Record<SiteLocale, BestAICodingAgentsPageData> = {
       { href: "/learn/best-ai-for-claude-code", label: "Claude Code Guide", variant: "primary" },
       { href: "/learn/best-ai-for-cursor", label: "Cursor Guide", variant: "secondary" },
       { href: "/capabilities", label: "Browse Capabilities", variant: "secondary" },
+    ],
+  },
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Lernen", href: "/learn" },
+      { name: "Beste KI für Coding-Agenten" },
+    ],
+    eyebrow: "Lernen",
+    metadata: {
+      title: "Beste KI für Coding-Agenten: das richtige Modell und den richtigen Capability-Stack wählen",
+      description:
+        "Nutzen Sie diese Seite als Kategorie-Leitfaden für die Wahl eines Coding-Agenten-Stacks und vertiefen Sie dann Modellqualität, plattformspezifische Workflows und die Capability-Schicht rund um den Agenten.",
+      openGraphTitle: "Beste KI für Coding-Agenten: das richtige Modell und den richtigen Capability-Stack wählen",
+      openGraphDescription:
+        "Ein Kategorie-Leitfaden für Teams, die entscheiden, ob das beste Setup für Coding-Agenten eine Modellwahl, eine plattformspezifische Workflow-Wahl oder eine Capability-Schicht-Wahl ist.",
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Beste KI für Coding-Agenten: das richtige Modell und den richtigen Capability-Stack wählen",
+      description:
+        "Ein Kategorie-Leitfaden für Teams, die entscheiden, ob das beste Setup für Coding-Agenten eine Modellwahl, eine plattformspezifische Workflow-Wahl oder eine Capability-Schicht-Wahl ist.",
+      path: BEST_AI_FOR_CODING_AGENTS_PATH,
+      about: ["Coding-Agenten", "KI-Modelle", "Claude Code", "Cursor", "Codex", "Agent Capability Runtime"],
+      keywords: [
+        "beste ki für coding-agenten",
+        "beste ki coding-agent",
+        "coding-agent stack",
+        "coding-agent kapazitäten",
+        "ki-tools für coding-teams",
+      ],
+      datePublished: "2026-04-07",
+      dateModified: "2026-04-07",
+    }),
+    faqJsonLd: createFaqPageJsonLd([
+      {
+        question: "Was ist aktuell die beste KI für Coding-Agenten?",
+        answer:
+          "Es gibt keine einzelne dauerhafte Antwort für jedes Team. Die beste Wahl hängt davon ab, ob Ihre eigentliche Frage Modellqualität, plattformspezifische Workflow-Eignung oder die Capability-Schicht rund um den Agenten betrifft.",
+      },
+      {
+        question: "Wann ist die beste Wahl für Coding-Agenten überwiegend eine Benchmark-Frage?",
+        answer:
+          "Es ist überwiegend eine Benchmark-Frage, wenn die Arbeit innerhalb von Code bleibt und das Hauptziel Reasoning, Editing, Debugging und Repository-Verständnis ist.",
+      },
+      {
+        question: "Wann sollte ich zum Claude-Code- oder Cursor-spezifischen Leitfaden wechseln?",
+        answer:
+          "Wechseln Sie zum engeren Leitfaden, sobald Sie wissen, welche Agent-Oberfläche Sie behalten wollen. Diese Seite eignet sich am besten als Kategorie-Leitfaden, bevor der Workflow konkreter wird.",
+      },
+      {
+        question: "Ersetzt AnyCap Claude Code, Cursor oder Codex?",
+        answer:
+          "Nein. AnyCap ist die Capability Runtime rund um diese Agenten. Ihre Rolle ist es, das, was sie tatsächlich leisten können, zu erweitern – besonders über Bild-, Video- und Vision-Workflows hinweg.",
+      },
+    ]),
+    lastUpdatedLabel: "7. April 2026",
+    heroTitle: ["Beste KI für", "Coding-Agenten"],
+    heroIntro:
+      "Die beste KI für Coding-Agenten ist meist kein einzelnes Modell-Ranking. Es ist die Kombination aus Basismodell, plattformspezifischem Workflow und Capability-Schicht rund um den Agenten. Sobald die Aufgabe Code verlässt und Screenshots, Aufzeichnungen, Medien oder Deliverables berührt, wird die Entscheidung zur Stack-Frage.",
+    quickTakeawaysTitle: "Kernpunkte",
+    quickTakeaways: quickTakeawaysDe,
+    evaluationTitle: "Wie Sie ein Setup für Coding-Agenten evaluieren",
+    evaluationIntro:
+      "Nutzen Sie diese vier Fragen, um die reine Modellwahl von der Plattform-Workflow-Eignung und vom Capability-Overhead zu trennen.",
+    evaluationCards: [
+      { title: "Qualität des Basismodells", body: "Beginnen Sie hier, wenn die Arbeit überwiegend Planung, Code-Lesen, Diff-Schreiben, Debugging und Kohärenz innerhalb eines echten Repositorys ist." },
+      { title: "Plattformspezifische Workflow-Eignung", body: "Wenn Sie bereits auf Claude Code oder Cursor sind, ist die bessere Frage oft, wie das beste Setup innerhalb dieser Umgebung aussieht – nicht über den gesamten Markt hinweg." },
+      { title: "Wie viel der Aufgabe Code verlässt", body: "Viele Software-Workflows ufern in Screenshots, Launch-Assets, Demos, Aufzeichnungen und visuelle QA aus. Hier ist das beste Setup nicht mehr nur eine Frage des Coding-Modells." },
+      { title: "Capability- und Integrations-Overhead", body: "Ein theoretisch starker Stack verliert an Wert, wenn jeder neue Workflow separate Provider, Credentials und brüchigen Glue-Code rund um den Agenten erfordert." },
+    ],
+    stackTitle: "Wie das beste Setup meist aussieht",
+    stackCards: [
+      { title: "Bestes Modell innerhalb eines Coding-Loops", label: "Geeignet, wenn die Arbeit überwiegend Code ist", body: "Das ist der richtige Rahmen, wenn der Workflow überwiegend in Prompts, Diffs, Tests und Dateien bleibt. Die Hauptfrage ist, welches Modell innerhalb der bereits vertrauten Coding-Umgebung am besten reasoned." },
+      { title: "Plattformspezifischer Setup-Leitfaden", label: "Geeignet, wenn Sie bereits auf Claude Code oder Cursor sind", body: "Sobald die Agent-Oberfläche gewählt ist, wird die beste Antwort meist enger. Sie brauchen die Seite, die das stärkste Setup innerhalb dieses spezifischen Workflows erklärt." },
+      { title: "Agent plus Capability Runtime", label: "Beste Wahl, wenn Aufgaben Medien- und Output-Schichten überschreiten", body: "Hier passt AnyCap. Sie behalten Claude Code, Cursor oder Codex und ergänzen die fehlende Capability-Schicht für Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine Oberfläche." },
+    ],
+    drillDownTitle: "Vertiefen Sie ausgehend von der Kategorie-Seite",
+    drillDownCards: [
+      { label: "Plattformspezifischer Käufer-Leitfaden", title: "Beste KI für Claude Code", href: "/learn/best-ai-for-claude-code", body: "Geeignet, wenn Sie wissen, dass Claude Code der Kern-Workflow ist, und die engere Empfehlung in dieser Umgebung suchen." },
+      { label: "Plattformspezifischer Käufer-Leitfaden", title: "Beste KI für Cursor", href: "/learn/best-ai-for-cursor", body: "Geeignet, wenn Cursor die Hauptumgebung ist und die Frage lautet, wie weit der Editor-Loop trägt, bevor Capability-Lücken zählen." },
+      { label: "Agent-spezifischer Pfad", title: "Codex-Workflows", href: "/for/codex", body: "Geeignet, wenn die Kategorie-Frage geklärt ist und Sie den Codex-spezifischen Pfad in AnyCap suchen." },
+      { label: "Capability-Lücken-Pfad", title: "Was Agenten noch nicht können", href: "/learn/what-agents-cant-do", body: "Geeignet, wenn der eigentliche Blocker nicht die Wahl eines Agenten ist, sondern das Identifizieren der fehlenden Kapazitäten rund um einen, den Sie schon mögen." },
+    ],
+    capabilityTitle: "Capability-Seiten, die als Nächstes zu öffnen sind",
+    capabilityCards: [
+      { title: "Bildgenerierung", href: "/capabilities/image-generation", body: "Erzeugen Sie Produkt-Visuals, Konzepte und Launch-Assets, statt nur Anweisungen für einen menschlichen Designer zu entwerfen." },
+      { title: "Videogenerierung", href: "/capabilities/video-generation", body: "Erstellen Sie kurze Demos und Motion-Assets, wenn eine Coding-Aufgabe ein echtes Artefakt benötigt statt eines weiteren Absatzes." },
+      { title: "Bildverständnis", href: "/capabilities/image-understanding", body: "Lesen Sie Screenshots, Referenzen und visuelle QA-Inputs durch denselben Workflow wie Code-Reasoning." },
+      { title: "Videoanalyse", href: "/capabilities/video-analysis", body: "Inspizieren Sie Aufzeichnungen und erklären Sie, was passiert ist, wenn der Bug oder das Workflow-Problem in einem Video lebt." },
+    ],
+    selectionTitle: "Wie Sie schnell entscheiden",
+    selectionRows: [
+      { question: "Wann ist das überwiegend ein Modellvergleich?", answer: "Es ist überwiegend ein Modellvergleich, wenn die Arbeit nahe am Code bleibt: Änderungen planen, Diffs schreiben, debuggen, Logs lesen und Dateien aktualisieren. Dann dominieren Reasoning-Qualität und Editing-Ergonomie die Entscheidung." },
+      { question: "Wann sollte ich stattdessen die Claude-Code- oder Cursor-spezifische Seite öffnen?", answer: "Öffnen Sie die engere Seite, sobald Sie wissen, welche Agent-Oberfläche Sie behalten wollen. Ab dort ist das Problem nicht mehr die ganze Kategorie, sondern das beste Setup innerhalb eines spezifischen Workflows." },
+      { question: "Wann zählt die Capability Runtime mehr als ein weiterer Benchmark?", answer: "Die Capability Runtime zählt mehr, sobald die Aufgabe Visuals erzeugen, Screenshots prüfen, Aufzeichnungen analysieren oder das Ergebnis in etwas verwandeln muss, das ein Mensch außerhalb des Code-Editors nutzen kann." },
+    ],
+    nextMoveTitle: "Nächste Schritte",
+    nextMoveCards: [
+      { title: "Beste KI für Claude Code", href: "/learn/best-ai-for-claude-code", body: "Hierhin, wenn die Kategorie-Frage spezifisch auf Claude Code eingegrenzt ist." },
+      { title: "Beste KI für Cursor", href: "/learn/best-ai-for-cursor", body: "Hierhin, wenn die Kategorie-Frage spezifisch auf Cursor eingegrenzt ist." },
+      { title: "Was Agenten noch nicht können", href: "/learn/what-agents-cant-do", body: "Hierhin, wenn das eigentliche Problem Capability-Lücken sind statt der Wahl eines neuen Agenten." },
+      { title: "Die SaaS-Assistenten-Variante ansehen", href: "/learn/ai-chatbot-vs-ai-agent-for-saas", body: "Hierhin, wenn dieselbe Stack-Entscheidung in einem SaaS-Chatbot oder Copilot auftritt statt in einem Coding-Workflow." },
+      { title: "Was ist die fortschrittlichste KI?", href: "/learn/what-is-the-most-advanced-ai", body: "Hierhin, wenn die Frage wirklich die Frontier betrifft: Welches KI-System ist insgesamt am fortschrittlichsten und warum die Antwort je nach Aufgabe wechselt." },
+      { title: "Den Capability-Hub durchstöbern", href: "/capabilities", body: "Hierhin, wenn Sie das Problem kennen und die exakte AnyCap-Oberfläche suchen, die es löst." },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      { question: "Was ist aktuell die beste KI für Coding-Agenten?", answer: "Es gibt keine einzelne dauerhafte Antwort für jedes Team. Die beste Wahl hängt davon ab, ob Ihre eigentliche Frage Modellqualität, plattformspezifische Workflow-Eignung oder die Capability-Schicht rund um den Agenten betrifft." },
+      { question: "Wann ist die beste Wahl für Coding-Agenten überwiegend eine Benchmark-Frage?", answer: "Es ist überwiegend eine Benchmark-Frage, wenn die Arbeit innerhalb von Code bleibt und das Hauptziel Reasoning, Editing, Debugging und Repository-Verständnis ist." },
+      { question: "Wann sollte ich zum Claude-Code- oder Cursor-spezifischen Leitfaden wechseln?", answer: "Wechseln Sie zum engeren Leitfaden, sobald Sie wissen, welche Agent-Oberfläche Sie behalten wollen. Diese Seite eignet sich am besten als Kategorie-Leitfaden, bevor der Workflow konkreter wird." },
+      { question: "Ersetzt AnyCap Claude Code, Cursor oder Codex?", answer: "Nein. AnyCap ist die Capability Runtime rund um diese Agenten. Ihre Rolle ist es, das, was sie tatsächlich leisten können, zu erweitern – besonders über Bild-, Video- und Vision-Workflows hinweg." },
+    ],
+    ctas: [
+      { href: "/learn/best-ai-for-claude-code", label: "Claude-Code-Leitfaden", variant: "primary" },
+      { href: "/learn/best-ai-for-cursor", label: "Cursor-Leitfaden", variant: "secondary" },
+      { href: "/capabilities", label: "Kapazitäten ansehen", variant: "secondary" },
     ],
   },
 };

@@ -476,6 +476,159 @@ const contentByLocale = {
       { label: "Panduan konteks", href: "/guides/context-engineering-for-agents" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Nano Banana Pro für KI-Agenten – Bildbearbeitung über AnyCap",
+      description:
+        "Nutzen Sie Nano Banana Pro über AnyCap, wenn KI-Agenten Bildbearbeitung, Überarbeitungsschleifen und prompt-basierte Updates an bestehenden Visuals brauchen. Erfahren Sie, wie es in Agenten-Workflows passt und wann Sie es einem reinen Generierungsmodell vorziehen sollten.",
+      openGraphTitle: "Nano Banana Pro für KI-Agenten – Bildbearbeitung über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Nano Banana Pro über AnyCap, wenn KI-Agenten Bildbearbeitung, Überarbeitungsschleifen und prompt-basierte Updates an bestehenden Visuals brauchen.",
+      articleHeadline: "Nano Banana Pro für KI-Agenten – Bildbearbeitung über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Nano Banana Pro über AnyCap für Bildbearbeitung, Überarbeitungsschleifen und prompt-basierte Updates an bestehenden Visuals in KI-Agenten-Workflows.",
+      articleAbout: ["Nano Banana Pro", "Bildbearbeitung", "AnyCap", "KI-Agenten"],
+      articleKeywords: [
+        "nano banana pro",
+        "nano banana pro api",
+        "bildbearbeitungsmodell",
+        "bild zu bild",
+        "anycap",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Nano Banana Pro", href: NANO_BANANA_PRO_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "Nano Banana Pro",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Nano Banana Pro ist die bessere Wahl, wenn ein Agent ein bestehendes Bild bearbeiten soll, statt von Grund auf zu generieren. Über AnyCap wird das Modell Teil derselben Capability-Runtime und CLI, die auch für andere Bild- und Video-Aufgaben dient – Agenten wechseln so ohne Werkzeugwechsel von der Generierung zur Überarbeitung.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Nano Banana Pro",
+      href: NANO_BANANA_PRO_PATH,
+      sectionTitle: "Vorher-Nachher-Beleg für den Überarbeitungs-Workflow",
+      intro:
+        "Nano Banana Pro ergibt am meisten Sinn, sobald ein Entwurf bereits existiert. Dieses Bildpaar zeigt das direkt: zuerst ein grobes Basisbild, dann eine sauberere, launchbereite Überarbeitung per Bild-zu-Bild-Edit.",
+      promptLabel: "Mit AnyCap verwendeter Edit-Prompt",
+      prompt:
+        "Ersetze den überladenen Schreibtisch durch einen warmen, cremefarbenen Studiogradient und einen schlichten Sockel, zentriere das Wearable, ergänze sanftes Konturlicht und eine sauberere Komposition, behalte die Form des Geräts bei, lass es launchbereit wirken, hochwertige Produktmarketing-Aufnahme, kein Text, kein Wasserzeichen",
+      caption:
+        "Das linke Bild ist ein grober Nano-Banana-2-Entwurf. Das rechte Bild ist die Nano-Banana-Pro-Überarbeitung, die über AnyCap aus diesem Quell-Asset erzeugt wurde.",
+      signals: [
+        "Verwandelt die abstrakte Idee einer Überarbeitungsschleife in eine sichtbare Vorher-Nachher-Sequenz.",
+        "Zeigt Hintergrundbereinigung, Motivzentrierung und Lichtverbesserung, ohne das Produkt selbst auszutauschen.",
+        "Sendet ein stärkeres Erfahrungssignal als eine Seite, die nur behauptet, das Modell sei gut im Bearbeiten.",
+      ],
+      images: [
+        {
+          src: SHOWCASE_IMAGE_SRC,
+          alt: "Grobes Tabletop-Produktfoto eines Wearable-Geräts auf einem unaufgeräumten Schreibtisch mit gemischtem Licht.",
+          width: 1376,
+          height: 768,
+          label: "Vorher",
+        },
+        {
+          src: SHOWCASE_AFTER_IMAGE_SRC,
+          alt: "Verfeinertes Produkt-Marketing-Foto desselben Wearable-Geräts, zentriert auf einem minimalistischen Sockel mit warmem cremefarbenem Studiohintergrund.",
+          width: 1376,
+          height: 768,
+          label: "Nachher",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Nano Banana Pro wählen sollten",
+    useCases: [
+      "Ein bestehendes Bild per Textanweisung überarbeiten",
+      "Beleuchtung, Komposition oder Hintergrund anpassen, ohne das Asset neu aufzubauen",
+      "Schnelle Agenten-Iterationsschleifen über visuelle Entwürfe ausführen",
+      "Mit einem Eingabebild starten statt mit einem leeren Prompt",
+    ],
+    callSectionTitle: "Nano Banana Pro über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Ein bestehendes Bild bearbeiten",
+        code:
+          'anycap image generate --model nano-banana-pro --mode image-to-image --prompt "replace the background with a warm studio light" --param reference_image_urls=\'["./input.png"]\' -o revised.png',
+      },
+      {
+        label: "Das Ergebnis in einer Review-Schleife verwenden",
+        code:
+          "Das Modell passt gut, wenn der Agent bereits einen Entwurf gesichtet hat und Feedback in einem größeren Workflow umsetzt.",
+      },
+    ],
+    workflowTitle: "Workflow-Abwägungen",
+    workflowCards: [
+      {
+        eyebrow: "Setzen Sie auf Nano Banana Pro",
+        body: "Wenn der Agent bereits ein Bild hat und gezielte Änderungen, mehrere Überarbeitungen oder prompt-basierte Bearbeitung braucht.",
+      },
+      {
+        eyebrow: "Setzen Sie stattdessen auf Seedream 5",
+        body: "Wenn der Workflow von einem Text-Prompt aus startet und der Agent ein neues, poliertes Bild braucht statt einer Bearbeitungsstufe.",
+      },
+    ],
+    comparisonTitle: "Nano Banana Pro vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Nano Banana Pro",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary:
+          "Prompt-basierte Bildbearbeitung, Überarbeitungsschleifen und gezielte visuelle Updates, sobald ein Entwurf existiert",
+        alternative:
+          "Wählen Sie Seedream 5 für einen polierten Erstdurchlauf oder Nano Banana 2 für schnellere Iteration in hohem Volumen",
+      },
+      {
+        dimension: "Rolle im Workflow",
+        primary: "Überarbeitungsmodell, das auf Generierung, Review oder visuelles Feedback folgt",
+        alternative:
+          "Greifen Sie zu einem Schwestermodell, wenn der Workflow ein neues Asset aus einem leeren Prompt erstellen soll",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary:
+          "Ein bestehendes Asset nehmen, einen Änderungswunsch umsetzen und schnell eine brauchbarere Version zurückliefern",
+        alternative:
+          "Zurück zu Seedream 5 oder Nano Banana 2 wechseln, wenn der Workflow stärker auf Generierungs-Durchsatz als auf Bearbeitungspräzision zielt",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Nano Banana Pro am besten?",
+        answer:
+          "Nano Banana Pro eignet sich am besten für gezielte Bildbearbeitungen, Überarbeitungsschleifen und prompt-basierte Updates, wenn ein Agent bereits ein Entwurfsbild zur Verfügung hat.",
+      },
+      {
+        question: "Wie rufen Agenten Nano Banana Pro über AnyCap auf?",
+        answer:
+          "Agenten rufen es mit der AnyCap-CLI über anycap image generate --model nano-banana-pro im Bild-zu-Bild-Modus mit einem Referenzbild und einem Edit-Prompt auf.",
+      },
+      {
+        question: "Soll ich Nano Banana Pro oder Seedream 5 verwenden?",
+        answer:
+          "Setzen Sie auf Nano Banana Pro, wenn die Aufgabe von einem bestehenden Bild ausgeht und Überarbeitungen verlangt. Setzen Sie auf Seedream 5, wenn der Workflow von einem leeren Prompt aus startet und ein stärkeres Erstbild braucht.",
+      },
+    ],
+    nextActions: [
+      { label: "Bildgenerierung", href: "/capabilities/image-generation", primary: true },
+      { label: "Seedream 5", href: "/models/seedream-5" },
+      { label: "Kontext-Leitfaden", href: "/guides/context-engineering-for-agents" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, LocaleContent>;
 
 export function getNanoBananaProMetadata(locale: SiteLocale): Metadata {

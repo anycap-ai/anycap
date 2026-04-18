@@ -386,6 +386,129 @@ const contentByLocale = {
       { label: "Panduan konteks", href: "/guides/context-engineering-for-agents" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Seedream 5 für KI-Agenten – Bildgenerierung über AnyCap",
+      description:
+        "Nutzen Sie Seedream 5 über AnyCap, wenn KI-Agenten polierte Bildgenerierung mit einer einzigen CLI und einer Capability-Runtime benötigen. Erfahren Sie, wann Sie Seedream 5 wählen, wie Sie es aufrufen und wie es in Bild-Workflows passt.",
+      openGraphTitle: "Seedream 5 für KI-Agenten – Bildgenerierung über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Seedream 5 über AnyCap, wenn KI-Agenten polierte Bildgenerierung mit einer einzigen CLI und einer Capability-Runtime benötigen.",
+      articleHeadline: "Seedream 5 für KI-Agenten – Bildgenerierung über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Seedream 5 über AnyCap, wenn KI-Agenten polierte Erstdurchlauf-Bildgenerierung in einer Capability-Runtime benötigen.",
+      articleAbout: ["Seedream 5", "Bildgenerierung", "AnyCap", "KI-Agenten"],
+      articleKeywords: ["seedream 5", "bildgenerierung", "anycap", "modell-leitfaden für ki-agenten"],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Seedream 5", href: SEEDREAM_5_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 5. April 2026",
+    hero: {
+      titleLine1: "Seedream 5",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Seedream 5 ist ein starker Standard, wenn ein Agent Bildgenerierung über AnyCap benötigt. Es passt zu Workflows, in denen der Agent von einem Text-Prompt aus startet und ein poliertes visuelles Ergebnis ohne benutzerdefinierte Provider-Integration benötigt. Mit AnyCap können Agenten Seedream 5 über dieselbe CLI aufrufen, die sie für andere multimodale Capabilities nutzen.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Seedream 5",
+      href: SEEDREAM_5_PATH,
+      sectionTitle: "Generiertes Beispiel für einen polierten Erstdurchlauf",
+      intro:
+        "Diese Seite zeigt jetzt einen echten Seedream 5-Output, generiert über AnyCap. Das Briefing zielt auf die Art launchbereiter Produkt-Framings ab, die Teams üblicherweise vor dem Start von Überarbeitungsschleifen haben möchten.",
+      promptLabel: "Mit AnyCap verwendeter Prompt",
+      prompt:
+        "Premium-SaaS-Produkt-Hero-Szene, matter Graphit-Laptop auf einem warmen, cremeweißen Sockel, schwebende, transluzente Interface-Karten, dezente olivgrüne Akzente, weiche Studioschatten, editoriales Licht, scharfe Komposition, hochwertige Marketing-Kunst, kein lesbarer Text, kein Wasserzeichen",
+      caption:
+        "Dieses Visual wurde mit Seedream 5 über AnyCap für diese Seite generiert und gibt dem Leitfaden ein eigenes Beispiel statt Stockfoto-Material.",
+      signals: [
+        "Zeigt die sauberere Erstdurchlauf-Komposition, die Seedream 5 allein aus einem Prompt liefern soll.",
+        "Macht die Hauptaussage der Seite visuell überprüfbar: polierter Output ohne separaten Provider-Workflow.",
+        "Fügt eigenes Multimedia hinzu, das E-E-A-T unterstützt und die Seite leichter scanbar macht.",
+      ],
+      images: [
+        {
+          src: SHOWCASE_IMAGE_SRC,
+          alt: "Premium-Produkt-Hero-Szene mit einem Graphit-Laptop auf einem cremeweißen Sockel und schwebenden, transluzenten Interface-Karten in weichem Studiolicht.",
+          width: 2560,
+          height: 1440,
+          label: "Seedream 5-Output",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Seedream 5 wählen sollten",
+    useCases: [
+      "Marketing-Grafiken und Launch-Assets",
+      "Produkt-Mockups und Konzept-Frames",
+      "Editorial-Visuals und Social-Thumbnails",
+      "Agenten-Workflows, die im Erstdurchlauf einen polierten Bild-Output benötigen",
+    ],
+    callSectionTitle: "Seedream 5 über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Ein neues Bild generieren",
+        code:
+          'anycap image generate --model seedream-5 --prompt "a product hero shot on a neutral background"',
+      },
+      {
+        label: "Verfügbare Bildmodelle auflisten",
+        code: "anycap image models",
+      },
+    ],
+    comparisonTitle: "Seedream 5 vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Seedream 5",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary: "Polierte Erstdurchlauf-Generierung für Marketing, UI und saubere visuelle Konzepte",
+        alternative: "Nano Banana Pro passt besser, wenn der Workflow iterative Bildbearbeitung benötigt",
+      },
+      {
+        dimension: "Rolle im Workflow",
+        primary: "Primäres Generierungsmodell",
+        alternative: "Nutzen Sie Nano Banana Pro nach der Generierung, wenn der Agent gezielte Bearbeitungen benötigt",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary: "Einen Prompt in ein fertiges visuelles Asset verwandeln",
+        alternative: "Nutzen Sie ein Schwestermodell, wenn die Aufgabe von einem bestehenden Bild ausgeht",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Seedream 5 am besten?",
+        answer:
+          "Seedream 5 eignet sich am besten für Erstdurchlauf-Bildgenerierung, wenn ein Agent direkt aus einem Text-Prompt ein poliertes Ergebnis benötigt.",
+      },
+      {
+        question: "Wie rufen Agenten Seedream 5 über AnyCap auf?",
+        answer:
+          "Agenten können es mit der AnyCap CLI über anycap image generate --model seedream-5 mit einem Text-Prompt aufrufen.",
+      },
+      {
+        question: "Soll ich Seedream 5 oder Nano Banana Pro verwenden?",
+        answer:
+          "Verwenden Sie Seedream 5 für neue Bildgenerierung und Nano Banana Pro, wenn der Workflow von einem bestehenden Bild ausgeht und Bearbeitung benötigt.",
+      },
+    ],
+    nextActions: [
+      { label: "Bildgenerierung", href: "/capabilities/image-generation", primary: true },
+      { label: "Nano Banana Pro", href: "/models/nano-banana-pro" },
+      { label: "Kontext-Leitfaden", href: "/guides/context-engineering-for-agents" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, LocaleContent>;
 
 export function getSeedream5Metadata(locale: SiteLocale): Metadata {

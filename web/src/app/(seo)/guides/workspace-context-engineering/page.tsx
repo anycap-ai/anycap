@@ -31,7 +31,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
+const contentByLocale: Record<SiteLocale, PageContent> = {
   en: {
     eyebrow: "Guide",
     title: ["Workspace context", "engineering"],
@@ -140,6 +140,42 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
     },
     breadcrumbLabel: "Rekayasa Konteks Workspace",
   },
+  de: {
+    eyebrow: "Anleitung",
+    title: ["Workspace Context", "Engineering"],
+    intro:
+      "In echten Entwickler-Agenten ist Kontext nicht nur Prompt-Text. Der Workspace umfasst Dateien, Terminals, frühere Edits, Tool-Berechtigungen und Projektregeln. Dieser Kontext bestimmt, ob der Agent Code lesen, einen Befehl ausführen, ein Bild prüfen oder eine multimodale Capability über AnyCap aufrufen soll.",
+    contextTitle: "Was als Workspace-Kontext zählt",
+    contextCards: [
+      {
+        title: "Projektdateien",
+        body: "Quelldateien, Docs, Configs und generierte Artefakte sagen dem Agenten, in welcher Art von Aufgabe er sich befindet.",
+      },
+      {
+        title: "Ausführungsstatus",
+        body: "Offene Terminals, laufende Prozesse und vorherige Befehle ändern, was als Nächstes sicher und nützlich ist.",
+      },
+      {
+        title: "Tool-Affordances",
+        body: "Verfügbare Tools und Berechtigungen bestimmen, ob der Agent lesen, bearbeiten, browsen oder Capabilities aufrufen kann.",
+      },
+      {
+        title: "Aufgabenverlauf",
+        body: "Vorherige Entscheidungen und Feedback helfen dem Agenten, Wiederholungen zu vermeiden und eine bessere nächste Aktion zu wählen.",
+      },
+    ],
+    routingTitle: "Warum das für Capability-Routing wichtig ist",
+    routingBody: [
+      "Wenn der Workspace einen Screenshot, eine Design-Review-Notiz und ein vorhandenes Bild-Asset zeigt, sollte der Agent wahrscheinlich Bildverständnis oder eine Bildbearbeitungs-Capability aufrufen. Wenn der Aufgabenverlauf zeigt, dass das Team einen Produkt-Launch vorbereitet, kann eine Bildgenerierungs- oder Videogenerierungs-Capability der richtige nächste Schritt sein.",
+      "AnyCap reduziert die Routing-Komplexität, weil mehrere multimodale Aktionen über eine konsistente Runtime statt vieler unverbundener Provider bereitgestellt werden.",
+    ],
+    ctas: {
+      contextEngineering: "Context Engineering",
+      imageUnderstanding: "Bildverständnis",
+      videoAnalysis: "Videoanalyse",
+    },
+    breadcrumbLabel: "Workspace Context Engineering",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
@@ -158,6 +194,15 @@ function getPageMetadata(locale: SiteLocale): Metadata {
         "Rekayasa konteks workspace - bagaimana agen memakai file, tool, dan status eksekusi",
       description:
         "Rekayasa konteks workspace menjelaskan bagaimana file, terminal, definisi tool, dan status eksekusi membentuk keputusan agen AI. Pelajari dampaknya pada routing tool dan pemanggilan capability multimodal lewat AnyCap.",
+    });
+  }
+
+  if (locale === "de") {
+    return createLocalizedMetadataForPath(locale, PATH, {
+      title:
+        "Workspace Context Engineering — Wie KI-Agenten Dateien, Tools und Status nutzen",
+      description:
+        "Workspace Context Engineering erklärt, wie Dateien, Terminals, Tool-Definitionen und Ausführungsstatus die Entscheidungen eines KI-Agenten prägen. Erfahren Sie, wie das Tool-Routing und multimodale Capability-Aufrufe über AnyCap beeinflusst.",
     });
   }
 

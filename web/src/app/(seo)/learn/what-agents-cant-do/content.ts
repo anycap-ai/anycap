@@ -92,6 +92,29 @@ const faqItemsPtBr = [
   },
 ] as const;
 
+const faqItemsDe = [
+  {
+    question: "Was fehlt KI-Agenten meist zuerst?",
+    answer:
+      "Die ersten fehlenden Stücke sind meist Bildgenerierung, Videogenerierung, Screenshot-Verständnis und Aufzeichnungsanalyse. Der Agent kann die Arbeit planen, aber diese Aufgaben nicht über eine konsistente Runtime abschließen.",
+  },
+  {
+    question: "Können Coding-Agenten eigenständig Bilder oder Videos erzeugen?",
+    answer:
+      "Nicht als integrierte Capability-Schicht. Manche Agenten können Custom-Tools aufrufen, doch die meisten Teams müssen weiterhin eine konsistente Runtime für Bildgenerierung, Videogenerierung und Medienverständnis ergänzen.",
+  },
+  {
+    question: "Muss ich den Agenten wechseln, um diese Kapazitäten zu erhalten?",
+    answer:
+      "Nein. Der Sinn von AnyCap ist es, den Agenten, den Sie bereits nutzen, zu behalten und die fehlende Capability-Schicht drumherum zu ergänzen.",
+  },
+  {
+    question: "Wo sollte ich beginnen, wenn mir mein aktueller Agent schon gefällt?",
+    answer:
+      "Beginnen Sie mit der Kapazitätenseite, die zur fehlenden Aufgabe passt – etwa Bildgenerierung, Videogenerierung, Bildverständnis oder Videoanalyse. Wenn Sie zuerst den agent-spezifischen Einstieg brauchen, nutzen Sie die Seiten unter „Agenten ausstatten“.",
+  },
+] as const;
+
 const baseRows = [
   {
     capability: "Image generation",
@@ -426,6 +449,122 @@ const contentByLocale: Record<SiteLocale, WhatAgentsCantDoPageData> = {
       { href: "/start", label: "Get Started", variant: "primary" },
       { href: "/for", label: "Equip Agents", variant: "secondary" },
       { href: "/capabilities", label: "Browse Capabilities", variant: "secondary" },
+    ],
+  },
+  de: {
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Lernen", href: "/learn" },
+      { name: "Was Agenten nicht können", href: WHAT_AGENTS_CANT_DO_PATH },
+    ],
+    eyebrow: "Lernen",
+    metadata: {
+      title: "Was KI-Agenten out of the box nicht können – und wie Sie Kapazitäten ergänzen",
+      description:
+        "KI-Agenten können planen, aber out of the box scheitern sie weiterhin an Bildgenerierung, Videogenerierung, Screenshot-Verständnis, Aufzeichnungsanalyse und teilbaren Output-Workflows.",
+      openGraphTitle: "Was KI-Agenten out of the box nicht können – und wie Sie Kapazitäten ergänzen",
+      openGraphDescription:
+        "Sehen Sie die häufigsten Kapazitätslücken moderner KI-Agenten und den kürzesten AnyCap-Weg, jede einzelne zu schließen.",
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Was KI-Agenten out of the box nicht können – und wie Sie Kapazitäten ergänzen",
+      description:
+        "Problem-Intent-Leitfaden zu den Kapazitätslücken, die auftreten, wenn Coding-Agenten Bild-, Video- und Vision-Workflows benötigen.",
+      path: WHAT_AGENTS_CANT_DO_PATH,
+      about: ["KI-Agenten", "Coding-Agenten", "Bildgenerierung", "Videogenerierung", "Bildverständnis", "Videoanalyse"],
+      keywords: [
+        "was ki-agenten nicht können",
+        "coding-agent limitierungen",
+        "ki-agent kapazitätslücken",
+        "ki-agent kann kein video erzeugen",
+        "ki-agent kapazitäten erweitern",
+      ],
+      datePublished: "2026-04-07",
+      dateModified: "2026-04-07",
+    }),
+    faqJsonLd: createFaqPageJsonLd(faqItemsDe),
+    heroTitle: ["KI-Agenten können denken.", "Sie brauchen trotzdem Kapazitäten."],
+    heroIntro:
+      "Die Lücke zeigt sich meist auf dieselbe Weise: Der Agent kann die Arbeit planen, aber er kann das Bild nicht erzeugen, das Video nicht erstellen, den Screenshot nicht lesen oder die Aufzeichnung nicht über eine konsistente Runtime auswerten. Egal ob Sie Claude Code, Cursor, Codex oder eine andere Assistant-Shell nutzen – die Lösung ist meist kein neuer Agent, sondern die fehlende Capability-Schicht um den, den Sie bereits mögen.",
+    table: {
+      eyebrow: "Häufige Bruchstellen",
+      title: "Wo Agenten zuerst an die Wand fahren",
+      description:
+        "Das sind die typischen Workflows, in denen Coding-Agenten an eine harte Grenze stoßen und eine externe Capability-Schicht benötigen.",
+      columns: [
+        { label: "Ohne AnyCap" },
+        { label: "Mit AnyCap ergänzen", accent: true },
+        { label: "Bester nächster Schritt" },
+      ],
+      footnote: "Nutzen Sie die rechte Spalte, um direkt zur passenden Seite für die fehlende Kapazität zu springen.",
+      rows: [
+        {
+          capability: "Bildgenerierung",
+          cells: [
+            { label: "Nicht eingebaut", tone: "muted" },
+            { label: "Mockups, Thumbnails und Creative-Assets erzeugen", tone: "accent" },
+            "Zur Seite Bildgenerierung",
+          ],
+        },
+        {
+          capability: "Videogenerierung",
+          cells: [
+            { label: "Nicht eingebaut", tone: "muted" },
+            { label: "Demos, Walkthroughs und kurze Clips erstellen", tone: "accent" },
+            "Zur Seite Videogenerierung",
+          ],
+        },
+        {
+          capability: "Bildverständnis",
+          cells: [
+            { label: "Keine konsistente Agent-Runtime", tone: "muted" },
+            { label: "Screenshots, Diagramme und visuelle Referenzen lesen", tone: "accent" },
+            "Zur Seite Bildverständnis",
+          ],
+        },
+        {
+          capability: "Videoanalyse",
+          cells: [
+            { label: "Separate Provider-Arbeit", tone: "muted" },
+            { label: "Aufzeichnungen über dieselbe CLI analysieren", tone: "accent" },
+            "Zur Seite Videoanalyse",
+          ],
+        },
+      ],
+    },
+    intentTitle: "Wählen Sie die kürzeste Seite für die fehlende Kapazität",
+    intentCards: [
+      {
+        eyebrow: "Bild-Lücke",
+        title: "Bildgenerierung",
+        href: "/capabilities/image-generation",
+        summary: "Beste Seite, wenn die fehlende Kapazität Produktvisuals, Marketing-Assets, Mockups oder Creative-Output sind.",
+      },
+      {
+        eyebrow: "Video-Lücke",
+        title: "Videogenerierung",
+        href: "/capabilities/video-generation",
+        summary: "Beste Seite, wenn die fehlende Kapazität Demos, Walkthroughs, Motion-Assets oder kurze Clips sind.",
+      },
+      {
+        eyebrow: "Vision-Lücke",
+        title: "Bildverständnis",
+        href: "/capabilities/image-understanding",
+        summary: "Beste Seite, wenn der Workflow bei Screenshots, Diagrammen, OCR oder visuellem QA startet.",
+      },
+      {
+        eyebrow: "Analyse-Lücke",
+        title: "Videoanalyse",
+        href: "/capabilities/video-analysis",
+        summary: "Beste Seite, wenn das Problem in einer Aufzeichnung liegt statt in einem Textlog oder statischen Screenshot.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: faqItemsDe,
+    ctas: [
+      { href: "/start", label: "Loslegen", variant: "primary" },
+      { href: "/for", label: "Agenten ausstatten", variant: "secondary" },
+      { href: "/capabilities", label: "Kapazitäten entdecken", variant: "secondary" },
     ],
   },
 };

@@ -41,6 +41,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan penyimpanan bersama dan distribusi file ke workflow agen AI dengan AnyCap Drive.",
   },
+  de: {
+    title: "Drive für KI-Agenten – Gemeinsamer Speicher, Dateiorganisation und öffentliche URLs",
+    description:
+      "Geben Sie KI-Agenten ein gemeinsames Drive über AnyCap. Speichern Sie generierte Outputs, organisieren Sie Assets und erstellen Sie öffentliche URLs über eine einzige Schnittstelle, statt Storage in jedem Workflow neu zu integrieren.",
+    openGraphTitle: "Drive für KI-Agenten – Gemeinsamer Speicher, Dateiorganisation und öffentliche URLs",
+    openGraphDescription:
+      "Erweitern Sie Workflows von KI-Agenten mit AnyCap Drive um gemeinsamen Speicher und Dateiauslieferung.",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
@@ -314,6 +322,84 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       "penyimpanan agen",
       "penyimpanan file untuk agen ai",
       "url publik untuk output agen",
+    ],
+  },
+  de: {
+    breadcrumb: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Drive" },
+    ],
+    eyebrow: "Capabilities",
+    title: "Drive",
+    intro:
+      "AnyCap Drive gibt Agenten einen gemeinsamen Ort, um Outputs zu speichern, Assets zu organisieren und öffentliche URLs zu übergeben. Statt Speicher als separates Produkt zu behandeln, das jeder Workflow neu verdrahten muss, macht Drive Persistenz zu einem Teil derselben Capability-Schicht wie Generierung, Analyse und Retrieval.",
+    usageHeading: "CLI-Nutzung",
+    usageExamples: [
+      { title: "Eine Output-Datei hochladen", code: "anycap drive upload launch.mp4" },
+      { title: "Ein gespeichertes Asset teilen", code: "anycap drive share dn_xKmP123" },
+      { title: "Dateien im Drive auflisten", code: "anycap drive list" },
+    ],
+    useCasesHeading: "Wann Agenten Drive benötigen",
+    useCases: [
+      "Generierte Bilder, Videos, Audios und Dokumente an einem gemeinsam zugänglichen Ort für Agenten aufbewahren.",
+      "Öffentliche URLs für Outputs erstellen, ohne pro Workflow ein separates Storage-Produkt anzubinden.",
+      "Wiederverwendbare Assets organisieren, damit verschiedene Agenten und Sessions mit demselben Datenbestand arbeiten können.",
+      "Auslieferung zum Bestandteil derselben Runtime machen wie Generierung, Analyse und Retrieval.",
+    ],
+    relatedHeading: "Verwandte Seiten",
+    relatedPages: [
+      {
+        href: "/capabilities/video-generation",
+        eyebrow: "Verwandte Capability",
+        title: "Videogenerierung",
+        body: "Generierte Videos sind nützlicher, wenn der Workflow sie persistieren und teilen kann.",
+      },
+      {
+        href: "/capabilities/image-generation",
+        eyebrow: "Verwandte Capability",
+        title: "Bildgenerierung",
+        body: "Speichern Sie generierte Visuals und Referenzbilder in einer wiederverwendbaren Asset-Bibliothek.",
+      },
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Preise",
+        body: "So fügt sich Drive-Speicher in den restlichen AnyCap-Produkt-Stack ein.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Warum Drive als Agenten-Capability einbeziehen?",
+        answer:
+          "Weil Generierung nur die halbe Miete ist. Agenten benötigen ebenso einen Ort, um Outputs zu speichern, später wieder abzurufen und Links an Nutzer oder nachgelagerte Systeme zu übergeben, ohne in jedem Projekt Speicher neu aufzubauen.",
+      },
+      {
+        question: "Was bietet AnyCap Drive Teams?",
+        answer:
+          "Eine gemeinsame Speicherschicht für generierte Outputs und Referenz-Assets sowie öffentliche Links, wenn Dateien die Agenten-Runtime verlassen und Menschen oder andere Systeme erreichen müssen.",
+      },
+      {
+        question: "Wie unterscheidet sich Drive von Generierung oder Suche?",
+        answer:
+          "Generierung erstellt Assets, Suche findet Informationen, und Drive hält Artefakte verfügbar, nachdem die Aktion abgeschlossen ist. Drive ist die Speicher- und Auslieferungsschicht, die Agenten-Workflows nützliche Outputs persistieren lässt.",
+      },
+      {
+        question: "Wann sollten Teams Drive verwenden?",
+        answer:
+          "Verwenden Sie Drive, wenn ein Agent Artefakte speichern, Inputs und Outputs organisieren oder stabile Datei-Links zurückgeben soll, statt flüchtiger lokaler Dateien.",
+      },
+    ],
+    jsonLdHeadline: "Drive für KI-Agenten – Gemeinsamer Speicher, Dateiorganisation und öffentliche URLs",
+    jsonLdDescription:
+      "Capability-Leitfaden zum Hinzufügen von gemeinsamem Speicher zu KI-Agenten über AnyCap Drive, inklusive Dateiorganisation und öffentlicher Auslieferungs-Workflows.",
+    jsonLdAbout: ["Drive für KI-Agenten", "Agenten-Speicher", "Datei-Sharing", "AnyCap Drive"],
+    jsonLdKeywords: [
+      "drive for ai agents",
+      "agent storage",
+      "file storage for ai agents",
+      "public urls for agent outputs",
     ],
   },
 } as const;

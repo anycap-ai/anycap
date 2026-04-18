@@ -40,6 +40,9 @@ const pricingCapabilitySummaryTextPtBr =
 const pricingCapabilitySummaryTextId =
   "Generasi gambar, Generasi video, Generasi musik, Pemahaman gambar, Analisis video, Pemahaman audio, Pencarian web, Pencarian web ter-grounding, Crawl web";
 
+const pricingCapabilitySummaryTextDe =
+  "Image generation, Video generation, Music generation, Image understanding, Video analysis, Audio understanding, Web search, Grounded Web search, Web crawl";
+
 type PricingPageContent = {
   metadata: {
     title: string;
@@ -281,6 +284,73 @@ const faqItemsId: readonly PricingFaqItem[] = [
   },
 ];
 
+const pricingPrinciplesDe: readonly PricingPrinciple[] = [
+  {
+    title: "Kostenlos starten und erst zahlen, wenn der Workflow sich bewährt",
+    description:
+      "Jeder neue Account beginnt mit $5 Free-Credit, sodass Teams reale Bild-, Video-, Audio- und Web-Workflows testen können, bevor sie sich auf ein größeres Prepaid-Paket festlegen.",
+  },
+  {
+    title: "Ein Guthaben für all die Workflows, die Agents wirklich brauchen",
+    description:
+      "Dasselbe AnyCap-Guthaben kann für Generierungs-, Analyse-, Such-, Speicher- und Veröffentlichungs-Workflows ausgegeben werden, statt Ausgaben über mehrere Provider-Dashboards zu verteilen.",
+  },
+  {
+    title: "Offizielle Provider-Tarife über einen konsolidierten Billing-Flow",
+    description:
+      "AnyCap reicht den offiziellen Modell-Tarif ohne Markup durch und ergänzt einen Kauf-Flow, ein Guthaben und eine Transaktionshistorie für den gesamten Runtime.",
+  },
+];
+
+const checklistDe: readonly PricingChecklistItem[] = [
+  {
+    title: "1. Vom Workflow ausgehen, nicht von der Modellliste",
+    description:
+      "Schätzen Sie den Pfad ab, den Ihr Agent tatsächlich ausführen wird: Generierung, Analyse, Suche, Speicher oder eine Mischung mehrerer Schritte in einem Job.",
+  },
+  {
+    title: "2. Den teuersten Schritt zuerst bepreisen",
+    description:
+      "Nutzen Sie die Tabellen unten, um den Generierungs-Output oder Aktionstyp abzuschätzen, der den größten Anteil an Credits verbraucht, und behandeln Sie den Rest als Puffer.",
+  },
+  {
+    title: "3. Spielraum für Retries und Iteration lassen",
+    description:
+      "Wenn der Workflow Prompt-Tuning, QA-Durchläufe oder Übergaben im Team erfordert, wählen Sie das Paket, das genug Headroom für stetigen Fortschritt ohne tägliches Top-up bietet.",
+  },
+];
+
+const faqItemsDe: readonly PricingFaqItem[] = [
+  {
+    question: "Gibt es einen kostenlosen Tarif?",
+    answer:
+      "Jeder Account startet mit $5 Free-Credit, was bei der aktuellen Basisumrechnung 250 Credits entspricht, und es sind keine Zahlungsinformationen nötig, um Workflows zu testen.",
+  },
+  {
+    question: "Verfallen Credits?",
+    answer: "Nein. Gekaufte Credits verfallen nicht.",
+  },
+  {
+    question: "Gibt es einen Markup auf das Modell-Pricing?",
+    answer:
+      "Nein. AnyCap reicht den offiziellen Provider-Tarif für jedes Modell und jede Capability durch und konsolidiert die Nutzung in einem Guthaben und einem Billing-Flow.",
+  },
+  {
+    question: "Kann ich dasselbe Guthaben für Generierung und Actions nutzen?",
+    answer:
+      "Ja. Dasselbe AnyCap-Guthaben kann über Generierungs-Modelle, Analyse-Tools, Web-Actions, Drive-Storage und Page-Publishing-Workflows hinweg genutzt werden.",
+  },
+  {
+    question: "Wie wähle ich mein erstes Credit-Pack?",
+    answer:
+      "Starter passt gut zu ersten Live-Tests, Standard ist der Default für wiederkehrende wöchentliche Nutzung und Pro ist die bessere Wahl, wenn ein Team schwerere oder kontinuierlichere Produktionslasten erwartet.",
+  },
+  {
+    question: "Welche Capabilities sind enthalten?",
+    answer: `${pricingCapabilitySummaryTextDe}. Drive-Storage und Page-Hosting sind ohne zusätzliche Credit-Kosten enthalten.`,
+  },
+];
+
 const pricingPackagesByLocale: Record<SiteLocale, readonly PricingCreditPackage[]> = {
   en: creditPackages.map((pkg) => ({
     ...pkg,
@@ -329,6 +399,22 @@ const pricingPackagesByLocale: Record<SiteLocale, readonly PricingCreditPackage[
         : pkg.name === "Standard"
           ? "Pilihan seimbang saat Anda mengharapkan banyak eksekusi gambar, video, audio, atau web berulang dan ingin lebih jarang isi ulang saat beriterasi."
           : "Lebih banyak ruang untuk sesi agen bersama, batch media lebih besar, dan alur kerja berjalan lebih lama di mana throughput penting.",
+  })),
+  de: creditPackages.map((pkg) => ({
+    ...pkg,
+    bonusLabel: pkg.bonus ? `+${pkg.bonus / 10}% Bonus` : null,
+    bestFor:
+      pkg.name === "Starter"
+        ? "Ideal für die ersten Live-Workflow-Tests"
+        : pkg.name === "Standard"
+          ? "Ideal für regelmäßige wöchentliche Nutzung"
+          : "Ideal für größere Team- oder Produktionslasten",
+    description:
+      pkg.name === "Starter"
+        ? "Ein risikoarmer Einstieg für Solo-Builder, um Prompts, Tool Calls und einen ersten produktionsnahen Agent-Pfad zu validieren."
+        : pkg.name === "Standard"
+          ? "Eine ausgewogene Default-Option, wenn Sie wiederkehrende Bild-, Video-, Audio- oder Web-Runs erwarten und beim Iterieren weniger Top-ups möchten."
+          : "Mehr Headroom für gemeinsame Agent-Sessions, größere Media-Batches und längere Workflows, in denen Durchsatz zählt.",
   })),
 };
 
@@ -802,6 +888,132 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       },
     },
     faqJsonLd: createFaqPageJsonLd(faqItemsId),
+  },
+  de: {
+    metadata: {
+      title: "AnyCap Preise — Pay-as-you-go, ohne Markup, $5 Free-Credit",
+      description:
+        "Erhalten Sie $5 Free-Credit, dann zahlen Sie nutzungsbasiert ohne Abo und ohne Markup. Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows in AnyCap.",
+      openGraphTitle: "AnyCap Preise — Pay-as-you-go, ohne Markup, $5 Free-Credit",
+      openGraphDescription:
+        "Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows. $5 Free-Credit, Pay-as-you-go, ohne Abo.",
+      pageName: "AnyCap Preise",
+      pageDescription:
+        "AnyCap-Preisseite. Pay-as-you-go-Credits über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Preise", href: "/pricing" },
+    ],
+    hero: {
+      eyebrow: "Preise",
+      titleLine1: "Einfache, transparente",
+      titleLine2: "Preise.",
+      intro:
+        "Starten Sie mit den KI-Agent-Capabilities, die Coding-Agents am häufigsten fehlen. AnyCap gibt Ihnen ein Prepaid-Guthaben für diese Workflows und lässt dasselbe Guthaben über den breiteren Runtime hinweg wachsen, während Ihr Stack größer wird. Kein Markup über offizielle Tarife. Kein Abo. Jeder neue Account startet mit $5 Free-Credit.",
+      factsLabel: "Preisfakten",
+      factsText:
+        "AnyCap nutzt Prepaid-Credits. Neue Accounts erhalten $5 Free-Credit. Danach wird das öffentliche AnyCap-Capability-Inventar zum gleichen Tarif wie beim offiziellen Modell-Provider abgerechnet, ohne Abo-Gebühr und ohne Plattform-Markup. Dasselbe Guthaben kann auch über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows hinweg genutzt werden. Credit-Pakete sind Einmalkäufe, und größere Pakete enthalten Bonus-Credits.",
+      lastUpdatedLabel: "Zuletzt aktualisiert am 8. April 2026",
+    },
+    sectionTitles: {
+      pricingPrinciples: "So funktioniert AnyCap-Pricing",
+      creditPackages: "Credit-Pakete",
+      estimateTopUp: "So schätzen Sie Ihr erstes Top-up",
+      generationModels: "Generierungsmodelle",
+      actions: "Actions",
+      drivePage: "Drive & Page",
+      faq: "Häufige Fragen",
+    },
+    pricingPrinciplesIntro:
+      "Das Preismodell ist bewusst einfach: Kostenlos starten, einmalige Credit-Packs kaufen, wenn mehr Guthaben nötig ist, und dasselbe Guthaben für die Workflows verfügbar halten, die Ihre Agents bereits ausführen.",
+    pricingPrinciples: pricingPrinciplesDe,
+    creditPackages: pricingPackagesByLocale.de,
+    creditPackagesIntro:
+      "Kaufen Sie Credits für die Nutzung über alle Capabilities hinweg. Größere Pakete enthalten Bonus-Credits.",
+    packageStatusLabels: {
+      popular: "Beliebt",
+      recommendedPack: "Empfohlenes Paket",
+      continueToCheckout: "Weiter zur Kasse",
+    },
+    enterprisePackage: {
+      name: "Enterprise",
+      headline: "Individuelles Volumen für Teams und größere Workflows",
+      description:
+        "Für Teams, die größere Käufe, konsolidierte Abrechnung, Procurement-Support oder Rechnungs-Billing benötigen.",
+      highlights: ["Individuelles Credit-Volumen", "Volumen-Pricing", "Rechnungs-Billing"],
+      ctaLabel: "Kontaktieren Sie uns",
+      ctaSubject: "AnyCap Enterprise pricing",
+    },
+    enterpriseFootnote:
+      "1 Credit = $0,02. Alle Pakete sind Einmalkäufe, keine Abos. Brauchen Sie ein größeres Volumen oder Rechnungs-Billing? Kontaktieren Sie uns für Enterprise-Preise.",
+    estimateTopUp: {
+      intro:
+        "Die meisten Teams brauchen vor dem Credit-Kauf keine perfekte Prognose. Besser ist es, den Workflow zu kartieren, den teuren Schritt zu bepreisen und dann das Paket zu wählen, das Raum für Iteration lässt.",
+      checklist: checklistDe,
+    },
+    generationModels: {
+      intro: "Credit-Tarife für jedes Generierungsmodell. Wir reichen den offiziellen Provider-Tarif ohne Markup durch.",
+      creditsNotice:
+        "Die angezeigten Credits sind Näherungswerte. Die tatsächlichen Kosten können je nach Auflösung, Dauer oder Qualitätseinstellungen variieren.",
+    },
+    actions: {
+      intro:
+        "Analysieren Sie Bilder, Videos und Audio, durchsuchen Sie das Web, crawlen Sie Seiten und führen Sie KI-grounded Web-Search aus — alles zu einem festen Tarif pro Request.",
+      includedCapabilitiesLabel: "Enthaltene Capabilities",
+      includedCapabilitiesSummary: pricingCapabilitySummaryTextDe,
+      tableHeaders: ["Action", "Einheit", "Credits"],
+    },
+    drivePage: {
+      intro:
+        "Cloud-Storage und Static-Site-Hosting sind in jedem Account ohne zusätzliche Credit-Kosten enthalten. Storage-Quoten gelten pro Account.",
+      driveLabel: "Drive",
+      driveDescription: "Cloud-Datei-Storage mit öffentlichen URLs und Sharing.",
+      pageLabel: "Page",
+      pageDescription: "Static-Site-Deployment und Web-Publishing.",
+      limitNotice: "Aktuelle Limits entsprechen Early-Access-Preview-Defaults und können sich ändern.",
+      driveQuotas: [
+        { label: "Dateien pro Account", value: "5.000" },
+        { label: "Maximale Dateigröße", value: "1 GB" },
+      ],
+      pageQuotas: [
+        { label: "Sites pro Account", value: "100" },
+        { label: "Versionen pro Site", value: "500" },
+      ],
+    },
+    faqItems: faqItemsDe,
+    cta: {
+      buyCredits: "Credits kaufen",
+      viewCapabilities: "Capabilities ansehen",
+    },
+    pricingPageJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "AnyCap Preise",
+      description:
+        "AnyCap-Preisseite. Pay-as-you-go-Credits über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows.",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+      dateModified: "2026-04-08",
+      mainEntity: {
+        "@type": "Product",
+        name: "AnyCap Credits",
+        url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+        description:
+          "Pay-as-you-go-Credits für die KI-Agent-Capabilities, die Coding-Agents am häufigsten fehlen, mit einem Guthaben über den weiteren AnyCap-Runtime hinweg.",
+        offers: pricingPackagesByLocale.de.map((pkg) => ({
+          "@type": "Offer",
+          name: `${pkg.name} Credit-Pack`,
+          url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
+          price: pkg.price.toFixed(2),
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+          description: pkg.bonusLabel
+            ? `${pkg.credits.toLocaleString()} Credits (${pkg.bonusLabel})`
+            : `${pkg.credits.toLocaleString()} Credits`,
+        })),
+      },
+    },
+    faqJsonLd: createFaqPageJsonLd(faqItemsDe),
   },
 };
 

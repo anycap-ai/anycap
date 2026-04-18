@@ -141,10 +141,10 @@ const englishContent: CursorPageContent = {
   metadata: {
     title: "Cursor tools for image, video, and vision | AnyCap",
     description:
-      "Tell Cursor 'help me install anycap.ai' and it handles the rest — skill discovery, CLI install, authentication, and immediate access to image generation, video generation, image understanding, and video analysis from natural language.",
+      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation, video generation, and vision.",
     openGraphTitle: "Cursor tools for image, video, and vision | AnyCap",
     openGraphDescription:
-      "Tell Cursor 'help me install anycap.ai' and it handles the rest — skill discovery, CLI install, authentication, and immediate access to image generation, video generation, image understanding, and video analysis from natural language.",
+      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation, video generation, and vision.",
     articleHeadline: "Cursor tools for image, video, and vision | AnyCap",
     articleDescription:
       "Guide to adding image generation, video generation, image understanding, and video analysis to Cursor through one capability runtime.",
@@ -1160,10 +1160,351 @@ const idContent: CursorPageContent = {
   },
 };
 
+const deContent: CursorPageContent = {
+  metadata: {
+    title: "Cursor-Tools für Bild, Video und Vision | AnyCap",
+    description:
+      'Sagen Sie Cursor "hilf mir, anycap.ai zu installieren" und der Rest passiert automatisch – Skill-Discovery, CLI-Installation und sofortiger Zugriff auf Bildgenerierung, Videogenerierung und Vision.',
+    openGraphTitle: "Cursor-Tools für Bild, Video und Vision | AnyCap",
+    openGraphDescription:
+      'Sagen Sie Cursor "hilf mir, anycap.ai zu installieren" und der Rest passiert automatisch – Skill-Discovery, CLI-Installation und sofortiger Zugriff auf Bildgenerierung, Videogenerierung und Vision.',
+    articleHeadline: "Cursor-Tools für Bild, Video und Vision | AnyCap",
+    articleDescription:
+      "Leitfaden, um Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine einzige Capability-Runtime zu Cursor hinzuzufügen.",
+    articleAbout: ["Cursor", "AnyCap CLI", "Agent-Skills", "Capability-Runtime"],
+    articleKeywords: [
+      "cursor tools",
+      "tools zu cursor hinzufügen",
+      "cursor capabilities",
+      "cursor bildgenerierung",
+      "cursor videogenerierung",
+      "cursor bildverständnis",
+      "cursor videoanalyse",
+    ],
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Agenten ausstatten", href: "/for", unlinkable: true },
+    { name: "Cursor" },
+  ],
+  pageEyebrow: "Für Cursor",
+  lastUpdatedLabel: "Zuletzt aktualisiert am 5. April 2026",
+  hero: {
+    titleLine1: "Cursor ist stark bei Code und Workspace-Edits.",
+    titleLine2: "Es fehlen weiterhin Bild-, Video- und Vision-Capabilities.",
+    videoDescription:
+      "Sehen Sie, wie Cursor AnyCap aus einem Prompt in natürlicher Sprache installiert – Skill-Discovery, CLI-Setup, Authentifizierung und erste Bildgenerierung in einem ununterbrochenen Flow.",
+    cursorIntroSuffix:
+      " ist hervorragend in Code-Generierung, Refactorings und workspace-bewussten Edits. Die Lücke zeigt sich, sobald der Workflow Produkt-Visuals, Walkthrough-Videos, Screenshot-Verständnis oder Recording-Reviews benötigt – nichts davon ist heute ein Cursor-Tool.",
+    promptSentence:
+      'Sagen Sie Cursor einfach, was Sie brauchen – etwa "hilf mir, anycap.ai zu installieren". Es findet den Skill, installiert die CLI, authentifiziert sich und ruft die richtige Capability auf – alles im selben Editor- und Terminal-Flow, ohne Sie zu separaten Provider-Setups zu zwingen.',
+    promptTagline: "Natürliche Sprache. Keine manuellen Schritte. Sofortige Capabilities.",
+    ctas: {
+      primary: "Loslegen",
+      secondary: "Bildgenerierung",
+      tertiary: "Videogenerierung",
+    },
+  },
+  demo: {
+    title: "AnyCap mit Cursor installieren und nutzen",
+    description:
+      "Sehen Sie, wie Cursor AnyCap aus einem Prompt in natürlicher Sprache installiert – Skill-Discovery, CLI-Setup, Authentifizierung und erste Bildgenerierung in einem ununterbrochenen Flow.",
+  },
+  install: {
+    eyebrow: "Loslegen",
+    title: 'Sagen Sie Cursor "hilf mir, anycap.ai zu installieren". Fertig.',
+    intro:
+      "Cursor kann den AnyCap-Skill finden, die CLI installieren, sich authentifizieren und Capabilities eigenständig aufrufen. Beschreiben Sie die Aufgabe einfach in natürlicher Sprache – Cursor führt das Setup aus und liefert Ergebnisse im selben Workspace-Flow. Keine Multi-Provider-Verkabelung nötig.",
+    whatToTypeLabel: "Was Sie in Cursor eingeben",
+    installPrompt: "hilf mir, anycap.ai zu installieren",
+    afterSetup:
+      'Nach dem Setup sagen Sie Cursor etwas wie "generiere ein Produkt-Mockup-Bild" – es ruft anycap image generate automatisch auf. Wenn Sie stattdessen direkte Befehlskontrolle möchten, öffnen Sie unten die manuellen Installationsschritte.',
+    manualToggleLabel: "Lieber manuell installieren? Hier sind die drei Schritte.",
+    steps: [
+      {
+        title: "Skill installieren",
+        subtitle: "Schritt 1",
+        code: "npx -y skills add anycap-ai/anycap -a cursor -y",
+        note:
+          "Damit lernt Cursor, wie es die AnyCap-Runtime entdeckt und aufruft, ohne Ihre Arbeitsweise zu ändern.",
+      },
+      {
+        title: "CLI installieren",
+        subtitle: "Schritt 2",
+        code: "curl -fsSL https://anycap.ai/install.sh | sh",
+        note:
+          "Die CLI ist eine einzelne Binary ohne Runtime-Abhängigkeiten und läuft sauber im integrierten Terminal von Cursor.",
+      },
+      {
+        title: "Anmelden und prüfen",
+        subtitle: "Schritt 3",
+        code: "anycap login && anycap status",
+        note:
+          "Nach der Authentifizierung kann Cursor zwischen Bild-, Video- und Vision-Capabilities wechseln, ohne neue Credentials oder Dashboard-Umwege.",
+      },
+    ],
+    guideLinkPrefix: "Eine vollständige Anleitung finden Sie im ",
+    guideLinkLabel: "Installations-Guide",
+    guideLinkSuffix: ".",
+  },
+  whyItFits: {
+    eyebrow: "Warum es passt",
+    title: "Gebaut für die Art, wie Cursor bereits arbeitet",
+    intro:
+      "AnyCap fügt sich sauber in Cursor ein, weil es für dieselben Rahmenbedingungen entworfen wurde: editor-getriebene Workflows, integrierte Terminal-Ausführung und projektbasierten Kontext.",
+    cards: [
+      {
+        title: "Integrierte Terminal-Ausführung",
+        description:
+          "Cursor arbeitet bereits über Code plus Terminal. Die AnyCap CLI ist eine abhängigkeitsfreie Binary, die in derselben Terminal-Sitzung installiert und authentifiziert wird, sodass Capabilities verfügbar sind, ohne den Editor-Flow zu verlassen.",
+      },
+      {
+        title: "Workspace-bewusste Outputs",
+        description:
+          "Cursor hat direkten Zugriff auf Ihr Repo und die umliegenden Dateien. AnyCap liefert Dateipfade und CDN-URLs zurück, die Cursor in Projektverzeichnisse speichern, in Dokumente einbetten oder an nachgelagerte Skripte und Build-Schritte weitergeben kann.",
+      },
+      {
+        title: "Ein Credential, alle Capabilities",
+        description:
+          "Ohne Runtime-Schicht bedeutet das Hinzufügen von Bildgenerierung, Videogenerierung und Vision separate Provider-Credentials im selben Projekt-Workflow. AnyCap konsolidiert sie zu einem einzigen Login, der den gesamten Stack abdeckt.",
+      },
+    ],
+  },
+  capabilityGap: {
+    eyebrow: "Capability-Lücke",
+    title: "Was Sie nach einer einzigen Skill-Installation erhalten",
+    description:
+      "Cursor bleibt auf Code und Workspace-Edits fokussiert, während AnyCap die Generierungs-, Analyse-, Such-, Speicher- und Publishing-Lücken außerhalb seiner nativen Oberfläche schließt.",
+    columns: [
+      { label: "Cursor allein" },
+      { label: "Mit AnyCap ergänzen", accent: true },
+      { label: "Bester nächster Schritt" },
+    ],
+    rows: [
+      {
+        capability: "Bildgenerierung",
+        cells: [
+          { label: "Keine Bildausgabe aus dem Terminal", tone: "muted" },
+          { label: "Visuals und Mockups via anycap image generate erzeugen", tone: "accent" },
+          { label: "Seite Bildgenerierung", href: "/capabilities/image-generation" },
+        ],
+      },
+      {
+        capability: "Videogenerierung",
+        cells: [
+          { label: "Kein Video-Tooling im CLI-Workflow", tone: "muted" },
+          { label: "Walkthroughs und Clips via anycap video generate erstellen", tone: "accent" },
+          { label: "Seite Videogenerierung", href: "/capabilities/video-generation" },
+        ],
+      },
+      {
+        capability: "Musikgenerierung",
+        cells: [
+          { label: "Keine Musikgenerierung im CLI-Workflow", tone: "muted" },
+          { label: "Hintergrundtracks über die AnyCap-Musik-Runtime erstellen", tone: "accent" },
+          { label: "Seite Musikgenerierung", href: "/capabilities/music-generation" },
+        ],
+      },
+      {
+        capability: "Bildverständnis",
+        cells: [
+          { label: "Keine einheitliche Vision-Runtime", tone: "muted" },
+          { label: "Screenshots, Diagramme und visuelle Referenzen lesen", tone: "accent" },
+          { label: "Seite Bildverständnis", href: "/capabilities/image-understanding" },
+        ],
+      },
+      {
+        capability: "Videoanalyse",
+        cells: [
+          { label: "Erfordert separates Provider-Setup", tone: "muted" },
+          { label: "Recordings aus derselben CLI inspizieren", tone: "accent" },
+          { label: "Seite Videoanalyse", href: "/capabilities/video-analysis" },
+        ],
+      },
+      {
+        capability: "Audioverständnis",
+        cells: [
+          { label: "Keine einheitliche Audioanalyse-Runtime", tone: "muted" },
+          { label: "Audio über eine Runtime transkribieren und analysieren", tone: "accent" },
+          { label: "Seite Audioverständnis", href: "/capabilities/audio-understanding" },
+        ],
+      },
+      {
+        capability: "Web-Suche",
+        cells: [
+          { label: "Suche hängt von externem Tooling ab", tone: "muted" },
+          { label: "Das Web aus derselben Capability-Schicht durchsuchen", tone: "accent" },
+          { label: "Seite Web-Suche", href: "/capabilities/web-search" },
+        ],
+      },
+      {
+        capability: "Grounded Web-Suche",
+        cells: [
+          { label: "Kein Grounded-Search-Flow im Task-Loop", tone: "muted" },
+          { label: "Grounded Search ausführen, wenn die Antwort Quellenangaben braucht", tone: "accent" },
+          { label: "Seite Grounded Web-Suche", href: "/capabilities/grounded-web-search" },
+        ],
+      },
+      {
+        capability: "Web-Crawl",
+        cells: [
+          { label: "Keine wiederverwendbare Crawl-Runtime", tone: "muted" },
+          { label: "Seiten crawlen und Inhalte über eine CLI extrahieren", tone: "accent" },
+          { label: "Seite Web-Crawl", href: "/capabilities/web-crawl" },
+        ],
+      },
+      {
+        capability: "Drive-Speicher",
+        cells: [
+          { label: "Keine gemeinsame Asset-Speicherschicht", tone: "muted" },
+          { label: "Outputs mit öffentlichen URLs in AnyCap Drive ablegen", tone: "accent" },
+          { label: "Preisseite", href: "/pricing" },
+        ],
+      },
+      {
+        capability: "Page-Hosting",
+        cells: [
+          { label: "Keine native Oberfläche zum Veröffentlichen von Seiten", tone: "muted" },
+          { label: "Einfache Seiten über AnyCap Page veröffentlichen", tone: "accent" },
+          { label: "Preisseite", href: "/pricing" },
+        ],
+      },
+      {
+        capability: "Ein Auth-Flow",
+        cells: [
+          { label: "Credential-Verwaltung pro Provider", tone: "muted" },
+          { label: "Ein Login für den gesamten Capability-Stack", tone: "accent" },
+          { label: "Loslegen-Seite", href: "/start" },
+        ],
+      },
+    ],
+  },
+  capabilityCards: {
+    title: "Beginnen Sie mit der ersten fehlenden Capability",
+    cards: [
+      {
+        eyebrow: "Kreative Ausgabe",
+        title: "Bildgenerierung",
+        href: "/capabilities/image-generation",
+        summary: "Beste Folgeseite, wenn Cursor Visuals, Mockups, Launch-Assets oder andere Bildausgaben braucht.",
+        command: "anycap image generate",
+      },
+      {
+        eyebrow: "Bewegte Ausgabe",
+        title: "Videogenerierung",
+        href: "/capabilities/video-generation",
+        summary: "Beste Folgeseite, wenn Cursor Demos, Walkthroughs oder kurze Videoausgaben benötigt.",
+        command: "anycap video generate",
+      },
+      {
+        eyebrow: "Vision",
+        title: "Bildverständnis",
+        href: "/capabilities/image-understanding",
+        summary: "Beste Folgeseite, wenn Cursor Screenshots, Diagramme, OCR oder Design-Feedback interpretieren soll.",
+        command: "anycap image read",
+      },
+      {
+        eyebrow: "Analyse",
+        title: "Videoanalyse",
+        href: "/capabilities/video-analysis",
+        summary: "Beste Folgeseite, wenn Cursor Recordings inspizieren und strukturierte Details extrahieren soll.",
+        command: "anycap video read",
+      },
+    ],
+  },
+  modelSelection: {
+    title: "Wählen Sie dann das Modell, nicht nur die Capability",
+    introPrefix:
+      "Cursor-Nutzer suchen häufig nach Modellvergleichen, nicht nur nach Capabilities. Bei Bildern lautet die Wahl meist ",
+    imageModelConnector: " vs ",
+    introMiddle: ", bei Videos ist es oft ",
+    videoModelConnector: " vs ",
+    outro: ". Diese Guides helfen Cursor, vor dem CLI-Aufruf das richtige Modell auszuwählen.",
+    cards: [
+      {
+        eyebrow: "Bildmodell",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        summary: "Bestes First-Pass-Bildmodell für polierte Cursor-Mockups, Launch-Visuals und sauberere visuelle Konzepte.",
+        comparison: "Vergleichen Sie mit Nano Banana 2, wenn die Frage Geschwindigkeit vs Politur lautet.",
+      },
+      {
+        eyebrow: "Bildmodell",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        summary: "Beste Wahl für schnelle Iteration, wenn Cursor viele visuelle Varianten oder wiederholte Content-Generierung braucht.",
+        comparison: "Vergleichen Sie mit Seedream 5 und Nano Banana Pro für die Workflow-Eignung.",
+      },
+      {
+        eyebrow: "Videomodell",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        summary: "Bestes Premium-Videomodell für Cursor, wenn die Aufgabe hochwertige cinematische Ausgabe erfordert.",
+        comparison: "Vergleichen Sie mit Kling 3.0 und Seedance 1.5 Pro hinsichtlich Bewegungsstil und Workflow-Trade-offs.",
+      },
+    ],
+  },
+  faq: {
+    title: "FAQ",
+    items: [
+      {
+        question: "Kann Cursor von sich aus Bilder generieren?",
+        answer:
+          "Nein. Cursor ist hervorragend in Coding, Refactoring und workspace-bewussten Edits, bringt aber keine native Bildgenerierungs-Runtime mit. AnyCap ergänzt diese Capability über eine Skill-Installation und eine CLI, sodass Cursor Visuals erzeugen kann, ohne den Editor- und Terminal-Workflow zu verlassen, den Sie bereits nutzen.",
+      },
+      {
+        question: "Warum AnyCap statt direkter Provider-Anbindung?",
+        answer:
+          "Eine separate Bild-API, eine Video-API und eine Vision-API in Cursor zu verkabeln bedeutet, mehrere SDKs, Credentials und Prompts im selben Projekt zu verwalten. AnyCap konsolidiert das in eine CLI und ein Login, sodass Cursor eine einzige Capability-Schicht erhält statt mehrerer disjunkter Provider-Setups.",
+      },
+      {
+        question: "Ersetzt AnyCap Cursor?",
+        answer:
+          "Nein. AnyCap ist weder eine IDE noch ein Coding-Agent. Es ist eine Capability-Runtime, die neben Cursor läuft. Sie behalten Cursor für Code, Planung und Editing und ergänzen die Bild-, Video- und Vision-Tools, die nicht mitgeliefert werden.",
+      },
+      {
+        question: "Was ist der schnellste Weg, Tools zu Cursor hinzuzufügen?",
+        answer:
+          'Sagen Sie Cursor einfach in natürlicher Sprache, was Sie brauchen, etwa "hilf mir, anycap.ai zu installieren". Cursor kann den Skill finden, die CLI installieren, sich authentifizieren und automatisch die richtige Capability aufrufen. Wenn Sie manuelle Kontrolle bevorzugen, steht der dreistufige Installationspfad weiterhin zur Verfügung.',
+      },
+      {
+        question: "Funktioniert AnyCap im Cursor-Workflow?",
+        answer:
+          "Ja. Die AnyCap CLI ist eine einzelne Binary ohne externe Abhängigkeiten. Sie läuft im integrierten Terminal von Cursor, sendet API-Requests an den AnyCap-Server und liefert Dateipfade oder URLs zurück, die Cursor in Folgeschritten verwenden, im Projekt speichern oder an nachgelagertes Tooling weitergeben kann.",
+      },
+      {
+        question: "Welches Bildmodell passt am besten zu Cursor: Seedream 5, Nano Banana 2 oder Nano Banana Pro?",
+        answer:
+          "Für Cursor-Workflows ist Seedream 5 das stärkere First-Pass-Bildmodell, Nano Banana 2 die schnellere Option für hochvolumige Iteration und Nano Banana Pro die bessere Wahl, wenn der Workflow von einem bestehenden Bild ausgeht und gezielte Revisionen braucht.",
+      },
+      {
+        question: "Welches Videomodell passt am besten zu Cursor: Veo 3.1, Kling 3.0 oder Seedance 1.5 Pro?",
+        answer:
+          "Für Cursor ist Veo 3.1 die Premium-Default-Wahl, Kling 3.0 passt gut zu cinematischer Bewegung, und Seedance 1.5 Pro ist eine zuverlässige Option für stabile Bild-zu-Video-Generierung und produktionsfreundliche Workflows.",
+      },
+    ],
+  },
+  siblingAgents: {
+    eyebrow: "Auch verfügbar für",
+    labels: [
+      { label: "Claude Code", href: "/for/claude-code" },
+      { label: "Codex", href: "/for/codex" },
+      { label: "Manus", href: "/for/manus" },
+    ],
+    ctas: {
+      primary: "Loslegen",
+      secondary: "Warum eine CLI zählt",
+      tertiary: "Wie Skills passen",
+    },
+    footerNote: "Zuletzt aktualisiert Apr 2026",
+  },
+};
+
 const contentByLocale: Record<SiteLocale, CursorPageContent> = {
   en: englishContent,
   "pt-br": ptBrContent,
   id: idContent,
+  de: deContent,
 };
 
 function getCursorContent(locale: SiteLocale): CursorPageContent {

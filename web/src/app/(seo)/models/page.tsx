@@ -220,6 +220,90 @@ const guideLookupPtBr: ModelGuideLookup = {
   },
 };
 
+const modelGroupsDe: ModelGroupCard[] = [
+  {
+    category: "Bildgenerierung",
+    items: [
+      {
+        name: "Seedream 5",
+        href: "/models/seedream-5",
+        description: "Ein starker Standard für polierte Erstdurchläufe der Bildgenerierung.",
+      },
+      {
+        name: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        description: "Besser geeignet für Überarbeitungsschleifen und prompt-basierte Bildbearbeitung.",
+      },
+      {
+        name: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        description: "Schneller geeignet für skalierbare Bildgenerierung und Iterationsschleifen in hohem Volumen.",
+      },
+    ],
+  },
+  {
+    category: "Videogenerierung",
+    items: [
+      {
+        name: "Veo 3.1",
+        href: "/models/veo-3-1",
+        description: "Das aktuelle Videogenerierungsmodell für Text-zu-Video-Workflows über AnyCap.",
+      },
+      {
+        name: "Kling 3.0",
+        href: "/models/kling-3-0",
+        description: "Eine starke Wahl für realistische Bewegung und cineastische Bild-zu-Video-Workflows.",
+      },
+      {
+        name: "Seedance 1.5 Pro",
+        href: "/models/seedance-1-5-pro",
+        description: "Ein verlässlicher Standard für produktionsfreundliche Text-zu-Video- und Bild-zu-Video-Arbeit.",
+      },
+    ],
+  },
+  {
+    category: "Musikgenerierung",
+    items: [
+      {
+        name: "ElevenLabs Music",
+        href: "/models/elevenlabs-music",
+        description: "Ein prompt-basiertes Musikmodell für Soundtrack-Entwürfe in derselben Agenten-Runtime.",
+      },
+    ],
+  },
+];
+
+const guideLookupDe: ModelGuideLookup = {
+  "Seedream 5": {
+    href: "/models/seedream-5",
+    bestFor: "Polierter Erstdurchlauf der Bildgenerierung aus einem Text-Prompt.",
+  },
+  "Nano Banana Pro": {
+    href: "/models/nano-banana-pro",
+    bestFor: "Gezielte Bildbearbeitung und Überarbeitungsschleifen aus einem bestehenden Visual.",
+  },
+  "Nano Banana 2": {
+    href: "/models/nano-banana-2",
+    bestFor: "Schnelle, skalierbare Bildgenerierung und Iteration in hohem Volumen.",
+  },
+  "Veo 3.1": {
+    href: "/models/veo-3-1",
+    bestFor: "Hochwertiger Text-zu-Video-Output, wenn der Erstdurchlauf stärker wirken soll.",
+  },
+  "Kling 3.0": {
+    href: "/models/kling-3-0",
+    bestFor: "Cineastische Bewegung und flexible Bild-zu-Video-Workflows.",
+  },
+  "Seedance 1.5 Pro": {
+    href: "/models/seedance-1-5-pro",
+    bestFor: "Stabile, produktionsfreundliche Video-Workflows und wiederholbare Bild-zu-Video-Jobs.",
+  },
+  "ElevenLabs Music": {
+    href: "/models/elevenlabs-music",
+    bestFor: "Prompt-basierte Soundtrack-Entwürfe in derselben Agenten-Runtime.",
+  },
+};
+
 const modelGroupsId: ModelGroupCard[] = [
   {
     category: "Pembuatan gambar",
@@ -305,11 +389,50 @@ const guideLookupId: ModelGuideLookup = {
 };
 
 function localizePricingGroups(locale: SiteLocale): PricingGenerationGroup[] {
-  if (locale !== "pt-br" && locale !== "id") {
+  if (locale !== "pt-br" && locale !== "id" && locale !== "de") {
     return pricingGenerationGroups;
   }
 
   return pricingGenerationGroups.map((group) => {
+    if (locale === "de") {
+      if (group.title === "Image generation") {
+        return {
+          ...group,
+          title: "Bildgenerierung",
+          description: "Abrechnung pro Aufruf. Unterstützt Text-zu-Bild- und Bild-zu-Bild-Modi.",
+          headers: ["Modell", "Modus", "Credits / Aufruf"],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes,
+          })),
+        };
+      }
+
+      if (group.title === "Video generation") {
+        return {
+          ...group,
+          title: "Videogenerierung",
+          description: "Abrechnung pro Sekunde generierter Ausgabe. Unterstützt Text-zu-Video- und Bild-zu-Video-Modi.",
+          headers: ["Modell", "Modus", "Credits / Sek."],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes,
+          })),
+        };
+      }
+
+      return {
+        ...group,
+        title: "Musikgenerierung",
+        description: "Abrechnung pro Sekunde generiertem Audio.",
+        headers: ["Modell", "Modus", "Credits / Sek."],
+        models: group.models.map((model) => ({
+          ...model,
+          modes: ["Text-zu-Musik"],
+        })),
+      };
+    }
+
     if (locale === "id") {
       if (group.title === "Image generation") {
         return {
@@ -528,6 +651,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
   id: undefined as never,
+  de: undefined as never,
 };
 contentByLocale.id = {
   breadcrumbItems: [
@@ -598,6 +722,75 @@ contentByLocale.id = {
     dateModified: lastUpdatedIso,
   }),
 };
+contentByLocale.de = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Modelle", href: "/models" },
+  ],
+  eyebrow: "Modelle",
+  lastUpdatedLabel: "5. April 2026",
+  heroTitle: ["Wählen Sie das richtige", "Modell für die Agenten-Aufgabe."],
+  heroIntro:
+    "AnyCap stellt multimodale Modelle über eine einzige Capability-Runtime und eine einzige CLI bereit. Diese Seite hilft Teams dabei, das passende Modell für einen bestimmten Agenten-Workflow auszuwählen, statt jede Bild- oder Videoanfrage gleich zu behandeln.",
+  summaryEyebrow: "Kurz vorab",
+  summaryBody:
+    "Der aktuelle öffentliche AnyCap-Modellkatalog umfasst Bildgenerierungsmodelle für Erstdurchläufe und Überarbeitungsschleifen, Videogenerierungsmodelle für hochwertige oder produktionsfreundliche Bewegungsarbeit sowie ein prompt-basiertes Musikmodell für Soundtrack-Entwürfe. Die richtige Wahl hängt meist davon ab, ob die Aufgabe von einem leeren Prompt oder einem bestehenden Asset ausgeht, wie viel Feinschliff der Erstdurchlauf braucht und wie wichtig Geschwindigkeit oder Kosteneffizienz im Workflow sind.",
+  chooseTitle: "So wählen Sie das richtige Modell",
+  chooseItems: [
+    "Beginnen Sie mit dem Output-Typ: Bild, Video oder Musik.",
+    "Entscheiden Sie dann, ob die Aufgabe einen polierten Erstdurchlauf, schnellere Iteration oder eine Überarbeitung aus einem bestehenden Asset braucht.",
+    "Nutzen Sie die Modell-Leitfadenseiten, wenn die Wahl von Bewegungsstil, Bearbeitungs-Workflow oder Kostenabwägung abhängt.",
+  ],
+  visualGuideTitle: "Visueller Leitfaden",
+  visualGuideAlt: "Illustrierte Übersicht der Bild-, Video- und Musikmodellkategorien im AnyCap-Modellhub.",
+  visualGuideBody:
+    "Diese Illustration ist eine schnelle visuelle Karte des aktuellen Katalogs: Bildmodelle auf der einen Seite, Videomodelle auf der anderen und Musikgenerierung als eigene Capability-Spur in derselben Agenten-Runtime. Sie wurde mit Nano Banana 2 erzeugt, damit die Bildsprache der Seite zum Modellkatalog selbst passt.",
+  comparisonTitle: "Aktueller Modellvergleich",
+  comparisonIntro:
+    "Dies sind die aktuell öffentlich verfügbaren Modelle über AnyCap. Die Credit-Bereiche stammen aus demselben Pricing-Inventar, das auch auf der Preisseite verwendet wird, sodass Hub und Preisseite konsistent bleiben.",
+  modelGroups: modelGroupsDe,
+  pricingGroups: localizePricingGroups("de"),
+  guideLookup: guideLookupDe,
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Wie wähle ich zwischen Seedream 5, Nano Banana Pro und Nano Banana 2?",
+      answer:
+        "Setzen Sie auf Seedream 5, wenn der Workflow ein stärkeres Erstbild aus einem Prompt braucht, auf Nano Banana Pro, wenn die Aufgabe von einem bestehenden Bild ausgeht und Überarbeitungen verlangt, und auf Nano Banana 2, wenn Geschwindigkeit, Durchsatz oder wiederholte Iteration wichtiger sind.",
+    },
+    {
+      question: "Wie wähle ich zwischen Veo 3.1, Kling 3.0 und Seedance 1.5 Pro?",
+      answer:
+        "Setzen Sie auf Veo 3.1, wenn der erste Video-Durchlauf aus einem Text-Briefing besonders hochwertig wirken soll, auf Kling 3.0, wenn der Workflow stärker auf cineastische Bewegung oder flexible Bild-zu-Video-Arbeit setzt, und auf Seedance 1.5 Pro, wenn das Team einen stabileren, produktionsorientierten Standard bevorzugt.",
+    },
+    {
+      question: "Nutzen alle AnyCap-Modelle dieselbe CLI und denselben Auth-Flow?",
+      answer:
+        "Ja. AnyCap stellt diese Modelle über dieselbe Capability-Runtime, CLI und denselben Auth-Flow bereit, sodass Teams keinen separaten Anbieter-Integrationspfad für jede hier aufgeführte Modellseite brauchen.",
+    },
+  ],
+  footerCtas: {
+    capability: "Beliebige Capability",
+    context: "Kontext-Leitfaden",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Modelle – Multimodale Modelle, verfügbar über AnyCap",
+    description:
+      "Vergleichshub für die multimodalen Modelle, die über AnyCap verfügbar sind, einschließlich Bild-, Video- und Musikmodelle, mit Workflow-Anleitung und aktuellen Credit-Bereichen.",
+    path: "/models",
+    about: ["AnyCap-Modelle", "Bildgenerierung", "Videogenerierung", "Musikgenerierung"],
+    keywords: [
+      "anycap modelle",
+      "bildgenerierungsmodelle",
+      "videogenerierungsmodelle",
+      "musikgenerierungsmodelle",
+      "seedream 5 vs nano banana 2",
+      "veo 3.1 vs kling 3.0",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+};
 
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/models", {
   title: "Models — Multimodal models available through AnyCap",
@@ -634,7 +827,7 @@ export default async function ModelsPage() {
               {content.eyebrow}
             </p>
             <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
-              {locale === "id" ? "Terakhir diperbarui" : locale === "pt-br" ? "Atualizado em" : "Last updated"} {content.lastUpdatedLabel}
+              {locale === "id" ? "Terakhir diperbarui" : locale === "pt-br" ? "Atualizado em" : locale === "de" ? "Aktualisiert am" : "Last updated"} {content.lastUpdatedLabel}
             </p>
             <h1
               className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
@@ -728,7 +921,7 @@ export default async function ModelsPage() {
                       <table className="w-full text-left">
                         <thead>
                           <tr className="border-b border-[#d4dbb8]">
-                            {[group.headers[0], group.headers[1], group.headers[2], locale === "id" ? "Paling cocok untuk" : locale === "pt-br" ? "Melhor uso" : "Best for"].map((header) => (
+                            {[group.headers[0], group.headers[1], group.headers[2], locale === "id" ? "Paling cocok untuk" : locale === "pt-br" ? "Melhor uso" : locale === "de" ? "Am besten geeignet für" : "Best for"].map((header) => (
                               <th
                                 key={header}
                                 className="bg-[#f4f5f0] px-5 py-4 text-[11px] tracking-[0.5px] text-[#5a5e52]"

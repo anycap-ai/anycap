@@ -453,6 +453,127 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       "CLI yang ramah agen dan memberi agen AI satu jalur instalasi serta satu interface untuk kapabilitas seperti pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video.",
     ),
   },
+  de: {
+    metadata: {
+      title: "AnyCap CLI | Capability-Runtime für KI-Agents",
+      description:
+        "Ihr Agent kann die Arbeit planen, braucht aber weiterhin eine Command-Surface für Image Generation, Video Generation, Image Understanding, Video Analysis, Search und Publishing. Die AnyCap CLI gibt dieser Capability-Schicht einen Installationspfad, einen Auth-Flow und eine Schnittstelle.",
+      openGraphTitle: "AnyCap CLI | Capability-Runtime für KI-Agents",
+      openGraphDescription:
+        "Eine CLI für Bild-, Video-, Vision-, Such- und Publishing-Workflows über Claude Code, Cursor, Codex und ähnliche Agent-Umgebungen.",
+    },
+    eyebrow: "CLI",
+    heroTitle: ["Eine CLI für die Capabilities,", "die Ihr Agent noch braucht."],
+    heroIntro:
+      "Der Agent kann den Workflow planen. Was meistens fehlt, ist die Ausführung: eine Command-Surface für Image Generation, Video Generation, Image Understanding und Video Analysis. Die AnyCap CLI gibt dieser Schicht einen Installationspfad, einen Auth-Flow und eine Schnittstelle über Claude Code, Cursor, Codex und ähnliche Agent-Produkte hinweg.",
+    heroTagline: "Wechseln Sie nicht den Agent. Ergänzen Sie Capabilities sofort.",
+    overviewTitle: "Warum die CLI über die Installation hinaus zählt",
+    overviewParagraphs: [
+      "Eine vereinheitlichte CLI ist wichtig, weil sie den Capability-Zugriff in eine stabile operative Surface verwandelt. Statt mit jedem Workflow einen neuen Provider-SDK, ein neues Dashboard oder ein neues Auth-Pattern einzuführen, kann der Agent eine vorhersehbare Command-Schicht über Media-, Such-, Storage- und Analyse-Aufgaben hinweg wiederverwenden.",
+      "Das vereinfacht auch Dokumentation und Routing. Sobald der Agent die CLI-Surface versteht, können Seiten der Site auf Fit und Workflow-Design fokussieren, statt für jede Capability ein anderes Ausführungsmodell neu zu erklären.",
+    ],
+    installTitle: "Einmal installieren",
+    installIntro:
+      "Die CLI-Installation wird verfügbar, sobald AnyCap öffentlich startet. Der Installationspfad unten ist der stabile Einstieg zum Runtime.",
+    commandsTitle: "Die ersten Commands, die die meisten Agents brauchen",
+    capabilities: [
+      {
+        name: "Image Generation",
+        description: "Erstellen und bearbeiten Sie Visuals mit Seedream 5, Nano Banana Pro und mehr.",
+        status: "Verfügbar",
+        ...capabilities[0],
+      },
+      {
+        name: "Video Generation",
+        description: "Erzeugen Sie Walkthroughs, Clips und Motion-Output mit Veo 3.1.",
+        status: "Verfügbar",
+        ...capabilities[1],
+      },
+      {
+        name: "Image Understanding",
+        description: "Analysieren Sie Screenshots, Diagramme, OCR und visuelle Referenzen über einen Runtime.",
+        status: "Verfügbar",
+        ...capabilities[2],
+      },
+      {
+        name: "Video Analysis",
+        description: "Inspizieren Sie Aufnahmen, fassen Sie Szenen zusammen und extrahieren Sie strukturierte Video-Intelligenz.",
+        status: "Verfügbar",
+        ...capabilities[3],
+      },
+    ],
+    capabilitiesCta: "Beliebige Capability ansehen →",
+    reasonsTitle: "Warum eine CLI zählt",
+    reasons: [
+      {
+        title: "Halten Sie die Command-Surface stabil",
+        description:
+          "Ohne vereinheitlichte CLI wird jede neue Capability zu einem neuen SDK, Dashboard oder Shell-Skript. AnyCap hält die Ausführungsschicht konsistent.",
+      },
+      {
+        title: "Einmal anmelden",
+        description:
+          "Die Authentifizierung passiert einmal und gilt über Bild-, Video- und Vision-Workflows hinweg, statt sich über Provider zu fragmentieren.",
+      },
+      {
+        title: "Zwischen Agents wechseln, ohne den Runtime neu zu lernen",
+        description:
+          "Dieselben Commands können unter Claude Code, Cursor, Codex und ähnlichen Agent-Umgebungen liegen, ohne jedes Mal ein neues Mental Model zu erzwingen.",
+      },
+    ],
+    ecosystemsLabel: "Verfügbar über verschiedene Agent-Produkte",
+    ecosystems: [...ecosystems],
+    stackTitle: "Verstehen Sie den Rest des Stacks",
+    nextPages: [
+      {
+        eyebrow: "Capabilities",
+        title: "Image Generation",
+        href: "/capabilities/image-generation",
+        summary: "Tauchen Sie tiefer in Text-to-Image, Image-Editing, unterstützte Modelle und den realen CLI-Workflow ein.",
+      },
+      {
+        eyebrow: "Capabilities",
+        title: "Video Generation",
+        href: "/capabilities/video-generation",
+        summary: "Sehen Sie, wie Text-to-Video und Image-to-Video in dieselbe Agent-Command-Surface passen.",
+      },
+      {
+        eyebrow: "Learn",
+        title: "Was Agents nicht können",
+        href: "/learn/what-agents-cant-do",
+        summary: "Beginnen Sie hier, wenn Sie das Defizit-zuerst-Narrativ und den kürzesten Weg zu jeder fehlenden Capability möchten.",
+      },
+      {
+        eyebrow: "Learn",
+        title: "Wie Skills passen",
+        href: "/skills",
+        summary: "Nutzen Sie das, wenn Sie verstehen wollen, wie die Instruction-Schicht Agent, CLI und Runtime verbindet.",
+      },
+      {
+        eyebrow: "Guides",
+        title: "MCP vs. Skills",
+        href: "/guides/mcp-vs-skills",
+        summary: "Nutzen Sie das, wenn Sie Protokoll- und Instruction-Schicht trennen wollen, bevor Sie AnyCap anbinden.",
+      },
+      {
+        eyebrow: "Guides",
+        title: "Context Engineering",
+        href: "/guides/context-engineering-for-agents",
+        summary: "Nutzen Sie das, wenn Sie verstehen wollen, wann der Agent eine Capability aufrufen statt im Prompt bleiben sollte.",
+      },
+    ],
+    ctas: [
+      { label: "Auf GitHub ansehen", external: githubHref },
+      { label: "Loslegen", href: "/start" },
+      { label: "Capability-Lücken sehen", href: "/learn/what-agents-cant-do" },
+      { label: "Für Claude Code", href: "/for/claude-code" },
+    ],
+    pageJsonLd: buildCliPageJsonLd(
+      "de",
+      "AnyCap CLI | Capability-Runtime für KI-Agents",
+      "Agent-native CLI, die KI-Agents einen Installationspfad und eine Schnittstelle für Capabilities wie Image Generation, Video Generation, Image Understanding und Video Analysis bietet.",
+    ),
+  },
 };
 
 export function getCliMetadata(locale: SiteLocale): Metadata {

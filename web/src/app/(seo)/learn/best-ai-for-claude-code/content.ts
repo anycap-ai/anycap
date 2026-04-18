@@ -43,7 +43,7 @@ type BestAIForClaudeCodePageData = {
   faqItems: readonly { question: string; answer: string }[];
 };
 
-const lastUpdatedIso = "2026-04-07";
+const lastUpdatedIso = "2026-04-17";
 
 const en: BestAIForClaudeCodePageData = {
   breadcrumbItems: [
@@ -53,27 +53,29 @@ const en: BestAIForClaudeCodePageData = {
   ],
   eyebrow: "Learn",
   metadata: {
-    title: "Best AI for Claude Code | Claude Code + Capabilities",
+    title: "Best AI Tools for Claude Code (Opus 4.7 Edition) — 2026",
     description:
-      "The best AI for Claude Code is usually the setup that keeps Claude Code's terminal-native workflow intact while adding the image, video, and vision capabilities it lacks.",
-    openGraphTitle: "Best AI for Claude Code | Claude Code + Capabilities",
+      "Updated for Claude Opus 4.7. The best AI for Claude Code is usually the setup that keeps Claude Code's terminal-native workflow intact while adding the image, video, and vision capabilities Opus 4.7 still does not provide.",
+    openGraphTitle: "Best AI Tools for Claude Code (Opus 4.7 Edition) — 2026",
     openGraphDescription:
-      "A buyer guide for teams deciding whether the best Claude Code setup is Claude Code alone, Claude Code plus ad hoc tools, or Claude Code plus one capability runtime.",
+      "A 2026 buyer guide for teams running Claude Code on Opus 4.7 — alone, with ad hoc tools, or with one capability runtime.",
   },
   articleJsonLd: createTechArticleJsonLd({
-    headline: "Best AI for Claude Code: the right setup is usually Claude Code plus capabilities",
+    headline: "Best AI Tools for Claude Code (Opus 4.7 Edition) — 2026",
     description:
-      "A buyer guide for teams deciding whether the best Claude Code setup is Claude Code alone, Claude Code plus ad hoc tools, or Claude Code plus one capability runtime.",
+      "Updated for Claude Opus 4.7. A buyer guide for teams deciding whether the best Claude Code setup is Claude Code alone, Claude Code plus ad hoc tools, or Claude Code plus one capability runtime.",
     path: BEST_AI_FOR_CLAUDE_CODE_PATH,
-    about: ["Claude Code", "Coding agents", "AI capabilities", "Image generation", "Video generation", "Agent capability runtime"],
+    about: ["Claude Code", "Claude Opus 4.7", "Coding agents", "AI capabilities", "Image generation", "Video generation", "Agent capability runtime"],
     keywords: [
       "best ai for claude code",
       "best ai tools for claude code",
+      "claude opus 4.7",
+      "claude code opus 4.7",
       "claude code capabilities",
       "add tools to claude code",
       "claude code terminal workflow",
     ],
-    datePublished: lastUpdatedIso,
+    datePublished: "2026-04-07",
     dateModified: lastUpdatedIso,
   }),
   faqJsonLd: createFaqPageJsonLd([
@@ -103,14 +105,14 @@ const en: BestAIForClaudeCodePageData = {
         "Start with the Add Tools to Claude Code guide, then test one concrete path like Claude Code image generation or Claude Code video generation. That gives you a real workflow check without switching agents.",
     },
   ]),
-  lastUpdatedLabel: "April 7, 2026",
+  lastUpdatedLabel: "Updated April 17, 2026 — Opus 4.7 edition",
   heroTitle: ["Best AI for", "Claude Code"],
   heroIntro:
-    "The best AI for Claude Code is usually not a question about replacing Claude Code at all. It is a question about whether your workflow still fits a terminal-native loop or whether the job has started to depend on screenshots, recordings, media output, and artifacts that Claude Code does not provide on its own.",
+    "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Pair Opus 4.7 with AnyCap and the combo is genuinely insane: the same terminal session reaches Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, plus image and video understanding, with one CLI and one login. The best AI for Claude Code stops being a model swap and becomes a capability question — and Opus 4.7 + AnyCap is the answer almost every time.",
   quickAnswerLabel: "Quick answer",
-  quickAnswerTitle: "The best Claude Code setup usually keeps Claude Code as the terminal-native core.",
+  quickAnswerTitle: "Claude Code on Opus 4.7 + AnyCap is the insane default — keep the terminal-native core, add every modality.",
   quickAnswerBody:
-    "This keeps the reasoning and coding loop intact while expanding what the workflow can actually finish. For many teams, that is more practical than introducing a new agent surface just because the task briefly leaves the terminal and becomes multimodal.",
+    "Opus 4.7 already wins the reasoning and coding loop. AnyCap closes the only gap that mattered — image generation, video generation, image understanding, video analysis — without a new agent, a new SDK, or a second login. For most teams, this beats every alternative: stronger than Claude Code alone, simpler than Claude Code plus three provider scripts, and faster to ship than swapping agents entirely.",
   quickTakeawaysLabel: "Key points",
   quickTakeaways: [
     "Claude Code already covers the core terminal loop for planning, editing, shell execution, and repo work.",
@@ -283,27 +285,29 @@ const ptBr: BestAIForClaudeCodePageData = {
   ],
   eyebrow: "Aprender",
   metadata: {
-    title: "Melhor IA para Claude Code | Claude Code + Capacidades",
+    title: "Melhores ferramentas de IA para Claude Code (Edição Opus 4.7) — 2026",
     description:
-      "A melhor IA para Claude Code normalmente é a configuração que mantém o fluxo nativo de terminal do Claude Code intacto, enquanto adiciona as capacidades de imagem, vídeo e visão que ele ainda não traz.",
-    openGraphTitle: "Melhor IA para Claude Code | Claude Code + Capacidades",
+      "Atualizado para o Claude Opus 4.7. A melhor IA para Claude Code normalmente é a configuração que mantém o fluxo nativo de terminal intacto, enquanto adiciona as capacidades de imagem, vídeo e visão que o Opus 4.7 ainda não oferece sozinho.",
+    openGraphTitle: "Melhores ferramentas de IA para Claude Code (Edição Opus 4.7) — 2026",
     openGraphDescription:
-      "Um guia de compra para times decidindo se a melhor configuração de Claude Code é só o Claude Code, o Claude Code com ferramentas avulsas ou o Claude Code com um runtime de capacidades.",
+      "Guia 2026 para times que rodam Claude Code no Opus 4.7 — sozinho, com ferramentas avulsas ou com um runtime único de capacidades.",
   },
   articleJsonLd: createTechArticleJsonLd({
-    headline: "Melhor IA para Claude Code: a configuração certa normalmente é Claude Code + capacidades",
+    headline: "Melhores ferramentas de IA para Claude Code (Edição Opus 4.7) — 2026",
     description:
-      "Um guia de compra para times decidindo se a melhor configuração de Claude Code é só o Claude Code, o Claude Code com ferramentas avulsas ou o Claude Code com um runtime de capacidades.",
+      "Atualizado para o Claude Opus 4.7. Um guia de compra para times decidindo se a melhor configuração de Claude Code é só o Claude Code, o Claude Code com ferramentas avulsas ou o Claude Code com um runtime de capacidades.",
     path: BEST_AI_FOR_CLAUDE_CODE_PATH,
-    about: ["Claude Code", "agentes de código", "capacidades de IA", "geração de imagem", "geração de vídeo", "runtime de capacidades"],
+    about: ["Claude Code", "Claude Opus 4.7", "agentes de código", "capacidades de IA", "geração de imagem", "geração de vídeo", "runtime de capacidades"],
     keywords: [
       "melhor ia para claude code",
+      "claude opus 4.7",
+      "claude code opus 4.7",
       "ferramentas para claude code",
       "capacidades do claude code",
       "adicionar ferramentas ao claude code",
       "fluxo terminal do claude code",
     ],
-    datePublished: lastUpdatedIso,
+    datePublished: "2026-04-07",
     dateModified: lastUpdatedIso,
   }),
   faqJsonLd: createFaqPageJsonLd([
@@ -333,14 +337,14 @@ const ptBr: BestAIForClaudeCodePageData = {
         "Comece com o guia de adicionar ferramentas ao Claude Code e teste um caminho concreto, como geração de imagem ou geração de vídeo. Isso valida a lacuna de capacidade sem trocar de agente.",
     },
   ]),
-  lastUpdatedLabel: "7 de abril de 2026",
+  lastUpdatedLabel: "Atualizado em 17 de abril de 2026 — edição Opus 4.7",
   heroTitle: ["Melhor IA para", "Claude Code"],
   heroIntro:
-    "A melhor IA para Claude Code normalmente não é uma pergunta sobre substituir o Claude Code. É uma pergunta sobre se o seu fluxo ainda cabe em um loop nativo de terminal ou se o trabalho passou a depender de capturas de tela, gravações, saída multimídia e artefatos que o Claude Code não produz sozinho.",
+    "O Claude Code agora roda no Claude Opus 4.7 — o agente de raciocínio e código mais forte que a Anthropic já lançou. Combine o Opus 4.7 com o AnyCap e o resultado é absurdo: a mesma sessão de terminal alcança Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, mais entendimento de imagem e análise de vídeo, com uma única CLI e um único login. A melhor IA para Claude Code deixa de ser troca de modelo e vira questão de capacidade — e Opus 4.7 + AnyCap é a resposta na maior parte dos casos.",
   quickAnswerLabel: "Resposta rápida",
-  quickAnswerTitle: "A melhor configuração de Claude Code normalmente mantém o Claude Code como núcleo nativo de terminal.",
+  quickAnswerTitle: "Claude Code no Opus 4.7 + AnyCap é o default absurdo — mantenha o núcleo de terminal e adicione todas as modalidades.",
   quickAnswerBody:
-    "Isso preserva o loop de raciocínio e código enquanto amplia o que o fluxo consegue realmente entregar. Para muitos times, isso é mais prático do que introduzir uma nova superfície de agente só porque a tarefa saiu brevemente do terminal e virou multimodal.",
+    "O Opus 4.7 já vence o loop de raciocínio e código. O AnyCap fecha a única lacuna que importava — geração de imagem, geração de vídeo, entendimento de imagem, análise de vídeo — sem novo agente, sem novo SDK e sem segundo login. Para a maioria dos times, isso bate todas as alternativas: mais forte que Claude Code sozinho, mais simples que Claude Code com três scripts de provider, e mais rápido de entregar do que trocar de agente.",
   quickTakeawaysLabel: "Pontos principais",
   quickTakeaways: [
     "O Claude Code já cobre o loop principal de terminal para planejamento, edição, execução de shell e trabalho no repositório.",
@@ -735,10 +739,243 @@ const id: BestAIForClaudeCodePageData = {
   ],
 };
 
+const de: BestAIForClaudeCodePageData = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Lernen", href: "/learn", unlinkable: true },
+    { name: "Beste KI für Claude Code" },
+  ],
+  eyebrow: "Lernen",
+  metadata: {
+    title: "Beste KI-Tools für Claude Code (Opus 4.7 Edition) – 2026",
+    description:
+      "Aktualisiert für Claude Opus 4.7. Die beste KI für Claude Code ist meist das Setup, das den terminal-nativen Workflow von Claude Code intakt hält und die Bild-, Video- und Vision-Kapazitäten ergänzt, die Opus 4.7 noch nicht mitbringt.",
+    openGraphTitle: "Beste KI-Tools für Claude Code (Opus 4.7 Edition) – 2026",
+    openGraphDescription:
+      "Ein Käufer-Leitfaden 2026 für Teams, die Claude Code auf Opus 4.7 betreiben – allein, mit ad-hoc-Tools oder mit einer einzigen Capability Runtime.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Beste KI-Tools für Claude Code (Opus 4.7 Edition) – 2026",
+    description:
+      "Aktualisiert für Claude Opus 4.7. Ein Käufer-Leitfaden für Teams, die entscheiden, ob das beste Claude-Code-Setup Claude Code allein, Claude Code plus ad-hoc-Tools oder Claude Code plus eine Capability Runtime ist.",
+    path: BEST_AI_FOR_CLAUDE_CODE_PATH,
+    about: ["Claude Code", "Claude Opus 4.7", "Coding-Agenten", "KI-Kapazitäten", "Bildgenerierung", "Videogenerierung", "Agent Capability Runtime"],
+    keywords: [
+      "beste ki für claude code",
+      "beste ki-tools für claude code",
+      "claude opus 4.7",
+      "claude code opus 4.7",
+      "claude code kapazitäten",
+      "tools zu claude code hinzufügen",
+      "claude code terminal-workflow",
+    ],
+    datePublished: "2026-04-07",
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Was ist aktuell die beste KI für Claude Code?",
+      answer:
+        "Wenn Sie terminal-native Coding-Arbeit meinen, ist Claude Code möglicherweise bereits die richtige Grundlage. Wenn Sie den gesamten Workflow rund ums Coding meinen, ist das beste Setup oft Claude Code plus die Kapazitäten, die ihm noch fehlen.",
+    },
+    {
+      question: "Ist die beste KI für Claude Code immer ein anderes Modell?",
+      answer:
+        "Nicht immer. Manchmal kommt der größere Gewinn daher, Medien- und Vision-Kapazitäten rund um Claude Code zu ergänzen, statt den Kern-Agenten zu wechseln.",
+    },
+    {
+      question: "Was bricht in einem Claude-Code-Workflow meist zuerst?",
+      answer:
+        "Der erste Bruchpunkt ist meist nicht die Reasoning-Qualität. Es ist der Moment, in dem der Workflow Screenshots prüfen, Aufzeichnungen analysieren oder Bilder und Videos erzeugen muss, die Claude Code nicht als eingebaute Runtime bietet.",
+    },
+    {
+      question: "Ersetzt AnyCap Claude Code?",
+      answer:
+        "Nein. AnyCap erweitert Claude Code. Seine Rolle ist es, Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse rund um den Agenten zu ergänzen, den Sie bereits nutzen.",
+    },
+    {
+      question: "Was ist der schnellste Weg, Claude Code plus Kapazitäten auszuprobieren?",
+      answer:
+        "Beginnen Sie mit dem Leitfaden „Tools zu Claude Code hinzufügen“ und testen Sie einen konkreten Pfad wie Bildgenerierung in Claude Code oder Videogenerierung in Claude Code. Das gibt eine echte Workflow-Prüfung, ohne den Agenten zu wechseln.",
+    },
+  ]),
+  lastUpdatedLabel: "Aktualisiert am 17. April 2026 – Opus-4.7-Edition",
+  heroTitle: ["Beste KI für", "Claude Code"],
+  heroIntro:
+    "Claude Code läuft jetzt auf Claude Opus 4.7 – dem stärksten Reasoning- und Coding-Agenten, den Anthropic je veröffentlicht hat. Kombinieren Sie Opus 4.7 mit AnyCap, und das Resultat ist beeindruckend: Dieselbe Terminal-Sitzung erreicht Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0 sowie Bild- und Videoverständnis – mit einer CLI und einem Login. Die beste KI für Claude Code ist nicht länger ein Modellwechsel, sondern eine Frage der Kapazitäten – und Opus 4.7 + AnyCap ist fast immer die Antwort.",
+  quickAnswerLabel: "Kurzantwort",
+  quickAnswerTitle: "Claude Code auf Opus 4.7 + AnyCap ist der starke Default – behalten Sie den terminal-nativen Kern, ergänzen Sie alle Modalitäten.",
+  quickAnswerBody:
+    "Opus 4.7 gewinnt bereits den Reasoning- und Coding-Loop. AnyCap schließt die einzige Lücke, die zählte – Bildgenerierung, Videogenerierung, Bildverständnis, Videoanalyse – ohne neuen Agenten, ohne neues SDK und ohne zweiten Login. Für die meisten Teams schlägt das jede Alternative: stärker als Claude Code allein, einfacher als Claude Code plus drei Provider-Skripte und schneller auslieferbar als ein vollständiger Agent-Wechsel.",
+  quickTakeawaysLabel: "Kernpunkte",
+  quickTakeaways: [
+    "Claude Code deckt bereits den Kern-Terminal-Loop für Planung, Editing, Shell-Ausführung und Repo-Arbeit ab.",
+    "Der erste echte Bruchpunkt ist meist nicht Coding-Qualität. Es ist der Moment, in dem der Workflow Bilder, Videos, Screenshots oder Aufzeichnungen produzieren oder prüfen muss.",
+    "Für die meisten Teams ist der beste Schritt, Claude Code zu behalten und eine Capability Runtime zu ergänzen, statt den Agenten zu ersetzen.",
+  ],
+  evaluationLabel: "Was zu evaluieren ist",
+  evaluationTitle: "Beginnen Sie mit der Frage, ob der Workflow noch in einen terminal-nativen Loop passt",
+  evaluationCards: [
+    {
+      title: "Wie terminal-nativ die Arbeit noch ist",
+      body:
+        "Wenn der Workflow überwiegend Code-Planung, Diffing, Debugging, Test-Fixing und Shell-Ausführung umfasst, lautet die Kernfrage, ob Claude Code für Ihr Team bereits stark genug ist. Oft ist es das.",
+    },
+    {
+      title: "Wie oft visuelle Inputs auftreten",
+      body:
+        "Die Form ändert sich, wenn Software-Arbeit mit Screenshots, Diagrammen, Aufzeichnungen oder visuellen QA-Beweisen beginnt. Hier ist die beste KI für Claude Code nicht mehr nur eine Modellfrage.",
+    },
+    {
+      title: "Wie oft das Ergebnis das Terminal verlassen muss",
+      body:
+        "Ein Stack, der nur Code editiert, reicht nicht aus, wenn das Endergebnis ein Artefakt werden muss, das ein Mensch reviewen, teilen, veröffentlichen oder an ein anderes Team übergeben kann.",
+    },
+    {
+      title: "Wie viel Setup-Wildwuchs Sie tolerieren",
+      body:
+        "Der theoretisch beste Stack ist nicht immer der praktisch beste Stack. Separate Provider, Credentials und Hilfsskripte können schnell zu einer Wartungsbürde rund um Claude Code werden.",
+    },
+  ],
+  stackLabel: "Drei Setup-Muster",
+  stackTitle: "Die meisten Teams, die Claude Code evaluieren, entscheiden in Wahrheit, wie stark sie das Terminal erweitern",
+  stackCards: [
+    {
+      title: "Nur Claude Code",
+      label: "Beste Wahl, wenn die Arbeit terminal-nativ bleibt",
+      body:
+        "Das ist der einfachste Pfad, wenn die Arbeit nahe an Code, Tests, Logs, Dateien und Shell-Befehlen bleibt. Der Wert kommt aus starkem Reasoning innerhalb des terminal-getriebenen Coding-Loops.",
+    },
+    {
+      title: "Claude Code plus ad-hoc-Provider-Skripte",
+      label: "Funktioniert, doch operative Schulden wachsen",
+      body:
+        "Sie können hier eine Bild-API, dort eine Video-API und später ein Skript für visuelle Analyse anflanschen. Das Problem: Der Workflow zerfasert über Keys, Provider und Setup-Oberflächen hinweg.",
+    },
+    {
+      title: "Claude Code plus eine Capability Runtime",
+      label: "Beste Wahl, wenn das Terminal externe Kapazitäten braucht",
+      body:
+        "Genau dafür ist AnyCap gebaut. Sie behalten Claude Code für Code, Planung und Terminal-Ausführung und ergänzen Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine einzige Runtime.",
+    },
+  ],
+  capabilityLabel: "Erste Kapazitäten, die ergänzt werden",
+  capabilityTitle: "Das sind meist die ersten Lücken, die nach reiner Repo-Arbeit auftauchen",
+  capabilityCards: [
+    {
+      title: "Bildgenerierung in Claude Code",
+      href: "/for/claude-code/image-generation",
+      body:
+        "Nutzen Sie diesen Pfad, wenn Claude Code Visuals, Produkt-Mockups oder Launch-Assets erzeugen muss, statt sie nur zu beschreiben.",
+    },
+    {
+      title: "Videogenerierung in Claude Code",
+      href: "/for/claude-code/video-generation",
+      body:
+        "Nutzen Sie diesen Pfad, wenn der Workflow Demos, Walkthroughs oder kurze Motion-Assets im selben Agent-Setup benötigt.",
+    },
+    {
+      title: "Bildverständnis",
+      href: "/capabilities/image-understanding",
+      body:
+        "Geeignet, wenn Claude Code Screenshots, Diagramme, Referenzen oder visuelle QA-Inputs prüfen muss.",
+    },
+    {
+      title: "Videoanalyse",
+      href: "/capabilities/video-analysis",
+      body:
+        "Geeignet, wenn der Bug, das Produktproblem oder der Workflow-Beweis in einer Aufzeichnung liegt statt in einem Text-Log.",
+    },
+  ],
+  decisionLabel: "Wie Sie entscheiden",
+  decisionTitle: "Stellen Sie diese Fragen, bevor Sie einen funktionierenden Workflow ersetzen",
+  decisionRows: [
+    {
+      question: "Wann reicht Claude Code allein bereits aus?",
+      answer:
+        "Claude Code reicht oft aus, wenn der Workflow innerhalb der Codebase bleibt und die Hauptaufgabe Reasoning, Editing, Testing und Terminal-Ausführung ist.",
+    },
+    {
+      question: "Wann brauche ich mehr als Claude Code?",
+      answer:
+        "Sie brauchen mehr als Claude Code, wenn die Aufgabe Bildoutput, Videooutput, Screenshot-Interpretation, visuelle QA, Aufzeichnungsanalyse oder ein Ergebnis erfordert, das das Terminal als Artefakt verlassen muss.",
+    },
+    {
+      question: "Soll ich Claude Code ersetzen oder erweitern?",
+      answer:
+        "Meist erweitern. Für viele Teams ist es besser, Claude Code zu behalten und die fehlenden Kapazitäten zu ergänzen, statt eine neue Agent-Oberfläche einzuführen und den Workflow neu zu lernen.",
+    },
+    {
+      question: "Was ist der schnellste Weg, das bessere Setup zu testen?",
+      answer:
+        "Beginnen Sie mit dem Leitfaden „Tools zu Claude Code hinzufügen“ oder springen Sie direkt zu Bildgenerierung oder Videogenerierung in Claude Code. So können Sie die Kapazitätslücke testen, ohne den Kern-Agenten zu wechseln.",
+    },
+  ],
+  nextMoveLabel: "Beste nächste Schritte",
+  nextMoveTitle: "Wechseln Sie von diesem Käufer-Leitfaden zum exakten Claude-Code-Pfad, den Sie brauchen",
+  nextMoveCards: [
+    {
+      title: "Tools zu Claude Code hinzufügen",
+      href: "/guides/add-tools-to-claude-code",
+      body: "Geeignet, wenn Sie bereit sind, den kürzeren Setup-Pfad zu testen, statt einen weiteren Erklärtext zu lesen.",
+    },
+    {
+      title: "Mit Bildgenerierung starten",
+      href: "/for/claude-code/image-generation",
+      body: "Bester nächster Schritt, wenn der erste fehlende Output Visuals, Konzeptbilder oder Produkt-Mockups sind.",
+    },
+    {
+      title: "Mit Videogenerierung starten",
+      href: "/for/claude-code/video-generation",
+      body: "Bester nächster Schritt, wenn der erste fehlende Output ein Demo-Clip, Walkthrough oder Motion-Asset ist.",
+    },
+    {
+      title: "Was ist die fortschrittlichste KI?",
+      href: "/learn/what-is-the-most-advanced-ai",
+      body: "Gehen Sie hierhin, wenn die Frage die Frontier insgesamt betrifft, nicht nur Claude Code.",
+    },
+    {
+      title: "Den Claude-Code-Hub ansehen",
+      href: "/for/claude-code",
+      body: "Hierhin wechseln, wenn Sie die zentrale Claude-Code-Landingpage wollen statt eines Käufer-Leitfadens im Lernen-Stil.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Fragen hinter dem Keyword",
+  faqItems: [
+    {
+      question: "Was ist aktuell die beste KI für Claude Code?",
+      answer:
+        "Wenn Sie terminal-native Coding-Arbeit meinen, ist Claude Code möglicherweise bereits die richtige Grundlage. Wenn Sie den gesamten Workflow rund ums Coding meinen, ist das beste Setup oft Claude Code plus die Kapazitäten, die ihm noch fehlen.",
+    },
+    {
+      question: "Ist die beste KI für Claude Code immer ein anderes Modell?",
+      answer:
+        "Nicht immer. Manchmal kommt der größere Gewinn daher, Medien- und Vision-Kapazitäten rund um Claude Code zu ergänzen, statt den Kern-Agenten zu wechseln.",
+    },
+    {
+      question: "Was bricht in einem Claude-Code-Workflow meist zuerst?",
+      answer:
+        "Der erste Bruchpunkt ist meist nicht die Reasoning-Qualität. Es ist der Moment, in dem der Workflow Screenshots prüfen, Aufzeichnungen analysieren oder Bilder und Videos erzeugen muss, die Claude Code nicht als eingebaute Runtime bietet.",
+    },
+    {
+      question: "Ersetzt AnyCap Claude Code?",
+      answer:
+        "Nein. AnyCap erweitert Claude Code. Seine Rolle ist es, Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse rund um den Agenten zu ergänzen, den Sie bereits nutzen.",
+    },
+    {
+      question: "Was ist der schnellste Weg, Claude Code plus Kapazitäten auszuprobieren?",
+      answer:
+        "Beginnen Sie mit dem Leitfaden „Tools zu Claude Code hinzufügen“ und testen Sie einen konkreten Pfad wie Bildgenerierung in Claude Code oder Videogenerierung in Claude Code. Das gibt eine echte Workflow-Prüfung, ohne den Agenten zu wechseln.",
+    },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, BestAIForClaudeCodePageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getBestAIForClaudeCodeMetadata(locale: SiteLocale): Metadata {

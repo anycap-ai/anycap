@@ -81,6 +81,7 @@ function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
 export async function middleware(req: NextRequest) {
   const authResponse = await auth0.middleware(req);
   const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
+  const { locale, pathname } = stripLocalePrefix(normalizedPath);
 
   if (req.nextUrl.pathname !== "/" && req.nextUrl.pathname.endsWith("/")) {
     return applyAuthResponse(redirectToPath(req, normalizedPath), authResponse);
@@ -96,7 +97,9 @@ export async function middleware(req: NextRequest) {
 
   if (
     protectedPaths.some(
-      (path) => normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+      (path) =>
+        (locale ? pathname : normalizedPath) === path ||
+        (locale ? pathname : normalizedPath).startsWith(`${path}/`),
     )
   ) {
     const session = await auth0.getSession(req);
@@ -107,8 +110,6 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const { locale, pathname } = stripLocalePrefix(normalizedPath);
-
   const legacyRedirectPath = legacyRouteRedirects.get(pathname);
   if (legacyRedirectPath) {
     const redirectURL = req.nextUrl.clone();
@@ -118,6 +119,60 @@ export async function middleware(req: NextRequest) {
 
   if (locale === defaultLocale) {
     return applyAuthResponse(redirectToPath(req, pathname), authResponse);
+  }
+
+  if (locale) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set(localeHeaderName, locale);
+    requestHeaders.set(requestPathnameHeaderName, normalizedPath);
+    requestHeaders.set(
+      "x-anycap-global-ui",
+      globalUiPaths.has(pathname) ||
+        globalUiPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+        ? "1"
+        : "0",
+    );
+
+    if (metadataRoutePaths.has(pathname) || getPublicRouteByPath(pathname)) {
+      const rewriteURL = req.nextUrl.clone();
+      rewriteURL.pathname = pathname;
+      return applyAuthResponse(
+        NextResponse.rewrite(rewriteURL, {
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        authResponse,
+      );
+    }
+
+    if (
+      passthroughPrefixes.some(
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+      )
+    ) {
+      const rewriteURL = req.nextUrl.clone();
+      rewriteURL.pathname = pathname;
+      return applyAuthResponse(
+        NextResponse.rewrite(rewriteURL, {
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        authResponse,
+      );
+    }
+
+    const notFoundUrl = new URL("/_not-found", req.nextUrl.origin);
+    return applyAuthResponse(
+      NextResponse.rewrite(notFoundUrl, {
+        status: 404,
+        request: {
+          headers: requestHeaders,
+        },
+      }),
+      authResponse,
+    );
   }
 
   if (!locale) {

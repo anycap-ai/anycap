@@ -653,10 +653,214 @@ const id: WhatIsTheMostAdvancedAIPageData = {
   ],
 };
 
+const de: WhatIsTheMostAdvancedAIPageData = {
+  breadcrumbItems: [
+    { name: "Start", href: "/" },
+    { name: "Lernen", href: "/learn", unlinkable: true },
+    { name: "Was ist die fortschrittlichste KI?" },
+  ],
+  eyebrow: "Lernen",
+  metadata: {
+    title: "Was ist die fortschrittlichste KI? Warum die echte Antwort kein einzelnes Modell ist",
+    description:
+      "Es gibt keine einzelne fortschrittlichste KI für jede Aufgabe. Vergleichen Sie Modellintelligenz, multimodale Systeme und reale Aufgabenausführung, bevor Sie einen Stack wählen.",
+    openGraphTitle: "Was ist die fortschrittlichste KI? Warum die echte Antwort kein einzelnes Modell ist",
+    openGraphDescription:
+      "Die fortschrittlichste KI hängt von der Aufgabe ab. Sehen Sie, warum reale Ausführung sowohl von der Modellqualität als auch vom System drumherum abhängt.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Was ist die fortschrittlichste KI? Warum die echte Antwort kein einzelnes Modell ist",
+    description:
+      "Praktischer Erklärer, warum die fortschrittlichste KI von Reasoning, multimodalem Output und Ausführung abhängt – und warum die echte Antwort meist ein System ist, kein einzelnes Modell.",
+    path: WHAT_IS_THE_MOST_ADVANCED_AI_PATH,
+    about: ["AI models", "AI agents", "Multimodal AI", "Agent capability runtime", "Coding agents"],
+    keywords: [
+      "was ist die fortschrittlichste ki",
+      "fortschrittlichste ki",
+      "fortschrittlichstes ki-modell",
+      "fortschrittliche ki-systeme",
+      "multimodale ki-tools",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Was ist gerade die fortschrittlichste KI?",
+      answer:
+        "Es gibt keine einzige dauerhafte Antwort. Der Spitzenreiter beim Reasoning kann sich vom besten System für Mediengenerierung, visuelles Verständnis oder Agentenausführung unterscheiden.",
+    },
+    {
+      question: "Ist die fortschrittlichste KI immer die beste KI für die Arbeit?",
+      answer:
+        "Nicht zwangsläufig. Für reale Arbeit kombiniert die nützlichste KI meist Modellqualität mit Zugriff auf die richtigen Kapazitäten rund um das Modell.",
+    },
+    {
+      question: "Ist AnyCap selbst das KI-Modell?",
+      answer:
+        "Nein. AnyCap ist die Capability Runtime rund um Agenten und Assistenten. Ihre Rolle besteht darin, ihnen zu helfen, Outputs über einen Installationspfad und eine CLI-Oberfläche zu erzeugen, zu prüfen und auszuliefern.",
+    },
+    {
+      question: "Worauf sollte ich optimieren, wenn ich KI in einem Agenten-Workflow nutze?",
+      answer:
+        "Optimieren Sie auf Aufgabenerfüllung, nicht nur auf Benchmark-Prestige. Ein starkes Modell ohne nutzbare Capability-Schicht verliert oft gegen ein etwas schwächeres Modell, das die Arbeit tatsächlich abschließt.",
+    },
+  ]),
+  lastUpdatedLabel: "7. April 2026",
+  heroTitle: ["Was ist die", "fortschrittlichste", "KI?"],
+  heroIntro:
+    "Die ehrliche Antwort: Es gibt keinen einzelnen Sieger für jede Art von Arbeit. Wenn Sie reines Reasoning meinen, mag ein Frontier-Modell führen. Wenn Sie Bild- oder Video-Output meinen, mag ein anderes System stärker sein. Wenn Sie Arbeit meinen, die tatsächlich abgeschlossen wird, ist die fortschrittlichste KI meist ein starkes Modell, verbunden mit den Runtime-, Tool- und Delivery-Schichten drumherum.",
+  quickTakeawaysLabel: "Kernpunkte",
+  quickTakeaways: [
+    "Es gibt keinen dauerhaften Einzelsieger über alle KI-Aufgaben hinweg.",
+    "Das stärkste Reasoning-Modell ist nicht immer das stärkste System für Bild, Video oder Agentenausführung.",
+    "Für reale Arbeit ist das fortschrittlichste Setup meist ein starkes Modell plus die Runtime- und Delivery-Schichten, die es handlungsfähig machen.",
+  ],
+  evaluationLabel: "Warum eine Antwort scheitert",
+  evaluationTitle: "„Am fortschrittlichsten“ ändert sich je nachdem, was die KI tun soll",
+  evaluationCards: [
+    {
+      title: "Reasoning und Planung",
+      body:
+        "Wenn Sie Chain-of-Thought-Qualität, Coding-Hilfe oder Langform-Analyse meinen, kommt die Shortlist meist von den neuesten Frontier-Modellen großer Labs. Das ist eine Definition von fortschrittlicher KI, aber nicht die einzige.",
+    },
+    {
+      title: "Multimodale Erstellung",
+      body:
+        "Brauchen Sie Bild- oder Video-Output, zählen spezialisierte Generierungssysteme mehr als ein reiner Text-Benchmark. Die fortschrittlichste KI für Medienarbeit kann sich von der fortschrittlichsten KI für Reasoning unterscheiden.",
+    },
+    {
+      title: "Visuelles Verständnis",
+      body:
+        "Ein Modell kann exzellent im Schreiben sein und beim Lesen von Screenshots, Diagrammen oder Aufzeichnungen schwach. Fortschrittliche KI für Produktionsarbeit bedeutet oft stärkere Vision- und Analyse-Workflows, nicht nur Textintelligenz.",
+    },
+    {
+      title: "Aufgabenerfüllung",
+      body:
+        "Das Modell ist nur ein Teil des Systems. Um reale Arbeit abzuschließen, braucht ein Agent oft Werkzeuge, um Assets zu erzeugen, Dateien zu prüfen und Outputs in einer für Menschen nutzbaren Form zurückzugeben.",
+    },
+  ],
+  stackLabel: "Ein nützlicheres Framework",
+  stackTitle: "In der Praxis ist fortschrittliche KI ein Stack, kein einzelner Benchmark-Score",
+  stackIntro:
+    "Genau hier klafft die Lücke zwischen KI-Schlagzeilen und Produktionsrealität. Menschen vergleichen zuerst Modellintelligenz, doch Teams spüren den Schmerz später: Der Agent kann die Aufgabe erklären, aber er kann das Bild nicht erzeugen, die Aufzeichnung nicht prüfen oder etwas Nutzbares übergeben. Deshalb muss das echte Gespräch das System rund um das Modell einschließen.",
+  stackLayers: [
+    {
+      title: "Basismodell",
+      body:
+        "Das ist der Teil, den die meisten zuerst vergleichen: rohe Reasoning-Qualität, Coding-Performance, Wissensbreite und multimodale Kapazität.",
+    },
+    {
+      title: "Capability Runtime",
+      body:
+        "Das ist die Schicht, die dem Agenten nutzbare Kräfte rund um das Modell gibt – etwa Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse.",
+    },
+    {
+      title: "Delivery-Schicht",
+      body:
+        "Auch starke KI braucht einen Weg, Ergebnisse auszuliefern. Die nützlichsten Systeme schaffen den Sprung vom Reasoning zu einem Output, den jemand prüfen, teilen oder veröffentlichen kann.",
+    },
+  ],
+  capabilityLabel: "Wo AnyCap hineinpasst",
+  capabilityTitle: "AnyCap ist nicht das Frontier-Modell. Es ist die Capability Runtime rund um das System.",
+  capabilityIntro:
+    "Diese Unterscheidung zählt. AnyCap versucht nicht, das Rennen um das „beste Modell“ allein zu gewinnen. Seine Rolle besteht darin, Agenten und Assistenten über einen Installationspfad, einen Auth-Flow und eine CLI-Oberfläche vom Reasoning zur Aktion zu bringen. Für Teams, die schon einen Workflow nutzen, den sie mögen, ist das oft nützlicher, als die Plattform zu wechseln, nur um dem Modell hinterherzujagen, das diesen Monat am stärksten wirkt.",
+  capabilityCards: [
+    {
+      title: "Bildgenerierung",
+      href: "/capabilities/image-generation",
+      body: "Erzeugen Sie Mockups, Konzepte und visuelle Assets, statt bei Textanweisungen zum Was-zu-bauen stehenzubleiben.",
+    },
+    {
+      title: "Videogenerierung",
+      href: "/capabilities/video-generation",
+      body: "Verwandeln Sie Prompts in Demos, Motion-Assets oder kurze Erklärer, wenn eine statische Antwort nicht reicht.",
+    },
+    {
+      title: "Bildverständnis",
+      href: "/capabilities/image-understanding",
+      body: "Lesen Sie Screenshots, Diagramme, Referenzen und visuelle QA-Eingaben durch denselben Agenten-Workflow.",
+    },
+    {
+      title: "Videoanalyse",
+      href: "/capabilities/video-analysis",
+      body: "Prüfen Sie Aufzeichnungen und erklären Sie, was passiert ist, statt Video als opaken Blob außerhalb des Workflows zu behandeln.",
+    },
+  ],
+  selectionLabel: "Wie auswählen",
+  selectionTitle: "Stellen Sie eine bessere Frage als „welche KI ist die Nummer eins?“",
+  selectionRows: [
+    {
+      question: "Wer hat gerade das stärkste Reasoning-Modell?",
+      answer:
+        "Schauen Sie auf die jüngsten Frontier-Modell-Vergleiche, aber rechnen Sie damit, dass sich die Antwort oft ändert. Das ist eine Frage zum Modell-Ranking, keine Workflow-Frage.",
+    },
+    {
+      question: "Was ist die fortschrittlichste KI für reale Arbeit?",
+      answer:
+        "Eine bessere Antwort ist ein Stack: starke Modellintelligenz plus die Kapazitäten, die zum Erzeugen, Prüfen und Ausliefern von Outputs nötig sind.",
+    },
+    {
+      question: "Was zählt am meisten für reale Agenten-Workflows?",
+      answer:
+        "Was am meisten zählt, ist, ob das System die Aufgabe abschließen kann – nicht, ob ein Modell einen Benchmark anführt. Das bedeutet meist Modellqualität plus die richtigen Capability- und Delivery-Schichten drumherum.",
+    },
+  ],
+  nextMoveLabel: "Beste nächste Schritte",
+  nextMoveTitle: "Vom Erklärer zu Seiten mit höherer Absicht weiterziehen",
+  nextMoveCards: [
+    {
+      title: "Mit der Capability-Lücke starten",
+      href: "/learn/what-agents-cant-do",
+      body: "Geeignet, wenn die echte Frage ist, was Agenten können und was nicht, bevor Sie externe Kapazitäten ergänzen.",
+    },
+    {
+      title: "Capability-Hub ansehen",
+      href: "/capabilities",
+      body: "Durchstöbern Sie die praktischen Workflows, die AnyCap rund um Coding-Agenten ergänzen soll.",
+    },
+    {
+      title: "Aktuellen Agenten ausstatten",
+      href: "/for",
+      body: "Sehen Sie, wie sich die Capability-Schicht um Ihren bestehenden Agenten legt, statt einen Plattformwechsel zu erzwingen.",
+    },
+    {
+      title: "Den kürzesten Produktpfad nehmen",
+      href: "/start",
+      body: "Wenn die Recherchephase vorbei ist, nutzen Sie den Quick-Start-Pfad, um vom Lesen ins Setup zu wechseln.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Fragen hinter dem Keyword",
+  faqItems: [
+    {
+      question: "Was ist gerade die fortschrittlichste KI?",
+      answer:
+        "Es gibt keine einzige dauerhafte Antwort. Der Spitzenreiter beim Reasoning kann sich vom besten System für Mediengenerierung, visuelles Verständnis oder Agentenausführung unterscheiden.",
+    },
+    {
+      question: "Ist die fortschrittlichste KI immer die beste KI für die Arbeit?",
+      answer:
+        "Nicht zwangsläufig. Für reale Arbeit kombiniert die nützlichste KI meist Modellqualität mit Zugriff auf die richtigen Kapazitäten rund um das Modell.",
+    },
+    {
+      question: "Ist AnyCap selbst das KI-Modell?",
+      answer:
+        "Nein. AnyCap ist die Capability Runtime rund um Agenten und Assistenten. Ihre Rolle besteht darin, ihnen zu helfen, Outputs über einen Installationspfad und eine CLI-Oberfläche zu erzeugen, zu prüfen und auszuliefern.",
+    },
+    {
+      question: "Worauf sollte ich optimieren, wenn ich KI in einem Agenten-Workflow nutze?",
+      answer:
+        "Optimieren Sie auf Aufgabenerfüllung, nicht nur auf Benchmark-Prestige. Ein starkes Modell ohne nutzbare Capability-Schicht verliert oft gegen ein etwas schwächeres Modell, das die Arbeit tatsächlich abschließt.",
+    },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, WhatIsTheMostAdvancedAIPageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getWhatIsTheMostAdvancedAIMetadata(locale: SiteLocale): Metadata {

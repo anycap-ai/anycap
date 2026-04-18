@@ -11,6 +11,14 @@ type SkillsCard = {
   eyebrow?: string;
 };
 
+type SkillCatalogEntry = {
+  name: string;
+  slug: string;
+  href?: string;
+  description: string;
+  installCode: string;
+};
+
 type SkillsPageData = {
   metadata: {
     title: string;
@@ -33,6 +41,8 @@ type SkillsPageData = {
   supportedTargets: { name: string; href: string | null }[];
   installTitle: string;
   installPatterns: { title: string; note: string; code: string }[];
+  skillsCatalogTitle?: string;
+  skillsCatalog?: readonly SkillCatalogEntry[];
   notTitle: string;
   notParagraphs: string[];
   nextTitle: string;
@@ -152,6 +162,64 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
         title: "Install manually",
         note: "Fallback path when you want direct control over the skill file location.",
         code: installPatterns[2].code,
+      },
+    ],
+    skillsCatalogTitle: "Available skills",
+    skillsCatalog: [
+      {
+        name: "anycap-cli",
+        slug: "anycap-cli",
+        description:
+          "The core skill. Teaches the agent how to use the full AnyCap CLI: image generation, video generation, music generation, media analysis, web search, web crawl, Drive storage, Page publishing, and auth.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-cli' -g -y",
+      },
+      {
+        name: "anycap-media-production",
+        slug: "anycap-media-production",
+        href: "/skills/anycap-media-production",
+        description:
+          "Full media production workflow. Covers iterative generation, refinement, and human annotation feedback loops for images, videos, and music.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-media-production' -g -y",
+      },
+      {
+        name: "anycap-human-interaction",
+        slug: "anycap-human-interaction",
+        href: "/skills/anycap-human-interaction",
+        description:
+          "Collect structured visual feedback from humans via image annotation, screen recording, video review, and audio capture. Also covers interactive Excalidraw diagramming.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-human-interaction' -g -y",
+      },
+      {
+        name: "anycap-deepresearch",
+        slug: "anycap-deepresearch",
+        href: "/skills/anycap-deepresearch",
+        description:
+          "Multi-source research workflow: plan, gather, analyze, synthesize, and deliver findings using web search and web crawl. Handles source attribution and structured output.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-deepresearch' -g -y",
+      },
+      {
+        name: "anycap-blog-production",
+        slug: "anycap-blog-production",
+        href: "/skills/anycap-blog-production",
+        description:
+          "Turn user-provided notes, research, and product facts into structured AnyCap-style blog posts with first-party evidence blocks and consistent editorial voice.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-blog-production' -g -y",
+      },
+      {
+        name: "anycap-ai-tool-seo",
+        slug: "anycap-ai-tool-seo",
+        href: "/skills/anycap-ai-tool-seo",
+        description:
+          "SEO planning and auditing for AI tool and SaaS websites. Uses web search and crawl to inspect live SERPs, analyze competitor pages, and surface keyword opportunities.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-ai-tool-seo' -g -y",
+      },
+      {
+        name: "anycap-social-meme-workflows",
+        slug: "anycap-social-meme-workflows",
+        href: "/skills/anycap-social-meme-workflows",
+        description:
+          "Create meme-style images, captioned photos, and social visuals by combining AI image generation with local text overlay. Built for viral social content workflows.",
+        installCode: "npx -y skills add anycap-ai/anycap -s 'anycap-social-meme-workflows' -g -y",
       },
     ],
     notTitle: "What skills are not",
@@ -409,6 +477,113 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       "id",
       "AnyCap Skills",
       "Halaman hub untuk AnyCap skills yang bisa dipasang dan mengajarkan agen AI cara menemukan serta memakai kapabilitas melalui satu runtime.",
+    ),
+  },
+  de: {
+    metadata: {
+      title: "AnyCap Skills | KI-Agents lernen, wie sie Capabilities nutzen",
+      description:
+        "Eine Skill bringt Claude Code, Cursor, Codex und ähnlichen Agent-Nutzern bei, AnyCap zu entdecken, zu installieren, zu authentifizieren und aufzurufen. Sie ist die Instruction-Schicht, die einen Agent zu einem multimodalen Workflow-Runner macht.",
+      openGraphTitle: "AnyCap Skills | KI-Agents lernen, wie sie Capabilities nutzen",
+      openGraphDescription:
+        "Erfahren Sie, wie AnyCap-Skills Agent-Nutzer mit CLI, Runtime und Capability-Stack verbinden.",
+    },
+    eyebrow: "Learn",
+    heroTitle: [
+      "Skills bringen Ihrem Agent bei,",
+      "die Capabilities zu nutzen, die er nicht mitbringt.",
+    ],
+    heroIntro:
+      "Der Agent kann vielleicht coden, weiß aber nicht automatisch, wie er Ihren Capability-Runtime entdeckt, installiert, authentifiziert und aufruft. Eine Skill ist die Instruction-Schicht, die diese Lücke schließt. Sie sagt Claude Code, Cursor, Codex und ähnlichen Agent-Nutzern, wie sie sich mit AnyCap verbinden, ohne jedes Setup zu einer manuellen Integration zu machen.",
+    heroTagline: "Behalten Sie den Agent. Bringen Sie ihm den fehlenden Runtime bei.",
+    overviewTitle: "Warum Skills in der Praxis zählen",
+    overviewParagraphs: [
+      "Skills zählen, weil Agents mehr brauchen als rohen Tool-Zugriff. Sie brauchen eine explizite Beschreibung, wie eine Capability in den Workflow passt, wann sie genutzt werden sollte und welche Install- oder Auth-Schritte zuerst erfolgen müssen.",
+      "Für AnyCap sind Skills auch eine Distributions-Strategie. Sie lassen denselben Capability-Runtime konsistent über mehrere Agent-Produkte erscheinen, ohne die gesamte Operator-Erfahrung jedes Mal neu zu bauen, wenn eine neue Umgebung dazukommt.",
+    ],
+    relationshipTitle: "Was eine Skill zum Workflow beiträgt",
+    relationshipRows: [
+      {
+        label: "Skill",
+        summary: "Instruction-Schicht, die dem Agent beibringt, welche fehlenden Capabilities existieren und wie sie installiert und aufgerufen werden.",
+      },
+      {
+        label: "CLI",
+        summary: "Ausführbare Surface, die Agent oder Operator tatsächlich ausführt, etwa `anycap image generate`.",
+      },
+      {
+        label: "Capability",
+        summary: "Konkrete Aktion, die über den Runtime exponiert wird, etwa Image Generation, Image Understanding oder Video Analysis.",
+      },
+      {
+        label: "Tool",
+        summary: "Generische Ausführungs-Surface. Eine Skill kann ein Tool beschreiben, ist aber nicht dasselbe wie der Capability-Runtime selbst.",
+      },
+    ],
+    relatedTitle: "Verwandte Inhalte",
+    supportedTitle: "Wo Skills andocken",
+    supportedLabel: "Unterstützt",
+    plannedLabel: "Geplant",
+    supportedTargets: [...supportedTargets],
+    installTitle: "Drei Wege, die Skill zu installieren",
+    installPatterns: [
+      {
+        title: "Über skills.sh installieren",
+        note: "Am besten, wenn das Agent-Ökosystem Skills bereits als Distributionsformat unterstützt.",
+        code: installPatterns[0].code,
+      },
+      {
+        title: "Über die AnyCap CLI installieren",
+        note: "Hilfreich, wenn der Runtime die Skill-Datei in einem bekannten Zielverzeichnis ablegen soll.",
+        code: installPatterns[1].code,
+      },
+      {
+        title: "Manuell installieren",
+        note: "Fallback, wenn Sie direkte Kontrolle über den Speicherort der Skill-Datei wollen.",
+        code: installPatterns[2].code,
+      },
+    ],
+    notTitle: "Was Skills nicht sind",
+    notParagraphs: [
+      "Eine Skill ist nicht dasselbe wie MCP, A2A oder ein anderes Agent-Protokoll. Diese Protokolle beschreiben, wie Systeme kommunizieren. Eine Skill beschreibt, wie der Agent einen Capability-Runtime in seiner Ausführungsumgebung installieren und nutzen sollte.",
+      "Eine Skill ist auch nicht die Capability selbst. Sie ist die Instruction-Schicht, die den Agent auf den Runtime, die CLI und die konkreten Commands hinweist, die er nach Abschluss der Installation aufrufen kann.",
+    ],
+    nextTitle: "Wie es weitergeht",
+    nextPages: [
+      {
+        eyebrow: "Guides",
+        title: "MCP vs. Skills",
+        href: "/guides/mcp-vs-skills",
+        summary: "Vergleichen Sie Protokoll- und Instruction-Schicht, bevor Sie entscheiden, wie AnyCap in Ihren Agent-Stack einfließt.",
+      },
+      {
+        eyebrow: "Learn",
+        title: "Warum eine CLI zählt",
+        href: "/cli",
+        summary: "Nutzen Sie das, um zu sehen, wie die Command-Surface über Bild-, Video- und Vision-Workflows hinweg stabil bleibt.",
+      },
+      {
+        eyebrow: "Learn",
+        title: "Was Agents nicht können",
+        href: "/learn/what-agents-cant-do",
+        summary: "Nutzen Sie das für das Capability-Lücken-Narrativ, bevor Sie die nächste Produkt- oder Capability-Seite wählen.",
+      },
+      {
+        eyebrow: "Guides",
+        title: "AnyCap installieren",
+        href: "/guides/install-anycap",
+        summary: "Nutzen Sie das für den kürzesten Installationspfad, sobald Sie verstanden haben, wie die Instruction-Schicht funktioniert.",
+      },
+    ],
+    ctas: [
+      { label: "AnyCap installieren", href: "/guides/install-anycap" },
+      { label: "Warum eine CLI zählt", href: "/cli" },
+      { label: "Capability-Lücken sehen", href: "/learn/what-agents-cant-do" },
+    ],
+    skillsHubJsonLd: buildSkillsHubJsonLd(
+      "de",
+      "AnyCap Skills",
+      "Hub-Seite für installierbare AnyCap-Skills, die KI-Agents beibringen, wie sie Capabilities über einen Runtime entdecken und nutzen.",
     ),
   },
 };

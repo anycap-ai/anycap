@@ -543,6 +543,162 @@ const contentByLocale = {
       { label: "Seedance 1.5 Pro", href: "/models/seedance-1-5-pro" },
     ],
   },
+  de: {
+    metadata: {
+      title: "Veo 3.1 für KI-Agenten – Text-zu-Video und Bild-zu-Video über AnyCap",
+      description:
+        "Nutzen Sie Veo 3.1 über AnyCap, wenn KI-Agenten Text-zu-Video- und Bild-zu-Video-Generierung in einer konsistenten Capability-Runtime benötigen. Erfahren Sie, wann Sie Veo 3.1 wählen, wie Sie es aufrufen und wie es in Video-Workflows passt.",
+      openGraphTitle: "Veo 3.1 für KI-Agenten – Text-zu-Video und Bild-zu-Video über AnyCap",
+      openGraphDescription:
+        "Nutzen Sie Veo 3.1 über AnyCap, wenn KI-Agenten Text-zu-Video- und Bild-zu-Video-Generierung in einer konsistenten Capability-Runtime benötigen.",
+      articleHeadline: "Veo 3.1 für KI-Agenten – Text-zu-Video und Bild-zu-Video über AnyCap",
+      articleDescription:
+        "Leitfaden zur Nutzung von Veo 3.1 über AnyCap für Premium-Text-zu-Video- und Bild-zu-Video-Generierung in KI-Agenten-Runtimes.",
+      articleAbout: ["Veo 3.1", "Videogenerierung", "Bild-zu-Video", "AnyCap", "KI-Agenten"],
+      articleKeywords: ["veo 3.1", "veo 3.1 api", "text zu video", "bild zu video", "veo 3.1 bild zu video", "videogenerierung", "anycap"],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Modelle", href: "/models" },
+      { name: "Veo 3.1", href: VEO_31_PATH },
+    ],
+    eyebrow: "Modell",
+    lastUpdatedLabel: "Aktualisiert am 10. April 2026",
+    hero: {
+      titleLine1: "Veo 3.1",
+      titleLine2: "für KI-Agenten",
+      intro:
+        "Veo 3.1 ist ein Premium-Videogenerierungsmodell, das über AnyCap bereitgestellt wird. Es unterstützt sowohl Text-zu-Video- als auch Bild-zu-Video-Workflows: Agenten können einen cineastischen Clip aus einem Text-Briefing generieren oder ein bestehendes Bild in Bewegung animieren, ohne dieselbe CLI zu verlassen. Das Ergebnis bleibt in einer einzigen Capability-Runtime neben Bildgenerierung, Videoanalyse und anderen multimodalen Schritten.",
+    },
+    showcaseLabels: {
+      generatedExampleLabel: "Generiertes Beispiel",
+      signalsLabel: "Warum das dieser Seite hilft",
+    },
+    showcase: {
+      modelName: "Veo 3.1",
+      href: VEO_31_PATH,
+      sectionTitle: "Illustratives Keyframe für ein Premium-Text-zu-Video-Briefing",
+      intro:
+        "Video-Output ist zeitbasiert, daher verwendet diese Seite ein begleitendes Standbild, um das Briefing visuell zu verankern. Das Bild spiegelt die Art cineastischer Szenenplanung wider, die Teams oft vor dem Senden einer Premium-Text-zu-Video-Anfrage betreiben.",
+      promptLabel: "Illustrativer Standbild-Prompt",
+      prompt:
+        "Cineastisches Aerial-Keyframe einer futuristischen Stadt im Morgengrauen, eine Drohne gleitet zwischen Türmen, sanfter Dunst, warmes Sonnenaufgangs-Streiflicht, hochwertiges Sci-Fi-Filmstandbild, kein Text, kein Wasserzeichen",
+      caption:
+        "Dieses Standbild wurde über AnyCap als visueller Stellvertreter für die Art von Premium-Szenen-Briefing generiert, die gut zu Veo 3.1 passt.",
+      signals: [
+        "Gibt Lesenden einen konkreten visuellen Anker neben dem CLI-Beispiel und der Workflow-Erklärung.",
+        "Stützt die Positionierung von Veo 3.1 als Premium-Erstdurchlauf-Spur im aktuellen Video-Stack.",
+        "Verbessert die Multimedia-Abdeckung, ohne vorzutäuschen, ein statisches Bild sei der vollständige Video-Output.",
+      ],
+      images: [
+        {
+          src: VEO_SHOWCASE_IMAGE_SRC,
+          alt: "Cineastisches Aerial-Standbild einer futuristischen Stadt im Morgengrauen mit einer Drohne, die zwischen hohen Türmen im warmen Sonnenaufgangslicht schwebt.",
+          width: 2560,
+          height: 1440,
+          label: "Begleitendes Keyframe",
+        },
+      ],
+    },
+    useCasesTitle: "Wann Agenten Veo 3.1 verwenden sollten",
+    useCases: [
+      "Kurze Produkt-Demos aus einem geschriebenen Konzept generieren (Text-zu-Video)",
+      "Ein Produkt-Screenshot, Design-Frame oder Referenzfoto in einen cineastischen Clip animieren (Bild-zu-Video)",
+      "Bewegungsprototypen während agentengeführter Content-Workflows erstellen",
+      "Ein Text-Briefing in einen Erklär- oder Teaser-Entwurf verwandeln",
+      "Videogenerierung in derselben Agenten-Runtime halten, die für Bild- und Analyseaufgaben verwendet wird",
+    ],
+    callSectionTitle: "Veo 3.1 über AnyCap aufrufen",
+    callExamples: [
+      {
+        label: "Text-zu-Video",
+        code:
+          'anycap video generate --model veo-3.1 --prompt "a cinematic flyover of a futuristic city at dawn" -o city.mp4',
+      },
+      {
+        label: "Bild-zu-Video",
+        code:
+          'anycap video generate --model veo-3.1 --mode image-to-video --prompt "slow push-in with soft parallax and ambient light shifts" --param images=\'["./keyframe.jpg"]\' -o animated.mp4',
+      },
+      {
+        label: "Verfügbare Videomodelle auflisten",
+        code: "anycap video models",
+      },
+    ],
+    workflowTitle: "Position im Workflow",
+    workflowParagraph:
+      "In einem Agenten-Workflow ist Veo 3.1 üblicherweise der Generierungsschritt, der auf Planung folgt und der Review vorausgeht. Ein Coding- oder Automation-Agent kann das Konzept entwerfen, Veo 3.1 für den Video-Output aufrufen und dann das Ergebnis in Review, Asset-Packaging oder Dokumentation weiterleiten.",
+    workflowCards: [
+      {
+        eyebrow: "Vorgelagert",
+        body: "Kontextgestaltung, Prompt-Vorbereitung, Story-Framing und Asset-Auswahl.",
+      },
+      {
+        eyebrow: "Nachgelagert",
+        body: "Review, Bearbeitungsnotizen, Videoanalyse und Distribution im restlichen Agenten-Stack.",
+      },
+    ],
+    comparisonTitle: "Veo 3.1 vs. nahe Alternativen",
+    comparisonHeaders: {
+      dimension: "Dimension",
+      primary: "Veo 3.1",
+      alternative: "Alternative",
+    },
+    comparisonRows: [
+      {
+        dimension: "Bester Einsatz",
+        primary: "Premium-cineastischer Output aus einem Text-Briefing oder einem Referenzbild",
+        alternative:
+          "Wählen Sie Kling 3.0 für explorativere cineastische Bewegung oder Seedance 1.5 Pro für stabilere produktionsfreundliche Workflows",
+      },
+      {
+        dimension: "Text-zu-Video",
+        primary: "Starke Erstdurchlauf-Qualität, wenn der Clip allein aus einem Prompt nahe am Endergebnis landen muss",
+        alternative:
+          "Nutzen Sie Kling 3.0 für einen anderen Bewegungsstil oder Seedance 1.5 Pro für einen wiederholbareren Standard",
+      },
+      {
+        dimension: "Bild-zu-Video",
+        primary: "Animiert ein Referenz-Frame in premium-cineastische Bewegung und bewahrt dabei die Quellkomposition",
+        alternative:
+          "Wählen Sie Kling 3.0 für flexiblere Bild-zu-Video-Iteration oder Seedance 1.5 Pro für stabilere visuelle Kontinuität",
+      },
+      {
+        dimension: "Typische Agenten-Aufgabe",
+        primary: "Ein geschriebenes Konzept oder Produkt-Screenshot in einen polierten Teaser, eine Demo oder einen Konzept-Clip verwandeln",
+        alternative:
+          "Den Output nach dem initialen Generierungsschritt in Review, Packaging oder Folgeanalyse weiterleiten",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Wofür eignet sich Veo 3.1 am besten?",
+        answer:
+          "Veo 3.1 eignet sich am besten für Premium-Videogenerierung – sowohl Text-zu-Video als auch Bild-zu-Video – wenn ein Agent einen stärkeren cineastischen Erstdurchlauf aus einem geschriebenen Briefing oder einem Referenzbild benötigt.",
+      },
+      {
+        question: "Wie nutzen Agenten Veo 3.1 für Bild-zu-Video?",
+        answer:
+          "Agenten können ein Referenzbild animieren, indem sie anycap video generate --model veo-3.1 --mode image-to-video ausführen und das Quellbild über --param images übergeben. Die CLI übernimmt den Upload und liefert den Video-Output zurück.",
+      },
+      {
+        question: "Wie rufen Agenten Veo 3.1 über AnyCap auf?",
+        answer:
+          "Agenten können es mit der AnyCap CLI über anycap video generate --model veo-3.1 mit einem Prompt für Text-zu-Video aufrufen oder --mode image-to-video mit einem Referenzbild für Bild-zu-Video hinzufügen. Der Rest des Workflows bleibt in derselben AnyCap-Runtime.",
+      },
+      {
+        question: "Soll ich Veo 3.1 oder Kling 3.0 verwenden?",
+        answer:
+          "Verwenden Sie Veo 3.1, wenn das Erstdurchlauf-Ergebnis hochwertiger wirken muss – sei es aus einem Text-Briefing oder einem Referenzbild. Verwenden Sie Kling 3.0, wenn der Workflow stärker auf flexibler Bild-zu-Video-Iteration oder einem anderen Bewegungsstil basiert.",
+      },
+    ],
+    nextActions: [
+      { label: "Videogenerierung", href: "/capabilities/video-generation", primary: true },
+      { label: "Kling 3.0", href: "/models/kling-3-0" },
+      { label: "Seedance 1.5 Pro", href: "/models/seedance-1-5-pro" },
+    ],
+  },
 } as const satisfies Record<SiteLocale, Veo31PageContent>;
 
 export function getVeo31Metadata(locale: SiteLocale): Metadata {

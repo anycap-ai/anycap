@@ -215,6 +215,7 @@ const contentByLocale: Record<SiteLocale, ContactPageData> = {
     },
   },
   id: {} as ContactPageData,
+  de: {} as ContactPageData,
 };
 
 const contactRoutesId: readonly ContactRoute[] = [
@@ -299,6 +300,94 @@ contentByLocale.id = {
           "@type": "ContactPoint",
           contactType: "customer support",
           url: "https://anycap.ai/id/contact",
+        },
+      ],
+    },
+  },
+};
+
+const contactRoutesDe: readonly ContactRoute[] = [
+  {
+    title: "Produkt-Support und Installations-Hilfe",
+    detail:
+      "Wenn Sie Ihren ersten Workflow zum Laufen bringen wollen, beginnen Sie mit dem Installations-Guide und nennen Sie Agent, Capability sowie den genauen Schritt, der fehlgeschlagen ist.",
+    ctaLabel: "Installations-Guide öffnen",
+    ctaKind: "link",
+    ctaHref: "/guides/install-anycap",
+  },
+  {
+    title: "Bug-Reports und Regressionen",
+    detail:
+      "Für reproduzierbare Bugs sind GitHub-Issues der beste Weg, weil Stack-Traces, Umgebungsdetails und Screenshots in einem öffentlichen Thread bleiben.",
+    ctaLabel: "GitHub-Issues öffnen",
+    ctaKind: "link",
+    ctaHref: "https://github.com/anycap-ai/anycap/issues",
+  },
+  {
+    title: "Preis- und Enterprise-Fragen",
+    detail:
+      "Wenn Sie größere Credit-Volumen, Rechnungsstellung oder Klärung zur Produktpassung brauchen, kontaktieren Sie das Team direkt per E-Mail.",
+    ctaLabel: "Team per E-Mail kontaktieren",
+    ctaKind: "email",
+    ctaSubject: "AnyCap Enterprise pricing",
+  },
+];
+
+const checklistDe = [
+  "Welchen Agent Sie nutzen, etwa Claude Code, Cursor, Codex oder Manus",
+  "Welche Capability oder Seite Sie verwenden wollten",
+  "Den erwarteten Output und das tatsächliche Ergebnis",
+  "Relevante Fehlermeldung, Request-ID oder Screenshot",
+  "Ob das Problem Produktion, Evaluierung oder einen Einmal-Test blockiert",
+] as const;
+
+contentByLocale.de = {
+  metadata: {
+    title: "AnyCap kontaktieren - Support, Preise und Issue-Reporting",
+    description:
+      "Kontaktieren Sie AnyCap für Installations-Hilfe, Preisanfragen, Bug-Reports, Sicherheits- oder Datenschutz-Fragen und Produkt-Feedback.",
+    openGraphTitle: "AnyCap kontaktieren - Support, Preise und Issue-Reporting",
+    openGraphDescription:
+      "Finden Sie den besten Weg für AnyCap-Support, Preisanfragen, Bug-Reports und Sicherheits- oder Datenschutz-Anfragen.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Kontakt", href: "/contact" },
+  ],
+  eyebrow: "Kontakt",
+  heroTitle: "Kontaktieren Sie das AnyCap-Team.",
+  heroIntro:
+    "Nutzen Sie diese Seite, wenn Sie Installations-Hilfe, Preisklärung, Fragen zur Produktpassung, Bug-Reporting-Pfade oder einen klaren Weg für Sicherheits- und Datenschutz-Anfragen benötigen.",
+  lastUpdatedLabel: "9. April 2026",
+  routesTitle: "Bester Weg pro Frage",
+  contactRoutes: contactRoutesDe,
+  checklistTitle: "Bitte fügen Sie das hinzu, wenn Sie uns kontaktieren",
+  supportChecklist: checklistDe,
+  directTitle: "Direktkontakt",
+  directBody1:
+    "Schreiben Sie dem AnyCap-Team eine E-Mail für Preisgespräche, Datenschutz-Anfragen oder jedes Anliegen, das nicht in einem öffentlichen GitHub-Thread stehen sollte.",
+  directBody2:
+    "Wenn das Problem aus einem Live-Workflow stammt, können Sie auch die CLI-Surface nutzen oder Details über den öffentlichen GitHub-Issue-Tracker einreichen.",
+  directBody3:
+    "Für Installations-Hilfe starten Sie mit dem Installations-Guide. Für Produkt- und Plan-Kontext prüfen Sie die Preisseite.",
+  contactPageJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: "AnyCap kontaktieren",
+    description:
+      "Kontaktieren Sie AnyCap für Support, Preise, Produktfragen, Sicherheits-Reports und Datenschutz-Anfragen.",
+    url: "https://anycap.ai/de/contact",
+    mainEntity: {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: siteConfig.siteName,
+      url: siteConfig.url,
+      sameAs: organizationSameAs,
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          url: "https://anycap.ai/de/contact",
         },
       ],
     },

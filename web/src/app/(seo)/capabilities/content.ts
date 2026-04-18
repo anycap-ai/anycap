@@ -550,6 +550,152 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
         "Hub kapabilitas untuk inventaris AnyCap yang aktif di seluruh alur media, pengambilan web, penyimpanan, dan publikasi.",
     },
   },
+  de: {
+    metadata: {
+      title: "KI-Agent-Capabilities — Bild, Video, Audio, Web, Speicher und Publishing",
+      description:
+        "Durchsuchen Sie den KI-Agent-Capability-Runtime, der Bild-, Video-, Audio-, Web-, Speicher- und Publishing-Workflows über einen Installationspfad, einen Auth-Flow und eine CLI hinzufügt.",
+      openGraphTitle: "KI-Agent-Capabilities — Bild, Video, Audio, Web, Speicher und Publishing",
+      openGraphDescription:
+        "Starten Sie mit dem aktiven Capability-Inventar für Coding-Agenten und erweitern Sie es über denselben Runtime in Speicher- und Publishing-Workflows.",
+      articleHeadline: "KI-Agent-Capabilities — Bild, Video, Audio, Web, Speicher und Publishing",
+      articleDescription:
+        "Hub-Seite für das aktive AnyCap-Capability-Inventar über Medien, Web-Retrieval, Speicher und Publishing-Workflows hinweg.",
+      articleAbout: ["KI-Agent-Capabilities", "Mediengenerierung", "Web-Retrieval", "Drive-Speicher"],
+      articleKeywords: [
+        "ki-agent capabilities",
+        "image generation für ki-agenten",
+        "video generation für ki-agenten",
+        "audio understanding für ki-agenten",
+        "web search api für ki-agenten",
+        "web crawl für ki-agenten",
+        "drive für ki-agenten",
+        "page publishing für ki-agenten",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Start", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+    ],
+    heroEyebrow: "KI-Agent-Capabilities",
+    heroTitleLine1: "Behalten Sie den Agenten, den Sie nutzen.",
+    heroTitleLine2: "Ergänzen Sie die fehlenden Capabilities.",
+    heroParagraph:
+      "AnyCap ist ein KI-Agent-Capability-Runtime für Coding-Agenten. Starten Sie mit dem öffentlichen Capability-Inventar über eine CLI, einen Auth-Flow und einen Installationspfad für Claude Code, Cursor, Codex und den Rest Ihres Agent-Stacks. Derselbe Runtime erweitert sich in benachbarte Workflows, wenn Ihre Anforderungen wachsen.",
+    overviewTitle: "Wie Sie das Capability-Inventar nutzen",
+    overviewParagraphs: [
+      "Der Capability-Hub ist nützlich, wenn die Workflow-Lücke klar ist, die genaue Seitenwahl aber nicht. Er gibt Teams einen Ort, an dem sie die verfügbare Runtime-Oberfläche überblicken können, bevor sie zu Image Generation, Video Generation, Understanding, Retrieval, Speicher oder benachbarten Capability-Seiten verzweigen.",
+      "Damit ist die Inventarseite mehr als eine Feature-Liste. Sie ist die Routing-Schicht, die Operatoren hilft, ein fehlendes Ergebnis im Agent-Workflow mit der richtigen Capability-Seite, Modell-Seite oder produktspezifischem Installationspfad zu verbinden.",
+    ],
+    gapTable: {
+      eyebrow: "Vergleich",
+      title: "Was den gängigen Coding-Agenten noch fehlt",
+      description:
+        "Diese Tabelle zeigt die Capability-Lücke im aktuellen Agent-Ökosystem und die Schicht, die AnyCap darüberlegt.",
+      addWithAnycapLabel: "Mit AnyCap hinzufügen",
+      footnote:
+        "Das ist der schnellste Weg, die Erzählung zu zeigen: den Agenten behalten, die fehlende Capability-Schicht ergänzen.",
+    },
+    gapCellLabels: {
+      builtIn: "Eingebaut",
+      notBuiltIn: "Nicht eingebaut",
+      noUnifiedRuntime: "Kein einheitlicher Runtime",
+      noUnifiedAudioRuntime: "Kein einheitlicher Audio-Runtime",
+      available: "Verfügbar",
+      externalTooling: "Externe Tools",
+      noGroundedFlow: "Kein grounded Flow",
+      noReusableCrawlRuntime: "Kein wiederverwendbarer Crawl-Runtime",
+      noSharedAssetLayer: "Keine gemeinsame Asset-Schicht",
+      comingSoon: "Demnächst",
+    },
+    capabilityNames: {
+      imageGeneration: "Image Generation",
+      videoGeneration: "Video Generation",
+      musicGeneration: "Music Generation",
+      imageUnderstanding: "Image Understanding",
+      videoAnalysis: "Video Analysis",
+      audioUnderstanding: "Audio Understanding",
+      webSearch: "Web Search",
+      groundedWebSearch: "Grounded Web Search",
+      webCrawl: "Web Crawl",
+      drive: "Drive",
+      speech: "Speech",
+    },
+    capabilityDescriptions: {
+      imageGeneration:
+        "Bilder generieren und bearbeiten über Seedream 5, Seedream 4.5, Nano Banana Pro und Nano Banana 2.",
+      videoGeneration:
+        "Videos aus Text-Prompts und Bildern generieren über Veo 3.1, Seedance 1.5 Pro und Kling 3.0.",
+      musicGeneration:
+        "Musiktracks und instrumentales Audio über einen einzigen Music-Runtime generieren.",
+      imageUnderstanding:
+        "Screenshots, Diagramme, Fotos und Charts über einen einheitlichen Vision-Runtime analysieren.",
+      videoAnalysis:
+        "Aufnahmen prüfen und strukturierte Informationen aus Videoinhalten extrahieren.",
+      audioUnderstanding:
+        "Meetings, Podcasts und Sprachclips über einen einzigen Runtime transkribieren und analysieren.",
+      webSearch: "Das Web nach strukturierten Ergebnissen durchsuchen, optional mit Volltextinhalt der Seite.",
+      groundedWebSearch:
+        "Synthetisierte Antworten mit Zitaten erhalten, gegroundet in Live-Web-Search.",
+      webCrawl: "Webseiten in sauberes Markdown für nachgelagerte Agent-Workflows konvertieren.",
+      drive: "Outputs speichern, Assets organisieren und öffentliche URLs über AnyCap Drive teilen.",
+      speech: "Text-to-Speech und Sprachgenerierung.",
+    },
+    sectionTitles: {
+      browseInventory: "Aktives Capability-Inventar durchsuchen",
+      modelsBehind: "Modelle hinter den Capabilities",
+      relatedEntryPages: "Verwandte Einstiegsseiten",
+      comingSoon: "Demnächst",
+      getStarted: "Loslegen",
+    },
+    modelGuideCards: [
+      {
+        eyebrow: "Hub",
+        title: "Modell-Guide",
+        href: "/models",
+        body: "Durchsuchen Sie die multimodalen Modelle, die über AnyCap verfügbar sind, und ordnen Sie sie dem richtigen Agent-Workflow zu.",
+      },
+      {
+        eyebrow: "Guide",
+        title: "Context Engineering für Agenten",
+        href: "/guides/context-engineering-for-agents",
+        body: "Verstehen Sie, wie Agenten entscheiden, wann Image-, Video- und Analyse-Capabilities in den Workflow gehören.",
+      },
+    ],
+    relatedCards: [
+      {
+        eyebrow: "Defizit-Hub",
+        title: "Was Agenten nicht können",
+        href: "/learn/what-agents-cant-do",
+        summary:
+          "Beginnen Sie hier, wenn Sie die fehlende Capability diagnostizieren, bevor Sie eine spezifische Seite wählen.",
+      },
+      {
+        eyebrow: "Agent-Pfad",
+        title: "Für Claude Code",
+        href: "/for/claude-code",
+        summary:
+          "Beginnen Sie hier, wenn Claude Code Ihr primärer Agent ist und Sie den ökosystem-spezifischen Installationspfad wollen.",
+      },
+      {
+        eyebrow: "Installationspfad",
+        title: "Loslegen",
+        href: "/start",
+        summary:
+          "Beginnen Sie hier, wenn Sie den kürzesten Weg vom Null-Setup zum ersten Capability-Aufruf wollen.",
+      },
+    ],
+    buttonLabels: {
+      getStarted: "Loslegen",
+      whatAgentsCantDo: "Was Agenten nicht können",
+      forClaudeCode: "Für Claude Code",
+    },
+    itemListJsonLd: {
+      name: "AnyCap Capabilities",
+      description:
+        "Capability-Hub für das aktive AnyCap-Inventar über Medien, Web-Retrieval, Speicher und Publishing-Workflows hinweg.",
+    },
+  },
 };
 
 function buildCapabilities(content: CapabilitiesPageContent): Capability[] {

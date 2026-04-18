@@ -818,10 +818,248 @@ const id: PageData = {
   ],
 };
 
+const de: PageData = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Lernen", href: "/learn", unlinkable: true },
+    { name: "KI-Chatbot-SaaS vs. KI-Agent für SaaS" },
+  ],
+  eyebrow: "Lernen",
+  metadata: {
+    title: "KI-Chatbot-SaaS vs. KI-Agent für SaaS – wann ein Chatbot nicht mehr ausreicht",
+    description:
+      "Vergleichen Sie KI-Chatbot-SaaS-Produkte mit Agent-orientierten SaaS-Systemen. Erfahren Sie, wo Chat ausreicht, wo multimodale und Web-Aufgaben ihn überfordern und wie eine Capability Runtime den Stack verändert.",
+    openGraphTitle: "KI-Chatbot-SaaS vs. KI-Agent für SaaS – wann ein Chatbot nicht mehr ausreicht",
+    openGraphDescription:
+      "Ein architekturorientierter Leitfaden für SaaS-Teams, die zwischen einem Chatbot-Produkt und einem Agentensystem mit echten Kapazitäten entscheiden.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "KI-Chatbot-SaaS vs. KI-Agent für SaaS – wann ein Chatbot nicht mehr ausreicht",
+    description:
+      "Eine praxisnahe Erklärung für SaaS-Teams, die entscheiden, ob sie ein Chatbot-Produkt, ein Agentensystem oder eine Capability Runtime rund um den Agent-Stack benötigen.",
+    path: AI_CHATBOT_VS_AI_AGENT_FOR_SAAS_PATH,
+    about: ["KI-Chatbot-SaaS", "KI-Agenten", "SaaS-Architektur", "Multimodale Workflows", "Agent Capability Runtime"],
+    keywords: [
+      "ai chatbot saas",
+      "chatbot saas",
+      "ai agent for saas",
+      "chatbot vs ai agent",
+      "multimodal chatbot saas",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Ist ein KI-Chatbot-SaaS dasselbe wie ein KI-Agent für SaaS?",
+      answer:
+        "Nein. Sie überschneiden sich, lösen aber unterschiedliche Schichten des Problems. Ein Chatbot-SaaS stellt das Gespräch in den Mittelpunkt. Ein Agentensystem stellt den Aufgabenabschluss über Tools, Kontext und Outputs in den Mittelpunkt.",
+    },
+    {
+      question: "Kann ein Chatbot Tools aufrufen und trotzdem ein Chatbot bleiben?",
+      answer:
+        "Ja, bis zu einem gewissen Punkt. Sobald jedoch der Tool-Einsatz zur wichtigsten Erfolgsgröße des Produkts wird, verhält sich die Architektur eher wie ein Agentensystem als wie ein einfacher Chatbot.",
+    },
+    {
+      question: "Wann benötigt ein SaaS-Chatbot multimodale Kapazitäten?",
+      answer:
+        "In der Regel dann, wenn Nutzer Screenshots, Diagramme oder Aufzeichnungen in den Workflow einbringen oder wenn das System Bilder und Videos erstellen muss, statt nur mit Text zu antworten.",
+    },
+    {
+      question: "Ist AnyCap die Chatbot-Schicht in diesem Vergleich?",
+      answer:
+        "Nein. AnyCap ist die Capability Runtime rund um den Assistenten oder Agenten. Sie hilft dem System, Outputs zu generieren, zu prüfen, zu suchen, zu crawlen und auszuliefern, während die Chatbot- oder Agent-Erfahrung in der Oberfläche bleiben kann, die Sie bereits nutzen.",
+    },
+  ]),
+  lastUpdatedLabel: "7. April 2026",
+  heroTitle: ["KI-Chatbot-SaaS", "vs. KI-Agent für", "SaaS"],
+  heroIntro:
+    "Wenn Sie nach KI-Chatbot-SaaS suchen, ist die eigentliche Produktfrage meist größer als Chat. Brauchen Sie nur eine konversationelle Schicht, die gut antwortet, oder benötigen Sie ein System, das Screenshots prüfen, das Live-Web recherchieren, Medien generieren und etwas zurückgeben kann, das Nutzer tatsächlich verwenden? Das Erste ist ein Chatbot-Produkt. Das Zweite ist deutlich näher an einem Agent-Stack.",
+  quickAnswerLabel: "Kurzantwort",
+  quickAnswerTitle: "Ein Chatbot reicht aus, bis das Produkt echte Arbeit außerhalb des Gesprächs leisten muss.",
+  quickAnswerBody:
+    "Das ist die klarste Lesart dieses Keywords. Ein Chatbot-SaaS ist eine starke Antwort für Support, Onboarding und begrenzte Assistenz. Sobald Nutzer aber erwarten, dass das System Dateien prüft, externe Quellen durchsucht, Medien erstellt oder Outputs liefert, die jenseits des Chat-Threads weiterleben, treffen Sie bereits Architekturentscheidungen für einen Agenten – ob Sie es so nennen oder nicht.",
+  quickTakeawaysLabel: "Kernpunkte",
+  quickTakeaways: [
+    "Ein KI-Chatbot-SaaS ist eine starke Wahl, wenn das Produkt vor allem Konversation, Retrieval und leichte Aktionen benötigt.",
+    "Sobald der Workflow Screenshots prüfen, das Live-Web durchsuchen, Medien generieren oder Dateien zurückgeben muss, entwerfen Sie ein Agentensystem statt eines reinen Chatbots.",
+    "AnyCap fügt sich rund um diesen Agent-Stack als Capability Runtime ein. Es ist nicht das Chatbot-Produkt selbst.",
+  ],
+  comparisonLabel: "Direkter Vergleich",
+  comparisonTitle: "Der Unterschied liegt nicht im Branding. Es geht darum, was das System für den Nutzer abschließen muss.",
+  comparisonIntro:
+    "Dies ist ein Architekturvergleich, kein Anbieter-Ranking. Es geht darum, die richtige Systemform für die Aufgabe zu wählen, statt das Etikett „Chatbot“ auf Workflows zu spannen, die in Wahrheit Kapazitäten und Aufgabenausführung benötigen.",
+  comparisonHeaders: {
+    dimension: "Dimension",
+    chatbot: "KI-Chatbot-SaaS",
+    agent: "KI-Agent für SaaS",
+  },
+  comparisonRows: [
+    { dimension: "Hauptversprechen", chatbot: "Den Nutzer in einer Chat-Oberfläche gut beantworten.", agent: "Eine Aufgabe abschließen, die Reasoning, Tools, Dateien, Recherche und lieferfähige Outputs umfassen kann." },
+    { dimension: "Typische Inputs", chatbot: "Text-Prompts, eine Wissensdatenbank und ein enger Produktkontext.", agent: "Text plus Screenshots, URLs, strukturierter State, hochgeladene Dateien und Zwischenergebnisse." },
+    { dimension: "Erfolgsmetrik", chatbot: "Die Antwort ist hilfreich, schnell und markenkonform.", agent: "Das System liefert ein fertiges Artefakt, eine Empfehlung oder einen abgeschlossenen Workflow." },
+    { dimension: "Tool-Einsatz", chatbot: "Optional und meist auf wenige begrenzte Aufrufe beschränkt.", agent: "Kern der Architektur. Tool-Ausführung ist der Weg, wie Aufgaben abgeschlossen werden." },
+    { dimension: "Medien- und Web-Aufgaben", chatbot: "Oft als Ausnahme nachgerüstet, was das Produkt fragil macht.", agent: "Als normaler Teil des Workflows behandelt, einschließlich Generierung, Analyse und Retrieval." },
+    { dimension: "Output-Erwartungen", chatbot: "Die Antwort bleibt überwiegend im Chat-Thread.", agent: "Das Ergebnis muss oft gespeichert, geteilt, veröffentlicht oder an ein anderes System übergeben werden." },
+    { dimension: "Beste Eignung", chatbot: "Support, Onboarding, FAQ und enge In-App-Assistenz.", agent: "Recherche, multimodale Produktarbeit, Content-Operationen und mehrstufige interne Workflows." },
+  ],
+  chatbotLabel: "Klassisches Chatbot-Terrain",
+  chatbotTitle: "Ein Chatbot-SaaS ist weiterhin sinnvoll, wenn das Produkt durch das Gespräch selbst gewinnt",
+  chatbotCards: [
+    {
+      title: "Support und Wissens-Retrieval",
+      body:
+        "Wenn der Assistent vor allem Produktfragen beantwortet, Dokumentation zusammenfasst und Nutzer zum nächsten Hilfsschritt leitet, kann ein Chatbot-SaaS die richtige Architektur sein. Die Aufgabe ist immer noch konversationell.",
+    },
+    {
+      title: "In-App-Onboarding und Anleitung",
+      body:
+        "Wenn das Produkt eine hilfreiche UI-Schicht braucht, die erklärt, wo geklickt werden muss, wie Einstellungen konfiguriert werden oder welches Feature als Nächstes zu nutzen ist, kann eine starke Chatbot-Erfahrung den Großteil des Mehrwerts liefern.",
+    },
+    {
+      title: "Begrenzte Workflows mit kleinem Aktionsumfang",
+      body:
+        "Ein Chatbot ist weiterhin tragfähig, wenn die Aktionsfläche schmal ist – etwa Kontodetails abrufen oder einen einzelnen vorhersehbaren Backend-Aufruf auslösen. Entscheidend ist, dass sich das System weiterhin wie geführte Konversation verhält und nicht wie offene Aufgabenausführung.",
+    },
+  ],
+  triggerLabel: "Wo die Grenze verschwimmt",
+  triggerTitle: "Die meisten SaaS-Teams überwachsen einen reinen Chatbot in dem Moment, in dem die Arbeit multimodal oder extern wird",
+  triggerIntro:
+    "Das ist der praktische Übergangspunkt hinter viel Verwirrung im KI-Produkt. Teams sagen weiterhin „Chatbot“, weil das die sichtbare Oberfläche ist. Doch das System darunter muss inzwischen analysieren, generieren, abrufen und ausliefern. An diesem Punkt verhält sich das Produkt eher wie ein Agent mit einer Capability-Schicht drumherum.",
+  triggerCards: [
+    {
+      title: "Der Assistent muss prüfen, was der Nutzer sieht",
+      body:
+        "Die Grenze verschiebt sich schnell, sobald Screenshots, Diagramme oder aufgezeichnete Flows in die Aufgabe einfließen. Jetzt benötigt das System Bildverständnis oder Videoanalyse, nicht nur Textgenerierung.",
+    },
+    {
+      title: "Die Aufgabe hängt von Live-Web-Kontext ab",
+      body:
+        "Ein Chatbot-SaaS kann aus einer statischen Wissensschicht antworten. Ein Agent-orientiertes System braucht Web-Suche, Web-Crawl und Beweissammlung, wenn die Antwort von aktuellen externen Informationen abhängt.",
+    },
+    {
+      title: "Der Workflow muss Medien erstellen",
+      body:
+        "Wenn der Assistent Launch-Visuals, Demo-Clips oder kreative Assets generieren muss, ist das Produkt nicht mehr nur konversationell. Es benötigt Mediengenerierung als erstklassige Kapazität.",
+    },
+    {
+      title: "Der Output muss den Chat verlassen",
+      body:
+        "Teams spüren den Architekturwechsel, wenn das Ergebnis zu einer Datei, einem Share-Link oder einer veröffentlichten Seite werden muss. An diesem Punkt ist der Chat-Thread nur eine Schicht des Systems.",
+    },
+  ],
+  capabilityLabel: "Wo AnyCap einsetzt",
+  capabilityTitle: "AnyCap ist die Capability Runtime rund um den Assistenten-Stack, nicht das Chatbot-Produkt",
+  capabilityIntro:
+    "Diese Unterscheidung macht das Keyword für AnyCap nutzbar, ohne ein falsches Positioning zu erzwingen. AnyCap ist relevant, wenn das SaaS-Team seine gewählte Agent- oder Assistenten-Oberfläche behält, aber eine konsistente Möglichkeit braucht, Bild-, Video-, Vision-, Web- und Artefakt-Workflows darum herum hinzuzufügen.",
+  capabilityCards: [
+    { title: "Bildverständnis", href: "/capabilities/image-understanding", body: "Lesen Sie Screenshots, Referenzen und visuelle QA-Inputs, wo ein reiner Chatbot nur raten könnte." },
+    { title: "Videogenerierung", href: "/capabilities/video-generation", body: "Erzeugen Sie Produktclips und kurze Demos, statt bei Textanweisungen über das zu Erstellende stehenzubleiben." },
+    { title: "Web-Suche", href: "/capabilities/web-search", body: "Holen Sie aktuellen externen Kontext, wenn die Antwort nicht allein aus internen Dokumenten kommen kann." },
+    { title: "Web-Crawl", href: "/capabilities/web-crawl", body: "Verwandeln Sie Seiten in nutzbares Markdown oder strukturierte Inputs für agentische Workflows." },
+    { title: "Drive", href: "/capabilities/drive", body: "Bringen Sie das Ergebnis eines internen Workflows in ein teilbares Artefakt, das ein Mensch tatsächlich öffnen kann." },
+  ],
+  architectureLabel: "Praktische Lesart",
+  architectureTitle: "Drei häufige SaaS-Architekturen hinter dem Keyword",
+  architectureCards: [
+    {
+      title: "Kundensupport-Assistent",
+      label: "Weiterhin ein Chatbot",
+      body:
+        "Das Produkt beantwortet bekannte Fragen, zitiert Help-Center-Inhalte und öffnet eventuell ein Ticket. Das ist ein klassisches Chatbot-SaaS-Muster, denn der Output bleibt Gespräch plus Routing.",
+    },
+    {
+      title: "Produkt-Copilot für Operatoren",
+      label: "Übergang ins Agent-Terrain",
+      body:
+        "Jetzt muss das System Screenshots lesen, Workflows vergleichen, Live-Dokumente durchsuchen und erklären, was sich geändert hat. Das ist nicht mehr nur Chat. Es ist ein agentischer Workflow mit Tool-Ausführung und Beweissammlung.",
+    },
+    {
+      title: "Growth- oder Content-Assistent",
+      label: "Benötigt eine Capability Runtime",
+      body:
+        "Wenn das Produkt Anfragen in Bilder, Videos, Recherchenotizen und teilbare Outputs verwandelt, ist die siegreiche Architektur meist eine Chat- oder Command-Schicht plus eine Runtime, die generieren, prüfen und Ergebnisse ausliefern kann.",
+    },
+  ],
+  selectionLabel: "Wie Sie wählen",
+  selectionTitle: 'Stellen Sie eine bessere Frage als „Soll ich einen Chatbot-SaaS bauen?"',
+  selectionRows: [
+    {
+      question: "Wann sollte ich beim KI-Chatbot-SaaS bleiben?",
+      answer:
+        "Bleiben Sie beim Chatbot-Modell, wenn die Hauptaufgabe Konversation, Retrieval und begrenzter Support ist. Wenn das Produkt durch Schnelligkeit, Freundlichkeit und Zuverlässigkeit innerhalb einer einzigen Chat-Oberfläche gewinnt, sollten Sie es nicht zu früh zu einem Agenten überengineeren.",
+    },
+    {
+      question: "Wann sollte ich auf einen KI-Agent für SaaS umsteigen?",
+      answer:
+        "Wechseln Sie zu einer Agent-Architektur, wenn der Workflow Tools, Dateien, Live-Web-Kontext, multimodale Analyse oder Deliverables außerhalb des Gesprächs benötigt. Das sind Signale, dass sich das Produkt vom Antworten zum Tun verschoben hat.",
+    },
+    {
+      question: "Wo passt AnyCap in diesen Stack?",
+      answer:
+        "AnyCap ist die Capability Runtime rund um die Agent- oder Assistenten-Schicht. Ihre Rolle ist es, dem System zu helfen, Medien zu generieren, Medien zu verstehen, Web-Kapazitäten zu nutzen und Outputs über eine CLI und eine Capability-Oberfläche auszuliefern.",
+    },
+  ],
+  nextMoveLabel: "Beste nächste Schritte",
+  nextMoveTitle: "Setzen Sie von dieser Brückenseite im restlichen Site-Bereich fort",
+  nextMoveCards: [
+    {
+      title: "Sehen Sie zuerst die Kapazitätslücke",
+      href: "/learn/what-agents-cant-do",
+      body: "Nutzen Sie diese Seite, wenn die echte Frage ist, was zuerst bricht, sobald ein Assistent mehr tun muss als chatten.",
+    },
+    {
+      title: "Sehen Sie die Coding-Agent-Variante",
+      href: "/learn/best-ai-for-coding-agents",
+      body: "Nutzen Sie diese Seite, wenn dieselbe Stack-Frage in Coding-Agenten auftritt statt in einer SaaS-Assistenten-Oberfläche.",
+    },
+    {
+      title: "Multimodale Kapazitäten hinzufügen",
+      href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
+      body: "Nutzen Sie diese Seite, wenn Sie über die Definitionsphase hinaus sind und das Implementierungsmuster für einen reicheren SaaS-Assistenten suchen.",
+    },
+    {
+      title: "Den Kapazitäten-Hub durchstöbern",
+      href: "/capabilities",
+      body: "Nutzen Sie die Kapazitäten-Übersicht, wenn Sie die konkreten Produkt-Oberflächen rund um den Agent-Workflow suchen.",
+    },
+    {
+      title: "Den kürzesten Setup-Pfad gehen",
+      href: "/guides/install-anycap",
+      body: "Nutzen Sie den Installationsleitfaden, wenn Sie die Architekturfrage hinter sich haben und den schnellsten Weg in eine echte Runtime suchen.",
+    },
+  ],
+  faqLabel: "FAQ",
+  faqTitle: "Fragen hinter dem Keyword",
+  faqItems: [
+    {
+      question: "Ist ein KI-Chatbot-SaaS dasselbe wie ein KI-Agent für SaaS?",
+      answer:
+        "Nein. Sie überschneiden sich, lösen aber unterschiedliche Schichten des Problems. Ein Chatbot-SaaS stellt das Gespräch in den Mittelpunkt. Ein Agentensystem stellt den Aufgabenabschluss über Tools, Kontext und Outputs in den Mittelpunkt.",
+    },
+    {
+      question: "Kann ein Chatbot Tools aufrufen und trotzdem ein Chatbot bleiben?",
+      answer:
+        "Ja, bis zu einem gewissen Punkt. Sobald jedoch der Tool-Einsatz zur wichtigsten Erfolgsgröße des Produkts wird, verhält sich die Architektur eher wie ein Agentensystem als wie ein einfacher Chatbot.",
+    },
+    {
+      question: "Wann benötigt ein SaaS-Chatbot multimodale Kapazitäten?",
+      answer:
+        "In der Regel dann, wenn Nutzer Screenshots, Diagramme oder Aufzeichnungen in den Workflow einbringen oder wenn das System Bilder und Videos erstellen muss, statt nur mit Text zu antworten.",
+    },
+    {
+      question: "Ist AnyCap die Chatbot-Schicht in diesem Vergleich?",
+      answer:
+        "Nein. AnyCap ist die Capability Runtime rund um den Assistenten oder Agenten. Sie hilft dem System, Outputs zu generieren, zu prüfen, zu suchen, zu crawlen und auszuliefern, während die Chatbot- oder Agent-Erfahrung in der Oberfläche bleiben kann, die Sie bereits nutzen.",
+    },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, PageData> = {
   en,
   "pt-br": ptBr,
   id,
+  de,
 };
 
 export function getAIChatbotVsAIAgentForSaaSMetadata(locale: SiteLocale): Metadata {

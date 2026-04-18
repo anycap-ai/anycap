@@ -17,8 +17,7 @@ const VALIDATION_IMAGE = {
   height: 2400,
 } as const;
 
-const contentByLocale = {
-  en: {
+const enContent = {
     metadata: {
       title: "Create AI Influencer for Free with an AI Agent",
       description:
@@ -330,7 +329,10 @@ const contentByLocale = {
         },
       ],
     },
-  },
+} as const;
+
+const contentByLocale = {
+  en: enContent,
   "pt-br": {
     metadata: {
       title: "Crie um AI influencer de graça com um agente de IA",
@@ -957,6 +959,7 @@ const contentByLocale = {
       ],
     },
   },
+  de: enContent,
 } as const;
 
 export function getCreateAIInfluencerForFreeMetadata(locale: SiteLocale): Metadata {

@@ -53,6 +53,13 @@ type ImageGenerationNextAction = {
   primary?: boolean;
 };
 
+type ImageGenerationOpusCallout = {
+  eyebrow: string;
+  title: string;
+  body: string;
+  ctas: readonly { label: string; href: string }[];
+};
+
 type ImageGenerationPageContent = {
   metadata: {
     title: string;
@@ -73,6 +80,7 @@ type ImageGenerationPageContent = {
     summaryLabel: string;
     summaryText: string;
   };
+  opusCallout: ImageGenerationOpusCallout;
   demo: {
     labels: ImageGenerationDemoLabels;
     lines: readonly DemoLine[];
@@ -136,6 +144,16 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryLabel: "Answer-first summary",
       summaryText:
         "Use Seedream 5 when the agent needs a stronger first-pass image, Nano Banana Pro when the workflow starts from an existing asset and needs targeted revisions, and Nano Banana 2 when speed and throughput matter more than maximizing polish on the first result.",
+    },
+    opusCallout: {
+      eyebrow: "Used with Claude Opus 4.7",
+      title: "Claude Code on Opus 4.7 + AnyCap image generation = insane",
+      body:
+        "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate images. Pair it with AnyCap and the same terminal session reaches Seedream 5, Nano Banana Pro, and Nano Banana 2 through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for image-heavy agent workflows in 2026.",
+      ctas: [
+        { label: "Claude Code image generation →", href: "/for/claude-code/image-generation" },
+        { label: "Claude Opus 4.7 capabilities →", href: "/learn/claude-opus-4-7-capabilities" },
+      ],
     },
     demo: {
       labels: {
@@ -373,6 +391,16 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryText:
         "Use o Seedream 5 quando o agente precisar de uma primeira imagem mais forte, o Nano Banana Pro quando o fluxo começar de um ativo existente e exigir revisões direcionadas, e o Nano Banana 2 quando velocidade e volume importarem mais do que o acabamento máximo no primeiro resultado.",
     },
+    opusCallout: {
+      eyebrow: "Usado com Claude Opus 4.7",
+      title: "Claude Code no Opus 4.7 + AnyCap geração de imagem = absurdo",
+      body:
+        "O Claude Code agora roda no Claude Opus 4.7 — o agente de raciocínio e código mais forte que a Anthropic já lançou. O Opus 4.7 ainda não gera imagens nativamente. Combine com o AnyCap e a mesma sessão de terminal alcança Seedream 5, Nano Banana Pro e Nano Banana 2 com uma CLI e um login. O combo Opus 4.7 + AnyCap é o default recomendado para fluxos de agente focados em imagem em 2026.",
+      ctas: [
+        { label: "Claude Code geração de imagem →", href: "/for/claude-code/image-generation" },
+        { label: "Capacidades do Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
+      ],
+    },
     demo: {
       labels: {
         header: "agente com AnyCap",
@@ -596,6 +624,16 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryText:
         "Gunakan Seedream 5 saat agen membutuhkan gambar awal yang lebih kuat, Nano Banana Pro saat alur dimulai dari aset yang sudah ada dan perlu revisi terarah, dan Nano Banana 2 saat kecepatan serta throughput lebih penting daripada hasil paling rapi pada percobaan pertama.",
     },
+    opusCallout: {
+      eyebrow: "Digunakan dengan Claude Opus 4.7",
+      title: "Claude Code di Opus 4.7 + AnyCap generasi gambar = gila",
+      body:
+        "Claude Code kini menjalankan Claude Opus 4.7 — agen reasoning dan coding terkuat dari Anthropic. Opus 4.7 belum bisa menghasilkan gambar secara native. Pasangkan dengan AnyCap dan sesi terminal yang sama menjangkau Seedream 5, Nano Banana Pro, dan Nano Banana 2 melalui satu CLI dan satu login. Kombinasi Opus 4.7 + AnyCap adalah default yang direkomendasikan untuk alur agen berbasis gambar di 2026.",
+      ctas: [
+        { label: "Claude Code generasi gambar →", href: "/for/claude-code/image-generation" },
+        { label: "Kapabilitas Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
+      ],
+    },
     demo: {
       labels: {
         header: "agen dengan AnyCap",
@@ -780,6 +818,248 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       },
       { label: "Jelajahi capabilities", href: "/capabilities" },
       { label: "Jelajahi CLI", href: "/cli" },
+    ] as const,
+  },
+  de: {
+    metadata: {
+      title: "Bildgenerierungs-API für KI-Agenten, Creator und Teams – Text-to-Image und Bildbearbeitung",
+      description:
+        "Geben Sie KI-Agenten und Creators Bildgenerierung über AnyCap. Nutzen Sie Seedream 5, Nano Banana Pro und Nano Banana 2 für Text-to-Image, Image-to-Image und Bildbearbeitung über eine einzige CLI.",
+      openGraphTitle: "Bildgenerierungs-API für KI-Agenten, Creator und Teams – Text-to-Image und Bildbearbeitung",
+      openGraphDescription:
+        "Bildgenerierung für KI-Agenten und Creator über AnyCap: Seedream 5, Nano Banana Pro und Nano Banana 2 für Text-to-Image, Image-to-Image und Bildbearbeitung – alles über eine einzige CLI.",
+      articleHeadline: "Bildgenerierungs-API für KI-Agenten, Creator und Teams – Text-to-Image und Bildbearbeitung",
+      articleDescription:
+        "Praxisleitfaden zur AnyCap-Bildgenerierung in Agenten-, Creator- und Produkt-Workflows mit Seedream 5, Nano Banana Pro und Nano Banana 2.",
+      articleAbout: ["Bildgenerierung", "Text-to-Image-API", "Bildbearbeitungs-API", "AnyCap", "Creator"],
+      articleKeywords: [
+        "bildgenerierung für ki-agenten",
+        "text to image api",
+        "bildbearbeitung api",
+        "ki-bildgenerator",
+        "seedream 5",
+        "nano banana pro",
+      ],
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Bildgenerierung", href: IMAGE_GENERATION_PATH },
+    ],
+    eyebrow: "Capabilities",
+    lastUpdatedLabel: "Zuletzt aktualisiert am 5. April 2026",
+    hero: {
+      title: "Bildgenerierung",
+      intro:
+        "Mit der AnyCap-Bildgenerierung erhalten Agenten, Creator und Produktteams eine einzige CLI für Text-to-Image- und Image-to-Image-Workflows. Sie erzeugen neue Visuals, überarbeiten bestehende Assets und führen Bildbearbeitungsschleifen über eine konsistente Oberfläche aus, statt für jedes Modell oder jeden Anbieter eine eigene API zu verdrahten. So entsteht eine praxistaugliche Bildgenerierungs-Schicht für Claude Code, Cursor, Codex und alle, die mit Agenten schneller visuelle Arbeit ausliefern wollen.",
+      summaryLabel: "Kurz vorab",
+      summaryText:
+        "Setzen Sie auf Seedream 5, wenn der Agent ein starkes Erstbild braucht, auf Nano Banana Pro, wenn der Workflow von einem bestehenden Asset ausgeht und gezielte Überarbeitungen erfordert, und auf Nano Banana 2, wenn Tempo und Durchsatz wichtiger sind als der letzte Feinschliff.",
+    },
+    opusCallout: {
+      eyebrow: "Im Einsatz mit Claude Opus 4.7",
+      title: "Claude Code auf Opus 4.7 + AnyCap-Bildgenerierung – die starke Kombination",
+      body:
+        "Claude Code läuft jetzt auf Claude Opus 4.7 – dem stärksten Reasoning- und Coding-Modell, das Anthropic je veröffentlicht hat. Bilder generiert Opus 4.7 nach wie vor nicht selbst. In Kombination mit AnyCap erreicht dieselbe Terminal-Sitzung Seedream 5, Nano Banana Pro und Nano Banana 2 über eine CLI und ein einziges Login. Opus 4.7 + AnyCap ist 2026 die empfohlene Standardkonfiguration für bildlastige Agenten-Workflows.",
+      ctas: [
+        { label: "Bildgenerierung in Claude Code →", href: "/for/claude-code/image-generation" },
+        { label: "Funktionsumfang von Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
+      ],
+    },
+    demo: {
+      labels: {
+        header: "Agent mit AnyCap",
+        name: "Name",
+        size: "Größe",
+        date: "Datum",
+        link: "Link",
+      },
+      lines: [
+        { type: "header", delay: 0 },
+        {
+          type: "prompt",
+          content: "Generiere ein minimalistisches Produkt-Hero-Bild auf cremefarbenem Hintergrund",
+          delay: 500,
+        },
+        {
+          type: "text",
+          content: "Ich erzeuge das Bild mit AnyCap.",
+          delay: 800,
+        },
+        {
+          type: "tool",
+          content:
+            "run(\"anycap image generate --prompt 'minimalist product hero, cream background' --model seedream-5 -o hero.png\")",
+          delay: 600,
+        },
+        {
+          type: "text",
+          content: "Bild fertig – hero.png (1024 × 1024)",
+          sub: "✓",
+          delay: 1400,
+        },
+        { type: "image", delay: 400 },
+        {
+          type: "text",
+          content: "Hier ist das Produkt-Hero. Sauber und bereit für Ihre Landing Page.",
+          delay: 600,
+        },
+        { type: "cursor", delay: 500 },
+      ] as const,
+    },
+    decisionTitle: "So wählen Sie zwischen den Bildmodellen",
+    decisionCardCta: "Modell-Leitfaden öffnen →",
+    decisionCardAriaLabelTemplate: "Modell-Leitfaden zu {title} lesen",
+    decisionCards: [
+      {
+        eyebrow: "Starkes Erstbild",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        body: "Geeignet, wenn der Workflow mit einem Prompt beginnt und das erste Ergebnis schon nahe am finalen Look sein soll.",
+      },
+      {
+        eyebrow: "Überarbeitungsschleifen",
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        body: "Geeignet, wenn der Agent bereits ein Bild hat und prompt-gesteuerte Edits oder kontrollierte visuelle Überarbeitungen braucht.",
+      },
+      {
+        eyebrow: "Tempo und Skalierung",
+        title: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        body: "Geeignet, wenn der Agent viele Varianten, schnellere Entwürfe oder eine skalierbare Generierungsschleife braucht.",
+      },
+    ] as const,
+    supportedModelsTitle: "Unterstützte Modelle",
+    tableHeaders: {
+      model: "Modell",
+      modes: "Modi",
+      bestFit: "Geeignet für",
+    },
+    models: [
+      {
+        name: "Seedream 5",
+        href: "/models/seedream-5",
+        modes: "Text-to-Image, Image-to-Image",
+        bestFor: "Sauberes Erstbild und visuelle Verfeinerung",
+      },
+      {
+        name: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        modes: "Text-to-Image, Image-to-Image",
+        bestFor: "Hochwertige Bearbeitungsschleifen und kommerziell nutzbare Ergebnisse",
+      },
+      {
+        name: "Nano Banana 2",
+        href: "/models/nano-banana-2",
+        modes: "Text-to-Image, Image-to-Image",
+        bestFor: "Schnelle Iteration und skalierbare Bildgenerierungs-Workflows",
+      },
+    ] as const,
+    usageTitle: "CLI-Nutzung",
+    usageExamples: [
+      {
+        title: "Text-to-Image",
+        code:
+          'anycap image generate --prompt "ein minimalistisches Produkt-Hero-Bild auf cremefarbenem Hintergrund" --model seedream-5 -o hero.png',
+      },
+      {
+        title: "Image-to-Image-Bearbeitung",
+        code:
+          'anycap image generate --prompt "verwandle das in eine warme redaktionelle Produktaufnahme" --model nano-banana-pro --mode image-to-image --param reference_image_urls=\'["https://example.com/source.png"]\' -o variation.png',
+      },
+      {
+        title: "Modelle auflisten",
+        code: "anycap image models",
+      },
+    ] as const,
+    useCasesTitle: "Wann Agenten und Creator Bildgenerierung brauchen",
+    useCases: [
+      {
+        title: "Produkt-Mockups",
+        description: "Erzeugen Sie polierte Visuals für Launch-Seiten, Changelogs und interne Demos.",
+      },
+      {
+        title: "Kreative Iteration",
+        description: "Führen Sie Text-to-Image- und Bildbearbeitungsschleifen aus, ohne den Agenten-Workflow zu verlassen.",
+      },
+      {
+        title: "Creator und Marketing",
+        description:
+          "Erstellen Sie Illustrationen, Thumbnails, Social Posts und Marketing-Assets über eine wiederholbare Befehlsoberfläche.",
+      },
+      {
+        title: "Alltagsbearbeitungen",
+        description:
+          "Verwandeln Sie Briefings, Screenshots und Referenzen in erste visuelle Richtungen, neue Hintergründe und einfache Foto-Anpassungen.",
+      },
+    ] as const,
+    relatedTitle: "Verwandte Modelle, Leitfäden und Workflows",
+    relatedCards: [
+      {
+        eyebrow: "Modell",
+        title: "Seedream 5",
+        href: "/models/seedream-5",
+        description: "Erfahren Sie, wann Agenten für sauberes Text-to-Image auf Seedream 5 setzen sollten.",
+      },
+      {
+        eyebrow: "Modell",
+        title: "Nano Banana Pro",
+        href: "/models/nano-banana-pro",
+        description: "Die stärkere Wahl für Bildbearbeitung und iterative visuelle Verfeinerung.",
+      },
+      {
+        eyebrow: "Workflow",
+        title: "KI-Influencer kostenlos erstellen",
+        href: "/learn/create-ai-influencer-for-free",
+        description: "Wie Bildgenerierung jenseits des technischen Agenten-Setups in Creator-Workflows passt.",
+      },
+      {
+        eyebrow: "Workflow",
+        title: "Foto-Hintergrund ändern",
+        href: "/learn/how-to-change-photo-background",
+        description: "Wie dieselbe Capability Alltagsbearbeitungen und schnellere Content-Produktion unterstützt.",
+      },
+    ] as const,
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Was bringt die AnyCap-Bildgenerierung Agenten konkret?",
+        answer:
+          "Sie gibt Agenten eine einzige Befehlsoberfläche für Text-to-Image- und Image-to-Image-Workflows. Dieselbe CLI deckt Erstbild-Generierung, kreative Iteration und Bildbearbeitung ab – ohne separate Anbieter-Integrationen.",
+      },
+      {
+        question: "Welche Bildmodelle sind heute über AnyCap verfügbar?",
+        answer:
+          "Aktuell öffentlich verfügbar sind Seedream 5, Nano Banana Pro und Nano Banana 2. Jedes Modell unterstützt Text-to-Image- und Image-to-Image-Modi über dieselbe AnyCap-API und CLI.",
+      },
+      {
+        question: "Warum spricht diese Seite zusätzlich zur Bildgenerierung von Bildbearbeitung?",
+        answer:
+          "Im Markt werden Text-to-Image, Bildbearbeitung und Bildgenerierung oft getrennt benannt. AnyCap führt diese Workflows unter einer Bildgenerierungs-Capability zusammen, weil Agenten in derselben Schleife meist sowohl Erstellung als auch Überarbeitung brauchen.",
+      },
+      {
+        question: "Geht es hier um eine Bildgenerierungs-API oder um eine CLI?",
+        answer:
+          "Beides. Teams suchen häufig nach einer Bildgenerierungs-, Text-to-Image- oder Bildbearbeitungs-API; in Agenten-Workflows läuft die Anbindung dann meist über die AnyCap-CLI.",
+      },
+      {
+        question: "Ist das nur etwas für Entwickler?",
+        answer:
+          "Nein. Dieselbe Capability nutzen auch Creator, Marketing, Operations und alle, die Produktvisuals, Social Content, Thumbnails oder schnelle Foto-Anpassungen brauchen. Der Agenten-Workflow ist nur ein möglicher Zugang.",
+      },
+    ] as const,
+    nextStepsTitle: "Nächste Schritte",
+    nextActions: [
+      {
+        label: "Auf GitHub ansehen",
+        href: "https://github.com/anycap-ai/anycap",
+        external: true,
+        primary: true,
+      },
+      { label: "Capabilities erkunden", href: "/capabilities" },
+      { label: "CLI erkunden", href: "/cli" },
+      { label: "Für Creator", href: "/learn/create-ai-influencer-for-free" },
     ] as const,
   },
 };

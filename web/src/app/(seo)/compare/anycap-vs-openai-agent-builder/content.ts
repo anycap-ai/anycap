@@ -652,10 +652,310 @@ const idLocale: ComparePageData = {
 
 const ptBr: ComparePageData = en;
 
+const de: ComparePageData = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Vergleich", href: "/compare", unlinkable: true },
+    { name: "AnyCap vs OpenAI Agent Builder" },
+  ],
+  eyebrow: "Vergleich",
+  metadata: {
+    title: "AnyCap vs OpenAI Agent Builder — Capability Runtime vs Workflow Builder",
+    description:
+      "Vergleichen Sie AnyCap und OpenAI Agent Builder. OpenAI Agent Builder ist ein visueller Workflow Builder mit typisierten Nodes, Guardrails, Versionierung und ChatKit-Deployment. AnyCap ist eine agentenübergreifende Capability-Runtime für Codex, Cursor, Claude Code und ähnliche Harnesses.",
+    openGraphTitle: "AnyCap vs OpenAI Agent Builder — Capability Runtime vs Workflow Builder",
+    openGraphDescription:
+      "Erfahren Sie, wann OpenAI Agent Builder die richtige Workflow-Schicht ist und wann AnyCap die bessere Capability-Schicht darstellt.",
+  },
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "AnyCap vs OpenAI Agent Builder — Capability Runtime vs Workflow Builder",
+    description:
+      "Vergleichsleitfaden für Teams, die entscheiden, ob sie das Workflow Canvas von OpenAI Agent Builder oder die agentenübergreifende Capability-Runtime von AnyCap benötigen.",
+    path: ANYCAP_VS_OPENAI_AGENT_BUILDER_PATH,
+    about: ["AnyCap", "OpenAI Agent Builder", "Agent capability runtime", "Agent workflow builder", "ChatKit"],
+    keywords: [
+      "anycap vs openai agent builder",
+      "openai agent builder alternative",
+      "agent builder vs capability runtime",
+      "openai workflow builder",
+      "capability runtime für agents",
+    ],
+    datePublished: lastUpdatedIso,
+    dateModified: lastUpdatedIso,
+  }),
+  faqJsonLd: createFaqPageJsonLd([
+    {
+      question: "Ist AnyCap ein Agent Builder?",
+      answer:
+        "Nein. AnyCap ist eine agent-native Capability-Runtime. Sie verleiht bestehenden Agents eine geteilte Ausführungsschicht für Bildgenerierung, Videogenerierung, Bildverständnis, Suche, Speicherung und Publishing — und fungiert nicht als Workflow Builder.",
+    },
+    {
+      question: "Ist OpenAI Agent Builder besser für kundengerichtete Agent-Apps?",
+      answer:
+        "In der Regel ja. OpenAI positioniert Agent Builder rund um das visuelle Design von Workflows, das Veröffentlichen versionierter Builds und das Deployment mit ChatKit oder exportiertem Workflow-Code — was ihn besser geeignet macht, wenn der Workflow selbst Teil eines Produkts werden muss.",
+    },
+    {
+      question: "Wann sollte ein Team AnyCap mit OpenAI Agent Builder vergleichen?",
+      answer:
+        "Vergleichen Sie sie, wenn das Team zwischen zwei Schichten des Stacks wählt: einem Workflow Builder auf der OpenAI-Plattform versus einer geteilten Runtime, die bereits gewählte Agents während der Ausführung mit Capabilities ausstattet.",
+    },
+    {
+      question: "Kann AnyCap OpenAI Agent Builder ersetzen?",
+      answer:
+        "Nicht, wenn Sie speziell ein visuelles Workflow-Canvas, Node-Level Control Flow, versionierte Workflow-Veröffentlichung oder ChatKit-Deployment benötigen. AnyCap ersetzt Capability-Wiring-Arbeit, nicht die Builder-Kategorie selbst.",
+    },
+    {
+      question: "Was ist die einfachste Faustregel?",
+      answer:
+        "Wenn Sie einen OpenAI-Workflow designen und ausliefern müssen, wählen Sie Agent Builder. Wenn Sie bereits Agents haben und diese mehr leisten sollen, wählen Sie AnyCap.",
+    },
+  ]),
+  lastUpdatedLabel: "6. April 2026",
+  heroTitle: ["AnyCap vs", "OpenAI Agent", "Builder"],
+  heroIntro:
+    "AnyCap vs OpenAI Agent Builder ist kein Vergleich derselben Kategorie, auch wenn beide bei Entscheidungen zur Agent-Infrastruktur auftauchen. OpenAI Agent Builder ist eine Workflow-Authoring-Schicht zum Designen, Testen, Versionieren und Deployen von Multi-Step-Systemen direkt auf dem OpenAI-Stack, einschließlich Node-Level Control Flow und ChatKit-Deployment-Pfaden. AnyCap ist eine Capability-Runtime-Schicht für Agents, die Sie bereits in Developer-Umgebungen einsetzen. Statt Workflow-Graphen zu designen, standardisiert sie den Ausführungszugang zu Bildgenerierung, Videogenerierung, Bildverständnis, Suche, Speicherung und Publishing über eine CLI und einen Auth-Flow. Die zentrale Architekturfrage ist, ob Ihr Team ein OpenAI-natives Workflow-Produkt designen und ausliefern muss oder bestehende Agents mit breiteren Capabilities ausstatten möchte und dabei die Portabilität über Shells hinweg bewahrt. Diese Unterscheidung falsch zu treffen, führt meist dazu, dass Teams in einer Schicht überbauen und in der anderen unterinvestieren. Klare Schichtgrenzen machen Beschaffungs- und Implementierungsentscheidungen deutlich sauberer.",
+  answerFirstSummaryLabel: "Antwort-zuerst-Zusammenfassung",
+  answerFirstSummaryBody:
+    "Wählen Sie OpenAI Agent Builder, wenn Ihre Priorität ist, einen OpenAI-nativen Workflow visuell zu designen, zu testen, zu versionieren und auszuliefern — besonders wenn das Ergebnis zu einer eingebetteten Chat- oder produktnahen Erfahrung wird. Wählen Sie AnyCap, wenn Ihr Team bereits Agents wie Codex, Cursor, Claude Code oder OpenClaw nutzt und diese Agents multimodale Ausführung über eine geteilte Runtime erhalten sollen. In diesem Szenario übertrifft eine Runtime in der Regel wiederholte Capability-Wiring-Projekte, weil Installation, Auth und operatives Verhalten über alle Umgebungen hinweg konsistent bleiben. Die praktische Trennung ist klar: Workflow-Authoring und Deployment-Lifecycle deuten auf Agent Builder; agentenübergreifende Capability-Ausführung deutet auf AnyCap. Architektur-Reviews sind schneller, wenn diese beiden Verantwortlichkeiten getrennt bewertet werden — gegen erwartete Wartungslast nach dem Launch, Governance-Beschränkungen und Portabilitätsanforderungen über zukünftige Agent-Umgebungen hinweg. Es reduziert auch Kategorie-Verwirrung in Beschaffung und Rollout-Planung.",
+  imageAlt:
+    "Generierte Vergleichs-Hero-Grafik mit einer Workflow-Builder-Schicht links und mehreren Coding-Agents, die rechts in eine geteilte AnyCap-Capability-Runtime fließen.",
+  imageCaption:
+    "Diese Hero-Grafik wurde mit AnyCap unter Verwendung von Nano Banana 2 generiert. Die linke Seite stellt die Workflow-Builder-Schicht dar, die rechte Seite eine geteilte Capability-Runtime, in die mehrere Coding-Agents während der Ausführung eingeklinkt werden können.",
+  comparisonTitle: "Side-by-Side-Vergleich",
+  comparisonHeaders: { dimension: "Dimension", anycap: "AnyCap", builder: "OpenAI Agent Builder" },
+  comparisonRows: [
+    {
+      dimension: "Hauptaufgabe",
+      anycap: "Agent-native Capability-Runtime, die bestehende Agents während der Ausführung aufrufen.",
+      builder: "Visueller Workflow Builder zum Designen, Vorschau, Versionieren und Deployen von OpenAI-basierten Agent-Workflows.",
+    },
+    {
+      dimension: "Beste Eignung",
+      anycap:
+        "Teams, die bereits Codex, Cursor, Claude Code, OpenCode, OpenClaw oder Custom Harnesses nutzen und eine geteilte Capability-Schicht benötigen.",
+      builder:
+        "Teams, die kundengerichtete oder interne Agent-Workflows direkt auf der OpenAI-Plattform bauen.",
+    },
+    {
+      dimension: "Workflow-Modell",
+      anycap:
+        "Eine CLI und ein Auth-Flow, fokussiert auf Capabilities wie Image, Video, Vision, Search, Storage und Publishing.",
+      builder:
+        "Ein node-basiertes Canvas mit Agents, Tools, Logik, State, typisierten Edges und Preview-Runs.",
+    },
+    {
+      dimension: "Deployment-Pfad",
+      anycap: "Einmal installieren, einmal anmelden und dieselbe Runtime aus mehreren Agent-Shells wiederverwenden.",
+      builder:
+        "Workflow-Versionen veröffentlichen, dann mit ChatKit einbetten oder Workflow-Code für eine Agents-SDK-Integration exportieren.",
+    },
+    {
+      dimension: "Tooling-Umfang",
+      anycap: "Kuratierte Capability-Schicht mit einem Credential und einer Command-Oberfläche.",
+      builder:
+        "Komponieren Sie Agent-Nodes mit File Search, Guardrails, MCP, Human Approval und Control-Flow-Logik.",
+    },
+    {
+      dimension: "Vendor-Ausrichtung",
+      anycap:
+        "Konzipiert, um über Agent-Umgebungen hinweg zu wandern, statt das Team an eine Builder-UI zu binden.",
+      builder: "Am stärksten, wenn Workflow, Modell und Deployment-Pfad innerhalb des OpenAI-Stacks bleiben.",
+    },
+    {
+      dimension: "Output-Handling",
+      anycap:
+        "Verbindet Ausführung mit Drive-Storage und Web-Publishing, sodass Artefakte aufbewahrt, geteilt und wiederverwendet werden können.",
+      builder:
+        "Fokussiert auf Workflow-Orchestrierung und App-Deployment statt auf eine agentenübergreifende Capability-Runtime.",
+    },
+    {
+      dimension: "Entscheidungs-Linse",
+      anycap: "Wählen, wenn die Frage lautet: Wie erhalten meine bestehenden Agents Capabilities?",
+      builder: "Wählen, wenn die Frage lautet: Wie designe und liefere ich einen OpenAI-Agent-Workflow?",
+    },
+  ],
+  comparisonReviewLabel: "Vergleich überprüft anhand öffentlicher OpenAI-Dokumentation und veröffentlichter AnyCap-Pages am 6. April 2026.",
+  comparisonReviewBody:
+    "Vergleich überprüft anhand öffentlicher OpenAI-Dokumentation und veröffentlichter AnyCap-Pages am 6. April 2026.",
+  framingTitle: "Die eigentliche Einordnung: Workflow Builder vs Capability Runtime",
+  framingBody: [
+    "Teams vergleichen diese Produkte oft, weil beide in Gesprächen über Agent-Infrastruktur auftauchen. Aber sie lösen unterschiedliche Probleme. Agent Builder entscheidet, wie ein OpenAI-Workflow zusammengesetzt, geroutet, geprüft, versioniert und deployt wird. AnyCap entscheidet, wie ein Agent Capabilities erhält, sobald der Agent oder Harness bereits vorhanden ist.",
+    "Dieser Unterschied ist wichtig, weil er die Kauffrage verändert. Wenn Sie einen Builder wählen, entscheiden Sie, wie der Workflow selbst geschrieben und ausgeliefert wird. Wenn Sie AnyCap wählen, entscheiden Sie, ob die Ausführungsschicht standardisiert wird, die mehrere Agents teilen können.",
+  ],
+  framingCards: [
+    {
+      title: "Fragen Sie zuerst",
+      label: "Müssen Sie den Workflow designen?",
+      body:
+        "Wenn ja, ist OpenAI Agent Builder das relevantere Produkt, weil das visuelle Workflow, Node-Verträge, Approvals und der Deployment-Pfad das Zentrum der zu erledigenden Aufgabe sind.",
+    },
+    {
+      title: "Fragen Sie als Nächstes",
+      label: "Oder müssen Sie bestehende Agents ausstatten?",
+      body:
+        "Wenn die Agent-Shell bereits feststeht und das Problem fehlende Capabilities sind, ist AnyCap der bessere Vergleich, weil er den Capability-Zugang über bestehende Agent-Umgebungen hinweg standardisiert.",
+    },
+    {
+      title: "Praktische Regel",
+      label: "Builder auf der einen Seite, Runtime auf der anderen",
+      body:
+        "Diese Page ist am stärksten, wenn Sie sie als Architekturvergleich lesen, nicht als Feature-Checkliste. Die Kategorien sind benachbart, nicht austauschbar.",
+    },
+  ],
+  strengthsTitleLeft: "Wo OpenAI Agent Builder stark ist",
+  strengthsTitleRight: "Wo AnyCap besser passt",
+  strengthsLeft: [
+    "OpenAI beschreibt Agent Builder als visuelles Canvas für Multi-Step-Workflows — passt also besser, wenn der Workflow selbst das ist, was Sie designen.",
+    "Das Node-System deckt Agent-Nodes, File Search, Guardrails, MCP, Logik, Human Approval und State-Management an einem Ort ab.",
+    "Veröffentlichte Workflows werden zu versionierten Objekten, was hilft, wenn das Team stabile Releases und Rollback-Punkte benötigt.",
+    "Es gibt einen direkten Pfad zu ChatKit, den OpenAI als empfohlenen Weg zur Einbettung agentischer Chat-Erfahrungen positioniert.",
+  ],
+  strengthsRight: [
+    "AnyCap passt besser, wenn die Agent-Shell bereits gewählt ist und die fehlende Schicht der Capability-Zugang ist, nicht das Workflow-Design.",
+    "Eine CLI und ein Auth-Flow können sich über Codex, Cursor, Claude Code, OpenClaw und ähnliche Umgebungen bewegen, ohne den Stack jedes Mal neu aufzubauen.",
+    "Das Produkt ist optimiert auf Capability-Zugang wie Bildgenerierung, Videogenerierung, Bildverständnis, Suche, Drive-Speicher und Publishing.",
+    "Das macht AnyCap nützlicher für Teams, die über mehrere Agent-Produkte hinweg arbeiten und eine Runtime-Oberfläche statt eines Builders pro Vendor wünschen.",
+  ],
+  useCasesTitle: "Beste Eignung nach Anwendungsfall",
+  useCases: [
+    {
+      eyebrow: "Wählen Sie OpenAI Agent Builder, wenn",
+      title: "Der Workflow selbst das Produkt ist.",
+      body:
+        "Sie müssen Multi-Step-Verhalten visuell abbilden, Nodes mit Live-Daten testen, Guardrails und Approvals hinzufügen und dann Versionen für einen deployten Chat- oder App-Flow veröffentlichen.",
+    },
+    {
+      eyebrow: "Wählen Sie AnyCap, wenn",
+      title: "Der Agent ist bereits gewählt und die fehlende Schicht ist der Capability-Zugang.",
+      body:
+        "Sie möchten, dass Codex, Cursor, Claude Code, OpenClaw oder ein Custom Harness Bildgenerierung, Videogenerierung, Bildverständnis, Suche, Speicherung und Publishing über eine geteilte Runtime erhalten.",
+    },
+    {
+      eyebrow: "Wählen Sie OpenAI Agent Builder, wenn",
+      title: "Sie einen engen Deployment-Pfad innerhalb des OpenAI-Stacks wünschen.",
+      body:
+        "Agent Builder passt besser, wenn Sie Versionen, OpenAI-gehostete Workflow-Ausführung und einen direkten ChatKit-Pfad in eine eingebettete kundengerichtete Chat-Erfahrung möchten.",
+    },
+    {
+      eyebrow: "Wählen Sie AnyCap, wenn",
+      title: "Ihnen Portabilität wichtiger ist als Builder-UX.",
+      body:
+        "AnyCap ist stärker, wenn dieselbe Capability-Oberfläche mit dem Team über mehrere Agent-Shells hinweg wandern muss, statt an ein Workflow-Canvas gebunden zu sein.",
+    },
+  ],
+  methodTitle: "Wie dieser Vergleich überprüft wurde",
+  methodBody: [
+    "Die OpenAI-Seite dieser Page wurde anhand der am 6. April 2026 verfügbaren offiziellen OpenAI Developer Docs überprüft. Die Kernaussagen sind bewusst eng und verifizierbar: Agent Builder ist ein visuelles Canvas für Multi-Step-Workflows; er unterstützt typisierte Inputs und Outputs, Preview-Runs, Templates, versioniertes Veröffentlichen und Deployment über ChatKit oder exportierten Workflow-Code; sein Node-System umfasst Agents, File Search, Guardrails, MCP, Logik, Human Approval und State.",
+    "Die AnyCap-Seite des Vergleichs basiert auf veröffentlichten AnyCap-Pages zu CLI, Installations-Flow, Capability-Runtime-Definition, Drive und Pricing. Aussagen sind auf das beschränkt, was diese Pages bereits öffentlich angeben: eine CLI, ein Auth-Flow, agentenübergreifende Eignung, geteilter Capability-Zugang, Storage, öffentliche URLs und Web-Publishing-Support.",
+  ],
+  methodologyNoteLabel: "Methodik-Hinweis",
+  methodologyNoteBody:
+    "Diese Page vergleicht Schicht-Eignung, nicht welches Unternehmen die größere Gesamtproduktoberfläche hat. Falls OpenAI später Agent-Builder-Deployment-Optionen ändert oder AnyCap sein Capability-Inventar anpasst, sollte die Page aktualisiert werden, um an die aktuelle öffentliche Dokumentation gebunden zu bleiben.",
+  sourceTitle: "Quellen-Hinweise",
+  sourceLinks: [
+    {
+      label: "OpenAI Agent Builder Guide",
+      href: "https://developers.openai.com/api/docs/guides/agent-builder",
+      note: "Visuelles Canvas, typisierte Inputs und Outputs, Templates, Preview, Workflow-Veröffentlichung, ChatKit und exportierter Code.",
+    },
+    {
+      label: "OpenAI Node Reference",
+      href: "https://developers.openai.com/api/docs/guides/node-reference",
+      note: "Agent, File Search, Guardrails, MCP, Logik, Human Approval, Transform und State Nodes.",
+    },
+    {
+      label: "OpenAI Safety in Building Agents",
+      href: "https://developers.openai.com/api/docs/guides/agent-builder-safety",
+      note: "Prompt Injection, Datenleck, strukturierte Outputs, Tool-Approvals und Guardrails-Anleitung.",
+    },
+    {
+      label: "AnyCap CLI Übersicht",
+      href: "/cli",
+      note: "Eine CLI, ein Auth-Flow und eine Capability-Oberfläche über mehrere Agent-Umgebungen hinweg.",
+    },
+    {
+      label: "AnyCap installieren",
+      href: "/guides/install-anycap",
+      note: "Veröffentlichter Setup-Flow für Codex, Cursor, OpenClaw und ähnliche Agent-Produkte.",
+    },
+    {
+      label: "Agent Capability Runtime",
+      href: "/glossary/agent-capability-runtime",
+      note: "Definition der Kategorie, die AnyCap zu besetzen versucht.",
+    },
+    {
+      label: "AnyCap Drive",
+      href: "/capabilities/drive",
+      note: "Geteilter Storage und öffentliche URLs für Outputs, die über einen Run hinaus bestehen müssen.",
+    },
+  ],
+  relatedTitle: "Verwandte Seiten",
+  relatedPages: [
+    {
+      href: "/glossary/agent-capability-runtime",
+      eyebrow: "Glossar",
+      title: "Agent-Capability-Runtime",
+      body: "Lesen Sie die Kerndefinition der Kategorie, die AnyCap zu besetzen versucht.",
+    },
+    {
+      href: "/cli",
+      eyebrow: "Produkt",
+      title: "AnyCap CLI",
+      body: "Sehen Sie die Ein-Command-Oberfläche, die Capabilities über Agent-Umgebungen wandern lässt.",
+    },
+    {
+      href: "/for/codex",
+      eyebrow: "Agent-Eignung",
+      title: "AnyCap für Codex",
+      body: "Sehen Sie, wie es aussieht, wenn der Agent bereits gewählt ist und die fehlende Schicht der Capability-Zugang ist.",
+    },
+    {
+      href: "/compare/anycap-vs-composio",
+      eyebrow: "Vergleich",
+      title: "AnyCap vs Composio",
+      body: "Vergleichen Sie eine Capability-Runtime mit einer breiteren Tool-Integrationsplattform.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Ist AnyCap ein Agent Builder?",
+      answer:
+        "Nein. AnyCap ist eine agent-native Capability-Runtime, kein visueller Workflow Builder. Sie stattet bestehende Agents mit einer geteilten Ausführungsschicht für Bildgenerierung, Videogenerierung, Bildverständnis, Suche, Speicherung und Publishing aus und überlässt Workflow-Authoring der Orchestrierungs-Schicht, die Sie bereits nutzen. Teams setzen sie ein, wenn sie Ausführungs-Portabilität und schnelleren Capability-Rollout benötigen — nicht, wenn sie Node-Graphen designen müssen.",
+    },
+    {
+      question: "Ist OpenAI Agent Builder besser für kundengerichtete Agent-Apps?",
+      answer:
+        "In der Regel ja. OpenAI positioniert Agent Builder rund um das visuelle Design von Workflows, das Veröffentlichen versionierter Builds und das Deployment mit ChatKit oder exportiertem Workflow-Code. Dieses Modell passt gut, wenn der Workflow selbst Teil der Produkterfahrung ist und Release-Management benötigt. In diesen Fällen sind Builder-Ergonomie, Versionskontrollen und Deployment-Pfade wichtiger als shell-übergreifende Runtime-Portabilität.",
+    },
+    {
+      question: "Wann sollte ein Team AnyCap mit OpenAI Agent Builder vergleichen?",
+      answer:
+        "Vergleichen Sie sie, wenn das Team zwischen zwei benachbarten Stack-Schichten entscheidet: einem Workflow Builder auf der OpenAI-Plattform versus einer geteilten Runtime, die bereits gewählte Agents während der Ausführung ausstattet. Wenn Architektur-Diskussionen Workflow-Design-Bedürfnisse mit Capability-Zugang-Bedürfnissen vermischen, hilft dieser Vergleich, diese Anliegen zu trennen. Die richtige Wahl wird meist offensichtlich, sobald das Team definiert, wo Orchestrierung endet und Capability-Ausführung beginnt.",
+    },
+    {
+      question: "Kann AnyCap OpenAI Agent Builder ersetzen?",
+      answer:
+        "Nicht, wenn Sie speziell ein visuelles Workflow-Canvas, Node-Level Control Flow, versioniertes Workflow-Publishing oder ChatKit-Deployment benötigen. AnyCap ersetzt Capability-Wiring-Arbeit, nicht die Workflow-Builder-Kategorie selbst. Sie kann eine Builder-Strategie ergänzen, indem sie Capability-Ausführung vereinfacht, ersetzt aber nicht builder-native Design- und Release-Semantik.",
+    },
+    {
+      question: "Was ist die einfachste Faustregel?",
+      answer:
+        "Wenn Sie einen OpenAI-nativen Workflow designen und ausliefern müssen, wählen Sie Agent Builder. Wenn Sie bereits Agents haben und diese mehr Capabilities über Umgebungen hinweg ausführen sollen, wählen Sie AnyCap. Wenn Teams unentschlossen sind, klärt die Frage, ob das primäre Liefergut ein Workflow-Produkt oder eine portable Ausführungsschicht ist, die Entscheidung in der Regel schnell.",
+    },
+  ],
+  ctas: [
+    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/cli", label: "CLI-Übersicht", variant: "secondary" },
+    { href: "/for/codex", label: "Agent-Anwendungsfälle ansehen", variant: "secondary" },
+  ],
+};
+
 const contentByLocale: Record<SiteLocale, ComparePageData> = {
   en,
   "pt-br": ptBr,
   id: idLocale,
+  de,
 };
 
 export function getAnyCapVsOpenAIAgentBuilderMetadata(locale: SiteLocale): Metadata {

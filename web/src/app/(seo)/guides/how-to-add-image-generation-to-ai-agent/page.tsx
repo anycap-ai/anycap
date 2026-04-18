@@ -1,66 +1,15 @@
-import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 import { getRequestLocale } from "@/lib/request-locale";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+export { metadata } from "./metadata";
 
 export const runtime = "edge";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
-
-const metadataByLocale: Record<
-  SiteLocale,
-  { title: string; description: string; openGraphTitle: string; openGraphDescription: string }
-> = {
-  en: {
-    title: "How to Add Image Generation to an AI Agent — Step-by-Step Guide",
-    description:
-      "Step-by-step guide to adding image generation capabilities to any AI agent — Claude Code, Cursor, or Codex — using AnyCap CLI and models like Seedream 5 and Nano Banana Pro.",
-    openGraphTitle: "How to Add Image Generation to an AI Agent — Step-by-Step Guide",
-    openGraphDescription:
-      "Step-by-step guide to adding image generation capabilities to any AI agent — Claude Code, Cursor, or Codex — using AnyCap CLI and models like Seedream 5 and Nano Banana Pro.",
-  },
-  "pt-br": {
-    title: "How to Add Image Generation to an AI Agent — Step-by-Step Guide",
-    description:
-      "Step-by-step guide to adding image generation capabilities to any AI agent — Claude Code, Cursor, or Codex — using AnyCap CLI and models like Seedream 5 and Nano Banana Pro.",
-    openGraphTitle: "How to Add Image Generation to an AI Agent — Step-by-Step Guide",
-    openGraphDescription:
-      "Step-by-step guide to adding image generation capabilities to any AI agent — Claude Code, Cursor, or Codex — using AnyCap CLI and models like Seedream 5 and Nano Banana Pro.",
-  },
-  id: {
-    title: "Cara menambahkan generasi gambar ke agen AI — panduan langkah demi langkah",
-    description:
-      "Panduan langkah demi langkah untuk menambahkan kapabilitas generasi gambar ke agen AI apa pun menggunakan AnyCap CLI serta model seperti Seedream 5 dan Nano Banana Pro.",
-    openGraphTitle: "Cara menambahkan generasi gambar ke agen AI — panduan langkah demi langkah",
-    openGraphDescription:
-      "Pelajari setup AnyCap CLI, pemilihan model, dan workflow praktis agar agen AI dapat membuat gambar secara konsisten.",
-  },
-};
-
-function getPageMetadata(locale: SiteLocale): Metadata {
-  const localizedMetadata = metadataByLocale[locale] ?? metadataByLocale[defaultLocale];
-
-  return {
-    title: localizedMetadata.title,
-    description: localizedMetadata.description,
-    alternates: { canonical: "/guides/how-to-add-image-generation-to-ai-agent" },
-    openGraph: {
-      type: "website",
-      locale: getLocaleConfig(locale).ogLocale,
-      url: "/guides/how-to-add-image-generation-to-ai-agent",
-      siteName: siteConfig.siteName,
-      title: localizedMetadata.openGraphTitle,
-      description: localizedMetadata.openGraphDescription,
-    },
-  };
-}
-
-export const metadata: Metadata = getPageMetadata(defaultLocale);
 
 const guideJsonLd = createTechArticleJsonLd({
   headline: "How to Add Image Generation to an AI Agent — Step-by-Step Guide",
@@ -165,6 +114,29 @@ const idFaqItems = [
   },
 ] as const;
 
+const deFaqItems = [
+  {
+    question: "Welche KI-Agenten unterstützen die AnyCap-Bildgenerierung?",
+    answer:
+      "Jeder Agent, der Shell-Befehle ausführen kann, unterstützt AnyCap. Dazu zählen Claude Code, Cursor, Codex und Manus. Der Agent ruft die AnyCap CLI direkt aus dem Terminal auf.",
+  },
+  {
+    question: "Welche Bildmodelle sind verfügbar?",
+    answer:
+      "AnyCap bietet Zugriff auf Seedream 5, Seedream 4.5, Nano Banana Pro und Nano Banana 2. Jedes Modell hat unterschiedliche Stärken — Seedream 5 glänzt bei fotorealistischen Bildern, während Nano Banana Pro künstlerische Stile gut umsetzt.",
+  },
+  {
+    question: "Kann der Agent das richtige Modell automatisch wählen?",
+    answer:
+      "Ja. Sobald der AnyCap-Skill installiert ist, lernt Ihr Agent die Stärken jedes Modells kennen. Er kann das beste Modell basierend auf dem Prompt und dem gewünschten Ausgabestil ohne manuelles Eingreifen auswählen.",
+  },
+  {
+    question: "Wie viel kostet die Bildgenerierung?",
+    answer:
+      "AnyCap nutzt nutzungsbasierte Preise ohne monatliche Gebühr. Neue Nutzer erhalten 5 USD Startguthaben. Die Preise variieren je nach Modell — Tarife pro Generierung finden Sie auf der Preisseite.",
+  },
+] as const;
+
 const copyByLocale = {
   en: {
     breadcrumbHome: "Home",
@@ -258,12 +230,58 @@ const copyByLocale = {
     ctaImage: "Generasi Gambar",
     ctaStart: "Mulai",
   },
+  de: {
+    breadcrumbHome: "Startseite",
+    breadcrumbGuides: "Anleitungen",
+    breadcrumbCurrent: "Bildgenerierung zu KI-Agenten hinzufügen",
+    eyebrow: "Anleitungen",
+    heroTitle: "Bildgenerierung zu einem KI-Agenten hinzufügen",
+    heroIntro:
+      "KI-Agenten wie Claude Code, Cursor und Codex sind stark beim Schreiben und Reasonen über Code — aber sie können selbst keine Bilder generieren. AnyCap schließt diese Lücke. Diese Anleitung führt in unter fünf Minuten durch das Hinzufügen von Bildgenerierung zu jedem KI-Agenten — von der Skill-Installation bis zur ersten Bildgenerierung mit Modellen wie Seedream 5 und Nano Banana Pro.",
+    neededTitle: "Was Sie benötigen",
+    neededItems: [
+      "Einen KI-Agenten, der Shell-Befehle ausführen kann (Claude Code, Cursor, Codex usw.)",
+      "Node.js 18+ (für skills.sh und npm install)",
+      "Einen Browser für den einmaligen Login-Flow",
+    ],
+    callout:
+      "Diese Schritte funktionieren für jeden Agenten, der Shell-Befehle ausführen kann. Die Beispiele nutzen Claude Code, aber dieselben Befehle funktionieren in Cursor, Codex und anderen Agenten.",
+    step1Title: "AnyCap Skill installieren",
+    step1ForClaude: "# Für Claude Code",
+    step1ForCursor: "# Für Cursor",
+    step1Body:
+      "Dies legt die AnyCap SKILL.md im Skills-Verzeichnis Ihres Agenten ab. Die Skill-Datei bringt dem Agenten bei, welche Bildmodelle verfügbar sind und wie er sie aufruft.",
+    step2Title: "AnyCap CLI installieren",
+    step2Prefix: "Oder: ",
+    step3Title: "Anmelden",
+    step3Body:
+      "Öffnet einen Browser zur Authentifizierung. Ein Login deckt alle Capabilities ab — Bildgenerierung, Video, Musik und Verständnis.",
+    step4Title: "Verfügbare Bildmodelle entdecken",
+    step4Body:
+      "Listet alle verfügbaren Bildmodelle auf. Aktuell verfügbar: Seedream 5, Seedream 4.5, Nano Banana Pro und Nano Banana 2 — jedes mit unterschiedlichen Stärken für Fotorealismus, künstlerische Stile und Geschwindigkeit.",
+    step5Title: "Generieren Sie Ihr erstes Bild",
+    step5Body:
+      "Die CLI gibt die URL des generierten Bildes zurück. Ihr Agent kann das Bild herunterladen, anzeigen oder in nachfolgenden Schritten verwenden.",
+    step6Title: "Bildgenerierung in Agenten-Workflows nutzen",
+    step6Intro:
+      "Sobald der Skill installiert und die CLI authentifiziert ist, kann Ihr Agent als Reaktion auf Prompts in natürlicher Sprache Bilder generieren. Sagen Sie Ihrem Agenten:",
+    step6AskLabel: "# Fragen Sie Ihren Agenten ganz natürlich",
+    step6AskPrompt: "\"Generiere ein Hero-Bild für die Landing Page\"",
+    step6ModelLabel: "# Oder geben Sie ein Modell an",
+    step6ModelPrompt: "\"Erstelle ein Logo-Konzept mit nano-banana-pro\"",
+    step6Body:
+      "Der Agent liest die Skill-Datei, wählt ein passendes Modell aus und ruft die AnyCap CLI auf — keine manuelle Befehlskonstruktion nötig.",
+    faqTitle: "FAQ",
+    ctaClaude: "AnyCap für Claude Code",
+    ctaImage: "Bildgenerierung",
+    ctaStart: "Loslegen",
+  },
 } as const;
 
 export default async function HowToAddImageGenerationPage() {
   const locale = await getRequestLocale();
-  const copy = locale === "id" ? copyByLocale.id : copyByLocale.en;
-  const localizedFaqItems = locale === "id" ? idFaqItems : faqItems;
+  const copy = locale === "id" ? copyByLocale.id : locale === "de" ? copyByLocale.de : copyByLocale.en;
+  const localizedFaqItems = locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
   const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
 
   return (

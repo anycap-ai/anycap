@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { marked } from "marked";
 import { HumanRedirectDialog } from "@/components/landing/HumanRedirectDialog";
 import { getLandingMarkdown } from "@/lib/landing-content";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createAgentMetadata } from "@/lib/localized-metadata";
+import { renderSimpleMarkdown } from "@/lib/simple-markdown";
 import { defaultLocale, localizePublicPath, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
@@ -26,6 +26,10 @@ const localizedAgentChrome = {
     humanLabel: "I'm Human ->",
     licenseLabel: "MIT License",
   },
+  de: {
+    humanLabel: "Ich bin Mensch ->",
+    licenseLabel: "MIT-Lizenz",
+  },
 } as const satisfies Record<
   SiteLocale,
   {
@@ -45,9 +49,7 @@ export default async function AgentEntryPage() {
   const locale = await getRequestLocale();
   const homePageHref = localizePublicPath(locale, "/");
   const chrome = localizedAgentChrome[locale] ?? localizedAgentChrome.en;
-  const html = marked.parse(localizeAgentMarkdown(getLandingMarkdown(locale), locale), {
-    async: false,
-  }) as string;
+  const html = renderSimpleMarkdown(localizeAgentMarkdown(getLandingMarkdown(locale), locale));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] font-mono">

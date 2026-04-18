@@ -540,9 +540,258 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     },
   },
   id: {} as AboutPageData,
+  de: {} as AboutPageData,
 };
 
 contentByLocale.id = contentByLocale.en;
+
+const aboutFaqItemsDe = [
+  {
+    question: "Was bringt AnyCap, wenn mein Agent bereits Code schreibt?",
+    answer:
+      "Code-Generierung löst Planung und Implementierung, aber viele produktive Workflows scheitern weiterhin an der Capability-Ausführung. Ein Agent kann korrekten Code produzieren und trotzdem fehlschlagen, wenn er Bilder rendern, Videos generieren, visuelle Ergebnisse prüfen oder Artefakte mit stabiler Authentifizierung zwischen Tools verschieben muss. AnyCap ergänzt diese fehlende Ausführungsschicht mit einem Installationspfad, einem Auth-Flow und einer Command-Surface. Teams behalten den Agent, dem sie bereits vertrauen, und reduzieren gleichzeitig provider-spezifischen Glue-Code. In der Praxis senkt das die Setup-Zeit, reduziert brüchige Integrationen und hält multimodale Workflows reproduzierbar über Umgebungen hinweg.",
+  },
+  {
+    question: "Ist AnyCap ein Agent-Framework oder ein Runtime um bestehende Agents?",
+    answer:
+      "AnyCap ist ein Runtime um bestehende Agents, kein ersetzendes Framework. Sie nutzen weiterhin Claude Code, Cursor, Codex oder eine andere Planungsschicht für Reasoning und Aufgabenzerlegung. AnyCap konzentriert sich auf Capabilities, die außerhalb des Reasonings des Basismodells liegen, etwa Mediengenerierung und multimodale Analyse. Diese Trennung hält die Verantwortlichkeiten klar: Der Agent entscheidet, was zu tun ist, und AnyCap bietet einen stabilen Weg, diese Entscheidung über Capabilities auszuführen. Das Ergebnis ist eine sauberere Architektur, in der Teams Modelle, Prompts oder Provider aktualisieren können, ohne jede Integration von Grund auf neu zu schreiben.",
+  },
+  {
+    question: "Wie sollten Teams AnyCap vor dem Produktiv-Rollout evaluieren?",
+    answer:
+      "Beginnen Sie mit einem realen Workflow, der aktuell scheitert, weil das Capability-Setup fragmentiert ist. Installieren Sie AnyCap über den öffentlichen Guide, führen Sie die Authentifizierung einmalig durch und führen Sie denselben Workflow Ende-zu-Ende über die CLI aus. Vergleichen Sie drei Dinge: Setup-Zeit, Fehlerbilder und Reproduzierbarkeit zwischen Teammitgliedern. Halten Sie während der Evaluierung Request-Logs, Fehler und Screenshots fest, damit das Team prüfen kann, wo der Runtime Reibung beseitigt hat und wo Lücken bleiben. Ein guter Pilot ist meist klein, aber repräsentativ: ein Agent, eine Capability-Kette, ein messbares Ergebnis. Wenn dieser Pfad vorhersehbar wird, werden Rollout-Entscheidungen deutlich klarer.",
+  },
+];
+
+contentByLocale.de = {
+    metadata: {
+      title: "Über AnyCap - Capability-Infrastruktur für KI-Agents",
+      description:
+        `Über AnyCap, das Team hinter einem Capability-Runtime für KI-Agents mit öffentlichem Repository, Release-Historie und einem Installationspfad für ${capabilitySummary}.`,
+      openGraphTitle: "Über AnyCap - Capability-Infrastruktur für KI-Agents",
+      openGraphDescription:
+        "Warum AnyCap existiert, was es ist, was es nicht ist und welche Prinzipien hinter einem agent-nativen Capability-Runtime stehen.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Über uns", href: "/about" },
+    ],
+    eyebrow: "Über uns",
+    heroTitle: ["AnyCap baut Capability-", "Infrastruktur für Agents."],
+    heroIntro: `AnyCap konzentriert sich auf die Ausführungsschicht zwischen einem Reasoning-Agent und den Capabilities, die zur Erledigung echter Arbeit nötig sind: ${capabilitySummary}. Die meisten Agents können planen und schreiben, scheitern aber weiterhin, wenn ein Workflow Mediengenerierung, visuelle Inspektion oder mehrstufige Capability-Übergaben kreuzt. Unser Ansatz ist einfach: Behalten Sie den Agent, dem Sie bereits vertrauen, und ergänzen Sie ihn um einen Capability-Runtime, sodass Installation, Authentifizierung und Command-Verhalten über Aufgaben hinweg vorhersehbar bleiben. Das gibt Teams eine stabile Integrations-Surface statt provider-spezifischen Glue-Codes und lässt Raum für Erweiterungen, während ${roadmapCapabilitySummary} von der Roadmap in die Produktion wandern.`,
+    companyFactsTitle: "Unternehmensfakten",
+    companyFacts: [
+      { label: "Unternehmen", value: "AnyCap" },
+      { label: "Produkt", value: "Capability-Runtime für KI-Agents" },
+      { label: "Primäre Schnittstelle", value: "CLI + Skill-Dateien" },
+      { label: "Öffentliche Repo-Historie", value: "Seit März 2026" },
+      { label: "Auslieferungs-Surfaces", value: "CLI, Web-App, Edge-Delivery, Skill-Distribution" },
+      { label: "Offizielles Repository", value: "github.com/anycap-ai/anycap" },
+      { label: "Lizenz", value: "MIT" },
+      { label: "Zuletzt aktualisiert", value: "2026-04-15" },
+    ],
+    teamTitle: "Wie das Team ausliefert",
+    teamCards: [
+      {
+        title: "Produkt und Engineering",
+        body:
+          "AnyCap wird als eine Produkt-Surface über CLI, öffentliche Website, Dashboard und Edge-Delivery-Schicht ausgeliefert. Das macht es möglich zu prüfen, wie Runtime, Docs und Distributionspfad zusammenspielen.",
+      },
+      {
+        title: "Distribution und Releases",
+        body:
+          "Das öffentliche Repository dokumentiert GitHub-Releases, npm-Packaging, Skill-Sync und das Cloudflare-Pages-Deployment. Der Auslieferungspfad ist sichtbar statt hinter einer geschlossenen Launch-Page versteckt.",
+      },
+      {
+        title: "Feedback und Iteration",
+        body:
+          "Operatoren können Probleme über GitHub und über den eingebauten `anycap feedback`-Flow melden. Das schafft einen echten Pfad von fehlgeschlagenen Requests oder fehlenden Capabilities zurück zum Team.",
+      },
+    ],
+    timelineTitle: "Öffentliche Build-Timeline",
+    timelineItems: [
+      {
+        label: "März 2026",
+        detail:
+          "Die aktuelle öffentliche Repository-Historie beginnt, mit CLI, Server, Dashboard-Foundations und Website, die alle aus derselben Codebase ausgeliefert werden.",
+      },
+      {
+        label: "Anfang April 2026",
+        detail:
+          "Capability-Inventar-Abgleich, Compare-Pages und workflow-getriebener SEO-Content wurden erweitert, damit Käufer das Produkt anhand konkreter Use Cases und nicht nur über Markencopy bewerten können.",
+      },
+      {
+        label: "Aktuelles Operating-Modell",
+        detail:
+          "AnyCap wird als agent-first Produkt mit einem Runtime, einem Installationspfad, einem Auth-Flow und öffentlicher Dokumentation zu Releases, Guides und Skills entwickelt.",
+      },
+    ],
+    referencesTitle: "Öffentliche Referenzen",
+    publicReferences: [
+      {
+        label: "GitHub-Organisation",
+        href: "https://github.com/anycap-ai",
+        detail: "Primäres Organisationsprofil für Repositories, Releases und öffentliches Issue-Tracking.",
+      },
+      {
+        label: "GitHub-Repository",
+        href: "https://github.com/anycap-ai/anycap",
+        detail: "Primäre öffentliche Codebase für Runtime, Website und Skill-Dateien.",
+      },
+      {
+        label: "GitHub-Releases",
+        href: "https://github.com/anycap-ai/anycap/releases",
+        detail: "Öffentliche Release-Artefakte und Notes für ausgelieferte CLI-Versionen.",
+      },
+      {
+        label: "skills.sh-Listing",
+        href: "https://skills.sh/anycap-ai/anycap",
+        detail: "Öffentliche Skill-Distribution-Surface für Agent-Installationen.",
+      },
+      {
+        label: "Installations-Guide",
+        href: "/guides/install-anycap",
+        detail: "Der kürzeste Pfad von der Evaluierung zu einem funktionierenden lokalen Setup.",
+      },
+      {
+        label: "Preise",
+        href: "/pricing",
+        detail: "Öffentliche Erläuterung des Free-Credit- und Pay-as-you-go-Positioning.",
+      },
+    ],
+    whatIsTitle: "Was AnyCap ist",
+    whatIsBody1:
+      "AnyCap ist ein agent-nativer Capability-Runtime, der KI-Agents einen konsistenten Weg bietet, Capabilities zu installieren, zu authentifizieren und auszuführen, die nicht in das Reasoning des Basismodells gehören. Statt für jede fehlende Capability einen anderen SDK und Credential-Flow zu verdrahten, exponieren Teams eine stabile Ausführungs-Surface gegenüber dem Agent. Diese Surface ist bewusst praxisnah: Derselbe Runtime funktioniert für Setup, Aufruf und Übergabe, sodass Operatoren nachvollziehen können, was passiert ist, wenn Workflows erfolgreich sind oder fehlschlagen.",
+    whatIsBody2:
+      "Wir konzentrieren uns auf die Capability-Schicht, weil hier produktive Workflows üblicherweise scheitern. Der Agent entscheidet möglicherweise korrekt, was zu tun ist, scheitert aber dennoch, wenn er ein Bild rendern, ein Video generieren, einen Screenshot inspizieren oder Outputs zwischen Tools über eine zuverlässige Schnittstelle bewegen muss. AnyCap verwandelt diese fragmentierten Schritte in einen kohärenten Runtime-Pfad. Teams können Workflows Ende-zu-Ende mit weniger versteckten Abhängigkeiten, weniger Einmal-Adaptern und einem klareren Operating-Modell für die Auslieferung multimodaler Arbeit evaluieren.",
+    whyTitle: "Warum es existiert",
+    whyCards: [
+      {
+        title: "Reasoning reicht nicht",
+        body:
+          "Moderne Agents können planen und coden, scheitern aber genau in dem Moment, in dem ein Workflow Bildgenerierung, Videogenerierung oder eine konsistente Vision-Schicht braucht.",
+      },
+      {
+        title: "Tooling ist zu fragmentiert",
+        body:
+          "Jede fehlende Capability bedeutet meist einen weiteren SDK, einen weiteren Auth-Flow, eine weitere provider-spezifische Integration und einen weiteren Weg, auf dem der Agent scheitern kann.",
+      },
+      {
+        title: "Agents verdienen First-Class-Produkte",
+        body:
+          "Wir denken, dass die Capability-Schicht von Anfang an für Agents gebaut werden sollte, nicht aus menschlichen Dashboards adaptiert oder im Nachhinein zusammengesetzt.",
+      },
+    ],
+    notTitle: "Was AnyCap nicht ist",
+    notCards: [
+      {
+        title: "Kein Dashboard-Produkt für Menschen",
+        body:
+          "AnyCap ist nicht darauf ausgelegt, sich durch Admin-Panels zu klicken. Die primäre Schnittstelle ist der Runtime, die CLI und der Installationspfad, den der Agent tatsächlich nutzen kann.",
+      },
+      {
+        title: "Kein Provider-Glue-Code",
+        body:
+          "Wir optimieren nicht für individuelle Einmal-Integrationen pro Modellanbieter. Das Ziel ist eine Capability-Surface, die über Provider hinweg konsistent bleibt.",
+      },
+      {
+        title: "Kein Ersatz für Ihren Agent",
+        body:
+          "Sie behalten Claude Code, Cursor, Codex oder einen anderen Agent. AnyCap existiert, um die Capability-Schicht zu ergänzen, die diese weiterhin brauchen.",
+      },
+    ],
+    principlesTitle: "Prinzipien hinter dem Produkt",
+    principles: [
+      "Ein Installationspfad statt einer Installation pro Provider",
+      "Ein Auth-Flow statt fragmentierter Credentials über den Stack",
+      "Eine Command-Surface statt capability-spezifischer Schnittstellen",
+      "Zuerst für Agents gebaut, dann für Menschen verständlich gemacht",
+    ],
+    faqTitle: "FAQ",
+    faqItems: [...aboutFaqItemsDe],
+    faqJsonLd: createFaqPageJsonLd(aboutFaqItemsDe),
+    contactTitle: "Kontakt- und Reporting-Pfade",
+    contactPaths: [
+      {
+        label: "GitHub-Issues",
+        href: "https://github.com/anycap-ai/anycap/issues",
+        detail: "Bester öffentlicher Pfad für Bug-Reports, Regressionen oder Roadmap-Wünsche.",
+      },
+      {
+        label: "CLI-Feedback-Command",
+        href: "/cli",
+        detail: "Nutzen Sie `anycap feedback`, wenn das Problem aus einem Live-Request oder einer Capability-Lücke stammt.",
+      },
+      {
+        label: "Hier starten",
+        href: "/start",
+        detail: "Bester nächster Schritt, wenn das Ziel ist, den Runtime direkt zu verifizieren.",
+      },
+    ],
+    trustTitle: "Vertrauenssignale",
+    trustSignals: [
+      {
+        label: "Offene Distribution",
+        detail: "Skill-Dateien, Release-Artefakte und die Haupt-Codebase werden über öffentliche GitHub-Pfade veröffentlicht.",
+      },
+      {
+        label: "Portabler Runtime",
+        detail: "Dieselbe Capability-Schicht ist darauf ausgelegt, über Claude Code, Cursor, Codex und benachbarte Agent-Produkte zu funktionieren.",
+      },
+      {
+        label: "Explizites Capability-Modell",
+        detail: "Wir trennen Runtime, CLI, Skill-Datei und Capabilities, damit Teams klar über den Stack räsonieren können.",
+      },
+    ],
+    aboutPageJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "AboutPage",
+      "@id": getLocalizedRouteUrl("de", "/about"),
+      name: "Über AnyCap",
+      description:
+        `Über-Seite für AnyCap, einen Capability-Runtime für KI-Agents, der ${capabilitySummary} über eine Schnittstelle ergänzt.`,
+      url: getLocalizedRouteUrl("de", "/about"),
+      inLanguage: "de",
+      isPartOf: {
+        "@id": `${siteConfig.url}#website`,
+      },
+      mainEntity: {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: siteConfig.siteName,
+        url: siteConfig.url,
+        sameAs: organizationSameAs,
+        contactPoint: [
+          {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            url: getLocalizedRouteUrl("de", "/contact"),
+          },
+        ],
+      },
+    },
+    organizationJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": organizationId,
+      name: siteConfig.siteName,
+      url: siteConfig.url,
+      sameAs: organizationSameAs,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteConfig.url}/anycap-mark.svg`,
+      },
+      description:
+        `AnyCap baut agent-native Capability-Infrastruktur, die es KI-Agents erlaubt, ${capabilitySummary} über einen Runtime zu nutzen.`,
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+        },
+      ],
+    },
+};
 
 export function getAboutMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;

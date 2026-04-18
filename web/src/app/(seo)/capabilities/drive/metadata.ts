@@ -29,6 +29,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan penyimpanan bersama dan distribusi file ke workflow agen AI dengan AnyCap Drive.",
   },
+  de: {
+    title: "Drive für KI-Agenten – Gemeinsamer Speicher, Dateiorganisation und öffentliche URLs",
+    description:
+      "Geben Sie KI-Agenten ein gemeinsames Drive über AnyCap. Speichern Sie generierte Outputs, organisieren Sie Assets und erstellen Sie öffentliche URLs über eine einzige Schnittstelle, statt Storage in jedem Workflow neu zu integrieren.",
+    openGraphTitle: "Drive für KI-Agenten – Gemeinsamer Speicher, Dateiorganisation und öffentliche URLs",
+    openGraphDescription:
+      "Erweitern Sie Workflows von KI-Agenten mit AnyCap Drive um gemeinsamen Speicher und Dateiauslieferung.",
+  },
 };
 
 export function getPageMetadata(locale: SiteLocale): Metadata {

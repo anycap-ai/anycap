@@ -373,6 +373,10 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
       title: "How to Add Vision to AI Agent",
       description: "Add image-reading and visual analysis workflows to an AI agent through a stable capability surface.",
     },
+    "/guides/claude-opus-4-7-image-video-workflow": {
+      title: "Claude Opus 4.7 Image and Video Workflow",
+      description: "Run a full image and video production workflow inside Claude Opus 4.7 with AnyCap as the capability layer.",
+    },
   },
   "/glossary": {
     "/glossary/context-engineering": {
@@ -386,6 +390,14 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
     "/glossary/agent-capability-runtime": {
       title: "Agent Capability Runtime",
       description: "A runtime layer that gives agents a stable way to call capabilities across providers.",
+    },
+    "/glossary/model-context-protocol": {
+      title: "Model Context Protocol",
+      description: "The open communication standard that defines how AI agents discover and invoke tools.",
+    },
+    "/glossary/agentic-workflow": {
+      title: "Agentic Workflow",
+      description: "A goal-directed sequence of AI decisions and tool actions that runs without per-step human approval.",
     },
   },
   "/compare": {
@@ -420,6 +432,10 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
     "/compare/fal-ai-alternatives-for-agents": {
       title: "fal.ai Alternatives for Agents",
       description: "Compare alternatives to fal.ai when the workflow needs a capability runtime that agents can use directly.",
+    },
+    "/compare/claude-opus-4-7-vs-sonnet-4-6": {
+      title: "Claude Opus 4.7 vs Sonnet 4.6",
+      description: "Compare Claude Opus 4.7 and Sonnet 4.6 for agent workflows that need a capability runtime alongside the model.",
     },
   },
 };
@@ -497,6 +513,14 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
     "/glossary/agent-capability-runtime": {
       title: "Runtime de Capacidade do Agente",
       description: "Uma camada de runtime que dá aos agentes uma forma estável de chamar capacidades entre provedores.",
+    },
+    "/glossary/model-context-protocol": {
+      title: "Model Context Protocol",
+      description: "O padrão de comunicação aberto que define como agentes de IA descobrem e invocam ferramentas.",
+    },
+    "/glossary/agentic-workflow": {
+      title: "Fluxo Agêntico",
+      description: "Uma sequência orientada a objetivos de decisões de IA e ações de ferramentas sem aprovação humana por etapa.",
     },
   },
   "/compare": {
@@ -608,6 +632,14 @@ const hubItemCopyId: HubItemCopyByHubPath = {
     "/glossary/agent-capability-runtime": {
       title: "Runtime Kapabilitas Agen",
       description: "Lapisan runtime yang memberi agen cara stabil untuk memanggil kapabilitas lintas penyedia.",
+    },
+    "/glossary/model-context-protocol": {
+      title: "Model Context Protocol",
+      description: "Standar komunikasi terbuka yang mendefinisikan bagaimana agen AI menemukan dan memanggil tool.",
+    },
+    "/glossary/agentic-workflow": {
+      title: "Alur Kerja Agentik",
+      description: "Rangkaian keputusan AI dan aksi tool yang berjalan hingga selesai tanpa persetujuan manusia di setiap langkah.",
     },
   },
   "/compare": {

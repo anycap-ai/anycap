@@ -1017,6 +1017,7 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
+  de: enContent,
 } satisfies Record<SiteLocale, BrightenPhotoPageContent>;
 
 function getContent(locale: SiteLocale): BrightenPhotoPageContent {

@@ -41,6 +41,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan pemahaman audio, transkripsi, dan analisis audio ke agen AI lewat satu CLI.",
   },
+  de: {
+    title: "Audioanalyse-API für KI-Agenten – Audioverständnis und Transkription",
+    description:
+      "Geben Sie KI-Agenten Audioverständnis über AnyCap. Analysieren Sie Aufnahmen, transkribieren Sie gesprochene Inhalte und extrahieren Sie Audio-Kontext über einen einzigen CLI-Befehl, statt einen separaten Audio-Analyse-Stack zu verdrahten.",
+    openGraphTitle: "Audioanalyse-API für KI-Agenten – Audioverständnis und Transkription",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Audioverständnis, Transkription und Audioanalyse über eine einzige CLI aus.",
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
@@ -351,6 +359,95 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       "api analisis audio",
       "pemahaman audio untuk agen ai",
       "api transkripsi audio",
+      "speech to text api",
+    ],
+  },
+  de: {
+    breadcrumb: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Audioverständnis" },
+    ],
+    eyebrow: "Capabilities",
+    title: "Audioverständnis",
+    intro:
+      "AnyCap gibt Agenten eine konsistente Audioverständnis-Schicht für Meetings, Podcasts, Interviews und Sprachnotizen. Statt für jeden Workflow eine separate Audioanalyse-API oder einen Transkriptions-Stack zu verdrahten, erhält der Agent eine einheitliche Befehlsoberfläche, um gesprochenen Kontext, Zusammenfassungen und strukturierte Erkenntnisse über dieselbe Runtime zu extrahieren, die auch für den restlichen Capability-Stack verwendet wird.",
+    usageHeading: "CLI-Nutzung",
+    usageExamples: [
+      {
+        title: "Lokale Aufnahme analysieren",
+        code: "anycap actions audio-read --file ./meeting.mp3",
+      },
+      {
+        title: "Podcast-Ausschnitt zusammenfassen",
+        code:
+          'anycap actions audio-read --url https://example.com/podcast.mp3 --instruction "Summarize the main topics and action items"',
+      },
+      {
+        title: "Gesprochenen Inhalt extrahieren",
+        code:
+          'anycap actions audio-read --file ./interview.wav --instruction "Transcribe the key quotes and speaker claims"',
+      },
+    ],
+    useCasesHeading: "Wann Agenten Audioverständnis benötigen",
+    useCases: [
+      "Meetings, Interviews und Podcast-Ausschnitte direkt im Agenten-Workflow transkribieren.",
+      "Action Items und Zusammenfassungen aus gesprochenen Inhalten extrahieren, bevor Folgedokumente erstellt werden.",
+      "Support-Calls oder Sprachnotizen über dieselbe Capability-Runtime prüfen, die auch für Bild- und Videoanalyse genutzt wird.",
+      "Audio-Dateien in strukturierten Kontext verwandeln, den ein Agent für Recherche, Planung oder Reporting wiederverwenden kann.",
+    ],
+    relatedHeading: "Verwandte Seiten",
+    relatedPages: [
+      {
+        href: "/pricing",
+        eyebrow: "Pricing",
+        title: "Preise",
+        body: "So wird Audioverständnis zusammen mit Bild, Video, Suche und Crawl bepreist.",
+      },
+      {
+        href: "/capabilities/video-analysis",
+        eyebrow: "Verwandte Capability",
+        title: "Videoanalyse",
+        body: "Kombinieren Sie Audio- und Videoanalyse, wenn Aufnahmen sowohl visuellen als auch gesprochenen Kontext enthalten.",
+      },
+      {
+        href: "/cli",
+        eyebrow: "CLI",
+        title: "AnyCap CLI",
+        body: "Erkunden Sie die Befehlsoberfläche, die Transkription und Analyse in einer Runtime zusammenhält.",
+      },
+    ],
+    faqHeading: "FAQ",
+    faqItems: [
+      {
+        question: "Was ermöglicht das Audioverständnis von AnyCap Agenten?",
+        answer:
+          "Es gibt Agenten eine einheitliche Schnittstelle für Audioanalyse über Meetings, Podcasts, Interviews und Sprachnotizen hinweg. In der Praxis bedeutet das eine CLI-Oberfläche für Transkription, Zusammenfassung und gezielte Audio-Frage-Antwort.",
+      },
+      {
+        question: "Geht es auf dieser Seite wirklich um eine Audioanalyse-API?",
+        answer:
+          "Ja. Audioverständnis ist die Capability-Bezeichnung, während Audio Analysis API, Audio Transcription API und Speech-to-Text API die angrenzenden Marktbegriffe sind, die Teams in der Evaluierung häufig verwenden.",
+      },
+      {
+        question: "Warum Audioverständnis über dieselbe Runtime wie Bild- und Videoanalyse nutzen?",
+        answer:
+          "Weil viele Workflows Medientypen mischen. Eine einzige Runtime erleichtert es einem Agenten, von Screenshots zu Aufnahmen und Audio-Dateien zu wechseln, ohne Tools oder Auth-Flows zu wechseln.",
+      },
+      {
+        question: "Ersetzt das Text-to-Speech?",
+        answer:
+          "Nein. Audioverständnis dient dem Lesen und Analysieren von Audio. Text-to-Speech ist eine separate Sprachausgabe-Capability und gehört weiterhin zu einem anderen SEO-Thema.",
+      },
+    ],
+    jsonLdHeadline: "Audioanalyse-API für KI-Agenten – Audioverständnis und Transkription",
+    jsonLdDescription:
+      "Capability-Leitfaden zum Hinzufügen von Audioverständnis zu KI-Agenten über AnyCap, inklusive Aufnahmen, Transkripten, Zusammenfassungen und Audioanalyse-Workflows.",
+    jsonLdAbout: ["Audioanalyse", "Audioverständnis", "Transcription API", "AnyCap"],
+    jsonLdKeywords: [
+      "audio analysis api",
+      "audio understanding for ai agents",
+      "audio transcription api",
       "speech to text api",
     ],
   },

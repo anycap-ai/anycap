@@ -225,6 +225,70 @@ const contentByLocale: Record<SiteLocale, PrivacyPageData> = {
         dateModified: "2026-04-09",
       },
   },
+  de: {
+    metadata: {
+      title: "Datenschutzerklärung | AnyCap",
+      description:
+        "Lesen Sie, wie AnyCap mit Account-Daten, Nutzungs-Logs, eingereichten Inhalten, Analytics, Drittanbietern und Datenschutz-Anfragen umgeht.",
+      openGraphTitle: "Datenschutzerklärung | AnyCap",
+      openGraphDescription:
+        "Lesen Sie, wie AnyCap mit Account-Daten, Abrechnungs- und Nutzungsdaten, eingereichten Inhalten, Analytics und Datenschutz-Anfragen umgeht.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Datenschutz", href: "/privacy" },
+    ],
+    eyebrow: "Datenschutz",
+    heroTitle: "Datenschutzerklärung für AnyCap",
+    heroIntro:
+      "Diese Erklärung beschreibt, welche Daten AnyCap verarbeitet, warum sie genutzt werden, wann sie an Dienstleister weitergegeben werden können und wie Sie das Team bei Datenschutz-Fragen erreichen.",
+    lastUpdatedLabel: "9. April 2026",
+    sections: {
+      infoTitle: "Informationen, die AnyCap erfassen kann",
+      infoIntro:
+        "Abhängig vom Workflow und der Produkt-Surface, die Sie nutzen, kann AnyCap die folgenden Informations-Kategorien verarbeiten:",
+      infoCategories: [
+        "Account- und Authentifizierungsdetails, etwa Identifier, die zur Anmeldung und zur Verwaltung des Zugriffs nötig sind.",
+        "Abrechnungs-, Credit- und Nutzungsdaten, die für den Betrieb von Pay-as-you-go-Workflows und die Transaktionshistorie erforderlich sind.",
+        "Prompts, Dateien, URLs, Outputs und Workflow-Daten, die Sie übermitteln, wenn Sie Generierungs-, Retrieval-, Speicher- oder Veröffentlichungs-Funktionen nutzen.",
+        "Geräte-, Browser- und Request-Metadaten, die für Sicherheit, Missbrauchsprävention, Zuverlässigkeit und Troubleshooting verwendet werden.",
+        "Kommunikation, die Sie an AnyCap senden, einschließlich Support-Anfragen, Issue-Reports und Feedback.",
+      ],
+      useTitle: "Wie die Informationen genutzt werden",
+      useCases: [
+        "Nutzer authentifizieren und die Produkt-Surfaces betreiben, deren Ausführung Sie anfragen.",
+        "Requests an AnyCap-Systeme und relevante Drittanbieter für Modelle oder Infrastruktur weiterleiten.",
+        "Nutzung, Credits, Abrechnungsereignisse und betriebliche Stabilität messen.",
+        "Ausfälle, Missbrauch, Betrug, Bugs und Sicherheitsvorfälle untersuchen.",
+        "Produktqualität, Support und Dokumentation verbessern.",
+        "Gesetzliche Pflichten erfüllen und Plattform-Regeln durchsetzen.",
+      ],
+      sharingTitle: "Weitergabe, Aufbewahrung und Sicherheit",
+      sharingCategories: [
+        "Anbieter für Infrastruktur, Authentifizierung, Hosting, Analytics und Zahlung, die den Service betreiben helfen.",
+        "Anbieter von Modellen oder Capabilities, wenn ein Workflow erfordert, dass AnyCap Prompts, Dateien oder zugehörige Request-Daten upstream sendet, um Ihre Anfrage zu erfüllen.",
+        "Berater, verbundene Unternehmen oder Behörden, sofern dies für Compliance, rechtliche Verfahren oder Sicherheitsreaktionen erforderlich ist.",
+      ],
+      retentionText:
+        "AnyCap speichert Daten nur so lange, wie es für Produktbetrieb, Sicherheit, Support, Abrechnung, Compliance und ordnungsgemäße Geschäftsdokumentation vernünftig nötig ist. Die Aufbewahrungsdauer kann je nach Datentyp, Umgebung und gesetzlicher Pflicht variieren.",
+      securityText:
+        "Wir setzen administrative, technische und organisatorische Maßnahmen ein, um unbefugten Zugriff, Missbrauch oder Offenlegung zu reduzieren. Kein System kann perfekte Sicherheit garantieren, daher übermitteln Sie keine Informationen, die der angeforderte Workflow nicht verarbeiten soll.",
+      requestTitle: "Datenschutz-Fragen und Anfragen",
+      requestText1:
+        "Wenn Sie zu Account-Daten, eingereichten Inhalten, Löschanfragen oder einem anderen Datenschutz-Thema Fragen haben, schreiben Sie dem AnyCap-Team eine E-Mail oder nutzen Sie die Kontaktseite.",
+      requestText2:
+        "Diese Erklärung sollte zusammen mit den Nutzungsbedingungen, der Preisseite und der Über-Seite gelesen werden.",
+    },
+    privacyPageJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "AnyCap Datenschutzerklärung",
+      description:
+        "Datenschutzerklärung für AnyCap, einschließlich Account-Daten, eingereichten Inhalten, Analytics, Drittanbietern und Kontaktdetails.",
+      url: "https://anycap.ai/privacy",
+      dateModified: "2026-04-09",
+    },
+  },
 };
 
 export function getPrivacyMetadata(locale: SiteLocale): Metadata {

@@ -435,6 +435,136 @@ const contentByLocale: Record<SiteLocale, WebSearchPageData> = {
       ],
     }),
   },
+  de: {
+    metadata: {
+      title: "Websuche-API für KI-Agenten, Forschende und Teams – Strukturierte Suche über eine CLI",
+      description:
+        "Geben Sie KI-Agenten, Forschenden und Teams Websuche über AnyCap. Führen Sie strukturierte Websuche mit Domain-Filtern, Aktualitäts-Kontrollen und optionalem Page-Crawling über eine CLI aus, statt eine separate Such-API zu verdrahten.",
+      openGraphTitle:
+        "Websuche-API für KI-Agenten, Forschende und Teams – Strukturierte Suche über eine CLI",
+      openGraphDescription:
+        "Statten Sie KI-Agenten mit Websuche über eine CLI, einen Auth-Flow und eine Capability-Runtime aus.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Capabilities", href: "/capabilities" },
+      { name: "Websuche" },
+    ],
+    eyebrow: "Capabilities",
+    heroTitle: "Websuche",
+    heroIntro:
+      "Die AnyCap-Websuche gibt Agenten, Forschenden und Teams eine strukturierte Websuche-API über eine CLI. Der Workflow kann Ergebnis-Sets abrufen, vertrauenswürdige Domains einschränken, nach Aktualität filtern und Seiteninhalte direkt in den Workflow ziehen, ohne sich auf eine separate Browser-Erweiterung oder anbieterspezifische Such-Integration zu verlassen. Das macht Websuche deutlich einfacher mit dem Rest der AnyCap-Runtime kombinierbar.",
+    heroImageAlt:
+      "Editorial-Illustration, die Websuche-Ergebnisse zeigt, die in fundierte Antworten und Crawl-Schritte fließen",
+    usageTitle: "CLI-Nutzung",
+    usageExamples: [
+      { title: "Allgemeine Websuche", code: usageExamples[0].code },
+      { title: "Schnell, nur Titel und URLs", code: usageExamples[1].code },
+      { title: "Domains einschränken", code: usageExamples[2].code },
+      { title: "Nur aktuelle Ergebnisse", code: usageExamples[3].code },
+    ],
+    useCasesTitle: "Wann Agenten Websuche brauchen",
+    useCases: [
+      "Relevante Seiten, Docs oder Referenzen finden, bevor ein Agent Code schreibt oder aktualisiert.",
+      "Das Web mit strukturierten Ergebnissen durchsuchen, statt einen browserbasierten Such-Workflow zu öffnen.",
+      "Suchen auf vertrauenswürdige Domains einschränken, wenn Teams vorhersehbarere Retrieval-Ergebnisse brauchen.",
+      "Seiteninhalte direkt in den Workflow ziehen, wenn der Workflow mehr als nur URLs und Snippets braucht.",
+      "Recherche-, Content- und Operations-Workflows unterstützen, die Quellenlisten statt einer endgültigen Antwort brauchen.",
+    ],
+    workflowTitle: "Wie der Workflow normalerweise läuft",
+    workflowSteps: [
+      {
+        title: "Schritt 1",
+        body: "Beginnen Sie mit strukturierter Suche, wenn der Agent die Quelle noch nicht kennt. Das liefert ein Ergebnis-Set statt einer spekulativen Antwort und ist meist der richtige erste Schritt für Recherche, Wettbewerbs-Scans und Release-Tracking.",
+      },
+      {
+        title: "Schritt 2",
+        body: "Verwenden Sie Grounded Search, wenn der Agent Belege in eine Antwort mit Zitaten verwandeln muss. Verwenden Sie Crawl, wenn die exakte URL bereits bekannt ist und Sie nur den Seiteninhalt ohne weiteren Discovery-Durchgang brauchen.",
+      },
+      {
+        title: "Schritt 3",
+        body: "Geben Sie das Ergebnis-Set an den Agenten oder das Team als Quellen-Notizen, Zitate oder ein kurzes Evidenz-Bundle zurück. So wird Websuche zum Input für nachfolgende Arbeit, statt zu einem Sackgassen-Feature, das bei Suchergebnissen aufhört.",
+      },
+    ],
+    strengthsTitle: "Wo sie überzeugt und wo nicht",
+    strengthCards: [
+      {
+        title: "Discovery",
+        body: "Websuche überzeugt, wenn die Antwort mit „finde mir die Quellen“ beginnt statt mit „sag mir die Antwort“. Sie ist der richtige erste Schritt, wenn der Agent Optionen braucht.",
+      },
+      {
+        title: "Verifikation",
+        body: "Sie überzeugt auch, wenn dem Team Aktualität, Domain-Vertrauen oder eine eingeschränkte Quellenliste wichtig ist. Das sind meist die Fälle, in denen sich eine generische Browser-Suche zu locker für Produktionsarbeit anfühlt.",
+      },
+      {
+        title: "Übergabe",
+        body: "Sie verliert an Wert, wenn Sie beim Suchergebnis aufhören. Das nützliche Ergebnis ist ein Quellen-Bundle, mit dem ein anderer Agent, Editor oder Mensch fortfahren kann, ohne dieselbe Such-Arbeit zu wiederholen.",
+      },
+    ],
+    relatedTitle: "Verwandte Seiten",
+    relatedPages: [
+      {
+        eyebrow: "Verwandte Capability",
+        title: "Grounded Web Search",
+        href: "/capabilities/grounded-web-search",
+        body: "Wechseln Sie zu zitatbasierten Antworten, wenn der Workflow Synthese statt Retrieval braucht.",
+      },
+      {
+        eyebrow: "Verwandte Capability",
+        title: "Web Crawl",
+        href: "/capabilities/web-crawl",
+        body: "Verwenden Sie Crawl, wenn die URL bereits bekannt ist und der Workflow nur den Seiteninhalt braucht.",
+      },
+      {
+        eyebrow: "Preise",
+        title: "Preise",
+        href: "/pricing",
+        body: "Sehen Sie das Credit-Modell für Websuche, fundierte Antworten und Crawl-Anfragen.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Was können Agenten mit der AnyCap-Websuche tun?",
+        answer:
+          "Sie gibt Agenten eine strukturierte Websuche-API über die CLI. Teams können nach Query suchen, nach Domain oder Datum filtern und optional vollständige Seiteninhalte abrufen, ohne separate Browser-Tools oder Such-Anbieter zusammenzustückeln.",
+      },
+      {
+        question: "Warum ist Websuche eine eigene Capability-Seite?",
+        answer:
+          "Weil die Marktsprache hier API-förmig ist. Such-Nachfrage wird meist als Web Search API, Search API for AI agents oder Real-time Web Search API formuliert, statt als generischer Capability-Begriff.",
+      },
+      {
+        question: "Wie unterscheidet sich das von Grounded Web Search?",
+        answer:
+          "Websuche liefert strukturierte Suchergebnisse zurück. Grounded Web Search synthetisiert eine Antwort mit Zitaten. Beide Capabilities teilen dieselbe Befehlsfamilie, lösen aber verschiedene Aufgaben.",
+      },
+      {
+        question: "Wann sollten Teams zuerst die Standard-Websuche verwenden?",
+        answer:
+          "Wenn das Ziel Discovery, Retrieval oder das Sammeln eines Ergebnis-Sets ist. Wenn der Agent Kandidatenseiten selbst inspizieren muss, ist Standardsuche der saubere Startpunkt.",
+      },
+      {
+        question: "Ist das nur für Entwickler?",
+        answer:
+          "Nein. Websuche ist nützlich für Forschende, Content-Teams, Operatoren und Support-Workflows, die vertrauenswürdige Quellenlisten, Wettbewerbs-Scans oder schnelles Sammeln von Live-Referenzen brauchen.",
+      },
+    ],
+    capabilityGuideJsonLd: createTechArticleJsonLd({
+      headline:
+        "Websuche-API für KI-Agenten, Forschende und Teams – Strukturierte Suche über eine CLI",
+      description:
+        "Capability-Leitfaden zum Hinzufügen von Websuche zu KI-Agenten über AnyCap, einschließlich allgemeiner Suche, Domain-Filter, Aktualitäts-Filter und optionalem Crawling.",
+      path: WEB_SEARCH_PATH,
+      about: ["Websuche-API", "Search API für KI-Agenten", "Echtzeit-Websuche", "AnyCap", "Recherche-Workflows"],
+      keywords: [
+        "websuche api",
+        "search api für ki-agenten",
+        "echtzeit websuche api",
+        "web search api ki agenten",
+      ],
+    }),
+  },
 };
 
 export function getWebSearchMetadata(locale: SiteLocale): Metadata {

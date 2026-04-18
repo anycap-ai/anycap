@@ -29,6 +29,14 @@ const metadataByLocale: Record<
     openGraphDescription:
       "Tambahkan grounded web search berbasis sitasi ke agen AI melalui satu CLI dan satu capability runtime.",
   },
+  de: {
+    title: "Grounded Web Search für KI-Agenten – Antworten mit Quellenangaben über eine CLI",
+    description:
+      "Geben Sie KI-Agenten Grounded Web Search über AnyCap. Erhalten Sie synthetisierte Antworten mit Quellenangaben aus der Live-Websuche über eine einzige CLI, statt einen separaten Grounded-Search-Flow zu bauen.",
+    openGraphTitle: "Grounded Web Search für KI-Agenten – Antworten mit Quellenangaben über eine CLI",
+    openGraphDescription:
+      "Statten Sie KI-Agenten mit Grounded Web Search inklusive Quellenbelegen über eine CLI und eine Capability-Runtime aus.",
+  },
 };
 
 export function getPageMetadata(locale: SiteLocale): Metadata {
