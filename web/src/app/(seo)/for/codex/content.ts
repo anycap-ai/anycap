@@ -181,7 +181,7 @@ function makeGapRows(rows: readonly GapRowSource[]): readonly CapabilityGapRow[]
 
 const englishContent = {
   metadata: {
-    title: "Codex tools and capabilities — Add image, video, and vision with AnyCap",
+    title: "Codex + AnyCap — Add Image, Video & Vision",
     description:
       "Install one skill, tell Codex what you need, and let AnyCap supply image generation, video generation, image understanding, and video analysis through one CLI.",
     openGraphTitle: "Codex tools and capabilities — Add image, video, and vision with AnyCap",

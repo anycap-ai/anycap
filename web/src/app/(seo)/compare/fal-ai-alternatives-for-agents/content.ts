@@ -42,7 +42,7 @@ type FalAiAlternativesPageData = {
 
 const en: FalAiAlternativesPageData = {
   metadata: {
-    title: "Top fal.ai Alternatives for AI Agents (2026) — Image, Video, and Vision",
+    title: "Top fal.ai Alternatives for AI Agents (2026)",
     description:
       "Compare the best fal.ai alternatives for AI agent workflows. See how AnyCap, Replicate, Hugging Face, and others handle image generation, video generation, and vision for Claude Code, Cursor, and Codex.",
     openGraphTitle: "Top fal.ai Alternatives for AI Agents (2026)",

@@ -48,13 +48,13 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       { name: "Claude Code", href: "/for/claude-code" },
       { name: "Image Generation" },
     ],
-    eyebrow: "Claude Code x Image Generation",
+    eyebrow: "Claude Code x Image Generation Skill",
     titleLines: [
-      "Opus 4.7 + AnyCap = image generation inside Claude Code.",
-      "One prompt away. No new SDK. No context switch.",
+      "Add the AnyCap image generation skill to Claude Code.",
+      "One install. One login. Opus 4.7 picks the model.",
     ],
     intro:
-      "Claude Code on Opus 4.7 reasons better than ever — but it still ships with no image model. Pair it with AnyCap and you get Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2 behind the same agent surface, in the same terminal session, on the same login. Ask Opus 4.7 for a launch visual, a product mockup, a thumbnail, or an iteration on an existing reference, and it picks the right model and runs it. The combo is borderline insane: the strongest coding agent Anthropic has shipped, plus image generation, with zero glue code between them.",
+      "Claude Code on Opus 4.7 reasons better than ever, but it still ships with no image model. The AnyCap image generation skill plugs that gap: install once, log in once, and Opus 4.7 can call Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2 from the same terminal session. Ask Opus 4.7 for a launch visual, a product mockup, a thumbnail, or an iteration on an existing reference, and the skill picks the right model and runs it. The combo is borderline insane: the strongest coding agent Anthropic has shipped, plus image generation, with zero glue code between them.",
     ctas: {
       primary: "Get Started",
       secondary: "Add Tools to Claude Code",
@@ -73,19 +73,29 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     },
     faqItems: [
       {
-        question: "Can Claude Code generate images on its own?",
+        question: "Is this a Claude Code skill?",
         answer:
-          "Not as a built-in capability. AnyCap adds image generation to Claude Code through one install path and one CLI.",
+          "Yes. AnyCap ships an image generation skill for Claude Code. Step 1 of the install path adds the skill via the official skills CLI; after that Opus 4.7 discovers and invokes image generation the same way it invokes any other skill.",
       },
       {
-        question: "Which image models are available through AnyCap?",
+        question: "How do I install the AnyCap image generation skill in Claude Code?",
+        answer:
+          "Three commands. Run npx -y skills add anycap-ai/anycap -a claude-code -y to add the skill, curl -fsSL https://anycap.ai/install.sh | sh to install the AnyCap CLI binary, then anycap login. After that the skill is ready inside any Claude Code session.",
+      },
+      {
+        question: "Can Claude Code generate images on its own?",
+        answer:
+          "Not as a built-in capability. The AnyCap skill adds image generation to Claude Code through one install path and one CLI.",
+      },
+      {
+        question: "Which image models does the skill expose?",
         answer:
           "The current image generation stack includes Seedream 5, Seedream 4.5, Nano Banana Pro, and Nano Banana 2.",
       },
       {
         question: "Do I need a different workflow for image editing?",
         answer:
-          "No. The same AnyCap image command can cover both text-to-image and image-to-image workflows depending on the model and flags you use.",
+          "No. The same anycap image command in the skill covers both text-to-image and image-to-image workflows depending on the model and flags you use.",
       },
     ],
     modelCards: [
@@ -107,12 +117,16 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       },
     ],
     articleJsonLd: createTechArticleJsonLd({
-      headline: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
+      headline: "Claude Code image generation skill — Seedream 5 + Nano Banana via AnyCap",
       description:
-        "How to add image generation to Claude Code on Claude Opus 4.7 through AnyCap with Seedream 5, Nano Banana Pro, and other current image models.",
+        "How to install the AnyCap image generation skill in Claude Code on Opus 4.7, and call Seedream 5, Nano Banana Pro, and other current image models from the same agent session.",
       path: "/for/claude-code/image-generation",
-      about: ["Claude Code", "Claude Opus 4.7", "Image generation", "Seedream 5", "Nano Banana Pro"],
+      about: ["Claude Code skill", "Claude Code image generation", "Claude Opus 4.7", "Image generation", "Seedream 5", "Nano Banana Pro", "AnyCap"],
       keywords: [
+        "claude code image generation skill",
+        "claude code image skill",
+        "anycap image generation skill",
+        "install image generation skill claude code",
         "claude code opus 4.7 image generation",
         "claude opus 4.7 image generation",
         "claude code image generation",
@@ -295,14 +309,14 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   "/for/claude-code/image-generation",
   {
-    title: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
+    title: "Claude Code Image Generation Skill | AnyCap",
     description:
-      "Claude Code on Opus 4.7 + AnyCap is insane for image work. Generate product visuals, mockups, and thumbnails through Seedream 5, Nano Banana Pro, and more — one CLI, one login, no context switch.",
+      "Install the AnyCap image generation skill in Claude Code. Opus 4.7 calls Seedream 5, Nano Banana Pro, and more through one CLI and one login.",
     openGraph: {
       type: "website",
-      title: "Claude Code Opus 4.7 image generation — Seedream 5 + Nano Banana via AnyCap",
+      title: "Claude Code image generation skill — Seedream 5 + Nano Banana via AnyCap",
       description:
-        "Add image generation to Claude Code on Opus 4.7 without switching agents or wiring separate image APIs.",
+        "Install the AnyCap image generation skill in Claude Code on Opus 4.7. One install, one login, no separate image API to wire.",
     },
   }
 );
@@ -319,10 +333,12 @@ export default async function ClaudeCodeImageGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {faqJsonLd['@type'] ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

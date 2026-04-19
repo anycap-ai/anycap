@@ -28,6 +28,18 @@ type Kling30WorkflowCard = {
   body: string;
 };
 
+type Kling30SpecRow = {
+  spec: string;
+  value: string;
+};
+
+type Kling30MultiModelRow = {
+  dimension: string;
+  kling: string;
+  veo: string;
+  seedance: string;
+};
+
 type Kling30PageContent = {
   metadata: {
     title: string;
@@ -69,6 +81,8 @@ type Kling30PageContent = {
       label: string;
     }[];
   };
+  specsTitle?: string;
+  specRows?: readonly Kling30SpecRow[];
   useCasesTitle: string;
   useCases: readonly string[];
   callSectionTitle: string;
@@ -76,6 +90,15 @@ type Kling30PageContent = {
   workflowTitle: string;
   workflowParagraph: string;
   workflowCards: readonly Kling30WorkflowCard[];
+  multiModelTitle?: string;
+  multiModelIntro?: string;
+  multiModelHeaders?: {
+    dimension: string;
+    kling: string;
+    veo: string;
+    seedance: string;
+  };
+  multiModelRows?: readonly Kling30MultiModelRow[];
   comparisonTitle: string;
   comparisonHeaders: {
     dimension: string;
@@ -93,7 +116,7 @@ const contentByLocale = {
     metadata: {
       title: "Kling 3.0 for AI agents — Video generation through AnyCap",
       description:
-        "Use Kling 3.0 through AnyCap when AI agents need realistic motion, cinematic scene generation, and image-to-video workflows through one CLI.",
+        "Kling 3.0 generates realistic motion, cinematic scenes, and image-to-video clips up to 15s with native audio sync. Call it from any AI agent through AnyCap.",
       openGraphTitle: "Kling 3.0 for AI agents — Video generation through AnyCap",
       openGraphDescription:
         "Use Kling 3.0 through AnyCap for text-to-video and image-to-video workflows inside one agent runtime.",
@@ -101,7 +124,16 @@ const contentByLocale = {
       articleDescription:
         "Guide to using Kling 3.0 through AnyCap for realistic text-to-video and image-to-video workflows inside AI agent runtimes.",
       articleAbout: ["Kling 3.0", "Video generation", "AnyCap", "AI agents"],
-      articleKeywords: ["kling 3.0", "kling 3.0 api", "image to video", "video generation", "anycap"],
+      articleKeywords: [
+        "kling 3.0",
+        "kling 3.0 api",
+        "kling 3.0 vs veo",
+        "kling 3.0 vs sora",
+        "image to video",
+        "video generation api",
+        "ai agent video generation",
+        "anycap",
+      ],
     },
     breadcrumbItems: [
       { name: "Home", href: "/" },
@@ -148,11 +180,23 @@ const contentByLocale = {
         },
       ],
     },
+    specsTitle: "Kling 3.0 specs at a glance",
+    specRows: [
+      { spec: "Output", value: "Video clips, 5–15 seconds, up to 1080p" },
+      { spec: "Modes", value: "Text-to-video, image-to-video, multi-shot scene continuation" },
+      { spec: "Audio", value: "Native audio-visual sync (dialogue, ambient, sound effects)" },
+      { spec: "Character consistency", value: "Maintains subject across shots within a scene" },
+      { spec: "Storyboard", value: "Multi-shot planning from a single prompt" },
+      { spec: "Strengths", value: "Realistic motion, cinematic lighting, image-to-video continuity" },
+      { spec: "AnyCap CLI", value: "anycap video generate --model kling-3.0" },
+    ],
     useCasesTitle: "When agents should choose Kling 3.0",
     useCases: [
       "Realistic motion and cinematic scene generation",
       "Image-to-video workflows that need stronger visual continuity",
-      "Agent-driven video drafts for demos, ads, and short product clips",
+      "Multi-shot drafts where character consistency matters across cuts",
+      "Clips that need native audio-visual sync without a separate audio pass",
+      "Agent-driven video drafts for demos, ads, and short product clips up to 15 seconds",
       "Teams that want Kling 3.0 in the same runtime as Veo 3.1 and Seedance 1.5 Pro",
     ],
     callSectionTitle: "Call Kling 3.0 through AnyCap",
@@ -179,6 +223,53 @@ const contentByLocale = {
       {
         eyebrow: "Downstream",
         body: "Review, clip packaging, video analysis, and distribution across the rest of the agent stack.",
+      },
+    ],
+    multiModelTitle: "Kling 3.0 vs Veo 3.1 vs Seedance 1.5 Pro",
+    multiModelIntro:
+      "All three are first-class video models in AnyCap. Pick the one that matches the workflow — agents can switch between them with one CLI flag.",
+    multiModelHeaders: {
+      dimension: "Dimension",
+      kling: "Kling 3.0",
+      veo: "Veo 3.1",
+      seedance: "Seedance 1.5 Pro",
+    },
+    multiModelRows: [
+      {
+        dimension: "Best fit",
+        kling: "Realistic motion, cinematic image-to-video",
+        veo: "Premium cinematic first pass, prompt fidelity",
+        seedance: "Steady production runs, consistent style",
+      },
+      {
+        dimension: "Max duration",
+        kling: "Up to 15 seconds",
+        veo: "Up to 8 seconds",
+        seedance: "Up to 10 seconds",
+      },
+      {
+        dimension: "Native audio",
+        kling: "Yes — dialogue, ambient, SFX",
+        veo: "Yes — synced ambient + speech",
+        seedance: "Audio added downstream",
+      },
+      {
+        dimension: "Image-to-video",
+        kling: "Strong — preserves source frame style",
+        veo: "Supported, leans toward reinterpretation",
+        seedance: "Supported, optimized for product shots",
+      },
+      {
+        dimension: "Character consistency",
+        kling: "Strong within a scene",
+        veo: "Strong, especially with reference image",
+        seedance: "Steady across batch runs",
+      },
+      {
+        dimension: "AnyCap CLI",
+        kling: "--model kling-3.0",
+        veo: "--model veo-3.1",
+        seedance: "--model seedance-1.5-pro",
       },
     ],
     comparisonTitle: "Kling 3.0 vs nearby choices",
@@ -220,6 +311,21 @@ const contentByLocale = {
         question: "Should I use Kling 3.0 or Veo 3.1?",
         answer:
           "Use Kling 3.0 when the workflow leans toward realistic motion and flexible image-to-video iteration. Use Veo 3.1 when the priority is a premium cinematic first pass.",
+      },
+      {
+        question: "How long can a Kling 3.0 clip be?",
+        answer:
+          "Kling 3.0 generates clips up to 15 seconds, with multi-shot scene continuation that maintains character consistency across cuts within a scene.",
+      },
+      {
+        question: "Does Kling 3.0 support native audio?",
+        answer:
+          "Yes. Kling 3.0 produces audio-visual synced output including dialogue, ambient sound, and effects in the same generation pass — no separate audio model required.",
+      },
+      {
+        question: "Can Kling 3.0 animate a reference image?",
+        answer:
+          "Yes. Image-to-video mode takes a source frame and a motion prompt, then preserves the source style while adding motion. In AnyCap, pass --mode image-to-video and reference images via --param.",
       },
     ],
     nextActions: [

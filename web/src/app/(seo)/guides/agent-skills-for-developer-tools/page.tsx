@@ -8,7 +8,6 @@ import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getSeoPageChrome } from "@/lib/seo/ia";
 import { getPageMetadata } from "./metadata";
 import { getRequestLocale } from "@/lib/request-locale";
-import { defaultLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
@@ -427,7 +426,10 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
   },
 };
 
-export const metadata: Metadata = getPageMetadata(defaultLocale);
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return getPageMetadata(locale);
+}
 
 const guideJsonLdByLocale = {
   en: createTechArticleJsonLd({

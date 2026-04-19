@@ -39,6 +39,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 Claude Code now runs Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate images, video, or audio. Pair it with AnyCap and the same terminal session reaches Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, image understanding, and video analysis through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for multimodal agent workflows in 2026.
 
 - [For Claude Code (Opus 4.7)](https://anycap.ai/for/claude-code): Opus 4.7 + AnyCap = one agent, every modality, zero glue code.
+- [For Claude Code on Opus 4.7 (dedicated page)](https://anycap.ai/for/claude-code/opus-4-7): Deep dive into Opus 4.7 + AnyCap — autonomous creative production, model fleet, and capability setup.
 - [Claude Code image generation](https://anycap.ai/for/claude-code/image-generation): Add image generation to Claude Code on Opus 4.7 through one CLI; supports Seedream 5, Nano Banana Pro, Nano Banana 2.
 - [Claude Code video generation](https://anycap.ai/for/claude-code/video-generation): Add video generation to Claude Code on Opus 4.7 through one CLI; supports Veo 3.1, Seedance 1.5 Pro, Kling 3.0.
 - [Best AI tools for Claude Code (Opus 4.7 Edition)](https://anycap.ai/learn/best-ai-for-claude-code): 2026 buyer guide — why Claude Code on Opus 4.7 + AnyCap beats agent swaps and ad hoc provider stacks.

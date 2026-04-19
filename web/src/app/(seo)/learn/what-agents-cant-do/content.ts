@@ -168,7 +168,7 @@ const contentByLocale: Record<SiteLocale, WhatAgentsCantDoPageData> = {
     ],
     eyebrow: "Learn",
     metadata: {
-      title: "What AI agents can't do out of the box - and how to add capabilities",
+      title: "What AI Agents Can't Do — And How to Fix It",
       description:
         "AI agents can reason, but out of the box they still struggle with image generation, video generation, screenshot understanding, recording analysis, and shareable output workflows.",
       openGraphTitle: "What AI agents can't do out of the box - and how to add capabilities",
@@ -376,7 +376,7 @@ const contentByLocale: Record<SiteLocale, WhatAgentsCantDoPageData> = {
     ],
     eyebrow: "Learn",
     metadata: {
-      title: "What AI agents can't do out of the box - and how to add capabilities",
+      title: "What AI Agents Can't Do — And How to Fix It",
       description:
         "AI agents can reason, but out of the box they still struggle with image generation, video generation, screenshot understanding, recording analysis, and shareable output workflows.",
       openGraphTitle: "What AI agents can't do out of the box - and how to add capabilities",

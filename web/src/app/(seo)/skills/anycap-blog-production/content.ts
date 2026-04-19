@@ -9,12 +9,12 @@ const DATE_PUBLISHED = "2026-04-18";
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-blog-production skill | Blog post generation for AI coding agents",
+    title: "Blog Production Skill for Claude Code | AnyCap",
     description:
-      "Install anycap-blog-production to let Claude Code and Cursor turn notes, research, and product facts into structured blog posts with first-party evidence blocks, web-sourced data, and consistent editorial voice.",
-    openGraphTitle: "anycap-blog-production skill | Blog generation for Claude Code",
+      "Turn notes and product facts into structured blog posts with live-sourced evidence and editorial voice. One-command install for Claude Code and Cursor.",
+    openGraphTitle: "anycap-blog-production — Structured blog production for Claude Code",
     openGraphDescription:
-      "Blog post production workflow skill for Claude Code and Cursor. Turns notes and research into structured posts with first-party evidence and editorial voice.",
+      "Blog production workflow for Claude Code and Cursor. Turns notes into structured posts with live-sourced evidence, editorial formatting, and optional featured images.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -41,6 +41,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

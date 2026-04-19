@@ -31,6 +31,18 @@ type Veo31CallExample = {
   code: string;
 };
 
+type Veo31SpecRow = {
+  spec: string;
+  value: string;
+};
+
+type Veo31MultiModelRow = {
+  dimension: string;
+  kling: string;
+  veo: string;
+  seedance: string;
+};
+
 type Veo31PageContent = {
   metadata: {
     title: string;
@@ -55,6 +67,8 @@ type Veo31PageContent = {
     signalsLabel: string;
   };
   showcase: ModelShowcaseEntry;
+  specsTitle?: string;
+  specRows?: readonly Veo31SpecRow[];
   useCasesTitle: string;
   useCases: readonly Veo31UseCase[];
   callSectionTitle: string;
@@ -62,6 +76,15 @@ type Veo31PageContent = {
   workflowTitle: string;
   workflowParagraph: string;
   workflowCards: readonly Veo31WorkflowCard[];
+  multiModelTitle?: string;
+  multiModelIntro?: string;
+  multiModelHeaders?: {
+    dimension: string;
+    kling: string;
+    veo: string;
+    seedance: string;
+  };
+  multiModelRows?: readonly Veo31MultiModelRow[];
   comparisonTitle: string;
   comparisonHeaders: {
     dimension: string;
@@ -79,7 +102,7 @@ const contentByLocale = {
     metadata: {
       title: "Veo 3.1 video generation for AI agents | AnyCap",
       description:
-        "Use Veo 3.1 through AnyCap when AI agents need text-to-video and image-to-video generation inside a consistent capability runtime. Learn when to choose Veo 3.1, how to call it, and how it fits video workflows.",
+        "Veo 3.1 is Google's premium video model with native audio sync. Call Veo 3.1 from any AI agent through AnyCap, alongside Kling 3.0 and Seedance 1.5 Pro.",
       openGraphTitle: "Veo 3.1 video generation for AI agents | AnyCap",
       openGraphDescription:
         "Use Veo 3.1 through AnyCap when AI agents need text-to-video and image-to-video generation inside a consistent capability runtime.",
@@ -87,7 +110,17 @@ const contentByLocale = {
       articleDescription:
         "Guide to using Veo 3.1 through AnyCap for premium text-to-video and image-to-video generation inside AI agent runtimes.",
       articleAbout: ["Veo 3.1", "Video generation", "Image-to-video", "AnyCap", "AI agents"],
-      articleKeywords: ["veo 3.1", "veo 3.1 api", "text to video", "image to video", "veo 3.1 image to video", "video generation", "anycap"],
+      articleKeywords: [
+        "veo 3.1",
+        "veo 3.1 api",
+        "google veo 3.1",
+        "veo 3.1 vs kling",
+        "veo 3.1 vs sora",
+        "text to video",
+        "image to video",
+        "video generation api",
+        "anycap",
+      ],
     },
     breadcrumbItems: [
       { name: "Home", href: "/" },
@@ -157,6 +190,16 @@ const contentByLocale = {
         code: "anycap video models",
       },
     ],
+    specsTitle: "Veo 3.1 specs at a glance",
+    specRows: [
+      { spec: "Output", value: "Video clips, up to 8 seconds, up to 1080p" },
+      { spec: "Modes", value: "Text-to-video, image-to-video" },
+      { spec: "Audio", value: "Native synced ambient sound and speech" },
+      { spec: "Strengths", value: "Premium cinematic quality, strong prompt adherence" },
+      { spec: "Reference image", value: "Strong character and composition preservation" },
+      { spec: "Provider", value: "Google DeepMind" },
+      { spec: "AnyCap CLI", value: "anycap video generate --model veo-3.1" },
+    ],
     workflowTitle: "Workflow placement",
     workflowParagraph:
       "In an agent workflow, Veo 3.1 is usually the generation step that follows planning and precedes review. A coding or automation agent may draft the concept, call Veo 3.1 for the video output, then route the result into review, asset packaging, or documentation.",
@@ -168,6 +211,53 @@ const contentByLocale = {
       {
         eyebrow: "Downstream",
         body: "Review, editing notes, video analysis, and distribution inside the rest of the agent stack.",
+      },
+    ],
+    multiModelTitle: "Veo 3.1 vs Kling 3.0 vs Seedance 1.5 Pro",
+    multiModelIntro:
+      "All three are first-class video models in AnyCap. Veo 3.1 is the premium first-pass lane; Kling 3.0 leans cinematic-realistic with longer clips; Seedance is the steady production workhorse. Switch with one CLI flag.",
+    multiModelHeaders: {
+      dimension: "Dimension",
+      kling: "Veo 3.1",
+      veo: "Kling 3.0",
+      seedance: "Seedance 1.5 Pro",
+    },
+    multiModelRows: [
+      {
+        dimension: "Best fit",
+        kling: "Premium cinematic first pass, prompt fidelity",
+        veo: "Realistic motion, image-to-video continuity",
+        seedance: "Steady production runs, consistent style",
+      },
+      {
+        dimension: "Max duration",
+        kling: "Up to 8 seconds",
+        veo: "Up to 15 seconds",
+        seedance: "Up to 10 seconds",
+      },
+      {
+        dimension: "Native audio",
+        kling: "Yes — synced ambient + speech",
+        veo: "Yes — dialogue, ambient, SFX",
+        seedance: "Audio added downstream",
+      },
+      {
+        dimension: "Image-to-video",
+        kling: "Strong, preserves character + composition",
+        veo: "Strong, preserves source frame style",
+        seedance: "Optimized for product shots",
+      },
+      {
+        dimension: "Provider",
+        kling: "Google DeepMind",
+        veo: "Kuaishou",
+        seedance: "ByteDance",
+      },
+      {
+        dimension: "AnyCap CLI",
+        kling: "--model veo-3.1",
+        veo: "--model kling-3.0",
+        seedance: "--model seedance-1.5-pro",
       },
     ],
     comparisonTitle: "Veo 3.1 vs nearby choices",
@@ -217,12 +307,22 @@ const contentByLocale = {
       {
         question: "How do agents call Veo 3.1 through AnyCap?",
         answer:
-          "Agents can call it with the AnyCap CLI using anycap video generate --model veo-3.1 and a prompt for text-to-video, or add --mode image-to-video with a reference image for image-to-video. The rest of the workflow stays in the same AnyCap runtime.",
+          "Agents call it with the AnyCap CLI using anycap video generate --model veo-3.1 and a prompt for text-to-video, or add --mode image-to-video with a reference image. Same auth as every other capability.",
       },
       {
         question: "Should I use Veo 3.1 or Kling 3.0?",
         answer:
-          "Use Veo 3.1 when the first-pass result needs to look more premium — whether from a text brief or a reference image. Use Kling 3.0 when the workflow leans on more flexible image-to-video iteration or a different motion style.",
+          "Use Veo 3.1 when the first-pass result needs the most premium look from a text brief or a reference image. Use Kling 3.0 when the workflow needs longer clips (up to 15s) or more flexible image-to-video iteration.",
+      },
+      {
+        question: "How long can a Veo 3.1 clip be?",
+        answer:
+          "Veo 3.1 generates clips up to 8 seconds at 1080p with native synced ambient audio and speech in a single pass.",
+      },
+      {
+        question: "Veo 3.1 vs Sora — which should an agent use?",
+        answer:
+          "Veo 3.1 is the production-ready API option with native audio sync and strong image-to-video. Sora is broadly available but currently lighter on multimodal API integration. For agent workflows that need a stable API surface, Veo 3.1 through AnyCap is the more dependable choice today.",
       },
     ],
     nextActions: [

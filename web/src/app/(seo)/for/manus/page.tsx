@@ -20,12 +20,12 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/for/manus", {
-  title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
+  title: "Manus + AnyCap — Add Image, Video & Vision",
   description:
     "Manus handles autonomous execution. AnyCap adds the missing runtime for image generation, video generation, vision, and audio — one skill, one login, one CLI.",
   openGraph: {
     type: "website",
-    title: "Manus tools and capabilities - Add image, video, and vision with AnyCap",
+    title: "Manus + AnyCap — Add Image, Video & Vision",
     description:
       "Add a dedicated image, video, and vision runtime to Manus without replacing the agent workflow you already use.",
   },
@@ -667,10 +667,12 @@ export default async function ForManusPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.integrationGuideJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {faqJsonLd['@type'] ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

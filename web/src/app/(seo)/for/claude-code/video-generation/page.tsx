@@ -260,9 +260,9 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   "/for/claude-code/video-generation",
   {
-    title: "Claude Code Opus 4.7 video generation — Veo 3.1 + Seedance + Kling via AnyCap",
+    title: "Claude Code Video Generation — Veo, Kling & Seedance",
     description:
-      "Claude Code on Opus 4.7 + AnyCap is insane for video. Generate launch teasers, product walkthroughs, and image-to-video iterations through Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 — one CLI, one login, no extra SDK.",
+      "Add video generation to Claude Code via AnyCap. Access Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 — one CLI, one login, no extra SDK.",
     openGraph: {
       type: "website",
       title: "Claude Code Opus 4.7 video generation — Veo 3.1 + Seedance + Kling via AnyCap",
@@ -284,10 +284,12 @@ export default async function ClaudeCodeVideoGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {faqJsonLd['@type'] ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

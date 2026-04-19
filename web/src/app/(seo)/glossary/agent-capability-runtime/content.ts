@@ -484,7 +484,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
     metadata: {
       title: "What is an Agent Capability Runtime? | AnyCap",
       description:
-        "An agent capability runtime is a software layer that gives AI agents installable capabilities through one interface, one auth flow, and one install path. Learn how it differs from agent frameworks, tool platforms, and direct API integrations.",
+        "An agent capability runtime gives AI agents installable capabilities (image, video, vision) through one interface and one auth flow. See how it differs from agent frameworks and tool platforms.",
       openGraphTitle: "What is an Agent Capability Runtime? | AnyCap",
       openGraphDescription:
         "An agent capability runtime gives AI agents installable capabilities through one interface. Learn how it differs from agent frameworks, tool integration platforms, and direct API integrations.",

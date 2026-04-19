@@ -795,7 +795,7 @@ contentByLocale.de = {
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/models", {
   title: "Models — Multimodal models available through AnyCap",
   description:
-    "Explore the multimodal models available through AnyCap, including Seedream 5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Kling 3.0, Seedance 1.5 Pro, and ElevenLabs Music.",
+    "Multimodal models available through AnyCap: Seedream 5, Nano Banana Pro, Veo 3.1, Kling 3.0, Seedance 1.5 Pro, and ElevenLabs Music for AI agent workflows.",
   openGraph: {
     type: "website",
     title: "Models — Multimodal models available through AnyCap",
@@ -815,10 +815,6 @@ export default async function ModelsPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

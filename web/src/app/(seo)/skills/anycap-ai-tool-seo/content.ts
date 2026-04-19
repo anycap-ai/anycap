@@ -9,12 +9,12 @@ const DATE_PUBLISHED = "2026-04-18";
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-ai-tool-seo skill | SEO planning and auditing for AI tool websites",
+    title: "SEO Audit Skill for AI Tool Sites | AnyCap",
     description:
-      "Install anycap-ai-tool-seo to let Claude Code and Cursor run SEO audits on AI tool and SaaS websites: inspect live SERPs, analyze competitor pages, surface keyword opportunities, and generate structured SEO recommendations.",
-    openGraphTitle: "anycap-ai-tool-seo skill | SEO auditing for AI tool websites",
+      "Run live SERP-backed SEO audits for AI tools and SaaS sites with Claude Code and Cursor. Inspect SERPs, crawl competitors, surface keyword gaps.",
+    openGraphTitle: "anycap-ai-tool-seo — SEO auditing for AI tool websites",
     openGraphDescription:
-      "SEO planning and auditing skill for Claude Code and Cursor. Uses AnyCap web search and crawl to inspect SERPs, analyze competitors, and surface keyword opportunities for AI tools.",
+      "SEO planning and auditing for Claude Code and Cursor. Live SERP inspection, competitor page crawl, and structured keyword opportunity reports for AI tools.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -41,6 +41,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

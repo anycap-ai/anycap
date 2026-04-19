@@ -9,12 +9,12 @@ const DATE_PUBLISHED = "2026-04-18";
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-deepresearch skill | Deep research workflow for Claude Code and Cursor",
+    title: "Deep Research Skill for Claude Code & Cursor | AnyCap",
     description:
-      "Install anycap-deepresearch to give Claude Code and Cursor a multi-source research workflow: plan, gather, analyze, synthesize, and deliver findings using AnyCap web search and web crawl with structured source attribution.",
-    openGraphTitle: "anycap-deepresearch skill | Deep research for Claude Code",
+      "Give Claude Code and Cursor a multi-source research workflow: plan, gather, synthesize, and cite findings using live web search and crawl.",
+    openGraphTitle: "anycap-deepresearch — Multi-source deep research for Claude Code",
     openGraphDescription:
-      "Multi-source research workflow skill for Claude Code and Cursor. Covers planning, web search, web crawl, synthesis, and structured source attribution.",
+      "Multi-source research workflow for Claude Code and Cursor. Query planning, live web search, crawl-depth analysis, and cited synthesis.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -41,6 +41,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

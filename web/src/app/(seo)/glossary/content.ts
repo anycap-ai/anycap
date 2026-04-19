@@ -56,7 +56,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
   metadata: {
     title: "What is context engineering? How AI agents use context",
     description:
-      "Context engineering is the practice of shaping what an AI agent sees, remembers, and can do during execution. Learn how it affects capability calls, workspace behavior, and multimodal workflows.",
+      "Context engineering shapes what an AI agent sees, remembers, and can do during execution. Learn how it affects capability calls and multimodal workflows.",
     openGraphTitle: "What is context engineering? How AI agents use context",
     openGraphDescription:
       "Learn what context engineering means for AI agents and how it affects capability calls, workspace behavior, and multimodal workflows.",
@@ -130,9 +130,9 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
 
 const agentHarnessContentEn: GlossaryEntryPageData = {
   metadata: {
-    title: "What is an agent harness? The execution layer around AI agents",
+    title: "Agent Harness — The Execution Layer for AI Agents",
     description:
-      "An agent harness is the execution layer around an AI agent that provides tools, files, permissions, and runtime controls. Learn how it relates to the model and where AnyCap fits as a capability runtime.",
+      "An agent harness is the execution layer around an AI agent providing tools, files, and runtime controls. Learn where AnyCap fits as a capability runtime.",
     openGraphTitle: "What is an agent harness? The execution layer around AI agents",
     openGraphDescription:
       "Learn what an agent harness is and where AnyCap fits as a capability runtime inside the agent stack.",
@@ -362,10 +362,10 @@ export function getAgentHarnessGlossaryPageData(locale: SiteLocale) {
 
 const mcpContentEn: GlossaryEntryPageData = {
   metadata: {
-    title: "What is the Model Context Protocol (MCP)? How AI agents connect to tools",
+    title: "Model Context Protocol — AI Agent Glossary",
     description:
-      "The Model Context Protocol (MCP) is an open communication standard that defines how AI agents discover and invoke tools, capabilities, and external services. Learn how MCP works, how it differs from a capability runtime, and where AnyCap fits in the agent stack.",
-    openGraphTitle: "What is the Model Context Protocol (MCP)? How AI agents connect to tools",
+      "Open standard for how AI agents discover and invoke tools. Learn how MCP works, how it differs from a capability runtime, and where AnyCap fits.",
+    openGraphTitle: "Model Context Protocol — AI Agent Glossary",
     openGraphDescription:
       "MCP is an open standard that defines how AI agents discover and call tools. Learn how it differs from a capability runtime and where AnyCap fits.",
   },
@@ -465,10 +465,10 @@ export function getMcpGlossaryPageData(locale: SiteLocale) {
 
 const agenticWorkflowContentEn: GlossaryEntryPageData = {
   metadata: {
-    title: "What is an agentic workflow? How AI agents chain decisions and actions",
+    title: "Agentic Workflow — AI Agent Glossary",
     description:
-      "An agentic workflow is a goal-directed sequence of model decisions and real-world tool actions that runs to completion without requiring human approval at every step. Learn how agentic workflows work, why capability coverage matters, and where AnyCap fits.",
-    openGraphTitle: "What is an agentic workflow? How AI agents chain decisions and actions",
+      "Goal-directed AI decision loops that run to completion without per-step human approval. Learn how agentic workflows work and why capability coverage matters.",
+    openGraphTitle: "Agentic Workflow — AI Agent Glossary",
     openGraphDescription:
       "An agentic workflow is a goal-directed sequence of AI decisions and tool actions that runs without per-step human approval. Learn how capability coverage shapes workflow reliability.",
   },

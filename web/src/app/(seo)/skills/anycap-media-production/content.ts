@@ -43,12 +43,12 @@ export type SkillDetailPageData = {
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-media-production skill | Full media production for AI agents",
+    title: "Media Production Skill for AI Agents | AnyCap",
     description:
-      "Install anycap-media-production to give Claude Code, Cursor, and Codex a full media production workflow: iterative image and video generation, AI-powered refinement, and structured human annotation feedback loops.",
-    openGraphTitle: "anycap-media-production skill | Full media production for AI agents",
+      "Give Claude Code and Cursor a full media production workflow: iterative image and video generation, AI refinement, and human annotation feedback loops.",
+    openGraphTitle: "anycap-media-production — Full media production for AI agents",
     openGraphDescription:
-      "Full media production workflow skill for Claude Code and Cursor. Covers iterative generation, refinement, and human annotation feedback loops for images, videos, and music.",
+      "Full media production workflow skill for Claude Code and Cursor. Iterative image/video generation, refinement loops, and human annotation feedback.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -75,6 +75,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

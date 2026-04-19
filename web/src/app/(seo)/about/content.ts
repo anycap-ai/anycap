@@ -85,7 +85,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
     metadata: {
       title: "About AnyCap - AI agent capability infrastructure",
       description:
-        `About AnyCap, the team shipping an AI agent capability runtime with a public repository, release history, and one install path for ${capabilitySummary}.`,
+        "AnyCap builds AI agent capability infrastructure: one runtime for image generation, video, vision, web search, and web crawl.",
       openGraphTitle: "About AnyCap - AI agent capability infrastructure",
       openGraphDescription:
         "Why AnyCap exists, what it is, what it is not, and the principles behind an agent-native capability runtime.",

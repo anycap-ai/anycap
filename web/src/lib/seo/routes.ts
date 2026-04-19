@@ -393,6 +393,12 @@ export const manualSeoRouteDefinitions = [
     priority: 0.67,
   },
   {
+    key: "compare-claude-opus-4-7-vs-sonnet-4-6",
+    kind: "seo",
+    path: "/compare/claude-opus-4-7-vs-sonnet-4-6",
+    priority: 0.72,
+  },
+  {
     key: "models-seedream-5",
     kind: "seo",
     path: "/models/seedream-5",

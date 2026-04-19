@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
@@ -16,7 +16,7 @@ const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as c
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/compare/anycap-vs-composio", {
   title: "AnyCap vs Composio — Agent capability comparison",
   description:
-    "Compare AnyCap and Composio for giving AI agents capabilities. AnyCap is an agent-native capability runtime with one CLI; Composio is a tool integration platform. See how they differ in approach, scope, and agent workflow fit.",
+    "AnyCap is an agent-native capability runtime with one CLI. Composio is a tool integration platform. See how they differ in scope and agent workflow fit.",
   openGraph: {
     type: "website",
     title: "AnyCap vs Composio — Agent capability comparison",
@@ -342,13 +342,10 @@ contentByLocale.de = contentByLocale.en;
 export default async function AnycapVsComposioPage() {
   const locale = await getRequestLocale();
   const content = contentByLocale[locale] ?? contentByLocale.en;
-  const faqJsonLd = createFaqPageJsonLd(content.faqItems);
-
   return (
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
           <FadeIn>

@@ -41,7 +41,7 @@ const usageExamples = [
 const contentByLocale: Record<SiteLocale, WebSearchPageData> = {
   en: {
     metadata: {
-      title: "Web Search API for AI agents, researchers, and teams - Structured search through one CLI",
+      title: "Web Search API for AI Agents | AnyCap",
       description:
         "Give AI agents, researchers, and teams web search through AnyCap. Run structured web search with domain filters, recency controls, and optional page crawling through one CLI instead of wiring a separate search API.",
       openGraphTitle:
