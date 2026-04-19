@@ -596,7 +596,7 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   PAGE_PATH,
   {
-    title: "Claude Opus 4.7 capabilities — what Opus 4.7 does (and what Opus 4.7 + AnyCap unlocks)",
+    title: "Claude Opus 4.7 Capabilities — What AnyCap Unlocks",
     description:
       "A capability map of Claude Opus 4.7. What it does natively, what it doesn't, and the insane combo when paired with AnyCap for image generation, video generation, and visual understanding.",
     openGraph: {

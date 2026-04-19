@@ -9,12 +9,12 @@ const DATE_PUBLISHED = "2026-04-18";
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-human-interaction skill | Visual feedback collection for AI agents",
+    title: "Human Interaction & Feedback Skill | AnyCap",
     description:
-      "Install anycap-human-interaction to let Claude Code and Cursor collect structured visual feedback from humans: image annotation, screen recording, video review, audio capture, and interactive Excalidraw diagramming.",
-    openGraphTitle: "anycap-human-interaction skill | Visual feedback for Claude Code",
+      "Let Claude Code and Cursor collect structured visual feedback: image annotation, screen recording, video review, and interactive Excalidraw diagramming.",
+    openGraphTitle: "anycap-human-interaction — Visual feedback for Claude Code",
     openGraphDescription:
-      "Collect structured visual feedback from humans inside your agent session. Covers annotation, screen recording, video review, and interactive diagramming.",
+      "Collect structured visual feedback from humans inside your agent session. Image annotation, screen recording, video review, and Excalidraw diagramming.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -41,6 +41,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

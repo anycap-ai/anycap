@@ -9,12 +9,12 @@ const DATE_PUBLISHED = "2026-04-18";
 
 const contentEn: SkillDetailPageData = {
   metadata: {
-    title: "anycap-social-meme-workflows skill | Meme and social image creation for Claude Code",
+    title: "Social & Meme Visual Workflow Skill | AnyCap",
     description:
-      "Install anycap-social-meme-workflows to let Claude Code and Cursor create meme-style images, captioned photos, and social visuals using AI image generation with local text overlay. Built for viral social content workflows.",
-    openGraphTitle: "anycap-social-meme-workflows skill | Social image creation for Claude Code",
+      "Create memes, captioned photos, and platform-sized social visuals with Claude Code and Cursor. AI generation plus local text overlay in one run.",
+    openGraphTitle: "anycap-social-meme-workflows — Social image creation for Claude Code",
     openGraphDescription:
-      "Social image and meme creation skill for Claude Code and Cursor. Combines AI image generation with text overlay for captioned photos, meme formats, and viral social content.",
+      "Social image and meme creation for Claude Code and Cursor. AI generation plus local text overlay for platform-sized social content batches.",
   },
   breadcrumbItems: [
     { name: "Home", href: "/" },
@@ -41,6 +41,7 @@ const contentEn: SkillDetailPageData = {
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   howToJsonLd: {
     "@context": "https://schema.org",

@@ -52,9 +52,9 @@ const en: ComparePageData = {
   ],
   eyebrow: "Compare",
   metadata: {
-    title: "AnyCap vs fal.ai — cross-agent runtime vs generative media API stack",
+    title: "AnyCap vs fal.ai — Capability Runtime vs Media API",
     description:
-      "Compare AnyCap and fal.ai. fal.ai is a generative media API platform with synchronous calls, queue-backed async inference, webhooks, and API-key auth. AnyCap is a cross-agent capability runtime that packages multimodal workflows for Codex, Cursor, Claude Code, and similar agent environments.",
+      "AnyCap is a cross-agent capability runtime for Codex, Cursor, and Claude Code. fal.ai is a generative media API platform. Compare architecture and use cases.",
     openGraphTitle: "AnyCap vs fal.ai — cross-agent runtime vs generative media API stack",
     openGraphDescription:
       "See when fal.ai is the right media API layer and when AnyCap is the stronger runtime around existing agents.",

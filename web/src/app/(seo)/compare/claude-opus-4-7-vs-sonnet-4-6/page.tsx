@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale, type SiteLocale } from "@/lib/site";
@@ -355,12 +355,12 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   PAGE_PATH,
   {
-    title: "Claude Opus 4.7 vs Sonnet 4.6 — which Claude model for Claude Code",
+    title: "Claude Opus 4.7 vs Sonnet 4.6 — for Claude Code",
     description:
-      "Practical comparison of Claude Opus 4.7 vs Sonnet 4.6 inside Claude Code. When each model is worth it, and how the Opus 4.7 + AnyCap combo unlocks image, video, and visual analysis.",
+      "Practical comparison of Opus 4.7 vs Sonnet 4.6 inside Claude Code. When each model is worth it, and how the Opus 4.7 + AnyCap combo unlocks image and video.",
     openGraph: {
       type: "website",
-      title: "Claude Opus 4.7 vs Sonnet 4.6 — which Claude model for Claude Code",
+      title: "Claude Opus 4.7 vs Sonnet 4.6 — for Claude Code",
       description:
         "When to default to Sonnet 4.6 and when to escalate to Opus 4.7 — plus how AnyCap closes the multimodal gap for both.",
     },
@@ -370,18 +370,12 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
 export default async function ClaudeOpus47VsSonnet46Page() {
   const locale = await getRequestLocale();
   const content = contentByLocale[locale] ?? contentByLocale.en;
-  const faqJsonLd = createFaqPageJsonLd(content.faqItems);
-
   return (
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       <article className="px-6 md:px-12 lg:px-20">

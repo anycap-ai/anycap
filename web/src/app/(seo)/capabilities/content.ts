@@ -114,7 +114,7 @@ type CapabilitiesPageContent = {
 const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
   en: {
     metadata: {
-      title: "AI Agent Capabilities — Image, video, audio, web, storage, and publishing",
+      title: "AI Agent Capabilities | AnyCap",
       description:
         "Browse the AI agent capability runtime that adds image, video, audio, web, storage, and publishing workflows through one install path, one auth flow, and one CLI.",
       openGraphTitle: "AI Agent Capabilities — Image, video, audio, web, storage, and publishing",

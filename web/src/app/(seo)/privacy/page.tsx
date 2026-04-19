@@ -5,7 +5,6 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
-import { defaultLocale } from "@/lib/site";
 import { getPrivacyMetadata, getPrivacyPageData, PRIVACY_PATH } from "./content";
 
 export const runtime = "edge";
@@ -20,11 +19,10 @@ const listClass =
 const linkClass = "text-[#1c1f17] underline decoration-[#6b7d3a] underline-offset-4";
 const buttonLinkClass = `${linkClass} cursor-pointer border-0 bg-transparent p-0`;
 
-export const metadata: Metadata = createLocalizedMetadataForPath(
-  defaultLocale,
-  PRIVACY_PATH,
-  getPrivacyMetadata(defaultLocale),
-);
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return createLocalizedMetadataForPath(locale, PRIVACY_PATH, getPrivacyMetadata(locale));
+}
 
 function PageSection({
   title,

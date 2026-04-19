@@ -296,7 +296,7 @@ function createPageContent(
 
 const englishCopy: ForClaudeCodeCopy = {
   metadata: {
-    title: "Claude Code Opus 4.7 + AnyCap — Image, Video, and Vision in One Agent",
+    title: "Claude Code Image, Video & Vision Tools | AnyCap",
     description:
       "Claude Code on Opus 4.7 + AnyCap is insane. Add image generation, video generation, vision, and audio to Claude Code through one skill, one CLI, and one login.",
     openGraphTitle: "Claude Code Opus 4.7 + AnyCap — Image, Video, and Vision in One Agent",

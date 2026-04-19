@@ -438,9 +438,9 @@ export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
   PAGE_PATH,
   {
-    title: "Claude Code on Opus 4.7 + AnyCap — autonomous creative production for agents",
+    title: "Claude Code Opus 4.7 + AnyCap Capabilities",
     description:
-      "Opus 4.7 is the first agent with the reasoning depth to direct a fleet of image and video models autonomously. Pair it with AnyCap and ship multi-asset launch packages in one run.",
+      "Opus 4.7 has the reasoning depth to direct image and video models autonomously. Add AnyCap and ship multi-asset launch packages in one run.",
     openGraph: {
       type: "website",
       title: "Claude Code on Opus 4.7 + AnyCap — autonomous creative production for agents",
@@ -472,10 +472,12 @@ export default async function ClaudeCodeOpus47Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {faqJsonLd['@type'] ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

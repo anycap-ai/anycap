@@ -141,10 +141,10 @@ const englishContent: CursorPageContent = {
   metadata: {
     title: "Cursor tools for image, video, and vision | AnyCap",
     description:
-      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation, video generation, and vision.",
+      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation and video generation.",
     openGraphTitle: "Cursor tools for image, video, and vision | AnyCap",
     openGraphDescription:
-      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation, video generation, and vision.",
+      "Tell Cursor \u2018help me install anycap.ai\u2019 and it handles the rest \u2014 skill discovery, CLI install, and immediate access to image generation and video generation.",
     articleHeadline: "Cursor tools for image, video, and vision | AnyCap",
     articleDescription:
       "Guide to adding image generation, video generation, image understanding, and video analysis to Cursor through one capability runtime.",

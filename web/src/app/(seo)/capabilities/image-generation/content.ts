@@ -111,7 +111,7 @@ type ImageGenerationPageContent = {
 const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
   en: {
     metadata: {
-      title: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
+      title: "Image Generation API for AI Agents | AnyCap",
       description:
         "Give AI agents and creators image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
       openGraphTitle: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",

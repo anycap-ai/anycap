@@ -56,9 +56,9 @@ const en: ComparePageData = {
   ],
   eyebrow: "Compare",
   metadata: {
-    title: "AnyCap vs Replicate — agent capability runtime vs model API platform",
+    title: "AnyCap vs Replicate — Capability Runtime vs Model API",
     description:
-      "Compare AnyCap and Replicate. Replicate is a model inference and deployment platform built around predictions, webhooks, and app backends. AnyCap is a cross-agent capability runtime for Codex, Cursor, Claude Code, and similar agent workflows.",
+      "AnyCap is a capability runtime for AI agents. Replicate is a model API platform. Compare architecture, use cases, and when to choose each for agent workflows.",
     openGraphTitle: "AnyCap vs Replicate — agent capability runtime vs model API platform",
     openGraphDescription:
       "See when Replicate is the right model API layer and when AnyCap is the cleaner capability layer around existing agents.",

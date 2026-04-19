@@ -17,17 +17,28 @@ type LocaleContent = ModelDetailPageContent & {
 const contentByLocale = {
   en: {
     metadata: {
-      title: "Seedream 5 for AI agents — Image generation through AnyCap",
+      title: "Seedream 5 (ByteDance) for AI agents — Image generation through AnyCap",
       description:
-        "Use Seedream 5 through AnyCap when AI agents need polished image generation with one CLI and one capability runtime. Learn when to choose Seedream 5, how to call it, and how it fits image workflows.",
-      openGraphTitle: "Seedream 5 for AI agents — Image generation through AnyCap",
+        "Seedream 5 is ByteDance's 2026 AI image generation model. Call it from any AI agent through AnyCap, alongside Nano Banana 2/Pro, GPT Image, and Imagen 4.",
+      openGraphTitle: "Seedream 5 (ByteDance) for AI agents — Image generation through AnyCap",
       openGraphDescription:
-        "Use Seedream 5 through AnyCap when AI agents need polished image generation with one CLI and one capability runtime.",
-      articleHeadline: "Seedream 5 for AI agents — Image generation through AnyCap",
+        "Use ByteDance's Seedream 5 image model through AnyCap when AI agents need polished image generation with one CLI and one capability runtime.",
+      articleHeadline: "Seedream 5 (ByteDance) for AI agents — Image generation through AnyCap",
       articleDescription:
-        "Guide to using Seedream 5 through AnyCap when AI agents need polished first-pass image generation in a capability runtime.",
-      articleAbout: ["Seedream 5", "Image generation", "AnyCap", "AI agents"],
-      articleKeywords: ["seedream 5", "image generation", "anycap", "ai agent model guide"],
+        "Guide to using Seedream 5, the 2026 AI image generation model from ByteDance, through AnyCap when AI agents need polished first-pass image generation in a capability runtime.",
+      articleAbout: ["Seedream 5", "ByteDance", "AI image generation", "Image generation model", "AnyCap", "AI agents"],
+      articleKeywords: [
+        "seedream 5",
+        "seedream 5 bytedance",
+        "seedream 5 api",
+        "seedream 5 image generation",
+        "bytedance image model",
+        "seedream 5 vs nano banana",
+        "seedream 5 vs gpt image",
+        "image generation api",
+        "ai agent image generation",
+        "anycap",
+      ],
     },
     breadcrumbItems: [
       { name: "Home", href: "/" },
@@ -37,10 +48,10 @@ const contentByLocale = {
     eyebrow: "Model",
     lastUpdatedLabel: "Last updated April 5, 2026",
     hero: {
-      titleLine1: "Seedream 5",
+      titleLine1: "Seedream 5 (ByteDance)",
       titleLine2: "for AI agents",
       intro:
-        "Seedream 5 is a strong default when an agent needs image generation through AnyCap. It fits workflows where the agent starts from a text prompt and needs a polished visual result without custom provider integration. With AnyCap, agents can call Seedream 5 through the same CLI they use for other multimodal capabilities.",
+        "Seedream 5 is ByteDance's 2026 AI image generation model. It's a strong default when an agent needs image generation through AnyCap. The model fits workflows where the agent starts from a text prompt and needs a polished visual result without custom provider integration. With AnyCap, agents can call this ByteDance image model through the same CLI they use for other multimodal capabilities.",
     },
     showcaseLabels: {
       generatedExampleLabel: "Generated example",
@@ -77,7 +88,8 @@ const contentByLocale = {
       "Marketing graphics and launch assets",
       "Product mockups and concept frames",
       "Editorial visuals and social thumbnails",
-      "Agent workflows that need a polished image output on the first pass",
+      "Brand-consistent visuals where the agent needs predictable framing",
+      "Workflows that need a polished image output on the first pass without an editing loop",
     ],
     callSectionTitle: "Call Seedream 5 through AnyCap",
     callExamples: [
@@ -89,6 +101,56 @@ const contentByLocale = {
       {
         label: "List available image models",
         code: "anycap image models",
+      },
+    ],
+    specsTitle: "Seedream 5 specs at a glance",
+    specRows: [
+      { spec: "Output", value: "Single image, up to 2K resolution" },
+      { spec: "Modes", value: "Text-to-image, image-to-image refinement" },
+      { spec: "Strengths", value: "Polished marketing-grade composition, clean studio lighting" },
+      { spec: "Editing", value: "Pair with Nano Banana Pro for targeted edits after generation" },
+      { spec: "Style fit", value: "Product, editorial, brand visuals — less effective for stylized illustration" },
+      { spec: "AnyCap CLI", value: "anycap image generate --model seedream-5" },
+    ],
+    multiModelTitle: "Seedream 5 vs Nano Banana 2 vs GPT Image 1.5 vs Imagen 4",
+    multiModelIntro:
+      "All four are top-tier image models in 2026. Seedream 5 is the polished default for marketing visuals; the others lead in different lanes. Agents can switch with one CLI flag in AnyCap.",
+    multiModelHeaders: {
+      dimension: "Dimension",
+      kling: "Seedream 5",
+      veo: "Nano Banana 2",
+      seedance: "GPT Image 1.5",
+    },
+    multiModelRows: [
+      {
+        dimension: "Best fit",
+        kling: "Marketing, product, brand visuals",
+        veo: "Knowledge-grounded, web-aware images",
+        seedance: "Highest LM Arena score, broad strength",
+      },
+      {
+        dimension: "Style fidelity",
+        kling: "Strong on clean studio looks",
+        veo: "Good across many styles",
+        seedance: "Best overall prompt fidelity",
+      },
+      {
+        dimension: "Iteration loop",
+        kling: "Pair with Nano Banana Pro for edits",
+        veo: "Can edit + regenerate in same pass",
+        seedance: "Strong inpainting + reference workflows",
+      },
+      {
+        dimension: "Cost band",
+        kling: "Mid",
+        veo: "Mid",
+        seedance: "Higher",
+      },
+      {
+        dimension: "AnyCap CLI",
+        kling: "--model seedream-5",
+        veo: "--model nano-banana-2",
+        seedance: "Coming soon",
       },
     ],
     comparisonTitle: "Seedream 5 vs nearby choices",
@@ -119,17 +181,27 @@ const contentByLocale = {
       {
         question: "What is Seedream 5 best for?",
         answer:
-          "Seedream 5 is best for first-pass image generation when an agent needs a polished result directly from a text prompt.",
+          "Seedream 5 is best for first-pass image generation when an agent needs a polished result directly from a text prompt — marketing assets, product mockups, editorial visuals.",
       },
       {
         question: "How do agents call Seedream 5 through AnyCap?",
         answer:
-          "Agents can call it with the AnyCap CLI using anycap image generate --model seedream-5 and a text prompt.",
+          "Agents call it with the AnyCap CLI using anycap image generate --model seedream-5 and a text prompt. Same auth and CLI as every other capability.",
       },
       {
         question: "Should I use Seedream 5 or Nano Banana Pro?",
         answer:
-          "Use Seedream 5 for new image generation and Nano Banana Pro when the workflow starts from an existing image and needs editing.",
+          "Use Seedream 5 for new image generation from a text prompt. Use Nano Banana Pro when the workflow starts from an existing image and needs targeted editing.",
+      },
+      {
+        question: "Seedream 5 vs Nano Banana 2 — which is better?",
+        answer:
+          "Seedream 5 leads on polished marketing-grade composition and clean studio lighting. Nano Banana 2 leads on knowledge-grounded, web-aware image generation. Pick based on whether the brief is brand visual or knowledge-driven.",
+      },
+      {
+        question: "Does Seedream 5 support image-to-image refinement?",
+        answer:
+          "Yes. Seedream 5 supports image-to-image refinement when an agent has a source frame to evolve. For pixel-level edits, hand off to Nano Banana Pro after generation.",
       },
     ],
     nextActions: [

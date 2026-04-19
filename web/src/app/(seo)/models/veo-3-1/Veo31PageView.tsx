@@ -37,9 +37,25 @@ export interface ModelDetailPageContent {
   useCases: readonly string[];
   callSectionTitle: string;
   callExamples: readonly { label: string; code: string }[];
+  specsTitle?: string;
+  specRows?: readonly { spec: string; value: string }[];
   workflowTitle?: string;
   workflowParagraph?: string;
   workflowCards?: readonly { eyebrow: string; body: string }[];
+  multiModelTitle?: string;
+  multiModelIntro?: string;
+  multiModelHeaders?: {
+    dimension: string;
+    kling: string;
+    veo: string;
+    seedance: string;
+  };
+  multiModelRows?: readonly {
+    dimension: string;
+    kling: string;
+    veo: string;
+    seedance: string;
+  }[];
   comparisonTitle?: string;
   comparisonHeaders?: {
     dimension: string;
@@ -149,6 +165,42 @@ export function Veo31PageView({ content }: { content: ModelDetailPageContent }) 
           </section>
         </FadeIn>
 
+        {content.specRows?.length ? (
+          <>
+            <div className="mt-16 md:mt-24">
+              <hr className="border-t border-[#d4dbb8]" />
+            </div>
+
+            <FadeIn>
+              <section className="mt-16 md:mt-24">
+                <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                  {content.specsTitle ?? "Specs"}
+                </h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full max-w-[860px] text-left">
+                    <tbody>
+                      {content.specRows.map((row) => (
+                        <tr key={row.spec} className="border-b border-[#d4dbb8]/50">
+                          <th
+                            scope="row"
+                            className="w-[180px] py-3 pr-6 align-top text-[11px] font-medium tracking-[0.5px] text-[#5a5e52]"
+                            style={mono}
+                          >
+                            {row.spec}
+                          </th>
+                          <td className="py-3 align-top text-sm leading-6 text-[#4d5145]">
+                            {row.value}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </FadeIn>
+          </>
+        ) : null}
+
         <div className="mt-16 md:mt-24">
           <hr className="border-t border-[#d4dbb8]" />
         </div>
@@ -204,6 +256,77 @@ export function Veo31PageView({ content }: { content: ModelDetailPageContent }) 
                       <p className="text-sm leading-6 text-[#4d5145]">{card.body}</p>
                     </div>
                   ))}
+                </div>
+              </section>
+            </FadeIn>
+          </>
+        ) : null}
+
+        {content.multiModelRows?.length ? (
+          <>
+            <div className="mt-16 md:mt-24">
+              <hr className="border-t border-[#d4dbb8]" />
+            </div>
+
+            <FadeIn>
+              <section className="mt-16 md:mt-24">
+                <h2 className="mb-4 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                  {content.multiModelTitle ?? "Compare models"}
+                </h2>
+                {content.multiModelIntro ? (
+                  <p className="mb-8 max-w-[820px] text-base leading-7 text-[#4d5145]">
+                    {content.multiModelIntro}
+                  </p>
+                ) : null}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-[#d4dbb8]">
+                        <th
+                          className="pb-3 pr-6 text-[11px] tracking-[0.5px] text-[#5a5e52]"
+                          style={mono}
+                        >
+                          {content.multiModelHeaders?.dimension ?? "Dimension"}
+                        </th>
+                        <th
+                          className="pb-3 pr-6 text-[11px] tracking-[0.5px] text-[#6b7d3a]"
+                          style={mono}
+                        >
+                          {content.multiModelHeaders?.kling ?? "Kling 3.0"}
+                        </th>
+                        <th
+                          className="pb-3 pr-6 text-[11px] tracking-[0.5px] text-[#5a5e52]"
+                          style={mono}
+                        >
+                          {content.multiModelHeaders?.veo ?? "Veo 3.1"}
+                        </th>
+                        <th
+                          className="pb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]"
+                          style={mono}
+                        >
+                          {content.multiModelHeaders?.seedance ?? "Seedance 1.5 Pro"}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {content.multiModelRows.map((row) => (
+                        <tr key={row.dimension} className="border-b border-[#d4dbb8]/50">
+                          <td className="align-top py-4 pr-6 text-sm font-medium text-[#1c1f17]">
+                            {row.dimension}
+                          </td>
+                          <td className="align-top py-4 pr-6 text-sm leading-6 text-[#4d5145]">
+                            {row.kling}
+                          </td>
+                          <td className="align-top py-4 pr-6 text-sm leading-6 text-[#4d5145]">
+                            {row.veo}
+                          </td>
+                          <td className="align-top py-4 text-sm leading-6 text-[#4d5145]">
+                            {row.seedance}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </section>
             </FadeIn>

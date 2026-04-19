@@ -72,8 +72,7 @@ export function createTechArticleJsonLd({
   };
 }
 
-export function createFaqPageJsonLd(items: readonly FaqPageItem[]) {
-  void items;
+export function createFaqPageJsonLd(_items: readonly FaqPageItem[]): Record<string, unknown> {
   // FAQPage rich results are intentionally disabled site-wide for SEO policy compliance.
   return {};
 }

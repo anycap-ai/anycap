@@ -6,7 +6,7 @@ import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 
 export const runtime = "edge";
@@ -117,8 +117,6 @@ const articleJsonLd = createTechArticleJsonLd({
   dateModified: lastUpdatedIso,
 });
 
-const faqJsonLd = createFaqPageJsonLd(faqItems);
-
 const sourceLinks = [
   {
     label: "OpenClaw image generation docs",
@@ -167,10 +165,7 @@ export default function AnycapVsOpenClawImageGenerationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

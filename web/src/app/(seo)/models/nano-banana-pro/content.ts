@@ -19,18 +19,22 @@ type LocaleContent = ModelDetailPageContent & {
 const contentByLocale = {
   en: {
     metadata: {
-      title: "Nano Banana Pro for AI agents — Image editing through AnyCap",
+      title: "Nano Banana Pro (Google Gemini) for AI agents — Image editing through AnyCap",
       description:
-        "Use Nano Banana Pro through AnyCap when AI agents need image editing, revision loops, and prompt-based updates to an existing visual. Learn how it fits agent workflows and when to choose it over a pure generation model.",
-      openGraphTitle: "Nano Banana Pro for AI agents — Image editing through AnyCap",
+        "Nano Banana Pro is Google's Gemini 3 Pro Image model, released November 2025. Use it through AnyCap when AI agents need image editing, revision loops, and prompt-based updates to an existing visual.",
+      openGraphTitle: "Nano Banana Pro (Google Gemini) for AI agents — Image editing through AnyCap",
       openGraphDescription:
-        "Use Nano Banana Pro through AnyCap when AI agents need image editing, revision loops, and prompt-based updates to an existing visual.",
-      articleHeadline: "Nano Banana Pro for AI agents — Image editing through AnyCap",
+        "Use Nano Banana Pro, Google Gemini's November 2025 image model, through AnyCap when AI agents need image editing and prompt-based revision.",
+      articleHeadline: "Nano Banana Pro (Google Gemini) for AI agents — Image editing through AnyCap",
       articleDescription:
-        "Guide to using Nano Banana Pro through AnyCap for image editing, revision loops, and prompt-based updates to an existing visual inside AI agent workflows.",
-      articleAbout: ["Nano Banana Pro", "Image editing", "AnyCap", "AI agents"],
+        "Guide to using Nano Banana Pro, Google Gemini's November 2025 image generation and editing model, through AnyCap for image editing, revision loops, and prompt-based updates inside AI agent workflows.",
+      articleAbout: ["Nano Banana Pro", "Google Gemini", "Gemini 3 Pro Image", "Image generation model", "Image editing", "AnyCap", "AI agents"],
       articleKeywords: [
         "nano banana pro",
+        "nano banana pro gemini",
+        "nano banana pro google",
+        "gemini 3 pro image",
+        "google image generation model",
         "nano banana pro api",
         "image editing model",
         "image to image",
@@ -45,10 +49,10 @@ const contentByLocale = {
     eyebrow: "Model",
     lastUpdatedLabel: "Last updated April 5, 2026",
     hero: {
-      titleLine1: "Nano Banana Pro",
+      titleLine1: "Nano Banana Pro (Gemini)",
       titleLine2: "for AI agents",
       intro:
-        "Nano Banana Pro is a better fit when an agent needs to edit an existing image instead of generating from scratch. Through AnyCap, the model becomes part of the same capability runtime and CLI used for other image and video tasks, so agents can move from generation to revision without changing tools.",
+        "Nano Banana Pro is Google's Gemini 3 Pro Image model, released November 2025. It's a better fit when an agent needs to edit an existing image instead of generating from scratch. Through AnyCap, the Google image model becomes part of the same capability runtime and CLI used for other image and video tasks, so agents can move from generation to revision without changing tools.",
     },
     showcaseLabels: {
       generatedExampleLabel: "Generated example",
