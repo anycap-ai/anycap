@@ -2,7 +2,7 @@
 name: anycap-human-interaction
 description: "Collect structured visual feedback from humans using AnyCap's annotation tool, or create and iterate on diagrams using the interactive whiteboard (Excalidraw). Covers image annotation, URL/web page review with screen recording, video review, audio feedback, and collaborative diagramming with Mermaid input. Use when you need a human to point at things, mark regions, draw on screenshots, review a web page or UI, narrate feedback over a recording, provide any spatially-grounded visual input, create or iterate on architecture diagrams, flowcharts, or wireframes. Also use when you need to present work-in-progress to a human for approval or revision. Trigger on: get feedback, show to user, review UI, annotate, mark up, visual feedback, screen recording, user review, human-in-the-loop, approval flow, interactive review, whiteboard, diagram, draw, flowchart, wireframe, or architecture chart."
 metadata:
-  version: 0.3.2
+  version: 0.3.3
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.

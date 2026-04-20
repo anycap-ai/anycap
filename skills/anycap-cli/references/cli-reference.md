@@ -175,9 +175,72 @@ Use this order for the chat-style Feishu agent flow. Start this flow automatical
 - "把你接到我的飞书 bot 上"
 - "用 AnyCap 启动飞书机器人"
 - "用飞书跟当前 agent 聊天"
+- "我要使用飞书连接本地codex"
+- "用飞书连接本地 Codex"
+- "把飞书接到本地 Codex"
+- "用飞书连接本地 Claude Code"
+- "把飞书接到本地 Claude Code"
+- "用飞书连接本地 Cursor"
+- "把飞书接到本地 Cursor"
+- "用飞书接入本地 agent"
+- "把飞书接到本地 agent"
+- "connect Feishu to local Codex"
+- "connect Feishu to local Claude Code"
+- "connect Feishu to local Cursor"
+- "connect Feishu to local agent"
 - "start AnyCap Feishu daemon"
 
-Do not make the human assemble the low-level daemon command manually. Use the current working directory as `--workspace` unless the human provides another repository path. Infer the local agent from the current runtime: Codex uses `--agent codex`; Claude Code uses `--agent claude-code`; Cursor uses `--agent cursor`. If unsure, ask whether to use Codex, Claude Code, or Cursor.
+Do not make the human assemble the low-level daemon command manually. The human should configure Feishu Open Platform and store credentials locally; the agent should start the local agent connection after the human confirms the Feishu setup is done. Use the current working directory as `--workspace` unless the human provides another repository path. The user-facing `anycap connect feishu` path currently supports Codex, Claude Code, and Cursor. Infer the local agent from the current runtime: Codex uses `--agent codex`; Claude Code uses `--agent claude-code`; Cursor uses `--agent cursor`. If unsure, ask whether to use Codex, Claude Code, or Cursor.
+
+Always remind the human to verify their personal Feishu bot setup before starting the local connection, even when local Feishu credentials already exist. Stored credentials only prove App ID/App Secret are available locally; they do not prove the bot capability, event subscription, message event, permissions, or app release are configured correctly.
+
+Ask the human to confirm these Feishu Open Platform steps and come back when done:
+
+1. Create an internal/self-built app in Feishu Open Platform.
+2. Enable the app's bot/robot capability.
+3. In event subscriptions, choose long connection event delivery. Do not ask the human to configure a public webhook for the normal local setup.
+4. Subscribe to the message receive event, shown in Feishu as "receive message" / `im.message.receive_v1`.
+5. In permissions, use batch import for the tenant scopes below, then publish or release the app version so the permissions take effect.
+6. Copy the App ID and App Secret locally. The human must never paste the App Secret into chat.
+
+Recommended tenant scopes for chat plus Feishu resource read/write:
+
+```json
+{
+  "scopes": {
+    "tenant": [
+      "bitable:app",
+      "bitable:app:readonly",
+      "docx:document",
+      "docx:document.block:convert",
+      "docx:document:create",
+      "docx:document:readonly",
+      "docx:document:write_only",
+      "im:chat:readonly",
+      "im:message",
+      "im:message.group_at_msg:readonly",
+      "im:message.p2p_msg:readonly",
+      "sheets:spreadsheet",
+      "sheets:spreadsheet.meta:read",
+      "sheets:spreadsheet.meta:write_only",
+      "sheets:spreadsheet:create",
+      "sheets:spreadsheet:read",
+      "sheets:spreadsheet:readonly",
+      "sheets:spreadsheet:write_only",
+      "wiki:node:copy",
+      "wiki:node:create",
+      "wiki:node:move",
+      "wiki:node:read",
+      "wiki:node:retrieve",
+      "wiki:node:update",
+      "wiki:wiki",
+      "wiki:wiki:readonly"
+    ]
+  }
+}
+```
+
+If Feishu still refuses bot replies, ask the human to search permissions for "send as bot" / "以机器人身份发送消息" and add the matching permission, commonly `im:message:send_as_bot`. If image or file downloads fail, ask them to add the message resource download permission shown by their console, commonly `im:resource`.
 
 Read Feishu credentials from the local connection credential store first. The store is written by `anycap connect credentials set feishu` and lives in the AnyCap config dir with mode 0600.
 
@@ -189,13 +252,15 @@ Check credential status without printing secrets:
 anycap connect credentials show feishu
 ```
 
-If credentials are missing, ask the human to run this in their own terminal and confirm. Never ask the human to paste App Secret values into chat. Never write App Secret values into docs, code, logs, memory files, command history, or final summaries. Do not echo secrets back to the human.
+If credentials are missing, ask the human to run this in their own terminal and confirm. If credentials already exist, still ask the human to confirm the Feishu Open Platform checklist above before starting the local connection. Never ask the human to paste App Secret values into chat. Never write App Secret values into docs, code, logs, memory files, command history, or final summaries. Do not echo secrets back to the human.
 
 Human terminal setup:
 
 ```bash
 anycap connect credentials set feishu --app-id <FEISHU_APP_ID> --app-secret <FEISHU_APP_SECRET>
 ```
+
+After the human says this is done, the agent continues. Do not ask the human to run `anycap connect feishu` in the normal flow.
 
 ```bash
 anycap status
@@ -225,13 +290,13 @@ Use Cursor Agent instead of Codex when that is the desired local agent:
 anycap connect feishu --agent cursor --workspace /path/to/repo
 ```
 
-When the human explicitly wants the Feishu bot to make Codex call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, add:
+Codex runs with unrestricted local execution by default for Feishu so MCP/plugin tools, AnyCap CLI calls, public internet APIs, and local-network/VPN-only resources can work from inside the non-interactive Codex subprocess:
 
 ```bash
-anycap connect feishu --agent codex --codex-exec-mode danger-full-access --workspace /path/to/repo
+anycap connect feishu --agent codex --workspace /path/to/repo
 ```
 
-The default Codex mode is `safe`, which maps to Codex `--full-auto`. That automates execution but can still run inside Codex's sandboxed or restricted network environment. Feishu resource reads are handled by the local daemon, but commands that Codex runs itself, such as `anycap image generate`, need non-sandboxed local network access.
+Use `--codex-exec-mode safe` only when the human explicitly wants Codex to run in the more restricted `--full-auto` mode.
 
 For Claude Code, the daemon defaults to `--claude-permission-mode acceptEdits`. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, pass broader Claude Code permission/tool flags:
 
@@ -255,9 +320,10 @@ This command will:
 - claims it as the current user's primary Feishu runner
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
 - starts the normal polling loop for sessions/tasks
-- uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
+- uses Codex `--dangerously-bypass-approvals-and-sandbox` by default so MCP/plugin tools, AnyCap CLI calls, and public/internal network access can work from inside Codex; pass `--codex-exec-mode safe` to use Codex `--full-auto` instead
 - uses Claude Code `claude -p --output-format json` when `--agent claude-code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
 - uses Cursor Agent `cursor-agent -p --output-format json --trust --force` when `--agent cursor`, and persists Cursor Agent `session_id` for follow-up turns; use `--cursor-model <model>` for explicit model selection and tell the human about the broader local command/network permission
+- injects an `anycap-local-session` context block into local executor session prompts. For Codex, explicit "continue/resume the local session" requests scan local Codex session metadata, pick the most recent non-`exec` session for the daemon workspace, and resume it by explicit session id. "Open/view/recover this conversation on my Mac" requests should get the exact command using `executor_ref` when present or `local_resume_ref` when provided; only fall back to `anycap agent conversations list` when neither exact ref is available. The agent should not suggest `--last` when an exact ref is available.
 
 Check which local machine is currently connected:
 
@@ -286,7 +352,7 @@ anycap agent runners serve --name local-mac --platform feishu --executor cursor 
 - `connect` is the main user-facing path.
 - `agent daemon start` is still available as the lower-level implementation path.
 - `agent runners serve` is still useful for debugging and operator workflows.
-- `agent runners serve` also accepts `--codex-exec-mode danger-full-access` when debugging local execution outside the default Codex sandbox.
+- `agent runners serve` also accepts `--codex-exec-mode safe` when debugging a more restricted Codex run.
 - `agent runners serve` also accepts `--claude-permission-mode`, `--claude-allowed-tools`, and `--claude-bin` when debugging Claude Code execution.
 - `agent runners serve` also accepts `--cursor-bin`, `--cursor-model`, and `--cursor-force` when debugging Cursor Agent execution.
 - `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
