@@ -3,11 +3,8 @@ package infra
 import (
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/cli/httpclient"
-	"gitlab.knoffice.tech/engineering/anycap/pkg/api"
 
 	"github.com/spf13/cobra"
 )
@@ -29,19 +26,6 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 			}
 
 			filePath := args[0]
-			stat, err := os.Stat(filePath)
-			if err != nil {
-				return err
-			}
-			if stat.IsDir() {
-				return fmt.Errorf("upload expects a file, got directory: %s", filePath)
-			}
-
-			contentType, err := detectContentType(filePath)
-			if err != nil {
-				return err
-			}
-
 			client := clientFactory()
 			var resolvedParentID *string
 			if parentIDSet {
@@ -58,55 +42,15 @@ func newDriveUploadCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 				resolvedParentID = id
 			}
 
-			presignResp, err := client.PostJSON(cmd.Context(), api.DriveFilesPresign, map[string]any{
-				"parent_id":      resolvedParentID,
-				"name":           filepath.Base(filePath),
-				"content_type":   contentType,
-				"content_length": stat.Size(),
-			})
+			result, err := uploadLocalFileToDrive(cmd.Context(), client, filePath, resolvedParentID)
 			if err != nil {
 				return err
 			}
-
-			presignData, err := decodeSuccessData[struct {
-				UploadSessionID string `json:"upload_session_id"`
-				FileID          string `json:"file_id"`
-				UploadURL       string `json:"upload_url"`
-			}](presignResp)
-			if err != nil {
-				return err
-			}
-
-			if err := uploadFileToPresignedURL(cmd.Context(), presignData.UploadURL, filePath, contentType, stat.Size()); err != nil {
-				return err
-			}
-
-			completeResp, err := client.PostJSON(cmd.Context(), api.DriveFilesComplete, map[string]any{
-				"upload_session_id": presignData.UploadSessionID,
-				"file_id":           presignData.FileID,
-			})
-			if err != nil {
-				return err
-			}
-
-			completeData, err := decodeSuccessData[struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
-				Size *int64 `json:"size,omitempty"`
-			}](completeResp)
-			if err != nil {
-				return err
-			}
-
-			size := stat.Size()
-			if completeData.Size != nil {
-				size = *completeData.Size
-			}
-			return writeFlatSuccess(stdout, completeResp.RequestID, map[string]any{
+			return writeFlatSuccess(stdout, "", map[string]any{
 				"status":  "success",
-				"file_id": completeData.ID,
-				"name":    completeData.Name,
-				"size":    size,
+				"file_id": result.FileID,
+				"name":    result.Name,
+				"size":    result.Size,
 			})
 		},
 	}

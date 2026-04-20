@@ -102,6 +102,9 @@ describe("handlePage route", () => {
 		expect(response.status).toBe(200);
 		expect(body).toContain("Password required");
 		expect(body).toContain("/__auth/password");
+		expect(body).toContain("data-password-form");
+		expect(body).toContain("Unlocking...");
+		expect(body).toContain("Verifying password and preparing content...");
 	});
 
 	it("returns 404 when site is unpublished", async () => {

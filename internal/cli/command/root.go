@@ -90,6 +90,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 
 	// Infrastructure commands.
 	rootCmd.AddCommand(infra.NewDriveCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(infra.NewSnapshotCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(infra.NewPageCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(infra.NewAnnotateCmd(opts.Stdout))
 	rootCmd.AddCommand(infra.NewDrawCmd(opts.Stdout))

@@ -26,6 +26,8 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityPOST(group, "/drive/files/presign", "drive.file.upload.prepare", h.PresignFile)
 	middleware.CapabilityPOST(group, "/drive/files/complete", "drive.file.upload.complete", h.CompleteFile)
 	middleware.CapabilityGET(group, "/drive/nodes", "drive.browse", h.ListNodes)
+	middleware.CapabilityGET(group, "/drive/nodes/:id", "drive.browse", h.GetNode)
+	middleware.CapabilityGET(group, "/drive/resolve-path", "drive.browse", h.ResolvePath)
 	middleware.CapabilityPATCH(group, "/drive/nodes/:id", "drive.item.update", h.UpdateNode)
 	middleware.CapabilityDELETE(group, "/drive/nodes/:id", "drive.item.delete", h.DeleteNode)
 	middleware.CapabilityGET(group, "/drive/nodes/:id/share", "drive.share.get", h.GetShare)

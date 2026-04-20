@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -168,6 +169,9 @@ func (s *Service) CreateFolder(ctx context.Context, userID int64, parentID *int6
 	if err := s.ensureValidParent(ctx, space.ID, parentID, false); err != nil {
 		return nil, err
 	}
+	if err := s.ensureSiblingNameAvailable(ctx, space.ID, parentID, name, nil); err != nil {
+		return nil, err
+	}
 
 	// Quota: atomically increment drive node count (check-and-increment)
 	quotaIncremented := false
@@ -235,6 +239,54 @@ func (s *Service) ListNodes(ctx context.Context, userID int64, parentID *int64, 
 	return s.nodeRepo.ListByParent(ctx, filter)
 }
 
+func (s *Service) GetNode(ctx context.Context, userID int64, nodeID int64) (*model.DriveNode, error) {
+	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
+		return nil, fmt.Errorf("drive service is not configured")
+	}
+	if nodeID <= 0 {
+		return nil, fmt.Errorf("id must be greater than zero")
+	}
+
+	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := s.nodeRepo.GetByID(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil || node.SpaceID != space.ID {
+		return nil, fmt.Errorf("drive node not found")
+	}
+	return node, nil
+}
+
+func (s *Service) ResolvePath(ctx context.Context, userID int64, nodePath string) (*model.DriveNode, error) {
+	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
+		return nil, fmt.Errorf("drive service is not configured")
+	}
+
+	cleaned, err := normalizeDriveNodePath(nodePath)
+	if err != nil {
+		return nil, err
+	}
+
+	space, err := s.spaceService.GetOrCreatePersonalSpace(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := s.nodeRepo.ResolveByPath(ctx, space.ID, cleaned)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, model.ErrNotFound(fmt.Sprintf("drive path not found: %s", cleaned))
+	}
+	return node, nil
+}
+
 func (s *Service) UpdateNode(ctx context.Context, userID int64, nodeID int64, name *string, parentID *int64, updateParent bool) (*model.DriveNode, error) {
 	if s == nil || s.spaceService == nil || s.nodeRepo == nil {
 		return nil, fmt.Errorf("drive service is not configured")
@@ -266,6 +318,18 @@ func (s *Service) UpdateNode(ctx context.Context, userID int64, nodeID int64, na
 		if err := s.ensureValidDestinationParent(ctx, space.ID, node, parentID); err != nil {
 			return nil, err
 		}
+	}
+
+	effectiveName := node.Name
+	if name != nil {
+		effectiveName = strings.TrimSpace(*name)
+	}
+	effectiveParentID := node.ParentID
+	if updateParent {
+		effectiveParentID = parentID
+	}
+	if err := s.ensureSiblingNameAvailable(ctx, space.ID, effectiveParentID, effectiveName, &node.ID); err != nil {
+		return nil, err
 	}
 
 	updated, err := s.nodeRepo.Update(ctx, model.UpdateDriveNodeInput{
@@ -446,4 +510,45 @@ func (s *Service) ensureValidDestinationParent(ctx context.Context, spaceID int6
 		}
 	}
 	return nil
+}
+
+func (s *Service) ensureSiblingNameAvailable(ctx context.Context, spaceID int64, parentID *int64, name string, excludeID *int64) error {
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return nil
+	}
+
+	items, _, err := s.nodeRepo.ListByParent(ctx, model.ListDriveNodesFilter{
+		SpaceID:  spaceID,
+		ParentID: parentID,
+		Name:     &trimmed,
+		Limit:    10,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		if excludeID != nil && item.ID == *excludeID {
+			continue
+		}
+		return model.ErrConflict(fmt.Sprintf("drive node %q already exists in destination", trimmed))
+	}
+	return nil
+}
+
+func normalizeDriveNodePath(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", model.ErrValidation("path is required")
+	}
+	if !strings.HasPrefix(trimmed, "/") {
+		return "", model.ErrValidation("path must be absolute and start with '/'")
+	}
+
+	cleaned := path.Clean(trimmed)
+	if cleaned == "." || cleaned == "/" {
+		return "", model.ErrValidation("path must target a drive node")
+	}
+	return cleaned, nil
 }

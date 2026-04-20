@@ -109,6 +109,10 @@ export function useDriveNodes(parentID?: string | null, limit = 10, offset = 0) 
   return useSWR<DriveNodeListResult>(`/v1/drive/nodes?${params}`, fetchWithAccessToken);
 }
 
+export async function getDriveNode(id: string) {
+  return fetchWithAccessToken<DriveNode>(`/v1/drive/nodes/${id}`);
+}
+
 export async function createDriveFolder(input: { name: string; parent_id?: string | null }) {
   const body: Record<string, unknown> = { name: input.name };
   if (input.parent_id !== undefined) {

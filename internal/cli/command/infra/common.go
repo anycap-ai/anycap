@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -37,6 +38,7 @@ type driveNodeSummary struct {
 	ParentID *string `json:"parent_id,omitempty"`
 	Kind     string  `json:"kind"`
 	Name     string  `json:"name"`
+	Size     *int64  `json:"size,omitempty"`
 }
 
 type pageSiteSummary struct {
@@ -196,28 +198,28 @@ func normalizeAbsolutePath(rawPath string) (string, error) {
 	return cleaned, nil
 }
 
-func listDriveNodes(ctx context.Context, client *httpclient.Client, parentID *string) ([]driveNodeSummary, error) {
-	endpoint := api.DriveNodesPath
-	if parentID != nil {
-		endpoint += "?parent_id=" + url.QueryEscape(*parentID)
-	}
-
-	resp, err := client.Get(ctx, endpoint)
+func resolveDrivePath(ctx context.Context, client *httpclient.Client, nodePath string) (*driveNodeSummary, error) {
+	cleaned, err := normalizeAbsolutePath(nodePath)
 	if err != nil {
 		return nil, err
 	}
-
-	var data struct {
-		Items []driveNodeSummary `json:"items"`
+	if cleaned == "/" {
+		return nil, nil
 	}
-	decoded, err := decodeSuccessData[struct {
-		Items []driveNodeSummary `json:"items"`
-	}](resp)
+
+	resp, err := client.Get(ctx, api.DriveResolvePath(cleaned))
+	if err != nil {
+		var apiErr *httpclient.APIError
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	decoded, err := decodeSuccessData[driveNodeSummary](resp)
 	if err != nil {
 		return nil, err
 	}
-	data = decoded
-	return data.Items, nil
+	return &decoded, nil
 }
 
 func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, folderPath string) (*string, error) {
@@ -229,31 +231,63 @@ func resolveDriveFolderPath(ctx context.Context, client *httpclient.Client, fold
 		return nil, nil
 	}
 
-	segments := strings.Split(strings.TrimPrefix(cleaned, "/"), "/")
-	var currentParent *string
-	for _, segment := range segments {
-		if segment == "" {
-			continue
-		}
-		children, err := listDriveNodes(ctx, client, currentParent)
-		if err != nil {
-			return nil, err
-		}
-
-		found := false
-		for _, child := range children {
-			if child.Name == segment && child.Kind == "folder" {
-				id := child.ID
-				currentParent = &id
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, fmt.Errorf("folder path not found: %s", cleaned)
-		}
+	node, err := resolveDrivePath(ctx, client, cleaned)
+	if err != nil {
+		return nil, err
 	}
-	return currentParent, nil
+	if node == nil {
+		return nil, fmt.Errorf("folder path not found: %s", cleaned)
+	}
+	if node.Kind != "folder" {
+		return nil, fmt.Errorf("path exists and is not a folder: %s", cleaned)
+	}
+	id := node.ID
+	return &id, nil
+}
+
+func ensureDriveFolderPath(ctx context.Context, client *httpclient.Client, folderPath string) (*string, error) {
+	cleaned, err := normalizeAbsolutePath(folderPath)
+	if err != nil {
+		return nil, err
+	}
+	if cleaned == "/" {
+		return nil, nil
+	}
+
+	existing, err := resolveDrivePath(ctx, client, cleaned)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		if existing.Kind != "folder" {
+			return nil, fmt.Errorf("path exists and is not a folder: %s", cleaned)
+		}
+		id := existing.ID
+		return &id, nil
+	}
+
+	parentPath := path.Dir(cleaned)
+	if parentPath == "." {
+		parentPath = "/"
+	}
+	parentID, err := ensureDriveFolderPath(ctx, client, parentPath)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.PostJSON(ctx, api.DriveFoldersPath, map[string]any{
+		"parent_id": parentID,
+		"name":      path.Base(cleaned),
+	})
+	if err != nil {
+		return nil, err
+	}
+	created, err := decodeSuccessData[driveNodeSummary](resp)
+	if err != nil {
+		return nil, err
+	}
+	id := created.ID
+	return &id, nil
 }
 
 func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePath string) (string, error) {
@@ -265,43 +299,14 @@ func resolveDriveNodePath(ctx context.Context, client *httpclient.Client, nodePa
 		return "", fmt.Errorf("node path '/' is not a valid node target")
 	}
 
-	segments := strings.Split(strings.TrimPrefix(cleaned, "/"), "/")
-	var (
-		currentParent *string
-		currentNode   *driveNodeSummary
-	)
-	for i, segment := range segments {
-		if segment == "" {
-			continue
-		}
-		children, err := listDriveNodes(ctx, client, currentParent)
-		if err != nil {
-			return "", err
-		}
-
-		var matched *driveNodeSummary
-		for _, child := range children {
-			if child.Name == segment {
-				candidate := child
-				matched = &candidate
-				break
-			}
-		}
-		if matched == nil {
-			return "", fmt.Errorf("node path not found: %s", cleaned)
-		}
-
-		currentNode = matched
-		if i < len(segments)-1 && matched.Kind != "folder" {
-			return "", fmt.Errorf("path segment is not a folder: %s", segment)
-		}
-		id := matched.ID
-		currentParent = &id
+	node, err := resolveDrivePath(ctx, client, cleaned)
+	if err != nil {
+		return "", err
 	}
-	if currentNode == nil {
+	if node == nil {
 		return "", fmt.Errorf("node path not found: %s", cleaned)
 	}
-	return currentNode.ID, nil
+	return node.ID, nil
 }
 
 func resolveDriveNodeID(client *httpclient.Client, ctx context.Context, args []string, srcPath string) (string, error) {
@@ -315,6 +320,77 @@ func resolveDriveNodeID(client *httpclient.Client, ctx context.Context, args []s
 		return "", fmt.Errorf("node-id argument or --src-path is required")
 	}
 	return resolveDriveNodePath(ctx, client, srcPath)
+}
+
+type driveUploadResult struct {
+	FileID string
+	Name   string
+	Size   int64
+}
+
+func uploadLocalFileToDrive(ctx context.Context, client *httpclient.Client, filePath string, parentID *string) (*driveUploadResult, error) {
+	stat, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if stat.IsDir() {
+		return nil, fmt.Errorf("upload expects a file, got directory: %s", filePath)
+	}
+
+	contentType, err := detectContentType(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	presignResp, err := client.PostJSON(ctx, api.DriveFilesPresign, map[string]any{
+		"parent_id":      parentID,
+		"name":           filepath.Base(filePath),
+		"content_type":   contentType,
+		"content_length": stat.Size(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	presignData, err := decodeSuccessData[struct {
+		UploadSessionID string `json:"upload_session_id"`
+		FileID          string `json:"file_id"`
+		UploadURL       string `json:"upload_url"`
+	}](presignResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := uploadFileToPresignedURL(ctx, presignData.UploadURL, filePath, contentType, stat.Size()); err != nil {
+		return nil, err
+	}
+
+	completeResp, err := client.PostJSON(ctx, api.DriveFilesComplete, map[string]any{
+		"upload_session_id": presignData.UploadSessionID,
+		"file_id":           presignData.FileID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	completeData, err := decodeSuccessData[struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Size *int64 `json:"size,omitempty"`
+	}](completeResp)
+	if err != nil {
+		return nil, err
+	}
+
+	size := stat.Size()
+	if completeData.Size != nil {
+		size = *completeData.Size
+	}
+	return &driveUploadResult{
+		FileID: completeData.ID,
+		Name:   completeData.Name,
+		Size:   size,
+	}, nil
 }
 
 func listPageSites(ctx context.Context, client *httpclient.Client) ([]pageSiteSummary, error) {

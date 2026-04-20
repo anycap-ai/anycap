@@ -9,6 +9,7 @@ import type { DriveAccessRecord, DriveDirChildrenRecord, DriveDirMetaRecord, Dri
 import { renderDriveDirectoryPage, renderErrorPage, renderFilePreviewPage, renderPasswordPage } from "./ui";
 
 const DRIVE_SESSION_COOKIE = "ac_drive_auth";
+const DRIVE_PASSWORD_HEADER = "x-anycap-share-password";
 
 function parseDriveShareRoute(pathname: string): { token: string; rest: string } | null {
 	const parts = pathname.split("/").filter((item) => item !== "");
@@ -95,6 +96,25 @@ function sanitizeRedirectPath(token: string, value: FormDataEntryValue | null): 
 		return fallback;
 	}
 	return trimmed;
+}
+
+function isRawShareDownloadRequest(url: URL, share: DriveShareRecord, rest: string): boolean {
+	if (url.searchParams.get("raw") !== "1") {
+		return false;
+	}
+	if (share.root_node_kind === "file" && rest === "") {
+		return true;
+	}
+	return rest.startsWith("file/");
+}
+
+function renderRawAuthError(status: number, message: string): Response {
+	return applyPrivateNoStore(new Response(`${message}\n`, {
+		status,
+		headers: {
+			"content-type": "text/plain; charset=utf-8",
+		},
+	}));
 }
 
 function shouldInline(mime: string): boolean {
@@ -433,16 +453,37 @@ export async function handleDrive(request: Request, env: Env, config: EdgeConfig
 	}
 
 	if (share.has_password) {
-		const t2 = Date.now();
-		const validSession = await isSessionValid(env, request, DRIVE_SESSION_COOKIE, "drive", token);
-		console.log(`[drive] session validation: ${Date.now() - t2}ms`);
-		if (!validSession) {
-			return renderPasswordPage({
-				title: "Password required",
-				description: "This shared resource is password protected.",
-				actionPath: `/s/${encodeURIComponent(token)}/password`,
-				redirectPath: `${url.pathname}${url.search}`,
-			});
+		const rawShareDownload = isRawShareDownloadRequest(url, share, rest);
+		if (rawShareDownload) {
+			const password = (request.headers.get(DRIVE_PASSWORD_HEADER) || "").trim();
+			if (password !== "") {
+				if (!share.password_hash || !share.password_salt) {
+					return renderRawAuthError(401, "share password is not configured");
+				}
+				const ok = await verifyPBKDF2Password(env, password, share.password_hash, share.password_salt);
+				if (!ok) {
+					return renderRawAuthError(401, "invalid share password");
+				}
+			} else {
+				const t2 = Date.now();
+				const validSession = await isSessionValid(env, request, DRIVE_SESSION_COOKIE, "drive", token);
+				console.log(`[drive] session validation: ${Date.now() - t2}ms`);
+				if (!validSession) {
+					return renderRawAuthError(401, "share password required");
+				}
+			}
+		} else {
+			const t2 = Date.now();
+			const validSession = await isSessionValid(env, request, DRIVE_SESSION_COOKIE, "drive", token);
+			console.log(`[drive] session validation: ${Date.now() - t2}ms`);
+			if (!validSession) {
+				return renderPasswordPage({
+					title: "Password required",
+					description: "This shared resource is password protected.",
+					actionPath: `/s/${encodeURIComponent(token)}/password`,
+					redirectPath: `${url.pathname}${url.search}`,
+				});
+			}
 		}
 	}
 
