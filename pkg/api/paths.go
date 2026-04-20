@@ -61,6 +61,11 @@ const (
 	DriveResolvePathBase = "/v1/drive/resolve-path"
 )
 
+// DriveResolvePath returns GET /v1/drive/resolve-path?path={absolutePath}.
+func DriveResolvePath(nodePath string) string {
+	return DriveResolvePathBase + "?path=" + url.QueryEscape(nodePath)
+}
+
 // DriveNodePath returns /v1/drive/nodes/{nodeID}.
 func DriveNodePath(nodeID string) string {
 	return DriveNodesPath + "/" + url.PathEscape(nodeID)

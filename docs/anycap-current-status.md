@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-09
+> Last updated: 2026-04-20
 
 ## 1. Capabilities (Cap)
 
@@ -82,6 +82,7 @@ Local files can be used directly in CLI commands (`--file`). The CLI handles upl
 | Dashboard preview/download | Dashboard Drive UI | File preview and direct download via short-lived edge access links (`/v1/drive/nodes/:id/access-links`) |
 
 Supports both ID-based (`--parent dn_xxx`) and path-based (`--parent-path /folder/sub`) addressing.
+Path-based addressing is resolved server-side via direct drive path lookup (`/v1/drive/resolve-path`) instead of client-side directory traversal.
 
 ### Page — Static Site Hosting
 
@@ -99,6 +100,23 @@ Supports both ID-based (`--parent dn_xxx`) and path-based (`--parent-path /folde
 | Unpublished preview | Dashboard Pages UI | Verified/unpublished versions can open temporary preview host (`/v1/pages/:id/versions/:vid/preview-host`) |
 
 Deploy supports concurrent asset uploads. Sites support password-protected access and SPA mode.
+
+### Snapshot — Portable Project Handoff
+
+| Feature | CLI Command | Description |
+|---------|-------------|-------------|
+| Create named snapshot | `anycap snapshot create` | Package one or more local targets into a single tar archive, upload to Drive under `/_snapshots/{name}.snapshot.tar`, create a password-protected expiring share link |
+| Restore snapshot | `anycap snapshot restore` | Restore from a single share URL into a local target directory using raw share download plus `X-Anycap-Share-Password` |
+
+Snapshot behavior:
+
+- Snapshot names are stable within `/_snapshots`
+- Same-name snapshots fail by default
+- `--overwrite` replaces an existing snapshot intentionally
+- Snapshot path checks use direct drive path resolution
+- Create blocks on sensitive-file matches unless `--force` is set
+- Technical directories such as common caches/build outputs are skipped during packing
+- Restore rejects unsafe tar entries and only extracts into an empty or non-existent target directory
 
 ### Agent Control — IM Command Surface
 
@@ -192,6 +210,8 @@ anycap
 ├── crawl                     Convert web page to Markdown
 ├── drive
 │   ├── ls / mkdir / upload / mv / rm / share
+├── snapshot
+│   ├── create / restore
 ├── page
 │   ├── list / info / set / deploy / delete
 │   ├── publish / unpublish / versions / rollback

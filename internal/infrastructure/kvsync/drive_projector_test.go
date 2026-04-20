@@ -28,6 +28,9 @@ func (r *fakeProjectorDriveNodeRepo) GetByID(_ context.Context, _ int64) (*model
 	cloned := *r.node
 	return &cloned, nil
 }
+func (r *fakeProjectorDriveNodeRepo) ResolveByPath(context.Context, int64, string) (*model.DriveNode, error) {
+	return nil, fmt.Errorf("not implemented")
+}
 func (r *fakeProjectorDriveNodeRepo) ListByParent(_ context.Context, _ model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	return r.children, len(r.children), nil
 }

@@ -80,6 +80,9 @@ func (s *Service) PresignFileUpload(ctx context.Context, userID int64, parentID 
 	}
 
 	trimmedName := strings.TrimSpace(name)
+	if err := s.ensureSiblingNameAvailable(ctx, space.ID, parentID, trimmedName, nil); err != nil {
+		return nil, err
+	}
 	trimmedContentType := strings.TrimSpace(contentType)
 	if trimmedContentType == "" {
 		trimmedContentType = "application/octet-stream"

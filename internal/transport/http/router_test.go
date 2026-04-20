@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -226,6 +227,35 @@ func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNo
 	return cloneDriveNode(node), nil
 }
 
+func (r *fakeDriveNodeRepo) ResolveByPath(_ context.Context, spaceID int64, nodePath string) (*model.DriveNode, error) {
+	currentParent := (*int64)(nil)
+	for _, segment := range strings.Split(strings.TrimPrefix(strings.TrimSpace(nodePath), "/"), "/") {
+		if segment == "" {
+			continue
+		}
+		var matched *model.DriveNode
+		for _, node := range r.nodes {
+			if node.DeletedAt != nil || node.SpaceID != spaceID || node.Name != segment {
+				continue
+			}
+			if !sameNullableInt64(node.ParentID, currentParent) {
+				continue
+			}
+			candidate := cloneDriveNode(node)
+			matched = candidate
+			break
+		}
+		if matched == nil {
+			return nil, nil
+		}
+		currentParent = &matched.ID
+	}
+	if currentParent == nil {
+		return nil, nil
+	}
+	return r.GetByID(context.Background(), *currentParent)
+}
+
 func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	items := make([]model.DriveNode, 0)
 	for _, node := range r.nodes {
@@ -233,6 +263,9 @@ func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDri
 			continue
 		}
 		if !sameNullableInt64(node.ParentID, filter.ParentID) {
+			continue
+		}
+		if filter.Name != nil && node.Name != *filter.Name {
 			continue
 		}
 		items = append(items, *cloneDriveNode(node))
@@ -2174,11 +2207,72 @@ func TestRouter_DriveCreateFolderAndList(t *testing.T) {
 		t.Fatalf("expected listed folder name=docs, got %v", first["name"])
 	}
 
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes?name=docs&limit=1", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("list nodes by name: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal filtered list response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected filtered data object, got %#v", env["data"])
+	}
+	items, ok = data["items"].([]any)
+	if !ok || len(items) != 1 {
+		t.Fatalf("expected one filtered item, got %#v", data)
+	}
+	first = items[0].(map[string]any)
+	if first["name"] != "docs" {
+		t.Fatalf("expected filtered folder name=docs, got %v", first["name"])
+	}
+
 	// Create subfolder using parent_id
 	subBody := []byte(`{"name":"sub","parent_id":"` + folderID.(string) + `"}`)
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/drive/folders", &ut.Body{Body: bytes.NewReader(subBody), Len: len(subBody)}, authz, ct)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("create subfolder: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/resolve-path?path=/docs/sub", nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("resolve path: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal resolve response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected resolve data object, got %#v", env["data"])
+	}
+	if data["name"] != "sub" {
+		t.Fatalf("expected resolved node name=sub, got %v", data["name"])
+	}
+	if data["parent_id"] != folderID {
+		t.Fatalf("expected resolved parent_id=%v, got %v", folderID, data["parent_id"])
+	}
+
+	subfolderID, ok := data["id"].(string)
+	if !ok || subfolderID == "" {
+		t.Fatalf("expected resolved id string, got %#v", data["id"])
+	}
+
+	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/drive/nodes/"+subfolderID, nil, authz)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("get node: expected 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &env); err != nil {
+		t.Fatalf("unmarshal get node response: %v", err)
+	}
+	data, ok = env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected get node data object, got %#v", env["data"])
+	}
+	if data["name"] != "sub" {
+		t.Fatalf("expected fetched node name=sub, got %v", data["name"])
+	}
+	if data["parent_id"] != folderID {
+		t.Fatalf("expected fetched node parent_id=%v, got %v", folderID, data["parent_id"])
 	}
 }
 

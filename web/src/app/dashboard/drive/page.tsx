@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createDriveAccessLinks,
+  getDriveNode,
   useDriveNodes,
 } from "@/lib/api/hooks";
 import type { DriveNode } from "@/lib/api/types";
@@ -172,6 +173,40 @@ export default function DrivePage() {
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
   const rows = useMemo(() => data?.items ?? [], [data]);
+
+  useEffect(() => {
+    const missingIDs = folderIds.filter((id) => !nameMap[id]);
+    if (missingIDs.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    void Promise.all(
+      missingIDs.map(async (id) => {
+        const node = await getDriveNode(id);
+        return [id, node.name] as const;
+      }),
+    )
+      .then((entries) => {
+        if (cancelled || entries.length === 0) {
+          return;
+        }
+        setNameMap((prev) => {
+          const next = { ...prev };
+          for (const [id, name] of entries) {
+            next[id] = name;
+          }
+          return next;
+        });
+      })
+      .catch(() => {
+        // Ignore breadcrumb hydration failures and fall back to raw IDs.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [folderIds, nameMap]);
 
   // Reset to page 1 when navigating folders
   const prevParentRef = useRef(currentParentID);

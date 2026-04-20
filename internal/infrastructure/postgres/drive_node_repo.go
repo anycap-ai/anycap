@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path"
 	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -75,6 +76,114 @@ func (r *DriveNodeRepo) GetByID(ctx context.Context, id int64) (*model.DriveNode
 	return node, nil
 }
 
+func (r *DriveNodeRepo) ResolveByPath(ctx context.Context, spaceID int64, nodePath string) (*model.DriveNode, error) {
+	if r == nil || r.db == nil {
+		return nil, fmt.Errorf("drive node repo db is not configured")
+	}
+
+	cleaned := path.Clean(strings.TrimSpace(nodePath))
+	if cleaned == "." || cleaned == "/" || !strings.HasPrefix(cleaned, "/") {
+		return nil, fmt.Errorf("drive path must be absolute and target a node")
+	}
+
+	segments := strings.Split(strings.TrimPrefix(cleaned, "/"), "/")
+	rows, err := r.db.QueryContext(ctx, `
+		WITH RECURSIVE segments AS (
+			SELECT seg, ord::INT AS ord
+			FROM unnest($2::TEXT[]) WITH ORDINALITY AS u(seg, ord)
+		),
+		walk AS (
+			SELECT
+				dn.id,
+				dn.space_id,
+				dn.parent_id,
+				dn.kind,
+				dn.name,
+				dn.storage_object_id,
+				dn.size,
+				dn.mime,
+				dn.edge_version,
+				dn.created_by,
+				dn.created_at,
+				dn.updated_at,
+				dn.deleted_at,
+				s.ord
+			FROM segments s
+			JOIN drive_nodes dn
+				ON s.ord = 1
+				AND dn.space_id = $1
+				AND dn.parent_id IS NULL
+				AND dn.name = s.seg
+				AND dn.deleted_at IS NULL
+
+			UNION ALL
+
+			SELECT
+				child.id,
+				child.space_id,
+				child.parent_id,
+				child.kind,
+				child.name,
+				child.storage_object_id,
+				child.size,
+				child.mime,
+				child.edge_version,
+				child.created_by,
+				child.created_at,
+				child.updated_at,
+				child.deleted_at,
+				s.ord
+			FROM walk w
+			JOIN segments s
+				ON s.ord = w.ord + 1
+			JOIN drive_nodes child
+				ON child.space_id = $1
+				AND child.parent_id = w.id
+				AND child.name = s.seg
+				AND child.deleted_at IS NULL
+		)
+		SELECT
+			id,
+			space_id,
+			parent_id,
+			kind,
+			name,
+			storage_object_id,
+			size,
+			mime,
+			edge_version,
+			created_by,
+			created_at,
+			updated_at,
+			deleted_at
+		FROM walk
+		WHERE ord = array_length($2::TEXT[], 1)
+	`, spaceID, segments)
+	if err != nil {
+		return nil, fmt.Errorf("resolve drive node by path: %w", err)
+	}
+	defer rows.Close()
+
+	var matches []*model.DriveNode
+	for rows.Next() {
+		node, scanErr := scanDriveNode(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("scan drive node: %w", scanErr)
+		}
+		matches = append(matches, node)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate resolved drive nodes: %w", err)
+	}
+	if len(matches) == 0 {
+		return nil, nil
+	}
+	if len(matches) > 1 {
+		return nil, model.ErrConflict(fmt.Sprintf("drive path %q is ambiguous", cleaned))
+	}
+	return matches[0], nil
+}
+
 func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	if r == nil || r.db == nil {
 		return nil, 0, fmt.Errorf("drive node repo db is not configured")
@@ -83,23 +192,31 @@ func (r *DriveNodeRepo) ListByParent(ctx context.Context, filter model.ListDrive
 	baseWhere := `space_id = $1
 		  AND (($2::bigint IS NULL AND parent_id IS NULL) OR parent_id = $2)
 		  AND deleted_at IS NULL`
+	args := []any{filter.SpaceID, filter.ParentID}
+	if filter.Name != nil {
+		baseWhere += " AND name = $3"
+		args = append(args, strings.TrimSpace(*filter.Name))
+	}
 
 	var total int
 	countQuery := "SELECT COUNT(*) FROM drive_nodes WHERE " + baseWhere
-	if err := r.db.QueryRowContext(ctx, countQuery, filter.SpaceID, filter.ParentID).Scan(&total); err != nil {
+	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count drive nodes: %w", err)
 	}
 
+	limitPos := len(args) + 1
+	offsetPos := len(args) + 2
 	query := fmt.Sprintf(`
 		SELECT id, space_id, parent_id, kind, name, storage_object_id, size, mime, edge_version, created_by, created_at, updated_at, deleted_at,
 			EXISTS(SELECT 1 FROM drive_share_links dsl WHERE dsl.node_id = drive_nodes.id AND dsl.status = 'active') AS has_share
 		FROM drive_nodes
 		WHERE %s
 		ORDER BY kind DESC, name ASC, id ASC
-		LIMIT $3 OFFSET $4
-	`, baseWhere)
+		LIMIT $%d OFFSET $%d
+	`, baseWhere, limitPos, offsetPos)
 
-	rows, err := r.db.QueryContext(ctx, query, filter.SpaceID, filter.ParentID, filter.Limit, filter.Offset)
+	args = append(args, filter.Limit, filter.Offset)
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list drive nodes by parent: %w", err)
 	}

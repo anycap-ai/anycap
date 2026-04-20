@@ -3,6 +3,7 @@ package drive
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
@@ -88,6 +89,9 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		Limit:  limit,
 		Offset: offset,
 	}
+	if name := strings.TrimSpace(string(ctx.Query("name"))); name != "" {
+		filter.Name = &name
+	}
 
 	items, total, err := h.service.ListNodes(c, userID, parentID, filter)
 	if err != nil {
@@ -104,6 +108,74 @@ func (h *Handler) ListNodes(c context.Context, ctx *app.RequestContext) {
 		"items": presentedItems,
 		"total": total,
 	})
+}
+
+func (h *Handler) GetNode(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
+	nodeID, err := h.resolveDriveNodeID(c, string(ctx.Param("id")))
+	if err != nil {
+		idresolver.WriteIDResolveError(c, ctx, "invalid_drive_node_id", err)
+		return
+	}
+
+	node, err := h.service.GetNode(c, userID, nodeID)
+	if err != nil {
+		writeDriveError(c, ctx, err, "get_drive_node_failed")
+		return
+	}
+
+	presented, err := h.presentDriveNode(c, node)
+	if err != nil {
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(c, ctx, presented)
+}
+
+func (h *Handler) ResolvePath(c context.Context, ctx *app.RequestContext) {
+	if h.service == nil {
+		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "drive_service_unavailable", "drive service is not configured")
+		return
+	}
+
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		return
+	}
+
+	userID, ok := handlers.ParseUserID(c, ctx, principal.UserID)
+	if !ok {
+		return
+	}
+
+	node, err := h.service.ResolvePath(c, userID, string(ctx.Query("path")))
+	if err != nil {
+		writeDriveError(c, ctx, err, "resolve_drive_path_failed")
+		return
+	}
+
+	presented, err := h.presentDriveNode(c, node)
+	if err != nil {
+		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_drive_node_failed", err.Error())
+		return
+	}
+	handlers.WriteSuccess(c, ctx, presented)
 }
 
 func (h *Handler) UpdateNode(c context.Context, ctx *app.RequestContext) {

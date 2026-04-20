@@ -73,6 +73,35 @@ func (r *fakeDriveNodeRepo) GetByID(_ context.Context, id int64) (*model.DriveNo
 	return cloneDriveNode(node), nil
 }
 
+func (r *fakeDriveNodeRepo) ResolveByPath(_ context.Context, spaceID int64, nodePath string) (*model.DriveNode, error) {
+	currentParent := (*int64)(nil)
+	for _, segment := range strings.Split(strings.TrimPrefix(strings.TrimSpace(nodePath), "/"), "/") {
+		if segment == "" {
+			continue
+		}
+		var matched *model.DriveNode
+		for _, node := range r.nodes {
+			if node.DeletedAt != nil || node.SpaceID != spaceID || node.Name != segment {
+				continue
+			}
+			if !sameNullableInt64(node.ParentID, currentParent) {
+				continue
+			}
+			candidate := cloneDriveNode(node)
+			matched = candidate
+			break
+		}
+		if matched == nil {
+			return nil, nil
+		}
+		currentParent = &matched.ID
+	}
+	if currentParent == nil {
+		return nil, nil
+	}
+	return r.GetByID(context.Background(), *currentParent)
+}
+
 func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDriveNodesFilter) ([]model.DriveNode, int, error) {
 	items := make([]model.DriveNode, 0)
 	for _, node := range r.nodes {
@@ -80,6 +109,9 @@ func (r *fakeDriveNodeRepo) ListByParent(_ context.Context, filter model.ListDri
 			continue
 		}
 		if !sameNullableInt64(node.ParentID, filter.ParentID) {
+			continue
+		}
+		if filter.Name != nil && node.Name != *filter.Name {
 			continue
 		}
 		items = append(items, *cloneDriveNode(node))
@@ -265,6 +297,52 @@ func TestListNodes_RejectsFileParent(t *testing.T) {
 	_, _, err := service.ListNodes(context.Background(), 1, &parentID, model.ListDriveNodesFilter{Limit: 50})
 	if err == nil || !strings.Contains(err.Error(), "parent node must be a folder") {
 		t.Fatalf("expected parent folder validation error, got %v", err)
+	}
+}
+
+func TestResolvePath_FindsNestedNode(t *testing.T) {
+	space := &model.Space{ID: 100, OwnerUserID: 1}
+	rootID := int64(1)
+	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
+		1: {ID: 1, SpaceID: 100, Kind: model.DriveNodeKindFolder, Name: "_snapshots"},
+		2: {ID: 2, SpaceID: 100, ParentID: &rootID, Kind: model.DriveNodeKindFile, Name: "repo.snapshot.tar"},
+	}}
+	service := NewService(&fakeSpaceService{space: space}, repo)
+
+	node, err := service.ResolvePath(context.Background(), 1, "/_snapshots/repo.snapshot.tar")
+	if err != nil {
+		t.Fatalf("ResolvePath() error = %v", err)
+	}
+	if node == nil || node.ID != 2 {
+		t.Fatalf("expected node id 2, got %#v", node)
+	}
+}
+
+func TestCreateFolder_RejectsSiblingConflict(t *testing.T) {
+	space := &model.Space{ID: 100, OwnerUserID: 1}
+	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
+		1: {ID: 1, SpaceID: 100, Kind: model.DriveNodeKindFolder, Name: "docs"},
+	}}
+	service := NewService(&fakeSpaceService{space: space}, repo)
+
+	_, err := service.CreateFolder(context.Background(), 1, nil, "docs")
+	if err == nil || !strings.Contains(err.Error(), `already exists`) {
+		t.Fatalf("expected sibling conflict error, got %v", err)
+	}
+}
+
+func TestUpdateNode_RejectsRenameConflict(t *testing.T) {
+	space := &model.Space{ID: 100, OwnerUserID: 1}
+	repo := &fakeDriveNodeRepo{nodes: map[int64]*model.DriveNode{
+		1: {ID: 1, SpaceID: 100, Kind: model.DriveNodeKindFile, Name: "a.txt"},
+		2: {ID: 2, SpaceID: 100, Kind: model.DriveNodeKindFile, Name: "b.txt"},
+	}}
+	service := NewService(&fakeSpaceService{space: space}, repo)
+
+	name := "a.txt"
+	_, err := service.UpdateNode(context.Background(), 1, 2, &name, nil, false)
+	if err == nil || !strings.Contains(err.Error(), `already exists`) {
+		t.Fatalf("expected rename conflict error, got %v", err)
 	}
 }
 

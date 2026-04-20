@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//go:embed page.html
+//go:embed web/index.html
 var annotationPageHTML string
 
 // jsStringEscape returns s escaped for safe embedding inside a JavaScript

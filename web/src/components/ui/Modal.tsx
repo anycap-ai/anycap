@@ -19,23 +19,27 @@ export function Modal({
   children: React.ReactNode;
   panelClassName?: string;
 }) {
-  const [visible, setVisible] = useState(false);
-  const [animate, setAnimate] = useState(false);
-  const backdropRef = useRef<HTMLDivElement>(null);
+	const [visible, setVisible] = useState(false);
+	const [animate, setAnimate] = useState(false);
+	const backdropRef = useRef<HTMLDivElement>(null);
+	const wasOpenRef = useRef(false);
 
-  useEffect(() => {
-    if (open) {
-      onOpen?.();
-      setVisible(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setAnimate(true));
-      });
-    } else {
-      setAnimate(false);
-      const timer = setTimeout(() => setVisible(false), 250);
-      return () => clearTimeout(timer);
-    }
-  }, [open, onOpen]);
+	useEffect(() => {
+		if (open && !wasOpenRef.current) {
+			onOpen?.();
+			setVisible(true);
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => setAnimate(true));
+			});
+		}
+		if (!open && wasOpenRef.current) {
+			setAnimate(false);
+			const timer = setTimeout(() => setVisible(false), 250);
+			wasOpenRef.current = open;
+			return () => clearTimeout(timer);
+		}
+		wasOpenRef.current = open;
+	}, [open, onOpen]);
 
   if (!visible) return null;
 
