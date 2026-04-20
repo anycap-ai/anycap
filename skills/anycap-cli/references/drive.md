@@ -92,7 +92,7 @@ Output:
 ```json
 {
   "status": "success",
-  "share_url": "https://drive.anycap.dev/s/abc123",
+  "url": "https://drive.anycap.dev/s/abc123",
   "expires_at": "2026-04-06T14:00:00Z",
   "request_id": "req_abc123"
 }
@@ -126,7 +126,7 @@ Use drive when the human needs a shareable link to view or download a file:
 # Generate an image, upload to drive, share with the human
 anycap image generate --prompt "product hero" --model seedream-5 -o hero.png
 anycap drive upload hero.png --parent-path /campaign-assets
-SHARE=$(anycap drive share --src-path /campaign-assets/hero.png | jq -r '.share_url')
+SHARE=$(anycap drive share --src-path /campaign-assets/hero.png | jq -r '.url')
 echo "Shareable link: $SHARE"
 ```
 

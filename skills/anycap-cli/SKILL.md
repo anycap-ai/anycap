@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.3.1
+  version: 0.3.2
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -308,6 +308,7 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 | Image | [generation.md](references/generation.md) | `generate` | 5-30s |
 | Annotate | [annotation.md](references/annotation.md) | `annotate` | Interactive |
 | Draw | [draw.md](references/draw.md) | `draw` | Interactive |
+| Snapshot | [snapshot.md](references/snapshot.md) | `create`, `restore` | 5-60s + upload/download |
 | Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
 
@@ -320,6 +321,9 @@ Read [references/annotation.md](references/annotation.md) when you need structur
 
 **Draw** -- interactive whiteboard (Excalidraw) for creating and iterating on diagrams.
 Read [references/draw.md](references/draw.md) when you need to create diagrams, architecture charts, flowcharts, or wireframes collaboratively with humans. Supports Mermaid input (auto-converted to editable shapes), Excalidraw JSON, and blank canvas. The agent can push updates via `anycap draw update` without restarting the session. Use non-blocking mode (`--no-wait`) for agent workflows.
+
+**Snapshot** -- portable project handoff via a single share URL.
+Read [references/snapshot.md](references/snapshot.md) when you need to move a recoverable working set between agents, devices, or accounts. `snapshot create` packages selected local targets into `/_snapshots/{name}.snapshot.tar`, creates a password-protected expiring share URL, and returns a restore command. `snapshot restore` downloads the tar via the raw share route and restores it locally.
 
 ```bash
 # Blocking mode -- opens browser, waits for Done click
@@ -388,6 +392,14 @@ anycap drive share --src-path /deliverables/result.png
 ```
 
 Do NOT use Drive to get URLs for other AnyCap commands -- actions and generation commands accept `--file` directly.
+
+**Hand off a working set via Snapshot.** When another agent or machine needs the project state itself, create a snapshot instead of sharing loose files one by one.
+Read [references/snapshot.md](references/snapshot.md) for named snapshot behavior, conflict handling, and restore flow.
+
+```bash
+anycap snapshot create --target . --name repo
+anycap snapshot restore 'https://drive.anycap.cloud/s/abc#password=secret' --target ./restored
+```
 
 **Publish a page.** When results are rich content (HTML reports, dashboards, documentation), deploy as a hosted web page.
 Read [references/page.md](references/page.md) for full Page usage (versioning, rollback, password protection, SPA mode).
@@ -500,6 +512,12 @@ anycap draw poll --session drw_xxxx | jq -r '.snapshot'
 
 # Push updated diagram to active session
 anycap draw update --session drw_xxxx --init updated.mmd | jq -r '.ok'
+
+# Create a named project snapshot
+anycap snapshot create --target . --name repo | jq -r '.snapshot_url'
+
+# Restore a snapshot into a local directory
+anycap snapshot restore 'https://drive.anycap.cloud/s/abc#password=secret' --target ./restored | jq -r '.target_dir'
 
 # Analyze a local image file (auto-uploaded, no drive needed)
 anycap actions image-read --file ./screenshot.png --instruction "What text is in this image?" | jq -r '.content'
