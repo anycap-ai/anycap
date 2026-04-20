@@ -177,7 +177,7 @@ func newSnapshotCreateCmd(clientFactory func() *httpclient.Client, stdout io.Wri
 	}
 
 	cmd.Flags().StringSliceVar(&targets, "target", nil, "Local file or directory target (repeatable)")
-	cmd.Flags().StringVar(&expires, "expires", "7d", "Snapshot expiration duration (for example: 7d, 24h)")
+	cmd.Flags().StringVar(&expires, "expires", "12h", "Snapshot expiration duration (default: 12h; keep it short unless explicitly requested)")
 	cmd.Flags().StringVar(&name, "name", "", "Snapshot name")
 	cmd.Flags().StringVar(&handoffFile, "handoff-file", "", "Optional handoff markdown or JSON file")
 	cmd.Flags().BoolVar(&force, "force", false, "Ignore sensitive-file warnings and continue")

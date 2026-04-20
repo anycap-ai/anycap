@@ -361,8 +361,8 @@ func TestSnapshotCreateFlow(t *testing.T) {
 	if atomic.LoadInt32(&folderCreateCount) != 1 {
 		t.Fatalf("expected 1 folder creation, got %d", folderCreateCount)
 	}
-	if shareExpires != 7*24*60*60 {
-		t.Fatalf("expected default expires 7d, got %d", shareExpires)
+	if shareExpires != 12*60*60 {
+		t.Fatalf("expected default expires 12h, got %d", shareExpires)
 	}
 	if sharePassword == "" {
 		t.Fatal("expected generated share password")

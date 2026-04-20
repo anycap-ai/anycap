@@ -392,7 +392,7 @@ Read [references/annotation.md](references/annotation.md) when you need structur
 Read [references/draw.md](references/draw.md) when you need to create diagrams, architecture charts, flowcharts, or wireframes collaboratively with humans. Supports Mermaid input (auto-converted to editable shapes), Excalidraw JSON, and blank canvas. The agent can push updates via `anycap draw update` without restarting the session. Use non-blocking mode (`--no-wait`) for agent workflows.
 
 **Snapshot** -- portable project handoff via a single share URL.
-Read [references/snapshot.md](references/snapshot.md) when you need to move a recoverable working set between agents, devices, or accounts. `snapshot create` packages selected local targets into `/_snapshots/{name}.snapshot.tar`, creates a password-protected expiring share URL, and returns a restore command. `snapshot restore` downloads the tar via the raw share route and restores it locally.
+Read [references/snapshot.md](references/snapshot.md) when you need to move a recoverable working set between agents, devices, or accounts. `snapshot create` packages selected local targets into `/_snapshots/{name}.snapshot.tar`, creates a password-protected expiring share URL, and returns a restore command. Keep snapshot expiration as short as practical; unless the user explicitly asks otherwise, use `12h` and rely on the CLI default when `--expires` is omitted. `snapshot restore` downloads the tar via the raw share route and restores it locally.
 
 ```bash
 # Blocking mode -- opens browser, waits for Done click
