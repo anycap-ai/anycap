@@ -94,7 +94,7 @@ type PageContent = {
   articleKeywords: readonly string[];
 };
 
-const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
   en: {
     eyebrow: "Learn",
     title: ["Add multimodal capabilities", "to a SaaS chatbot"],
@@ -800,10 +800,245 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
       "chatbot dengan dukungan gambar dan video",
     ],
   },
+  de: {
+    eyebrow: "Anleitung",
+    title: ["Multimodale Faehigkeiten zu einem", "SaaS-Chatbot hinzufuegen"],
+    intro:
+      "Viele SaaS-Chatbots fuehlten sich nuetzlich an, bis der Nutzer einen Screenshot einwirft, nach aktuellem externem Kontext fragt oder erwartet, dass das System ein echtes Asset zurueckgibt statt einer Textantwort. An diesem Punkt reicht Prompt-Tuning nicht mehr aus. Sie brauchen eine sauberere Capability-Schicht rund um den Chatbot-Workflow.",
+    updatedPrefix: "Zuletzt aktualisiert",
+    updatedLabel: "7. April 2026",
+    summaryEyebrow: "Zusammenfassung",
+    summaryTitle:
+      "Der sauberste Weg ist nicht mehr Prompt-Komplexitaet, sondern ein Runtime, das die fehlenden Faehigkeiten ergaenzt.",
+    summaryBody:
+      "In der Praxis sollten die meisten Teams das Chat-Erlebnis beibehalten, das sie bereits haben, und in einer sinnvollen Reihenfolge Faehigkeiten ergaenzen: zuerst visuelles Verstaendnis, dann Live-Web-Retrieval, Mediengenerierung nur wenn das Produkt es wirklich braucht, und eine Delivery-Schicht damit Ausgaben den Chat-Thread verlassen koennen. Genau hier wird ein Capability-Runtime nuetzlicher als eine weitere zusammengestoppelte Anbieter-Integration.",
+    quickTakeawaysEyebrow: "Kernpunkte",
+    quickTakeaways: [
+      "Multimodale Faehigkeiten schichtweise ergaenzen, nicht als zufaellige Einzelanbieter-Aufrufe.",
+      "Mit den Nutzereingaben und -ausgaben beginnen, die die groesste Reibung verursachen: Screenshots, Web-Kontext, Mediengenerierung und teilbare Deliverables.",
+      "Das saubere Muster ist: Chat-Interface plus Orchestrierung plus Capability-Runtime plus Output-Schicht.",
+    ],
+    multimodalEyebrow: "Was multimodal bedeutet",
+    multimodalTitle: "Ein multimodaler Chatbot spricht nicht nur. Er kann inspizieren, abrufen, erstellen und liefern.",
+    modalityCards: [
+      {
+        title: "Bildverstaendnis",
+        body: "Der Chatbot kann Screenshots, Diagramme, UI-Zustaende und visuelle Referenzen inspizieren, statt den Nutzer zu zwingen, alles in Text zu beschreiben.",
+      },
+      {
+        title: "Videoverstaendnis",
+        body: "Das System kann ueber Bildschirmaufnahmen, Demos und kurze Clips nachdenken, wenn das Problem zeitlich ist statt statisch.",
+      },
+      {
+        title: "Mediengenerierung",
+        body: "Der Workflow kann Bilder oder Videos als Ausgaben zurueckgeben, wenn der Nutzer Assets moechte, nicht nur schriftliche Ratschlaege.",
+      },
+      {
+        title: "Web-Kontext",
+        body: "Der Assistent kann aktuelle externe Informationen per Suche und Crawl abrufen statt sich nur auf die interne Wissensschicht zu verlassen.",
+      },
+    ],
+    stackEyebrow: "Stack-Muster",
+    stackTitle: "Das Implementierungsmuster ist einfach: die Chat-Schicht behalten und das System darum herum aufruesten",
+    stackIntro:
+      "SaaS-Teams konzentrieren sich oft zu sehr auf die Oberflaeche und planen den Ausfuehrungspfad zu wenig. Ein saubereres System trennt das sichtbare Gespraech von der Orchestrierungslogik, dem Capability-Runtime und der Output-Schicht. Das ergibt ein Produkt, das wachsen kann, ohne jede neue Modalitaet in einen weiteren Ausnahme-Branch zu verwandeln.",
+    stackLayers: [
+      {
+        title: "Chat-Oberflaeche",
+        body: "Behalten Sie die Oberflaeche, die Ihre Nutzer bereits kennen. Die Chat-Schicht erfasst die Anfrage, klaert die Absicht und zeigt Fortschritt und Ausgaben.",
+      },
+      {
+        title: "Orchestrierungsschicht",
+        body: "Hier entscheiden Sie, welches Tool oder welche Faehigkeit aufgerufen wird, wie der Zustand gehalten wird und wann Rueckfragen vor der Aufgabe gestellt werden.",
+      },
+      {
+        title: "Capability-Runtime",
+        body: "Diese Schicht uebernimmt die eigentlichen Faehigkeiten rund um das Modell: Bild- und Videogenerierung, Bild- und Videoverstaendnis, Web-Suche, Crawl und Output-Delivery.",
+      },
+      {
+        title: "Delivery-Schicht",
+        body: "Die finale Ausgabe muss den Chat-Thread oft als Datei, Share-Link oder veroffentlichte Seite verlassen. Planen Sie das von Anfang an statt als Nachgedanken.",
+      },
+    ],
+    rolloutEyebrow: "Rollout-Reihenfolge",
+    rolloutTitle: "Faehigkeiten in der Reihenfolge ergaenzen, die die groesste Nutzerreibung beseitigt",
+    rolloutSteps: [
+      {
+        step: "Schritt 1",
+        title: "Mit der Nutzereingabe mit der hoechsten Reibung beginnen",
+        body: "Fuer viele SaaS-Assistenten ist das erste fehlerhafte Erlebnis ein Screenshot. Nutzer laden ein UI-Bild oder einen Fehlerbildschirm hoch, und der Chatbot kann nicht sehen, was sie meinen. Damit wird Bildverstaendnis zur saubersten ersten Faehigkeit, die hinzugefuegt werden sollte.",
+      },
+      {
+        step: "Schritt 2",
+        title: "Live-Web-Retrieval fuer sich aendernde Informationen ergaenzen",
+        body: "Wenn die Antwort von aktuellen Docs, Preisen, Wettbewerberseiten oder externen Referenzen abhaengt, reicht statisches Retrieval nicht aus. Suche und Crawl ergaenzen, bevor Sie mehr Prompt-Engineering hinzufuegen.",
+      },
+      {
+        step: "Schritt 3",
+        title: "Generierung nur ergaenzen, wenn das Produkt Assets zurueckgeben muss",
+        body: "Bild- und Videogenerierung sind maechtig, sollten aber erst kommen, wenn feststeht, dass der Nutzer wirklich Media-Output erwartet. Andernfalls fuegen Sie Kosten und Komplexitaet hinzu, bevor das Produkt das braucht.",
+      },
+      {
+        step: "Schritt 4",
+        title: "Einen echten Output-Pfad ergaenzen",
+        body: "Wenn der Assistent reichhaltigere Ergebnisse zurueckgibt, brauchen Nutzer Links, Dateien oder gehostete Seiten. Die Delivery-Schicht frueh planen, damit der Workflow mit etwas Verwendbarem endet statt mit einem langen Chat-Transcript.",
+      },
+    ],
+    avoidEyebrow: "Was zu vermeiden ist",
+    avoidTitle: "Zusammengestoppelte Integrationen haeufen Produktschulden schneller an als sie Mehrwert schaffen",
+    tradeoffHeaders: ["Dimension", "Bolt-on-Muster", "Capability-Runtime-Muster"],
+    tradeoffRows: [
+      {
+        dimension: "Integrationsmuster",
+        boltOn: "Jede neue Modalitaet wird zu ihrer eigenen anbieterspezifischen Ausnahme.",
+        runtime: "Alle Faehigkeiten liegen hinter einer konsistenten Runtime-Oberflaeche.",
+      },
+      {
+        dimension: "Prompt-Design",
+        boltOn: "Prompts absorbieren weiterhin Systemkomplexitaet und Randfaelle.",
+        runtime: "Prompts bleiben auf die Absicht fokussiert, waehrend der Runtime die Tool-Ausfuehrung uebernimmt.",
+      },
+      {
+        dimension: "Operativer Overhead",
+        boltOn: "Teams verwalten separate APIs, Auth-Flows und Antwortformate.",
+        runtime: "Der Assistent kann eine einzige Capability-Schicht in mehreren Workflows wiederverwenden.",
+      },
+      {
+        dimension: "Produktkonsistenz",
+        boltOn: "Das Erlebnis fuehlt sich jedes Mal anders an, wenn ein neuer Tool-Pfad entsteht.",
+        runtime: "Der Assistent verhael sich wie ein einziges System, auch wenn die Faehigkeiten wachsen.",
+      },
+      {
+        dimension: "Output-Delivery",
+        boltOn: "Ergebnisse enden oft im Chat-Thread.",
+        runtime: "Ergebnisse koennen als Dateien, Links oder veroefftliche Artefakte ausgegeben werden.",
+      },
+    ],
+    productEyebrow: "Produktbeispiele",
+    productTitle: "Drei haeufige Situationen, in denen ein Feature-Request zu einer Architekturentscheidung wird",
+    useCaseCards: [
+      {
+        title: "Screenshot-Triage fuer den Support",
+        body: "Nutzer senden Screenshots von defekten UI-Zustaenden. Der Assistent liest das Bild, vergleicht es mit bekannten Produktmustern und liefert eine fundierte Antwort statt generischer Fehlerbehebungstexte.",
+      },
+      {
+        title: "Recherche-Assistent fuer Customer Success",
+        body: "Der Workflow durchsucht Live-Hilfedokumentationen oder externe Quellen, crawlt nuetzliche Seiten und fasst zusammen, was sich geaendert hat.",
+      },
+      {
+        title: "Wachstums- oder Launch-Assistent",
+        body: "Das Produkt verwandelt Anfragen in Launch-Visuals, Demo-Clips und teilbare Deliverables statt bei einer Empfehlungsliste stehen zu bleiben.",
+      },
+    ],
+    fitEyebrow: "Wo AnyCap passt",
+    fitTitle: "AnyCap gibt dem Chatbot oder Agenten die Capability-Schicht rund um das Modell",
+    fitBody:
+      "Das ist der praktische Implementierungspunkt dieser Seite. Sie muessen das Produkt nicht umbenennen oder die Oberflaeche neu bauen, um reichhaltigeres Verhalten hinzuzufuegen. Sie brauchen einen Runtime, der multimodalen Input, multimodalen Output, Live-Web-Aufgaben und Delivery-Workflows ueber eine konsistente Capability-Oberflaeche verarbeiten kann.",
+    capabilityCards: [
+      {
+        title: "Bildverstaendnis",
+        href: "/capabilities/image-understanding",
+        body: "Screenshots, Diagramme und visuelle Referenzen im selben Workflow lesen.",
+      },
+      {
+        title: "Videoanalyse",
+        href: "/capabilities/video-analysis",
+        body: "Aufnahmen inspizieren, wenn das Problem von Abfolge und Bewegung abhaengt.",
+      },
+      {
+        title: "Web-Suche",
+        href: "/capabilities/web-search",
+        body: "Aktuelle Informationen abrufen, wenn die interne Wissensschicht allein nicht ausreicht.",
+      },
+      {
+        title: "Web-Crawl",
+        href: "/capabilities/web-crawl",
+        body: "Webseiten in nutzbares Markdown oder strukturierten Agenten-Kontext umwandeln.",
+      },
+      {
+        title: "Bildgenerierung",
+        href: "/capabilities/image-generation",
+        body: "Visuelle Assets liefern, wenn das Produkt erstellen muss, nicht nur erklaeren.",
+      },
+      {
+        title: "Drive",
+        href: "/capabilities/drive",
+        body: "Reichhaltige Ausgaben in Dateien und teilbare Links umwandeln, die Menschen wirklich nutzen koennen.",
+      },
+    ],
+    nextMoveEyebrow: "Naechste Schritte",
+    nextMoveTitle: "Von der Architektur zu den Produktseiten und zur Einrichtung weitergehen",
+    nextMoveCards: [
+      {
+        title: "Zuerst die Architekturentscheidung pruefen",
+        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        body: "Diese Seite nutzen, wenn noch geklaert werden muss, ob das Produkt wirklich ein Chatbot oder ein Agenten-Workflow sein sollte.",
+      },
+      {
+        title: "Die Capability-Luecke kartieren",
+        href: "/learn/what-agents-cant-do",
+        body: "Diese Seite nutzen, um die kuerzeste Erklaerung zu bekommen, was zuerst bricht, wenn Chat allein nicht ausreicht.",
+      },
+      {
+        title: "Die Capabilities erkunden",
+        href: "/capabilities",
+        body: "Capabilities aufrufen, wenn die konkreten Produktseiten hinter dem hier beschriebenen Stack-Muster gezeigt werden sollen.",
+      },
+      {
+        title: "Den Installationspfad einschlagen",
+        href: "/guides/install-anycap",
+        body: "Den Installationsleitfaden nutzen, wenn es bereit ist, von der Architekturplanung zur tatsaechlichen Einrichtung ueberzugehen.",
+      },
+    ],
+    faqEyebrow: "FAQ",
+    faqTitle: "Haeufige Implementierungsfragen",
+    faqItems: [
+      {
+        question: "Was bedeutet multimodal fuer einen SaaS-Chatbot?",
+        answer:
+          "Es bedeutet, dass das System mit mehr als Text arbeiten kann. In der Praxis umfasst das ueblicherweise Screenshots, Bilder, Videos, Live-Webseiten und reichhaltigere Ausgabeformate wie Dateien oder geteilte Links.",
+      },
+      {
+        question: "Muss ich alle Modalitaeten auf einmal ergaenzen?",
+        answer:
+          "Nein. Mit der Eingabe oder Ausgabe beginnen, die die groesste Nutzerreibung verursacht. Fuer viele SaaS-Produkte bedeutet das zuerst Screenshot-Verstaendnis, dann Live-Web-Kontext, und erst dann Mediengenerierung, wenn das Produkt das wirklich braucht.",
+      },
+      {
+        question: "Kann ich das aktuelle Chatbot-Erlebnis behalten und diese Faehigkeiten trotzdem ergaenzen?",
+        answer:
+          "Ja. Das ist ueblicherweise der beste Weg. Das Interface und die Orchestrierung behalten, die bereits Sinn ergeben, und dann einen Runtime ergaenzen, der dem System die fehlenden Faehigkeiten rund um es herum liefert.",
+      },
+      {
+        question: "Wo passt AnyCap in dieses Implementierungsmuster?",
+        answer:
+          "AnyCap kommt als Capability-Runtime zum Einsatz. Es gibt dem Assistenten Bild-, Video-, Web-, Storage- und Delivery-Workflows ueber eine einzige Capability-Oberflaeche statt ueber viele unverbundene Integrationen.",
+      },
+    ],
+    breadcrumbHome: "Startseite",
+    breadcrumbSection: "Anleitungen",
+    breadcrumbLabel: "Multimodale Faehigkeiten zu einem SaaS-Chatbot hinzufuegen",
+    articleHeadline: "Multimodale Faehigkeiten zu einem SaaS-Chatbot hinzufuegen",
+    articleDescription:
+      "Implementierungsleitfaden fuer SaaS-Teams, die einen Chatbot mit Bild-, Video-, Web- und Delivery-Workflows ueber ein Capability-Runtime erweitern moechten.",
+    articleAbout: [
+      "Multimodale KI",
+      "KI-SaaS-Chatbot",
+      "SaaS-Architektur",
+      "KI-Agenten",
+      "Agent Capability Runtime",
+    ],
+    articleKeywords: [
+      "multimodaler Chatbot",
+      "SaaS-Chatbot",
+      "multimodale Faehigkeiten zum Chatbot hinzufuegen",
+      "multimodaler KI-Chatbot SaaS",
+      "Chatbot mit Bild- und Video-Unterstuetzung",
+    ],
+  },
 };
 
 function getPageMetadata(locale: SiteLocale): Metadata {
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : locale === "de" ? "de" : "en"];
   return createLocalizedMetadataForPath(locale, PATH, {
     title: content.articleHeadline,
     description: content.articleDescription,
@@ -839,7 +1074,7 @@ function BulletList({ items }: { items: readonly string[] }) {
 
 export default async function AddMultimodalCapabilitiesToSaaSChatbotPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : locale === "de" ? "de" : "en"];
   const articleJsonLd = getArticleJsonLd(content);
   const faqJsonLd = createFaqPageJsonLd([...content.faqItems]);
 

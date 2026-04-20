@@ -441,6 +441,48 @@ export const manualSeoRouteDefinitions = [
     priority: 0.62,
   },
   {
+    key: "compare-anycap-vs-modal",
+    kind: "seo",
+    path: "/compare/anycap-vs-modal",
+    priority: 0.66,
+  },
+  {
+    key: "compare-anycap-vs-together-ai",
+    kind: "seo",
+    path: "/compare/anycap-vs-together-ai",
+    priority: 0.66,
+  },
+  {
+    key: "compare-fal-ai-vs-replicate",
+    kind: "seo",
+    path: "/compare/fal-ai-vs-replicate",
+    priority: 0.68,
+  },
+  {
+    key: "for-gemini-cli",
+    kind: "seo",
+    path: "/for/gemini-cli",
+    priority: 0.84,
+  },
+  {
+    key: "guides-how-to-use-veo-3-in-ai-agent",
+    kind: "seo",
+    path: "/guides/how-to-use-veo-3-in-ai-agent",
+    priority: 0.72,
+  },
+  {
+    key: "guides-how-to-use-kling-in-ai-agent",
+    kind: "seo",
+    path: "/guides/how-to-use-kling-in-ai-agent",
+    priority: 0.72,
+  },
+  {
+    key: "learn-best-video-generation-api-for-ai-agents-2026",
+    kind: "seo",
+    path: "/learn/best-video-generation-api-for-ai-agents-2026",
+    priority: 0.8,
+  },
+  {
     key: "glossary-context-engineering",
     kind: "seo",
     path: "/glossary/context-engineering",

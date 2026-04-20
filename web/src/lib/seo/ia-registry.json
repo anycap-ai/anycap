@@ -105,6 +105,14 @@
     { "id": "learn-ai-video-generator-from-image", "kind": "leaf", "label": "AI Video Generator from Image", "path": "/learn/ai-video-generator-from-image", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-ai-influencers" },
     { "id": "learn-what-is-an-ai-influencer", "kind": "detail", "label": "What Is an AI Influencer?", "path": "/learn/what-is-an-ai-influencer", "eyebrow": "Use Cases", "parentId": "learn-how-to-make-ai-influencers" },
 
+    { "id": "compare-anycap-vs-modal", "kind": "detail", "label": "AnyCap vs Modal", "path": "/compare/anycap-vs-modal", "eyebrow": "Compare", "parentId": "hub-compare" },
+    { "id": "compare-anycap-vs-together-ai", "kind": "detail", "label": "AnyCap vs Together AI", "path": "/compare/anycap-vs-together-ai", "eyebrow": "Compare", "parentId": "hub-compare" },
+    { "id": "compare-fal-ai-vs-replicate", "kind": "detail", "label": "fal.ai vs Replicate", "path": "/compare/fal-ai-vs-replicate", "eyebrow": "Compare", "parentId": "hub-compare" },
+    { "id": "for-gemini-cli", "kind": "detail", "label": "Gemini CLI", "path": "/for/gemini-cli", "eyebrow": "For Gemini CLI", "parentId": "hub-for" },
+    { "id": "guides-how-to-use-veo-3-in-ai-agent", "kind": "detail", "label": "How to Use Veo 3.1 in an AI Agent", "path": "/guides/how-to-use-veo-3-in-ai-agent", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "guides-how-to-use-kling-in-ai-agent", "kind": "detail", "label": "How to Use Kling 3.0 in an AI Agent", "path": "/guides/how-to-use-kling-in-ai-agent", "eyebrow": "Guides", "parentId": "hub-guides" },
+    { "id": "learn-best-video-generation-api-for-ai-agents-2026", "kind": "detail", "label": "Best Video Generation API for AI Agents (2026)", "path": "/learn/best-video-generation-api-for-ai-agents-2026", "eyebrow": "Coding Agent Stacks", "parentId": "learn-coding-agent-stacks" },
+
     { "id": "hub-models", "kind": "hub", "label": "Models", "path": "/models", "eyebrow": "Models", "parentId": "home" },
     { "id": "models-seedream-5", "kind": "detail", "label": "Seedream 5", "path": "/models/seedream-5", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-nano-banana-pro", "kind": "detail", "label": "Nano Banana Pro", "path": "/models/nano-banana-pro", "eyebrow": "Model", "parentId": "hub-models" },

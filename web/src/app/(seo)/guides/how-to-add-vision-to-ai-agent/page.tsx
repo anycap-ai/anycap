@@ -44,7 +44,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
   en: {
     eyebrow: "Guides",
     title: ["How to add vision capabilities", "to an AI agent"],
@@ -252,6 +252,75 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
     },
     breadcrumbLabel: "Tambah vision ke agen AI",
   },
+  de: {
+    eyebrow: "Anleitungen",
+    title: ["Visuelle Faehigkeiten zu einem KI-Agenten", "hinzufuegen"],
+    intro: [
+      "Die meisten KI-Agenten arbeiten mit Text und Code, aber sie koennen nicht sehen, es sei denn, Sie geben ihnen eine visuelle Faehigkeitsoberflaeche. AnyCap fuegt Bildverstaendnis und Videoanalyse hinzu, damit der Agent Screenshots ueberpruefen, Designs begutachten, Demos zusammenfassen und visuelle Belege im selben Workflow beurteilen kann.",
+      "Diese Anleitung behandelt die Einrichtung von image read und video read fuer Agenten wie Claude Code, Cursor und Codex. Die Einrichtung ist unkompliziert, aber der Mehrwert entsteht nach der Installation: Der Agent kann von rein textbasiertem Denken zu visueller Inspektion, Extraktion und QA-Aufgaben uebergehen.",
+      "Nach der Konfiguration kann Ihr Agent einen Screenshot, ein UI-Mockup oder eine aufgezeichnete Demo als strukturierte Eingabe behandeln. Das eroeffnet neue Workflows fuer Bug-Triage, Barrierefreiheitspruefung, Wettbewerbsforschung, Release-Notes-Erstellung und Design-Validierung.",
+    ],
+    neededTitle: "Was Sie benoetigen",
+    neededItems: [
+      "Einen KI-Agenten, der Shell-Befehle ausfuehren kann, wie Claude Code, Cursor oder Codex",
+      "Node.js 18+ fuer die Unterstuetzung von skills.sh und npm install",
+      "Einen Browser fuer den einmaligen Anmeldevorgang",
+      "Bilder oder Videos zur Analyse, entweder als URLs oder lokale Dateien, die zuerst hochgeladen werden koennen",
+    ],
+    callout:
+      "Visuelle Faehigkeiten erscheinen ueblicherweise als zwei Befehle: image read fuer Standbilder und video read fuer zeitliche Analysen. Beide geben strukturierten Text zurueck, ueber den ein Agent nachdenken, zusammenfassen oder Folgemaessnahmen einleiten kann.",
+    steps: {
+      skill: "AnyCap-Skill installieren",
+      cli: "AnyCap CLI installieren",
+      login: "Anmelden",
+      image: "Bildverstaendnis verwenden",
+      video: "Videoanalyse verwenden",
+      combine: "Visuelle Faehigkeiten in Agenten-Workflows kombinieren",
+    },
+    useCasesTitle: "Wo visuelle Faehigkeiten den groessten Mehrwert bieten",
+    useCases: [
+      {
+        title: "UI- und QA-Pruefung",
+        body: "Lassen Sie den Agenten Screenshots auf Layout-Regressionen, Barrierefreiheitsprobleme, Textueberlaeufe oder visuelle Bugs vor einem Release ueberpruefen.",
+      },
+      {
+        title: "Design- und Markenpruefung",
+        body: "Bitten Sie den Agenten, einen Mockup mit Brand-Guidelines zu vergleichen, sichtbaren Text zu extrahieren oder die Hierarchie und Komposition eines Layouts zusammenzufassen.",
+      },
+      {
+        title: "Videoverstaendnis",
+        body: "Uebergeben Sie dem Agenten ein Produktdemo, eine Nutzeraufzeichnung oder ein Werbekreativ, damit er Szenen zusammenfassen, Schluesselmomente extrahieren und die Analyse in Notizen oder Tickets umwandeln kann.",
+      },
+    ],
+    interpretationTitle: "Wie Agenten die visuelle Ausgabe gut nutzen",
+    interpretationBody: [
+      "Visuelle Funktionen sind am nuetzlichsten, wenn die Analyse Teil eines groesseren Workflows wird, anstatt nur eine einmalige Bildunterschrift zu sein. Beispielsweise kann ein Agent einen Screenshot lesen, Barrierefreiheitsprobleme identifizieren und dann Code-Dateien oeffnen, um eine Korrektur basierend auf dem Gefundenen vorzuschlagen.",
+      "Das Gleiche gilt fuer Videos. Eine szenenweise Zusammenfassung wird wertvoller, wenn der Agent sie in Release-Notes, eine QA-Checkliste oder eine Liste fehlender Produkterklaerungen umwandelt. Es geht nicht nur darum, Bilder zu beschreiben, sondern dem Agenten zu helfen, Entscheidungen auf der Grundlage visueller Belege zu treffen.",
+      "In der Praxis liefern gezielte Prompts bessere Ergebnisse als generische. Die Frage 'Was ist in diesem Bild?' ist nuetzlich, aber die Frage 'Welche Onboarding-Probleme wuerden einen Erstbenutzer in diesem Screenshot aufhalten?' gibt dem Modell einen schaerferen Bewertungsrahmen.",
+    ],
+    mistakesTitle: "Haeufige Einrichtungs- und Nutzungsfehler",
+    mistakes: [
+      {
+        title: "Den Upload-Schritt fuer lokale Dateien vergessen",
+        body: "Wenn die Eingabe noch nicht ueber eine URL erreichbar ist, muss der Agent sie zuerst hochladen und dann die resultierende URL an den Lesebefehl uebergeben.",
+      },
+      {
+        title: "Generische Prompts fuer komplexe Pruefungen verwenden",
+        body: "Breite Prompts liefern breite Antworten. Eine gezielte Frage zur Barrierefreiheit, Informationshierarchie oder Funktionsreihenfolge erzeugt umsetzbarere Ausgaben.",
+      },
+      {
+        title: "Visuelle Faehigkeiten als isolierte Aufgabe behandeln",
+        body: "Der groesste Hebel entsteht, wenn der Agent die visuelle Analyse nutzt, um den naechsten Schritt voranzutreiben, z. B. Notizen zu verfassen, Bugs zu erstellen oder Codeaenderungen vorzunehmen.",
+      },
+    ],
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap fuer Claude Code",
+      capability: "Alle Faehigkeiten",
+      start: "Jetzt starten",
+    },
+    breadcrumbLabel: "Visuelle Faehigkeiten zu KI-Agent hinzufuegen",
+  },
 };
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);
@@ -359,6 +428,29 @@ const idFaqItems = [
   },
 ] as const;
 
+const deFaqItems = [
+  {
+    question: "Was ist der Unterschied zwischen image read und video read?",
+    answer:
+      "Image read analysiert einen einzelnen visuellen Frame und gibt strukturierte Details wie Objekte, sichtbaren Text, Layout und Kontext zurueck. Video read fuegt zeitliches Verstaendnis hinzu, sodass die Ausgabe Szenen, Aktionen, Abfolge und Schluesselmomente im Zeitverlauf umfasst.",
+  },
+  {
+    question: "Welche Bild- und Videoformate werden unterstuetzt?",
+    answer:
+      "Bild-Workflows unterstuetzen gaengige Formate wie JPEG, PNG, WebP und GIF, waehrend Video-Workflows gaengige Formate wie MP4, WebM und MOV unterstuetzen. Das einfachste Muster ist, eine stabile URL anzugeben oder die lokale Datei zuerst vom Agenten hochladen zu lassen.",
+  },
+  {
+    question: "Funktionieren visuelle Faehigkeiten mit lokal gespeicherten Dateien?",
+    answer:
+      "Ja. Wenn die Datei lokal ist, kann der Agent sie zuerst hochladen und dann die resultierende gehostete URL an den image read- oder video read-Befehl uebergeben. Dieses Upload-dann-Analyse-Muster ist genau die Art von operativem Detail, das ein Skill zu automatisieren hilft.",
+  },
+  {
+    question: "Was sind gute erste Anwendungsfaelle fuer visuelle Faehigkeiten in einem Agenten?",
+    answer:
+      "Starke fruehe Anwendungsfaelle umfassen Screenshot-QA, Barrierefreiheitspruefung, Informationsextraktion aus UI-Mockups, Zusammenfassung von Produktdemos und den Vergleich von Visuals mit Design- oder Markenvorgaben.",
+  },
+] as const;
+
 const localizedStepCopy = {
   en: {
     breadcrumbHome: "Home",
@@ -390,6 +482,8 @@ const localizedStepCopy = {
     workflowPrompt3: "\"Generate a hero image, then analyze it for brand consistency\"",
     workflowBody:
       "The agent can orchestrate upload, analysis, interpretation, and follow-up actions without forcing the user to manage each step manually.",
+    combineBody:
+      "With vision installed, your agent can combine visual input with writing, coding, and planning tasks. That is where the capability becomes more than a captioning tool.",
   },
   id: {
     breadcrumbHome: "Beranda",
@@ -421,15 +515,50 @@ const localizedStepCopy = {
     workflowPrompt3: "\"Buat hero image lalu analisis konsistensinya terhadap guideline brand\"",
     workflowBody:
       "Agen dapat mengorkestrasi upload, analisis, interpretasi, dan aksi lanjutan tanpa memaksa pengguna mengelola setiap langkah secara manual.",
+    combineBody:
+      "Setelah vision terpasang, agen Anda dapat menggabungkan input visual dengan tugas penulisan, coding, dan perencanaan. Di sinilah kapabilitas ini menjadi lebih dari sekadar alat pembuat caption.",
+  },
+  de: {
+    breadcrumbHome: "Startseite",
+    breadcrumbGuides: "Anleitungen",
+    skillForClaude: "# Fuer Claude Code",
+    skillForCursor: "# Fuer Cursor",
+    skillBody:
+      "Dadurch wird der AnyCap-Skill installiert, damit Ihr Agent Bild- und Videoanalyse entdecken kann, ohne den Workflow von Grund auf neu zu improvieren. Der Skill erklaert Befehle, die Einrichtung und die Situationen, in denen visuelle Faehigkeiten eingesetzt werden sollten.",
+    cliPrefix: "Oder verwenden Sie ",
+    cliSuffix:
+      ". Die CLI ist die Runtime-Oberflaeche, die image read und video read ausfuehrt, nachdem der Skill dem Agenten mitgeteilt hat, wie er sie aufrufen soll.",
+    loginBody:
+      "Dadurch wird die CLI einmalig authentifiziert, sodass der Agent visuelles Verstaendnis zusammen mit anderen AnyCap-Faehigkeiten in derselben Sitzung nutzen kann.",
+    imageReadLabel: "# Bild von einer URL analysieren",
+    imagePromptLabel: "# Mit einer spezifischen Frage analysieren",
+    imagePromptValue: "Welche Barrierefreiheitsprobleme sehen Sie?",
+    imageBody:
+      "Der Befehl gibt strukturierte Details ueber sichtbaren Text, Objekte, Layout und Kontext zurueck. Gezielte Prompts machen die Ausgabe ueblicherweise fuer echte Produktarbeit viel nuetzlicher.",
+    videoReadLabel: "# Video analysieren",
+    videoPromptLabel: "# Mit einem gezielten Prompt analysieren",
+    videoPromptValue: "Listen Sie alle gezeigten Funktionen in der Reihenfolge auf",
+    videoBody:
+      "Die Videoanalyse gibt Struktur auf Szenenebene, Schluesselmomente und zeitliche Zusammenhaenge zurueck, was sie fuer Demos, Nutzeraufzeichnungen und Wettbewerbsanalysen nuetzlich macht.",
+    workflowLabel: "# UI-Pruefungs-Workflow",
+    workflowPrompt1: "\"Sieh dir diesen Screenshot an und identifiziere alle UI-Probleme\"",
+    workflowLabel2: "# Video-Zusammenfassungs-Workflow",
+    workflowPrompt2: "\"Schau dir dieses Demovideo an und schreibe Release-Notes\"",
+    workflowLabel3: "# Kombinierter Generierungs- plus Sicht-Workflow",
+    workflowPrompt3: "\"Generiere ein Hero-Bild und analysiere es dann auf Markenkonsistenz\"",
+    workflowBody:
+      "Der Agent kann Upload, Analyse, Interpretation und Folgemaessnahmen orchestrieren, ohne den Benutzer zu zwingen, jeden Schritt manuell zu verwalten.",
+    combineBody:
+      "Mit installierten visuellen Faehigkeiten kann Ihr Agent visuelle Eingaben mit Schreib-, Coding- und Planungsaufgaben kombinieren. Hier wird die Faehigkeit zu mehr als nur einem Bildunterschriften-Tool.",
   },
 } as const;
 
 export default async function HowToAddVisionPage() {
   const locale = await getRequestLocale();
-  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
-  const localizedFaqItems = locale === "id" ? idFaqItems : faqItems;
+  const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : locale === "de" ? "de" : "en"];
+  const localizedFaqItems = locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
   const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
-  const stepCopy = locale === "id" ? localizedStepCopy.id : localizedStepCopy.en;
+  const stepCopy = locale === "id" ? localizedStepCopy.id : locale === "de" ? localizedStepCopy.de : localizedStepCopy.en;
 
   return (
     <>
@@ -637,8 +766,7 @@ export default async function HowToAddVisionPage() {
                 </h2>
               </div>
               <p className="max-w-[760px] text-sm leading-6 text-[#4d5145]">
-                With vision installed, your agent can combine visual input with writing, coding, and
-                planning tasks. That is where the capability becomes more than a captioning tool.
+                {stepCopy.combineBody}
               </p>
               <div className="mt-3 bg-[#1c1f17] px-5 py-4">
                 <p className="mb-1 text-[13px] text-[#6b7d3a]" style={mono}>
