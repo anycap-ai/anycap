@@ -148,10 +148,10 @@ const gapEntrances: readonly Omit<StartGapEntrance, "summary">[] = [
 const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
   en: {
     metadata: {
-      title: "Get started with AnyCap — Don't switch agents, add capabilities immediately",
+      title: "Get started with AnyCap, Don't switch agents, add capabilities immediately",
       description:
         "Start with AnyCap in minutes. Pick Claude Code, Cursor, or Codex, then ask in natural language to install one skill and one CLI and add image, video, and vision capabilities without switching agents.",
-      openGraphTitle: "Get started with AnyCap — Don't switch agents, add capabilities immediately",
+      openGraphTitle: "Get started with AnyCap, Don't switch agents, add capabilities immediately",
       openGraphDescription:
         "Pick your agent, ask in natural language, and add image, video, and vision capabilities through one CLI.",
       pageName: "Get started with AnyCap",
@@ -231,7 +231,7 @@ const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
       forClaudeCode: "For Claude Code",
     },
     pageJsonLd: createTechArticleJsonLd({
-      headline: "Get started with AnyCap — Don't switch agents, add capabilities immediately",
+      headline: "Get started with AnyCap, Don't switch agents, add capabilities immediately",
       description:
         "Quick start page for installing AnyCap by asking your agent in natural language and choosing the right onboarding path for Claude Code, Cursor, or Codex.",
       path: START_PATH,
@@ -513,6 +513,137 @@ const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
       name: "Mulai dengan AnyCap",
       description:
         "Video merek berdurasi 25 detik untuk halaman mulai, menampilkan posisi 'jangan ganti agen' dan gagasan bahwa Anda bisa mulai dengan meminta dalam bahasa alami.",
+      contentUrl: START_VIDEO_SRC,
+      uploadDate: lastUpdatedIso,
+      duration: "PT25S",
+      thumbnailUrl: START_VIDEO_THUMBNAIL_URL,
+    },
+  },
+  de: {
+    metadata: {
+      title: "Einstieg mit AnyCap — Agenten nicht wechseln, Fähigkeiten sofort hinzufügen",
+      description:
+        "Starte mit AnyCap in Minuten. Wähle Claude Code, Cursor oder Codex und bitte in natürlicher Sprache, ein Skill und eine CLI zu installieren und Bild-, Video- und Vision-Fähigkeiten hinzuzufügen — ohne den Agenten zu wechseln.",
+      openGraphTitle: "Einstieg mit AnyCap — Agenten nicht wechseln, Fähigkeiten sofort hinzufügen",
+      openGraphDescription:
+        "Wähle deinen Agenten, bitte in natürlicher Sprache und füge Bild-, Video- und Vision-Fähigkeiten über eine CLI hinzu.",
+      pageName: "Einstieg mit AnyCap",
+      pageDescription:
+        "Schnellstart-Seite für die AnyCap-Installation: deinen Agenten in natürlicher Sprache bitten und den richtigen Onboarding-Pfad für Claude Code, Cursor oder Codex wählen.",
+    },
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Einstieg", href: START_PATH },
+    ],
+    hero: {
+      eyebrow: "Einstieg",
+      titleLine1: "Den Agenten nicht wechseln.",
+      titleLine2: "Fähigkeiten sofort hinzufügen.",
+      intro:
+        "AnyCap ist der schnellste Weg von einem leistungsfähigen Coding-Agenten zu einem leistungsfähigen multimodalen Agenten. Wähle den Agenten, den du bereits nutzt, und sage in natürlicher Sprache, was du möchtest. Er kann für dich ein Skill und eine CLI installieren und danach Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über dieselbe Befehlsoberfläche hinzufügen.",
+      lastUpdatedLabel: "Zuletzt aktualisiert am 10. April 2026",
+      naturalLanguageEyebrow: "Natürliche Sprache zuerst",
+      naturalLanguageLead: "Sag einfach, was du möchtest, z. B.",
+      naturalLanguageNote:
+        "Der einfachste Weg ist, in einfacher Sprache zu fragen und den Agenten Setup, Login und Capability-Aufruf von dort übernehmen zu lassen.",
+    },
+    video: {
+      sectionEyebrow: "Ansehen",
+      title: "Den natürlichsprachigen Workflow in Aktion sehen",
+      description:
+        "Ein kurzes Markenvideo für die Start-Seite. Es verbindet die Botschaft 'Agenten nicht wechseln' mit dem Gedanken, mit einer natürlichsprachigen Beschreibung zu beginnen.",
+      alt: "Kurzes Markenvideo, das die AnyCap-Startseite und den natürlichsprachigen Setup-Pfad zeigt.",
+    },
+    overviewTitle: "Warum diese Seite existiert",
+    overviewParagraphs: [
+      "Die Start-Seite ist für den kürzesten Weg von der Absicht zur funktionierenden Fähigkeit konzipiert. Anstatt den Nutzer zuerst die gesamte Produktstruktur studieren zu lassen, bietet sie einen natürlichsprachigen Ausgangspunkt, einen einfachen Installationspfad und klare Folgeseiten für die häufigsten Lücken.",
+      "Das macht die Seite sowohl für Erstanwender als auch für Teams nützlich, die anderen einen sauberen Onboarding-Link schicken möchten. Das Ziel ist nicht nur, AnyCap zu erklären — es ist, die Reibung zwischen der ersten Frage und dem ersten erfolgreichen Capability-Aufruf zu reduzieren.",
+    ],
+    sectionTitles: {
+      agents: "Agenten wählen",
+      naturalLanguageStartPath: "Natürlichsprachiger Startpfad",
+      gapEntrances: "Von der Lücke starten, die du schließen musst",
+      watch: "Den natürlichsprachigen Workflow in Aktion sehen",
+    },
+    cardEyebrow: "Agentenpfad",
+    agentOptions: agentOptions.map((option) => ({
+      ...option,
+      description:
+        option.name === "Claude Code"
+          ? "Bester erster Pfad, wenn du die stärkste Install-Intent-Seite und das tiefste Capability-Onboarding möchtest."
+          : option.name === "Cursor"
+            ? "Nutze diesen Pfad, wenn deine Agenten-Workflows bereits in Cursor laufen und du dieselbe Capability-Schicht dort möchtest."
+            : "Gut geeignet, wenn du Bild-, Video- und Vision-Fähigkeiten zu Codex hinzufügen möchtest, ohne Provider-SDKs zu integrieren.",
+    })),
+    universalSteps: universalSteps.map((step) => ({
+      ...step,
+      title:
+        step.title === "Ask your agent to get you started"
+          ? "Agent bitten, loszulegen"
+          : step.title === "Install the CLI"
+            ? "CLI installieren"
+            : "Einmal einloggen",
+      note:
+        step.title === "Ask your agent to get you started"
+          ? "Claude Code, Cursor oder Codex können eine einfachsprachige Anfrage in den Setup-Flow umwandeln."
+          : step.title === "Install the CLI"
+            ? "Oder per npm installieren, wenn du den Paketmanager-Pfad bevorzugst."
+            : "Die Authentifizierung erfolgt einmal und gilt für alle Fähigkeiten, sodass du nach dem Setup weiter in natürlicher Sprache fragen kannst.",
+    })),
+    gapEntrances: gapEntrances.map((entry) => ({
+      ...entry,
+      eyebrow:
+        entry.eyebrow === "Claude Code"
+          ? "Claude Code"
+          : entry.eyebrow === "Problem intent"
+            ? "Problemabsicht"
+            : "Fähigkeiten-Hub",
+      title:
+        entry.title === "Add image generation to Claude Code"
+          ? "Bildgenerierung zu Claude Code hinzufügen"
+          : entry.title === "Add video generation to Claude Code"
+            ? "Videogenerierung zu Claude Code hinzufügen"
+            : entry.title === "What agents still can't do"
+              ? "Was Agenten noch nicht können"
+              : "Beliebige Fähigkeit erkunden",
+      summary:
+        entry.title === "Add image generation to Claude Code"
+          ? "Beste nächste Seite, wenn die Lücke Visuals, Mockups oder kreative Assets betrifft."
+          : entry.title === "Add video generation to Claude Code"
+            ? "Beste nächste Seite, wenn die Lücke Demos, Walkthroughs oder Social-Clips betrifft."
+            : entry.title === "What agents still can't do"
+              ? "Nutze dies, wenn du die Defizit-Narration und die richtige Landing Page für jede fehlende Fähigkeit möchtest."
+              : "Nutze dies, wenn du bereits weißt, dass du Bild-, Video- oder Vision-APIs für deinen Agenten möchtest.",
+    })),
+    ctas: {
+      startWithClaudeCode: "Mit Claude Code starten",
+      universalInstallGuide: "Universeller Installationsleitfaden",
+      seeCapabilityGaps: "Fähigkeitslücken ansehen",
+      installAnycap: "AnyCap installieren",
+      viewCapabilities: "Fähigkeiten ansehen",
+      forClaudeCode: "Für Claude Code",
+    },
+    pageJsonLd: createTechArticleJsonLd({
+      headline: "Einstieg mit AnyCap — Agenten nicht wechseln, Fähigkeiten sofort hinzufügen",
+      description:
+        "Schnellstart-Seite für die AnyCap-Installation: deinen Agenten in natürlicher Sprache bitten und den richtigen Onboarding-Pfad für Claude Code, Cursor oder Codex wählen.",
+      path: START_PATH,
+      about: ["AnyCap CLI", "KI-Agenten", "Claude Code", "Cursor", "Codex"],
+      keywords: [
+        "anycap starten",
+        "anycap installieren",
+        "fähigkeiten zu claude code hinzufügen",
+        "cursor tools",
+        "codex tools",
+      ],
+      dateModified: lastUpdatedIso,
+    }),
+    videoJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: "Einstieg mit AnyCap",
+      description:
+        "Ein 25-sekündiges Markenvideo für die Start-Seite, das AnyCap's 'Agenten nicht wechseln'-Positionierung und die Idee zeigt, mit einer natürlichsprachigen Anfrage zu beginnen.",
       contentUrl: START_VIDEO_SRC,
       uploadDate: lastUpdatedIso,
       duration: "PT25S",

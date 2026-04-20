@@ -110,4 +110,11 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "models-seedance-1-5-pro": ptBrIdAndDeRolloutSeoLocales,
   "models-elevenlabs-music": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-video-analysis": ptBrIdAndDeRolloutSeoLocales,
+  "compare-anycap-vs-modal": ptBrIdAndDeRolloutSeoLocales,
+  "compare-anycap-vs-together-ai": ptBrIdAndDeRolloutSeoLocales,
+  "compare-fal-ai-vs-replicate": ptBrIdAndDeRolloutSeoLocales,
+  "for-gemini-cli": ptBrIdAndDeRolloutSeoLocales,
+  "guides-how-to-use-veo-3-in-ai-agent": ptBrIdAndDeRolloutSeoLocales,
+  "guides-how-to-use-kling-in-ai-agent": ptBrIdAndDeRolloutSeoLocales,
+  "learn-best-video-generation-api-for-ai-agents-2026": ptBrIdAndDeRolloutSeoLocales,
 } as const satisfies SeoLocaleRolloutConfig;

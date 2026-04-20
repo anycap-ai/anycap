@@ -44,7 +44,7 @@ type PageContent = {
   breadcrumbLabel: string;
 };
 
-const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
+const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
   en: {
     eyebrow: "Guides",
     title: ["How to add video generation", "to an AI agent"],
@@ -252,6 +252,75 @@ const contentByLocale: Record<"en" | "pt-br" | "id", PageContent> = {
     },
     breadcrumbLabel: "Tambah generasi video ke agen AI",
   },
+  de: {
+    eyebrow: "Anleitungen",
+    title: ["Videogenerierung zu einem KI-Agenten", "hinzufuegen"],
+    intro: [
+      "KI-Agenten koennen Code schreiben, Fragen beantworten und Workflows automatisieren, aber sie koennen keine Videos eigenstaendig erstellen. AnyCap ergaenzt die Videogenerierung ueber eine Skill-Datei und eine CLI, damit der Agent Modelle entdecken, Jobs einreichen und auf Ergebnisse warten kann, ohne den Workflow zu verlassen.",
+      "Diese Anleitung zeigt, wie Sie Videogenerierung zu einem beliebigen KI-Agenten hinzufuegen, einschliesslich Claude Code, Cursor und Codex. Sie deckt die Einrichtung, die Modellsuche, den Prompt-Aufbau und den asynchronen Workflow ab, der eine Anfrage in natuerlicher Sprache in ein fertiges Videoasset umwandelt.",
+      "Das praktische Ziel ist einfach: Nach der Einrichtung sollte Ihr Agent Videogenerierung wie jeden anderen Tool-Aufruf behandeln koennen. Ein Benutzer kann ein Produktdemo, ein Motion-Konzept oder einen kurzen Social-Clip anfordern, und der Agent uebernimmt den gesamten Ausfuehrungsweg.",
+    ],
+    neededTitle: "Was Sie benoetigen",
+    neededItems: [
+      "Einen KI-Agenten, der Shell-Befehle ausfuehren kann (Claude Code, Cursor, Codex und aehnliche Tools)",
+      "Node.js 18+ fuer skills.sh und npm-basierte Installationsablaeufe",
+      "Einen Browser fuer den einmaligen Anmeldevorgang",
+      "Einen klaren Prompt oder ein Referenzbild fuer den ersten Generierungstest",
+    ],
+    callout:
+      "Videogenerierung ist asynchron. Die CLI sendet die Anfrage, fragt den Status ab bis der Job abgeschlossen ist, und gibt die Ergebnis-URL zurueck. Ihr Agent kann diese Abfrageschleife nach der Einrichtung automatisch verwalten.",
+    steps: {
+      skill: "AnyCap-Skill installieren",
+      cli: "AnyCap CLI installieren",
+      login: "Anmelden",
+      discover: "Verfuegbare Videomodelle entdecken",
+      firstVideo: "Ihr erstes Video generieren",
+      workflow: "Videogenerierung in Agenten-Workflows verwenden",
+    },
+    useCasesTitle: "Wo Videogenerierung am meisten hilft",
+    useCases: [
+      {
+        title: "Produktdemos",
+        body: "Verwandeln Sie Release-Notes oder eine Feature-Zusammenfassung in ein kurzes Produktdemovideo, das ein Agent als Teil der Startvorbereitung generieren kann.",
+      },
+      {
+        title: "Marketing-Experimente",
+        body: "Bitten Sie den Agenten um mehrere kurze Varianten eines Werbekonzepts, einer Hero-Animation oder eines Social-Teasers, ohne den Terminal-Workflow zu verlassen.",
+      },
+      {
+        title: "Design-Handoff",
+        body: "Animieren Sie einen statischen Mockup zu einem Walkthrough-Video, damit Teams Bewegung und Erzaehlung frueher im Designzyklus ueberpruefen koennen.",
+      },
+    ],
+    promptsTitle: "Bessere Video-Ausgaben erzielen",
+    promptsBody: [
+      "Die Prompt-Qualitaet ist bei Videos wichtiger als bei vielen Textaufgaben, da das Modell Bildkomposition, Bewegung, Dauer und visuelle Kontinuitaet erschliessen muss. Ein kurzer vager Prompt funktioniert oft noch, aber ein strukturierter Prompt liefert in der Regel reproduzierbarere Ergebnisse.",
+      "Fuer beste Ergebnisse teilen Sie dem Agenten das Motiv, die Kamerabewegung, die Szene, die Beleuchtung, den Ton und die Laenge mit. Wenn Sie einen visuellen Ausgangspunkt haben, verwenden Sie ein Referenzbild, damit der Agent das Video um ein bestimmtes Layout oder eine Artdirection verankern kann.",
+      "Ein gutes Muster ist, den Agenten zuerst um einen Entwurfs-Prompt zu bitten, diesen zu ueberpruefen und ihn dann den Generierungsbefehl ausfuehren zu lassen. Das haelt den Workflow kollaborativ, waehrend der Agent trotzdem die operativen Details uebernimmt.",
+    ],
+    mistakesTitle: "Haeufige Einrichtungs- und Workflow-Fehler",
+    mistakes: [
+      {
+        title: "Modellsuche ueberspringen",
+        body: "Verschiedene Modelle haben unterschiedliche Staerken, Dauern und Bewegungsstile. Das vorherige Ausfuehren von anycap video models hilft dem Agenten, ein Modell zu waehlen, das zur Anfrage passt.",
+      },
+      {
+        title: "Unterspezifizierte Prompts verwenden",
+        body: "Eine Anfrage wie 'Erstelle ein Produktvideo' ist ueblicherweise zu allgemein. Fuegen Sie Szenenkontext, Tempo, Kamerarichtung und beabsichtigten Verwendungszweck hinzu, damit der Agent einen staerkeren Prompt erstellen kann.",
+      },
+      {
+        title: "Videogenerierung wie einen synchronen Befehl behandeln",
+        body: "Videojobs benoetigen Zeit. Der Agent sollte die Anfrage senden, weiterhin den Status abfragen und den Workflow erst fortsetzen, wenn die Ergebnis-URL verfuegbar ist.",
+      },
+    ],
+    faqTitle: "FAQ",
+    ctas: {
+      claude: "AnyCap fuer Claude Code",
+      video: "Videogenerierung",
+      start: "Jetzt starten",
+    },
+    breadcrumbLabel: "Videogenerierung zu KI-Agent hinzufuegen",
+  },
 };
 
 export const metadata: Metadata = getPageMetadata(defaultLocale);
@@ -339,7 +408,7 @@ const faqItems = [
 export default async function HowToAddVideoGenerationPage() {
   const locale = await getRequestLocale();
   const content =
-    contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : "en"];
+    contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : locale === "de" ? "de" : "en"];
   const localizedFaqItems =
     locale === "id"
       ? [
@@ -362,6 +431,29 @@ export default async function HowToAddVideoGenerationPage() {
             question: "Apakah ini hanya untuk Claude Code?",
             answer:
               "Tidak. Semua agen yang bisa menjalankan command shell dapat memakai generasi video AnyCap, termasuk Cursor, Codex, dan tool sejenis. Instal target skill yang sesuai dan alur lainnya hampir sama.",
+          },
+        ]
+      : locale === "de"
+      ? [
+          {
+            question: "Welche Videomodelle unterstuetzt AnyCap?",
+            answer:
+              "AnyCap bietet Zugang zu mehreren Videogenerierungsmodellen, darunter Veo 3.1, Kling 3.0 und weitere. Fuehren Sie anycap video models aus, um die aktuell verfuegbaren Optionen anzuzeigen, und waehlen Sie basierend auf Bewegungsstil, Dauer und Ausgabezielen.",
+          },
+          {
+            question: "Wie lange dauert die Videogenerierung?",
+            answer:
+              "Videogenerierung ist asynchron. Die CLI sendet die Anfrage und fragt den Status bis zum Abschluss ab. Viele Jobs werden innerhalb weniger Sekunden bis einiger Minuten abgeschlossen, abhangig von Modell, Warteschlangenstatus und Einstellungen. Agenten koennen diese Warteschleife fuer Sie uebernehmen.",
+          },
+          {
+            question: "Kann ich Videos aus Referenzbildern generieren?",
+            answer:
+              "Ja. Einige Modelle unterstuetzen die Bild-zu-Video-Generierung. Laden Sie ein Referenzbild ueber AnyCap Drive hoch oder geben Sie den entsprechenden Asset-Pfad an, damit der Agent die Bewegung um ein vorhandenes Design oder einen Frame verankern kann.",
+          },
+          {
+            question: "Funktioniert das auch mit anderen Agenten als Claude Code?",
+            answer:
+              "Ja. Jeder Agent, der Shell-Befehle ausfuehren kann, kann die AnyCap-Videogenerierung verwenden, einschliesslich Cursor, Codex und aehnlicher Tools. Installieren Sie das entsprechende Skill-Target und der Rest des Workflows bleibt nahezu identisch.",
           },
         ]
       : faqItems;
@@ -387,6 +479,27 @@ export default async function HowToAddVideoGenerationPage() {
           refPrompt: "\"Animasikan mockup ini menjadi walkthrough onboarding singkat\"",
           workflowFooter:
             "Agen membaca skill, memakai CLI sebagai runtime, dan mengelola alur generasi asinkron dari awal sampai akhir.",
+        }
+      : locale === "de"
+      ? {
+          skillBody:
+            "Dadurch wird der AnyCap-Skill in das Skill-Verzeichnis Ihres Agenten eingefuegt. Die Datei gibt dem Agenten auffindbare Anweisungen fuer die Videogenerierung, sodass er weiss, welche Befehle auszufuehren sind, ohne aus der Dokumentation zu improvisieren.",
+          cliBody:
+            "Oder verwenden Sie npm install -g @anycap/cli. Die CLI ist die Ausfuehrungsoberflaeche, die multimodale Jobs tatsaechlich sendet und verfolgt.",
+          loginBody:
+            "Dadurch wird der browserbasierte Authentifizierungsablauf geoeffnet. Eine einmalige Anmeldung deckt die Videogenerierung und den Rest der AnyCap-Faehigkeiten ab, was Agenten-Workflows spaeter vereinfacht.",
+          discoverBody:
+            "Dadurch werden die verfuegbaren Videomodelle aufgelistet, was vor dem ersten Ausfuehren empfehlenswert ist. Agenten koennen diese Ausgabe nutzen, um die Anfrage dem besten verfuegbaren Modell zuzuordnen, anstatt jedes Mal dieselbe Wahl fest zu codieren.",
+          firstVideoBody:
+            "Die CLI sendet die Anfrage und fragt den Status ab, bis das Video fertig ist. Sobald der Job abgeschlossen ist, gibt sie die resultierende URL zurueck, damit der Agent mit den Schritten zur Veroeffentlichung, Einbettung oder Ueberprueue fortfahren kann.",
+          workflowBody:
+            "Nach Abschluss der Einrichtung kann Ihr Agent Videos aus Anfragen in natuerlicher Sprache generieren. Er kann ein Modell auswaehlen, einen Prompt erstellen, den Generierungsjob einreichen und auf den Abschluss warten, ohne manuelle Befehl-fuer-Befehl-Ueberwachung.",
+          askLabel: "# Bitten Sie Ihren Agenten direkt",
+          refLabel: "# Oder aus einem Referenzbild generieren",
+          askPrompt: "\"Erstelle ein 5-Sekunden-Produktdemovideo fuer unsere neue Funktion\"",
+          refPrompt: "\"Animiere diesen Mockup zu einem kurzen Onboarding-Walkthrough\"",
+          workflowFooter:
+            "Der Agent liest den Skill, verwendet die CLI als Runtime und verwaltet den asynchronen Generierungsablauf von Anfang bis Ende.",
         }
       : {
           skillBody:

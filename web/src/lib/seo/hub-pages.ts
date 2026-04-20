@@ -331,6 +331,10 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
       title: "Manus",
       description: "Give Manus a unified capability runtime for image, video, and vision tasks.",
     },
+    "/for/gemini-cli": {
+      title: "Gemini CLI",
+      description: "Give Gemini CLI one capability layer for image, video, and vision workflows.",
+    },
   },
   "/guides": {
     "/guides/install-anycap": {
@@ -372,6 +376,14 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
     "/guides/how-to-add-vision-to-ai-agent": {
       title: "How to Add Vision to AI Agent",
       description: "Add image-reading and visual analysis workflows to an AI agent through a stable capability surface.",
+    },
+    "/guides/how-to-use-veo-3-in-ai-agent": {
+      title: "How to Use Veo 3.1 in an AI Agent",
+      description: "Run Veo 3.1 video workflows through one capability layer instead of wiring model APIs manually.",
+    },
+    "/guides/how-to-use-kling-in-ai-agent": {
+      title: "How to Use Kling 3.0 in an AI Agent",
+      description: "Add Kling 3.0 video generation to agent workflows with one runtime surface and one auth flow.",
     },
     "/guides/claude-opus-4-7-image-video-workflow": {
       title: "Claude Opus 4.7 Image and Video Workflow",
@@ -417,6 +429,18 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
       title: "AnyCap vs fal.ai",
       description: "Compare cross-agent capability access with a queue-first generative media API stack.",
     },
+    "/compare/anycap-vs-modal": {
+      title: "AnyCap vs Modal",
+      description: "Compare an agent capability runtime with a general-purpose cloud execution platform.",
+    },
+    "/compare/anycap-vs-together-ai": {
+      title: "AnyCap vs Together.ai",
+      description: "Compare agent-first capability workflows with model inference infrastructure for application backends.",
+    },
+    "/compare/fal-ai-vs-replicate": {
+      title: "fal.ai vs Replicate",
+      description: "Compare fal.ai and Replicate when teams choose a media inference layer for agent workflows.",
+    },
     "/compare/anycap-vs-openclaw-image-generation": {
       title: "AnyCap vs OpenClaw (Image)",
       description: "Compare agent-native image generation with a human-facing AI image editing interface.",
@@ -457,6 +481,10 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
     "/for/manus": {
       title: "Manus",
       description: "Dê ao Manus um runtime de capacidades unificado para tarefas de imagem, vídeo e visão.",
+    },
+    "/for/gemini-cli": {
+      title: "Gemini CLI",
+      description: "Dê ao Gemini CLI uma camada única de capacidades para fluxos de imagem, vídeo e visão.",
     },
   },
   "/guides": {
@@ -576,6 +604,10 @@ const hubItemCopyId: HubItemCopyByHubPath = {
     "/for/manus": {
       title: "Manus",
       description: "Berikan Manus runtime kapabilitas terpadu untuk tugas gambar, video, dan visi.",
+    },
+    "/for/gemini-cli": {
+      title: "Gemini CLI",
+      description: "Berikan Gemini CLI satu lapisan kapabilitas untuk alur gambar, video, dan visi.",
     },
   },
   "/guides": {

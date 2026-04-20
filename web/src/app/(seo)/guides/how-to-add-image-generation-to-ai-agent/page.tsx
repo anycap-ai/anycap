@@ -137,6 +137,29 @@ const deFaqItems = [
   },
 ] as const;
 
+const ptBrFaqItems = [
+  {
+    question: "Quais agentes de IA suportam a geracao de imagem do AnyCap?",
+    answer:
+      "Qualquer agente que execute comandos de shell suporta o AnyCap, incluindo Claude Code, Cursor, Codex e Manus. O agente chama a AnyCap CLI diretamente do terminal.",
+  },
+  {
+    question: "Quais modelos de imagem estao disponiveis?",
+    answer:
+      "O AnyCap oferece acesso ao Seedream 5, Seedream 4.5, Nano Banana Pro e Nano Banana 2. Cada modelo tem pontos fortes diferentes: o Seedream 5 se destaca em imagens fotorrealistas, enquanto o Nano Banana Pro lida bem com estilos artisticos.",
+  },
+  {
+    question: "O agente pode escolher o modelo certo automaticamente?",
+    answer:
+      "Sim. Com a skill do AnyCap instalada, seu agente aprende sobre os pontos fortes de cada modelo e pode selecionar o melhor com base no prompt e no estilo de saida desejado, sem intervencao manual.",
+  },
+  {
+    question: "Quanto custa a geracao de imagem?",
+    answer:
+      "O AnyCap usa precificacao por uso, sem taxa mensal. Novos usuarios recebem $5 em credito gratuito. Os precos variam por modelo, consulte a pagina de precos para as taxas por geracao.",
+  },
+] as const;
+
 const copyByLocale = {
   en: {
     breadcrumbHome: "Home",
@@ -230,6 +253,52 @@ const copyByLocale = {
     ctaImage: "Generasi Gambar",
     ctaStart: "Mulai",
   },
+  "pt-br": {
+    breadcrumbHome: "Inicio",
+    breadcrumbGuides: "Guias",
+    breadcrumbCurrent: "Adicionar geracao de imagem ao agente de IA",
+    eyebrow: "Guias",
+    heroTitle: "Como adicionar geracao de imagem a um agente de IA",
+    heroIntro:
+      "Agentes de IA como Claude Code, Cursor e Codex sao poderosos para escrever e raciocinar sobre codigo, mas nao conseguem gerar imagens por conta propria. O AnyCap preenche essa lacuna. Este guia mostra como adicionar geracao de imagem a qualquer agente de IA em menos de cinco minutos, da instalacao da skill ate a primeira imagem com modelos como Seedream 5 e Nano Banana Pro.",
+    neededTitle: "O que voce precisa",
+    neededItems: [
+      "Um agente de IA que consiga executar comandos de shell (Claude Code, Cursor, Codex etc.)",
+      "Node.js 18+ (para skills.sh e npm install)",
+      "Um navegador para o login unico",
+    ],
+    callout:
+      "Estes passos funcionam para qualquer agente que execute comandos de shell. Os exemplos usam Claude Code, mas os mesmos comandos funcionam no Cursor, Codex e outros agentes.",
+    step1Title: "Instale a skill do AnyCap",
+    step1ForClaude: "# Para Claude Code",
+    step1ForCursor: "# Para Cursor",
+    step1Body:
+      "Este comando coloca o AnyCap SKILL.md no diretorio de skills do seu agente. O arquivo de skill ensina ao agente quais modelos de imagem estao disponiveis e como chama-los.",
+    step2Title: "Instale a CLI do AnyCap",
+    step2Prefix: "Ou: ",
+    step3Title: "Faca login",
+    step3Body:
+      "Abre um navegador para autenticacao. Um unico login cobre todas as capabilities, incluindo geracao de imagem, video, musica e understanding.",
+    step4Title: "Descubra os modelos de imagem disponiveis",
+    step4Body:
+      "Lista todos os modelos de imagem disponiveis. As opcoes atuais incluem Seedream 5, Seedream 4.5, Nano Banana Pro e Nano Banana 2, cada um com diferentes pontos fortes para fotorrealismo, estilos artisticos e velocidade.",
+    step5Title: "Gere sua primeira imagem",
+    step5Body:
+      "A CLI retorna a URL da imagem gerada. Seu agente pode baixar, exibir ou usar a imagem nas etapas seguintes.",
+    step6Title: "Use geracao de imagem nos workflows do agente",
+    step6Intro:
+      "Com a skill instalada e a CLI autenticada, seu agente pode gerar imagens a partir de prompts em linguagem natural. Diga ao seu agente:",
+    step6AskLabel: "# Peca ao agente de forma natural",
+    step6AskPrompt: "\"Gere uma hero image para a landing page\"",
+    step6ModelLabel: "# Ou especifique um modelo",
+    step6ModelPrompt: "\"Crie um conceito de logo usando nano-banana-pro\"",
+    step6Body:
+      "O agente le o arquivo de skill, seleciona um modelo adequado e chama a AnyCap CLI, sem precisar construir o comando manualmente.",
+    faqTitle: "FAQ",
+    ctaClaude: "AnyCap para Claude Code",
+    ctaImage: "Geracao de Imagem",
+    ctaStart: "Comecar",
+  },
   de: {
     breadcrumbHome: "Startseite",
     breadcrumbGuides: "Anleitungen",
@@ -280,8 +349,8 @@ const copyByLocale = {
 
 export default async function HowToAddImageGenerationPage() {
   const locale = await getRequestLocale();
-  const copy = locale === "id" ? copyByLocale.id : locale === "de" ? copyByLocale.de : copyByLocale.en;
-  const localizedFaqItems = locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
+  const copy = locale === "pt-br" ? copyByLocale["pt-br"] : locale === "id" ? copyByLocale.id : locale === "de" ? copyByLocale.de : copyByLocale.en;
+  const localizedFaqItems = locale === "pt-br" ? ptBrFaqItems : locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
   const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
 
   return (
