@@ -555,7 +555,9 @@ printf 'cwd=%s prompt=%s' "$cwd" "$prompt" > "$out"
 		t.Fatalf("expected second session update committed, got %+v", sessionUpdatePayload[1])
 	}
 	finalMessage, _ := sessionUpdatePayload[1]["final_message"].(string)
-	if !strings.Contains(finalMessage, "prompt=修一下 parser panic") || !strings.Contains(finalMessage, "cwd="+workspace) {
+	if !strings.Contains(finalMessage, "修一下 parser panic") ||
+		!strings.Contains(finalMessage, "<anycap-local-session") ||
+		!strings.Contains(finalMessage, "cwd="+workspace) {
 		t.Fatalf("unexpected final_message %q", finalMessage)
 	}
 	if sessionUpdatePayload[1]["executor_ref"] != "thread_123" {

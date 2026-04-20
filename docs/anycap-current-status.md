@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-09
+> Last updated: 2026-04-20
 
 ## 1. Capabilities (Cap)
 
@@ -156,6 +156,7 @@ Current Phase 1 behavior:
 - `anycap connect feishu --agent cursor` runs Cursor Agent with `cursor-agent -p --output-format json --trust --force`; it accepts explicit `--cursor-bin` and `--cursor-model` settings, and startup/status output warns that Cursor may execute local commands and network requests unless Cursor explicitly denies them. The lower-level `agent daemon start --executor cursor` path still requires explicit `--cursor-force`.
 - The CLI runner supports real local `codex`, `claude-code`, and `cursor` executors. Non-interactive runs capture Codex `thread_id`, Claude Code `session_id`, or Cursor Agent `session_id` and persist it as `executor_ref`.
 - Continue-mode sessions inherit the parent `executor_ref`, so the runner can resume the existing Codex thread with `codex exec resume`, the existing Claude Code session with `claude -p --resume`, or the existing Cursor Agent session with `cursor-agent -p --resume`.
+- Local executor session prompts include an `anycap-local-session` context block with the current agent, workspace, conversation/session IDs, and `executor_ref` when available. Codex requests that explicitly say "continue/resume the local session" scan local Codex session metadata, pick the most recent non-`exec` session for the daemon workspace, and resume it by explicit session id; Codex "open/view/recover this conversation on my Mac" requests use the current `executor_ref` when present, otherwise inject the latest matching local Codex session as `local_resume_ref`, so the agent can return a precise `codex resume <id>` command instead of using `--last` or falling back to a conversation list.
 - Fire-mode sessions inherit the parent `executor_ref`, so pending mailbox results can be fed back into the same local executor conversation context.
 - Protected mailbox APIs support creating and listing undelivered mailbox entries. By default, mailbox writes auto-fire into a new fire-mode session whenever the current front session is idle; if a session is still `created` or `running`, mailbox entries stay queued and are auto-fired after that session reaches `committed` or `failed`.
 - Runtime now emits a lightweight conversation notification on session terminal updates; the Feishu layer translates that structured notification into a stage-style reply, including a short summary when an async mailbox result triggers auto-fire continuation.

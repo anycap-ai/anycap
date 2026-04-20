@@ -323,6 +323,7 @@ This command will:
 - uses Codex `--full-auto` by default unless `--codex-exec-mode danger-full-access` is explicitly provided for AnyCap CLI calls or public/internal network access from inside Codex
 - uses Claude Code `claude -p --output-format json` when `--agent claude-code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
 - uses Cursor Agent `cursor-agent -p --output-format json --trust --force` when `--agent cursor`, and persists Cursor Agent `session_id` for follow-up turns; use `--cursor-model <model>` for explicit model selection and tell the human about the broader local command/network permission
+- injects an `anycap-local-session` context block into local executor session prompts. For Codex, explicit "continue/resume the local session" requests scan local Codex session metadata, pick the most recent non-`exec` session for the daemon workspace, and resume it by explicit session id. "Open/view/recover this conversation on my Mac" requests should get the exact command using `executor_ref` when present or `local_resume_ref` when provided; only fall back to `anycap agent conversations list` when neither exact ref is available. The agent should not suggest `--last` when an exact ref is available.
 
 Check which local machine is currently connected:
 
