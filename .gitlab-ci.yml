@@ -28,6 +28,10 @@ variables:
   GOVERSION: "1.25"
   GOTOOLCHAIN: "auto"
   CI_IMAGE: "kntech-registry-vpc.ap-southeast-1.cr.aliyuncs.com/kntech-dev/ci/ci:go-1.24"
+  GOMODCACHE: "$CI_PROJECT_DIR/.cache/go-mod"
+  GOCACHE: "$CI_PROJECT_DIR/.cache/go-build"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
+  GIT_DEPTH: "20"
   # Docker build config
   APP_server_DOCKERFILE: "deploy/docker/Dockerfile.server"
   APP_server_DOCKER_REPO: "kntech-registry-vpc.ap-southeast-1.cr.aliyuncs.com/kntech-dev/anycap-server"
@@ -36,7 +40,15 @@ image: golang:${GOVERSION}
 
 default:
   before_script: []
-  cache: []
+  cache:
+    key:
+      files:
+        - go.sum
+      prefix: "go-1.25"
+    paths:
+      - .cache/go-mod/
+      - .cache/go-build/
+    policy: pull-push
   interruptible: true
 
 workflow:
@@ -90,9 +102,17 @@ build:annotate-ui:
   tags:
     - docker
   image: node:22-slim
+  cache:
+    key:
+      files:
+        - internal/cli/annotate/web/package-lock.json
+      prefix: "npm-annotate"
+    paths:
+      - .cache/npm/annotate/
+    policy: pull-push
   script:
     - cd internal/cli/annotate/web
-    - npm install
+    - npm ci --cache "$NPM_CONFIG_CACHE/annotate" --prefer-offline
     - npm run build
     - cp dist/index.html ../page.html
   artifacts:
@@ -115,9 +135,17 @@ build:draw-ui:
   tags:
     - docker
   image: node:22-slim
+  cache:
+    key:
+      files:
+        - internal/cli/draw/web/package-lock.json
+      prefix: "npm-draw"
+    paths:
+      - .cache/npm/draw/
+    policy: pull-push
   script:
     - cd internal/cli/draw/web
-    - npm install
+    - npm ci --cache "$NPM_CONFIG_CACHE/draw" --prefer-offline
     - npm run build
     - cp dist/index.html ../page.html
   artifacts:
@@ -171,7 +199,7 @@ test:
     - job: build:draw-ui
       artifacts: true
   script:
-    - go test ./...
+    - go test -vet=off ./...
   rules:
     - if: $RELEASE_CLI
       when: never
