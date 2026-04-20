@@ -11,16 +11,18 @@ import (
 )
 
 type DriveProjector struct {
-	kvClient  KVClient
-	nodeRepo  port.DriveNodeRepository
-	shareRepo port.DriveShareRepository
+	kvClient          KVClient
+	nodeRepo          port.DriveNodeRepository
+	shareRepo         port.DriveShareRepository
+	storageObjectRepo port.StorageObjectRepository
 }
 
-func NewDriveProjector(kvClient KVClient, nodeRepo port.DriveNodeRepository, shareRepo port.DriveShareRepository) *DriveProjector {
+func NewDriveProjector(kvClient KVClient, nodeRepo port.DriveNodeRepository, shareRepo port.DriveShareRepository, storageObjectRepo port.StorageObjectRepository) *DriveProjector {
 	return &DriveProjector{
-		kvClient:  kvClient,
-		nodeRepo:  nodeRepo,
-		shareRepo: shareRepo,
+		kvClient:          kvClient,
+		nodeRepo:          nodeRepo,
+		shareRepo:         shareRepo,
+		storageObjectRepo: storageObjectRepo,
 	}
 }
 
@@ -76,6 +78,24 @@ func (p *DriveProjector) projectFileMeta(ctx context.Context, job model.KVSyncJo
 	}
 	if node.Kind != model.DriveNodeKindFile {
 		return ProjectResultObsolete, nil
+	}
+	if payload.ObjectKey == "" && node.StorageObjectID != nil && p.storageObjectRepo != nil {
+		object, err := p.storageObjectRepo.GetByID(ctx, *node.StorageObjectID)
+		if err != nil {
+			return ProjectResultDone, err
+		}
+		if object != nil {
+			payload.ObjectKey = object.ObjectKey
+			if payload.MIME == "" {
+				payload.MIME = object.MIME
+			}
+			if payload.Size <= 0 {
+				payload.Size = object.Size
+			}
+			if payload.ETag == "" {
+				payload.ETag = object.ETag
+			}
+		}
 	}
 
 	value, err := json.Marshal(map[string]any{

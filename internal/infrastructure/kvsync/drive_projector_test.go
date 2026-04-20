@@ -15,6 +15,10 @@ type fakeProjectorDriveNodeRepo struct {
 	children []model.DriveNode
 }
 
+type fakeProjectorStorageObjectRepo struct {
+	object *model.StorageObject
+}
+
 func (r *fakeProjectorDriveNodeRepo) CreateFolder(context.Context, model.CreateDriveFolderInput) (*model.DriveNode, error) {
 	return nil, fmt.Errorf("not implemented")
 }
@@ -51,6 +55,20 @@ func (r *fakeProjectorDriveNodeRepo) SoftDeleteSubtreeWithStorageDecrement(conte
 }
 func (r *fakeProjectorDriveNodeRepo) SoftDeleteOrphanFileNodes(context.Context, int64, []int64) (int64, error) {
 	return 0, fmt.Errorf("not implemented")
+}
+
+func (r *fakeProjectorStorageObjectRepo) Create(context.Context, model.StorageObject) (*model.StorageObject, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *fakeProjectorStorageObjectRepo) GetByID(_ context.Context, _ int64) (*model.StorageObject, error) {
+	if r.object == nil {
+		return nil, nil
+	}
+	cloned := *r.object
+	return &cloned, nil
+}
+func (r *fakeProjectorStorageObjectRepo) ListByPrefix(context.Context, int64, string) ([]model.StorageObject, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
 type fakeProjectorDriveShareRepo struct {
@@ -90,7 +108,7 @@ func TestDriveProjector_FileMetaSync(t *testing.T) {
 		UpdatedAt:   time.Now().UTC(),
 	}}
 	kv := &fakeKVClient{}
-	projector := NewDriveProjector(kv, nodeRepo, &fakeProjectorDriveShareRepo{})
+	projector := NewDriveProjector(kv, nodeRepo, &fakeProjectorDriveShareRepo{}, nil)
 
 	payload := model.KVSyncDriveFileMetaPayload{
 		FileID:    9,
@@ -120,6 +138,63 @@ func TestDriveProjector_FileMetaSync(t *testing.T) {
 	}
 }
 
+func TestDriveProjector_FileMetaSyncPreservesObjectKeyOnRename(t *testing.T) {
+	size := int64(12)
+	mime := "application/x-tar"
+	parentID := int64(2)
+	storageObjectID := int64(88)
+	nodeRepo := &fakeProjectorDriveNodeRepo{node: &model.DriveNode{
+		ID:              9,
+		SpaceID:         100,
+		ParentID:        &parentID,
+		Kind:            model.DriveNodeKindFile,
+		Name:            "repo.snapshot.tar",
+		StorageObjectID: &storageObjectID,
+		Size:            &size,
+		MIME:            &mime,
+		EdgeVersion:     4,
+		UpdatedAt:       time.Now().UTC(),
+	}}
+	storageRepo := &fakeProjectorStorageObjectRepo{object: &model.StorageObject{
+		ID:        storageObjectID,
+		SpaceID:   100,
+		ObjectKey: "drive/spaces/100/nodes/9/object",
+		Size:      12,
+		MIME:      "application/x-tar",
+		ETag:      "etag-rename",
+	}}
+	kv := &fakeKVClient{}
+	projector := NewDriveProjector(kv, nodeRepo, &fakeProjectorDriveShareRepo{}, storageRepo)
+
+	payload := model.KVSyncDriveFileMetaPayload{
+		FileID:   9,
+		SpaceID:  100,
+		ParentID: &parentID,
+		Name:     "repo.snapshot.tar",
+	}
+	data, _ := json.Marshal(payload)
+	result, err := projector.Project(context.Background(), model.KVSyncJob{
+		JobType:     model.KVSyncJobTypeDriveFileMetaSync,
+		TargetID:    "9",
+		EdgeVersion: 4,
+		Payload:     data,
+	})
+	if err != nil {
+		t.Fatalf("Project() error = %v", err)
+	}
+	if result != ProjectResultDone {
+		t.Fatalf("expected done result, got %v", result)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(kv.values["drive:file:9"], &got); err != nil {
+		t.Fatalf("unmarshal kv payload: %v", err)
+	}
+	if got["object_key"] != "drive/spaces/100/nodes/9/object" {
+		t.Fatalf("expected object_key preserved, got %#v", got["object_key"])
+	}
+}
+
 func TestDriveProjector_ShareSync(t *testing.T) {
 	hash := "pbkdf2_sha256$100000$v1$abc"
 	salt := "salt-b64"
@@ -133,7 +208,7 @@ func TestDriveProjector_ShareSync(t *testing.T) {
 		EdgeVersion:  5,
 	}}
 	kv := &fakeKVClient{}
-	projector := NewDriveProjector(kv, &fakeProjectorDriveNodeRepo{}, shareRepo)
+	projector := NewDriveProjector(kv, &fakeProjectorDriveNodeRepo{}, shareRepo, nil)
 
 	payload := model.KVSyncDriveSharePayload{
 		Action:       model.KVSyncDriveShareActionUpsert,
@@ -184,7 +259,7 @@ func TestDriveProjector_DirTreeDelete(t *testing.T) {
 			"drive:file:4":         []byte(`{}`),
 		},
 	}
-	projector := NewDriveProjector(kv, &fakeProjectorDriveNodeRepo{}, &fakeProjectorDriveShareRepo{})
+	projector := NewDriveProjector(kv, &fakeProjectorDriveNodeRepo{}, &fakeProjectorDriveShareRepo{}, nil)
 
 	payload := model.KVSyncDriveDirTreeDeletePayload{
 		RootID:  1,
