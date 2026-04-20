@@ -418,7 +418,9 @@ func TestAgentRunnerServeOnceProcessesSessionWithCodexExecutor(t *testing.T) {
 
 	workspace := t.TempDir()
 	codexBin := filepath.Join(t.TempDir(), "codex-stub.sh")
+	argsPath := filepath.Join(t.TempDir(), "codex-args.txt")
 	script := `#!/bin/sh
+printf '%s\n' "$@" > "` + argsPath + `"
 out=""
 cwd=""
 thread_id="thread_123"
@@ -563,6 +565,17 @@ printf 'cwd=%s prompt=%s' "$cwd" "$prompt" > "$out"
 	if sessionUpdatePayload[1]["executor_ref"] != "thread_123" {
 		t.Fatalf("unexpected executor_ref %+v", sessionUpdatePayload[1]["executor_ref"])
 	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if !strings.Contains(argsText, "--dangerously-bypass-approvals-and-sandbox\n") {
+		t.Fatalf("expected default codex executor to bypass sandbox, got %q", argsText)
+	}
+	if strings.Contains(argsText, "--full-auto\n") {
+		t.Fatalf("expected full-auto to be absent by default, got %q", argsText)
+	}
 	if !strings.Contains(stdout.String(), `"executor":"codex"`) {
 		t.Fatalf("expected executor codex in output, got %s", stdout.String())
 	}
@@ -597,7 +610,7 @@ while [ "$#" -gt 0 ]; do
       out="$2"
       shift 2
       ;;
-    --json|--skip-git-repo-check|--full-auto)
+    --json|--skip-git-repo-check|--full-auto|--dangerously-bypass-approvals-and-sandbox)
       shift
       ;;
     --cd|-C)

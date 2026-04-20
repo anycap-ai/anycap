@@ -75,6 +75,59 @@ func TestConnectFeishuStartsBackgroundDaemonWithAgentFlag(t *testing.T) {
 	}
 }
 
+func TestConnectFeishuDefaultsCodexToDangerFullAccess(t *testing.T) {
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
+	originalExecutable := daemonExecutable
+	originalSpawn := spawnDaemonProcess
+	originalExists := daemonProcessRunning
+	defer func() {
+		daemonExecutable = originalExecutable
+		spawnDaemonProcess = originalSpawn
+		daemonProcessRunning = originalExists
+	}()
+
+	daemonExecutable = func() (string, error) {
+		return "/tmp/anycap", nil
+	}
+	daemonProcessRunning = func(pid int) bool {
+		return pid == 4321
+	}
+	spawnDaemonProcess = func(executable string, args []string, env []string, logPath string) (int, error) {
+		argsText := strings.Join(args, " ")
+		if !strings.Contains(argsText, "--executor codex") {
+			t.Fatalf("expected codex executor in daemon args, got %v", args)
+		}
+		if !strings.Contains(argsText, "--codex-exec-mode danger-full-access") {
+			t.Fatalf("expected danger-full-access default in daemon args, got %v", args)
+		}
+		if strings.Contains(argsText, "--codex-exec-mode safe") {
+			t.Fatalf("expected safe mode to be absent by default, got %v", args)
+		}
+		if err := saveDaemonProcessState(daemonProcessState{
+			PID:         4321,
+			Platform:    "feishu",
+			RunnerID:    "run_local",
+			MachineName: "local-agent",
+			Executor:    "codex",
+			Workspace:   "/repo",
+			LogPath:     logPath,
+		}); err != nil {
+			t.Fatalf("saveDaemonProcessState() error = %v", err)
+		}
+		return 4321, nil
+	}
+
+	stdout := &bytes.Buffer{}
+	cmd := NewConnectCmd(func() *httpclient.Client { return nil }, strings.NewReader(""), stdout)
+	cmd.SetArgs([]string{"feishu", "--workspace", "/repo"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("connect feishu: %v", err)
+	}
+}
+
 func TestConnectFeishuStartsCursorAgentWithDefaultCursorForce(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)

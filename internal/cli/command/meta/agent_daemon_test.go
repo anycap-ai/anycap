@@ -434,7 +434,7 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 
 	stdout := &bytes.Buffer{}
 	cmd := newAgentDaemonCmd(func() *httpclient.Client { return nil }, stdout)
-	cmd.SetArgs([]string{"start", "--platform", "feishu", "--workspace", "/repo", "--codex-exec-mode", "danger-full-access"})
+	cmd.SetArgs([]string{"start", "--platform", "feishu", "--workspace", "/repo"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("daemon start background: %v", err)
