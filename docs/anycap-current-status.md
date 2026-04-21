@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-20
+> Last updated: 2026-04-21
 
 ## 1. Capabilities (Cap)
 
@@ -114,6 +114,7 @@ Snapshot behavior:
 - Same-name snapshots fail by default
 - `--overwrite` replaces an existing snapshot intentionally
 - Snapshot path checks use direct drive path resolution
+- Snapshot share expiration defaults to `12h` and should stay short unless explicitly requested otherwise
 - Create blocks on sensitive-file matches unless `--force` is set
 - Technical directories such as common caches/build outputs are skipped during packing
 - Restore rejects unsafe tar entries and only extracts into an empty or non-existent target directory
@@ -293,14 +294,16 @@ Distributed via GitHub. Agents install with `anycap skill install`.
 
 ### User Dashboard
 
+Dashboard pages share a unified light olive/sage control-surface shell with consistent navigation, table, modal, badge, pagination, and action feedback patterns.
+
 | Page | Function |
 |------|----------|
-| Overview | Credit balance, recent activity, error summary |
+| Overview | Credit balance, recent activity, guided setup CTA, and direct billing entry |
 | Usage | Usage statistics |
-| Logs | Detailed call logs |
+| Logs | Detailed capability call logs with status, cost, and request ID visibility |
 | Billing | Credit balance, modal-based credit pack purchase, transactions, payment result feedback |
 | API Keys | Create, rename, set expiry (1-3650 days or never), renew expiry, disable, and delete keys. CLI-managed key (`cli`) is read-only here. |
-| Drive | Visual file browser |
+| Drive | Visual file browser with breadcrumb path navigation, preview/download, share, rename, move, and delete actions |
 | Pages | Site management with version history, published Open, and verified version Preview |
 | Playground | Interactive capability testing |
 | Settings | User preferences |
