@@ -11,8 +11,8 @@ export default function App() {
   useEffect(() => {
     (async () => {
       const session = await chrome.storage.session.get('pendingRequest');
-      if (session.pendingRequest) {
-        store.setPendingRequest(session.pendingRequest);
+      if (session.pendingRequest && typeof session.pendingRequest === 'object') {
+        store.setPendingRequest(session.pendingRequest as any);
         await chrome.storage.session.remove('pendingRequest');
       }
 

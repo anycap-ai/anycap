@@ -1,6 +1,6 @@
 import { API_BASE } from './constants';
 import { getStored } from './storage';
-import { AnyCapError, classifyHttpError } from './errors';
+import { classifyHttpError } from './errors';
 
 export type GenerateRequest = {
   prompt: string;
