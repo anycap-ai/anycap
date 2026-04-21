@@ -3,6 +3,7 @@ import { useStore } from '@/src/lib/store';
 import { getAuthState, canGenerate, incrementTrial } from '@/src/lib/quota';
 import { generateVariation } from '@/src/lib/api';
 import { classifyError, errorMessage } from '@/src/lib/errors';
+import { signIn, signOut } from '@/src/lib/auth';
 
 export default function App() {
   const store = useStore();
@@ -85,10 +86,23 @@ export default function App() {
     return (
       <div className="p-4 w-80 text-center">
         <h2 className="text-lg font-bold text-gray-900">Sign In</h2>
-        <p className="text-sm text-gray-600 mt-2">OAuth integration coming soon.</p>
+        <p className="text-sm text-gray-600 mt-2">Connect your AnyCap account to get 50 free credits per month.</p>
+        <button
+          onClick={async () => {
+            const token = await signIn();
+            if (token) {
+              const state = await getAuthState();
+              store.setAuthState(state.isAuthed, state.remainingTrials);
+              store.setView('generate');
+            }
+          }}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+        >
+          Sign In with AnyCap
+        </button>
         <button
           onClick={() => store.setView('generate')}
-          className="mt-4 w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300"
+          className="mt-2 w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300"
         >
           Back
         </button>
@@ -129,7 +143,21 @@ export default function App() {
 
   return (
     <div className="p-4 w-80">
-      <h1 className="text-lg font-bold text-blue-600">AnyCap</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-bold text-blue-600">AnyCap</h1>
+        {store.isAuthed ? (
+          <button
+            onClick={async () => {
+              await signOut();
+              const state = await getAuthState();
+              store.setAuthState(state.isAuthed, state.remainingTrials);
+            }}
+            className="text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            Sign out
+          </button>
+        ) : null}
+      </div>
       <p className="text-xs text-gray-500 mt-1">
         {store.isAuthed
           ? 'Signed in'
