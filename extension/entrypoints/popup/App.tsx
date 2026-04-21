@@ -4,11 +4,63 @@ import { getAuthState, canGenerate, incrementTrial } from '@/src/lib/quota';
 import { generateVariation, fetchExtensionConfig } from '@/src/lib/api';
 import { classifyError, errorMessage } from '@/src/lib/errors';
 import { signIn, signOut } from '@/src/lib/auth';
+import { addGeneration, getRecentGenerations, type GenerationRecord } from '@/src/lib/history';
+import { saveToDrive } from '@/src/lib/drive';
+
+function ResultActions({ resultUrl }: { resultUrl: string }) {
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const store = useStore();
+
+  const handleDownload = () => {
+    chrome.downloads.download({
+      url: resultUrl,
+      filename: `anycap-${Date.now()}.png`,
+    });
+  };
+
+  const handleSaveDrive = async () => {
+    if (!store.isAuthed) return;
+    setSaveState('saving');
+    try {
+      await saveToDrive(resultUrl);
+      setSaveState('saved');
+    } catch {
+      setSaveState('error');
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleDownload}
+        className="w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
+      >
+        Download
+      </button>
+      <button
+        onClick={handleSaveDrive}
+        disabled={!store.isAuthed || saveState === 'saving'}
+        className="w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+      >
+        {saveState === 'saved'
+          ? 'Saved to Drive'
+          : saveState === 'saving'
+            ? 'Saving...'
+            : saveState === 'error'
+              ? 'Save failed'
+              : store.isAuthed
+                ? 'Save to Drive'
+                : 'Sign in to save'}
+      </button>
+    </>
+  );
+}
 
 export default function App() {
   const store = useStore();
   const [prompt, setPrompt] = useState('create a stylistic variation of this image');
   const [model, setModel] = useState('nano-banana-2');
+  const [history, setHistory] = useState<GenerationRecord[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -31,6 +83,9 @@ export default function App() {
       } catch {
         // ignore: use hardcoded defaults if server is unreachable
       }
+
+      const recent = await getRecentGenerations();
+      setHistory(recent);
     })();
   }, []);
 
@@ -46,10 +101,12 @@ export default function App() {
     store.setGeneration({ phase: 'loading' });
 
     try {
+      const state = await getAuthState();
       const result = await generateVariation({
         prompt,
         model,
         images: [req.image.srcUrl],
+        watermark: !state.isAuthed,
       });
 
       if (!store.isAuthed) {
@@ -60,6 +117,13 @@ export default function App() {
 
       const url = result.outputs[0]?.url;
       if (url) {
+        await addGeneration({
+          resultUrl: url,
+          srcUrl: req.image.srcUrl,
+          ts: Date.now(),
+        });
+        const recent = await getRecentGenerations();
+        setHistory(recent);
         store.setGeneration({ phase: 'success', resultUrl: url });
         store.setView('result');
       } else {
@@ -137,24 +201,27 @@ export default function App() {
           alt="Generated variation"
           className="w-full rounded-lg shadow-sm"
         />
-        <div className="flex gap-2 mt-3">
-          <a
-            href={store.generation.resultUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 text-center bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Open
-          </a>
-          <button
-            onClick={() => {
-              store.reset();
-              store.setView('generate');
-            }}
-            className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            New
-          </button>
+        <div className="flex flex-col gap-2 mt-3">
+          <div className="flex gap-2">
+            <a
+              href={store.generation.resultUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 text-center bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Open
+            </a>
+            <button
+              onClick={() => {
+                store.reset();
+                store.setView('generate');
+              }}
+              className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              New
+            </button>
+          </div>
+          <ResultActions resultUrl={store.generation.resultUrl} />
         </div>
       </div>
     );
@@ -222,15 +289,34 @@ export default function App() {
           </button>
         </>
       ) : (
-        <div className="mt-4 text-center">
-          <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-            </svg>
-          </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Right-click any image and select "Generate variation with AnyCap" to start.
-          </p>
+        <div className="mt-4">
+          {history.length > 0 ? (
+            <>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent</h2>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {history.map((item, i) => (
+                  <a key={i} href={item.resultUrl} target="_blank" rel="noreferrer" className="block">
+                    <img
+                      src={item.resultUrl}
+                      alt="Recent"
+                      className="w-full h-16 object-cover rounded-md hover:opacity-80 transition-opacity"
+                    />
+                  </a>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Right-click any image and select "Generate variation with AnyCap" to start.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
