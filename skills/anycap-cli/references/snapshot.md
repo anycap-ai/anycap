@@ -23,6 +23,9 @@ anycap snapshot restore 'https://drive.anycap.cloud/s/abc#password=secret' --tar
 Important behavior:
 
 - `--target` is repeatable
+- snapshot share expiration should be kept as short as practical
+- unless the user explicitly asks otherwise, use `12h`
+- if `--expires` is omitted, the CLI default is `12h`
 - snapshot names are stable within `/_snapshots`
 - same-name snapshots fail by default
 - `--overwrite` intentionally replaces an existing same-name snapshot
@@ -32,7 +35,7 @@ Important behavior:
 Example:
 
 ```bash
-anycap snapshot create --target . --target README.md --name repo --expires 7d
+anycap snapshot create --target . --target README.md --name repo --expires 12h
 ```
 
 Typical output fields:
