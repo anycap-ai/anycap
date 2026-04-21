@@ -24,6 +24,47 @@ stages:
   - build
   - deploy
 
+# ---------------------------------------------------------------------------
+# Extension: build + test
+# Runs on main, MRs, and feature/fix/chore branches when extension files change.
+# ---------------------------------------------------------------------------
+
+.extension_rules: &extension_rules
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      changes:
+        - extension/**/*
+    - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore)([\/-].+)?$/
+      changes:
+        - extension/**/*
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - extension/**/*
+    - when: never
+
+build:extension:
+  stage: build
+  tags:
+    - docker
+  image: node:22-slim
+  <<: *extension_rules
+  cache:
+    - key:
+        files:
+          - extension/pnpm-lock.yaml
+      paths:
+        - extension/node_modules
+  script:
+    - corepack enable
+    - cd extension
+    - pnpm install --frozen-lockfile
+    - pnpm build
+    - pnpm test
+  artifacts:
+    paths:
+      - extension/.output/
+    expire_in: 1 day
+
 variables:
   GOVERSION: "1.25"
   GOTOOLCHAIN: "auto"
