@@ -4,6 +4,7 @@ import {
   MENU_TITLE,
   WELCOME_URL,
 } from '@/src/lib/constants';
+import { isStartGeneration } from '@/src/lib/messages';
 
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener((details) => {
@@ -23,6 +24,15 @@ export default defineBackground(() => {
       chrome.tabs.sendMessage(tab.id, {
         type: 'ANYCAP_INVOKE_VARIATION',
         srcUrl: info.srcUrl,
+      });
+    }
+  });
+
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (isStartGeneration(msg)) {
+      chrome.storage.session.set({ pendingRequest: msg });
+      chrome.action.openPopup?.().catch(() => {
+        // Fallback: Chrome < 127 can't programmatically open popup
       });
     }
   });

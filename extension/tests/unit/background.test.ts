@@ -4,11 +4,17 @@ const contextMenusCreate = vi.fn();
 const tabsCreate = vi.fn();
 const onInstalledAddListener = vi.fn();
 const onClickedAddListener = vi.fn();
+const onMessageAddListener = vi.fn();
+const storageSessionSet = vi.fn();
+const actionOpenPopup = vi.fn().mockResolvedValue(undefined);
 
 (globalThis as any).chrome = {
   runtime: {
     onInstalled: {
       addListener: onInstalledAddListener,
+    },
+    onMessage: {
+      addListener: onMessageAddListener,
     },
   },
   contextMenus: {
@@ -20,6 +26,14 @@ const onClickedAddListener = vi.fn();
   tabs: {
     create: tabsCreate,
     sendMessage: vi.fn(),
+  },
+  storage: {
+    session: {
+      set: storageSessionSet,
+    },
+  },
+  action: {
+    openPopup: actionOpenPopup,
   },
 };
 
@@ -87,5 +101,28 @@ describe('background', () => {
       type: 'ANYCAP_INVOKE_VARIATION',
       srcUrl: 'https://example.com/img.png',
     });
+  });
+
+  it('stores pending request and opens popup on ANYCAP_START_GENERATION', () => {
+    const messageHandler = onMessageAddListener.mock.calls[0][0];
+    const msg = {
+      type: 'ANYCAP_START_GENERATION',
+      image: { srcUrl: 'https://example.com/img.png', width: 300, height: 300 },
+      pageUrl: 'https://example.com',
+    };
+
+    messageHandler(msg);
+
+    expect(storageSessionSet).toHaveBeenCalledTimes(1);
+    expect(storageSessionSet).toHaveBeenCalledWith({ pendingRequest: msg });
+    expect(actionOpenPopup).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores non-ANYCAP_START_GENERATION messages', () => {
+    const messageHandler = onMessageAddListener.mock.calls[0][0];
+    messageHandler({ type: 'UNKNOWN' });
+
+    expect(storageSessionSet).not.toHaveBeenCalled();
+    expect(actionOpenPopup).not.toHaveBeenCalled();
   });
 });

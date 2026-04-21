@@ -26,7 +26,11 @@ export default defineContentScript({
       if (message?.type === 'ANYCAP_INVOKE_VARIATION' && lastImage) {
         chrome.runtime.sendMessage({
           type: 'ANYCAP_START_GENERATION',
-          image: lastImage,
+          image: {
+            srcUrl: lastImage.src,
+            width: lastImage.naturalWidth,
+            height: lastImage.naturalHeight,
+          },
           pageUrl: location.href,
         });
       }
