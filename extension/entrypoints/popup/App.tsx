@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '@/src/lib/store';
 import { getAuthState, canGenerate, incrementTrial } from '@/src/lib/quota';
-import { generateVariation } from '@/src/lib/api';
+import { generateVariation, fetchExtensionConfig } from '@/src/lib/api';
 import { classifyError, errorMessage } from '@/src/lib/errors';
 import { signIn, signOut } from '@/src/lib/auth';
 
 export default function App() {
   const store = useStore();
   const [prompt, setPrompt] = useState('create a stylistic variation of this image');
+  const [model, setModel] = useState('nano-banana-2');
 
   useEffect(() => {
     (async () => {
@@ -21,6 +22,14 @@ export default function App() {
       store.setAuthState(state.isAuthed, state.remainingTrials);
       if (!state.isAuthed && state.remainingTrials === 0) {
         store.setView('paywall');
+      }
+
+      try {
+        const cfg = await fetchExtensionConfig();
+        setPrompt(cfg.default_prompt);
+        setModel(cfg.default_model);
+      } catch {
+        // ignore: use hardcoded defaults if server is unreachable
       }
     })();
   }, []);
@@ -39,7 +48,7 @@ export default function App() {
     try {
       const result = await generateVariation({
         prompt,
-        model: 'nano-banana-2',
+        model,
         images: [req.image.srcUrl],
       });
 
