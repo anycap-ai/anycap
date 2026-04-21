@@ -415,7 +415,7 @@ func TestAgentDaemonStartBackgroundSpawnsProcessAndReportsLocalState(t *testing.
 		if !strings.Contains(strings.Join(args, " "), "agent daemon start --foreground") {
 			t.Fatalf("expected foreground daemon args, got %v", args)
 		}
-		if !strings.Contains(strings.Join(args, " "), "--codex-exec-mode danger-full-access") {
+		if !strings.Contains(strings.Join(args, " "), "--codex-exec-mode safe") {
 			t.Fatalf("expected codex exec mode in args, got %v", args)
 		}
 		if err := saveDaemonProcessState(daemonProcessState{
@@ -733,6 +733,24 @@ func TestAgentDaemonStatusFallsBackToLocalDaemonState(t *testing.T) {
 	}
 	if ready, ok := data["ready"].(bool); !ok || !ready {
 		t.Fatalf("expected ready=true, got %v", data["ready"])
+	}
+	nextSteps, ok := data["next_steps"].([]any)
+	if !ok {
+		t.Fatalf("expected next_steps array, got %T", data["next_steps"])
+	}
+	foundDangerGuidance := false
+	for _, raw := range nextSteps {
+		step, _ := raw.(string)
+		if strings.Contains(step, "--codex-exec-mode danger-full-access") &&
+			strings.Contains(step, "MCP") &&
+			strings.Contains(step, "Computer Use") &&
+			strings.Contains(step, "Figma") {
+			foundDangerGuidance = true
+			break
+		}
+	}
+	if !foundDangerGuidance {
+		t.Fatalf("expected next_steps to explain when to use danger-full-access, got %v", nextSteps)
 	}
 	personalBot := data["personal_bot"].(map[string]any)
 	if connected, ok := personalBot["connected"].(bool); !ok || !connected {

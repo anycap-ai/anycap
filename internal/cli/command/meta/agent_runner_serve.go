@@ -345,7 +345,7 @@ func newAgentRunnerServeCmd(clientFactory func() *httpclient.Client, stdout io.W
 	cmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
 	cmd.Flags().StringVar(&executorKind, "executor", "stub", "Runner executor: stub, codex, claude-code, or cursor")
 	cmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
-	cmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "danger-full-access", "Codex execution mode: safe or danger-full-access")
+	cmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	cmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude-code")
 	cmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	cmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")

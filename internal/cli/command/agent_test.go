@@ -570,11 +570,11 @@ printf 'cwd=%s prompt=%s' "$cwd" "$prompt" > "$out"
 		t.Fatalf("ReadFile(argsPath) error = %v", err)
 	}
 	argsText := string(argsBody)
-	if !strings.Contains(argsText, "--dangerously-bypass-approvals-and-sandbox\n") {
-		t.Fatalf("expected default codex executor to bypass sandbox, got %q", argsText)
+	if !strings.Contains(argsText, "--full-auto\n") {
+		t.Fatalf("expected default codex executor to use full-auto, got %q", argsText)
 	}
-	if strings.Contains(argsText, "--full-auto\n") {
-		t.Fatalf("expected full-auto to be absent by default, got %q", argsText)
+	if strings.Contains(argsText, "--dangerously-bypass-approvals-and-sandbox\n") {
+		t.Fatalf("expected danger-full-access to be absent by default, got %q", argsText)
 	}
 	if !strings.Contains(stdout.String(), `"executor":"codex"`) {
 		t.Fatalf("expected executor codex in output, got %s", stdout.String())

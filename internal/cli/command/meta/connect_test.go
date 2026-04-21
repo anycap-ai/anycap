@@ -75,7 +75,7 @@ func TestConnectFeishuStartsBackgroundDaemonWithAgentFlag(t *testing.T) {
 	}
 }
 
-func TestConnectFeishuDefaultsCodexToDangerFullAccess(t *testing.T) {
+func TestConnectFeishuDefaultsCodexToSafeMode(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
 
@@ -99,11 +99,11 @@ func TestConnectFeishuDefaultsCodexToDangerFullAccess(t *testing.T) {
 		if !strings.Contains(argsText, "--executor codex") {
 			t.Fatalf("expected codex executor in daemon args, got %v", args)
 		}
-		if !strings.Contains(argsText, "--codex-exec-mode danger-full-access") {
-			t.Fatalf("expected danger-full-access default in daemon args, got %v", args)
+		if !strings.Contains(argsText, "--codex-exec-mode safe") {
+			t.Fatalf("expected safe default in daemon args, got %v", args)
 		}
-		if strings.Contains(argsText, "--codex-exec-mode safe") {
-			t.Fatalf("expected safe mode to be absent by default, got %v", args)
+		if strings.Contains(argsText, "--codex-exec-mode danger-full-access") {
+			t.Fatalf("expected danger-full-access to be absent by default, got %v", args)
 		}
 		if err := saveDaemonProcessState(daemonProcessState{
 			PID:         4321,

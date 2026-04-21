@@ -267,13 +267,15 @@ anycap connect feishu --agent cursor --workspace /path/to/repo
 
 The user-facing `connect feishu --agent cursor` path enables Cursor Agent `--force` automatically so URL access and shell-backed network checks can run non-interactively. Always tell the human that this lets Cursor Agent execute local commands and network requests unless Cursor explicitly denies them.
 
-Codex is the default local executor. The user-facing `connect feishu --agent codex` path now defaults to:
+Codex is the default local executor. Before starting `connect feishu --agent codex`, tell the human that the default Codex mode is safe, which maps to Codex `--full-auto`.
+
+If the human says they need MCP/plugin access, such as Computer Use, Figma, Canva, or custom MCP servers, ask whether to start the daemon with:
 
 ```bash
 --codex-exec-mode danger-full-access
 ```
 
-Reason: Feishu-triggered Codex runs are non-interactive, and MCP/plugin tools, AnyCap CLI calls, public internet APIs, and local-network/VPN-only resources need non-sandboxed local access. If the human explicitly wants a more restricted Codex run, pass `--codex-exec-mode safe`, which maps to Codex `--full-auto`.
+If they say yes, start the daemon with that explicit flag. Otherwise, keep the default safe mode.
 
 For Claude Code, `--claude-permission-mode acceptEdits` is the default. If the human wants the Feishu bot to make Claude Code call AnyCap capabilities, access public internet APIs, or access local-network/VPN-only resources, use Claude Code's broader permission/tool flags, for example:
 
@@ -319,8 +321,8 @@ Main notes:
 - If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
 - The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
 - Feishu-triggered local executor sessions include an `anycap-local-session` context block. With Codex, if the human asks to continue/resume the local Codex session from Feishu, AnyCap scans local Codex session metadata, picks the most recent non-`exec` session for the daemon workspace, resumes it by explicit session id, and persists that thread as `executor_ref` for later Feishu turns. When the human asks how to open/view/recover the conversation on their Mac, reply with the precise local command using the current `executor_ref` or, if provided, `local_resume_ref`, for example `cd "/path/to/repo" && codex resume <id>`. Do not suggest `codex resume --last` unless no exact `executor_ref` or `local_resume_ref` is available.
-- `--codex-exec-mode danger-full-access` is the default for Codex so Feishu-triggered sessions can use MCP/plugin tools, AnyCap commands, and public/internal network resources from inside Codex.
-- Use `--codex-exec-mode safe` only when the human explicitly wants a more restricted Codex process that maps to Codex `--full-auto`.
+- Default Codex mode for Feishu is safe, which maps to Codex `--full-auto`.
+- If the human needs MCP/plugin access, such as Computer Use, Figma, Canva, or custom MCP servers, ask whether to start with `--codex-exec-mode danger-full-access`, and only use it when they explicitly choose it.
 - `--agent claude-code` runs Claude Code with `claude -p --output-format json` and persists Claude Code `session_id` as `executor_ref` for follow-up turns.
 - For Claude Code, use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when the Feishu bot should call AnyCap commands or reach public/internal network resources from inside Claude Code.
 - `--agent cursor` runs Cursor Agent with `cursor-agent -p --output-format json --trust --force` and persists Cursor Agent `session_id` as `executor_ref` for follow-up turns.

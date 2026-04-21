@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	cliconfig "gitlab.knoffice.tech/engineering/anycap/internal/cli/config"
@@ -56,5 +57,16 @@ func TestRunnerServeHTTPClientInboundIMChat(t *testing.T) {
 	}
 	if gotBody["message"] != "帮我看这个 bug" {
 		t.Fatalf("expected message text, got %v", gotBody["message"])
+	}
+}
+
+func TestAgentRunnerServeDefaultsCodexExecModeToSafe(t *testing.T) {
+	cmd := newAgentRunnerServeCmd(func() *httpclient.Client { return nil }, nil)
+	got, err := cmd.Flags().GetString("codex-exec-mode")
+	if err != nil {
+		t.Fatalf("GetString(codex-exec-mode) error = %v", err)
+	}
+	if strings.TrimSpace(got) != "safe" {
+		t.Fatalf("expected default codex exec mode safe, got %q", got)
 	}
 }
