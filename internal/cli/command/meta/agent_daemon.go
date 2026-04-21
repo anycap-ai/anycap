@@ -108,7 +108,7 @@ func newAgentDaemonCmd(clientFactory func() *httpclient.Client, stdout io.Writer
 	startCmd.Flags().DurationVar(&pollEvery, "poll-interval", 3*time.Second, "Polling interval between task fetch attempts")
 	startCmd.Flags().StringVar(&executorKind, "executor", "codex", "Runner executor: codex, claude-code, cursor, or stub")
 	startCmd.Flags().StringVar(&codexBin, "codex-bin", "codex", "Path to the codex CLI binary when --executor=codex")
-	startCmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "danger-full-access", "Codex execution mode: safe or danger-full-access")
+	startCmd.Flags().StringVar(&codexExecMode, "codex-exec-mode", "safe", "Codex execution mode: safe or danger-full-access")
 	startCmd.Flags().StringVar(&claudeBin, "claude-bin", "claude", "Path to the Claude Code CLI binary when --executor=claude-code")
 	startCmd.Flags().StringVar(&claudePermissionMode, "claude-permission-mode", "acceptEdits", "Claude Code permission mode passed to --permission-mode")
 	startCmd.Flags().StringVar(&claudeAllowedTools, "claude-allowed-tools", "", "Optional Claude Code --allowedTools value, for example Read,Edit,Bash")
@@ -328,7 +328,7 @@ func buildDaemonStatusPayload(body []byte, requestID, platform string, state *da
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine if the personal bot is not connected yet.", platform),
 				fmt.Sprintf("Use '--agent claude-code' instead of codex if this %s bot should run Claude Code locally.", platform),
 				fmt.Sprintf("Use '--agent cursor' instead of codex if this %s bot should run Cursor Agent locally.", platform),
-				fmt.Sprintf("Add '--codex-exec-mode safe' only when the human explicitly wants a more restricted local Codex run for %s.", platform),
+				codexExecModeGuidance(),
 			},
 		},
 	}
@@ -482,6 +482,7 @@ func writeLocalDaemonStatus(stdout io.Writer, platform string, state *daemonProc
 		"next_steps": []string{
 			"Open Feishu and send a message to the personal bot.",
 			fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' to stop the local daemon.", platform),
+			codexExecModeGuidance(),
 		},
 	}
 	if strings.EqualFold(strings.TrimSpace(state.Executor), "cursor") && state.CursorForce {
@@ -501,6 +502,7 @@ func writeLocalDaemonStatus(stdout io.Writer, platform string, state *daemonProc
 			data["next_steps"] = []string{
 				fmt.Sprintf("Inspect the daemon log at %s for the most recent Feishu connection error.", strings.TrimSpace(state.LogPath)),
 				fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' and then start it again after fixing the Feishu connection issue.", platform),
+				codexExecModeGuidance(),
 			}
 		}
 	}
@@ -526,7 +528,7 @@ func writeDisconnectedDaemonStatus(stdout io.Writer, platform string) error {
 				fmt.Sprintf("Run 'anycap connect %s --agent codex --workspace /path/to/repo' on the local machine you want to receive chat tasks.", platform),
 				"Use '--agent claude-code' instead of codex if this bot should run Claude Code locally.",
 				"Use '--agent cursor' instead of codex if this bot should run Cursor Agent locally.",
-				"Add '--codex-exec-mode safe' only if the human explicitly wants restricted local Codex execution.",
+				codexExecModeGuidance(),
 				fmt.Sprintf("Run 'anycap connect status %s' again after startup to confirm the connection.", platform),
 			},
 		},
@@ -584,6 +586,7 @@ func startDaemonInBackground(cmd *cobra.Command, stdout io.Writer, platform, nam
 		"next_steps": []string{
 			fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm the daemon is fully connected.", platform),
 			fmt.Sprintf("Run 'anycap agent daemon stop --platform %s' when you want to stop the background daemon.", platform),
+			codexExecModeGuidance(),
 		},
 	}
 	if strings.EqualFold(strings.TrimSpace(executorKind), "cursor") && cursorForce {
@@ -783,6 +786,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		"next_steps": []string{
 			"Open Feishu and send a message to the bot to start a task.",
 			fmt.Sprintf("Run 'anycap agent daemon status --platform %s' to confirm which local machine is currently connected.", trimmedPlatform),
+			codexExecModeGuidance(),
 		},
 	}
 	if strings.EqualFold(executorName, "cursor") && cursorForce {
@@ -800,6 +804,10 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 
 func cursorForceWarning() string {
 	return "Cursor Agent is running with --force, so it may execute local commands and network requests unless Cursor explicitly denies them."
+}
+
+func codexExecModeGuidance() string {
+	return "Default Codex mode is safe (Codex --full-auto). If the human needs MCP, plugins, Computer Use, Figma, or custom MCP servers, restart with '--codex-exec-mode danger-full-access'."
 }
 
 func messageForInboundChat(event im.NormalizedInboundEvent) string {
