@@ -1,0 +1,9 @@
+export const MENU_ID_VARIATION = 'anycap-generate-variation';
+export const MENU_TITLE = '✨ Generate variation with AnyCap';
+export const MIN_IMAGE_DIMENSION = 256;
+export const MAX_ANON_TRIALS = 3;
+export const DEFAULT_PROMPT = 'create a stylistic variation of this image';
+export const API_BASE = 'https://api.anycap.ai';
+export const OAUTH_AUTHORIZE_URL = 'https://anycap.ai/oauth/authorize';
+export const WELCOME_URL = 'https://anycap.ai/welcome-extension';
+export const PRICING_URL = 'https://anycap.ai/pricing';
