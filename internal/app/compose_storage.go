@@ -45,7 +45,7 @@ func buildPersistentStorageComposition(cfg config.Config, sqlDB *sql.DB, shared 
 	kvSyncJobRepo := postgres.NewKVSyncJobRepo(db)
 	kvClient := buildKVSyncClient(cfg)
 	edgeGrantStore := buildEdgeGrantStore(cfg)
-	driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo)
+	driveProjector := kvsync.NewDriveProjector(kvClient, driveNodeRepo, driveShareRepo, storageObjectRepo)
 	pageProjector := kvsync.NewPageProjector(kvClient, pageSiteRepo, pageVersionRepo, cfg.PageHostFormat)
 	kvSyncWorker := kvsync.NewWorker(kvSyncJobRepo, map[string]kvsync.Projector{
 		model.KVSyncJobTypeDriveFileMetaSync:    driveProjector,

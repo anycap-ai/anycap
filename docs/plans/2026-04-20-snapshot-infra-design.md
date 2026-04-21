@@ -203,7 +203,7 @@ anycap snapshot create --target . --target README.md
 Suggested flags:
 
 - `--target <path>` repeatable, required, files or directories
-- `--expires <duration>` optional, default required by policy with a sensible default such as `7d`
+- `--expires <duration>` optional, default `12h`
 - `--name <name>` optional output archive/display name
 - `--handoff-file <path>` optional
 - `--force` optional, ignore sensitive-file warnings and continue
@@ -232,6 +232,12 @@ Behavior:
    - generate a strong random password
    - create drive share with password and expiration
    - return a restore URL with `#password=...`
+
+Expiration guidance:
+
+- snapshot shares should default to a short lifetime
+- unless the user explicitly asks otherwise, use `12h`
+- agents should prefer the shortest practical expiration for handoff
 
 Suggested output:
 

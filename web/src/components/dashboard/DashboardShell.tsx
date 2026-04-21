@@ -39,7 +39,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f3ef]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
+    <div className="dashboard-shell min-h-screen bg-[#f2f3ef]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
       <header className="flex items-center border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-4 sm:px-6 lg:hidden">
         <Link href="/">
@@ -141,7 +141,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <UserAvatarMenu
               positionClass="absolute left-full bottom-0 ml-2 z-30 origin-bottom-left"
               trigger={
-                <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-colors duration-150 hover:bg-[rgba(107,125,58,0.07)]">
+                <div className="flex items-center gap-3 cursor-pointer rounded-[10px] px-2 py-2 -mx-2 transition-all duration-150 hover:bg-[rgba(107,125,58,0.07)] active:translate-y-px active:scale-[0.985]">
                   <UserAvatar picture={user?.avatar_url} name={displayName} size={36} />
                   <span className="text-[15px] text-[#4d5145] font-medium truncate">
                     {displayName}
