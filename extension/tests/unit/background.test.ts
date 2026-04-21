@@ -29,12 +29,19 @@ import {
   WELCOME_URL,
 } from '@/src/lib/constants';
 
-// Import the background module to trigger its side effects
-import '@/entrypoints/background';
+// Import the background module
+import backgroundModule from '@/entrypoints/background';
 
 describe('background', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // WXT's defineBackground returns { main: fn } without executing it.
+    // We manually invoke main so the side effects register listeners.
+    if (typeof backgroundModule === 'function') {
+      (backgroundModule as any)();
+    } else if (backgroundModule && typeof (backgroundModule as any).main === 'function') {
+      (backgroundModule as any).main();
+    }
   });
 
   it('registers context menu with correct id, title, and contexts', () => {

@@ -16,6 +16,7 @@ import (
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
+	extensionapp "gitlab.knoffice.tech/engineering/anycap/internal/application/extension"
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
@@ -53,6 +54,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
+	extensionhandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/extension"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
@@ -199,6 +201,9 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		deps.idMapper,
 	)
 
+	anonRateLimit := middleware.NewAnonRateLimit()
+	extensionConfigHandler := extensionhandler.NewConfigHandler(extensionapp.NewConfigService())
+
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr:        deps.config.HTTPAddr,
 		Middlewares: httpMiddlewares,
@@ -218,6 +223,12 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			videoCatalog,
 			audioCatalog,
 			musicCatalog,
+			extensionConfigHandler,
+			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
+				// Anonymous image generation for Chrome extension trials.
+				anon := group.Group("", anonRateLimit.Middleware(), featureGateMiddleware)
+				imageHandler.RegisterAnonymousRoutes(anon)
+			}),
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", authMiddleware, rateLimitMiddleware, featureGateMiddleware)
 				systemHandler.RegisterProtectedRoutes(protected)

@@ -10,6 +10,7 @@ type Principal struct {
 	Email          string   `json:"email,omitempty"`
 	Name           string   `json:"name,omitempty"`
 	Picture        string   `json:"picture,omitempty"`
+	IsPro          bool     `json:"is_pro,omitempty"`
 }
 
 type AuthUser struct {

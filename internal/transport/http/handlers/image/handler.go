@@ -3,8 +3,10 @@ package image
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
+	"gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
@@ -31,6 +33,13 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	g.POST("/:operation", h.Execute)
 }
 
+// RegisterAnonymousRoutes registers the image generate endpoint for anonymous
+// Chrome extension users. It is mounted under a middleware chain that applies
+// anonymous rate limiting instead of auth.
+func (h *Handler) RegisterAnonymousRoutes(group *route.RouterGroup) {
+	group.POST("/image/generate", h.Execute)
+}
+
 // Execute handles any image operation (generate, edit, upscale, etc.).
 // The operation is extracted from the URL path and passed to the service,
 // which selects the appropriate route from the model catalog.
@@ -50,21 +59,34 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	principal, ok := middleware.GetPrincipal(ctx)
-	if !ok {
-		logger.Warn("missing principal for image request")
-		ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
-		return
-	}
-
 	// Merge schema field names with legacy field names.
 	images := payload.EffectiveImages()
 	aspectRatio := payload.EffectiveAspectRatio()
 
+	principal, ok := middleware.GetPrincipal(ctx)
+	var userID, apiKeyID string
+	isPro := false
+	if ok {
+		userID = principal.UserID
+		apiKeyID = principal.APIKeyID
+		isPro = principal.IsPro
+	} else {
+		// Anonymous request: use install_id as user identifier.
+		installID := string(ctx.Request.Header.Peek("X-Anycap-Install-Id"))
+		if strings.TrimSpace(installID) == "" {
+			logger.Warn("missing principal and install_id for image request")
+			ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
+			return
+		}
+		userID = "anon:" + installID
+	}
+
+	wm := image.ResolveWatermark(isPro, payload.Watermark)
+
 	result, err := h.service.Execute(c, model.GenerateImageRequest{
 		RequestID:          trace.GetTraceID(c),
-		UserID:             principal.UserID,
-		APIKeyID:           principal.APIKeyID,
+		UserID:             userID,
+		APIKeyID:           apiKeyID,
 		Prompt:             payload.Prompt,
 		Model:              payload.Model,
 		Mode:               model.Mode(payload.Mode),
@@ -72,6 +94,7 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 		Ratio:              aspectRatio,
 		Resolution:         payload.Resolution,
 		ReferenceImageURLs: images,
+		Watermark:          wm.Enabled,
 	}, model.Operation(operation))
 	if err != nil {
 		middleware.ReportError(ctx, err)

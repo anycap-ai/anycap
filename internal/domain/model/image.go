@@ -18,6 +18,7 @@ type GenerateImageRequest struct {
 	Ratio              string   `json:"ratio,omitempty"`
 	Resolution         string   `json:"resolution,omitempty"`
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
+	Watermark          bool     `json:"watermark,omitempty"`
 }
 
 func (r GenerateImageRequest) Validate() error {
