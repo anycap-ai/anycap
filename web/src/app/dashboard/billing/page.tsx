@@ -4,6 +4,8 @@ export const runtime = "edge";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { CreditBalanceCard } from "@/components/dashboard/CreditBalanceCard";
+import { CreditInfoHint } from "@/components/dashboard/CreditInfoHint";
 import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { createBillingCheckout, useBalance, useCreditPacks, useLogs } from "@/lib/api/hooks";
@@ -80,11 +82,20 @@ type RequestedPackCriteria = {
   priceCent: number | null;
 };
 
-const billingTrustPoints = [
-  "One-time credit packs",
-  "Purchased credits do not expire",
-  "One balance across generation, actions, Drive, and Page",
-] as const;
+function formatPackValue(pack: CreditPack): string {
+  const dollars = pack.price_cent / 100;
+  if (!Number.isFinite(dollars) || dollars <= 0) {
+    return "Value unavailable";
+  }
+
+  const creditsPerDollar = pack.credits / dollars;
+  const rounded =
+    creditsPerDollar >= 100
+      ? Math.round(creditsPerDollar).toString()
+      : creditsPerDollar.toFixed(1).replace(/\.0$/, "");
+
+  return `${rounded} credits / $1`;
+}
 
 function matchPackByQuery(
   packs: CreditPack[],
@@ -194,45 +205,67 @@ function PackOption({
       type="button"
       onClick={() => onSelect(pack)}
       disabled={disabled}
-      className={`w-full rounded-2xl border px-4 py-4 text-left transition-all ${
+      className={`w-full rounded-[24px] border px-4 py-4 text-left transition-all sm:px-5 sm:py-5 ${
         selected
-          ? "border-[#6b7d3a] bg-[rgba(107,125,58,0.09)] shadow-[0_1px_3px_rgba(0,0,0,0.05)]"
+          ? "border-[#77864a] bg-[#f7f8f3] shadow-[0_12px_28px_rgba(92,108,49,0.08),0_1px_3px_rgba(0,0,0,0.06)]"
           : featured
-            ? "border-[#bfcaa2] bg-[rgba(107,125,58,0.05)]"
-            : "border-[#d8dcd0] bg-[#fafbf8] hover:bg-[#f4f6f0]"
+            ? "border-[#d9ddd2] bg-[#fbfcf8] hover:border-[#c8cfbc] hover:bg-[#f7f8f3]"
+            : "border-[#d8dcd0] bg-[#fcfcfa] hover:border-[#cfd5c8] hover:bg-[#f7f8f4]"
       } ${disabled ? "cursor-wait opacity-75" : ""}`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[15px] font-semibold text-[#1c1f17]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <div
+            className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+              selected
+                ? "border-[#6b7d3a] bg-[#6b7d3a]"
+                : "border-[#c3c8bb] bg-white"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full bg-white transition-opacity ${
+                selected ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              {pack.description ? (
+                <span className="rounded-full border border-[#d8dcd0] bg-white px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[#666c62]">
+                  {pack.description}
+                </span>
+              ) : null}
+              {featured ? (
+                <span className="rounded-full bg-[#eef1e6] px-2.5 py-1 text-[11px] font-medium text-[#55672c]">
+                  Recommended
+                </span>
+              ) : null}
+            </div>
+
+            <p className="mt-3 text-[17px] font-semibold leading-[1.3] text-[#1c1f17] sm:text-[19px]">
               {pack.name || formatCredit(pack.credits)}
             </p>
-            {featured ? (
-              <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                  featured
-                    ? "bg-[rgba(107,125,58,0.12)] text-[#55672c]"
-                    : "bg-[#f1f2ed] text-[#6b7068]"
-                }`}
-              >
-                Recommend
-              </span>
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#5f6459]">
+              <span className="font-medium text-[#2c3028]">{formatCredit(pack.credits)}</span>
+              <span>{formatPackValue(pack)}</span>
+            </div>
+
+            {pack.description ? (
+              <p className="mt-2 text-[13px] leading-[1.6] text-[#73786d]">
+                {pack.description} pack for one-time top-ups.
+              </p>
             ) : null}
           </div>
-          <p className="mt-1 text-[13px] text-[#4d5145]">
-            {formatCredit(pack.credits)}
-          </p>
-          {pack.description ? (
-            <p className="mt-1 text-[13px] leading-[1.6] text-[#6b7068]">
-              {pack.description}
-            </p>
-          ) : null}
         </div>
 
-        <div className="shrink-0 text-left sm:text-right">
-          <p className="text-[18px] font-semibold text-[#1c1f17]">
+        <div className="shrink-0 pl-8 text-left sm:pl-0 sm:text-right">
+          <p className="text-[30px] font-semibold tracking-[-0.04em] text-[#1c1f17]">
             {formatMoney(pack.price_cent, pack.currency)}
+          </p>
+          <p className="mt-1 text-[12.5px] text-[#82877b]">
+            One-time purchase
           </p>
         </div>
       </div>
@@ -476,64 +509,42 @@ export default function BillingPage() {
       ) : null}
 
       <section className="max-w-[760px]">
-        <div className="rounded-2xl border border-[#d8dcd0] bg-white px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-[13.5px] font-medium text-[#7a7e71] mb-4">
-                Credit Balance
-              </p>
-              {balanceLoading && !balance && !balanceError ? (
-                <>
-                  <Skeleton className="h-10 w-32 mb-3" />
-                  <Skeleton className="h-4 w-36" />
-                </>
-              ) : balance ? (
-                <>
-                  <p className="text-[36px] font-bold leading-none tracking-tight text-[#1c1f17] sm:text-4xl">
-                    {formatCredit(balance.available)}
-                  </p>
-                  <p className="text-[14px] text-[#4d5145] mt-3">
-                    credits remaining
-                  </p>
-                  <p className="mt-4 max-w-[440px] text-[13px] leading-[1.7] text-[#6b7068]">
-                    Buy one-time credit packs whenever you need more balance. Purchased credits do
-                    not expire, and the same balance works across AnyCap generation, analysis,
-                    search, Drive, and Page workflows.
-                  </p>
-                </>
-              ) : (
-                <p className="text-[14px] leading-[1.6] text-[#8d3425]">
-                  Balance is temporarily unavailable.
-                </p>
-              )}
-            </div>
-
-            <div className="sm:shrink-0">
-              {balanceLoading && !balance && !balanceError ? (
-                <Skeleton className="h-11 w-32" />
-              ) : balance ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCheckoutError(null);
-                    setPendingRequestedPack(null);
-                    const recommended = matchPackByQuery(packs, {
-                      key: null,
-                      credits: null,
-                      priceCent: null,
-                    });
-                    setSelectedPackID(recommended?.id ?? null);
-                    setCheckoutAttemptBase(createCheckoutAttemptBase());
-                    setBuyModalOpen(true);
-                  }}
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:w-auto"
-                >
-                  Buy credits
-                </button>
-              ) : null}
-            </div>
+        {balanceLoading && !balance && !balanceError ? (
+          <div className="rounded-[28px] border border-[#d8dcd0] bg-[linear-gradient(180deg,#ffffff_0%,#fafbf8_100%)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.75)] sm:px-7 sm:py-6">
+            <Skeleton className="h-10 w-32 mb-3" />
+            <Skeleton className="h-4 w-36" />
           </div>
-        </div>
+        ) : balance ? (
+          <CreditBalanceCard
+            balance={balance}
+            action={
+              <button
+                type="button"
+                onClick={() => {
+                  setCheckoutError(null);
+                  setPendingRequestedPack(null);
+                  const recommended = matchPackByQuery(packs, {
+                    key: null,
+                    credits: null,
+                    priceCent: null,
+                  });
+                  setSelectedPackID(recommended?.id ?? null);
+                  setCheckoutAttemptBase(createCheckoutAttemptBase());
+                  setBuyModalOpen(true);
+                }}
+                className="inline-flex w-full items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-5 py-3 text-[14px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:w-auto"
+              >
+                Buy credits
+              </button>
+            }
+          />
+        ) : (
+          <div className="rounded-[28px] border border-[#d8dcd0] bg-[linear-gradient(180deg,#ffffff_0%,#fafbf8_100%)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.75)] sm:px-7 sm:py-6">
+            <p className="text-[14px] leading-[1.6] text-[#8d3425]">
+              Balance is temporarily unavailable.
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="mt-12">
@@ -630,53 +641,61 @@ export default function BillingPage() {
           }
         }}
         title="Buy credits"
+        panelClassName="bg-white max-w-[560px]"
       >
-        <p className="mb-4 text-[13px] leading-[1.6] text-[#6b7068]">
-          Choose a one-time credit pack. The recommended pack is selected by default, and your
-          balance stays available across the rest of the AnyCap runtime.
-        </p>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {billingTrustPoints.map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-[#d8dcd0] bg-[#fafbf8] px-3 py-1 text-[12px] text-[#4d5145]"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        {hasRequestedPack ? (
-          <p className="mb-4 text-[13px] leading-[1.6] text-[#4d5145]">
-            We preselected the closest pack based on the option you chose on the pricing page.
-          </p>
-        ) : null}
-        {packsLoading ? (
-          <div className="space-y-3">
+        <div className="space-y-5">
+          <div className="rounded-[24px] border border-[#d8dcd0] bg-[#f8f9f6] px-5 py-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="max-w-[360px]">
+                <div className="flex items-center gap-2">
+                  <p className="text-[18px] font-semibold tracking-[-0.03em] text-[#1c1f17]">
+                    Buy credits
+                  </p>
+                  <CreditInfoHint label="Credit pack details" />
+                </div>
+              </div>
+
+              {hasRequestedPack ? (
+                <span className="rounded-full border border-[#d7dccf] bg-white px-3 py-1 text-[12px] font-medium text-[#59604f]">
+                  Pricing preselected
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <p className="text-[13px] font-medium text-[#4f554b]">Choose a pack</p>
+
+          {packsLoading ? (
+            <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="rounded-2xl border border-[#d8dcd0] bg-[#fafbf8] px-4 py-4">
-                <Skeleton className="h-5 w-28 mb-3" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <div className="flex items-center justify-between mt-4">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-9 w-20" />
+              <div key={index} className="rounded-[24px] border border-[#d8dcd0] bg-[#fcfcfa] px-5 py-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-20 mb-3" />
+                    <Skeleton className="h-6 w-44 mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="shrink-0">
+                    <Skeleton className="h-8 w-20" />
+                  </div>
                 </div>
               </div>
             ))}
-          </div>
-        ) : packsError ? (
-          <div className="rounded-2xl border border-[#e4c8c2] bg-[#fbf2ef] px-4 py-4">
-            <p className="text-[14px] font-medium text-[#8d3425]">
-              Credit packs are unavailable
-            </p>
-            <p className="mt-2 text-[14px] leading-[1.7] text-[#6a3a31]">
-              {packStatus === 404
-                ? "The current server does not expose /v1/pricing/credit-packs yet."
-                : packErrorMessage}
-            </p>
-          </div>
-        ) : packs.length ? (
-          <>
-            <div className="space-y-3">
+            </div>
+          ) : packsError ? (
+            <div className="rounded-[24px] border border-[#e4c8c2] bg-[#fbf2ef] px-5 py-4">
+              <p className="text-[14px] font-medium text-[#8d3425]">
+                Credit packs are unavailable
+              </p>
+              <p className="mt-2 text-[14px] leading-[1.7] text-[#6a3a31]">
+                {packStatus === 404
+                  ? "The current server does not expose /v1/pricing/credit-packs yet."
+                  : packErrorMessage}
+              </p>
+            </div>
+          ) : packs.length ? (
+            <>
+              <div className="space-y-3">
               {packs.map((pack) => (
                 <PackOption
                   key={pack.id}
@@ -686,34 +705,50 @@ export default function BillingPage() {
                   onSelect={(nextPack) => setSelectedPackID(nextPack.id)}
                 />
               ))}
-            </div>
-            {selectedPack ? (
-              <>
-                <div className="mt-5 flex items-center justify-end">
-                  <button
-                    type="button"
-                    onClick={() => void handleBuy(selectedPack)}
-                    disabled={submittingPackID != null}
-                    className="inline-flex w-full items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] disabled:cursor-wait disabled:opacity-70 sm:w-auto"
-                  >
-                    {submittingPackID === selectedPack.id ? (
-                      <span className="inline-flex items-center gap-2">
-                        <Spinner size={14} />
-                        Redirecting to secure checkout...
-                      </span>
-                    ) : (
-                      `Buy ${formatCredit(selectedPack.credits)} for ${formatMoney(selectedPack.price_cent, selectedPack.currency)}`
-                    )}
-                  </button>
+              </div>
+              {selectedPack ? (
+                <div className="rounded-[24px] border border-[#d8dcd0] bg-[#f8f9f6] px-5 py-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[12.5px] font-medium text-[#7a7e71]">
+                        Selected pack
+                      </p>
+                      <p className="mt-2 text-[19px] font-semibold tracking-[-0.03em] text-[#1c1f17]">
+                        {formatCredit(selectedPack.credits)}
+                      </p>
+                      <p className="mt-1 text-[13px] leading-[1.6] text-[#5d6359]">
+                        {selectedPack.description ? `${selectedPack.description} · ` : ""}
+                        {formatMoney(selectedPack.price_cent, selectedPack.currency)} one-time checkout
+                      </p>
+                    </div>
+
+                    <div className="sm:shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => void handleBuy(selectedPack)}
+                        disabled={submittingPackID != null}
+                        className="inline-flex w-full items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] disabled:cursor-wait disabled:opacity-70 sm:min-w-[220px]"
+                      >
+                        {submittingPackID === selectedPack.id ? (
+                          <span className="inline-flex items-center gap-2">
+                            <Spinner size={14} />
+                            Redirecting...
+                          </span>
+                        ) : (
+                          `Continue for ${formatMoney(selectedPack.price_cent, selectedPack.currency)}`
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </>
-            ) : null}
-          </>
-        ) : (
-          <div className="rounded-2xl border border-[#d8dcd0] bg-[#fafbf8] px-4 py-4 text-[14px] text-[#7a7e71]">
-            No credit packs are available yet.
-          </div>
-        )}
+              ) : null}
+            </>
+          ) : (
+            <div className="rounded-[24px] border border-[#d8dcd0] bg-[#fafbf8] px-4 py-4 text-[14px] text-[#7a7e71]">
+              No credit packs are available yet.
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );
