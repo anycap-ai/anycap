@@ -54,9 +54,9 @@ export function SendToAgentPanel({
   };
 
   return (
-    <div className="bg-[#f4f5f0] rounded-xl shadow-2xl shadow-black/20 overflow-hidden w-full mx-auto">
+    <div className="bg-[#fcfcfd] rounded-xl shadow-2xl shadow-black/20 overflow-hidden w-full mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#d4dbb8]">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e3e7]">
         <div className="flex items-center gap-2.5">
           {onBack && (
             <button
@@ -101,12 +101,12 @@ export function SendToAgentPanel({
       {/* Body */}
       <div className="p-6">
         <p
-          className="italic font-bold text-[#6b7d3a] text-[13px] leading-snug mb-3.5 tracking-[0.2px]"
+          className="italic font-bold text-[#6b6b73] text-[13px] leading-snug mb-3.5 tracking-[0.2px]"
           style={mono}
         >
           Just send this message to your {agent.name} — it will install AnyCap automatically.
         </p>
-        <div className="bg-white rounded-lg p-5 mb-5 border border-[#d4dbb8]">
+        <div className="bg-[#f8f8fa] rounded-lg p-5 mb-5 border border-[#e1e2e6]">
           <p
             className="text-[#1c1f17] text-[15px] leading-relaxed"
             style={mono}
