@@ -3,14 +3,11 @@ import { useStore } from '@/src/lib/store';
 import { getAuthState, canGenerate, incrementTrial } from '@/src/lib/quota';
 import { generateVariation, fetchExtensionConfig } from '@/src/lib/api';
 import { classifyError, errorMessage } from '@/src/lib/errors';
-import { signIn, signOut } from '@/src/lib/auth';
+// import { signIn, signOut } from '@/src/lib/auth';
 import { addGeneration, getRecentGenerations, type GenerationRecord } from '@/src/lib/history';
-import { saveToDrive } from '@/src/lib/drive';
+// import { saveToDrive } from '@/src/lib/drive';
 
 function ResultActions({ resultUrl }: { resultUrl: string }) {
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const store = useStore();
-
   const handleDownload = () => {
     chrome.downloads.download({
       url: resultUrl,
@@ -18,41 +15,13 @@ function ResultActions({ resultUrl }: { resultUrl: string }) {
     });
   };
 
-  const handleSaveDrive = async () => {
-    if (!store.isAuthed) return;
-    setSaveState('saving');
-    try {
-      await saveToDrive(resultUrl);
-      setSaveState('saved');
-    } catch {
-      setSaveState('error');
-    }
-  };
-
   return (
-    <>
-      <button
-        onClick={handleDownload}
-        className="w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
-      >
-        Download
-      </button>
-      <button
-        onClick={handleSaveDrive}
-        disabled={!store.isAuthed || saveState === 'saving'}
-        className="w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-      >
-        {saveState === 'saved'
-          ? 'Saved to Drive'
-          : saveState === 'saving'
-            ? 'Saving...'
-            : saveState === 'error'
-              ? 'Save failed'
-              : store.isAuthed
-                ? 'Save to Drive'
-                : 'Sign in to save'}
-      </button>
-    </>
+    <button
+      onClick={handleDownload}
+      className="w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
+    >
+      Download
+    </button>
   );
 }
 
@@ -150,45 +119,7 @@ export default function App() {
         <p className="text-sm text-gray-600 mt-1">
           You have used all 3 free generations. Sign in to get 50 free credits per month.
         </p>
-        <button
-          onClick={() => store.setView('auth')}
-          className="mt-4 w-full bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Sign In
-        </button>
-      </div>
-    );
-  }
-
-  if (store.view === 'auth') {
-    return (
-      <div className="p-5 w-80 text-center">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-          <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-        <h2 className="text-base font-bold text-gray-900 mt-3">Sign In</h2>
-        <p className="text-sm text-gray-600 mt-1">Connect your AnyCap account to get 50 free credits per month.</p>
-        <button
-          onClick={async () => {
-            const token = await signIn();
-            if (token) {
-              const state = await getAuthState();
-              store.setAuthState(state.isAuthed, state.remainingTrials);
-              store.setView('generate');
-            }
-          }}
-          className="mt-4 w-full bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Sign In with AnyCap
-        </button>
-        <button
-          onClick={() => store.setView('generate')}
-          className="mt-2 w-full bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
-        >
-          Back
-        </button>
+        <p className="mt-3 text-xs text-gray-400">Account login coming soon.</p>
       </div>
     );
   }
@@ -231,23 +162,9 @@ export default function App() {
     <div className="p-5 w-80">
       <div className="flex items-center justify-between">
         <h1 className="text-base font-bold text-blue-600">AnyCap</h1>
-        {store.isAuthed ? (
-          <button
-            onClick={async () => {
-              await signOut();
-              const state = await getAuthState();
-              store.setAuthState(state.isAuthed, state.remainingTrials);
-            }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
-          >
-            Sign out
-          </button>
-        ) : null}
       </div>
       <p className="text-xs text-gray-500 mt-0.5">
-        {store.isAuthed
-          ? 'Signed in'
-          : `${store.remainingTrials} free ${store.remainingTrials === 1 ? 'try' : 'tries'} remaining`}
+        {`${store.remainingTrials} free ${store.remainingTrials === 1 ? 'try' : 'tries'} remaining`}
       </p>
 
       {store.pendingRequest ? (

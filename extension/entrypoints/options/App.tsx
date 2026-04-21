@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getOrCreateInstallId } from '@/src/lib/install-id';
 import { getAuthState } from '@/src/lib/quota';
-import { signOut } from '@/src/lib/auth';
 import { WELCOME_URL, PRICING_URL } from '@/src/lib/constants';
 
 export default function App() {
   const [installId, setInstallId] = useState('');
-  const [isAuthed, setIsAuthed] = useState(false);
   const [remainingTrials, setRemainingTrials] = useState(0);
 
   useEffect(() => {
@@ -14,7 +12,6 @@ export default function App() {
       const id = await getOrCreateInstallId();
       setInstallId(id);
       const state = await getAuthState();
-      setIsAuthed(state.isAuthed);
       setRemainingTrials(state.remainingTrials);
     })();
   }, []);
@@ -35,30 +32,9 @@ export default function App() {
         <div className="bg-gray-50 rounded-lg p-4">
           <h2 className="text-sm font-semibold text-gray-700">Account</h2>
           <p className="text-sm text-gray-600 mt-1">
-            {isAuthed ? 'Signed in' : `Anonymous — ${remainingTrials} free ${remainingTrials === 1 ? 'try' : 'tries'} remaining`}
+            {`Anonymous — ${remainingTrials} free ${remainingTrials === 1 ? 'try' : 'tries'} remaining`}
           </p>
-          {isAuthed ? (
-            <button
-              onClick={async () => {
-                await signOut();
-                const state = await getAuthState();
-                setIsAuthed(state.isAuthed);
-                setRemainingTrials(state.remainingTrials);
-              }}
-              className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
-            >
-              Sign out
-            </button>
-          ) : (
-            <a
-              href={WELCOME_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-700 underline"
-            >
-              Sign in to get 50 free credits per month
-            </a>
-          )}
+          <p className="mt-1 text-xs text-gray-400">Account login coming soon.</p>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-4">
