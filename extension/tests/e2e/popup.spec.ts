@@ -1,16 +1,16 @@
-import { test, expect } from '@playwright/test';
-
-const EXTENSION_ID = process.env.EXTENSION_ID || 'anycap-extension';
+import { test, expect } from './fixtures';
 
 test.describe('popup', () => {
-  test('renders default state with instruction text', async ({ page }) => {
-    await page.goto(`chrome-extension://${EXTENSION_ID}/popup.html`);
-    await expect(page.locator('text=Right-click any image')).toBeVisible();
-    await expect(page.locator('text=AnyCap')).toBeVisible();
+  test('renders default state with instruction text', async ({ context, extensionId }) => {
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await expect(popup.getByText('Right-click any image')).toBeVisible();
+    await expect(popup.getByRole('heading', { name: 'AnyCap' })).toBeVisible();
   });
 
-  test('shows trial count for anonymous users', async ({ page }) => {
-    await page.goto(`chrome-extension://${EXTENSION_ID}/popup.html`);
-    await expect(page.locator('text=free tries remaining')).toBeVisible();
+  test('shows trial count for anonymous users', async ({ context, extensionId }) => {
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await expect(popup.locator('text=free tries remaining')).toBeVisible();
   });
 });
