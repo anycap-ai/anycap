@@ -4,6 +4,7 @@ export const runtime = "edge";
 
 import { useState } from "react";
 import Link from "next/link";
+import { CreditBalanceCard } from "@/components/dashboard/CreditBalanceCard";
 import { useDashboardSummary } from "@/lib/api/hooks";
 import { getInstallPrompt, agents } from "@/lib/agents";
 import type { TimelineItem, Balance } from "@/lib/api/types";
@@ -63,25 +64,19 @@ function StatCard({
 
 function BalanceCard({ balance }: { balance: Balance }) {
   return (
-    <StatCard label="Balance">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[36px] text-[#1c1f17] font-bold leading-none tracking-tight sm:text-[40px]">
-            {formatCredit(balance.available)}
-          </p>
-          <p className="text-[15px] text-[#4d5145] mt-2.5">
-            credits
-          </p>
+    <CreditBalanceCard
+      balance={balance}
+      action={
+        <div className="sm:shrink-0">
+          <Link
+            href="/dashboard/billing?buy=1"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-5 py-3 text-[14px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:w-auto"
+          >
+            Buy credits
+          </Link>
         </div>
-
-        <Link
-          href="/dashboard/billing?buy=1"
-          className="inline-flex w-full items-center justify-center self-start rounded-xl border border-[#6b7d3a] bg-[#6b7d3a] px-4 py-3 text-[13px] font-medium text-[#f4f5f0] shadow-[0_1px_2px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all hover:bg-[#627235] sm:mt-5 sm:w-auto"
-        >
-          Buy credits
-        </Link>
-      </div>
-    </StatCard>
+      }
+    />
   );
 }
 
