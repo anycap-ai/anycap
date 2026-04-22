@@ -94,13 +94,15 @@ func (e *codexExecExecutor) ExecuteSession(ctx context.Context, session agentcon
 	if prompt == "" {
 		return nil, fmt.Errorf("session user message is required")
 	}
+	wantsAutoResume := shouldResumeLatestLocalCodexSession(prompt)
+	wantsLocalResumeCommand := shouldProvideLocalCodexResumeCommand(prompt)
 	var resumeID string
-	if session.ExecutorRef != nil {
+	if !wantsLocalResumeCommand && session.ExecutorRef != nil {
 		resumeID = strings.TrimSpace(*session.ExecutorRef)
 	}
 	resumeTarget := ""
 	localResumeRef := ""
-	if shouldResumeLatestLocalCodexSession(prompt) {
+	if wantsAutoResume {
 		localSessionID, err := latestLocalCodexSessionID(e.workspace)
 		if err != nil {
 			return nil, err
@@ -109,7 +111,7 @@ func (e *codexExecExecutor) ExecuteSession(ctx context.Context, session agentcon
 		resumeTarget = localSessionID
 		localResumeRef = localSessionID
 		session.ExecutorRef = nil
-	} else if strings.TrimSpace(resumeID) == "" && shouldProvideLocalCodexResumeCommand(prompt) {
+	} else if strings.TrimSpace(resumeID) == "" && wantsLocalResumeCommand {
 		if localSessionID, err := latestLocalCodexSessionID(e.workspace); err == nil {
 			localResumeRef = localSessionID
 		}

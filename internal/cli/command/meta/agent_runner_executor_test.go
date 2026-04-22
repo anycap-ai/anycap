@@ -471,6 +471,88 @@ printf 'done' > "$out"
 	}
 }
 
+func TestCodexExecExecutorExecuteSessionProvidesLocalResumeCommandWithExecutorRef(t *testing.T) {
+	tmpDir := t.TempDir()
+	scriptPath := filepath.Join(tmpDir, "codex-stub.sh")
+	argsPath := filepath.Join(tmpDir, "codex-args.txt")
+	stdinPath := filepath.Join(tmpDir, "codex-stdin.txt")
+	script := `#!/bin/sh
+stdin_log="` + stdinPath + `"
+args_log="` + argsPath + `"
+printf '%s\n' "$@" > "$args_log"
+out=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    exec|--json|--skip-git-repo-check|--full-auto)
+      shift
+      ;;
+    resume)
+      shift
+      ;;
+    --output-last-message)
+      out="$2"
+      shift 2
+      ;;
+    -C)
+      shift 2
+      ;;
+    -)
+      shift
+      break
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+cat > "$stdin_log"
+printf '{"type":"thread.started","thread_id":"thread_123"}\n'
+printf 'done' > "$out"
+`
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	executor := newCodexExecExecutor(scriptPath, tmpDir, "")
+	message := "我想在本地codex恢复这次对话"
+	executorRef := "thread_existing"
+	_, err := executor.ExecuteSession(context.Background(), agentcontrolapp.RunnerSession{
+		ID:          "ags_128",
+		RunnerID:    "run_123",
+		UserMessage: &message,
+		ExecutorRef: &executorRef,
+	})
+	if err != nil {
+		t.Fatalf("ExecuteSession() error = %v", err)
+	}
+	argsBody, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatalf("ReadFile(argsPath) error = %v", err)
+	}
+	argsText := string(argsBody)
+	if strings.Contains(argsText, "resume\n") || strings.Contains(argsText, "thread_existing\n") {
+		t.Fatalf("expected local open request not to resume automatically, got %q", argsText)
+	}
+	stdinBody, err := os.ReadFile(stdinPath)
+	if err != nil {
+		t.Fatalf("ReadFile(stdinPath) error = %v", err)
+	}
+	prompt := string(stdinBody)
+	for _, want := range []string{
+		`executor_ref="thread_existing"`,
+		`cd "` + tmpDir + `" && codex resume thread_existing`,
+		`Do not run the command yourself`,
+		message,
+	} {
+		if !strings.Contains(prompt, want) {
+			t.Fatalf("expected prompt to contain %q, got:\n%s", want, prompt)
+		}
+	}
+	if strings.Contains(prompt, `resume_target="`) {
+		t.Fatalf("expected prompt not to attach local resume target, got:\n%s", prompt)
+	}
+}
+
 func TestCodexExecExecutorExecuteSessionUsesDangerFullAccessModeWhenRequested(t *testing.T) {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "codex-stub.sh")

@@ -45,7 +45,7 @@ func (p *imConversationEventPublisher) Publish(ctx context.Context, session mode
 		return err
 	}
 	binding, err := p.resolveReplyBinding(ctx, *conversation)
-	if err != nil || binding == nil || binding.ID <= 0 {
+	if err != nil || binding == nil {
 		return err
 	}
 	message := buildConversationEventMessage(session, event)
@@ -72,6 +72,17 @@ func (p *imConversationEventPublisher) resolveReplyBinding(ctx context.Context, 
 		}
 		copy := item
 		return &copy, nil
+	}
+	if strings.TrimSpace(conversation.Platform) != "" &&
+		strings.TrimSpace(conversation.BotID) != "" &&
+		strings.TrimSpace(conversation.ChatID) != "" {
+		return &model.IMBinding{
+			UserID:    conversation.UserID,
+			Platform:  conversation.Platform,
+			BotID:     conversation.BotID,
+			ChannelID: conversation.ChatID,
+			Status:    model.IMBindingStatusActive,
+		}, nil
 	}
 	return nil, fmt.Errorf("reply binding not found")
 }
