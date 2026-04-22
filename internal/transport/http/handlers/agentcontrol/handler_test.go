@@ -572,6 +572,87 @@ func TestRunnerRouteAcceptsDaemonOwnedInboundIMChat(t *testing.T) {
 	}
 }
 
+func TestRunnerSessionUpdateRepliesForOwnedInboundWithoutBinding(t *testing.T) {
+	engine, rawKey, conversations, sessions, adapter := newAgentControlTestEngine(t, true)
+	now := time.Now().UTC()
+	lastSessionID := int64(1)
+
+	reqBody := `{"platform":"feishu","bot_id":"cli_personal_bot","chat_id":"oc_chat","message_id":"om_message","sender_id":"ou_owner","message":"请回复 hello"}`
+	req := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/im/inbound",
+		&ut.Body{Body: bytes.NewReader([]byte(reqBody)), Len: len(reqBody)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+	)
+	if req.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", req.Code, req.Body.String())
+	}
+	if len(conversations.itemsByID) != 1 || len(sessions.items) != 1 {
+		t.Fatalf("expected owned inbound to create conversation+session, got conversations=%d sessions=%d", len(conversations.itemsByID), len(sessions.items))
+	}
+
+	conversations.itemsByID = map[int64]model.AgentConversation{
+		1: {
+			ID:            1,
+			UserID:        "2000000001",
+			Platform:      model.IMPlatformFeishu,
+			BotID:         "cli_personal_bot",
+			ChatID:        "oc_chat",
+			RunnerID:      21,
+			Agent:         "codex",
+			Status:        model.AgentConversationStatusActive,
+			LastSessionID: &lastSessionID,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		},
+	}
+	sessions.items = []model.AgentSession{
+		{
+			ID:             1,
+			UserID:         "2000000001",
+			ConversationID: 1,
+			RunnerID:       21,
+			Agent:          "codex",
+			Mode:           model.AgentSessionModeContinue,
+			Status:         model.AgentSessionStatusCreated,
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		},
+	}
+
+	authHeader := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	nextResp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/agent/runners/21/sessions/next", nil, authHeader)
+	if nextResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 next session, got %d body=%s", nextResp.Code, nextResp.Body.String())
+	}
+
+	updateResp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/runners/21/sessions/1",
+		&ut.Body{Body: bytes.NewReader([]byte(`{"status":"running"}`)), Len: len(`{"status":"running"}`)},
+		authHeader,
+	)
+	if updateResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 update session, got %d body=%s", updateResp.Code, updateResp.Body.String())
+	}
+
+	commitResp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/runners/21/sessions/1",
+		&ut.Body{Body: bytes.NewReader([]byte(`{"status":"committed","final_message":"hello back"}`)), Len: len(`{"status":"committed","final_message":"hello back"}`)},
+		authHeader,
+	)
+	if commitResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 commit session, got %d body=%s", commitResp.Code, commitResp.Body.String())
+	}
+	if len(adapter.sentMessages) == 0 || adapter.sentMessages[len(adapter.sentMessages)-1] != "hello back" {
+		t.Fatalf("expected owned inbound committed session reply message, got %+v", adapter.sentMessages)
+	}
+}
+
 func TestRunnerRouteSuppressesImmediateReplyWhenPreviousSessionStillRunning(t *testing.T) {
 	engine, rawKey, conversations, sessions, _ := newAgentControlTestEngine(t, true)
 	lastSessionID := int64(7)
