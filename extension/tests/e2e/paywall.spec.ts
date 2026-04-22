@@ -19,5 +19,5 @@ test('4th anonymous generation shows paywall', async ({ context, extensionId }) 
   await popup.reload();
 
   await expect(popup.getByText(/Free Tries Used/i)).toBeVisible();
-  await expect(popup.getByRole('button', { name: /Sign In/i })).toBeVisible();
+  await expect(popup.getByText(/Account login coming soon/i)).toBeVisible();
 });

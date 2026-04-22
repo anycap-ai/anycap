@@ -34,6 +34,8 @@ const actionOpenPopup = vi.fn().mockResolvedValue(undefined);
   },
   action: {
     openPopup: actionOpenPopup,
+    setBadgeText: vi.fn(),
+    setBadgeBackgroundColor: vi.fn(),
   },
 };
 
@@ -65,11 +67,14 @@ describe('background', () => {
     installedHandler({ reason: 'update' });
 
     expect(contextMenusCreate).toHaveBeenCalledTimes(1);
-    expect(contextMenusCreate).toHaveBeenCalledWith({
-      id: MENU_ID_VARIATION,
-      title: MENU_TITLE,
-      contexts: ['image'],
-    });
+    expect(contextMenusCreate).toHaveBeenCalledWith(
+      {
+        id: MENU_ID_VARIATION,
+        title: MENU_TITLE,
+        contexts: ['image'],
+      },
+      expect.any(Function)
+    );
   });
 
   it('opens welcome tab on install', () => {
@@ -97,10 +102,14 @@ describe('background', () => {
     );
 
     expect(sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessage).toHaveBeenCalledWith(42, {
-      type: 'ANYCAP_INVOKE_VARIATION',
-      srcUrl: 'https://example.com/img.png',
-    });
+    expect(sendMessage).toHaveBeenCalledWith(
+      42,
+      {
+        type: 'ANYCAP_INVOKE_VARIATION',
+        srcUrl: 'https://example.com/img.png',
+      },
+      expect.any(Function)
+    );
   });
 
   it('stores pending request and opens popup on ANYCAP_START_GENERATION', () => {

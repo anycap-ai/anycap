@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { API_BASE } from '../../src/lib/constants';
@@ -142,5 +142,38 @@ describe('api', () => {
     const cfg = await fetchExtensionConfig();
     expect(cfg.default_model).toBe('m1');
     expect(cfg.min_image_dim).toBe(128);
+  });
+
+  it('throws NETWORK_ERROR when fetch fails', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) as any;
+
+    const { generateVariation } = await import('../../src/lib/api');
+    await expect(
+      generateVariation({ prompt: 'test', model: 'm', images: [] })
+    ).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+
+    globalThis.fetch = originalFetch;
+  });
+
+  it('throws SERVER_ERROR on extension config 500', async () => {
+    server.use(
+      http.get(`${API_BASE}/v1/extension/config`, () =>
+        HttpResponse.json(
+          {
+            id: 'req_6',
+            status: 'error',
+            error: { code: 'INTERNAL', message: 'config down' },
+          },
+          { status: 500 }
+        )
+      )
+    );
+
+    const { fetchExtensionConfig } = await import('../../src/lib/api');
+    await expect(fetchExtensionConfig()).rejects.toMatchObject({
+      code: 'SERVER_ERROR',
+      message: 'config down',
+    });
   });
 });

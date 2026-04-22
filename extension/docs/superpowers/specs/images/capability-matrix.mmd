@@ -1,0 +1,51 @@
+graph LR
+    subgraph Image["🖼️ Image"]
+        IV["Variation"]
+        IG["Generate"]
+        IE["Edit"]
+        IU["Understand"]
+    end
+
+    subgraph Video["🎬 Video"]
+        VG["Generate"]
+    end
+
+    subgraph Music["🎵 Music"]
+        MG["Generate"]
+    end
+
+    subgraph Web["🌐 Web"]
+        WS["Search"]
+        WC["Crawl"]
+    end
+
+    subgraph Storage["💾 Storage"]
+        DSI["Save Image"]
+        DSP["Save Page"]
+        PD["Deploy Site"]
+    end
+
+    subgraph Context["Right-Click Context"]
+        CTX_IMG["Image"]
+        CTX_TXT["Selected Text"]
+        CTX_PAG["Page"]
+    end
+
+    CTX_IMG -->|high| IV
+    CTX_IMG -->|normal| IE
+    CTX_IMG -->|normal| IU
+    CTX_IMG -->|normal| DSI
+    CTX_IMG -->|normal| VG
+
+    CTX_TXT -->|high| IG
+    CTX_TXT -->|high| WS
+    CTX_TXT -->|normal| MG
+    CTX_TXT -->|normal| VG
+
+    CTX_PAG -->|normal| WC
+    CTX_PAG -->|normal| DSP
+    CTX_PAG -->|normal| PD
+
+    style IV fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style IG fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style WS fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px

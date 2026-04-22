@@ -1,0 +1,38 @@
+graph TB
+    subgraph Browser["Browser"]
+        CS["Content Script<br/>Context Detection"]
+        BG["Background<br/>Service Worker"]
+        subgraph Popup["Popup UI"]
+            CP["Capability Panel"]
+            CF["Capability Form"]
+            RV["Result View"]
+            ST["Settings"]
+        end
+    end
+
+    subgraph AnyCap["AnyCap Platform"]
+        API["API Gateway"]
+        subgraph Caps["Capabilities"]
+            IMG["Image<br/>generate / edit / understand"]
+            VID["Video<br/>generate"]
+            MUS["Music<br/>generate"]
+            WEB["Web<br/>search / crawl"]
+            DRV["Drive<br/>save"]
+            PAG["Page<br/>deploy"]
+        end
+    end
+
+    User((User)) -->|right-click| CS
+    CS -->|report context| BG
+    BG -->|build menu| ContextMenu[Context Menu]
+    User -->|select capability| ContextMenu
+    ContextMenu -->|open popup| Popup
+    CP -->|select| CF
+    CF -->|submit| API
+    API --> IMG & VID & MUS & WEB & DRV & PAG
+    API -->|return result| RV
+    ST -->|toggle| BG
+
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Popup fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Caps fill:#fff3e0,stroke:#e65100,stroke-width:2px

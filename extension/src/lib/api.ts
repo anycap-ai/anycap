@@ -1,6 +1,6 @@
 import { API_BASE } from './constants';
 import { getStored } from './storage';
-import { classifyHttpError } from './errors';
+import { classifyError, classifyHttpError } from './errors';
 
 export type GenerateRequest = {
   prompt: string;
@@ -41,10 +41,15 @@ async function getHeaders(): Promise<Record<string, string>> {
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
   const headers = await getHeaders();
-  const res = await fetch(url, {
-    ...init,
-    headers: { ...headers, ...(init?.headers || {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: { ...headers, ...(init?.headers || {}) },
+    });
+  } catch (err) {
+    throw classifyError(err);
+  }
 
   let body: any;
   try {

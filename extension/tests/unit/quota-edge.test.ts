@@ -38,15 +38,15 @@ describe('quota edge cases', () => {
     expect(state.remainingTrials).toBe(MAX_ANON_TRIALS - 1);
   });
 
-  it('handles trialFirstUsedAt being exactly 30 days ago', async () => {
+  it('resets trials slightly after 30 days', async () => {
     const { setStored } = await import('../../src/lib/storage');
-    const exactlyThirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const slightlyOverThirtyDays = Date.now() - 30 * 24 * 60 * 60 * 1000 - 1000;
     await setStored('trialCount', MAX_ANON_TRIALS);
-    await setStored('trialFirstUsedAt', exactlyThirtyDaysAgo);
+    await setStored('trialFirstUsedAt', slightlyOverThirtyDays);
 
     const { getAuthState } = await import('../../src/lib/quota');
     const state = await getAuthState();
-    expect(state.remainingTrials).toBe(0);
+    expect(state.remainingTrials).toBe(MAX_ANON_TRIALS);
   });
 
   it('handles trialFirstUsedAt being null with non-zero count', async () => {

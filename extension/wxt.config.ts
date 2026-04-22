@@ -1,7 +1,11 @@
 import { defineConfig } from 'wxt';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
+  vite: () => ({
+    plugins: [tailwindcss()],
+  }),
   manifest: {
     name: 'AnyCap — Turn anything you see into new content',
     short_name: 'AnyCap',

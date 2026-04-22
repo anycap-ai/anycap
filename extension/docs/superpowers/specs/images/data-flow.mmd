@@ -1,0 +1,30 @@
+sequenceDiagram
+    actor User
+    participant CS as Content Script
+    participant BG as Background
+    participant Popup as Popup
+    participant API as AnyCap API
+
+    User->>CS: Right-click image
+    CS->>CS: Detect context: image
+    CS->>CS: Capture metadata<br/>(src, width, height)
+    CS->>BG: ANYCAP_REPORT_CONTEXT
+    BG->>BG: Query registry:<br/>capabilities for 'image'
+    BG->>BG: Build context menu:<br/>Variation (high) + More...
+    User->>BG: Click "Generate Variation"
+    BG->>BG: Store pendingRequest<br/>{capabilityId, context}
+    BG->>BG: Set badge "1"
+    BG->>Popup: Open popup
+    Popup->>Popup: Read pendingRequest
+    Popup->>Popup: Router: image-variation/form
+    Popup->>User: Show form with<br/>pre-filled image + prompt
+    User->>Popup: Click Generate
+    Popup->>Popup: Show loading state
+    Popup->>API: POST /v1/image/generate
+    API->>Popup: Return result URL
+    Popup->>Popup: Show result view
+    Popup->>User: Display generated image
+    User->>Popup: Click "Save to Drive"
+    Popup->>API: POST /v1/drive/upload
+    API->>Popup: Return drive link
+    Popup->>User: Show success toast

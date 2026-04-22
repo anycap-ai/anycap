@@ -7,7 +7,7 @@ export default defineContentScript({
   main() {
     let lastImage: ImageInfo | null = null;
 
-    document.addEventListener('contextmenu', (event) => {
+    const handleContextMenu = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (target.tagName === 'IMG') {
         const img = target as HTMLImageElement;
@@ -20,20 +20,33 @@ export default defineContentScript({
           lastImage = info;
         }
       }
-    });
+    };
 
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message?.type === 'ANYCAP_INVOKE_VARIATION' && lastImage) {
-        chrome.runtime.sendMessage({
-          type: 'ANYCAP_START_GENERATION',
-          image: {
-            srcUrl: lastImage.src,
-            width: lastImage.naturalWidth,
-            height: lastImage.naturalHeight,
-          },
-          pageUrl: location.href,
-        });
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    // Clean up on navigation (SPA)
+    const observer = new MutationObserver(() => {
+      lastImage = null;
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message?.type === 'ANYCAP_INVOKE_VARIATION') {
+        const target = lastImage ?? { src: message.srcUrl, naturalWidth: 256, naturalHeight: 256 };
+        if (target) {
+          sendResponse({
+            type: 'ANYCAP_START_GENERATION',
+            image: {
+              srcUrl: target.src,
+              width: target.naturalWidth,
+              height: target.naturalHeight,
+            },
+            pageUrl: location.href,
+          });
+        }
+        return true;
       }
+      return false;
     });
   },
 });

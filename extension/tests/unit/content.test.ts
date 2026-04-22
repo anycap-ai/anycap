@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const sentMessages: any[] = [];
-const messageListeners: Array<(msg: any) => void> = [];
+const messageListeners: Array<(msg: any, sender: any, sendResponse: any) => boolean | void> = [];
+const sendResponseMock = vi.fn();
 
 (globalThis as any).chrome = {
   runtime: {
@@ -48,13 +49,15 @@ describe('content script', () => {
     img.dispatchEvent(contextEvent);
 
     expect(messageListeners.length).toBeGreaterThan(0);
-    messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' });
+    const result = messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' }, {}, sendResponseMock);
 
-    expect(sentMessages).toHaveLength(1);
-    expect(sentMessages[0].type).toBe('ANYCAP_START_GENERATION');
-    expect(sentMessages[0].image.srcUrl).toBe('https://example.com/photo.jpg');
-    expect(sentMessages[0].image.width).toBe(800);
-    expect(sentMessages[0].image.height).toBe(600);
+    expect(result).toBe(true);
+    expect(sendResponseMock).toHaveBeenCalledTimes(1);
+    const response = sendResponseMock.mock.calls[0][0];
+    expect(response.type).toBe('ANYCAP_START_GENERATION');
+    expect(response.image.srcUrl).toBe('https://example.com/photo.jpg');
+    expect(response.image.width).toBe(800);
+    expect(response.image.height).toBe(600);
   });
 
   it('ignores images that are too small', async () => {
@@ -70,10 +73,10 @@ describe('content script', () => {
     img.dispatchEvent(contextEvent);
 
     if (messageListeners.length > 0) {
-      messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' });
+      messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' }, {}, sendResponseMock);
     }
 
-    expect(sentMessages).toHaveLength(0);
+    expect(sendResponseMock).not.toHaveBeenCalled();
   });
 
   it('ignores non-image elements', async () => {
@@ -88,9 +91,9 @@ describe('content script', () => {
     div.dispatchEvent(contextEvent);
 
     if (messageListeners.length > 0) {
-      messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' });
+      messageListeners[0]({ type: 'ANYCAP_INVOKE_VARIATION' }, {}, sendResponseMock);
     }
 
-    expect(sentMessages).toHaveLength(0);
+    expect(sendResponseMock).not.toHaveBeenCalled();
   });
 });
