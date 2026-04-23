@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -650,6 +651,99 @@ func TestRunnerSessionUpdateRepliesForOwnedInboundWithoutBinding(t *testing.T) {
 	}
 	if len(adapter.sentMessages) == 0 || adapter.sentMessages[len(adapter.sentMessages)-1] != "hello back" {
 		t.Fatalf("expected owned inbound committed session reply message, got %+v", adapter.sentMessages)
+	}
+}
+
+func TestRunnerSessionUpdateReturnsClientOwnedOutboundReply(t *testing.T) {
+	engine, rawKey, conversations, sessions, adapter := newAgentControlTestEngine(t, true)
+	now := time.Now().UTC()
+	lastSessionID := int64(1)
+
+	conversations.itemsByID = map[int64]model.AgentConversation{
+		1: {
+			ID:            1,
+			UserID:        "2000000001",
+			Platform:      model.IMPlatformFeishu,
+			BotID:         "cli_personal_bot",
+			ChatID:        "oc_chat",
+			RunnerID:      21,
+			Agent:         "codex",
+			Status:        model.AgentConversationStatusActive,
+			LastSessionID: &lastSessionID,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		},
+	}
+	sessions.items = []model.AgentSession{
+		{
+			ID:             1,
+			UserID:         "2000000001",
+			ConversationID: 1,
+			RunnerID:       21,
+			Agent:          "codex",
+			Mode:           model.AgentSessionModeContinue,
+			Status:         model.AgentSessionStatusCreated,
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		},
+	}
+
+	authHeader := ut.Header{Key: "Authorization", Value: "Bearer " + rawKey}
+	nextResp := ut.PerformRequest(engine.Engine, http.MethodGet, "/v1/agent/runners/21/sessions/next", nil, authHeader)
+	if nextResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 next session, got %d body=%s", nextResp.Code, nextResp.Body.String())
+	}
+
+	runningBody := []byte(`{"status":"running"}`)
+	runningResp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/runners/21/sessions/1",
+		&ut.Body{Body: bytes.NewReader(runningBody), Len: len(runningBody)},
+		authHeader,
+	)
+	if runningResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 running session, got %d body=%s", runningResp.Code, runningResp.Body.String())
+	}
+
+	commitBody := []byte(`{"status":"committed","final_message":"hello back","reply_delivery":"client"}`)
+	commitResp := ut.PerformRequest(
+		engine.Engine,
+		http.MethodPost,
+		"/v1/agent/runners/21/sessions/1",
+		&ut.Body{Body: bytes.NewReader(commitBody), Len: len(commitBody)},
+		authHeader,
+	)
+	if commitResp.Code != http.StatusOK {
+		t.Fatalf("expected 200 commit session, got %d body=%s", commitResp.Code, commitResp.Body.String())
+	}
+	var envelope struct {
+		Data struct {
+			OutboundReply *struct {
+				Platform       string `json:"platform"`
+				BotID          string `json:"bot_id"`
+				ChannelID      string `json:"channel_id"`
+				SenderID       string `json:"sender_id"`
+				Message        string `json:"message"`
+				IdempotencyKey string `json:"idempotency_key"`
+			} `json:"outbound_reply"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(commitResp.Body.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode commit response: %v", err)
+	}
+	if envelope.Data.OutboundReply == nil {
+		t.Fatalf("expected outbound_reply in response, got %s", commitResp.Body.String())
+	}
+	reply := envelope.Data.OutboundReply
+	if reply.Platform != model.IMPlatformFeishu || reply.BotID != "cli_personal_bot" || reply.ChannelID != "oc_chat" || reply.Message != "hello back" {
+		t.Fatalf("unexpected outbound reply %+v", reply)
+	}
+	if reply.IdempotencyKey != "1:committed" {
+		t.Fatalf("expected session update idempotency key, got %q", reply.IdempotencyKey)
+	}
+	if len(adapter.sentMessages) != 0 {
+		t.Fatalf("expected server adapter not to send client-owned reply, got %+v", adapter.sentMessages)
 	}
 }
 

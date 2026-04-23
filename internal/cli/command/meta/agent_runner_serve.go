@@ -17,7 +17,8 @@ import (
 )
 
 type runnerServeHTTPClient struct {
-	client *httpclient.Client
+	client        *httpclient.Client
+	replyDelivery string
 }
 
 func (c *runnerServeHTTPClient) Register(ctx context.Context, name string, platform string, agent string) (*agentcontrolapp.RunnerRegistration, error) {
@@ -214,7 +215,7 @@ func (c *runnerServeHTTPClient) NextTask(ctx context.Context, runnerID string) (
 	}, nil
 }
 
-func (c *runnerServeHTTPClient) UpdateSession(ctx context.Context, runnerID string, sessionID string, status string, finalMessage *string, executorRef *string, _ string) error {
+func (c *runnerServeHTTPClient) UpdateSession(ctx context.Context, runnerID string, sessionID string, status string, finalMessage *string, executorRef *string, _ string) (*agentcontrolapp.RunnerSessionClientUpdateResult, error) {
 	payload := map[string]any{
 		"status": strings.TrimSpace(status),
 	}
@@ -224,8 +225,42 @@ func (c *runnerServeHTTPClient) UpdateSession(ctx context.Context, runnerID stri
 	if executorRef != nil && strings.TrimSpace(*executorRef) != "" {
 		payload["executor_ref"] = strings.TrimSpace(*executorRef)
 	}
-	_, err := c.client.PostJSON(ctx, api.AgentRunnerSessionPath(runnerID, sessionID), payload)
-	return err
+	if strings.TrimSpace(c.replyDelivery) != "" {
+		payload["reply_delivery"] = strings.TrimSpace(c.replyDelivery)
+	}
+	resp, err := c.client.PostJSON(ctx, api.AgentRunnerSessionPath(runnerID, sessionID), payload)
+	if err != nil {
+		return nil, err
+	}
+	var envelope struct {
+		Data struct {
+			OutboundReply *struct {
+				Platform       string `json:"platform"`
+				BotID          string `json:"bot_id"`
+				ChannelID      string `json:"channel_id"`
+				SenderID       string `json:"sender_id"`
+				Message        string `json:"message"`
+				IdempotencyKey string `json:"idempotency_key"`
+			} `json:"outbound_reply"`
+		} `json:"data"`
+	}
+	if len(resp.Body) > 0 {
+		if err := json.Unmarshal(resp.Body, &envelope); err != nil {
+			return nil, fmt.Errorf("decode session update response: %w", err)
+		}
+	}
+	result := &agentcontrolapp.RunnerSessionClientUpdateResult{}
+	if envelope.Data.OutboundReply != nil {
+		result.OutboundReply = &agentcontrolapp.OutboundIMReply{
+			Platform:       strings.TrimSpace(envelope.Data.OutboundReply.Platform),
+			BotID:          strings.TrimSpace(envelope.Data.OutboundReply.BotID),
+			ChannelID:      strings.TrimSpace(envelope.Data.OutboundReply.ChannelID),
+			SenderID:       strings.TrimSpace(envelope.Data.OutboundReply.SenderID),
+			Message:        strings.TrimSpace(envelope.Data.OutboundReply.Message),
+			IdempotencyKey: strings.TrimSpace(envelope.Data.OutboundReply.IdempotencyKey),
+		}
+	}
+	return result, nil
 }
 
 func (c *runnerServeHTTPClient) UpdateTask(ctx context.Context, runnerID string, taskID string, status string, errorMessage *string, _ string) error {

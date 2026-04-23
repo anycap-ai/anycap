@@ -13,50 +13,83 @@ type conversationEventPublisher interface {
 	Publish(ctx context.Context, session model.AgentSession, event *model.AgentConversationEvent) error
 }
 
-type imConversationEventPublisher struct {
+type conversationEventReply struct {
+	Binding model.IMBinding
+	Message string
+}
+
+type conversationReplyBuilder struct {
 	bindings      port.IMBindingRepository
 	conversations port.AgentConversationRepository
-	adapter       webhookAdapter
+}
+
+type imConversationEventPublisher struct {
+	builder *conversationReplyBuilder
+	adapter webhookAdapter
 }
 
 func newConversationEventPublisher(bindings port.IMBindingRepository, conversations port.AgentConversationRepository, adapter webhookAdapter) conversationEventPublisher {
-	if bindings == nil || conversations == nil || adapter == nil {
+	builder := newConversationReplyBuilder(bindings, conversations)
+	if builder == nil || adapter == nil {
 		return nil
 	}
 	return &imConversationEventPublisher{
-		bindings:      bindings,
-		conversations: conversations,
-		adapter:       adapter,
+		builder: builder,
+		adapter: adapter,
 	}
 }
 
 func (p *imConversationEventPublisher) Publish(ctx context.Context, session model.AgentSession, event *model.AgentConversationEvent) error {
-	if p == nil || p.bindings == nil || p.conversations == nil || p.adapter == nil || event == nil {
+	if p == nil || p.builder == nil || p.adapter == nil {
 		return nil
+	}
+	reply, err := p.builder.Build(ctx, session, event)
+	if err != nil || reply == nil {
+		return err
+	}
+	return p.adapter.SendMessage(ctx, reply.Binding, reply.Message)
+}
+
+func newConversationReplyBuilder(bindings port.IMBindingRepository, conversations port.AgentConversationRepository) *conversationReplyBuilder {
+	if bindings == nil || conversations == nil {
+		return nil
+	}
+	return &conversationReplyBuilder{
+		bindings:      bindings,
+		conversations: conversations,
+	}
+}
+
+func (b *conversationReplyBuilder) Build(ctx context.Context, session model.AgentSession, event *model.AgentConversationEvent) (*conversationEventReply, error) {
+	if b == nil || b.bindings == nil || b.conversations == nil || event == nil {
+		return nil, nil
 	}
 	if session.Status != model.AgentSessionStatusCommitted &&
 		session.Status != model.AgentSessionStatusFailed &&
 		session.Status != model.AgentSessionStatusInterrupted {
-		return nil
+		return nil, nil
 	}
 
-	conversation, err := p.conversations.GetConversationByID(ctx, session.ConversationID)
+	conversation, err := b.conversations.GetConversationByID(ctx, session.ConversationID)
 	if err != nil || conversation == nil || conversation.ID <= 0 {
-		return err
+		return nil, err
 	}
-	binding, err := p.resolveReplyBinding(ctx, *conversation)
+	binding, err := b.resolveReplyBinding(ctx, *conversation)
 	if err != nil || binding == nil {
-		return err
+		return nil, err
 	}
 	message := buildConversationEventMessage(session, event)
 	if strings.TrimSpace(message) == "" {
-		return nil
+		return nil, nil
 	}
-	return p.adapter.SendMessage(ctx, *binding, message)
+	return &conversationEventReply{
+		Binding: *binding,
+		Message: strings.TrimSpace(message),
+	}, nil
 }
 
-func (p *imConversationEventPublisher) resolveReplyBinding(ctx context.Context, conversation model.AgentConversation) (*model.IMBinding, error) {
-	items, err := p.bindings.ListBindingsByUser(ctx, conversation.UserID)
+func (b *conversationReplyBuilder) resolveReplyBinding(ctx context.Context, conversation model.AgentConversation) (*model.IMBinding, error) {
+	items, err := b.bindings.ListBindingsByUser(ctx, conversation.UserID)
 	if err != nil {
 		return nil, err
 	}

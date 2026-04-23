@@ -37,9 +37,19 @@ type RunnerTaskUpdateRequest struct {
 }
 
 type RunnerSessionUpdateRequest struct {
-	Status       string `json:"status"`
-	FinalMessage string `json:"final_message,omitempty"`
-	ExecutorRef  string `json:"executor_ref,omitempty"`
+	Status        string `json:"status"`
+	FinalMessage  string `json:"final_message,omitempty"`
+	ExecutorRef   string `json:"executor_ref,omitempty"`
+	ReplyDelivery string `json:"reply_delivery,omitempty"`
+}
+
+type OutboundIMReplyResponse struct {
+	Platform       string `json:"platform"`
+	BotID          string `json:"bot_id"`
+	ChannelID      string `json:"channel_id"`
+	SenderID       string `json:"sender_id,omitempty"`
+	Message        string `json:"message"`
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
 }
 
 type ConversationControlRequest struct {

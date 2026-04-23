@@ -51,6 +51,19 @@ type RunnerSessionExecutionResult struct {
 	ExecutorRef  *string
 }
 
+type OutboundIMReply struct {
+	Platform       string
+	BotID          string
+	ChannelID      string
+	SenderID       string
+	Message        string
+	IdempotencyKey string
+}
+
+type RunnerSessionClientUpdateResult struct {
+	OutboundReply *OutboundIMReply
+}
+
 type RunnerLoopSummary struct {
 	RunnerID       string
 	TasksProcessed int
@@ -63,7 +76,7 @@ type RunnerLoopClient interface {
 	Heartbeat(ctx context.Context, runnerID string, state string) error
 	NextSession(ctx context.Context, runnerID string) (*RunnerSession, error)
 	GetSession(ctx context.Context, runnerID string, sessionID string) (*RunnerSession, error)
-	UpdateSession(ctx context.Context, runnerID string, sessionID string, status string, finalMessage *string, executorRef *string, idempotencyKey string) error
+	UpdateSession(ctx context.Context, runnerID string, sessionID string, status string, finalMessage *string, executorRef *string, idempotencyKey string) (*RunnerSessionClientUpdateResult, error)
 	NextTask(ctx context.Context, runnerID string) (*RunnerTask, error)
 	UpdateTask(ctx context.Context, runnerID string, taskID string, status string, errorMessage *string, idempotencyKey string) error
 }
@@ -84,6 +97,7 @@ type RunnerLoop struct {
 	pollInterval         time.Duration
 	sessionWatchInterval time.Duration
 	sleep                func(context.Context, time.Duration) error
+	outboundReplyHandler func(context.Context, OutboundIMReply) error
 }
 
 type RunnerLoopOption func(*RunnerLoop)
@@ -164,6 +178,12 @@ func WithLoopSleep(fn func(context.Context, time.Duration) error) RunnerLoopOpti
 		if fn != nil {
 			l.sleep = fn
 		}
+	}
+}
+
+func WithLoopOutboundReplyHandler(fn func(context.Context, OutboundIMReply) error) RunnerLoopOption {
+	return func(l *RunnerLoop) {
+		l.outboundReplyHandler = fn
 	}
 }
 
@@ -251,7 +271,7 @@ func (l *RunnerLoop) processSession(ctx context.Context, session RunnerSession) 
 	if err := l.client.Heartbeat(ctx, l.runnerID, model.AgentRunnerStateBusy); err != nil {
 		return false, false, err
 	}
-	if err := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusRunning, nil, nil, session.ID+":running"); err != nil {
+	if _, err := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusRunning, nil, nil, session.ID+":running"); err != nil {
 		return true, false, err
 	}
 	execCtx, cancel := context.WithCancel(ctx)
@@ -280,8 +300,12 @@ func (l *RunnerLoop) processSession(ctx context.Context, session RunnerSession) 
 		if msg == "" {
 			msg = "session execution failed"
 		}
-		if updateErr := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusFailed, &msg, nil, session.ID+":failed"); updateErr != nil {
+		updateResult, updateErr := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusFailed, &msg, nil, session.ID+":failed")
+		if updateErr != nil {
 			return true, false, fmt.Errorf("update failed session status: %w", updateErr)
+		}
+		if replyErr := l.handleOutboundReply(ctx, updateResult); replyErr != nil {
+			return true, false, fmt.Errorf("handle failed session outbound reply: %w", replyErr)
 		}
 		_ = l.client.Heartbeat(ctx, l.runnerID, model.AgentRunnerStateIdle)
 		return true, false, nil
@@ -292,13 +316,27 @@ func (l *RunnerLoop) processSession(ctx context.Context, session RunnerSession) 
 		finalMessage = execResult.FinalMessage
 		executorRef = execResult.ExecutorRef
 	}
-	if err := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusCommitted, finalMessage, executorRef, session.ID+":committed"); err != nil {
+	updateResult, err := l.client.UpdateSession(ctx, l.runnerID, session.ID, model.AgentSessionStatusCommitted, finalMessage, executorRef, session.ID+":committed")
+	if err != nil {
+		return true, false, err
+	}
+	if err := l.handleOutboundReply(ctx, updateResult); err != nil {
 		return true, false, err
 	}
 	if err := l.client.Heartbeat(ctx, l.runnerID, model.AgentRunnerStateIdle); err != nil {
 		return true, true, err
 	}
 	return true, true, nil
+}
+
+func (l *RunnerLoop) handleOutboundReply(ctx context.Context, result *RunnerSessionClientUpdateResult) error {
+	if l == nil || l.outboundReplyHandler == nil || result == nil || result.OutboundReply == nil {
+		return nil
+	}
+	if strings.TrimSpace(result.OutboundReply.Message) == "" {
+		return nil
+	}
+	return l.outboundReplyHandler(ctx, *result.OutboundReply)
 }
 
 func (l *RunnerLoop) watchSessionInterruption(ctx context.Context, session RunnerSession, cancel context.CancelFunc, interrupted chan<- struct{}, done <-chan struct{}) {
