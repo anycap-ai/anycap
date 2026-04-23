@@ -2,7 +2,7 @@
 name: anycap-blog-production
 description: "Turn user-provided data, notes, research, product facts, or structured inputs into AnyCap-style blog posts and then enrich those posts with first-party evidence blocks when needed. Use when a user wants a blog, article, tutorial, learn page, or SEO content draft written in the tone of the AnyCap website. Best fit when the input is data-first rather than prose-first: spreadsheets, JSON, bullets, notes, source URLs, benchmarks, product facts, or rough research. Trigger on: write blog from data, turn notes into article, blog drafting, article production, learn page drafting, SEO article in AnyCap tone, or requests to convert structured inputs into publish-ready content."
 metadata:
-  version: 0.3.4
+  version: 0.3.5
   website: https://anycap.ai
   compatibility: Requires anycap CLI binary and internet access. Best for AnyCap website content, especially blog, learn, guide, glossary, and landing-page style articles authored from structured inputs.
 license: MIT
