@@ -2,7 +2,7 @@
 name: anycap-deepresearch
 description: "Guide for conducting thorough, multi-source research and producing comprehensive, well-sourced reports. Powered by AnyCap -- the capability runtime that equips AI agents with web search (including AI Grounded citations), web crawl, image generation, cloud storage, and one-click web publishing through a single CLI. Use when the user asks for deep research, competitive analysis, market research, technical deep dive, literature review, technology comparison, or any task requiring multi-source information gathering and synthesis. Also use when users say \"investigate\", \"survey the landscape\", \"compare X vs Y\", \"state of the art\", \"write a report on\", \"look into\", \"find out about\", \"analyze the market\", or any inquiry that needs more than a single search. Trigger on mentions of research, analysis, investigation, comparison, report, survey, or deep dive."
 metadata:
-  version: 0.3.5
+  version: 0.3.6
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI (authenticated). Works with any agent that supports shell commands.

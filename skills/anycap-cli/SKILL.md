@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.3.5
+  version: 0.3.6
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -319,7 +319,7 @@ Main notes:
 
 - `anycap connect stop feishu` stops the local background connection for Feishu.
 - If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
-- The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
+- The local daemon now owns the Feishu long connection and sends final agent replies through the same personal bot. The server still stores conversation/session/mailbox state, but it does not need the user's Feishu App ID/App Secret for the normal `connect feishu` path.
 - Feishu-triggered local executor sessions include an `anycap-local-session` context block. With Codex, if the human asks to continue/resume the local Codex session from Feishu, AnyCap scans local Codex session metadata, picks the most recent non-`exec` session for the daemon workspace, resumes it by explicit session id, and persists that thread as `executor_ref` for later Feishu turns. When the human asks how to open/view/recover the conversation on their Mac, reply with the precise local command using the current `executor_ref` or, if provided, `local_resume_ref`, for example `cd "/path/to/repo" && codex resume <id>`. Do not suggest `codex resume --last` unless no exact `executor_ref` or `local_resume_ref` is available.
 - Default Codex mode for Feishu is safe, which maps to Codex `--full-auto`.
 - If the human needs MCP/plugin access, such as Computer Use, Figma, Canva, or custom MCP servers, ask whether to start with `--codex-exec-mode danger-full-access`, and only use it when they explicitly choose it.

@@ -325,6 +325,7 @@ This command will:
 - registers a local runner
 - claims it as the current user's primary Feishu runner
 - starts the local Feishu long connection for the user's personal bot when App ID/App Secret are provided
+- sends final agent replies from the local daemon through that same personal bot while the server stores session state
 - starts the normal polling loop for sessions/tasks
 - uses Codex safe mode by default, which maps to Codex `--full-auto`; if the human explicitly chooses broader access for MCP/plugin tools such as Computer Use, Figma, Canva, or custom MCP servers, pass `--codex-exec-mode danger-full-access`
 - uses Claude Code `claude -p --output-format json` when `--agent claude-code`, and persists Claude Code `session_id` for follow-up turns; use `--claude-permission-mode bypassPermissions --claude-allowed-tools Read,Edit,Bash` when AnyCap CLI calls or public/internal network access should run from inside Claude Code
