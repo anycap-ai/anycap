@@ -8,6 +8,7 @@
 # Go
 dist/
 /bin/
+.cache/
 .gocache/
 .gomodcache/
 
