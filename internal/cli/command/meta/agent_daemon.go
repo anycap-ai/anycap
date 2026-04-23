@@ -711,6 +711,7 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 	}()
 
 	var botErrCh <-chan error
+	var localFeishuAdapter *im.FeishuAdapter
 	trimmedFeishuAppID := strings.TrimSpace(feishuAppID)
 	trimmedFeishuSecret := strings.TrimSpace(feishuSecret)
 	if strings.EqualFold(trimmedPlatform, "feishu") && (trimmedFeishuAppID != "" || trimmedFeishuSecret != "") {
@@ -722,6 +723,8 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 			AppSecret:  trimmedFeishuSecret,
 			HTTPClient: &http.Client{Timeout: 10 * time.Second},
 		})
+		localFeishuAdapter = adapter
+		httpClient.replyDelivery = "client"
 		bot := buildDaemonIMBot(im.FeishuLongConnBotConfig{
 			AppID:           trimmedFeishuAppID,
 			AppSecret:       trimmedFeishuSecret,
@@ -743,15 +746,32 @@ func runDaemonForeground(cmd *cobra.Command, clientFactory func() *httpclient.Cl
 		}()
 	}
 
-	loop := agentcontrolapp.NewRunnerLoop(
-		httpClient,
-		executor,
+	loopOpts := []agentcontrolapp.RunnerLoopOption{
 		agentcontrolapp.WithLoopRunnerID(reg.ID),
 		agentcontrolapp.WithLoopRunnerName(strings.TrimSpace(reg.Name)),
 		agentcontrolapp.WithLoopRunnerPlatform(strings.TrimSpace(reg.Platform)),
 		agentcontrolapp.WithLoopRunnerAgent(executorName),
 		agentcontrolapp.WithLoopOnce(once),
 		agentcontrolapp.WithLoopPollInterval(pollEvery),
+	}
+	if localFeishuAdapter != nil {
+		loopOpts = append(loopOpts, agentcontrolapp.WithLoopOutboundReplyHandler(func(ctx context.Context, reply agentcontrolapp.OutboundIMReply) error {
+			if !strings.EqualFold(reply.Platform, model.IMPlatformFeishu) {
+				return nil
+			}
+			return localFeishuAdapter.SendMessage(ctx, model.IMBinding{
+				Platform:  model.IMPlatformFeishu,
+				BotID:     strings.TrimSpace(reply.BotID),
+				ChannelID: strings.TrimSpace(reply.ChannelID),
+				SenderID:  strings.TrimSpace(reply.SenderID),
+				Status:    model.IMBindingStatusActive,
+			}, reply.Message)
+		}))
+	}
+	loop := agentcontrolapp.NewRunnerLoop(
+		httpClient,
+		executor,
+		loopOpts...,
 	)
 	summary, err := loop.Run(daemonCtx)
 	cancel()

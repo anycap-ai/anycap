@@ -60,6 +60,50 @@ func TestRunnerServeHTTPClientInboundIMChat(t *testing.T) {
 	}
 }
 
+func TestRunnerServeHTTPClientUpdateSessionRequestsClientOwnedReply(t *testing.T) {
+	var gotBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/agent/runners/run_123/sessions/ags_123" || r.Method != http.MethodPost {
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+		if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+			t.Fatalf("json.Decode() error = %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"success","data":{"id":"ags_123","status":"committed","outbound_reply":{"platform":"feishu","bot_id":"cli_personal_bot","channel_id":"oc_chat","sender_id":"ou_owner","message":"hello back","idempotency_key":"ags_123:committed"}}}`))
+	}))
+	defer server.Close()
+
+	client := &runnerServeHTTPClient{
+		client:        httpclient.New(server.URL, httpclient.WithCredential(cliconfig.NewAPIKeyCredential("sk-agent-test"))),
+		replyDelivery: "client",
+	}
+	finalMessage := "hello back"
+	executorRef := "codex-exec"
+	result, err := client.UpdateSession(context.Background(), "run_123", "ags_123", "committed", &finalMessage, &executorRef, "ags_123:committed")
+	if err != nil {
+		t.Fatalf("UpdateSession() error = %v", err)
+	}
+	if gotBody["status"] != "committed" {
+		t.Fatalf("expected status committed, got %v", gotBody["status"])
+	}
+	if gotBody["final_message"] != "hello back" {
+		t.Fatalf("expected final message, got %v", gotBody["final_message"])
+	}
+	if gotBody["executor_ref"] != "codex-exec" {
+		t.Fatalf("expected executor ref, got %v", gotBody["executor_ref"])
+	}
+	if gotBody["reply_delivery"] != "client" {
+		t.Fatalf("expected client reply delivery, got %v", gotBody["reply_delivery"])
+	}
+	if result == nil || result.OutboundReply == nil {
+		t.Fatalf("expected outbound reply result, got %+v", result)
+	}
+	if result.OutboundReply.Message != "hello back" || result.OutboundReply.ChannelID != "oc_chat" {
+		t.Fatalf("unexpected outbound reply %+v", result.OutboundReply)
+	}
+}
+
 func TestAgentRunnerServeDefaultsCodexExecModeToSafe(t *testing.T) {
 	cmd := newAgentRunnerServeCmd(func() *httpclient.Client { return nil }, nil)
 	got, err := cmd.Flags().GetString("codex-exec-mode")

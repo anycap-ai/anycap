@@ -29,12 +29,19 @@ type RunnerHandler struct {
 	conversationService *agentcontrolapp.ConversationService
 	adapter             webhookAdapter
 	eventPublisher      conversationEventPublisher
+	replyBuilder        *conversationReplyBuilder
 	resolver            idresolver.IDResolver
 	mapper              presenter.IDMapper
 	now                 func() time.Time
 }
 
+type runnerSessionUpdateResponse struct {
+	presenter.AgentConversationSessionDTO
+	OutboundReply *dto.OutboundIMReplyResponse `json:"outbound_reply,omitempty"`
+}
+
 func NewRunnerHandler(bindings port.IMBindingRepository, runners port.AgentRunnerRepository, conversations port.AgentConversationRepository, taskService *agentcontrolapp.TaskService, conversationService *agentcontrolapp.ConversationService, adapter webhookAdapter, resolver idresolver.IDResolver, mapper presenter.IDMapper) *RunnerHandler {
+	replyBuilder := newConversationReplyBuilder(bindings, conversations)
 	return &RunnerHandler{
 		bindings:            bindings,
 		runners:             runners,
@@ -43,6 +50,7 @@ func NewRunnerHandler(bindings port.IMBindingRepository, runners port.AgentRunne
 		conversationService: conversationService,
 		adapter:             adapter,
 		eventPublisher:      newConversationEventPublisher(bindings, conversations, adapter),
+		replyBuilder:        replyBuilder,
 		resolver:            resolver,
 		mapper:              mapper,
 		now: func() time.Time {
@@ -486,6 +494,11 @@ func (h *RunnerHandler) UpdateSession(c context.Context, ctx *app.RequestContext
 		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_request_body", "invalid json request body")
 		return
 	}
+	replyDelivery := strings.ToLower(strings.TrimSpace(req.ReplyDelivery))
+	if replyDelivery != "" && replyDelivery != "server" && replyDelivery != "client" {
+		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_reply_delivery", "reply_delivery must be empty, server, or client")
+		return
+	}
 	var finalMessage *string
 	if strings.TrimSpace(req.FinalMessage) != "" {
 		value := strings.TrimSpace(req.FinalMessage)
@@ -514,8 +527,16 @@ func (h *RunnerHandler) UpdateSession(c context.Context, ctx *app.RequestContext
 		handlers.WriteError(c, ctx, consts.StatusInternalServerError, "present_agent_session_failed", err.Error())
 		return
 	}
-	_ = h.publishSessionEvent(c, *session, result.Event)
-	ctx.JSON(consts.StatusOK, dto.SuccessEnvelope(trace.GetTraceID(c), out))
+	var outboundReply *dto.OutboundIMReplyResponse
+	if replyDelivery == "client" {
+		outboundReply = h.buildOutboundSessionReply(c, *session, result.Event, string(ctx.Param("session_id"))+":"+strings.TrimSpace(session.Status))
+	} else {
+		_ = h.publishSessionEvent(c, *session, result.Event)
+	}
+	ctx.JSON(consts.StatusOK, dto.SuccessEnvelope(trace.GetTraceID(c), runnerSessionUpdateResponse{
+		AgentConversationSessionDTO: out,
+		OutboundReply:               outboundReply,
+	}))
 }
 
 func (h *RunnerHandler) NextSession(c context.Context, ctx *app.RequestContext) {
@@ -592,6 +613,24 @@ func (h *RunnerHandler) publishSessionEvent(ctx context.Context, session model.A
 		return nil
 	}
 	return h.eventPublisher.Publish(ctx, session, event)
+}
+
+func (h *RunnerHandler) buildOutboundSessionReply(ctx context.Context, session model.AgentSession, event *model.AgentConversationEvent, idempotencyKey string) *dto.OutboundIMReplyResponse {
+	if h == nil || h.replyBuilder == nil {
+		return nil
+	}
+	reply, err := h.replyBuilder.Build(ctx, session, event)
+	if err != nil || reply == nil {
+		return nil
+	}
+	return &dto.OutboundIMReplyResponse{
+		Platform:       strings.TrimSpace(reply.Binding.Platform),
+		BotID:          strings.TrimSpace(reply.Binding.BotID),
+		ChannelID:      strings.TrimSpace(reply.Binding.ChannelID),
+		SenderID:       strings.TrimSpace(reply.Binding.SenderID),
+		Message:        strings.TrimSpace(reply.Message),
+		IdempotencyKey: strings.TrimSpace(idempotencyKey),
+	}
 }
 
 func buildSessionReplyMessage(session model.AgentSession) string {

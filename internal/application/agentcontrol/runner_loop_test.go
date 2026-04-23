@@ -18,6 +18,7 @@ type fakeRunnerLoopClient struct {
 	heartbeats     []string
 	registerAgents []string
 	sessionUpdates []runnerSessionUpdateCall
+	sessionResults []RunnerSessionClientUpdateResult
 	updates        []runnerTaskUpdateCall
 }
 
@@ -84,7 +85,7 @@ func (c *fakeRunnerLoopClient) GetSession(_ context.Context, _ string, sessionID
 	return current, nil
 }
 
-func (c *fakeRunnerLoopClient) UpdateSession(_ context.Context, _ string, sessionID string, status string, finalMessage *string, executorRef *string, idempotencyKey string) error {
+func (c *fakeRunnerLoopClient) UpdateSession(_ context.Context, _ string, sessionID string, status string, finalMessage *string, executorRef *string, idempotencyKey string) (*RunnerSessionClientUpdateResult, error) {
 	c.sessionUpdates = append(c.sessionUpdates, runnerSessionUpdateCall{
 		sessionID:      sessionID,
 		status:         status,
@@ -92,7 +93,12 @@ func (c *fakeRunnerLoopClient) UpdateSession(_ context.Context, _ string, sessio
 		executorRef:    executorRef,
 		idempotencyKey: idempotencyKey,
 	})
-	return nil
+	if len(c.sessionResults) == 0 {
+		return nil, nil
+	}
+	result := c.sessionResults[0]
+	c.sessionResults = c.sessionResults[1:]
+	return &result, nil
 }
 
 func (c *fakeRunnerLoopClient) UpdateTask(_ context.Context, _ string, taskID string, status string, errorMessage *string, idempotencyKey string) error {
@@ -178,6 +184,57 @@ func TestRunnerLoopRunOnceProcessesSessionBeforeTask(t *testing.T) {
 	}
 	if len(client.updates) != 0 {
 		t.Fatalf("expected no task updates, got %+v", client.updates)
+	}
+}
+
+func TestRunnerLoopRunOnceHandlesOutboundReply(t *testing.T) {
+	client := &fakeRunnerLoopClient{
+		registerResp: &RunnerRegistration{ID: "run_123", Name: "mac-mini", Platform: "feishu"},
+		nextSessions: []*RunnerSession{
+			{ID: "ags_123", RunnerID: "run_123", ConversationID: "agc_123", UserMessage: ptrLoopString("请回复 hello")},
+		},
+		sessionResults: []RunnerSessionClientUpdateResult{
+			{},
+			{
+				OutboundReply: &OutboundIMReply{
+					Platform:       model.IMPlatformFeishu,
+					BotID:          "cli_personal_bot",
+					ChannelID:      "oc_chat",
+					SenderID:       "ou_owner",
+					Message:        "hello back",
+					IdempotencyKey: "ags_123:committed",
+				},
+			},
+		},
+	}
+	handled := make([]OutboundIMReply, 0, 1)
+	loop := NewRunnerLoop(client, &fakeRunnerExecutor{
+		sessionResult: RunnerSessionExecutionResult{
+			FinalMessage: ptrLoopString("hello back"),
+		},
+	},
+		WithLoopRunnerName("mac-mini"),
+		WithLoopRunnerPlatform("feishu"),
+		WithLoopRunnerAgent("codex"),
+		WithLoopOnce(true),
+		WithLoopOutboundReplyHandler(func(_ context.Context, reply OutboundIMReply) error {
+			handled = append(handled, reply)
+			return nil
+		}),
+	)
+
+	summary, err := loop.Run(context.Background())
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if summary.TasksProcessed != 1 || summary.TasksSucceeded != 1 {
+		t.Fatalf("unexpected summary %+v", summary)
+	}
+	if len(handled) != 1 {
+		t.Fatalf("expected one outbound reply to be handled, got %+v", handled)
+	}
+	if handled[0].Message != "hello back" || handled[0].ChannelID != "oc_chat" {
+		t.Fatalf("unexpected handled reply %+v", handled[0])
 	}
 }
 
