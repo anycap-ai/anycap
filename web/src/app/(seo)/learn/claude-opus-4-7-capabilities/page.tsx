@@ -585,10 +585,191 @@ const deContent: PageContent = {
   }),
 };
 
+const idContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Pelajari", href: "/learn", unlinkable: true },
+    { name: "Capability Claude Opus 4.7" },
+  ],
+  eyebrow: "Pelajari x Claude Opus 4.7",
+  lastUpdatedLabel: "Diperbarui 17 April 2026",
+  heroTitle: [
+    "Capability Claude Opus 4.7,",
+    "dan satu kombinasi yang bikin gila.",
+  ],
+  heroIntro:
+    "Claude Opus 4.7 adalah agent reasoning dan coding terkuat yang Anthropic pernah ship. Dia plan lebih jauh, nulis lebih panjang, dan pakai tool lebih reliable dari semua model Claude sebelumnya. Dia tetap tidak generate image, render video, atau analisis rekaman sendirian. Pasangkan Opus 4.7 dengan AnyCap dan permukaan agent yang sama menjangkau Seedream 5, Nano Banana Pro, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, image understanding, dan video analysis — lewat satu CLI, satu login, dan tanpa glue code. Ini adalah peta capability Opus 4.7 sendirian, dan upgrade realistis sekali AnyCap ditambah.",
+  pillarSections: [
+    {
+      label: "Pilar 1",
+      title: "Reasoning, planning, dan coding — kekuatan native Opus 4.7",
+      body:
+        "Opus 4.7 dibangun untuk run agentic panjang. Dia pegang plan lewat banyak tool call, recover dari aksi yang gagal, dan menghasilkan kode yang cocok dengan codebase yang ada — bukan snippet generik. Di Claude Code on Opus 4.7, ini terlihat sebagai refactor multi-step yang lebih panjang, lebih sedikit tool call buntu, dan judgment lebih kuat saat memilih file mana yang disentuh.",
+      bullets: [
+        "Refactor multi-step dan migrasi lintas file tanpa kehilangan plan.",
+        "Loop perbaikan test yang pegang konteks kegagalan antar iterasi.",
+        "Edit yang sadar codebase, menghormati pola yang ada bukan menciptakan baru.",
+        "Tool use yang recover saat shell command atau test run gagal.",
+      ],
+    },
+    {
+      label: "Pilar 2",
+      title: "Vision dan reasoning dokumen — kuat, tapi read-only",
+      body:
+        "Opus 4.7 bisa interpretasi screenshot, diagram, dan gambar dokumen yang kamu kasih. Dia tidak bisa bikin visual baru, video, atau audio. Begitu workflow butuh mockup yang di-generate, teaser launch, walkthrough produk, atau iterasi clip dari referensi yang ada, Opus 4.7 sendirian kehabisan ruang.",
+      bullets: [
+        "Membaca screenshot untuk bug UI, dashboard, dan QA design.",
+        "Interpretasi dokumen dan diagram untuk review spec dan design handoff.",
+        "Tanpa generation native untuk image, video, atau audio.",
+        "Tanpa analisis native untuk rekaman atau screen capture.",
+      ],
+    },
+    {
+      label: "Pilar 3",
+      title: "Capability gap yang AnyCap tutup",
+      body:
+        "AnyCap adalah AI agent capability runtime. Dia plug ke Claude Code on Opus 4.7 lewat satu skill file dan satu CLI. Setelah install, Opus 4.7 bisa panggil image generation, video generation, image understanding, dan video analysis seakan-akan native tools. Kombinasi ini benar-benar gila: agent Claude terkuat yang pernah ship, plus media production-grade, tanpa SDK kedua, tanpa login kedua, dan tanpa permukaan agent tambahan.",
+      bullets: [
+        "Image generation lewat Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.",
+        "Video generation lewat Veo 3.1, Seedance 1.5 Pro, Kling 3.0.",
+        "Image understanding untuk screenshot, referensi, dan QA visual.",
+        "Video analysis untuk rekaman bug, review demo, dan QA walkthrough.",
+      ],
+    },
+  ],
+  capabilityTableTitle: "Opus 4.7 sendiri vs. Opus 4.7 + AnyCap",
+  capabilityTableNote:
+    "Pandangan berdampingan: apa yang Opus 4.7 ship secara native versus apa yang agent yang sama bisa lakukan setelah AnyCap di-install.",
+  capabilityRows: [
+    {
+      capability: "Reasoning kode jangka panjang",
+      opus47: "Kuat — plan multi-file, refactor, dan perbaikan test.",
+      opus47AnyCap: "Sama. AnyCap tidak mengubah loop coding.",
+    },
+    {
+      capability: "Image generation",
+      opus47: "Tidak tersedia secara native.",
+      opus47AnyCap: "Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.",
+    },
+    {
+      capability: "Video generation",
+      opus47: "Tidak tersedia secara native.",
+      opus47AnyCap: "Veo 3.1, Seedance 1.5 Pro, Kling 3.0.",
+    },
+    {
+      capability: "Image understanding",
+      opus47: "Kuat untuk input yang kamu kasih langsung.",
+      opus47AnyCap: "Sama, ditambah command agent-callable untuk batch dan pipeline.",
+    },
+    {
+      capability: "Video analysis",
+      opus47: "Tidak tersedia secara native.",
+      opus47AnyCap: "Video analysis agent-callable untuk rekaman dan walkthrough.",
+    },
+    {
+      capability: "Setup overhead",
+      opus47: "Satu permukaan agent (Claude Code).",
+      opus47AnyCap: "Permukaan agent yang sama. Satu install skill, satu login CLI.",
+    },
+  ],
+  workflowTitle: "Seperti apa workflow Opus 4.7 + AnyCap sebenarnya",
+  workflowSteps: [
+    {
+      title: "1. Install sekali",
+      body:
+        "Jalankan install skill dan login CLI AnyCap di sesi terminal yang sama yang sudah dipakai Claude Code. Tidak ada agent baru. Tidak ada dashboard baru. Tidak ada flow auth kedua.",
+    },
+    {
+      title: "2. Tanya Opus 4.7 seperti biasa",
+      body:
+        "Ngobrol dengan Claude Code seperti biasanya. \"Generate visual launch untuk halaman produk ini\" atau \"render walkthrough 6 detik dari mockup ini\" — Opus 4.7 pilih model yang tepat dan jalankan command AnyCap yang tepat.",
+    },
+    {
+      title: "3. Iterasi di loop yang sama",
+      body:
+        "Output kembali ke percakapan. Opus 4.7 bisa reasoning soal hasilnya, perhalus prompt, ganti model, atau chain ke image-to-video. Loop penuh tetap di satu sesi terminal.",
+    },
+    {
+      title: "4. Ship dari agent yang sama",
+      body:
+        "Saat aset siap, Claude Code on Opus 4.7 bisa nulis file, update halaman, commit perubahan, dan lanjut — tanpa pindah konteks dari agent yang menghasilkan kerjaan itu.",
+    },
+  ],
+  ctaTitle: "Langkah berikutnya yang paling tepat",
+  ctaCards: [
+    {
+      title: "Hub Claude Code di Opus 4.7",
+      href: "/for/claude-code",
+      body: "Landing utama untuk kombinasi Opus 4.7 + AnyCap dan install path-nya.",
+    },
+    {
+      title: "Image generation Claude Code",
+      href: "/for/claude-code/image-generation",
+      body: "Tambah Seedream 5 dan Nano Banana Pro ke Opus 4.7 lewat satu CLI.",
+    },
+    {
+      title: "Video generation Claude Code",
+      href: "/for/claude-code/video-generation",
+      body: "Tambah Veo 3.1, Seedance, dan Kling ke Opus 4.7 lewat satu CLI.",
+    },
+    {
+      title: "Tambah tools ke Claude Code",
+      href: "/guides/add-tools-to-claude-code",
+      body: "Setup step-by-step untuk Opus 4.7 + AnyCap, end to end.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apa yang Claude Opus 4.7 paling jago?",
+      answer:
+        "Reasoning jangka panjang dan coding di dalam Claude Code. Refactor multi-file, loop test, dan tool use yang recover dari kegagalan adalah area di mana Opus 4.7 paling menonjol.",
+    },
+    {
+      question: "Apakah Claude Opus 4.7 bisa generate image atau video sendiri?",
+      answer:
+        "Tidak. Opus 4.7 bisa interpretasi image yang kamu kasih, tapi tidak generate image, video, atau audio secara native. AnyCap menambahkan capability itu lewat satu CLI.",
+    },
+    {
+      question: "Kenapa pasangkan Opus 4.7 dengan AnyCap, bukan API terpisah?",
+      answer:
+        "Karena sesi Claude Code yang sama bisa menjangkau image generation, video generation, image understanding, dan video analysis lewat satu runtime — tanpa SDK ekstra, tanpa login kedua, tanpa agent terpisah.",
+    },
+    {
+      question: "Model mana yang AnyCap expose ke Opus 4.7?",
+      answer:
+        "Image: Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2. Video: Veo 3.1, Seedance 1.5 Pro, Kling 3.0. Plus image understanding dan video analysis.",
+    },
+    {
+      question: "Apakah kombinasi Opus 4.7 + AnyCap production-ready?",
+      answer:
+        "Ya. AnyCap jalan di install path dan CLI yang sama yang sudah dipakai di workflow agent produksi sekarang. Claude Code on Opus 4.7 panggil command AnyCap dengan cara yang sama dia panggil tool lain.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Capability Claude Opus 4.7 — apa yang Opus 4.7 lakukan, apa yang tidak, dan apa yang Opus 4.7 + AnyCap unlock",
+    description:
+      "Peta capability Claude Opus 4.7 — kekuatan native-nya, modalitas yang tidak dia ship, dan upgrade sekali AnyCap menambah image generation, video generation, image understanding, dan video analysis lewat satu CLI.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Code", "Capability AI", "Image generation", "Video generation", "AnyCap"],
+    keywords: [
+      "capability claude opus 4.7",
+      "claude opus 4.7",
+      "fitur claude opus 4.7",
+      "apa yang bisa claude opus 4.7 lakukan",
+      "claude opus 4.7 image generation",
+      "claude opus 4.7 video generation",
+      "claude code opus 4.7",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
   de: deContent,
 };
 

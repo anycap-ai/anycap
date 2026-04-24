@@ -133,11 +133,22 @@ export async function middleware(req: NextRequest) {
         : "0",
     );
 
-    if (metadataRoutePaths.has(pathname) || getPublicRouteByPath(pathname)) {
+    if (metadataRoutePaths.has(pathname)) {
       const rewriteURL = req.nextUrl.clone();
       rewriteURL.pathname = pathname;
       return applyAuthResponse(
         NextResponse.rewrite(rewriteURL, {
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        authResponse,
+      );
+    }
+
+    if (getPublicRouteByPath(pathname)) {
+      return applyAuthResponse(
+        NextResponse.next({
           request: {
             headers: requestHeaders,
           },

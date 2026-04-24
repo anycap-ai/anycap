@@ -4,6 +4,7 @@ import { Inter, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { GlobalUiChrome } from "@/components/layout/GlobalUiChrome";
 import { organizationId, organizationSameAs } from "@/lib/organization";
+import { getRequestHtmlLang } from "@/lib/request-locale";
 import { getLocalizedRouteUrl, siteConfig } from "@/lib/site";
 import { defaultSocialImage } from "@/lib/seo-metadata";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
@@ -159,13 +160,15 @@ const preHydrationCleanupScript = `
   })();
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const htmlLang = await getRequestHtmlLang();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={htmlLang} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

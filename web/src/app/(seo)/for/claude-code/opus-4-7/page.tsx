@@ -427,10 +427,386 @@ const deContent: PageContent = {
   }),
 };
 
+const ptBrContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Início", href: "/" },
+    { name: "Equipar Agentes", href: "/for", unlinkable: true },
+    { name: "Claude Code", href: "/for/claude-code" },
+    { name: "Opus 4.7" },
+  ],
+  eyebrow: "Claude Code x Opus 4.7",
+  lastUpdatedLabel: "Atualizado em 17 de abril de 2026",
+  heroTitle: [
+    "Claude Code no Opus 4.7 + AnyCap.",
+    "O primeiro agente forte o bastante para tocar uma pipeline criativa de produção inteira.",
+  ],
+  heroIntro:
+    "A maioria dos agentes consegue chamar uma API de imagem. O Opus 4.7 é o primeiro com profundidade de raciocínio para escolher o modelo certo entre sete, manter um briefing multi-asset por horas, olhar o output e decidir que está errado, encadear imagem em vídeo sem perder o plano, e devolver o resultado para a base de código. O AnyCap expõe Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, image understanding e video analysis em uma única CLI. O Opus 4.7 transforma essa frota em uma linha de produção que funciona.",
+  ctas: {
+    primary: "Instalar em 90 segundos",
+    secondary: "Ver o workflow",
+  },
+  thesisLabel: "A tese",
+  thesisTitle:
+    "AnyCap é a frota de modelos. Opus 4.7 é o único agente capaz de pilotá-la sem supervisão.",
+  thesisBody:
+    "Um modelo mais fraco também consegue chamar qualquer comando do AnyCap. Diga qual modelo, qual prompt, quais parâmetros — e fique de olho. O Opus 4.7 é o primeiro agente que dispensa essa supervisão. Ele lê o briefing, escolhe o modelo, gera, avalia, refina, troca de modelo quando o primeiro errou, encadeia o still em image-to-video e despacha o asset para o repo. Esse último passo — fechar o loop — é onde o Opus 4.7 deixa de ser um chatbot com ferramentas e vira operador de linha de produção.",
+  scenariosTitle: "Cinco cenários que só o Opus 4.7 destrava no AnyCap",
+  scenariosIntro:
+    "Cada um deles é tecnicamente possível em um agente mais fraco. Nenhum deles é confiável o bastante para entregar sem humano no loop. Opus 4.7 é o ponto de virada onde o humano pode sair da sala.",
+  scenarios: [
+    {
+      index: "01",
+      title: "Escolha automática do modelo certo numa frota de sete",
+      body:
+        "AnyCap expõe Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Seedance 1.5 Pro e Kling 3.0. Opus 4.7 lê o briefing, sabe qual modelo combina e escolhe. \"Hero shot polido, fundo off-white\" → Seedream 5. \"Edite este mockup com sombras mais suaves\" → Nano Banana Pro. \"Image-to-video cinematográfico\" → Kling 3.0. \"Teaser de produção repetível\" → Seedance.",
+      whyOpus:
+        "Sonnet 4.6 escolhe um modelo, mas costuma cair no que apareceu por último no contexto. Opus 4.7 raciocina sobre encaixe de modelo antes de chamar.",
+    },
+    {
+      index: "02",
+      title: "Planejar e entregar um lançamento multi-asset numa única run",
+      body:
+        "\"Produza um pacote de lançamento: hero image, três variações sociais, um teaser de 6 segundos e um vídeo walkthrough.\" Opus 4.7 segura o briefing inteiro, sequencia seis chamadas do AnyCap, gerencia imagens de referência entre os passos e devolve o pacote como uma entrega única.",
+      whyOpus:
+        "Essa é a tarefa agentic de horizonte longo para a qual Sonnet 4.6 não foi feito. Em modelos mais leves, o briefing escapa depois do passo três. Opus 4.7 ainda lembra, no passo cinco, que as variações sociais precisam casar com o hero shot.",
+    },
+    {
+      index: "03",
+      title: "Olhar o output, decidir que está errado, consertar",
+      body:
+        "AnyCap devolve o asset gerado para a conversa. Opus 4.7 olha, julga se bate com o briefing, identifica o que está fora (\"a iluminação está dura demais, a cor da marca sumiu\") e refina o prompt, troca de modelo, ou escala de text-to-image para image-to-image.",
+      whyOpus:
+        "É raciocínio visual + recuperação de uso de tool no mesmo loop. A recuperação do Opus 4.7 depois de um \"isso não funcionou\" é a mais forte da linha Claude — e é o que torna iteração autônoma viável.",
+    },
+    {
+      index: "04",
+      title: "Encadear imagem em vídeo sem perder o briefing",
+      body:
+        "Gere o still no Seedream 5. Avalie se o still está pronto para o lançamento. Se sim, promova para image-to-video no Kling 3.0 com notas de movimento que vieram do briefing original. A identidade visual segue intacta porque o mesmo agente segurou o plano nas duas chamadas.",
+      whyOpus:
+        "Encadear modalidades exige que o agente lembre o que é \"on brand\" quando o meio muda. Opus 4.7 mantém isso entre modalidades. Modelos mais leves esquecem as notas de marca no instante em que a modalidade troca.",
+      command:
+        "anycap image generate --model seedream-5 --prompt \"...\" && anycap video generate --model kling-3.0 --mode image-to-video --param reference_image_urls='[\"./still.png\"]' --prompt \"...\"",
+    },
+    {
+      index: "05",
+      title: "Fechar o loop — devolver o asset para a base de código",
+      body:
+        "Quando o asset é aprovado, o Claude Code no Opus 4.7 escreve o arquivo no diretório certo, atualiza a página que precisa dele, roda o type checker, abre o PR e escreve a descrição. Mesmo agente, mesma sessão, sem repassar para humano nem para outra ferramenta.",
+      whyOpus:
+        "É a parte que transforma um chatbot com ferramentas em operador de linha de produção. Opus 4.7 é o agente que entrega consistentemente a última milha chata sem precisar ser cobrado duas vezes.",
+    },
+  ],
+  reasoningTaxTitle: "Onde o prêmio de raciocínio do Opus 4.7 realmente compensa",
+  reasoningTaxIntro:
+    "Sonnet 4.6 + AnyCap é uma combinação ótima para volume alto. Opus 4.7 + AnyCap é a combinação para tarefas em que o custo de errar é maior do que o custo da inferência. O prêmio compensa no momento em que qualquer uma destas entra no fluxo.",
+  reasoningTaxRows: [
+    {
+      task: "Imagem única, uma tentativa, você vai revisar de qualquer jeito",
+      sonnet: "Use Sonnet 4.6 — rápido, barato, bom o suficiente.",
+      opus47: "Exagero. Reserve o Opus 4.7 para a run multi-asset.",
+    },
+    {
+      task: "Pacote de lançamento multi-asset, ponta a ponta",
+      sonnet: "O briefing escapa no meio. Você re-prompta duas vezes.",
+      opus47: "Mantém o briefing em todos os assets numa única run.",
+    },
+    {
+      task: "Escolher o modelo certo entre sete para um briefing novo",
+      sonnet: "Cai no modelo mais recente do contexto.",
+      opus47: "Raciocina sobre encaixe de modelo antes de chamar.",
+    },
+    {
+      task: "Olhar o output, julgar se bate com a marca",
+      sonnet: "Vai dizer que está bom. Frequentemente está errado.",
+      opus47: "Identifica o que está fora e propõe a correção.",
+    },
+    {
+      task: "Encadear imagem → image-to-video sem perder identidade",
+      sonnet: "As notas de marca escapam quando a modalidade muda.",
+      opus47: "Carrega o briefing entre modalidades sem ruído.",
+    },
+    {
+      task: "Despachar o asset, atualizar a página, abrir o PR",
+      sonnet: "Para no write do arquivo. Você termina manual.",
+      opus47: "Fecha o loop sem precisar de cobrança.",
+    },
+  ],
+  installTitle: "Instale uma vez, depois fale normalmente com o Opus 4.7",
+  installIntro:
+    "AnyCap se instala na mesma sessão de Claude Code em que o Opus 4.7 já roda. Sem segundo SDK, sem segundo login, sem segunda superfície de agente.",
+  installSteps: [
+    "npx -y skills add anycap-ai/anycap -a claude-code -y",
+    "curl -fsSL https://anycap.ai/install.sh | sh",
+    "anycap login",
+  ],
+  installNote:
+    "Depois da instalação, briefe o Opus 4.7 em linguagem natural. \"Gere um hero de lançamento em fundo off-white, depois um walkthrough de 6 segundos a partir da mesma imagem.\" O agente escolhe os modelos, executa a cadeia e devolve os assets na conversa.",
+  ctaTitle: "Próximos passos recomendados",
+  ctaCards: [
+    {
+      title: "Campanha de lançamento multi-asset com Opus 4.7",
+      href: "/guides/multi-asset-launch-campaign-with-claude-opus-4-7",
+      body: "Guia ponta a ponta: seis assets de lançamento numa única run do Opus 4.7.",
+    },
+    {
+      title: "Opus 4.7 como diretor criativo",
+      href: "/learn/claude-opus-4-7-as-creative-director",
+      body: "Por que o Opus 4.7 é o primeiro agente capaz de dirigir uma frota de modelos, não só chamar um.",
+    },
+    {
+      title: "Workflow de imagem + vídeo no Opus 4.7",
+      href: "/guides/claude-opus-4-7-image-video-workflow",
+      body: "De um still de lançamento a um vídeo walkthrough finalizado, num único terminal.",
+    },
+    {
+      title: "Opus 4.7 vs Sonnet 4.6 para Claude Code",
+      href: "/compare/claude-opus-4-7-vs-sonnet-4-6",
+      body: "Quando o prêmio de raciocínio vale o custo — e quando não vale.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Por que combinar Opus 4.7 especificamente com AnyCap?",
+      answer:
+        "Porque o prêmio de raciocínio do Opus 4.7 só compensa quando a tarefa exige esse raciocínio. Rotear entre sete modelos de imagem e vídeo, segurar um briefing multi-asset, julgar se um asset gerado bate com a marca e encadear imagem em vídeo sem perder identidade são exatamente essas tarefas. AnyCap é a superfície que transforma o raciocínio do Opus 4.7 em mídia entregue.",
+    },
+    {
+      question: "AnyCap exige Opus 4.7?",
+      answer:
+        "Não. O AnyCap funciona com Sonnet 4.6 e qualquer outro modelo Claude no Claude Code. O Opus 4.7 é o modelo que destrava as pipelines autônomas multi-step descritas nesta página. Modelos mais leves continuam executando os comandos individuais.",
+    },
+    {
+      question: "O que \"fechar o loop\" significa de fato aqui?",
+      answer:
+        "Gerar o asset, escrever no diretório certo do repo, atualizar a página ou doc que depende dele, commitar a mudança, abrir um PR com descrição escrita. O Opus 4.7 faz tudo isso em uma sessão contínua no Claude Code — sem repasse para humano nem para outra ferramenta.",
+    },
+    {
+      question: "Como isso difere de chamar APIs de imagem e vídeo direto?",
+      answer:
+        "Chamadas diretas jogam seleção de modelo, ajuste de parâmetros e lógica de encadeamento no colo do dev. AnyCap move isso para uma CLI; Opus 4.7 move o julgamento de quando e como chamar para dentro do agente. Juntos eles eliminam a cola humana entre intenção e asset entregue.",
+    },
+    {
+      question: "Isso funciona hoje ou é promessa de roadmap?",
+      answer:
+        "Funciona hoje. Claude Code no Opus 4.7 está em GA. AnyCap se instala por um arquivo de skill e uma CLI. Image generation, video generation, image understanding e video analysis estão todos disponíveis como comandos chamáveis pelo agente agora.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline:
+      "Claude Code no Opus 4.7 + AnyCap — o primeiro agente forte o bastante para tocar uma pipeline criativa de produção inteira",
+    description:
+      "Por que o Opus 4.7 é o ponto de virada em que um agente passa a rotear entre sete modelos de imagem e vídeo, segurar um briefing multi-asset, autocorrigir output visual, encadear imagem em vídeo e despachar o asset para a base de código de forma autônoma.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Code", "Agente de IA", "Geração de imagem", "Geração de vídeo", "AnyCap"],
+    keywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 claude code",
+      "opus 4.7 geração de imagem",
+      "opus 4.7 geração de vídeo",
+      "opus 4.7 agente",
+      "claude opus 4.7 anycap",
+      "claude opus 4.7 pipeline criativa",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
+const idContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Lengkapi Agen", href: "/for", unlinkable: true },
+    { name: "Claude Code", href: "/for/claude-code" },
+    { name: "Opus 4.7" },
+  ],
+  eyebrow: "Claude Code x Opus 4.7",
+  lastUpdatedLabel: "Diperbarui 17 April 2026",
+  heroTitle: [
+    "Claude Code di atas Opus 4.7 + AnyCap.",
+    "Agen pertama yang cukup kuat menjalankan pipeline produksi kreatif penuh.",
+  ],
+  heroIntro:
+    "Sebagian besar agen bisa memanggil API gambar. Opus 4.7 adalah yang pertama dengan kedalaman reasoning untuk memilih model yang tepat dari tujuh pilihan, memegang brief multi-asset selama berjam-jam, melihat output dan memutuskan bahwa itu salah, merangkai image ke video tanpa kehilangan plan, lalu mengirim hasilnya kembali ke codebase. AnyCap menyodorkan Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Seedance 1.5 Pro, Kling 3.0, image understanding, dan video analysis lewat satu CLI. Opus 4.7 mengubah armada model itu menjadi lini produksi yang benar-benar jalan.",
+  ctas: {
+    primary: "Pasang dalam 90 detik",
+    secondary: "Lihat workflow-nya",
+  },
+  thesisLabel: "Tesisnya",
+  thesisTitle:
+    "AnyCap adalah armada modelnya. Opus 4.7 adalah satu-satunya agen yang bisa mengemudikannya tanpa pengawasan.",
+  thesisBody:
+    "Model yang lebih lemah tetap bisa memanggil semua perintah AnyCap. Tinggal bilang model mana, prompt mana, parameter mana, lalu jaga matanya. Opus 4.7 adalah agen pertama yang tidak perlu pengawasan seperti itu. Ia membaca brief, memilih model, generate, evaluasi, refine, ganti model saat yang pertama salah, merangkai still ke image-to-video, dan mengirim aset ke repo. Langkah terakhir itu — menutup loop — adalah momen Opus 4.7 berhenti jadi chatbot dengan tools dan mulai jadi operator lini produksi.",
+  scenariosTitle: "Lima skenario yang hanya Opus 4.7 buka di AnyCap",
+  scenariosIntro:
+    "Setiap skenario ini secara teknis bisa dijalankan agen yang lebih lemah. Tapi tak satu pun cukup andal untuk dikirim tanpa manusia di loop. Opus 4.7 adalah titik balik di mana manusia bisa keluar ruangan.",
+  scenarios: [
+    {
+      index: "01",
+      title: "Pemilihan model yang tepat secara otomatis dari armada tujuh model",
+      body:
+        "AnyCap menyediakan Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, Veo 3.1, Seedance 1.5 Pro, dan Kling 3.0. Opus 4.7 membaca brief, tahu model mana yang cocok, lalu memilih. \"Hero shot rapi, latar off-white\" → Seedream 5. \"Edit mockup ini dengan bayangan yang lebih lembut\" → Nano Banana Pro. \"Image-to-video sinematik\" → Kling 3.0. \"Teaser produksi yang berulang\" → Seedance.",
+      whyOpus:
+        "Sonnet 4.6 akan memilih model, tapi sering jatuh ke model yang paling baru muncul di context. Opus 4.7 melakukan reasoning soal kecocokan model sebelum memanggil.",
+    },
+    {
+      index: "02",
+      title: "Merencanakan dan mengirim launch multi-asset dalam satu run",
+      body:
+        "\"Buatkan paket peluncuran: hero image, tiga varian social, teaser 6 detik, dan video walkthrough.\" Opus 4.7 memegang brief utuh, mengurutkan enam pemanggilan AnyCap, mengelola gambar referensi antar langkah, lalu mengembalikan paketnya sebagai satu pengiriman.",
+      whyOpus:
+        "Ini tugas agentic horizon panjang yang bukan dibangun untuk Sonnet 4.6. Pada model yang lebih ringan, brief mulai melenceng setelah langkah ketiga. Opus 4.7 masih ingat di langkah kelima bahwa varian social harus selaras dengan hero shot.",
+    },
+    {
+      index: "03",
+      title: "Lihat output, putuskan bahwa salah, perbaiki",
+      body:
+        "AnyCap mengembalikan aset hasil generate ke percakapan. Opus 4.7 melihatnya, menilai apakah cocok dengan brief, mengidentifikasi yang melenceng (\"pencahayaannya terlalu keras, warna brand-nya hilang\"), lalu memilih: refine prompt, ganti model, atau eskalasi dari text-to-image ke image-to-image.",
+      whyOpus:
+        "Ini visual reasoning + tool-use recovery dalam satu loop. Recovery Opus 4.7 dari \"itu tidak berhasil\" adalah yang terkuat di lini Claude, dan itulah yang membuat iterasi otonom jadi mungkin.",
+    },
+    {
+      index: "04",
+      title: "Rangkai image ke video tanpa kehilangan brief",
+      body:
+        "Generate still dengan Seedream 5. Lakukan reasoning apakah still itu siap launch. Jika ya, promosikan ke image-to-video di Kling 3.0 dengan catatan motion yang berasal dari brief asli. Identitas visual ikut karena agen yang sama memegang plan di kedua pemanggilan.",
+      whyOpus:
+        "Cross-modality chaining menuntut agen mengingat arti \"on brand\" saat medium berganti. Opus 4.7 memegang itu lintas modalitas. Model yang lebih ringan biasanya melupakan catatan brand begitu modalitas berpindah.",
+      command:
+        "anycap image generate --model seedream-5 --prompt \"...\" && anycap video generate --model kling-3.0 --mode image-to-video --param reference_image_urls='[\"./still.png\"]' --prompt \"...\"",
+    },
+    {
+      index: "05",
+      title: "Tutup loop — kirim asetnya kembali ke codebase",
+      body:
+        "Begitu aset disetujui, Claude Code di Opus 4.7 menulis file ke direktori yang tepat, memperbarui halaman yang membutuhkannya, menjalankan type checker, membuka PR, dan menulis deskripsinya. Agen yang sama, sesi yang sama, tanpa serah-terima ke manusia atau tool lain.",
+      whyOpus:
+        "Ini bagian yang mengubah chatbot bertools menjadi operator lini produksi. Opus 4.7 adalah agen yang konsisten menyelesaikan last mile membosankan tanpa perlu diingatkan dua kali.",
+    },
+  ],
+  reasoningTaxTitle: "Di mana premi reasoning Opus 4.7 benar-benar terbayar",
+  reasoningTaxIntro:
+    "Sonnet 4.6 + AnyCap pasangan yang luar biasa untuk pekerjaan volume tinggi. Opus 4.7 + AnyCap pasangan untuk tugas di mana biaya salah lebih besar daripada biaya inference. Premi-nya terbayar begitu salah satu kebutuhan ini muncul di workflow.",
+  reasoningTaxRows: [
+    {
+      task: "Satu image, sekali jalan, toh akan kamu review",
+      sonnet: "Pakai Sonnet 4.6 — cepat, murah, sudah cukup.",
+      opus47: "Berlebihan. Simpan Opus 4.7 untuk run multi-asset.",
+    },
+    {
+      task: "Paket launch multi-asset, end-to-end",
+      sonnet: "Brief melenceng di tengah jalan. Kamu re-prompt dua kali.",
+      opus47: "Memegang brief untuk semua aset dalam satu run.",
+    },
+    {
+      task: "Memilih model yang tepat dari tujuh untuk brief baru",
+      sonnet: "Jatuh ke model paling akhir di context.",
+      opus47: "Reasoning soal kecocokan model sebelum memanggil.",
+    },
+    {
+      task: "Lihat output, nilai apakah cocok dengan brand",
+      sonnet: "Akan bilang sudah bagus. Sering kali salah.",
+      opus47: "Mengidentifikasi yang melenceng dan mengusulkan perbaikannya.",
+    },
+    {
+      task: "Rangkai image → image-to-video tanpa kehilangan identitas",
+      sonnet: "Catatan brand melenceng saat modalitas berganti.",
+      opus47: "Membawa brief lintas modalitas dengan bersih.",
+    },
+    {
+      task: "Kirim aset, update halaman, buka PR",
+      sonnet: "Berhenti di file write. Kamu menyelesaikan manual.",
+      opus47: "Menutup loop tanpa diminta lagi.",
+    },
+  ],
+  installTitle: "Pasang sekali, lalu ngobrol biasa dengan Opus 4.7",
+  installIntro:
+    "AnyCap terpasang di sesi Claude Code yang sama dengan tempat Opus 4.7 berjalan. Tidak ada SDK kedua, tidak ada login kedua, tidak ada permukaan agen kedua.",
+  installSteps: [
+    "npx -y skills add anycap-ai/anycap -a claude-code -y",
+    "curl -fsSL https://anycap.ai/install.sh | sh",
+    "anycap login",
+  ],
+  installNote:
+    "Setelah dipasang, brief Opus 4.7 dengan bahasa biasa. \"Buatkan hero launch dengan latar off-white, lalu walkthrough 6 detik dari image yang sama.\" Agen akan memilih model, menjalankan rangkaiannya, dan mengembalikan aset ke percakapan.",
+  ctaTitle: "Langkah berikut yang paling masuk akal",
+  ctaCards: [
+    {
+      title: "Kampanye launch multi-asset dengan Opus 4.7",
+      href: "/guides/multi-asset-launch-campaign-with-claude-opus-4-7",
+      body: "Panduan end-to-end: enam aset launch dalam satu run Opus 4.7.",
+    },
+    {
+      title: "Opus 4.7 sebagai creative director",
+      href: "/learn/claude-opus-4-7-as-creative-director",
+      body: "Mengapa Opus 4.7 jadi agen pertama yang bisa memimpin armada model, bukan sekadar memanggilnya.",
+    },
+    {
+      title: "Workflow image + video di Opus 4.7",
+      href: "/guides/claude-opus-4-7-image-video-workflow",
+      body: "Dari still launch sampai video walkthrough yang sudah jadi, satu terminal saja.",
+    },
+    {
+      title: "Opus 4.7 vs Sonnet 4.6 untuk Claude Code",
+      href: "/compare/claude-opus-4-7-vs-sonnet-4-6",
+      body: "Kapan premi reasoning sepadan biayanya, kapan tidak.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Kenapa harus memasangkan Opus 4.7 secara spesifik dengan AnyCap?",
+      answer:
+        "Karena premi reasoning Opus 4.7 baru terbayar saat tugasnya memang butuh reasoning itu. Routing antar tujuh model image dan video, memegang brief multi-asset, menilai apakah aset hasil generate sesuai brand, dan merangkai image ke video tanpa kehilangan identitas — itulah tugas-tugas yang dimaksud. AnyCap adalah permukaan yang mengubah reasoning Opus 4.7 menjadi media yang benar-benar terkirim.",
+    },
+    {
+      question: "Apakah AnyCap mewajibkan Opus 4.7?",
+      answer:
+        "Tidak. AnyCap jalan dengan Sonnet 4.6 dan model Claude lainnya di Claude Code. Opus 4.7 adalah model yang membuka pipeline otonom multi-step yang dijelaskan halaman ini. Model yang lebih ringan tetap bisa menjalankan perintah satuan.",
+    },
+    {
+      question: "Apa arti \"menutup loop\" di sini?",
+      answer:
+        "Generate aset, tulis ke direktori repo yang tepat, perbarui halaman atau dokumentasi yang membutuhkannya, commit perubahannya, buka PR dengan deskripsi tertulis. Opus 4.7 melakukan semua itu dalam satu sesi Claude Code yang menyambung — tanpa serah-terima ke manusia atau tool lain.",
+    },
+    {
+      question: "Apa bedanya dengan langsung memanggil API image dan video?",
+      answer:
+        "Pemanggilan API langsung melempar pemilihan model, tuning parameter, dan logika chaining ke developer. AnyCap memindahkannya ke satu CLI; Opus 4.7 memindahkan keputusan kapan dan bagaimana memanggil ke agen. Bersama-sama mereka menghapus glue manusia antara intent dan aset yang terkirim.",
+    },
+    {
+      question: "Apakah ini sudah bisa dipakai sekarang atau klaim roadmap?",
+      answer:
+        "Sudah bisa sekarang. Claude Code di Opus 4.7 sudah generally available. AnyCap dipasang lewat satu skill file dan satu CLI. Image generation, video generation, image understanding, dan video analysis sudah tersedia sebagai perintah yang bisa dipanggil agen.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline:
+      "Claude Code di Opus 4.7 + AnyCap — agen pertama yang cukup kuat menjalankan pipeline produksi kreatif penuh",
+    description:
+      "Mengapa Opus 4.7 jadi titik balik di mana agen mampu routing antar tujuh model image dan video, memegang brief multi-asset, mengoreksi output visual sendiri, merangkai image ke video, dan mengirim aset ke codebase secara otonom.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Code", "AI agent", "Pembuatan gambar", "Pembuatan video", "AnyCap"],
+    keywords: [
+      "claude code opus 4.7",
+      "claude opus 4.7 claude code",
+      "opus 4.7 image generation",
+      "opus 4.7 video generation",
+      "opus 4.7 agent",
+      "claude opus 4.7 anycap",
+      "claude opus 4.7 creative pipeline",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: enContent,
-  "pt-br": enContent,
-  id: enContent,
+  "pt-br": ptBrContent,
+  id: idContent,
   de: deContent,
 };
 

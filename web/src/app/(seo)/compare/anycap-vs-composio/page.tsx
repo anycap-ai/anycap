@@ -333,11 +333,283 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       dateModified: "2026-04-10",
     }),
   },
-  id: undefined as never,
-  de: undefined as never,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Bandingkan", href: "/compare", unlinkable: true },
+      { name: "AnyCap vs Composio" },
+    ],
+    heroEyebrow: "Bandingkan",
+    intro:
+      "AnyCap dan Composio sama-sama membantu agen AI berbuat lebih banyak, tapi pendekatannya berbeda secara fundamental. AnyCap adalah capability runtime yang agent-native — satu CLI, satu auth flow untuk kapabilitas multimodal seperti image generation dan video analysis. Composio adalah platform integrasi tools yang menyambungkan agen ke ratusan layanan pihak ketiga lewat integrasi level SDK. Pilihannya tergantung: butuh kapabilitas multimodal yang dalam lewat satu antarmuka agen yang konsisten, atau akses luas ke tools pihak ketiga lewat SDK developer.",
+    tableTitle: "Perbandingan berdampingan",
+    tableHeaders: ["Dimensi", "AnyCap", "Composio"],
+    comparisons: [
+      {
+        dimension: "Konsep inti",
+        anycap: "Capability runtime agent-native — satu CLI, satu auth, semua kapabilitas",
+        composio: "Platform integrasi tools — menyambungkan agen ke 250+ tools dan API pihak ketiga",
+      },
+      {
+        dimension: "Pengalaman instalasi",
+        anycap: "Satu skill file + satu binary CLI. Terpasang di bawah 5 menit.",
+        composio: "Integrasi SDK ke kode aplikasi kamu. Butuh manajemen API key per tool.",
+      },
+      {
+        dimension: "Kapabilitas multimodal",
+        anycap: "Image generation, video generation, image read, dan video analysis bawaan",
+        composio: "Menyambung ke API multimodal eksternal sebagai integrasi tool",
+      },
+      {
+        dimension: "Kompatibilitas agen",
+        anycap: "Jalan di Claude Code, Cursor, Codex, OpenCode, dan OpenClaw lewat skill file",
+        composio: "Jalan dengan berbagai framework LLM lewat SDK",
+      },
+      {
+        dimension: "Model autentikasi",
+        anycap: "Satu login untuk semua kapabilitas",
+        composio: "Manajemen OAuth dan API key per tool",
+      },
+      {
+        dimension: "Filosofi desain",
+        anycap: "Dibangun untuk agen sejak hari pertama. CLI-first dan agent-native.",
+        composio: "Platform integrasi yang dirancang untuk developer yang membangun aplikasi agen",
+      },
+    ],
+    setupTitle: "Perbandingan pengalaman setup",
+    setupIntro:
+      "Perbedaannya paling jelas saat setup awal. Begini bentuk tiap jalur dari nol sampai pemanggilan kapabilitas pertama.",
+    setupCards: [
+      {
+        title: "Setup AnyCap",
+        accent: true,
+        steps: [
+          "Pasang skill + CLI (2 perintah)",
+          "Login sekali (1 perintah)",
+          "Pakai kapabilitas apa pun langsung",
+        ],
+        summary: "3 perintah · 1 auth flow · semua kapabilitas siap pakai",
+      },
+      {
+        title: "Setup Composio",
+        steps: [
+          "Pasang Composio SDK di project",
+          "Konfigurasikan API key untuk platform Composio",
+          "Sambungkan tiap tool secara terpisah lewat OAuth atau API key",
+          "Hubungkan pemanggilan tool ke framework agen kamu",
+        ],
+        summary: "Integrasi SDK · auth per tool · tools ditambahkan inkremental",
+      },
+    ],
+    chooseAnyCapTitle: "Kapan memilih AnyCap",
+    chooseAnyCapItems: [
+      "Kamu ingin agen membuat gambar, membuat video, atau menganalisis konten visual.",
+      "Kamu pakai Claude Code, Cursor, atau produk agen sejenis dan ingin sekali install untuk semua kapabilitas.",
+      "Kamu lebih suka antarmuka CLI-first yang agent-native dibanding integrasi SDK.",
+      "Kamu mau satu auth untuk semua kapabilitas alih-alih OAuth per tool.",
+    ],
+    relatedTitle: "Perbandingan dan panduan terkait",
+    relatedCards: [
+      {
+        eyebrow: "Bandingkan",
+        title: "AnyCap vs OpenAI Agent Builder",
+        href: "/compare/anycap-vs-openai-agent-builder",
+        body: "Lihat bedanya capability runtime dengan platform builder di dalam stack agen.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Apa itu Agent Harness?",
+        href: "/guides/what-is-agent-harness",
+        body: "Pahami posisi AnyCap di antara model, harness, dan lapisan kapabilitas.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Apa beda utama AnyCap dan Composio?",
+        answer:
+          "AnyCap adalah capability runtime yang memberi agen kapabilitas multimodal lewat satu CLI dan satu auth flow. Composio adalah platform integrasi tools yang menyambungkan agen ke ratusan layanan pihak ketiga lewat integrasi level SDK. AnyCap fokus pada kedalaman kapabilitas multimodal; Composio fokus pada keluasan integrasi layanan.",
+      },
+      {
+        question: "Bisa pakai AnyCap dan Composio bersamaan?",
+        answer:
+          "Bisa. Keduanya memecahkan masalah yang berbeda dan tidak tabrakan. Kamu bisa pakai AnyCap untuk kapabilitas multimodal dan Composio untuk integrasi tool SaaS dalam workflow agen yang sama.",
+      },
+      {
+        question: "Mana yang lebih baik untuk image dan video generation?",
+        answer:
+          "AnyCap. Image dan video generation adalah kapabilitas bawaan dengan model yang sudah dikurasi. Composio bisa menyambung ke API gambar eksternal sebagai integrasi tool, tapi tiap integrasi butuh konfigurasi terpisah.",
+      },
+      {
+        question: "Mana yang lebih baik untuk menyambung ke tools SaaS seperti Gmail atau Slack?",
+        answer:
+          "Composio. Spesialisasinya menyambungkan agen ke ratusan layanan pihak ketiga dengan OAuth terkelola. AnyCap tidak menyediakan integrasi tool SaaS; fokusnya kapabilitas multimodal dan web retrieval.",
+      },
+      {
+        question: "Bagaimana autentikasi AnyCap dan Composio berbeda?",
+        answer:
+          "AnyCap pakai satu login yang menutup semua kapabilitas. Composio mengelola OAuth dan API key per tool, memberi kontrol detail tiap integrasi tapi butuh setup lebih banyak saat jumlah tool tersambung bertambah.",
+      },
+    ],
+    footerCtas: {
+      github: "Lihat di GitHub",
+      capability: "Semua Kapabilitas",
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "AnyCap vs Composio — Perbandingan kapabilitas agen",
+      description:
+        "Bandingkan AnyCap dan Composio untuk memberi kapabilitas ke agen AI. AnyCap adalah capability runtime agent-native dengan satu CLI; Composio adalah platform integrasi tools.",
+      path: "/compare/anycap-vs-composio",
+      about: ["AnyCap", "Composio", "Kapabilitas agen AI", "Integrasi tools"],
+      keywords: [
+        "anycap vs composio",
+        "alternatif composio",
+        "perbandingan tools agen ai",
+        "capability runtime vs platform tools",
+      ],
+      datePublished: "2026-04-03",
+      dateModified: "2026-04-10",
+    }),
+  },
+  de: {
+    breadcrumbItems: [
+      { name: "Startseite", href: "/" },
+      { name: "Vergleich", href: "/compare", unlinkable: true },
+      { name: "AnyCap vs Composio" },
+    ],
+    heroEyebrow: "Vergleich",
+    intro:
+      "AnyCap und Composio helfen beide KI-Agenten, mehr zu erreichen, verfolgen aber grundlegend unterschiedliche Ansätze. AnyCap ist eine agent-native Capability-Runtime, die Agenten eine CLI und einen Auth-Flow für multimodale Capabilities wie Bildgenerierung und Videoanalyse bietet. Composio ist eine Tool-Integrationsplattform, die Agenten über SDK-Integrationen mit Hunderten von Drittanbieterdiensten verbindet. Die richtige Wahl hängt davon ab, ob Sie tiefe multimodale Capabilities über eine konsistente Agent-Oberfläche oder breiten Zugriff auf Drittanbieter-Tools über ein Entwickler-SDK benötigen.",
+    tableTitle: "Direkter Vergleich",
+    tableHeaders: ["Dimension", "AnyCap", "Composio"],
+    comparisons: [
+      {
+        dimension: "Kernkonzept",
+        anycap: "Agent-native Capability-Runtime – eine CLI, ein Auth, jede Capability",
+        composio: "Tool-Integrationsplattform – verbindet Agenten mit über 250 Drittanbieter-Tools und APIs",
+      },
+      {
+        dimension: "Installationserlebnis",
+        anycap: "Eine Skill-Datei + ein CLI-Binary. In unter 5 Minuten installiert.",
+        composio: "SDK-Integration in Ihren Anwendungscode. Erfordert API-Key-Verwaltung pro Tool.",
+      },
+      {
+        dimension: "Multimodale Capabilities",
+        anycap: "Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse eingebaut",
+        composio: "Verbindet sich mit externen multimodalen APIs als Tool-Integrationen",
+      },
+      {
+        dimension: "Agent-Kompatibilität",
+        anycap: "Funktioniert mit Claude Code, Cursor, Codex, OpenCode und OpenClaw über Skill-Dateien",
+        composio: "Funktioniert mit verschiedenen LLM-Frameworks über SDK",
+      },
+      {
+        dimension: "Auth-Modell",
+        anycap: "Ein einziges Login für jede Capability",
+        composio: "OAuth- und API-Key-Verwaltung pro Tool",
+      },
+      {
+        dimension: "Designphilosophie",
+        anycap: "Vom ersten Tag an für Agenten gebaut. CLI-first und agent-native.",
+        composio: "Integrationsplattform für Entwickler, die Agent-Anwendungen bauen",
+      },
+    ],
+    setupTitle: "Vergleich des Setup-Erlebnisses",
+    setupIntro:
+      "Der Unterschied wird beim initialen Setup am deutlichsten. So sieht jeder Pfad von null bis zum ersten Capability-Aufruf aus.",
+    setupCards: [
+      {
+        title: "AnyCap-Setup",
+        accent: true,
+        steps: [
+          "Skill + CLI installieren (2 Befehle)",
+          "Einmal anmelden (1 Befehl)",
+          "Jede Capability sofort nutzen",
+        ],
+        summary: "3 Befehle · 1 Auth-Flow · alle Capabilities verfügbar",
+      },
+      {
+        title: "Composio-Setup",
+        steps: [
+          "Composio-SDK in Ihrem Projekt installieren",
+          "API-Key für die Composio-Plattform konfigurieren",
+          "Jedes Tool einzeln über OAuth oder API-Key verbinden",
+          "Tool-Aufrufe in Ihr Agent-Framework einbinden",
+        ],
+        summary: "SDK-Integration · Auth pro Tool · Tools werden inkrementell hinzugefügt",
+      },
+    ],
+    chooseAnyCapTitle: "Wann AnyCap wählen",
+    chooseAnyCapItems: [
+      "Sie möchten, dass Agenten Bilder generieren, Videos erstellen oder visuelle Inhalte analysieren.",
+      "Sie nutzen Claude Code, Cursor oder ähnliche Agent-Produkte und wollen eine Installation für jede Capability.",
+      "Sie bevorzugen eine CLI-first, agent-native Oberfläche statt SDK-Integration.",
+      "Sie wollen ein einziges Auth für jede Capability statt OAuth pro Tool.",
+    ],
+    relatedTitle: "Verwandte Vergleiche und Leitfäden",
+    relatedCards: [
+      {
+        eyebrow: "Vergleich",
+        title: "AnyCap vs OpenAI Agent Builder",
+        href: "/compare/anycap-vs-openai-agent-builder",
+        body: "Sehen Sie, wie sich eine Capability-Runtime von einer Builder-Plattform innerhalb des Agent-Stacks unterscheidet.",
+      },
+      {
+        eyebrow: "Leitfaden",
+        title: "Was ist ein Agent Harness?",
+        href: "/guides/what-is-agent-harness",
+        body: "Verstehen Sie, wo AnyCap zwischen Modell, Harness und Capability-Schicht liegt.",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Was ist der Hauptunterschied zwischen AnyCap und Composio?",
+        answer:
+          "AnyCap ist eine Capability-Runtime, die Agenten multimodale Capabilities über eine CLI und einen Auth-Flow gibt. Composio ist eine Tool-Integrationsplattform, die Agenten über SDK-Integrationen mit Hunderten von Drittanbieterdiensten verbindet. AnyCap fokussiert auf Tiefe der multimodalen Capabilities; Composio auf Breite der Service-Integrationen.",
+      },
+      {
+        question: "Kann ich AnyCap und Composio zusammen nutzen?",
+        answer:
+          "Ja. Beide lösen unterschiedliche Probleme und konfligieren nicht. Sie können AnyCap für multimodale Capabilities und Composio für SaaS-Tool-Integrationen im selben Agent-Workflow verwenden.",
+      },
+      {
+        question: "Was ist besser für Bild- und Videogenerierung?",
+        answer:
+          "AnyCap. Bild- und Videogenerierung sind eingebaute Capabilities mit kuratierten Modellen. Composio kann externe Bild-APIs als Tool-Integrationen anbinden, jede Integration erfordert jedoch separate Konfiguration.",
+      },
+      {
+        question: "Was ist besser für die Anbindung an SaaS-Tools wie Gmail oder Slack?",
+        answer:
+          "Composio. Es spezialisiert sich darauf, Agenten mit Hunderten von Drittanbieterdiensten über verwaltetes OAuth zu verbinden. AnyCap bietet keine SaaS-Tool-Integrationen; es fokussiert auf multimodale Capabilities und Web-Retrieval.",
+      },
+      {
+        question: "Wie unterscheidet sich die Authentifizierung zwischen AnyCap und Composio?",
+        answer:
+          "AnyCap verwendet ein einziges Login, das jede Capability abdeckt. Composio verwaltet OAuth-Flows und API-Keys pro Tool, was feinkörnige Kontrolle über jede Integration gibt, aber mit wachsender Anzahl verbundener Tools mehr Setup erfordert.",
+      },
+    ],
+    footerCtas: {
+      github: "Auf GitHub ansehen",
+      capability: "Alle Capabilities",
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "AnyCap vs Composio – Vergleich der Agent-Capabilities",
+      description:
+        "Vergleichen Sie AnyCap und Composio, um KI-Agenten Capabilities zu geben. AnyCap ist eine agent-native Capability-Runtime mit einer CLI; Composio ist eine Tool-Integrationsplattform.",
+      path: "/compare/anycap-vs-composio",
+      about: ["AnyCap", "Composio", "KI-Agent-Capabilities", "Tool-Integration"],
+      keywords: [
+        "anycap vs composio",
+        "composio alternative",
+        "vergleich ki-agent-tools",
+        "capability runtime vs tool-plattform",
+      ],
+      datePublished: "2026-04-03",
+      dateModified: "2026-04-10",
+    }),
+  },
 };
-contentByLocale.id = contentByLocale.en;
-contentByLocale.de = contentByLocale.en;
 
 export default async function AnycapVsComposioPage() {
   const locale = await getRequestLocale();

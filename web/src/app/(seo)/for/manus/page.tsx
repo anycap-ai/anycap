@@ -231,6 +231,105 @@ const gapRowsDe: CapabilityGapRow[] = [
   },
 ];
 
+const gapRowsId: CapabilityGapRow[] = [
+  {
+    capability: "Image generation",
+    cells: [
+      { label: "Alur umum", tone: "muted" },
+      { label: "Buat visual dan mockup dengan anycap image generate", tone: "accent" },
+      { label: "Halaman image generation", href: "/capabilities/image-generation" },
+    ],
+  },
+  {
+    capability: "Video generation",
+    cells: [
+      { label: "Setup per task", tone: "muted" },
+      { label: "Buat walkthrough dan klip dengan anycap video generate", tone: "accent" },
+      { label: "Halaman video generation", href: "/capabilities/video-generation" },
+    ],
+  },
+  {
+    capability: "Music generation",
+    cells: [
+      { label: "Setup provider per task", tone: "muted" },
+      { label: "Buat backing track lewat runtime musik AnyCap", tone: "accent" },
+      { label: "Halaman music generation", href: "/capabilities/music-generation" },
+    ],
+  },
+  {
+    capability: "Image understanding",
+    cells: [
+      { label: "Visual reasoning ad hoc", tone: "muted" },
+      { label: "Baca screenshot, diagram, dan referensi visual", tone: "accent" },
+      { label: "Halaman image understanding", href: "/capabilities/image-understanding" },
+    ],
+  },
+  {
+    capability: "Video analysis",
+    cells: [
+      { label: "Alur review ad hoc", tone: "muted" },
+      { label: "Periksa rekaman lewat CLI yang sama", tone: "accent" },
+      { label: "Halaman video analysis", href: "/capabilities/video-analysis" },
+    ],
+  },
+  {
+    capability: "Audio understanding",
+    cells: [
+      { label: "Review audio ad hoc", tone: "muted" },
+      { label: "Transkrip dan analisis audio lewat satu runtime", tone: "accent" },
+      { label: "Halaman audio understanding", href: "/capabilities/audio-understanding" },
+    ],
+  },
+  {
+    capability: "Web search",
+    cells: [
+      { label: "Perilaku berbeda tiap task", tone: "muted" },
+      { label: "Cari di web lewat lapisan kapabilitas yang sama", tone: "accent" },
+      { label: "Halaman web search", href: "/capabilities/web-search" },
+    ],
+  },
+  {
+    capability: "Grounded web search",
+    cells: [
+      { label: "Grounded search berbeda tiap task", tone: "muted" },
+      { label: "Jalankan grounded search saat jawaban butuh sitasi", tone: "accent" },
+      { label: "Halaman grounded web search", href: "/capabilities/grounded-web-search" },
+    ],
+  },
+  {
+    capability: "Web crawl",
+    cells: [
+      { label: "Setup crawl berbeda tiap task", tone: "muted" },
+      { label: "Crawl halaman dan ekstrak konten lewat satu CLI", tone: "accent" },
+      { label: "Halaman web crawl", href: "/capabilities/web-crawl" },
+    ],
+  },
+  {
+    capability: "Drive storage",
+    cells: [
+      { label: "Penyimpanan tergantung tiap alur", tone: "muted" },
+      { label: "Simpan output dengan URL publik di AnyCap Drive", tone: "accent" },
+      { label: "Halaman pricing", href: "/pricing" },
+    ],
+  },
+  {
+    capability: "Page hosting",
+    cells: [
+      { label: "Publikasi berbeda tiap task", tone: "muted" },
+      { label: "Publish halaman sederhana lewat AnyCap Page", tone: "accent" },
+      { label: "Halaman pricing", href: "/pricing" },
+    ],
+  },
+  {
+    capability: "Satu auth flow",
+    cells: [
+      { label: "Akses kapabilitas berbeda tiap task", tone: "muted" },
+      { label: "Satu login untuk seluruh stack kapabilitas", tone: "accent" },
+      { label: "Halaman Mulai", href: "/start" },
+    ],
+  },
+];
+
 type PageContent = {
   breadcrumbItems: readonly { name: string; href?: string; unlinkable?: boolean }[];
   heroEyebrow: string;
@@ -519,7 +618,137 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
-  id: undefined as never,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Lengkapi Agen", href: "/for", unlinkable: true },
+      { name: "Manus" },
+    ],
+    heroEyebrow: "Untuk Manus",
+    heroTitle: [
+      "Manus bisa merencanakan, browsing, dan mengantar pekerjaan.",
+      "Tetap butuh capability runtime yang berdiri sendiri.",
+    ],
+    heroIntro:
+      "Manus sangat baik dalam eksekusi otonom yang multi-step dan berbasis browser. Celahnya muncul saat sebuah workflow butuh image generation, video generation, image understanding, atau video analysis yang berulang — tanpa membuat tiap task kembali ke setup provider dari nol. AnyCap menambahkan runtime yang hilang itu lewat satu skill, satu login, dan satu CLI, jadi Manus tetap dipakai dan kemampuannya melebar dengan andal.",
+    heroMicrocopy: "Tetap pakai Manus. Standardisasi lapisan kapabilitasnya.",
+    heroCtas: {
+      primary: "Mulai Sekarang",
+      image: "Image Generation",
+      video: "Video Analysis",
+    },
+    table: {
+      eyebrow: "Capability gap",
+      title: "Di mana Manus masih untung dengan runtime khusus",
+      description:
+        "Manus tetap fokus pada eksekusi otonom, sementara AnyCap menstandardisasi generation, analysis, search, storage, dan publishing lintas task.",
+      capabilityLabel: "Kapabilitas",
+      columns: [
+        { label: "Manus saja" },
+        { label: "Tambah dengan AnyCap", accent: true },
+        { label: "Langkah berikut terbaik" },
+      ],
+      footnote:
+        "Halaman ini adalah hub Manus. Sampai ada lebih banyak halaman dalam khusus Manus, langkah berikutnya mengarah ke halaman kapabilitas atau halaman pricing yang paling cepat menutup tiap celah.",
+      rows: gapRowsId,
+    },
+    installTitle: "Pasang dalam 3 langkah",
+    installSteps: [
+      {
+        title: "Pasang skill",
+        subtitle: "Langkah 1",
+        code: "npx -y skills add anycap-ai/anycap -y",
+        note: "Manus mendukung skill yang reusable. Ini memberi Manus pintu masuk yang awet ke runtime AnyCap, bukan menjelaskan ulang stack kapabilitas yang sama di tiap task.",
+      },
+      {
+        title: "Pasang CLI",
+        subtitle: "Langkah 2",
+        code: "curl -fsSL https://anycap.ai/install.sh | sh",
+        note: "CLI menjadi permukaan eksekusi yang stabil untuk beban image, video, dan vision di seluruh task Manus.",
+      },
+      {
+        title: "Login dan verifikasi",
+        subtitle: "Langkah 3",
+        code: "anycap login && anycap status",
+        note: "Setelah autentikasi, Manus bisa memakai ulang capability runtime yang sama tanpa setup provider baru tiap kali task berkembang.",
+      },
+    ],
+    capabilityCardsTitle: "Mulai dari kapabilitas pertama yang hilang",
+    capabilityCards: [
+      {
+        eyebrow: "Output kreatif",
+        title: "Image Generation",
+        href: "/capabilities/image-generation",
+        summary: "Halaman lanjutan terbaik saat Manus butuh visual, mockup, aset launch, atau output gambar berulang lainnya.",
+        command: "anycap image generate",
+      },
+      {
+        eyebrow: "Output bergerak",
+        title: "Video Generation",
+        href: "/capabilities/video-generation",
+        summary: "Halaman lanjutan terbaik saat workflow butuh demo, explainer, klip walkthrough, atau output bergerak.",
+        command: "anycap video generate",
+      },
+      {
+        eyebrow: "Vision",
+        title: "Image Understanding",
+        href: "/capabilities/image-understanding",
+        summary: "Halaman lanjutan terbaik saat Manus perlu memeriksa screenshot, diagram, OCR, atau input QA visual.",
+        command: "anycap image read",
+      },
+      {
+        eyebrow: "Analysis",
+        title: "Video Analysis",
+        href: "/capabilities/video-analysis",
+        summary: "Halaman lanjutan terbaik saat Manus perlu mereview rekaman dan mengekstrak detail terstruktur dari video.",
+        command: "anycap video read",
+      },
+    ],
+    faqTitle: "FAQ",
+    faqItems: [
+      {
+        question: "Kenapa menambahkan AnyCap ke Manus?",
+        answer:
+          "Manus kuat dalam eksekusi otonom end-to-end. AnyCap menambahkan runtime khusus untuk beban image, video, dan vision sehingga kapabilitas tersebut tetap reusable, predictable, dan lebih mudah dirouting lintas task.",
+      },
+      {
+        question: "Apakah AnyCap menggantikan Manus?",
+        answer:
+          "Tidak. Idenya tetap memakai Manus dan menambahkan lapisan kapabilitas yang stabil untuk image generation, video generation, image understanding, dan video analysis.",
+      },
+      {
+        question: "Bisakah Manus memakai AnyCap lewat skill?",
+        answer:
+          "Bisa. Pasang skill AnyCap, pasang CLI, login sekali, lalu Manus bisa memanggil lapisan kapabilitas yang sama di banyak workflow.",
+      },
+      {
+        question: "Mulai dari mana untuk workflow Manus?",
+        answer:
+          "Sebagian besar tim mulai dari kapabilitas pertama yang hilang di workflow: image generation untuk aset, image understanding untuk screenshot, video generation untuk demo, atau video analysis untuk rekaman.",
+      },
+    ],
+    footerCtas: {
+      primary: "Mulai Sekarang",
+      cli: "Kenapa satu CLI penting",
+      skills: "Bagaimana skill cocoknya",
+    },
+    integrationGuideJsonLd: createTechArticleJsonLd({
+      headline: "Tools dan kapabilitas Manus — Tambah image, video, dan vision dengan AnyCap",
+      description:
+        "Panduan menambahkan image generation, video generation, image understanding, dan video analysis ke Manus lewat satu capability runtime.",
+      path: "/for/manus",
+      about: ["Manus", "AnyCap CLI", "Agent skills", "Capability runtime"],
+      keywords: [
+        "tools manus",
+        "skill manus",
+        "kapabilitas manus",
+        "image generation manus",
+        "agent skill manus",
+      ],
+      datePublished: PAGE_LAST_MODIFIED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
   de: {
     breadcrumbItems: [
       { name: "Startseite", href: "/" },
@@ -653,7 +882,6 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
 };
-contentByLocale.id = contentByLocale.en;
 
 export default async function ForManusPage() {
   const locale = await getRequestLocale();
