@@ -418,6 +418,95 @@ const problemSignalsDe = [
   },
 ] as const;
 
+const faqItemsId = [
+  {
+    question: "Apa itu agent capability runtime?",
+    answer:
+      "Agent capability runtime adalah lapisan software yang memberi agen AI kapabilitas yang bisa dipasang seperti pembuatan gambar, pembuatan video, pemahaman gambar, analisis video, web search, dan web crawl lewat satu antarmuka. Ia menyediakan satu install path, satu alur autentikasi, dan satu permukaan command untuk setiap kapabilitas yang dibutuhkan agen, alih-alih mengharuskan integrasi provider terpisah.",
+  },
+  {
+    question: "Apa bedanya capability runtime dengan agent framework?",
+    answer:
+      "Agent framework seperti LangChain, CrewAI, atau AutoGen menyediakan loop reasoning, memori, dan orkestrasi untuk membangun agen. Capability runtime tidak menggantikan framework. Ia memasok kapabilitas konkret yang bisa dipanggil agen-agen di framework tersebut. Keduanya beroperasi di lapisan yang berbeda dalam stack.",
+  },
+  {
+    question: "Apa bedanya capability runtime dengan platform integrasi tool?",
+    answer:
+      "Platform integrasi tool seperti Composio atau Zapier menghubungkan agen ke ratusan layanan pihak ketiga lewat integrasi level SDK dan OAuth per tool. Capability runtime fokus mengirimkan kapabilitas berkualitas tinggi yang terkurasi lewat satu CLI dan satu alur autentikasi. Trade-off-nya adalah luas vs dalam.",
+  },
+  {
+    question: "Kenapa tidak panggil API provider langsung saja?",
+    answer:
+      "Integrasi API langsung memberi kontrol penuh tapi butuh autentikasi, penanganan error, rate limiting, dan normalisasi respons terpisah per provider. Saat agen butuh pembuatan gambar dari satu provider, pembuatan video dari yang lain, dan visi dari yang ketiga, beban integrasi berlipat ganda. Capability runtime menyerap kompleksitas itu ke dalam satu antarmuka.",
+  },
+  {
+    question: "Kapabilitas apa saja yang biasanya dicakup agent capability runtime?",
+    answer:
+      "Kapabilitas umum mencakup pembuatan gambar, pembuatan video, pemahaman gambar, analisis video, transkripsi audio, web search, web crawl, cloud storage, dan publishing halaman statis. Cakupan tepatnya tergantung runtime-nya.",
+  },
+  {
+    question: "Apakah AnyCap satu-satunya agent capability runtime?",
+    answer:
+      "AnyCap adalah produk pertama yang memakai istilah agent capability runtime sebagai kategori utamanya. Produk lain memecahkan sebagian masalah yang sama, tapi belum ada yang menggabungkan satu install, satu auth, dan satu CLI di seluruh capability stack seperti yang dilakukan capability runtime khusus.",
+  },
+  {
+    question: "Apakah capability runtime menggantikan agen AI?",
+    answer:
+      "Tidak. Capability runtime bukan agen. Ia berjalan berdampingan dengan agen dan menyediakan kapabilitas yang tidak dibawa agen secara bawaan. Agen menangani reasoning, perencanaan, dan eksekusi kode. Runtime menangani semua hal di luar permukaan bawaan agen.",
+  },
+  {
+    question: "Bagaimana hubungan MCP dengan capability runtime?",
+    answer:
+      "MCP adalah protokol komunikasi yang menstandarkan cara agen menemukan dan memanggil tool. Capability runtime bisa mengekspos kapabilitasnya lewat MCP, tapi MCP saja tidak menyediakan kapabilitas itu. Ia menyediakan kabelnya, sementara runtime membundel implementasi, autentikasi, dan pengirimannya.",
+  },
+] as const;
+
+const capabilityCategoriesId = [
+  {
+    category: "Generasi",
+    capabilities: "Pembuatan gambar, pembuatan video, pembuatan musik",
+    agentUse: "Membuat visual, demo, mockup produk, aset marketing, dan trek latar",
+  },
+  {
+    category: "Pemahaman",
+    capabilities: "Pemahaman gambar, analisis video, transkripsi audio",
+    agentUse: "Menafsirkan screenshot, menganalisis rekaman, membaca diagram, mengekstrak data terstruktur dari media",
+  },
+  {
+    category: "Pengambilan web",
+    capabilities: "Web search, web crawl",
+    agentUse: "Riset, cek fakta, analisis kompetitif, pencarian dokumentasi, pengumpulan bukti",
+  },
+  {
+    category: "Pengiriman",
+    capabilities: "Cloud storage, publishing halaman statis",
+    agentUse: "Membagikan aset hasil generasi ke manusia, mempublikasikan hasil sebagai halaman web, menyimpan artefak untuk pemakaian berikutnya",
+  },
+] as const;
+
+const problemSignalsId = [
+  {
+    signal: "Agen perlu menghasilkan artefak gambar, video, atau audio",
+    without: "Butuh integrasi API gambar terpisah, kredensial terpisah, dan penanganan error khusus",
+    with: "Satu command CLI: anycap image generate, anycap video generate, atau anycap music generate",
+  },
+  {
+    signal: "Agen perlu menafsirkan screenshot, diagram, atau rekaman",
+    without: "Butuh API visi, mungkin juga API transkripsi, masing-masing dengan auth dan SDK sendiri",
+    with: "Satu command CLI: anycap image read, anycap video read, atau anycap audio read",
+  },
+  {
+    signal: "Workflow merentang ke tiga provider kapabilitas atau lebih",
+    without: "Tiga set API key, tiga SDK, tiga pola penanganan error, tiga dashboard tagihan",
+    with: "Satu login, satu CLI, satu permukaan tagihan",
+  },
+  {
+    signal: "Produk agen baru butuh kapabilitas yang sama dengan yang lama",
+    without: "Integrasi ulang tiap provider untuk agen baru, tulis ulang glue code, uji ulang alur auth",
+    with: "Pasang skill file dan CLI yang sama — kapabilitas langsung pindah ke agen baru",
+  },
+] as const;
+
 const relatedPages = [
   {
     eyebrow: "Glossary",
@@ -837,7 +926,247 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       github: "Ver no GitHub",
     },
   },
-  id: undefined as unknown as AgentCapabilityRuntimePageData,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Glosarium", href: "/glossary", unlinkable: true },
+      { name: "Agent Capability Runtime", href: "/glossary/agent-capability-runtime" },
+    ],
+    metadata: {
+      title: "Apa itu Agent Capability Runtime? | AnyCap",
+      description:
+        "Agent capability runtime memberi agen AI kapabilitas yang bisa dipasang (gambar, video, visi) lewat satu antarmuka dan satu alur autentikasi. Lihat bedanya dengan agent framework dan platform tool.",
+      openGraphTitle: "Apa itu Agent Capability Runtime? | AnyCap",
+      openGraphDescription:
+        "Agent capability runtime memberi agen AI kapabilitas yang bisa dipasang lewat satu antarmuka. Pelajari bedanya dengan agent framework, platform integrasi tool, dan integrasi API langsung.",
+    },
+    definitionJsonLd: {
+      "@context": "https://schema.org",
+      "@type": "DefinedTerm",
+      name: "Agent Capability Runtime",
+      description:
+        "Lapisan software yang memberi agen AI kapabilitas yang bisa dipasang lewat satu antarmuka, alih-alih membutuhkan integrasi terpisah untuk tiap kapabilitas.",
+      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+    },
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Apa itu Agent Capability Runtime? Definisi, arsitektur, dan kenapa penting",
+      description:
+        "Panduan mendalam tentang agent capability runtime: apa itu, bedanya dengan agent framework dan platform tool, masalah arsitektur apa yang diselesaikan, dan kapan tim sebaiknya mengadopsinya.",
+      path: AGENT_CAPABILITY_RUNTIME_PATH,
+      about: ["Agent Capability Runtime", "Agen AI", "AI multimodal", "Arsitektur agen", "Integrasi tool"],
+      keywords: [
+        "agent capability runtime",
+        "ai capability runtime",
+        "ai agent runtime",
+        "tool agen",
+        "kapabilitas agen",
+        "agen multimodal",
+        "arsitektur agen",
+      ],
+      datePublished: "2026-04-03",
+      dateModified: "2026-04-10",
+    }),
+    faqJsonLd: buildFaqJsonLd(faqItemsId),
+    eyebrow: "Glosarium",
+    lastUpdatedLabel: "10 April 2026",
+    heroTitle: ["Apa itu agent", "capability runtime?"],
+    heroBody: [
+      "Agent capability runtime adalah lapisan software yang memberi agen AI kapabilitas yang bisa dipasang lewat satu antarmuka yang konsisten. Alih-alih mengharuskan SDK, alur autentikasi, format respons, dan penanganan lifecycle terpisah untuk tiap kapabilitas, runtime ini menyediakan satu install path, satu alur autentikasi, dan satu permukaan command untuk apa pun yang dibutuhkan agen di luar loop reasoning bawaannya. Ini penting saat workflow melintasi banyak provider, karena kompleksitas integrasi tumbuh lebih cepat daripada peningkatan kualitas model. Runtime menyerap kompleksitas itu agar tim bisa fokus pada penyelesaian tugas, bukan pemeliharaan glue code.",
+      "Istilah ini menamai sebuah lapisan arsitektur yang spesifik di stack agen. Agen menangani reasoning, perencanaan, dan eksekusi kode. Harness mengelola lifecycle, izin, dan routing tool. Capability runtime duduk di bawah keduanya dan memasok aksi konkret seperti generasi, pemahaman, pengambilan data, penyimpanan, dan publishing lewat kontrak yang agent-native. Dengan pemisahan ini, tim bisa mengembangkan model, prompt, dan provider tanpa menulis ulang logika eksekusi setiap kali kebutuhan kapabilitas bertambah.",
+    ],
+    sectionLabels: {
+      architecture: "Arsitektur",
+      motivation: "Motivasi",
+      comparison: "Perbandingan",
+      scope: "Cakupan",
+      design: "Desain",
+      example: "Contoh",
+    },
+    architectureHeading: "Posisi capability runtime di stack agen",
+    architectureIntro:
+      "Stack agen punya banyak lapisan, dan tiap lapisan menyelesaikan kelas masalah yang berbeda. Capability runtime menempati lapisan antara harness dan API model/provider, di mana konsistensi eksekusi paling penting. Tugasnya adalah menyatukan kapabilitas yang kalau tidak akan tersebar antar provider yang masing-masing punya model auth, kontrak request, dan semantik kegagalan yang berbeda. Dengan memusatkan lapisan ini, tim mengurangi drift operasional dan menjaga perilaku agen lebih bisa diprediksi seiring workflow tumbuh dalam modalitas dan kompleksitas. Ini juga lapisan dengan leverage paling besar: satu update runtime bisa memperbaiki banyak workflow tanpa menyentuh tiap integrasi agen secara terpisah. Dalam praktiknya, ini berarti biaya onboarding lebih rendah, batas insiden lebih jelas, dan lebih sedikit regresi saat perilaku provider berubah. Lapisan ini juga jadi kontrak stabil bagi tim platform untuk menegakkan kebijakan tanpa menghambat kecepatan delivery.",
+    architectureTable: baseArchitectureRows.map((row) => {
+      if (row.layer === "Agent (reasoning layer)") {
+        return {
+          layer: "Agen (lapisan reasoning)",
+          role: "Merencanakan, bernalar, menulis kode, menjalankan command shell, mengelola percakapan",
+          examples: "Claude Code, Cursor, Codex, OpenCode, agen LangChain kustom",
+        };
+      }
+
+      if (row.layer === "Harness (execution layer)") {
+        return {
+          layer: "Harness (lapisan eksekusi)",
+          role: "Mengelola lifecycle agen: routing tool, izin, jendela konteks, penemuan skill",
+          examples: "Harness bawaan Claude Code, mode agen Cursor, sandbox OpenAI Codex",
+        };
+      }
+
+      if (row.layer === "Capability runtime") {
+        return {
+          layer: "Capability runtime",
+          role: "Memasok kapabilitas yang bisa dipasang (generasi, pemahaman, pencarian, penyimpanan) lewat satu antarmuka",
+          examples: "AnyCap",
+        };
+      }
+
+      return {
+        layer: "API model / provider",
+        role: "Menyajikan endpoint inferensi model individu untuk tugas spesifik",
+        examples: "OpenAI API, Google Gemini API, Replicate, fal.ai, ElevenLabs",
+      };
+    }),
+    architectureClosing:
+      "Intinya, kapabilitas tidak sama dengan agen, dan tidak sama dengan API model. Capability runtime adalah lapisan khusus yang menjembatani jarak antara apa yang bisa dilakukan agen secara bawaan dan apa yang sebenarnya dibutuhkan workflow.",
+    motivationHeading: "Masalah yang diselesaikan capability runtime",
+    motivationIntro:
+      "Tanpa capability runtime, menambahkan tiap kapabilitas baru ke workflow agen berarti integrasi terpisah. Tabel di bawah menunjukkan apa yang berubah saat runtime menyerap pekerjaan integrasi itu.",
+    problemSignals: problemSignalsId,
+    comparisonHeading: "Bedanya dengan pendekatan lain",
+    comparisonIntro:
+      "Capability runtime bukan satu-satunya cara memberi agen kemampuan baru, tapi ia menyelesaikan masalah eksekusi spesifik yang sering dibiarkan terbuka pendekatan lain. Framework mengorkestrasi loop reasoning, platform tool memaksimalkan luas integrasi, dan API langsung memaksimalkan kontrol level rendah. Capability runtime mengoptimalkan delivery operasional yang konsisten antar aksi multimodal di lingkungan agen. Pilihan terbaik tergantung luas workflow, jumlah provider, dan seberapa banyak overhead integrasi yang sanggup diserap tim tanpa memperlambat delivery produk. Dalam praktik, tim dengan repetisi cross-modal yang tinggi biasanya paling diuntungkan oleh lapisan ini. Nilainya berlipat saat banyak produk agen membutuhkan kapabilitas yang sama dengan ekspektasi reliabilitas yang sama. Ini paling kentara saat satu workflow harus berjalan tanpa perubahan di harness berbeda dan siklus rilis berbeda. Bedanya seperti reintegrasi berulang vs infrastruktur eksekusi yang bisa dipakai ulang.",
+    approachComparisons: baseApproachComparisons.map((row) => {
+      if (row.approach === "Direct API integration") {
+        return {
+          approach: "Integrasi API langsung",
+          what: "Memanggil API REST atau SDK tiap provider secara langsung untuk pembuatan gambar, pembuatan video, visi, dll.",
+          install: "Pemasangan SDK dan setup API key per provider",
+          auth: "Kredensial terpisah per provider",
+          tradeoff: "Kontrol penuh atas tiap provider, tapi beban integrasi berlipat dengan tiap kapabilitas baru",
+          bestFor: "Tim yang hanya butuh satu kapabilitas dari satu provider dan menginginkan kontrol maksimum",
+        };
+      }
+
+      if (row.approach === "Agent framework") {
+        return {
+          approach: "Agent framework",
+          what: "Menyediakan loop reasoning, memori, orkestrasi tool, dan manajemen lifecycle agen",
+          install: "Pemasangan level framework (pip, npm, dll.)",
+          auth: "Framework mengelola pemanggilan tool; tool tetap butuh auth-nya sendiri",
+          tradeoff: "Orkestrasi kuat, tapi framework tidak memasok kapabilitas itu sendiri — ia hanya memanggilnya",
+          bestFor: "Tim yang membangun arsitektur agen kustom dari nol",
+        };
+      }
+
+      if (row.approach === "Tool integration platform") {
+        return {
+          approach: "Platform integrasi tool",
+          what: "Menghubungkan agen ke 100+ layanan pihak ketiga lewat integrasi SDK dan OAuth terkelola",
+          install: "Integrasi SDK ke kode aplikasi",
+          auth: "OAuth terkelola per tool dan penyimpanan API key",
+          tradeoff: "Cakupan sangat luas, tapi tiap tool tetap jadi permukaan integrasi terpisah di balik platform",
+          bestFor: "Tim yang butuh akses CRM, email, kalender, dan tool SaaS untuk agen mereka",
+        };
+      }
+
+      if (row.approach === "MCP server") {
+        return {
+          approach: "Server MCP",
+          what: "Mengekspos satu tool atau set tool lewat standar Model Context Protocol",
+          install: "Setup server MCP per tool atau kapabilitas",
+          auth: "Bervariasi tergantung implementasi server MCP",
+          tradeoff: "Standar level protokol untuk komunikasi agen-tool, tapi tiap server adalah proses terpisah",
+          bestFor: "Tim yang memperluas produk agen yang mendukung MCP secara native (Claude Desktop, Cursor, dll.)",
+        };
+      }
+
+      return {
+        approach: "Capability runtime",
+        what: "Satu install, satu auth, tiap kapabilitas lewat antarmuka agent-native yang konsisten",
+        install: "Satu skill file + satu binary CLI",
+        auth: "Satu login mencakup seluruh capability stack",
+        tradeoff: "Agent-native dan konsisten, tapi kapabilitas terkurasi alih-alih open-ended",
+        bestFor: "Tim yang butuh kapabilitas multimodal di dalam workflow agen",
+      };
+    }),
+    scopeHeading: "Kapabilitas apa yang biasanya dicakup runtime",
+    scopeIntro:
+      "Capability runtime mencakup kapabilitas yang berada di luar loop reasoning bawaan agen tapi berulang kali dibutuhkan di workflow nyata. Tujuannya bukan menggantikan reasoning, tapi membuat aksi non-reasoning tersedia lewat lapisan eksekusi yang stabil. Dalam praktik, sebagian besar inventaris runtime mengelompok secara alami ke empat kategori sehingga tim bisa berpikir tentang cakupan, mengenali celah, dan memperluas akses kapabilitas tanpa mendesain ulang model orkestrasinya tiap kali muncul jenis tugas baru. Pengelompokan kategori ini juga membuat perencanaan roadmap lebih jernih karena tim bisa memprioritaskan berdasarkan dampak workflow alih-alih marketing provider. Ini membantu tim produk dan engineering sepakat soal apa yang ditambahkan berikutnya berdasarkan bottleneck eksekusi, bukan siklus hype. Saat jumlah kapabilitas tumbuh, struktur ini mencegah pertumbuhan inventaris yang tidak teratur dari menggerus reliabilitas agen atau memperlambat adopsi lintas tim. Ia juga menjaga dokumentasi dan bahasa implementasi tetap selaras antar tim.",
+    capabilityCategories: capabilityCategoriesId,
+    designHeading: "Prinsip desain utama capability runtime",
+    designPrinciples: [
+      {
+        title: "Satu install path",
+        body:
+          "Agen tidak seharusnya perlu menemukan, mengunduh, dan mengkonfigurasi paket terpisah untuk tiap kapabilitas. Capability runtime dipasang sekali dan membuat tiap kapabilitas tersedia lewat binary atau skill file yang sama.",
+      },
+      {
+        title: "Satu alur autentikasi",
+        body:
+          "Autentikasi sebaiknya terjadi sekali dan berlaku untuk tiap kapabilitas. Agen tidak seharusnya mengelola API key, token OAuth, atau akun tagihan terpisah per provider.",
+      },
+      {
+        title: "Antarmuka agent-native",
+        body:
+          "Antarmukanya harus selaras dengan cara kerja agen yang sudah ada. Untuk agen native terminal, itu berarti CLI. Untuk agen berbasis SDK, mungkin berarti library.",
+      },
+      {
+        title: "Abstraksi provider",
+        body:
+          "Runtime mengabstraksi perbedaan antar provider. Kalau model pembuatan gambar berubah, pola pemanggilan agen tetap sama. Pemilihan model jadi parameter, bukan reintegrasi.",
+      },
+      {
+        title: "Portabilitas antar agen",
+        body:
+          "Kapabilitas seharusnya ikut berpindah saat tim ganti agen. Kalau tim pindah dari Claude Code ke Cursor atau Codex, capability runtime yang sama harus tetap jalan tanpa harus integrasi ulang provider.",
+      },
+    ],
+    exampleHeading: "AnyCap sebagai capability runtime",
+    exampleBody: [
+      "AnyCap adalah capability runtime agent-native yang dibangun sejak awal untuk workflow agen. Ia menerapkan prinsip desain di atas: satu install skill file, satu binary CLI, satu login, dan satu permukaan command untuk tiap kapabilitas.",
+      "Saat ini AnyCap menyediakan pembuatan gambar, pembuatan video, pembuatan musik, pemahaman gambar, analisis video, pemahaman audio, web search, grounded web search, web crawl, Drive storage, dan Page publishing. Ia bekerja di Claude Code, Cursor, Codex, dan produk agen lain lewat skill file.",
+    ],
+    exampleCallout: "curl -fsSL https://anycap.ai/install.sh | sh && anycap login",
+    examplePostscript:
+      "Setelah itu, tiap kapabilitas tersedia lewat anycap <capability> <operation> di produk agen mana pun yang didukung.",
+    faqHeading: "FAQ",
+    faqItems: faqItemsId as unknown as { question: string; answer: string }[],
+    relatedHeading: "Halaman terkait",
+    relatedPages: [
+      {
+        eyebrow: "Glosarium",
+        title: "Apa itu context engineering?",
+        href: "/glossary/context-engineering",
+        summary: "Cara agen mengelola informasi yang mereka kirim ke model saat inferensi.",
+      },
+      {
+        eyebrow: "Glosarium",
+        title: "Apa itu agent harness?",
+        href: "/glossary/agent-harness",
+        summary: "Lapisan eksekusi yang mengelola routing tool, izin, dan lifecycle agen.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Context engineering untuk agen",
+        href: "/guides/context-engineering-for-agents",
+        summary: "Strategi praktis untuk mengkurasi konteks yang tepat di dalam workflow agen.",
+      },
+      {
+        eyebrow: "Panduan",
+        title: "Agent skill untuk developer tool",
+        href: "/guides/agent-skills-for-developer-tools",
+        summary: "Cara skill file memungkinkan agen menemukan dan memanggil kapabilitas tanpa konfigurasi manual.",
+      },
+      {
+        eyebrow: "Bandingkan",
+        title: "AnyCap vs Composio",
+        href: "/compare/anycap-vs-composio",
+        summary: "Perbandingan capability runtime dengan platform integrasi tool.",
+      },
+      {
+        eyebrow: "Bandingkan",
+        title: "AnyCap vs Replicate",
+        href: "/compare/anycap-vs-replicate",
+        summary: "Perbandingan capability runtime dengan platform inferensi model.",
+      },
+    ],
+    ctas: {
+      primary: "Lihat Kapabilitas",
+      secondary: "Ringkasan CLI",
+      tertiary: "Mulai",
+      github: "Lihat di GitHub",
+    },
+  },
   de: {
     breadcrumbItems: [
       { name: "Start", href: "/" },

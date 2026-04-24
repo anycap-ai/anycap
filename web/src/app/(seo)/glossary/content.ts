@@ -52,6 +52,14 @@ const glossaryHubContentDe: GlossaryHubPageData = {
   ],
 };
 
+const glossaryHubContentId: GlossaryHubPageData = {
+  ...getHubPageDefinition("id", "glossary"),
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Glosarium", href: GLOSSARY_PATH },
+  ],
+};
+
 const contextEngineeringContentEn: GlossaryEntryPageData = {
   metadata: {
     title: "What is context engineering? How AI agents use context",
@@ -280,24 +288,100 @@ const agentHarnessContentDe: GlossaryEntryPageData = {
   ],
 };
 
+const contextEngineeringContentId: GlossaryEntryPageData = {
+  metadata: {
+    title: "Apa itu context engineering? Cara agen AI memakai konteks",
+    description:
+      "Context engineering adalah praktik membentuk apa yang dilihat, diingat, dan bisa dilakukan agen AI saat eksekusi. Pelajari pengaruhnya pada panggilan kapabilitas dan workflow multimodal.",
+    openGraphTitle: "Apa itu context engineering? Cara agen AI memakai konteks",
+    openGraphDescription:
+      "Pahami arti context engineering bagi agen AI dan pengaruhnya pada panggilan kapabilitas, perilaku workspace, dan workflow multimodal.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Glosarium", href: GLOSSARY_PATH },
+    { name: "Context Engineering", href: "/glossary/context-engineering" },
+  ],
+  eyebrow: "Glosarium",
+  heroTitle: ["Apa itu", "context engineering?"],
+  intro:
+    "Context engineering adalah praktik membentuk ruang informasi dan ruang aksi yang dipakai agen AI saat eksekusi berjalan, bukan hanya saat menulis prompt awal. Cakupannya termasuk prompt, file workspace, definisi tool, runtime state, batas izin, langkah-langkah sebelumnya, dan batasan operasional yang memengaruhi kualitas keputusan. Di workflow produksi, sinyal-sinyal ini menentukan apakah agen memilih tool yang tepat di waktu yang tepat, meminta data yang hilang, atau lanjut bernalar dalam teks. Context engineering yang kuat mengurangi panggilan tool yang tidak perlu, menekan loop kegagalan, dan membuat perilaku lebih mudah direproduksi antar run. Tanpa itu, model yang kuat sekalipun bisa mengambil keputusan eksekusi yang buruk karena state penting hilang, ambigu, atau muncul terlambat. Itulah sebabnya tim agen yang berkinerja tinggi memperlakukan desain konteks sebagai infrastruktur inti, bukan urusan copywriting. Konteks berfungsi sebagai arsitektur eksekusi, bukan gaya komunikasi semata, terutama di workflow multimodal dengan target reliabilitas yang ketat.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Context Engineering",
+    description:
+      "Praktik membentuk informasi, tool, batasan, dan runtime state yang dipakai agen AI saat eksekusi agar bisa mengambil keputusan yang lebih baik.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
+  },
+  whyTitle: "Mengapa ini penting",
+  whyBody: [
+    "Agen yang andal butuh lebih dari sekadar model yang kuat. Ia butuh konteks yang tepat untuk memahami tool apa saja yang tersedia, file mana yang otoritatif, aksi apa yang diizinkan, dan seperti apa wujud sukses untuk langkah saat ini. Kalau sinyalnya lemah, agen bisa melewatkan panggilan tool yang benar, memilih kapabilitas yang salah, atau memicu aksi terlalu cepat. Context engineering yang baik meningkatkan reliabilitas karena menyelaraskan reasoning model dengan realitas eksekusi.",
+    "Untuk AnyCap, context engineering langsung memengaruhi kualitas pemanggilan kapabilitas. Ia menentukan kapan agen sebaiknya memanggil image generation, video generation, image read, atau video analysis lewat runtime, dan kapan sebaiknya tetap di teks. Konteks yang lebih baik berarti lebih sedikit panggilan buta, routing multimodal yang lebih bersih, dan hasil yang lebih bisa diprediksi untuk tim yang beroperasi di berbagai lingkungan agen.",
+  ],
+  relatedLinks: [
+    { label: "Panduan Konteks", href: "/guides/context-engineering-for-agents", variant: "primary" },
+    { label: "Konteks Workspace", href: "/guides/workspace-context-engineering", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+  ],
+};
+
+const agentHarnessContentId: GlossaryEntryPageData = {
+  metadata: {
+    title: "Apa itu agent harness? Lapisan eksekusi di sekitar agen AI",
+    description:
+      "Agent harness adalah lapisan eksekusi di sekitar agen AI yang menyediakan tool, file, dan kontrol runtime. Pelajari posisi AnyCap sebagai capability runtime di stack agen.",
+    openGraphTitle: "Apa itu agent harness? Lapisan eksekusi di sekitar agen AI",
+    openGraphDescription:
+      "Pelajari apa itu agent harness dan posisi AnyCap sebagai capability runtime di dalam stack agen.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Glosarium", href: GLOSSARY_PATH },
+    { name: "Agent Harness", href: "/glossary/agent-harness" },
+  ],
+  eyebrow: "Glosarium",
+  heroTitle: ["Apa itu", "agent harness?"],
+  intro:
+    "Agent harness adalah lapisan eksekusi di sekitar model yang mengubah hasil reasoning menjadi operasi nyata. Ia menyediakan file, terminal, kontrol browser, routing tool, batas izin, dan aturan runtime yang menentukan aksi apa saja yang mungkin di tiap langkah. Model memutuskan apa yang seharusnya terjadi; harness mengatur apa yang boleh terjadi dengan aman dan terprediksi di lingkungan. Lapisan ini krusial untuk reliabilitas produksi karena ia mengontrol akses, urutan, dan penanganan kegagalan antar panggilan tool. Tanpa harness yang dirancang jelas, perilaku agen jadi rapuh, sulit diaudit, dan susah direproduksi antar tim atau antar run.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Agent Harness",
+    description:
+      "Lingkungan eksekusi di sekitar agen AI yang menyediakan tool, file, izin, runtime state, dan kontrol kebijakan.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
+  },
+  whyTitle: "Mengapa ini penting",
+  whyBody: [
+    "Model memutuskan apa yang harus dilakukan, tetapi harness yang menentukan apa yang sebenarnya bisa ia lakukan dalam praktik. Itu termasuk tool mana yang bisa ditemukan, file mana yang terlihat, izin apa yang diberikan, dan urutan aksi mana yang diperbolehkan di lingkungan eksekusi. Pemisahan inilah yang membuat kebijakan, keamanan, dan observability bisa ditegakkan tanpa mengikis fleksibilitas model.",
+    "AnyCap masuk ke harness itu sebagai capability runtime. Ia memberi harness cara yang bersih dan konsisten untuk mengekspos aksi multimodal lewat satu antarmuka, alih-alih menjahit integrasi provider terpisah ke setiap workflow. Hasilnya adalah batas operasional yang lebih jelas, debugging yang lebih mudah, dan reuse yang lebih cepat antar shell agen yang berbeda.",
+  ],
+  relatedLinks: [
+    { label: "Panduan Harness", href: "/guides/what-is-agent-harness", variant: "primary" },
+    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Bandingkan dengan Agent Builder", href: "/compare/anycap-vs-openai-agent-builder", variant: "secondary" },
+  ],
+};
+
 const glossaryHubContentByLocale: Record<SiteLocale, GlossaryHubPageData> = {
   en: glossaryHubContentEn,
   "pt-br": glossaryHubContentPtBr,
-  id: glossaryHubContentEn,
+  id: glossaryHubContentId,
   de: glossaryHubContentDe,
 };
 
 const contextEngineeringContentByLocale: Record<SiteLocale, GlossaryEntryPageData> = {
   en: contextEngineeringContentEn,
   "pt-br": contextEngineeringContentPtBr,
-  id: contextEngineeringContentEn,
+  id: contextEngineeringContentId,
   de: contextEngineeringContentDe,
 };
 
 const agentHarnessContentByLocale: Record<SiteLocale, GlossaryEntryPageData> = {
   en: agentHarnessContentEn,
   "pt-br": agentHarnessContentPtBr,
-  id: agentHarnessContentEn,
+  id: agentHarnessContentId,
   de: agentHarnessContentDe,
 };
 
@@ -436,11 +520,87 @@ const mcpContentPtBr: GlossaryEntryPageData = {
   ],
 };
 
+const mcpContentDe: GlossaryEntryPageData = {
+  metadata: {
+    title: "Was ist das Model Context Protocol (MCP)? Wie KI-Agents Tools anbinden",
+    description:
+      "Das Model Context Protocol (MCP) ist ein offener Kommunikationsstandard, der definiert, wie KI-Agents Tools, Capabilities und externe Services entdecken und aufrufen. Erfahren Sie, wie MCP funktioniert, wie es sich von einer Capability-Runtime unterscheidet und wo AnyCap im Stack einfließt.",
+    openGraphTitle: "Was ist das Model Context Protocol (MCP)? Wie KI-Agents Tools anbinden",
+    openGraphDescription:
+      "MCP ist ein offener Standard, der definiert, wie KI-Agents Tools entdecken und aufrufen. Erfahren Sie, wie es sich von einer Capability-Runtime unterscheidet und wo AnyCap einfließt.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Glossar", href: GLOSSARY_PATH },
+    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+  ],
+  eyebrow: "Glossar",
+  heroTitle: ["Was ist das", "Model Context Protocol?"],
+  intro:
+    "Das Model Context Protocol (MCP) ist ein offener Kommunikationsstandard, der definiert, wie KI-Agents Tools, Capabilities und externe Services während der Ausführung entdecken und aufrufen. Ende 2024 von Anthropic veröffentlicht, standardisiert MCP das Nachrichtenformat zwischen einem Agent-Host und jedem konformen Server und ersetzt das frühere Muster, für jedes Tool, jede Datenquelle oder Capability eine eigene Integration zu bauen. Im Kern etabliert MCP eine Host-Client-Server-Architektur: Der Agent-Host verwaltet die aktive Modell-Session, MCP-Clients übersetzen Tool-Aufrufe in Protokoll-Nachrichten, und MCP-Server exponieren einzelne Capabilities über eine stabile Schnittstelle. Weil das Protokoll offen ist, kann jeder Entwickler einen MCP-Server für ein neues Tool bauen, und jedes Agent-Produkt mit MCP-Unterstützung kann ihn ohne SDK-Eigenarbeit konsumieren. Damit ist MCP ein Konnektivitäts-Standard, keine Capability-Runtime. Es definiert, wie Agents mit Tools sprechen — nicht, was diese Tools tatsächlich leisten. Das Was ist Sache der Tool-Schicht — der Capability-Runtime — die hinter dem Protokoll sitzt.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Model Context Protocol (MCP)",
+    description:
+      "Ein offener Kommunikationsstandard, der definiert, wie KI-Agents Tools, Capabilities und externe Services während der Ausführung entdecken und aufrufen.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+  },
+  whyTitle: "Warum es zählt",
+  whyBody: [
+    "MCP verändert die Ökonomie der Tool-Integration für Agent-Entwickler. Vor MCP brauchte das Hinzufügen einer Capability eine eigene Integration mit anbieterspezifischer Authentifizierung, Fehlerbehandlung und Response-Parsing. Mit MCP ist jede Capability, die über einen konformen Server bereitgestellt wird, sofort für jeden MCP-fähigen Agent zugänglich. Das verschiebt die Integrationsfläche von Pro-Tool-Arbeit zu Pro-Server-Arbeit, und eine wachsende Community von MCP-Server-Autoren erledigt einen Großteil dieser Arbeit öffentlich. Teams, die MCP früh einsetzen, gewinnen Zugriff auf ein wachsendes Tool-Ökosystem ohne zusätzliche Integrationskosten.",
+    "Für Teams, die AnyCap nutzen, arbeiten MCP und die Capability-Runtime auf unterschiedlichen Schichten. MCP ist das Kommunikationsprotokoll — es standardisiert, wie der Agent die Runtime aufruft. AnyCap ist die Capability-Runtime — sie liefert die tatsächlichen Capabilities (Image Generation, Video Generation, Image Understanding, Video Analysis, Web Search und weitere), an die das Protokoll Anfragen routet. Das sind keine konkurrierenden Optionen. Ein Team nutzt MCP als Leitung und AnyCap als das, was auf dieser Leitung läuft. Der Skill-File-Installationspfad gibt dem Agent die Instruktionsschicht, die beide verbindet.",
+  ],
+  relatedLinks: [
+    { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
+    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
+  ],
+};
+
+const mcpContentId: GlossaryEntryPageData = {
+  metadata: {
+    title: "Apa itu Model Context Protocol (MCP)? Cara agen AI terhubung ke tool",
+    description:
+      "Model Context Protocol (MCP) adalah standar komunikasi terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool, kapabilitas, dan layanan eksternal. Pelajari cara kerjanya, bedanya dengan capability runtime, dan posisi AnyCap di stack.",
+    openGraphTitle: "Apa itu Model Context Protocol (MCP)? Cara agen AI terhubung ke tool",
+    openGraphDescription:
+      "MCP adalah standar terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool. Pelajari bedanya dengan capability runtime dan posisi AnyCap.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Glosarium", href: GLOSSARY_PATH },
+    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+  ],
+  eyebrow: "Glosarium",
+  heroTitle: ["Apa itu", "Model Context Protocol?"],
+  intro:
+    "Model Context Protocol (MCP) adalah standar komunikasi terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool, kapabilitas, dan layanan eksternal saat eksekusi. Dirilis Anthropic akhir 2024, MCP menstandarkan format pesan antara agent host dan server mana pun yang patuh pada protokol, menggantikan pola lama membangun integrasi khusus untuk setiap tool, sumber data, atau kapabilitas yang mungkin dibutuhkan agen. Pada intinya, MCP membentuk arsitektur host-client-server: agent host mengelola session model yang aktif, klien MCP menerjemahkan panggilan tool menjadi pesan protokol, dan server MCP mengekspos kapabilitas-kapabilitas terpisah lewat antarmuka yang stabil. Karena protokolnya terbuka, developer mana pun bisa membuat server MCP untuk tool baru, dan produk agen mana pun yang mendukung MCP bisa langsung memakainya tanpa kerja SDK khusus. Itu menjadikan MCP sebagai standar konektivitas, bukan capability runtime. Ia mendefinisikan cara agen bicara ke tool, bukan apa yang sebenarnya bisa dilakukan tool itu. Bagian apa adalah tanggung jawab lapisan tool — capability runtime — yang duduk di belakang protokol.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Model Context Protocol (MCP)",
+    description:
+      "Standar komunikasi terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool, kapabilitas, dan layanan eksternal saat eksekusi.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+  },
+  whyTitle: "Mengapa ini penting",
+  whyBody: [
+    "MCP mengubah ekonomi integrasi tool bagi developer agen. Sebelum MCP, menambahkan kapabilitas ke agen butuh integrasi khusus dengan autentikasi, penanganan error, dan parsing respons per provider. Dengan MCP, kapabilitas mana pun yang diekspos lewat server yang patuh standar langsung bisa diakses oleh setiap agen yang mendukung standar tersebut. Ini menggeser permukaan integrasi dari per-tool menjadi per-server, dan komunitas penulis server MCP yang terus tumbuh mengerjakan sebagian besar pekerjaan itu secara publik. Hasilnya, developer yang mengadopsi MCP lebih dini mendapat akses ke ekosistem tool yang berkembang tanpa biaya integrasi tambahan.",
+    "Untuk tim yang memakai AnyCap, MCP dan capability runtime beroperasi di lapisan yang berbeda. MCP adalah protokol komunikasi — ia menstandarkan bagaimana agen memanggil runtime. AnyCap adalah capability runtime — ia menyediakan kapabilitas konkret (image generation, video generation, image understanding, video analysis, web search, dan lainnya) yang dituju oleh protokol. Keduanya bukan pilihan yang bersaing. Tim memakai MCP sebagai kabelnya, dan AnyCap sebagai yang berjalan di atas kabel itu. Skill file install path memberi agen lapisan instruksi yang dibutuhkan untuk menyambungkan keduanya.",
+  ],
+  relatedLinks: [
+    { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
+    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Kapabilitas AnyCap", href: "/capabilities", variant: "secondary" },
+  ],
+};
+
 const mcpContentByLocale: Record<SiteLocale, GlossaryEntryPageData> = {
   en: mcpContentEn,
   "pt-br": mcpContentPtBr,
-  id: mcpContentEn,
-  de: mcpContentEn,
+  id: mcpContentId,
+  de: mcpContentDe,
 };
 
 export function getMcpGlossaryMetadata(locale: SiteLocale): Metadata {
@@ -539,11 +699,87 @@ const agenticWorkflowContentPtBr: GlossaryEntryPageData = {
   ],
 };
 
+const agenticWorkflowContentDe: GlossaryEntryPageData = {
+  metadata: {
+    title: "Was ist ein Agentic Workflow? Wie KI-Agents Entscheidungen und Aktionen verketten",
+    description:
+      "Ein Agentic Workflow ist eine zielgerichtete Sequenz aus KI-Modellentscheidungen und realen Tool-Aktionen, die ohne menschliche Freigabe pro Schritt bis zum Ende läuft. Erfahren Sie, wie Agentic Workflows funktionieren und warum Capability-Abdeckung zählt.",
+    openGraphTitle: "Was ist ein Agentic Workflow? Wie KI-Agents Entscheidungen und Aktionen verketten",
+    openGraphDescription:
+      "Ein Agentic Workflow ist eine zielgerichtete Sequenz aus KI-Entscheidungen und Tool-Aktionen ohne Freigabe pro Schritt. Erfahren Sie, wie Capability-Abdeckung Workflow-Zuverlässigkeit prägt.",
+  },
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Glossar", href: GLOSSARY_PATH },
+    { name: "Agentic Workflow", href: "/glossary/agentic-workflow" },
+  ],
+  eyebrow: "Glossar",
+  heroTitle: ["Was ist ein", "Agentic Workflow?"],
+  intro:
+    "Ein Agentic Workflow ist eine zielgerichtete Sequenz aus Modell-Entscheidungen und realen Tool-Aktionen, die bis zum Ende läuft, ohne dass ein Mensch in jedem Schritt freigeben muss. Das Modell entscheidet, was zu tun ist; der Agent-Harness führt es aus; die Ergebnisse fließen in die nächste Entscheidung ein. Diese Schleife läuft, bis das Ziel erreicht ist, eine Stop-Bedingung greift oder der Agent Human-Input anfordert. Was einen Agentic Workflow von einer einfachen Chat-Session unterscheidet, ist die Kombination aus Autonomie, Tool-Nutzung und State-Persistenz über Schritte hinweg. Das Modell generiert nicht nur Text — es ruft Tools auf, liest Datei-Inhalte, generiert Bilder, durchsucht das Web, führt Code aus und speichert Ergebnisse, auf denen Folgeschritte aufbauen. Agentic Workflows sind das, was KI-Systeme für mehrstufige Produktiv-Aufgaben wirklich nützlich macht — nicht nur für isolierte Anfragen. Die Zuverlässigkeit jedes Schritts hängt stark davon ab, welche Tools verfügbar sind, wie gut sie dem Modell beschrieben werden und welche Constraints die Ausführung steuern. Workflows, die Capability-Grenzen überschreiten — ein Bild generieren, dann analysieren, dann das Ergebnis publizieren — brauchen eine Runtime, die all diese Aktionen über eine konsistente Schnittstelle abdeckt.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Agentic Workflow",
+    description:
+      "Eine zielgerichtete Sequenz aus KI-Modellentscheidungen und realen Tool-Aktionen, die ohne menschliche Freigabe pro Schritt bis zum Ende läuft.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+  },
+  whyTitle: "Warum es zählt",
+  whyBody: [
+    "Agentic Workflows sind dort, wo Capability-Lücken am sichtbarsten werden. Ein gut entworfener Agent mit starkem Reasoning, aber ohne Zugriff auf Image Generation, Vision oder Web-Retrieval scheitert an Schritten, die diese Aktionen erfordern — egal wie stark sein Sprachverständnis ist. Das macht Capability-Abdeckung zu einer Frage des Workflow-Designs, nicht nur der Produktauswahl. Je vielfältiger der Workflow, desto mehr Capability-Typen braucht er. Teams, die Workflow-Schritte vor der Wahl ihrer Capability-Schicht planen, vermeiden es, Lücken erst während der Ausführung zu entdecken — der teuerste Zeitpunkt, sie zu finden.",
+    "Für Teams, die AnyCap nutzen, ist die Capability-Runtime die Tool-Schicht, die Agentic Workflows mit Generation, Understanding und Retrieval möglich macht. Ohne sie müssten Entwickler separate Integrationen für jeden Aktionstyp bauen und pflegen, was die Fehlerfläche vergrößert und Iteration verlangsamt. Eine Runtime, die Image, Video, Vision, Web Search, Web Crawl, Storage und Publishing in einem Installationspfad abdeckt, reduziert den Integrations-Overhead, der den Workflow sonst in unverbundene Teile fragmentieren würde. Deshalb profitieren Teams mit hochdiversen Agentic Workflows typischerweise am meisten von der Runtime-Architektur.",
+  ],
+  relatedLinks: [
+    { label: "Was Agents nicht können", href: "/learn/what-agents-cant-do", variant: "primary" },
+    { label: "Context Engineering", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
+  ],
+};
+
+const agenticWorkflowContentId: GlossaryEntryPageData = {
+  metadata: {
+    title: "Apa itu agentic workflow? Cara agen AI merangkai keputusan dan aksi",
+    description:
+      "Agentic workflow adalah rangkaian berorientasi tujuan dari keputusan model dan aksi tool nyata yang berjalan sampai selesai tanpa persetujuan manusia per langkah. Pelajari cara kerja agentic workflow dan mengapa cakupan kapabilitas penting.",
+    openGraphTitle: "Apa itu agentic workflow? Cara agen AI merangkai keputusan dan aksi",
+    openGraphDescription:
+      "Agentic workflow adalah rangkaian keputusan AI dan aksi tool yang berjalan tanpa persetujuan manusia per langkah. Lihat bagaimana cakupan kapabilitas membentuk reliabilitas.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Glosarium", href: GLOSSARY_PATH },
+    { name: "Agentic Workflow", href: "/glossary/agentic-workflow" },
+  ],
+  eyebrow: "Glosarium",
+  heroTitle: ["Apa itu", "agentic workflow?"],
+  intro:
+    "Agentic workflow adalah rangkaian berorientasi tujuan dari keputusan model dan aksi tool nyata yang berjalan sampai selesai tanpa butuh persetujuan manusia di setiap langkah. Model memutuskan apa yang dilakukan; agent harness mengeksekusinya; hasilnya jadi masukan untuk keputusan berikutnya. Loop ini terus berjalan sampai tujuan tercapai, kondisi berhenti dipicu, atau agen meminta input manusia. Yang membedakan agentic workflow dari sesi chat biasa adalah kombinasi otonomi, pemakaian tool, dan persistensi state antar langkah. Model tidak sekadar menghasilkan teks — ia memanggil tool, membaca isi file, menghasilkan gambar, mencari di web, menjalankan kode, dan menyimpan hasil yang dipakai langkah selanjutnya. Agentic workflow adalah yang membuat sistem AI benar-benar berguna untuk tugas produksi multi-langkah, bukan sekadar query terpisah. Reliabilitas tiap langkah sangat bergantung pada tool yang tersedia, seberapa baik tool itu dideskripsikan ke model, dan batasan apa yang mengatur eksekusi. Workflow yang melintasi batas kapabilitas — menghasilkan gambar, lalu menganalisanya, lalu mempublikasikan hasilnya — butuh runtime yang menutup semua aksi itu lewat satu antarmuka yang konsisten.",
+  definitionJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: "Agentic Workflow",
+    description:
+      "Rangkaian berorientasi tujuan dari keputusan model AI dan aksi tool nyata yang berjalan sampai selesai tanpa membutuhkan persetujuan manusia di setiap langkah.",
+    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+  },
+  whyTitle: "Mengapa ini penting",
+  whyBody: [
+    "Agentic workflow adalah tempat celah kapabilitas paling kelihatan. Agen yang dirancang baik dengan reasoning kuat tapi tanpa akses ke pembuatan gambar, visi, atau pengambilan data web akan gagal di langkah-langkah yang butuh aksi itu — sekuat apa pun pemahaman bahasanya. Artinya, cakupan kapabilitas adalah pertanyaan desain workflow, bukan sekadar pemilihan produk. Makin beragam workflow-nya, makin banyak tipe kapabilitas yang dibutuhkan. Tim yang merencanakan langkah workflow sebelum memilih lapisan kapabilitas terhindar dari menemukan celah di tengah eksekusi — saat paling mahal untuk menemukannya.",
+    "Untuk tim yang memakai AnyCap, capability runtime adalah lapisan tool yang membuat agentic workflow dengan pembuatan, pemahaman, dan pengambilan data jadi mungkin. Tanpa itu, developer harus membangun dan memelihara integrasi terpisah untuk tiap tipe aksi, yang menambah permukaan kegagalan dan memperlambat iterasi. Runtime yang menutup image, video, visi, web search, web crawl, storage, dan publishing dalam satu install path mengurangi overhead integrasi yang kalau tidak akan memecah workflow jadi potongan-potongan yang tidak terhubung. Itulah sebabnya tim yang menjalankan agentic workflow dengan keragaman tinggi biasanya paling diuntungkan oleh arsitektur runtime ini.",
+  ],
+  relatedLinks: [
+    { label: "Yang tidak bisa dilakukan agen", href: "/learn/what-agents-cant-do", variant: "primary" },
+    { label: "Context Engineering", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "Kapabilitas AnyCap", href: "/capabilities", variant: "secondary" },
+  ],
+};
+
 const agenticWorkflowContentByLocale: Record<SiteLocale, GlossaryEntryPageData> = {
   en: agenticWorkflowContentEn,
   "pt-br": agenticWorkflowContentPtBr,
-  id: agenticWorkflowContentEn,
-  de: agenticWorkflowContentEn,
+  id: agenticWorkflowContentId,
+  de: agenticWorkflowContentDe,
 };
 
 export function getAgenticWorkflowGlossaryMetadata(locale: SiteLocale): Metadata {

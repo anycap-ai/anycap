@@ -344,11 +344,291 @@ const ptBrContent: PageContent = {
   }),
 };
 
+const idContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Bandingkan", href: "/compare", unlinkable: true },
+    { name: "Claude Opus 4.7 vs Sonnet 4.6" },
+  ],
+  eyebrow: "Bandingkan x model Claude",
+  lastUpdatedLabel: "Diperbarui 17 April 2026",
+  heroTitle: [
+    "Claude Opus 4.7 vs Sonnet 4.6",
+    "untuk Claude Code — pilih yang mana, dan kenapa.",
+  ],
+  heroIntro:
+    "Claude Opus 4.7 adalah model reasoning dan coding terkuat dari Anthropic. Claude Sonnet 4.6 adalah default yang cepat dan hemat biaya untuk pekerjaan agent harian. Di dalam Claude Code, keduanya bisa menjalankan agent — tapi diatur untuk pekerjaan yang berbeda. Halaman ini perbandingan praktis: kapan Opus 4.7 benar-benar worth it, kapan Sonnet 4.6 jadi default yang lebih baik, dan bagaimana kombinasi Opus 4.7 + AnyCap mengubah keseluruhan ketika image, video, dan analisis visual masuk ke workflow.",
+  quickAnswerLabel: "Jawaban singkat",
+  quickAnswerTitle: "Default ke Sonnet 4.6 untuk kecepatan dan biaya. Pindah ke Opus 4.7 saat run jadi panjang, ambigu, atau visual.",
+  quickAnswerBody:
+    "Sonnet 4.6 menang di latency, biaya, dan loop coding volume tinggi. Opus 4.7 menang di run agentic panjang, refactor sulit, dan workflow apa pun yang butuh kedalaman reasoning atau recovery saat tool gagal. Pasangkan Opus 4.7 dengan AnyCap dan permukaan agent yang sama langsung menjangkau image generation, video generation, dan analisis visual — kombinasi ini benar-benar gila untuk tim produk yang ship pekerjaan multimodal dari terminal.",
+  tableTitle: "Berdampingan: Opus 4.7 vs Sonnet 4.6",
+  tableNote: "Perbedaan praktis untuk tim yang menjalankan Claude Code di salah satu model.",
+  tableHeaders: ["Dimensi", "Claude Opus 4.7", "Claude Sonnet 4.6"],
+  comparisons: [
+    {
+      dimension: "Cocok untuk",
+      opus47: "Run agentic panjang, reasoning sulit, refactor multi-file, kerjaan padat keputusan.",
+      sonnet46: "Coding harian cepat, edit volume tinggi, alur sensitif latency.",
+    },
+    {
+      dimension: "Kedalaman reasoning",
+      opus47: "Terkuat di lini Claude — bisa pegang plan lewat banyak tool call.",
+      sonnet46: "Kuat, tapi lebih disetel ke breadth dan kecepatan.",
+    },
+    {
+      dimension: "Latency",
+      opus47: "Lebih lambat — bayar waktu untuk plan yang lebih dalam.",
+      sonnet46: "Cepat — pas untuk feedback loop yang ketat.",
+    },
+    {
+      dimension: "Biaya per token",
+      opus47: "Tarif per token lebih tinggi, layak untuk run high-stakes.",
+      sonnet46: "Tarif per token lebih rendah, cocok untuk volume tinggi.",
+    },
+    {
+      dimension: "Recovery saat tool gagal",
+      opus47: "Recover dari shell atau test run yang gagal lebih reliable.",
+      sonnet46: "Recover juga, tapi lebih sensitif ke output tool yang berisik.",
+    },
+    {
+      dimension: "Vision (baca)",
+      opus47: "Kuat untuk screenshot, diagram, dan dokumen.",
+      sonnet46: "Vision kuat, biasanya lebih cepat di input bulk.",
+    },
+    {
+      dimension: "Image generation (native)",
+      opus47: "Tidak native — butuh AnyCap untuk Seedream 5, Nano Banana Pro.",
+      sonnet46: "Tidak native — butuh AnyCap untuk Seedream 5, Nano Banana Pro.",
+    },
+    {
+      dimension: "Video generation (native)",
+      opus47: "Tidak native — butuh AnyCap untuk Veo 3.1, Seedance, Kling.",
+      sonnet46: "Tidak native — butuh AnyCap untuk Veo 3.1, Seedance, Kling.",
+    },
+    {
+      dimension: "Pasangan terbaik",
+      opus47: "AnyCap — menutup gap multimodal supaya agent terkuat bisa benar-benar ship media.",
+      sonnet46: "AnyCap — install path sama; Sonnet cuma jalanin loop lebih cepat.",
+    },
+  ],
+  whenOpusTitle: "Kapan Opus 4.7 layak biayanya",
+  whenOpusBullets: [
+    "Refactor dan migrasi multi-file yang melibatkan banyak tool call.",
+    "Perencanaan jangka panjang di mana agent harus pegang brief berjam-jam.",
+    "Loop kegagalan test yang butuh root-cause analysis dalam.",
+    "Workflow yang mencampur kode dengan generasi visual (Opus 4.7 + AnyCap kombinasi terkuat).",
+    "Kasus apa pun di mana jawaban salah lebih mahal dari beberapa dolar inferensi tambahan.",
+  ],
+  whenSonnetTitle: "Kapan Sonnet 4.6 default yang lebih baik",
+  whenSonnetBullets: [
+    "Coding rutin volume tinggi dengan budget latency ketat.",
+    "Pemrosesan vision bulk — baca banyak screenshot atau dokumen cepat.",
+    "Job batch sensitif biaya dan run agentic di CI.",
+    "Sesi pair-programming di mana kecepatan kalahkan kedalaman.",
+    "Triase — biar Sonnet pass pertama, escalate ke Opus 4.7 cuma kalau perlu.",
+  ],
+  capabilityCalloutTitle: "Salah satu model + AnyCap = semua modalitas, satu CLI",
+  capabilityCalloutBody:
+    "Baik Opus 4.7 maupun Sonnet 4.6 tidak ship dengan image generation, video generation, atau video analysis. AnyCap menutup gap itu untuk keduanya. Skill file dan CLI yang sama jalan di model Claude mana pun yang sedang menjalankan Claude Code — jadi kamu bisa pindah model bebas tanpa rewiring stack multimodal. Kombinasi Opus 4.7 + AnyCap default rekomendasi untuk pekerjaan multimodal high-stakes; Sonnet 4.6 + AnyCap counterpart-nya untuk throughput tinggi.",
+  ctaTitle: "Langkah berikutnya yang paling tepat",
+  ctaCards: [
+    { title: "Hub Claude Code di Opus 4.7", href: "/for/claude-code", body: "Opus 4.7 + AnyCap = satu agent, semua modalitas, tanpa glue code." },
+    { title: "Capability Claude Opus 4.7", href: "/learn/claude-opus-4-7-capabilities", body: "Apa yang Opus 4.7 bisa, tidak bisa, dan apa yang AnyCap unlock." },
+    { title: "Workflow image + video Opus 4.7", href: "/guides/claude-opus-4-7-image-video-workflow", body: "Workflow image dan video end-to-end dengan satu CLI." },
+    { title: "Tool AI terbaik untuk Claude Code", href: "/learn/best-ai-for-claude-code", body: "Buyer guide buat tim yang mau extend Claude Code." },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah Claude Opus 4.7 selalu lebih baik dari Sonnet 4.6?",
+      answer:
+        "Tidak. Opus 4.7 lebih kuat di run panjang, sulit, dan padat keputusan. Sonnet 4.6 lebih cepat dan murah untuk volume rutin. Kebanyakan setup produksi pakai Sonnet 4.6 sebagai default dan Opus 4.7 untuk run yang paling penting.",
+    },
+    {
+      question: "Bisa pindah antara Opus 4.7 dan Sonnet 4.6 di dalam Claude Code?",
+      answer:
+        "Bisa. Claude Code memungkinkan pilih model. Install path AnyCap sama untuk keduanya, jadi pindah model tanpa rewiring image, video, atau analisis visual.",
+    },
+    {
+      question: "Apakah Opus 4.7 generate image atau video secara native?",
+      answer:
+        "Tidak. Baik Opus 4.7 maupun Sonnet 4.6 tidak ship dengan image generation, video generation, atau video analysis. AnyCap menambahkan itu lewat satu CLI untuk kedua model.",
+    },
+    {
+      question: "Kenapa kombinasi Opus 4.7 + AnyCap dibilang gila?",
+      answer:
+        "Karena agent reasoning terkuat yang Anthropic ship tiba-tiba menjangkau Seedream 5, Nano Banana Pro, Veo 3.1, Seedance, Kling, image understanding, dan video analysis lewat satu terminal — tanpa SDK kedua, tanpa login kedua.",
+    },
+    {
+      question: "Apa setup yang direkomendasikan untuk tim produk kecil?",
+      answer:
+        "Default Sonnet 4.6 + AnyCap untuk pekerjaan harian. Escalate ke Opus 4.7 + AnyCap saat run-nya panjang, ambigu, atau harus ship aset multimodal end-to-end.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Claude Opus 4.7 vs Claude Sonnet 4.6 untuk Claude Code — model mana, dan kapan",
+    description:
+      "Perbandingan praktis Claude Opus 4.7 dan Claude Sonnet 4.6 di dalam Claude Code. Kapan masing-masing layak, di mana mereka berbeda, dan bagaimana kombinasi Opus 4.7 + AnyCap unlock image, video, dan analisis visual untuk keduanya.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Code", "Capability AI", "AnyCap"],
+    keywords: [
+      "claude opus 4.7 vs sonnet 4.6",
+      "opus 4.7 vs sonnet 4.6",
+      "claude code opus 4.7",
+      "claude code sonnet 4.6",
+      "model claude terbaik untuk claude code",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
+const deContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Startseite", href: "/" },
+    { name: "Vergleich", href: "/compare", unlinkable: true },
+    { name: "Claude Opus 4.7 vs Sonnet 4.6" },
+  ],
+  eyebrow: "Vergleich x Claude-Modelle",
+  lastUpdatedLabel: "Aktualisiert am 17. April 2026",
+  heroTitle: [
+    "Claude Opus 4.7 vs Sonnet 4.6",
+    "für Claude Code — welches Modell, und warum.",
+  ],
+  heroIntro:
+    "Claude Opus 4.7 ist Anthropics stärkstes Reasoning- und Coding-Modell. Claude Sonnet 4.6 ist das schnelle, kosteneffiziente Standardmodell für die meiste Agent-Arbeit im Alltag. Innerhalb von Claude Code können beide den Agenten steuern — sie sind aber für unterschiedliche Aufgaben optimiert. Diese Seite ist ein praktischer Vergleich: wann sich Opus 4.7 wirklich lohnt, wann Sonnet 4.6 die bessere Voreinstellung ist und wie die Kombination Opus 4.7 + AnyCap das Bild verändert, sobald Bild, Video und visuelle Analyse in den Workflow kommen.",
+  quickAnswerLabel: "Kurze Antwort",
+  quickAnswerTitle: "Standardmäßig Sonnet 4.6 für Geschwindigkeit und Kosten. Wechseln Sie auf Opus 4.7, sobald der Run lang, mehrdeutig oder visuell wird.",
+  quickAnswerBody:
+    "Sonnet 4.6 gewinnt bei Latenz, Kosten und Coding-Loops mit hohem Volumen. Opus 4.7 gewinnt bei langen agentischen Runs, schwierigen Refactors und jedem Workflow, in dem Reasoning-Tiefe oder Tool-Recovery zählen. Kombinieren Sie Opus 4.7 mit AnyCap und derselbe Agent erreicht zusätzlich Bildgenerierung, Videogenerierung und visuelle Analyse — die Kombination ist für Produktteams, die multimodale Arbeit aus dem Terminal ausliefern, ein Gamechanger.",
+  tableTitle: "Direktvergleich: Opus 4.7 vs Sonnet 4.6",
+  tableNote: "Praktische Unterschiede für Teams, die Claude Code auf einem der beiden Modelle betreiben.",
+  tableHeaders: ["Dimension", "Claude Opus 4.7", "Claude Sonnet 4.6"],
+  comparisons: [
+    {
+      dimension: "Am besten geeignet für",
+      opus47: "Lange agentische Runs, schwieriges Reasoning, Multi-File-Refactors, entscheidungsdichte Arbeit.",
+      sonnet46: "Schnelles Coding im Alltag, Edits in hohem Volumen, latenzempfindliche Flows.",
+    },
+    {
+      dimension: "Reasoning-Tiefe",
+      opus47: "Stärkstes Modell der Claude-Reihe — hält Pläne über viele Tool-Calls hinweg.",
+      sonnet46: "Stark, aber stärker auf Breite und Geschwindigkeit ausgerichtet.",
+    },
+    {
+      dimension: "Latenz",
+      opus47: "Langsamer — bezahlt Zeit für den tieferen Plan.",
+      sonnet46: "Schnell — besser für enge Feedback-Loops.",
+    },
+    {
+      dimension: "Kosten pro Token",
+      opus47: "Höhere Token-Rate, gerechtfertigt bei kritischen Runs.",
+      sonnet46: "Niedrigere Token-Rate, passt zu hohem Volumen.",
+    },
+    {
+      dimension: "Tool-Recovery",
+      opus47: "Erholt sich zuverlässiger von fehlgeschlagenen Shell- oder Test-Runs.",
+      sonnet46: "Erholt sich ebenfalls, ist aber empfindlicher gegenüber lautem Tool-Output.",
+    },
+    {
+      dimension: "Vision (Lesen)",
+      opus47: "Stark bei Screenshots, Diagrammen und Dokumenten.",
+      sonnet46: "Starke Vision, im Bulk-Input meist schneller.",
+    },
+    {
+      dimension: "Bildgenerierung (nativ)",
+      opus47: "Nicht nativ — benötigt AnyCap für Seedream 5, Nano Banana Pro.",
+      sonnet46: "Nicht nativ — benötigt AnyCap für Seedream 5, Nano Banana Pro.",
+    },
+    {
+      dimension: "Videogenerierung (nativ)",
+      opus47: "Nicht nativ — benötigt AnyCap für Veo 3.1, Seedance, Kling.",
+      sonnet46: "Nicht nativ — benötigt AnyCap für Veo 3.1, Seedance, Kling.",
+    },
+    {
+      dimension: "Beste Kombination",
+      opus47: "AnyCap — schließt die multimodale Lücke, damit der stärkste Agent Medien wirklich ausliefern kann.",
+      sonnet46: "AnyCap — gleicher Install-Pfad; Sonnet fährt den Loop nur schneller.",
+    },
+  ],
+  whenOpusTitle: "Wann sich Opus 4.7 lohnt",
+  whenOpusBullets: [
+    "Multi-File-Refactors und Migrationen mit vielen Tool-Calls.",
+    "Langfristige Planung, bei der der Agent das Briefing über Stunden hinweg halten muss.",
+    "Test-Failure-Loops, die tiefe Root-Cause-Analyse erfordern.",
+    "Workflows, die Code mit visueller Generierung kombinieren (Opus 4.7 + AnyCap ist die stärkste Kombination).",
+    "Alles, bei dem eine falsche Antwort mehr kostet als ein paar Dollar zusätzliche Inferenz.",
+  ],
+  whenSonnetTitle: "Wann Sonnet 4.6 die bessere Voreinstellung ist",
+  whenSonnetBullets: [
+    "Routinemäßiges Coding in hohem Volumen mit engem Latenzbudget.",
+    "Bulk-Vision-Durchläufe — viele Screenshots oder Dokumente schnell lesen.",
+    "Kostensensitive Batch-Jobs und CI-getriebene Agent-Runs.",
+    "Pair-Programming-Sitzungen, in denen Geschwindigkeit über Tiefe geht.",
+    "Triage — Sonnet macht den ersten Durchgang, Opus 4.7 wird nur bei Bedarf hinzugezogen.",
+  ],
+  capabilityCalloutTitle: "Beide Modelle + AnyCap = jede Modalität, eine CLI",
+  capabilityCalloutBody:
+    "Weder Opus 4.7 noch Sonnet 4.6 liefern Bildgenerierung, Videogenerierung oder Videoanalyse nativ aus. AnyCap schließt diese Lücke für beide. Dieselbe Skill-Datei und CLI funktionieren mit jedem Claude-Modell, das gerade Claude Code antreibt — Sie können also frei zwischen Modellen wechseln, ohne den multimodalen Stack neu zu verdrahten. Opus 4.7 + AnyCap ist die empfohlene Standardkombination für kritische multimodale Arbeit; Sonnet 4.6 + AnyCap das Hochdurchsatz-Gegenstück.",
+  ctaTitle: "Beste nächste Schritte",
+  ctaCards: [
+    { title: "Claude-Code-Hub auf Opus 4.7", href: "/for/claude-code", body: "Opus 4.7 + AnyCap = ein Agent, jede Modalität, kein Glue-Code." },
+    { title: "Capabilities von Claude Opus 4.7", href: "/learn/claude-opus-4-7-capabilities", body: "Was Opus 4.7 kann, was nicht und was AnyCap freischaltet." },
+    { title: "Bild- und Video-Workflow mit Opus 4.7", href: "/guides/claude-opus-4-7-image-video-workflow", body: "End-to-End-Workflow mit einer einzigen CLI." },
+    { title: "Beste KI-Tools für Claude Code", href: "/learn/best-ai-for-claude-code", body: "Kaufratgeber für Teams, die Claude Code erweitern." },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Ist Claude Opus 4.7 immer besser als Sonnet 4.6?",
+      answer:
+        "Nein. Opus 4.7 ist stärker bei langen, schwierigen, entscheidungsdichten Runs. Sonnet 4.6 ist schneller und günstiger für routinemäßige Arbeit in hohem Volumen. Die meisten Produktions-Setups nutzen Sonnet 4.6 als Standard und Opus 4.7 für die Runs, die wirklich zählen.",
+    },
+    {
+      question: "Kann ich innerhalb von Claude Code zwischen Opus 4.7 und Sonnet 4.6 wechseln?",
+      answer:
+        "Ja. Claude Code lässt Sie das zugrundeliegende Modell wählen. Der AnyCap-Install-Pfad ist für beide identisch, Sie wechseln Modelle also ohne Bild, Video oder visuelle Analyse neu zu verdrahten.",
+    },
+    {
+      question: "Generiert Opus 4.7 Bilder oder Video nativ?",
+      answer:
+        "Nein. Weder Opus 4.7 noch Sonnet 4.6 liefern Bildgenerierung, Videogenerierung oder Videoanalyse nativ aus. AnyCap ergänzt das über eine CLI für beide Modelle.",
+    },
+    {
+      question: "Warum wird die Kombination Opus 4.7 + AnyCap als spektakulär beschrieben?",
+      answer:
+        "Weil der stärkste Reasoning-Agent von Anthropic plötzlich Seedream 5, Nano Banana Pro, Veo 3.1, Seedance, Kling, Bildverständnis und Videoanalyse über ein Terminal erreicht — ohne zweites SDK und ohne zweiten Login.",
+    },
+    {
+      question: "Welche Konfiguration empfehlen Sie einem kleinen Produktteam?",
+      answer:
+        "Standardmäßig Sonnet 4.6 + AnyCap für die tägliche Arbeit. Eskalation auf Opus 4.7 + AnyCap, sobald der Run lang, mehrdeutig oder ein End-to-End-Multimodal-Asset gefordert ist.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Claude Opus 4.7 vs Claude Sonnet 4.6 für Claude Code — welches Modell, und wann",
+    description:
+      "Praktischer Vergleich von Claude Opus 4.7 und Claude Sonnet 4.6 innerhalb von Claude Code. Wann sich jedes Modell lohnt, wo sie sich unterscheiden und wie die Opus 4.7 + AnyCap-Kombination Bild, Video und visuelle Analyse für beide freischaltet.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Code", "KI-Capabilities", "AnyCap"],
+    keywords: [
+      "claude opus 4.7 vs sonnet 4.6",
+      "opus 4.7 vs sonnet 4.6",
+      "claude code opus 4.7",
+      "claude code sonnet 4.6",
+      "bestes claude-modell für claude code",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
-  de: enContent,
+  id: idContent,
+  de: deContent,
 };
 
 export const metadata: Metadata = createLocalizedMetadataForPath(

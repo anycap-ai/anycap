@@ -218,7 +218,103 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
-  id: undefined as never,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Lengkapi Agen", href: "/for", unlinkable: true },
+      { name: "Claude Code", href: "/for/claude-code" },
+      { name: "Pembuatan Gambar" },
+    ],
+    eyebrow: "Claude Code x Skill Image Generation",
+    titleLines: [
+      "Tambahkan skill image generation AnyCap ke Claude Code.",
+      "Sekali install. Sekali login. Opus 4.7 yang memilih modelnya.",
+    ],
+    intro:
+      "Claude Code di atas Opus 4.7 melakukan reasoning lebih baik dari sebelumnya, tapi tetap dirilis tanpa model gambar. Skill image generation AnyCap menutup celah itu: install sekali, login sekali, lalu Opus 4.7 bisa memanggil Seedream 5, Seedream 4.5, Nano Banana Pro, dan Nano Banana 2 dari sesi terminal yang sama. Minta Opus 4.7 untuk visual peluncuran, mockup produk, thumbnail, atau iterasi dari referensi yang sudah ada — skill akan memilih model yang tepat dan menjalankannya. Kombinasinya nyaris gila: agen coding terkuat yang pernah dirilis Anthropic, plus image generation, tanpa glue code di antaranya.",
+    ctas: {
+      primary: "Mulai Sekarang",
+      secondary: "Tambah Tools ke Claude Code",
+    },
+    installTitle: "Jalur instalasi",
+    installStepPrefix: "Langkah",
+    modelTitle: "Pilih model gambar yang tepat",
+    commandTitle: "Perintah pertama untuk dicoba",
+    textToImageLabel: "Text to image",
+    imageEditingLabel: "Image editing",
+    faqTitle: "FAQ",
+    footerCtas: {
+      back: "Kembali ke hub Claude Code",
+      capability: "Kapabilitas Image Generation",
+      video: "Video generation di Claude Code",
+    },
+    faqItems: [
+      {
+        question: "Apakah ini skill Claude Code?",
+        answer:
+          "Ya. AnyCap merilis skill image generation untuk Claude Code. Langkah 1 di jalur instalasi menambahkan skill lewat skills CLI resmi; setelah itu Opus 4.7 menemukan dan memanggil image generation seperti skill lainnya.",
+      },
+      {
+        question: "Bagaimana cara memasang skill image generation AnyCap di Claude Code?",
+        answer:
+          "Tiga perintah. Jalankan npx -y skills add anycap-ai/anycap -a claude-code -y untuk menambahkan skill, curl -fsSL https://anycap.ai/install.sh | sh untuk memasang binary CLI AnyCap, lalu anycap login. Setelah itu skill siap dipakai di sesi Claude Code mana pun.",
+      },
+      {
+        question: "Apakah Claude Code bisa membuat gambar sendiri?",
+        answer:
+          "Tidak sebagai kapabilitas bawaan. Skill AnyCap menambahkan image generation ke Claude Code lewat satu jalur instalasi dan satu CLI.",
+      },
+      {
+        question: "Model gambar apa saja yang tersedia lewat skill ini?",
+        answer:
+          "Stack image generation saat ini mencakup Seedream 5, Seedream 4.5, Nano Banana Pro, dan Nano Banana 2.",
+      },
+      {
+        question: "Apakah saya butuh alur berbeda untuk image editing?",
+        answer:
+          "Tidak. Perintah anycap image yang sama menutup alur text-to-image maupun image-to-image, tergantung model dan flag yang dipakai.",
+      },
+    ],
+    modelCards: [
+      {
+        name: "Seedream 5",
+        summary: "Pilihan pertama terbaik untuk hasil text-to-image yang rapi.",
+      },
+      {
+        name: "Seedream 4.5",
+        summary: "Alternatif kuat saat butuh opsi text-to-image lain yang juga berfokus pada teks.",
+      },
+      {
+        name: "Nano Banana Pro",
+        summary: "Paling pas saat Claude Code mulai dari gambar yang sudah ada dan butuh editing iteratif.",
+      },
+      {
+        name: "Nano Banana 2",
+        summary: "Opsi lain berorientasi editing untuk alur image-to-image.",
+      },
+    ],
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Skill image generation Claude Code — Seedream 5 + Nano Banana lewat AnyCap",
+      description:
+        "Cara memasang skill image generation AnyCap di Claude Code Opus 4.7, lalu memanggil Seedream 5, Nano Banana Pro, dan model gambar lainnya dari sesi agen yang sama.",
+      path: "/for/claude-code/image-generation",
+      about: ["Claude Code skill", "Claude Code image generation", "Claude Opus 4.7", "Pembuatan gambar", "Seedream 5", "Nano Banana Pro", "AnyCap"],
+      keywords: [
+        "skill image generation claude code",
+        "skill image claude code",
+        "skill image generation anycap",
+        "pasang skill image generation claude code",
+        "claude code opus 4.7 image generation",
+        "claude opus 4.7 image generation",
+        "image generation claude code",
+        "tambah image generation ke claude code",
+        "claude code buat gambar",
+        "image generation untuk claude code",
+      ],
+      datePublished: PAGE_PUBLISHED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
   de: {
     breadcrumbItems: [
       { name: "Startseite", href: "/" },
@@ -303,7 +399,6 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
 };
-contentByLocale.id = contentByLocale.en;
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,
