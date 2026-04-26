@@ -4,7 +4,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { getPageMetadata } from "./metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";
@@ -341,47 +341,6 @@ const guideJsonLd = createTechArticleJsonLd({
   dateModified: "2026-04-14",
 });
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Add Vision Capabilities to an AI Agent",
-  description:
-    "Step-by-step guide to adding image understanding and video analysis capabilities to any AI agent using AnyCap CLI.",
-  totalTime: "PT5M",
-  step: [
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap skill",
-      text: "Run the skills installer to place the AnyCap skill into your agent's skills directory. For Claude Code: npx -y skills add anycap-ai/anycap -a claude-code -y",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap CLI",
-      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI binary, or use npm install -g @anycap/cli.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Log in",
-      text: "Run anycap login to authenticate. The one-time login covers image understanding and video analysis together with the rest of AnyCap.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Use image understanding",
-      text: "Run anycap image read --url https://example.com/screenshot.png to analyze an image and return structured visual output.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Use video analysis",
-      text: "Run anycap video read --url https://example.com/demo.mp4 to analyze a video and return a scene-by-scene summary and key moments.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Combine vision in agent workflows",
-      text: "Ask your agent to review screenshots or videos naturally so it can combine visual analysis with coding, writing, or QA tasks.",
-    },
-  ],
-};
-
 const faqItems = [
   {
     question: "What is the difference between image read and video read?",
@@ -557,7 +516,6 @@ export default async function HowToAddVisionPage() {
   const locale = await getRequestLocale();
   const content = contentByLocale[locale === "pt-br" ? "pt-br" : locale === "id" ? "id" : locale === "de" ? "de" : "en"];
   const localizedFaqItems = locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
-  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
   const stepCopy = locale === "id" ? localizedStepCopy.id : locale === "de" ? localizedStepCopy.de : localizedStepCopy.en;
 
   return (
@@ -570,8 +528,6 @@ export default async function HowToAddVisionPage() {
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

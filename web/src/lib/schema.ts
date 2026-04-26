@@ -76,3 +76,9 @@ export function createFaqPageJsonLd(_items: readonly FaqPageItem[]): Record<stri
   // FAQPage rich results are intentionally disabled site-wide for SEO policy compliance.
   return {};
 }
+
+export function hasJsonLdContent(
+  value: Record<string, unknown> | null | undefined,
+): value is Record<string, unknown> {
+  return Boolean(value && Object.keys(value).length > 0);
+}

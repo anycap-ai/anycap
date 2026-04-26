@@ -4,7 +4,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd, hasJsonLdContent } from "@/lib/schema";
 import { getSeoPageChrome } from "@/lib/seo/ia";
 import { getPageMetadata } from "./metadata";
 import { getRequestLocale } from "@/lib/request-locale";
@@ -524,7 +524,9 @@ export default async function AgentSkillsForDeveloperToolsPage() {
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      {hasJsonLdContent(faqJsonLd) ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

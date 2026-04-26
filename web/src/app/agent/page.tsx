@@ -51,8 +51,31 @@ export default async function AgentEntryPage() {
   const chrome = localizedAgentChrome[locale] ?? localizedAgentChrome.en;
   const html = renderSimpleMarkdown(localizeAgentMarkdown(getLandingMarkdown(locale), locale));
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${siteConfig.url}${homePageHref}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Agent",
+        item: `${siteConfig.url}${localizePublicPath(locale, "/agent")}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] font-mono">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <main className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
         <HumanRedirectDialog href={homePageHref} />
 

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd, hasJsonLdContent } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale, type SiteLocale } from "@/lib/site";
@@ -1095,10 +1095,12 @@ export default async function ClaudeOpus47ImageVideoWorkflowPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {hasJsonLdContent(faqJsonLd) ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

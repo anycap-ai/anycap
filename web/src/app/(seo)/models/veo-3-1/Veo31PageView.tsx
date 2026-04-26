@@ -9,6 +9,10 @@ import {
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
+function hasJsonLdContent(value: Record<string, unknown> | undefined): value is Record<string, unknown> {
+  return Boolean(value && Object.keys(value).length > 0);
+}
+
 export interface ModelDetailPageContent {
   metadata: {
     title: string;
@@ -78,13 +82,13 @@ export function Veo31PageView({ content }: { content: ModelDetailPageContent }) 
     : "A dedicated model page helps teams decide whether this model belongs in the workflow before they start wiring prompts or capability calls into an agent task. That is especially useful when several adjacent models can appear to solve the same problem but differ in motion quality, style fit, editing strength, or operational tradeoffs.";
   return (
     <>
-      {content.modelGuideJsonLd ? (
+      {hasJsonLdContent(content.modelGuideJsonLd) ? (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(content.modelGuideJsonLd) }}
         />
       ) : null}
-      {content.faqJsonLd ? (
+      {hasJsonLdContent(content.faqJsonLd) ? (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
