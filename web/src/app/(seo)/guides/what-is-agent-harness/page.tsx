@@ -6,6 +6,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { defaultLocale, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
@@ -238,6 +239,15 @@ export const metadata: Metadata = getPageMetadata(defaultLocale);
 export default async function WhatIsAgentHarnessPage() {
   const locale = await getRequestLocale();
   const content = contentByLocale[locale] ?? contentByLocale.en;
+  const articleJsonLd = createTechArticleJsonLd({
+    headline: content.title.join(" "),
+    description: content.intro,
+    path: PATH,
+    locale,
+    about: ["AI agents", "agent harness", "capability runtime"],
+    keywords: ["agent harness", "AI agent runtime", "capability runtime"],
+  });
+
   return (
     <>
       <BreadcrumbJsonLd
@@ -246,6 +256,10 @@ export default async function WhatIsAgentHarnessPage() {
           { name: "Guides", href: "/guides", unlinkable: true },
           { name: content.breadcrumbLabel },
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

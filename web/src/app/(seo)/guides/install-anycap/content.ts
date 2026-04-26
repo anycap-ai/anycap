@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const INSTALL_ANYCAP_GUIDE_PATH = "/guides/install-anycap";
@@ -1170,22 +1170,8 @@ export function getInstallAnyCapPageData(locale: SiteLocale) {
     keywords: [...content.metadata.articleKeywords],
   });
 
-  const howToJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: content.howTo.name,
-    description: content.howTo.description,
-    step: content.howTo.steps.map((step) => ({
-      "@type": "HowToStep",
-      name: step.name,
-      text: step.text,
-    })),
-  };
-
   return {
     ...content,
     guideJsonLd,
-    howToJsonLd,
-    faqJsonLd: createFaqPageJsonLd(content.faqItems),
   };
 }

@@ -3,7 +3,7 @@ import { getRequestLocale } from "@/lib/request-locale";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 export { metadata } from "./metadata";
 
 export const runtime = "edge";
@@ -26,47 +26,6 @@ const guideJsonLd = createTechArticleJsonLd({
   datePublished: "2026-04-10",
   dateModified: "2026-04-10",
 });
-
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Add Image Generation to an AI Agent",
-  description:
-    "Step-by-step guide to adding image generation capabilities to any AI agent using AnyCap CLI.",
-  totalTime: "PT5M",
-  step: [
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap skill",
-      text: "Run the skills installer to place the AnyCap SKILL.md into your agent's skills directory. For Claude Code: npx -y skills add anycap-ai/anycap -a claude-code -y",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap CLI",
-      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI binary. Alternatively use npm install -g @anycap/cli.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Log in",
-      text: "Run anycap login to authenticate. This single login covers every capability including image generation.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Discover available image models",
-      text: "Run anycap image models to list available models: Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Generate your first image",
-      text: "Run anycap image generate --model seedream-5 --prompt 'a product photo on white background' to create your first AI-generated image.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Use image generation in agent workflows",
-      text: "Ask your agent to generate images naturally. For example, tell Claude Code: 'Generate a hero image for the landing page' and it will call AnyCap automatically.",
-    },
-  ],
-};
 
 const faqItems = [
   {
@@ -351,7 +310,6 @@ export default async function HowToAddImageGenerationPage() {
   const locale = await getRequestLocale();
   const copy = locale === "pt-br" ? copyByLocale["pt-br"] : locale === "id" ? copyByLocale.id : locale === "de" ? copyByLocale.de : copyByLocale.en;
   const localizedFaqItems = locale === "pt-br" ? ptBrFaqItems : locale === "id" ? idFaqItems : locale === "de" ? deFaqItems : faqItems;
-  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
 
   return (
     <>
@@ -361,8 +319,6 @@ export default async function HowToAddImageGenerationPage() {
         { name: copy.breadcrumbCurrent },
       ]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

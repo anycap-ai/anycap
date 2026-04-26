@@ -4,7 +4,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { ArticleByline } from "@/components/seo/ArticleByline";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";
@@ -39,26 +39,10 @@ export default async function AddToolsToClaudeCodePage() {
     dateModified: "2026-04-10",
   });
 
-  const howToJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: content.heroTitle,
-    description: content.metadata.description,
-    step: content.steps.map((step) => ({
-      "@type": "HowToStep",
-      name: step.title,
-      text: [step.command, step.body, step.bodyCommand].filter(Boolean).join(" "),
-    })),
-  };
-
-  const faqJsonLd = createFaqPageJsonLd(content.faqItems);
-
   return (
     <>
       <BreadcrumbJsonLd items={content.breadcrumbItems} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
