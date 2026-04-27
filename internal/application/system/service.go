@@ -31,6 +31,7 @@ type Service struct {
 	provider                   featureProvider
 	checkoutReturnOriginAllow  map[string]struct{}
 	checkoutIdempotencyClaimer checkoutIdempotencyClaimer
+	signupRewardDeadline       time.Time
 }
 
 type featureProvider interface {
@@ -87,6 +88,10 @@ func (s *Service) SetUsageReader(usage port.UsageReader) {
 
 func (s *Service) SetCreditClient(credit port.CreditClient) {
 	s.credit = credit
+}
+
+func (s *Service) SetSignupRewardDeadline(deadline time.Time) {
+	s.signupRewardDeadline = deadline.UTC()
 }
 
 func (s *Service) SetPaymentClient(payment port.PaymentClient) {
@@ -179,6 +184,9 @@ func (s *Service) CurrentUser(ctx context.Context, principal *model.Principal) (
 
 func (s *Service) ensureSignupReward(ctx context.Context, principal *model.Principal) {
 	if s == nil || principal == nil || !principal.CreatedUser || principal.UserID == "" || s.credit == nil {
+		return
+	}
+	if !s.signupRewardDeadline.IsZero() && time.Now().UTC().After(s.signupRewardDeadline.UTC()) {
 		return
 	}
 	if err := s.credit.GrantSignupReward(ctx, principal.UserID); err != nil {

@@ -66,3 +66,83 @@ func TestMemoryProvisioner_ReusesIdentityMapping(t *testing.T) {
 		t.Fatalf("expected updated email, got %q", second.Email)
 	}
 }
+
+func TestMemoryProvisioner_MigratesVerifiedPasswordIdentityByEmail(t *testing.T) {
+	provisioner := NewMemoryProvisioner()
+	now := time.Date(2026, 4, 27, 10, 0, 0, 0, time.UTC)
+
+	first, createdFirst, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:        "auth0|old-password-user",
+		Email:         "user@example.com",
+		EmailVerified: true,
+		Name:          "Old User",
+	}, now)
+	if err != nil {
+		t.Fatalf("first FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if !createdFirst {
+		t.Fatal("expected first lookup to create user")
+	}
+
+	second, createdSecond, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:        "auth0|new-password-user",
+		Email:         "user@example.com",
+		EmailVerified: true,
+		Name:          "New User",
+	}, now.Add(time.Minute))
+	if err != nil {
+		t.Fatalf("second FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if createdSecond {
+		t.Fatal("expected migrated password identity to reuse existing user")
+	}
+	if second.ID != first.ID {
+		t.Fatalf("expected same user after migration, got %q and %q", first.ID, second.ID)
+	}
+
+	third, createdThird, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:        "auth0|new-password-user",
+		Email:         "user@example.com",
+		EmailVerified: true,
+	}, now.Add(2*time.Minute))
+	if err != nil {
+		t.Fatalf("third FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if createdThird || third.ID != first.ID {
+		t.Fatalf("expected new subject to be persisted on same user, created=%v user=%#v", createdThird, third)
+	}
+}
+
+func TestMemoryProvisioner_DoesNotMigratePasswordIdentityFromGoogleEmail(t *testing.T) {
+	provisioner := NewMemoryProvisioner()
+	now := time.Date(2026, 4, 27, 10, 0, 0, 0, time.UTC)
+
+	googleUser, createdGoogle, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:        "google-oauth2|google-user",
+		Email:         "user@example.com",
+		EmailVerified: true,
+		Name:          "Google User",
+	}, now)
+	if err != nil {
+		t.Fatalf("google FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if !createdGoogle {
+		t.Fatal("expected google lookup to create user")
+	}
+
+	passwordUser, createdPassword, err := provisioner.FindOrCreateByAuthIdentity(context.Background(), "auth0", model.AuthUser{
+		UserID:        "auth0|password-user",
+		Email:         "user@example.com",
+		EmailVerified: true,
+		Name:          "Password User",
+	}, now.Add(time.Minute))
+	if err != nil {
+		t.Fatalf("password FindOrCreateByAuthIdentity() error = %v", err)
+	}
+	if !createdPassword {
+		t.Fatal("expected password lookup to create a separate user")
+	}
+	if passwordUser.ID == googleUser.ID {
+		t.Fatalf("expected google and password identities with same email to remain separate users, got %q", passwordUser.ID)
+	}
+}

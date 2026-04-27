@@ -259,6 +259,8 @@ Three methods supported:
 
 Credentials stored in system keychain (file fallback at `~/.anycap/credentials`).
 
+Auth0 JWT users are mapped to local AnyCap users through `auth_identities`. The Auth0 Universal Login template supports Google and database email/password login. Verified Auth0 database/password identities can be re-keyed by email during tenant migration, while social identities such as Google remain separate identities even when the email matches.
+
 ### Output
 
 - JSON to stdout by default (non-TTY), human-readable in TTY

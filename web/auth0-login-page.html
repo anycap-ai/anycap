@@ -92,7 +92,49 @@
       margin-bottom: 32px;
     }
 
-    /* ── Google button ── */
+    .form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #6f7467;
+    }
+
+    .field input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid #cdd5b3;
+      background: rgba(252, 253, 248, 0.9);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: #1c1f17;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: #6b7d3a;
+      box-shadow: 0 0 0 3px rgba(107, 125, 58, 0.14);
+    }
+
+    .field input::placeholder {
+      color: #a2a899;
+    }
+
+    .btn-primary,
     .btn-google {
       display: flex;
       align-items: center;
@@ -101,16 +143,28 @@
       width: 100%;
       padding: 12px 20px;
       border: none;
-      background: #1c1f17;
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background: #6b7d3a;
+    }
+
+    .btn-primary:hover {
+      background: #1c1f17;
+    }
+
+    .btn-google {
+      background: #1c1f17;
     }
 
     .btn-google:hover {
       background: #6b7d3a;
     }
 
+    .btn-primary:disabled,
     .btn-google:disabled {
       opacity: 0.6;
       cursor: default;
@@ -131,6 +185,7 @@
       height: 14px;
     }
 
+    .btn-primary span,
     .btn-google span {
       font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
       font-size: 11px;
@@ -138,6 +193,26 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       color: #f4f5f0;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #969d8b;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: #d4dbb8;
     }
 
     /* ── Error ── */
@@ -181,6 +256,22 @@
     <p class="subtitle">to continue to AnyCap</p>
 
     <div id="error-message" class="error"></div>
+
+    <form id="password-form" class="form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+      </div>
+      <button class="btn-primary" id="btn-password" type="submit">
+        <span>Continue with Email</span>
+      </button>
+    </form>
+
+    <div class="divider">or</div>
 
     <!-- Google button -->
     <button class="btn-google" id="btn-google">
@@ -260,18 +351,49 @@
         _intstate: config.internalOptions._intstate
       });
 
-      document.getElementById('btn-google').addEventListener('click', function () {
-        this.disabled = true;
-        this.querySelector('span:last-child').textContent = 'REDIRECTING...';
+      var databaseConnection = 'Username-Password-Authentication';
+      var errorMessage = document.getElementById('error-message');
+      var passwordForm = document.getElementById('password-form');
+      var passwordButton = document.getElementById('btn-password');
+      var googleButton = document.getElementById('btn-google');
+
+      function showError(err) {
+        errorMessage.textContent = (err && (err.description || err.message)) || 'Something went wrong';
+        errorMessage.style.display = 'block';
+      }
+
+      function setBusy(button, label) {
+        button.disabled = true;
+        button.querySelector('span:last-child').textContent = label;
+      }
+
+      function clearBusy(button, label) {
+        button.disabled = false;
+        button.querySelector('span:last-child').textContent = label;
+      }
+
+      passwordForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        errorMessage.style.display = 'none';
+        setBusy(passwordButton, 'SIGNING IN...');
+        webAuth.login({
+          realm: databaseConnection,
+          username: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value
+        }, function (err) {
+          if (!err) return;
+          showError(err);
+          clearBusy(passwordButton, 'CONTINUE WITH EMAIL');
+        });
+      });
+
+      googleButton.addEventListener('click', function () {
+        errorMessage.style.display = 'none';
+        setBusy(googleButton, 'REDIRECTING...');
         webAuth.authorize({ connection: 'google-oauth2' }, function (err) {
-          if (err) {
-            var msg = document.getElementById('error-message');
-            msg.textContent = err.description || 'Something went wrong';
-            msg.style.display = 'block';
-            var btn = document.getElementById('btn-google');
-            btn.disabled = false;
-            btn.querySelector('span:last-child').textContent = 'CONTINUE WITH GOOGLE';
-          }
+          if (!err) return;
+          showError(err);
+          clearBusy(googleButton, 'CONTINUE WITH GOOGLE');
         });
       });
     });
