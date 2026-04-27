@@ -400,6 +400,34 @@ func TestService_CurrentUserGrantsSignupRewardForNewUser(t *testing.T) {
 	}
 }
 
+func TestService_CurrentUserSkipsSignupRewardAfterDeadline(t *testing.T) {
+	credit := &fakeSystemCreditClient{}
+	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
+	service.signupRewardDeadline = time.Now().Add(-time.Hour)
+	service.SetUserReader(&fakeUserReader{
+		users: map[string]model.User{
+			"2000000001": {
+				ID:     "2000000001",
+				Email:  "user@example.com",
+				Status: model.UserStatusActive,
+			},
+		},
+	})
+	service.SetCreditClient(credit)
+
+	_, err := service.CurrentUser(context.Background(), &model.Principal{
+		UserID:      "2000000001",
+		AuthType:    "auth0_jwt",
+		CreatedUser: true,
+	})
+	if err != nil {
+		t.Fatalf("CurrentUser() error = %v", err)
+	}
+	if len(credit.grants) != 0 {
+		t.Fatalf("expected no signup reward grant after deadline, got %#v", credit.grants)
+	}
+}
+
 func TestService_CreditBalance(t *testing.T) {
 	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	service.SetCreditClient(&fakeSystemCreditClient{
