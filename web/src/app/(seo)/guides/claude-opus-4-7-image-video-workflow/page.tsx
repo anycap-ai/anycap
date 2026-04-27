@@ -3,7 +3,7 @@ import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
+import { createFaqPageJsonLd, createTechArticleJsonLd, hasJsonLdContent } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale, type SiteLocale } from "@/lib/site";
@@ -718,10 +718,234 @@ const deContent: PageContent = {
   }),
 };
 
+const idContent: PageContent = {
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Panduan", href: "/guides", unlinkable: true },
+    { name: "Workflow Image + Video Claude Opus 4.7" },
+  ],
+  eyebrow: "Panduan x Claude Opus 4.7",
+  lastUpdatedLabel: "Diperbarui 17 April 2026",
+  heroTitle: [
+    "Workflow image + video Claude Opus 4.7",
+    "dengan AnyCap — satu terminal, semua modalitas.",
+  ],
+  heroIntro:
+    "Ini workflow produksi untuk Claude Code on Claude Opus 4.7 plus AnyCap. Opus 4.7 plan, coding, dan reasoning di dalam terminal. AnyCap menambah image generation, video generation, dan visual understanding lewat satu CLI. Kombinasinya benar-benar gila: satu agent, semua modalitas, tanpa glue code. Ikuti langkah di bawah untuk membawa proyek dari visual launch sampai video walkthrough yang jadi tanpa keluar dari Claude Code.",
+  heroImage: {
+    src: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/hero.webp",
+    alt: "Mockup produk editorial dengan tulisan 'Opus 4.7 + AnyCap' di samping notebook developer — di-generate Claude Code on Opus 4.7 yang panggil AnyCap dengan Seedream 5.",
+    caption: "Di-generate end-to-end oleh Claude Code on Opus 4.7 — anycap image generate --model seedream-5",
+    width: 1200,
+    height: 1200,
+  },
+  prerequisitesTitle: "Prasyarat",
+  prerequisites: [
+    "Claude Code terinstall dan jalan di Claude Opus 4.7.",
+    "Node.js 18+ tersedia di mesinmu.",
+    "Sesi browser untuk flow login AnyCap.",
+  ],
+  installTitle: "Install sekali, terus lupakan",
+  installSteps: [
+    {
+      label: "Step 1 — install skill AnyCap",
+      command: "npx -y skills add anycap-ai/anycap -a claude-code -y",
+    },
+    {
+      label: "Step 2 — install CLI AnyCap",
+      command: "curl -fsSL https://anycap.ai/install.sh | sh",
+    },
+    {
+      label: "Step 3 — login",
+      command: "anycap login",
+    },
+  ],
+  imageWorkflowTitle: "Workflow image — dari ide ke aset launch",
+  imageWorkflowIntro:
+    "Opus 4.7 pegang brief, pilih model image yang tepat, dan iterasi bareng kamu. Yang penting bukan satu command-nya. Yang penting agent tetap di sesi terminal yang sama lewat setiap step.",
+  imageWorkflowSteps: [
+    {
+      step: "1",
+      title: "Brief Opus 4.7 dengan bahasa biasa",
+      body:
+        "Bilang ke Claude Code apa yang kamu butuhkan: \"Generate visual launch untuk rilis AnyCap Opus 4.7. Background off-white, lighting studio lembut, motif terminal.\" Opus 4.7 pilih model yang tepat — biasanya Seedream 5 untuk hasil first-pass yang polished.",
+    },
+    {
+      step: "2",
+      title: "Image pertama — Seedream 5",
+      body: "AnyCap route call-nya. Image kembali ke percakapan, dan Opus 4.7 reasoning apakah cocok dengan brief.",
+      commandLabel: "Di-generate Opus 4.7",
+      command:
+        "anycap image generate --model seedream-5 --prompt \"launch visual on off-white background, soft studio lighting, terminal motif\"",
+      image: {
+        src: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/step-image-1.webp",
+        alt: "Satu mug keramik matte di background krem — hero produk first-pass yang di-generate AnyCap.",
+        caption: "Hasil first-pass dikembalikan ke Opus 4.7 untuk review",
+        width: 800,
+        height: 800,
+      },
+    },
+    {
+      step: "3",
+      title: "Iterasi dengan Nano Banana Pro",
+      body: "Begitu ada referensi, pindah ke editing image-to-image. Opus 4.7 yang putuskan kapan tetap pakai model yang sama dan kapan ganti.",
+      commandLabel: "Refinement image-to-image",
+      command:
+        "anycap image generate --model nano-banana-pro --mode image-to-image --prompt \"add olive highlights and softer shadows\" --param reference_image_urls='[\"./mockup.png\"]'",
+      image: {
+        src: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/step-image-2.webp",
+        alt: "Tiga varian warna mug keramik matte yang sama — sage, terracotta, dusty blue — di-generate sebagai batch follow-up oleh AnyCap.",
+        caption: "Opus 4.7 fan-out varian dalam satu loop CLI — tanpa swap model manual",
+        width: 800,
+        height: 800,
+      },
+    },
+    {
+      step: "4",
+      title: "Kembalikan aset ke codebase",
+      body:
+        "Karena Claude Code on Opus 4.7 adalah agent yang sama yang menghasilkan image-nya, dia bisa nulis file ke direktori yang tepat, update halaman, dan commit perubahan dalam satu loop berkelanjutan.",
+    },
+  ],
+  videoWorkflowTitle: "Workflow video — dari still ke motion",
+  videoWorkflowIntro:
+    "Begitu image sudah locked, agent yang sama promote-nya jadi motion. Kling 3.0 pilihan image-to-video terkuat — pertahankan still sebagai frame pertama dan tambah motion sinematik. Seedance 1.5 Pro default production-friendly saat butuh text-to-video yang ship bagus lintas format.",
+  videoWorkflowSteps: [
+    {
+      step: "1",
+      title: "Promote still jadi image-to-video dengan Kling 3.0",
+      body: "Saat image sudah jalan, image-to-video pertahankan visual identity dan tambah motion di atasnya. Bandingkan still referensi di kiri dengan motion Kling 3.0 di kanan — frame yang sama, sekarang hidup.",
+      commandLabel: "Image-to-video",
+      command:
+        "anycap video generate --model kling-3.0 --mode image-to-video --prompt \"gentle parallax over the launch image\" --param reference_image_urls='[\"./launch.png\"]'",
+      image: {
+        src: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/step-video-keyframe.webp",
+        alt: "Still sinematik drone delivery melayang di atas jalan kota berlampu neon saat golden hour — frame referensi yang Opus 4.7 serahkan ke Kling 3.0.",
+        caption: "Still referensi — frame pertama",
+        width: 1200,
+        height: 670,
+      },
+      video: {
+        src: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/step-video-kling.mp4",
+        poster: "https://cdn.anycap.ai/page_resource/guides/opus-4-7-workflow/step-video-keyframe.webp",
+        alt: "Output image-to-video Kling 3.0 — dolly sinematik melewati jalan berlampu neon dengan drone delivery melayang saat kamera maju.",
+        caption: "Motion Kling 3.0 — loop 5 detik",
+        width: 1284,
+        height: 716,
+      },
+    },
+    {
+      step: "2",
+      title: "Jalankan varian production-friendly dengan Seedance 1.5 Pro",
+      body: "Seedance pilihan tepat saat butuh text-to-video yang repeatable dan ship bagus lintas format.",
+      commandLabel: "Varian production-friendly",
+      command:
+        "anycap video generate --model seedance-1.5-pro --prompt \"6-second walkthrough of the new product page, soft cuts\"",
+    },
+    {
+      step: "3",
+      title: "Biar Opus 4.7 yang handle sisanya",
+      body:
+        "Save clip-nya, update halaman marketing, tulis commit message, file PR — Opus 4.7 jaga loop-nya tetap tertutup karena dia tetap agent yang sama yang mulai pekerjaan ini.",
+    },
+  ],
+  promptTipsTitle: "Tips prompt yang bikin Opus 4.7 + AnyCap benar-benar gila",
+  promptTips: [
+    {
+      title: "Bilang ke agent tujuannya, bukan model-nya",
+      body:
+        "Bilang \"gue butuh visual launch\" bukan \"panggil Seedream 5.\" Opus 4.7 sudah tahu model AnyCap mana yang paling cocok untuk tujuan itu — judgment ini bagian dari kenapa kombinasinya jalan.",
+    },
+    {
+      title: "Kasih image referensi langsung ke dia",
+      body:
+        "Drop file-nya ke percakapan. Opus 4.7 baca image-nya, lalu route command image-to-image atau image-to-video yang tepat ke AnyCap.",
+    },
+    {
+      title: "Perlakukan image dan video sebagai satu rantai",
+      body:
+        "Brief yang sama biasanya butuh varian still dan motion. Minta Opus 4.7 plan rantainya di awal kasih hasil akhir yang jauh lebih baik dibanding jalankan tiap step terisolasi.",
+    },
+    {
+      title: "Biar agent tutup loop-nya",
+      body:
+        "Begitu aset di-approve, minta Opus 4.7 wire ke halaman, commit perubahan, dan update tracker apa pun. Kombinasinya paling gila saat agent juga yang ngerjain last mile yang membosankan.",
+    },
+  ],
+  ctaTitle: "Langkah berikutnya yang paling tepat",
+  ctaCards: [
+    {
+      title: "Hub Claude Code di Opus 4.7",
+      href: "/for/claude-code",
+      body: "Landing utama untuk kombinasi Opus 4.7 + AnyCap.",
+    },
+    {
+      title: "Image generation Claude Code",
+      href: "/for/claude-code/image-generation",
+      body: "Halaman image generation tertarget dengan pilihan model.",
+    },
+    {
+      title: "Video generation Claude Code",
+      href: "/for/claude-code/video-generation",
+      body: "Halaman video generation tertarget dengan pilihan model.",
+    },
+    {
+      title: "Capability Claude Opus 4.7",
+      href: "/learn/claude-opus-4-7-capabilities",
+      body: "Apa yang Opus 4.7 lakukan, apa yang tidak, dan apa yang AnyCap unlock.",
+    },
+  ],
+  faqTitle: "FAQ",
+  faqItems: [
+    {
+      question: "Apakah perlu produk image atau video terpisah untuk jalankan workflow ini?",
+      answer:
+        "Tidak. AnyCap route Claude Code on Opus 4.7 ke model image dan video yang tepat lewat satu CLI. Tidak ada produk kedua untuk install, tidak ada login kedua, dan tidak ada agent kedua.",
+    },
+    {
+      question: "Model mana yang harus Opus 4.7 pilih duluan?",
+      answer:
+        "Untuk image, Seedream 5 first-pass terkuat. Untuk image editing, Nano Banana Pro. Untuk video, Kling 3.0 pilihan image-to-video terkuat, dan Seedance 1.5 Pro default text-to-video production-friendly.",
+    },
+    {
+      question: "Bisakah Claude Opus 4.7 chain image jadi video otomatis?",
+      answer:
+        "Bisa. Opus 4.7 bisa pegang brief lewat dua step, generate still, lalu promote-nya jadi image-to-video pakai Kling 3.0 tanpa keluar dari percakapan.",
+    },
+    {
+      question: "Apakah ini lebih cepat dari wiring SDK provider terpisah?",
+      answer:
+        "Iya. Inti AnyCap adalah hilangkan glue SDK. Opus 4.7 panggil command AnyCap seakan-akan native tool, jadi workflow tetap di satu sesi terminal.",
+    },
+    {
+      question: "Di mana lihat biaya real-time?",
+      answer:
+        "AnyCap pakai harga pay-as-you-go dengan kredit gratis $5. Tarif per model dan penggunaan kredit tersedia di halaman pricing.",
+    },
+  ],
+  articleJsonLd: createTechArticleJsonLd({
+    headline: "Workflow image + video Claude Opus 4.7 dengan AnyCap — satu terminal, semua modalitas",
+    description:
+      "Workflow end-to-end untuk Claude Code on Claude Opus 4.7 plus AnyCap. Generate visual launch dengan Seedream 5 dan Nano Banana Pro, promote ke motion dengan image-to-video Kling 3.0 dan Seedance 1.5 Pro — semua tanpa keluar dari terminal.",
+    path: PAGE_PATH,
+    about: ["Claude Opus 4.7", "Claude Code", "Image generation", "Video generation", "AnyCap", "Workflow"],
+    keywords: [
+      "workflow image claude opus 4.7",
+      "workflow video claude opus 4.7",
+      "workflow claude code opus 4.7",
+      "workflow image generation claude code",
+      "workflow video generation claude code",
+      "workflow anycap",
+    ],
+    datePublished: PAGE_PUBLISHED_ISO,
+    dateModified: PAGE_LAST_MODIFIED_ISO,
+  }),
+};
+
 const contentByLocale: Record<SiteLocale, PageContent> = {
   en: enContent,
   "pt-br": ptBrContent,
-  id: enContent,
+  id: idContent,
   de: deContent,
 };
 
@@ -871,10 +1095,12 @@ export default async function ClaudeOpus47ImageVideoWorkflowPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.articleJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {hasJsonLdContent(faqJsonLd) ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

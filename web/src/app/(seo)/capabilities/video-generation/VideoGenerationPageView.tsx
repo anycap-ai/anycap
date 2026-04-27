@@ -3,6 +3,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { VideoGenDemo } from "@/components/landing/VideoGenDemo";
 import type { VideoGenerationPageData } from "@/app/(seo)/capabilities/video-generation/content";
+import { hasJsonLdContent } from "@/lib/schema";
 
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
@@ -28,10 +29,12 @@ export function VideoGenerationPageView({ content }: { content: VideoGenerationP
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content.capabilityGuideJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
-      />
+      {hasJsonLdContent(content.faqJsonLd) ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(content.faqJsonLd) }}
+        />
+      ) : null}
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

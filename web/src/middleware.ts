@@ -63,6 +63,11 @@ function redirectToPath(req: NextRequest, pathname: string) {
   return NextResponse.redirect(redirectURL, 308);
 }
 
+function internalDefaultLocalePath(pathname: string): string {
+  const normalizedPath = normalizePublicPath(pathname);
+  return normalizedPath === "/" ? `/${defaultLocale}` : `/${defaultLocale}${normalizedPath}`;
+}
+
 function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
   for (const cookie of authResponse.cookies.getAll()) {
     target.cookies.set(cookie);
@@ -133,11 +138,22 @@ export async function middleware(req: NextRequest) {
         : "0",
     );
 
-    if (metadataRoutePaths.has(pathname) || getPublicRouteByPath(pathname)) {
+    if (metadataRoutePaths.has(pathname)) {
       const rewriteURL = req.nextUrl.clone();
       rewriteURL.pathname = pathname;
       return applyAuthResponse(
         NextResponse.rewrite(rewriteURL, {
+          request: {
+            headers: requestHeaders,
+          },
+        }),
+        authResponse,
+      );
+    }
+
+    if (getPublicRouteByPath(pathname)) {
+      return applyAuthResponse(
+        NextResponse.next({
           request: {
             headers: requestHeaders,
           },
@@ -194,6 +210,7 @@ export async function middleware(req: NextRequest) {
 
     const matchedPublicRoute = getPublicRouteByPath(normalizedPath);
     if (matchedPublicRoute) {
+      const rewriteURL = req.nextUrl.clone();
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set(localeHeaderName, defaultLocale);
       requestHeaders.set(requestPathnameHeaderName, normalizedPath);
@@ -207,8 +224,9 @@ export async function middleware(req: NextRequest) {
           : "0",
       );
 
+      rewriteURL.pathname = internalDefaultLocalePath(normalizedPath);
       return applyAuthResponse(
-        NextResponse.next({
+        NextResponse.rewrite(rewriteURL, {
           request: {
             headers: requestHeaders,
           },

@@ -7,6 +7,8 @@ import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { normalizeUserCode } from "@/lib/auth/session";
 import { DeviceCodeForm } from "./DeviceCodeForm";
 
+export const runtime = "edge";
+
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 

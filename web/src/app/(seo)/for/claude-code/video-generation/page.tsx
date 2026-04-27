@@ -181,7 +181,77 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       dateModified: PAGE_LAST_MODIFIED_ISO,
     }),
   },
-  id: undefined as never,
+  id: {
+    breadcrumbItems: [
+      { name: "Beranda", href: "/" },
+      { name: "Lengkapi Agen", href: "/for", unlinkable: true },
+      { name: "Claude Code", href: "/for/claude-code" },
+      { name: "Pembuatan Video" },
+    ],
+    eyebrow: "Claude Code x Pembuatan Video",
+    titleLines: [
+      "Opus 4.7 + AnyCap = pembuatan video di dalam Claude Code.",
+      "Veo 3.1, Seedance, Kling — agen yang sama, CLI yang sama, tanpa glue code.",
+    ],
+    intro:
+      "Claude Code di atas Opus 4.7 mampu merencanakan dan mengeksekusi pekerjaan panjang berlapis-lapis — tetapi tidak bisa merender satu frame video pun. Pasangkan dengan AnyCap, dan permukaan agen yang sama langsung menjangkau Veo 3.1, Seedance 1.5 Pro, serta Kling 3.0. Minta Opus 4.7 membuat teaser peluncuran, walkthrough produk, klip media sosial, atau iterasi image-to-video dari visual yang sudah ada — agen akan memilih model yang tepat, memanggilnya, lalu mengembalikan hasilnya ke percakapan. Kombinasinya benar-benar gila: agen reasoning terkuat yang pernah dirilis Anthropic, plus video kelas produksi, tanpa SDK baru yang harus dirangkai.",
+    ctas: {
+      primary: "Mulai Sekarang",
+      secondary: "Tambah Tools ke Claude Code",
+    },
+    installTitle: "Jalur instalasi",
+    installStepPrefix: "Langkah",
+    commandTitle: "Perintah pertama untuk dicoba",
+    commandBody:
+      "Intinya bukan sekadar panggilan video itu sendiri. Intinya, agen menjangkau pembuatan video lewat runtime yang sama dengan yang sudah dipakai untuk tugas image dan vision.",
+    useCasesTitle: "Kapan kapabilitas ini relevan",
+    useCases: [
+      "Walkthrough produk dan klip demo yang dihasilkan langsung dari alur kerja Claude Code.",
+      "Visual peluncuran atau media sosial yang membutuhkan gerakan, bukan sekadar satu frame.",
+      "Validasi konsep saat agen perlu memperlihatkan alur, bukan hanya menjelaskannya.",
+      "Jalur ekspansi yang konsisten dari image generation ke video generation tanpa SDK lain.",
+    ],
+    faqTitle: "FAQ",
+    footerCtas: {
+      back: "Kembali ke hub Claude Code",
+      capability: "Kapabilitas Video Generation",
+      image: "Image generation di Claude Code",
+    },
+    faqItems: [
+      {
+        question: "Apakah Claude Code bisa membuat video sendiri?",
+        answer:
+          "Tidak sebagai lapisan kapabilitas bawaan. AnyCap menambahkan video generation ke Claude Code lewat satu jalur instalasi dan satu CLI.",
+      },
+      {
+        question: "Model video apa saja yang tersedia saat ini?",
+        answer:
+          "Halaman video generation saat ini menonjolkan Veo 3.1, dan harga AnyCap juga mencantumkan Seedance 1.5 Pro serta Kling 3.0.",
+      },
+      {
+        question: "Mengapa lewat AnyCap, bukan SDK terpisah?",
+        answer:
+          "Karena runtime dan auth flow yang sama juga menutup image generation, image understanding, dan video analysis tanpa mengubah cara kerja agen.",
+      },
+    ],
+    articleJsonLd: createTechArticleJsonLd({
+      headline: "Claude Code Opus 4.7 video generation — Veo 3.1, Seedance, Kling lewat AnyCap",
+      description:
+        "Cara menambahkan video generation ke Claude Code di Opus 4.7 lewat AnyCap dengan Veo 3.1, Seedance 1.5 Pro, dan Kling 3.0 — satu CLI, satu login, tanpa SDK ekstra.",
+      path: "/for/claude-code/video-generation",
+      about: ["Claude Code", "Claude Opus 4.7", "Pembuatan video", "Veo 3.1", "Seedance", "Kling", "AnyCap"],
+      keywords: [
+        "claude code opus 4.7 video generation",
+        "claude opus 4.7 video generation",
+        "video generation claude code",
+        "tambah video generation ke claude code",
+        "claude code buat video",
+        "video generation untuk claude code",
+      ],
+      datePublished: PAGE_PUBLISHED_ISO,
+      dateModified: PAGE_LAST_MODIFIED_ISO,
+    }),
+  },
   de: {
     breadcrumbItems: [
       { name: "Startseite", href: "/" },
@@ -254,7 +324,6 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     }),
   },
 };
-contentByLocale.id = contentByLocale.en;
 
 export const metadata: Metadata = createLocalizedMetadataForPath(
   defaultLocale,

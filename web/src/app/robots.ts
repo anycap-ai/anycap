@@ -35,7 +35,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [...blockedSiteRoutes],
       },
     ],
-    sitemap: `${siteConfig.url}/sitemap.xml`,
+    sitemap: [
+      `${siteConfig.url}/sitemap.xml`,
+      `${siteConfig.url}/page/sitemap-index.xml`,
+    ],
     host: siteConfig.url,
   };
 }

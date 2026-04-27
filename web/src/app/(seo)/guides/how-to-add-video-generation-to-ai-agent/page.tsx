@@ -4,7 +4,7 @@ import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { ArticleByline } from "@/components/seo/ArticleByline";
-import { createTechArticleJsonLd, createFaqPageJsonLd } from "@/lib/schema";
+import { createTechArticleJsonLd } from "@/lib/schema";
 import { getPageMetadata } from "./metadata";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale } from "@/lib/site";
@@ -341,47 +341,6 @@ const guideJsonLd = createTechArticleJsonLd({
   dateModified: "2026-04-14",
 });
 
-const howToJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  name: "Add Video Generation to an AI Agent",
-  description:
-    "Step-by-step guide to adding video generation capabilities to any AI agent using AnyCap CLI.",
-  totalTime: "PT5M",
-  step: [
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap skill",
-      text: "Run the skills installer to place the AnyCap skill into your agent's skills directory. For Claude Code: npx -y skills add anycap-ai/anycap -a claude-code -y",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Install the AnyCap CLI",
-      text: "Run curl -fsSL https://anycap.ai/install.sh | sh to install the CLI binary, or use npm install -g @anycap/cli.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Log in",
-      text: "Run anycap login to authenticate. The one-time login covers video generation and the rest of the AnyCap capability surface.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Discover available video models",
-      text: "Run anycap video models to inspect available models such as Veo 3.1 and Kling 3.0 and choose the one that fits your request.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Generate your first video",
-      text: "Run anycap video generate --model veo-3.1 --prompt 'a drone shot over a mountain lake at sunrise' to create your first AI-generated video.",
-    },
-    {
-      "@type": "HowToStep",
-      name: "Use video generation in agent workflows",
-      text: "Ask your agent for a video naturally. It can construct the prompt, submit the job, and wait for the final result URL automatically.",
-    },
-  ],
-};
-
 const faqItems = [
   {
     question: "Which video models does AnyCap support?",
@@ -457,7 +416,6 @@ export default async function HowToAddVideoGenerationPage() {
           },
         ]
       : faqItems;
-  const faqJsonLd = createFaqPageJsonLd(localizedFaqItems);
   const localizedCopy =
     locale === "id"
       ? {
@@ -532,8 +490,6 @@ export default async function HowToAddVideoGenerationPage() {
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <article className="px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">

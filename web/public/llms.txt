@@ -102,6 +102,57 @@ Claude Code now runs Claude Opus 4.7 — the strongest reasoning and coding agen
 - [Agent Harness](https://anycap.ai/glossary/agent-harness): The execution layer around an AI model.
 - [Context Engineering](https://anycap.ai/glossary/context-engineering): Structuring context for better agent execution.
 - [Agent Capability Runtime](https://anycap.ai/glossary/agent-capability-runtime): The runtime layer that exposes capabilities to agents.
+- [Agentic Workflow](https://anycap.ai/glossary/agentic-workflow): Multi-step agent execution patterns that chain tools, reasoning, and capabilities.
+- [Model Context Protocol](https://anycap.ai/glossary/model-context-protocol): Open protocol for connecting agents to tools and data sources.
+
+## News & Developer Insights
+
+> Breaking news and analysis on AI models, coding tools, and agent development platforms.
+
+- [AI index](https://anycap.ai/page/en-US/ai): Developer guides for AI tools, models, orchestration, and agentic workflows.
+- [Blog index](https://anycap.ai/page/en-US/blog): Practical AnyCap blog posts and implementation notes for agent builders.
+- [News index](https://anycap.ai/page/en-US/news): Latest AI model, coding agent, and platform news for developers.
+
+## Agentic AI Explainers
+
+- [Agentic AI vs Traditional AI](https://anycap.ai/page/en-US/ai/agentic-ai-vs-traditional-ai): Key differences between agentic and traditional AI systems for developers.
+- [Agentic Workflows Guide](https://anycap.ai/page/en-US/ai/agentic-workflows-complete-guide): How to build AI systems that plan, act, and recover autonomously.
+- [Agentive AI Explained](https://anycap.ai/page/en-US/ai/agentive-ai-explained): Definition, examples, and four core characteristics of agentive AI.
+- [Predictive vs Generative vs Agentic AI](https://anycap.ai/page/en-US/ai/predictive-generative-agentic-ai-compared): Side-by-side comparison of AI paradigms for 2026.
+- [AG-UI Protocol Explained](https://anycap.ai/page/en-US/ai/ag-ui-protocol-explained): The open streaming event protocol for human-agent interfaces.
+
+## Frontier Model Guides
+
+- [DeepSeek V4 Complete Developer Guide](https://anycap.ai/page/en-US/ai/deepseek-v4-complete-developer-guide): Architecture, context, API, and integration guidance for DeepSeek V4.
+- [DeepSeek V4 Release Date](https://anycap.ai/page/en-US/ai/deepseek-v4-release-date-what-we-know): Current timeline, V4 Lite status, and developer preparation notes.
+- [GPT-5.5 for Developers](https://anycap.ai/page/en-US/ai/gpt-5-5-what-developers-need-to-know): API pricing, benchmarks, and agentic coding changes developers should know.
+- [Seedance 1.5 Pro Guide](https://anycap.ai/page/en-US/ai/seedance-1-5-pro-complete-guide): Video model guide covering API access, camera controls, and agent workflow fit.
+- [Best AI Video Models for Agents](https://anycap.ai/page/en-US/blog/best-ai-video-models-for-agents-2026): Practical comparison of Kling, Seedance, Veo, Hailuo, and Runway for agent integration.
+
+## Orchestration & Tools
+
+- [AI Orchestration Frameworks 2026](https://anycap.ai/page/en-US/ai/ai-orchestration-frameworks-compared-2026): LangGraph, CrewAI, and AutoGen side-by-side comparison.
+- [Data Orchestration Tools 2026](https://anycap.ai/page/en-US/ai/data-orchestration-tools-2026): Airflow, Dagster, Prefect, and AI-native options compared.
+- [Automation Orchestration Tools](https://anycap.ai/page/en-US/ai/automation-orchestration-tools-guide): Zapier, n8n, Temporal, and LangGraph for AI agents.
+- [Agentic Analytics Tools 2026](https://anycap.ai/page/en-US/ai/agentic-analytics-tool-review-2026): Developer guide to analytics tools for agent workflows.
+- [Best AI Tools for Enterprise Search](https://anycap.ai/page/en-US/ai/best-ai-tools-for-enterprise-search): Practical comparison for developer teams in 2026.
+
+- [Claude Mythos Preview](https://anycap.ai/page/en-US/news/claude-mythos-preview-too-dangerous-to-ship): Why Anthropic has not publicly released Claude Mythos Preview despite strong benchmark results.
+- [DeepSeek V4 Engram Explained](https://anycap.ai/page/en-US/news/deepseek-v4-engram-explained): What DeepSeek V4's Engram memory system means for long-context AI workflows.
+- [DeepSeek V4 Now Live](https://anycap.ai/page/en-US/news/deepseek-v4-now-live-weights-benchmarks): Weights, benchmarks, and first impressions for DeepSeek V4.
+- [DeepSeek V4 Research Papers](https://anycap.ai/page/en-US/news/deepseek-v4-research-papers-architecture): Summary of three DeepSeek V4 architecture papers and their developer implications.
+- [Gemini Enterprise Agent Platform](https://anycap.ai/page/en-US/news/google-gemini-enterprise-agent-platform-2026): Google Vertex AI rebrand and agent platform changes from Cloud Next 2026.
+- [GPT-5.5 API Available](https://anycap.ai/page/en-US/news/gpt-5-5-api-available-pricing-quick-start): API pricing, rate limits, and first-call guidance for GPT-5.5.
+- [What AI Agents Can't Do](https://anycap.ai/page/en-US/news/what-ai-agents-cant-do-in-2026): Current agent limitations and practical workarounds for 2026.
+- [Deep Research Tools Compared](https://anycap.ai/page/en-US/news/deep-research-tools-ai-agents-compared): Side-by-side comparison of ChatGPT Deep Research, Perplexity Sonar Pro, and AnyCap DeepResearch.
+- [GPT Image 2 First Look](https://anycap.ai/page/en-US/news/gpt-image-2-first-look-developers): GPT Image 2 API review — quality, pricing, and integration guide for developers.
+- [What Is Contextual Refinement](https://anycap.ai/page/en-US/news/what-is-contextual-refinement-ai): What contextual refinement means for AI agent output quality.
+- [Cursor AI 2026 New Features](https://anycap.ai/page/en-US/news/cursor-ai-2026-new-features-guide): Cursor AI 2026 new features and capability extension guide.
+- [Kling AI 2026 Review](https://anycap.ai/page/en-US/news/kling-ai-review-2026): Kling AI 2026 review — pricing, API access, and Kling 3.0 developer guide.
+- [Claude Code SDK Developer Guide](https://anycap.ai/page/en-US/news/claude-code-sdk-developer-guide): Claude Code SDK developer guide for building agents programmatically.
+- [Claude Code Shortcuts and Tips](https://anycap.ai/page/en-US/news/claude-code-shortcuts-tips): Claude Code keyboard shortcuts and workflow patterns for 2–3x productivity.
+- [Claude Code Rate Limits Explained](https://anycap.ai/page/en-US/news/claude-code-rate-limits-explained): Claude Code rate limits and the 5-hour cap explained with workarounds.
+- [Kling AI NSFW Policy](https://anycap.ai/page/en-US/news/kling-ai-nsfw-policy-developers): Kling AI NSFW policy guide for developers building video generation workflows.
 
 ## Product
 

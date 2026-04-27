@@ -543,7 +543,253 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
   de: {} as AboutPageData,
 };
 
-contentByLocale.id = contentByLocale.en;
+const aboutFaqItemsId = [
+  {
+    question: "Apa yang ditambahkan AnyCap kalau agen saya sudah bisa menulis kode?",
+    answer:
+      "Code generation menyelesaikan perencanaan dan implementasi, tapi banyak workflow produksi tetap gagal di sisi eksekusi capability. Sebuah agen bisa menghasilkan kode yang benar dan tetap gagal saat harus merender gambar, membuat video, memeriksa output visual, atau memindahkan artifact antar tool dengan autentikasi yang stabil. AnyCap menambahkan lapisan eksekusi yang hilang itu lewat satu jalur instalasi, satu alur auth, dan satu command surface. Tim tetap memakai agen yang sudah mereka percaya, sambil mengurangi glue code khusus per provider. Hasilnya, waktu setup turun, integrasi yang rapuh berkurang, dan workflow multimodal tetap reproducible di berbagai environment.",
+  },
+  {
+    question: "AnyCap itu agent framework atau runtime di sekitar agen yang sudah ada?",
+    answer:
+      "AnyCap adalah runtime di sekitar agen yang sudah ada, bukan framework pengganti. Anda tetap memakai Claude Code, Cursor, Codex, atau planning layer lain untuk reasoning dan task decomposition. AnyCap fokus pada capability di luar reasoning model dasar, seperti pembuatan media dan analisis multimodal. Pemisahan ini membuat tanggung jawab tetap jelas: agen memutuskan apa yang harus dilakukan, dan AnyCap menyediakan jalur stabil untuk mengeksekusi keputusan itu lewat capability. Hasilnya arsitektur yang lebih bersih — tim bisa upgrade model, prompt, atau provider tanpa menulis ulang setiap integrasi dari nol.",
+  },
+  {
+    question: "Bagaimana sebaiknya tim mengevaluasi AnyCap sebelum dipakai di produksi?",
+    answer:
+      "Mulai dari satu workflow nyata yang saat ini patah karena setup capability-nya terpotong-potong. Install AnyCap lewat panduan publik, jalankan auth sekali, lalu eksekusi workflow yang sama dari ujung ke ujung lewat CLI. Bandingkan tiga hal: waktu setup, jenis kegagalan, dan reproducibility antar anggota tim. Selama evaluasi, simpan log request, error, dan screenshot supaya tim bisa meninjau bagian mana yang dipermudah runtime dan bagian mana yang masih kurang. Pilot yang baik biasanya kecil tapi representatif: satu agen, satu rangkaian capability, satu output yang bisa diukur. Kalau jalur itu jadi predictable, keputusan rollout jadi jauh lebih jelas.",
+  },
+];
+
+contentByLocale.id = {
+  metadata: {
+    title: "Tentang AnyCap - Infrastruktur capability untuk agen AI",
+    description:
+      `Tentang AnyCap, tim yang membangun runtime capability untuk agen AI dengan repository publik, riwayat release, dan jalur instalasi untuk ${capabilitySummary}.`,
+    openGraphTitle: "Tentang AnyCap - Infrastruktur capability untuk agen AI",
+    openGraphDescription:
+      "Mengapa AnyCap ada, apa yang AnyCap lakukan, apa yang bukan ranahnya, dan prinsip di balik runtime capability yang agent-native.",
+  },
+  breadcrumbItems: [
+    { name: "Beranda", href: "/" },
+    { name: "Tentang", href: "/about" },
+  ],
+  eyebrow: "Tentang",
+  heroTitle: ["AnyCap membangun infrastruktur", "capability untuk agen."],
+  heroIntro: `AnyCap fokus pada lapisan eksekusi antara agen reasoning dan capability yang dibutuhkan untuk menyelesaikan kerja nyata: ${capabilitySummary}. Kebanyakan agen sudah bisa merencanakan dan menulis, tapi tetap patah saat workflow menyentuh pembuatan media, inspeksi visual, atau handoff capability multi-langkah. Pendekatannya sederhana: tetap pakai agen yang sudah Anda percaya, lalu tambahkan satu runtime capability di sekitarnya supaya install, auth, dan perilaku command tetap predictable lintas tugas. Tim mendapat surface integrasi yang stabil, bukan glue code khusus per provider, dan tetap punya ruang untuk berkembang seiring ${roadmapCapabilitySummary} pindah dari roadmap ke produksi.`,
+  companyFactsTitle: "Fakta perusahaan",
+  companyFacts: [
+    { label: "Perusahaan", value: "AnyCap" },
+    { label: "Produk", value: "Runtime capability untuk agen AI" },
+    { label: "Antarmuka utama", value: "CLI + skill files" },
+    { label: "Riwayat repo publik", value: "Sejak Maret 2026" },
+    { label: "Surface pengiriman", value: "CLI, web app, edge delivery, distribusi skill" },
+    { label: "Repository resmi", value: "github.com/anycap-ai/anycap" },
+    { label: "Lisensi", value: "MIT" },
+    { label: "Terakhir diperbarui", value: "2026-04-15" },
+  ],
+  teamTitle: "Cara tim mengirim",
+  teamCards: [
+    {
+      title: "Produk dan engineering",
+      body:
+        "AnyCap dikirim sebagai satu surface produk lintas CLI, situs publik, dashboard, dan lapisan edge delivery. Itu bikin runtime, dokumentasi, dan jalur distribusi bisa diverifikasi langsung apakah benar-benar nyambung.",
+    },
+    {
+      title: "Distribusi dan release",
+      body:
+        "Repository publik mendokumentasikan release GitHub, packaging npm, sinkronisasi skill, dan deploy Cloudflare Pages. Jalur pengirimannya terlihat — bukan disembunyikan di balik halaman peluncuran tertutup.",
+    },
+    {
+      title: "Feedback dan iterasi",
+      body:
+        "Operator bisa melaporkan masalah lewat GitHub dan lewat alur `anycap feedback` bawaan. Itu bikin ada jalur nyata dari request yang gagal atau capability yang kurang kembali ke tim.",
+    },
+  ],
+  timelineTitle: "Timeline pembangunan publik",
+  timelineItems: [
+    {
+      label: "Maret 2026",
+      detail:
+        "Riwayat repository publik saat ini dimulai, dengan CLI, server, fondasi dashboard, dan situs semuanya dikirim dari codebase yang sama.",
+    },
+    {
+      label: "Awal April 2026",
+      detail:
+        "Penyelarasan inventaris capability, halaman compare, dan konten SEO berbasis workflow diperluas supaya pembeli bisa mengevaluasi produk lewat use case konkret, bukan sekadar copy brand.",
+    },
+    {
+      label: "Model operasi saat ini",
+      detail:
+        "AnyCap dikembangkan sebagai produk agent-first dengan satu runtime, satu jalur instalasi, satu alur auth, dan dokumentasi publik untuk release, panduan, serta skill.",
+    },
+  ],
+  referencesTitle: "Referensi publik",
+  publicReferences: [
+    {
+      label: "Organisasi GitHub",
+      href: "https://github.com/anycap-ai",
+      detail: "Profil organisasi utama untuk repository, release, dan issue tracking publik.",
+    },
+    {
+      label: "Repository GitHub",
+      href: "https://github.com/anycap-ai/anycap",
+      detail: "Codebase publik utama untuk runtime, situs, dan skill files.",
+    },
+    {
+      label: "Release GitHub",
+      href: "https://github.com/anycap-ai/anycap/releases",
+      detail: "Artifact release publik dan catatan versi CLI yang sudah dirilis.",
+    },
+    {
+      label: "Listing skills.sh",
+      href: "https://skills.sh/anycap-ai/anycap",
+      detail: "Surface distribusi skill publik untuk install di agen.",
+    },
+    {
+      label: "Panduan instalasi",
+      href: "/guides/install-anycap",
+      detail: "Jalur paling singkat dari evaluasi sampai setup lokal yang berfungsi.",
+    },
+    {
+      label: "Harga",
+      href: "/pricing",
+      detail: "Penjelasan publik soal positioning kredit gratis dan pay-as-you-go.",
+    },
+  ],
+  whatIsTitle: "Apa itu AnyCap",
+  whatIsBody1:
+    "AnyCap adalah runtime capability yang agent-native, memberi agen AI cara konsisten untuk install, autentikasi, dan eksekusi capability yang tidak masuk ke reasoning model dasar. Daripada menyambungkan SDK dan alur kredensial yang berbeda untuk setiap capability yang hilang, tim cukup memaparkan satu surface eksekusi yang stabil ke agen. Surface itu dibuat untuk operasi nyata: setup, invocation, dan handoff jalan di runtime yang sama, jadi operator bisa menelusuri apa yang terjadi saat workflow berhasil maupun gagal.",
+  whatIsBody2:
+    "Kami fokus di lapisan capability karena di situlah workflow produksi biasanya patah. Agen mungkin memutuskan dengan benar apa yang harus dilakukan, tapi tetap gagal saat harus merender gambar, membuat video, memeriksa screenshot, atau memindahkan output antar tool lewat satu antarmuka yang reliable. AnyCap mengubah langkah-langkah yang terpotong itu jadi satu jalur runtime yang utuh. Tim bisa mengevaluasi workflow ujung ke ujung dengan dependency tersembunyi yang lebih sedikit, adapter one-off yang lebih sedikit, dan model operasi yang lebih jelas untuk mengirim kerja multimodal.",
+  whyTitle: "Mengapa AnyCap ada",
+  whyCards: [
+    {
+      title: "Reasoning saja tidak cukup",
+      body:
+        "Agen modern bisa merencanakan dan ngoding, tapi tetap gagal begitu workflow butuh image generation, video generation, atau lapisan vision yang konsisten.",
+    },
+    {
+      title: "Tooling-nya terlalu terpotong",
+      body:
+        "Setiap capability yang hilang biasanya berarti SDK lain, alur auth lain, integrasi spesifik provider lain, dan satu cara baru lagi buat agen gagal.",
+    },
+    {
+      title: "Agen pantas dapat produk first-class",
+      body:
+        "Kami percaya lapisan capability seharusnya dibangun untuk agen sejak awal — bukan diadaptasi dari dashboard manusia atau dijahit setelah faktanya.",
+    },
+  ],
+  notTitle: "Apa yang bukan AnyCap",
+  notCards: [
+    {
+      title: "Bukan produk dashboard untuk manusia",
+      body:
+        "AnyCap tidak dirancang buat klik-klik di panel admin. Antarmuka utamanya adalah runtime, CLI, dan jalur instalasi yang benar-benar bisa dipakai agen.",
+    },
+    {
+      title: "Bukan glue code antar provider",
+      body:
+        "Kami tidak mengoptimalkan integrasi one-off per vendor model. Targetnya adalah satu surface capability yang tetap konsisten lintas provider.",
+    },
+    {
+      title: "Bukan pengganti agen Anda",
+      body:
+        "Anda tetap pakai Claude Code, Cursor, Codex, atau agen lain. AnyCap ada untuk menambahkan lapisan capability yang masih mereka butuhkan.",
+    },
+  ],
+  principlesTitle: "Prinsip di balik produk",
+  principles: [
+    "Satu jalur instalasi, bukan satu install per provider",
+    "Satu alur auth, bukan kredensial yang terpotong-potong di seluruh stack",
+    "Satu command surface, bukan antarmuka spesifik per capability",
+    "Dibangun untuk agen lebih dulu, lalu dibikin bisa dipahami manusia",
+  ],
+  faqTitle: "FAQ",
+  faqItems: [...aboutFaqItemsId],
+  faqJsonLd: createFaqPageJsonLd(aboutFaqItemsId),
+  contactTitle: "Jalur kontak dan pelaporan",
+  contactPaths: [
+    {
+      label: "Issue GitHub",
+      href: "https://github.com/anycap-ai/anycap/issues",
+      detail: "Jalur publik terbaik untuk laporan bug, regresi, atau permintaan roadmap.",
+    },
+    {
+      label: "Command feedback CLI",
+      href: "/cli",
+      detail: "Pakai `anycap feedback` saat masalahnya datang dari request yang sedang berjalan atau capability yang kurang.",
+    },
+    {
+      label: "Mulai dari sini",
+      href: "/start",
+      detail: "Langkah berikut yang paling tepat kalau tujuannya verifikasi runtime langsung.",
+    },
+  ],
+  trustTitle: "Sinyal kepercayaan",
+  trustSignals: [
+    {
+      label: "Distribusi terbuka",
+      detail: "Skill files, artifact release, dan codebase utama dipublikasikan lewat jalur GitHub publik.",
+    },
+    {
+      label: "Runtime portabel",
+      detail: "Lapisan capability yang sama dirancang untuk jalan di Claude Code, Cursor, Codex, dan produk agen sejenis.",
+    },
+    {
+      label: "Model capability yang eksplisit",
+      detail: "Kami memisahkan runtime, CLI, skill file, dan capability supaya tim bisa berpikir jernih soal stack-nya.",
+    },
+  ],
+  aboutPageJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "@id": getLocalizedRouteUrl("id", "/about"),
+    name: "Tentang AnyCap",
+    description:
+      `Halaman tentang AnyCap, runtime capability untuk agen AI yang menambahkan ${capabilitySummary} lewat satu antarmuka.`,
+    url: getLocalizedRouteUrl("id", "/about"),
+    inLanguage: "id",
+    isPartOf: {
+      "@id": `${siteConfig.url}#website`,
+    },
+    mainEntity: {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: siteConfig.siteName,
+      url: siteConfig.url,
+      sameAs: organizationSameAs,
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          url: getLocalizedRouteUrl("id", "/contact"),
+        },
+      ],
+    },
+  },
+  organizationJsonLd: {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": organizationId,
+    name: siteConfig.siteName,
+    url: siteConfig.url,
+    sameAs: organizationSameAs,
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteConfig.url}/anycap-mark.svg`,
+    },
+    description:
+      `AnyCap membangun infrastruktur capability yang agent-native sehingga agen AI bisa memakai ${capabilitySummary} lewat satu runtime.`,
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+      },
+    ],
+  },
+};
 
 const aboutFaqItemsDe = [
   {
