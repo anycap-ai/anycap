@@ -37,14 +37,15 @@ func TestJWTVerifier_VerifyIdentityToken(t *testing.T) {
 	defer jwksServer.Close()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"iss":     jwksServer.URL + "/",
-		"aud":     []string{"https://api.anycap.local"},
-		"sub":     "auth0|demo-user",
-		"email":   "demo@example.com",
-		"name":    "Demo User",
-		"picture": "https://cdn.example.com/avatar.png",
-		"exp":     time.Now().Add(time.Hour).Unix(),
-		"iat":     time.Now().Add(-time.Minute).Unix(),
+		"iss":            jwksServer.URL + "/",
+		"aud":            []string{"https://api.anycap.local"},
+		"sub":            "auth0|demo-user",
+		"email":          "demo@example.com",
+		"email_verified": true,
+		"name":           "Demo User",
+		"picture":        "https://cdn.example.com/avatar.png",
+		"exp":            time.Now().Add(time.Hour).Unix(),
+		"iat":            time.Now().Add(-time.Minute).Unix(),
 	})
 	token.Header["kid"] = "kid-1"
 
@@ -62,7 +63,7 @@ func TestJWTVerifier_VerifyIdentityToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("VerifyIdentityToken() error = %v", err)
 	}
-	if authUser.UserID != "auth0|demo-user" || authUser.Email != "demo@example.com" || authUser.Name != "Demo User" {
+	if authUser.UserID != "auth0|demo-user" || authUser.Email != "demo@example.com" || !authUser.EmailVerified || authUser.Name != "Demo User" {
 		t.Fatalf("unexpected auth user: %#v", authUser)
 	}
 }
@@ -118,11 +119,12 @@ func TestJWTVerifier_FetchIdentityProfile(t *testing.T) {
 		if got := r.Header.Get("Authorization"); got != "Bearer access-token-123" {
 			t.Fatalf("unexpected Authorization header %q", got)
 		}
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"sub":     "auth0|demo-user",
-			"email":   "demo@example.com",
-			"name":    "Demo User",
-			"picture": "https://cdn.example.com/avatar.png",
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"sub":            "auth0|demo-user",
+			"email":          "demo@example.com",
+			"email_verified": true,
+			"name":           "Demo User",
+			"picture":        "https://cdn.example.com/avatar.png",
 		})
 	}))
 	defer jwksServer.Close()
@@ -136,7 +138,7 @@ func TestJWTVerifier_FetchIdentityProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FetchIdentityProfile() error = %v", err)
 	}
-	if authUser.UserID != "auth0|demo-user" || authUser.Email != "demo@example.com" || authUser.Name != "Demo User" {
+	if authUser.UserID != "auth0|demo-user" || authUser.Email != "demo@example.com" || !authUser.EmailVerified || authUser.Name != "Demo User" {
 		t.Fatalf("unexpected auth user: %#v", authUser)
 	}
 }

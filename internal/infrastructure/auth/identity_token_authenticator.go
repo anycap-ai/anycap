@@ -52,6 +52,7 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 			profile, fetchErr := fetcher.FetchIdentityProfile(ctx, rawToken)
 			if fetchErr == nil && profile.UserID == authUser.UserID {
 				authUser.Email = firstNonEmpty(profile.Email, authUser.Email)
+				authUser.EmailVerified = profile.EmailVerified || authUser.EmailVerified
 				authUser.Name = firstNonEmpty(profile.Name, authUser.Name)
 				authUser.Picture = firstNonEmpty(profile.Picture, authUser.Picture)
 			}

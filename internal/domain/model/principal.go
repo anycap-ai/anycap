@@ -13,10 +13,11 @@ type Principal struct {
 }
 
 type AuthUser struct {
-	UserID  string `json:"user_id"`
-	Email   string `json:"email,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Picture string `json:"picture,omitempty"`
+	UserID        string `json:"user_id"`
+	Email         string `json:"email,omitempty"`
+	EmailVerified bool   `json:"email_verified,omitempty"`
+	Name          string `json:"name,omitempty"`
+	Picture       string `json:"picture,omitempty"`
 }
 
 type DeviceAuthorization struct {

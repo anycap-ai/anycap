@@ -85,10 +85,11 @@ func (v *JWTVerifier) VerifyIdentityToken(ctx context.Context, rawToken string) 
 	}
 
 	return model.AuthUser{
-		UserID:  sub,
-		Email:   stringClaim(claims, "email"),
-		Name:    stringClaim(claims, "name"),
-		Picture: stringClaim(claims, "picture"),
+		UserID:        sub,
+		Email:         stringClaim(claims, "email"),
+		EmailVerified: boolClaim(claims, "email_verified"),
+		Name:          stringClaim(claims, "name"),
+		Picture:       stringClaim(claims, "picture"),
 	}, nil
 }
 
@@ -131,10 +132,11 @@ func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string)
 	}
 
 	var profile struct {
-		Sub     string `json:"sub"`
-		Email   string `json:"email"`
-		Name    string `json:"name"`
-		Picture string `json:"picture"`
+		Sub           string `json:"sub"`
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
 		logging.WithContext(ctx).WithField("flow", "auth.fetch_identity_profile").WithError(err).Error("decode identity profile failed")
@@ -146,10 +148,11 @@ func (v *JWTVerifier) FetchIdentityProfile(ctx context.Context, rawToken string)
 	}
 
 	return model.AuthUser{
-		UserID:  profile.Sub,
-		Email:   profile.Email,
-		Name:    profile.Name,
-		Picture: profile.Picture,
+		UserID:        profile.Sub,
+		Email:         profile.Email,
+		EmailVerified: profile.EmailVerified,
+		Name:          profile.Name,
+		Picture:       profile.Picture,
 	}, nil
 }
 
@@ -292,6 +295,11 @@ func verifyAudience(raw any, want string) bool {
 
 func stringClaim(claims jwt.MapClaims, key string) string {
 	value, _ := claims[key].(string)
+	return value
+}
+
+func boolClaim(claims jwt.MapClaims, key string) bool {
+	value, _ := claims[key].(bool)
 	return value
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -49,6 +50,18 @@ func (p *MemoryProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provid
 		return user, false, nil
 	}
 
+	if migratedKey, userID := p.migratablePasswordIdentityByEmail(provider, authUser); migratedKey != "" {
+		delete(p.identities, migratedKey)
+		p.identities[key] = userID
+		user := p.users[userID]
+		user.Email = firstNonEmpty(authUser.Email, user.Email)
+		user.Name = firstNonEmpty(authUser.Name, user.Name)
+		user.AvatarURL = firstNonEmpty(authUser.Picture, user.AvatarURL)
+		user.UpdatedAt = now.UTC()
+		p.users[userID] = user
+		return user, false, nil
+	}
+
 	if p.nextID >= maxUserID {
 		return model.User{}, false, model.ErrInternal
 	}
@@ -82,6 +95,34 @@ func (p *MemoryProvisioner) GetUserByID(_ context.Context, userID string) (model
 
 func identityKey(provider, externalSubject string) string {
 	return fmt.Sprintf("%s:%s", provider, externalSubject)
+}
+
+func (p *MemoryProvisioner) migratablePasswordIdentityByEmail(provider string, authUser model.AuthUser) (string, string) {
+	if !isMigratableAuth0PasswordIdentity(provider, authUser) {
+		return "", ""
+	}
+
+	var (
+		matchedKey    string
+		matchedUserID string
+		count         int
+	)
+	for key, userID := range p.identities {
+		if !strings.HasPrefix(key, "auth0:auth0|") {
+			continue
+		}
+		user := p.users[userID]
+		if !strings.EqualFold(strings.TrimSpace(user.Email), strings.TrimSpace(authUser.Email)) {
+			continue
+		}
+		count++
+		matchedKey = key
+		matchedUserID = userID
+	}
+	if count != 1 {
+		return "", ""
+	}
+	return matchedKey, matchedUserID
 }
 
 func firstNonEmpty(values ...string) string {

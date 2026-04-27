@@ -25,7 +25,7 @@ export function CLILoginClient() {
     savePendingLoginCookie(loginState);
 
     const callbackWithToken = `/auth/callback?browser_token=${encodeURIComponent(browserToken)}&mode=cli_login`;
-    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent(callbackWithToken)}&connection=${encodeURIComponent("google-oauth2")}&prompt=${encodeURIComponent("login")}`;
+    const sdkLoginURL = `/api/auth/login?returnTo=${encodeURIComponent(callbackWithToken)}&prompt=${encodeURIComponent("login")}`;
     window.location.assign(sdkLoginURL);
   }, [params]);
 
