@@ -1,181 +1,181 @@
 # AnyCap for Chrome
 
-> **Image · Video · Music · Search · Crawl — in your browser.**
-> Right-click anything on a page; AnyCap meets you there in a side panel.
+> **图片 · 视频 · 音乐 · 搜索 · 爬取，全部在浏览器里完成。**
+> 在网页上右键任意元素，AnyCap 在右侧栏立刻接住你。
 
-![AnyCap Chrome side panel hero](docs/assets/hero-side-panel.png)
+![AnyCap Chrome 侧栏首图](docs/assets/hero-side-panel.png)
 
-AnyCap is an **AI capability runtime**. The Chrome extension is one of three sibling clients
-(CLI · Desktop · **Chrome**) that all talk to the same `anycap-server`. Whatever the agent stack
-can do, you can do too — without leaving the page.
+AnyCap 是一个 **AI 能力运行时（capability runtime）**。Chrome 扩展是三个客户端中的
+一个（CLI · Desktop · **Chrome**），三者共用同一个 `anycap-server`。Agent 能做的事，
+你也能做，无需离开当前页面。
 
-| | What it does |
+| 能力 | 它做什么 |
 |---|---|
-| **Vary** | Right-click any image → generate a variation |
-| **Image** | Text-to-image with model + aspect-ratio selectors |
-| **Video** | Text-to-video, in-panel `<video>` preview |
-| **Music** | Text-to-music, in-panel `<audio>` preview |
-| **Search** | Web search with cited result cards |
-| **Crawl** | Page → title + summary + clean Markdown |
+| **Vary** | 右键任意图片 → 生成同款变体 |
+| **Image** | 文生图，可选模型与画幅比例 |
+| **Video** | 文生视频，侧栏内 `<video>` 直接预览 |
+| **Music** | 文生音乐，侧栏内 `<audio>` 直接试听 |
+| **Search** | 网页搜索，返回带引用源的卡片 |
+| **Crawl** | 抓取页面 → 标题 + 摘要 + 干净的 Markdown |
 
 ---
 
-## Install
+## 安装
 
-> **TL;DR — Grab the latest `.zip` from [Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases), unzip, load unpacked.**
+> **一句话总结 — 从 [Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases) 下载最新 `.zip`，解压，加载已解压的扩展程序。**
 
-### Option A — Pre-built zip (recommended for testers)
+### 方式 A — 使用预打包 zip（推荐给体验者）
 
-1. Download `anycap-extension-<version>-chrome.zip` from
-   <https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases>.
-2. Unzip it anywhere, e.g. `~/Downloads/anycap-extension`.
-3. Open `chrome://extensions`, enable **Developer mode** (top-right toggle).
-4. Click **Load unpacked** → pick the unzipped folder.
-5. Click the AnyCap toolbar icon — the side panel opens. Or right-click any image.
+1. 从 <https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases> 下载
+   `anycap-extension-<version>-chrome.zip`。
+2. 解压到任意目录，例如 `~/Downloads/anycap-extension`。
+3. 浏览器打开 `chrome://extensions`，右上角开启 **开发者模式**。
+4. 点击 **加载已解压的扩展程序**，选择刚才解压出来的目录。
+5. 点击 AnyCap 工具栏图标 — 侧栏即弹出。或者直接在网页上右键任意图片。
 
-The pre-built zip ships with `WXT_MOCK=true`, so you can demo every capability **without the
-backend** — image / video / music / search / crawl all return realistic sample data with
-faked latency. When the production server is ready, swap to **Option B**.
+预打包 zip 默认带 `WXT_MOCK=true`，**无需任何后端**就能演示全部能力 — image / video /
+music / search / crawl 都会返回带真实延迟感的样本数据。等生产服务上线后，可切到下面的
+**方式 B**。
 
-### Option B — Build from source
+### 方式 B — 从源码构建
 
 ```bash
 git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git
 cd anycap_chrome
 pnpm install
 
-# Choose ONE of:
-pnpm demo           # WXT_MOCK=true — offline demo build, no backend
-pnpm build          # Real backend (requires anycap-server reachable)
-pnpm release        # WXT_RELEASE=true — strips localhost host_permissions, zips for CWS
+# 三选一：
+pnpm demo           # WXT_MOCK=true — 离线演示构建，无需后端
+pnpm build          # 真后端模式（需要可达的 anycap-server）
+pnpm release        # WXT_RELEASE=true — 剥离 localhost host_permissions，输出 CWS-ready zip
 ```
 
-The build output lands in `.output/chrome-mv3/` — same load-unpacked flow as Option A.
+构建产物落在 `.output/chrome-mv3/`，加载方式同方式 A。
 
 ---
 
-## How it works
+## 工作原理
 
-### Right-click anywhere → side panel takes over
+### 在网页上右键 → 侧栏直接接管
 
-![right-click → side panel flow](docs/assets/right-click-flow.png)
+![右键 → 侧栏数据流](docs/assets/right-click-flow.png)
 
-Each context type lands on the right tab with the form pre-filled:
+每种右键场景都会落到对应的 tab，并且表单已经预填好：
 
-| Right-clicked target | Menu | Lands on |
+| 右键的目标 | 菜单项 | 落到哪个 tab |
 |---|---|---|
-| Image | ✨ Generate variation with AnyCap | **Vary** |
-| Selection (text) | 🎨 Generate image from this text | **Image** |
-| Selection (text) | 🎬 Generate video from this text | **Video** |
-| Selection (text) | 🎵 Generate music from this text | **Music** |
-| Selection (text) | 🔍 Search with AnyCap | **Search** |
-| Page (background) | 📄 Crawl this page with AnyCap | **Crawl** |
-| Link | 📄 Crawl link with AnyCap | **Crawl** |
+| 图片 | ✨ Generate variation with AnyCap | **Vary** |
+| 选中文字 | 🎨 Generate image from this text | **Image** |
+| 选中文字 | 🎬 Generate video from this text | **Video** |
+| 选中文字 | 🎵 Generate music from this text | **Music** |
+| 选中文字 | 🔍 Search with AnyCap | **Search** |
+| 页面空白处 | 📄 Crawl this page with AnyCap | **Crawl** |
+| 链接 | 📄 Crawl link with AnyCap | **Crawl** |
 
-Under the hood, `entrypoints/background.ts` writes a tagged-union `pendingRequest` to
-`chrome.storage.session` and calls `chrome.sidePanel.open({ windowId })`. The side panel
-listens for `chrome.storage.onChanged`, picks the right tab from `kind`, and pre-fills the form.
+底层实现：`entrypoints/background.ts` 把一个 tagged-union 的 `pendingRequest` 写入
+`chrome.storage.session`，然后调用 `chrome.sidePanel.open({ windowId })`。侧栏监听
+`chrome.storage.onChanged`，根据 `kind` 字段切换到对应 tab，再把表单预填好。
 
-### One backend, three skins
+### 一套后端，三种皮肤
 
-![AnyCap product family architecture](docs/assets/architecture.png)
+![AnyCap 产品矩阵架构](docs/assets/architecture.png)
 
-This extension is **not** a CLI wrapper. It hits the same Go HTTP API that powers the CLI
-and the desktop app — server is the single source of truth for auth, rate limit, model
-routing and billing. Adding a capability on the server lights it up for all three clients;
-adding it client-side is a 30-line tab component.
+这个扩展 **不是** CLI 的封装。它直接打的是给 CLI 和桌面端供电的同一个 Go HTTP API —
+认证、限流、模型路由、计费全在 server 一处。新增一个能力，只要加在 server 上，三个
+客户端立刻全部点亮；客户端侧只需要一个 30 行的 tab 组件。
 
 ---
 
-## Project layout
+## 项目结构
 
 ```
 entrypoints/
-  background.ts            # MV3 service worker — context menus, side-panel routing
-  content.ts               # Captures last hovered image, fires on pagehide
+  background.ts            # MV3 service worker — 右键菜单、侧栏路由
+  content.ts               # 捕获最近一次悬停的图片，pagehide 时清空
   sidepanel/
-    App.tsx                # 7-tab shell (Vary, Image, Video, Music, Search, Crawl, Settings)
-    tabs/                  # One file per capability — fully isolated
-    components/            # AnycapMark, Spinner, ErrorBox, HistorySection, TemplateChips
+    App.tsx                # 7-tab 外壳（Vary / Image / Video / Music / Search / Crawl / Settings）
+    tabs/                  # 每个能力一个文件，互相隔离
+    components/            # AnycapMark / Spinner / ErrorBox / HistorySection / TemplateChips
     main.tsx, index.html, style.css
 src/lib/
-  api.ts                   # HTTP client → anycap-server (sends X-Anycap-Source: chrome-extension)
-  api-mock.ts              # WXT_MOCK=true — picsum + sample MP4/OGG + fake search/crawl
-  store.ts                 # Zustand state, tagged-union PendingRequest
-  history.ts               # 30-item per-capability history with kind filter
-  settings.ts              # Profile / default models / privacy preferences
-  templates.ts             # 19 prompt-template chips
+  api.ts                   # 打 anycap-server 的 HTTP 客户端（带 X-Anycap-Source: chrome-extension）
+  api-mock.ts              # WXT_MOCK=true 时拦截每次调用 — picsum + 样本 MP4/OGG + 假搜索/抓取
+  store.ts                 # Zustand 状态，tagged-union 的 PendingRequest
+  history.ts               # 每能力 30 条历史，按 kind 过滤
+  settings.ts              # 个人资料 / 默认模型 / 隐私偏好
+  templates.ts             # 19 条 prompt 模板
   storage.ts, constants.ts, auth.ts, errors.ts
 public/icons/              # 16 / 48 / 128
 store-assets/
-  composer/*.html          # Static HTML composers for CWS shots (1280×800 / 1400×560 / 440×280)
-  cws/*.png                # Rendered CWS submission assets
+  composer/*.html          # CWS 截图的静态 HTML 编排器（1280×800 / 1400×560 / 440×280）
+  cws/*.png                # 渲染好的 CWS 提审素材
 tests/
-  unit/                    # Vitest — 78 tests
-  e2e/                     # Playwright — 7 prod + 8 demo + 12 screenshot
-wxt.config.ts              # Manifest, host_permissions (localhost stripped on release)
-docs/assets/               # README diagrams
+  unit/                    # Vitest — 78 个用例
+  e2e/                     # Playwright — 7 prod + 8 demo + 12 截图
+wxt.config.ts              # Manifest，host_permissions（release 模式剥离 localhost）
+docs/assets/               # README 用的图示
 ```
 
-## Development
+## 开发
 
 ```bash
-pnpm dev                # WXT dev server, hot-reload
-pnpm test               # Vitest unit tests
-pnpm e2e                # Playwright (production-mode build)
-pnpm e2e:demo           # Playwright (mock build) — no backend needed
+pnpm dev                # WXT 开发服务，热重载
+pnpm test               # Vitest 单元测试
+pnpm e2e                # Playwright（生产模式构建）
+pnpm e2e:demo           # Playwright（mock 模式）— 不需要后端
 pnpm release            # WXT_RELEASE=true wxt build && wxt zip → CWS-ready
 ```
 
-### Build flags
+### 构建标志
 
-| Env var | Effect |
+| 环境变量 | 作用 |
 |---|---|
-| `WXT_MOCK=true` | Replace every `api.ts` call with deterministic mocks (picsum / archive.org / W3C OGGs / fake search/crawl). No network needed. |
-| `WXT_RELEASE=true` | Strip `localhost` and `127.0.0.1` host permissions, set production `DefaultEndpoint`, produce a CWS-ready zip via `wxt zip`. |
-| `WXT_API_BASE=...` | Override server endpoint at build time (defaults to `http://127.0.0.1:8080` in dev, `https://api.anycap.ai` in release). |
+| `WXT_MOCK=true` | 把 `api.ts` 的每次调用替换成确定性的 mock（picsum / archive.org / W3C OGG / 假搜索/抓取）。完全不联网。 |
+| `WXT_RELEASE=true` | 剥离 `localhost` 与 `127.0.0.1` 的 host_permissions，把生产 `DefaultEndpoint` 烧进去，并通过 `wxt zip` 输出 CWS-ready 包。 |
+| `WXT_API_BASE=...` | 在构建时覆盖 server 端点（dev 默认 `http://127.0.0.1:8080`，release 默认 `https://api.anycap.ai`）。 |
 
-### Testing notes
+### 测试要点
 
-- E2E uses Playwright `launchPersistentContext` — **MV3 extensions only run in headed mode**, headless is unsupported by Chromium.
-- Mock-mode E2E (`pnpm e2e:demo`) doesn't need the server — perfect for CI, quick smoke tests, and demos.
-- `tests/e2e/cws-shots.spec.ts` regenerates all 6 CWS marketing PNGs from `store-assets/composer/*.html`.
+- E2E 用 Playwright `launchPersistentContext` — **MV3 扩展只能跑 headed 模式**，Chromium 的 headless 不支持。
+- Mock 模式 E2E（`pnpm e2e:demo`）不需要后端 — CI、快速冒烟、对外演示都很合适。
+- `tests/e2e/cws-shots.spec.ts` 会从 `store-assets/composer/*.html` 重新渲染全部 6 张 CWS 营销图。
 
-## Permissions audit
+## 权限审计
 
 ```
-contextMenus    — 7 right-click menu entries
-activeTab       — read pageUrl when user invokes "Crawl this page"
-storage         — chrome.storage.session (cross-context routing) + .local (history, cache)
-downloads       — "Save to downloads" action on generated assets
-sidePanel       — open the side panel programmatically from background
-optional: identity   — used only if/when OAuth login is enabled (UI hidden in v0.2.0)
+contextMenus    — 7 个右键菜单项
+activeTab       — 用户触发"抓取当前页"时读 pageUrl
+storage         — chrome.storage.session（跨上下文路由）+ .local（历史、缓存）
+downloads       — 生成结果上的"保存到下载"动作
+sidePanel       — 从 background 主动打开侧栏
+optional: identity   — 仅在 OAuth 登录启用时使用（v0.2.0 暂时隐藏 UI）
 ```
 
-Production host permissions: `https://api.anycap.ai/*`, `https://anycap.ai/*` only.
-Localhost / `127.0.0.1` are added back in dev/demo builds (`WXT_RELEASE` not set).
+生产 host permissions：仅 `https://api.anycap.ai/*`、`https://anycap.ai/*`。
+Localhost / `127.0.0.1` 只在 dev/demo 构建里加回来（`WXT_RELEASE` 未设置时）。
 
-## Releases
+## 历次发布
 
-| Version | Date | Highlights |
+| 版本 | 日期 | 主要变化 |
 |---|---|---|
-| **v0.2.0** | 2026-04-27 | First side-panel release. 6 capabilities, 7 right-click menus, 19 templates, mock mode, CWS assets. |
-| v0.1.0 | 2026-04-22 | Popup-only image-variation MVP. |
+| **v0.2.0** | 2026-04-27 | 首个侧栏版本。6 个能力、7 个右键菜单、19 条模板、mock 模式、CWS 提审素材。 |
+| v0.1.0 | 2026-04-22 | 仅弹窗的图片变体 MVP。 |
 
-Full changelog: [`CHANGELOG.md`](./CHANGELOG.md).
-Pre-built zips and signed release notes: [Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases).
+完整变更日志：[`CHANGELOG.md`](./CHANGELOG.md)。
+预打包 zip 与签名后的发布说明：[Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases)。
 
-## Documentation
+## 文档索引
 
-| File | Purpose |
+| 文件 | 用途 |
 |---|---|
-| [`CHANGELOG.md`](./CHANGELOG.md) | Per-version changes |
-| [`DEMO.md`](./DEMO.md) | 5-minute demo script with screenshots |
-| [`LOAD_AND_USE.md`](./LOAD_AND_USE.md) | First-time install + troubleshooting |
-| [`LAUNCH_CHECKLIST.md`](./LAUNCH_CHECKLIST.md) | What still blocks Chrome Web Store submission |
-| [`store-assets/description.md`](./store-assets/description.md) | CWS-ready short + long descriptions, permission justifications |
-| [`store-assets/cws/README.md`](./store-assets/cws/README.md) | Marketing-asset slot map (1280×800 × 4 + marquee + tile) |
+| [`CHANGELOG.md`](./CHANGELOG.md) | 各版本变更 |
+| [`DEMO.md`](./DEMO.md) | 5 分钟演示脚本 + 截图 |
+| [`LOAD_AND_USE.md`](./LOAD_AND_USE.md) | 首次安装指引与故障排查 |
+| [`LAUNCH_CHECKLIST.md`](./LAUNCH_CHECKLIST.md) | 提交 Chrome 商店前还差什么 |
+| [`docs/NEXT-STEPS.md`](./docs/NEXT-STEPS.md) | 让插件真正可用的工程路线图（A / B / C 三档） |
+| [`store-assets/description.md`](./store-assets/description.md) | CWS-ready 的短/长描述、权限说明 |
+| [`store-assets/cws/README.md`](./store-assets/cws/README.md) | 营销素材与 CWS 提审表单的对应表（1280×800 × 4 + marquee + tile） |
 
-## License
+## 许可
 
-Internal — Knoffice / AnyCap. See repository owner.
+Internal — Knoffice / AnyCap。归仓库所有者所有。
