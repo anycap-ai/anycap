@@ -55,3 +55,8 @@ anycap.toml
 # Annotate UI build artifact (built from internal/cli/annotate/web/)
 internal/cli/annotate/page.html
 .claude
+.agents/*
+.claude/*
+
+# Playwright MCP runtime logs
+.playwright-mcp/
