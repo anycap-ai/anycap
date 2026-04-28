@@ -58,6 +58,7 @@ describe('api', () => {
     expect(capturedHeaders!.get('X-Anycap-Install-Id')).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     );
+    expect(capturedHeaders!.get('X-Anycap-Source')).toBe('chrome-extension');
     expect(result.outputs[0].url).toBe('https://cdn.anycap.ai/1.png');
   });
 
@@ -85,6 +86,7 @@ describe('api', () => {
 
     expect(capturedHeaders!.get('Authorization')).toBe('Bearer tok_abc');
     expect(capturedHeaders!.get('X-Anycap-Install-Id')).toBeNull();
+    expect(capturedHeaders!.get('X-Anycap-Source')).toBe('chrome-extension');
   });
 
   it('throws TRIAL_EXHAUSTED on 429', async () => {
@@ -140,8 +142,24 @@ describe('api', () => {
 
     const { fetchExtensionConfig } = await import('../../src/lib/api');
     const cfg = await fetchExtensionConfig();
-    expect(cfg.default_model).toBe('m1');
-    expect(cfg.min_image_dim).toBe(128);
+    expect(cfg).not.toBeNull();
+    expect(cfg!.default_model).toBe('m1');
+    expect(cfg!.min_image_dim).toBe(128);
+  });
+
+  it('returns null on extension config 404 (graceful fallback)', async () => {
+    server.use(
+      http.get(`${API_BASE}/v1/extension/config`, () =>
+        HttpResponse.json(
+          { id: 'req_x', status: 'error', error: { code: 'NOT_FOUND', message: 'no route' } },
+          { status: 404 }
+        )
+      )
+    );
+
+    const { fetchExtensionConfig } = await import('../../src/lib/api');
+    const cfg = await fetchExtensionConfig();
+    expect(cfg).toBeNull();
   });
 
   it('throws NETWORK_ERROR when fetch fails', async () => {

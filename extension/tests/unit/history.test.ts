@@ -44,16 +44,43 @@ describe('history', () => {
     expect(history[1].resultUrl).toBe('a');
   });
 
-  it('caps history at 10 items', async () => {
+  it('caps history at 30 items', async () => {
     const { addGeneration, getRecentGenerations } = await import(
       '../../src/lib/history'
     );
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 35; i++) {
       await addGeneration({ resultUrl: `${i}`, srcUrl: 's', ts: i });
     }
     const history = await getRecentGenerations();
-    expect(history).toHaveLength(10);
-    expect(history[0].resultUrl).toBe('14');
+    expect(history).toHaveLength(30);
+    expect(history[0].resultUrl).toBe('34');
+  });
+
+  it('filters by kind via getRecentByKind', async () => {
+    const { addGeneration, getRecentByKind } = await import(
+      '../../src/lib/history'
+    );
+    await addGeneration({ kind: 'image', resultUrl: 'img', srcUrl: '', prompt: 'cat', ts: 1 });
+    await addGeneration({ kind: 'video', resultUrl: 'vid', srcUrl: '', prompt: 'sea', ts: 2 });
+    await addGeneration({ kind: 'image', resultUrl: 'img2', srcUrl: '', prompt: 'dog', ts: 3 });
+
+    const images = await getRecentByKind('image');
+    expect(images).toHaveLength(2);
+    expect(images.map((r) => r.resultUrl)).toEqual(['img2', 'img']);
+
+    const videos = await getRecentByKind('video');
+    expect(videos).toHaveLength(1);
+  });
+
+  it('clearHistoryByKind preserves other kinds', async () => {
+    const { addGeneration, getRecentByKind, clearHistoryByKind } = await import(
+      '../../src/lib/history'
+    );
+    await addGeneration({ kind: 'image', resultUrl: 'img', srcUrl: '', ts: 1 });
+    await addGeneration({ kind: 'video', resultUrl: 'vid', srcUrl: '', ts: 2 });
+    await clearHistoryByKind('image');
+    expect(await getRecentByKind('image')).toHaveLength(0);
+    expect(await getRecentByKind('video')).toHaveLength(1);
   });
 
   it('clears history', async () => {

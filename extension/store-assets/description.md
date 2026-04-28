@@ -1,18 +1,35 @@
-# AnyCap Chrome Extension — Store Description
+# AnyCap Chrome Extension — Store Description (v0.2.0)
 
-Turn anything you see into new content.
+**Image, Video, Music, Search, Crawl — in your browser.**
 
-AnyCap for Chrome lets you right-click any image on the web and get a stylistic variation in about 10 seconds. Powered by AnyCap — the capability runtime for AI agents.
+AnyCap brings 6 AI capabilities to every browser tab via a clean side panel. Right-click anything (image, text, link, page) and the right tool opens with your context pre-filled.
 
-Features:
-- One click: right-click any image → get a stylistic variation
-- Works everywhere: Unsplash, Pinterest, Twitter, Reddit, any site with images
-- 3 free trials, no signup. 50 free generations/month after signing in.
-- Everything saves to your AnyCap Drive
-- Pro: no watermark, 1,000+ generations/month
+**6 capabilities, one panel:**
 
-AnyCap is the capability runtime that gives AI agents everything they can't do natively — image generation, video, web clipping, and more. This extension brings image generation to every browser tab.
+- **Vary** — right-click an image, get a stylistic variation
+- **Image** — text-to-image with model & aspect ratio control
+- **Video** — text-to-video with duration selector
+- **Music** — text-to-music with genre presets
+- **Search** — web search with 6 source-cited result cards
+- **Crawl** — turn any page into clean markdown for your LLM
 
-Privacy: we only send the URL of the image you right-click, nothing else. See https://anycap.ai/privacy/extension
+**7 context-aware right-click menus:**
 
-Get started: https://anycap.ai
+- Image → ✨ Generate variation
+- Selected text → 🎨 Image / 🎬 Video / 🎵 Music / 🔍 Search
+- Link → 📄 Crawl link
+- Page → 📄 Crawl this page
+
+**Built-in productivity:**
+
+- 19 prompt templates across all gen tabs — one tap to start
+- Per-capability history with thumbnail grid — click to rehydrate the form
+- Settings tab: default models, watermark control, reduced motion, reset trial
+
+**Free tier:** 3 generations / month, no signup. Sign in for 50 / month. Pro plans coming.
+
+**Privacy:** anonymous users send only the input you give us (image URL, prompt text, page URL). No browsing history, no clipboard scraping. Full policy: https://anycap.ai/privacy/extension
+
+**Get started:** install → click the AnyCap toolbar icon → side panel slides in. Or right-click anything on a page.
+
+Powered by AnyCap — the AI capability runtime that gives agents and humans the same set of primitives. https://anycap.ai

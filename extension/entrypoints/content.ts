@@ -24,11 +24,13 @@ export default defineContentScript({
 
     document.addEventListener('contextmenu', handleContextMenu);
 
-    // Clean up on navigation (SPA)
-    const observer = new MutationObserver(() => {
+    // Clear cached image on real navigation. We deliberately avoid a
+    // MutationObserver here — most modern pages (Gmail, Twitter, etc.) mutate
+    // the DOM constantly, which would clear lastImage between the right-click
+    // and the background message and break the dimension-capture flow.
+    window.addEventListener('pagehide', () => {
       lastImage = null;
     });
-    observer.observe(document.body, { childList: true, subtree: true });
 
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message?.type === 'ANYCAP_INVOKE_VARIATION') {

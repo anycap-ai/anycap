@@ -22,7 +22,7 @@ describe('store', () => {
   });
 
   it('sets pending request', () => {
-    const req = { image: { srcUrl: 'https://example.com/img.png', width: 300, height: 300 }, pageUrl: 'https://example.com' };
+    const req = { kind: 'vary' as const, image: { srcUrl: 'https://example.com/img.png', width: 300, height: 300 }, pageUrl: 'https://example.com' };
     useStore.getState().setPendingRequest(req);
     expect(useStore.getState().pendingRequest).toEqual(req);
   });
@@ -37,7 +37,7 @@ describe('store', () => {
     const s = useStore.getState();
     s.setView('result');
     s.setGeneration({ phase: 'success', resultUrl: 'https://example.com/result.png' });
-    s.setPendingRequest({ image: { srcUrl: 'https://example.com/img.png', width: 300, height: 300 }, pageUrl: 'https://example.com' });
+    s.setPendingRequest({ kind: 'vary', image: { srcUrl: 'https://example.com/img.png', width: 300, height: 300 }, pageUrl: 'https://example.com' });
 
     s.reset();
     const state = useStore.getState();

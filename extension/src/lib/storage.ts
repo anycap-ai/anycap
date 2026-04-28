@@ -4,7 +4,18 @@ export type StoredSchema = {
   authToken: string | null;
   installId: string | null;
   apiKey: string | null;
-  recentGenerations: Array<{ resultUrl: string; srcUrl: string; ts: number }>;
+  recentGenerations: Array<{
+    kind?: 'vary' | 'image' | 'video' | 'music' | 'search' | 'crawl';
+    resultUrl: string;
+    srcUrl: string;
+    prompt?: string;
+    model?: string;
+    aspectRatio?: string;
+    durationSeconds?: number;
+    title?: string;
+    ts: number;
+  }>;
+  userSettings: Record<string, unknown> | null;
 };
 
 const DEFAULTS: StoredSchema = {
@@ -14,6 +25,7 @@ const DEFAULTS: StoredSchema = {
   installId: null,
   apiKey: null,
   recentGenerations: [],
+  userSettings: null,
 };
 
 export async function getStored<K extends keyof StoredSchema>(

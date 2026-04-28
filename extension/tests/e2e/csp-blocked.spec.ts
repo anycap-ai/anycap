@@ -1,9 +1,24 @@
 import { test, expect } from './fixtures';
 
 test('server 429 shows paywall with trial exhausted message', async ({ context, extensionId }) => {
-  const popup = await context.newPage();
+  const sw = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await sw.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        chrome.storage.session.set(
+          {
+            pendingRequest: {
+              kind: 'vary',
+              image: { srcUrl: 'https://picsum.photos/800/600', width: 800, height: 600 },
+              pageUrl: 'about:blank',
+            },
+          },
+          () => resolve(),
+        ),
+      ),
+  );
 
-  // Mock the generate API to return 429
+  const popup = await context.newPage();
   await popup.route('**/v1/image/generate', async (route) => {
     await route.fulfill({
       status: 429,
@@ -16,27 +31,9 @@ test('server 429 shows paywall with trial exhausted message', async ({ context, 
     });
   });
 
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/sidepanel.html`);
 
-  // Seed pending request
-  await popup.evaluate(async () => {
-    await chrome.storage.session.set({
-      pendingRequest: {
-        type: 'ANYCAP_START_GENERATION',
-        image: { srcUrl: 'https://picsum.photos/800/600', width: 800, height: 600 },
-        pageUrl: 'about:blank',
-      },
-    });
-  });
-
-  await popup.reload();
-
-  // Wait for generate view to appear
   await expect(popup.locator('img[alt="Source"]')).toBeVisible();
-
-  // Click generate and wait for the error/paywall state
   await popup.getByRole('button', { name: /Generate Variation/i }).click();
-
-  // The mocked 429 maps to TRIAL_EXHAUSTED → paywall view
   await expect(popup.getByText(/Free Tries Used/i)).toBeVisible({ timeout: 15_000 });
 });

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-olive: #6b7d3a;
+  --color-olive-hover: #5c6c31;
+  --color-olive-active: #4f5d2a;
+  --color-sage: #8fa34e;
+  --color-light-sage: #b8cc6e;
+  --color-pale-sage: #c8d4a0;
+  --color-cream-yellow: #d4e0a4;
+  --color-navy: #1c1f17;
+  --color-text-primary: #1c1f17;
+  --color-text-body: #3a3e32;
+  --color-text-secondary: #4d5145;
+  --color-text-muted: #7a7e71;
+  --color-text-neutral: #9a9e90;
+  --color-text-disabled: #b0b4a8;
+  --color-surface: #f4f5f0;
+  --color-surface-card: #ffffff;
+  --color-surface-input: #fafbf8;
+  --color-surface-hover: #f0f2eb;
+  --color-border-card: #d8dcd0;
+  --color-border-divider: #dce0d2;
+  --color-border-input: #ccd1c3;
+  --color-border-input-hover: #b8bdaf;
+  --color-error: #c4442d;
+  --color-error-hover: #a83a26;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-card);
+}
+
+/* App background — subtle gradient to break monotony of pure white */
+.bg-app {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(212, 224, 164, 0.18), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(143, 163, 78, 0.08), transparent 70%),
+    var(--color-surface-card);
+}
+
+.header-gradient {
+  background: linear-gradient(180deg, rgba(212, 224, 164, 0.16), rgba(255, 255, 255, 0));
+}
+
+/* Card hover — used by quick-action cards on Vary empty state */
+.card-hover {
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-input-hover);
+  box-shadow: 0 4px 12px -6px rgba(28, 31, 23, 0.18);
+}
+
+/* Hide default scrollbar styling for a cleaner panel look */
+.scroll-y {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.scroll-y::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-y::-webkit-scrollbar-thumb {
+  background: var(--color-border-card);
+  border-radius: 4px;
+}
+.scroll-y::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-input-hover);
+}
