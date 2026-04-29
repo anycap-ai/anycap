@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { LearnProofImage } from "@/components/seo/LearnProofShowcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_BRIGHTEN_A_PHOTO_ONLINE_PATH = "/learn/how-to-brighten-a-photo-online";
 
@@ -1017,11 +1017,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, BrightenPhotoPageContent>;
+} satisfies Partial<Record<SiteLocale, BrightenPhotoPageContent>>;
 
 function getContent(locale: SiteLocale): BrightenPhotoPageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToBrightenAPhotoOnlineMetadata(locale: SiteLocale): Metadata {

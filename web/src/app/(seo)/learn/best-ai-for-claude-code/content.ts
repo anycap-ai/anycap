@@ -236,6 +236,11 @@ const en: BestAIForClaudeCodePageData = {
       body: "Best next move when the first missing output is a demo clip, walkthrough, or motion asset.",
     },
     {
+      title: "Claude Opus 4.7 vs Sonnet 4.6",
+      href: "/compare/claude-opus-4-7-vs-sonnet-4-6",
+      body: "Side-by-side decision when the open question is which Claude model fits the coding-agent loop you actually run.",
+    },
+    {
       title: "What is the most advanced AI?",
       href: "/learn/what-is-the-most-advanced-ai",
       body: "Go here when the question is about the frontier overall, not just Claude Code specifically.",

@@ -37,7 +37,7 @@ const contentEn: SkillDetailPageData = {
     applicationCategory: "DeveloperApplication",
     description:
       "An installable AI agent skill that turns user-provided notes, research, and product facts into structured blog posts with first-party evidence blocks and consistent editorial voice.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, SKILL_PATH),
+    url: getLocalizedRouteUrl("en", SKILL_PATH),
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { LearnProofImage } from "@/components/seo/LearnProofShowcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_MAKE_BACKGROUND_WHITE_FOR_PRODUCT_PHOTOS_PATH =
   "/learn/how-to-make-background-white-for-product-photos";
@@ -1030,11 +1030,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, WhiteBackgroundPageContent>;
+} satisfies Partial<Record<SiteLocale, WhiteBackgroundPageContent>>;
 
 function getContent(locale: SiteLocale): WhiteBackgroundPageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToMakeBackgroundWhiteForProductPhotosMetadata(

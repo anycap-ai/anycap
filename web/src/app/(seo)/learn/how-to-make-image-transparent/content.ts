@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { LearnProofImage } from "@/components/seo/LearnProofShowcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_MAKE_IMAGE_TRANSPARENT_PATH = "/learn/how-to-make-image-transparent";
 
@@ -1015,11 +1015,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, TransparentImagePageContent>;
+} satisfies Partial<Record<SiteLocale, TransparentImagePageContent>>;
 
 function getContent(locale: SiteLocale): TransparentImagePageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToMakeImageTransparentMetadata(locale: SiteLocale): Metadata {

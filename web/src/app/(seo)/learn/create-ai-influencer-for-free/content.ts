@@ -959,11 +959,10 @@ const contentByLocale = {
       ],
     },
   },
-  de: enContent,
 } as const;
 
 export function getCreateAIInfluencerForFreeMetadata(locale: SiteLocale): Metadata {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     title: content.metadata.title,
@@ -981,7 +980,7 @@ export function getCreateAIInfluencerForFreeMetadata(locale: SiteLocale): Metada
 }
 
 export function getCreateAIInfluencerForFreePageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     ...content,

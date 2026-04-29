@@ -987,11 +987,10 @@ const contentByLocale = {
       ],
     },
   },
-  de: enContent,
 } as const;
 
 export function getWhatIsAnAIInfluencerMetadata(locale: SiteLocale): Metadata {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     title: content.metadata.title,
@@ -1009,7 +1008,7 @@ export function getWhatIsAnAIInfluencerMetadata(locale: SiteLocale): Metadata {
 }
 
 export function getWhatIsAnAIInfluencerPageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     ...content,

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_MAKE_AI_INFLUENCER_VIDEOS_PATH = "/learn/how-to-make-ai-influencer-videos";
 
@@ -927,11 +927,10 @@ const contentByLocale = {
       },
     ],
   },
-  de: enContent,
-} satisfies Record<SiteLocale, LocalizedPageContent>;
+} satisfies Partial<Record<SiteLocale, LocalizedPageContent>>;
 
 function getContent(locale: SiteLocale): LocalizedPageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToMakeAIInfluencerVideosMetadata(locale: SiteLocale): Metadata {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { LearnProofImage } from "@/components/seo/LearnProofShowcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_REMOVE_PEOPLE_FROM_PHOTOS_PATH = "/learn/how-to-remove-people-from-photos";
 
@@ -1015,11 +1015,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, RemovePeoplePageContent>;
+} satisfies Partial<Record<SiteLocale, RemovePeoplePageContent>>;
 
 function getContent(locale: SiteLocale): RemovePeoplePageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToRemovePeopleFromPhotosMetadata(locale: SiteLocale): Metadata {

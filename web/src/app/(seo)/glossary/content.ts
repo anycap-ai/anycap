@@ -84,7 +84,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "The practice of shaping the information, tools, constraints, and runtime state an AI agent uses during execution so it can make better decisions.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("en", "/glossary/context-engineering"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -122,7 +122,7 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
     name: "Engenharia de Contexto",
     description:
       "A prática de moldar as informações, ferramentas, restrições e o estado de runtime que um agente de IA usa durante a execução para tomar decisões melhores.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("pt-br", "/glossary/context-engineering"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -160,7 +160,7 @@ const agentHarnessContentEn: GlossaryEntryPageData = {
     name: "Agent Harness",
     description:
       "The execution environment around an AI agent that provides tools, files, permissions, runtime state, and policy controls.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
+    url: getLocalizedRouteUrl("en", "/glossary/agent-harness"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -198,7 +198,7 @@ const agentHarnessContentPtBr: GlossaryEntryPageData = {
     name: "Agent Harness",
     description:
       "O ambiente de execução ao redor de um agente de IA que fornece ferramentas, arquivos, permissões, estado de runtime e controles de política.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
+    url: getLocalizedRouteUrl("pt-br", "/glossary/agent-harness"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -236,7 +236,7 @@ const contextEngineeringContentDe: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "Die Praxis, Informationen, Tools, Constraints und Runtime-State so zu gestalten, dass ein KI-Agent während der Ausführung bessere Entscheidungen treffen kann.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("de", "/glossary/context-engineering"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -274,7 +274,7 @@ const agentHarnessContentDe: GlossaryEntryPageData = {
     name: "Agent Harness",
     description:
       "Die Ausführungsumgebung um einen KI-Agent, die Tools, Dateien, Berechtigungen, Runtime-State und Policy-Kontrollen bereitstellt.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
+    url: getLocalizedRouteUrl("de", "/glossary/agent-harness"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -312,7 +312,7 @@ const contextEngineeringContentId: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "Praktik membentuk informasi, tool, batasan, dan runtime state yang dipakai agen AI saat eksekusi agar bisa mengambil keputusan yang lebih baik.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("id", "/glossary/context-engineering"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [
@@ -350,7 +350,7 @@ const agentHarnessContentId: GlossaryEntryPageData = {
     name: "Agent Harness",
     description:
       "Lingkungan eksekusi di sekitar agen AI yang menyediakan tool, file, izin, runtime state, dan kontrol kebijakan.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agent-harness"),
+    url: getLocalizedRouteUrl("id", "/glossary/agent-harness"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [
@@ -468,7 +468,7 @@ const mcpContentEn: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "An open communication standard that defines how AI agents discover and invoke tools, capabilities, and external services during execution.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("en", "/glossary/model-context-protocol"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -506,7 +506,7 @@ const mcpContentPtBr: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Um padrão de comunicação aberto que define como agentes de IA descobrem e invocam ferramentas, capacidades e serviços externos durante a execução.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("pt-br", "/glossary/model-context-protocol"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -544,7 +544,7 @@ const mcpContentDe: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Ein offener Kommunikationsstandard, der definiert, wie KI-Agents Tools, Capabilities und externe Services während der Ausführung entdecken und aufrufen.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("de", "/glossary/model-context-protocol"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -582,7 +582,7 @@ const mcpContentId: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Standar komunikasi terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool, kapabilitas, dan layanan eksternal saat eksekusi.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("id", "/glossary/model-context-protocol"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [
@@ -647,7 +647,7 @@ const agenticWorkflowContentEn: GlossaryEntryPageData = {
     name: "Agentic Workflow",
     description:
       "A goal-directed sequence of AI model decisions and real-world tool actions that runs to completion without requiring human approval at each step.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+    url: getLocalizedRouteUrl("en", "/glossary/agentic-workflow"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -685,7 +685,7 @@ const agenticWorkflowContentPtBr: GlossaryEntryPageData = {
     name: "Fluxo Agêntico",
     description:
       "Uma sequência orientada a objetivos de decisões do modelo de IA e ações reais com ferramentas que executa até a conclusão sem exigir aprovação humana a cada etapa.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+    url: getLocalizedRouteUrl("pt-br", "/glossary/agentic-workflow"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -723,7 +723,7 @@ const agenticWorkflowContentDe: GlossaryEntryPageData = {
     name: "Agentic Workflow",
     description:
       "Eine zielgerichtete Sequenz aus KI-Modellentscheidungen und realen Tool-Aktionen, die ohne menschliche Freigabe pro Schritt bis zum Ende läuft.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+    url: getLocalizedRouteUrl("de", "/glossary/agentic-workflow"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -761,7 +761,7 @@ const agenticWorkflowContentId: GlossaryEntryPageData = {
     name: "Agentic Workflow",
     description:
       "Rangkaian berorientasi tujuan dari keputusan model AI dan aksi tool nyata yang berjalan sampai selesai tanpa membutuhkan persetujuan manusia di setiap langkah.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/glossary/agentic-workflow"),
+    url: getLocalizedRouteUrl("id", "/glossary/agentic-workflow"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [

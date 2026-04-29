@@ -804,11 +804,10 @@ const contentByLocale = {
       ],
     },
   },
-  de: enContent,
 } as const;
 
 export function getAiVideoGeneratorFromImageMetadata(locale: SiteLocale): Metadata {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     title: content.metadata.title,
@@ -826,7 +825,7 @@ export function getAiVideoGeneratorFromImageMetadata(locale: SiteLocale): Metada
 }
 
 export function getAiVideoGeneratorFromImagePageData(locale: SiteLocale) {
-  const content = contentByLocale[locale] ?? contentByLocale.en;
+  const content = contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 
   return {
     ...content,
