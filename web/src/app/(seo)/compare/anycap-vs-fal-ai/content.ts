@@ -248,6 +248,12 @@ const en: ComparePageData = {
   relatedTitle: "Related pages",
   relatedPages: [
     {
+      href: "/compare/fal-ai-alternatives-for-agents",
+      eyebrow: "Compare",
+      title: "fal.ai Alternatives for Agents",
+      body: "See the broader set of fal.ai alternatives that agent teams evaluate alongside AnyCap and Replicate.",
+    },
+    {
       href: "/compare/anycap-vs-replicate",
       eyebrow: "Compare",
       title: "AnyCap vs Replicate",

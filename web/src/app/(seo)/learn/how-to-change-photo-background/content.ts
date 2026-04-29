@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { LearnProofImage } from "@/components/seo/LearnProofShowcase";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
-import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const HOW_TO_CHANGE_PHOTO_BACKGROUND_PATH = "/learn/how-to-change-photo-background";
 
@@ -1025,11 +1025,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, ChangePhotoBackgroundPageContent>;
+} satisfies Partial<Record<SiteLocale, ChangePhotoBackgroundPageContent>>;
 
 function getContent(locale: SiteLocale): ChangePhotoBackgroundPageContent {
-  return contentByLocale[locale] ?? contentByLocale[defaultLocale];
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getHowToChangePhotoBackgroundMetadata(locale: SiteLocale): Metadata {

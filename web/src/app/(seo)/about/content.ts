@@ -283,7 +283,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
           {
             "@type": "ContactPoint",
             contactType: "customer support",
-            url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+            url: getLocalizedRouteUrl("en", "/contact"),
           },
         ],
       },
@@ -305,7 +305,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
         {
           "@type": "ContactPoint",
           contactType: "customer support",
-          url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+          url: getLocalizedRouteUrl("en", "/contact"),
         },
       ],
     },
@@ -534,7 +534,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
         {
           "@type": "ContactPoint",
           contactType: "customer support",
-          url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+          url: getLocalizedRouteUrl("pt-br", "/contact"),
         },
       ],
     },
@@ -785,7 +785,7 @@ contentByLocale.id = {
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+        url: getLocalizedRouteUrl("id", "/contact"),
       },
     ],
   },
@@ -1033,7 +1033,7 @@ contentByLocale.de = {
         {
           "@type": "ContactPoint",
           contactType: "customer support",
-          url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/contact"),
+          url: getLocalizedRouteUrl("de", "/contact"),
         },
       ],
     },

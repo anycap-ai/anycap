@@ -37,7 +37,7 @@ const contentEn: SkillDetailPageData = {
     applicationCategory: "DeveloperApplication",
     description:
       "An installable AI agent skill for creating meme-style images, captioned photos, and social visuals by combining AI image generation with local text overlay for viral social content workflows.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, SKILL_PATH),
+    url: getLocalizedRouteUrl("en", SKILL_PATH),
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,

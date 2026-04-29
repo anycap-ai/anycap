@@ -811,11 +811,10 @@ const contentByLocale = {
   en: enContent,
   "pt-br": ptBrContent,
   id: idContent,
-  de: enContent,
-} satisfies Record<SiteLocale, PhotoToDrawingPageContent>;
+} satisfies Partial<Record<SiteLocale, PhotoToDrawingPageContent>>;
 
 function getContent(locale: SiteLocale): PhotoToDrawingPageContent {
-  return contentByLocale[locale] ?? contentByLocale.en;
+  return contentByLocale[locale as keyof typeof contentByLocale] ?? enContent;
 }
 
 export function getPhotoToDrawingMetadata(locale: SiteLocale): Metadata {

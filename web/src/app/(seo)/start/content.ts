@@ -662,7 +662,7 @@ export function getStartMetadata(locale: SiteLocale): Metadata {
     openGraph: {
       type: "website",
       locale: getLocaleConfig(locale).ogLocale,
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, START_PATH),
+      url: getLocalizedRouteUrl(locale, START_PATH),
       siteName: siteConfig.siteName,
       title: content.metadata.openGraphTitle,
       description: content.metadata.openGraphDescription,

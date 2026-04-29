@@ -522,18 +522,18 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       name: "AnyCap Pricing",
       description:
         "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+      url: getLocalizedRouteUrl("en", PRICING_PATH),
       dateModified: "2026-04-08",
       mainEntity: {
         "@type": "Product",
         name: "AnyCap Credits",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+        url: getLocalizedRouteUrl("en", PRICING_PATH),
         description:
           "Pay-as-you-go credits for the AI agent capabilities coding agents miss most often, with one balance across the wider AnyCap runtime.",
         offers: pricingPackagesByLocale.en.map((pkg) => ({
           "@type": "Offer",
           name: `${pkg.name} credit pack`,
-          url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
+          url: `${getLocalizedRouteUrl("en", PRICING_PATH)}#pack-${pkg.packQuery}`,
           price: pkg.price.toFixed(2),
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
@@ -710,18 +710,18 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       name: "Preços do AnyCap",
       description:
         "Página de preços do AnyCap. Créditos pagos por uso em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+      url: getLocalizedRouteUrl("pt-br", PRICING_PATH),
       dateModified: "2026-04-08",
       mainEntity: {
         "@type": "Product",
         name: "Créditos do AnyCap",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+        url: getLocalizedRouteUrl("pt-br", PRICING_PATH),
         description:
           "Créditos pagos por uso para as capacidades para agentes de IA que os agentes de código mais sentem falta, com um único saldo no runtime mais amplo do AnyCap.",
         offers: pricingPackagesByLocale["pt-br"].map((pkg) => ({
           "@type": "Offer",
           name: `${pkg.name} pacote de créditos`,
-          url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
+          url: `${getLocalizedRouteUrl("pt-br", PRICING_PATH)}#pack-${pkg.packQuery}`,
           price: pkg.price.toFixed(2),
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
@@ -866,18 +866,18 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       name: "Harga AnyCap",
       description:
         "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+      url: getLocalizedRouteUrl("id", PRICING_PATH),
       dateModified: "2026-04-08",
       mainEntity: {
         "@type": "Product",
         name: "Kredit AnyCap",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+        url: getLocalizedRouteUrl("id", PRICING_PATH),
         description:
           "Kredit bayar sesuai pemakaian untuk kapabilitas agen AI yang paling sering tidak dimiliki agen coding, dengan satu saldo di runtime AnyCap yang lebih luas.",
         offers: pricingPackagesByLocale.id.map((pkg) => ({
           "@type": "Offer",
           name: `${pkg.name} paket kredit`,
-          url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
+          url: `${getLocalizedRouteUrl("id", PRICING_PATH)}#pack-${pkg.packQuery}`,
           price: pkg.price.toFixed(2),
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
@@ -992,18 +992,18 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       name: "AnyCap Preise",
       description:
         "AnyCap-Preisseite. Pay-as-you-go-Credits über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+      url: getLocalizedRouteUrl("de", PRICING_PATH),
       dateModified: "2026-04-08",
       mainEntity: {
         "@type": "Product",
         name: "AnyCap Credits",
-        url: getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH),
+        url: getLocalizedRouteUrl("de", PRICING_PATH),
         description:
           "Pay-as-you-go-Credits für die KI-Agent-Capabilities, die Coding-Agents am häufigsten fehlen, mit einem Guthaben über den weiteren AnyCap-Runtime hinweg.",
         offers: pricingPackagesByLocale.de.map((pkg) => ({
           "@type": "Offer",
           name: `${pkg.name} Credit-Pack`,
-          url: `${getLocalizedRouteUrl(siteConfig.defaultLocale, PRICING_PATH)}#pack-${pkg.packQuery}`,
+          url: `${getLocalizedRouteUrl("de", PRICING_PATH)}#pack-${pkg.packQuery}`,
           price: pkg.price.toFixed(2),
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",

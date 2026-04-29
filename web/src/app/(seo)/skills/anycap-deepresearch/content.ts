@@ -37,7 +37,7 @@ const contentEn: SkillDetailPageData = {
     applicationCategory: "DeveloperApplication",
     description:
       "An installable AI agent skill that covers multi-source deep research: plan, gather, analyze, synthesize, and deliver findings using web search and web crawl with source attribution.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, SKILL_PATH),
+    url: getLocalizedRouteUrl("en", SKILL_PATH),
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,

@@ -298,6 +298,18 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         description: "Explore a stronger fit for image editing and iterative visual refinement.",
       },
       {
+        eyebrow: "Guide",
+        title: "How to Add Image Generation to AI Agent",
+        href: "/guides/how-to-add-image-generation-to-ai-agent",
+        description: "Step-by-step walkthrough for wiring this capability into a coding agent without per-provider glue code.",
+      },
+      {
+        eyebrow: "Compare",
+        title: "fal.ai Alternatives for Agents",
+        href: "/compare/fal-ai-alternatives-for-agents",
+        description: "See how AnyCap and other agent-friendly options stack up against fal.ai for production image workflows.",
+      },
+      {
         eyebrow: "Workflow",
         title: "Create AI Influencer for Free",
         href: "/learn/create-ai-influencer-for-free",

@@ -37,7 +37,7 @@ const contentEn: SkillDetailPageData = {
     applicationCategory: "DeveloperApplication",
     description:
       "An installable AI agent skill for SEO planning and auditing of AI tool and SaaS websites. Uses web search and crawl to inspect live SERPs, analyze competitor pages, and surface keyword opportunities.",
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, SKILL_PATH),
+    url: getLocalizedRouteUrl("en", SKILL_PATH),
     operatingSystem: "Any",
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_PUBLISHED,

@@ -285,12 +285,12 @@ export default async function LearnIndexPage() {
     "@type": "CollectionPage",
     name: learnPageContent.metadata.title,
     description: learnPageContent.metadata.description,
-    url: getLocalizedRouteUrl(siteConfig.defaultLocale, "/learn"),
+    url: getLocalizedRouteUrl(locale, "/learn"),
     hasPart: learnHubContent.allArticles.map((article) => ({
       "@type": "WebPage",
       name: article.title,
       description: article.description,
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
+      url: getLocalizedRouteUrl(locale, article.href),
     })),
   } as const;
   const itemListJsonLd = {
@@ -300,7 +300,7 @@ export default async function LearnIndexPage() {
       "@type": "ListItem",
       position: index + 1,
       name: article.title,
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, article.href),
+      url: getLocalizedRouteUrl(locale, article.href),
     })),
   } as const;
   const statsLine =

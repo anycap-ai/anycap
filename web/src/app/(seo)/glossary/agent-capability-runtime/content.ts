@@ -584,7 +584,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       name: "Agent Capability Runtime",
       description:
         "A software layer that gives AI agents installable capabilities through a single interface, rather than requiring separate integrations for each capability.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+      url: getLocalizedRouteUrl("en", AGENT_CAPABILITY_RUNTIME_PATH),
     },
     articleJsonLd: createTechArticleJsonLd({
       headline: "What is an Agent Capability Runtime? Definition, Architecture, and Why It Matters",
@@ -705,7 +705,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       name: "Runtime de Capacidade do Agente",
       description:
         "Uma camada de software que dá aos agentes de IA capacidades instaláveis por meio de uma interface única, em vez de exigir integrações separadas para cada capacidade.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+      url: getLocalizedRouteUrl("pt-br", AGENT_CAPABILITY_RUNTIME_PATH),
     },
     articleJsonLd: createTechArticleJsonLd({
       headline: "O que é um runtime de capacidade do agente? Definição, arquitetura e por que isso importa",
@@ -946,7 +946,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       name: "Agent Capability Runtime",
       description:
         "Lapisan software yang memberi agen AI kapabilitas yang bisa dipasang lewat satu antarmuka, alih-alih membutuhkan integrasi terpisah untuk tiap kapabilitas.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+      url: getLocalizedRouteUrl("id", AGENT_CAPABILITY_RUNTIME_PATH),
     },
     articleJsonLd: createTechArticleJsonLd({
       headline: "Apa itu Agent Capability Runtime? Definisi, arsitektur, dan kenapa penting",
@@ -1187,7 +1187,7 @@ const contentByLocale: Record<SiteLocale, AgentCapabilityRuntimePageData> = {
       name: "Agent Capability Runtime",
       description:
         "Eine Softwareschicht, die KI-Agenten installierbare Capabilities über eine einzige Schnittstelle bereitstellt, statt separate Integrationen für jede Capability zu erfordern.",
-      url: getLocalizedRouteUrl(siteConfig.defaultLocale, AGENT_CAPABILITY_RUNTIME_PATH),
+      url: getLocalizedRouteUrl("de", AGENT_CAPABILITY_RUNTIME_PATH),
     },
     articleJsonLd: createTechArticleJsonLd({
       headline: "Was ist ein Agent Capability Runtime? Definition, Architektur und warum es wichtig ist",
