@@ -110,6 +110,18 @@ const REQUIRED_CWS_SUBMISSION_ITEMS = [
   ['feature access dconf gate', 'feature_access'],
   ['rate limit dconf gate', 'rate_limit'],
 ];
+const REQUIRED_CWS_PRIVACY_PRACTICES = [
+  'Privacy Practices',
+  'Website content',
+  'User-provided content',
+  'Authentication information',
+  'User activity',
+  'app functionality',
+  'abuse prevention',
+  'not sold',
+  'not used for advertising',
+  'Limited Use',
+];
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -456,6 +468,11 @@ export function validateCWSSubmissionGuide(text, currentReleaseZipSha256) {
   for (const permission of [...EXPECTED_PERMISSIONS, 'identity']) {
     if (!source.includes(`\`${permission}\``)) {
       errors.push(`store-assets/cws-submission.md must include ${permission} permission`);
+    }
+  }
+  for (const required of REQUIRED_CWS_PRIVACY_PRACTICES) {
+    if (!source.includes(required)) {
+      errors.push(`store-assets/cws-submission.md must include Privacy Practices disclosure: ${required}`);
     }
   }
   if (!source.toLowerCase().includes('explicit approval') || !source.toLowerCase().includes('headed chromium')) {

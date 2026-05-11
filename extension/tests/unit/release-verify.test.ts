@@ -122,6 +122,10 @@ function createValidAssetTree() {
       'Promo assets: store-assets/cws/05-marquee-1400x560.png, store-assets/cws/06-promo-440x280.png',
       'Promotional video source: store-assets/demo.mp4. Upload to YouTube after approval.',
       'Permissions: `contextMenus`, `activeTab`, `storage`, `downloads`, `sidePanel`, optional `identity`.',
+      'Privacy Practices: disclose Website content, User-provided content, Authentication information, and User activity.',
+      'Purposes: app functionality, abuse prevention, security, support, and debugging.',
+      'Data is not sold and not used for advertising.',
+      'Limited Use disclosure is included in the privacy policy.',
       'Pre-submit gates: pnpm verify:release; pnpm smoke:server -- --base-url https://api.anycap.ai; ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after explicit approval because it opens headed Chromium.',
       'Final upload gate: pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed.',
       'Server gates: deploy/server-prod, feature_access, rate_limit.',
@@ -710,6 +714,17 @@ describe('release verifier', () => {
     );
     expect(validateCWSSubmissionGuide(text)).toContain(
       'store-assets/cws-submission.md must include YouTube upload instruction: YouTube',
+    );
+  });
+
+  it('rejects the Chrome Web Store submission guide without privacy practices disclosure', async () => {
+    const { validateCWSSubmissionGuide } = await loadVerifier();
+    const text = fs
+      .readFileSync(path.join(createValidAssetTree(), 'store-assets/cws-submission.md'), 'utf8')
+      .replace('Privacy Practices', 'Privacy Checklist');
+
+    expect(validateCWSSubmissionGuide(text)).toContain(
+      'store-assets/cws-submission.md must include Privacy Practices disclosure: Privacy Practices',
     );
   });
 

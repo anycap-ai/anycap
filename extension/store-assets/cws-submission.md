@@ -47,6 +47,37 @@ Permissions to justify in the submission form:
 - `sidePanel`
 - Optional `identity`
 
+## Privacy Practices
+
+Use this section to keep the Chrome Web Store privacy questionnaire aligned with
+the public privacy policy and the shipped extension behavior.
+
+Data categories to disclose when the dashboard asks for collected or transmitted
+user data:
+
+| Category | Data handled by the extension |
+|---|---|
+| Website content | Selected text, right-clicked image URLs, page URLs, link URLs, and crawl URLs that the user explicitly submits through a tab or context menu |
+| User-provided content | Prompts, search queries, model choices, aspect ratios, and duration settings |
+| Authentication information | AnyCap bearer token stored in `chrome.storage.local` when sign-in is enabled and chosen by the user |
+| User activity | Local recent-request history, feature names, request status, timing, and error metadata used for app functionality, abuse prevention, support, and debugging |
+
+Data categories that should not be claimed:
+
+- Full browsing history
+- Cookies or page credentials
+- Background screenshots or screen recordings
+- Clipboard contents, except when the user explicitly copies an extension result
+- Location, health, financial/payment, or personal communications data
+
+Purpose statements:
+
+- Data is used for app functionality, abuse prevention, security, support, and debugging.
+- Data is not sold.
+- Data is not used for advertising or creditworthiness decisions.
+- Limited Use disclosure is included in the privacy policy at
+  `https://anycap.ai/privacy/extension`.
+
 ## Pre-Submit Gates
 
 Run these before upload:

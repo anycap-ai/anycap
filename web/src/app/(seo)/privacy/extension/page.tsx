@@ -145,6 +145,21 @@ export default function ExtensionPrivacyPage() {
           </FadeIn>
 
           <FadeIn>
+            <PageSection title="Chrome Web Store Limited Use">
+              <p className={bodyClass}>
+                AnyCap uses Chrome extension data only to provide and secure the
+                requested capability, support users, debug failures, and prevent
+                abuse. Extension data is not sold, not used for advertising or
+                creditworthiness decisions, and not used for unrelated products.
+                If the extension receives information from Google APIs, AnyCap
+                uses and transfers that information in accordance with the
+                Chrome Web Store User Data Policy, including the Limited Use
+                requirements.
+              </p>
+            </PageSection>
+          </FadeIn>
+
+          <FadeIn>
             <PageSection title="Contact">
               <p className={bodyClass}>
                 Questions? Email{" "}
