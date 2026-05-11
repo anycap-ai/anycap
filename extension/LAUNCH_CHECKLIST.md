@@ -7,10 +7,10 @@ submitting to the Chrome Web Store.
 
 ### Build / quality
 
-- [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.65 KB)
+- [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.77 KB)
 - [x] `pnpm verify:release` — release zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced runtime files, content script `file://` exclusion, permissions, scripts, no dev/staging leakage, `.output`/`releases` zip sync, CWS submission hash, release zip/side-panel performance budgets, side-panel accessibility and contrast guards, CWS asset dimensions, demo MP4 metadata, listing and screenshot composer copy including hidden sign-in quota and production trial-reset claims, launch UI source/zip copy, README/load-use/changelog release-doc consistency, permission justifications, CWS submission guide including demo-video YouTube instructions, headless CWS renderer script, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs pass
 - [x] `pnpm preflight:local` — browser-free local gate covering release rebuild, unit tests, type check, and release verifier
-- [x] `pnpm test` — 183 unit tests pass
+- [x] `pnpm test` — 185 unit tests pass
 - [x] `pnpm launch:audit -- --skip-smoke` — browser-free local launch audit command is wired
 - [x] Targeted server readiness tests — `internal/transport/http`, `internal/middleware`, and image/video/music/web application packages cover anonymous Chrome extension routes and pass locally
 - [ ] `pnpm smoke:server -- --base-url <staging-or-prod>` — browser-free required-features + anonymous extension config/search/crawl smoke pending deploy
@@ -20,7 +20,7 @@ submitting to the Chrome Web Store.
 - [x] `npx tsc --noEmit` — clean
 - [ ] Manual smoke: side panel opens via toolbar click, all 7 right-click menus appear in correct contexts — pending explicit approval because it interacts with visible Chrome
 - [ ] Internal dogfood (5 people × 2 days, zero P0 bugs)
-- [ ] P90 generation latency < 15 s on dev server (waiting on prod server deploy)
+- [ ] P90 generation latency < 15 s on deployed server (waiting on prod server deploy)
 
 ### Manifest / permissions
 
@@ -35,9 +35,9 @@ submitting to the Chrome Web Store.
 - [ ] Server deployed with current extension support changes — anonymous image/video/music/web routes, durable install-ID trial budget, `/v1/extension/config`, and anonymous zero-credit trial path. **Blocks real-mode public install.**
 - [ ] Anonymous public-trial abuse-control gate deployed — local server now has dual install-ID + hashed remote-address trial buckets, but production must run this code or an equivalent gateway rule before anonymous media generation is enabled. **Blocks public CWS submission.**
 - [ ] Production `feature_access` dconf allows anonymous extension rollout for the enabled operations (`image.generate`, `video.generate`, `music.generate`, `web.search`, `web.crawl`) before public CWS traffic
-- [x] Production launch runbook: `docs/PRODUCTION-LAUNCH-RUNBOOK.md` covers deploy branches, dconf, browser-free smoke, `--abuse-control-passed`, `--real-e2e-passed`, CWS upload, and rollback
+- [x] Production launch runbook: `docs/PRODUCTION-LAUNCH-RUNBOOK.md` covers deploy branches, dconf, browser-free smoke, `--abuse-control-passed`, `--real-e2e-passed`, `--dogfood-passed`, `--latency-passed`, CWS upload, and rollback
 - [ ] Latest browser-free prod smoke (2026-05-11, install ID `codex-smoke-20260511-after-contrast`): target line printed; `required features` returned `200`; `extension config` returned `404`; `web search` and `web crawl` returned `401 AUTH_INVALID`. Re-run `ANYCAP_INSTALL_ID=<fresh-install-id> pnpm smoke:server -- --base-url https://api.anycap.ai` after deploy/dconf.
-- [ ] Latest launch audit (2026-05-11, install ID `codex-audit-20260511-youtube-gate`): release artifacts and required features pass; blockers are production `/v1/extension/config` deploy, anonymous web auth deploy, live privacy page body returning a Next.js 404 fallback, deployed abuse-control acknowledgement, approved real-mode E2E, and recorded YouTube demo URL. Do not pass `--abuse-control-passed` until the local dual-bucket middleware or equivalent gateway install-ID rotation controls are deployed and verified.
+- [ ] Latest launch audit (2026-05-11, install ID `codex-audit-20260511-manual-gates`): release artifacts and required features pass; blockers are production `/v1/extension/config` deploy, anonymous web auth deploy, live privacy page body returning a Next.js 404 fallback, deployed abuse-control acknowledgement, approved real-mode E2E, internal dogfood acknowledgement, P90 latency acknowledgement, and recorded YouTube demo URL. Do not pass `--abuse-control-passed` until the local dual-bucket middleware or equivalent gateway install-ID rotation controls are deployed and verified.
 - [ ] Privacy page live at `https://anycap.ai/privacy/extension` — local web source now explicitly registers the route, IA entry, and breadcrumb JSON-LD, pins web builds with `web/.node-version`, and a Node 22.16.0 web production build lists `/privacy/extension`; production currently still returns HTTP 200 with Next.js 404 fallback content until web deploy
 - [x] OAuth `anycap-chrome-extension` client has the extension's redirect URI registered (used only when login UI lands)
 
@@ -52,7 +52,7 @@ submitting to the Chrome Web Store.
 - [ ] Demo video YouTube upload — upload `store-assets/demo.mp4`, paste the URL into CWS after approval, and record the URL in `store-assets/cws-submission.md` so `pnpm launch:audit` can pass
 - [ ] Privacy policy URL: `https://anycap.ai/privacy/extension` — must return the extension privacy page body, not the current Next.js 404 fallback
 - [x] Permission justifications: see `store-assets/permission-justifications.md` — verified against manifest permissions
-- [ ] Submit for review — only after the anonymous abuse-control gate, production smoke, approved real-mode E2E, final launch audit, and YouTube demo upload are complete
+- [ ] Submit for review — only after the anonymous abuse-control gate, production smoke, approved real-mode E2E, internal dogfood, P90 latency check, final launch audit, and YouTube demo upload are complete
 
 ## Post-submit (3-7 day review window)
 

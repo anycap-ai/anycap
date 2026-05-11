@@ -51,16 +51,18 @@ Latest browser-free production smoke on 2026-05-11 with install ID
 token.
 
 Latest `pnpm launch:audit` on 2026-05-11 with install ID
-`codex-audit-20260511-youtube-gate` confirms release artifacts and required features,
+`codex-audit-20260511-manual-gates` confirms release artifacts and required features,
 then reports automated blockers: production `/v1/extension/config` deploy,
 anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
 404 fallback body, deployed abuse-control acknowledgement, approved real-mode
-E2E, and a recorded YouTube demo URL. The local web source now registers `/privacy/extension` in SEO
+E2E, internal dogfood acknowledgement, P90 latency acknowledgement, and a
+recorded YouTube demo URL. The local web source now registers `/privacy/extension` in SEO
 routes and IA, includes breadcrumb JSON-LD, pins builds with `web/.node-version`,
 and builds under Node 22.16.0; production
 still needs a web deploy before the live URL can pass. `launch:audit` now checks
 the privacy page body instead of trusting HEAD-only status and requires
-`--abuse-control-passed` before the final CWS upload gate can turn green.
+`--abuse-control-passed`, `--real-e2e-passed`, `--dogfood-passed`, and
+`--latency-passed` before the final CWS upload gate can turn green.
 
 **Verify after deploy:**
 ```bash
@@ -68,9 +70,9 @@ cd extension
 ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm smoke:server
 # expect all checks ok, not 401/403/503
 
-# Final browser-free CWS upload gate after abuse control is deployed
-# and approved real E2E has passed:
-ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed
+# Final browser-free CWS upload gate after abuse control, approved real E2E,
+# dogfood, P90 latency, and YouTube URL are complete:
+ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed
 
 # Optional provider-costing media-only smoke:
 ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm smoke:server -- --include-media
@@ -150,7 +152,8 @@ a screen-cap tool like Cleanshot.
   `launch:audit` body check; production currently returns a Next.js 404 fallback
   until the web route is published/fixed.
 - Submit only after anonymous abuse control, production smoke, approved real-mode
-  E2E, live privacy page, final audit, and YouTube demo upload are complete.
+  E2E, live privacy page, dogfood, P90 latency check, final audit, and YouTube
+  demo upload are complete.
   Review takes 1–10 days.
 
 ### A7. Dogfood: 5 people × 2 working days

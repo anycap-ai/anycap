@@ -136,6 +136,8 @@ export function buildLaunchAudit({
   smokeResult,
   privacyResult,
   youtubeDemoUrl = '',
+  dogfoodPassed = false,
+  latencyPassed = false,
   realE2EPassed = false,
   abuseControlPassed = false,
 } = {}) {
@@ -205,6 +207,28 @@ export function buildLaunchAudit({
     );
   }
 
+  checks.push({
+    name: 'internal dogfood',
+    ok: dogfoodPassed,
+    detail: dogfoodPassed ? 'acknowledged' : 'not acknowledged',
+  });
+  if (!dogfoodPassed) {
+    blockers.push(
+      'Complete internal dogfood with 5 people for 2 working days and zero P0 bugs before CWS upload; pass --dogfood-passed only after it is recorded.',
+    );
+  }
+
+  checks.push({
+    name: 'P90 generation latency',
+    ok: latencyPassed,
+    detail: latencyPassed ? 'acknowledged' : 'not acknowledged',
+  });
+  if (!latencyPassed) {
+    blockers.push(
+      'Confirm P90 generation latency is under 15s on the deployed server before CWS upload; pass --latency-passed only after metrics confirm it.',
+    );
+  }
+
   if (!realE2EPassed) {
     blockers.push(
       'Run approved real-mode E2E with ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after production smoke passes; it opens headed Chromium.',
@@ -224,6 +248,8 @@ function parseArgs(argv) {
     installId: process.env.ANYCAP_INSTALL_ID || DEFAULT_INSTALL_ID,
     realE2EPassed: false,
     abuseControlPassed: false,
+    dogfoodPassed: false,
+    latencyPassed: false,
     skipSmoke: false,
   };
 
@@ -237,6 +263,10 @@ function parseArgs(argv) {
       parsed.realE2EPassed = true;
     } else if (arg === '--abuse-control-passed') {
       parsed.abuseControlPassed = true;
+    } else if (arg === '--dogfood-passed') {
+      parsed.dogfoodPassed = true;
+    } else if (arg === '--latency-passed') {
+      parsed.latencyPassed = true;
     } else if (arg === '--skip-smoke') {
       parsed.skipSmoke = true;
     } else if (arg === '--help' || arg === '-h') {
@@ -247,7 +277,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm launch:audit [--base-url URL] [--install-id ID] [--abuse-control-passed] [--real-e2e-passed] [--skip-smoke]
+  console.log(`Usage: pnpm launch:audit [--base-url URL] [--install-id ID] [--abuse-control-passed] [--real-e2e-passed] [--dogfood-passed] [--latency-passed] [--skip-smoke]
 
 Runs browser-free Chrome extension launch gates:
   - release artifact verifier
@@ -255,21 +285,24 @@ Runs browser-free Chrome extension launch gates:
   - Chrome Web Store privacy policy URL GET and body validation, unless --skip-smoke is set
   - anonymous public-trial abuse-control acknowledgement
   - YouTube demo video URL recorded in store-assets/cws-submission.md
+  - internal dogfood and P90 latency acknowledgements
   - blocker summary for deploy/dconf/CWS gates
 
 Pass --abuse-control-passed only after the dual-bucket server middleware or equivalent gateway controls limit install-ID rotation for anonymous public trials.
 Pass --real-e2e-passed only after an approved ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real run has completed green.
+Pass --dogfood-passed only after 5 people have dogfooded for 2 working days with zero P0 bugs.
+Pass --latency-passed only after deployed-server metrics confirm P90 generation latency is under 15s.
 This command never runs Playwright and never opens Chrome.`);
 }
 
-function printAudit(audit) {
+export function printAudit(audit) {
   for (const check of audit.checks) {
     const status = check.ok ? 'ok' : 'fail';
     console.log(`launch audit: ${status} ${check.name} - ${check.detail}`);
   }
   if (audit.blockers.length > 0) {
     for (const blocker of audit.blockers) {
-      console.error(`launch audit: blocker ${blocker}`);
+      console.log(`launch audit: blocker ${blocker}`);
     }
   }
 }
@@ -299,6 +332,8 @@ async function main() {
     youtubeDemoUrl: readYouTubeDemoUrl(process.cwd()),
     realE2EPassed: args.realE2EPassed,
     abuseControlPassed: args.abuseControlPassed,
+    dogfoodPassed: args.dogfoodPassed,
+    latencyPassed: args.latencyPassed,
   });
   printAudit(audit);
   if (!audit.ok) {

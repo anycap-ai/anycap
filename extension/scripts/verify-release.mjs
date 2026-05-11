@@ -49,7 +49,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 183;
+const CURRENT_UNIT_TEST_COUNT = 185;
 const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
 const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
 const MIN_SMALL_TEXT_CONTRAST = 4.5;
@@ -170,7 +170,7 @@ const REQUIRED_SIDEPANEL_CONTRAST_PAIRS = [
 ];
 const REQUIRED_REAL_E2E_COMMAND = 'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real';
 const REQUIRED_FINAL_LAUNCH_AUDIT_COMMAND =
-  'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed';
+  'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed';
 const CURRENT_CAPABILITIES = ['Vary', 'Image', 'Video', 'Music', 'Search', 'Crawl'];
 const REQUIRED_STORE_PRIVACY_SUMMARY_TERMS = [
   'selected text',

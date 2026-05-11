@@ -17,11 +17,17 @@ type LaunchAuditModule = {
     };
     privacyResult?: { ok: boolean; status: number; code?: string; message?: string };
     youtubeDemoUrl?: string;
+    dogfoodPassed?: boolean;
+    latencyPassed?: boolean;
   }) => {
     ok: boolean;
     checks: Array<{ name: string; ok: boolean; detail: string }>;
     blockers: string[];
   };
+  printAudit: (audit: {
+    checks: Array<{ name: string; ok: boolean; detail: string }>;
+    blockers: string[];
+  }) => void;
 };
 
 async function loadAudit(): Promise<LaunchAuditModule> {
@@ -173,6 +179,8 @@ describe('launch audit', () => {
       },
       privacyResult: { ok: true, status: 200 },
       youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
+      dogfoodPassed: true,
+      latencyPassed: true,
     });
 
     expect(audit.blockers).toContain(
@@ -240,6 +248,74 @@ describe('launch audit', () => {
     );
   });
 
+  it('reports dogfood and latency blockers before CWS upload', async () => {
+    const { buildLaunchAudit } = await loadAudit();
+
+    const audit = buildLaunchAudit({
+      releaseErrors: [],
+      realE2EPassed: true,
+      abuseControlPassed: true,
+      youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
+      smokeResult: {
+        ok: true,
+        results: [
+          { name: 'required features', ok: true, status: 200 },
+          { name: 'extension config', ok: true, status: 200 },
+          { name: 'web search', ok: true, status: 200 },
+          { name: 'web crawl', ok: true, status: 200 },
+        ],
+      },
+      privacyResult: { ok: true, status: 200 },
+    });
+
+    expect(audit.ok).toBe(false);
+    expect(audit.checks).toContainEqual({
+      name: 'internal dogfood',
+      ok: false,
+      detail: 'not acknowledged',
+    });
+    expect(audit.checks).toContainEqual({
+      name: 'P90 generation latency',
+      ok: false,
+      detail: 'not acknowledged',
+    });
+    expect(audit.blockers).toContain(
+      'Complete internal dogfood with 5 people for 2 working days and zero P0 bugs before CWS upload; pass --dogfood-passed only after it is recorded.',
+    );
+    expect(audit.blockers).toContain(
+      'Confirm P90 generation latency is under 15s on the deployed server before CWS upload; pass --latency-passed only after metrics confirm it.',
+    );
+  });
+
+  it('prints checks and blockers on stdout in deterministic order', async () => {
+    const { printAudit } = await loadAudit();
+    const originalLog = console.log;
+    const originalError = console.error;
+    const logs: string[] = [];
+    const errors: string[] = [];
+    console.log = (...args: unknown[]) => logs.push(args.join(' '));
+    console.error = (...args: unknown[]) => errors.push(args.join(' '));
+    try {
+      printAudit({
+        checks: [
+          { name: 'release artifacts', ok: true, detail: 'pnpm verify:release passed' },
+          { name: 'internal dogfood', ok: false, detail: 'not acknowledged' },
+        ],
+        blockers: ['Complete internal dogfood before CWS upload.'],
+      });
+    } finally {
+      console.log = originalLog;
+      console.error = originalError;
+    }
+
+    expect(errors).toEqual([]);
+    expect(logs).toEqual([
+      'launch audit: ok release artifacts - pnpm verify:release passed',
+      'launch audit: fail internal dogfood - not acknowledged',
+      'launch audit: blocker Complete internal dogfood before CWS upload.',
+    ]);
+  });
+
   it('reports a CWS privacy policy blocker when the public URL is not live', async () => {
     const { buildLaunchAudit } = await loadAudit();
 
@@ -278,6 +354,8 @@ describe('launch audit', () => {
       },
       privacyResult: { ok: true, status: 200 },
       youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
+      dogfoodPassed: true,
+      latencyPassed: true,
     });
 
     expect(audit.ok).toBe(true);

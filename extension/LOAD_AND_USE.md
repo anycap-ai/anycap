@@ -76,7 +76,7 @@ After that, `WXT_API_BASE` is unnecessary for production use — the default
 
 ```bash
 cd extension
-pnpm test                                          # 183 unit tests
+pnpm test                                          # 185 unit tests
 pnpm preflight:local                               # browser-free local release gate
 npx tsc --noEmit
 pnpm release                                       # CWS-ready zip + current zip SHA-256 doc sync
@@ -87,8 +87,8 @@ ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm smoke:server
                                                   # browser-free server/dconf smoke
 ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit
                                                   # browser-free launch gate summary
-ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed
-                                                  # final browser-free CWS gate after abuse-control is deployed and approved real E2E is green
+ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed
+                                                  # final browser-free CWS gate after abuse-control, approved real E2E, dogfood, P90 latency, and YouTube URL are complete
 ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm smoke:server -- --include-media
                                                   # optional media-only anonymous smoke; consumes provider quota
 

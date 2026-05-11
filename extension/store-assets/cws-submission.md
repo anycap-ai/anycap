@@ -8,7 +8,7 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 
 - Upload: `releases/anycap-extension-0.2.0-chrome.zip`
 - Version: `0.2.0`
-- SHA-256: `9cd9df74670313576bd26a93a7f929e3eeb1d9eefbcb453de2d0046a68fcea7b`
+- SHA-256: `07f2143d85be2d90f41eca41a0f20c356c786d1ec3a5d23cfc877eedfd26daf0`
 - Category: Productivity
 - Language: English
 
@@ -98,10 +98,12 @@ Run this only after explicit approval because it opens headed Chromium:
 ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real
 ```
 
-After that real-mode E2E run is green, run the final browser-free upload gate:
+After that real-mode E2E run is green, dogfood is complete, P90 latency is
+confirmed under 15 seconds, and the YouTube demo URL is recorded, run the final
+browser-free upload gate:
 
 ```bash
-ANYCAP_INSTALL_ID=<fresh-install-id> pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed
+ANYCAP_INSTALL_ID=<fresh-install-id> pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed
 ```
 
 Server gates that must already be complete:
@@ -121,4 +123,5 @@ Server gates that must already be complete:
 
 Submit only after the package, assets, listing copy, permission copy, privacy URL,
 anonymous abuse-control gate, server deploy, dconf rollout, browser-free smoke,
-approved real-mode E2E, and the YouTube demo URL is recorded.
+approved real-mode E2E, internal dogfood, P90 latency confirmation, and the
+YouTube demo URL is recorded.
