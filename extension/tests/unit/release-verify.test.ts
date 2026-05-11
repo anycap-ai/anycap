@@ -675,6 +675,18 @@ describe('release verifier', () => {
     );
   });
 
+  it('rejects CWS screenshot composer copy that promises hidden sign-in quota', async () => {
+    const { validateCWSAssets } = await loadVerifier();
+    const root = createValidAssetTree();
+    const composerPath = path.join(root, 'store-assets/composer/01-hero.html');
+    fs.mkdirSync(path.dirname(composerPath), { recursive: true });
+    fs.writeFileSync(composerPath, '<p>Sign in to get 50 free credits per month.</p>');
+
+    expect(validateCWSAssets(root)).toContain(
+      'store-assets/composer/01-hero.html must not promise sign-in quota while extension login UI is hidden',
+    );
+  });
+
   it('accepts store description copy with required launch claims', async () => {
     const { validateStoreDescription } = await loadVerifier();
     const text = [

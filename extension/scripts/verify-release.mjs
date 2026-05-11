@@ -120,6 +120,7 @@ const FORBIDDEN_LAUNCH_COPY_PATTERNS = [
   [/reset\s+free\s+trial\s+counter/i, 'production extension UI must not expose a reset free trial counter'],
   [/reset\s+trial\s+in\s+settings/i, 'paywall must not direct production users to reset anonymous trial state'],
 ];
+const FORBIDDEN_SIGN_IN_QUOTA_COPY = /(?:sign\s+in\s+(?:to\s+get|for)\s+50|50\s+free\s+credits|free\s+credits\s+per\s+month)/i;
 const FORBIDDEN_TRIAL_RESET_COPY = /(?:\breset\s+(free\s+)?trial\b|\btrial\s+reset\b)/i;
 const DEMO_VIDEO_PATH = 'store-assets/demo.mp4';
 const REQUIRED_CWS_SUBMISSION_ITEMS = [
@@ -466,7 +467,7 @@ export function validateStoreDescription(text) {
   if (!normalized.includes('free tier') && !normalized.includes('free trial')) {
     errors.push('store-assets/description.md must mention the free tier or free trial');
   }
-  if (/sign\s+in\s+for\s+50\s*\/\s*month/i.test(source) || /50\s+free\s+credits/i.test(source)) {
+  if (FORBIDDEN_SIGN_IN_QUOTA_COPY.test(source)) {
     errors.push('store-assets/description.md must not promise sign-in quota while extension login UI is hidden');
   }
   if (FORBIDDEN_TRIAL_RESET_COPY.test(source)) {
@@ -487,7 +488,11 @@ export function validateStoreDescription(text) {
 
 function validateCWSScreenshotComposerCopy(relPath, source) {
   const errors = [];
-  if (FORBIDDEN_TRIAL_RESET_COPY.test(String(source || ''))) {
+  const text = String(source || '');
+  if (FORBIDDEN_SIGN_IN_QUOTA_COPY.test(text)) {
+    errors.push(`${relPath} must not promise sign-in quota while extension login UI is hidden`);
+  }
+  if (FORBIDDEN_TRIAL_RESET_COPY.test(text)) {
     errors.push(`${relPath} must not advertise trial reset controls in CWS screenshot copy`);
   }
   return errors;
