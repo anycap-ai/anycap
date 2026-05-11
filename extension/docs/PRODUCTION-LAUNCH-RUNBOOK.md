@@ -43,7 +43,7 @@ packaging.
 Do not run these without explicit approval from the repository owner:
 
 - Push or merge to `deploy/server-dev` or `deploy/server-prod`.
-- Run `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e`, `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo`, or `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:real`, because they open headed Chromium.
+- Run `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e`, `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo`, `ANYCAP_ALLOW_HEADED_E2E=1 pnpm shots:feishu`, or `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:real`, because they open headed Chromium.
 - Upload or submit the Chrome Web Store item.
 - Run media generation smoke against production with `--include-media`, because
   it consumes provider quota.
