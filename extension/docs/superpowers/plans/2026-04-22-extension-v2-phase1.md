@@ -894,8 +894,8 @@ if (store.pendingRequest) {
 Run: `pnpm test`
 Expected: 61 unit tests PASS
 
-Run: `pnpm exec playwright test`
-Expected: 16 E2E tests PASS（需要微调选择器后全部通过）
+Run: `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e`
+Expected: E2E tests PASS（需要显式批准，因为该命令会打开 headed Chromium）
 
 - [ ] **Step 6: Commit**
 
