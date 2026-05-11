@@ -8,7 +8,7 @@ export const runtime = "edge";
 export const metadata: Metadata = {
   title: "Privacy — AnyCap Chrome Extension",
   description:
-    "What data the AnyCap Chrome Extension collects and how it is used.",
+    "What data the AnyCap Chrome Extension collects for browser capabilities and how it is used.",
 };
 
 const bodyClass = "text-base leading-7 text-[#4d5145]";
@@ -50,10 +50,11 @@ export default function ExtensionPrivacyPage() {
             </h1>
             <p className="mt-6 max-w-[760px] text-base leading-7 text-[#4d5145] md:text-lg">
               This page explains what data the AnyCap Chrome Extension collects,
-              how it is used, and what we do not collect.
+              how it is used, and what we do not collect when you generate
+              media, search the web, or crawl a page from the browser.
             </p>
             <p className="mt-4 text-[11px] text-[#5a5e52] font-mono">
-              Effective date: April 28, 2026
+              Effective date: May 11, 2026
             </p>
           </FadeIn>
 
@@ -65,21 +66,36 @@ export default function ExtensionPrivacyPage() {
             <PageSection title="Data we collect">
               <ul className={listClass}>
                 <li>
-                  <strong>The image URL you right-click.</strong> Sent to our
-                  server to generate the variation.
+                  <strong>Capability inputs you choose to submit.</strong> This
+                  can include prompts, selected text, model choices, aspect
+                  ratio, duration, a right-clicked image URL, a page URL, or a
+                  link URL, depending on which extension action you run.
                 </li>
                 <li>
-                  <strong>An anonymous install ID</strong> (random UUID
-                  generated in your browser). Used only for anonymous-trial rate
-                  limiting.
+                  <strong>Web search and crawl inputs.</strong> Search queries
+                  and crawl URLs are sent to AnyCap so the server can return web
+                  results, extracted Markdown, summaries, and source links.
                 </li>
                 <li>
-                  <strong>If you sign in</strong>: your AnyCap account ID and
-                  auth token. Stored only in <code>chrome.storage.local</code>.
+                  <strong>An anonymous install ID.</strong> A random UUID is
+                  generated in your browser and sent when you are not signed in.
+                  It is used for anonymous-trial limits and abuse prevention.
                 </li>
                 <li>
-                  <strong>Usage telemetry</strong> (install / generate /
-                  download / login counts). No URLs, no image content.
+                  <strong>If you sign in:</strong> the extension stores your
+                  AnyCap auth token in <code>chrome.storage.local</code> and
+                  sends it as a bearer token for authenticated requests.
+                </li>
+                <li>
+                  <strong>Local extension state.</strong> Settings, onboarding
+                  status, recent request history, and the anonymous install ID
+                  are stored in Chrome extension storage on your device.
+                </li>
+                <li>
+                  <strong>Operational request metadata.</strong> AnyCap may log
+                  request status, timing, feature names, error codes, IP-derived
+                  abuse-control buckets, and provider task metadata needed to
+                  operate and secure the service.
                 </li>
               </ul>
             </PageSection>
@@ -88,9 +104,11 @@ export default function ExtensionPrivacyPage() {
           <FadeIn>
             <PageSection title="What we DO NOT collect">
               <ul className={listClass}>
-                <li>Page DOM, cookies, or browsing history.</li>
-                <li>Any content from pages you do not right-click on.</li>
-                <li>Your clipboard.</li>
+                <li>Your full browsing history.</li>
+                <li>Cookies or page credentials.</li>
+                <li>Page DOM from pages you did not explicitly act on.</li>
+                <li>Clipboard contents, except when you choose to copy a result.</li>
+                <li>Background screenshots or screen recordings.</li>
               </ul>
             </PageSection>
           </FadeIn>
@@ -98,10 +116,16 @@ export default function ExtensionPrivacyPage() {
           <FadeIn>
             <PageSection title="Data retention">
               <p className={bodyClass}>
-                Generated images (results) are stored in your AnyCap Drive when
-                you sign in. They are deleted when you delete them from Drive or
-                close your account. Anonymous generations are not persisted
-                beyond the session.
+                Recent extension history and settings stay in Chrome extension
+                storage until you clear them or uninstall the extension.
+                Anonymous trial counters and abuse-control buckets are retained
+                server-side for the active rate-limit window. Generated media,
+                search results, crawl output, and request logs may be retained
+                by AnyCap as needed to provide the result, secure the service,
+                debug failures, and comply with operational requirements. When
+                signed in, generated assets may be associated with your AnyCap
+                account and can be managed through AnyCap surfaces that expose
+                those assets.
               </p>
             </PageSection>
           </FadeIn>
@@ -109,9 +133,13 @@ export default function ExtensionPrivacyPage() {
           <FadeIn>
             <PageSection title="Third parties">
               <p className={bodyClass}>
-                Images are sent to our model providers (NexusHub → e.g.
-                nano-banana) to produce the variation. These providers do not
-                retain the images after the generation completes.
+                AnyCap may send the inputs needed for a capability to model,
+                search, crawl, storage, authentication, hosting, and security
+                providers. For example, prompts or reference images may be sent
+                to media-generation providers, search queries to search
+                providers, and URLs to crawl providers. Providers process this
+                data only for the requested capability and related operational
+                needs.
               </p>
             </PageSection>
           </FadeIn>
