@@ -128,6 +128,8 @@ ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e
                          # Playwright（生产模式构建）— 显式确认后才会打开 headed Chromium
 ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo
                          # Playwright（mock 模式）— 不需要后端，当前 9 个用例，显式确认后才会打开 headed Chromium
+ANYCAP_ALLOW_HEADED_E2E=1 pnpm shots:feishu
+                         # Playwright（mock 模式截图）— 显式确认后才会打开 headed Chromium
 ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api-staging.anycap.ai pnpm e2e:real
                          # Playwright（真实后端冒烟：vary/image/crawl）— 显式确认后才会打开 headed Chromium
 pnpm release            # WXT_RELEASE=true wxt build && wxt zip → releases/ CWS-ready zip，并同步当前 zip SHA-256
@@ -149,12 +151,13 @@ ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit -- --abuse-contr
 | `WXT_MOCK=true` | 把 `api.ts` 的每次调用替换成确定性的 mock（picsum / archive.org / W3C OGG / 假搜索/抓取）。完全不联网。 |
 | `WXT_RELEASE=true` | 剥离 `localhost` 与 `127.0.0.1` 的 host_permissions，把生产 `DefaultEndpoint` 烧进去，并通过 `wxt zip` 输出 CWS-ready 包。 |
 | `WXT_API_BASE=...` | 在构建时覆盖 server 端点（dev 默认 `http://127.0.0.1:8080`，release 默认 `https://api.anycap.ai`）。非 release 构建会自动把该 origin 加入 `host_permissions`，便于 staging 冒烟；release 构建仍只保留生产 AnyCap 域名。 |
-| `ANYCAP_ALLOW_HEADED_E2E=1` | 用于所有 headed Playwright scripts（`pnpm e2e`、`pnpm e2e:demo`、`pnpm e2e:real`）。必须在明确批准打开 headed Chromium 后设置；未设置时脚本会在打开浏览器前退出。 |
+| `ANYCAP_ALLOW_HEADED_E2E=1` | 用于所有 headed Playwright scripts（`pnpm e2e`、`pnpm e2e:demo`、`pnpm shots:feishu`、`pnpm e2e:real`）。必须在明确批准打开 headed Chromium 后设置；未设置时脚本会在打开浏览器前退出。 |
 
 ### 测试要点
 
 - E2E 用 Playwright `launchPersistentContext` — **MV3 扩展只能跑 headed 模式**，Chromium 的 headless 不支持。
 - Mock 模式 E2E（`pnpm e2e:demo`）不需要后端，但会打开 headed Chromium；它需要 `ANYCAP_ALLOW_HEADED_E2E=1`。
+- Mock 截图 E2E（`pnpm shots:feishu`）会打开 headed Chromium 生成 side-panel 截图；它需要 `ANYCAP_ALLOW_HEADED_E2E=1`。
 - Real 模式 E2E（`pnpm e2e:real`）会命中 `WXT_API_BASE` 指定的真实 server，覆盖匿名 vary / image / crawl；它需要 `ANYCAP_ALLOW_HEADED_E2E=1`，未设置时会在打开 headed Chromium 前退出。
 - Local preflight（`pnpm preflight:local`）不会打开浏览器；它串行运行 `pnpm release`、`pnpm test`、`npx tsc --noEmit` 和 `pnpm verify:release`，其中 `pnpm release` 会把当前 release zip SHA-256 同步到提审文档。
 - Release verifier（`pnpm verify:release`）不会打开浏览器；它检查 CWS zip 的 Manifest V3、扩展图标尺寸、生产 host permissions、optional identity、side panel/background/content script 入口和引用文件、content script `file://` 排除、无 source maps / tests / localhost / staging 字符串泄漏、`.output` 与 `releases/` zip 同步、CWS 提交文档中的当前 zip SHA-256，以及提审素材是否齐全、尺寸正确、headless CWS renderer、listing 文案、权限说明、CWS 提审清单、Chrome extension launch dconf 示例、生产发布 runbook、隐私 URL、server smoke、support scripts、local preflight、visible Chrome approval docs 和 real E2E 门禁。

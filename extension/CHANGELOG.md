@@ -23,7 +23,7 @@
 - Updated Chrome Web Store listing copy to describe the launch trial as "3 anonymous capability runs / month" and removed the premature "Sign in for 50 / month" promise while the extension login UI remains hidden; release verification now rejects that unavailable sign-in quota promise.
 - Added a gated `pnpm e2e:real` Playwright smoke spec for explicit staging/prod anonymous vary, image, and crawl verification.
 - `pnpm e2e:real` now exits before opening headed Chromium unless `ANYCAP_ALLOW_HEADED_E2E=1` is set after explicit approval.
-- All headed Playwright scripts (`pnpm e2e`, `pnpm e2e:demo`, `pnpm e2e:real`) now require `ANYCAP_ALLOW_HEADED_E2E=1` before opening Chromium.
+- All headed Playwright package scripts (`pnpm e2e`, `pnpm e2e:demo`, `pnpm shots:feishu`, `pnpm e2e:real`) now require `ANYCAP_ALLOW_HEADED_E2E=1` before opening Chromium, and the release verifier rejects any package script that invokes Playwright without that guard.
 - Non-release builds now add the `WXT_API_BASE` origin to `host_permissions`, so staging real-mode E2E is not blocked by Chrome extension permissions; release builds stay production-only.
 - Added `pnpm verify:release` for browser-free validation of the CWS zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced files, content script `file://` exclusion, release host permissions, required scripts, store asset dimensions, listing copy, demo MP4 metadata, CWS submission guide, Chrome extension launch dconf examples, and production launch runbook.
 - Added `store-assets/permission-justifications.md` and verify it covers every required and optional manifest permission.

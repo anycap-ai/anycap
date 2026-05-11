@@ -7,16 +7,16 @@ submitting to the Chrome Web Store.
 
 ### Build / quality
 
-- [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.67 KB)
+- [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.69 KB)
 - [x] `pnpm verify:release` — release zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced runtime files, content script `file://` exclusion, permissions, scripts, no dev/staging leakage, `.output`/`releases` zip sync, CWS submission hash, CWS asset dimensions, demo MP4 metadata, listing copy, permission justifications, CWS submission guide including demo-video YouTube instructions, headless CWS renderer script, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs pass
 - [x] `pnpm preflight:local` — browser-free local gate covering release rebuild, unit tests, type check, and release verifier
-- [x] `pnpm test` — 164 unit tests pass
+- [x] `pnpm test` — 166 unit tests pass
 - [x] `pnpm launch:audit -- --skip-smoke` — browser-free local launch audit command is wired
 - [x] Targeted server readiness tests — `internal/transport/http`, `internal/middleware`, and image/video/music/web application packages cover anonymous Chrome extension routes and pass locally
 - [ ] `pnpm smoke:server -- --base-url <staging-or-prod>` — browser-free required-features + anonymous extension config/search/crawl smoke pending deploy
 - [ ] `pnpm smoke:server -- --base-url <staging-or-prod> --include-media` — browser-free anonymous image/video/music smoke pending deploy; skips search/crawl to stay within the 3-run trial and consumes provider quota
 - [ ] `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:real` — vary/image/crawl real-mode smoke pending final approved run against deployed staging/prod server
-- [x] `pnpm e2e:demo` — underlying demo E2E previously passed with 9 tests (covers all 6 capability tabs + onboarding); current headed wrapper now requires `ANYCAP_ALLOW_HEADED_E2E=1` and blocks before Playwright when not approved
+- [x] `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo` — underlying demo E2E previously passed with 9 tests (covers all 6 capability tabs + onboarding); current headed wrapper blocks before Playwright when not approved
 - [x] `npx tsc --noEmit` — clean
 - [ ] Manual smoke: side panel opens via toolbar click, all 7 right-click menus appear in correct contexts — pending explicit approval because it interacts with visible Chrome
 - [ ] Internal dogfood (5 people × 2 days, zero P0 bugs)
