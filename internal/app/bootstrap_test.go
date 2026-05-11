@@ -34,6 +34,9 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	if deps.rateLimitResolver == nil {
 		t.Fatal("expected rate limit resolver to be initialized")
 	}
+	if deps.anonymousTrialStore == nil {
+		t.Fatal("expected anonymous trial store to be initialized")
+	}
 	if got := deps.rateLimitResolver.ResolveCapabilityRateLimitRPM("image.generate"); got != 60 {
 		t.Fatalf("expected default rate limit resolver value 60, got %d", got)
 	}
@@ -167,6 +170,9 @@ func TestBuildServerDependencies_IntegrationModeUsesComposableInfra(t *testing.T
 	}
 	if deps.apiKeyService == nil || deps.rateLimiter == nil {
 		t.Fatal("expected integration dependencies to be initialized")
+	}
+	if _, ok := deps.anonymousTrialStore.(*postgres.AnonymousTrialRepo); !ok {
+		t.Fatalf("expected postgres anonymous trial repo, got %T", deps.anonymousTrialStore)
 	}
 }
 

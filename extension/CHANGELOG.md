@@ -1,5 +1,49 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Offline detection**: `navigator.onLine` checked before every API call; users see "You're offline" with a retry button instead of a generic network error.
+- **Server-error retry UX**: HTTP 503 and 5xx errors now show "AnyCap servers are having a moment" with an inline retry action.
+- **ErrorBox action buttons**: every error (except trial-exhausted and CSP-blocked) now surfaces a contextual action — retry for network/server/offline, "Go to Settings" for unauthorized.
+- **Global focus-visible ring**: keyboard navigation is visible on all interactive elements via `:focus-visible`.
+- **System reduced-motion support**: `prefers-reduced-motion: reduce` is now honored globally, disabling transitions and hover lifts even before the Settings toggle is set.
+
+### Engineering
+
+- Added `OFFLINE` error code and `isOffline()` guard in `errors.ts`.
+- Enhanced `classifyHttpError` to return friendly messages for 503.
+- Added unit tests for offline detection and 503 classification.
+- TabBar buttons now carry `aria-label` and `focus-visible` classes for accessibility.
+- Server anonymous trial enforcement now uses a Postgres-backed install-ID budget in persistent runtime modes.
+- Anonymous public-trial enforcement now also consumes a hashed TCP remote-address client bucket, so rotating install IDs or spoofing `X-Forwarded-For` does not bypass the local server trial gate.
+- Anonymous extension media generation skips billing intents, preventing `anon:<install-id>` from hitting numeric user-ID billing tables.
+- Added anonymous public-trial abuse-control gate coverage to the completion audit, production runbook, CWS submission guide, launch checklist, next-steps doc, README, load/use guide, and demo notes. `pnpm launch:audit` now requires `--abuse-control-passed` before it can turn green, and `pnpm verify:release` requires the final upload docs to include that gate.
+- Updated Chrome Web Store listing copy to describe the launch trial as "3 anonymous capability runs / month" and removed the premature "Sign in for 50 / month" promise while the extension login UI remains hidden; release verification now rejects that unavailable sign-in quota promise.
+- Added a gated `pnpm e2e:real` Playwright smoke spec for explicit staging/prod anonymous vary, image, and crawl verification.
+- `pnpm e2e:real` now exits before opening headed Chromium unless `ANYCAP_ALLOW_HEADED_E2E=1` is set after explicit approval.
+- All headed Playwright scripts (`pnpm e2e`, `pnpm e2e:demo`, `pnpm e2e:real`) now require `ANYCAP_ALLOW_HEADED_E2E=1` before opening Chromium.
+- Non-release builds now add the `WXT_API_BASE` origin to `host_permissions`, so staging real-mode E2E is not blocked by Chrome extension permissions; release builds stay production-only.
+- Added `pnpm verify:release` for browser-free validation of the CWS zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced files, content script `file://` exclusion, release host permissions, required scripts, store asset dimensions, listing copy, demo MP4 metadata, CWS submission guide, Chrome extension launch dconf examples, and production launch runbook.
+- Added `store-assets/permission-justifications.md` and verify it covers every required and optional manifest permission.
+- Added `store-assets/cws-submission.md` and verify it covers CWS form inputs, asset mapping, permission copy, server smoke, real E2E, deploy, and dconf gates.
+- Release verifier now scans the CWS zip for source maps, test files, localhost, staging hosts, and mock-mode strings.
+- `pnpm release` now copies WXT's `.output/anycap-extension-0.2.0-chrome.zip` into `releases/anycap-extension-0.2.0-chrome.zip`, and the release verifier requires that sync path.
+- Release verifier now fails if a freshly built `.output/anycap-extension-0.2.0-chrome.zip` exists but differs from `releases/anycap-extension-0.2.0-chrome.zip`.
+- Added `pnpm preflight:local` as a browser-free local production gate for release rebuild, unit tests, type check, and release verification; release verifier now requires it to stay browser-free.
+- Extension CI now runs `pnpm preflight:local` so the checked-in CWS package path stays covered by the same browser-free local gate.
+- Added `pnpm smoke:server` for browser-free post-deploy validation of required feature flags, anonymous extension headers, `/v1/extension/config`, web search, web crawl, extension config/search/crawl response shapes, and optional image/video/music generation.
+- Adjusted `pnpm smoke:server -- --include-media` to run image/video/music as a media-only anonymous smoke, skipping search/crawl so the smoke does not exceed the 3-run anonymous launch trial by itself.
+- Fixed the extension web-search client to send `max_results` to the server and map server `description` fields into the UI `snippet` field.
+- Added `pnpm launch:audit` for browser-free launch gate aggregation across release verification, production smoke, live privacy policy URL, and remaining deploy / auth / dconf / real E2E blockers.
+- Launch audit now retries the live privacy policy URL check once on transient network failure.
+- Launch audit now fetches the live privacy policy page body and rejects Next.js 404 fallback content even when the CDN returns HTTP 200.
+- Added `--abuse-control-passed` and `--real-e2e-passed` to `pnpm launch:audit` so the browser-free audit can turn green as the final Chrome Web Store upload gate only after anonymous abuse control and an approved headed E2E run are both acknowledged.
+- Added `docs/PRODUCTION-LAUNCH-RUNBOOK.md` with server deploy, dconf, smoke, E2E acknowledgement, CWS submission, and rollback steps.
+- Added `pnpm render:cws`, a headless Chrome Web Store screenshot and promo asset renderer that avoids opening visible browser windows.
+- Added `pnpm render:demo`, a headless demo video renderer that outputs `store-assets/demo.mp4` for YouTube upload after approval.
+
 ## v0.2.0 — 2026-04-27
 
 This is the first **side-panel** release. The popup is gone; the extension now lives in Chrome's right-side panel and exposes 7 capability tabs.
@@ -41,7 +85,7 @@ This is the first **side-panel** release. The popup is gone; the extension now l
 
 - `WXT_MOCK=true pnpm demo` — fully offline-capable demo build that mocks all server calls (image, video, music, search, crawl) with realistic latency and sample media.
 - `WXT_RELEASE=true pnpm release` — production build that strips `localhost` host permissions and produces a CWS-ready zip.
-- 78 unit tests, 7 production E2E + 8 demo E2E + 12 screenshot E2E, all passing.
+- Comprehensive unit, production-mode E2E, demo E2E, and screenshot E2E coverage for the initial side-panel cut.
 
 ### Changed
 
@@ -62,7 +106,8 @@ This is the first **side-panel** release. The popup is gone; the extension now l
 ### Known gaps
 
 - Account login is wired (`src/lib/auth.ts`) but the UI is hidden until OAuth flow is finalized.
-- Real-mode generation against `api.anycap.ai` will fail until commit `3514a828` (anonymous extension routes) is merged into `deploy/server-prod`. See `LOAD_AND_USE.md`.
+- Real-mode generation against `api.anycap.ai` still requires deploying the current anonymous extension server changes and feature-access dconf before public install.
+- Anonymous public trial abuse control is implemented locally but still must be deployed before public CWS traffic; do not enable anonymous media generation until production runs the dual-bucket middleware or an equivalent gateway rule.
 
 ## v0.1.0 — 2026-04-22
 

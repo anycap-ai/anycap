@@ -23,6 +23,9 @@ func NewRepo(db sqlstore.DBTX) *Repo {
 }
 
 func (r *Repo) InsertUsageEvent(ctx context.Context, event model.UsageEventRecord) error {
+	if model.IsAnonymousUserID(event.UserID) {
+		return nil
+	}
 	numericUserID, err := userid.Parse(event.UserID)
 	if err != nil {
 		return err

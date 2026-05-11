@@ -23,6 +23,29 @@ describe('errors', () => {
     expect(classified.code).toBe('UNKNOWN_ERROR');
   });
 
+  it('classifies as OFFLINE when navigator.onLine is false', () => {
+    const original = (globalThis as any).navigator;
+    (globalThis as any).navigator = { onLine: false };
+    const classified = classifyError(new Error('fetch failed'));
+    expect(classified.code).toBe('OFFLINE');
+    (globalThis as any).navigator = original;
+  });
+
+  it('classifies as NETWORK_ERROR when online but fetch fails', () => {
+    const original = (globalThis as any).navigator;
+    (globalThis as any).navigator = { onLine: true };
+    const classified = classifyError(new TypeError('Failed to fetch'));
+    expect(classified.code).toBe('NETWORK_ERROR');
+    (globalThis as any).navigator = original;
+  });
+
+  it('classifies 503 as SERVER_ERROR with friendly message', () => {
+    const err = classifyHttpError(503);
+    expect(err.code).toBe('SERVER_ERROR');
+    expect(err.message).toContain('temporarily unavailable');
+    expect(err.status).toBe(503);
+  });
+
   it('classifies 429 as TRIAL_EXHAUSTED', () => {
     const err = classifyHttpError(429);
     expect(err.code).toBe('TRIAL_EXHAUSTED');
@@ -48,6 +71,7 @@ describe('errors', () => {
       'NETWORK_ERROR',
       'SERVER_ERROR',
       'CSP_BLOCKED',
+      'OFFLINE',
       'UNKNOWN_ERROR',
     ] as const;
     for (const code of codes) {

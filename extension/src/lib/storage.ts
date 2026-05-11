@@ -16,6 +16,7 @@ export type StoredSchema = {
     ts: number;
   }>;
   userSettings: Record<string, unknown> | null;
+  onboardingCompleted: boolean;
 };
 
 const DEFAULTS: StoredSchema = {
@@ -26,6 +27,7 @@ const DEFAULTS: StoredSchema = {
   apiKey: null,
   recentGenerations: [],
   userSettings: null,
+  onboardingCompleted: false,
 };
 
 export async function getStored<K extends keyof StoredSchema>(

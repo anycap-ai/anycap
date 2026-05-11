@@ -61,7 +61,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		logger.Error("video execution not configured")
 		return model.GenerateVideoResult{}, model.ErrVideoExecutionNotConfigured
 	}
-	if s.credit == nil {
+	anonymous := model.IsAnonymousUserID(req.UserID)
+	if s.credit == nil && !anonymous {
 		logger.Error("video credit client not configured")
 		return model.GenerateVideoResult{}, model.ErrInternal
 	}
@@ -70,14 +71,19 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		return model.GenerateVideoResult{}, model.ErrAuthInvalid
 	}
 
-	balance, err := s.credit.GetBalance(ctx, req.UserID)
-	if err != nil {
-		logger.WithError(err).Error("video credit balance lookup failed")
-		return model.GenerateVideoResult{}, err
-	}
-	if balance.Available < 1 {
-		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for video request")
-		return model.GenerateVideoResult{}, model.ErrInsufficientCredit
+	minCredit := int64(1)
+	if anonymous {
+		minCredit = 0
+	} else {
+		balance, err := s.credit.GetBalance(ctx, req.UserID)
+		if err != nil {
+			logger.WithError(err).Error("video credit balance lookup failed")
+			return model.GenerateVideoResult{}, err
+		}
+		if balance.Available < 1 {
+			logger.WithField("available_credit", balance.Available).Warn("insufficient credit for video request")
+			return model.GenerateVideoResult{}, model.ErrInsufficientCredit
+		}
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityVideo, req.Model)
@@ -106,14 +112,19 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		req.ReferenceImageURLs = resolved
 	}
 
-	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
+	billing := s.billing
+	if anonymous {
+		billing = nil
+	}
+
+	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
 		Capability: "video.generate",
 		Provider:   model.BillingProviderNexusHub,
 		RequestID:  req.RequestID,
 		Model:      req.Model,
-		MinCredit:  1,
+		MinCredit:  minCredit,
 	}, execflow.Hooks[model.GenerateVideoResult]{
 		Invoke: func(ctx context.Context) (model.GenerateVideoResult, error) {
 			result, err := s.nexusHub.GenerateVideo(ctx, req, route)
@@ -126,14 +137,18 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			return result, err
 		},
 		OnProviderSuccess: func(result model.GenerateVideoResult) execflow.ProviderSuccessMeta {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
 				ProviderStatus: result.Status,
-				CreditCost:     result.CreditCost,
+				CreditCost:     creditCost,
 			}
 		},
 		AfterSuccess: func(ctx context.Context, result *model.GenerateVideoResult) error {
-			if s.artifactPub == nil {
+			if s.artifactPub == nil || anonymous {
 				return nil
 			}
 			published, err := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
@@ -151,8 +166,12 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			return nil
 		},
 		BuildUsageRecords: func(result model.GenerateVideoResult, startedAt time.Time) *execflow.UsageRecords {
+			if anonymous {
+				return nil
+			}
 			eventID := externalid.Generate(externalid.PrefixUsageEvent)
 			runID := externalid.Generate(externalid.PrefixProviderRun)
+			creditCost := result.CreditCost
 			return &execflow.UsageRecords{
 				Event: &model.UsageEventRecord{
 					ID:            eventID,
@@ -163,8 +182,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 					Provider:      "nexushub",
 					RequestID:     req.RequestID,
 					Status:        result.Status,
-					EstimatedCost: result.CreditCost,
-					FinalCost:     result.CreditCost,
+					EstimatedCost: creditCost,
+					FinalCost:     creditCost,
 					OccurredAt:    startedAt.UTC(),
 				},
 				ProviderRun: &model.ProviderRunRecord{
@@ -176,7 +195,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 					AbilityKey:     route.AbilityKey,
 					ProviderStatus: result.Status,
 					ProviderUsage:  result.Usage,
-					ProviderCost:   result.CreditCost,
+					ProviderCost:   creditCost,
 					RawResult: map[string]any{
 						"model":   result.Model,
 						"outputs": result.Outputs,
@@ -186,6 +205,10 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			}
 		},
 		BuildCallLog: func(result model.GenerateVideoResult, startedAt time.Time) *model.CallLog {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return &model.CallLog{
 				RequestID:  req.RequestID,
 				UserID:     req.UserID,
@@ -194,7 +217,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 				Model:      req.Model,
 				Status:     result.Status,
 				LatencyMS:  time.Since(startedAt).Milliseconds(),
-				CreditCost: result.CreditCost,
+				CreditCost: creditCost,
 			}
 		},
 	})
@@ -202,5 +225,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		return model.GenerateVideoResult{}, err
 	}
 
+	if anonymous {
+		result.CreditCost = 0
+	}
 	return result, nil
 }

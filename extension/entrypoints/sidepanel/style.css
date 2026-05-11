@@ -61,6 +61,26 @@ body {
   box-shadow: 0 4px 12px -6px rgba(28, 31, 23, 0.18);
 }
 
+/* Global focus-visible ring — ensures keyboard navigation is visible everywhere */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 125, 58, 0.35);
+}
+
+/* Respect reduced-motion system preference (complements the Settings toggle) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
 /* Hide default scrollbar styling for a cleaner panel look */
 .scroll-y {
   overflow-y: auto;

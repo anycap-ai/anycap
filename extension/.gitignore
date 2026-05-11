@@ -1,5 +1,6 @@
 .output
 .wxt
+.claude/
 node_modules
 coverage
 test-results

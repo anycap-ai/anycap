@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Sparkles,
   ImagePlus,
@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { useStore, type CapabilityTab, type PendingRequest } from '@/src/lib/store';
 import { getAuthState } from '@/src/lib/quota';
+import { getStored, setStored } from '@/src/lib/storage';
 import { AnycapMark } from './components/AnycapMark';
+import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { VaryTab } from './tabs/VaryTab';
 import { ImageTab } from './tabs/ImageTab';
 import { VideoTab } from './tabs/VideoTab';
@@ -55,6 +57,7 @@ function tabFromPendingRequest(req: PendingRequest | null): CapabilityTab | null
 
 export default function App() {
   const store = useStore();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     let canceled = false;
@@ -72,16 +75,24 @@ export default function App() {
         store.setAuthState(state.isAuthed, state.remainingTrials);
         if (!state.isAuthed && state.remainingTrials === 0) store.setView('paywall');
       }
+      const onboardingCompleted = await getStored('onboardingCompleted');
+      if (!canceled && !onboardingCompleted) {
+        setShowOnboarding(true);
+      }
     })();
 
     const handler = (changes: any, area: string) => {
-      if (area !== 'session' || !changes.pendingRequest?.newValue) return;
-      const req = changes.pendingRequest.newValue as PendingRequest;
-      store.setPendingRequest(req);
-      const t = tabFromPendingRequest(req);
-      if (t) store.setActiveTab(t);
-      store.setGeneration({ phase: 'idle' });
-      chrome.storage.session.remove('pendingRequest');
+      if (area === 'session' && changes.pendingRequest?.newValue) {
+        const req = changes.pendingRequest.newValue as PendingRequest;
+        store.setPendingRequest(req);
+        const t = tabFromPendingRequest(req);
+        if (t) store.setActiveTab(t);
+        store.setGeneration({ phase: 'idle' });
+        chrome.storage.session.remove('pendingRequest');
+      }
+      if (area === 'local' && changes.onboardingCompleted) {
+        setShowOnboarding(changes.onboardingCompleted.newValue === false);
+      }
     };
     chrome.storage.onChanged.addListener(handler);
     return () => {
@@ -91,9 +102,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const finishOnboarding = async () => {
+    setShowOnboarding(false);
+    await setStored('onboardingCompleted', true);
+  };
+
   if (store.view === 'paywall') {
     return (
-      <div className="h-full flex flex-col bg-app">
+      <div className="h-full flex flex-col bg-app relative">
         <Header />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-xs">
@@ -114,12 +130,13 @@ export default function App() {
             <p className="mt-3 text-xs text-text-neutral">Account login coming soon.</p>
           </div>
         </div>
+        {showOnboarding && <OnboardingOverlay onDone={finishOnboarding} />}
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-app">
+    <div className="h-full flex flex-col bg-app relative">
       <Header />
       <TabBar />
       <div className="flex-1 scroll-y px-4 py-4">
@@ -132,6 +149,7 @@ export default function App() {
         {store.activeTab === 'settings' && <SettingsTab />}
       </div>
       <Footer />
+      {showOnboarding && <OnboardingOverlay onDone={finishOnboarding} />}
     </div>
   );
 }
@@ -165,7 +183,7 @@ function Header() {
 function TabBar() {
   const store = useStore();
   return (
-    <nav className="flex border-b border-border-divider bg-surface-card overflow-x-auto" role="tablist">
+    <nav className="flex border-b border-border-divider bg-surface-card overflow-x-auto" role="tablist" aria-label="Capability tabs">
       {TABS.map((t) => {
         const active = store.activeTab === t.id;
         const Icon = t.Icon;
@@ -174,17 +192,19 @@ function TabBar() {
             key={t.id}
             role="tab"
             aria-selected={active}
+            aria-label={t.label}
+            tabIndex={0}
             onClick={() => store.setActiveTab(t.id)}
-            className={`relative flex-1 min-w-[58px] flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${
+            className={`relative flex-1 min-w-[58px] flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive/30 ${
               active ? 'text-olive' : 'text-text-muted hover:text-text-body'
             }`}
           >
-            <Icon className="w-4 h-4" strokeWidth={1.8} />
+            <Icon className="w-4 h-4" strokeWidth={1.8} aria-hidden="true" />
             <span>{t.label}</span>
             {active && (
               <span
                 className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-olive"
-                aria-hidden
+                aria-hidden="true"
               />
             )}
           </button>

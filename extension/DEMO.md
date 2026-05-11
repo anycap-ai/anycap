@@ -2,6 +2,9 @@
 
 > Demo build runs entirely on the client. **No server required.** The bundle
 > intercepts all API calls with realistic mocks (delay + sample media).
+> Manual Chrome steps below use a visible browser window. Do not run them during
+> unattended agent work or without explicit approval when browser windows should
+> stay closed.
 
 ## One-shot setup
 
@@ -33,13 +36,15 @@ The panel has 6 capability tabs that mirror the AnyCap CLI / desktop matrix:
 
 ## Right-click context menus → side panel
 
-The extension registers **5** context menu entries. Each one opens the side
+The extension registers **7** context menu entries. Each one opens the side
 panel and pre-fills the right tab.
 
 | Right-clicked element | Menu item | Lands on tab | Pre-filled |
 |---|---|---|---|
 | Image (≥256 px) | ✨ Generate variation with AnyCap | **Vary** | source image |
 | Selected text | 🎨 Generate image from this text | **Image** | prompt = selection |
+| Selected text | 🎬 Generate video from this text | **Video** | prompt = selection |
+| Selected text | 🎵 Generate music from this text | **Music** | prompt = selection |
 | Selected text | 🔍 Search with AnyCap | **Search** | query = selection |
 | Page (background) | 📄 Crawl this page with AnyCap | **Crawl** | URL = page URL |
 | Link | 📄 Crawl link with AnyCap | **Crawl** | URL = link URL |
@@ -76,16 +81,24 @@ music). Internet required for the assets to render — same as production.
 pnpm build
 ```
 
-(`WXT_MOCK` unset → real API mode. Currently fails at API call time because
-`deploy/server-prod` lacks commit `3514a828`. See `LOAD_AND_USE.md`.)
+(`WXT_MOCK` unset → real API mode. Public anonymous use requires the current
+server extension support to be deployed and feature/rate dconf to allow Chrome
+extension users. Anonymous media generation also requires the anonymous
+abuse-control gate to be closed before public rollout. See `LOAD_AND_USE.md`.)
 
 ## Verification
 
 ```bash
-pnpm test                # 78 unit tests
-pnpm e2e                 # 7 prod-mode E2E + 21 mock-only skipped
-pnpm e2e:demo            # builds demo + runs 8 demo E2E covering all 6 tabs
-pnpm release             # produces releases/anycap-extension-0.2.0-chrome.zip (CWS-ready, 126 KB)
+pnpm test                # 157 unit tests
+pnpm preflight:local     # browser-free release rebuild + test + type + release verifier gate
+ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo
+                         # run only after explicit approval; opens headed Chromium for all 6 tabs + onboarding
+pnpm release             # produces releases/anycap-extension-0.2.0-chrome.zip (CWS-ready)
+pnpm verify:release      # browser-free manifest / permission / CWS asset / submission / launch-dconf / launch-runbook audit
+pnpm render:cws          # headless CWS screenshot / promo asset renderer; no browser window
+pnpm render:demo         # headless demo MP4 renderer; no browser window
+pnpm launch:audit -- --skip-smoke
+                           # browser-free launch gate summary
 ```
 
 ## Producing a release
@@ -94,4 +107,5 @@ pnpm release             # produces releases/anycap-extension-0.2.0-chrome.zip (
 pnpm release
 # → .output/anycap-extension-0.2.0-chrome.zip
 # → strips localhost host_permissions, keeps only api.anycap.ai + anycap.ai
+pnpm verify:release
 ```

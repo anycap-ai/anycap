@@ -21,6 +21,11 @@ type zeroCostNexusClient struct{}
 type fakeArtifactPublisher struct {
 	err error
 }
+type fakeBillingCoordinator struct {
+	intents         []model.CreateBillingIntentInput
+	providerSuccess []model.RecordBillingProviderSuccessInput
+	deducted        []string
+}
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
 	f.events = append(f.events, event)
@@ -64,6 +69,38 @@ func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPubli
 	return model.ArtifactPublishResult{}, nil
 }
 
+func (f *fakeBillingCoordinator) CreateOrGetIntent(_ context.Context, input model.CreateBillingIntentInput) (model.BillingIntent, error) {
+	f.intents = append(f.intents, input)
+	return model.BillingIntent{
+		Provider:       input.Provider,
+		TraceID:        input.TraceID,
+		DeductSourceID: "anycap-music-generate-" + input.TraceID,
+		CreditCost:     input.CreditCost,
+	}, nil
+}
+
+func (f *fakeBillingCoordinator) RecordProviderSuccess(_ context.Context, input model.RecordBillingProviderSuccessInput) error {
+	f.providerSuccess = append(f.providerSuccess, input)
+	return nil
+}
+
+func (f *fakeBillingCoordinator) RecordProviderFailure(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkUncertain(_ context.Context, _, _ string, _ string) error {
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkLookupNotReady(_ context.Context, _ model.BillingIntent, _ string) error {
+	return nil
+}
+
+func (f *fakeBillingCoordinator) MarkDeducted(_ context.Context, _, traceID string) error {
+	f.deducted = append(f.deducted, traceID)
+	return nil
+}
+
 func testCatalog() *nexushub.CatalogStub {
 	return nexushub.NewCatalogStubWith([]model.ModelSpec{
 		{
@@ -99,6 +136,56 @@ func TestGenerateMusic_InsufficientCredit(t *testing.T) {
 	})
 	if !errors.Is(err, model.ErrInsufficientCredit) {
 		t.Fatalf("expected ErrInsufficientCredit, got %v", err)
+	}
+}
+
+func TestGenerateMusic_AnonymousSkipsCreditClient(t *testing.T) {
+	logs := calllog.NewMemoryCallLogRepo()
+	service := NewService(testCatalog(), nexushub.NewStubClient(), nil, logs)
+
+	result, err := service.Generate(context.Background(), model.GenerateMusicRequest{
+		UserID:    model.AnonymousUserIDPrefix + "install-1",
+		RequestID: "req-anon-music",
+		Prompt:    "lofi night drive",
+		Model:     "mureka-v6",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if result.CreditCost != 0 {
+		t.Fatalf("expected anonymous result credit cost 0, got %d", result.CreditCost)
+	}
+
+	items, err := logs.ListByUserID(context.Background(), model.AnonymousUserIDPrefix+"install-1", 10)
+	if err != nil {
+		t.Fatalf("ListByUserID() error = %v", err)
+	}
+	if len(items) != 1 || items[0].CreditCost != 0 {
+		t.Fatalf("expected one zero-cost anonymous call log, got %#v", items)
+	}
+}
+
+func TestGenerateMusic_AnonymousSkipsBillingCoordinator(t *testing.T) {
+	billingCoord := &fakeBillingCoordinator{}
+	writer := &fakeUsageWriter{}
+	service := NewService(testCatalog(), nexushub.NewStubClient(), nil, calllog.NewMemoryCallLogRepo())
+	service.SetBillingCoordinator(billingCoord)
+	service.SetUsageWriter(writer)
+
+	_, err := service.Generate(context.Background(), model.GenerateMusicRequest{
+		UserID:    model.AnonymousUserIDPrefix + "install-1",
+		RequestID: "req-anon-music-billing",
+		Prompt:    "lofi night drive",
+		Model:     "mureka-v6",
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if len(billingCoord.intents) != 0 || len(billingCoord.providerSuccess) != 0 || len(billingCoord.deducted) != 0 {
+		t.Fatalf("expected anonymous request to skip billing coordinator, got %#v", billingCoord)
+	}
+	if len(writer.events) != 0 || len(writer.runs) != 0 {
+		t.Fatalf("expected anonymous request to skip usage ledger, got events=%#v runs=%#v", writer.events, writer.runs)
 	}
 }
 

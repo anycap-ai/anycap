@@ -1,0 +1,25 @@
+{
+  "feature_access_groups": {},
+  "features": {
+    "image.generate": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "video.generate": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "music.generate": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "web.search": {
+      "enabled": true,
+      "rollout": "all"
+    },
+    "web.crawl": {
+      "enabled": true,
+      "rollout": "all"
+    }
+  }
+}

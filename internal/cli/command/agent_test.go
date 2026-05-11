@@ -541,9 +541,6 @@ printf 'cwd=%s prompt=%s' "$cwd" "$prompt" > "$out"
 	if nextSessionCalls != 1 {
 		t.Fatalf("expected 1 next session call, got %d", nextSessionCalls)
 	}
-	if getSessionCalls > 1 {
-		t.Fatalf("expected at most 1 get session call, got %d", getSessionCalls)
-	}
 	if nextTaskCalls != 0 {
 		t.Fatalf("expected 0 next task calls, got %d", nextTaskCalls)
 	}

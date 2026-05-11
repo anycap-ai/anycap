@@ -70,7 +70,8 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		logger.Error("image execution not configured")
 		return model.GenerateImageResult{}, model.ErrImageExecutionNotConfigured
 	}
-	if s.credit == nil {
+	anonymous := model.IsAnonymousUserID(req.UserID)
+	if s.credit == nil && !anonymous {
 		logger.Error("image credit client not configured")
 		return model.GenerateImageResult{}, model.ErrInternal
 	}
@@ -79,14 +80,19 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		return model.GenerateImageResult{}, model.ErrAuthInvalid
 	}
 
-	balance, err := s.credit.GetBalance(ctx, req.UserID)
-	if err != nil {
-		logger.WithError(err).Error("image credit balance lookup failed")
-		return model.GenerateImageResult{}, err
-	}
-	if balance.Available < 1 {
-		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for image request")
-		return model.GenerateImageResult{}, model.ErrInsufficientCredit
+	minCredit := int64(1)
+	if anonymous {
+		minCredit = 0
+	} else {
+		balance, err := s.credit.GetBalance(ctx, req.UserID)
+		if err != nil {
+			logger.WithError(err).Error("image credit balance lookup failed")
+			return model.GenerateImageResult{}, err
+		}
+		if balance.Available < 1 {
+			logger.WithField("available_credit", balance.Available).Warn("insufficient credit for image request")
+			return model.GenerateImageResult{}, model.ErrInsufficientCredit
+		}
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityImage, req.Model)
@@ -117,14 +123,19 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		req.ReferenceImageURLs = resolved
 	}
 
-	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
+	billing := s.billing
+	if anonymous {
+		billing = nil
+	}
+
+	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
 		Capability: action,
 		Provider:   model.BillingProviderNexusHub,
 		RequestID:  req.RequestID,
 		Model:      req.Model,
-		MinCredit:  1,
+		MinCredit:  minCredit,
 	}, execflow.Hooks[model.GenerateImageResult]{
 		Invoke: func(ctx context.Context) (model.GenerateImageResult, error) {
 			result, err := s.nexusHub.GenerateImage(ctx, req, route)
@@ -137,14 +148,18 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 			return result, err
 		},
 		OnProviderSuccess: func(result model.GenerateImageResult) execflow.ProviderSuccessMeta {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
 				ProviderStatus: result.Status,
-				CreditCost:     result.CreditCost,
+				CreditCost:     creditCost,
 			}
 		},
 		AfterSuccess: func(ctx context.Context, result *model.GenerateImageResult) error {
-			if s.artifactPub == nil {
+			if s.artifactPub == nil || anonymous {
 				return nil
 			}
 			published, err := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
@@ -162,8 +177,12 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 			return nil
 		},
 		BuildUsageRecords: func(result model.GenerateImageResult, startedAt time.Time) *execflow.UsageRecords {
+			if anonymous {
+				return nil
+			}
 			eventID := externalid.Generate(externalid.PrefixUsageEvent)
 			runID := externalid.Generate(externalid.PrefixProviderRun)
+			creditCost := result.CreditCost
 			return &execflow.UsageRecords{
 				Event: &model.UsageEventRecord{
 					ID:            eventID,
@@ -174,8 +193,8 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 					Provider:      "nexushub",
 					RequestID:     req.RequestID,
 					Status:        result.Status,
-					EstimatedCost: result.CreditCost,
-					FinalCost:     result.CreditCost,
+					EstimatedCost: creditCost,
+					FinalCost:     creditCost,
 					OccurredAt:    startedAt.UTC(),
 				},
 				ProviderRun: &model.ProviderRunRecord{
@@ -187,7 +206,7 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 					AbilityKey:     route.AbilityKey,
 					ProviderStatus: result.Status,
 					ProviderUsage:  result.Usage,
-					ProviderCost:   result.CreditCost,
+					ProviderCost:   creditCost,
 					RawResult: map[string]any{
 						"model":   result.Model,
 						"outputs": result.Outputs,
@@ -197,6 +216,10 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 			}
 		},
 		BuildCallLog: func(result model.GenerateImageResult, startedAt time.Time) *model.CallLog {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return &model.CallLog{
 				RequestID:  req.RequestID,
 				UserID:     req.UserID,
@@ -205,7 +228,7 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 				Model:      req.Model,
 				Status:     result.Status,
 				LatencyMS:  time.Since(startedAt).Milliseconds(),
-				CreditCost: result.CreditCost,
+				CreditCost: creditCost,
 			}
 		},
 	})
@@ -213,5 +236,8 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		return model.GenerateImageResult{}, err
 	}
 
+	if anonymous {
+		result.CreditCost = 0
+	}
 	return result, nil
 }

@@ -2,6 +2,18 @@ import { defineConfig } from 'wxt';
 import tailwindcss from '@tailwindcss/vite';
 
 const isRelease = process.env.WXT_RELEASE === 'true';
+const apiBase = process.env.WXT_API_BASE?.trim();
+
+function apiBaseHostPermission(): string[] {
+  if (!apiBase) return [];
+  try {
+    const url = new URL(apiBase);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return [];
+    return [`${url.protocol}//${url.hostname}/*`];
+  } catch {
+    return [];
+  }
+}
 
 // Localhost permissions are useful only when running against a local
 // `make dev` server. Strip them from production zips so CWS reviewers don't
@@ -9,8 +21,8 @@ const isRelease = process.env.WXT_RELEASE === 'true';
 const hostPermissions = [
   'https://api.anycap.ai/*',
   'https://anycap.ai/*',
-  ...(isRelease ? [] : ['http://127.0.0.1/*', 'http://localhost/*']),
-];
+  ...(isRelease ? [] : ['http://127.0.0.1/*', 'http://localhost/*', ...apiBaseHostPermission()]),
+].filter((value, index, all) => all.indexOf(value) === index);
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],

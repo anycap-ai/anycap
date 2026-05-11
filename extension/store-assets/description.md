@@ -26,7 +26,7 @@ AnyCap brings 6 AI capabilities to every browser tab via a clean side panel. Rig
 - Per-capability history with thumbnail grid — click to rehydrate the form
 - Settings tab: default models, watermark control, reduced motion, reset trial
 
-**Free tier:** 3 generations / month, no signup. Sign in for 50 / month. Pro plans coming.
+**Free trial:** 3 anonymous capability runs / month during launch, no signup. Account sign-in and Pro plans are planned.
 
 **Privacy:** anonymous users send only the input you give us (image URL, prompt text, page URL). No browsing history, no clipboard scraping. Full policy: https://anycap.ai/privacy/extension
 

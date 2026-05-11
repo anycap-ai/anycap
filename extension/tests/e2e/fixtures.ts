@@ -23,6 +23,12 @@ export const test = base.extend<{ context: BrowserContext; extensionId: string }
       sw = await context.waitForEvent('serviceworker');
     }
     const extensionId = sw.url().split('/')[2];
+    await sw.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          chrome.storage.local.set({ onboardingCompleted: true }, () => resolve()),
+        ),
+    );
     await use(extensionId);
   },
 });

@@ -90,7 +90,7 @@ export function CrawlTab() {
         <Globe2 className="w-3.5 h-3.5" /> Use current tab URL
       </button>
 
-      {phase === 'error' && error && <ErrorBox error={error} />}
+      {phase === 'error' && error && <ErrorBox error={error} onRetry={run} />}
 
       <PrimaryButton onClick={run} loading={phase === 'loading'} disabled={!url.trim()}>
         {phase === 'loading' ? 'Reading…' : 'Crawl Page'}

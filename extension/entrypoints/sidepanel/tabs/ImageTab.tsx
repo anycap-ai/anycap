@@ -124,7 +124,7 @@ export function ImageTab() {
         </label>
       </div>
 
-      {phase === 'error' && error && <ErrorBox error={error} />}
+      {phase === 'error' && error && <ErrorBox error={error} onRetry={run} />}
 
       <PrimaryButton onClick={run} loading={phase === 'loading'} disabled={!prompt.trim()}>
         {phase === 'loading' ? 'Generating…' : 'Generate Image'}

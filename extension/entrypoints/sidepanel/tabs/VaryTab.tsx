@@ -177,7 +177,7 @@ export function VaryTab() {
         style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)' }}
         placeholder="Describe the variation..."
       />
-      {store.generation.phase === 'error' && <ErrorBox error={store.generation.error} />}
+      {store.generation.phase === 'error' && <ErrorBox error={store.generation.error} onRetry={handleGenerate} />}
       <PrimaryButton onClick={handleGenerate} loading={store.generation.phase === 'loading'}>
         {store.generation.phase === 'loading' ? 'Generating…' : 'Generate Variation'}
       </PrimaryButton>

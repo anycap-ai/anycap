@@ -56,7 +56,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		logger.Error("music execution not configured")
 		return model.GenerateMusicResult{}, model.ErrMusicExecutionNotConfigured
 	}
-	if s.credit == nil {
+	anonymous := model.IsAnonymousUserID(req.UserID)
+	if s.credit == nil && !anonymous {
 		logger.Error("music credit client not configured")
 		return model.GenerateMusicResult{}, model.ErrInternal
 	}
@@ -65,14 +66,19 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		return model.GenerateMusicResult{}, model.ErrAuthInvalid
 	}
 
-	balance, err := s.credit.GetBalance(ctx, req.UserID)
-	if err != nil {
-		logger.WithError(err).Error("music credit balance lookup failed")
-		return model.GenerateMusicResult{}, err
-	}
-	if balance.Available < 1 {
-		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for music request")
-		return model.GenerateMusicResult{}, model.ErrInsufficientCredit
+	minCredit := int64(1)
+	if anonymous {
+		minCredit = 0
+	} else {
+		balance, err := s.credit.GetBalance(ctx, req.UserID)
+		if err != nil {
+			logger.WithError(err).Error("music credit balance lookup failed")
+			return model.GenerateMusicResult{}, err
+		}
+		if balance.Available < 1 {
+			logger.WithField("available_credit", balance.Available).Warn("insufficient credit for music request")
+			return model.GenerateMusicResult{}, model.ErrInsufficientCredit
+		}
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityMusic, req.Model)
@@ -90,14 +96,19 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		return model.GenerateMusicResult{}, err
 	}
 
-	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
+	billing := s.billing
+	if anonymous {
+		billing = nil
+	}
+
+	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
 		Capability: "music.generate",
 		Provider:   model.BillingProviderNexusHub,
 		RequestID:  req.RequestID,
 		Model:      req.Model,
-		MinCredit:  1,
+		MinCredit:  minCredit,
 	}, execflow.Hooks[model.GenerateMusicResult]{
 		Invoke: func(ctx context.Context) (model.GenerateMusicResult, error) {
 			result, err := s.nexusHub.GenerateMusic(ctx, req, route)
@@ -110,14 +121,18 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 			return result, err
 		},
 		OnProviderSuccess: func(result model.GenerateMusicResult) execflow.ProviderSuccessMeta {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
 				ProviderStatus: result.Status,
-				CreditCost:     result.CreditCost,
+				CreditCost:     creditCost,
 			}
 		},
 		AfterSuccess: func(ctx context.Context, result *model.GenerateMusicResult) error {
-			if s.artifactPub == nil {
+			if s.artifactPub == nil || anonymous {
 				return nil
 			}
 			published, err := s.artifactPub.Publish(ctx, model.ArtifactPublishRequest{
@@ -135,8 +150,12 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 			return nil
 		},
 		BuildUsageRecords: func(result model.GenerateMusicResult, startedAt time.Time) *execflow.UsageRecords {
+			if anonymous {
+				return nil
+			}
 			eventID := externalid.Generate(externalid.PrefixUsageEvent)
 			runID := externalid.Generate(externalid.PrefixProviderRun)
+			creditCost := result.CreditCost
 			return &execflow.UsageRecords{
 				Event: &model.UsageEventRecord{
 					ID:            eventID,
@@ -147,8 +166,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 					Provider:      "nexushub",
 					RequestID:     req.RequestID,
 					Status:        result.Status,
-					EstimatedCost: result.CreditCost,
-					FinalCost:     result.CreditCost,
+					EstimatedCost: creditCost,
+					FinalCost:     creditCost,
 					OccurredAt:    startedAt.UTC(),
 				},
 				ProviderRun: &model.ProviderRunRecord{
@@ -160,7 +179,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 					AbilityKey:     route.AbilityKey,
 					ProviderStatus: result.Status,
 					ProviderUsage:  result.Usage,
-					ProviderCost:   result.CreditCost,
+					ProviderCost:   creditCost,
 					RawResult: map[string]any{
 						"model":   result.Model,
 						"outputs": result.Outputs,
@@ -170,6 +189,10 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 			}
 		},
 		BuildCallLog: func(result model.GenerateMusicResult, startedAt time.Time) *model.CallLog {
+			creditCost := result.CreditCost
+			if anonymous {
+				creditCost = 0
+			}
 			return &model.CallLog{
 				RequestID:  req.RequestID,
 				UserID:     req.UserID,
@@ -178,7 +201,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 				Model:      req.Model,
 				Status:     result.Status,
 				LatencyMS:  time.Since(startedAt).Milliseconds(),
-				CreditCost: result.CreditCost,
+				CreditCost: creditCost,
 			}
 		},
 	})
@@ -186,5 +209,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		return model.GenerateMusicResult{}, err
 	}
 
+	if anonymous {
+		result.CreditCost = 0
+	}
 	return result, nil
 }

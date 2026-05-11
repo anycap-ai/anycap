@@ -1,9 +1,15 @@
 # Next steps to make AnyCap Chrome truly production-ready
 
-> **State as of v0.2.0 (2026-04-27):** The extension ships, installs, demos every
-> capability in mock mode, has 78 unit + 27 E2E tests green, and 6 CWS marketing
-> assets ready. What follows is what stops it from being something we can hand to
-> 1,000 strangers tomorrow.
+> **State as of v0.2.0 refresh (2026-05-11):** The extension side-panel package is
+> code-complete for the v0.2 capability surface, with image/video/music/search/crawl,
+> first-run onboarding, clearer failure UX, anonymous install-id headers, and a
+> refreshed CWS-ready zip. The server now has a Postgres-backed anonymous trial
+> budget for persistent runtime modes. Unit/type/release gates pass, and demo E2E
+> previously passed in a headed Chromium run; all headed Playwright scripts are
+> now guarded by `ANYCAP_ALLOW_HEADED_E2E=1`. Public launch is still blocked by
+> production deployment of the local anonymous public-trial abuse controls,
+> production smoke, real-mode
+> staging/prod verification, YouTube/CWS submission, and dogfood.
 
 The list is grouped by **blocking** (must do before public install) and **important**
 (do before scaling beyond a closed beta). Each item names the file or surface to touch
@@ -13,59 +19,136 @@ and the rough effort.
 
 ## A. Blocking — required before public install
 
-### A1. Deploy server commit `3514a828` to `deploy/server-prod`
-**Where:** `anycap-server` parent monorepo · effort: 30 min (CI merge) + soak.
-That commit adds the anonymous extension routes (`/v1/extension/config`, anonymous
-rate-limiter on `/v1/{cap}/...` when `X-Anycap-Source: chrome-extension` is set).
-Until it's live in prod, `pnpm build` (real-mode) returns `401` to anonymous users.
+### A1. Deploy current server extension support to production
+**Where:** this repo, server deploy branches · effort: 30 min (CI merge) + soak.
+The server code now supports hybrid authenticated/anonymous extension traffic for
+image, video, music, web search, and web crawl. Anonymous extension requests use
+`X-Anycap-Source: chrome-extension` and `X-Anycap-Install-Id`, become
+`anon:<install-id>` principals, skip normal credit consume, and are limited by
+install ID with Postgres persistence in dev/prod/integration runtime modes. Until
+these changes are deployed, the real release package can still return
+`401`/`403`/`503` for anonymous users.
+
+The local server now uses a dual anonymous trial budget: the normalized install ID
+bucket plus a hashed TCP remote-address client bucket. This blocks install-ID
+rotation and ignores spoofed `X-Forwarded-For` values in local integration tests.
+Public rollout still needs the current server deployed before anonymous media
+generation is enabled in production.
+
+Local server readiness is covered by targeted Go tests for `internal/transport/http`,
+`internal/middleware`, and the image/video/music/web application packages. These
+tests pass locally; production still fails because the deployed server does not
+yet expose the new extension config route or anonymous web auth path.
+
+Use `docs/PRODUCTION-LAUNCH-RUNBOOK.md` for the exact deploy, dconf, smoke,
+real-mode E2E acknowledgement, CWS upload, and rollback sequence.
+
+Latest browser-free production smoke on 2026-05-11 with install ID
+`codex-smoke-20260511-final-recheck` still fails before media generation:
+`/v1/features` returns the required feature flags as enabled, but
+`/v1/extension/config` returns `404`, while
+`/v1/web/search` and `/v1/web/crawl` return `401 AUTH_INVALID` without a bearer
+token.
+
+Latest `pnpm launch:audit` on 2026-05-11 with install ID
+`codex-audit-20260511120715` confirms release artifacts and required features,
+then reports five automated blockers: production `/v1/extension/config` deploy,
+anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
+404 fallback body, deployed abuse-control acknowledgement, and approved
+real-mode E2E. The local web source now registers `/privacy/extension` in SEO
+routes and IA, includes breadcrumb JSON-LD, pins builds with `web/.node-version`,
+and builds under Node 22.16.0; production
+still needs a web deploy before the live URL can pass. `launch:audit` now checks
+the privacy page body instead of trusting HEAD-only status and requires
+`--abuse-control-passed` before the final CWS upload gate can turn green.
 
 **Verify after deploy:**
 ```bash
-curl -H "X-Anycap-Source: chrome-extension" \
-     https://api.anycap.ai/v1/extension/config
-# expect 200 with default model + trial budget JSON
+cd extension
+ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm smoke:server
+# expect all checks ok, not 401/403/503
+
+# Final browser-free CWS upload gate after abuse control is deployed
+# and approved real E2E has passed:
+ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed
+
+# Optional provider-costing media-only smoke:
+ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm smoke:server -- --include-media
 ```
 
-### A2. Per-user generation budget on the server
-**Where:** `anycap-server/internal/middleware/rate_limit.go` · effort: 1–2 days.
-Today the extension stores `trialCount` in `chrome.storage.local` — clearable by any
-user. Move trial accounting server-side keyed by anonymous install-id (already sent
-in `X-Anycap-Install-ID`), so the 3-free-gen budget can't be bypassed.
+### A2. Deploy anonymous public-trial abuse-control gate
+**Where:** server middleware or gateway/WAF · effort: included in server deploy.
+The local server-side control is implemented in `internal/middleware/anon_rate_limit.go`.
+Each anonymous extension request now consumes the normalized install-ID bucket and
+a hashed TCP remote-address client bucket. This keeps the existing 3-run launch
+trial but also blocks install-ID rotation from the same network peer. The code
+does not trust client-supplied `X-Forwarded-For`; the spoofing regression is
+covered by integration tests.
 
-### A3. Real-mode E2E against staging
-**Where:** new `tests/e2e/real-flow.spec.ts` · effort: half-day.
-Today our E2E is mock-only. Add one production-mode E2E that hits an
-`api.anycap.ai-staging` deployment for vary + image + crawl. Run it nightly in CI;
-flag if anything regresses on the server contract.
+Do not pass `--abuse-control-passed` until this server code is deployed to the
+target environment, or an equivalent gateway/WAF rule is active and recorded in
+the launch notes.
 
-### A4. CWS submission form filled and submitted
-**Where:** [Chrome Web Store dashboard](https://chrome.google.com/webstore/devconsole/) · effort: half-day.
-- Upload `releases/anycap-extension-0.2.0-chrome.zip`
-- Paste copy from `store-assets/description.md`
-- Upload all 6 PNGs from `store-assets/cws/`
-- Paste permission justifications from `LAUNCH_CHECKLIST.md`
-- Privacy policy URL: <https://anycap.ai/extension/privacy>
-- Submit. Review takes 1–10 days.
+### A3. Configure production feature rollout for anonymous extension users
+**Where:** dconf `feature_access` and `rate_limit` · effort: 30 min.
+Feature flags are still enforced after anonymous auth. Set rollout rules for
+`image.generate`, `video.generate`, `music.generate`, `web.search`, and `web.crawl`
+to allow the intended anonymous extension audience, then set explicit RPM values
+instead of relying on `default_rpm`.
 
-### A5. Privacy policy page lands
-**Where:** `web/src/app/[locale]/(seo)/extension/privacy/page.tsx` · effort: half-day.
-A stub already exists. Make it match what the extension actually does: anonymous
-install-id only, no PII collected, generated assets stored in user's Drive only if
-they're logged in, mock-mode does no network calls at all. Privacy is what blocks
-many CWS reviewers — make it concrete and short.
+Use these launch-slice examples as the merge source for production dconf:
 
-### A6. Demo video (60–120s)
-**Where:** new `store-assets/demo.mp4` · effort: half-day.
-CWS's "promotional video" slot massively boosts install rate. Script:
+- `configs/server/dconf/chrome_extension_launch.feature_access.example.json`
+- `configs/server/dconf/chrome_extension_launch.rate_limit.example.json`
+
+Anonymous extension principals do not have an email, so these five public trial
+features must use `rollout=all`; `rollout=groups` only works for authenticated
+users with an email.
+
+### A4. Real-mode E2E against staging
+**Where:** `tests/e2e/real-flow.spec.ts` · effort: 1 hour to wire into CI after staging is ready.
+A gated real-mode smoke spec now exists for anonymous image variation,
+image-from-text, and crawl. Run it manually against staging after A1/A2/A3, then wire
+it into nightly CI once the staging endpoint and dconf rollout are stable:
+
+```bash
+ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api-staging.anycap.ai pnpm e2e:real
+```
+
+Treat A4 as done only after this command is run green against the target
+environment. The spec intentionally opens headed Chromium because MV3 extension
+E2E cannot run headless; without `ANYCAP_ALLOW_HEADED_E2E=1`, the script exits
+before opening a browser window.
+
+### A5. Demo video (60–120s)
+**Where:** `store-assets/demo.mp4` + YouTube upload · effort: approval/upload.
+The local source video now exists: `pnpm render:demo` creates a 72s H.264
+1280×720 MP4 without opening a visible browser window. CWS still needs the
+approved YouTube upload URL. Script:
 1. (5s) Right-click an image → "Generate variation with AnyCap" → side panel opens
 2. (15s) Generate video tab — paste prompt → click → preview plays
 3. (15s) Crawl this page → markdown drops in
 4. (10s) History grid → click thumbnail → form rehydrated
 5. (5s) Settings — anonymous quota, default models
 
-Tools: `tests/e2e/cws-shots.spec.ts` already drives the side panel — extend to
-record an MP4 with `ffmpeg` (skill `ffmpeg-ops`) or use a screen-cap tool like
-Cleanshot.
+Tools: `pnpm render:cws` refreshes static CWS stills, and `pnpm render:demo`
+creates the local video source without opening a visible browser. For a narrated
+human screencast later, record an approved headed extension run with `ffmpeg` or
+a screen-cap tool like Cleanshot.
+
+### A6. CWS submission form filled and submitted
+**Where:** [Chrome Web Store dashboard](https://chrome.google.com/webstore/devconsole/) · effort: half-day.
+- Upload `releases/anycap-extension-0.2.0-chrome.zip`
+- Use `store-assets/cws-submission.md` as the form checklist
+- Paste copy from `store-assets/description.md`
+- Upload all 6 PNGs from `store-assets/cws/`
+- Paste permission justifications from `LAUNCH_CHECKLIST.md`
+- Privacy policy URL: <https://anycap.ai/privacy/extension> must pass the
+  `launch:audit` body check; production currently returns a Next.js 404 fallback
+  until the web route is published/fixed.
+- Submit only after anonymous abuse control, production smoke, approved real-mode
+  E2E, live privacy page, final audit, and YouTube demo upload are complete.
+  Review takes 1–10 days.
 
 ### A7. Dogfood: 5 people × 2 working days
 Pick 5 people across (1 marketing, 1 design, 1 dev, 2 random users). Have them
@@ -96,48 +179,42 @@ Code exists at `src/lib/auth.ts` but UI is hidden behind `false`. Required for:
 Validate the OAuth callback URL works inside the side-panel context (it didn't in
 v0.1 — `chrome.identity.launchWebAuthFlow` requires popup, not panel).
 
-### B3. First-run onboarding
-**Where:** new `entrypoints/sidepanel/components/OnboardingOverlay.tsx` · effort: 1 day.
-First time the side panel opens, show a 3-step coachmark:
-1. "Right-click any image to vary it" → arrow at the page
-2. "Use the tabs to switch capability"
-3. "Click a history thumbnail to reuse the form"
-
-Hide after first dismissal (`chrome.storage.local: onboardingCompleted=true`).
-
-### B4. Auto-update for sideloaded installs
+### B3. Auto-update for sideloaded installs
 **Where:** new `update.xml` hosted at `anycap.ai/extension/update.xml` · effort: half-day.
 Side-loaded extensions don't auto-update. CWS does. **Until** we're on CWS, host
 an `update.xml` that points to the latest release zip and add `update_url` in the
 manifest. After CWS approval, drop this — Chrome takes over.
 
-### B5. i18n — at minimum, en + zh
+### B4. i18n — at minimum, en + zh
 **Where:** new `entrypoints/sidepanel/i18n/` · effort: 2 days.
 Most of our team is bilingual; many of our prospect users in China are read-Chinese-first.
 Use Chrome's `chrome.i18n` (`_locales/en/messages.json`, `_locales/zh_CN/messages.json`).
 Start with side-panel UI; the prompt-template chips can lazy-translate later.
 
-### B6. Accessibility audit
+### B5. Accessibility audit
 **Where:** `entrypoints/sidepanel/` · effort: 1 day.
 - Tab nav: every button reachable via `Tab`, focus ring visible (probably is — confirm)
 - Screen reader: each tab has `aria-label`, `role="tab"` (✅ already), `aria-selected`
 - Color contrast: olive #5C7C4F on cream #F5F0E6 — verify ≥4.5:1 with axe
 - Reduced motion: respect `prefers-reduced-motion` (already a Settings toggle, also honor system)
 
-### B7. Performance budget
+### B6. Performance budget
 **Where:** `wxt.config.ts` build flags · effort: 2 hours.
 Bundle is 345 KB today. Set a budget:
 - `chunks/sidepanel-*.js` ≤ 80 KB gzipped
 - Total ≤ 200 KB gzipped
 Wire to CI: fail if exceeded. WXT supports rolldown; size is mostly React + lucide.
 
-### B8. Real-mode failure UX
-When the server is down or the user's network is offline, today we show "Generation
-failed: Failed to fetch". Replace with:
-- Detect `navigator.onLine === false` → "You're offline. Try again when reconnected."
-- HTTP 5xx → "AnyCap servers are having a moment. Try again in 30s." with retry button
-- HTTP 401 → "Login required" → links to OAuth (when B2 lands)
-- Mock mode: silent (dev tool only)
+### B7. Completed polish from this plan
+These items are already implemented in the current v0.2.0 refresh:
+- First-run onboarding with persistent dismissal and Settings replay.
+- Real-mode failure UX for offline, server, quota, auth, validation, and network cases.
+- Durable server-side anonymous trial budget keyed by install ID.
+- Privacy policy URL source aligned to `https://anycap.ai/privacy/extension`,
+  including explicit SEO route registration, IA entry, and breadcrumb JSON-LD;
+  production still needs to serve the page body instead of the current 404
+  fallback after web deploy.
+- CWS release package refreshed with minimized production host permissions.
 
 ---
 
@@ -178,10 +255,10 @@ both products have meaningful retention.
 
 | Week | Theme | Items |
 |---|---|---|
-| 1 | Server side & CWS | A1, A2, A4, A5 |
-| 2 | Confidence | A3, A6, A7 (dogfood) |
-| 3 | Quality bar | B1, B2, B6, B8 |
-| 4 | First-run polish | B3, B5, store launch |
+| 1 | Server side & abuse controls | A1, A2, A3 |
+| 2 | Confidence | A4, A5, A7 |
+| 3 | Quality bar | B1, B2, B5, B6 |
+| 4 | Launch polish | B3, B4, A6 |
 
 After CWS approval and 1k installs: pivot to **C1, C2** (analytics-driven content + Pro tier).
 
@@ -191,11 +268,13 @@ After CWS approval and 1k installs: pivot to **C1, C2** (analytics-driven conten
 
 Not when **we** like it — when:
 
-1. ✅ A new user can install from CWS in <60s (CWS approval + zero local setup)
-2. ✅ Every capability returns a real generation against `api.anycap.ai` for 3 free trials, no login required
-3. ✅ A failed generation is surfaced clearly, retryable, and we get a stack trace
-4. ✅ A user who logs in once can sync history across browsers
-5. ✅ We have a Discord or email channel that catches "this is broken for me" within 24h
-6. ✅ Dogfood week-2: ≥3/5 testers go back unprompted in a separate session
+1. A new user can install from CWS in <60s (CWS approval + zero local setup)
+2. Every capability returns a real generation against `api.anycap.ai` for free anonymous trials, no login required, with abuse controls active
+3. A failed generation is surfaced clearly, retryable, and observable by the team
+4. A user who logs in once can sync history across browsers
+5. We have a Discord or email channel that catches "this is broken for me" within 24h
+6. Dogfood week-2: >=3/5 testers go back unprompted in a separate session
 
-Today (v0.2.0) we have **(2)** in mock and the building blocks for the rest. Ship A1–A7 in two weeks and we cross the line.
+Today (v0.2.0 refresh) we have the client and server building blocks for **(2)**,
+but it is not true in production until A1/A2/A3/A4 pass. Ship A1-A7 before
+treating this as public-install ready.

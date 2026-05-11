@@ -5,6 +5,8 @@
     "image.edit": 10,
     "video.generate": 5,
     "music.generate": 8,
+    "web.search": 30,
+    "web.crawl": 30,
     "image.read": 30,
     "video.read": 20,
     "audio.read": 20,

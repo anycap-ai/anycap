@@ -3,10 +3,9 @@ package image
 import (
 	"context"
 	"encoding/json"
-	"strings"
 
-	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities/image"
+	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
@@ -45,6 +44,9 @@ func (h *Handler) RegisterAnonymousRoutes(group *route.RouterGroup) {
 // which selects the appropriate route from the model catalog.
 func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 	operation := ctx.Param("operation")
+	if operation == "" {
+		operation = string(model.OperationGenerate)
+	}
 	capability := "image." + operation
 	middleware.SetCapability(ctx, capability)
 	logger := logging.WithContext(c).WithFields(logging.Fields{
@@ -72,13 +74,13 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 		isPro = principal.IsPro
 	} else {
 		// Anonymous request: use install_id as user identifier.
-		installID := string(ctx.Request.Header.Peek("X-Anycap-Install-Id"))
-		if strings.TrimSpace(installID) == "" {
+		anonymousUserID, ok := middleware.ChromeExtensionAnonymousUserID(ctx)
+		if !ok {
 			logger.Warn("missing principal and install_id for image request")
 			ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
 			return
 		}
-		userID = "anon:" + installID
+		userID = anonymousUserID
 	}
 
 	wm := image.ResolveWatermark(isPro, payload.Watermark)

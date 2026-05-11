@@ -1,8 +1,8 @@
 # Chrome Web Store assets — v0.2.0
 
-Generated 2026-04-27 from `store-assets/composer/*.html` via
-`npx playwright test tests/e2e/cws-shots.spec.ts`. Re-run that command to
-regenerate any of these.
+Generated 2026-05-10 from `store-assets/composer/*.html` via
+`pnpm render:cws`. The renderer uses headless Chromium and does not open a
+visible browser window.
 
 ## What goes where on the CWS submission form
 
@@ -20,14 +20,15 @@ later (e.g. video/music output) without breaking layout.
 
 ## Submission form copy
 
-Description and permission justifications: see `../description.md` and
-`../../LAUNCH_CHECKLIST.md`.
+Description: see `../description.md`.
+Permission justifications: see `../permission-justifications.md`.
+Full submission checklist: see `../cws-submission.md`.
 
 ## Re-rendering
 
 ```bash
 # After updating side-panel screenshots in tests/e2e/feishu-shots/
-npx playwright test tests/e2e/cws-shots.spec.ts
+pnpm render:cws
 # All 6 PNGs regenerate from store-assets/composer/*.html
 ```
 

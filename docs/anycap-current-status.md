@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-21
+> Last updated: 2026-05-11
 
 ## 1. Capabilities (Cap)
 
@@ -67,7 +67,25 @@ Both tools run entirely locally (no server connection needed). Non-blocking mode
 
 Local files can be used directly in CLI commands (`--file`). The CLI handles upload automatically via presigned URLs. Upload limits: images 20 MB, audio 50 MB, video 200 MB.
 
-## 2. Infrastructure (Infra)
+## 2. Chrome Extension
+
+The Chrome extension is a Manifest V3 side-panel client for the same AnyCap server API used by the CLI and dashboard.
+
+| Surface | Current status |
+|---------|----------------|
+| Side panel | 7 tabs: Vary, Image, Video, Music, Search, Crawl, Settings |
+| Context menus | 7 right-click flows: image variation, image/video/music from selected text, search selected text, crawl current page, crawl link |
+| First run | Onboarding overlay is shown until dismissed and can be replayed from Settings |
+| Anonymous mode | Extension sends `X-Anycap-Source: chrome-extension` plus `X-Anycap-Install-Id` when no auth token is present |
+| Authenticated mode | If an auth token exists, extension requests use the normal `Authorization: Bearer ...` path |
+| Release package | `extension/releases/anycap-extension-0.2.0-chrome.zip` is the current Chrome Web Store-ready package |
+| Release checks | `pnpm preflight:local` runs the browser-free release rebuild, release zip SHA-256 doc sync, unit/type, and release-verifier gate; `pnpm verify:release` validates the CWS zip, `.output`/`releases` zip sync, CWS submission hash, extension icon dimensions, runtime manifest entrypoints and referenced runtime files, content script `file://` exclusion, support scripts, local preflight, dev/staging leakage, store asset dimensions, demo MP4 metadata, headless CWS/demo renderer wiring, listing copy, permission justifications, CWS submission guide including demo-video YouTube instructions, Chrome extension launch dconf examples, production launch runbook, visible Chrome approval docs, and final launch docs requiring `--abuse-control-passed --real-e2e-passed`; `pnpm render:cws` refreshes CWS screenshots and promo assets without opening a visible browser; `pnpm render:demo` creates `store-assets/demo.mp4` without opening a visible browser; `pnpm smoke:server` validates required feature flags, deployed anonymous extension server/dconf paths, and extension config/search/crawl response shapes without opening a browser, with optional image-only or media-only provider checks that stay within the 3-run anonymous trial; `pnpm launch:audit` aggregates browser-free launch blockers, GETs the live Chrome Web Store privacy policy URL and validates the page body is not a Next.js 404 fallback, requires `--abuse-control-passed`, and accepts `--real-e2e-passed` after the approved headed E2E run completes |
+
+Server code supports hybrid authenticated/anonymous Chrome extension calls for image generation, video generation, music generation, web search, and web crawl. Anonymous extension principals use an `anon:<install-id>` user ID and skip normal credit balance/consume flows. Server middleware now normalizes install IDs before using them in anonymous principals or trial buckets, accepting only 1-128 characters from `[A-Za-z0-9_-]`, and consumes both an install-ID trial bucket plus a hashed TCP remote-address client bucket so rotating `X-Anycap-Install-Id` or spoofing `X-Forwarded-For` does not bypass the local anonymous trial gate. Stub mode uses the in-memory trial store; persistent runtime modes use the `anonymous_trial_buckets` Postgres table so trial consumption survives server restarts. Targeted local Go tests cover the anonymous extension router, middleware, client-bucket abuse control, and image/video/music/web application paths. The extension search client now sends `max_results` to match the server contract and maps server `description` fields into the UI `snippet` field. Production rollout still requires deploying the server changes and configuring feature-access dconf so anonymous extension users are allowed for the enabled capabilities; pass `--abuse-control-passed` only after the deployed server contains the dual-bucket anonymous trial middleware or an equivalent gateway rule is active. The web source now explicitly registers `/privacy/extension` in SEO route definitions and IA, the page includes breadcrumb JSON-LD, and `web/.node-version` pins builds to Node 22.16.0; browser-free web checks and a Node 22.16.0 production build include both `/privacy/extension` and `/[locale]/privacy/extension`. Latest browser-free production smoke on 2026-05-11 with install ID `codex-smoke-20260511-final-recheck` still fails before media generation: `/v1/features` returns the required feature flags as enabled, `/v1/extension/config` returns `404`, and anonymous web search/crawl return `401 AUTH_INVALID`. Latest launch audit on 2026-05-11 with install ID `codex-audit-20260511120715` confirms release artifacts and required feature flags, then reports blockers for production extension config deploy, anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js 404 fallback body, missing deployed abuse-control acknowledgement, and approved real-mode E2E. `extension/docs/COMPLETION-AUDIT.md` records the prompt-to-artifact completion audit; `extension/docs/PRODUCTION-LAUNCH-RUNBOOK.md` is the current deploy/dconf/smoke/CWS/rollback runbook.
+
+Chrome release host permissions are limited to `https://api.anycap.ai/*` and `https://anycap.ai/*`. Non-release builds add the `WXT_API_BASE` origin to host permissions so staging smoke tests can target a non-production API. OAuth `identity` permission is optional and only requested when login UI is enabled.
+
+## 3. Infrastructure (Infra)
 
 ### Drive — Cloud File Storage
 
@@ -185,7 +203,7 @@ Current Phase 1 behavior:
 - The same stop/reset/fork/fire controls are exposed through protected HTTP APIs and the `anycap agent conversations ...` CLI group, not only through Feishu slash-style commands.
 - Fallback server-owned outbound Feishu replies can use either the legacy reply proxy API or direct Feishu OpenAPI send with App ID/App Secret.
 
-## 3. CLI
+## 4. CLI
 
 ### Full Command Tree
 
@@ -271,7 +289,7 @@ Auth0 JWT users are mapped to local AnyCap users through `auth_identities`. The 
 
 CLI always shows all commands. Feature gating is enforced on the server side. When a capability or control surface is disabled, the server returns a structured error and hint.
 
-## 4. Skill Files
+## 5. Skill Files
 
 Agent-facing skill documentation, following the entry skill + on-demand loading pattern.
 
@@ -292,7 +310,7 @@ Agent-facing skill documentation, following the entry skill + on-demand loading 
 
 Distributed via GitHub. Agents install with `anycap skill install`.
 
-## 5. Dashboard
+## 6. Dashboard
 
 ### User Dashboard
 
@@ -316,7 +334,7 @@ Dashboard pages share a unified light olive/sage control-surface shell with cons
 - CLI-initiated login (redirect flow)
 - Device code flow (for headless environments)
 
-## 6. Website
+## 7. Website
 
 ### Landing
 
@@ -344,7 +362,7 @@ Home and `/agent` keep HTML as the default human-facing response. Markdown negot
 - Auto-discovery sitemap
 - Dynamic OG image generation
 
-## 7. Billing & Usage
+## 8. Billing & Usage
 
 - **Credit-based billing**: each capability call has a credit cost
 - **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
@@ -366,9 +384,9 @@ Home and `/agent` keep HTML as the default human-facing response. Markdown negot
 - **Payment integration boundary**: AnyCap server maps internal `pack_id -> price_id` and calls the external Payment Service; web clients never talk to Payment directly
 - **Payment callback foundation**: AnyCap now has a configurable RocketMQ consumer foundation for Payment callback events, with idempotent `payment_event_receipts` storage for `credits_granted` and `payment_failed`
 - **Credit authority**: Payment remains the source of truth for post-payment credit grants; AnyCap does not grant credits again on callback
-- **Rate limiting**: per-user, per-capability
+- **Rate limiting**: per-user, per-capability; Chrome extension anonymous requests also have an install-ID trial budget with Postgres persistence in persistent runtime modes
 
-## 8. Feedback
+## 9. Feedback
 
 Built-in feedback loop via `anycap feedback`:
 
@@ -376,7 +394,7 @@ Built-in feedback loop via `anycap feedback`:
 - **Context**: can attach request ID from a previous call
 - **Notifications**: feedback forwarded to team via Lark webhook
 
-## 9. Distribution
+## 10. Distribution
 
 | Channel | What |
 |---------|------|
@@ -385,3 +403,4 @@ Built-in feedback loop via `anycap feedback`:
 | GitHub repo | Skill files (latest `main`) |
 | anycap.ai | Website (Cloudflare Pages) |
 | `curl \| sh` | One-line install (guided in skill files) |
+| Chrome extension zip | Current CWS-ready package under `extension/releases/` |

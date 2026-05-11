@@ -5,6 +5,7 @@ export type AnyCapErrorCode =
   | 'NETWORK_ERROR'
   | 'SERVER_ERROR'
   | 'CSP_BLOCKED'
+  | 'OFFLINE'
   | 'UNKNOWN_ERROR';
 
 export class AnyCapError extends Error {
@@ -18,8 +19,16 @@ export class AnyCapError extends Error {
   }
 }
 
+export function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
 export function classifyError(err: unknown): AnyCapError {
   if (err instanceof AnyCapError) return err;
+
+  if (isOffline()) {
+    return new AnyCapError('OFFLINE', "You're offline. Check your connection and try again.");
+  }
 
   if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('network'))) {
     return new AnyCapError('NETWORK_ERROR', 'Network error. Please check your connection and try again.');
@@ -37,6 +46,9 @@ export function classifyHttpError(status: number, body?: { code?: string; messag
   if (status === 401) {
     return new AnyCapError('UNAUTHORIZED', message || 'Session expired. Please sign in again.', status);
   }
+  if (status === 503) {
+    return new AnyCapError('SERVER_ERROR', body?.message || 'AnyCap servers are temporarily unavailable. Please try again in a moment.', status);
+  }
   if (status >= 500) {
     return new AnyCapError('SERVER_ERROR', message || 'Server error. Please try again later.', status);
   }
@@ -49,8 +61,9 @@ export function errorMessage(code: AnyCapErrorCode): string {
     UNAUTHORIZED: 'Your session has expired. Please sign in again.',
     IMAGE_TOO_SMALL: 'Image is too small. Minimum dimension is 256 pixels.',
     NETWORK_ERROR: 'Network error. Please check your connection and try again.',
-    SERVER_ERROR: 'Server error. Please try again later.',
+    SERVER_ERROR: 'AnyCap servers are having a moment. Please try again.',
     CSP_BLOCKED: 'This page blocks image access. Try opening the image in a new tab first.',
+    OFFLINE: "You're offline. Check your connection and try again.",
     UNKNOWN_ERROR: 'Something went wrong. Please try again.',
   };
   return map[code];

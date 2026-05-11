@@ -1,5 +1,9 @@
 package model
 
+import "strings"
+
+const AnonymousUserIDPrefix = "anon:"
+
 type Principal struct {
 	UserID         string   `json:"user_id"`
 	APIKeyID       string   `json:"api_key_id,omitempty"`
@@ -11,6 +15,10 @@ type Principal struct {
 	Name           string   `json:"name,omitempty"`
 	Picture        string   `json:"picture,omitempty"`
 	IsPro          bool     `json:"is_pro,omitempty"`
+}
+
+func IsAnonymousUserID(userID string) bool {
+	return strings.HasPrefix(userID, AnonymousUserIDPrefix)
 }
 
 type AuthUser struct {

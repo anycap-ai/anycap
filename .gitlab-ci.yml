@@ -26,7 +26,7 @@ stages:
 
 # ---------------------------------------------------------------------------
 # Extension: build + test
-# Runs on main, MRs, and feature/fix/chore branches when extension files change.
+# Runs on main, MRs, and feature/fix/chore branches when extension release inputs change.
 # ---------------------------------------------------------------------------
 
 .extension_rules: &extension_rules
@@ -34,12 +34,15 @@ stages:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
       changes:
         - extension/**/*
+        - configs/server/dconf/chrome_extension_launch.*.json
     - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore)([\/-].+)?$/
       changes:
         - extension/**/*
+        - configs/server/dconf/chrome_extension_launch.*.json
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - extension/**/*
+        - configs/server/dconf/chrome_extension_launch.*.json
     - when: never
 
 build:extension:
@@ -58,11 +61,11 @@ build:extension:
     - corepack enable
     - cd extension
     - pnpm install --frozen-lockfile
-    - pnpm build
-    - pnpm test
+    - pnpm preflight:local
   artifacts:
     paths:
       - extension/.output/
+      - extension/releases/
     expire_in: 1 day
 
 variables:

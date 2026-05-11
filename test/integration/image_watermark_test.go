@@ -32,7 +32,18 @@ func TestImageGenerate_WatermarkParam(t *testing.T) {
 			DisplayName: "FLUX Dev",
 			Status:      "active",
 			Operations: map[model.Operation]model.OperationSpec{
-				model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "flux-dev"}}},
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "flux-dev"}},
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "flux-dev",
+						GenType:    string(model.CapabilityImage),
+						AlgoType:   "txt_2_img",
+						Mode:       model.ModeTextToImage,
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
 			},
 		},
 	})

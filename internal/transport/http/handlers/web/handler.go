@@ -33,6 +33,13 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityPOST(g, "/crawl", "web.crawl", h.Crawl)
 }
 
+// RegisterAnonymousRoutes registers web endpoints for anonymous Chrome
+// extension trials. It must be mounted behind the anonymous rate limiter.
+func (h *Handler) RegisterAnonymousRoutes(group *route.RouterGroup) {
+	group.POST("/web/search", h.Search)
+	group.POST("/web/crawl", h.Crawl)
+}
+
 // ---- Response DTOs (strip internal details) ----
 
 // groundingSearchResponse is the client-facing response for grounding search.
@@ -53,12 +60,11 @@ func (h *Handler) Search(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	principal, ok := middleware.GetPrincipal(ctx)
-	if !ok || principal == nil {
+	reqCtx, ok := h.requestContext(c, ctx)
+	if !ok {
 		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
-	reqCtx := middleware.ContextWithUserID(c, principal.UserID)
 
 	var req model.WebSearchRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -129,12 +135,11 @@ func (h *Handler) Crawl(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	principal, ok := middleware.GetPrincipal(ctx)
-	if !ok || principal == nil {
+	reqCtx, ok := h.requestContext(c, ctx)
+	if !ok {
 		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
 		return
 	}
-	reqCtx := middleware.ContextWithUserID(c, principal.UserID)
 
 	var req model.WebCrawlRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
@@ -156,6 +161,18 @@ func (h *Handler) Crawl(c context.Context, ctx *app.RequestContext) {
 	}
 
 	handlers.WriteSuccess(c, ctx, result)
+}
+
+func (h *Handler) requestContext(c context.Context, ctx *app.RequestContext) (context.Context, bool) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if ok && principal != nil {
+		return middleware.ContextWithUserID(c, principal.UserID), true
+	}
+	anonymousUserID, ok := middleware.ChromeExtensionAnonymousUserID(ctx)
+	if !ok {
+		return nil, false
+	}
+	return middleware.ContextWithUserID(c, anonymousUserID), true
 }
 
 func classifyWebError(err error) (httpStatus int, code string, message string) {

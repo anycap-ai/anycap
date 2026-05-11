@@ -73,7 +73,7 @@ export function SearchTab() {
         style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)' }}
       />
 
-      {phase === 'error' && error && <ErrorBox error={error} />}
+      {phase === 'error' && error && <ErrorBox error={error} onRetry={run} />}
 
       <PrimaryButton onClick={run} loading={phase === 'loading'} disabled={!query.trim()}>
         {phase === 'loading' ? 'Searching…' : 'Search'}

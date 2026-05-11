@@ -162,9 +162,23 @@ describe('api', () => {
     expect(cfg).toBeNull();
   });
 
-  it('throws NETWORK_ERROR when fetch fails', async () => {
+  it('throws OFFLINE when navigator.onLine is false', async () => {
+    const originalNavigator = (globalThis as any).navigator;
+    (globalThis as any).navigator = { onLine: false };
+
+    const { generateVariation } = await import('../../src/lib/api');
+    await expect(
+      generateVariation({ prompt: 'test', model: 'm', images: [] })
+    ).rejects.toMatchObject({ code: 'OFFLINE' });
+
+    (globalThis as any).navigator = originalNavigator;
+  });
+
+  it('throws NETWORK_ERROR when fetch fails while online', async () => {
     const originalFetch = globalThis.fetch;
+    const originalNavigator = (globalThis as any).navigator;
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) as any;
+    (globalThis as any).navigator = { onLine: true };
 
     const { generateVariation } = await import('../../src/lib/api');
     await expect(
@@ -172,6 +186,7 @@ describe('api', () => {
     ).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
 
     globalThis.fetch = originalFetch;
+    (globalThis as any).navigator = originalNavigator;
   });
 
   it('throws SERVER_ERROR on extension config 500', async () => {
@@ -193,5 +208,37 @@ describe('api', () => {
       code: 'SERVER_ERROR',
       message: 'config down',
     });
+  });
+
+  it('searchWeb sends max_results and normalizes server descriptions to snippets', async () => {
+    let capturedBody: any = null;
+    server.use(
+      http.post(`${API_BASE}/v1/web/search`, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({
+          id: 'req_search',
+          status: 'success',
+          data: {
+            mode: 'general',
+            query: 'AnyCap',
+            results: [
+              {
+                title: 'AnyCap',
+                url: 'https://anycap.ai',
+                description: 'Agent capability runtime',
+                content: '# AnyCap',
+              },
+            ],
+            credit_cost: 0,
+          },
+        });
+      })
+    );
+
+    const { searchWeb } = await import('../../src/lib/api');
+    const result = await searchWeb({ query: 'AnyCap', topK: 6 });
+
+    expect(capturedBody).toEqual({ query: 'AnyCap', max_results: 6, crawl_results: 0 });
+    expect(result.results[0].snippet).toBe('Agent capability runtime');
   });
 });

@@ -22,7 +22,9 @@ import (
 	pageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/page"
 	systemapp "gitlab.knoffice.tech/engineering/anycap/internal/application/system"
 	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
+	webapp "gitlab.knoffice.tech/engineering/anycap/internal/application/web"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/apikey"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/calllog"
@@ -48,6 +50,7 @@ import (
 	pagehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/page"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/system"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/video"
+	webhandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/web"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/presenter"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 	commonmw "gitlab.knoffice.tech/open/common-go/hertz/middleware"
@@ -69,6 +72,29 @@ type testIdentityTokenAuthenticator struct {
 type fakeRouterPaymentClient struct {
 	checkout model.CheckoutSession
 	err      error
+}
+
+type fakeRouterWebCrawler struct{}
+
+type fakeRouterWebGeneralSearchProvider struct{}
+
+func (fakeRouterWebCrawler) Crawl(_ context.Context, url string) (port.CrawlOutput, error) {
+	return port.CrawlOutput{
+		Title:    "Example page",
+		Markdown: "# Example page\n\n" + url,
+	}, nil
+}
+
+func (fakeRouterWebGeneralSearchProvider) SearchGeneral(_ context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error) {
+	return model.WebSearchGeneralResult{
+		Mode:  "general",
+		Query: req.Query,
+		Results: []model.WebSearchResult{{
+			Title:       "Example result",
+			URL:         "https://example.com",
+			Description: "A search result",
+		}},
+	}, nil
 }
 
 func (a *testIdentityTokenAuthenticator) AuthenticateIdentityToken(_ context.Context, rawToken string) (model.Principal, error) {
@@ -722,6 +748,11 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	videoHandler := video.NewHandler(videoapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	musicHandler := music.NewHandler(musicapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	webService := webapp.NewService(fakeRouterWebCrawler{})
+	webService.SetGeneralSearchProvider(fakeRouterWebGeneralSearchProvider{})
+	webService.SetCreditClient(creditClient)
+	webService.SetCallLogRepo(callLogs)
+	webHandler := webhandler.NewHandler(webService)
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
 	videoCatalog := catalog.NewHandler(catalogService, model.CapabilityVideo)
@@ -773,6 +804,11 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 		middleware.Auth(apiKeys, identityTokens),
 		middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}),
 	}
+	extensionMiddlewares := []app.HandlerFunc{
+		middleware.AuthOrChromeExtensionAnonymous(apiKeys, identityTokens),
+		middleware.RateLimit(ratelimit.NewInMemoryLimiter(), staticCapabilityRateLimitResolver{defaultRPM: rpm, overrides: overrides}),
+		middleware.NewAnonRateLimit().Middleware(),
+	}
 	engine := NewRouter(RouterConfig{
 		Addr: ":0",
 		Middlewares: []app.HandlerFunc{
@@ -792,12 +828,17 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 			videoCatalog,
 			musicCatalog,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
+				extension := group.Group("", extensionMiddlewares...)
+				imageHandler.RegisterAnonymousRoutes(extension)
+				videoHandler.RegisterRoutes(extension)
+				musicHandler.RegisterRoutes(extension)
+				webHandler.RegisterRoutes(extension)
+			}),
+			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", protectedMiddlewares...)
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
-				videoHandler.RegisterRoutes(protected)
-				musicHandler.RegisterRoutes(protected)
 				if !separateAdminServer {
 					modelRouteHandler.RegisterRoutes(protected)
 				}
@@ -1727,6 +1768,82 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	resp = ut.PerformRequest(h.engine.Engine, http.MethodGet, "/v1/status", nil, ut.Header{Key: "Authorization", Value: "Bearer " + rawKey})
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 after logout revoke, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestRouter_ChromeExtensionAnonymousRoutes(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		body string
+	}{
+		{
+			name: "image generate",
+			path: "/v1/image/generate",
+			body: `{"prompt":"paper crane","model":"flux-dev"}`,
+		},
+		{
+			name: "video generate",
+			path: "/v1/video/generate",
+			body: `{"prompt":"paper crane","model":"veo-mini"}`,
+		},
+		{
+			name: "music generate",
+			path: "/v1/music/generate",
+			body: `{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`,
+		},
+		{
+			name: "web search",
+			path: "/v1/web/search",
+			body: `{"query":"agent capability runtime"}`,
+		},
+		{
+			name: "web crawl",
+			path: "/v1/web/crawl",
+			body: `{"url":"https://example.com/article"}`,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := newRouterForTest(t, 10)
+			body := []byte(tc.body)
+			resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, tc.path,
+				&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+				ut.Header{Key: "Content-Type", Value: "application/json"},
+				ut.Header{Key: "X-Anycap-Source", Value: "chrome-extension"},
+				ut.Header{Key: "X-Anycap-Install-Id", Value: "install-" + string(rune('a'+i))},
+			)
+			if resp.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d body=%s", resp.Code, resp.Body.String())
+			}
+		})
+	}
+}
+
+func TestRouter_ChromeExtensionAnonymousRateLimit(t *testing.T) {
+	h, _ := newRouterForTest(t, 10)
+	body := []byte(`{"prompt":"paper crane","model":"flux-dev"}`)
+	for i := 0; i < 3; i++ {
+		resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate",
+			&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+			ut.Header{Key: "Content-Type", Value: "application/json"},
+			ut.Header{Key: "X-Anycap-Source", Value: "chrome-extension"},
+			ut.Header{Key: "X-Anycap-Install-Id", Value: "install-rate-limit"},
+		)
+		if resp.Code != http.StatusOK {
+			t.Fatalf("expected request %d to return 200, got %d body=%s", i+1, resp.Code, resp.Body.String())
+		}
+	}
+
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+		ut.Header{Key: "X-Anycap-Source", Value: "chrome-extension"},
+		ut.Header{Key: "X-Anycap-Install-Id", Value: "install-rate-limit"},
+	)
+	if resp.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected fourth request 429, got %d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

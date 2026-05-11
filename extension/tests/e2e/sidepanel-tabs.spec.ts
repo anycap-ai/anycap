@@ -20,6 +20,29 @@ test('side panel: all 6 tabs render and switch correctly', async ({ context, ext
   }
 });
 
+test('side panel: first-run onboarding can be dismissed and stays dismissed', async ({
+  context,
+  extensionId,
+}) => {
+  const sw = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await sw.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        chrome.storage.local.set({ onboardingCompleted: false }, () => resolve()),
+      ),
+  );
+
+  const panel = await context.newPage();
+  await openPanel(panel, extensionId);
+
+  await expect(panel.getByText('Right-click to start')).toBeVisible();
+  await panel.getByRole('button', { name: 'Skip onboarding' }).click();
+  await expect(panel.getByText('Right-click to start')).toBeHidden();
+
+  await panel.reload();
+  await expect(panel.getByText('Right-click to start')).toBeHidden();
+});
+
 test('side panel: image tab generates a result against the mock', async ({ context, extensionId }) => {
   const panel = await context.newPage();
   await openPanel(panel, extensionId);

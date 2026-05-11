@@ -1,6 +1,6 @@
 import { API_BASE, MOCK_MODE } from './constants';
 import { getStored } from './storage';
-import { classifyError, classifyHttpError, AnyCapError } from './errors';
+import { classifyError, classifyHttpError, AnyCapError, isOffline } from './errors';
 import {
   generateVariationMock,
   fetchExtensionConfigMock,
@@ -75,6 +75,7 @@ export type SearchResult = {
   title: string;
   url: string;
   snippet: string;
+  description?: string;
   source?: string;
 };
 
@@ -112,6 +113,9 @@ async function getHeaders(): Promise<Record<string, string>> {
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isOffline()) {
+    throw classifyError(new Error('offline'));
+  }
   const url = `${API_BASE}${path}`;
   const headers = await getHeaders();
   let res: Response;
@@ -190,10 +194,17 @@ export async function generateMusic(req: GenerateMusicRequest): Promise<Generate
 
 export async function searchWeb(req: SearchWebRequest): Promise<SearchWebResult> {
   if (MOCK_MODE) return searchWebMock(req);
-  return fetchJson<SearchWebResult>('/v1/web/search', {
+  const data = await fetchJson<SearchWebResult>('/v1/web/search', {
     method: 'POST',
-    body: JSON.stringify({ query: req.query, top_k: req.topK ?? 8 }),
+    body: JSON.stringify({ query: req.query, max_results: req.topK ?? 8, crawl_results: 0 }),
   });
+  return {
+    ...data,
+    results: data.results.map((result) => ({
+      ...result,
+      snippet: result.snippet ?? result.description ?? '',
+    })),
+  };
 }
 
 export async function crawlPage(req: CrawlPageRequest): Promise<CrawlPageResult> {

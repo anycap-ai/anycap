@@ -21,6 +21,7 @@ import {
 } from '@/src/lib/settings';
 import { getAuthState } from '@/src/lib/quota';
 import { MOCK_MODE } from '@/src/lib/constants';
+import { setStored } from '@/src/lib/storage';
 
 const IMAGE_MODELS = ['nano-banana-2', 'seedream-5', 'flux-dev'];
 const VIDEO_MODELS = ['veo-3-1', 'kling-2', 'sora-1'];
@@ -61,6 +62,11 @@ export function SettingsTab() {
   const onResetSettings = async () => {
     const fresh = await resetSettings();
     setS(fresh);
+    setSavedAt(Date.now());
+  };
+
+  const onReplayOnboarding = async () => {
+    await setStored('onboardingCompleted', false);
     setSavedAt(Date.now());
   };
 
@@ -126,6 +132,7 @@ export function SettingsTab() {
           <div className="font-medium text-text-primary">Reset all settings to defaults</div>
           <div className="text-[11px] text-text-neutral mt-0.5">Models, watermark, motion — back to factory.</div>
         </button>
+        <ReplayOnboardingButton onReplay={onReplayOnboarding} />
       </Section>
 
       <Section icon={Info} title="About">
@@ -274,6 +281,21 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-text-muted">{label}</span>
       <span className="text-text-primary font-medium">{value}</span>
     </div>
+  );
+}
+
+function ReplayOnboardingButton({ onReplay }: { onReplay: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onReplay}
+      className="w-full text-left text-sm border border-border-card bg-surface-input rounded-xl px-3 py-2.5 hover:bg-surface-hover hover:border-border-input-hover card-hover"
+    >
+      <div className="font-medium text-text-primary">Replay first-run guide</div>
+      <div className="text-[11px] text-text-neutral mt-0.5">
+        Show the quick side-panel walkthrough again.
+      </div>
+    </button>
   );
 }
 

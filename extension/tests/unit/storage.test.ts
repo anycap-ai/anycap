@@ -33,6 +33,7 @@ describe('storage', () => {
     const { getStored } = await import('../../src/lib/storage');
     expect(await getStored('trialCount')).toBe(0);
     expect(await getStored('authToken')).toBeNull();
+    expect(await getStored('onboardingCompleted')).toBe(false);
   });
 
   it('removes a key', async () => {

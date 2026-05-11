@@ -1,0 +1,10 @@
+{
+  "default_rpm": 60,
+  "capabilities": {
+    "image.generate": 10,
+    "video.generate": 5,
+    "music.generate": 8,
+    "web.search": 30,
+    "web.crawl": 30
+  }
+}

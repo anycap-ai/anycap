@@ -28,6 +28,12 @@ func (h *Handler) RegisterRoutes(group *route.RouterGroup) {
 	middleware.CapabilityPOST(g, "/generate", "music.generate", h.Generate)
 }
 
+// RegisterAnonymousRoutes registers music generation for anonymous Chrome
+// extension trials. It must be mounted behind the anonymous rate limiter.
+func (h *Handler) RegisterAnonymousRoutes(group *route.RouterGroup) {
+	group.POST("/music/generate", h.Generate)
+}
+
 func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithFields(logging.Fields{
 		"capability": "music.generate",
@@ -41,16 +47,24 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
-	if !ok {
-		logger.Warn("missing principal for music request")
-		ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
-		return
+	var userID, apiKeyID string
+	if ok {
+		userID = principal.UserID
+		apiKeyID = principal.APIKeyID
+	} else {
+		anonymousUserID, ok := middleware.ChromeExtensionAnonymousUserID(ctx)
+		if !ok {
+			logger.Warn("missing principal and install_id for music request")
+			ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
+			return
+		}
+		userID = anonymousUserID
 	}
 
 	result, err := h.service.Generate(c, model.GenerateMusicRequest{
 		RequestID:        trace.GetTraceID(c),
-		UserID:           principal.UserID,
-		APIKeyID:         principal.APIKeyID,
+		UserID:           userID,
+		APIKeyID:         apiKeyID,
 		Prompt:           payload.Prompt,
 		Model:            payload.Model,
 		Mode:             model.Mode(payload.Mode),

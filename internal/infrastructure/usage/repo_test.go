@@ -118,6 +118,27 @@ func TestUsageRepo_InsertUsageEvent(t *testing.T) {
 	}
 }
 
+func TestUsageRepo_InsertUsageEventSkipsAnonymousUser(t *testing.T) {
+	db := &fakeUsageDB{}
+	repo := NewRepo(db)
+
+	err := repo.InsertUsageEvent(context.Background(), model.UsageEventRecord{
+		ID:          "uevt_anon",
+		UserID:      model.AnonymousUserIDPrefix + "install-1",
+		ProductArea: "capability",
+		Action:      "image.generate",
+		Provider:    "nexushub",
+		RequestID:   "req_anon",
+		Status:      "success",
+	})
+	if err != nil {
+		t.Fatalf("InsertUsageEvent() error = %v", err)
+	}
+	if db.query != "" {
+		t.Fatalf("expected anonymous usage event insert to be skipped, query=%q", db.query)
+	}
+}
+
 func TestUsageRepo_InsertProviderRun(t *testing.T) {
 	db := &fakeUsageDB{}
 	repo := NewRepo(db)
