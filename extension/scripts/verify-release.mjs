@@ -48,7 +48,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 175;
+const CURRENT_UNIT_TEST_COUNT = 176;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
   {
     path: 'README.md',
@@ -645,6 +645,9 @@ export function validateProductionLaunchRunbook(text) {
   }
   if (!source.includes('pnpm smoke:server -- --base-url https://api.anycap.ai')) {
     errors.push('docs/PRODUCTION-LAUNCH-RUNBOOK.md must include browser-free production smoke');
+  }
+  if (!source.includes(`${CURRENT_UNIT_TEST_COUNT} unit tests`)) {
+    errors.push(`docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: ${CURRENT_UNIT_TEST_COUNT}`);
   }
   if (
     !source.includes('pnpm e2e:real') ||
