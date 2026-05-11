@@ -20,9 +20,9 @@ and CWS submission gates pass.
 | Production manifest has minimized permissions | `pnpm verify:release`; manifest host permissions limited to `https://api.anycap.ai/*` and `https://anycap.ai/*`; `identity` optional | Done |
 | CWS zip is freshly buildable | `pnpm preflight:local` rebuilt the release zip on 2026-05-11 | Done |
 | CWS zip copied into `releases/` and byte-matches WXT output | `shasum -a 256 .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip` matched | Done |
-| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `774b28d8ba088f12266d7dc4d42166a88e8d71e22feec729bb5960f11239b94e`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
-| Release verifier covers package, assets, listing, launch UI copy, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, assets, demo MP4 metadata, permission copy, CWS listing and screenshot composer copy including hidden sign-in quota and production trial-reset claims, README/load-use/changelog release-doc consistency, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, visible Chrome approval docs, anonymous-launch UI source and packed zip copy that reject hidden sign-in quota promises and production trial-reset controls, and all package scripts that invoke Playwright requiring the headed-E2E approval guard | Done |
-| Unit/type checks pass | `pnpm test` passed after production runbook unit-count guard hardening: 24 files / 176 tests; `npx tsc --noEmit` and `pnpm verify:release` pass | Done |
+| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `ebc4803ba86e556c375e0a16aed59ca165e866f6f7b1ce18a6e0229717002d28`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
+| Release verifier covers package, assets, listing, launch UI copy, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, release zip/side-panel performance budgets, assets, demo MP4 metadata, permission copy, CWS listing and screenshot composer copy including hidden sign-in quota and production trial-reset claims, README/load-use/changelog release-doc consistency, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, visible Chrome approval docs, anonymous-launch UI source and packed zip copy that reject hidden sign-in quota promises and production trial-reset controls, and all package scripts that invoke Playwright requiring the headed-E2E approval guard | Done |
+| Unit/type checks pass | `pnpm test` passed after release zip performance budget hardening: 24 files / 178 tests; `npx tsc --noEmit` and `pnpm verify:release` pass | Done |
 | CI extension gate is browser-free | `.gitlab-ci.yml` parses successfully and `build:extension` runs `pnpm preflight:local`; release verifier rejects preflight scripts containing headed browser commands | Done |
 | CWS screenshots and promo assets exist and are current | `pnpm render:cws` passed; 4 screenshots + 2 promo assets regenerated with headless Chromium | Done |
 | Demo video source exists and covers v0.2 workflows | `pnpm render:demo` passed; `store-assets/demo.mp4` is 72s H.264 1280×720 yuv420p, verified by `pnpm verify:release`, and covers 6 capability tabs plus 7 right-click menus | Done |
@@ -83,18 +83,18 @@ Results:
 
 - `pnpm render:cws`: passed; regenerated all 6 CWS PNG assets without a visible browser window.
 - `pnpm release`: passed; rebuilt `releases/anycap-extension-0.2.0-chrome.zip`.
-- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `774b28d8ba088f12266d7dc4d42166a88e8d71e22feec729bb5960f11239b94e`; record the build-run-specific value again immediately before CWS upload.
+- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `ebc4803ba86e556c375e0a16aed59ca165e866f6f7b1ce18a6e0229717002d28`; record the build-run-specific value again immediately before CWS upload.
 - `pnpm verify:release`: passed.
 - `pnpm verify:release`: passed again on 2026-05-11 after browser-approval documentation updates.
 - `pnpm preflight:local`: passed after release-doc consistency guard hardening; browser-free local gate rebuilt the release zip, synced the current SHA-256 into launch docs, then ran unit tests, type check, and release verifier.
 - `npx tsc --noEmit`: passed.
 - `pnpm render:demo`: passed; generated `store-assets/demo.mp4`.
 - `ffprobe store-assets/demo.mp4`: H.264, 1280×720, yuv420p, 72s.
-- `pnpm test`: passed after production runbook unit-count guard hardening, 24 files / 176 tests.
-- `pnpm test -- release-verify.test.ts`: passed after production runbook unit-count guard hardening, 24 files / 176 tests.
-- `pnpm test -- launch-audit.test.ts`: passed after the anonymous abuse-control audit regression; latest full browser-free preflight test run is 24 files / 176 tests.
-- `pnpm test -- server-smoke.test.ts`: passed after changing `--include-media` to media-only anonymous smoke so it stays within the 3-run launch trial; latest full browser-free preflight test run is 24 files / 176 tests.
-- `pnpm test -- release-verify.test.ts confirm-headed-e2e.test.ts`: passed after the all-Playwright-script approval guard update; latest full browser-free preflight test run is 24 files / 176 tests.
+- `pnpm test`: passed after release zip performance budget hardening, 24 files / 178 tests.
+- `pnpm test -- release-verify.test.ts`: passed after release zip performance budget hardening, 24 files / 178 tests.
+- `pnpm test -- launch-audit.test.ts`: passed after the anonymous abuse-control audit regression; latest full browser-free preflight test run is 24 files / 178 tests.
+- `pnpm test -- server-smoke.test.ts`: passed after changing `--include-media` to media-only anonymous smoke so it stays within the 3-run launch trial; latest full browser-free preflight test run is 24 files / 178 tests.
+- `pnpm test -- release-verify.test.ts confirm-headed-e2e.test.ts`: passed after the all-Playwright-script approval guard update; latest full browser-free preflight test run is 24 files / 178 tests.
 - `pnpm e2e`, `pnpm e2e:demo`, `pnpm shots:feishu`, and `pnpm e2e:real` without `ANYCAP_ALLOW_HEADED_E2E=1`: each blocked before `pnpm build`, `pnpm demo`, or Playwright with `headed E2E blocked`.
 - `git diff --check`: passed again after the release hash-sync and verification-documentation updates.
 - `.gitlab-ci.yml`: parsed successfully, and `build:extension` runs `pnpm preflight:local`.

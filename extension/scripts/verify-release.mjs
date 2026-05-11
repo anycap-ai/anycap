@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
 const EXPECTED_RELEASE_HOSTS = ['https://api.anycap.ai/*', 'https://anycap.ai/*'];
 const EXPECTED_PERMISSIONS = ['contextMenus', 'activeTab', 'storage', 'downloads', 'sidePanel'];
@@ -48,7 +49,9 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 176;
+const CURRENT_UNIT_TEST_COUNT = 178;
+const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
+const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
   {
     path: 'README.md',
@@ -775,6 +778,37 @@ export function validateZipEntries(entries, readEntryText) {
   return errors;
 }
 
+function isSidepanelJSChunk(entry) {
+  return /^chunks\/sidepanel(?:-[^/]+)?\.js$/.test(entry);
+}
+
+export function validateZipPerformanceBudget(entries, readEntryBuffer, releaseZipBytes = 0) {
+  const errors = [];
+  if (Number.isFinite(releaseZipBytes) && releaseZipBytes > MAX_RELEASE_ZIP_COMPRESSED_BYTES) {
+    errors.push(
+      `release zip must be <= ${MAX_RELEASE_ZIP_COMPRESSED_BYTES} bytes compressed, got ${releaseZipBytes} bytes`,
+    );
+  }
+
+  const sidepanelEntries = entries.filter(isSidepanelJSChunk);
+  if (sidepanelEntries.length === 0) {
+    errors.push('release zip must include chunks/sidepanel*.js for performance budget check');
+  }
+
+  for (const entry of sidepanelEntries) {
+    try {
+      const gzipBytes = zlib.gzipSync(readEntryBuffer(entry)).length;
+      if (gzipBytes > MAX_SIDEPANEL_JS_GZIP_BYTES) {
+        errors.push(`release zip ${entry} must be <= ${MAX_SIDEPANEL_JS_GZIP_BYTES} bytes gzip, got ${gzipBytes} bytes`);
+      }
+    } catch (err) {
+      errors.push(`release zip ${entry} could not be read for performance budget: ${err.message}`);
+    }
+  }
+
+  return errors;
+}
+
 function listZipEntries(zipPath) {
   const output = execFileSync('unzip', ['-Z1', zipPath], { encoding: 'utf8' });
   return output.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -837,6 +871,13 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
       errors.push(...validateZipIcons(manifest, (entry) => execFileSync('unzip', ['-p', zipPath, entry])));
       errors.push(...validateZipRequiredEntries(entries));
       errors.push(...validateZipEntries(entries, (entry) => execFileSync('unzip', ['-p', zipPath, entry], { encoding: 'utf8' })));
+      errors.push(
+        ...validateZipPerformanceBudget(
+          entries,
+          (entry) => execFileSync('unzip', ['-p', zipPath, entry]),
+          fs.statSync(zipPath).size,
+        ),
+      );
     } catch (err) {
       errors.push(`failed to read manifest from release zip: ${err.message}`);
     }

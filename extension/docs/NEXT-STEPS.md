@@ -199,11 +199,10 @@ Start with side-panel UI; the prompt-template chips can lazy-translate later.
 - Reduced motion: respect `prefers-reduced-motion` (already a Settings toggle, also honor system)
 
 ### B6. Performance budget
-**Where:** `wxt.config.ts` build flags · effort: 2 hours.
-Bundle is 345 KB today. Set a budget:
-- `chunks/sidepanel-*.js` ≤ 80 KB gzipped
-- Total ≤ 200 KB gzipped
-Wire to CI: fail if exceeded. WXT supports rolldown; size is mostly React + lucide.
+**Where:** `scripts/verify-release.mjs` · status: implemented.
+The release verifier now fails CI if the CWS zip exceeds 200 KiB compressed or
+if any `chunks/sidepanel*.js` bundle exceeds 80 KiB after gzip. The current
+release zip is 128,652 bytes and the side-panel app chunk is 17,685 bytes gzip.
 
 ### B7. Completed polish from this plan
 These items are already implemented in the current v0.2.0 refresh:

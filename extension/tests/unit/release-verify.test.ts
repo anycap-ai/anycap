@@ -32,6 +32,11 @@ type ReleaseVerifyModule = {
     entries: string[],
     readEntryText: (entry: string) => string,
   ) => string[];
+  validateZipPerformanceBudget: (
+    entries: string[],
+    readEntryBuffer: (entry: string) => Buffer,
+    releaseZipBytes: number,
+  ) => string[];
   validateZipRequiredEntries: (entries: string[]) => string[];
   validateSyncedReleaseZip: (rootDir: string) => string[];
   validateGitLabCIExtensionJob: (text: string) => string[];
@@ -71,6 +76,16 @@ function pngHeader(width: number, height: number): Buffer {
   buffer.write('IHDR', 12, 'ascii');
   buffer.writeUInt32BE(width, 16);
   buffer.writeUInt32BE(height, 20);
+  return buffer;
+}
+
+function pseudoRandomBuffer(size: number): Buffer {
+  const buffer = Buffer.alloc(size);
+  let state = 0x12345678;
+  for (let index = 0; index < size; index += 1) {
+    state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+    buffer[index] = (state >>> 24) & 0xff;
+  }
   return buffer;
 }
 
@@ -152,7 +167,7 @@ function createValidAssetTree() {
       '# Production launch runbook',
       'Deploy branches: deploy/server-dev and deploy/server-prod.',
       'Configure dconf: feature_access and rate_limit.',
-      'pnpm test passes locally with 176 unit tests.',
+      'pnpm test passes locally with 178 unit tests.',
       'Browser-free smoke: pnpm smoke:server -- --base-url https://api.anycap.ai.',
       'Real E2E: ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after explicit approval because it opens headed Chromium.',
       'Final audit: pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed.',
@@ -186,10 +201,10 @@ function createReleaseDocsTree(overrides: Record<string, string> = {}) {
   const docs: Record<string, string> = {
     'README.md': [
       'tests/',
-      '  unit/                    # Vitest — 176 个用例',
+      '  unit/                    # Vitest — 178 个用例',
       'Release verifier checks listing / screenshot composer 文案.',
     ].join('\n'),
-    'LOAD_AND_USE.md': 'pnpm test                                          # 176 unit tests',
+    'LOAD_AND_USE.md': 'pnpm test                                          # 178 unit tests',
     'CHANGELOG.md': [
       'Updated Chrome Web Store listing and screenshot composer copy.',
       'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
@@ -488,8 +503,8 @@ describe('release verifier', () => {
     })) ?? [];
 
     expect(errors).toEqual([
-      'README.md must document current Vitest unit test count: 176',
-      'LOAD_AND_USE.md must document current Vitest unit test count: 176',
+      'README.md must document current Vitest unit test count: 178',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 178',
       'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
   });
@@ -501,7 +516,7 @@ describe('release verifier', () => {
         'https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases',
         'git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git',
         'cd anycap_chrome',
-        '  unit/                    # Vitest — 176 个用例',
+        '  unit/                    # Vitest — 178 个用例',
       ].join('\n'),
     })) ?? [];
 
@@ -937,7 +952,7 @@ describe('release verifier', () => {
       'deploy/server-dev deploy/server-prod',
       'feature_access rate_limit',
       'pnpm smoke:server -- --base-url https://api.anycap.ai',
-      'pnpm test passes locally with 176 unit tests.',
+      'pnpm test passes locally with 178 unit tests.',
       'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real explicit approval headed Chromium',
       'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed',
       'Chrome Web Store releases/anycap-extension-0.2.0-chrome.zip',
@@ -961,7 +976,7 @@ describe('release verifier', () => {
     ].join('\n');
 
     expect(validateProductionLaunchRunbook(text)).toContain(
-      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 176',
+      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 178',
     );
   });
 
@@ -1147,6 +1162,34 @@ describe('release verifier', () => {
       'release zip chunks/sidepanel.js: extension launch UI must use planned account sign-in language, not stale login copy',
       'release zip chunks/sidepanel.js: paywall must not direct production users to reset anonymous trial state',
     ]);
+  });
+
+  it('accepts release zip performance budgets within launch limits', async () => {
+    const { validateZipPerformanceBudget } = await loadVerifier();
+
+    expect(
+      validateZipPerformanceBudget(
+        ['chunks/sidepanel.js'],
+        () => Buffer.from('console.log("small sidepanel");'),
+        128_652,
+      ),
+    ).toEqual([]);
+  });
+
+  it('rejects release zip performance budgets that exceed launch limits', async () => {
+    const { validateZipPerformanceBudget } = await loadVerifier();
+    const errors = validateZipPerformanceBudget(
+      ['chunks/sidepanel.js'],
+      () => pseudoRandomBuffer(90 * 1024),
+      204_801,
+    );
+
+    expect(errors).toContain('release zip must be <= 204800 bytes compressed, got 204801 bytes');
+    expect(errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^release zip chunks\/sidepanel\.js must be <= 81920 bytes gzip, got \d+ bytes$/),
+      ]),
+    );
   });
 
   it('rejects stale releases zip when WXT output zip differs', async () => {

@@ -25,7 +25,7 @@ but production is not ready:
 
 - `pnpm verify:release` passes locally.
 - `pnpm preflight:local` passes locally.
-- `pnpm test` passes locally with 176 unit tests.
+- `pnpm test` passes locally with 178 unit tests.
 - Full local Go tests pass.
 - Latest production smoke with install ID `codex-smoke-20260511-delivery-audit` returned required features as enabled, but
   `/v1/extension/config` returned `404`, and anonymous `/v1/web/search` plus
