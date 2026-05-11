@@ -28,7 +28,7 @@ AnyCap brings 6 AI capabilities to every browser tab via a clean side panel. Rig
 
 **Free trial:** 3 anonymous capability runs / month during launch, no signup. Account sign-in and Pro plans are planned.
 
-**Privacy:** anonymous users send only the input you give us (image URL, prompt text, page URL). No browsing history, no clipboard scraping. Full policy: https://anycap.ai/privacy/extension
+**Privacy:** anonymous users send only the inputs they choose to submit, such as a prompt, selected text, image URL, page URL, link URL, search query, model choice, aspect ratio, or duration. The extension does not collect full browsing history, cookies, page credentials, background screenshots, or clipboard contents. Full policy: https://anycap.ai/privacy/extension
 
 **Get started:** install → click the AnyCap toolbar icon → side panel slides in. Or right-click anything on a page.
 
