@@ -47,6 +47,7 @@
 - Release verifier now requires the production launch runbook to document the current Vitest unit-test count, preventing stale local-verification evidence in the launch snapshot.
 - Release verifier now enforces CWS zip and side-panel gzip performance budgets before upload.
 - Release verifier now guards side-panel accessibility source for labelled tab panels, onboarding dialog semantics, and labelled history thumbnails.
+- Side-panel muted and neutral text colors now pass the release verifier's static small-text contrast guard.
 
 ## v0.2.0 — 2026-04-27
 

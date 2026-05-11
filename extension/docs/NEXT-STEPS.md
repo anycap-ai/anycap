@@ -197,6 +197,8 @@ Start with side-panel UI; the prompt-template chips can lazy-translate later.
 - Screen reader: tabs now connect to the active `tabpanel` via `aria-controls`
   and `aria-labelledby`; onboarding is an `aria-modal` dialog; thumbnail history
   buttons have explicit `aria-label` text instead of relying on `title`.
+- Color contrast: `text-muted` and `text-neutral` theme tokens now pass the
+  release verifier's static 4.5:1 contrast guard against their light surfaces.
 - Reduced motion: `prefers-reduced-motion` is honored in CSS.
 - Remaining manual check: run an approved visible-browser screen-reader/keyboard
   pass after production smoke succeeds.
@@ -205,7 +207,7 @@ Start with side-panel UI; the prompt-template chips can lazy-translate later.
 **Where:** `scripts/verify-release.mjs` · status: implemented.
 The release verifier now fails CI if the CWS zip exceeds 200 KiB compressed or
 if any `chunks/sidepanel*.js` bundle exceeds 80 KiB after gzip. The current
-release zip is 128,773 bytes and the side-panel app chunk is 17,819 bytes gzip.
+release zip is 128,772 bytes and the side-panel app chunk is 17,837 bytes gzip.
 
 ### B7. Completed polish from this plan
 These items are already implemented in the current v0.2.0 refresh:

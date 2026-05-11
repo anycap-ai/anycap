@@ -49,9 +49,10 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 180;
+const CURRENT_UNIT_TEST_COUNT = 182;
 const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
 const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
+const MIN_SMALL_TEXT_CONTRAST = 4.5;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
   {
     path: 'README.md',
@@ -159,6 +160,13 @@ const ACCESSIBILITY_SOURCE_CHECKS = [
       return source.includes('aria-label') && source.includes('Open recent');
     },
   },
+];
+const REQUIRED_SIDEPANEL_CONTRAST_PAIRS = [
+  ['olive on surface-card', 'olive', 'surface-card'],
+  ['text-muted on surface-card', 'text-muted', 'surface-card'],
+  ['text-neutral on surface-input', 'text-neutral', 'surface-input'],
+  ['error on surface-card', 'error', 'surface-card'],
+  ['white on olive', 'white', 'olive'],
 ];
 const REQUIRED_REAL_E2E_COMMAND = 'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real';
 const REQUIRED_FINAL_LAUNCH_AUDIT_COMMAND =
@@ -638,6 +646,54 @@ export function validateAccessibilitySource(rootDir = process.cwd()) {
   return errors;
 }
 
+function parseThemeColors(css) {
+  const colors = new Map([['white', '#ffffff']]);
+  const pattern = /--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g;
+  for (const match of css.matchAll(pattern)) {
+    colors.set(match[1], match[2].toLowerCase());
+  }
+  return colors;
+}
+
+function relativeLuminance(hex) {
+  const normalized = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((index) => {
+    const channel = parseInt(normalized.slice(index, index + 2), 16) / 255;
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(foreground, background) {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  const lighter = Math.max(first, second);
+  const darker = Math.min(first, second);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function validateSidePanelColorContrast(css) {
+  const colors = parseThemeColors(String(css || ''));
+  const errors = [];
+
+  for (const [label, foregroundName, backgroundName] of REQUIRED_SIDEPANEL_CONTRAST_PAIRS) {
+    const foreground = colors.get(foregroundName);
+    const background = colors.get(backgroundName);
+    if (!foreground || !background) {
+      errors.push(`entrypoints/sidepanel/style.css must define colors for ${label}`);
+      continue;
+    }
+    const ratio = contrastRatio(foreground, background);
+    if (ratio < MIN_SMALL_TEXT_CONTRAST) {
+      errors.push(
+        `entrypoints/sidepanel/style.css color contrast for ${label} must be at least ${MIN_SMALL_TEXT_CONTRAST}:1, got ${ratio.toFixed(2)}:1`,
+      );
+    }
+  }
+
+  return errors;
+}
+
 export function validatePermissionJustifications(text) {
   const source = String(text || '');
   const errors = [];
@@ -944,6 +1000,12 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
   errors.push(...validateReleaseDocs(rootDir));
   errors.push(...validateLaunchCopy(rootDir));
   errors.push(...validateAccessibilitySource(rootDir));
+  const sidePanelStylePath = path.join(rootDir, 'entrypoints/sidepanel/style.css');
+  if (fs.existsSync(sidePanelStylePath)) {
+    errors.push(...validateSidePanelColorContrast(fs.readFileSync(sidePanelStylePath, 'utf8')));
+  } else {
+    errors.push('entrypoints/sidepanel/style.css is missing');
+  }
   errors.push(...validateSyncedReleaseZip(rootDir));
   errors.push(...validateChromeExtensionLaunchDconfFiles(rootDir));
 

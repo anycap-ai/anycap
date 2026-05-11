@@ -20,6 +20,7 @@ type ReleaseVerifyModule = {
   validateVisibleChromeDocs: (rootDir: string) => string[];
   validateReleaseDocs?: (rootDir: string) => string[];
   validateAccessibilitySource: (rootDir: string) => string[];
+  validateSidePanelColorContrast: (css: string) => string[];
   validateChromeExtensionLaunchDconf: (
     featureAccess: Record<string, unknown>,
     rateLimit: Record<string, unknown>,
@@ -168,7 +169,7 @@ function createValidAssetTree() {
       '# Production launch runbook',
       'Deploy branches: deploy/server-dev and deploy/server-prod.',
       'Configure dconf: feature_access and rate_limit.',
-      'pnpm test passes locally with 180 unit tests.',
+      'pnpm test passes locally with 182 unit tests.',
       'Browser-free smoke: pnpm smoke:server -- --base-url https://api.anycap.ai.',
       'Real E2E: ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after explicit approval because it opens headed Chromium.',
       'Final audit: pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed.',
@@ -202,10 +203,10 @@ function createReleaseDocsTree(overrides: Record<string, string> = {}) {
   const docs: Record<string, string> = {
     'README.md': [
       'tests/',
-      '  unit/                    # Vitest — 180 个用例',
+      '  unit/                    # Vitest — 182 个用例',
       'Release verifier checks listing / screenshot composer 文案.',
     ].join('\n'),
-    'LOAD_AND_USE.md': 'pnpm test                                          # 180 unit tests',
+    'LOAD_AND_USE.md': 'pnpm test                                          # 182 unit tests',
     'CHANGELOG.md': [
       'Updated Chrome Web Store listing and screenshot composer copy.',
       'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
@@ -526,6 +527,37 @@ describe('release verifier', () => {
     ]);
   });
 
+  it('accepts side-panel theme colors with readable small-text contrast', async () => {
+    const { validateSidePanelColorContrast } = await loadVerifier();
+    const css = [
+      '--color-olive: #6b7d3a;',
+      '--color-text-muted: #666b5f;',
+      '--color-text-neutral: #707568;',
+      '--color-error: #c4442d;',
+      '--color-surface-card: #ffffff;',
+      '--color-surface-input: #fafbf8;',
+    ].join('\n');
+
+    expect(validateSidePanelColorContrast(css)).toEqual([]);
+  });
+
+  it('rejects side-panel theme colors below readable small-text contrast', async () => {
+    const { validateSidePanelColorContrast } = await loadVerifier();
+    const css = [
+      '--color-olive: #6b7d3a;',
+      '--color-text-muted: #7a7e71;',
+      '--color-text-neutral: #9a9e90;',
+      '--color-error: #c4442d;',
+      '--color-surface-card: #ffffff;',
+      '--color-surface-input: #fafbf8;',
+    ].join('\n');
+
+    expect(validateSidePanelColorContrast(css)).toEqual([
+      'entrypoints/sidepanel/style.css color contrast for text-muted on surface-card must be at least 4.5:1, got 4.16:1',
+      'entrypoints/sidepanel/style.css color contrast for text-neutral on surface-input must be at least 4.5:1, got 2.64:1',
+    ]);
+  });
+
   it('rejects docs that describe visible Chrome operations without approval language', async () => {
     const { validateVisibleChromeDocs } = await loadVerifier();
 
@@ -553,8 +585,8 @@ describe('release verifier', () => {
     })) ?? [];
 
     expect(errors).toEqual([
-      'README.md must document current Vitest unit test count: 180',
-      'LOAD_AND_USE.md must document current Vitest unit test count: 180',
+      'README.md must document current Vitest unit test count: 182',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 182',
       'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
   });
@@ -566,7 +598,7 @@ describe('release verifier', () => {
         'https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases',
         'git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git',
         'cd anycap_chrome',
-        '  unit/                    # Vitest — 180 个用例',
+        '  unit/                    # Vitest — 182 个用例',
       ].join('\n'),
     })) ?? [];
 
@@ -1002,7 +1034,7 @@ describe('release verifier', () => {
       'deploy/server-dev deploy/server-prod',
       'feature_access rate_limit',
       'pnpm smoke:server -- --base-url https://api.anycap.ai',
-      'pnpm test passes locally with 180 unit tests.',
+      'pnpm test passes locally with 182 unit tests.',
       'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real explicit approval headed Chromium',
       'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed',
       'Chrome Web Store releases/anycap-extension-0.2.0-chrome.zip',
@@ -1026,7 +1058,7 @@ describe('release verifier', () => {
     ].join('\n');
 
     expect(validateProductionLaunchRunbook(text)).toContain(
-      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 180',
+      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 182',
     );
   });
 
