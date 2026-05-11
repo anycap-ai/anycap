@@ -41,6 +41,7 @@
 - Launch audit now fetches the live privacy policy page body and rejects Next.js 404 fallback content even when the CDN returns HTTP 200.
 - Added `--abuse-control-passed` and `--real-e2e-passed` to `pnpm launch:audit` so the browser-free audit can turn green as the final Chrome Web Store upload gate only after anonymous abuse control and an approved headed E2E run are both acknowledged.
 - Added `--dogfood-passed` and `--latency-passed` to `pnpm launch:audit` so final CWS upload also waits for internal dogfood and P90 latency confirmation.
+- Added `store-assets/launch-evidence.md`; final dogfood/P90 launch-audit acknowledgements now require recorded evidence, not flags alone.
 - Added `docs/PRODUCTION-LAUNCH-RUNBOOK.md` with server deploy, dconf, smoke, E2E acknowledgement, CWS submission, and rollback steps.
 - Added `pnpm render:cws`, a headless Chrome Web Store screenshot and promo asset renderer that avoids opening visible browser windows.
 - Added `pnpm render:demo`, a headless demo video renderer that outputs `store-assets/demo.mp4` for YouTube upload after approval.
@@ -51,6 +52,7 @@
 - Side-panel muted and neutral text colors now pass the release verifier's static small-text contrast guard.
 - Launch audit now blocks the final CWS upload gate until the YouTube demo URL is recorded in `store-assets/cws-submission.md`.
 - Launch audit now blocks the final CWS upload gate until dogfood and P90 latency acknowledgements are passed.
+- Release verification now requires the launch evidence template fields used by the final dogfood/P90 audit gate.
 
 ## v0.2.0 — 2026-04-27
 

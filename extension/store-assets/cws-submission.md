@@ -8,7 +8,7 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 
 - Upload: `releases/anycap-extension-0.2.0-chrome.zip`
 - Version: `0.2.0`
-- SHA-256: `07f2143d85be2d90f41eca41a0f20c356c786d1ec3a5d23cfc877eedfd26daf0`
+- SHA-256: `b0831537f71a83c495712138e90d8d8be92b96de3db4d2fce9ee7f6f2b100c69`
 - Category: Productivity
 - Language: English
 
@@ -30,6 +30,7 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 | Marquee promo | `store-assets/cws/05-marquee-1400x560.png` |
 | Small promo tile | `store-assets/cws/06-promo-440x280.png` |
 | Promotional video source | `store-assets/demo.mp4` |
+| Launch evidence | `store-assets/launch-evidence.md` |
 
 Upload `store-assets/demo.mp4` to YouTube after approval, then paste the
 YouTube URL into the optional CWS promotional video field.
@@ -99,8 +100,8 @@ ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real
 ```
 
 After that real-mode E2E run is green, dogfood is complete, P90 latency is
-confirmed under 15 seconds, and the YouTube demo URL is recorded, run the final
-browser-free upload gate:
+confirmed under 15 seconds, `store-assets/launch-evidence.md` is updated, and
+the YouTube demo URL is recorded, run the final browser-free upload gate:
 
 ```bash
 ANYCAP_INSTALL_ID=<fresh-install-id> pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed

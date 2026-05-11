@@ -26,6 +26,7 @@ const REQUIRED_CWS_TEXT_ASSETS = [
   'store-assets/description.md',
   'store-assets/permission-justifications.md',
   'store-assets/cws-submission.md',
+  'store-assets/launch-evidence.md',
   'docs/PRODUCTION-LAUNCH-RUNBOOK.md',
 ];
 const REQUIRED_CWS_COMPOSER_ASSETS = [
@@ -49,7 +50,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 185;
+const CURRENT_UNIT_TEST_COUNT = 188;
 const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
 const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
 const MIN_SMALL_TEXT_CONTRAST = 4.5;
@@ -467,6 +468,8 @@ export function validateCWSAssets(rootDir = process.cwd()) {
       errors.push(...validatePermissionJustifications(fs.readFileSync(absPath, 'utf8')));
     } else if (relPath === 'store-assets/cws-submission.md') {
       errors.push(...validateCWSSubmissionGuide(fs.readFileSync(absPath, 'utf8'), releaseZipHash));
+    } else if (relPath === 'store-assets/launch-evidence.md') {
+      errors.push(...validateLaunchEvidenceTemplate(fs.readFileSync(absPath, 'utf8')));
     } else if (relPath === 'docs/PRODUCTION-LAUNCH-RUNBOOK.md') {
       errors.push(...validateProductionLaunchRunbook(fs.readFileSync(absPath, 'utf8')));
     }
@@ -740,6 +743,26 @@ export function validateCWSSubmissionGuide(text, currentReleaseZipSha256) {
   }
   if (!source.includes(REQUIRED_REAL_E2E_COMMAND)) {
     errors.push(`store-assets/cws-submission.md must require ${REQUIRED_REAL_E2E_COMMAND}`);
+  }
+
+  return errors;
+}
+
+export function validateLaunchEvidenceTemplate(text) {
+  const source = String(text || '');
+  const errors = [];
+
+  for (const required of [
+    'Dogfood status:',
+    'Dogfood participants:',
+    'Dogfood working days:',
+    'P0 bugs:',
+    'P90 generation latency seconds:',
+    'Metrics source:',
+  ]) {
+    if (!source.includes(required)) {
+      errors.push(`store-assets/launch-evidence.md must include ${required}`);
+    }
   }
 
   return errors;

@@ -62,7 +62,9 @@ and builds under Node 22.16.0; production
 still needs a web deploy before the live URL can pass. `launch:audit` now checks
 the privacy page body instead of trusting HEAD-only status and requires
 `--abuse-control-passed`, `--real-e2e-passed`, `--dogfood-passed`, and
-`--latency-passed` before the final CWS upload gate can turn green.
+`--latency-passed` before the final CWS upload gate can turn green. The
+dogfood and latency acknowledgements also require recorded evidence in
+`store-assets/launch-evidence.md`.
 
 **Verify after deploy:**
 ```bash
@@ -71,7 +73,7 @@ ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm 
 # expect all checks ok, not 401/403/503
 
 # Final browser-free CWS upload gate after abuse control, approved real E2E,
-# dogfood, P90 latency, and YouTube URL are complete:
+# dogfood/P90 evidence, and YouTube URL are complete:
 ANYCAP_INSTALL_ID=<fresh-install-id> ANYCAP_API_BASE=https://api.anycap.ai pnpm launch:audit -- --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed
 
 # Optional provider-costing media-only smoke:

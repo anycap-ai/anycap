@@ -9,6 +9,7 @@ import { runServerSmoke } from './smoke-server.mjs';
 const DEFAULT_BASE_URL = 'https://api.anycap.ai';
 const DEFAULT_INSTALL_ID = `launch-audit-${Date.now()}`;
 const PRIVACY_POLICY_URL = 'https://anycap.ai/privacy/extension';
+const LAUNCH_EVIDENCE_PATH = 'store-assets/launch-evidence.md';
 const PRIVACY_NOT_FOUND_MARKERS = ['NEXT_HTTP_ERROR_FALLBACK;404', '404 — Not Found', '404 - Not Found'];
 const PRIVACY_REQUIRED_MARKERS = ['AnyCap Chrome Extension', 'Data we collect'];
 const YOUTUBE_DEMO_URL_PATTERN =
@@ -96,6 +97,42 @@ function readYouTubeDemoUrl(rootDir = process.cwd()) {
   return extractYouTubeDemoUrl(fs.readFileSync(submissionPath, 'utf8'));
 }
 
+function readLaunchEvidence(rootDir = process.cwd()) {
+  const evidencePath = path.join(rootDir, LAUNCH_EVIDENCE_PATH);
+  if (!fs.existsSync(evidencePath)) return '';
+  return fs.readFileSync(evidencePath, 'utf8');
+}
+
+function readNumericField(source, label) {
+  const match = source.match(new RegExp(`${label}:\\s*([0-9]+(?:\\.[0-9]+)?)`, 'i'));
+  if (!match) return undefined;
+  return Number.parseFloat(match[1]);
+}
+
+export function validateLaunchEvidence(text = '') {
+  const source = String(text || '');
+  const dogfoodStatusPassed = /Dogfood status:\s*passed\b/i.test(source);
+  const dogfoodParticipants = readNumericField(source, 'Dogfood participants');
+  const dogfoodWorkingDays = readNumericField(source, 'Dogfood working days');
+  const p0Bugs = readNumericField(source, 'P0 bugs');
+  const p90LatencySeconds = readNumericField(source, 'P90 generation latency seconds');
+
+  return {
+    dogfood: {
+      ok:
+        dogfoodStatusPassed &&
+        Number.isFinite(dogfoodParticipants) &&
+        dogfoodParticipants >= 5 &&
+        Number.isFinite(dogfoodWorkingDays) &&
+        dogfoodWorkingDays >= 2 &&
+        p0Bugs === 0,
+    },
+    latency: {
+      ok: Number.isFinite(p90LatencySeconds) && p90LatencySeconds < 15,
+    },
+  };
+}
+
 export async function checkPrivacyPolicy(fetchImpl = globalThis.fetch) {
   if (typeof fetchImpl !== 'function') {
     return { ok: false, status: 0, code: 'FETCH_MISSING', message: 'fetch is not available' };
@@ -136,6 +173,7 @@ export function buildLaunchAudit({
   smokeResult,
   privacyResult,
   youtubeDemoUrl = '',
+  launchEvidenceText = '',
   dogfoodPassed = false,
   latencyPassed = false,
   realE2EPassed = false,
@@ -143,6 +181,7 @@ export function buildLaunchAudit({
 } = {}) {
   const checks = [];
   const blockers = [];
+  const launchEvidence = validateLaunchEvidence(launchEvidenceText);
 
   if (baseUrl || installId) {
     checks.push({
@@ -207,25 +246,43 @@ export function buildLaunchAudit({
     );
   }
 
+  const dogfoodOk = dogfoodPassed && launchEvidence.dogfood.ok;
   checks.push({
     name: 'internal dogfood',
-    ok: dogfoodPassed,
-    detail: dogfoodPassed ? 'acknowledged' : 'not acknowledged',
+    ok: dogfoodOk,
+    detail: dogfoodPassed
+      ? launchEvidence.dogfood.ok
+        ? 'acknowledged; evidence recorded'
+        : 'acknowledged; evidence missing or invalid'
+      : 'not acknowledged',
   });
   if (!dogfoodPassed) {
     blockers.push(
       'Complete internal dogfood with 5 people for 2 working days and zero P0 bugs before CWS upload; pass --dogfood-passed only after it is recorded.',
     );
+  } else if (!launchEvidence.dogfood.ok) {
+    blockers.push(
+      'Record dogfood evidence in store-assets/launch-evidence.md before CWS upload: status passed, participants >= 5, working days >= 2, P0 bugs 0.',
+    );
   }
 
+  const latencyOk = latencyPassed && launchEvidence.latency.ok;
   checks.push({
     name: 'P90 generation latency',
-    ok: latencyPassed,
-    detail: latencyPassed ? 'acknowledged' : 'not acknowledged',
+    ok: latencyOk,
+    detail: latencyPassed
+      ? launchEvidence.latency.ok
+        ? 'acknowledged; evidence recorded'
+        : 'acknowledged; evidence missing or invalid'
+      : 'not acknowledged',
   });
   if (!latencyPassed) {
     blockers.push(
       'Confirm P90 generation latency is under 15s on the deployed server before CWS upload; pass --latency-passed only after metrics confirm it.',
+    );
+  } else if (!launchEvidence.latency.ok) {
+    blockers.push(
+      'Record P90 generation latency evidence under 15s in store-assets/launch-evidence.md before CWS upload.',
     );
   }
 
@@ -330,6 +387,7 @@ async function main() {
     smokeResult,
     privacyResult,
     youtubeDemoUrl: readYouTubeDemoUrl(process.cwd()),
+    launchEvidenceText: readLaunchEvidence(process.cwd()),
     realE2EPassed: args.realE2EPassed,
     abuseControlPassed: args.abuseControlPassed,
     dogfoodPassed: args.dogfoodPassed,

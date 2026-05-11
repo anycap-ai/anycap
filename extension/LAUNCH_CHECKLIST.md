@@ -10,7 +10,7 @@ submitting to the Chrome Web Store.
 - [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.77 KB)
 - [x] `pnpm verify:release` — release zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced runtime files, content script `file://` exclusion, permissions, scripts, no dev/staging leakage, `.output`/`releases` zip sync, CWS submission hash, release zip/side-panel performance budgets, side-panel accessibility and contrast guards, CWS asset dimensions, demo MP4 metadata, listing and screenshot composer copy including hidden sign-in quota and production trial-reset claims, launch UI source/zip copy, README/load-use/changelog release-doc consistency, permission justifications, CWS submission guide including demo-video YouTube instructions, headless CWS renderer script, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs pass
 - [x] `pnpm preflight:local` — browser-free local gate covering release rebuild, unit tests, type check, and release verifier
-- [x] `pnpm test` — 185 unit tests pass
+- [x] `pnpm test` — 188 unit tests pass
 - [x] `pnpm launch:audit -- --skip-smoke` — browser-free local launch audit command is wired
 - [x] Targeted server readiness tests — `internal/transport/http`, `internal/middleware`, and image/video/music/web application packages cover anonymous Chrome extension routes and pass locally
 - [ ] `pnpm smoke:server -- --base-url <staging-or-prod>` — browser-free required-features + anonymous extension config/search/crawl smoke pending deploy
@@ -19,8 +19,8 @@ submitting to the Chrome Web Store.
 - [x] `ANYCAP_ALLOW_HEADED_E2E=1 pnpm e2e:demo` — underlying demo E2E previously passed with 9 tests (covers all 6 capability tabs + onboarding); current headed wrapper blocks before Playwright when not approved
 - [x] `npx tsc --noEmit` — clean
 - [ ] Manual smoke: side panel opens via toolbar click, all 7 right-click menus appear in correct contexts — pending explicit approval because it interacts with visible Chrome
-- [ ] Internal dogfood (5 people × 2 days, zero P0 bugs)
-- [ ] P90 generation latency < 15 s on deployed server (waiting on prod server deploy)
+- [ ] Internal dogfood (5 people × 2 days, zero P0 bugs), recorded in `store-assets/launch-evidence.md`
+- [ ] P90 generation latency < 15 s on deployed server, recorded in `store-assets/launch-evidence.md` (waiting on prod server deploy)
 
 ### Manifest / permissions
 
@@ -52,6 +52,7 @@ submitting to the Chrome Web Store.
 - [ ] Demo video YouTube upload — upload `store-assets/demo.mp4`, paste the URL into CWS after approval, and record the URL in `store-assets/cws-submission.md` so `pnpm launch:audit` can pass
 - [ ] Privacy policy URL: `https://anycap.ai/privacy/extension` — must return the extension privacy page body, not the current Next.js 404 fallback
 - [x] Permission justifications: see `store-assets/permission-justifications.md` — verified against manifest permissions
+- [x] Launch evidence template: see `store-assets/launch-evidence.md` — verified by `pnpm verify:release`; values remain pending until dogfood and latency evidence exist
 - [ ] Submit for review — only after the anonymous abuse-control gate, production smoke, approved real-mode E2E, internal dogfood, P90 latency check, final launch audit, and YouTube demo upload are complete
 
 ## Post-submit (3-7 day review window)

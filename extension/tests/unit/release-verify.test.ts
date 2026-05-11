@@ -15,6 +15,7 @@ type ReleaseVerifyModule = {
   validateLaunchCopy: (rootDir: string) => string[];
   validatePermissionJustifications: (text: string) => string[];
   validateCWSSubmissionGuide: (text: string, currentReleaseZipSha256?: string) => string[];
+  validateLaunchEvidenceTemplate: (text: string) => string[];
   validateProductionLaunchRunbook: (text: string) => string[];
   validateSupportScripts: (rootDir: string) => string[];
   validateVisibleChromeDocs: (rootDir: string) => string[];
@@ -162,6 +163,18 @@ function createValidAssetTree() {
       'Server gates: deploy/server-prod, feature_access, rate_limit.',
     ].join('\n'),
   );
+  fs.writeFileSync(
+    path.join(root, 'store-assets/launch-evidence.md'),
+    [
+      '# Chrome Extension Launch Evidence',
+      'Dogfood status: pending',
+      'Dogfood participants: 0',
+      'Dogfood working days: 0',
+      'P0 bugs: pending',
+      'P90 generation latency seconds: pending',
+      'Metrics source: pending',
+    ].join('\n'),
+  );
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.writeFileSync(
     path.join(root, 'docs/PRODUCTION-LAUNCH-RUNBOOK.md'),
@@ -169,7 +182,7 @@ function createValidAssetTree() {
       '# Production launch runbook',
       'Deploy branches: deploy/server-dev and deploy/server-prod.',
       'Configure dconf: feature_access and rate_limit.',
-      'pnpm test passes locally with 185 unit tests.',
+      'pnpm test passes locally with 188 unit tests.',
       'Browser-free smoke: pnpm smoke:server -- --base-url https://api.anycap.ai.',
       'Real E2E: ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after explicit approval because it opens headed Chromium.',
       'Final audit: pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed.',
@@ -203,10 +216,10 @@ function createReleaseDocsTree(overrides: Record<string, string> = {}) {
   const docs: Record<string, string> = {
     'README.md': [
       'tests/',
-      '  unit/                    # Vitest — 185 个用例',
+      '  unit/                    # Vitest — 188 个用例',
       'Release verifier checks listing / screenshot composer 文案.',
     ].join('\n'),
-    'LOAD_AND_USE.md': 'pnpm test                                          # 185 unit tests',
+    'LOAD_AND_USE.md': 'pnpm test                                          # 188 unit tests',
     'CHANGELOG.md': [
       'Updated Chrome Web Store listing and screenshot composer copy.',
       'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
@@ -585,8 +598,8 @@ describe('release verifier', () => {
     })) ?? [];
 
     expect(errors).toEqual([
-      'README.md must document current Vitest unit test count: 185',
-      'LOAD_AND_USE.md must document current Vitest unit test count: 185',
+      'README.md must document current Vitest unit test count: 188',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 188',
       'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
   });
@@ -598,7 +611,7 @@ describe('release verifier', () => {
         'https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases',
         'git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git',
         'cd anycap_chrome',
-        '  unit/                    # Vitest — 185 个用例',
+        '  unit/                    # Vitest — 188 个用例',
       ].join('\n'),
     })) ?? [];
 
@@ -1028,13 +1041,39 @@ describe('release verifier', () => {
     );
   });
 
+  it('accepts the launch evidence template fields required by final audit', async () => {
+    const { validateLaunchEvidenceTemplate } = await loadVerifier();
+    const text = [
+      'Dogfood status: pending',
+      'Dogfood participants: 0',
+      'Dogfood working days: 0',
+      'P0 bugs: pending',
+      'P90 generation latency seconds: pending',
+      'Metrics source: pending',
+    ].join('\n');
+
+    expect(validateLaunchEvidenceTemplate(text)).toEqual([]);
+  });
+
+  it('rejects a launch evidence template without dogfood and latency fields', async () => {
+    const { validateLaunchEvidenceTemplate } = await loadVerifier();
+
+    expect(validateLaunchEvidenceTemplate('Dogfood status: pending')).toEqual([
+      'store-assets/launch-evidence.md must include Dogfood participants:',
+      'store-assets/launch-evidence.md must include Dogfood working days:',
+      'store-assets/launch-evidence.md must include P0 bugs:',
+      'store-assets/launch-evidence.md must include P90 generation latency seconds:',
+      'store-assets/launch-evidence.md must include Metrics source:',
+    ]);
+  });
+
   it('accepts the production launch runbook with deploy, dconf, validation, and rollback gates', async () => {
     const { validateProductionLaunchRunbook } = await loadVerifier();
     const text = [
       'deploy/server-dev deploy/server-prod',
       'feature_access rate_limit',
       'pnpm smoke:server -- --base-url https://api.anycap.ai',
-      'pnpm test passes locally with 185 unit tests.',
+      'pnpm test passes locally with 188 unit tests.',
       'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real explicit approval headed Chromium',
       'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed --dogfood-passed --latency-passed',
       'Chrome Web Store releases/anycap-extension-0.2.0-chrome.zip',
@@ -1058,7 +1097,7 @@ describe('release verifier', () => {
     ].join('\n');
 
     expect(validateProductionLaunchRunbook(text)).toContain(
-      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 185',
+      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 188',
     );
   });
 

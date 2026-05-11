@@ -19,6 +19,7 @@ type LaunchAuditModule = {
     youtubeDemoUrl?: string;
     dogfoodPassed?: boolean;
     latencyPassed?: boolean;
+    launchEvidenceText?: string;
   }) => {
     ok: boolean;
     checks: Array<{ name: string; ok: boolean; detail: string }>;
@@ -34,6 +35,14 @@ async function loadAudit(): Promise<LaunchAuditModule> {
   // @ts-ignore JS CLI module is intentionally not part of the TS build.
   return import('../../scripts/launch-audit.mjs');
 }
+
+const validLaunchEvidence = [
+  'Dogfood status: passed',
+  'Dogfood participants: 5',
+  'Dogfood working days: 2',
+  'P0 bugs: 0',
+  'P90 generation latency seconds: 14.2',
+].join('\n');
 
 describe('launch audit', () => {
   it('includes the audited base URL and install ID for traceability', async () => {
@@ -287,6 +296,47 @@ describe('launch audit', () => {
     );
   });
 
+  it('requires recorded dogfood and latency evidence even when manual flags are passed', async () => {
+    const { buildLaunchAudit } = await loadAudit();
+
+    const audit = buildLaunchAudit({
+      releaseErrors: [],
+      realE2EPassed: true,
+      abuseControlPassed: true,
+      dogfoodPassed: true,
+      latencyPassed: true,
+      youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
+      smokeResult: {
+        ok: true,
+        results: [
+          { name: 'required features', ok: true, status: 200 },
+          { name: 'extension config', ok: true, status: 200 },
+          { name: 'web search', ok: true, status: 200 },
+          { name: 'web crawl', ok: true, status: 200 },
+        ],
+      },
+      privacyResult: { ok: true, status: 200 },
+    });
+
+    expect(audit.ok).toBe(false);
+    expect(audit.checks).toContainEqual({
+      name: 'internal dogfood',
+      ok: false,
+      detail: 'acknowledged; evidence missing or invalid',
+    });
+    expect(audit.checks).toContainEqual({
+      name: 'P90 generation latency',
+      ok: false,
+      detail: 'acknowledged; evidence missing or invalid',
+    });
+    expect(audit.blockers).toContain(
+      'Record dogfood evidence in store-assets/launch-evidence.md before CWS upload: status passed, participants >= 5, working days >= 2, P0 bugs 0.',
+    );
+    expect(audit.blockers).toContain(
+      'Record P90 generation latency evidence under 15s in store-assets/launch-evidence.md before CWS upload.',
+    );
+  });
+
   it('prints checks and blockers on stdout in deterministic order', async () => {
     const { printAudit } = await loadAudit();
     const originalLog = console.log;
@@ -356,6 +406,7 @@ describe('launch audit', () => {
       youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
       dogfoodPassed: true,
       latencyPassed: true,
+      launchEvidenceText: validLaunchEvidence,
     });
 
     expect(audit.ok).toBe(true);

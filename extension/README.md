@@ -111,7 +111,7 @@ store-assets/
   composer/*.html          # CWS 截图的静态 HTML 编排器（1280×800 / 1400×560 / 440×280）
   cws/*.png                # 渲染好的 CWS 提审素材
 tests/
-  unit/                    # Vitest — 185 个用例
+  unit/                    # Vitest — 188 个用例
   e2e/                     # Playwright — prod / demo / CWS screenshot specs
 wxt.config.ts              # Manifest，host_permissions（release 模式剥离 localhost）
 docs/assets/               # README 用的图示
@@ -163,7 +163,7 @@ ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit -- --abuse-contr
 - CWS asset renderer（`pnpm render:cws`）使用 headless Chromium 渲染 `store-assets/composer/*.html` 到 `store-assets/cws/*.png`，不会打开可见浏览器窗口。
 - Demo video renderer（`pnpm render:demo`）使用 headless Chromium 生成 1280×720 frame，再用 ffmpeg 合成 `store-assets/demo.mp4`，不会打开可见浏览器窗口；YouTube 上传仍需单独审批。
 - Server smoke（`pnpm smoke:server`）不会打开浏览器；默认带匿名 extension headers 检查 `/v1/features`、`/v1/extension/config`、`/v1/web/search`、`/v1/web/crawl`，要求 `image.generate`、`video.generate`、`music.generate`、`web.search`、`web.crawl` 已启用，并校验 extension config / search / crawl 的最小响应结构；可加 `--include-image` 额外检查 image generate。`--include-media` 会改为检查 image / video / music generate，跳过 search / crawl，以保持在 3 次匿名 trial 内。
-- Launch audit（`pnpm launch:audit`）不会打开浏览器；它组合 release verifier、browser-free production smoke 和带一次重试的 live privacy policy GET 检查，并校验页面正文不是 Next.js 404 fallback、且包含 extension privacy 内容。它会输出仍阻塞 CWS 提交的 deploy / auth / dconf / privacy / abuse-control / real E2E / dogfood / latency / YouTube demo URL blockers。生产已部署双 bucket 匿名 abuse-control 后加 `--abuse-control-passed`，真实 E2E 获批并跑绿后加 `--real-e2e-passed`，5 人 2 工作日 dogfood 零 P0 后加 `--dogfood-passed`，部署服务 P90 生成延迟小于 15 秒后加 `--latency-passed`；四个确认和 `store-assets/cws-submission.md` 中的真实 YouTube demo URL 都存在时，它才能成为 CWS 上传前的绿色门禁。
+- Launch audit（`pnpm launch:audit`）不会打开浏览器；它组合 release verifier、browser-free production smoke 和带一次重试的 live privacy policy GET 检查，并校验页面正文不是 Next.js 404 fallback、且包含 extension privacy 内容。它会输出仍阻塞 CWS 提交的 deploy / auth / dconf / privacy / abuse-control / real E2E / dogfood / latency / YouTube demo URL blockers。生产已部署双 bucket 匿名 abuse-control 后加 `--abuse-control-passed`，真实 E2E 获批并跑绿后加 `--real-e2e-passed`，5 人 2 工作日 dogfood 零 P0 后加 `--dogfood-passed`，部署服务 P90 生成延迟小于 15 秒后加 `--latency-passed`；dogfood/P90 还必须记录在 `store-assets/launch-evidence.md`，四个确认和 `store-assets/cws-submission.md` 中的真实 YouTube demo URL 都存在时，它才能成为 CWS 上传前的绿色门禁。
 - `pnpm render:cws` 会从 `store-assets/composer/*.html` 重新渲染全部 6 张 CWS 营销图，且不打开可见浏览器窗口。
 
 ## 权限审计
