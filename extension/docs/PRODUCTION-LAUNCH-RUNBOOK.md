@@ -25,7 +25,7 @@ but production is not ready:
 
 - `pnpm verify:release` passes locally.
 - `pnpm preflight:local` passes locally.
-- `pnpm test` passes locally with 182 unit tests.
+- `pnpm test` passes locally with 183 unit tests.
 - Full local Go tests pass.
 - Latest production smoke with install ID `codex-smoke-20260511-after-contrast` returned required features as enabled, but
   `/v1/extension/config` returned `404`, and anonymous `/v1/web/search` plus
@@ -193,8 +193,9 @@ This step opens headed Chromium. Run it only after explicit approval:
 ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real
 ```
 
-After it passes, run the final browser-free audit with the manual E2E
-acknowledgement:
+After it passes, upload `store-assets/demo.mp4` to YouTube, record the final URL
+in `store-assets/cws-submission.md`, then run the final browser-free audit with
+the manual E2E acknowledgement:
 
 ```bash
 ANYCAP_INSTALL_ID=prod-audit-$(date +%Y%m%d%H%M%S) pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed
@@ -207,7 +208,8 @@ that equivalent gateway-level controls limit anonymous install-ID rotation.
 `--real-e2e-passed` is only an explicit acknowledgement that the headed E2E
 command already completed green. The audit fetches
 `https://anycap.ai/privacy/extension` with GET and fails if the response body is
-the Next.js 404 fallback, even if the CDN returns HTTP 200.
+the Next.js 404 fallback, even if the CDN returns HTTP 200. It also fails until
+`store-assets/cws-submission.md` contains a real YouTube demo URL.
 
 ## 6. Chrome Web Store Submission
 

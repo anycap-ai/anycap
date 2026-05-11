@@ -8,7 +8,7 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 
 - Upload: `releases/anycap-extension-0.2.0-chrome.zip`
 - Version: `0.2.0`
-- SHA-256: `e8263a1c5f4a4a7863999bb696d1ed9701a5f839bc09f667743eb243fa7e5390`
+- SHA-256: `9cd9df74670313576bd26a93a7f929e3eeb1d9eefbcb453de2d0046a68fcea7b`
 - Category: Productivity
 - Language: English
 
@@ -33,6 +33,11 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 
 Upload `store-assets/demo.mp4` to YouTube after approval, then paste the
 YouTube URL into the optional CWS promotional video field.
+
+- Promotional video YouTube URL: pending upload
+
+`pnpm launch:audit` blocks the final CWS upload gate until this section contains
+a real `https://www.youtube.com/watch?v=...` or `https://youtu.be/...` URL.
 
 ## Permissions
 
@@ -116,4 +121,4 @@ Server gates that must already be complete:
 
 Submit only after the package, assets, listing copy, permission copy, privacy URL,
 anonymous abuse-control gate, server deploy, dconf rollout, browser-free smoke,
-and approved real-mode E2E are complete.
+approved real-mode E2E, and the YouTube demo URL is recorded.

@@ -51,11 +51,11 @@ Latest browser-free production smoke on 2026-05-11 with install ID
 token.
 
 Latest `pnpm launch:audit` on 2026-05-11 with install ID
-`codex-audit-20260511-after-contrast` confirms release artifacts and required features,
-then reports five automated blockers: production `/v1/extension/config` deploy,
+`codex-audit-20260511-youtube-gate` confirms release artifacts and required features,
+then reports automated blockers: production `/v1/extension/config` deploy,
 anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
-404 fallback body, deployed abuse-control acknowledgement, and approved
-real-mode E2E. The local web source now registers `/privacy/extension` in SEO
+404 fallback body, deployed abuse-control acknowledgement, approved real-mode
+E2E, and a recorded YouTube demo URL. The local web source now registers `/privacy/extension` in SEO
 routes and IA, includes breadcrumb JSON-LD, pins builds with `web/.node-version`,
 and builds under Node 22.16.0; production
 still needs a web deploy before the live URL can pass. `launch:audit` now checks
@@ -142,6 +142,9 @@ a screen-cap tool like Cleanshot.
 - Use `store-assets/cws-submission.md` as the form checklist
 - Paste copy from `store-assets/description.md`
 - Upload all 6 PNGs from `store-assets/cws/`
+- Upload `store-assets/demo.mp4` to YouTube and record the final URL in
+  `store-assets/cws-submission.md`; `launch:audit` blocks until it finds a real
+  YouTube link there.
 - Paste permission justifications from `LAUNCH_CHECKLIST.md`
 - Privacy policy URL: <https://anycap.ai/privacy/extension> must pass the
   `launch:audit` body check; production currently returns a Next.js 404 fallback

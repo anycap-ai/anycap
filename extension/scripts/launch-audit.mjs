@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +11,8 @@ const DEFAULT_INSTALL_ID = `launch-audit-${Date.now()}`;
 const PRIVACY_POLICY_URL = 'https://anycap.ai/privacy/extension';
 const PRIVACY_NOT_FOUND_MARKERS = ['NEXT_HTTP_ERROR_FALLBACK;404', '404 — Not Found', '404 - Not Found'];
 const PRIVACY_REQUIRED_MARKERS = ['AnyCap Chrome Extension', 'Data we collect'];
+const YOUTUBE_DEMO_URL_PATTERN =
+  /https:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[A-Za-z0-9_-]{6,}(?:[^\s)`<]*)?/;
 
 function resultDetail(result) {
   const parts = [String(result.status || 'network')];
@@ -82,6 +85,17 @@ function validatePrivacyPolicyBody(body) {
   return { ok: true };
 }
 
+export function extractYouTubeDemoUrl(text) {
+  const match = String(text || '').match(YOUTUBE_DEMO_URL_PATTERN);
+  return match?.[0] || '';
+}
+
+function readYouTubeDemoUrl(rootDir = process.cwd()) {
+  const submissionPath = path.join(rootDir, 'store-assets/cws-submission.md');
+  if (!fs.existsSync(submissionPath)) return '';
+  return extractYouTubeDemoUrl(fs.readFileSync(submissionPath, 'utf8'));
+}
+
 export async function checkPrivacyPolicy(fetchImpl = globalThis.fetch) {
   if (typeof fetchImpl !== 'function') {
     return { ok: false, status: 0, code: 'FETCH_MISSING', message: 'fetch is not available' };
@@ -121,6 +135,7 @@ export function buildLaunchAudit({
   releaseErrors = [],
   smokeResult,
   privacyResult,
+  youtubeDemoUrl = '',
   realE2EPassed = false,
   abuseControlPassed = false,
 } = {}) {
@@ -178,6 +193,18 @@ export function buildLaunchAudit({
     );
   }
 
+  const hasYouTubeDemoUrl = Boolean(extractYouTubeDemoUrl(youtubeDemoUrl));
+  checks.push({
+    name: 'YouTube demo video',
+    ok: hasYouTubeDemoUrl,
+    detail: hasYouTubeDemoUrl ? youtubeDemoUrl : 'missing',
+  });
+  if (!hasYouTubeDemoUrl) {
+    blockers.push(
+      'Upload store-assets/demo.mp4 to YouTube and add the YouTube URL to store-assets/cws-submission.md before CWS upload.',
+    );
+  }
+
   if (!realE2EPassed) {
     blockers.push(
       'Run approved real-mode E2E with ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after production smoke passes; it opens headed Chromium.',
@@ -227,6 +254,7 @@ Runs browser-free Chrome extension launch gates:
   - production anonymous extension smoke, unless --skip-smoke is set
   - Chrome Web Store privacy policy URL GET and body validation, unless --skip-smoke is set
   - anonymous public-trial abuse-control acknowledgement
+  - YouTube demo video URL recorded in store-assets/cws-submission.md
   - blocker summary for deploy/dconf/CWS gates
 
 Pass --abuse-control-passed only after the dual-bucket server middleware or equivalent gateway controls limit install-ID rotation for anonymous public trials.
@@ -268,6 +296,7 @@ async function main() {
     releaseErrors: releaseResult.errors,
     smokeResult,
     privacyResult,
+    youtubeDemoUrl: readYouTubeDemoUrl(process.cwd()),
     realE2EPassed: args.realE2EPassed,
     abuseControlPassed: args.abuseControlPassed,
   });

@@ -48,6 +48,7 @@
 - Release verifier now enforces CWS zip and side-panel gzip performance budgets before upload.
 - Release verifier now guards side-panel accessibility source for labelled tab panels, onboarding dialog semantics, and labelled history thumbnails.
 - Side-panel muted and neutral text colors now pass the release verifier's static small-text contrast guard.
+- Launch audit now blocks the final CWS upload gate until the YouTube demo URL is recorded in `store-assets/cws-submission.md`.
 
 ## v0.2.0 — 2026-04-27
 

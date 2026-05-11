@@ -16,6 +16,7 @@ type LaunchAuditModule = {
       results: Array<{ name: string; ok: boolean; status: number; code?: string; message?: string }>;
     };
     privacyResult?: { ok: boolean; status: number; code?: string; message?: string };
+    youtubeDemoUrl?: string;
   }) => {
     ok: boolean;
     checks: Array<{ name: string; ok: boolean; detail: string }>;
@@ -171,6 +172,7 @@ describe('launch audit', () => {
         ],
       },
       privacyResult: { ok: true, status: 200 },
+      youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
     });
 
     expect(audit.blockers).toContain(
@@ -194,6 +196,7 @@ describe('launch audit', () => {
         ],
       },
       privacyResult: { ok: true, status: 200 },
+      youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
     });
 
     expect(audit.ok).toBe(false);
@@ -204,6 +207,36 @@ describe('launch audit', () => {
     });
     expect(audit.blockers).toContain(
       'Confirm anonymous public-trial abuse control is deployed before CWS upload; pass --abuse-control-passed only after the dual-bucket server middleware or equivalent gateway controls limit install-ID rotation.',
+    );
+  });
+
+  it('reports a YouTube demo video URL blocker before CWS upload', async () => {
+    const { buildLaunchAudit } = await loadAudit();
+
+    const audit = buildLaunchAudit({
+      releaseErrors: [],
+      realE2EPassed: true,
+      abuseControlPassed: true,
+      smokeResult: {
+        ok: true,
+        results: [
+          { name: 'required features', ok: true, status: 200 },
+          { name: 'extension config', ok: true, status: 200 },
+          { name: 'web search', ok: true, status: 200 },
+          { name: 'web crawl', ok: true, status: 200 },
+        ],
+      },
+      privacyResult: { ok: true, status: 200 },
+    });
+
+    expect(audit.ok).toBe(false);
+    expect(audit.checks).toContainEqual({
+      name: 'YouTube demo video',
+      ok: false,
+      detail: 'missing',
+    });
+    expect(audit.blockers).toContain(
+      'Upload store-assets/demo.mp4 to YouTube and add the YouTube URL to store-assets/cws-submission.md before CWS upload.',
     );
   });
 
@@ -244,6 +277,7 @@ describe('launch audit', () => {
         ],
       },
       privacyResult: { ok: true, status: 200 },
+      youtubeDemoUrl: 'https://www.youtube.com/watch?v=abc123XYZ_-',
     });
 
     expect(audit.ok).toBe(true);
