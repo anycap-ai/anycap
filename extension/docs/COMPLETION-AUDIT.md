@@ -39,6 +39,7 @@ and CWS submission gates pass.
 | Visible browser operations are approval-gated | Headed Playwright package scripts require `scripts/confirm-headed-e2e.mjs`; manual install/demo/smoke docs state visible Chrome UI requires explicit approval; `pnpm verify:release` validates both guard paths | Done |
 | Final launch audit can pass before CWS upload | `pnpm launch:audit` failed again on 2026-05-11 with `codex-audit-20260511-delivery-audit`; it catches the live privacy URL's Next.js 404 fallback body and now requires `--abuse-control-passed` plus `--real-e2e-passed` before it can turn green | Blocked |
 | CWS package uploaded and submitted | No upload performed without explicit approval | Blocked |
+| Local credentials can perform remaining web/store upload gates | `gh auth status` reports no GitHub login; `pnpm --dir web exec wrangler whoami` reports unauthenticated; GitHub SSH access is denied; no CWS/Google/YouTube/Cloudflare upload tokens are present in the environment | Blocked |
 
 ## Fresh Verification
 
@@ -107,6 +108,11 @@ Results:
 - `npx -y -p node@22.16.0 -p pnpm@10.33.0 pnpm --dir web run build`: passed again and listed `/privacy/extension` plus `/[locale]/privacy/extension`; `web/.node-version` pins Cloudflare/local builds to the same Node major/minor. The same build under local Node 24.14.1 still fails in Next page-data collection with `SIGSEGV`, which appears local toolchain-specific after Node 22.16.0 passes.
 - `pnpm smoke:server -- --base-url https://api.anycap.ai`: failed as expected before production deploy.
 - `pnpm launch:audit -- --base-url https://api.anycap.ai --install-id codex-audit-20260511-delivery-audit`: printed target context, caught the live privacy URL returning HTTP 200 with a Next.js 404 fallback body, then failed as expected before production deploy, deployed abuse-control acknowledgement, and real E2E.
+- Local credential audit: `gh auth status` reports no GitHub login;
+  `pnpm --dir web exec wrangler whoami` reports unauthenticated; `ssh -T
+  git@github.com` returns `Permission denied (publickey)`; `env | rg
+  '^(CHROME|CWS|GOOGLE|YOUTUBE|CLOUDFLARE|CF_|WRANGLER|GITHUB|GH_)'` only finds
+  `GH_PAGER=cat`; and `git remote -v` shows only the GitLab `origin` remote.
 
 Production failures observed:
 
@@ -145,8 +151,10 @@ These are the remaining gates before the objective can be marked complete:
 5. Rerun browser-free production smoke until `/v1/extension/config`, `/v1/web/search`, and `/v1/web/crawl` return `200`.
 6. With explicit approval, run `ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real`.
 7. Rerun `pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed` only after the anonymous abuse-control gate is actually deployed and the approved real-mode E2E is green.
-8. Upload `store-assets/demo.mp4` to YouTube after approval.
-9. Upload `releases/anycap-extension-0.2.0-chrome.zip` to Chrome Web Store using `store-assets/cws-submission.md`.
+8. Authenticate the local machine or provide another approved release operator
+   for GitHub/Cloudflare, YouTube, and Chrome Web Store upload steps.
+9. Upload `store-assets/demo.mp4` to YouTube after approval.
+10. Upload `releases/anycap-extension-0.2.0-chrome.zip` to Chrome Web Store using `store-assets/cws-submission.md`.
 
 ## Decision
 

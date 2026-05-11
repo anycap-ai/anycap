@@ -38,6 +38,21 @@ but production is not ready:
 Those results mean the production blocker is server deployment, not Chrome-side
 packaging.
 
+## Current Access Snapshot
+
+As of 2026-05-11, this local machine is not ready to perform the remaining
+web/store upload steps without additional credentials:
+
+- `gh auth status` reports no GitHub login.
+- `pnpm --dir web exec wrangler whoami` reports no Cloudflare/Wrangler login.
+- `git@github.com:anycap-ai/anycap.git` SSH access is denied.
+- The environment does not expose Chrome Web Store, Google, YouTube,
+  Cloudflare, Wrangler, or GitHub upload tokens; only `GH_PAGER=cat` is present.
+- The repository currently has only the GitLab `origin` remote configured.
+
+Treat those as credential blockers, separate from the production server blockers
+above.
+
 ## Approval Gates
 
 Do not run these without explicit approval from the repository owner:
