@@ -44,14 +44,14 @@ Use `docs/PRODUCTION-LAUNCH-RUNBOOK.md` for the exact deploy, dconf, smoke,
 real-mode E2E acknowledgement, CWS upload, and rollback sequence.
 
 Latest browser-free production smoke on 2026-05-11 with install ID
-`codex-smoke-20260511-nobrowser-recheck` still fails before media generation:
+`codex-smoke-20260511-delivery-audit` still fails before media generation:
 `/v1/features` returns the required feature flags as enabled, but
 `/v1/extension/config` returns `404`, while
 `/v1/web/search` and `/v1/web/crawl` return `401 AUTH_INVALID` without a bearer
 token.
 
 Latest `pnpm launch:audit` on 2026-05-11 with install ID
-`codex-audit-20260511-nobrowser-recheck` confirms release artifacts and required features,
+`codex-audit-20260511-delivery-audit` confirms release artifacts and required features,
 then reports five automated blockers: production `/v1/extension/config` deploy,
 anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
 404 fallback body, deployed abuse-control acknowledgement, and approved
