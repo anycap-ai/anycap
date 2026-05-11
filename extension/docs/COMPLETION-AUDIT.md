@@ -21,8 +21,8 @@ and CWS submission gates pass.
 | CWS zip is freshly buildable | `pnpm preflight:local` rebuilt the release zip on 2026-05-11 | Done |
 | CWS zip copied into `releases/` and byte-matches WXT output | `shasum -a 256 .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip` matched | Done |
 | Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `f5474c8b0d0b799317e29c85c9def3a7bfe39292eb2899dd97d2c48a3440946a`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
-| Release verifier covers package, assets, listing, launch UI copy, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, assets, demo MP4 metadata, permission copy, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, visible Chrome approval docs, anonymous-launch UI copy that rejects hidden sign-in quota promises and production trial-reset controls, and all package scripts that invoke Playwright requiring the headed-E2E approval guard | Done |
-| Unit/type checks pass | `pnpm preflight:local` passed after anonymous launch copy hardening: 24 files / 169 tests, `npx tsc --noEmit`, and `pnpm verify:release` | Done |
+| Release verifier covers package, assets, listing, launch UI copy, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, assets, demo MP4 metadata, permission copy, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, visible Chrome approval docs, anonymous-launch UI source and packed zip copy that reject hidden sign-in quota promises and production trial-reset controls, and all package scripts that invoke Playwright requiring the headed-E2E approval guard | Done |
+| Unit/type checks pass | `pnpm preflight:local` passed after anonymous launch copy hardening: 24 files / 169 tests, and targeted verifier tests now pass with 24 files / 170 tests; `npx tsc --noEmit` and `pnpm verify:release` pass | Done |
 | CI extension gate is browser-free | `.gitlab-ci.yml` parses successfully and `build:extension` runs `pnpm preflight:local`; release verifier rejects preflight scripts containing headed browser commands | Done |
 | CWS screenshots and promo assets exist and are current | `pnpm render:cws` passed; 4 screenshots + 2 promo assets regenerated with headless Chromium | Done |
 | Demo video source exists and covers v0.2 workflows | `pnpm render:demo` passed; `store-assets/demo.mp4` is 72s H.264 1280×720 yuv420p, verified by `pnpm verify:release`, and covers 6 capability tabs plus 7 right-click menus | Done |
@@ -89,7 +89,8 @@ Results:
 - `npx tsc --noEmit`: passed.
 - `pnpm render:demo`: passed; generated `store-assets/demo.mp4`.
 - `ffprobe store-assets/demo.mp4`: H.264, 1280×720, yuv420p, 72s.
-- `pnpm test`: passed, 24 files / 169 tests.
+- `pnpm test`: passed, 24 files / 169 tests in the latest full browser-free preflight run.
+- `pnpm test -- release-verify.test.ts`: passed after packed-zip anonymous launch copy guard hardening, 24 files / 170 tests.
 - `pnpm test -- launch-audit.test.ts`: passed after the anonymous abuse-control audit regression; latest full browser-free preflight test run is 24 files / 169 tests.
 - `pnpm test -- server-smoke.test.ts`: passed after changing `--include-media` to media-only anonymous smoke so it stays within the 3-run launch trial; latest full browser-free preflight test run is 24 files / 169 tests.
 - `pnpm test -- release-verify.test.ts confirm-headed-e2e.test.ts`: passed after the all-Playwright-script approval guard update; latest full browser-free preflight test run is 24 files / 169 tests.

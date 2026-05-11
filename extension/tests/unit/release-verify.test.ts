@@ -1006,6 +1006,22 @@ describe('release verifier', () => {
     ]);
   });
 
+  it('rejects release zip JavaScript with stale hidden-login launch copy', async () => {
+    const { validateZipEntries } = await loadVerifier();
+
+    expect(
+      validateZipEntries(['chunks/sidepanel.js'], () =>
+        'Free Tries Used. Sign in to get 50 free credits per month. Reset trial in Settings. Account login coming soon.',
+      ),
+    ).toEqual([
+      'release zip chunks/sidepanel.js: extension launch UI must not promise 50 free credits while login UI is hidden',
+      'release zip chunks/sidepanel.js: extension launch UI must not direct exhausted anonymous users to hidden sign-in quota',
+      'release zip chunks/sidepanel.js: extension launch UI must not mention unavailable monthly sign-in credits',
+      'release zip chunks/sidepanel.js: extension launch UI must use planned account sign-in language, not stale login copy',
+      'release zip chunks/sidepanel.js: paywall must not direct production users to reset anonymous trial state',
+    ]);
+  });
+
   it('rejects stale releases zip when WXT output zip differs', async () => {
     const { validateSyncedReleaseZip } = await loadVerifier();
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'anycap-release-sync-'));

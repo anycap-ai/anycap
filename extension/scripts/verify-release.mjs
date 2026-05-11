@@ -677,6 +677,11 @@ export function validateZipEntries(entries, readEntryText) {
         errors.push(`release zip ${entry} must not contain ${forbidden.replace(/^https?:\/\//, '')}`);
       }
     }
+    for (const [pattern, message] of FORBIDDEN_LAUNCH_COPY_PATTERNS) {
+      if (pattern.test(text)) {
+        errors.push(`release zip ${entry}: ${message}`);
+      }
+    }
   }
   return errors;
 }
