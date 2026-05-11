@@ -37,7 +37,7 @@ and CWS submission gates pass.
 | Extension privacy web route is buildable | Local web source explicitly registers `/privacy/extension` in SEO route definitions and IA, includes breadcrumb JSON-LD, pins web builds to Node 22.16.0 with `web/.node-version`, and Node 22.16.0 `pnpm --dir web run build` lists `/privacy/extension` and `/[locale]/privacy/extension` | Done locally, production deploy pending |
 | Real-mode E2E against production passes | `pnpm e2e:real` is guarded by `ANYCAP_ALLOW_HEADED_E2E=1` and intentionally not run without explicit approval because it opens headed Chromium | Blocked by approval and production deploy |
 | Visible browser operations are approval-gated | Headed Playwright package scripts require `scripts/confirm-headed-e2e.mjs`; manual install/demo/smoke docs state visible Chrome UI requires explicit approval; `pnpm verify:release` validates both guard paths | Done |
-| Final launch audit can pass before CWS upload | `pnpm launch:audit` failed again on 2026-05-11 with `codex-audit-20260511133000`; it catches the live privacy URL's Next.js 404 fallback body and now requires `--abuse-control-passed` plus `--real-e2e-passed` before it can turn green | Blocked |
+| Final launch audit can pass before CWS upload | `pnpm launch:audit` failed again on 2026-05-11 with `codex-audit-20260511143155`; it catches the live privacy URL's Next.js 404 fallback body and now requires `--abuse-control-passed` plus `--real-e2e-passed` before it can turn green | Blocked |
 | CWS package uploaded and submitted | No upload performed without explicit approval | Blocked |
 
 ## Fresh Verification
@@ -75,7 +75,7 @@ pnpm --dir web run check:edge-runtime
 npx -y -p node@22.16.0 -p pnpm@10.33.0 pnpm --dir web run build
 cd extension
 pnpm smoke:server -- --install-id codex-smoke-20260511-final-recheck --base-url https://api.anycap.ai
-pnpm launch:audit -- --install-id codex-audit-20260511133000 --base-url https://api.anycap.ai
+pnpm launch:audit -- --install-id codex-audit-20260511143155 --base-url https://api.anycap.ai
 ```
 
 Results:
@@ -105,7 +105,7 @@ Results:
 - `pnpm --dir web run check:seo-locale-rollout` and `pnpm --dir web run check:edge-runtime`: passed.
 - `npx -y -p node@22.16.0 -p pnpm@10.33.0 pnpm --dir web run build`: passed again and listed `/privacy/extension` plus `/[locale]/privacy/extension`; `web/.node-version` pins Cloudflare/local builds to the same Node major/minor. The same build under local Node 24.14.1 still fails in Next page-data collection with `SIGSEGV`, which appears local toolchain-specific after Node 22.16.0 passes.
 - `pnpm smoke:server -- --base-url https://api.anycap.ai`: failed as expected before production deploy.
-- `pnpm launch:audit -- --base-url https://api.anycap.ai --install-id codex-audit-20260511133000`: printed target context, caught the live privacy URL returning HTTP 200 with a Next.js 404 fallback body, then failed as expected before production deploy, deployed abuse-control acknowledgement, and real E2E.
+- `pnpm launch:audit -- --base-url https://api.anycap.ai --install-id codex-audit-20260511143155`: printed target context, caught the live privacy URL returning HTTP 200 with a Next.js 404 fallback body, then failed as expected before production deploy, deployed abuse-control acknowledgement, and real E2E.
 
 Production failures observed:
 
@@ -118,7 +118,7 @@ server smoke: fail web crawl (401) AUTH_INVALID - missing or invalid bearer toke
 ```
 
 ```text
-launch audit: ok target - base-url=https://api.anycap.ai install-id=codex-audit-20260511133000
+launch audit: ok target - base-url=https://api.anycap.ai install-id=codex-audit-20260511143155
 launch audit: ok release artifacts - pnpm verify:release passed
 launch audit: ok prod smoke: required features - 200
 launch audit: fail prod smoke: extension config - 404
