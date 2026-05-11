@@ -34,6 +34,7 @@
 - Added `pnpm preflight:local` as a browser-free local production gate for release rebuild, unit tests, type check, and release verification; release verifier now requires it to stay browser-free.
 - Extension CI now runs `pnpm preflight:local` so the checked-in CWS package path stays covered by the same browser-free local gate.
 - Added `pnpm smoke:server` for browser-free post-deploy validation of required feature flags, anonymous extension headers, `/v1/extension/config`, web search, web crawl, extension config/search/crawl response shapes, and optional image/video/music generation.
+- `pnpm smoke:server` now prints per-check durations so launch operators can capture browser-free timing evidence in the final launch notes.
 - Adjusted `pnpm smoke:server -- --include-media` to run image/video/music as a media-only anonymous smoke, skipping search/crawl so the smoke does not exceed the 3-run anonymous launch trial by itself.
 - Fixed the extension web-search client to send `max_results` to the server and map server `description` fields into the UI `snippet` field.
 - Added `pnpm launch:audit` for browser-free launch gate aggregation across release verification, production smoke, live privacy policy URL, and remaining deploy / auth / dconf / real E2E blockers.

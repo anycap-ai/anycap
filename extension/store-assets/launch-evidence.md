@@ -28,8 +28,11 @@ Required before recording a numeric latency:
 - Metric comes from the deployed server, not a local mock build.
 - P90 generation latency is below 15 seconds.
 - Measurement window and query/dashboard source are recorded in the notes below.
+- `pnpm smoke:server` per-check `in Nms` timings may be recorded below as
+  browser-free spot-check evidence, but they do not replace the deployed-server
+  P90 metric source.
 
 ## Notes
 
 - Dogfood evidence:
-- Latency evidence:
+- Latency evidence: record deployed-server P90 source/window and any relevant `pnpm smoke:server` per-check durations.

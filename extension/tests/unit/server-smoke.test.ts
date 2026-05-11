@@ -10,10 +10,11 @@ type SmokeModule = {
     includeImage?: boolean;
     includeMedia?: boolean;
     fetchImpl: typeof fetch;
+    nowImpl?: () => number;
   }) => Promise<{
     ok: boolean;
     target?: { baseUrl: string; installId: string };
-    results: Array<{ name: string; ok: boolean; status: number; code?: string; message?: string }>;
+    results: Array<{ name: string; ok: boolean; status: number; code?: string; message?: string; duration_ms?: number }>;
   }>;
 };
 
@@ -158,6 +159,42 @@ describe('server smoke script', () => {
     expect(calls[2].init?.method).toBe('POST');
     expect(JSON.parse(String(calls[2].init?.body))).toEqual({ query: 'AnyCap', max_results: 4, crawl_results: 0 });
     expect(JSON.parse(String(calls[3].init?.body))).toEqual({ url: 'https://example.com/' });
+  });
+
+  it('records per-check durations for browser-free latency evidence', async () => {
+    const { runServerSmoke } = await loadSmoke();
+    let now = 1000;
+    const fetchImpl = async (url: URL | RequestInfo) => {
+      const rawUrl = String(url);
+      if (rawUrl.endsWith('/v1/features')) {
+        return jsonResponse(200, { status: 'success', data: { features: requiredFeatures } });
+      }
+      if (rawUrl.endsWith('/v1/extension/config')) {
+        return jsonResponse(200, {
+          status: 'success',
+          data: { default_prompt: 'prompt', default_model: 'nano-banana-2', min_image_dim: 256 },
+        });
+      }
+      if (rawUrl.endsWith('/v1/web/search')) {
+        return jsonResponse(200, { status: 'success', data: { query: 'AnyCap', results: [] } });
+      }
+      return jsonResponse(200, {
+        status: 'success',
+        data: { url: 'https://example.com/', title: 'Example Domain', markdown: '# Example Domain' },
+      });
+    };
+
+    const result = await runServerSmoke({
+      baseUrl: 'https://api-staging.anycap.ai',
+      installId: 'smoke-install',
+      fetchImpl: fetchImpl as typeof fetch,
+      nowImpl: () => {
+        now += 25;
+        return now;
+      },
+    });
+
+    expect(result.results.map((item) => item.duration_ms)).toEqual([25, 25, 25, 25]);
   });
 
   it('fails when required Chrome extension features are missing or disabled', async () => {

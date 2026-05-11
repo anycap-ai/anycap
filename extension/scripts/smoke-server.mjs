@@ -29,7 +29,8 @@ function readError(body) {
   };
 }
 
-async function runCheck(fetchImpl, baseUrl, installId, check) {
+async function runCheck(fetchImpl, baseUrl, installId, check, nowImpl) {
+  const startedAt = nowImpl();
   const hasBody = check.body !== undefined;
   let response;
   let lastError;
@@ -50,6 +51,7 @@ async function runCheck(fetchImpl, baseUrl, installId, check) {
       name: check.name,
       ok: false,
       status: 0,
+      duration_ms: Math.max(0, Math.round(nowImpl() - startedAt)),
       message: lastError instanceof Error ? lastError.message : String(lastError),
     };
   }
@@ -67,6 +69,7 @@ async function runCheck(fetchImpl, baseUrl, installId, check) {
     name: check.name,
     ok: response.ok && body?.status !== 'error' && !validationError,
     status: response.status,
+    duration_ms: Math.max(0, Math.round(nowImpl() - startedAt)),
     ...(validationError || serverError),
   };
 }
@@ -139,6 +142,7 @@ export async function runServerSmoke({
   includeImage = false,
   includeMedia = false,
   fetchImpl = globalThis.fetch,
+  nowImpl = () => performance.now(),
 } = {}) {
   if (typeof fetchImpl !== 'function') {
     throw new Error('fetch is not available; use Node 18+ or pass fetchImpl');
@@ -215,7 +219,7 @@ export async function runServerSmoke({
 
   const results = [];
   for (const check of checks) {
-    results.push(await runCheck(fetchImpl, normalizedBase, installId, check));
+    results.push(await runCheck(fetchImpl, normalizedBase, installId, check, nowImpl));
   }
   return { ok: results.every((result) => result.ok), target: { baseUrl: normalizedBase, installId }, results };
 }
@@ -278,11 +282,12 @@ async function main() {
   console.log(`server smoke: ok target - base-url=${result.target.baseUrl} install-id=${result.target.installId}`);
   for (const item of result.results) {
     const status = item.status || 'network';
+    const duration = Number.isFinite(item.duration_ms) ? ` in ${item.duration_ms}ms` : '';
     if (item.ok) {
-      console.log(`server smoke: ok ${item.name} (${status})`);
+      console.log(`server smoke: ok ${item.name} (${status})${duration}`);
     } else {
       const detail = [item.code, item.message, item.hint].filter(Boolean).join(' - ');
-      console.error(`server smoke: fail ${item.name} (${status})${detail ? ` ${detail}` : ''}`);
+      console.error(`server smoke: fail ${item.name} (${status})${duration}${detail ? ` ${detail}` : ''}`);
     }
   }
   if (!result.ok) {

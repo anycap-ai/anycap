@@ -25,7 +25,7 @@ but production is not ready:
 
 - `pnpm verify:release` passes locally.
 - `pnpm preflight:local` passes locally.
-- `pnpm test` passes locally with 188 unit tests.
+- `pnpm test` passes locally with 189 unit tests.
 - Full local Go tests pass.
 - Latest production smoke with install ID `codex-smoke-20260511-after-contrast` returned required features as enabled, but
   `/v1/extension/config` returned `404`, and anonymous `/v1/web/search` plus
@@ -176,6 +176,11 @@ Expected:
 - `/v1/extension/config` returns `200`.
 - `/v1/web/search` returns `200`, not `401`, `403`, or `503`.
 - `/v1/web/crawl` returns `200`, not `401`, `403`, or `503`.
+
+Each smoke check prints `in Nms` timing in the terminal. Paste the relevant
+browser-free timings into `store-assets/launch-evidence.md` notes if useful,
+but use deployed-server metrics or a recorded measurement window for the final
+P90 latency acknowledgement.
 
 Optional provider-costing media-only smoke, only after approval. This mode
 checks image/video/music and skips search/crawl so it stays within the 3-run
