@@ -59,6 +59,7 @@ build:extension:
         - extension/node_modules
   script:
     - corepack enable
+    - corepack prepare pnpm@10.33.0 --activate
     - cd extension
     - pnpm install --frozen-lockfile
     - pnpm preflight:local

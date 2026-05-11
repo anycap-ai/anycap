@@ -171,6 +171,11 @@ export function validateManifest(manifest) {
 export function validatePackageScripts(pkg) {
   const scripts = pkg.scripts && typeof pkg.scripts === 'object' ? pkg.scripts : {};
   const errors = [];
+  const packageManager = String(pkg.packageManager ?? '');
+
+  if (!/^pnpm@10\./.test(packageManager)) {
+    errors.push('package.json must pin packageManager to pnpm@10.x for GitLab Node 22 CI installs');
+  }
 
   if (!String(scripts.release ?? '').includes('WXT_RELEASE=true')) {
     errors.push('package.json scripts.release must build with WXT_RELEASE=true');

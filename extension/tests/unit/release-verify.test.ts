@@ -213,6 +213,7 @@ describe('release verifier', () => {
 
     expect(
       validatePackageScripts({
+        packageManager: 'pnpm@10.33.0',
         scripts: {
           release:
             'export WXT_RELEASE=true && wxt build && wxt zip && mkdir -p releases && cp .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip && node scripts/sync-release-hash.mjs',
@@ -247,6 +248,19 @@ describe('release verifier', () => {
     });
 
     expect(errors).toContain('package.json scripts.e2e:real must run scripts/confirm-headed-e2e.mjs first');
+  });
+
+  it('requires package.json to pin pnpm 10 for GitLab Node 22 CI installs', async () => {
+    const { validatePackageScripts } = await loadVerifier();
+
+    const errors = validatePackageScripts({
+      scripts: {
+        release:
+          'export WXT_RELEASE=true && wxt build && wxt zip && mkdir -p releases && cp .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip && node scripts/sync-release-hash.mjs',
+      },
+    });
+
+    expect(errors).toContain('package.json must pin packageManager to pnpm@10.x for GitLab Node 22 CI installs');
   });
 
   it('requires all headed Playwright scripts to run the browser approval guard', async () => {

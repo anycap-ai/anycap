@@ -10,7 +10,7 @@ submitting to the Chrome Web Store.
 - [x] `pnpm release` produces `releases/anycap-extension-0.2.0-chrome.zip` (128.67 KB)
 - [x] `pnpm verify:release` — release zip manifest, extension icon dimensions, runtime manifest entrypoints and referenced runtime files, content script `file://` exclusion, permissions, scripts, no dev/staging leakage, `.output`/`releases` zip sync, CWS submission hash, CWS asset dimensions, demo MP4 metadata, listing copy, permission justifications, CWS submission guide including demo-video YouTube instructions, headless CWS renderer script, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs pass
 - [x] `pnpm preflight:local` — browser-free local gate covering release rebuild, unit tests, type check, and release verifier
-- [x] `pnpm test` — 160 unit tests pass
+- [x] `pnpm test` — 161 unit tests pass
 - [x] `pnpm launch:audit -- --skip-smoke` — browser-free local launch audit command is wired
 - [x] Targeted server readiness tests — `internal/transport/http`, `internal/middleware`, and image/video/music/web application packages cover anonymous Chrome extension routes and pass locally
 - [ ] `pnpm smoke:server -- --base-url <staging-or-prod>` — browser-free required-features + anonymous extension config/search/crawl smoke pending deploy
