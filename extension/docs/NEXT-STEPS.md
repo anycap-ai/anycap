@@ -51,7 +51,7 @@ Latest browser-free production smoke on 2026-05-11 with install ID
 token.
 
 Latest `pnpm launch:audit` on 2026-05-11 with install ID
-`codex-audit-20260511120715` confirms release artifacts and required features,
+`codex-audit-20260511133000` confirms release artifacts and required features,
 then reports five automated blockers: production `/v1/extension/config` deploy,
 anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
 404 fallback body, deployed abuse-control acknowledgement, and approved
