@@ -43,6 +43,7 @@
 - Added `docs/PRODUCTION-LAUNCH-RUNBOOK.md` with server deploy, dconf, smoke, E2E acknowledgement, CWS submission, and rollback steps.
 - Added `pnpm render:cws`, a headless Chrome Web Store screenshot and promo asset renderer that avoids opening visible browser windows.
 - Added `pnpm render:demo`, a headless demo video renderer that outputs `store-assets/demo.mp4` for YouTube upload after approval.
+- Release verifier now rejects retired standalone `engineering/anycap_chrome` repository references in extension release docs, so install instructions stay pointed at the current monorepo.
 
 ## v0.2.0 — 2026-04-27
 

@@ -185,10 +185,10 @@ function createReleaseDocsTree(overrides: Record<string, string> = {}) {
   const docs: Record<string, string> = {
     'README.md': [
       'tests/',
-      '  unit/                    # Vitest — 174 个用例',
+      '  unit/                    # Vitest — 175 个用例',
       'Release verifier checks listing / screenshot composer 文案.',
     ].join('\n'),
-    'LOAD_AND_USE.md': 'pnpm test                                          # 174 unit tests',
+    'LOAD_AND_USE.md': 'pnpm test                                          # 175 unit tests',
     'CHANGELOG.md': [
       'Updated Chrome Web Store listing and screenshot composer copy.',
       'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
@@ -487,10 +487,24 @@ describe('release verifier', () => {
     })) ?? [];
 
     expect(errors).toEqual([
-      'README.md must document current Vitest unit test count: 174',
-      'LOAD_AND_USE.md must document current Vitest unit test count: 174',
+      'README.md must document current Vitest unit test count: 175',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 175',
       'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
+  });
+
+  it('rejects release docs that point users at the retired standalone Chrome repo', async () => {
+    const verifier = await loadVerifier();
+    const errors = verifier.validateReleaseDocs?.(createReleaseDocsTree({
+      'README.md': [
+        'https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases',
+        'git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git',
+        'cd anycap_chrome',
+        '  unit/                    # Vitest — 175 个用例',
+      ].join('\n'),
+    })) ?? [];
+
+    expect(errors).toContain('README.md must not reference retired engineering/anycap_chrome repository');
   });
 
   it('requires a browser-free local production preflight script', async () => {

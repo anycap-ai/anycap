@@ -22,13 +22,12 @@ AnyCap 是一个 **AI 能力运行时（capability runtime）**。Chrome 扩展�
 
 ## 安装
 
-> **一句话总结 — 从 [Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases) 下载最新 `.zip`，解压，加载已解压的扩展程序。**
+> **一句话总结 — 使用本仓库 `extension/releases/anycap-extension-0.2.0-chrome.zip`，解压，加载已解压的扩展程序。**
 > 下面的安装和试用步骤会使用可见 Chrome UI。Agent 执行时不要在未获明确批准的情况下运行这些步骤。
 
 ### 方式 A — 使用预打包 zip（推荐给体验者）
 
-1. 从 <https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases> 下载
-   `anycap-extension-<version>-chrome.zip`。
+1. 从本仓库 `extension/releases/` 取得 `anycap-extension-0.2.0-chrome.zip`。
 2. 解压到任意目录，例如 `~/Downloads/anycap-extension`。
 3. 浏览器打开 `chrome://extensions`，右上角开启 **开发者模式**。
 4. 点击 **加载已解压的扩展程序**，选择刚才解压出来的目录。
@@ -42,8 +41,8 @@ AnyCap 是一个 **AI 能力运行时（capability runtime）**。Chrome 扩展�
 ### 方式 B — 从源码构建
 
 ```bash
-git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git
-cd anycap_chrome
+git clone https://gitlab.knoffice.tech/engineering/anycap.git
+cd anycap/extension
 pnpm install
 
 # 三选一：
@@ -112,7 +111,7 @@ store-assets/
   composer/*.html          # CWS 截图的静态 HTML 编排器（1280×800 / 1400×560 / 440×280）
   cws/*.png                # 渲染好的 CWS 提审素材
 tests/
-  unit/                    # Vitest — 174 个用例
+  unit/                    # Vitest — 175 个用例
   e2e/                     # Playwright — prod / demo / CWS screenshot specs
 wxt.config.ts              # Manifest，host_permissions（release 模式剥离 localhost）
 docs/assets/               # README 用的图示
@@ -189,7 +188,7 @@ Localhost / `127.0.0.1` 只在 dev/demo 构建里加回来（`WXT_RELEASE` 未�
 | v0.1.0 | 2026-04-22 | 仅弹窗的图片变体 MVP。 |
 
 完整变更日志：[`CHANGELOG.md`](./CHANGELOG.md)。
-预打包 zip 与签名后的发布说明：[Releases](https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases)。
+预打包 zip：本仓库 [`extension/releases/`](./releases/)。
 
 ## 文档索引
 

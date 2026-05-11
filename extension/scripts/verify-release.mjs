@@ -48,7 +48,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 174;
+const CURRENT_UNIT_TEST_COUNT = 175;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
   {
     path: 'README.md',
@@ -91,6 +91,13 @@ const REQUIRED_RELEASE_DOCS = [
     error: `README.md must document current Vitest unit test count: ${CURRENT_UNIT_TEST_COUNT}`,
     validate(source) {
       return String(source || '').includes(`Vitest — ${CURRENT_UNIT_TEST_COUNT} 个用例`);
+    },
+  },
+  {
+    path: 'README.md',
+    error: 'README.md must not reference retired engineering/anycap_chrome repository',
+    validate(source) {
+      return !/engineering\/anycap_chrome|anycap_chrome/i.test(String(source || ''));
     },
   },
   {
