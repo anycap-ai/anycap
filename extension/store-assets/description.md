@@ -24,7 +24,7 @@ AnyCap brings 6 AI capabilities to every browser tab via a clean side panel. Rig
 
 - 19 prompt templates across all gen tabs — one tap to start
 - Per-capability history with thumbnail grid — click to rehydrate the form
-- Settings tab: default models, watermark control, reduced motion, reset trial
+- Settings tab: default models, watermark control, reduced motion, local history
 
 **Free trial:** 3 anonymous capability runs / month during launch, no signup. Account sign-in and Pro plans are planned.
 

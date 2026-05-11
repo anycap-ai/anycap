@@ -681,6 +681,23 @@ describe('release verifier', () => {
     );
   });
 
+  it('rejects store description copy that advertises production trial reset controls', async () => {
+    const { validateStoreDescription } = await loadVerifier();
+    const text = [
+      'Image, Video, Music, Search, Crawl — in your browser.',
+      '6 capabilities, one panel:',
+      'Vary Image Video Music Search Crawl',
+      '7 context-aware right-click menus:',
+      'Settings tab: default models, watermark control, reduced motion, reset trial.',
+      'Free trial: 3 anonymous capability runs / month during launch, no signup.',
+      'Privacy: selected text, image URL, page URL, link URL, search query, model choice. No cookies, background screenshots, or clipboard contents. https://anycap.ai/privacy/extension',
+    ].join('\n');
+
+    expect(validateStoreDescription(text)).toContain(
+      'store-assets/description.md must not advertise trial reset controls in production listing copy',
+    );
+  });
+
   it('rejects store description copy without the privacy policy URL', async () => {
     const { validateStoreDescription } = await loadVerifier();
 

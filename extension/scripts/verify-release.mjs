@@ -451,6 +451,9 @@ export function validateStoreDescription(text) {
   if (/sign\s+in\s+for\s+50\s*\/\s*month/i.test(source) || /50\s+free\s+credits/i.test(source)) {
     errors.push('store-assets/description.md must not promise sign-in quota while extension login UI is hidden');
   }
+  if (/\breset\s+(free\s+)?trial\b/i.test(source)) {
+    errors.push('store-assets/description.md must not advertise trial reset controls in production listing copy');
+  }
 
   const missingCapabilities = CURRENT_CAPABILITIES.filter((capability) => !source.includes(capability));
   if (missingCapabilities.length > 0) {
