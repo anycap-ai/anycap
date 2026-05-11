@@ -27,7 +27,7 @@ but production is not ready:
 - `pnpm preflight:local` passes locally.
 - `pnpm test` passes locally with 182 unit tests.
 - Full local Go tests pass.
-- Latest production smoke with install ID `codex-smoke-20260511-delivery-audit` returned required features as enabled, but
+- Latest production smoke with install ID `codex-smoke-20260511-after-contrast` returned required features as enabled, but
   `/v1/extension/config` returned `404`, and anonymous `/v1/web/search` plus
   `/v1/web/crawl` returned `401 AUTH_INVALID`.
 - The local server now includes the anonymous public-trial abuse control:
