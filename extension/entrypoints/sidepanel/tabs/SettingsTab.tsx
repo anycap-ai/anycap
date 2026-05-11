@@ -83,7 +83,7 @@ export function SettingsTab() {
           />
         </Field>
         <p className="text-[11px] text-text-neutral">
-          Account login coming soon — anonymous users get 3 free tries / month.
+          Account sign-in and paid plans are planned. Anonymous users get 3 runs / month during launch.
         </p>
       </Section>
 
@@ -116,15 +116,17 @@ export function SettingsTab() {
       </Section>
 
       <Section icon={RotateCcw} title="Maintenance">
-        <button
-          onClick={onResetTrial}
-          className="w-full text-left text-sm border border-border-card bg-surface-input rounded-xl px-3 py-2.5 hover:bg-surface-hover hover:border-border-input-hover card-hover"
-        >
-          <div className="font-medium text-text-primary">Reset free trial counter</div>
-          <div className="text-[11px] text-text-neutral mt-0.5">
-            Restore 3 free tries — useful while building demos.
-          </div>
-        </button>
+        {MOCK_MODE && (
+          <button
+            onClick={onResetTrial}
+            className="w-full text-left text-sm border border-border-card bg-surface-input rounded-xl px-3 py-2.5 hover:bg-surface-hover hover:border-border-input-hover card-hover"
+          >
+            <div className="font-medium text-text-primary">Reset demo trial counter</div>
+            <div className="text-[11px] text-text-neutral mt-0.5">
+              Restore 3 local demo tries.
+            </div>
+          </button>
+        )}
         <button
           onClick={onResetSettings}
           className="w-full text-left text-sm border border-border-card bg-surface-input rounded-xl px-3 py-2.5 hover:bg-surface-hover hover:border-border-input-hover card-hover"

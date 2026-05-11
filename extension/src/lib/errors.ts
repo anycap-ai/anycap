@@ -57,7 +57,7 @@ export function classifyHttpError(status: number, body?: { code?: string; messag
 
 export function errorMessage(code: AnyCapErrorCode): string {
   const map: Record<AnyCapErrorCode, string> = {
-    TRIAL_EXHAUSTED: 'You have used all free tries. Sign in to get 50 free credits per month.',
+    TRIAL_EXHAUSTED: 'You have used all 3 anonymous launch runs for this month.',
     UNAUTHORIZED: 'Your session has expired. Please sign in again.',
     IMAGE_TOO_SMALL: 'Image is too small. Minimum dimension is 256 pixels.',
     NETWORK_ERROR: 'Network error. Please check your connection and try again.',

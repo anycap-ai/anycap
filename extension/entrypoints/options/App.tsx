@@ -52,7 +52,7 @@ export default function App() {
           <p className="text-sm text-text-body mt-1">
             {`Anonymous — ${remainingTrials} free ${remainingTrials === 1 ? 'try' : 'tries'} remaining`}
           </p>
-          <p className="mt-1 text-xs text-text-neutral">Account login coming soon.</p>
+          <p className="mt-1 text-xs text-text-neutral">Account sign-in and paid plans are planned.</p>
         </div>
 
         <div className="bg-surface-card border border-border-card rounded-2xl p-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)' }}>

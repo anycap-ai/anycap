@@ -12,6 +12,7 @@ type ReleaseVerifyModule = {
   readPNGDimensions: (buffer: Buffer) => { width: number; height: number };
   validateCWSAssets: (rootDir: string) => string[];
   validateStoreDescription: (text: string) => string[];
+  validateLaunchCopy: (rootDir: string) => string[];
   validatePermissionJustifications: (text: string) => string[];
   validateCWSSubmissionGuide: (text: string, currentReleaseZipSha256?: string) => string[];
   validateProductionLaunchRunbook: (text: string) => string[];
@@ -159,6 +160,33 @@ function createVisibleChromeDocsTree(overrides: Record<string, string> = {}) {
   };
 
   for (const [relPath, content] of Object.entries(docs)) {
+    const target = path.join(root, relPath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  }
+  return root;
+}
+
+function createLaunchCopyTree(overrides: Record<string, string> = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'anycap-launch-copy-'));
+  const files: Record<string, string> = {
+    'entrypoints/sidepanel/App.tsx': [
+      'You have used all 3 anonymous launch runs for this month.',
+      'Account sign-in and paid plans are planned.',
+    ].join('\n'),
+    'entrypoints/sidepanel/tabs/SettingsTab.tsx': [
+      'import { MOCK_MODE } from "@/src/lib/constants";',
+      '{MOCK_MODE && (',
+      '  <button>Reset demo trial counter</button>',
+      ')}',
+      'Account sign-in and paid plans are planned. Anonymous users get 3 runs / month during launch.',
+    ].join('\n'),
+    'entrypoints/options/App.tsx': 'Account sign-in and paid plans are planned.',
+    'src/lib/errors.ts': 'TRIAL_EXHAUSTED: "You have used all 3 anonymous launch runs for this month."',
+    ...overrides,
+  };
+
+  for (const [relPath, content] of Object.entries(files)) {
     const target = path.join(root, relPath);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, content);
@@ -357,6 +385,42 @@ describe('release verifier', () => {
     const { validateVisibleChromeDocs } = await loadVerifier();
 
     expect(validateVisibleChromeDocs(createVisibleChromeDocsTree())).toEqual([]);
+  });
+
+  it('accepts launch UI copy scoped to anonymous v0.2 rollout', async () => {
+    const { validateLaunchCopy } = await loadVerifier();
+
+    expect(validateLaunchCopy(createLaunchCopyTree())).toEqual([]);
+  });
+
+  it('rejects launch UI copy that promises hidden sign-in quota', async () => {
+    const { validateLaunchCopy } = await loadVerifier();
+
+    expect(
+      validateLaunchCopy(createLaunchCopyTree({
+        'entrypoints/sidepanel/App.tsx': 'Sign in to get 50 free credits per month.',
+      })),
+    ).toEqual([
+      'extension launch UI must not promise 50 free credits while login UI is hidden',
+      'extension launch UI must not direct exhausted anonymous users to hidden sign-in quota',
+      'extension launch UI must not mention unavailable monthly sign-in credits',
+    ]);
+  });
+
+  it('rejects production launch UI copy that exposes trial reset controls', async () => {
+    const { validateLaunchCopy } = await loadVerifier();
+
+    expect(
+      validateLaunchCopy(createLaunchCopyTree({
+        'entrypoints/sidepanel/tabs/SettingsTab.tsx': 'Reset demo trial counter',
+      })),
+    ).toContain('demo trial reset control must be gated behind MOCK_MODE');
+
+    expect(
+      validateLaunchCopy(createLaunchCopyTree({
+        'entrypoints/sidepanel/tabs/SettingsTab.tsx': 'Reset free trial counter',
+      })),
+    ).toContain('production extension UI must not expose a reset free trial counter');
   });
 
   it('rejects docs that describe visible Chrome operations without approval language', async () => {

@@ -24,5 +24,6 @@ test('4th anonymous generation shows paywall', async ({ context, extensionId }) 
   await popup.goto(`chrome-extension://${extensionId}/sidepanel.html`);
 
   await expect(popup.getByText(/Free Tries Used/i)).toBeVisible();
-  await expect(popup.getByText(/Account login coming soon/i)).toBeVisible();
+  await expect(popup.getByText(/3 anonymous launch runs/i)).toBeVisible();
+  await expect(popup.getByText(/Account sign-in and paid plans are planned/i)).toBeVisible();
 });

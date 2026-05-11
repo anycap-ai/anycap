@@ -98,6 +98,20 @@ const REQUIRED_ANONYMOUS_EXTENSION_OPERATIONS = [
   'web.search',
   'web.crawl',
 ];
+const LAUNCH_COPY_SOURCE_FILES = [
+  'entrypoints/sidepanel/App.tsx',
+  'entrypoints/sidepanel/tabs/SettingsTab.tsx',
+  'entrypoints/options/App.tsx',
+  'src/lib/errors.ts',
+];
+const FORBIDDEN_LAUNCH_COPY_PATTERNS = [
+  [/50\s+free\s+credits/i, 'extension launch UI must not promise 50 free credits while login UI is hidden'],
+  [/sign\s+in\s+to\s+get\s+50/i, 'extension launch UI must not direct exhausted anonymous users to hidden sign-in quota'],
+  [/free\s+credits\s+per\s+month/i, 'extension launch UI must not mention unavailable monthly sign-in credits'],
+  [/account\s+login\s+coming\s+soon/i, 'extension launch UI must use planned account sign-in language, not stale login copy'],
+  [/reset\s+free\s+trial\s+counter/i, 'production extension UI must not expose a reset free trial counter'],
+  [/reset\s+trial\s+in\s+settings/i, 'paywall must not direct production users to reset anonymous trial state'],
+];
 const DEMO_VIDEO_PATH = 'store-assets/demo.mp4';
 const REQUIRED_CWS_SUBMISSION_ITEMS = [
   ['developer console URL', 'https://chrome.google.com/webstore/devconsole/'],
@@ -450,6 +464,37 @@ export function validateStoreDescription(text) {
   return errors;
 }
 
+export function validateLaunchCopy(rootDir = process.cwd()) {
+  const errors = [];
+  let combinedSource = '';
+  let settingsSource = '';
+
+  for (const relPath of LAUNCH_COPY_SOURCE_FILES) {
+    const absPath = path.join(rootDir, relPath);
+    if (!fs.existsSync(absPath)) {
+      errors.push(`${relPath} is missing`);
+      continue;
+    }
+    const source = fs.readFileSync(absPath, 'utf8');
+    combinedSource += `\n${source}`;
+    if (relPath.endsWith('SettingsTab.tsx')) {
+      settingsSource = source;
+    }
+  }
+
+  for (const [pattern, message] of FORBIDDEN_LAUNCH_COPY_PATTERNS) {
+    if (pattern.test(combinedSource)) {
+      errors.push(message);
+    }
+  }
+
+  if (settingsSource.includes('Reset demo trial counter') && !settingsSource.includes('{MOCK_MODE && (')) {
+    errors.push('demo trial reset control must be gated behind MOCK_MODE');
+  }
+
+  return errors;
+}
+
 export function validatePermissionJustifications(text) {
   const source = String(text || '');
   const errors = [];
@@ -707,6 +752,7 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
   errors.push(...validateDemoVideoAsset(rootDir));
   errors.push(...validateSupportScripts(rootDir));
   errors.push(...validateVisibleChromeDocs(rootDir));
+  errors.push(...validateLaunchCopy(rootDir));
   errors.push(...validateSyncedReleaseZip(rootDir));
   errors.push(...validateChromeExtensionLaunchDconfFiles(rootDir));
 

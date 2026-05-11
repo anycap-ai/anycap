@@ -119,15 +119,11 @@ export default function App() {
             </div>
             <h2 className="text-base font-bold text-text-primary mt-4">Free Tries Used</h2>
             <p className="text-sm text-text-body mt-1.5">
-              You have used all 3 free generations. Sign in to get 50 free credits per month.
+              You have used all 3 anonymous launch runs for this month.
             </p>
-            <button
-              onClick={() => store.setActiveTab('settings')}
-              className="mt-4 text-xs text-olive hover:text-olive-hover hover:underline font-medium"
-            >
-              Reset trial in Settings →
-            </button>
-            <p className="mt-3 text-xs text-text-neutral">Account login coming soon.</p>
+            <p className="mt-3 text-xs text-text-neutral">
+              Account sign-in and paid plans are planned.
+            </p>
           </div>
         </div>
         {showOnboarding && <OnboardingOverlay onDone={finishOnboarding} />}

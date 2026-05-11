@@ -217,7 +217,7 @@ Crawl Page 后返回:标题 + 字数 + 语言 + 摘要,折叠区可展开完整 
 | **Profile** | Display name(占位) | 当前匿名,登录上线后扩展 |
 | **Default models** | Image / Video / Music 默认模型 | 各 Tab mount 时读取作为 default |
 | **Privacy & display** | Reduced motion · Watermark on results | 减少动画 / 水印开关(免费层强制开) |
-| **Maintenance** | Reset trial · Reset settings | 重置免费配额 / 还原所有设置 |
+| **Maintenance** | Reset settings | 还原所有设置；demo 模式才显示本地试用重置 |
 
 底部 About 区还有版本号、运行模式(production / demo)、试用进度、源码链接、隐私政策链接、Pricing 链接。
 
@@ -230,8 +230,8 @@ Crawl Page 后返回:标题 + 字数 + 语言 + 摘要,折叠区可展开完整 
 
 要点:
 - 文案明确"使用了所有 3 次免费",降低用户挫败感
-- 当前演示版尚未接 Auth0 完整登录(标注 "Account login coming soon")
-- 真实部署后,登录用户每月 50 credits;过量可买更多
+- 当前 v0.2 匿名首发隐藏登录 UI（标注 "Account sign-in and paid plans are planned"）
+- 账户登录与付费计划后续上线；当前公开首发按匿名 3 次/月说明
 
 ---
 
