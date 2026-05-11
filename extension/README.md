@@ -112,7 +112,7 @@ store-assets/
   composer/*.html          # CWS 截图的静态 HTML 编排器（1280×800 / 1400×560 / 440×280）
   cws/*.png                # 渲染好的 CWS 提审素材
 tests/
-  unit/                    # Vitest — 154 个用例
+  unit/                    # Vitest — 173 个用例
   e2e/                     # Playwright — prod / demo / CWS screenshot specs
 wxt.config.ts              # Manifest，host_permissions（release 模式剥离 localhost）
 docs/assets/               # README 用的图示
@@ -160,7 +160,7 @@ ANYCAP_API_BASE=https://api-staging.anycap.ai pnpm launch:audit -- --abuse-contr
 - Mock 截图 E2E（`pnpm shots:feishu`）会打开 headed Chromium 生成 side-panel 截图；它需要 `ANYCAP_ALLOW_HEADED_E2E=1`。
 - Real 模式 E2E（`pnpm e2e:real`）会命中 `WXT_API_BASE` 指定的真实 server，覆盖匿名 vary / image / crawl；它需要 `ANYCAP_ALLOW_HEADED_E2E=1`，未设置时会在打开 headed Chromium 前退出。
 - Local preflight（`pnpm preflight:local`）不会打开浏览器；它串行运行 `pnpm release`、`pnpm test`、`npx tsc --noEmit` 和 `pnpm verify:release`，其中 `pnpm release` 会把当前 release zip SHA-256 同步到提审文档。
-- Release verifier（`pnpm verify:release`）不会打开浏览器；它检查 CWS zip 的 Manifest V3、扩展图标尺寸、生产 host permissions、optional identity、side panel/background/content script 入口和引用文件、content script `file://` 排除、无 source maps / tests / localhost / staging 字符串泄漏、`.output` 与 `releases/` zip 同步、CWS 提交文档中的当前 zip SHA-256，以及提审素材是否齐全、尺寸正确、headless CWS renderer、listing 文案、权限说明、CWS 提审清单、Chrome extension launch dconf 示例、生产发布 runbook、隐私 URL、server smoke、support scripts、local preflight、visible Chrome approval docs 和 real E2E 门禁。
+- Release verifier（`pnpm verify:release`）不会打开浏览器；它检查 CWS zip 的 Manifest V3、扩展图标尺寸、生产 host permissions、optional identity、side panel/background/content script 入口和引用文件、content script `file://` 排除、无 source maps / tests / localhost / staging 字符串泄漏、`.output` 与 `releases/` zip 同步、CWS 提交文档中的当前 zip SHA-256，以及提审素材是否齐全、尺寸正确、headless CWS renderer、listing / screenshot composer 文案、权限说明、CWS 提审清单、Chrome extension launch dconf 示例、生产发布 runbook、隐私 URL、server smoke、support scripts、local preflight、visible Chrome approval docs 和 real E2E 门禁。
 - CWS asset renderer（`pnpm render:cws`）使用 headless Chromium 渲染 `store-assets/composer/*.html` 到 `store-assets/cws/*.png`，不会打开可见浏览器窗口。
 - Demo video renderer（`pnpm render:demo`）使用 headless Chromium 生成 1280×720 frame，再用 ffmpeg 合成 `store-assets/demo.mp4`，不会打开可见浏览器窗口；YouTube 上传仍需单独审批。
 - Server smoke（`pnpm smoke:server`）不会打开浏览器；默认带匿名 extension headers 检查 `/v1/features`、`/v1/extension/config`、`/v1/web/search`、`/v1/web/crawl`，要求 `image.generate`、`video.generate`、`music.generate`、`web.search`、`web.crawl` 已启用，并校验 extension config / search / crawl 的最小响应结构；可加 `--include-image` 额外检查 image generate。`--include-media` 会改为检查 image / video / music generate，跳过 search / crawl，以保持在 3 次匿名 trial 内。
