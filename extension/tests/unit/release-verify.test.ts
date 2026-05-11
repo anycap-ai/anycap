@@ -19,6 +19,7 @@ type ReleaseVerifyModule = {
   validateSupportScripts: (rootDir: string) => string[];
   validateVisibleChromeDocs: (rootDir: string) => string[];
   validateReleaseDocs?: (rootDir: string) => string[];
+  validateAccessibilitySource: (rootDir: string) => string[];
   validateChromeExtensionLaunchDconf: (
     featureAccess: Record<string, unknown>,
     rateLimit: Record<string, unknown>,
@@ -167,7 +168,7 @@ function createValidAssetTree() {
       '# Production launch runbook',
       'Deploy branches: deploy/server-dev and deploy/server-prod.',
       'Configure dconf: feature_access and rate_limit.',
-      'pnpm test passes locally with 178 unit tests.',
+      'pnpm test passes locally with 180 unit tests.',
       'Browser-free smoke: pnpm smoke:server -- --base-url https://api.anycap.ai.',
       'Real E2E: ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real after explicit approval because it opens headed Chromium.',
       'Final audit: pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed.',
@@ -201,10 +202,10 @@ function createReleaseDocsTree(overrides: Record<string, string> = {}) {
   const docs: Record<string, string> = {
     'README.md': [
       'tests/',
-      '  unit/                    # Vitest — 178 个用例',
+      '  unit/                    # Vitest — 180 个用例',
       'Release verifier checks listing / screenshot composer 文案.',
     ].join('\n'),
-    'LOAD_AND_USE.md': 'pnpm test                                          # 178 unit tests',
+    'LOAD_AND_USE.md': 'pnpm test                                          # 180 unit tests',
     'CHANGELOG.md': [
       'Updated Chrome Web Store listing and screenshot composer copy.',
       'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
@@ -236,6 +237,33 @@ function createLaunchCopyTree(overrides: Record<string, string> = {}) {
     ].join('\n'),
     'entrypoints/options/App.tsx': 'Account sign-in and paid plans are planned.',
     'src/lib/errors.ts': 'TRIAL_EXHAUSTED: "You have used all 3 anonymous launch runs for this month."',
+    ...overrides,
+  };
+
+  for (const [relPath, content] of Object.entries(files)) {
+    const target = path.join(root, relPath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  }
+  return root;
+}
+
+function createAccessibilityTree(overrides: Record<string, string> = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'anycap-a11y-source-'));
+  const files: Record<string, string> = {
+    'entrypoints/sidepanel/App.tsx': [
+      'role="tablist" aria-label="Capability tabs"',
+      'role="tab" aria-selected={active} aria-controls={`tabpanel-${t.id}`} id={`tab-${t.id}`}',
+      'role="tabpanel" id={`tabpanel-${store.activeTab}`} aria-labelledby={`tab-${store.activeTab}`}',
+    ].join('\n'),
+    'entrypoints/sidepanel/components/OnboardingOverlay.tsx': [
+      'role="dialog"',
+      'aria-modal="true"',
+      'aria-labelledby="onboarding-title"',
+      'id="onboarding-title"',
+    ].join('\n'),
+    'entrypoints/sidepanel/components/HistorySection.tsx':
+      'aria-label={`Open recent ${r.kind ?? kind} generation: ${r.prompt || r.title || "Untitled run"}`}',
     ...overrides,
   };
 
@@ -476,6 +504,28 @@ describe('release verifier', () => {
     ).toContain('production extension UI must not expose a reset free trial counter');
   });
 
+  it('accepts side-panel source with accessible tabs, onboarding dialog, and history thumbnails', async () => {
+    const { validateAccessibilitySource } = await loadVerifier();
+
+    expect(validateAccessibilitySource(createAccessibilityTree())).toEqual([]);
+  });
+
+  it('rejects side-panel source without accessible tabs, onboarding dialog, or history thumbnail labels', async () => {
+    const { validateAccessibilitySource } = await loadVerifier();
+
+    expect(
+      validateAccessibilitySource(createAccessibilityTree({
+        'entrypoints/sidepanel/App.tsx': 'role="tablist" role="tab"',
+        'entrypoints/sidepanel/components/OnboardingOverlay.tsx': '<div className="overlay">',
+        'entrypoints/sidepanel/components/HistorySection.tsx': '<button title={r.prompt}>',
+      })),
+    ).toEqual([
+      'entrypoints/sidepanel/App.tsx must connect each tab to a labelled tabpanel with aria-controls and aria-labelledby',
+      'entrypoints/sidepanel/components/OnboardingOverlay.tsx must expose the onboarding overlay as an aria-modal dialog labelled by its title',
+      'entrypoints/sidepanel/components/HistorySection.tsx thumbnail history buttons must use aria-label instead of relying on title only',
+    ]);
+  });
+
   it('rejects docs that describe visible Chrome operations without approval language', async () => {
     const { validateVisibleChromeDocs } = await loadVerifier();
 
@@ -503,8 +553,8 @@ describe('release verifier', () => {
     })) ?? [];
 
     expect(errors).toEqual([
-      'README.md must document current Vitest unit test count: 178',
-      'LOAD_AND_USE.md must document current Vitest unit test count: 178',
+      'README.md must document current Vitest unit test count: 180',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 180',
       'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
   });
@@ -516,7 +566,7 @@ describe('release verifier', () => {
         'https://gitlab.knoffice.tech/engineering/anycap_chrome/-/releases',
         'git clone https://gitlab.knoffice.tech/engineering/anycap_chrome.git',
         'cd anycap_chrome',
-        '  unit/                    # Vitest — 178 个用例',
+        '  unit/                    # Vitest — 180 个用例',
       ].join('\n'),
     })) ?? [];
 
@@ -952,7 +1002,7 @@ describe('release verifier', () => {
       'deploy/server-dev deploy/server-prod',
       'feature_access rate_limit',
       'pnpm smoke:server -- --base-url https://api.anycap.ai',
-      'pnpm test passes locally with 178 unit tests.',
+      'pnpm test passes locally with 180 unit tests.',
       'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https://api.anycap.ai pnpm e2e:real explicit approval headed Chromium',
       'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed',
       'Chrome Web Store releases/anycap-extension-0.2.0-chrome.zip',
@@ -976,7 +1026,7 @@ describe('release verifier', () => {
     ].join('\n');
 
     expect(validateProductionLaunchRunbook(text)).toContain(
-      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 178',
+      'docs/PRODUCTION-LAUNCH-RUNBOOK.md must document current Vitest unit test count: 180',
     );
   });
 

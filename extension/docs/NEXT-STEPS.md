@@ -192,17 +192,20 @@ Use Chrome's `chrome.i18n` (`_locales/en/messages.json`, `_locales/zh_CN/message
 Start with side-panel UI; the prompt-template chips can lazy-translate later.
 
 ### B5. Accessibility audit
-**Where:** `entrypoints/sidepanel/` · effort: 1 day.
-- Tab nav: every button reachable via `Tab`, focus ring visible (probably is — confirm)
-- Screen reader: each tab has `aria-label`, `role="tab"` (✅ already), `aria-selected`
-- Color contrast: olive #5C7C4F on cream #F5F0E6 — verify ≥4.5:1 with axe
-- Reduced motion: respect `prefers-reduced-motion` (already a Settings toggle, also honor system)
+**Where:** `entrypoints/sidepanel/` · status: partially implemented.
+- Tab nav: every button remains reachable via `Tab`, with visible focus rings.
+- Screen reader: tabs now connect to the active `tabpanel` via `aria-controls`
+  and `aria-labelledby`; onboarding is an `aria-modal` dialog; thumbnail history
+  buttons have explicit `aria-label` text instead of relying on `title`.
+- Reduced motion: `prefers-reduced-motion` is honored in CSS.
+- Remaining manual check: run an approved visible-browser screen-reader/keyboard
+  pass after production smoke succeeds.
 
 ### B6. Performance budget
 **Where:** `scripts/verify-release.mjs` · status: implemented.
 The release verifier now fails CI if the CWS zip exceeds 200 KiB compressed or
 if any `chunks/sidepanel*.js` bundle exceeds 80 KiB after gzip. The current
-release zip is 128,652 bytes and the side-panel app chunk is 17,685 bytes gzip.
+release zip is 128,773 bytes and the side-panel app chunk is 17,819 bytes gzip.
 
 ### B7. Completed polish from this plan
 These items are already implemented in the current v0.2.0 refresh:

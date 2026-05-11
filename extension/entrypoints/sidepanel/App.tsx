@@ -135,7 +135,12 @@ export default function App() {
     <div className="h-full flex flex-col bg-app relative">
       <Header />
       <TabBar />
-      <div className="flex-1 scroll-y px-4 py-4">
+      <div
+        className="flex-1 scroll-y px-4 py-4"
+        role="tabpanel"
+        id={`tabpanel-${store.activeTab}`}
+        aria-labelledby={`tab-${store.activeTab}`}
+      >
         {store.activeTab === 'vary' && <VaryTab />}
         {store.activeTab === 'image' && <ImageTab />}
         {store.activeTab === 'video' && <VideoTab />}
@@ -186,9 +191,11 @@ function TabBar() {
         return (
           <button
             key={t.id}
+            id={`tab-${t.id}`}
             role="tab"
             aria-selected={active}
             aria-label={t.label}
+            aria-controls={`tabpanel-${t.id}`}
             tabIndex={0}
             onClick={() => store.setActiveTab(t.id)}
             className={`relative flex-1 min-w-[58px] flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive/30 ${

@@ -71,6 +71,7 @@ export function HistorySection({
               onClick={() => onPick(r)}
               className="block group relative rounded-lg overflow-hidden border border-border-card hover:border-olive/40 card-hover"
               title={r.prompt || 'Recent generation'}
+              aria-label={`Open recent ${r.kind ?? kind} generation: ${r.prompt || r.title || 'Untitled run'}`}
             >
               {/image|vary/.test(r.kind ?? 'vary') ? (
                 <img src={r.resultUrl} alt="" className="w-full h-16 object-cover" loading="lazy" />

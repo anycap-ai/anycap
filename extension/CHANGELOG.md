@@ -46,6 +46,7 @@
 - Release verifier now rejects retired standalone `engineering/anycap_chrome` repository references in extension release docs, so install instructions stay pointed at the current monorepo.
 - Release verifier now requires the production launch runbook to document the current Vitest unit-test count, preventing stale local-verification evidence in the launch snapshot.
 - Release verifier now enforces CWS zip and side-panel gzip performance budgets before upload.
+- Release verifier now guards side-panel accessibility source for labelled tab panels, onboarding dialog semantics, and labelled history thumbnails.
 
 ## v0.2.0 — 2026-04-27
 

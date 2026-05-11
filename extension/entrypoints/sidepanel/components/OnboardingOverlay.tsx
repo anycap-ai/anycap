@@ -31,6 +31,9 @@ export function OnboardingOverlay({ onDone }: { onDone: () => void }) {
   return (
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-navy/60 backdrop-blur-sm px-6">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-title"
         className="relative w-full max-w-[260px] rounded-2xl bg-surface-card p-5 text-center"
         style={{ boxShadow: '0 24px 64px -16px rgba(28,31,23,0.35)' }}
       >
@@ -48,12 +51,13 @@ export function OnboardingOverlay({ onDone }: { onDone: () => void }) {
         <div
           className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pale-sage to-cream-yellow flex items-center justify-center mx-auto"
           style={{ boxShadow: '0 6px 16px -8px rgba(107,125,58,0.5)' }}
+          aria-hidden="true"
         >
-          <StepIcon className="w-6 h-6 text-olive" strokeWidth={1.8} />
+          <StepIcon className="w-6 h-6 text-olive" strokeWidth={1.8} aria-hidden="true" />
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-bold text-text-primary mt-3">
+        <h3 id="onboarding-title" className="text-sm font-bold text-text-primary mt-3">
           {STEPS[step].title}
         </h3>
 
@@ -63,7 +67,7 @@ export function OnboardingOverlay({ onDone }: { onDone: () => void }) {
         </p>
 
         {/* Dots */}
-        <div className="flex items-center justify-center gap-1.5 mt-4">
+        <div className="flex items-center justify-center gap-1.5 mt-4" aria-hidden="true">
           {STEPS.map((_, i) => (
             <span
               key={i}

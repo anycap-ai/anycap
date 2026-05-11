@@ -111,7 +111,7 @@ store-assets/
   composer/*.html          # CWS 截图的静态 HTML 编排器（1280×800 / 1400×560 / 440×280）
   cws/*.png                # 渲染好的 CWS 提审素材
 tests/
-  unit/                    # Vitest — 178 个用例
+  unit/                    # Vitest — 180 个用例
   e2e/                     # Playwright — prod / demo / CWS screenshot specs
 wxt.config.ts              # Manifest，host_permissions（release 模式剥离 localhost）
 docs/assets/               # README 用的图示

@@ -49,7 +49,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 178;
+const CURRENT_UNIT_TEST_COUNT = 180;
 const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
 const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
@@ -121,6 +121,42 @@ const REQUIRED_RELEASE_DOCS = [
         lower.includes('sign-in quota') &&
         lower.includes('trial-reset')
       );
+    },
+  },
+];
+const ACCESSIBILITY_SOURCE_CHECKS = [
+  {
+    path: 'entrypoints/sidepanel/App.tsx',
+    error: 'entrypoints/sidepanel/App.tsx must connect each tab to a labelled tabpanel with aria-controls and aria-labelledby',
+    validate(source) {
+      return (
+        source.includes('role="tablist"') &&
+        source.includes('role="tab"') &&
+        source.includes('aria-controls={`tabpanel-${t.id}`}') &&
+        source.includes('id={`tab-${t.id}`}') &&
+        source.includes('role="tabpanel"') &&
+        source.includes('id={`tabpanel-${store.activeTab}`}') &&
+        source.includes('aria-labelledby={`tab-${store.activeTab}`}')
+      );
+    },
+  },
+  {
+    path: 'entrypoints/sidepanel/components/OnboardingOverlay.tsx',
+    error: 'entrypoints/sidepanel/components/OnboardingOverlay.tsx must expose the onboarding overlay as an aria-modal dialog labelled by its title',
+    validate(source) {
+      return (
+        source.includes('role="dialog"') &&
+        source.includes('aria-modal="true"') &&
+        source.includes('aria-labelledby="onboarding-title"') &&
+        source.includes('id="onboarding-title"')
+      );
+    },
+  },
+  {
+    path: 'entrypoints/sidepanel/components/HistorySection.tsx',
+    error: 'entrypoints/sidepanel/components/HistorySection.tsx thumbnail history buttons must use aria-label instead of relying on title only',
+    validate(source) {
+      return source.includes('aria-label') && source.includes('Open recent');
     },
   },
 ];
@@ -584,6 +620,24 @@ export function validateLaunchCopy(rootDir = process.cwd()) {
   return errors;
 }
 
+export function validateAccessibilitySource(rootDir = process.cwd()) {
+  const errors = [];
+
+  for (const check of ACCESSIBILITY_SOURCE_CHECKS) {
+    const absPath = path.join(rootDir, check.path);
+    if (!fs.existsSync(absPath)) {
+      errors.push(`${check.path} is missing`);
+      continue;
+    }
+    const source = fs.readFileSync(absPath, 'utf8');
+    if (!check.validate(source)) {
+      errors.push(check.error);
+    }
+  }
+
+  return errors;
+}
+
 export function validatePermissionJustifications(text) {
   const source = String(text || '');
   const errors = [];
@@ -889,6 +943,7 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
   errors.push(...validateVisibleChromeDocs(rootDir));
   errors.push(...validateReleaseDocs(rootDir));
   errors.push(...validateLaunchCopy(rootDir));
+  errors.push(...validateAccessibilitySource(rootDir));
   errors.push(...validateSyncedReleaseZip(rootDir));
   errors.push(...validateChromeExtensionLaunchDconfFiles(rootDir));
 
