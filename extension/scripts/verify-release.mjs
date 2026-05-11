@@ -27,6 +27,14 @@ const REQUIRED_CWS_TEXT_ASSETS = [
   'store-assets/cws-submission.md',
   'docs/PRODUCTION-LAUNCH-RUNBOOK.md',
 ];
+const REQUIRED_CWS_COMPOSER_ASSETS = [
+  'store-assets/composer/01-hero.html',
+  'store-assets/composer/02-rightclick.html',
+  'store-assets/composer/03-templates.html',
+  'store-assets/composer/04-history.html',
+  'store-assets/composer/05-marquee.html',
+  'store-assets/composer/06-promo.html',
+];
 const REQUIRED_ZIP_RUNTIME_ENTRIES = [
   'background.js',
   'sidepanel.html',
@@ -112,6 +120,7 @@ const FORBIDDEN_LAUNCH_COPY_PATTERNS = [
   [/reset\s+free\s+trial\s+counter/i, 'production extension UI must not expose a reset free trial counter'],
   [/reset\s+trial\s+in\s+settings/i, 'paywall must not direct production users to reset anonymous trial state'],
 ];
+const FORBIDDEN_TRIAL_RESET_COPY = /(?:\breset\s+(free\s+)?trial\b|\btrial\s+reset\b)/i;
 const DEMO_VIDEO_PATH = 'store-assets/demo.mp4';
 const REQUIRED_CWS_SUBMISSION_ITEMS = [
   ['developer console URL', 'https://chrome.google.com/webstore/devconsole/'],
@@ -363,6 +372,15 @@ export function validateCWSAssets(rootDir = process.cwd()) {
     }
   }
 
+  for (const relPath of REQUIRED_CWS_COMPOSER_ASSETS) {
+    const absPath = path.join(rootDir, relPath);
+    if (!fs.existsSync(absPath)) {
+      errors.push(`${relPath} is missing`);
+      continue;
+    }
+    errors.push(...validateCWSScreenshotComposerCopy(relPath, fs.readFileSync(absPath, 'utf8')));
+  }
+
   return errors;
 }
 
@@ -451,7 +469,7 @@ export function validateStoreDescription(text) {
   if (/sign\s+in\s+for\s+50\s*\/\s*month/i.test(source) || /50\s+free\s+credits/i.test(source)) {
     errors.push('store-assets/description.md must not promise sign-in quota while extension login UI is hidden');
   }
-  if (/\breset\s+(free\s+)?trial\b/i.test(source)) {
+  if (FORBIDDEN_TRIAL_RESET_COPY.test(source)) {
     errors.push('store-assets/description.md must not advertise trial reset controls in production listing copy');
   }
 
@@ -463,6 +481,14 @@ export function validateStoreDescription(text) {
     if (!normalized.includes(term.toLowerCase())) {
       errors.push(`store-assets/description.md privacy summary must mention ${term}`);
     }
+  }
+  return errors;
+}
+
+function validateCWSScreenshotComposerCopy(relPath, source) {
+  const errors = [];
+  if (FORBIDDEN_TRIAL_RESET_COPY.test(String(source || ''))) {
+    errors.push(`${relPath} must not advertise trial reset controls in CWS screenshot copy`);
   }
   return errors;
 }

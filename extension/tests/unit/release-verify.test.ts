@@ -87,6 +87,18 @@ function createValidAssetTree() {
   writeAsset(root, 'store-assets/cws/04-history-1280x800.png', 1280, 800);
   writeAsset(root, 'store-assets/cws/05-marquee-1400x560.png', 1400, 560);
   writeAsset(root, 'store-assets/cws/06-promo-440x280.png', 440, 280);
+  for (const relPath of [
+    'store-assets/composer/01-hero.html',
+    'store-assets/composer/02-rightclick.html',
+    'store-assets/composer/03-templates.html',
+    'store-assets/composer/04-history.html',
+    'store-assets/composer/05-marquee.html',
+    'store-assets/composer/06-promo.html',
+  ]) {
+    const target = path.join(root, relPath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, '<p>Safe Chrome Web Store screenshot copy.</p>');
+  }
   fs.writeFileSync(
     path.join(root, 'store-assets/description.md'),
     [
@@ -648,6 +660,18 @@ describe('release verifier', () => {
 
     expect(validateCWSAssets(root)).toContain(
       'store-assets/cws/06-promo-440x280.png must be 440x280, got 441x280',
+    );
+  });
+
+  it('rejects CWS screenshot composer copy that advertises production trial reset controls', async () => {
+    const { validateCWSAssets } = await loadVerifier();
+    const root = createValidAssetTree();
+    const composerPath = path.join(root, 'store-assets/composer/04-history.html');
+    fs.mkdirSync(path.dirname(composerPath), { recursive: true });
+    fs.writeFileSync(composerPath, '<li>One-click trial reset</li>');
+
+    expect(validateCWSAssets(root)).toContain(
+      'store-assets/composer/04-history.html must not advertise trial reset controls in CWS screenshot copy',
     );
   });
 
