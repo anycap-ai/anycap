@@ -94,7 +94,7 @@ function createValidAssetTree() {
       'Vary Image Video Music Search Crawl',
       '7 context-aware right-click menus:',
       'Free trial: 3 anonymous capability runs / month during launch, no signup.',
-      'Privacy: https://anycap.ai/privacy/extension',
+      'Privacy: selected text, image URL, page URL, link URL, search query, model choice. No cookies, background screenshots, or clipboard contents. https://anycap.ai/privacy/extension',
     ].join('\n'),
   );
   fs.writeFileSync(
@@ -591,7 +591,7 @@ describe('release verifier', () => {
       'Vary Image Video Music Search Crawl',
       '7 context-aware right-click menus:',
       'Free trial: 3 anonymous capability runs / month during launch, no signup.',
-      'Privacy: https://anycap.ai/privacy/extension',
+      'Privacy: selected text, image URL, page URL, link URL, search query, model choice. No cookies, background screenshots, or clipboard contents. https://anycap.ai/privacy/extension',
     ].join('\n');
 
     expect(validateStoreDescription(text)).toEqual([]);
@@ -618,6 +618,22 @@ describe('release verifier', () => {
 
     expect(validateStoreDescription('Image Video Music Search Crawl')).toContain(
       'store-assets/description.md must include https://anycap.ai/privacy/extension',
+    );
+  });
+
+  it('rejects store description copy with an incomplete privacy summary', async () => {
+    const { validateStoreDescription } = await loadVerifier();
+    const text = [
+      'Image, Video, Music, Search, Crawl — in your browser.',
+      '6 capabilities, one panel:',
+      'Vary Image Video Music Search Crawl',
+      '7 context-aware right-click menus:',
+      'Free trial: 3 anonymous capability runs / month during launch, no signup.',
+      'Privacy: prompt and image URL only. https://anycap.ai/privacy/extension',
+    ].join('\n');
+
+    expect(validateStoreDescription(text)).toContain(
+      'store-assets/description.md privacy summary must mention selected text',
     );
   });
 

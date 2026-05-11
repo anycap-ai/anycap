@@ -80,6 +80,17 @@ const REQUIRED_REAL_E2E_COMMAND = 'ANYCAP_ALLOW_HEADED_E2E=1 WXT_API_BASE=https:
 const REQUIRED_FINAL_LAUNCH_AUDIT_COMMAND =
   'pnpm launch:audit -- --base-url https://api.anycap.ai --abuse-control-passed --real-e2e-passed';
 const CURRENT_CAPABILITIES = ['Vary', 'Image', 'Video', 'Music', 'Search', 'Crawl'];
+const REQUIRED_STORE_PRIVACY_SUMMARY_TERMS = [
+  'selected text',
+  'image URL',
+  'page URL',
+  'link URL',
+  'search query',
+  'model choice',
+  'cookies',
+  'background screenshots',
+  'clipboard contents',
+];
 const REQUIRED_ANONYMOUS_EXTENSION_OPERATIONS = [
   'image.generate',
   'video.generate',
@@ -430,6 +441,11 @@ export function validateStoreDescription(text) {
   const missingCapabilities = CURRENT_CAPABILITIES.filter((capability) => !source.includes(capability));
   if (missingCapabilities.length > 0) {
     errors.push(`store-assets/description.md must mention all current capabilities: ${CURRENT_CAPABILITIES.join(', ')}`);
+  }
+  for (const term of REQUIRED_STORE_PRIVACY_SUMMARY_TERMS) {
+    if (!normalized.includes(term.toLowerCase())) {
+      errors.push(`store-assets/description.md privacy summary must mention ${term}`);
+    }
   }
   return errors;
 }
