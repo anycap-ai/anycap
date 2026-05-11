@@ -18,6 +18,7 @@ type ReleaseVerifyModule = {
   validateProductionLaunchRunbook: (text: string) => string[];
   validateSupportScripts: (rootDir: string) => string[];
   validateVisibleChromeDocs: (rootDir: string) => string[];
+  validateReleaseDocs?: (rootDir: string) => string[];
   validateChromeExtensionLaunchDconf: (
     featureAccess: Record<string, unknown>,
     rateLimit: Record<string, unknown>,
@@ -168,6 +169,30 @@ function createVisibleChromeDocsTree(overrides: Record<string, string> = {}) {
     'DEMO.md': 'Manual Chrome steps below use a visible browser window. Run only with explicit approval.',
     'LOAD_AND_USE.md': 'Manual loading and smoke steps use visible Chrome UI. Run only with explicit approval.',
     'LAUNCH_CHECKLIST.md': 'Manual smoke is pending explicit approval because it interacts with visible Chrome.',
+    ...overrides,
+  };
+
+  for (const [relPath, content] of Object.entries(docs)) {
+    const target = path.join(root, relPath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  }
+  return root;
+}
+
+function createReleaseDocsTree(overrides: Record<string, string> = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'anycap-release-docs-'));
+  const docs: Record<string, string> = {
+    'README.md': [
+      'tests/',
+      '  unit/                    # Vitest — 174 个用例',
+      'Release verifier checks listing / screenshot composer 文案.',
+    ].join('\n'),
+    'LOAD_AND_USE.md': 'pnpm test                                          # 174 unit tests',
+    'CHANGELOG.md': [
+      'Updated Chrome Web Store listing and screenshot composer copy.',
+      'release verification now rejects unavailable sign-in quota and trial-reset claims in both CWS listing and screenshot source copy.',
+    ].join('\n'),
     ...overrides,
   };
 
@@ -450,6 +475,21 @@ describe('release verifier', () => {
       'DEMO.md must state manual Chrome demo steps require explicit approval because they use a visible browser window',
       'LOAD_AND_USE.md must state manual loading/smoke steps require explicit approval because they use visible Chrome UI',
       'LAUNCH_CHECKLIST.md must state manual smoke requires explicit approval because it interacts with visible Chrome',
+    ]);
+  });
+
+  it('rejects release docs with stale test counts or listing-only CWS copy guard claims', async () => {
+    const verifier = await loadVerifier();
+    const errors = verifier.validateReleaseDocs?.(createReleaseDocsTree({
+      'README.md': 'tests/unit/                    # Vitest — 154 个用例',
+      'LOAD_AND_USE.md': 'pnpm test                                          # 166 unit tests',
+      'CHANGELOG.md': 'release verification now rejects that unavailable sign-in quota promise.',
+    })) ?? [];
+
+    expect(errors).toEqual([
+      'README.md must document current Vitest unit test count: 174',
+      'LOAD_AND_USE.md must document current Vitest unit test count: 174',
+      'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
     ]);
   });
 

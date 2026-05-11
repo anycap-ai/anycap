@@ -48,6 +48,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
+const CURRENT_UNIT_TEST_COUNT = 174;
 const REQUIRED_VISIBLE_CHROME_DOCS = [
   {
     path: 'README.md',
@@ -81,6 +82,35 @@ const REQUIRED_VISIBLE_CHROME_DOCS = [
     validate(source) {
       const lower = source.toLowerCase();
       return lower.includes('manual smoke') && lower.includes('explicit approval') && lower.includes('visible chrome');
+    },
+  },
+];
+const REQUIRED_RELEASE_DOCS = [
+  {
+    path: 'README.md',
+    error: `README.md must document current Vitest unit test count: ${CURRENT_UNIT_TEST_COUNT}`,
+    validate(source) {
+      return String(source || '').includes(`Vitest — ${CURRENT_UNIT_TEST_COUNT} 个用例`);
+    },
+  },
+  {
+    path: 'LOAD_AND_USE.md',
+    error: `LOAD_AND_USE.md must document current Vitest unit test count: ${CURRENT_UNIT_TEST_COUNT}`,
+    validate(source) {
+      return String(source || '').includes(`${CURRENT_UNIT_TEST_COUNT} unit tests`);
+    },
+  },
+  {
+    path: 'CHANGELOG.md',
+    error: 'CHANGELOG.md must describe CWS listing and screenshot composer hidden sign-in quota/trial-reset guards',
+    validate(source) {
+      const lower = String(source || '').toLowerCase();
+      return (
+        lower.includes('listing') &&
+        lower.includes('screenshot composer') &&
+        lower.includes('sign-in quota') &&
+        lower.includes('trial-reset')
+      );
     },
   },
 ];
@@ -298,6 +328,21 @@ export function validateSupportScripts(rootDir) {
 export function validateVisibleChromeDocs(rootDir) {
   const errors = [];
   for (const item of REQUIRED_VISIBLE_CHROME_DOCS) {
+    const absPath = path.join(rootDir, item.path);
+    if (!fs.existsSync(absPath)) {
+      errors.push(`${item.path} is missing`);
+      continue;
+    }
+    if (!item.validate(fs.readFileSync(absPath, 'utf8'))) {
+      errors.push(item.error);
+    }
+  }
+  return errors;
+}
+
+export function validateReleaseDocs(rootDir) {
+  const errors = [];
+  for (const item of REQUIRED_RELEASE_DOCS) {
     const absPath = path.join(rootDir, item.path);
     if (!fs.existsSync(absPath)) {
       errors.push(`${item.path} is missing`);
@@ -791,6 +836,7 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
   errors.push(...validateDemoVideoAsset(rootDir));
   errors.push(...validateSupportScripts(rootDir));
   errors.push(...validateVisibleChromeDocs(rootDir));
+  errors.push(...validateReleaseDocs(rootDir));
   errors.push(...validateLaunchCopy(rootDir));
   errors.push(...validateSyncedReleaseZip(rootDir));
   errors.push(...validateChromeExtensionLaunchDconfFiles(rootDir));
