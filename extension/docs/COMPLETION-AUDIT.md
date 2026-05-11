@@ -20,7 +20,7 @@ and CWS submission gates pass.
 | Production manifest has minimized permissions | `pnpm verify:release`; manifest host permissions limited to `https://api.anycap.ai/*` and `https://anycap.ai/*`; `identity` optional | Done |
 | CWS zip is freshly buildable | `pnpm preflight:local` rebuilt the release zip on 2026-05-11 | Done |
 | CWS zip copied into `releases/` and byte-matches WXT output | `shasum -a 256 .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip` matched | Done |
-| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `c4e2272fb564225cd1250ae2adc9587ba284f932ad4aa3f8bb351c2ddd7e3b47`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
+| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `314650249fca2c6d93214d31bc9a29168468dd35993c85bc91a7404eb50ac7b7`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
 | Release verifier covers package, assets, listing, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, assets, demo MP4 metadata, permission copy, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs | Done |
 | Unit/type checks pass | `pnpm preflight:local` passed after the GitLab native verifier tools hardening: 24 files / 164 tests, `npx tsc --noEmit`, and `pnpm verify:release` | Done |
 | CI extension gate is browser-free | `.gitlab-ci.yml` parses successfully and `build:extension` runs `pnpm preflight:local`; release verifier rejects preflight scripts containing headed browser commands | Done |
@@ -81,7 +81,7 @@ Results:
 
 - `pnpm render:cws`: passed; regenerated all 6 CWS PNG assets without a visible browser window.
 - `pnpm release`: passed; rebuilt `releases/anycap-extension-0.2.0-chrome.zip`.
-- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `c4e2272fb564225cd1250ae2adc9587ba284f932ad4aa3f8bb351c2ddd7e3b47`; record the build-run-specific value again immediately before CWS upload.
+- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `314650249fca2c6d93214d31bc9a29168468dd35993c85bc91a7404eb50ac7b7`; record the build-run-specific value again immediately before CWS upload.
 - `pnpm verify:release`: passed.
 - `pnpm verify:release`: passed again on 2026-05-11 after browser-approval documentation updates.
 - `pnpm preflight:local`: passed after the GitLab native verifier tools hardening; browser-free local gate rebuilt the release zip, synced the current SHA-256 into launch docs, then ran unit tests, type check, and release verifier.

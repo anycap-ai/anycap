@@ -234,6 +234,8 @@ describe('release verifier', () => {
           'launch:audit': 'node scripts/launch-audit.mjs',
           'render:cws': 'node scripts/render-cws-assets.mjs',
           'render:demo': 'node scripts/render-demo-video.mjs',
+          'shots:feishu':
+            'node scripts/confirm-headed-e2e.mjs && pnpm demo && ANYCAP_E2E_MODE=demo playwright test tests/e2e/feishu-shots.spec.ts',
           'preflight:local': 'pnpm release && pnpm test && npx tsc --noEmit && pnpm verify:release',
         },
       }),
@@ -324,12 +326,14 @@ describe('release verifier', () => {
         'launch:audit': 'node scripts/launch-audit.mjs',
         'render:cws': 'node scripts/render-cws-assets.mjs',
         'render:demo': 'node scripts/render-demo-video.mjs',
+        'shots:feishu': 'pnpm demo && ANYCAP_E2E_MODE=demo playwright test tests/e2e/feishu-shots.spec.ts',
         'preflight:local': 'pnpm release && pnpm test && npx tsc --noEmit && pnpm verify:release',
       },
     });
 
     expect(errors).toContain('package.json scripts.e2e must run scripts/confirm-headed-e2e.mjs first');
     expect(errors).toContain('package.json scripts.e2e:demo must run scripts/confirm-headed-e2e.mjs first');
+    expect(errors).toContain('package.json scripts.shots:feishu must run scripts/confirm-headed-e2e.mjs first');
   });
 
   it('requires support scripts referenced by package release gates to exist', async () => {

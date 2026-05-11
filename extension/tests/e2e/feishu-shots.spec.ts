@@ -1,9 +1,8 @@
 import { test, expect } from './fixtures';
 
 // Captures one screenshot per side-panel state to embed in the Feishu doc.
-// Run via:
-//   pnpm demo
-//   ANYCAP_E2E_MODE=demo pnpm exec playwright test tests/e2e/feishu-shots.spec.ts
+// Run only after explicit approval to open headed Chromium:
+//   ANYCAP_ALLOW_HEADED_E2E=1 pnpm shots:feishu
 
 test.skip(
   process.env.ANYCAP_E2E_MODE !== 'demo',

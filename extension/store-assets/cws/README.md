@@ -28,9 +28,14 @@ Full submission checklist: see `../cws-submission.md`.
 
 ```bash
 # After updating side-panel screenshots in tests/e2e/feishu-shots/
+ANYCAP_ALLOW_HEADED_E2E=1 pnpm shots:feishu
 pnpm render:cws
 # All 6 PNGs regenerate from store-assets/composer/*.html
 ```
+
+`pnpm shots:feishu` opens headed Chromium, so run it only after explicit
+approval. `pnpm render:cws` stays headless and does not open a visible browser
+window.
 
 The composer takes the raw 400×760 side-panel screenshots and lays them on a
 branded background with hero copy + bullet feature list. Each layout file is

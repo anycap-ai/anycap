@@ -241,8 +241,8 @@ export function validatePackageScripts(pkg) {
   if (!String(scripts['e2e:real'] ?? '').includes('ANYCAP_E2E_MODE=real')) {
     errors.push('package.json scripts.e2e:real must set ANYCAP_E2E_MODE=real');
   }
-  for (const scriptName of ['e2e', 'e2e:demo', 'e2e:real']) {
-    const scriptValue = String(scripts[scriptName] ?? '').trim();
+  for (const [scriptName, rawScriptValue] of Object.entries(scripts)) {
+    const scriptValue = String(rawScriptValue ?? '').trim();
     if (scriptValue.includes('playwright') && !scriptValue.startsWith('node scripts/confirm-headed-e2e.mjs')) {
       errors.push(`package.json scripts.${scriptName} must run scripts/confirm-headed-e2e.mjs first`);
     }
