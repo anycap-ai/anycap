@@ -76,7 +76,7 @@ After that, `WXT_API_BASE` is unnecessary for production use — the default
 
 ```bash
 cd extension
-pnpm test                                          # 161 unit tests
+pnpm test                                          # 162 unit tests
 pnpm preflight:local                               # browser-free local release gate
 npx tsc --noEmit
 pnpm release                                       # CWS-ready zip + current zip SHA-256 doc sync

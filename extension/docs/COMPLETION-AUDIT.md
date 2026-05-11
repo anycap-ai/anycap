@@ -20,9 +20,9 @@ and CWS submission gates pass.
 | Production manifest has minimized permissions | `pnpm verify:release`; manifest host permissions limited to `https://api.anycap.ai/*` and `https://anycap.ai/*`; `identity` optional | Done |
 | CWS zip is freshly buildable | `pnpm preflight:local` rebuilt the release zip on 2026-05-11 | Done |
 | CWS zip copied into `releases/` and byte-matches WXT output | `shasum -a 256 .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip` matched | Done |
-| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `1eeb64cd0998cb8b2ee0b9cb8dc321f8f00a7129dee838f575a552ade0ff77cb`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
+| Current CWS zip hash checked | `.output` and `releases` zip SHA-256 values match after `pnpm preflight:local`; latest build-run-specific hash is `cebd808c18b90fb2d44f83be9536e84ccf9085c913d7e8a7d7089e4c4bfb9108`; `pnpm release` syncs the hash into `store-assets/cws-submission.md` and this audit; record again immediately before CWS upload | Done |
 | Release verifier covers package, assets, listing, submission, launch dconf, runbook | `pnpm verify:release` passed; verifier checks CWS zip, runtime manifest entrypoints and referenced files, content script `file://` exclusion, assets, demo MP4 metadata, permission copy, CWS submission guide including demo-video YouTube instructions, headless renderers, Chrome extension launch dconf examples, production launch runbook, and visible Chrome approval docs | Done |
-| Unit/type checks pass | `pnpm preflight:local` passed after the CI pnpm pin hardening: 24 files / 161 tests, `npx tsc --noEmit`, and `pnpm verify:release` | Done |
+| Unit/type checks pass | `pnpm preflight:local` passed after the explicit `@types/chrome` CI hardening: 24 files / 162 tests, `npx tsc --noEmit`, and `pnpm verify:release` | Done |
 | CI extension gate is browser-free | `.gitlab-ci.yml` parses successfully and `build:extension` runs `pnpm preflight:local`; release verifier rejects preflight scripts containing headed browser commands | Done |
 | CWS screenshots and promo assets exist and are current | `pnpm render:cws` passed; 4 screenshots + 2 promo assets regenerated with headless Chromium | Done |
 | Demo video source exists and covers v0.2 workflows | `pnpm render:demo` passed; `store-assets/demo.mp4` is 72s H.264 1280×720 yuv420p, verified by `pnpm verify:release`, and covers 6 capability tabs plus 7 right-click menus | Done |
@@ -81,17 +81,17 @@ Results:
 
 - `pnpm render:cws`: passed; regenerated all 6 CWS PNG assets without a visible browser window.
 - `pnpm release`: passed; rebuilt `releases/anycap-extension-0.2.0-chrome.zip`.
-- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `1eeb64cd0998cb8b2ee0b9cb8dc321f8f00a7129dee838f575a552ade0ff77cb`; record the build-run-specific value again immediately before CWS upload.
+- SHA-256: `.output` and `releases` zip hashes matched after rebuild at `cebd808c18b90fb2d44f83be9536e84ccf9085c913d7e8a7d7089e4c4bfb9108`; record the build-run-specific value again immediately before CWS upload.
 - `pnpm verify:release`: passed.
 - `pnpm verify:release`: passed again on 2026-05-11 after browser-approval documentation updates.
-- `pnpm preflight:local`: passed after the CI pnpm pin hardening; browser-free local gate rebuilt the release zip, synced the current SHA-256 into launch docs, then ran unit tests, type check, and release verifier.
+- `pnpm preflight:local`: passed after the explicit `@types/chrome` CI hardening; browser-free local gate rebuilt the release zip, synced the current SHA-256 into launch docs, then ran unit tests, type check, and release verifier.
 - `npx tsc --noEmit`: passed.
 - `pnpm render:demo`: passed; generated `store-assets/demo.mp4`.
 - `ffprobe store-assets/demo.mp4`: H.264, 1280×720, yuv420p, 72s.
-- `pnpm test`: passed, 24 files / 161 tests.
-- `pnpm test -- launch-audit.test.ts`: passed after the anonymous abuse-control audit regression; latest full browser-free preflight test run is 24 files / 161 tests.
-- `pnpm test -- server-smoke.test.ts`: passed after changing `--include-media` to media-only anonymous smoke so it stays within the 3-run launch trial; latest full browser-free preflight test run is 24 files / 161 tests.
-- `pnpm test -- release-verify.test.ts sync-release-hash.test.ts`: passed after the release hash-sync verifier update; latest full browser-free preflight test run is 24 files / 161 tests.
+- `pnpm test`: passed, 24 files / 162 tests.
+- `pnpm test -- launch-audit.test.ts`: passed after the anonymous abuse-control audit regression; latest full browser-free preflight test run is 24 files / 162 tests.
+- `pnpm test -- server-smoke.test.ts`: passed after changing `--include-media` to media-only anonymous smoke so it stays within the 3-run launch trial; latest full browser-free preflight test run is 24 files / 162 tests.
+- `pnpm test -- release-verify.test.ts sync-release-hash.test.ts`: passed after the release hash-sync verifier update; latest full browser-free preflight test run is 24 files / 162 tests.
 - `pnpm e2e`, `pnpm e2e:demo`, and `pnpm e2e:real` without `ANYCAP_ALLOW_HEADED_E2E=1`: each blocked before `pnpm build`, `pnpm demo`, or Playwright with `headed E2E blocked`.
 - `git diff --check`: passed again after the release hash-sync and verification-documentation updates.
 - `.gitlab-ci.yml`: parsed successfully, and `build:extension` runs `pnpm preflight:local`.

@@ -214,6 +214,9 @@ describe('release verifier', () => {
     expect(
       validatePackageScripts({
         packageManager: 'pnpm@10.33.0',
+        devDependencies: {
+          '@types/chrome': '^0.1.40',
+        },
         scripts: {
           release:
             'export WXT_RELEASE=true && wxt build && wxt zip && mkdir -p releases && cp .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip && node scripts/sync-release-hash.mjs',
@@ -261,6 +264,21 @@ describe('release verifier', () => {
     });
 
     expect(errors).toContain('package.json must pin packageManager to pnpm@10.x for GitLab Node 22 CI installs');
+  });
+
+  it('requires package.json to install Chrome extension globals for clean CI type checks', async () => {
+    const { validatePackageScripts } = await loadVerifier();
+
+    const errors = validatePackageScripts({
+      packageManager: 'pnpm@10.33.0',
+      devDependencies: {},
+      scripts: {
+        release:
+          'export WXT_RELEASE=true && wxt build && wxt zip && mkdir -p releases && cp .output/anycap-extension-0.2.0-chrome.zip releases/anycap-extension-0.2.0-chrome.zip && node scripts/sync-release-hash.mjs',
+      },
+    });
+
+    expect(errors).toContain('package.json devDependencies must include @types/chrome for clean CI type checks');
   });
 
   it('requires all headed Playwright scripts to run the browser approval guard', async () => {

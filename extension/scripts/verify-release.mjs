@@ -170,11 +170,15 @@ export function validateManifest(manifest) {
 
 export function validatePackageScripts(pkg) {
   const scripts = pkg.scripts && typeof pkg.scripts === 'object' ? pkg.scripts : {};
+  const devDependencies = pkg.devDependencies && typeof pkg.devDependencies === 'object' ? pkg.devDependencies : {};
   const errors = [];
   const packageManager = String(pkg.packageManager ?? '');
 
   if (!/^pnpm@10\./.test(packageManager)) {
     errors.push('package.json must pin packageManager to pnpm@10.x for GitLab Node 22 CI installs');
+  }
+  if (!devDependencies['@types/chrome']) {
+    errors.push('package.json devDependencies must include @types/chrome for clean CI type checks');
   }
 
   if (!String(scripts.release ?? '').includes('WXT_RELEASE=true')) {
