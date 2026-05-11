@@ -32,6 +32,7 @@ type ReleaseVerifyModule = {
   ) => string[];
   validateZipRequiredEntries: (entries: string[]) => string[];
   validateSyncedReleaseZip: (rootDir: string) => string[];
+  validateGitLabCIExtensionJob: (text: string) => string[];
 };
 
 async function loadVerifier(): Promise<ReleaseVerifyModule> {
@@ -279,6 +280,30 @@ describe('release verifier', () => {
     });
 
     expect(errors).toContain('package.json devDependencies must include @types/chrome for clean CI type checks');
+  });
+
+  it('accepts the GitLab extension job with pinned pnpm and native verifier tools', async () => {
+    const { validateGitLabCIExtensionJob } = await loadVerifier();
+    const text = [
+      'build:extension:',
+      '  script:',
+      '    - apt-get update && apt-get install -y --no-install-recommends unzip ffmpeg && rm -rf /var/lib/apt/lists/*',
+      '    - corepack enable',
+      '    - corepack prepare pnpm@10.33.0 --activate',
+      '    - cd extension',
+      '    - pnpm install --frozen-lockfile',
+      '    - pnpm preflight:local',
+    ].join('\n');
+
+    expect(validateGitLabCIExtensionJob(text)).toEqual([]);
+  });
+
+  it('requires the GitLab extension job to install release verifier native tools', async () => {
+    const { validateGitLabCIExtensionJob } = await loadVerifier();
+
+    expect(validateGitLabCIExtensionJob('corepack enable\npnpm preflight:local')).toContain(
+      '.gitlab-ci.yml build:extension must install unzip and ffmpeg for release verification',
+    );
   });
 
   it('requires all headed Playwright scripts to run the browser approval guard', async () => {

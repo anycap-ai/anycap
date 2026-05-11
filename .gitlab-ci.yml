@@ -58,6 +58,7 @@ build:extension:
       paths:
         - extension/node_modules
   script:
+    - apt-get update && apt-get install -y --no-install-recommends unzip ffmpeg && rm -rf /var/lib/apt/lists/*
     - corepack enable
     - corepack prepare pnpm@10.33.0 --activate
     - cd extension

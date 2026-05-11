@@ -263,6 +263,19 @@ export function validateVisibleChromeDocs(rootDir) {
   return errors;
 }
 
+export function validateGitLabCIExtensionJob(text) {
+  const source = String(text || '');
+  const errors = [];
+
+  if (!source.includes('corepack prepare pnpm@10.33.0 --activate')) {
+    errors.push('.gitlab-ci.yml build:extension must activate pnpm@10.33.0');
+  }
+  if (!source.includes('apt-get install') || !source.includes('unzip') || !source.includes('ffmpeg')) {
+    errors.push('.gitlab-ci.yml build:extension must install unzip and ffmpeg for release verification');
+  }
+  return errors;
+}
+
 export function readPNGDimensions(buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 24) {
     throw new Error('PNG is too small to contain an IHDR header');
@@ -621,6 +634,8 @@ export function validateSyncedReleaseZip(rootDir = process.cwd()) {
 export function validateReleaseArtifacts(rootDir = process.cwd()) {
   const errors = [];
   const packagePath = path.join(rootDir, 'package.json');
+  const repoRoot = fs.existsSync(path.join(rootDir, '.gitlab-ci.yml')) ? rootDir : path.resolve(rootDir, '..');
+  const gitlabCIPath = path.join(repoRoot, '.gitlab-ci.yml');
   const zipPath = path.join(rootDir, 'releases/anycap-extension-0.2.0-chrome.zip');
 
   if (!fs.existsSync(packagePath)) {
@@ -628,6 +643,12 @@ export function validateReleaseArtifacts(rootDir = process.cwd()) {
   } else {
     const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     errors.push(...validatePackageScripts(pkg));
+  }
+
+  if (!fs.existsSync(gitlabCIPath)) {
+    errors.push('.gitlab-ci.yml is missing');
+  } else {
+    errors.push(...validateGitLabCIExtensionJob(fs.readFileSync(gitlabCIPath, 'utf8')));
   }
 
   if (!fs.existsSync(zipPath)) {
