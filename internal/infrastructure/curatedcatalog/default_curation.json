@@ -45,28 +45,6 @@
       ]
     },
     {
-      "model_id": "gemini-3-pro-image",
-      "capability": "image",
-      "display_name": "Gemini 3 Pro Image",
-      "model_description": "Gemini 3 Pro Image is Google's flagship multimodal image model. It delivers high visual quality, strong prompt adherence, and detailed scene understanding, and is well suited for high-fidelity creative production and image editing workflows.",
-      "operations": [
-        {
-          "operation": "generate",
-          "mode": "text-to-image",
-          "ability_key": "kapon-gemini-3-pro-image-preview",
-          "algo_type": "txt_2_img",
-          "mode_description": "Generate images directly from text prompts."
-        },
-        {
-          "operation": "edit",
-          "mode": "image-to-image",
-          "ability_key": "kapon-gemini-3-pro-image-preview",
-          "algo_type": "img_2_img",
-          "mode_description": "Edit or transform existing images using text prompts while preserving the original composition."
-        }
-      ]
-    },
-    {
       "model_id": "gpt-image-2",
       "capability": "image",
       "display_name": "GPT Image 2",
