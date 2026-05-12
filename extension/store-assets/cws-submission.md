@@ -8,7 +8,7 @@ Developer console: https://chrome.google.com/webstore/devconsole/
 
 - Upload: `releases/anycap-extension-0.2.0-chrome.zip`
 - Version: `0.2.0`
-- SHA-256: `6e66be348d33d49a54df8730a69fe5e7dcbc69d4ed1d1f8e4051be0fce4df5da`
+- SHA-256: `9c0b9ebc152e9e8a6df9a512b243e91be52dba8d6f643642d06a457a591fd9be`
 - Category: Productivity
 - Language: English
 

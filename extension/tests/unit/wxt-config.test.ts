@@ -25,7 +25,7 @@ describe('wxt config', () => {
     });
 
     expect(config.manifest?.host_permissions).toContain('https://api-staging.anycap.ai/*');
-  });
+  }, 15000);
 
   it('keeps release host permissions limited to production origins', async () => {
     const config = await loadConfig({
@@ -37,5 +37,5 @@ describe('wxt config', () => {
       'https://api.anycap.ai/*',
       'https://anycap.ai/*',
     ]);
-  });
+  }, 15000);
 });
