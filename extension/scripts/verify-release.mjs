@@ -50,7 +50,7 @@ const REQUIRED_SUPPORT_SCRIPTS = [
   'scripts/render-cws-assets.mjs',
   'scripts/render-demo-video.mjs',
 ];
-const CURRENT_UNIT_TEST_COUNT = 189;
+const CURRENT_UNIT_TEST_COUNT = 190;
 const MAX_RELEASE_ZIP_COMPRESSED_BYTES = 200 * 1024;
 const MAX_SIDEPANEL_JS_GZIP_BYTES = 80 * 1024;
 const MIN_SMALL_TEXT_CONTRAST = 4.5;

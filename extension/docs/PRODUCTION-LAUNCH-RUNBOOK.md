@@ -1,6 +1,6 @@
 # AnyCap Chrome Extension Production Launch Runbook
 
-Last updated: 2026-05-11. This runbook is for the v0.2.0 Chrome Web Store
+Last updated: 2026-05-12. This runbook is for the v0.2.0 Chrome Web Store
 launch. It separates terminal-only gates from approval-gated browser and store
 actions.
 
@@ -20,16 +20,17 @@ Treat the launch as complete only when all of these are true:
 
 ## Current Production Snapshot
 
-As of 2026-05-11, the local package and server code are ready for deployment,
+As of 2026-05-12, the local package and server code are ready for deployment,
 but production is not ready:
 
 - `pnpm verify:release` passes locally.
 - `pnpm preflight:local` passes locally.
-- `pnpm test` passes locally with 189 unit tests.
+- `pnpm test` passes locally with 190 unit tests.
 - Full local Go tests pass.
-- Latest production smoke with install ID `codex-smoke-20260511-after-contrast` returned required features as enabled, but
-  `/v1/extension/config` returned `404`, and anonymous `/v1/web/search` plus
-  `/v1/web/crawl` returned `401 AUTH_INVALID`.
+- Latest production smoke with install ID `prod-check-20260512174848` returned
+  required features as enabled, but `/v1/extension/config` returned `404`,
+  and anonymous `/v1/web/search` plus `/v1/web/crawl` returned
+  `401 AUTH_INVALID`.
 - The local server now includes the anonymous public-trial abuse control:
   `AnonRateLimit` consumes both the normalized install-ID bucket and a hashed TCP
   remote-address client bucket, and integration tests cover install-ID rotation
@@ -40,7 +41,7 @@ packaging.
 
 ## Current Access Snapshot
 
-As of 2026-05-11, this local machine is not ready to perform the remaining
+As of 2026-05-12, this local machine is not ready to perform the remaining
 web/store upload steps without additional credentials:
 
 - `gh auth status` reports no GitHub login.

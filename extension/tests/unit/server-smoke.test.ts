@@ -16,6 +16,18 @@ type SmokeModule = {
     target?: { baseUrl: string; installId: string };
     results: Array<{ name: string; ok: boolean; status: number; code?: string; message?: string; duration_ms?: number }>;
   }>;
+  formatServerSmokeResult: (result: {
+    target: { baseUrl: string; installId: string };
+    results: Array<{
+      name: string;
+      ok: boolean;
+      status: number;
+      code?: string;
+      message?: string;
+      hint?: string;
+      duration_ms?: number;
+    }>;
+  }) => { stdout: string[]; stderr: string[] };
 };
 
 const requiredFeatures = {
@@ -195,6 +207,33 @@ describe('server smoke script', () => {
     });
 
     expect(result.results.map((item) => item.duration_ms)).toEqual([25, 25, 25, 25]);
+  });
+
+  it('formats CLI smoke output with per-check durations for success and failure lines', async () => {
+    const { formatServerSmokeResult } = await loadSmoke();
+
+    expect(
+      formatServerSmokeResult({
+        target: { baseUrl: 'https://api.anycap.ai', installId: 'smoke-install' },
+        results: [
+          { name: 'required features', ok: true, status: 200, duration_ms: 17 },
+          {
+            name: 'web search',
+            ok: false,
+            status: 401,
+            duration_ms: 23,
+            code: 'AUTH_INVALID',
+            message: 'missing or invalid bearer token',
+          },
+        ],
+      }),
+    ).toEqual({
+      stdout: [
+        'server smoke: ok target - base-url=https://api.anycap.ai install-id=smoke-install',
+        'server smoke: ok required features (200) in 17ms',
+      ],
+      stderr: ['server smoke: fail web search (401) in 23ms AUTH_INVALID - missing or invalid bearer token'],
+    });
   });
 
   it('fails when required Chrome extension features are missing or disabled', async () => {

@@ -224,6 +224,24 @@ export async function runServerSmoke({
   return { ok: results.every((result) => result.ok), target: { baseUrl: normalizedBase, installId }, results };
 }
 
+export function formatServerSmokeResult(result) {
+  const stdout = [`server smoke: ok target - base-url=${result.target.baseUrl} install-id=${result.target.installId}`];
+  const stderr = [];
+
+  for (const item of result.results) {
+    const status = item.status || 'network';
+    const duration = Number.isFinite(item.duration_ms) ? ` in ${item.duration_ms}ms` : '';
+    if (item.ok) {
+      stdout.push(`server smoke: ok ${item.name} (${status})${duration}`);
+    } else {
+      const detail = [item.code, item.message, item.hint].filter(Boolean).join(' - ');
+      stderr.push(`server smoke: fail ${item.name} (${status})${duration}${detail ? ` ${detail}` : ''}`);
+    }
+  }
+
+  return { stdout, stderr };
+}
+
 function parseArgs(argv) {
   const parsed = {
     baseUrl: process.env.ANYCAP_API_BASE || process.env.WXT_API_BASE || DEFAULT_BASE_URL,
@@ -279,17 +297,9 @@ async function main() {
   }
 
   const result = await runServerSmoke(args);
-  console.log(`server smoke: ok target - base-url=${result.target.baseUrl} install-id=${result.target.installId}`);
-  for (const item of result.results) {
-    const status = item.status || 'network';
-    const duration = Number.isFinite(item.duration_ms) ? ` in ${item.duration_ms}ms` : '';
-    if (item.ok) {
-      console.log(`server smoke: ok ${item.name} (${status})${duration}`);
-    } else {
-      const detail = [item.code, item.message, item.hint].filter(Boolean).join(' - ');
-      console.error(`server smoke: fail ${item.name} (${status})${duration}${detail ? ` ${detail}` : ''}`);
-    }
-  }
+  const formatted = formatServerSmokeResult(result);
+  for (const line of formatted.stdout) console.log(line);
+  for (const line of formatted.stderr) console.error(line);
   if (!result.ok) {
     process.exit(1);
   }

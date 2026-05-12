@@ -1,6 +1,6 @@
 # Next steps to make AnyCap Chrome truly production-ready
 
-> **State as of v0.2.0 refresh (2026-05-11):** The extension side-panel package is
+> **State as of v0.2.0 refresh (2026-05-12):** The extension side-panel package is
 > code-complete for the v0.2 capability surface, with image/video/music/search/crawl,
 > first-run onboarding, clearer failure UX, anonymous install-id headers, and a
 > refreshed CWS-ready zip. The server now has a Postgres-backed anonymous trial
@@ -43,15 +43,15 @@ yet expose the new extension config route or anonymous web auth path.
 Use `docs/PRODUCTION-LAUNCH-RUNBOOK.md` for the exact deploy, dconf, smoke,
 real-mode E2E acknowledgement, CWS upload, and rollback sequence.
 
-Latest browser-free production smoke on 2026-05-11 with install ID
-`codex-smoke-20260511-after-contrast` still fails before media generation:
+Latest browser-free production smoke on 2026-05-12 with install ID
+`prod-check-20260512174848` still fails before media generation:
 `/v1/features` returns the required feature flags as enabled, but
 `/v1/extension/config` returns `404`, while
 `/v1/web/search` and `/v1/web/crawl` return `401 AUTH_INVALID` without a bearer
 token.
 
-Latest `pnpm launch:audit` on 2026-05-11 with install ID
-`codex-audit-20260511-manual-gates` confirms release artifacts and required features,
+Latest `pnpm launch:audit` on 2026-05-12 with install ID
+`prod-audit-20260512175617` confirms release artifacts and required features,
 then reports automated blockers: production `/v1/extension/config` deploy,
 anonymous web auth deploy, the live privacy URL returning HTTP 200 with a Next.js
 404 fallback body, deployed abuse-control acknowledgement, approved real-mode
