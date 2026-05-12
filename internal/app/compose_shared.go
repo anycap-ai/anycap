@@ -8,6 +8,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/curatedcatalog"
 	"gitlab.knoffice.tech/engineering/anycap/pkg/buildinfo"
 )
 
@@ -18,6 +19,7 @@ type sharedComposition struct {
 	modelRouteRepo       port.ModelRouteRepository
 	catalogService       *catalogapp.Service
 	modelRouteService    *modelrouteapp.Service
+	discoveryRefresher   *curatedcatalog.Refresher
 	capProvider          port.CapabilitiesProvider
 	cloudObjectStore     port.CloudObjectStore
 	capGetExpiry         time.Duration
@@ -31,7 +33,7 @@ type sharedComposition struct {
 }
 
 func buildSharedComposition(cfg config.Config, info buildinfo.Info) sharedComposition {
-	catalogRepo, modelRouteRepo := buildCatalogAndModelRouteRepos(cfg)
+	catalogRepo, modelRouteRepo, refresher := buildCatalogAndModelRouteRepos(cfg)
 	return sharedComposition{
 		config:               cfg,
 		buildInfo:            info,
@@ -39,6 +41,7 @@ func buildSharedComposition(cfg config.Config, info buildinfo.Info) sharedCompos
 		modelRouteRepo:       modelRouteRepo,
 		catalogService:       catalogapp.NewService(catalogRepo),
 		modelRouteService:    modelrouteapp.NewService(modelRouteRepo),
+		discoveryRefresher:   refresher,
 		capProvider:          buildCapabilitiesProvider(cfg),
 		cloudObjectStore:     buildCloudObjectStorage(cfg),
 		capGetExpiry:         time.Duration(cfg.CloudS3.PresignGetExpiry) * time.Second,

@@ -1,0 +1,188 @@
+package curatedcatalog
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/config"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
+)
+
+type fakeCuration struct {
+	cfg *config.ModelCurationConfig
+}
+
+func (f fakeCuration) Snapshot() *config.ModelCurationConfig { return f.cfg }
+
+type fakeDiscovery struct {
+	nodes map[string]*nexushub.DiscoveryNode
+	calls int
+}
+
+func (f *fakeDiscovery) GetNode(_ context.Context, abilityKey, algo string) (*nexushub.DiscoveryNode, error) {
+	f.calls++
+	if node, ok := f.nodes[abilityKey]; ok {
+		return node, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func sampleCuration() *config.ModelCurationConfig {
+	return &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:          "seedream-5",
+				Capability:       "image",
+				DisplayName:      "Seedream 5",
+				ModelDescription: "test description",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "text-to-image", AbilityKey: "ark-doubao-seedream-5", AlgoType: "txt_2_img", ModeDescription: "Text to image."},
+					{Operation: "edit", Mode: "image-to-image", AbilityKey: "ark-doubao-seedream-5", AlgoType: "img_2_img"},
+				},
+			},
+			{
+				ModelID:    "veo-3.1",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "text-to-video", AbilityKey: "veo3.1", AlgoType: "txt_2_video"},
+				},
+			},
+		},
+	}
+}
+
+func sampleDiscoveryNodes() map[string]*nexushub.DiscoveryNode {
+	mkSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"image_option": map[string]any{
+					"properties": map[string]any{
+						"type":  map[string]any{"type": "string", "enum": []any{algo}},
+						"ratio": map[string]any{"type": "string", "enum": []any{"1:1"}},
+					},
+				},
+			},
+		}
+	}
+	mkVideoSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"video_option": map[string]any{
+					"properties": map[string]any{
+						"type":     map[string]any{"type": "string", "enum": []any{algo}},
+						"duration": map[string]any{"type": "integer", "enum": []any{5}},
+					},
+				},
+			},
+		}
+	}
+	return map[string]*nexushub.DiscoveryNode{
+		"ark-doubao-seedream-5": {
+			AbilityKey: "ark-doubao-seedream-5",
+			State:      "active",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_img": {Schema: mkSchema("txt_2_img"), AlgoDescription: nexushub.DiscoveryAlgoDescription{Description: "discovery-described txt_2_img"}},
+				"img_2_img": {Schema: mkSchema("img_2_img"), AlgoDescription: nexushub.DiscoveryAlgoDescription{Description: "fallback mode description"}},
+			},
+		},
+		"veo3.1": {
+			AbilityKey: "veo3.1",
+			State:      "active",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_video": {Schema: mkVideoSchema("txt_2_video")},
+			},
+		},
+	}
+}
+
+func TestCatalog_ListModels_Image(t *testing.T) {
+	cat := New(fakeCuration{cfg: sampleCuration()}, &fakeDiscovery{nodes: sampleDiscoveryNodes()})
+
+	specs, err := cat.ListModels(context.Background(), model.CapabilityImage)
+	if err != nil {
+		t.Fatalf("ListModels error: %v", err)
+	}
+	if len(specs) != 1 {
+		t.Fatalf("want 1 image model, got %d", len(specs))
+	}
+	spec := specs[0]
+	if spec.ModelID != "seedream-5" {
+		t.Fatalf("unexpected model_id: %s", spec.ModelID)
+	}
+
+	gen, ok := spec.Operations[model.OperationGenerate]
+	if !ok {
+		t.Fatalf("expected generate operation present")
+	}
+	if len(gen.Routes) != 1 || gen.Routes[0].AbilityKey != "ark-doubao-seedream-5" || gen.Routes[0].AlgoType != "txt_2_img" {
+		t.Fatalf("unexpected generate route: %+v", gen.Routes)
+	}
+	if len(gen.Modes) != 1 || gen.Modes[0].Mode != model.ModeTextToImage || gen.Modes[0].Description != "Text to image." {
+		t.Fatalf("unexpected modes: %+v", gen.Modes)
+	}
+	if _, ok := gen.ModeSchemas[model.ModeTextToImage]; !ok {
+		t.Fatalf("expected mode schema for text-to-image")
+	}
+	if len(gen.RequestHints) == 0 {
+		t.Fatalf("expected fallback RequestHints to be populated")
+	}
+
+	edit, ok := spec.Operations[model.OperationEdit]
+	if !ok {
+		t.Fatalf("expected edit operation present")
+	}
+	if len(edit.Routes) != 1 || edit.Routes[0].AlgoType != "img_2_img" {
+		t.Fatalf("unexpected edit route: %+v", edit.Routes)
+	}
+	if edit.Modes[0].Description != "fallback mode description" {
+		t.Fatalf("expected discovery-derived mode description, got %q", edit.Modes[0].Description)
+	}
+}
+
+func TestCatalog_ListModels_Video(t *testing.T) {
+	cat := New(fakeCuration{cfg: sampleCuration()}, &fakeDiscovery{nodes: sampleDiscoveryNodes()})
+	specs, err := cat.ListModels(context.Background(), model.CapabilityVideo)
+	if err != nil {
+		t.Fatalf("ListModels error: %v", err)
+	}
+	if len(specs) != 1 || specs[0].ModelID != "veo-3.1" {
+		t.Fatalf("unexpected video result: %+v", specs)
+	}
+}
+
+func TestCatalog_GetModel_NotFound(t *testing.T) {
+	cat := New(fakeCuration{cfg: sampleCuration()}, &fakeDiscovery{nodes: sampleDiscoveryNodes()})
+	if _, err := cat.GetModel(context.Background(), model.CapabilityImage, "missing"); err == nil {
+		t.Fatal("expected error for missing model")
+	}
+}
+
+func TestCatalog_SkipsOperationsMissingFromDiscovery(t *testing.T) {
+	cur := sampleCuration()
+	// Add an operation that points to an ability_key absent from discovery.
+	cur.Models[0].Operations = append(cur.Models[0].Operations, config.ModelCurationOperationConfig{
+		Operation: "upscale", AbilityKey: "missing-node", AlgoType: "ultra_img",
+	})
+	cat := New(fakeCuration{cfg: cur}, &fakeDiscovery{nodes: sampleDiscoveryNodes()})
+
+	spec, err := cat.GetModel(context.Background(), model.CapabilityImage, "seedream-5")
+	if err != nil {
+		t.Fatalf("GetModel error: %v", err)
+	}
+	if _, ok := spec.Operations[model.OperationUpscale]; ok {
+		t.Fatal("expected upscale operation to be skipped (missing in discovery)")
+	}
+}
+
+func TestCatalog_CuratedAbilityKeysDeduplicates(t *testing.T) {
+	cat := New(fakeCuration{cfg: sampleCuration()}, &fakeDiscovery{nodes: sampleDiscoveryNodes()})
+	keys := cat.CuratedAbilityKeys()
+	// (ark-doubao-seedream-5, txt_2_img), (ark-doubao-seedream-5, img_2_img), (veo3.1, txt_2_video)
+	if len(keys) != 3 {
+		t.Fatalf("expected 3 unique ability keys, got %d: %+v", len(keys), keys)
+	}
+}

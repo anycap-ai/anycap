@@ -15,7 +15,7 @@ var (
 )
 
 func DConfEnabled(cfg Config) bool {
-	return cfg.RateLimitDConfEnabled || cfg.FeatureDConfEnabled
+	return cfg.RateLimitDConfEnabled || cfg.FeatureDConfEnabled || cfg.StorageQuotaDConfEnabled || cfg.ModelCurationDConfEnabled
 }
 
 func InitDConf(cfg Config) error {
@@ -35,6 +35,9 @@ func InitDConf(cfg Config) error {
 	}
 	if cfg.StorageQuotaDConfEnabled {
 		logging.WithFields(logging.Fields{"group": cfg.StorageQuotaDConfGroup, "data_id": cfg.StorageQuotaDConfDataID}).Info("storage-quota initialized dconf client")
+	}
+	if cfg.ModelCurationDConfEnabled {
+		logging.WithFields(logging.Fields{"group": cfg.ModelCurationDConfGroup, "data_id": cfg.ModelCurationDConfDataID}).Info("model-curation initialized dconf client")
 	}
 	return nil
 }
