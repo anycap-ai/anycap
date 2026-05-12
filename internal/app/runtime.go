@@ -124,4 +124,7 @@ func registerRuntimeTasks(runtime *serverRuntime, deps serverDependencies) {
 	if deps.paymentEventsWorker != nil {
 		runtime.Register("payment-events", deps.paymentEventsWorker)
 	}
+	if deps.discoveryRefresher != nil {
+		runtime.Register("discovery-refresh", deps.discoveryRefresher)
+	}
 }

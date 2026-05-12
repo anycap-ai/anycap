@@ -1,0 +1,431 @@
+{
+  "models": [
+    {
+      "model_id": "nano-banana-2",
+      "capability": "image",
+      "display_name": "Nano Banana 2",
+      "model_description": "Nano Banana 2 is a high-efficiency image generation and conversational image editing model built for fast, large-scale visual creation. It combines the intelligence of the Gemini 3 series with low latency, strong instruction following, and production-oriented image quality, making it well suited for high-volume creative workflows such as marketing assets, product mockups, storyboards, infographics, and iterative visual editing. It supports conversational multimodal workflows with text and image inputs, and is positioned as the faster, more scalable counterpart to Gemini 3 Pro Image.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "nano_banana_2",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "nano_banana_2",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform images using prompts."
+        }
+      ]
+    },
+    {
+      "model_id": "nano-banana-pro",
+      "capability": "image",
+      "display_name": "Nano Banana Pro",
+      "model_description": "Nano Banana Pro is an advanced multimodal generative model designed for high-quality text-to-image and image-to-image creation. It delivers enhanced visual fidelity, stronger prompt alignment, and improved consistency across outputs, making it suitable for both creative production and commercial workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "nano_banana_pro",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "nano_banana_pro",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform images using prompts."
+        }
+      ]
+    },
+    {
+      "model_id": "gemini-3-pro-image",
+      "capability": "image",
+      "display_name": "Gemini 3 Pro Image",
+      "model_description": "Gemini 3 Pro Image is Google's flagship multimodal image model. It delivers high visual quality, strong prompt adherence, and detailed scene understanding, and is well suited for high-fidelity creative production and image editing workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "kapon-gemini-3-pro-image-preview",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "kapon-gemini-3-pro-image-preview",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform existing images using text prompts while preserving the original composition."
+        }
+      ]
+    },
+    {
+      "model_id": "gpt-image-2",
+      "capability": "image",
+      "display_name": "GPT Image 2",
+      "model_description": "GPT Image 2 is OpenAI's image generation and editing model. It produces high-fidelity images from text prompts and supports prompt-driven edits to existing images, making it suitable for creative workflows that mix generation and refinement.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "gpt_image_2",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "gpt_image_2",
+          "algo_type": "img_edit",
+          "mode_description": "Edit existing images by describing the desired change in text."
+        }
+      ]
+    },
+    {
+      "model_id": "seedream-4.5",
+      "capability": "image",
+      "display_name": "Seedream 4.5",
+      "model_description": "Seedream 4.5 is a reliable image editing and transformation model designed for image-to-image tasks. It provides stable visual modifications, consistent structure preservation, and efficient performance, making it suitable for everyday editing and iterative workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "ark-doubao-seedream-4-5-251128",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts. Users can describe scenes, styles, and compositions, and the model will produce visually coherent results with reliable consistency."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "ark-doubao-seedream-4-5-251128",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform existing images using text prompts. The model preserves the original composition while applying changes to style, lighting, color, or specific elements."
+        }
+      ]
+    },
+    {
+      "model_id": "seedream-5",
+      "capability": "image",
+      "display_name": "Seedream 5",
+      "model_description": "Seedream 5 is a high-quality image editing and transformation model optimized for image-to-image tasks. It enables precise visual modifications, style transfer, and content refinement while preserving the original structure and composition.\n\nKey Capabilities:\n\nImage-to-Image transformation with strong structural consistency\nHigh-fidelity detail enhancement and refinement\nStyle transfer and visual reinterpretation\nControlled editing of subjects, backgrounds, and attributes\nSuitable for iterative creative workflows",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "ark-doubao-seedream-5",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts. Users can describe scenes, characters, styles, and compositions, and the model will synthesize high-quality visuals accordingly."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "ark-doubao-seedream-5",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform existing images using text prompts. The model preserves the core composition while applying changes to style, details, lighting, or specific elements within the image."
+        }
+      ]
+    },
+    {
+      "model_id": "flux-kontext-max",
+      "capability": "image",
+      "display_name": "FLUX.1 Kontext Max",
+      "model_description": "FLUX.1 Kontext Max is Black Forest Labs' high-end image generation and editing model. It produces detailed, stylistically rich images and supports iterative image-to-image refinement, making it well suited for creative and design-oriented workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "flux_kontext_max",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "flux_kontext_max",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform existing images using text prompts while preserving the overall composition."
+        }
+      ]
+    },
+    {
+      "model_id": "qwen-image",
+      "capability": "image",
+      "display_name": "Qwen Image",
+      "model_description": "Qwen Image is Alibaba's multimodal image generation and editing model. It supports both text-to-image generation and image-driven editing, with strong prompt adherence and good performance on Chinese and English text understanding.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "replicate_qwen_image",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "replicate_qwen_image",
+          "algo_type": "img_edit",
+          "mode_description": "Edit existing images by describing the desired change in text."
+        }
+      ]
+    },
+    {
+      "model_id": "kling-3.0",
+      "capability": "video",
+      "display_name": "Kling 3.0",
+      "model_description": "Kling 3.0 is a multimodal video generation model that converts static images into dynamic video sequences. It enables realistic motion synthesis, cinematic transitions, and controllable animation based on visual and textual inputs.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "cloudsway_kling_3.0",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate videos directly from text prompts. Users can describe scenes, actions, camera movements, and styles, and the model will synthesize a complete video sequence with temporal continuity."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "cloudsway_kling_3.0",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate a video sequence from a single image or multiple reference images. The model animates the scene by introducing motion, camera dynamics, and temporal progression while preserving the original visual structure."
+        }
+      ]
+    },
+    {
+      "model_id": "kling-o1",
+      "capability": "video",
+      "display_name": "Kling O1",
+      "model_description": "Kling O1 is an image-to-video model that animates a reference image into a coherent short video clip. It supports first/last frame conditioning and reference-based animation, making it suitable for product demos, story beats, and stylized motion design.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "kling-o1",
+          "algo_type": "img_2_video",
+          "mode_description": "Animate a reference image into a short video clip with controllable motion and style."
+        }
+      ]
+    },
+    {
+      "model_id": "hailuo-2.3",
+      "capability": "video",
+      "display_name": "Hailuo 2.3",
+      "model_description": "Hailuo 2.3 is MiniMax's video generation model. It produces fluid motion and cinematic transitions from both text prompts and reference images, suitable for short narrative clips and visual storytelling.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "cloudsway_hailuo_2.3",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate videos directly from text prompts."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "cloudsway_hailuo_2.3",
+          "algo_type": "img_2_video",
+          "mode_description": "Animate a reference image into a short video clip."
+        }
+      ]
+    },
+    {
+      "model_id": "seedance-1.5-pro",
+      "capability": "video",
+      "display_name": "Seedance 1.5 Pro",
+      "model_description": "Seedance 1.5 Pro is a high-performance video generation model optimized for image-to-video tasks. It delivers smooth motion, strong temporal consistency, and high visual fidelity, making it suitable for professional-grade video creation and content production workflows.\n\nKey Capabilities:\n\nImage-to-Video generation with stable motion and transitions\nHigh visual quality with refined details\nStrong temporal consistency across frames\nOptimized for realistic and cinematic outputs\nReliable performance for production-level use cases",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "ark-doubao-seedance-1.5-pro",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts. Users can describe scenes, actions, camera movements, and styles, and the model will produce a complete video sequence with narrative flow and visual coherence."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "ark-doubao-seedance-1.5-pro",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from input images. The model animates static visuals by introducing motion, camera dynamics, and scene progression while preserving the original composition and structure."
+        }
+      ]
+    },
+    {
+      "model_id": "seedance-2",
+      "capability": "video",
+      "display_name": "Seedance 2.0",
+      "model_description": "Seedance 2.0 is the next-generation Doubao video generation model. It delivers improved temporal consistency, sharper detail, and stronger prompt adherence over Seedance 1.5, suitable for high-quality cinematic and product video workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "ark-doubao-seedance-2",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "ark-doubao-seedance-2",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from a reference image while preserving the original composition."
+        }
+      ]
+    },
+    {
+      "model_id": "seedance-2-fast",
+      "capability": "video",
+      "display_name": "Seedance 2.0 Fast",
+      "model_description": "Seedance 2.0 Fast is the latency-optimized variant of Seedance 2.0. It trades some peak quality for faster turnaround, making it well suited for iterative previewing, ideation, and high-volume content production.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "ark-doubao-seedance-2-fast",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts with faster turnaround."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "ark-doubao-seedance-2-fast",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from a reference image with faster turnaround."
+        }
+      ]
+    },
+    {
+      "model_id": "veo-3.1",
+      "capability": "video",
+      "display_name": "Veo 3.1",
+      "model_description": "Veo 3.1 is a high-end video generation model designed for text-to-video tasks. It produces cinematic-quality videos with advanced motion realism, strong temporal consistency, and detailed scene understanding, making it suitable for professional video production and storytelling.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "veo3.1",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate high-quality video content directly from text prompts. Users can describe scenes, actions, camera movement, and style, and the model will produce a coherent video sequence with cinematic flow."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "veo3.1",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from input images. The model animates static visuals by introducing motion, camera movement, and temporal progression while maintaining the original composition and enhancing realism."
+        }
+      ]
+    },
+    {
+      "model_id": "veo-3.1-fast",
+      "capability": "video",
+      "display_name": "Veo 3.1 Fast",
+      "model_description": "Veo 3.1 Fast is the latency-optimized variant of Veo 3.1. It delivers cinematic motion quality with faster turnaround, suitable for iterative previewing and high-volume content production.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "veo3.1_fast",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts with faster turnaround."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "veo3.1_fast",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from a reference image with faster turnaround."
+        }
+      ]
+    },
+    {
+      "model_id": "sora-2-pro",
+      "capability": "video",
+      "display_name": "Sora 2 Pro",
+      "model_description": "Sora 2 Pro is OpenAI's high-end text-to-video model. It produces realistic, temporally coherent videos from text and image prompts, with strong scene understanding and fluid motion, suitable for cinematic, product, and narrative content.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "replicate-sora-2-pro",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "replicate-sora-2-pro",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from a reference image."
+        }
+      ]
+    },
+    {
+      "model_id": "elevanlabs-music",
+      "capability": "music",
+      "display_name": "ElevenLabs Music",
+      "model_description": "ElevenLabs Music is an advanced generative audio model that creates original music from text prompts. It enables users to generate high-quality compositions with control over style, mood, instrumentation, and structure, making it suitable for creative production and audio content workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-music",
+          "ability_key": "302ai_elevenlab_music",
+          "algo_type": "text_2_music",
+          "mode_description": "Generate original music tracks directly from text prompts. Users can describe the desired style, mood, tempo, and instruments, and the model will produce a complete audio composition. can control music duration 3-600s"
+        }
+      ]
+    },
+    {
+      "model_id": "suno-v5",
+      "capability": "music",
+      "display_name": "Suno V5",
+      "model_description": "Suno V5 is a state-of-the-art generative music model that creates full-length songs and audio tracks from text prompts. It supports rich musical structure, including vocals, lyrics, instrumentation, and arrangement, enabling high-quality music production from simple descriptions.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-music",
+          "ability_key": "302ai-suno-v5",
+          "algo_type": "text_2_music",
+          "mode_description": "Generate complete music tracks directly from text prompts. Users can describe themes, styles, lyrics, and mood, and the model will produce structured audio with optional vocals and instrumentation."
+        }
+      ]
+    },
+    {
+      "model_id": "suno-v5.5",
+      "capability": "music",
+      "display_name": "Suno V5.5",
+      "model_description": "Suno V5.5 is the latest revision of Suno's text-to-music model, with improved musical structure, vocal quality, and prompt adherence over V5.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-music",
+          "ability_key": "302ai-suno-v5.5",
+          "algo_type": "text_2_music",
+          "mode_description": "Generate complete music tracks directly from text prompts with vocals and arrangement."
+        }
+      ]
+    },
+    {
+      "model_id": "mureka-v8",
+      "capability": "music",
+      "display_name": "Mureka V8",
+      "model_description": "Mureka V8 is a generative music model focused on high-quality vocal and instrumental composition from text prompts. It supports custom lyrics and style tags, suitable for songwriting and audio content production.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-music",
+          "ability_key": "cloudsway_mureka_v8",
+          "algo_type": "text_2_music",
+          "mode_description": "Generate music tracks directly from text prompts with optional custom lyrics."
+        }
+      ]
+    }
+  ]
+}

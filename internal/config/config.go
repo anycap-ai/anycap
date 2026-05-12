@@ -15,39 +15,43 @@ import (
 )
 
 const (
-	defaultAppName               = "anycap-server"
-	defaultAppEnv                = "local"
-	defaultHTTPAddr              = ":18080"
-	defaultRuntimeMode           = "stub"
-	defaultLogLevel              = "info"
-	defaultLogFormat             = "json"
-	defaultLogOutput             = "stdout"
-	defaultRateLimitRPM          = 60
-	defaultRateLimitDConfGroup   = "anycap"
-	defaultRateLimitDConfDataID  = "rate_limit"
-	defaultFeatureDConfGroup     = "anycap"
-	defaultFeatureDConfDataID    = "feature_access"
-	rateLimitEnvPrefix           = "ANYCAP_RATE_LIMIT_"
-	rateLimitEnvSuffix           = "_RPM"
-	defaultLoginAPIKeyTTL        = 7 * 24 * time.Hour
-	defaultAgentPlatformTimeout  = 600 * time.Second
-	defaultPresignExpiry         = 600   // seconds (10 minutes)
-	defaultPresignGetExpiry      = 3600  // seconds (1 hour)
-	maxPresignExpiry             = 3600  // seconds (1 hour hard cap)
-	maxPresignGetExpiry          = 86400 // seconds (24 hours hard cap)
-	legacyPGConfigEnvKey         = "ANYCAP_PG_CONFIG"
-	defaultDriveShareBaseURL     = "https://drive.anycap.cloud/s"
-	defaultKVSyncPollInterval    = 1 * time.Second
-	defaultKVSyncLockTTL         = 5 * time.Minute
-	defaultKVSyncWaitTimeout     = 5 * time.Second
-	defaultUsageSyncPollInterval = 1 * time.Minute
-	defaultUsageSyncBatchSize    = 50
-	defaultCloudflareAPIBaseURL  = "https://api.cloudflare.com/client/v4"
-	defaultDriveAccessTTLSeconds = int64(300)
-	defaultPagePreviewTTLSeconds = int64(300)
-	defaultArtifactLinkTTL       = int64(600)
-	minEdgeGrantTTLSeconds       = int64(60)
-	maxEdgeGrantTTLSeconds       = int64(3600)
+	defaultAppName              = "anycap-server"
+	defaultAppEnv               = "local"
+	defaultHTTPAddr             = ":18080"
+	defaultRuntimeMode          = "stub"
+	defaultLogLevel             = "info"
+	defaultLogFormat            = "json"
+	defaultLogOutput            = "stdout"
+	defaultRateLimitRPM         = 60
+	defaultRateLimitDConfGroup  = "anycap"
+	defaultRateLimitDConfDataID = "rate_limit"
+	defaultFeatureDConfGroup    = "anycap"
+	defaultFeatureDConfDataID   = "feature_access"
+
+	defaultModelCurationDConfGroup  = "anycap"
+	defaultModelCurationDConfDataID = "model_curation"
+	defaultDiscoveryCacheTTL        = 5 * time.Minute
+	rateLimitEnvPrefix              = "ANYCAP_RATE_LIMIT_"
+	rateLimitEnvSuffix              = "_RPM"
+	defaultLoginAPIKeyTTL           = 7 * 24 * time.Hour
+	defaultAgentPlatformTimeout     = 600 * time.Second
+	defaultPresignExpiry            = 600   // seconds (10 minutes)
+	defaultPresignGetExpiry         = 3600  // seconds (1 hour)
+	maxPresignExpiry                = 3600  // seconds (1 hour hard cap)
+	maxPresignGetExpiry             = 86400 // seconds (24 hours hard cap)
+	legacyPGConfigEnvKey            = "ANYCAP_PG_CONFIG"
+	defaultDriveShareBaseURL        = "https://drive.anycap.cloud/s"
+	defaultKVSyncPollInterval       = 1 * time.Second
+	defaultKVSyncLockTTL            = 5 * time.Minute
+	defaultKVSyncWaitTimeout        = 5 * time.Second
+	defaultUsageSyncPollInterval    = 1 * time.Minute
+	defaultUsageSyncBatchSize       = 50
+	defaultCloudflareAPIBaseURL     = "https://api.cloudflare.com/client/v4"
+	defaultDriveAccessTTLSeconds    = int64(300)
+	defaultPagePreviewTTLSeconds    = int64(300)
+	defaultArtifactLinkTTL          = int64(600)
+	minEdgeGrantTTLSeconds          = int64(60)
+	maxEdgeGrantTTLSeconds          = int64(3600)
 )
 
 type Config struct {
@@ -82,13 +86,20 @@ type Config struct {
 	FeatureDConfEnabled   bool
 	FeatureDConfGroup     string
 	FeatureDConfDataID    string
-	LoginAPIKeyTTL        time.Duration
-	Auth0Enabled          bool
-	Auth0Issuer           string
-	Auth0Audience         string
-	Auth0RedirectURL      string
-	NexusHubBaseURL       string
-	NexusHubToken         string
+
+	ModelCurationDConfEnabled bool
+	ModelCurationDConfGroup   string
+	ModelCurationDConfDataID  string
+	ModelCurationFile         string
+	NexusHubDiscoveryCacheTTL time.Duration
+
+	LoginAPIKeyTTL   time.Duration
+	Auth0Enabled     bool
+	Auth0Issuer      string
+	Auth0Audience    string
+	Auth0RedirectURL string
+	NexusHubBaseURL  string
+	NexusHubToken    string
 	// Split configuration for NexusHub Platform (catalog/schema) and Core (execution).
 	// Legacy NEXUSHUB_BASE_URL / NEXUSHUB_TOKEN remain as fallbacks for backward compatibility.
 	NexusHubPlatformBaseURL string
@@ -321,52 +332,57 @@ func LoadFromEnv() (Config, error) {
 	)
 
 	cfg := Config{
-		AppName:                 getEnv("ANYCAP_APP_NAME", defaultAppName),
-		AppEnv:                  getEnv("ANYCAP_APP_ENV", defaultAppEnv),
-		HTTPAddr:                getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
-		AdminHTTPAddr:           getEnv("ANYCAP_ADMIN_HTTP_ADDR", ""),
-		RuntimeMode:             getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
-		LogLevel:                getEnv("ANYCAP_LOG_LEVEL", defaultLogLevel),
-		LogFormat:               getEnv("ANYCAP_LOG_FORMAT", defaultLogFormat),
-		LogOutput:               getEnv("ANYCAP_LOG_OUTPUT", defaultLogOutput),
-		PGDSN:                   os.Getenv("ANYCAP_PG_DSN"),
-		PGHost:                  os.Getenv("ANYCAP_PG_HOST"),
-		PGPort:                  getEnvInt("ANYCAP_PG_PORT", 5432),
-		PGUser:                  os.Getenv("ANYCAP_PG_USER"),
-		PGPassword:              os.Getenv("ANYCAP_PG_PASSWORD"),
-		PGDatabase:              getEnv("ANYCAP_PG_DATABASE", "postgres"),
-		PGSSLMode:               getEnv("ANYCAP_PG_SSL_MODE", "prefer"),
-		PGTimezone:              os.Getenv("ANYCAP_PG_TIMEZONE"),
-		PGAutoMigrate:           getEnvBool("ANYCAP_PG_AUTO_MIGRATE", false),
-		RedisAddr:               os.Getenv("ANYCAP_REDIS_ADDR"),
-		RedisHost:               os.Getenv("ANYCAP_REDIS_HOST"),
-		RedisPort:               getEnvInt("ANYCAP_REDIS_PORT", 6379),
-		RedisUsername:           getEnv("ANYCAP_REDIS_USERNAME", "default"),
-		RedisPassword:           os.Getenv("ANYCAP_REDIS_PASSWORD"),
-		RedisDB:                 getEnvInt("ANYCAP_REDIS_DB", 0),
-		RateLimitRPM:            getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
-		RateLimitOverrides:      loadRateLimitOverrides(),
-		RateLimitDConfEnabled:   getEnvBool("ANYCAP_RATE_LIMIT_DCONF_ENABLED", false),
-		RateLimitDConfGroup:     getEnv("ANYCAP_RATE_LIMIT_DCONF_GROUP", defaultRateLimitDConfGroup),
-		RateLimitDConfDataID:    getEnv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", defaultRateLimitDConfDataID),
-		FeatureDConfEnabled:     getEnvBool("ANYCAP_FEATURE_DCONF_ENABLED", false),
-		FeatureDConfGroup:       getEnv("ANYCAP_FEATURE_DCONF_GROUP", defaultFeatureDConfGroup),
-		FeatureDConfDataID:      getEnv("ANYCAP_FEATURE_DCONF_DATA_ID", defaultFeatureDConfDataID),
-		LoginAPIKeyTTL:          getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
-		Auth0Enabled:            getEnvBool("ANYCAP_AUTH0_ENABLED", false),
-		Auth0Issuer:             os.Getenv("ANYCAP_AUTH0_ISSUER"),
-		Auth0Audience:           os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
-		Auth0RedirectURL:        os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
-		NexusHubBaseURL:         getEnv("NEXUSHUB_BASE_URL", ""),
-		NexusHubToken:           getEnv("NEXUSHUB_TOKEN", ""),
-		NexusHubPlatformBaseURL: getEnv("NEXUSHUB_PLATFORM_BASE_URL", ""),
-		NexusHubPlatformToken:   getEnv("NEXUSHUB_PLATFORM_TOKEN", ""),
-		NexusHubCoreBaseURL:     getEnv("NEXUSHUB_CORE_BASE_URL", ""),
-		NexusHubCoreToken:       getEnv("NEXUSHUB_CORE_TOKEN", ""),
-		Payment:                 loadPaymentConfig(),
-		PaymentEvents:           loadPaymentEventsConfig(),
-		AgentPlatform:           loadAgentPlatformConfig(),
-		CloudS3:                 loadCloudS3Config(),
+		AppName:                   getEnv("ANYCAP_APP_NAME", defaultAppName),
+		AppEnv:                    getEnv("ANYCAP_APP_ENV", defaultAppEnv),
+		HTTPAddr:                  getEnv("ANYCAP_HTTP_ADDR", defaultHTTPAddr),
+		AdminHTTPAddr:             getEnv("ANYCAP_ADMIN_HTTP_ADDR", ""),
+		RuntimeMode:               getEnv("ANYCAP_RUNTIME_MODE", defaultRuntimeMode),
+		LogLevel:                  getEnv("ANYCAP_LOG_LEVEL", defaultLogLevel),
+		LogFormat:                 getEnv("ANYCAP_LOG_FORMAT", defaultLogFormat),
+		LogOutput:                 getEnv("ANYCAP_LOG_OUTPUT", defaultLogOutput),
+		PGDSN:                     os.Getenv("ANYCAP_PG_DSN"),
+		PGHost:                    os.Getenv("ANYCAP_PG_HOST"),
+		PGPort:                    getEnvInt("ANYCAP_PG_PORT", 5432),
+		PGUser:                    os.Getenv("ANYCAP_PG_USER"),
+		PGPassword:                os.Getenv("ANYCAP_PG_PASSWORD"),
+		PGDatabase:                getEnv("ANYCAP_PG_DATABASE", "postgres"),
+		PGSSLMode:                 getEnv("ANYCAP_PG_SSL_MODE", "prefer"),
+		PGTimezone:                os.Getenv("ANYCAP_PG_TIMEZONE"),
+		PGAutoMigrate:             getEnvBool("ANYCAP_PG_AUTO_MIGRATE", false),
+		RedisAddr:                 os.Getenv("ANYCAP_REDIS_ADDR"),
+		RedisHost:                 os.Getenv("ANYCAP_REDIS_HOST"),
+		RedisPort:                 getEnvInt("ANYCAP_REDIS_PORT", 6379),
+		RedisUsername:             getEnv("ANYCAP_REDIS_USERNAME", "default"),
+		RedisPassword:             os.Getenv("ANYCAP_REDIS_PASSWORD"),
+		RedisDB:                   getEnvInt("ANYCAP_REDIS_DB", 0),
+		RateLimitRPM:              getEnvInt("ANYCAP_RATE_LIMIT_RPM", defaultRateLimitRPM),
+		RateLimitOverrides:        loadRateLimitOverrides(),
+		RateLimitDConfEnabled:     getEnvBool("ANYCAP_RATE_LIMIT_DCONF_ENABLED", false),
+		RateLimitDConfGroup:       getEnv("ANYCAP_RATE_LIMIT_DCONF_GROUP", defaultRateLimitDConfGroup),
+		RateLimitDConfDataID:      getEnv("ANYCAP_RATE_LIMIT_DCONF_DATA_ID", defaultRateLimitDConfDataID),
+		FeatureDConfEnabled:       getEnvBool("ANYCAP_FEATURE_DCONF_ENABLED", false),
+		FeatureDConfGroup:         getEnv("ANYCAP_FEATURE_DCONF_GROUP", defaultFeatureDConfGroup),
+		FeatureDConfDataID:        getEnv("ANYCAP_FEATURE_DCONF_DATA_ID", defaultFeatureDConfDataID),
+		ModelCurationDConfEnabled: getEnvBool("ANYCAP_MODEL_CURATION_DCONF_ENABLED", false),
+		ModelCurationDConfGroup:   getEnv("ANYCAP_MODEL_CURATION_DCONF_GROUP", defaultModelCurationDConfGroup),
+		ModelCurationDConfDataID:  getEnv("ANYCAP_MODEL_CURATION_DCONF_DATA_ID", defaultModelCurationDConfDataID),
+		ModelCurationFile:         getEnv("ANYCAP_MODEL_CURATION_FILE", ""),
+		NexusHubDiscoveryCacheTTL: getEnvDuration("ANYCAP_NEXUSHUB_DISCOVERY_TTL", defaultDiscoveryCacheTTL),
+		LoginAPIKeyTTL:            getEnvDuration("ANYCAP_LOGIN_API_KEY_TTL", defaultLoginAPIKeyTTL),
+		Auth0Enabled:              getEnvBool("ANYCAP_AUTH0_ENABLED", false),
+		Auth0Issuer:               os.Getenv("ANYCAP_AUTH0_ISSUER"),
+		Auth0Audience:             os.Getenv("ANYCAP_AUTH0_AUDIENCE"),
+		Auth0RedirectURL:          os.Getenv("ANYCAP_AUTH0_REDIRECT_URL"),
+		NexusHubBaseURL:           getEnv("NEXUSHUB_BASE_URL", ""),
+		NexusHubToken:             getEnv("NEXUSHUB_TOKEN", ""),
+		NexusHubPlatformBaseURL:   getEnv("NEXUSHUB_PLATFORM_BASE_URL", ""),
+		NexusHubPlatformToken:     getEnv("NEXUSHUB_PLATFORM_TOKEN", ""),
+		NexusHubCoreBaseURL:       getEnv("NEXUSHUB_CORE_BASE_URL", ""),
+		NexusHubCoreToken:         getEnv("NEXUSHUB_CORE_TOKEN", ""),
+		Payment:                   loadPaymentConfig(),
+		PaymentEvents:             loadPaymentEventsConfig(),
+		AgentPlatform:             loadAgentPlatformConfig(),
+		CloudS3:                   loadCloudS3Config(),
 		Lark: LarkConfig{
 			MsgAPI:        getEnv("ANYCAP_LARK_MSG_API", "https://lark-msg-wmvfpeppfl.ap-southeast-1-vpc.fcapp.run/v1/send"),
 			WebhookURL:    os.Getenv("ANYCAP_LARK_WEBHOOK_URL"),

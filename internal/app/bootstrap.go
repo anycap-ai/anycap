@@ -9,6 +9,7 @@ import (
 	"path"
 	"slices"
 	"strings"
+	"time"
 
 	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
@@ -35,6 +36,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/curatedcatalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/edgegrant"
 	infraim "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/im"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/kvsync"
@@ -129,6 +131,7 @@ type serverDependencies struct {
 	usageSyncWorker         *usageapp.Worker
 	billingWorker           *billingapp.Worker
 	paymentEventsWorker     *paymenteventsinfra.Worker
+	discoveryRefresher      *curatedcatalog.Refresher
 	idResolver              idresolver.IDResolver
 	idMapper                presenter.IDMapper
 	quotaProvider           port.StorageQuotaProvider
@@ -368,6 +371,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			usageSyncWorker:       mediaComp.usageSyncWorker,
 			billingWorker:         mediaComp.billingWorker,
 			paymentEventsWorker:   billingComp.paymentEventsWorker,
+			discoveryRefresher:    shared.discoveryRefresher,
 			rateLimitResolver:     config.NewRateLimitProvider(cfg),
 			idResolver:            authComp.idResolver,
 			idMapper:              authComp.idMapper,
@@ -450,6 +454,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			usageSyncWorker:         mediaComp.usageSyncWorker,
 			billingWorker:           mediaComp.billingWorker,
 			paymentEventsWorker:     billingComp.paymentEventsWorker,
+			discoveryRefresher:      shared.discoveryRefresher,
 			rateLimitResolver:       config.NewRateLimitProvider(cfg),
 			idResolver:              authComp.idResolver,
 			idMapper:                authComp.idMapper,
@@ -795,78 +800,104 @@ func deriveDriveAccessBaseURL(shareBaseURL string) string {
 }
 
 func buildCatalogRepo(cfg config.Config) port.CatalogRepository {
-	catalogRepo, _ := buildCatalogAndModelRouteRepos(cfg)
+	catalogRepo, _, _ := buildCatalogAndModelRouteRepos(cfg)
 	return catalogRepo
 }
 
-func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, port.ModelRouteRepository) {
+// buildCatalogAndModelRouteRepos picks the catalog backend.
+//
+// Preferred path (production): NexusHub Platform configured -> CuratedCatalog
+// (curated list from dconf/embedded defaults, enriched with NexusHub Discovery).
+// This path bypasses Postgres for catalog reads. The legacy
+// modelRouteRepository remains backed by Postgres if available so that the
+// (largely unused) /v1/admin/model-routes endpoints keep working.
+//
+// Legacy fallback (kept for safety / stub mode): postgres CatalogRepo with the
+// old NexusHub Platform schema enricher.
+//
+// Stub fallback: a static in-memory list used only when no NexusHub Platform
+// and no Postgres are configured (smoke tests, offline dev).
+func buildCatalogAndModelRouteRepos(cfg config.Config) (port.CatalogRepository, port.ModelRouteRepository, *curatedcatalog.Refresher) {
 	platformBaseURL := cfg.ResolvedNexusHubPlatformBaseURL()
 	platformToken := cfg.ResolvedNexusHubPlatformToken()
+
+	// Optional postgres repo only used to back the legacy admin endpoints.
+	var modelRouteRepo port.ModelRouteRepository
 	modelRouteUnavailableMessage := "model-routes: postgres is not configured; admin CRUD endpoints will be unavailable"
 	if cfg.PGDSN != "" {
 		repo, err := newCatalogRepoFromDSN(context.Background(), cfg.PGDSN)
 		if err != nil {
-			logging.WithError(err).Warn("catalog failed to initialize postgres repo; falling back")
+			logging.WithError(err).Warn("model-routes: postgres repo init failed; admin CRUD endpoints will be unavailable")
 			modelRouteUnavailableMessage = "model-routes: postgres repo unavailable; admin CRUD endpoints will be unavailable"
 		} else {
-			if platformBaseURL != "" {
-				logging.WithField("platform_base_url", platformBaseURL).Info("catalog using postgres model routes with nexushub schema enrichment")
-				return nexushub.NewCatalogSchemaEnricher(
-					repo,
-					nexushub.NewPlatformClient(nexushub.PlatformClientConfig{
-						BaseURL: platformBaseURL,
-						Token:   platformToken,
-					}),
-				), repo
-			}
-
-			logging.GetLogger().Info("catalog using postgres model routes without schema enrichment")
-			return repo, repo
+			modelRouteRepo = repo
+			modelRouteUnavailableMessage = ""
 		}
 	}
-
-	logging.WithField("message", modelRouteUnavailableMessage).Warn("catalog model-route repository unavailable")
-	if platformBaseURL == "" {
-		logging.GetLogger().Info("catalog using stub provider")
-		return nexushub.NewCatalogStubWith([]model.ModelSpec{
-			{
-				ModelID:     "flux-dev",
-				Capability:  model.CapabilityImage,
-				DisplayName: "FLUX Dev",
-				Status:      "active",
-				Operations: map[model.Operation]model.OperationSpec{
-					model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "flux-dev"}}},
-				},
-			},
-			{
-				ModelID:     "gpt-image-1.5",
-				Capability:  model.CapabilityImage,
-				DisplayName: "GPT Image 1.5",
-				Status:      "active",
-				Operations: map[model.Operation]model.OperationSpec{
-					model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "gpt-image-1.5"}}},
-				},
-			},
-			{
-				ModelID:     "mureka-v6",
-				Capability:  model.CapabilityMusic,
-				DisplayName: "Mureka V6",
-				Status:      "active",
-				Operations: map[model.Operation]model.OperationSpec{
-					model.OperationGenerate: {RequestHints: map[string]any{
-						"prompt":            map[string]any{"type": "string"},
-						"model":             map[string]any{"type": "string", "default": "mureka-v6"},
-						"make_instrumental": map[string]any{"type": "boolean"},
-						"tags":              map[string]any{"type": "string"},
-						"lyrics":            map[string]any{"type": "string"},
-					}},
-				},
-			},
-		}), nil
+	if modelRouteUnavailableMessage != "" {
+		logging.WithField("message", modelRouteUnavailableMessage).Warn("catalog model-route repository unavailable")
 	}
 
-	logging.WithField("platform_base_url", platformBaseURL).Info("catalog using nexushub platform")
-	return nexushub.NewPlatformClient(nexushub.PlatformClientConfig{BaseURL: platformBaseURL, Token: platformToken}), nil
+	// Preferred: NexusHub Discovery + curated list.
+	if platformBaseURL != "" {
+		discoveryClient := nexushub.NewDiscoveryClient(nexushub.DiscoveryClientConfig{
+			BaseURL: platformBaseURL,
+			Token:   platformToken,
+		})
+		ttl := cfg.NexusHubDiscoveryCacheTTL
+		if ttl <= 0 {
+			ttl = 5 * time.Minute
+		}
+		discoveryCache := nexushub.NewDiscoveryCache(discoveryClient, ttl)
+		curationProvider := config.NewModelCurationProvider(cfg)
+		curated := curatedcatalog.New(curationProvider, discoveryCache)
+		refresher := curatedcatalog.NewRefresher(curated, discoveryCache, ttl/2)
+
+		logging.WithFields(logging.Fields{
+			"platform_base_url": platformBaseURL,
+			"curation_source":   curationProvider.Source(),
+			"discovery_ttl":     ttl.String(),
+		}).Info("catalog using curated list + nexushub discovery")
+		return curated, modelRouteRepo, refresher
+	}
+
+	// Stub: no platform, no postgres -> hardcoded list (used by tests/offline).
+	logging.GetLogger().Info("catalog using stub provider (no NexusHub Platform configured)")
+	return nexushub.NewCatalogStubWith([]model.ModelSpec{
+		{
+			ModelID:     "flux-dev",
+			Capability:  model.CapabilityImage,
+			DisplayName: "FLUX Dev",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "flux-dev"}}},
+			},
+		},
+		{
+			ModelID:     "gpt-image-1.5",
+			Capability:  model.CapabilityImage,
+			DisplayName: "GPT Image 1.5",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}, "model": map[string]any{"type": "string", "default": "gpt-image-1.5"}}},
+			},
+		},
+		{
+			ModelID:     "mureka-v6",
+			Capability:  model.CapabilityMusic,
+			DisplayName: "Mureka V6",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {RequestHints: map[string]any{
+					"prompt":            map[string]any{"type": "string"},
+					"model":             map[string]any{"type": "string", "default": "mureka-v6"},
+					"make_instrumental": map[string]any{"type": "boolean"},
+					"tags":              map[string]any{"type": "string"},
+					"lyrics":            map[string]any{"type": "string"},
+				}},
+			},
+		},
+	}), modelRouteRepo, nil
 }
 
 func buildImageExecutionClient(cfg config.Config) port.NexusHubClient {
