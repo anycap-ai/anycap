@@ -14,7 +14,7 @@
           "mode_description": "Generate images directly from text prompts."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "nano_banana_2",
           "algo_type": "img_2_img",
@@ -36,7 +36,7 @@
           "mode_description": "Generate images directly from text prompts."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "nano_banana_pro",
           "algo_type": "img_2_img",
@@ -58,7 +58,7 @@
           "mode_description": "Generate images directly from text prompts."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "gpt_image_2",
           "algo_type": "img_edit",
@@ -80,7 +80,7 @@
           "mode_description": "Generate images directly from text prompts. Users can describe scenes, styles, and compositions, and the model will produce visually coherent results with reliable consistency."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "ark-doubao-seedream-4-5-251128",
           "algo_type": "img_2_img",
@@ -102,7 +102,7 @@
           "mode_description": "Generate images directly from text prompts. Users can describe scenes, characters, styles, and compositions, and the model will synthesize high-quality visuals accordingly."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "ark-doubao-seedream-5",
           "algo_type": "img_2_img",
@@ -124,7 +124,7 @@
           "mode_description": "Generate images directly from text prompts."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "flux_kontext_max",
           "algo_type": "img_2_img",
@@ -146,7 +146,7 @@
           "mode_description": "Generate images directly from text prompts."
         },
         {
-          "operation": "edit",
+          "operation": "generate",
           "mode": "image-to-image",
           "ability_key": "replicate_qwen_image",
           "algo_type": "img_edit",
