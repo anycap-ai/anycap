@@ -17,7 +17,6 @@ import (
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
-	extensionapp "gitlab.knoffice.tech/engineering/anycap/internal/application/extension"
 	feedbackapp "gitlab.knoffice.tech/engineering/anycap/internal/application/feedback"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
 	loginapp "gitlab.knoffice.tech/engineering/anycap/internal/application/login"
@@ -56,7 +55,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
-	extensionhandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/extension"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/feedback"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/image"
@@ -129,7 +127,6 @@ type serverDependencies struct {
 	identityTokens          port.IdentityTokenAuthenticator
 	rateLimiter             port.RateLimiter
 	rateLimitResolver       middleware.CapabilityRateLimitResolver
-	anonymousTrialStore     port.AnonymousTrialStore
 	kvSyncWorker            *kvsync.Worker
 	usageSyncWorker         *usageapp.Worker
 	billingWorker           *billingapp.Worker
@@ -188,7 +185,6 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		middleware.CORS(buildCORSAllowedOrigins(cfg)),
 	}
 	authMiddleware := buildAuthMiddleware(deps.config, deps.apiKeyService, deps.identityTokens)
-	extensionAuthMiddleware := buildAuthOrChromeExtensionAnonymousMiddleware(deps.config, deps.apiKeyService, deps.identityTokens)
 	rateLimitMiddleware := middleware.RateLimit(deps.rateLimiter, deps.rateLimitResolver)
 	featureGateMiddleware := middleware.FeatureGate(featureProvider)
 	webhookHandler := agentcontrolhandler.NewWebhookHandler(deps.bindingService, deps.conversationService, deps.taskService, deps.imAdapter)
@@ -205,9 +201,6 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 		deps.idResolver,
 		deps.idMapper,
 	)
-
-	anonRateLimit := middleware.NewAnonRateLimitWithStore(deps.anonymousTrialStore)
-	extensionConfigHandler := extensionhandler.NewConfigHandler(extensionapp.NewConfigService())
 
 	httpServer := transporthttp.NewRouter(transporthttp.RouterConfig{
 		Addr:        deps.config.HTTPAddr,
@@ -228,24 +221,17 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 			videoCatalog,
 			audioCatalog,
 			musicCatalog,
-			extensionConfigHandler,
-			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
-				// Chrome extension trial endpoints accept either normal auth or an
-				// anonymous install-id, then share the normal feature/rate gates.
-				extension := group.Group("", extensionAuthMiddleware, rateLimitMiddleware, anonRateLimit.Middleware(), featureGateMiddleware)
-				imageHandler.RegisterAnonymousRoutes(extension)
-				videoHandler.RegisterRoutes(extension)
-				musicHandler.RegisterRoutes(extension)
-				webHandler.RegisterRoutes(extension)
-			}),
 			transporthttp.RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", authMiddleware, rateLimitMiddleware, featureGateMiddleware)
 				systemHandler.RegisterProtectedRoutes(protected)
 				loginHandler.RegisterProtectedRoutes(protected)
 				imageHandler.RegisterRoutes(protected)
+				videoHandler.RegisterRoutes(protected)
+				musicHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
+				webHandler.RegisterRoutes(protected)
 				feedbackHandler.RegisterRoutes(protected)
 				bindingHandler.RegisterRoutes(protected)
 				conversationHandler.RegisterRoutes(protected)
@@ -382,7 +368,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:         authComp.apiKeyService,
 			identityTokens:        authComp.identityTokens,
 			rateLimiter:           ratelimit.NewInMemoryLimiter(),
-			anonymousTrialStore:   middleware.NewMemoryAnonymousTrialStore(),
 			usageSyncWorker:       mediaComp.usageSyncWorker,
 			billingWorker:         mediaComp.billingWorker,
 			paymentEventsWorker:   billingComp.paymentEventsWorker,
@@ -466,7 +451,6 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			apiKeyService:           authComp.apiKeyService,
 			identityTokens:          authComp.identityTokens,
 			rateLimiter:             ratelimit.NewRedisLimiter(redisClient),
-			anonymousTrialStore:     postgres.NewAnonymousTrialRepo(storageComp.db),
 			usageSyncWorker:         mediaComp.usageSyncWorker,
 			billingWorker:           mediaComp.billingWorker,
 			paymentEventsWorker:     billingComp.paymentEventsWorker,
@@ -987,15 +971,6 @@ func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService, identity
 		return middleware.LocalBypassAuth(principal)
 	}
 	return middleware.Auth(apiKeys, identityTokens)
-}
-
-func buildAuthOrChromeExtensionAnonymousMiddleware(cfg config.Config, apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthenticator) hertzapp.HandlerFunc {
-	if shouldBypassAuthForLocalTest(cfg) {
-		principal := buildBypassPrincipal()
-		logging.WithField("user_id", principal.UserID).Warn("auth bypass enabled for local testing")
-		return middleware.LocalBypassAuth(principal)
-	}
-	return middleware.AuthOrChromeExtensionAnonymous(apiKeys, identityTokens)
 }
 
 func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner, creditClient port.CreditClient) port.IdentityTokenAuthenticator {

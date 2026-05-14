@@ -10,7 +10,6 @@ export const manualSeoRouteDefinitions = [
   { key: "contact", kind: "seo", path: "/contact", priority: 0.56 },
   { key: "pricing", kind: "seo", path: "/pricing", priority: 0.9 },
   { key: "privacy", kind: "seo", path: "/privacy", priority: 0.34 },
-  { key: "privacy-extension", kind: "seo", path: "/privacy/extension", priority: 0.28 },
   { key: "terms", kind: "seo", path: "/terms", priority: 0.34 },
   { key: "start", kind: "seo", path: "/start", priority: 0.96 },
   { key: "for", kind: "seo", path: "/for", priority: 0.84 },

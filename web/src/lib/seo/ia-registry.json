@@ -6,7 +6,6 @@
     { "id": "contact", "kind": "standalone", "label": "Contact", "path": "/contact", "eyebrow": "Contact", "parentId": "home" },
     { "id": "pricing", "kind": "standalone", "label": "Pricing", "path": "/pricing", "eyebrow": "Pricing", "parentId": "home" },
     { "id": "privacy", "kind": "standalone", "label": "Privacy", "path": "/privacy", "eyebrow": "Privacy", "parentId": "home" },
-    { "id": "privacy-extension", "kind": "standalone", "label": "Chrome Extension Privacy", "path": "/privacy/extension", "eyebrow": "Privacy", "parentId": "privacy" },
     { "id": "terms", "kind": "standalone", "label": "Terms", "path": "/terms", "eyebrow": "Terms", "parentId": "home" },
     { "id": "start", "kind": "standalone", "label": "Get Started", "path": "/start", "eyebrow": "Get Started", "parentId": "home" },
 

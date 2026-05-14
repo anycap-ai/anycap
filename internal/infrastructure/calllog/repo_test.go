@@ -73,21 +73,3 @@ func TestCallLogDBRepo_Insert(t *testing.T) {
 		t.Fatalf("expected bigint user_id arg 2000000001, got %#v", db.args[1])
 	}
 }
-
-func TestCallLogDBRepo_InsertSkipsAnonymousUser(t *testing.T) {
-	db := &fakeCallLogDB{}
-	repo := NewCallLogDBRepo(db)
-
-	err := repo.Insert(context.Background(), model.CallLog{
-		RequestID:  "req-anon",
-		UserID:     model.AnonymousUserIDPrefix + "install-1",
-		Capability: "image.generate",
-		Status:     "success",
-	})
-	if err != nil {
-		t.Fatalf("Insert() error = %v", err)
-	}
-	if db.query != "" {
-		t.Fatalf("expected anonymous call log insert to be skipped, query=%q", db.query)
-	}
-}
