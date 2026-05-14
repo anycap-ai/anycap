@@ -198,6 +198,82 @@ For a given capability:
 4. otherwise fall back to `ANYCAP_RATE_LIMIT_RPM`
 5. if the final RPM is `<= 0`, skip capability rate limiting for that capability
 
+## Model Curation DConf
+
+### Env Controls
+
+```env
+ANYCAP_MODEL_CURATION_DCONF_ENABLED=false
+ANYCAP_MODEL_CURATION_DCONF_GROUP=anycap
+ANYCAP_MODEL_CURATION_DCONF_DATA_ID=model_curation
+ANYCAP_MODEL_CURATION_FILE=
+ANYCAP_NEXUSHUB_DISCOVERY_TTL=5m
+```
+
+When dconf is enabled, AnyCap loads the curated public model list from the
+specified group/data id. If dconf load fails, AnyCap falls back to:
+
+1. `ANYCAP_MODEL_CURATION_FILE` on disk (when set and valid JSON)
+2. Embedded default JSON shipped with the binary (23 models curated from the
+   live NexusHub Discovery snapshot)
+
+The Catalog joins each curation entry with the live NexusHub Discovery
+snapshot (`tool_definition[algo].schema`) to build the final model spec
+returned by `/v1/{cap}/models` and `/v1/{cap}/models/:model/schema`. Schema
+shape is flattened to the legacy `model_params` form so existing CLI agents
+keep working.
+
+### JSON Shape
+
+```json
+{
+  "models": [
+    {
+      "model_id": "seedream-5",
+      "capability": "image",
+      "display_name": "Seedream 5",
+      "model_description": "...",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "ark-doubao-seedream-5",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "edit",
+          "mode": "image-to-image",
+          "ability_key": "ark-doubao-seedream-5",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform images using prompts."
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Field reference
+
+- `model_id`: stable public identifier surfaced to CLI users.
+- `capability`: one of `image`, `video`, `music`, `audio`.
+- `operations[]`: each entry binds a `(operation, mode)` to a NexusHub
+  `ability_key + algo_type`. The `algo_type` MUST exist under the node's
+  `tool_definition` in NexusHub Discovery; entries that do not match are
+  skipped at startup with a one-shot WARN log.
+- `mode_description`: optional override; falls back to the Discovery
+  `algo_description.description` when empty.
+
+### Discovery cache
+
+A short in-memory cache fronts NexusHub Discovery so user-facing endpoints
+stay cache-hit. TTL is set by `ANYCAP_NEXUSHUB_DISCOVERY_TTL` (default `5m`).
+A background refresher warms every curated `(ability_key, algo_type)` every
+`TTL/2`. On upstream errors within `2 * TTL` of the last successful fetch the
+cache returns the previously cached value (stale-while-error) instead of
+surfacing the failure.
+
 ## Recommended Rollout Setup
 
 A practical starting point:

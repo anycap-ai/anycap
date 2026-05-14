@@ -9,6 +9,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
+	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/curatedcatalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/nexushub"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/postgres"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/idresolver"
@@ -300,7 +301,7 @@ func TestNewServer_UsesSingleSharedPostgresRepoForCatalogAndModelRoutes(t *testi
 	}
 }
 
-func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured(t *testing.T) {
+func TestBuildCatalogRepo_UsesCuratedCatalogWhenNexusHubPlatformConfigured(t *testing.T) {
 	original := newCatalogRepoFromDSN
 	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
 		return &postgres.CatalogRepo{}, nil
@@ -314,12 +315,12 @@ func TestBuildCatalogRepo_UsesSchemaEnricherWhenPostgresAndNexusHubAreConfigured
 		NexusHubBaseURL: "http://localhost:8080",
 	})
 
-	if _, ok := repo.(*nexushub.CatalogSchemaEnricher); !ok {
-		t.Fatalf("expected catalog schema enricher, got %T", repo)
+	if _, ok := repo.(*curatedcatalog.Catalog); !ok {
+		t.Fatalf("expected curated catalog, got %T", repo)
 	}
 }
 
-func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *testing.T) {
+func TestBuildCatalogRepo_FallsBackToStubWhenNexusHubMissing(t *testing.T) {
 	original := newCatalogRepoFromDSN
 	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
 		return &postgres.CatalogRepo{}, nil
@@ -330,18 +331,18 @@ func TestBuildCatalogRepo_UsesPostgresDirectlyWhenNexusHubIsNotConfigured(t *tes
 
 	repo := buildCatalogRepo(config.Config{PGDSN: "postgres://demo"})
 
-	if _, ok := repo.(*postgres.CatalogRepo); !ok {
-		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	if _, ok := repo.(*nexushub.CatalogStub); !ok {
+		t.Fatalf("expected catalog stub when no NexusHub Platform configured, got %T", repo)
 	}
 }
 
-func TestBuildCatalogRepo_FallsBackToNexusHubWhenPostgresNotConfigured(t *testing.T) {
+func TestBuildCatalogRepo_UsesCuratedCatalogFromLegacyNexusHubBaseURL(t *testing.T) {
 	repo := buildCatalogRepo(config.Config{
 		NexusHubBaseURL: "http://localhost:8080",
 	})
 
-	if _, ok := repo.(*nexushub.PlatformClient); !ok {
-		t.Fatalf("expected nexushub platform client, got %T", repo)
+	if _, ok := repo.(*curatedcatalog.Catalog); !ok {
+		t.Fatalf("expected curated catalog, got %T", repo)
 	}
 }
 
@@ -487,12 +488,12 @@ func TestBuildCatalogRepo_UsesPlatformConfigWhenSplitEndpointsAreConfigured(t *t
 		NexusHubPlatformBaseURL: "http://platform.example.com",
 	})
 
-	if _, ok := repo.(*nexushub.PlatformClient); !ok {
-		t.Fatalf("expected nexushub platform client, got %T", repo)
+	if _, ok := repo.(*curatedcatalog.Catalog); !ok {
+		t.Fatalf("expected curated catalog, got %T", repo)
 	}
 }
 
-func TestBuildCatalogRepo_UsesPostgresDSNWhenConfigured(t *testing.T) {
+func TestBuildCatalogRepo_UsesStubWhenOnlyPostgresConfigured(t *testing.T) {
 	original := newCatalogRepoFromDSN
 	newCatalogRepoFromDSN = func(context.Context, string) (*postgres.CatalogRepo, error) {
 		return &postgres.CatalogRepo{}, nil
@@ -503,20 +504,20 @@ func TestBuildCatalogRepo_UsesPostgresDSNWhenConfigured(t *testing.T) {
 
 	repo := buildCatalogRepo(config.Config{PGDSN: "postgres://demo:demo@localhost:5432/anycap?sslmode=disable"})
 
-	if _, ok := repo.(*postgres.CatalogRepo); !ok {
-		t.Fatalf("expected postgres catalog repo without enrichment, got %T", repo)
+	if _, ok := repo.(*nexushub.CatalogStub); !ok {
+		t.Fatalf("expected catalog stub when no NexusHub Platform, got %T", repo)
 	}
 }
 
-func TestBuildCatalogRepo_FallsBackToNexusHubWhenNoPostgresConfigIsPresent(t *testing.T) {
+func TestBuildCatalogRepo_FallsBackToCuratedCatalogWhenNoPostgresConfigIsPresent(t *testing.T) {
 	t.Setenv("ANYCAP_PG_CONFIG", "")
 
 	repo := buildCatalogRepo(config.Config{
 		NexusHubBaseURL: "http://localhost:8080",
 	})
 
-	if _, ok := repo.(*nexushub.PlatformClient); !ok {
-		t.Fatalf("expected nexushub platform client, got %T", repo)
+	if _, ok := repo.(*curatedcatalog.Catalog); !ok {
+		t.Fatalf("expected curated catalog, got %T", repo)
 	}
 }
 

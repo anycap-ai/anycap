@@ -170,7 +170,7 @@ Values: `true`/`1` to force on, `false`/`0` to force off. Unset uses the infrast
 
 Capability operations (generate, edit, upscale, etc.) are data-driven. The server handler uses a parameterized route (`/v1/{cap}/:operation`), and the service delegates to the model catalog for route selection. To add a new operation:
 
-1. Add seed data to the catalog DB with the new operation name.
+1. Add an entry under `models[].operations[]` in the model curation source (dconf `model_curation` JSON in dev/prod, or `internal/infrastructure/curatedcatalog/default_curation.json` for the embedded fallback) referencing the NexusHub `ability_key + algo_type`. The corresponding ability MUST already exist and be `active` in NexusHub Discovery.
 2. Add a feature flag constant and default (see "Adding a new feature flag" above).
 3. Add a CLI subcommand using the `newImageOperationCmd` factory (one line in `NewImageCmd`).
 4. **Before going live**, configure dconf:
@@ -181,7 +181,7 @@ Capability operations (generate, edit, upscale, etc.) are data-driven. The serve
 
 Before enabling a new operation in production:
 
-- [ ] Seed data deployed to catalog DB
+- [ ] Curation entry deployed (dconf `model_curation` updated; embedded default updated when relevant)
 - [ ] Feature flag added to `feature_access` dconf with appropriate rollout (start with `groups` for internal testing, then `all`)
 - [ ] Rate limit configured in `rate_limit` dconf (unconfigured operations fall back to `default_rpm`)
 - [ ] CLI subcommand added and tested
