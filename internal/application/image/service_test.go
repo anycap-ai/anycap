@@ -183,56 +183,6 @@ func TestGenerateImage_InsufficientCredit(t *testing.T) {
 	}
 }
 
-func TestGenerateImage_AnonymousSkipsCreditClient(t *testing.T) {
-	logs := calllog.NewMemoryCallLogRepo()
-	service := NewService(testCatalog(), nexushub.NewStubClient(), nil, logs)
-
-	result, err := service.Generate(context.Background(), model.GenerateImageRequest{
-		UserID:    model.AnonymousUserIDPrefix + "install-1",
-		RequestID: "req-anon-image",
-		Prompt:    "paper crane",
-		Model:     "flux-dev",
-	})
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
-	if result.CreditCost != 0 {
-		t.Fatalf("expected anonymous result credit cost 0, got %d", result.CreditCost)
-	}
-
-	items, err := logs.ListByUserID(context.Background(), model.AnonymousUserIDPrefix+"install-1", 10)
-	if err != nil {
-		t.Fatalf("ListByUserID() error = %v", err)
-	}
-	if len(items) != 1 || items[0].CreditCost != 0 {
-		t.Fatalf("expected one zero-cost anonymous call log, got %#v", items)
-	}
-}
-
-func TestGenerateImage_AnonymousSkipsBillingCoordinator(t *testing.T) {
-	billingCoord := &fakeBillingCoordinator{}
-	writer := &fakeUsageWriter{}
-	service := NewService(testCatalog(), nexushub.NewStubClient(), nil, calllog.NewMemoryCallLogRepo())
-	service.SetBillingCoordinator(billingCoord)
-	service.SetUsageWriter(writer)
-
-	_, err := service.Generate(context.Background(), model.GenerateImageRequest{
-		UserID:    model.AnonymousUserIDPrefix + "install-1",
-		RequestID: "req-anon-image-billing",
-		Prompt:    "paper crane",
-		Model:     "flux-dev",
-	})
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
-	if len(billingCoord.intents) != 0 || len(billingCoord.providerSuccess) != 0 || len(billingCoord.deducted) != 0 {
-		t.Fatalf("expected anonymous request to skip billing coordinator, got %#v", billingCoord)
-	}
-	if len(writer.events) != 0 || len(writer.runs) != 0 {
-		t.Fatalf("expected anonymous request to skip usage ledger, got events=%#v runs=%#v", writer.events, writer.runs)
-	}
-}
-
 func TestGenerateImage_DeductIsIdempotent(t *testing.T) {
 	creditClient := credit.NewStubClient(map[string]int64{"user-1": 3})
 	service := NewService(testCatalog(), nexushub.NewStubClient(), creditClient, calllog.NewMemoryCallLogRepo())

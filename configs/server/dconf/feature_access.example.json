@@ -58,14 +58,6 @@
         "beta_users"
       ]
     },
-    "web.search": {
-      "enabled": true,
-      "rollout": "all"
-    },
-    "web.crawl": {
-      "enabled": true,
-      "rollout": "all"
-    },
     "image.read": {
       "enabled": true,
       "rollout": "all"

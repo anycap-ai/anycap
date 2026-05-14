@@ -69,7 +69,6 @@ func (s *Service) SearchGrounding(ctx context.Context, req model.WebSearchReques
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
-	creditCost := chargeableWebCreditCost(userID, groundingSearchCreditCost)
 	if err := s.ensureBalance(ctx, userID, groundingSearchCreditCost, "web.search"); err != nil {
 		return model.WebSearchGroundingResult{}, err
 	}
@@ -88,7 +87,7 @@ func (s *Service) SearchGrounding(ctx context.Context, req model.WebSearchReques
 	}
 
 	result.Query = req.Query
-	result.CreditCost = creditCost
+	result.CreditCost = groundingSearchCreditCost
 	return result, nil
 }
 
@@ -106,7 +105,6 @@ func (s *Service) SearchGeneral(ctx context.Context, req model.WebSearchRequest)
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
-	creditCost := chargeableWebCreditCost(userID, generalSearchCreditCost)
 	if err := s.ensureBalance(ctx, userID, generalSearchCreditCost, "web.search"); err != nil {
 		return model.WebSearchGeneralResult{}, err
 	}
@@ -125,7 +123,7 @@ func (s *Service) SearchGeneral(ctx context.Context, req model.WebSearchRequest)
 	}
 
 	result.Query = req.Query
-	result.CreditCost = creditCost
+	result.CreditCost = generalSearchCreditCost
 	return result, nil
 }
 
@@ -142,7 +140,6 @@ func (s *Service) Crawl(ctx context.Context, req model.WebCrawlRequest) (model.W
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
-	creditCost := chargeableWebCreditCost(userID, crawlCreditCost)
 	if err := s.ensureBalance(ctx, userID, crawlCreditCost, "web.crawl"); err != nil {
 		return model.WebCrawlResult{}, err
 	}
@@ -164,13 +161,13 @@ func (s *Service) Crawl(ctx context.Context, req model.WebCrawlRequest) (model.W
 		URL:        req.URL,
 		Title:      markdown.Title,
 		Markdown:   markdown.Markdown,
-		CreditCost: creditCost,
+		CreditCost: crawlCreditCost,
 	}, nil
 }
 
 func (s *Service) ensureBalance(ctx context.Context, userID string, cost int64, capability string) error {
 	logger := logging.WithContext(ctx).WithField("capability", capability)
-	if cost <= 0 || s.credit == nil || model.IsAnonymousUserID(userID) {
+	if cost <= 0 || s.credit == nil {
 		return nil
 	}
 	if userID == "" {
@@ -194,8 +191,7 @@ func (s *Service) ensureBalance(ctx context.Context, userID string, cost int64, 
 
 func (s *Service) finalizeSuccess(ctx context.Context, userID, requestID, capability, modelName string, cost int64, startedAt time.Time) error {
 	logger := logging.WithContext(ctx).WithField("capability", capability)
-	creditCost := chargeableWebCreditCost(userID, cost)
-	if s.credit != nil && creditCost > 0 {
+	if s.credit != nil {
 		if err := s.credit.Deduct(ctx, userID, cost, capability, requestID); err != nil {
 			logger.WithField("credit_cost", cost).WithError(err).Error("web credit deduction failed")
 			return model.ErrBillingUncertain
@@ -209,22 +205,15 @@ func (s *Service) finalizeSuccess(ctx context.Context, userID, requestID, capabi
 			Model:      modelName,
 			Status:     "success",
 			LatencyMS:  time.Since(startedAt).Milliseconds(),
-			CreditCost: creditCost,
+			CreditCost: cost,
 		}); err != nil {
 			logger.WithFields(logging.Fields{
-				"credit_cost": creditCost,
+				"credit_cost": cost,
 				"latency_ms":  time.Since(startedAt).Milliseconds(),
 			}).WithError(err).Warn("web call log persistence failed")
 		}
 	}
 	return nil
-}
-
-func chargeableWebCreditCost(userID string, cost int64) int64 {
-	if model.IsAnonymousUserID(userID) {
-		return 0
-	}
-	return cost
 }
 
 func webRequestID(ctx context.Context, capability string) string {

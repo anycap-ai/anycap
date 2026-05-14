@@ -48,25 +48,6 @@ func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthentic
 	}
 }
 
-func AuthOrChromeExtensionAnonymous(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthenticator) app.HandlerFunc {
-	auth := Auth(apiKeys, identityTokens)
-	return func(ctx context.Context, c *app.RequestContext) {
-		header := strings.TrimSpace(string(c.Request.Header.Peek("Authorization")))
-		if header == "" {
-			if userID, ok := ChromeExtensionAnonymousUserID(c); ok {
-				SetPrincipal(c, model.Principal{
-					UserID:   userID,
-					AuthType: "chrome_extension_anonymous",
-				})
-				c.Next(ContextWithUserID(ctx, userID))
-				return
-			}
-		}
-
-		auth(ctx, c)
-	}
-}
-
 func LocalBypassAuth(principal model.Principal) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
 		SetPrincipal(c, principal)

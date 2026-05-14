@@ -45,10 +45,9 @@ If loading fails, AnyCap falls back to:
 
 ### JSON Shape
 
-Reference files:
+Reference file:
 
-- `configs/server/dconf/feature_access.example.json`
-- `configs/server/dconf/chrome_extension_launch.feature_access.example.json` for the Chrome extension anonymous public-trial launch slice.
+- [`configs/server/dconf/feature_access.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/feature_access.example.json)
 
 Example:
 
@@ -81,14 +80,6 @@ Example:
       "enabled": true,
       "rollout": "groups",
       "feature_access_groups": ["internal", "beta_users"]
-    },
-    "web.search": {
-      "enabled": true,
-      "rollout": "all"
-    },
-    "web.crawl": {
-      "enabled": true,
-      "rollout": "all"
     },
     "image.read": {
       "enabled": true,
@@ -123,7 +114,6 @@ Example:
 - `enabled=false` means the feature is globally disabled
 - `rollout=all` means all users may access the feature
 - `rollout=groups` means the current user's normalized `principal.Email` must match at least one referenced `feature_access_groups` entry
-- Anonymous Chrome extension principals do not have an email, so public anonymous extension rollout needs `rollout=all` for `image.generate`, `video.generate`, `music.generate`, `web.search`, and `web.crawl`.
 - supported rollout values in v1:
   - `all`
   - `groups`
@@ -161,10 +151,9 @@ If loading fails, AnyCap falls back to:
 
 ### JSON Shape
 
-Reference files:
+Reference file:
 
-- `configs/server/dconf/rate_limit.example.json`
-- `configs/server/dconf/chrome_extension_launch.rate_limit.example.json` for the Chrome extension anonymous public-trial launch slice.
+- [`configs/server/dconf/rate_limit.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/rate_limit.example.json)
 
 Example:
 
@@ -175,8 +164,6 @@ Example:
     "image.generate": 10,
     "video.generate": 5,
     "music.generate": 8,
-    "web.search": 30,
-    "web.crawl": 30,
     "image.read": 30,
     "video.read": 20,
     "audio.read": 20,

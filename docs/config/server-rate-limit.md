@@ -36,8 +36,8 @@ ANYCAP_RATE_LIMIT_DCONF_DATA_ID=rate_limit
 
 See also:
 
-- `docs/config/server-dconf.md`
-- `configs/server/dconf/rate_limit.example.json`
+- [`docs/config/server-dconf.md`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/docs/config/server-dconf.md)
+- [`configs/server/dconf/rate_limit.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/rate_limit.example.json)
 
 When `ANYCAP_RATE_LIMIT_DCONF_ENABLED=true`, AnyCap initializes the shared `common-go/dconf` client and attempts to load JSON config from:
 
@@ -75,9 +75,6 @@ Recommended dconf JSON shape:
   "capabilities": {
     "image.generate": 10,
     "video.generate": 5,
-    "music.generate": 8,
-    "web.search": 30,
-    "web.crawl": 30,
     "image.read": 30,
     "drive.browse": 120,
     "page.publish": 12
@@ -105,8 +102,6 @@ Examples:
 | `POST /v1/image/generate` | `image.generate` | `ANYCAP_RATE_LIMIT_IMAGE_GENERATE_RPM` |
 | `POST /v1/video/generate` | `video.generate` | `ANYCAP_RATE_LIMIT_VIDEO_GENERATE_RPM` |
 | `POST /v1/music/generate` | `music.generate` | `ANYCAP_RATE_LIMIT_MUSIC_GENERATE_RPM` |
-| `POST /v1/web/search` | `web.search` | `ANYCAP_RATE_LIMIT_WEB_SEARCH_RPM` |
-| `POST /v1/web/crawl` | `web.crawl` | `ANYCAP_RATE_LIMIT_WEB_CRAWL_RPM` |
 | `POST /v1/capabilities/presign` | `asset.upload.prepare` | `ANYCAP_RATE_LIMIT_ASSET_UPLOAD_PREPARE_RPM` |
 | `POST /v1/capabilities/image/read` | `image.read` | `ANYCAP_RATE_LIMIT_IMAGE_READ_RPM` |
 | `POST /v1/capabilities/video/read` | `video.read` | `ANYCAP_RATE_LIMIT_VIDEO_READ_RPM` |

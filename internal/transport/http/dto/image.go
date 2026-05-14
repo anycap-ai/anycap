@@ -8,7 +8,6 @@ type GenerateImageRequest struct {
 	AspectRatio    string   `json:"aspect_ratio,omitempty"`
 	Resolution     string   `json:"resolution,omitempty"`
 	Images         []string `json:"images,omitempty"`
-	Watermark      bool     `json:"watermark,omitempty"`
 
 	// Deprecated: use Images instead. Kept for backward compatibility.
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`

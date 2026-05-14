@@ -19,9 +19,6 @@ func NewCallLogDBRepo(db sqlstore.DBTX) *CallLogDBRepo {
 }
 
 func (r *CallLogDBRepo) Insert(ctx context.Context, entry model.CallLog) error {
-	if model.IsAnonymousUserID(entry.UserID) {
-		return nil
-	}
 	numericUserID, err := userid.Parse(entry.UserID)
 	if err != nil {
 		return err
