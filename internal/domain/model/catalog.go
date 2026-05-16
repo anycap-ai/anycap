@@ -84,6 +84,40 @@ type RouteBinding struct {
 	Env        string    `json:"env,omitempty"`
 	Priority   int       `json:"priority"`
 	Enabled    bool      `json:"enabled"`
+	// ResourceTargets enumerates the upstream slots that may carry
+	// reference media for this binding. Treated as alternatives (oneOf):
+	// the adapter picks the first target whose Kind matches the data
+	// shape it has. Empty means the route does not consume reference
+	// media; AnyCap will not synthesize an "images" parameter and any
+	// caller-supplied references are dropped with a warning.
+	ResourceTargets []ResourceTarget `json:"resource_targets,omitempty"`
+}
+
+// ResourceKind enumerates the shapes a reference resource can take in
+// the upstream payload. The strings mirror NexusHub's Discovery
+// annotation vocabulary verbatim, and any new value introduced upstream
+// should be added here before wiring it through adapters.
+type ResourceKind string
+
+const (
+	ResourceKindURL          ResourceKind = "url"
+	ResourceKindURLArray     ResourceKind = "url_array"
+	ResourceKindStorage      ResourceKind = "storage"
+	ResourceKindStorageArray ResourceKind = "storage_array"
+)
+
+// ResourceTarget describes one upstream slot a reference resource can
+// fill. Key is a dot-path interpreted by the destination adapter
+// (e.g. "image_option.refer_image_urls" for the NexusHub adapter).
+type ResourceTarget struct {
+	Key  string       `json:"key"`
+	Kind ResourceKind `json:"kind"`
+}
+
+// HasReferenceMedia reports whether the binding accepts at least one
+// reference target.
+func (r RouteBinding) HasReferenceMedia() bool {
+	return len(r.ResourceTargets) > 0
 }
 
 // OperationSummary is the public view of an operation with its modes.

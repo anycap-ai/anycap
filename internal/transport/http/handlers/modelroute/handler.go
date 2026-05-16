@@ -1,3 +1,10 @@
+// Package modelroute exposes the legacy /v1/admin/model-routes admin
+// endpoints backed by the Postgres anycap_model_routes table.
+//
+// Deprecated: the public catalog read path now goes through
+// curatedcatalog (dconf-curated list + NexusHub Discovery). These
+// admin endpoints are retained only for ad-hoc inspection of the
+// historical table and should not be extended.
 package modelroute
 
 import (

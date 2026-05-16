@@ -1,3 +1,11 @@
+// Package modelroute backs the legacy /v1/admin/model-routes admin
+// endpoints. Its read path is no longer the source of truth for the
+// public catalog (see internal/infrastructure/curatedcatalog).
+//
+// Deprecated: kept only for the admin endpoints that still let
+// operators inspect the historical anycap_model_routes Postgres table.
+// New catalog functionality should extend curatedcatalog and dconf
+// model_curation instead.
 package modelroute
 
 import (

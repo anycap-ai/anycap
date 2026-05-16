@@ -17,7 +17,16 @@ type GenerateImageRequest struct {
 	NegativePrompt     string   `json:"negative_prompt,omitempty"`
 	Ratio              string   `json:"ratio,omitempty"`
 	Resolution         string   `json:"resolution,omitempty"`
+	Format             string   `json:"format,omitempty"`
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
+
+	// Provider-specific image-edit knobs surfaced by NexusHub Discovery
+	// (currently used by gpt-image-2 and qwen-image img_edit). Optional
+	// — zero values are not forwarded upstream.
+	MoveForward   int  `json:"move_forward,omitempty"`
+	RotateDegrees int  `json:"rotate_degrees,omitempty"`
+	UseWideAngle  bool `json:"use_wide_angle,omitempty"`
+	VerticalTilt  int  `json:"vertical_tilt,omitempty"`
 }
 
 func (r GenerateImageRequest) Validate() error {

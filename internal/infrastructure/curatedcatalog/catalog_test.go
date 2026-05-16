@@ -3,6 +3,7 @@ package curatedcatalog
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
@@ -184,5 +185,111 @@ func TestCatalog_CuratedAbilityKeysDeduplicates(t *testing.T) {
 	// (ark-doubao-seedream-5, txt_2_img), (ark-doubao-seedream-5, img_2_img), (veo3.1, txt_2_video)
 	if len(keys) != 3 {
 		t.Fatalf("expected 3 unique ability keys, got %d: %+v", len(keys), keys)
+	}
+}
+
+func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{{
+			ModelID:    "nano-banana-pro",
+			Capability: "image",
+			Operations: []config.ModelCurationOperationConfig{
+				{Operation: "generate", Mode: "text-to-image", AbilityKey: "nano_banana_pro", AlgoType: "txt_2_img"},
+				{Operation: "generate", Mode: "image-to-image", AbilityKey: "nano_banana_pro", AlgoType: "img_2_img"},
+			},
+		}},
+	}
+
+	annotation := map[string]any{
+		"resource": map[string]any{
+			"oneOf": []any{
+				map[string]any{"key": "image_option.refer_image_urls", "type": "url_array"},
+				map[string]any{"key": "resource_url", "type": "url"},
+			},
+		},
+	}
+	imageSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"image_option": map[string]any{
+					"properties": map[string]any{
+						"type":             map[string]any{"type": "string", "enum": []any{algo}},
+						"ratio":            map[string]any{"type": "string", "enum": []any{"1:1"}},
+						"refer_image_urls": map[string]any{"type": "array"},
+					},
+				},
+			},
+		}
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"nano_banana_pro": {
+			AbilityKey: "nano_banana_pro",
+			State:      "active",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_img": {Schema: imageSchema("txt_2_img")},
+				"img_2_img": {Schema: imageSchema("img_2_img"), Annotation: annotation},
+			},
+		},
+	}
+
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+	spec, err := cat.GetModel(context.Background(), model.CapabilityImage, "nano-banana-pro")
+	if err != nil {
+		t.Fatalf("GetModel error: %v", err)
+	}
+
+	gen, ok := spec.Operations[model.OperationGenerate]
+	if !ok {
+		t.Fatalf("expected generate operation present")
+	}
+
+	var t2i, i2i model.RouteBinding
+	for _, route := range gen.Routes {
+		switch route.Mode {
+		case model.ModeTextToImage:
+			t2i = route
+		case model.ModeImageToImage:
+			i2i = route
+		}
+	}
+	if t2i.AbilityKey == "" || i2i.AbilityKey == "" {
+		t.Fatalf("expected both modes routed: %+v", gen.Routes)
+	}
+
+	// text-to-image has no annotation -> no targets, no synthetic images.
+	if t2i.HasReferenceMedia() {
+		t.Fatalf("text-to-image route should not declare resource targets: %+v", t2i.ResourceTargets)
+	}
+	if t2iSchema, ok := gen.ModeSchemas[model.ModeTextToImage]; ok {
+		params, _ := t2iSchema["model_params"].(map[string]any)
+		if _, exists := params["images"]; exists {
+			t.Fatalf("text-to-image schema must not expose images: %+v", params)
+		}
+	}
+
+	// image-to-image has annotation -> targets propagated, images synthesized.
+	wantTargets := []model.ResourceTarget{
+		{Key: "image_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+		{Key: "resource_url", Kind: model.ResourceKindURL},
+	}
+	if !reflect.DeepEqual(i2i.ResourceTargets, wantTargets) {
+		t.Fatalf("image-to-image targets mismatch:\n got:  %+v\n want: %+v", i2i.ResourceTargets, wantTargets)
+	}
+	i2iSchema, ok := gen.ModeSchemas[model.ModeImageToImage]
+	if !ok {
+		t.Fatalf("expected mode schema for image-to-image")
+	}
+	params, _ := i2iSchema["model_params"].(map[string]any)
+	images, ok := params["images"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected images in image-to-image schema, got %+v", params)
+	}
+	items, _ := images["items"].(map[string]any)
+	if items["format"] != "file-or-url" {
+		t.Fatalf("expected images.items.format=file-or-url, got %v", items["format"])
+	}
+	if _, exists := params["refer_image_urls"]; exists {
+		t.Fatalf("wire field refer_image_urls must stay hidden")
 	}
 }

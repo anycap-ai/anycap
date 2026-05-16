@@ -27,6 +27,13 @@ type PlatformClientConfig struct {
 
 // PlatformClient 通过 NexusHub Platform API 获取 atomic node 配置
 // 并将其转换为 AnyCap 领域模型 (ModelSpec)。
+//
+// Deprecated: replaced by nexushub.DiscoveryClient + curatedcatalog.Catalog
+// (see docs/plans/2026-05-12-nexushub-discovery-and-curation.md). The
+// new path consumes the public /v1/atomic_nodes/discovery surface and
+// no longer relies on the internal /v1/atomic_nodes endpoint or the
+// per-route capabilities flags. Kept for reference until the Postgres
+// model-routes table is fully retired.
 type PlatformClient struct {
 	baseURL    string
 	token      string

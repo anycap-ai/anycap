@@ -8,5 +8,8 @@ type GenerateVideoRequest struct {
 	AspectRatio    string   `json:"aspect_ratio,omitempty"`
 	Resolution     string   `json:"resolution,omitempty"`
 	Duration       int      `json:"duration,omitempty"`
+	Format         string   `json:"format,omitempty"`
+	FPS            int      `json:"fps,omitempty"`
+	GenerateAudio  *bool    `json:"generate_audio,omitempty"`
 	Images         []string `json:"images,omitempty"`
 }

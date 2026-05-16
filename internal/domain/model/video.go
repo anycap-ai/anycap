@@ -17,6 +17,9 @@ type GenerateVideoRequest struct {
 	Ratio              string   `json:"ratio,omitempty"`
 	Resolution         string   `json:"resolution,omitempty"`
 	Duration           int      `json:"duration,omitempty"`
+	Format             string   `json:"format,omitempty"`
+	FPS                int      `json:"fps,omitempty"`
+	GenerateAudio      *bool    `json:"generate_audio,omitempty"`
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
 }
 

@@ -58,6 +58,9 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Ratio:              payload.AspectRatio,
 		Resolution:         payload.Resolution,
 		Duration:           payload.Duration,
+		Format:             payload.Format,
+		FPS:                payload.FPS,
+		GenerateAudio:      payload.GenerateAudio,
 		ReferenceImageURLs: append([]string(nil), payload.Images...),
 	})
 	if err != nil {

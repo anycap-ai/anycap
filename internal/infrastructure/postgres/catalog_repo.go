@@ -21,6 +21,12 @@ const (
 
 // CatalogRepo implements port.CatalogRepository with a single table:
 // anycap_model_routes(model_id, capability, operation, ability_key, algo_type, ...).
+//
+// Deprecated: superseded by curatedcatalog.Catalog (dconf-curated list +
+// NexusHub Discovery enrichment, see
+// docs/plans/2026-05-12-nexushub-discovery-and-curation.md). This type
+// is retained only to back the legacy /v1/admin/model-routes admin
+// endpoints and is not used by any production catalog read path.
 type CatalogRepo struct {
 	pool *pgxpool.Pool
 }

@@ -151,15 +151,18 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 			continue
 		}
 
+		resourceTargets := parseResourceTargets(entry.Annotation)
+
 		// Route binding (used by execution path).
 		opSpec.Routes = append(opSpec.Routes, model.RouteBinding{
-			RouteType:  model.RouteTypeDirect,
-			AbilityKey: op.AbilityKey,
-			GenType:    string(capability),
-			AlgoType:   op.AlgoType,
-			Mode:       model.Mode(op.Mode),
-			Priority:   model.DefaultRoutePriority,
-			Enabled:    true,
+			RouteType:       model.RouteTypeDirect,
+			AbilityKey:      op.AbilityKey,
+			GenType:         string(capability),
+			AlgoType:        op.AlgoType,
+			Mode:            model.Mode(op.Mode),
+			Priority:        model.DefaultRoutePriority,
+			Enabled:         true,
+			ResourceTargets: resourceTargets,
 		})
 
 		// Mode metadata (CLI displays this as the mode description).
@@ -171,8 +174,10 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 			addModeOnce(&opSpec, model.Mode(op.Mode), modeDesc)
 		}
 
-		// Schema enrichment.
-		flat := flattenDiscoverySchema(entry.Schema)
+		// Schema enrichment. The synthetic "images" parameter is added
+		// when Discovery declares at least one reference target for this
+		// algo; CLI then knows it can pass --param images=...
+		flat := flattenDiscoverySchema(entry.Schema, len(resourceTargets) > 0)
 		if len(flat) > 0 {
 			if op.Mode != "" {
 				if opSpec.ModeSchemas == nil {
