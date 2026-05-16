@@ -75,14 +75,19 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 			Type:           route.AlgoType,
 			Ratio:          req.Ratio,
 			Resolution:     req.Resolution,
+			Format:         req.Format,
 			NegativePrompt: req.NegativePrompt,
-			ReferImageURLs: append([]string(nil), req.ReferenceImageURLs...),
+			MoveForward:    req.MoveForward,
+			RotateDegrees:  req.RotateDegrees,
+			UseWideAngle:   req.UseWideAngle,
+			VerticalTilt:   req.VerticalTilt,
 		},
 		MetaOption: map[string]any{
 			"request_id": req.RequestID,
 			"model_id":   req.Model,
 		},
 	}
+	applyResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
 
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -200,14 +205,16 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	}
 
 	payload := atomicProcessPayload{
-		GenType:     route.GenType,
-		Prompt:      req.Prompt,
-		ResourceURL: firstString(req.ReferenceImageURLs),
+		GenType: route.GenType,
+		Prompt:  req.Prompt,
 		VideoOption: &atomicVideoOption{
 			Type:           route.AlgoType,
 			Ratio:          req.Ratio,
 			Resolution:     req.Resolution,
 			Duration:       req.Duration,
+			Format:         req.Format,
+			FPS:            req.FPS,
+			GenerateAudio:  req.GenerateAudio,
 			NegativePrompt: req.NegativePrompt,
 		},
 		MetaOption: map[string]any{
@@ -215,6 +222,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 			"model_id":   req.Model,
 		},
 	}
+	applyResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
 
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -452,6 +460,7 @@ func buildMusicOption(req model.GenerateMusicRequest) *atomicMusicOption {
 		ContinueAt:       req.ContinueAt,
 		ContinueClipID:   req.ContinueClipID,
 		VocalGender:      req.VocalGender,
+		Model:            req.ModelVariant,
 	}
 	if req.Duration > 0 {
 		opt.Duration = req.Duration * 1000 // seconds → ms
@@ -625,8 +634,15 @@ type atomicImageOption struct {
 	Type           string   `json:"type,omitempty"`
 	Ratio          string   `json:"ratio,omitempty"`
 	Resolution     string   `json:"resolution,omitempty"`
+	Format         string   `json:"format,omitempty"`
 	NegativePrompt string   `json:"negative_prompt,omitempty"`
 	ReferImageURLs []string `json:"refer_image_urls,omitempty"`
+
+	// Provider-specific image-edit knobs (gpt-image-2, qwen-image).
+	MoveForward   int  `json:"move_forward,omitempty"`
+	RotateDegrees int  `json:"rotate_degrees,omitempty"`
+	UseWideAngle  bool `json:"use_wide_angle,omitempty"`
+	VerticalTilt  int  `json:"vertical_tilt,omitempty"`
 }
 
 type atomicVideoOption struct {
@@ -634,6 +650,9 @@ type atomicVideoOption struct {
 	Ratio          string `json:"ratio,omitempty"`
 	Resolution     string `json:"resolution,omitempty"`
 	Duration       int    `json:"duration,omitempty"`
+	Format         string `json:"format,omitempty"`
+	FPS            int    `json:"fps,omitempty"`
+	GenerateAudio  *bool  `json:"generate_audio,omitempty"`
 	NegativePrompt string `json:"negative_prompt,omitempty"`
 }
 
@@ -646,6 +665,10 @@ type atomicMusicOption struct {
 	ContinueAt       int    `json:"continue_at,omitempty"`
 	ContinueClipID   string `json:"continue_clip_id,omitempty"`
 	VocalGender      string `json:"vocal_gender,omitempty"`
+	// Model is the upstream provider variant (e.g. "v5", "v5.5"). It
+	// is exposed to AnyCap callers as "model_variant" to avoid
+	// colliding with the AnyCap top-level model id.
+	Model string `json:"model,omitempty"`
 	// Duration in milliseconds. AnyCap API accepts seconds; converted here.
 	// TODO: NexusHub will rename this field to "duration_ms" — update json tag when that happens.
 	Duration int `json:"duration,omitempty"`
@@ -745,13 +768,6 @@ func setNexusExtraHeader(ctx context.Context, req *http.Request) {
 		return
 	}
 	req.Header.Set("X-Nexus-Extra", string(extra))
-}
-
-func firstString(values []string) string {
-	if len(values) == 0 {
-		return ""
-	}
-	return values[0]
 }
 
 // mapSubmitError maps NexusHub submit_atomic_process errors to domain errors.

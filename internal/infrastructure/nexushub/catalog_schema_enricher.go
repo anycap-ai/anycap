@@ -14,6 +14,10 @@ type OperationSchemaProvider interface {
 
 // CatalogSchemaEnricher decorates a catalog repo with schema metadata sourced from NexusHub atomic nodes.
 // Route bindings still come from the underlying repository, while operation_schemas stay in NexusHub.
+//
+// Deprecated: replaced by curatedcatalog.Catalog which builds schema
+// directly from NexusHub Discovery's tool_definition.schema. Retained
+// for reference; not wired into any production catalog path.
 type CatalogSchemaEnricher struct {
 	baseRepo       port.CatalogRepository
 	schemaProvider OperationSchemaProvider

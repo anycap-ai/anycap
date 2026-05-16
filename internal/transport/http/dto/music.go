@@ -13,4 +13,9 @@ type GenerateMusicRequest struct {
 	ContinueClipID   string `json:"continue_clip_id,omitempty"`
 	VocalGender      string `json:"vocal_gender,omitempty"`
 	Duration         int    `json:"duration,omitempty"`
+
+	// ModelVariant is the upstream music_option.model knob (e.g.
+	// "v5", "v5.5") and is independent from the AnyCap top-level
+	// Model ID. Optional.
+	ModelVariant string `json:"model_variant,omitempty"`
 }

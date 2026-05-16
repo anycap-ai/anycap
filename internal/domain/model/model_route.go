@@ -10,6 +10,12 @@ const (
 // ModelRoute 表示 AnyCap 路由管理表中的一条记录。
 // 每一行都是 model_id + operation + mode 到 ability_key 的具体绑定。
 // mode 是用户可见的模态标识，algo_type 是 NexusHub 内部调度标识。
+//
+// Deprecated: the public catalog read path now goes through
+// curatedcatalog (dconf-curated list + NexusHub Discovery). This type
+// only models the legacy anycap_model_routes Postgres table that backs
+// the /v1/admin/model-routes admin endpoints. Do not use it from new
+// catalog-related code.
 type ModelRoute struct {
 	ID               int64
 	ModelID          string

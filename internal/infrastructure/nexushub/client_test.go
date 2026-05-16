@@ -100,6 +100,9 @@ func TestClient_GenerateImage(t *testing.T) {
 		AlgoType:   "img_2_img",
 		Priority:   100,
 		Enabled:    true,
+		ResourceTargets: []model.ResourceTarget{
+			{Key: "image_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+		},
 	})
 	if err != nil {
 		t.Fatalf("GenerateImage() error = %v", err)
@@ -296,6 +299,9 @@ func TestClient_GenerateVideo(t *testing.T) {
 		Mode:       model.ModeImageToVideo,
 		Priority:   100,
 		Enabled:    true,
+		ResourceTargets: []model.ResourceTarget{
+			{Key: "resource_url", Kind: model.ResourceKindURL},
+		},
 	})
 	if err != nil {
 		t.Fatalf("GenerateVideo() error = %v", err)

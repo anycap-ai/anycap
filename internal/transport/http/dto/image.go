@@ -7,7 +7,15 @@ type GenerateImageRequest struct {
 	NegativePrompt string   `json:"negative_prompt,omitempty"`
 	AspectRatio    string   `json:"aspect_ratio,omitempty"`
 	Resolution     string   `json:"resolution,omitempty"`
+	Format         string   `json:"format,omitempty"`
 	Images         []string `json:"images,omitempty"`
+
+	// Provider-specific image-edit knobs (currently consumed by
+	// gpt-image-2 and qwen-image img_edit). All optional.
+	MoveForward   int  `json:"move_forward,omitempty"`
+	RotateDegrees int  `json:"rotate_degrees,omitempty"`
+	UseWideAngle  bool `json:"use_wide_angle,omitempty"`
+	VerticalTilt  int  `json:"vertical_tilt,omitempty"`
 
 	// Deprecated: use Images instead. Kept for backward compatibility.
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`

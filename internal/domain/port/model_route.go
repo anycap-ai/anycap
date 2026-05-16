@@ -7,6 +7,10 @@ import (
 )
 
 // ModelRouteRepository 提供 AnyCap 路由管理的 CRUD 能力。
+//
+// Deprecated: backs only the legacy /v1/admin/model-routes admin
+// endpoints. The public catalog read path uses port.CatalogRepository
+// (implemented by curatedcatalog.Catalog).
 type ModelRouteRepository interface {
 	ListModelRoutes(ctx context.Context, filter model.ListModelRoutesFilter) ([]model.ModelRoute, error)
 	GetModelRoute(ctx context.Context, id int64) (*model.ModelRoute, error)

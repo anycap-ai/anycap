@@ -71,6 +71,11 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 		NegativePrompt:     payload.NegativePrompt,
 		Ratio:              aspectRatio,
 		Resolution:         payload.Resolution,
+		Format:             payload.Format,
+		MoveForward:        payload.MoveForward,
+		RotateDegrees:      payload.RotateDegrees,
+		UseWideAngle:       payload.UseWideAngle,
+		VerticalTilt:       payload.VerticalTilt,
 		ReferenceImageURLs: images,
 	}, model.Operation(operation))
 	if err != nil {
