@@ -177,7 +177,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       {
         eyebrow: "Learn",
         title: "What agents can't do",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Start here if you want the deficiency-first narrative and the shortest page for each missing capability.",
       },
       {
@@ -202,7 +202,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     ctas: [
       { label: "View on GitHub", external: githubHref },
       { label: "Get Started", href: "/start" },
-      { label: "See Capability Gaps", href: "/learn/what-agents-cant-do" },
+      { label: "See Capability Gaps", href: "/learn/what-is-the-most-advanced-ai" },
       { label: "For Claude Code", href: "/for/claude-code" },
     ],
     pageJsonLd: buildCliPageJsonLd(
@@ -298,7 +298,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       {
         eyebrow: "Aprender",
         title: "O que agentes não conseguem fazer",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Comece aqui se você quiser a narrativa centrada nas limitações e a rota mais curta para cada capacidade que falta.",
       },
       {
@@ -323,7 +323,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     ctas: [
       { label: "Ver no GitHub", external: githubHref },
       { label: "Começar", href: "/start" },
-      { label: "Ver lacunas de capacidade", href: "/learn/what-agents-cant-do" },
+      { label: "Ver lacunas de capacidade", href: "/learn/what-is-the-most-advanced-ai" },
       { label: "Para Claude Code", href: "/for/claude-code" },
     ],
     pageJsonLd: buildCliPageJsonLd(
@@ -419,7 +419,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       {
         eyebrow: "Pelajari",
         title: "Apa yang tidak bisa dilakukan agen",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Mulai dari sini jika Anda ingin narasi berbasis kekurangan dan jalur terpendek ke setiap kapabilitas yang hilang.",
       },
       {
@@ -444,7 +444,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     ctas: [
       { label: "Lihat di GitHub", external: githubHref },
       { label: "Mulai", href: "/start" },
-      { label: "Lihat Celah Kapabilitas", href: "/learn/what-agents-cant-do" },
+      { label: "Lihat Celah Kapabilitas", href: "/learn/what-is-the-most-advanced-ai" },
       { label: "Untuk Claude Code", href: "/for/claude-code" },
     ],
     pageJsonLd: buildCliPageJsonLd(
@@ -540,7 +540,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
       {
         eyebrow: "Learn",
         title: "Was Agents nicht können",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Beginnen Sie hier, wenn Sie das Defizit-zuerst-Narrativ und den kürzesten Weg zu jeder fehlenden Capability möchten.",
       },
       {
@@ -565,7 +565,7 @@ const contentByLocale: Record<SiteLocale, CliPageData> = {
     ctas: [
       { label: "Auf GitHub ansehen", external: githubHref },
       { label: "Loslegen", href: "/start" },
-      { label: "Capability-Lücken sehen", href: "/learn/what-agents-cant-do" },
+      { label: "Capability-Lücken sehen", href: "/learn/what-is-the-most-advanced-ai" },
       { label: "Für Claude Code", href: "/for/claude-code" },
     ],
     pageJsonLd: buildCliPageJsonLd(

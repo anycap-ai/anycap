@@ -68,7 +68,7 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
     summary: "Compare the stack before you compare only the model.",
     description:
       "Start here when the real decision is how a coding agent should work day to day, then narrow into the Claude Code or Cursor specific path when you know which workflow matters.",
-    featuredId: "learn-best-ai-for-coding-agents",
+    featuredId: "learn-best-ai-for-cursor",
     relatedLinks: [
       { label: "Claude Code setup", href: "/for/claude-code" },
       { label: "Cursor setup", href: "/for/cursor" },
@@ -80,9 +80,9 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
     summary: "Move from chat-first ideas into capability-aware architecture.",
     description:
       "Use this path when a SaaS assistant, copilot, or internal AI feature has to move from answering in chat to inspecting, generating, and delivering richer outputs.",
-    featuredId: "learn-ai-chatbot-vs-ai-agent-for-saas",
+    featuredId: "learn-add-multimodal-capabilities-to-saas-chatbot",
     relatedLinks: [
-      { label: "Agent capability runtime", href: "/glossary/agent-capability-runtime" },
+      { label: "Agent harness", href: "/glossary/agent-harness" },
       { label: "Browse capabilities", href: "/capabilities" },
     ],
   },
@@ -92,7 +92,7 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
     summary: "Use the gap map before you decide what to add next.",
     description:
       "This path works best when the agent mostly succeeds already, but breaks on screenshots, recordings, generation, or delivery and you need to separate model hype from real missing capability.",
-    featuredId: "learn-what-agents-cant-do",
+    featuredId: "learn-what-is-the-most-advanced-ai",
     relatedLinks: [
       { label: "Agent Harness", href: "/glossary/agent-harness" },
       { label: "Capabilities hub", href: "/capabilities" },
@@ -109,7 +109,7 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
       { label: "Image Generation", href: "/capabilities/image-generation" },
       { label: "Image Understanding", href: "/capabilities/image-understanding" },
       { label: "Skills", href: "/skills" },
-      { label: "Install AnyCap", href: "/guides/install-anycap" },
+      { label: "Get started", href: "/start" },
     ],
   },
   "learn-product": {
@@ -120,7 +120,7 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
       "Start here if the main question is what AnyCap actually ships, where the CLI fits, and how reusable skills shape the workflow around the capability runtime.",
     featuredId: "cli",
     relatedLinks: [
-      { label: "Install AnyCap", href: "/guides/install-anycap" },
+      { label: "Get started", href: "/start" },
       { label: "Browse capabilities", href: "/capabilities" },
     ],
   },
@@ -139,28 +139,10 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
     badge: "Product guide",
     updated: "Evergreen",
   },
-  "learn-best-ai-for-coding-agents": {
-    description:
-      "Use this buyer guide when the real question is whether the right answer is a model choice, a platform workflow, or the capability layer around the agent.",
-    badge: "Buyer guide",
-    updated: "Apr 7, 2026",
-  },
-  "learn-best-ai-for-claude-code": {
-    description:
-      "A Claude Code specific path for teams deciding when pure repo work is enough and when capability gaps start to matter.",
-    badge: "Platform guide",
-    updated: "Apr 7, 2026",
-  },
   "learn-best-ai-for-cursor": {
     description:
       "A Cursor specific path for teams deciding when the editor loop is enough and when they need image, video, or vision workflows around it.",
     badge: "Platform guide",
-    updated: "Apr 7, 2026",
-  },
-  "learn-ai-chatbot-vs-ai-agent-for-saas": {
-    description:
-      "A practical architecture guide for SaaS teams deciding when a chatbot is enough and when the workflow really needs an agent plus a capability layer.",
-    badge: "Architecture guide",
     updated: "Apr 7, 2026",
   },
   "learn-add-multimodal-capabilities-to-saas-chatbot": {
@@ -168,12 +150,6 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
       "An implementation path for extending a SaaS chatbot with image, video, web, and delivery workflows without rebuilding the whole stack.",
     badge: "Implementation",
     updated: "Apr 7, 2026",
-  },
-  "learn-what-agents-cant-do": {
-    description:
-      "Map the recurring gaps in modern coding agents and connect each missing capability to the shortest AnyCap path.",
-    badge: "Foundations",
-    updated: "Evergreen",
   },
   "learn-what-is-the-most-advanced-ai": {
     description:
@@ -222,31 +198,6 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
     badge: "Workflow",
     updated: "Apr 10, 2026",
     order: 45,
-  },
-  "learn-how-to-make-memes-online": {
-    description:
-      "Generate or edit the base visual, keep the caption exact, and branch into narrower meme styles from one anchor workflow.",
-    badge: "Workflow anchor",
-    updated: "Apr 8, 2026",
-    order: 50,
-  },
-  "learn-funny-meme-drawings": {
-    description:
-      "Generate classic doodle memes, bad-drawing variants, and other low-fi humorous visuals that still fit a repeatable workflow.",
-    badge: "Style variant",
-    updated: "Apr 8, 2026",
-  },
-  "learn-easy-memes-to-draw": {
-    description:
-      "Generate simple doodle character sheets, easy meme ideas, and beginner-friendly reaction drawings that still map to a real workflow.",
-    badge: "Style variant",
-    updated: "Apr 8, 2026",
-  },
-  "learn-how-to-make-bad-drawing-memes": {
-    description:
-      "Generate intentionally awkward meme drawings, keep the ugly style readable, and turn badly drawn joke ideas into repeatable visuals.",
-    badge: "Style variant",
-    updated: "Apr 8, 2026",
   },
   "learn-how-to-make-ai-influencers": {
     description:

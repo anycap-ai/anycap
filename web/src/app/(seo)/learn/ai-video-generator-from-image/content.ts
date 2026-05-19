@@ -260,7 +260,7 @@ const enContent = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Use this when you want to run the full still-plus-motion workflow locally.",
         },
         {
@@ -528,7 +528,7 @@ const contentByLocale = {
         },
         {
           title: "Instalar AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Use isto quando quiser rodar localmente o workflow completo de still mais motion.",
         },
         {
@@ -793,7 +793,7 @@ const contentByLocale = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Gunakan ini ketika kamu ingin menjalankan workflow lengkap still plus motion secara lokal.",
         },
         {

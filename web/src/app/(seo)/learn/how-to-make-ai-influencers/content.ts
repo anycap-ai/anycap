@@ -364,7 +364,7 @@ const enContent = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Go here when you want the shortest path from this article into a working CLI setup.",
         },
         {
@@ -713,7 +713,7 @@ const contentByLocale = {
         },
         {
           title: "Instalar AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Vá para lá quando quiser o caminho mais curto deste artigo até um setup funcional de CLI.",
         },
         {
@@ -1059,7 +1059,7 @@ const contentByLocale = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Masuk ke sini jika kamu ingin jalur paling singkat dari artikel ini ke setup CLI yang berfungsi.",
         },
         {

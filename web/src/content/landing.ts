@@ -138,7 +138,7 @@ AnyCap is built to work alongside coding agents such as Claude Code, Codex, Curs
 
 ## Links
 
-- [Install Guide](https://anycap.ai/guides/install-anycap) - Full setup walkthrough
+- [Get Started](https://anycap.ai/start) - Full setup walkthrough
 - [For Codex](https://anycap.ai/for/codex) - Agent-specific skill install guidance
 - [For Claude Code](https://anycap.ai/for/claude-code) - Agent-specific skill install guidance
 - [For Cursor](https://anycap.ai/for/cursor) - Agent-specific skill install guidance
@@ -299,7 +299,7 @@ O AnyCap foi feito para rodar ao lado de coding agents como Claude Code, Codex, 
 
 ## Links
 
-- [Guia de instalacao](https://anycap.ai/guides/install-anycap) - Passo a passo completo de setup
+- [Comecar](https://anycap.ai/start) - Passo a passo completo de setup
 - [Para Codex](https://anycap.ai/for/codex) - Guia especifico de instalacao da skill
 - [Para Claude Code](https://anycap.ai/for/claude-code) - Guia especifico de instalacao da skill
 - [Para Cursor](https://anycap.ai/for/cursor) - Guia especifico de instalacao da skill

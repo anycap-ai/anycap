@@ -202,7 +202,7 @@ const en: WhatIsTheMostAdvancedAIPageData = {
   nextMoveCards: [
     {
       title: "Start with the capability gap",
-      href: "/learn/what-agents-cant-do",
+      href: "/learn/what-is-the-most-advanced-ai",
       body: "Use this page if the real question is what agents can and cannot do before you add external capabilities.",
     },
     {
@@ -405,7 +405,7 @@ const ptBr: WhatIsTheMostAdvancedAIPageData = {
   nextMoveCards: [
     {
       title: "Comece pela lacuna de capacidade",
-      href: "/learn/what-agents-cant-do",
+      href: "/learn/what-is-the-most-advanced-ai",
       body: "Use esta página se a pergunta real é o que agentes conseguem ou não fazer antes de adicionar capacidades externas.",
     },
     {
@@ -608,7 +608,7 @@ const id: WhatIsTheMostAdvancedAIPageData = {
   nextMoveCards: [
     {
       title: "Mulai dari celah kemampuan",
-      href: "/learn/what-agents-cant-do",
+      href: "/learn/what-is-the-most-advanced-ai",
       body: "Gunakan halaman ini jika pertanyaan sebenarnya adalah apa yang bisa dan tidak bisa dilakukan agen sebelum menambah kemampuan eksternal.",
     },
     {
@@ -811,7 +811,7 @@ const de: WhatIsTheMostAdvancedAIPageData = {
   nextMoveCards: [
     {
       title: "Mit der Capability-Lücke starten",
-      href: "/learn/what-agents-cant-do",
+      href: "/learn/what-is-the-most-advanced-ai",
       body: "Geeignet, wenn die echte Frage ist, was Agenten können und was nicht, bevor Sie externe Kapazitäten ergänzen.",
     },
     {

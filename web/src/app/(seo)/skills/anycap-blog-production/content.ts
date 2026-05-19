@@ -195,7 +195,7 @@ const contentEn: SkillDetailPageData = {
     { label: "View all skills", href: "/skills", variant: "primary" },
     { label: "Web Search", href: "/capabilities/web-search", variant: "secondary" },
     { label: "Image Generation", href: "/capabilities/image-generation", variant: "secondary" },
-    { label: "Install AnyCap", href: "/guides/install-anycap", variant: "secondary" },
+    { label: "Install AnyCap", href: "/start", variant: "secondary" },
   ],
 };
 

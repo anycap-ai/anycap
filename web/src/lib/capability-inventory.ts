@@ -23,8 +23,12 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
     unitLabel: "/call",
     headers: ["Model", "Modes", "Credits / call"],
     models: [
+      { model: "FLUX.1 Kontext Max", modes: ["text-to-image", "image-to-image"], credits: "varies" },
+      { model: "GPT Image 2", modes: ["text-to-image", "image-to-image"], credits: "varies" },
       { model: "Nano Banana Pro", modes: ["text-to-image", "image-to-image"], credits: "~7" },
       { model: "Nano Banana 2", modes: ["text-to-image", "image-to-image"], credits: "~4" },
+      { model: "Qwen Image", modes: ["text-to-image", "image-to-image"], credits: "varies" },
+      { model: "Seedream 4.5", modes: ["text-to-image", "image-to-image"], credits: "varies" },
       { model: "Seedream 5", modes: ["text-to-image", "image-to-image"], credits: "~2" },
     ],
   },
@@ -35,13 +39,19 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
     unitLabel: "/sec",
     headers: ["Model", "Modes", "Credits / sec"],
     models: [
+      { model: "Hailuo 2.3", modes: ["text-to-video", "image-to-video"], credits: "varies" },
       { model: "Veo 3.1", modes: ["text-to-video", "image-to-video"], credits: "~20" },
+      { model: "Veo 3.1 Fast", modes: ["text-to-video", "image-to-video"], credits: "varies" },
+      { model: "Sora 2 Pro", modes: ["text-to-video", "image-to-video"], credits: "varies" },
       {
         model: "Seedance 1.5 Pro",
         modes: ["text-to-video", "image-to-video"],
         credits: "~14",
       },
+      { model: "Seedance 2.0", modes: ["text-to-video", "image-to-video"], credits: "varies" },
+      { model: "Seedance 2.0 Fast", modes: ["text-to-video", "image-to-video"], credits: "varies" },
       { model: "Kling 3.0", modes: ["text-to-video", "image-to-video"], credits: "~9" },
+      { model: "Kling O1", modes: ["image-to-video"], credits: "varies" },
     ],
   },
   {
@@ -49,7 +59,12 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
     description: "Charged per second of generated audio.",
     unitLabel: "/sec",
     headers: ["Model", "Modes", "Credits / sec"],
-    models: [{ model: "ElevenLabs Music", modes: ["text-to-music"], credits: "~1" }],
+    models: [
+      { model: "ElevenLabs Music", modes: ["text-to-music"], credits: "~1" },
+      { model: "Mureka V8", modes: ["text-to-music"], credits: "varies" },
+      { model: "Suno V5", modes: ["text-to-music"], credits: "varies" },
+      { model: "Suno V5.5", modes: ["text-to-music"], credits: "varies" },
+    ],
   },
 ];
 

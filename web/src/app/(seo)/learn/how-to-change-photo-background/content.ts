@@ -417,7 +417,7 @@ const enContent: ChangePhotoBackgroundPageContent = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Move here when you want the shortest path from this page to a working CLI setup.",
       },
     ],
@@ -715,7 +715,7 @@ const ptBrContent: ChangePhotoBackgroundPageContent = {
       },
       {
         title: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Vá por aqui quando quiser sair desta página com um CLI funcionando no seu ambiente.",
       },
     ],
@@ -1014,7 +1014,7 @@ const idContent: ChangePhotoBackgroundPageContent = {
       },
       {
         title: "Instal AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Lanjut ke sini ketika Anda ingin jalur terpendek dari halaman ini ke pengaturan CLI yang berfungsi.",
       },
     ],

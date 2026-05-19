@@ -187,7 +187,7 @@ export default async function ForCursorPage() {
                 <p className="mt-6 text-sm leading-6 text-[#5a5e52]">
                   {content.install.guideLinkPrefix}
                   <Link
-                    href="/guides/install-anycap"
+                    href="/start"
                     className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"
                   >
                     {content.install.guideLinkLabel}

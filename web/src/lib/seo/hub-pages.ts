@@ -337,17 +337,9 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
-    "/guides/install-anycap": {
-      title: "Install AnyCap",
-      description: "Install the CLI, authenticate once, and verify the capability runtime is ready.",
-    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Understand when you need the protocol layer, the instruction layer, or both for an agent workflow.",
-    },
-    "/guides/add-tools-to-claude-code": {
-      title: "Add Tools to Claude Code",
-      description: "Wire AnyCap into Claude Code so agents can call multimodal tools directly.",
     },
     "/guides/context-engineering-for-agents": {
       title: "Context Engineering for Agents",
@@ -377,35 +369,15 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
       title: "How to Add Vision to AI Agent",
       description: "Add image-reading and visual analysis workflows to an AI agent through a stable capability surface.",
     },
-    "/guides/how-to-use-veo-3-in-ai-agent": {
-      title: "How to Use Veo 3.1 in an AI Agent",
-      description: "Run Veo 3.1 video workflows through one capability layer instead of wiring model APIs manually.",
-    },
-    "/guides/how-to-use-kling-in-ai-agent": {
-      title: "How to Use Kling 3.0 in an AI Agent",
-      description: "Add Kling 3.0 video generation to agent workflows with one runtime surface and one auth flow.",
-    },
     "/guides/claude-opus-4-7-image-video-workflow": {
       title: "Claude Opus 4.7 Image and Video Workflow",
       description: "Run a full image and video production workflow inside Claude Opus 4.7 with AnyCap as the capability layer.",
     },
   },
   "/glossary": {
-    "/glossary/context-engineering": {
-      title: "Context Engineering",
-      description: "The practice of shaping inputs, files, and memory so an agent can work reliably.",
-    },
     "/glossary/agent-harness": {
       title: "Agent Harness",
       description: "The execution environment that manages tools, files, prompts, and agent safety rails.",
-    },
-    "/glossary/agent-capability-runtime": {
-      title: "Agent Capability Runtime",
-      description: "A runtime layer that gives agents a stable way to call capabilities across providers.",
-    },
-    "/glossary/model-context-protocol": {
-      title: "Model Context Protocol",
-      description: "The open communication standard that defines how AI agents discover and invoke tools.",
     },
     "/glossary/agentic-workflow": {
       title: "Agentic Workflow",
@@ -488,17 +460,9 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
-    "/guides/install-anycap": {
-      title: "Instalar o AnyCap",
-      description: "Instale a CLI, autentique uma vez e confirme que o runtime de capacidades está pronto.",
-    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Entenda quando você precisa da camada de protocolo, da camada de instrução, ou das duas em um fluxo com agentes.",
-    },
-    "/guides/add-tools-to-claude-code": {
-      title: "Adicionar Ferramentas ao Claude Code",
-      description: "Conecte o AnyCap ao Claude Code para que agentes possam chamar ferramentas multimodais diretamente.",
     },
     "/guides/context-engineering-for-agents": {
       title: "Engenharia de Contexto para Agentes",
@@ -530,21 +494,9 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
     },
   },
   "/glossary": {
-    "/glossary/context-engineering": {
-      title: "Engenharia de Contexto",
-      description: "A prática de moldar entradas, arquivos e memória para que um agente trabalhe com confiabilidade.",
-    },
     "/glossary/agent-harness": {
       title: "Agent Harness",
       description: "O ambiente de execução que gerencia ferramentas, arquivos, prompts e travas de segurança do agente.",
-    },
-    "/glossary/agent-capability-runtime": {
-      title: "Runtime de Capacidade do Agente",
-      description: "Uma camada de runtime que dá aos agentes uma forma estável de chamar capacidades entre provedores.",
-    },
-    "/glossary/model-context-protocol": {
-      title: "Model Context Protocol",
-      description: "O padrão de comunicação aberto que define como agentes de IA descobrem e invocam ferramentas.",
     },
     "/glossary/agentic-workflow": {
       title: "Fluxo Agêntico",
@@ -611,17 +563,9 @@ const hubItemCopyId: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
-    "/guides/install-anycap": {
-      title: "Pasang AnyCap",
-      description: "Pasang CLI, autentikasi sekali, dan verifikasi bahwa runtime kapabilitas sudah siap.",
-    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Pahami kapan Anda membutuhkan lapisan protokol, lapisan instruksi, atau keduanya untuk workflow agen.",
-    },
-    "/guides/add-tools-to-claude-code": {
-      title: "Tambahkan Tool ke Claude Code",
-      description: "Hubungkan AnyCap ke Claude Code agar agen bisa memanggil tool multimodal secara langsung.",
     },
     "/guides/context-engineering-for-agents": {
       title: "Engineering Konteks untuk Agen",
@@ -653,21 +597,9 @@ const hubItemCopyId: HubItemCopyByHubPath = {
     },
   },
   "/glossary": {
-    "/glossary/context-engineering": {
-      title: "Engineering Konteks",
-      description: "Praktik membentuk input, file, dan memori agar agen bisa bekerja dengan andal.",
-    },
     "/glossary/agent-harness": {
       title: "Agent Harness",
       description: "Lingkungan eksekusi yang mengelola tool, file, prompt, dan pagar keamanan agen.",
-    },
-    "/glossary/agent-capability-runtime": {
-      title: "Runtime Kapabilitas Agen",
-      description: "Lapisan runtime yang memberi agen cara stabil untuk memanggil kapabilitas lintas penyedia.",
-    },
-    "/glossary/model-context-protocol": {
-      title: "Model Context Protocol",
-      description: "Standar komunikasi terbuka yang mendefinisikan bagaimana agen AI menemukan dan memanggil tool.",
     },
     "/glossary/agentic-workflow": {
       title: "Alur Kerja Agentik",

@@ -132,7 +132,7 @@ const en: ForGeminiCliPageData = {
     intro:
       "Gemini CLI is Google's open-source AI agent CLI, it reasons with Gemini models, runs code, searches the web, and reads files. What it can't do natively: generate images, generate video, or understand visual inputs at the capability-call level. AnyCap fills that gap. Install it once, add it as a skill to Gemini CLI, and the agent gains access to image generation, video generation, and image understanding through a single runtime with no additional provider integrations.",
     ctaPrimary: "Install AnyCap",
-    ctaPrimaryHref: "/guides/install-anycap",
+    ctaPrimaryHref: "/start",
     ctaSecondary: "View capabilities",
     ctaSecondaryHref: "/capabilities",
   },
@@ -270,7 +270,7 @@ const en: ForGeminiCliPageData = {
     },
     {
       label: "Install AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       description: "Step-by-step installation and authentication guide.",
     },
     {
@@ -340,7 +340,7 @@ const contentByLocale: Record<SiteLocale, ForGeminiCliPageData> = {
       },
       {
         label: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         description: "Guia de instalação e autenticação passo a passo.",
       },
       {
@@ -407,7 +407,7 @@ const contentByLocale: Record<SiteLocale, ForGeminiCliPageData> = {
       },
       {
         label: "Pasang AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         description: "Panduan instalasi dan autentikasi langkah demi langkah.",
       },
       {
@@ -474,7 +474,7 @@ const contentByLocale: Record<SiteLocale, ForGeminiCliPageData> = {
       },
       {
         label: "AnyCap installieren",
-        href: "/guides/install-anycap",
+        href: "/start",
         description: "Schritt-für-Schritt-Installations- und Authentifizierungsanleitung.",
       },
       {

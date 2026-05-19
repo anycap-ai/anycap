@@ -191,7 +191,7 @@ const contentEn: SkillDetailPageData = {
     { label: "View all skills", href: "/skills", variant: "primary" },
     { label: "Image Understanding", href: "/capabilities/image-understanding", variant: "secondary" },
     { label: "Video Analysis", href: "/capabilities/video-analysis", variant: "secondary" },
-    { label: "Install AnyCap", href: "/guides/install-anycap", variant: "secondary" },
+    { label: "Install AnyCap", href: "/start", variant: "secondary" },
   ],
 };
 

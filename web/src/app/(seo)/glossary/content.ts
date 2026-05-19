@@ -72,7 +72,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Home", href: "/" },
     { name: "Glossary", href: GLOSSARY_PATH },
-    { name: "Context Engineering", href: "/glossary/context-engineering" },
+    { name: "Context Engineering", href: "/guides/context-engineering-for-agents" },
   ],
   eyebrow: "Glossary",
   heroTitle: ["What is", "context engineering?"],
@@ -84,7 +84,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "The practice of shaping the information, tools, constraints, and runtime state an AI agent uses during execution so it can make better decisions.",
-    url: getLocalizedRouteUrl("en", "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("en", "/guides/context-engineering-for-agents"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -94,7 +94,7 @@ const contextEngineeringContentEn: GlossaryEntryPageData = {
   relatedLinks: [
     { label: "Context Guide", href: "/guides/context-engineering-for-agents", variant: "primary" },
     { label: "Workspace Context", href: "/guides/workspace-context-engineering", variant: "secondary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
   ],
 };
 
@@ -110,7 +110,7 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Início", href: "/" },
     { name: "Glossário", href: GLOSSARY_PATH },
-    { name: "Engenharia de Contexto", href: "/glossary/context-engineering" },
+    { name: "Engenharia de Contexto", href: "/guides/context-engineering-for-agents" },
   ],
   eyebrow: "Glossário",
   heroTitle: ["O que é", "engenharia de contexto?"],
@@ -122,7 +122,7 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
     name: "Engenharia de Contexto",
     description:
       "A prática de moldar as informações, ferramentas, restrições e o estado de runtime que um agente de IA usa durante a execução para tomar decisões melhores.",
-    url: getLocalizedRouteUrl("pt-br", "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("pt-br", "/guides/context-engineering-for-agents"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -132,7 +132,7 @@ const contextEngineeringContentPtBr: GlossaryEntryPageData = {
   relatedLinks: [
     { label: "Guia de Contexto", href: "/guides/context-engineering-for-agents", variant: "primary" },
     { label: "Contexto do Workspace", href: "/guides/workspace-context-engineering", variant: "secondary" },
-    { label: "Runtime de Capacidade", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Runtime de Capacidade", href: "/glossary/agent-harness", variant: "secondary" },
   ],
 };
 
@@ -169,7 +169,7 @@ const agentHarnessContentEn: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "Harness Guide", href: "/guides/what-is-agent-harness", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Agent Builder Compare", href: "/compare/anycap-vs-openai-agent-builder", variant: "secondary" },
   ],
 };
@@ -207,7 +207,7 @@ const agentHarnessContentPtBr: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "Guia de Harness", href: "/guides/what-is-agent-harness", variant: "primary" },
-    { label: "Runtime de Capacidade", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Runtime de Capacidade", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Comparar com Agent Builder", href: "/compare/anycap-vs-openai-agent-builder", variant: "secondary" },
   ],
 };
@@ -224,7 +224,7 @@ const contextEngineeringContentDe: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Startseite", href: "/" },
     { name: "Glossar", href: GLOSSARY_PATH },
-    { name: "Context Engineering", href: "/glossary/context-engineering" },
+    { name: "Context Engineering", href: "/guides/context-engineering-for-agents" },
   ],
   eyebrow: "Glossar",
   heroTitle: ["Was ist", "Context Engineering?"],
@@ -236,7 +236,7 @@ const contextEngineeringContentDe: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "Die Praxis, Informationen, Tools, Constraints und Runtime-State so zu gestalten, dass ein KI-Agent während der Ausführung bessere Entscheidungen treffen kann.",
-    url: getLocalizedRouteUrl("de", "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("de", "/guides/context-engineering-for-agents"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -246,7 +246,7 @@ const contextEngineeringContentDe: GlossaryEntryPageData = {
   relatedLinks: [
     { label: "Context Guide", href: "/guides/context-engineering-for-agents", variant: "primary" },
     { label: "Workspace Context", href: "/guides/workspace-context-engineering", variant: "secondary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
   ],
 };
 
@@ -283,7 +283,7 @@ const agentHarnessContentDe: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "Harness Guide", href: "/guides/what-is-agent-harness", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Agent Builder Compare", href: "/compare/anycap-vs-openai-agent-builder", variant: "secondary" },
   ],
 };
@@ -300,7 +300,7 @@ const contextEngineeringContentId: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Beranda", href: "/" },
     { name: "Glosarium", href: GLOSSARY_PATH },
-    { name: "Context Engineering", href: "/glossary/context-engineering" },
+    { name: "Context Engineering", href: "/guides/context-engineering-for-agents" },
   ],
   eyebrow: "Glosarium",
   heroTitle: ["Apa itu", "context engineering?"],
@@ -312,7 +312,7 @@ const contextEngineeringContentId: GlossaryEntryPageData = {
     name: "Context Engineering",
     description:
       "Praktik membentuk informasi, tool, batasan, dan runtime state yang dipakai agen AI saat eksekusi agar bisa mengambil keputusan yang lebih baik.",
-    url: getLocalizedRouteUrl("id", "/glossary/context-engineering"),
+    url: getLocalizedRouteUrl("id", "/guides/context-engineering-for-agents"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [
@@ -322,7 +322,7 @@ const contextEngineeringContentId: GlossaryEntryPageData = {
   relatedLinks: [
     { label: "Panduan Konteks", href: "/guides/context-engineering-for-agents", variant: "primary" },
     { label: "Konteks Workspace", href: "/guides/workspace-context-engineering", variant: "secondary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
   ],
 };
 
@@ -359,7 +359,7 @@ const agentHarnessContentId: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "Panduan Harness", href: "/guides/what-is-agent-harness", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Bandingkan dengan Agent Builder", href: "/compare/anycap-vs-openai-agent-builder", variant: "secondary" },
   ],
 };
@@ -456,7 +456,7 @@ const mcpContentEn: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Home", href: "/" },
     { name: "Glossary", href: GLOSSARY_PATH },
-    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+    { name: "Model Context Protocol", href: "/guides/mcp-vs-skills" },
   ],
   eyebrow: "Glossary",
   heroTitle: ["What is the", "Model Context Protocol?"],
@@ -468,7 +468,7 @@ const mcpContentEn: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "An open communication standard that defines how AI agents discover and invoke tools, capabilities, and external services during execution.",
-    url: getLocalizedRouteUrl("en", "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("en", "/guides/mcp-vs-skills"),
   },
   whyTitle: "Why it matters",
   whyBody: [
@@ -477,7 +477,7 @@ const mcpContentEn: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -494,7 +494,7 @@ const mcpContentPtBr: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Início", href: "/" },
     { name: "Glossário", href: GLOSSARY_PATH },
-    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+    { name: "Model Context Protocol", href: "/guides/mcp-vs-skills" },
   ],
   eyebrow: "Glossário",
   heroTitle: ["O que é o", "Model Context Protocol?"],
@@ -506,7 +506,7 @@ const mcpContentPtBr: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Um padrão de comunicação aberto que define como agentes de IA descobrem e invocam ferramentas, capacidades e serviços externos durante a execução.",
-    url: getLocalizedRouteUrl("pt-br", "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("pt-br", "/guides/mcp-vs-skills"),
   },
   whyTitle: "Por que isso importa",
   whyBody: [
@@ -515,7 +515,7 @@ const mcpContentPtBr: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
-    { label: "Runtime de Capacidade", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Runtime de Capacidade", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Capacidades do AnyCap", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -532,7 +532,7 @@ const mcpContentDe: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Startseite", href: "/" },
     { name: "Glossar", href: GLOSSARY_PATH },
-    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+    { name: "Model Context Protocol", href: "/guides/mcp-vs-skills" },
   ],
   eyebrow: "Glossar",
   heroTitle: ["Was ist das", "Model Context Protocol?"],
@@ -544,7 +544,7 @@ const mcpContentDe: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Ein offener Kommunikationsstandard, der definiert, wie KI-Agents Tools, Capabilities und externe Services während der Ausführung entdecken und aufrufen.",
-    url: getLocalizedRouteUrl("de", "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("de", "/guides/mcp-vs-skills"),
   },
   whyTitle: "Warum es zählt",
   whyBody: [
@@ -553,7 +553,7 @@ const mcpContentDe: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -570,7 +570,7 @@ const mcpContentId: GlossaryEntryPageData = {
   breadcrumbItems: [
     { name: "Beranda", href: "/" },
     { name: "Glosarium", href: GLOSSARY_PATH },
-    { name: "Model Context Protocol", href: "/glossary/model-context-protocol" },
+    { name: "Model Context Protocol", href: "/guides/mcp-vs-skills" },
   ],
   eyebrow: "Glosarium",
   heroTitle: ["Apa itu", "Model Context Protocol?"],
@@ -582,7 +582,7 @@ const mcpContentId: GlossaryEntryPageData = {
     name: "Model Context Protocol (MCP)",
     description:
       "Standar komunikasi terbuka yang mendefinisikan cara agen AI menemukan dan memanggil tool, kapabilitas, dan layanan eksternal saat eksekusi.",
-    url: getLocalizedRouteUrl("id", "/glossary/model-context-protocol"),
+    url: getLocalizedRouteUrl("id", "/guides/mcp-vs-skills"),
   },
   whyTitle: "Mengapa ini penting",
   whyBody: [
@@ -591,7 +591,7 @@ const mcpContentId: GlossaryEntryPageData = {
   ],
   relatedLinks: [
     { label: "MCP vs Skills", href: "/guides/mcp-vs-skills", variant: "primary" },
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime", variant: "secondary" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness", variant: "secondary" },
     { label: "Kapabilitas AnyCap", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -655,8 +655,8 @@ const agenticWorkflowContentEn: GlossaryEntryPageData = {
     "For teams using AnyCap, the capability runtime is the tool layer that makes agentic workflows with generation, understanding, and retrieval possible. Without it, developers must build and maintain separate integrations for each action type, which adds failure surface and slows iteration. A runtime that covers image, video, vision, web search, web crawl, storage, and publishing in one install path reduces the integration overhead that would otherwise fragment the workflow into disconnected pieces. This is why teams running high-diversity agentic workflows typically benefit most from the runtime architecture.",
   ],
   relatedLinks: [
-    { label: "What Agents Can't Do", href: "/learn/what-agents-cant-do", variant: "primary" },
-    { label: "Context Engineering", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "What Agents Can't Do", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -693,8 +693,8 @@ const agenticWorkflowContentPtBr: GlossaryEntryPageData = {
     "Para times que usam AnyCap, o runtime de capacidades é a camada de ferramentas que torna possíveis fluxos agênticos com geração, entendimento e recuperação. Sem ele, os desenvolvedores precisam construir e manter integrações separadas para cada tipo de ação, o que adiciona superfície de falha e desacelera a iteração. Um runtime que cobre imagem, vídeo, visão, busca web, web crawl, armazenamento e publicação em um único caminho de instalação reduz o overhead de integração que, de outra forma, fragmentaria o fluxo em partes desconectadas.",
   ],
   relatedLinks: [
-    { label: "O que agentes não conseguem fazer", href: "/learn/what-agents-cant-do", variant: "primary" },
-    { label: "Engenharia de Contexto", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "O que agentes não conseguem fazer", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Engenharia de Contexto", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "Capacidades do AnyCap", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -731,8 +731,8 @@ const agenticWorkflowContentDe: GlossaryEntryPageData = {
     "Für Teams, die AnyCap nutzen, ist die Capability-Runtime die Tool-Schicht, die Agentic Workflows mit Generation, Understanding und Retrieval möglich macht. Ohne sie müssten Entwickler separate Integrationen für jeden Aktionstyp bauen und pflegen, was die Fehlerfläche vergrößert und Iteration verlangsamt. Eine Runtime, die Image, Video, Vision, Web Search, Web Crawl, Storage und Publishing in einem Installationspfad abdeckt, reduziert den Integrations-Overhead, der den Workflow sonst in unverbundene Teile fragmentieren würde. Deshalb profitieren Teams mit hochdiversen Agentic Workflows typischerweise am meisten von der Runtime-Architektur.",
   ],
   relatedLinks: [
-    { label: "Was Agents nicht können", href: "/learn/what-agents-cant-do", variant: "primary" },
-    { label: "Context Engineering", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "Was Agents nicht können", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
 };
@@ -769,8 +769,8 @@ const agenticWorkflowContentId: GlossaryEntryPageData = {
     "Untuk tim yang memakai AnyCap, capability runtime adalah lapisan tool yang membuat agentic workflow dengan pembuatan, pemahaman, dan pengambilan data jadi mungkin. Tanpa itu, developer harus membangun dan memelihara integrasi terpisah untuk tiap tipe aksi, yang menambah permukaan kegagalan dan memperlambat iterasi. Runtime yang menutup image, video, visi, web search, web crawl, storage, dan publishing dalam satu install path mengurangi overhead integrasi yang kalau tidak akan memecah workflow jadi potongan-potongan yang tidak terhubung. Itulah sebabnya tim yang menjalankan agentic workflow dengan keragaman tinggi biasanya paling diuntungkan oleh arsitektur runtime ini.",
   ],
   relatedLinks: [
-    { label: "Yang tidak bisa dilakukan agen", href: "/learn/what-agents-cant-do", variant: "primary" },
-    { label: "Context Engineering", href: "/glossary/context-engineering", variant: "secondary" },
+    { label: "Yang tidak bisa dilakukan agen", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "Kapabilitas AnyCap", href: "/capabilities", variant: "secondary" },
   ],
 };

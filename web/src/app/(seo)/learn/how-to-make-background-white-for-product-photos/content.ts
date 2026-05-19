@@ -418,7 +418,7 @@ const enContent: WhiteBackgroundPageContent = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Move here when you want the shortest path from this page to a working CLI setup.",
       },
     ],
@@ -719,7 +719,7 @@ const ptBrContent: WhiteBackgroundPageContent = {
       },
       {
         title: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Siga por aqui quando quiser sair desta página com um CLI funcionando no seu ambiente.",
       },
     ],
@@ -1019,7 +1019,7 @@ const idContent: WhiteBackgroundPageContent = {
       },
       {
         title: "Instal AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Pindah ke sini ketika Anda ingin jalur terpendek dari halaman ini ke pengaturan CLI yang berfungsi.",
       },
     ],

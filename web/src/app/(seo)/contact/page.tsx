@@ -187,7 +187,7 @@ export default async function ContactPage() {
                 .
               </p>
               <p className={bodyClass}>
-                {content.directBody3} <ContactLink href="/guides/install-anycap">install guide</ContactLink>.{" "}
+                {content.directBody3} <ContactLink href="/start">install guide</ContactLink>.{" "}
                 For product and plan context, review the <ContactLink href="/pricing">pricing page</ContactLink>.
               </p>
             </PageSection>

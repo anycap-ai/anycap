@@ -792,7 +792,7 @@ export default async function AgentSkillsForDeveloperToolsPage() {
             <section className="mt-16 md:mt-24 mb-8">
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/guides/install-anycap"
+                  href="/start"
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
                   style={mono}
                 >

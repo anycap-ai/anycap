@@ -274,12 +274,12 @@ const en: ComparePageData = {
     },
     {
       label: "Install AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Published setup flow for Codex, Cursor, OpenClaw, and similar agent products.",
     },
     {
       label: "Agent capability runtime",
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       note: "Definition of the category AnyCap is trying to own.",
     },
     {
@@ -291,7 +291,7 @@ const en: ComparePageData = {
   relatedTitle: "Related pages",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glossary",
       title: "Agent Capability Runtime",
       body: "Read the core definition for the category AnyCap is trying to own.",
@@ -344,7 +344,7 @@ const en: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Install AnyCap", variant: "primary" },
+    { href: "/start", label: "Install AnyCap", variant: "primary" },
     { href: "/cli", label: "CLI Overview", variant: "secondary" },
     { href: "/for/codex", label: "See Agent Use Cases", variant: "secondary" },
   ],
@@ -574,12 +574,12 @@ const idLocale: ComparePageData = {
     },
     {
       label: "Instal AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Alur setup yang dipublikasikan untuk Codex, Cursor, OpenClaw, dan produk agen serupa.",
     },
     {
       label: "Runtime kemampuan agen",
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       note: "Definisi kategori yang ingin dimiliki AnyCap.",
     },
     {
@@ -591,7 +591,7 @@ const idLocale: ComparePageData = {
   relatedTitle: "Halaman terkait",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glosarium",
       title: "Agent Capability Runtime",
       body: "Baca definisi inti untuk kategori yang ingin dimiliki AnyCap.",
@@ -644,7 +644,7 @@ const idLocale: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Instal AnyCap", variant: "primary" },
+    { href: "/start", label: "Instal AnyCap", variant: "primary" },
     { href: "/cli", label: "Ringkasan CLI", variant: "secondary" },
     { href: "/for/codex", label: "Lihat kasus penggunaan agen", variant: "secondary" },
   ],
@@ -875,12 +875,12 @@ const de: ComparePageData = {
     },
     {
       label: "AnyCap installieren",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Veröffentlichter Setup-Flow für Codex, Cursor, OpenClaw und ähnliche Agent-Produkte.",
     },
     {
       label: "Agent Capability Runtime",
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       note: "Definition der Kategorie, die AnyCap zu besetzen versucht.",
     },
     {
@@ -892,7 +892,7 @@ const de: ComparePageData = {
   relatedTitle: "Verwandte Seiten",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glossar",
       title: "Agent-Capability-Runtime",
       body: "Lesen Sie die Kerndefinition der Kategorie, die AnyCap zu besetzen versucht.",
@@ -945,7 +945,7 @@ const de: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/start", label: "AnyCap installieren", variant: "primary" },
     { href: "/cli", label: "CLI-Übersicht", variant: "secondary" },
     { href: "/for/codex", label: "Agent-Anwendungsfälle ansehen", variant: "secondary" },
   ],

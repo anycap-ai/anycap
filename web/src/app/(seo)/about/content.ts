@@ -168,7 +168,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       },
       {
         label: "Install guide",
-        href: "/guides/install-anycap",
+        href: "/start",
         detail: "The shortest path from evaluation to a working local setup.",
       },
       {
@@ -397,7 +397,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       },
       {
         label: "Guia de instalação",
-        href: "/guides/install-anycap",
+        href: "/start",
         detail: "O caminho mais curto da avaliação até um setup local funcionando.",
       },
       {
@@ -648,7 +648,7 @@ contentByLocale.id = {
     },
     {
       label: "Panduan instalasi",
-      href: "/guides/install-anycap",
+      href: "/start",
       detail: "Jalur paling singkat dari evaluasi sampai setup lokal yang berfungsi.",
     },
     {
@@ -896,7 +896,7 @@ contentByLocale.de = {
       },
       {
         label: "Installations-Guide",
-        href: "/guides/install-anycap",
+        href: "/start",
         detail: "Der kürzeste Pfad von der Evaluierung zu einem funktionierenden lokalen Setup.",
       },
       {

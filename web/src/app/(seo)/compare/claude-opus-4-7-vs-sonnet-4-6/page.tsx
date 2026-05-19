@@ -153,7 +153,7 @@ const enContent: PageContent = {
     },
     {
       title: "Best AI tools for Claude Code (Opus 4.7 Edition)",
-      href: "/learn/best-ai-for-claude-code",
+      href: "/for/claude-code",
       body: "Buyer guide for teams choosing how to extend Claude Code.",
     },
   ],
@@ -296,7 +296,7 @@ const ptBrContent: PageContent = {
     { title: "Hub do Claude Code no Opus 4.7", href: "/for/claude-code", body: "Opus 4.7 + AnyCap = um agente, todas as modalidades, sem cola." },
     { title: "Capacidades do Claude Opus 4.7", href: "/learn/claude-opus-4-7-capabilities", body: "O que o Opus 4.7 faz e o que o AnyCap libera." },
     { title: "Workflow de imagem + vídeo no Opus 4.7", href: "/guides/claude-opus-4-7-image-video-workflow", body: "Workflow ponta a ponta com uma CLI." },
-    { title: "Melhores ferramentas para Claude Code", href: "/learn/best-ai-for-claude-code", body: "Guia para escolher como estender o Claude Code." },
+    { title: "Melhores ferramentas para Claude Code", href: "/for/claude-code", body: "Guia para escolher como estender o Claude Code." },
   ],
   faqTitle: "FAQ",
   faqItems: [
@@ -436,7 +436,7 @@ const idContent: PageContent = {
     { title: "Hub Claude Code di Opus 4.7", href: "/for/claude-code", body: "Opus 4.7 + AnyCap = satu agent, semua modalitas, tanpa glue code." },
     { title: "Capability Claude Opus 4.7", href: "/learn/claude-opus-4-7-capabilities", body: "Apa yang Opus 4.7 bisa, tidak bisa, dan apa yang AnyCap unlock." },
     { title: "Workflow image + video Opus 4.7", href: "/guides/claude-opus-4-7-image-video-workflow", body: "Workflow image dan video end-to-end dengan satu CLI." },
-    { title: "Tool AI terbaik untuk Claude Code", href: "/learn/best-ai-for-claude-code", body: "Buyer guide buat tim yang mau extend Claude Code." },
+    { title: "Tool AI terbaik untuk Claude Code", href: "/for/claude-code", body: "Buyer guide buat tim yang mau extend Claude Code." },
   ],
   faqTitle: "FAQ",
   faqItems: [
@@ -576,7 +576,7 @@ const deContent: PageContent = {
     { title: "Claude-Code-Hub auf Opus 4.7", href: "/for/claude-code", body: "Opus 4.7 + AnyCap = ein Agent, jede Modalität, kein Glue-Code." },
     { title: "Capabilities von Claude Opus 4.7", href: "/learn/claude-opus-4-7-capabilities", body: "Was Opus 4.7 kann, was nicht und was AnyCap freischaltet." },
     { title: "Bild- und Video-Workflow mit Opus 4.7", href: "/guides/claude-opus-4-7-image-video-workflow", body: "End-to-End-Workflow mit einer einzigen CLI." },
-    { title: "Beste KI-Tools für Claude Code", href: "/learn/best-ai-for-claude-code", body: "Kaufratgeber für Teams, die Claude Code erweitern." },
+    { title: "Beste KI-Tools für Claude Code", href: "/for/claude-code", body: "Kaufratgeber für Teams, die Claude Code erweitern." },
   ],
   faqTitle: "FAQ",
   faqItems: [

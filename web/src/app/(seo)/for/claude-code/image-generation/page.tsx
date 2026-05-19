@@ -465,7 +465,7 @@ export default async function ClaudeCodeImageGenerationPage() {
                 {content.ctas.primary}
               </Link>
               <Link
-                href="/guides/add-tools-to-claude-code"
+                href="/guides/agent-skills-for-developer-tools"
                 className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                 style={mono}
               >

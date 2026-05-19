@@ -3,10 +3,12 @@ package kvsync
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 const (
@@ -87,7 +89,10 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	for {
 		if err := w.processOne(ctx); err != nil {
-			return err
+			if ctx.Err() != nil {
+				return nil
+			}
+			logging.WithError(err).WithField("worker_id", w.workerID).Warn("kvsync worker process failed")
 		}
 
 		select {
@@ -182,12 +187,8 @@ func (w *Waiter) Wait(ctx context.Context, jobIDs []int64) error {
 		return nil
 	}
 
-	waitCtx := ctx
-	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
-		var cancel context.CancelFunc
-		waitCtx, cancel = context.WithTimeout(ctx, w.timeout)
-		defer cancel()
-	}
+	waitCtx, cancel := context.WithTimeout(ctx, w.timeout)
+	defer cancel()
 
 	pending := make(map[int64]struct{}, len(jobIDs))
 	for _, id := range jobIDs {
@@ -201,21 +202,27 @@ func (w *Waiter) Wait(ctx context.Context, jobIDs []int64) error {
 
 	ticker := time.NewTicker(w.pollInterval)
 	defer ticker.Stop()
+	lastSeen := make(map[int64]string, len(pending))
 
 	for len(pending) > 0 {
 		for id := range pending {
 			job, err := w.repo.GetByID(waitCtx, id)
 			if err != nil {
+				if waitCtx.Err() != nil {
+					return fmt.Errorf("kvsync wait timeout after %s: pending=%s: %w", w.timeout, formatPendingJobs(pending, lastSeen), waitCtx.Err())
+				}
 				return err
 			}
 			if job == nil {
+				lastSeen[id] = "not_found"
 				continue
 			}
+			lastSeen[id] = describeJobStatus(job)
 			switch job.Status {
 			case model.KVSyncJobStatusDone, model.KVSyncJobStatusObsolete:
 				delete(pending, id)
 			case model.KVSyncJobStatusDead, model.KVSyncJobStatusFailed:
-				return fmt.Errorf("kvsync job %d failed with status=%s", id, job.Status)
+				return fmt.Errorf("kvsync job %d failed: %s", id, describeJobStatus(job))
 			}
 		}
 		if len(pending) == 0 {
@@ -224,10 +231,51 @@ func (w *Waiter) Wait(ctx context.Context, jobIDs []int64) error {
 
 		select {
 		case <-waitCtx.Done():
-			return waitCtx.Err()
+			return fmt.Errorf("kvsync wait timeout after %s: pending=%s: %w", w.timeout, formatPendingJobs(pending, lastSeen), waitCtx.Err())
 		case <-ticker.C:
 		}
 	}
 
 	return nil
+}
+
+func describeJobStatus(job *model.KVSyncJob) string {
+	if job == nil {
+		return "not_found"
+	}
+	parts := []string{
+		"status=" + string(job.Status),
+		fmt.Sprintf("attempts=%d/%d", job.Attempts, job.MaxAttempts),
+	}
+	if job.LockedBy != nil && strings.TrimSpace(*job.LockedBy) != "" {
+		parts = append(parts, "locked_by="+strings.TrimSpace(*job.LockedBy))
+	}
+	if job.LockedAt != nil {
+		parts = append(parts, "locked_at="+job.LockedAt.UTC().Format(time.RFC3339))
+	}
+	if job.LastError != nil && strings.TrimSpace(*job.LastError) != "" {
+		parts = append(parts, "last_error="+strings.TrimSpace(*job.LastError))
+	}
+	return strings.Join(parts, " ")
+}
+
+func formatPendingJobs(pending map[int64]struct{}, lastSeen map[int64]string) string {
+	if len(pending) == 0 {
+		return "none"
+	}
+	ids := make([]int64, 0, len(pending))
+	for id := range pending {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+
+	items := make([]string, 0, len(ids))
+	for _, id := range ids {
+		status := lastSeen[id]
+		if status == "" {
+			status = "unknown"
+		}
+		items = append(items, fmt.Sprintf("%d{%s}", id, status))
+	}
+	return strings.Join(items, ",")
 }

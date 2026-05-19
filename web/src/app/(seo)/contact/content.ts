@@ -50,7 +50,7 @@ const contactRoutesEn: readonly ContactRoute[] = [
       "If you are trying to get your first workflow running, start with the install guide and include the agent, capability, and exact step that failed.",
     ctaLabel: "Open install guide",
     ctaKind: "link",
-    ctaHref: "/guides/install-anycap",
+    ctaHref: "/start",
   },
   {
     title: "Bug reports and regressions",
@@ -157,7 +157,7 @@ const contentByLocale: Record<SiteLocale, ContactPageData> = {
           "Se você está tentando fazer seu primeiro fluxo funcionar, comece pelo guia de instalação e inclua o agente, a capacidade e a etapa exata que falhou.",
         ctaLabel: "Abrir guia de instalação",
         ctaKind: "link",
-        ctaHref: "/guides/install-anycap",
+        ctaHref: "/start",
       },
       {
         title: "Reporte de bugs e regressões",
@@ -225,7 +225,7 @@ const contactRoutesId: readonly ContactRoute[] = [
       "Kalau Anda sedang mencoba menjalankan workflow pertama, mulai dari panduan instalasi dan sertakan agen, capability, serta langkah persis yang gagal.",
     ctaLabel: "Buka panduan instalasi",
     ctaKind: "link",
-    ctaHref: "/guides/install-anycap",
+    ctaHref: "/start",
   },
   {
     title: "Laporan bug dan regresi",
@@ -313,7 +313,7 @@ const contactRoutesDe: readonly ContactRoute[] = [
       "Wenn Sie Ihren ersten Workflow zum Laufen bringen wollen, beginnen Sie mit dem Installations-Guide und nennen Sie Agent, Capability sowie den genauen Schritt, der fehlgeschlagen ist.",
     ctaLabel: "Installations-Guide öffnen",
     ctaKind: "link",
-    ctaHref: "/guides/install-anycap",
+    ctaHref: "/start",
   },
   {
     title: "Bug-Reports und Regressionen",

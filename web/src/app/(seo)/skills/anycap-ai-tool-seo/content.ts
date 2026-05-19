@@ -222,7 +222,7 @@ Target keyword: "AI image generation API"
     { label: "View all skills", href: "/skills", variant: "primary" },
     { label: "Web Search", href: "/capabilities/web-search", variant: "secondary" },
     { label: "Web Crawl", href: "/capabilities/web-crawl", variant: "secondary" },
-    { label: "Install AnyCap", href: "/guides/install-anycap", variant: "secondary" },
+    { label: "Install AnyCap", href: "/start", variant: "secondary" },
   ],
 };
 

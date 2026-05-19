@@ -266,12 +266,12 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
     nextMoveCards: [
       {
         title: "See the architecture decision first",
-        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
         body: "Use this page if you still need to clarify whether the product is really a chatbot or an agent workflow.",
       },
       {
         title: "Map the capability gap",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         body: "Use this page if you want the shortest explanation of what breaks first when chat alone is not enough.",
       },
       {
@@ -281,7 +281,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Take the install path",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Use the install guide when you are ready to move from architecture planning into setup.",
       },
     ],
@@ -501,12 +501,12 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
     nextMoveCards: [
       {
         title: "Veja a decisao de arquitetura primeiro",
-        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
         body: "Use esta pagina se ainda precisar esclarecer se o produto e realmente um chatbot ou um workflow de agente.",
       },
       {
         title: "Mapeie a lacuna de capacidades",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         body: "Use esta pagina se quiser a explicacao mais curta sobre o que quebra primeiro quando o chat sozinho nao basta.",
       },
       {
@@ -516,7 +516,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Siga o caminho de instalacao",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Use o guia de instalacao quando estiver pronto para sair do planejamento de arquitetura e partir para a configuracao.",
       },
     ],
@@ -736,12 +736,12 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
     nextMoveCards: [
       {
         title: "Cek keputusan arsitektur dulu",
-        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
         body: "Gunakan halaman ini jika Anda masih perlu memastikan apakah produk Anda seharusnya chatbot biasa atau workflow agen.",
       },
       {
         title: "Petakan gap kapabilitas",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         body: "Gunakan halaman ini untuk memahami dengan cepat titik kegagalan saat chat saja tidak lagi cukup.",
       },
       {
@@ -751,7 +751,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Masuk ke jalur instalasi",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Gunakan panduan instalasi saat Anda siap beralih dari keputusan arsitektur ke implementasi.",
       },
     ],
@@ -971,12 +971,12 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
     nextMoveCards: [
       {
         title: "Zuerst die Architekturentscheidung pruefen",
-        href: "/learn/ai-chatbot-vs-ai-agent-for-saas",
+        href: "/learn/add-multimodal-capabilities-to-saas-chatbot",
         body: "Diese Seite nutzen, wenn noch geklaert werden muss, ob das Produkt wirklich ein Chatbot oder ein Agenten-Workflow sein sollte.",
       },
       {
         title: "Die Capability-Luecke kartieren",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         body: "Diese Seite nutzen, um die kuerzeste Erklaerung zu bekommen, was zuerst bricht, wenn Chat allein nicht ausreicht.",
       },
       {
@@ -986,7 +986,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Den Installationspfad einschlagen",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Den Installationsleitfaden nutzen, wenn es bereit ist, von der Architekturplanung zur tatsaechlichen Einrichtung ueberzugehen.",
       },
     ],

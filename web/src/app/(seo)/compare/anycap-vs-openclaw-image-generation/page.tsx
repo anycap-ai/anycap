@@ -130,7 +130,7 @@ const sourceLinks = [
   },
   {
     label: "Install AnyCap",
-    href: "/guides/install-anycap",
+    href: "/start",
     note: "One CLI and one auth flow across multiple agent products.",
   },
   {
@@ -608,7 +608,7 @@ export default function AnycapVsOpenClawImageGenerationPage() {
                   </p>
                 </Link>
                 <Link
-                  href="/guides/install-anycap"
+                  href="/start"
                   className="border border-[#d4dbb8] p-5 hover:border-[#6b7d3a] transition-colors"
                 >
                   <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>

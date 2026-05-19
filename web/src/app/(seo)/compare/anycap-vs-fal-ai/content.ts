@@ -241,7 +241,7 @@ const en: ComparePageData = {
     },
     {
       label: "Install AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Published setup flow for agent environments that need a portable runtime.",
     },
   ],
@@ -272,7 +272,7 @@ const en: ComparePageData = {
       body: "Go deeper on how the AnyCap runtime exposes image models through one command surface.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Start here",
       title: "Install AnyCap",
       body: "Validate the runtime directly in your own agent workflow instead of staying in comparison mode.",
@@ -307,7 +307,7 @@ const en: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Install AnyCap", variant: "primary" },
+    { href: "/start", label: "Install AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Image Generation", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Video Generation", variant: "secondary" },
   ],
@@ -454,7 +454,7 @@ const ptBr: ComparePageData = {
     },
     {
       label: "Instalar o AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Fluxo publicado de setup para ambientes de agente que precisam de runtime portátil.",
     },
   ],
@@ -478,7 +478,7 @@ const ptBr: ComparePageData = {
       body: "Aprofunde como o AnyCap expõe modelos de imagem por uma interface única.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Comece aqui",
       title: "Instalar o AnyCap",
       body: "Valide o runtime diretamente no seu fluxo de agente em vez de ficar só na comparação.",
@@ -512,7 +512,7 @@ const ptBr: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Instalar o AnyCap", variant: "primary" },
+    { href: "/start", label: "Instalar o AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Geração de imagem", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Geração de vídeo", variant: "secondary" },
   ],
@@ -715,7 +715,7 @@ const id: ComparePageData = {
     },
     {
       label: "Instal AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Alur penyiapan yang dipublikasikan untuk lingkungan agent yang memerlukan runtime portabel.",
     },
   ],
@@ -740,7 +740,7 @@ const id: ComparePageData = {
       body: "Pelajari lebih dalam bagaimana runtime AnyCap mengekspos model gambar melalui satu permukaan perintah.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Mulai di sini",
       title: "Instal AnyCap",
       body: "Validasi runtime langsung di alur kerja agent Anda alih-alih tetap dalam mode perbandingan.",
@@ -775,7 +775,7 @@ const id: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Instal AnyCap", variant: "primary" },
+    { href: "/start", label: "Instal AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Pembuatan gambar", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Pembuatan video", variant: "secondary" },
   ],
@@ -978,7 +978,7 @@ const de: ComparePageData = {
     },
     {
       label: "AnyCap installieren",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Veröffentlichter Setup-Flow für Agent-Umgebungen, die eine portable Runtime benötigen.",
     },
   ],
@@ -1003,7 +1003,7 @@ const de: ComparePageData = {
       body: "Vertiefen Sie, wie die AnyCap-Runtime Bildmodelle über eine Command-Oberfläche bereitstellt.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Hier starten",
       title: "AnyCap installieren",
       body: "Validieren Sie die Runtime direkt in Ihrem eigenen Agent-Workflow, statt im Vergleichsmodus zu bleiben.",
@@ -1038,7 +1038,7 @@ const de: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/start", label: "AnyCap installieren", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Bildgenerierung", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Videogenerierung", variant: "secondary" },
   ],

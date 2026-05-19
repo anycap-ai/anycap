@@ -215,7 +215,7 @@ const en: ComparePageData = {
     },
     {
       label: "Install AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Setup flow for agent environments that need a portable capability runtime.",
     },
   ],
@@ -240,7 +240,7 @@ const en: ComparePageData = {
       body: "See the public video workflow that an agent gets through AnyCap without any GPU infrastructure.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Start here",
       title: "Install AnyCap",
       body: "Validate the runtime directly in your own agent workflow instead of staying in comparison mode.",
@@ -275,7 +275,7 @@ const en: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Install AnyCap", variant: "primary" },
+    { href: "/start", label: "Install AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Image Generation", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Video Generation", variant: "secondary" },
   ],
@@ -300,7 +300,7 @@ const ptBr: ComparePageData = {
   lastUpdatedLabel: "20 de abril de 2026",
   comparisonHeaders: { dimension: "Dimensão", anycap: "AnyCap", modal: "Modal" },
   ctas: [
-    { href: "/guides/install-anycap", label: "Instalar o AnyCap", variant: "primary" },
+    { href: "/start", label: "Instalar o AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Geração de imagem", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Geração de vídeo", variant: "secondary" },
   ],
@@ -325,7 +325,7 @@ const id: ComparePageData = {
   lastUpdatedLabel: "20 April 2026",
   comparisonHeaders: { dimension: "Dimensi", anycap: "AnyCap", modal: "Modal" },
   ctas: [
-    { href: "/guides/install-anycap", label: "Instal AnyCap", variant: "primary" },
+    { href: "/start", label: "Instal AnyCap", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Pembuatan gambar", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Pembuatan video", variant: "secondary" },
   ],
@@ -350,7 +350,7 @@ const de: ComparePageData = {
   lastUpdatedLabel: "20. April 2026",
   comparisonHeaders: { dimension: "Dimension", anycap: "AnyCap", modal: "Modal" },
   ctas: [
-    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/start", label: "AnyCap installieren", variant: "primary" },
     { href: "/capabilities/image-generation", label: "Bildgenerierung", variant: "secondary" },
     { href: "/capabilities/video-generation", label: "Videogenerierung", variant: "secondary" },
   ],

@@ -413,7 +413,7 @@ const enContent: BrightenPhotoPageContent = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Start here if you want the CLI ready before testing the same correction workflow on your own photo.",
       },
     ],
@@ -707,7 +707,7 @@ const ptBrContent: BrightenPhotoPageContent = {
       },
       {
         title: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Siga por aqui se quiser preparar o CLI antes de testar a mesma correção na sua própria foto.",
       },
     ],
@@ -1006,7 +1006,7 @@ const idContent: BrightenPhotoPageContent = {
       },
       {
         title: "Instal AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Mulai di sini jika Anda ingin CLI siap sebelum menguji alur koreksi yang sama pada foto Anda sendiri.",
       },
     ],
