@@ -172,7 +172,7 @@ const enContent: PageContent = {
     },
     {
       title: "Add tools to Claude Code",
-      href: "/guides/add-tools-to-claude-code",
+      href: "/guides/agent-skills-for-developer-tools",
       body: "Step-by-step setup for Opus 4.7 + AnyCap, end to end.",
     },
   ],
@@ -353,7 +353,7 @@ const ptBrContent: PageContent = {
     },
     {
       title: "Adicionar ferramentas ao Claude Code",
-      href: "/guides/add-tools-to-claude-code",
+      href: "/guides/agent-skills-for-developer-tools",
       body: "Setup ponta a ponta do Opus 4.7 + AnyCap.",
     },
   ],
@@ -533,7 +533,7 @@ const deContent: PageContent = {
     },
     {
       title: "Tools zu Claude Code hinzufügen",
-      href: "/guides/add-tools-to-claude-code",
+      href: "/guides/agent-skills-for-developer-tools",
       body: "Schritt-für-Schritt-Setup für Opus 4.7 + AnyCap, von Anfang bis Ende.",
     },
   ],
@@ -714,7 +714,7 @@ const idContent: PageContent = {
     },
     {
       title: "Tambah tools ke Claude Code",
-      href: "/guides/add-tools-to-claude-code",
+      href: "/guides/agent-skills-for-developer-tools",
       body: "Setup step-by-step untuk Opus 4.7 + AnyCap, end to end.",
     },
   ],

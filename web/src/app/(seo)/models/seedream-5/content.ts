@@ -19,7 +19,7 @@ const contentByLocale = {
     metadata: {
       title: "Seedream 5 (ByteDance) for AI agents — Image generation through AnyCap",
       description:
-        "Seedream 5 is ByteDance's 2026 AI image generation model. Call it from any AI agent through AnyCap, alongside Nano Banana 2/Pro, GPT Image, and Imagen 4.",
+        "Seedream 5 is available through AnyCap as an active image generation and refinement model. Call it from AI agents with the exact CLI model ID seedream-5.",
       openGraphTitle: "Seedream 5 (ByteDance) for AI agents — Image generation through AnyCap",
       openGraphDescription:
         "Use ByteDance's Seedream 5 image model through AnyCap when AI agents need polished image generation with one CLI and one capability runtime.",
@@ -112,33 +112,33 @@ const contentByLocale = {
       { spec: "Style fit", value: "Product, editorial, brand visuals — less effective for stylized illustration" },
       { spec: "AnyCap CLI", value: "anycap image generate --model seedream-5" },
     ],
-    multiModelTitle: "Seedream 5 vs Nano Banana 2 vs GPT Image 1.5 vs Imagen 4",
+    multiModelTitle: "Seedream 5 vs Nano Banana 2 vs GPT Image 2",
     multiModelIntro:
-      "All four are top-tier image models in 2026. Seedream 5 is the polished default for marketing visuals; the others lead in different lanes. Agents can switch with one CLI flag in AnyCap.",
+      "These models are all active in the current AnyCap image catalog. Seedream 5 is a practical choice for polished image generation and refinement, while Nano Banana 2 and GPT Image 2 fit adjacent workflows. Agents can switch with one CLI flag in AnyCap.",
     multiModelHeaders: {
       dimension: "Dimension",
       kling: "Seedream 5",
       veo: "Nano Banana 2",
-      seedance: "GPT Image 1.5",
+      seedance: "GPT Image 2",
     },
     multiModelRows: [
       {
         dimension: "Best fit",
         kling: "Marketing, product, brand visuals",
-        veo: "Knowledge-grounded, web-aware images",
-        seedance: "Highest LM Arena score, broad strength",
+        veo: "Fast iteration and high-volume variants",
+        seedance: "General-purpose OpenAI image generation and editing",
       },
       {
         dimension: "Style fidelity",
         kling: "Strong on clean studio looks",
-        veo: "Good across many styles",
-        seedance: "Best overall prompt fidelity",
+        veo: "Good for rapid concept exploration",
+        seedance: "Useful when the workflow prefers the OpenAI image family",
       },
       {
         dimension: "Iteration loop",
         kling: "Pair with Nano Banana Pro for edits",
-        veo: "Can edit + regenerate in same pass",
-        seedance: "Strong inpainting + reference workflows",
+        veo: "Good for fast batches and image-to-image iteration",
+        seedance: "Supports text-to-image and image-to-image through AnyCap",
       },
       {
         dimension: "Cost band",
@@ -150,7 +150,7 @@ const contentByLocale = {
         dimension: "AnyCap CLI",
         kling: "--model seedream-5",
         veo: "--model nano-banana-2",
-        seedance: "Coming soon",
+        seedance: "--model gpt-image-2",
       },
     ],
     comparisonTitle: "Seedream 5 vs nearby choices",
@@ -196,7 +196,7 @@ const contentByLocale = {
       {
         question: "Seedream 5 vs Nano Banana 2 — which is better?",
         answer:
-          "Seedream 5 leads on polished marketing-grade composition and clean studio lighting. Nano Banana 2 leads on knowledge-grounded, web-aware image generation. Pick based on whether the brief is brand visual or knowledge-driven.",
+          "Use Seedream 5 when the brief needs a more polished first-pass image or controlled visual refinement. Use Nano Banana 2 when the workflow needs faster iteration, more variants, or lower-latency image generation at scale.",
       },
       {
         question: "Does Seedream 5 support image-to-image refinement?",

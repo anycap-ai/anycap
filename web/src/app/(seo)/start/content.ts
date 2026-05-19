@@ -136,7 +136,7 @@ const gapEntrances: readonly Omit<StartGapEntrance, "summary">[] = [
   {
     eyebrow: "Problem intent",
     title: "What agents still can't do",
-    href: "/learn/what-agents-cant-do",
+    href: "/learn/what-is-the-most-advanced-ai",
   },
   {
     eyebrow: "Capability hub",

@@ -187,7 +187,7 @@ export default async function ForClaudeCodePage() {
                 <p className="mt-6 text-sm leading-6 text-[#5a5e52]">
                   {content.install.walkthroughPrefix}{" "}
                   <Link
-                    href="/guides/install-anycap"
+                    href="/start"
                     className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"
                   >
                     {content.install.walkthroughLinkLabel}
@@ -367,7 +367,7 @@ export default async function ForClaudeCodePage() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/guides/add-tools-to-claude-code"
+                  href="/guides/agent-skills-for-developer-tools"
                   className="inline-block rounded-lg bg-[#6b7d3a] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#f4f5f0] transition-colors hover:bg-[#1c1f17]"
                   style={mono}
                 >

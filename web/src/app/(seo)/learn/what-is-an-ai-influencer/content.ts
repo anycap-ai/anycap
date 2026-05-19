@@ -330,7 +330,7 @@ const enContent = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Use this when you want to move from the definition into a working CLI workflow.",
         },
       ],
@@ -657,7 +657,7 @@ const contentByLocale = {
         },
         {
           title: "Instalar AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Use isto quando quiser sair da definição e entrar em um workflow funcional de CLI.",
         },
       ],
@@ -981,7 +981,7 @@ const contentByLocale = {
         },
         {
           title: "Install AnyCap",
-          href: "/guides/install-anycap",
+          href: "/start",
           body: "Gunakan ini ketika kamu ingin berpindah dari definisi menuju workflow CLI yang benar-benar bekerja.",
         },
       ],

@@ -18,21 +18,13 @@ import { getForCursorMetadata } from "@/app/(seo)/for/cursor/content";
 import { getGlossaryMetadata } from "@/app/(seo)/glossary/content";
 import {
   getAgentHarnessGlossaryMetadata,
-  getContextEngineeringGlossaryMetadata,
-  getMcpGlossaryMetadata,
   getAgenticWorkflowGlossaryMetadata,
 } from "@/app/(seo)/glossary/content";
-import { getAddToolsToClaudeCodeMetadata } from "@/app/(seo)/guides/add-tools-to-claude-code/content";
 import { getContextEngineeringForAgentsMetadata } from "@/app/(seo)/guides/context-engineering-for-agents/content";
-import { getAgentCapabilityRuntimeMetadata } from "@/app/(seo)/glossary/agent-capability-runtime/content";
 import { getGuidesMetadata } from "@/app/(seo)/guides/content";
 import { getMcpVsSkillsMetadata } from "@/app/(seo)/guides/mcp-vs-skills/content";
 import { getLearnMetadata } from "@/app/(seo)/learn/content";
-import { getAIChatbotVsAIAgentForSaaSMetadata } from "@/app/(seo)/learn/ai-chatbot-vs-ai-agent-for-saas/content";
-import { getBestAICodingAgentsMetadata } from "@/app/(seo)/learn/best-ai-for-coding-agents/content";
-import { getBestAIForClaudeCodeMetadata } from "@/app/(seo)/learn/best-ai-for-claude-code/content";
 import { getBestAICursorMetadata } from "@/app/(seo)/learn/best-ai-for-cursor/content";
-import { getWhatAgentsCantDoMetadata } from "@/app/(seo)/learn/what-agents-cant-do/content";
 import { getWhatIsTheMostAdvancedAIMetadata } from "@/app/(seo)/learn/what-is-the-most-advanced-ai/content";
 import { getSkillsMetadata } from "@/app/(seo)/skills/content";
 import { getPrivacyMetadata } from "@/app/(seo)/privacy/content";
@@ -66,20 +58,12 @@ const localizedMetadataByRouteKey: Partial<
   "for-cursor": getForCursorMetadata,
   glossary: getGlossaryMetadata,
   "glossary-agent-harness": getAgentHarnessGlossaryMetadata,
-  "glossary-agent-capability-runtime": getAgentCapabilityRuntimeMetadata,
-  "glossary-context-engineering": getContextEngineeringGlossaryMetadata,
-  "glossary-model-context-protocol": getMcpGlossaryMetadata,
   "glossary-agentic-workflow": getAgenticWorkflowGlossaryMetadata,
   guides: getGuidesMetadata,
-  "guides-add-tools-to-claude-code": getAddToolsToClaudeCodeMetadata,
   "guides-context-engineering-for-agents":
     getContextEngineeringForAgentsMetadata,
   learn: getLearnMetadata,
-  "learn-ai-chatbot-vs-ai-agent-for-saas": getAIChatbotVsAIAgentForSaaSMetadata,
-  "learn-best-ai-for-claude-code": getBestAIForClaudeCodeMetadata,
-  "learn-best-ai-for-coding-agents": getBestAICodingAgentsMetadata,
   "learn-best-ai-for-cursor": getBestAICursorMetadata,
-  "learn-what-agents-cant-do": getWhatAgentsCantDoMetadata,
   "learn-what-is-the-most-advanced-ai": getWhatIsTheMostAdvancedAIMetadata,
   privacy: getPrivacyMetadata,
   skills: getSkillsMetadata,

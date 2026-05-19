@@ -380,7 +380,7 @@ const enContent: LocalizedPageContent = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Use this when you want to run the still-first video workflow locally.",
       },
       {
@@ -650,7 +650,7 @@ const contentByLocale = {
       },
       {
         title: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Use esta página quando quiser rodar o workflow still-first localmente.",
       },
       {
@@ -917,7 +917,7 @@ const contentByLocale = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Gunakan halaman ini jika kamu ingin menjalankan workflow still-first secara lokal.",
       },
       {

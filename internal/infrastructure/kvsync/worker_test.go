@@ -2,7 +2,10 @@ package kvsync
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -106,6 +109,31 @@ func (p *fakeProjector) Project(_ context.Context, _ model.KVSyncJob) (ProjectRe
 	return p.result, p.err
 }
 
+type flakyClaimJobRepo struct {
+	*fakeJobRepo
+	claimFailures atomic.Int32
+	markedDone    chan struct{}
+}
+
+func (r *flakyClaimJobRepo) ClaimNext(ctx context.Context, workerID string, now time.Time) (*model.KVSyncJob, error) {
+	if r.claimFailures.Add(-1) >= 0 {
+		return nil, fmt.Errorf("temporary claim failure")
+	}
+	return r.fakeJobRepo.ClaimNext(ctx, workerID, now)
+}
+
+func (r *flakyClaimJobRepo) MarkDone(ctx context.Context, id int64) error {
+	err := r.fakeJobRepo.MarkDone(ctx, id)
+	if err == nil && r.markedDone != nil {
+		select {
+		case <-r.markedDone:
+		default:
+			close(r.markedDone)
+		}
+	}
+	return err
+}
+
 func TestWorker_ProcessOne_Done(t *testing.T) {
 	repo := &fakeJobRepo{}
 	_, _ = repo.Create(context.Background(), model.KVSyncJob{
@@ -175,6 +203,49 @@ func TestWorker_ProcessOne_FailedToDead(t *testing.T) {
 	}
 }
 
+func TestWorker_RunContinuesAfterTransientClaimError(t *testing.T) {
+	baseRepo := &fakeJobRepo{}
+	_, _ = baseRepo.Create(context.Background(), model.KVSyncJob{
+		JobType:     "job-1",
+		TargetID:    "1",
+		EdgeVersion: 1,
+		MaxAttempts: 3,
+	})
+	repo := &flakyClaimJobRepo{
+		fakeJobRepo: baseRepo,
+		markedDone:  make(chan struct{}),
+	}
+	repo.claimFailures.Store(1)
+
+	worker := NewWorker(repo, map[string]Projector{
+		"job-1": &fakeProjector{result: ProjectResultDone},
+	}, WorkerConfig{WorkerID: "w1", PollInterval: time.Millisecond})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- worker.Run(ctx)
+	}()
+
+	select {
+	case <-repo.markedDone:
+	case <-time.After(200 * time.Millisecond):
+		cancel()
+		t.Fatal("expected worker to continue and process job after transient claim error")
+	}
+
+	cancel()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("worker did not stop after context cancellation")
+	}
+}
+
 func TestWaiter_WaitDone(t *testing.T) {
 	repo := &fakeJobRepo{}
 	job, _ := repo.Create(context.Background(), model.KVSyncJob{
@@ -196,6 +267,35 @@ func TestWaiter_WaitDone(t *testing.T) {
 
 	if err := waiter.Wait(context.Background(), []int64{job.ID}); err != nil {
 		t.Fatalf("Wait() error = %v", err)
+	}
+}
+
+func TestWaiter_UsesConfiguredTimeoutWhenParentDeadlineIsLonger(t *testing.T) {
+	repo := &fakeJobRepo{}
+	job, _ := repo.Create(context.Background(), model.KVSyncJob{
+		JobType:     "job-1",
+		TargetID:    "1",
+		EdgeVersion: 1,
+		MaxAttempts: 3,
+	})
+
+	waiter := NewWaiter(repo, WaiterConfig{
+		PollInterval: 5 * time.Millisecond,
+		Timeout:      20 * time.Millisecond,
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+	defer cancel()
+
+	start := time.Now()
+	err := waiter.Wait(ctx, []int64{job.ID})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline exceeded, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "pending=1{status=pending attempts=0/3}") {
+		t.Fatalf("expected pending job diagnostics, got %v", err)
+	}
+	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
+		t.Fatalf("waiter ignored configured timeout; elapsed=%s", elapsed)
 	}
 }
 

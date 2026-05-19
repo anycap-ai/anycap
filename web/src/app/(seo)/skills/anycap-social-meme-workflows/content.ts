@@ -192,7 +192,7 @@ const contentEn: SkillDetailPageData = {
     { label: "View all skills", href: "/skills", variant: "primary" },
     { label: "Image Generation", href: "/capabilities/image-generation", variant: "secondary" },
     { label: "Claude Code", href: "/for/claude-code", variant: "secondary" },
-    { label: "Install AnyCap", href: "/guides/install-anycap", variant: "secondary" },
+    { label: "Install AnyCap", href: "/start", variant: "secondary" },
   ],
 };
 

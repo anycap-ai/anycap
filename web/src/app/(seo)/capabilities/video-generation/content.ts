@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 import { type DemoLine } from "@/components/landing/CapabilityDemo";
+import { getCatalogModelsByCapability } from "@/lib/seo/model-catalog";
 
 export const VIDEO_GENERATION_PATH = "/capabilities/video-generation";
 
@@ -113,13 +114,13 @@ const contentByLocale = {
     metadata: {
       title: "Video Generation API for AI agents - Text-to-video and image-to-video",
       description:
-        "Give AI agents video generation through AnyCap. Use Veo 3.1, Kling 3.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
+        "Give AI agents video generation through AnyCap. Use active models such as Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
       openGraphTitle: "Video Generation API for AI agents - Text-to-video and image-to-video",
       openGraphDescription:
-        "Give AI agents video generation through AnyCap. Use Veo 3.1, Kling 3.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
+        "Give AI agents video generation through AnyCap. Use active models such as Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
       articleHeadline: "Video Generation API for AI agents - Text-to-video and image-to-video",
       articleDescription:
-        "Capability guide for using AnyCap video generation across AI agent workflows with Veo 3.1, Kling 3.0, and Seedance 1.5 Pro.",
+        "Capability guide for using AnyCap video generation across AI agent workflows with active video models including Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro.",
       articleAbout: ["Video generation", "Text-to-video API", "Image-to-video", "AnyCap"],
       articleKeywords: [
         "video generation for ai agents",
@@ -200,10 +201,10 @@ const contentByLocale = {
     decisionCardAriaLabelTemplate: "Read the {title} model guide",
     decisionCards: [
       {
-        eyebrow: "Premium first pass",
-        title: "Veo 3.1",
-        href: "/models/veo-3-1",
-        body: "Best when the text brief needs to become a more polished teaser or concept clip on the first generation.",
+        eyebrow: "Newer Seedance default",
+        title: "Seedance 2.0",
+        href: "/models/seedance-2",
+        body: "Best when the agent needs the newer Seedance entry for cinematic product videos and polished image-to-video workflows.",
       },
       {
         eyebrow: "Cinematic motion",
@@ -212,10 +213,10 @@ const contentByLocale = {
         body: "Best when the workflow wants stronger motion style or more flexible image-to-video iteration.",
       },
       {
-        eyebrow: "Repeatable production",
-        title: "Seedance 1.5 Pro",
-        href: "/models/seedance-1-5-pro",
-        body: "Best when the team values steadier image-to-video output and a more repeatable production workflow.",
+        eyebrow: "Premium first pass",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Best when the text brief needs to become a more polished teaser or concept clip on the first generation.",
       },
     ] as const,
     supportedModelsTitle: "Supported models",
@@ -254,7 +255,7 @@ const contentByLocale = {
       {
         title: "Image-to-video",
         code:
-          'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+          'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param images=./frame.jpg -o animated.mp4',
       },
       {
         title: "Discover models",
@@ -314,7 +315,7 @@ const contentByLocale = {
       {
         question: "Which video models are available through AnyCap today?",
         answer:
-          "The current public video generation surface includes Veo 3.1, Kling 3.0, and Seedance 1.5 Pro. Each model is available through the same AnyCap video generation API, CLI, and auth flow.",
+          "The current AnyCap video generation catalog includes Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast, and Seedance 1.5 Pro. Each listed model is available through the same AnyCap video generation API, CLI, and auth flow.",
       },
       {
         question: "Why does this page include image-to-video as well as text-to-video?",
@@ -431,10 +432,10 @@ const contentByLocale = {
     decisionCardAriaLabelTemplate: "Ler o guia do modelo {title}",
     decisionCards: [
       {
-        eyebrow: "Primeira versão premium",
-        title: "Veo 3.1",
-        href: "/models/veo-3-1",
-        body: "Melhor quando o briefing textual precisa virar um teaser ou clipe conceitual mais polido na primeira geração.",
+        eyebrow: "Novo padrão Seedance",
+        title: "Seedance 2.0",
+        href: "/models/seedance-2",
+        body: "Melhor quando o agente precisa da entrada mais nova da família Seedance para vídeos de produto cinematográficos e fluxos imagem para vídeo mais polidos.",
       },
       {
         eyebrow: "Movimento cinematográfico",
@@ -443,10 +444,10 @@ const contentByLocale = {
         body: "Melhor quando o fluxo quer um estilo de movimento mais forte ou uma iteração de imagem para vídeo mais flexível.",
       },
       {
-        eyebrow: "Produção repetível",
-        title: "Seedance 1.5 Pro",
-        href: "/models/seedance-1-5-pro",
-        body: "Melhor quando a equipe valoriza uma saída de imagem para vídeo mais estável e um fluxo de produção mais repetível.",
+        eyebrow: "Primeira versão premium",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Melhor quando o briefing textual precisa virar um teaser ou clipe conceitual mais polido na primeira geração.",
       },
     ] as const,
     supportedModelsTitle: "Modelos suportados",
@@ -485,7 +486,7 @@ const contentByLocale = {
       {
         title: "Imagem para vídeo",
         code:
-          'anycap video generate --prompt "anime este frame em um movimento sutil de câmera" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+          'anycap video generate --prompt "anime este frame em um movimento sutil de câmera" --model seedance-1.5-pro --mode image-to-video --param images=./frame.jpg -o animated.mp4',
       },
       {
         title: "Descobrir modelos",
@@ -549,7 +550,7 @@ const contentByLocale = {
       {
         question: "Quais modelos de vídeo estão disponíveis no AnyCap hoje?",
         answer:
-          "A superfície pública atual de geração de vídeo inclui Veo 3.1, Kling 3.0 e Seedance 1.5 Pro. Cada modelo está disponível pela mesma API de geração de vídeo, CLI e fluxo de autenticação do AnyCap.",
+          "O catálogo atual de geração de vídeo do AnyCap inclui Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast e Seedance 1.5 Pro. Cada modelo listado está disponível pela mesma API de geração de vídeo, CLI e fluxo de autenticação do AnyCap.",
       },
       {
         question: "Por que esta página inclui imagem para vídeo além de texto para vídeo?",
@@ -665,10 +666,10 @@ const contentByLocale = {
     decisionCardAriaLabelTemplate: "Baca panduan model {title}",
     decisionCards: [
       {
-        eyebrow: "First pass premium",
-        title: "Veo 3.1",
-        href: "/models/veo-3-1",
-        body: "Terbaik saat briefing teks perlu menjadi teaser atau konsep klip yang lebih rapi pada generasi pertama.",
+        eyebrow: "Default Seedance terbaru",
+        title: "Seedance 2.0",
+        href: "/models/seedance-2",
+        body: "Terbaik saat agen membutuhkan entri Seedance yang lebih baru untuk video produk sinematik dan workflow image-to-video yang lebih rapi.",
       },
       {
         eyebrow: "Gerakan sinematik",
@@ -677,10 +678,10 @@ const contentByLocale = {
         body: "Terbaik saat alur membutuhkan gaya gerakan yang lebih kuat atau iterasi image-to-video yang lebih fleksibel.",
       },
       {
-        eyebrow: "Produksi yang dapat diulang",
-        title: "Seedance 1.5 Pro",
-        href: "/models/seedance-1-5-pro",
-        body: "Terbaik saat tim mengutamakan output image-to-video yang lebih stabil dan alur produksi yang lebih mudah diulang.",
+        eyebrow: "First pass premium",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Terbaik saat briefing teks perlu menjadi teaser atau konsep klip yang lebih rapi pada generasi pertama.",
       },
     ] as const,
     supportedModelsTitle: "Model yang didukung",
@@ -719,7 +720,7 @@ const contentByLocale = {
       {
         title: "Image-to-video",
         code:
-          'anycap video generate --prompt "animasikan still ini menjadi gerakan kamera yang halus" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+          'anycap video generate --prompt "animasikan still ini menjadi gerakan kamera yang halus" --model seedance-1.5-pro --mode image-to-video --param images=./frame.jpg -o animated.mp4',
       },
       {
         title: "Temukan model",
@@ -783,7 +784,7 @@ const contentByLocale = {
       {
         question: "Model video apa saja yang tersedia di AnyCap sekarang?",
         answer:
-          "Surface generasi video publik saat ini mencakup Veo 3.1, Kling 3.0, dan Seedance 1.5 Pro. Setiap model tersedia lewat API generasi video, CLI, dan alur autentikasi AnyCap yang sama.",
+          "Katalog generasi video AnyCap saat ini mencakup Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast, dan Seedance 1.5 Pro. Setiap model yang tercantum tersedia lewat API generasi video, CLI, dan alur autentikasi AnyCap yang sama.",
       },
       {
         question: "Mengapa halaman ini menyertakan image-to-video selain text-to-video?",
@@ -899,10 +900,10 @@ const contentByLocale = {
     decisionCardAriaLabelTemplate: "Modell-Leitfaden zu {title} lesen",
     decisionCards: [
       {
-        eyebrow: "Premium-Erstpass",
-        title: "Veo 3.1",
-        href: "/models/veo-3-1",
-        body: "Geeignet, wenn das Text-Briefing schon beim ersten Lauf zu einem polierten Teaser oder Konzept-Clip werden soll.",
+        eyebrow: "Neuerer Seedance-Standard",
+        title: "Seedance 2.0",
+        href: "/models/seedance-2",
+        body: "Geeignet, wenn der Agent den neueren Seedance-Eintrag für cinematische Produktvideos und poliertere Image-to-Video-Workflows braucht.",
       },
       {
         eyebrow: "Cinematische Bewegung",
@@ -911,10 +912,10 @@ const contentByLocale = {
         body: "Geeignet, wenn der Workflow stärkere Bewegungsstile oder flexiblere Image-to-Video-Iteration braucht.",
       },
       {
-        eyebrow: "Wiederholbare Produktion",
-        title: "Seedance 1.5 Pro",
-        href: "/models/seedance-1-5-pro",
-        body: "Geeignet, wenn das Team stabileren Image-to-Video-Output und einen besser wiederholbaren Produktions-Workflow schätzt.",
+        eyebrow: "Premium-Erstpass",
+        title: "Veo 3.1",
+        href: "/models/veo-3-1",
+        body: "Geeignet, wenn das Text-Briefing schon beim ersten Lauf zu einem polierten Teaser oder Konzept-Clip werden soll.",
       },
     ] as const,
     supportedModelsTitle: "Unterstützte Modelle",
@@ -953,7 +954,7 @@ const contentByLocale = {
       {
         title: "Image-to-Video",
         code:
-          'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param reference_image_urls=\'["https://example.com/frame.jpg"]\' -o animated.mp4',
+          'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param images=./frame.jpg -o animated.mp4',
       },
       {
         title: "Modelle entdecken",
@@ -1013,7 +1014,7 @@ const contentByLocale = {
       {
         question: "Welche Video-Modelle sind heute über AnyCap verfügbar?",
         answer:
-          "Aktuell öffentlich verfügbar sind Veo 3.1, Kling 3.0 und Seedance 1.5 Pro. Jedes Modell ist über dieselbe AnyCap-Videogenerierungs-API, dieselbe CLI und denselben Auth-Flow erreichbar.",
+          "Der aktuelle AnyCap-Katalog für Videogenerierung umfasst Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast und Seedance 1.5 Pro. Jedes gelistete Modell ist über dieselbe AnyCap-Videogenerierungs-API, dieselbe CLI und denselben Auth-Flow erreichbar.",
       },
       {
         question: "Warum behandelt diese Seite Image-to-Video sowie Text-to-Video?",
@@ -1039,6 +1040,34 @@ const contentByLocale = {
     ] as const,
   },
 } as const satisfies Record<SiteLocale, VideoGenerationPageContent>;
+
+function getCatalogVideoModels(): VideoGenerationModel[] {
+  const priority = new Map(
+    [
+      "seedance-2",
+      "kling-3.0",
+      "seedance-2-fast",
+      "veo-3.1",
+      "veo-3.1-fast",
+      "sora-2-pro",
+      "seedance-1.5-pro",
+      "kling-o1",
+    ].map((modelId, index) => [modelId, index]),
+  );
+
+  return getCatalogModelsByCapability("video")
+    .filter((model) => model.modelId !== "hailuo-2.3")
+    .sort(
+      (left, right) =>
+        (priority.get(left.modelId) ?? 99) - (priority.get(right.modelId) ?? 99),
+    )
+    .map((model) => ({
+      name: model.displayName,
+      href: model.path,
+      modes: model.modes.join(", "),
+      bestFor: model.bestFor,
+    }));
+}
 
 export function getVideoGenerationMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
@@ -1073,6 +1102,7 @@ export function getVideoGenerationPageData(locale: SiteLocale) {
 
   return {
     ...content,
+    models: getCatalogVideoModels(),
     capabilityGuideJsonLd,
     faqJsonLd: createFaqPageJsonLd(content.faqItems),
   };

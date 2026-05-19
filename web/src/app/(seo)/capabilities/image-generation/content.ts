@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 import { type DemoLine } from "@/components/landing/CapabilityDemo";
+import { getCatalogModelsByCapability } from "@/lib/seo/model-catalog";
 
 export const IMAGE_GENERATION_PATH = "/capabilities/image-generation";
 
@@ -113,13 +114,13 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
     metadata: {
       title: "Image Generation API for AI Agents | AnyCap",
       description:
-        "Give AI agents and creators image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
+        "Give AI agents and creators image generation through AnyCap. Use active models such as Seedream 5, GPT Image 2, FLUX.1 Kontext Max, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
       openGraphTitle: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
       openGraphDescription:
-        "Give AI agents and creators image generation through AnyCap. Use Seedream 5, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
+        "Give AI agents and creators image generation through AnyCap. Use active models such as Seedream 5, GPT Image 2, FLUX.1 Kontext Max, Nano Banana Pro, and Nano Banana 2 for text-to-image, image-to-image, and image editing workflows through one CLI.",
       articleHeadline: "Image Generation API for AI agents, creators, and teams - Text-to-image and image editing",
       articleDescription:
-        "Capability guide for using AnyCap image generation across AI agent, creator, and product workflows with Seedream 5, Nano Banana Pro, and Nano Banana 2.",
+        "Capability guide for using AnyCap image generation across AI agent, creator, and product workflows with active image models including Seedream 5, GPT Image 2, FLUX.1 Kontext Max, Nano Banana Pro, and Nano Banana 2.",
       articleAbout: ["Image generation", "Text-to-image API", "Image editing API", "AnyCap", "Creators"],
       articleKeywords: [
         "image generation for ai agents",
@@ -149,7 +150,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       eyebrow: "Used with Claude Opus 4.7",
       title: "Claude Code on Opus 4.7 + AnyCap image generation = insane",
       body:
-        "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate images. Pair it with AnyCap and the same terminal session reaches Seedream 5, Nano Banana Pro, and Nano Banana 2 through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for image-heavy agent workflows in 2026.",
+        "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate images. Pair it with AnyCap and the same terminal session reaches the active AnyCap image catalog, including Seedream 5, GPT Image 2, FLUX.1 Kontext Max, Nano Banana Pro, and Nano Banana 2 through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for image-heavy agent workflows in 2026.",
       ctas: [
         { label: "Claude Code image generation →", href: "/for/claude-code/image-generation" },
         { label: "Claude Opus 4.7 capabilities →", href: "/learn/claude-opus-4-7-capabilities" },
@@ -207,6 +208,12 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         body: "Best when the workflow starts from a prompt and the first image needs to look closer to final.",
       },
       {
+        eyebrow: "OpenAI image stack",
+        title: "GPT Image 2",
+        href: "/models/gpt-image-2",
+        body: "Best when the agent workflow prefers OpenAI's image model family for general generation and prompt-driven edits.",
+      },
+      {
         eyebrow: "Revision loops",
         title: "Nano Banana Pro",
         href: "/models/nano-banana-pro",
@@ -255,7 +262,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         title: "Image-to-image editing",
         code:
-          'anycap image generate --prompt "turn this into a warm editorial product shot" --model nano-banana-pro --mode image-to-image --param reference_image_urls=\'["https://example.com/source.png"]\' -o variation.png',
+          'anycap image generate --prompt "turn this into a warm editorial product shot" --model nano-banana-pro --mode image-to-image --param images=./source.png -o variation.png',
       },
       {
         title: "Discover models",
@@ -332,7 +339,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         question: "Which image models are available through AnyCap today?",
         answer:
-          "The current public image generation surface includes Seedream 5, Nano Banana Pro, and Nano Banana 2. Each model supports text-to-image and image-to-image modes through the same AnyCap image generation API and CLI interface.",
+          "The current AnyCap image generation catalog includes Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, GPT Image 2, FLUX.1 Kontext Max, and Qwen Image. Each listed image model supports text-to-image and image-to-image modes through the same AnyCap image generation API and CLI interface.",
       },
       {
         question: "Why does this page mention image editing as well as image generation?",
@@ -465,6 +472,12 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         body: "Melhor quando o fluxo começa com um prompt e a primeira imagem precisa ficar mais próxima do resultado final.",
       },
       {
+        eyebrow: "Stack de imagem OpenAI",
+        title: "GPT Image 2",
+        href: "/models/gpt-image-2",
+        body: "Melhor quando o fluxo do agente prefere a família de modelos de imagem da OpenAI para geração geral e edições guiadas por prompt.",
+      },
+      {
         eyebrow: "Ciclos de revisão",
         title: "Nano Banana Pro",
         href: "/models/nano-banana-pro",
@@ -513,7 +526,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         title: "Edição de imagem para imagem",
         code:
-          'anycap image generate --prompt "transforme isso em uma foto editorial quente de produto" --model nano-banana-pro --mode image-to-image --param reference_image_urls=\'["https://example.com/source.png"]\' -o variation.png',
+          'anycap image generate --prompt "transforme isso em uma foto editorial quente de produto" --model nano-banana-pro --mode image-to-image --param images=./source.png -o variation.png',
       },
       {
         title: "Descobrir modelos",
@@ -576,7 +589,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         question: "Quais modelos de imagem estão disponíveis no AnyCap hoje?",
         answer:
-          "A superfície pública atual de geração de imagem inclui Seedream 5, Nano Banana Pro e Nano Banana 2. Cada modelo suporta modos de texto para imagem e imagem para imagem pela mesma API e CLI do AnyCap.",
+          "O catálogo atual de geração de imagem do AnyCap inclui Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, GPT Image 2, FLUX.1 Kontext Max e Qwen Image. Cada modelo de imagem listado suporta modos de texto para imagem e imagem para imagem pela mesma API e CLI do AnyCap.",
       },
       {
         question: "Por que esta página fala de edição de imagem além de geração de imagem?",
@@ -698,6 +711,12 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         body: "Terbaik saat alur dimulai dari prompt dan gambar pertama perlu terlihat mendekati hasil akhir.",
       },
       {
+        eyebrow: "Stack gambar OpenAI",
+        title: "GPT Image 2",
+        href: "/models/gpt-image-2",
+        body: "Terbaik saat workflow agen lebih memilih keluarga model gambar OpenAI untuk generasi umum dan edit berbasis prompt.",
+      },
+      {
         eyebrow: "Loop revisi",
         title: "Nano Banana Pro",
         href: "/models/nano-banana-pro",
@@ -746,7 +765,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         title: "Pengeditan image-to-image",
         code:
-          'anycap image generate --prompt "ubah ini menjadi foto produk editorial yang hangat" --model nano-banana-pro --mode image-to-image --param reference_image_urls=\'["https://example.com/source.png"]\' -o variation.png',
+          'anycap image generate --prompt "ubah ini menjadi foto produk editorial yang hangat" --model nano-banana-pro --mode image-to-image --param images=./source.png -o variation.png',
       },
       {
         title: "Temukan model",
@@ -807,7 +826,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         question: "Model gambar apa saja yang tersedia di AnyCap sekarang?",
         answer:
-          "Surface generasi gambar publik saat ini mencakup Seedream 5, Nano Banana Pro, dan Nano Banana 2. Setiap model mendukung mode text-to-image dan image-to-image lewat API dan CLI AnyCap yang sama.",
+          "Katalog generasi gambar AnyCap saat ini mencakup Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, GPT Image 2, FLUX.1 Kontext Max, dan Qwen Image. Setiap model gambar yang tercantum mendukung mode text-to-image dan image-to-image lewat API dan CLI AnyCap yang sama.",
       },
       {
         question: "Mengapa halaman ini membahas image editing selain generasi gambar?",
@@ -930,6 +949,12 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
         body: "Geeignet, wenn der Workflow mit einem Prompt beginnt und das erste Ergebnis schon nahe am finalen Look sein soll.",
       },
       {
+        eyebrow: "OpenAI-Bildstack",
+        title: "GPT Image 2",
+        href: "/models/gpt-image-2",
+        body: "Geeignet, wenn der Agenten-Workflow die OpenAI-Bildmodellfamilie für allgemeine Generierung und prompt-gesteuerte Edits bevorzugt.",
+      },
+      {
         eyebrow: "Überarbeitungsschleifen",
         title: "Nano Banana Pro",
         href: "/models/nano-banana-pro",
@@ -978,7 +1003,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         title: "Image-to-Image-Bearbeitung",
         code:
-          'anycap image generate --prompt "verwandle das in eine warme redaktionelle Produktaufnahme" --model nano-banana-pro --mode image-to-image --param reference_image_urls=\'["https://example.com/source.png"]\' -o variation.png',
+          'anycap image generate --prompt "verwandle das in eine warme redaktionelle Produktaufnahme" --model nano-banana-pro --mode image-to-image --param images=./source.png -o variation.png',
       },
       {
         title: "Modelle auflisten",
@@ -1043,7 +1068,7 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       {
         question: "Welche Bildmodelle sind heute über AnyCap verfügbar?",
         answer:
-          "Aktuell öffentlich verfügbar sind Seedream 5, Nano Banana Pro und Nano Banana 2. Jedes Modell unterstützt Text-to-Image- und Image-to-Image-Modi über dieselbe AnyCap-API und CLI.",
+          "Der aktuelle AnyCap-Katalog für Bildgenerierung umfasst Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2, GPT Image 2, FLUX.1 Kontext Max und Qwen Image. Jedes gelistete Bildmodell unterstützt Text-to-Image- und Image-to-Image-Modi über dieselbe AnyCap-API und CLI.",
       },
       {
         question: "Warum spricht diese Seite zusätzlich zur Bildgenerierung von Bildbearbeitung?",
@@ -1075,6 +1100,15 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
     ] as const,
   },
 };
+
+function getCatalogImageModels(): ImageGenerationModel[] {
+  return getCatalogModelsByCapability("image").map((model) => ({
+    name: model.displayName,
+    href: model.path,
+    modes: model.modes.join(", "),
+    bestFor: model.bestFor,
+  }));
+}
 
 export function getImageGenerationMetadata(locale: SiteLocale): Metadata {
   const content = contentByLocale[locale] ?? contentByLocale.en;
@@ -1109,6 +1143,7 @@ export function getImageGenerationPageData(locale: SiteLocale) {
 
   return {
     ...content,
+    models: getCatalogImageModels(),
     capabilityGuideJsonLd,
     faqJsonLd: createFaqPageJsonLd(content.faqItems),
   };

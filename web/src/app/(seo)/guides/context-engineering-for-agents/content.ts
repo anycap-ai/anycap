@@ -69,7 +69,7 @@ const en: ContextEngineeringForAgentsPageData = {
     "Need to review a recording? anycap video read",
   ],
   cta: [
-    { label: "Capability Runtime", href: "/glossary/agent-capability-runtime" },
+    { label: "Capability Runtime", href: "/glossary/agent-harness" },
     { label: "Image Generation", href: "/capabilities/image-generation" },
     { label: "Video Analysis", href: "/capabilities/video-analysis" },
   ],
@@ -121,7 +121,7 @@ const ptBr: ContextEngineeringForAgentsPageData = {
     "Precisa revisar uma gravação? anycap video read",
   ],
   cta: [
-    { label: "Runtime de capacidade", href: "/glossary/agent-capability-runtime" },
+    { label: "Runtime de capacidade", href: "/glossary/agent-harness" },
     { label: "Geração de imagem", href: "/capabilities/image-generation" },
     { label: "Análise de vídeo", href: "/capabilities/video-analysis" },
   ],
@@ -176,7 +176,7 @@ const contentByLocale: Record<SiteLocale, ContextEngineeringForAgentsPageData> =
       "Butuh meninjau rekaman? anycap video read",
     ],
     cta: [
-      { label: "Runtime Kapabilitas", href: "/glossary/agent-capability-runtime" },
+      { label: "Runtime Kapabilitas", href: "/glossary/agent-harness" },
       { label: "Pembuatan Gambar", href: "/capabilities/image-generation" },
       { label: "Analisis Video", href: "/capabilities/video-analysis" },
     ],
@@ -227,7 +227,7 @@ const contentByLocale: Record<SiteLocale, ContextEngineeringForAgentsPageData> =
       "Aufnahme analysieren? anycap video read",
     ],
     cta: [
-      { label: "Capability-Runtime", href: "/glossary/agent-capability-runtime" },
+      { label: "Capability-Runtime", href: "/glossary/agent-harness" },
       { label: "Bildgenerierung", href: "/capabilities/image-generation" },
       { label: "Videoanalyse", href: "/capabilities/video-analysis" },
     ],

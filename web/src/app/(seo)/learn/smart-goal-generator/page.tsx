@@ -439,7 +439,7 @@ export default function SmartGoalGeneratorPage() {
                 coding agent can run the retrieval loop first, then draft the final goal. If you
                 need the full setup path, the fastest entry point is still the{" "}
                 <Link
-                  href="/guides/install-anycap"
+                  href="/start"
                   className="underline decoration-[#d4dbb8] underline-offset-2 transition-colors hover:text-[#6b7d3a] hover:decoration-[#6b7d3a]"
                 >
                   install guide

@@ -9,6 +9,7 @@ import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
 import { pricingGenerationGroups, type PricingGenerationGroup } from "@/lib/capability-inventory";
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
+import { catalogModels } from "@/lib/seo/model-catalog";
 
 export const runtime = "edge";
 
@@ -27,6 +28,10 @@ type ModelGroupCard = {
 };
 
 type ModelGuideLookup = Record<string, { href: string; bestFor: string }>;
+
+const catalogModelByDisplayName = Object.fromEntries(
+  catalogModels.map((model) => [model.displayName, model]),
+);
 
 type PageContent = {
   breadcrumbItems: readonly { name: string; href: string }[];
@@ -795,7 +800,7 @@ contentByLocale.de = {
 export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/models", {
   title: "Models — Multimodal models available through AnyCap",
   description:
-    "Multimodal models available through AnyCap: Seedream 5, Nano Banana Pro, Veo 3.1, Kling 3.0, Seedance 1.5 Pro, and ElevenLabs Music for AI agent workflows.",
+    "Multimodal models available through AnyCap for AI agent workflows, including active image, video, and music models with CLI IDs, modes, and workflow guidance.",
   openGraph: {
     type: "website",
     title: "Models — Multimodal models available through AnyCap",
@@ -931,6 +936,11 @@ export default async function ModelsPage() {
                         <tbody>
                           {group.models.map((model) => {
                             const guide = content.guideLookup[model.model];
+                            const catalogModel = catalogModelByDisplayName[model.model];
+                            const modelGuide = guide ?? {
+                              href: catalogModel?.path ?? "/models",
+                              bestFor: catalogModel?.bestFor ?? content.summaryBody,
+                            };
 
                             return (
                               <tr
@@ -939,7 +949,7 @@ export default async function ModelsPage() {
                               >
                                 <td className="px-5 py-4 text-sm font-medium text-[#1c1f17]">
                                   <Link
-                                    href={guide.href}
+                                    href={modelGuide.href}
                                     className="transition-colors hover:text-[#6b7d3a]"
                                   >
                                     {model.model}
@@ -952,7 +962,7 @@ export default async function ModelsPage() {
                                   {model.credits}
                                 </td>
                                 <td className="px-5 py-4 text-sm leading-6 text-[#4d5145]">
-                                  {guide.bestFor}
+                                  {modelGuide.bestFor}
                                 </td>
                               </tr>
                             );

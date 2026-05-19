@@ -264,7 +264,7 @@ const en: ComparePageData = {
       body: "Explore the full landscape of fal.ai alternatives for agent-first development teams.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Start here",
       title: "Install AnyCap",
       body: "Try the agent capability runtime directly in your agent workflow.",
@@ -299,7 +299,7 @@ const en: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Install AnyCap", variant: "primary" },
+    { href: "/start", label: "Install AnyCap", variant: "primary" },
     { href: "/compare/anycap-vs-fal-ai", label: "AnyCap vs fal.ai", variant: "secondary" },
     { href: "/compare/anycap-vs-replicate", label: "AnyCap vs Replicate", variant: "secondary" },
   ],
@@ -324,7 +324,7 @@ const ptBr: ComparePageData = {
   lastUpdatedLabel: "20 de abril de 2026",
   comparisonHeaders: { dimension: "Dimensão", fal: "fal.ai", replicate: "Replicate" },
   ctas: [
-    { href: "/guides/install-anycap", label: "Instalar o AnyCap", variant: "primary" },
+    { href: "/start", label: "Instalar o AnyCap", variant: "primary" },
     { href: "/compare/anycap-vs-fal-ai", label: "AnyCap vs fal.ai", variant: "secondary" },
     { href: "/compare/anycap-vs-replicate", label: "AnyCap vs Replicate", variant: "secondary" },
   ],
@@ -349,7 +349,7 @@ const id: ComparePageData = {
   lastUpdatedLabel: "20 April 2026",
   comparisonHeaders: { dimension: "Dimensi", fal: "fal.ai", replicate: "Replicate" },
   ctas: [
-    { href: "/guides/install-anycap", label: "Instal AnyCap", variant: "primary" },
+    { href: "/start", label: "Instal AnyCap", variant: "primary" },
     { href: "/compare/anycap-vs-fal-ai", label: "AnyCap vs fal.ai", variant: "secondary" },
     { href: "/compare/anycap-vs-replicate", label: "AnyCap vs Replicate", variant: "secondary" },
   ],
@@ -374,7 +374,7 @@ const de: ComparePageData = {
   lastUpdatedLabel: "20. April 2026",
   comparisonHeaders: { dimension: "Dimension", fal: "fal.ai", replicate: "Replicate" },
   ctas: [
-    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/start", label: "AnyCap installieren", variant: "primary" },
     { href: "/compare/anycap-vs-fal-ai", label: "AnyCap vs fal.ai", variant: "secondary" },
     { href: "/compare/anycap-vs-replicate", label: "AnyCap vs Replicate", variant: "secondary" },
   ],

@@ -36,7 +36,7 @@ const lines: DemoLine[] = [
       "tool availability, memory, and execution constraints. [1][2]",
       "",
       "Sources:",
-      "[1] anycap.ai/glossary/context-engineering",
+      "[1] anycap.ai/guides/context-engineering-for-agents",
       "[2] simonwillison.net/2025/context-engineering",
     ],
   },

@@ -413,7 +413,7 @@ const enContent: RemovePeoplePageContent = {
       },
       {
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Start here when you want the CLI ready before trying the same workflow on your own images.",
       },
     ],
@@ -707,7 +707,7 @@ const ptBrContent: RemovePeoplePageContent = {
       },
       {
         title: "Instalar AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Siga por aqui quando quiser preparar o CLI antes de rodar o mesmo workflow nas suas imagens.",
       },
     ],
@@ -1004,7 +1004,7 @@ const idContent: RemovePeoplePageContent = {
       },
       {
         title: "Instal AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         body: "Mulai di sini ketika Anda ingin CLI siap sebelum mencoba alur yang sama pada gambar Anda sendiri.",
       },
     ],

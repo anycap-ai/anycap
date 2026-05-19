@@ -271,14 +271,14 @@ const en: ComparePageData = {
     },
     {
       label: "Install AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Published setup path for Codex, Cursor, Claude Code, and adjacent agent products.",
     },
   ],
   relatedTitle: "Related pages",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glossary",
       title: "Agent Capability Runtime",
       body: "Read the category definition that explains why AnyCap and Replicate are not the same layer.",
@@ -296,7 +296,7 @@ const en: ComparePageData = {
       body: "See the storage and sharing layer that makes AnyCap more than a direct API wrapper.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Start here",
       title: "Install AnyCap",
       body: "Validate the runtime directly in your own agent workflow instead of staying in comparison mode.",
@@ -331,7 +331,7 @@ const en: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Install AnyCap", variant: "primary" },
+    { href: "/start", label: "Install AnyCap", variant: "primary" },
     { href: "/cli", label: "CLI Overview", variant: "secondary" },
     { href: "/for/codex", label: "See Agent Use Cases", variant: "secondary" },
   ],
@@ -503,13 +503,13 @@ const ptBr: ComparePageData = {
     },
     {
       label: "Instalar o AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Fluxo de setup publicado para Codex, Cursor, Claude Code e produtos de agente próximos.",
     },
   ],
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glossário",
       title: "Agent Capability Runtime",
       body: "Leia a definição da categoria para entender por que AnyCap e Replicate não são a mesma camada.",
@@ -527,7 +527,7 @@ const ptBr: ComparePageData = {
       body: "Veja a camada de armazenamento e compartilhamento que faz o AnyCap ir além de um wrapper de API direta.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Comece aqui",
       title: "Instalar o AnyCap",
       body: "Valide o runtime diretamente no seu próprio fluxo de agente em vez de ficar só na comparação.",
@@ -786,14 +786,14 @@ const id: ComparePageData = {
     },
     {
       label: "Pasang AnyCap",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Jalur pengaturan yang dipublikasikan untuk Codex, Cursor, Claude Code, dan produk agen terkait.",
     },
   ],
   relatedTitle: "Halaman terkait",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glosarium",
       title: "Runtime kemampuan agen",
       body: "Baca definisi kategori yang menjelaskan mengapa AnyCap dan Replicate bukan lapisan yang sama.",
@@ -811,7 +811,7 @@ const id: ComparePageData = {
       body: "Lihat lapisan penyimpanan dan berbagi yang membuat AnyCap lebih dari pembungkus API langsung.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Mulai di sini",
       title: "Pasang AnyCap",
       body: "Validasi runtime langsung di alur kerja agen Anda sendiri alih-alih tetap dalam mode perbandingan.",
@@ -846,7 +846,7 @@ const id: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "Pasang AnyCap", variant: "primary" },
+    { href: "/start", label: "Pasang AnyCap", variant: "primary" },
     { href: "/cli", label: "Ringkasan CLI", variant: "secondary" },
     { href: "/for/codex", label: "Lihat kasus penggunaan agen", variant: "secondary" },
   ],
@@ -1076,14 +1076,14 @@ const de: ComparePageData = {
     },
     {
       label: "AnyCap installieren",
-      href: "/guides/install-anycap",
+      href: "/start",
       note: "Veröffentlichter Setup-Pfad für Codex, Cursor, Claude Code und verwandte Agent-Produkte.",
     },
   ],
   relatedTitle: "Verwandte Seiten",
   relatedPages: [
     {
-      href: "/glossary/agent-capability-runtime",
+      href: "/glossary/agent-harness",
       eyebrow: "Glossar",
       title: "Agent-Capability-Runtime",
       body: "Lesen Sie die Kategoriedefinition, die erklärt, warum AnyCap und Replicate nicht dieselbe Schicht sind.",
@@ -1101,7 +1101,7 @@ const de: ComparePageData = {
       body: "Sehen Sie sich die Speicher- und Sharing-Schicht an, die AnyCap mehr macht als einen direkten API-Wrapper.",
     },
     {
-      href: "/guides/install-anycap",
+      href: "/start",
       eyebrow: "Hier starten",
       title: "AnyCap installieren",
       body: "Validieren Sie die Runtime direkt in Ihrem eigenen Agent-Workflow, statt im Vergleichsmodus zu bleiben.",
@@ -1136,7 +1136,7 @@ const de: ComparePageData = {
     },
   ],
   ctas: [
-    { href: "/guides/install-anycap", label: "AnyCap installieren", variant: "primary" },
+    { href: "/start", label: "AnyCap installieren", variant: "primary" },
     { href: "/cli", label: "CLI-Übersicht", variant: "secondary" },
     { href: "/for/codex", label: "Agent-Anwendungsfälle ansehen", variant: "secondary" },
   ],

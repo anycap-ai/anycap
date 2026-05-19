@@ -127,8 +127,8 @@ export const learnDropdown: NavDropdownDef = {
       description: "Learn how agent skills expose capabilities inside developer tools.",
     },
     {
-      href: "/guides/install-anycap",
-      label: "Install AnyCap",
+      href: "/start",
+      label: "Get Started",
       section: "Guides",
       description: "Set up the CLI, auth once, and verify the capability runtime is ready.",
     },
@@ -151,10 +151,10 @@ export const learnDropdown: NavDropdownDef = {
       description: "Browse comparison pages for adjacent agent tooling, media APIs, and tradeoffs.",
     },
     {
-      href: "/learn/what-agents-cant-do",
-      label: "What Agents Can't Do",
+      href: "/learn/what-is-the-most-advanced-ai",
+      label: "Most Advanced AI",
       section: "Evaluate",
-      description: "Read a practical explainer on where agents still struggle in production workflows.",
+      description: "Separate model capability from workflow and runtime capability decisions.",
     },
     {
       href: "/learn/smart-goal-generator",
@@ -162,13 +162,6 @@ export const learnDropdown: NavDropdownDef = {
       section: "Use Cases",
       description:
         "Turn rough goals into research-backed SMART goals with Codex, Cursor, or Claude Code.",
-    },
-    {
-      href: "/learn/how-to-make-memes-online",
-      label: "How to Make Memes Online",
-      section: "Use Cases",
-      description:
-        "See a concrete creative workflow for generating the visual, keeping the caption exact, and delivering a meme.",
     },
   ],
   hideBelow: "md",

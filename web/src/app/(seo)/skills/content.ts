@@ -93,7 +93,7 @@ function buildSkillsHubJsonLd(locale: SiteLocale, label: string, description: st
       {
         "@type": "WebPage",
         name: "Install AnyCap",
-        url: getLocalizedRouteUrl(locale, "/guides/install-anycap"),
+        url: getLocalizedRouteUrl(locale, "/start"),
       },
     ],
   };
@@ -244,20 +244,20 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Learn",
         title: "What agents can't do",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Use this when you want the capability-gap narrative before choosing the next product or capability page.",
       },
       {
         eyebrow: "Guides",
         title: "Install AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         summary: "Use this when you want the shortest install path after you understand how the instruction layer works.",
       },
     ],
     ctas: [
-      { label: "Install AnyCap", href: "/guides/install-anycap" },
+      { label: "Install AnyCap", href: "/start" },
       { label: "Why One CLI Matters", href: "/cli" },
-      { label: "See Capability Gaps", href: "/learn/what-agents-cant-do" },
+      { label: "See Capability Gaps", href: "/learn/what-is-the-most-advanced-ai" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "en",
@@ -351,20 +351,20 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Aprender",
         title: "O que agentes não conseguem fazer",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Comece aqui se você quiser a narrativa sobre lacunas de capacidade antes de escolher a próxima página de produto ou capacidade.",
       },
       {
         eyebrow: "Guias",
         title: "Instalar o AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         summary: "Use isto quando quiser o caminho mais curto de instalação depois de entender como a camada de instrução funciona.",
       },
     ],
     ctas: [
-      { label: "Instalar o AnyCap", href: "/guides/install-anycap" },
+      { label: "Instalar o AnyCap", href: "/start" },
       { label: "Por que uma CLI importa", href: "/cli" },
-      { label: "Ver lacunas de capacidade", href: "/learn/what-agents-cant-do" },
+      { label: "Ver lacunas de capacidade", href: "/learn/what-is-the-most-advanced-ai" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "pt-br",
@@ -458,20 +458,20 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Pelajari",
         title: "Apa yang tidak bisa dilakukan agen",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Gunakan ini ketika Anda ingin narasi celah kapabilitas sebelum memilih halaman produk atau kapabilitas berikutnya.",
       },
       {
         eyebrow: "Panduan",
         title: "Pasang AnyCap",
-        href: "/guides/install-anycap",
+        href: "/start",
         summary: "Gunakan ini ketika Anda ingin jalur instalasi paling singkat setelah memahami cara kerja layer instruksi.",
       },
     ],
     ctas: [
-      { label: "Pasang AnyCap", href: "/guides/install-anycap" },
+      { label: "Pasang AnyCap", href: "/start" },
       { label: "Mengapa Satu CLI Penting", href: "/cli" },
-      { label: "Lihat Celah Kapabilitas", href: "/learn/what-agents-cant-do" },
+      { label: "Lihat Celah Kapabilitas", href: "/learn/what-is-the-most-advanced-ai" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "id",
@@ -565,20 +565,20 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Learn",
         title: "Was Agents nicht können",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary: "Nutzen Sie das für das Capability-Lücken-Narrativ, bevor Sie die nächste Produkt- oder Capability-Seite wählen.",
       },
       {
         eyebrow: "Guides",
         title: "AnyCap installieren",
-        href: "/guides/install-anycap",
+        href: "/start",
         summary: "Nutzen Sie das für den kürzesten Installationspfad, sobald Sie verstanden haben, wie die Instruction-Schicht funktioniert.",
       },
     ],
     ctas: [
-      { label: "AnyCap installieren", href: "/guides/install-anycap" },
+      { label: "AnyCap installieren", href: "/start" },
       { label: "Warum eine CLI zählt", href: "/cli" },
-      { label: "Capability-Lücken sehen", href: "/learn/what-agents-cant-do" },
+      { label: "Capability-Lücken sehen", href: "/learn/what-is-the-most-advanced-ai" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "de",

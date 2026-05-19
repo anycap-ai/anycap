@@ -165,7 +165,7 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       {
         eyebrow: "Guide",
         title: "Add Tools to Claude Code",
-        href: "/guides/add-tools-to-claude-code",
+        href: "/guides/agent-skills-for-developer-tools",
         body: "Move from concept to setup with a concrete installation flow.",
       },
     ],
@@ -346,7 +346,7 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       {
         eyebrow: "Guia",
         title: "Adicionar Ferramentas ao Claude Code",
-        href: "/guides/add-tools-to-claude-code",
+        href: "/guides/agent-skills-for-developer-tools",
         body: "Saia do conceito e vá para o setup com um fluxo concreto de instalação.",
       },
     ],
@@ -527,7 +527,7 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       {
         eyebrow: "Panduan",
         title: "Menambahkan alat ke Claude Code",
-        href: "/guides/add-tools-to-claude-code",
+        href: "/guides/agent-skills-for-developer-tools",
         body: "Dari konsep ke setup dengan alur instalasi yang konkret.",
       },
     ],
@@ -708,7 +708,7 @@ const contentByLocale: Record<SiteLocale, McpVsSkillsPageData> = {
       {
         eyebrow: "Anleitung",
         title: "Tools zu Claude Code hinzufügen",
-        href: "/guides/add-tools-to-claude-code",
+        href: "/guides/agent-skills-for-developer-tools",
         body: "Vom Konzept zum Setup mit einem konkreten Installationsfluss.",
       },
     ],

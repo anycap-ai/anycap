@@ -262,7 +262,7 @@ const englishContent = {
     ],
     guideLeadIn: "For a full walkthrough, see the ",
     guideLinkLabel: "install guide",
-    guideUrl: "/guides/install-anycap",
+    guideUrl: "/start",
   },
   whyItFits: {
     eyebrow: "Why it fits",
@@ -643,7 +643,7 @@ const portugueseContent = {
     ],
     guideLeadIn: "Para um passo a passo completo, veja o ",
     guideLinkLabel: "guia de instalação",
-    guideUrl: "/guides/install-anycap",
+    guideUrl: "/start",
   },
   whyItFits: {
     eyebrow: "Por que combina",
@@ -1024,7 +1024,7 @@ const indonesianContent = {
     ],
     guideLeadIn: "Untuk panduan lengkap, lihat ",
     guideLinkLabel: "panduan pemasangan",
-    guideUrl: "/guides/install-anycap",
+    guideUrl: "/start",
   },
   whyItFits: {
     eyebrow: "Mengapa cocok",
@@ -1405,7 +1405,7 @@ const germanContent = {
     ],
     guideLeadIn: "Eine vollständige Anleitung finden Sie im ",
     guideLinkLabel: "Installationsleitfaden",
-    guideUrl: "/guides/install-anycap",
+    guideUrl: "/start",
   },
   whyItFits: {
     eyebrow: "Warum es passt",

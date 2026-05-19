@@ -228,7 +228,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Deficiency hub",
         title: "What agents can't do",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary:
           "Start here if you are diagnosing the missing capability before choosing a specific page.",
       },
@@ -374,7 +374,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Hub de deficiências",
         title: "O que os agentes não conseguem fazer",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary:
           "Comece aqui se você está diagnosticando a capacidade ausente antes de escolher uma página específica.",
       },
@@ -520,7 +520,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Hub kekurangan",
         title: "Apa yang tidak bisa dilakukan agen",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary:
           "Mulai di sini jika Anda sedang mendiagnosis kemampuan yang hilang sebelum memilih halaman tertentu.",
       },
@@ -666,7 +666,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Defizit-Hub",
         title: "Was Agenten nicht können",
-        href: "/learn/what-agents-cant-do",
+        href: "/learn/what-is-the-most-advanced-ai",
         summary:
           "Beginnen Sie hier, wenn Sie die fehlende Capability diagnostizieren, bevor Sie eine spezifische Seite wählen.",
       },
@@ -704,7 +704,7 @@ function buildCapabilities(content: CapabilitiesPageContent): Capability[] {
   return [
     { name: n.imageGeneration, category: "Image", status: "available", description: d.imageGeneration, models: "Seedream 5, Seedream 4.5, Nano Banana Pro, Nano Banana 2", href: "/capabilities/image-generation" },
     { name: n.videoGeneration, category: "Video", status: "available", description: d.videoGeneration, models: "Veo 3.1, Seedance 1.5 Pro, Kling 3.0", href: "/capabilities/video-generation" },
-    { name: n.musicGeneration, category: "Audio", status: "available", description: d.musicGeneration, models: "ElevenLabs Music", href: "/capabilities/music-generation" },
+    { name: n.musicGeneration, category: "Audio", status: "available", description: d.musicGeneration, models: "ElevenLabs Music, Mureka V8, Suno V5, Suno V5.5", href: "/capabilities/music-generation" },
     { name: n.imageUnderstanding, category: "Vision", status: "available", description: d.imageUnderstanding, models: "Vision models", href: "/capabilities/image-understanding" },
     { name: n.videoAnalysis, category: "Video", status: "available", description: d.videoAnalysis, models: "Vision models", href: "/capabilities/video-analysis" },
     { name: n.audioUnderstanding, category: "Audio", status: "available", description: d.audioUnderstanding, models: "Audio models", href: "/capabilities/audio-understanding" },

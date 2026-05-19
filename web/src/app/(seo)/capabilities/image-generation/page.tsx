@@ -111,7 +111,7 @@ export default async function ImageGenerationPage() {
               <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
                 {content.decisionTitle}
               </h2>
-              <div className="grid max-w-[1040px] gap-4 sm:grid-cols-3">
+              <div className="grid max-w-[1180px] gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {content.decisionCards.map((card) => (
                   <Link
                     key={card.title}

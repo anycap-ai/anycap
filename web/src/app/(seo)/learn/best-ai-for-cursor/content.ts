@@ -270,7 +270,7 @@ const en: BestAIForCursorPageData = {
     },
     {
       title: "Install the runtime",
-      href: "/guides/install-anycap",
+      href: "/start",
       body: "Use the install guide when you are ready to move from evaluation into actual setup steps.",
     },
   ],
@@ -531,7 +531,7 @@ const ptBr: BestAIForCursorPageData = {
     },
     {
       title: "Instalar o runtime",
-      href: "/guides/install-anycap",
+      href: "/start",
       body: "Use o guia de instalação quando estiver pronto para sair da avaliação e entrar nos passos reais de setup.",
     },
   ],
@@ -788,7 +788,7 @@ const id: BestAIForCursorPageData = {
     },
     {
       title: "Pasang runtime",
-      href: "/guides/install-anycap",
+      href: "/start",
       body: "Gunakan panduan instalasi ketika Anda siap beralih dari evaluasi ke langkah pengaturan nyata.",
     },
   ],
@@ -1044,7 +1044,7 @@ const de: BestAIForCursorPageData = {
     },
     {
       title: "Die Runtime installieren",
-      href: "/guides/install-anycap",
+      href: "/start",
       body: "Nutzen Sie den Installationsleitfaden, wenn Sie von der Evaluation zu echten Setup-Schritten übergehen wollen.",
     },
   ],

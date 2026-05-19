@@ -7,6 +7,7 @@ import { MusicGenDemo } from "@/components/landing/MusicGenDemo";
 import { createFaqPageJsonLd, createTechArticleJsonLd, hasJsonLdContent } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
+import { getCatalogModelsByCapability } from "@/lib/seo/model-catalog";
 
 export const runtime = "edge";
 
@@ -60,44 +61,25 @@ type MusicGenerationModel = {
   bestFor: string;
 };
 
-const models: Record<SiteLocale, readonly MusicGenerationModel[]> = {
-  en: [
-    {
-      name: "ElevenLabs Music",
-      href: "/models/elevenlabs-music",
-      modelId: "elevanlabs-music",
-      modes: "text-to-music",
-      bestFor: "Prompt-based soundtrack drafts and background music inside the same agent runtime",
-    },
-  ],
-  "pt-br": [
-    {
-      name: "ElevenLabs Music",
-      href: "/models/elevenlabs-music",
-      modelId: "elevanlabs-music",
-      modes: "texto para música",
-      bestFor: "Rascunhos de trilha sonora por prompt e música de fundo dentro do mesmo runtime de agente",
-    },
-  ],
-  id: [
-    {
-      name: "ElevenLabs Music",
-      href: "/models/elevenlabs-music",
-      modelId: "elevanlabs-music",
-      modes: "teks-ke-musik",
-      bestFor: "Draf soundtrack berbasis prompt dan musik latar di runtime agen yang sama",
-    },
-  ],
-  de: [
-    {
-      name: "ElevenLabs Music",
-      href: "/models/elevenlabs-music",
-      modelId: "elevanlabs-music",
-      modes: "text-to-music",
-      bestFor: "Prompt-basierte Soundtrack-Entwürfe und Hintergrundmusik in derselben Agenten-Runtime",
-    },
-  ],
-};
+function getLocalizedModeLabel(locale: SiteLocale, mode: string) {
+  if (mode !== "text-to-music") {
+    return mode;
+  }
+
+  if (locale === "pt-br") return "texto para música";
+  if (locale === "id") return "teks-ke-musik";
+  return mode;
+}
+
+function getMusicModels(locale: SiteLocale): MusicGenerationModel[] {
+  return getCatalogModelsByCapability("music").map((model) => ({
+    name: model.displayName,
+    href: model.path,
+    modelId: model.modelId,
+    modes: model.modes.map((mode) => getLocalizedModeLabel(locale, mode)).join(", "),
+    bestFor: model.bestFor,
+  }));
+}
 
 const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
   en: {
@@ -113,8 +95,8 @@ const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
       "AnyCap music generation gives agents one CLI for prompt-based music workflows. Agents can create background tracks, instrumental drafts, and soundtrack concepts through one interface instead of wiring a separate text-to-music API. That makes music generation easier to plug into the same agent workflow that already handles image generation, video generation, and media analysis.",
     summaryEyebrow: "Answer-first summary",
     summaryBody:
-      "AnyCap currently exposes prompt-based music generation through ElevenLabs Music. Use it when the same agent that already creates visuals or clips also needs a fast soundtrack draft without switching to a separate audio toolchain.",
-    modelSectionTitle: "Supported model",
+      "AnyCap currently exposes prompt-based music generation through ElevenLabs Music, Mureka V8, Suno V5, and Suno V5.5. Use it when the same agent that already creates visuals or clips also needs soundtrack drafts, vocal concepts, or complete music tracks without switching to a separate audio toolchain.",
+    modelSectionTitle: "Supported models",
     tableHeaders: ["Model", "Model ID", "Modes", "Best fit"],
     usageTitle: "CLI usage",
     usageExamples: [
@@ -215,8 +197,8 @@ const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
       "A geração de música do AnyCap dá aos agentes uma única CLI para fluxos musicais baseados em prompt. Os agentes podem criar trilhas de fundo, rascunhos instrumentais e conceitos de trilha sonora por uma única interface, em vez de integrar uma API separada de texto para música. Isso facilita encaixar geração de música no mesmo fluxo de agente que já cuida de geração de imagem, geração de vídeo e análise de mídia.",
     summaryEyebrow: "Resumo direto",
     summaryBody:
-      "Hoje o AnyCap expõe geração de música por prompt via ElevenLabs Music. Use isso quando o mesmo agente que já cria visuais ou clipes também precisar de um rascunho rápido de trilha sonora sem mudar para outra cadeia de ferramentas de áudio.",
-    modelSectionTitle: "Modelo compatível",
+      "Hoje o AnyCap expõe geração de música por prompt via ElevenLabs Music, Mureka V8, Suno V5 e Suno V5.5. Use isso quando o mesmo agente que já cria visuais ou clipes também precisar de rascunhos de trilha, conceitos vocais ou faixas completas sem mudar para outra cadeia de ferramentas de áudio.",
+    modelSectionTitle: "Modelos compatíveis",
     tableHeaders: ["Modelo", "ID do modelo", "Modos", "Melhor uso"],
     usageTitle: "Uso pela CLI",
     usageExamples: [
@@ -317,7 +299,7 @@ const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
       "Fitur generasi musik di AnyCap memberi agen satu CLI untuk workflow musik berbasis prompt. Agen bisa membuat musik latar, draf instrumental, dan konsep soundtrack lewat satu antarmuka, tanpa merangkai API teks-ke-musik terpisah. Ini memudahkan tim menjaga workflow musik tetap satu alur dengan generasi gambar, generasi video, dan analisis media.",
     summaryEyebrow: "Ringkasan cepat",
     summaryBody:
-      "Saat ini AnyCap menyediakan generasi musik berbasis prompt melalui ElevenLabs Music. Gunakan saat agen yang sama sudah membuat visual atau klip dan juga butuh draf soundtrack cepat tanpa pindah ke toolchain audio lain.",
+      "Saat ini AnyCap menyediakan generasi musik berbasis prompt melalui ElevenLabs Music, Mureka V8, Suno V5, dan Suno V5.5. Gunakan saat agen yang sama sudah membuat visual atau klip dan juga butuh draf soundtrack, konsep vokal, atau track lengkap tanpa pindah ke toolchain audio lain.",
     modelSectionTitle: "Model yang didukung",
     tableHeaders: ["Model", "ID Model", "Mode", "Cocok untuk"],
     usageTitle: "Penggunaan CLI",
@@ -419,7 +401,7 @@ const contentByLocale: Record<SiteLocale, MusicGenerationPageContent> = {
       "Mit der AnyCap-Musikgenerierung erhalten Agenten eine CLI für Prompt-basierte Musik-Workflows. Agenten können Hintergrund-Tracks, Instrumental-Entwürfe und Soundtrack-Konzepte über eine Schnittstelle erstellen, statt eine separate Text-to-Music-API zu verdrahten. So lässt sich Musikgenerierung in denselben Agenten-Workflow integrieren, der bereits Bildgenerierung, Videogenerierung und Medienanalyse abdeckt.",
     summaryEyebrow: "Kurz vorab",
     summaryBody:
-      "AnyCap stellt aktuell Prompt-basierte Musikgenerierung über ElevenLabs Music bereit. Setzen Sie sie ein, wenn derselbe Agent, der bereits Visuals oder Clips erzeugt, auch einen schnellen Soundtrack-Entwurf braucht, ohne in eine separate Audio-Toolchain zu wechseln.",
+      "AnyCap stellt aktuell Prompt-basierte Musikgenerierung über ElevenLabs Music, Mureka V8, Suno V5 und Suno V5.5 bereit. Setzen Sie sie ein, wenn derselbe Agent, der bereits Visuals oder Clips erzeugt, auch Soundtrack-Entwürfe, Vocal-Konzepte oder vollständige Musiktracks braucht, ohne in eine separate Audio-Toolchain zu wechseln.",
     modelSectionTitle: "Unterstütztes Modell",
     tableHeaders: ["Modell", "Modell-ID", "Modi", "Geeignet für"],
     usageTitle: "CLI-Nutzung",
@@ -583,7 +565,7 @@ export default async function MusicGenerationPage() {
     dateModified: lastUpdatedIso,
   });
   const faqJsonLd = createFaqPageJsonLd(content.faqItems);
-  const localizedModels = models[locale].length > 0 ? models[locale] : models.en;
+  const localizedModels = getMusicModels(locale);
 
   return (
     <>
