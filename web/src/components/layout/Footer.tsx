@@ -56,7 +56,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/compare", label: "Compare Overview" },
       { href: "/compare/anycap-vs-replicate", label: "AnyCap vs Replicate" },
       { href: "/compare/anycap-vs-fal-ai", label: "AnyCap vs fal.ai" },
-      { href: "/learn/what-is-the-most-advanced-ai", label: "What Agents Can't Do" },
+      { href: "/learn/what-agents-cant-do", label: "What Agents Can't Do" },
     ],
   },
   {

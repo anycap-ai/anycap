@@ -76,14 +76,14 @@ export default async function StartPage() {
                 {content.ctas.startWithClaudeCode}
               </Link>
               <Link
-                href="/start"
+                href="/guides/install-anycap"
                 className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                 style={mono}
               >
                 {content.ctas.universalInstallGuide}
               </Link>
               <Link
-                href="/learn/what-is-the-most-advanced-ai"
+                href="/learn/what-agents-cant-do"
                 className="inline-block rounded-lg border border-[#1c1f17] px-8 py-3 text-[11px] font-bold tracking-[0.8px] text-[#1c1f17] transition-colors hover:bg-[#1c1f17] hover:text-[#f4f5f0]"
                 style={mono}
               >

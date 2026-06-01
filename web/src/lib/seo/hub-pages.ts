@@ -337,6 +337,10 @@ const hubItemCopyEn: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
+    "/guides/install-anycap": {
+      title: "Install AnyCap",
+      description: "Canonical install path for the AnyCap CLI and agent skill — auth, verification, and first command.",
+    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Understand when you need the protocol layer, the instruction layer, or both for an agent workflow.",
@@ -460,6 +464,10 @@ const hubItemCopyPtBr: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
+    "/guides/install-anycap": {
+      title: "Install AnyCap",
+      description: "Canonical install path for the AnyCap CLI and agent skill — auth, verification, and first command.",
+    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Entenda quando você precisa da camada de protocolo, da camada de instrução, ou das duas em um fluxo com agentes.",
@@ -563,6 +571,10 @@ const hubItemCopyId: HubItemCopyByHubPath = {
     },
   },
   "/guides": {
+    "/guides/install-anycap": {
+      title: "Install AnyCap",
+      description: "Canonical install path for the AnyCap CLI and agent skill — auth, verification, and first command.",
+    },
     "/guides/mcp-vs-skills": {
       title: "MCP vs Skills",
       description: "Pahami kapan Anda membutuhkan lapisan protokol, lapisan instruksi, atau keduanya untuk workflow agen.",

@@ -6,7 +6,7 @@ import { getLearnHubContent, type LearnHubArticle, type LearnHubLink, type Learn
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { createFaqPageJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
-import { defaultLocale, getLocalizedRouteUrl, siteConfig, type SiteLocale } from "@/lib/site";
+import { defaultLocale, getLocalizedRouteUrl, type SiteLocale } from "@/lib/site";
 import { LEARN_PATH, getLearnMetadata, getLearnPageData } from "./content";
 
 export const runtime = "edge";
@@ -60,47 +60,28 @@ function formatArticleCount(count: number, locale: SiteLocale) {
   return `${count} article${count === 1 ? "" : "s"}`;
 }
 
-function ArticleRow({
-  article,
-  emphasis = "default",
-}: {
-  article: LearnHubArticle;
-  emphasis?: "default" | "featured";
-}) {
-  const isFeatured = emphasis === "featured";
-
+function FeaturedArticle({ article }: { article: LearnHubArticle }) {
   return (
-    <div>
+    <div className="border border-[#dce0d2] bg-[#fffffc] p-6 md:p-8">
       <Link href={article.href} className="group block">
-        {isFeatured ? (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-              {article.badge}
-            </span>
-          </div>
-        ) : null}
-        <h3
-          className={
-            isFeatured
-              ? "mt-3 text-[24px] leading-8 text-[#1c1f17] transition-colors group-hover:text-[#36401f] md:text-[30px] md:leading-9"
-              : "text-[16px] leading-6 text-[#1c1f17] transition-colors group-hover:text-[#36401f]"
-          }
-          style={isFeatured ? pixel : mono}
+        <h4
+          className="text-[22px] leading-8 text-[#1c1f17] transition-colors group-hover:text-[#36401f] md:text-[28px] md:leading-9"
+          style={pixel}
         >
           {article.title}
-        </h3>
-        <p className={isFeatured ? "mt-3 text-base leading-7 text-[#4d5145]" : "mt-1.5 text-sm leading-6 text-[#4d5145]"}>
+        </h4>
+        <p className="mt-3 max-w-[68ch] text-[15px] leading-7 text-[#4d5145]">
           {article.description}
         </p>
       </Link>
 
       {article.children.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           {article.children.map((child) => (
             <Link
               key={child.href}
               href={child.href}
-              className="rounded-full border border-[#d8dcd0] bg-[#f7f9ef] px-3 py-1.5 text-[11px] tracking-[0.35px] text-[#1c1f17] transition-colors hover:border-[#6b7d3a] hover:text-[#36401f]"
+              className="rounded-full border border-[#d8dcd0] bg-[#f4f5f0] px-3 py-1.5 text-[12px] tracking-[0.2px] text-[#1c1f17] transition-colors hover:border-[#6b7d3a] hover:text-[#36401f]"
               style={mono}
             >
               {child.title}
@@ -112,116 +93,103 @@ function ArticleRow({
   );
 }
 
-function SectionLinks({ links }: { links: readonly LearnHubLink[] }) {
+function SupportingArticle({ article }: { article: LearnHubArticle }) {
   return (
-    <div className="mt-3 flex flex-wrap gap-2.5">
+    <div>
+      <Link href={article.href} className="group block">
+        <h4
+          className="text-[17px] leading-7 text-[#1c1f17] transition-colors group-hover:text-[#36401f]"
+          style={mono}
+        >
+          {article.title}
+        </h4>
+        <p className="mt-1.5 max-w-[68ch] text-[14px] leading-6 text-[#4d5145]">
+          {article.description}
+        </p>
+      </Link>
+
+      {article.children.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {article.children.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              className="rounded-full border border-[#d8dcd0] bg-[#f4f5f0] px-2.5 py-1 text-[11px] tracking-[0.2px] text-[#3a3e32] transition-colors hover:border-[#6b7d3a] hover:text-[#36401f]"
+              style={mono}
+            >
+              {child.title}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ShortcutLinks({ links }: { links: readonly LearnHubLink[] }) {
+  return (
+    <div className="flex flex-wrap gap-2">
       {links.map((link) => (
         <Link
           key={link.href}
           href={link.href}
-          className="rounded-full border border-[#d8dcd0] bg-[#fbfcf8] px-3.5 py-2 text-[12px] tracking-[0.25px] text-[#1c1f17] transition-colors hover:border-[#6b7d3a] hover:text-[#36401f]"
+          className="inline-flex items-center gap-1.5 text-[13px] tracking-[0.1px] text-[#4d5145] underline decoration-[#c7cfad] decoration-1 underline-offset-[5px] transition-colors hover:text-[#36401f] hover:decoration-[#6b7d3a]"
           style={mono}
         >
           {link.label}
+          <span aria-hidden="true" className="text-[#6b7d3a]">›</span>
         </Link>
       ))}
     </div>
   );
 }
 
-function ArticleGroup({
-  title,
-  articles,
-  locale,
-}: {
-  title: string;
-  articles: readonly LearnHubArticle[];
-  locale: SiteLocale;
-}) {
-  if (articles.length === 0) {
-    return null;
-  }
-
-  return (
-    <section>
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-          {title}
-        </p>
-        <span
-          className="rounded-full border border-[#d8dcd0] bg-[#fffffc] px-2.5 py-1 text-[10px] tracking-[0.35px] text-[#6b7068]"
-          style={mono}
-        >
-          {formatArticleCount(articles.length, locale)}
-        </span>
-      </div>
-      <ol className="mt-3 divide-y divide-[#e3e7da]">
-        {articles.map((article) => (
-          <li key={article.href} className="list-none py-4 first:pt-0 last:pb-0">
-            <ArticleRow article={article} />
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-function SectionAccordion({
+function SectionRow({
   section,
   index,
   locale,
-  sectionLabels,
+  totalCount,
 }: {
   section: LearnHubSection;
   index: number;
   locale: SiteLocale;
-  sectionLabels: LearnPageContent["sectionLabels"];
+  totalCount: number;
 }) {
   const articleCount = countSectionArticles(section);
-  const sectionLabel = String(index + 1).padStart(2, "0");
 
   return (
     <details
       id={section.id}
       open={index === 0}
-      className="group rounded-[28px] border border-[#d8dcd0] bg-[#fffffc] shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-[#c7cfad] hover:shadow-[0_3px_12px_rgba(0,0,0,0.08)] [&[open]]:border-[#6b7d3a] [&[open]]:bg-[#fcfdf8] [&[open]]:shadow-[0_8px_24px_rgba(107,125,58,0.12)] [&[open]_.learn-accordion-chevron]:rotate-180 [&[open]_.learn-accordion-trigger]:bg-[#fcfdf8] [&_summary::-webkit-details-marker]:hidden"
+      className="group border-t border-[#dce0d2] [&[open]_.learn-section-chevron]:rotate-180 [&[open]_.learn-section-title]:text-[#36401f] [&_summary::-webkit-details-marker]:hidden last:border-b last:border-[#dce0d2]"
     >
-      <summary className="learn-accordion-trigger list-none cursor-pointer rounded-[28px] px-6 py-5 transition-colors active:scale-[0.998] md:px-8 md:py-6">
-        <div className="flex items-start gap-4 md:gap-5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d4dbb8] bg-[#f7f9ef] text-[12px] tracking-[0.6px] text-[#6b7d3a] md:h-14 md:w-14 md:text-[13px]" style={mono}>
-            {sectionLabel}
-          </div>
-
+      <summary className="list-none cursor-pointer py-7 md:py-9">
+        <div className="flex items-start gap-6 md:gap-10">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-[11px] tracking-[0.45px] text-[#6b7d3a]" style={mono}>
-                {section.eyebrow}
-              </span>
-              <span
-                className="rounded-full border border-[#d8dcd0] bg-[#fbfcf8] px-3 py-1.5 text-[11px] tracking-[0.45px] text-[#5a5e52]"
-                style={mono}
-              >
-                {formatArticleCount(articleCount, locale)}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2.5">
-              <h3 className="text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                {section.title}
-              </h3>
-            </div>
-            <p className="mt-3 max-w-[840px] text-base leading-7 text-[#3a3e32]">{section.summary}</p>
+            <h3
+              className="learn-section-title text-[26px] leading-9 text-[#1c1f17] transition-colors md:text-[34px] md:leading-[1.15]"
+              style={pixel}
+            >
+              {section.title}
+            </h3>
+            <p className="mt-3 max-w-[64ch] text-[15px] leading-7 text-[#4d5145]">
+              {section.summary}
+            </p>
           </div>
 
-          <div className="mt-1 hidden h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d8dcd0] bg-[#fbfcf8] transition-colors duration-200 md:flex">
+          <div className="flex shrink-0 items-center gap-5 pt-2">
+            <span className="hidden text-[12px] tracking-[0.2px] text-[#6b7068] md:inline" style={mono}>
+              {formatArticleCount(articleCount, locale)}
+            </span>
             <svg
               aria-hidden="true"
-              viewBox="0 0 16 16"
-              className="learn-accordion-chevron h-4 w-4 text-[#6b7d3a] transition-transform duration-200"
+              viewBox="0 0 24 24"
+              className="learn-section-chevron h-5 w-5 text-[#6b7d3a] transition-transform duration-200"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M4 6.5L8 10L12 6.5"
+                d="M6 9.5L12 15.5L18 9.5"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
@@ -232,42 +200,29 @@ function SectionAccordion({
         </div>
       </summary>
 
-      <div className="border-t border-[#dce0d2] px-6 py-6 md:px-8 md:py-8">
-        <div className="space-y-6">
-            <section className="rounded-[24px] border border-[#dce0d2] bg-[#f7f9ef] p-5 md:p-6">
-            <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-              {sectionLabels.startHere}
-            </p>
-            <div className="mt-4 max-w-[920px]">
-              <ArticleRow article={section.featuredArticle} emphasis="featured" />
-            </div>
+      <div className="pb-10 md:pb-14">
+        <div className="grid gap-8 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:gap-12">
+          <div>
+            <FeaturedArticle article={section.featuredArticle} />
 
             {section.relatedLinks.length > 0 ? (
-              <div className="mt-5 border-t border-[#dce0d2] pt-4">
-                <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  {sectionLabels.shortcuts}
-                </p>
-                <SectionLinks links={section.relatedLinks} />
+              <div className="mt-5">
+                <ShortcutLinks links={section.relatedLinks} />
               </div>
             ) : null}
-          </section>
-
-          {section.followOnArticles.length > 0 ? (
-            <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup title={sectionLabels.goDeeper} articles={section.followOnArticles} locale={locale} />
-            </div>
-          ) : null}
+          </div>
 
           {section.supportingArticles.length > 0 ? (
-            <div className="border-t border-[#dce0d2] pt-6">
-              <ArticleGroup
-                title={sectionLabels.alsoUseful}
-                articles={section.supportingArticles}
-                locale={locale}
-              />
+            <div className="md:pt-2">
+              <ol className="space-y-6">
+                {section.supportingArticles.map((article) => (
+                  <li key={article.href} className="list-none">
+                    <SupportingArticle article={article} />
+                  </li>
+                ))}
+              </ol>
             </div>
           ) : null}
-
         </div>
       </div>
     </details>
@@ -303,10 +258,8 @@ export default async function LearnIndexPage() {
       url: getLocalizedRouteUrl(locale, article.href),
     })),
   } as const;
-  const statsLine =
-    locale === "pt-br"
-      ? `${sections.length} categorias. ${allArticles.length} páginas curadas. ${learnPageContent.hero.statsSuffix}`
-      : `${sections.length} categories. ${allArticles.length} curated pages. ${learnPageContent.hero.statsSuffix}`;
+
+  const heroTitle = `${learnPageContent.hero.titleLines[0]} ${learnPageContent.hero.titleLines[1]}`;
 
   return (
     <>
@@ -325,109 +278,123 @@ export default async function LearnIndexPage() {
       />
 
       <article className="px-6 md:px-12 lg:px-20">
-        <div className="mx-auto max-w-[1220px] py-12 md:py-20 lg:py-24">
+        <div className="mx-auto max-w-[1180px] py-16 md:py-24 lg:py-28">
           <FadeIn>
-            <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
+            <p className="mb-5 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
               {learnPageContent.eyebrow}
             </p>
             <h1
-              className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
+              className="max-w-[20ch] leading-[1.05] tracking-[-0.02em] text-[#1c1f17]"
+              style={{ ...pixel, fontSize: "clamp(34px, 5.6vw, 64px)" }}
             >
-              {learnPageContent.hero.titleLines[0]}
-              <br />
-              {learnPageContent.hero.titleLines[1]}
+              {heroTitle}
             </h1>
-            <p className="mt-6 max-w-[820px] text-base leading-7 text-[#4d5145] md:text-lg">
+            <p className="mt-7 max-w-[64ch] text-[17px] leading-8 text-[#3a3e32] md:text-[18px]">
               {learnPageContent.hero.intro}
-            </p>
-
-            <p className="mt-6 text-[12px] tracking-[0.35px] text-[#6b7068]" style={mono}>
-              {statsLine}
             </p>
           </FadeIn>
 
-          <FadeIn className="mt-10">
-            <section className="border-y border-[#dce0d2] py-6 md:py-8">
-              <div className="max-w-[820px]">
-                <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                  {learnPageContent.orientation.eyebrow}
-                </p>
-                <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
-                  {learnPageContent.pathSectionIntro.title}
-                </h2>
-                <p className="mt-4 text-sm leading-6 text-[#4d5145] md:text-[15px]">
-                  {learnPageContent.orientation.description}
-                </p>
-              </div>
+          <FadeIn className="mt-16 md:mt-20">
+            <section>
+              <h2
+                className="max-w-[26ch] text-[24px] leading-9 text-[#1c1f17] md:text-[30px]"
+                style={pixel}
+              >
+                {learnPageContent.orientation.title}
+              </h2>
+              <p className="mt-4 max-w-[64ch] text-[15px] leading-7 text-[#4d5145]">
+                {learnPageContent.orientation.description}
+              </p>
 
-              <ol className="mt-6 grid gap-4 md:grid-cols-3">
+              <ol className="mt-10 grid gap-y-8 gap-x-10 md:grid-cols-3">
                 {learnPageContent.orientation.steps.map((step) => (
-                  <li key={step.step} className="list-none">
-                    <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                      {step.step}
-                    </p>
-                    <h3 className="mt-3 text-[14px] leading-6 text-[#1c1f17]" style={mono}>
+                  <li
+                    key={step.step}
+                    className="list-none border-t border-[#6b7d3a] pt-5"
+                  >
+                    <h3
+                      className="text-[17px] leading-7 text-[#1c1f17]"
+                      style={mono}
+                    >
                       {step.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#4d5145]">{step.description}</p>
+                    <p className="mt-2.5 text-[14px] leading-6 text-[#4d5145]">
+                      {step.description}
+                    </p>
                   </li>
                 ))}
               </ol>
             </section>
           </FadeIn>
 
-          <FadeIn className="mt-12">
+          <FadeIn className="mt-20 md:mt-28">
             <section>
-              <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                {learnPageContent.pathSectionIntro.eyebrow}
-              </p>
-              <p className="mt-3 max-w-[760px] text-sm leading-6 text-[#4d5145] md:text-[15px]">
+              <div className="flex items-end justify-between gap-6">
+                <h2
+                  className="max-w-[22ch] text-[26px] leading-9 text-[#1c1f17] md:text-[34px] md:leading-[1.15]"
+                  style={pixel}
+                >
+                  {learnPageContent.pathSectionIntro.title}
+                </h2>
+                <span
+                  className="hidden whitespace-nowrap pb-2 text-[12px] tracking-[0.2px] text-[#6b7068] md:inline"
+                  style={mono}
+                >
+                  {sections.length} {locale === "pt-br" ? "caminhos" : locale === "de" ? "Pfade" : "paths"} · {allArticles.length} {locale === "pt-br" ? "artigos" : locale === "de" ? "Artikel" : "articles"}
+                </span>
+              </div>
+              <p className="mt-4 max-w-[64ch] text-[15px] leading-7 text-[#4d5145]">
                 {learnPageContent.pathSectionIntro.description}
               </p>
             </section>
           </FadeIn>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-10 md:mt-14">
             {sections.map((section, index) => (
-              <FadeIn key={section.id}>
-                <SectionAccordion
-                  section={section}
-                  index={index}
-                  locale={locale}
-                  sectionLabels={learnPageContent.sectionLabels}
-                />
-              </FadeIn>
+              <SectionRow
+                key={section.id}
+                section={section}
+                index={index}
+                locale={locale}
+                totalCount={sections.length}
+              />
             ))}
           </div>
 
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#dce0d2]" />
-          </div>
-
           <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                {learnPageContent.sectionLabels.needDifferentType}
-              </p>
-              <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
+            <section className="mt-24 md:mt-32">
+              <h2
+                className="max-w-[26ch] text-[24px] leading-9 text-[#1c1f17] md:text-[30px]"
+                style={pixel}
+              >
                 {learnPageContent.sectionLabels.differentTypeTitle}
               </h2>
-              <p className="mt-4 max-w-[760px] text-sm leading-6 text-[#4d5145] md:text-[15px]">
+              <p className="mt-4 max-w-[64ch] text-[15px] leading-7 text-[#4d5145]">
                 {learnPageContent.sectionLabels.differentTypeBody}
               </p>
-              <div className="mt-6 divide-y divide-[#dce0d2] border-y border-[#dce0d2]">
+              <div className="mt-8 border-t border-[#dce0d2]">
                 {adjacentHubs.map((hub) => (
                   <Link
                     key={hub.href}
                     href={hub.href}
-                    className="block py-5 transition-colors hover:text-[#1c1f17]"
+                    className="group block border-b border-[#dce0d2] py-6 transition-colors hover:bg-[#fffffc] md:py-7"
                   >
-                    <div className="grid gap-2 md:grid-cols-[190px_minmax(0,1fr)] md:gap-6">
-                      <h3 className="text-base text-[#1c1f17]" style={mono}>
+                    <div className="grid gap-2 md:grid-cols-[200px_minmax(0,1fr)_auto] md:gap-8 md:items-baseline">
+                      <h3
+                        className="text-[18px] text-[#1c1f17] transition-colors group-hover:text-[#36401f]"
+                        style={pixel}
+                      >
                         {hub.title}
                       </h3>
-                      <p className="text-sm leading-6 text-[#4d5145]">{hub.description}</p>
+                      <p className="max-w-[64ch] text-[14px] leading-6 text-[#4d5145]">
+                        {hub.description}
+                      </p>
+                      <span
+                        aria-hidden="true"
+                        className="hidden text-[16px] text-[#6b7d3a] transition-transform duration-200 group-hover:translate-x-1 md:inline"
+                      >
+                        →
+                      </span>
                     </div>
                   </Link>
                 ))}
@@ -435,51 +402,54 @@ export default async function LearnIndexPage() {
             </section>
           </FadeIn>
 
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#dce0d2]" />
-          </div>
-
           <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <p className="text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
+            <section className="mt-24 md:mt-32">
+              <p className="text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
                 {learnPageContent.sectionLabels.faqEyebrow}
               </p>
-              <h2 className="mt-3 text-[24px] leading-8 text-[#1c1f17] md:text-[30px]" style={pixel}>
+              <h2
+                className="mt-4 max-w-[26ch] text-[26px] leading-9 text-[#1c1f17] md:text-[34px] md:leading-[1.15]"
+                style={pixel}
+              >
                 {learnPageContent.sectionLabels.faqTitle}
               </h2>
-              <div className="mt-6 divide-y divide-[#dce0d2] border-y border-[#dce0d2]">
+              <div className="mt-10 border-t border-[#dce0d2]">
                 {faqItems.map((item, index) => (
                   <details
                     key={item.question}
                     open={index === 0}
-                    className="group py-5 [&[open]_.learn-faq-chevron]:rotate-180 [&_summary::-webkit-details-marker]:hidden"
+                    className="group border-b border-[#dce0d2] py-6 [&[open]_.learn-faq-chevron]:rotate-180 [&_summary::-webkit-details-marker]:hidden md:py-7"
                   >
                     <summary
-                      className="list-none cursor-pointer text-base text-[#1c1f17] marker:content-none"
-                      style={mono}
+                      className="list-none cursor-pointer marker:content-none"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <span>{item.question}</span>
-                        <span className="mt-0.5 hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#d8dcd0] bg-[#fffffc] md:flex">
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 16 16"
-                            className="learn-faq-chevron h-4 w-4 text-[#6b7d3a] transition-transform duration-200"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M4 6.5L8 10L12 6.5"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
+                      <div className="flex items-start justify-between gap-6">
+                        <span
+                          className="text-[17px] leading-7 text-[#1c1f17] md:text-[18px]"
+                          style={pixel}
+                        >
+                          {item.question}
                         </span>
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          className="learn-faq-chevron mt-1 h-5 w-5 shrink-0 text-[#6b7d3a] transition-transform duration-200"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 9.5L12 15.5L18 9.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </div>
                     </summary>
-                    <p className="mt-3 max-w-[760px] text-sm leading-6 text-[#4d5145]">{item.answer}</p>
+                    <p className="mt-4 max-w-[68ch] text-[15px] leading-7 text-[#4d5145]">
+                      {item.answer}
+                    </p>
                   </details>
                 ))}
               </div>

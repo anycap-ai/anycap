@@ -196,7 +196,7 @@ const enContent: ImageUnderstandingPageContent = {
     },
     { label: "Explore capabilities", href: "/capabilities" },
     { label: "Explore the CLI", href: "/cli" },
-    { label: "What agents can't do", href: "/learn/what-is-the-most-advanced-ai" },
+    { label: "What agents can't do", href: "/learn/what-agents-cant-do" },
   ],
 };
 
@@ -325,7 +325,7 @@ const ptBrContent: ImageUnderstandingPageContent = {
     },
     { label: "Explorar capacidades", href: "/capabilities" },
     { label: "Explorar a CLI", href: "/cli" },
-    { label: "O que os agentes não conseguem fazer", href: "/learn/what-is-the-most-advanced-ai" },
+    { label: "O que os agentes não conseguem fazer", href: "/learn/what-agents-cant-do" },
   ],
 };
 
@@ -454,7 +454,7 @@ const idContent: ImageUnderstandingPageContent = {
     },
     { label: "Jelajahi kemampuan", href: "/capabilities" },
     { label: "Jelajahi CLI", href: "/cli" },
-    { label: "Apa yang tidak bisa dilakukan agen", href: "/learn/what-is-the-most-advanced-ai" },
+    { label: "Apa yang tidak bisa dilakukan agen", href: "/learn/what-agents-cant-do" },
   ],
 };
 
@@ -583,7 +583,7 @@ const deContent: ImageUnderstandingPageContent = {
     },
     { label: "Capabilities erkunden", href: "/capabilities" },
     { label: "CLI erkunden", href: "/cli" },
-    { label: "Was Agenten nicht können", href: "/learn/what-is-the-most-advanced-ai" },
+    { label: "Was Agenten nicht können", href: "/learn/what-agents-cant-do" },
   ],
 };
 

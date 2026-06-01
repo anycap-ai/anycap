@@ -85,6 +85,8 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "learn-how-to-make-background-white-for-product-photos": ptBrAndIdRolloutSeoLocales,
   "learn-how-to-remove-people-from-photos": ptBrAndIdRolloutSeoLocales,
   "learn-smart-goal-generator": ptBrAndIdRolloutSeoLocales,
+  "guides-install-anycap": ptBrIdAndDeRolloutSeoLocales,
+  "learn-what-agents-cant-do": ptBrIdAndDeRolloutSeoLocales,
   "learn-what-is-the-most-advanced-ai": ptBrIdAndDeRolloutSeoLocales,
   "learn-how-to-brighten-a-photo-online": ptBrAndIdRolloutSeoLocales,
   "learn-how-to-make-a-photo-into-a-drawing": ptBrAndIdRolloutSeoLocales,

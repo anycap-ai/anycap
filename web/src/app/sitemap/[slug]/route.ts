@@ -8,6 +8,8 @@ export const runtime = "edge";
 const XML_HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
   "Cache-Control": "public, max-age=0, must-revalidate",
+  "CDN-Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+  "Cloudflare-CDN-Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
 } as const;
 
 function parseLocaleFromSlug(slug: string): SiteLocale | null {

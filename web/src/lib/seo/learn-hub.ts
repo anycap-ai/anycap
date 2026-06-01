@@ -92,7 +92,7 @@ const clusterMetaById: Record<string, LearnHubClusterMeta> = {
     summary: "Use the gap map before you decide what to add next.",
     description:
       "This path works best when the agent mostly succeeds already, but breaks on screenshots, recordings, generation, or delivery and you need to separate model hype from real missing capability.",
-    featuredId: "learn-what-is-the-most-advanced-ai",
+    featuredId: "learn-what-agents-cant-do",
     relatedLinks: [
       { label: "Agent Harness", href: "/glossary/agent-harness" },
       { label: "Capabilities hub", href: "/capabilities" },
@@ -150,6 +150,13 @@ const nodeMetaById: Record<string, LearnHubNodeMeta> = {
       "An implementation path for extending a SaaS chatbot with image, video, web, and delivery workflows without rebuilding the whole stack.",
     badge: "Implementation",
     updated: "Apr 7, 2026",
+  },
+  "learn-what-agents-cant-do": {
+    description:
+      "A practical map of what coding agents still cannot do without vision, generation, search, or delivery layers, and how to close those gaps.",
+    badge: "Explainer",
+    updated: "Jun 1, 2026",
+    order: 5,
   },
   "learn-what-is-the-most-advanced-ai": {
     description:
