@@ -129,7 +129,7 @@ type Config struct {
 	UsageSyncPollInterval   time.Duration
 	UsageSyncBatchSize      int
 	Artifact                ArtifactConfig
-	Api302                  Api302Config
+	Web                     WebConfig
 	AgentControl            AgentControlConfig
 	// Storage quota
 	StorageQuotaDConfEnabled bool
@@ -242,9 +242,11 @@ type CloudflareKVConfig struct {
 	APIBaseURL  string
 }
 
-type Api302Config struct {
-	APIKey  string
-	BaseURL string
+type WebConfig struct {
+	// SearchAbilityKey and ScrapeAbilityKey are the NexusHub ability keys for
+	// the 302 AI general-search and firecrawl-scrape capabilities.
+	SearchAbilityKey string
+	ScrapeAbilityKey string
 }
 
 type AgentControlConfig struct {
@@ -269,8 +271,8 @@ type AgentControlFixedRunnerConfig struct {
 	RunnerID string `json:"runner_id"`
 }
 
-func (c Api302Config) Enabled() bool {
-	return c.APIKey != ""
+func (c WebConfig) Enabled() bool {
+	return true
 }
 
 func (c AgentControlFeishuConfig) WebhookEnabled() bool {
@@ -418,9 +420,9 @@ func LoadFromEnv() (Config, error) {
 			IngestToken:    getEnv("ANYCAP_ARTIFACT_INGEST_TOKEN", ""),
 			LinkTTLSeconds: getEnvInt64("ANYCAP_ARTIFACT_LINK_TTL_SECONDS", defaultArtifactLinkTTL),
 		},
-		Api302: Api302Config{
-			APIKey:  getEnv("API_302_API_KEY", ""),
-			BaseURL: getEnv("API_302_BASE_URL", ""),
+		Web: WebConfig{
+			SearchAbilityKey: getEnv("ANYCAP_WEB_SEARCH_ABILITY_KEY", "302ai-general-search"),
+			ScrapeAbilityKey: getEnv("ANYCAP_WEB_SCRAPE_ABILITY_KEY", "302ai-firecrawl-scrape"),
 		},
 		// Storage quota
 		StorageQuotaDConfEnabled: getEnvBool("ANYCAP_STORAGE_QUOTA_DCONF_ENABLED", false),

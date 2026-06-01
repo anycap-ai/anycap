@@ -621,13 +621,14 @@ type submitUserInfo struct {
 }
 
 type atomicProcessPayload struct {
-	GenType     string             `json:"gen_type"`
-	Prompt      string             `json:"prompt,omitempty"`
-	ResourceURL string             `json:"resource_url,omitempty"`
-	ImageOption *atomicImageOption `json:"image_option,omitempty"`
-	VideoOption *atomicVideoOption `json:"video_option,omitempty"`
-	MusicOption *atomicMusicOption `json:"music_option,omitempty"`
-	MetaOption  map[string]any     `json:"meta_option,omitempty"`
+	GenType      string              `json:"gen_type"`
+	Prompt       string              `json:"prompt,omitempty"`
+	ResourceURL  string              `json:"resource_url,omitempty"`
+	ImageOption  *atomicImageOption  `json:"image_option,omitempty"`
+	VideoOption  *atomicVideoOption  `json:"video_option,omitempty"`
+	MusicOption  *atomicMusicOption  `json:"music_option,omitempty"`
+	SearchOption *atomicSearchOption `json:"search_option,omitempty"`
+	MetaOption   map[string]any      `json:"meta_option,omitempty"`
 }
 
 type atomicImageOption struct {
