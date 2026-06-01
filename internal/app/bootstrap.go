@@ -32,7 +32,6 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/agentplatform"
-	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/api302"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/artifactingest"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/auth"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/credit"
@@ -272,8 +271,8 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.MusicModels:   hasCatalogProvider(cfg),
 		feature.Drive:         true,
 		feature.Page:          true,
-		feature.WebSearch:     cfg.Api302.Enabled() || cfg.AgentPlatform.Enabled(),
-		feature.WebCrawl:      cfg.Api302.Enabled(),
+		feature.WebSearch:     hasWebExecutionProvider(cfg) || cfg.AgentPlatform.Enabled(),
+		feature.WebCrawl:      hasWebExecutionProvider(cfg),
 		feature.AgentControl:  true,
 	}
 
@@ -579,14 +578,17 @@ func buildCapabilitiesProvider(cfg config.Config) port.CapabilitiesProvider {
 }
 
 func buildWebCrawler(cfg config.Config) port.WebCrawler {
-	if cfg.Api302.Enabled() {
-		logging.WithField("base_url", cfg.Api302.BaseURL).Info("web crawler using 302 AI")
-		return api302.NewClient(api302.ClientConfig{
-			APIKey:  cfg.Api302.APIKey,
-			BaseURL: cfg.Api302.BaseURL,
+	if hasWebExecutionProvider(cfg) {
+		baseURL := cfg.ResolvedNexusHubCoreBaseURL()
+		logging.WithField("base_url", baseURL).Info("web crawler using nexushub")
+		return nexushub.NewWebClient(nexushub.WebClientConfig{
+			BaseURL:          baseURL,
+			Token:            cfg.ResolvedNexusHubCoreToken(),
+			SearchAbilityKey: cfg.Web.SearchAbilityKey,
+			ScrapeAbilityKey: cfg.Web.ScrapeAbilityKey,
 		})
 	}
-	logging.GetLogger().Info("web crawler not configured (API_302_API_KEY not set)")
+	logging.GetLogger().Info("web crawler not configured (NexusHub Core not set)")
 	return nil
 }
 
@@ -600,14 +602,17 @@ func buildWebSearchProvider(cfg config.Config) port.WebSearchProvider {
 }
 
 func buildWebGeneralSearchProvider(cfg config.Config) port.WebGeneralSearchProvider {
-	if cfg.Api302.Enabled() {
-		logging.WithField("base_url", cfg.Api302.BaseURL).Info("web general search using 302 AI")
-		return api302.NewClient(api302.ClientConfig{
-			APIKey:  cfg.Api302.APIKey,
-			BaseURL: cfg.Api302.BaseURL,
+	if hasWebExecutionProvider(cfg) {
+		baseURL := cfg.ResolvedNexusHubCoreBaseURL()
+		logging.WithField("base_url", baseURL).Info("web general search using nexushub")
+		return nexushub.NewWebClient(nexushub.WebClientConfig{
+			BaseURL:          baseURL,
+			Token:            cfg.ResolvedNexusHubCoreToken(),
+			SearchAbilityKey: cfg.Web.SearchAbilityKey,
+			ScrapeAbilityKey: cfg.Web.ScrapeAbilityKey,
 		})
 	}
-	logging.GetLogger().Info("web general search not configured (API_302_API_KEY not set)")
+	logging.GetLogger().Info("web general search not configured (NexusHub Core not set)")
 	return nil
 }
 
@@ -961,6 +966,10 @@ func hasVideoExecutionProvider(cfg config.Config) bool {
 }
 
 func hasMusicExecutionProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func hasWebExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
 

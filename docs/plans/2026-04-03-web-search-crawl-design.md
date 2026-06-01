@@ -6,7 +6,7 @@ Date: 2026-04-03
 
 Add web search and web crawl capabilities to AnyCap. Search has two modes:
 
-- **General search** -- Google web search via 302 AI Unified Search API. Returns a list of results with title, URL, description, and optionally full page content. Cost: 1 credit.
+- **General search** -- Google web search via NexusHub Core (`302ai-general-search`). Returns a list of results with title, URL, description, and optionally full page content. Cost: 1 credit.
 - **LLM grounding search** -- LLM-powered search via Agent Platform. Returns a synthesized answer with citations grounded in real-time web data. Cost: 5 credits.
 
 Crawl converts a web page to Markdown. Cost: 1 credit.
@@ -16,19 +16,20 @@ Crawl converts a web page to Markdown. Cost: 1 credit.
 ```mermaid
 graph TD
     CLI["anycap CLI"] --> Server["AnyCap Server"]
-    Server --> API302["302 AI<br/>Unified Search + Firecrawl"]
+    Server --> NexusHub["NexusHub Core<br/>302ai-general-search + 302ai-firecrawl-scrape"]
     Server --> AP["Agent Platform<br/>LLM Grounding"]
     
     subgraph "Server Layers"
-        Handler["Transport: web_handler.go"]
+        Handler["Transport: web/handler.go"]
         Service["Application: web/service.go"]
-        API302Client["Infrastructure: api302.Client"]
+        WebClient["Infrastructure: nexushub.WebClient"]
         APClient["Infrastructure: agentplatform.Client"]
     end
     
     Handler --> Service
-    Service --> API302Client
+    Service --> WebClient
     Service --> APClient
+    WebClient --> NexusHub
 ```
 
 ## Server API
@@ -270,20 +271,39 @@ anycap crawl https://example.com | jq -r '.markdown'
 
 | Feature | Env var | Default |
 |---------|---------|---------|
-| `web.search` | `ANYCAP_FEATURE_WEB_SEARCH` | true if `API_302_API_KEY` OR `AGENT_PLATFORM` configured |
-| `web.crawl` | `ANYCAP_FEATURE_WEB_CRAWL` | true if `API_302_API_KEY` configured |
+| `web.search` | `ANYCAP_FEATURE_WEB_SEARCH` | true if NexusHub Core OR Agent Platform configured |
+| `web.crawl` | `ANYCAP_FEATURE_WEB_CRAWL` | true if NexusHub Core configured |
 
 The `web.search` feature is enabled if either provider is available. The server returns a specific error
 if the requested mode's provider is not configured (e.g. grounding requested but Agent Platform not set up,
-or general requested but 302 AI not set up).
+or general requested but NexusHub Core not set up).
 
 ## Infrastructure Dependencies
 
-| Mode | Provider | Env var |
-|------|----------|---------|
-| General search | 302 AI (search1_search, Google) | `API_302_API_KEY` |
+General search and crawl route through **NexusHub Core** via `submit_atomic_process`, using the
+`302ai-general-search` and `302ai-firecrawl-scrape` abilities. The 302 AI key lives inside NexusHub;
+AnyCap holds no direct 302 AI credential.
+
+| Mode | Provider | Config |
+|------|----------|--------|
+| General search | NexusHub Core (`302ai-general-search`) | `NEXUSHUB_CORE_BASE_URL` + `NEXUSHUB_CORE_TOKEN` (+ optional `ANYCAP_WEB_SEARCH_ABILITY_KEY`) |
 | Grounding search | Agent Platform (Gemini grounding) | `AGENT_PLATFORM_BASE_URL` + `AGENT_PLATFORM_API_KEY` + `AGENT_SEARCH_GROUNDING_MODEL` |
-| Crawl | 302 AI (Firecrawl) | `API_302_API_KEY` |
+| Crawl | NexusHub Core (`302ai-firecrawl-scrape`) | `NEXUSHUB_CORE_BASE_URL` + `NEXUSHUB_CORE_TOKEN` (+ optional `ANYCAP_WEB_SCRAPE_ABILITY_KEY`) |
+
+### NexusHub atomic payloads
+
+Both abilities use `gen_type: "search"` with a `search_option` block:
+
+- General search: `{"type":"web_search","provider":"search1_search","category":"google","query":...,"max_results":...,"crawl_results":...}`. Date-range filters (`after`/`before`) route to `provider:"exa"` with `startPublishedDate`/`endPublishedDate`.
+- Crawl: `{"type":"web_scrape","url":...,"formats":["markdown"],"onlyMainContent":true,"timeout":30000}`.
+
+The atomic `resp_payload` nests the upstream payload under `resources[0].meta_data.data`. Search result
+field names vary by provider (search1 returns `link`/`snippet`/`content`; exa returns `url`/`summary`/`text`/`publishedDate`),
+so the client normalizes all known aliases.
+
+For general search with `crawl_results >= 2`, NexusHub completes the task but returns an empty inline
+`resp_payload`; the client then polls `GET /v1/get_submit_result/{task_id}` (with `X-Token`) until the
+payload is populated. Crawl and low-crawl searches return their payload inline in the submit response.
 
 ## Implementation Plan
 
@@ -294,7 +314,7 @@ or general requested but 302 AI not set up).
 - [x] Infrastructure: `api302.Client.Crawl`
 - [x] Application: `web.Service.Crawl` (1 credit)
 - [x] Handler: `POST /v1/web/crawl`
-- [x] Config: `Api302Config` (`API_302_API_KEY`, `API_302_BASE_URL`)
+- [x] Config: web crawl routes through NexusHub Core (`NEXUSHUB_CORE_*`, `ANYCAP_WEB_SCRAPE_ABILITY_KEY`)
 - [x] Feature flag: `web.crawl`
 - [x] Bootstrap wiring
 - [x] CLI: `anycap crawl <url>`
@@ -316,7 +336,7 @@ or general requested but 302 AI not set up).
 
 ### Phase 3: General search (done)
 
-- [x] Infrastructure: `api302.Client.SearchGeneral` (302 AI Unified Search API port adapter)
+- [x] Infrastructure: `nexushub.WebClient.SearchGeneral` (NexusHub atomic-process port adapter)
 - [x] Application: `web.Service.SearchGeneral` (general mode, 1 credit)
 - [x] Handler: dispatch by mode, strip model/usage/duration_ms from grounding response
 - [x] CLI: `anycap search --query` with general mode flags (--max-results, --time-range, --include, --exclude, --no-crawl)
