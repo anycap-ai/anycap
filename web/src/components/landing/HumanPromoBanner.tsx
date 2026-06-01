@@ -71,7 +71,7 @@ export function HumanPromoBanner() {
           className="min-w-0 flex-1 text-left text-[13px] font-medium leading-[1.45] md:text-[14px]"
           style={mono}
         >
-          Your agent here. Start me with 250 bonus credits before Apr 30, and I&apos;ll show you what I can do.
+          Your agent here. Start me with 250 bonus credits before Jun 30, and I&apos;ll show you what I can do.
         </p>
         <LoginButton
           className="hidden shrink-0 rounded-full bg-[#1c1f17] px-4 py-2 text-[12px] text-[#f4f5f0] transition-all hover:bg-[#11140e] md:inline-flex"

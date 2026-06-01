@@ -655,7 +655,7 @@ const agenticWorkflowContentEn: GlossaryEntryPageData = {
     "For teams using AnyCap, the capability runtime is the tool layer that makes agentic workflows with generation, understanding, and retrieval possible. Without it, developers must build and maintain separate integrations for each action type, which adds failure surface and slows iteration. A runtime that covers image, video, vision, web search, web crawl, storage, and publishing in one install path reduces the integration overhead that would otherwise fragment the workflow into disconnected pieces. This is why teams running high-diversity agentic workflows typically benefit most from the runtime architecture.",
   ],
   relatedLinks: [
-    { label: "What Agents Can't Do", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "What Agents Can't Do", href: "/learn/what-agents-cant-do", variant: "primary" },
     { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
@@ -693,7 +693,7 @@ const agenticWorkflowContentPtBr: GlossaryEntryPageData = {
     "Para times que usam AnyCap, o runtime de capacidades é a camada de ferramentas que torna possíveis fluxos agênticos com geração, entendimento e recuperação. Sem ele, os desenvolvedores precisam construir e manter integrações separadas para cada tipo de ação, o que adiciona superfície de falha e desacelera a iteração. Um runtime que cobre imagem, vídeo, visão, busca web, web crawl, armazenamento e publicação em um único caminho de instalação reduz o overhead de integração que, de outra forma, fragmentaria o fluxo em partes desconectadas.",
   ],
   relatedLinks: [
-    { label: "O que agentes não conseguem fazer", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "O que agentes não conseguem fazer", href: "/learn/what-agents-cant-do", variant: "primary" },
     { label: "Engenharia de Contexto", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "Capacidades do AnyCap", href: "/capabilities", variant: "secondary" },
   ],
@@ -731,7 +731,7 @@ const agenticWorkflowContentDe: GlossaryEntryPageData = {
     "Für Teams, die AnyCap nutzen, ist die Capability-Runtime die Tool-Schicht, die Agentic Workflows mit Generation, Understanding und Retrieval möglich macht. Ohne sie müssten Entwickler separate Integrationen für jeden Aktionstyp bauen und pflegen, was die Fehlerfläche vergrößert und Iteration verlangsamt. Eine Runtime, die Image, Video, Vision, Web Search, Web Crawl, Storage und Publishing in einem Installationspfad abdeckt, reduziert den Integrations-Overhead, der den Workflow sonst in unverbundene Teile fragmentieren würde. Deshalb profitieren Teams mit hochdiversen Agentic Workflows typischerweise am meisten von der Runtime-Architektur.",
   ],
   relatedLinks: [
-    { label: "Was Agents nicht können", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Was Agents nicht können", href: "/learn/what-agents-cant-do", variant: "primary" },
     { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "AnyCap Capabilities", href: "/capabilities", variant: "secondary" },
   ],
@@ -769,7 +769,7 @@ const agenticWorkflowContentId: GlossaryEntryPageData = {
     "Untuk tim yang memakai AnyCap, capability runtime adalah lapisan tool yang membuat agentic workflow dengan pembuatan, pemahaman, dan pengambilan data jadi mungkin. Tanpa itu, developer harus membangun dan memelihara integrasi terpisah untuk tiap tipe aksi, yang menambah permukaan kegagalan dan memperlambat iterasi. Runtime yang menutup image, video, visi, web search, web crawl, storage, dan publishing dalam satu install path mengurangi overhead integrasi yang kalau tidak akan memecah workflow jadi potongan-potongan yang tidak terhubung. Itulah sebabnya tim yang menjalankan agentic workflow dengan keragaman tinggi biasanya paling diuntungkan oleh arsitektur runtime ini.",
   ],
   relatedLinks: [
-    { label: "Yang tidak bisa dilakukan agen", href: "/learn/what-is-the-most-advanced-ai", variant: "primary" },
+    { label: "Yang tidak bisa dilakukan agen", href: "/learn/what-agents-cant-do", variant: "primary" },
     { label: "Context Engineering", href: "/guides/context-engineering-for-agents", variant: "secondary" },
     { label: "Kapabilitas AnyCap", href: "/capabilities", variant: "secondary" },
   ],

@@ -151,7 +151,7 @@ export const learnDropdown: NavDropdownDef = {
       description: "Browse comparison pages for adjacent agent tooling, media APIs, and tradeoffs.",
     },
     {
-      href: "/learn/what-is-the-most-advanced-ai",
+      href: "/learn/what-agents-cant-do",
       label: "Most Advanced AI",
       section: "Evaluate",
       description: "Separate model capability from workflow and runtime capability decisions.",

@@ -136,7 +136,7 @@ const gapEntrances: readonly Omit<StartGapEntrance, "summary">[] = [
   {
     eyebrow: "Problem intent",
     title: "What agents still can't do",
-    href: "/learn/what-is-the-most-advanced-ai",
+    href: "/learn/what-agents-cant-do",
   },
   {
     eyebrow: "Capability hub",
@@ -148,12 +148,12 @@ const gapEntrances: readonly Omit<StartGapEntrance, "summary">[] = [
 const contentByLocale: Partial<Record<SiteLocale, StartPageContent>> = {
   en: {
     metadata: {
-      title: "Get started with AnyCap, Don't switch agents, add capabilities immediately",
+      title: "Get Started with AnyCap — Install CLI, Auth & First Command",
       description:
-        "Start with AnyCap in minutes. Pick Claude Code, Cursor, or Codex, then ask in natural language to install one skill and one CLI and add image, video, and vision capabilities without switching agents.",
-      openGraphTitle: "Get started with AnyCap, Don't switch agents, add capabilities immediately",
+        "Install AnyCap in minutes: add the agent skill, install the CLI, log in once, and run your first image or video command in Claude Code, Cursor, or Codex without switching agents.",
+      openGraphTitle: "Get Started with AnyCap — Install CLI, Auth & First Command",
       openGraphDescription:
-        "Pick your agent, ask in natural language, and add image, video, and vision capabilities through one CLI.",
+        "Pick your agent, install one skill and one CLI, then add image, video, and vision capabilities through a single command surface.",
       pageName: "Get started with AnyCap",
       pageDescription:
         "Quick start page for installing AnyCap by asking your agent in natural language and choosing the right onboarding path for Claude Code, Cursor, or Codex.",

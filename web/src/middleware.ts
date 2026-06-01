@@ -16,6 +16,16 @@ const globalUiPrefixes = ["/auth", "/dashboard"];
 const globalUiPaths = new Set(["/"]);
 const metadataRoutePaths = new Set(["/twitter-image"]);
 
+// Paths that always require a per-request response (auth session work, dashboards, API).
+// We never attach edge-cache headers to these regardless of cookie state.
+const noCachePathPrefixes = ["/dashboard", "/auth", "/api"];
+
+// CF Edge cache directive for SEO HTML.
+//   browser → always revalidate (max-age=0, must-revalidate)
+//   CF Edge → cache 1h, serve stale up to 24h while revalidating
+const seoBrowserCacheControl = "public, max-age=0, must-revalidate";
+const seoEdgeCdnCacheControl = "public, s-maxage=3600, stale-while-revalidate=86400";
+
 const anycapApiOrigin = (() => {
   try {
     return new URL(process.env.NEXT_PUBLIC_ANYCAP_API_URL || "").origin;
@@ -68,6 +78,50 @@ function internalDefaultLocalePath(pathname: string): string {
   return normalizedPath === "/" ? `/${defaultLocale}` : `/${defaultLocale}${normalizedPath}`;
 }
 
+function isPubliclyCacheablePath(rawPathname: string, strippedPathname: string): boolean {
+  // Auth/dashboard/API routes must never be edge-cached even if they happen to
+  // return no Set-Cookie on a given request.
+  for (const prefix of noCachePathPrefixes) {
+    if (rawPathname === prefix || rawPathname.startsWith(`${prefix}/`)) {
+      return false;
+    }
+    if (strippedPathname === prefix || strippedPathname.startsWith(`${prefix}/`)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Opportunistically attach CF Edge cache headers. Only safe when:
+//   - request path is a public SEO/marketing route
+//   - response does NOT set cookies (Auth0 session refresh would invalidate caching)
+//   - response is not a redirect (CF caches redirects on its own defaults)
+//   - response is not an explicit error status from middleware (e.g., 404 rewrite)
+// In every other case we leave headers untouched -- same behavior as today.
+function maybeApplyEdgeCacheHeaders(
+  target: NextResponse,
+  rawPathname: string,
+  strippedPathname: string,
+) {
+  if (!isPubliclyCacheablePath(rawPathname, strippedPathname)) {
+    return target;
+  }
+  if (target.headers.has("set-cookie")) {
+    return target;
+  }
+  // Skip non-2xx middleware responses (redirects, 404 rewrites). The downstream
+  // page may still return its own non-2xx status; cache headers we set here will
+  // ride along, which is acceptable for static SEO 404s.
+  if (target.status >= 300) {
+    return target;
+  }
+
+  target.headers.set("Cache-Control", seoBrowserCacheControl);
+  target.headers.set("CDN-Cache-Control", seoEdgeCdnCacheControl);
+  target.headers.set("Cloudflare-CDN-Cache-Control", seoEdgeCdnCacheControl);
+  return target;
+}
+
 function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
   for (const cookie of authResponse.cookies.getAll()) {
     target.cookies.set(cookie);
@@ -84,6 +138,13 @@ function applyAuthResponse(target: NextResponse, authResponse: NextResponse) {
 }
 
 export async function middleware(req: NextRequest) {
+  const response = await runMiddleware(req);
+  const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
+  const { pathname } = stripLocalePrefix(normalizedPath);
+  return maybeApplyEdgeCacheHeaders(response, req.nextUrl.pathname, pathname);
+}
+
+async function runMiddleware(req: NextRequest): Promise<NextResponse> {
   const authResponse = await auth0.middleware(req);
   const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
   const { locale, pathname } = stripLocalePrefix(normalizedPath);

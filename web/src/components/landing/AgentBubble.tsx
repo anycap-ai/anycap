@@ -89,7 +89,7 @@ export function AgentBubble() {
             Let me show you what I can do<span className="text-[#5f7a29]">.</span>
           </p>
           <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
-            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Apr 30</span>.
+            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Jun 30</span>.
           </p>
           <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
             Go to dashboard
@@ -115,7 +115,7 @@ export function AgentBubble() {
             Let me show you what I can do<span className="text-[#5f7a29]">.</span>
           </p>
           <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
-            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Apr 30</span>.
+            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Jun 30</span>.
           </p>
           <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
             Try it free

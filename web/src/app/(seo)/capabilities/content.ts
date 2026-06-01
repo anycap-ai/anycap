@@ -228,7 +228,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Deficiency hub",
         title: "What agents can't do",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary:
           "Start here if you are diagnosing the missing capability before choosing a specific page.",
       },
@@ -241,10 +241,10 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
       {
         eyebrow: "Install path",
-        title: "Get Started",
-        href: "/start",
+        title: "Install AnyCap",
+        href: "/guides/install-anycap",
         summary:
-          "Start here if you want the shortest path from zero setup to first capability call.",
+          "Step-by-step install guide for the CLI, auth, verification, and first command.",
       },
     ],
     buttonLabels: {
@@ -374,7 +374,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Hub de deficiências",
         title: "O que os agentes não conseguem fazer",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary:
           "Comece aqui se você está diagnosticando a capacidade ausente antes de escolher uma página específica.",
       },
@@ -387,10 +387,10 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
       {
         eyebrow: "Caminho de instalação",
-        title: "Comece agora",
-        href: "/start",
+        title: "Instalar AnyCap",
+        href: "/guides/install-anycap",
         summary:
-          "Comece aqui se você quer o caminho mais curto do zero à primeira chamada de capacidade.",
+          "Guia passo a passo para instalar a CLI, autenticar, verificar e executar o primeiro comando.",
       },
     ],
     buttonLabels: {
@@ -520,7 +520,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Hub kekurangan",
         title: "Apa yang tidak bisa dilakukan agen",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary:
           "Mulai di sini jika Anda sedang mendiagnosis kemampuan yang hilang sebelum memilih halaman tertentu.",
       },
@@ -533,10 +533,10 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
       {
         eyebrow: "Jalur instalasi",
-        title: "Mulai",
-        href: "/start",
+        title: "Instal AnyCap",
+        href: "/guides/install-anycap",
         summary:
-          "Mulai di sini jika Anda ingin jalur tercepat dari setup nol ke panggilan kapabilitas pertama.",
+          "Panduan langkah demi langkah untuk menginstal CLI, autentikasi, verifikasi, dan perintah pertama.",
       },
     ],
     buttonLabels: {
@@ -666,7 +666,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       {
         eyebrow: "Defizit-Hub",
         title: "Was Agenten nicht können",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary:
           "Beginnen Sie hier, wenn Sie die fehlende Capability diagnostizieren, bevor Sie eine spezifische Seite wählen.",
       },
@@ -679,10 +679,10 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
       {
         eyebrow: "Installationspfad",
-        title: "Loslegen",
-        href: "/start",
+        title: "AnyCap installieren",
+        href: "/guides/install-anycap",
         summary:
-          "Beginnen Sie hier, wenn Sie den kürzesten Weg vom Null-Setup zum ersten Capability-Aufruf wollen.",
+          "Schritt-für-Schritt-Anleitung zur Installation der CLI, Authentifizierung, Verifizierung und des ersten Befehls.",
       },
     ],
     buttonLabels: {

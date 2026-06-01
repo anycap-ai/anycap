@@ -22,9 +22,11 @@ import {
 } from "@/app/(seo)/glossary/content";
 import { getContextEngineeringForAgentsMetadata } from "@/app/(seo)/guides/context-engineering-for-agents/content";
 import { getGuidesMetadata } from "@/app/(seo)/guides/content";
+import { getInstallAnycapMetadata } from "@/app/(seo)/guides/install-anycap/content";
 import { getMcpVsSkillsMetadata } from "@/app/(seo)/guides/mcp-vs-skills/content";
 import { getLearnMetadata } from "@/app/(seo)/learn/content";
 import { getBestAICursorMetadata } from "@/app/(seo)/learn/best-ai-for-cursor/content";
+import { getWhatAgentsCantDoMetadata } from "@/app/(seo)/learn/what-agents-cant-do/content";
 import { getWhatIsTheMostAdvancedAIMetadata } from "@/app/(seo)/learn/what-is-the-most-advanced-ai/content";
 import { getSkillsMetadata } from "@/app/(seo)/skills/content";
 import { getPrivacyMetadata } from "@/app/(seo)/privacy/content";
@@ -64,6 +66,8 @@ const localizedMetadataByRouteKey: Partial<
     getContextEngineeringForAgentsMetadata,
   learn: getLearnMetadata,
   "learn-best-ai-for-cursor": getBestAICursorMetadata,
+  "guides-install-anycap": getInstallAnycapMetadata,
+  "learn-what-agents-cant-do": getWhatAgentsCantDoMetadata,
   "learn-what-is-the-most-advanced-ai": getWhatIsTheMostAdvancedAIMetadata,
   privacy: getPrivacyMetadata,
   skills: getSkillsMetadata,
@@ -74,7 +78,9 @@ const localizedMetadataByRouteKey: Partial<
 
 const localizedMetadataByPath: Partial<Record<string, LocalizedMetadataResolver>> =
   {
+    "/guides/install-anycap": getInstallAnycapMetadata,
     "/guides/mcp-vs-skills": getMcpVsSkillsMetadata,
+    "/learn/what-agents-cant-do": getWhatAgentsCantDoMetadata,
   };
 
 export async function getValidatedLocale(

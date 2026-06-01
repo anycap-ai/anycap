@@ -109,6 +109,12 @@ export const manualSeoRouteDefinitions = [
     priority: 0.72,
   },
   {
+    key: "learn-what-agents-cant-do",
+    kind: "seo",
+    path: "/learn/what-agents-cant-do",
+    priority: 0.84,
+  },
+  {
     key: "learn-what-is-the-most-advanced-ai",
     kind: "seo",
     path: "/learn/what-is-the-most-advanced-ai",
@@ -131,6 +137,12 @@ export const manualSeoRouteDefinitions = [
     kind: "seo",
     path: "/learn/add-multimodal-capabilities-to-saas-chatbot",
     priority: 0.78,
+  },
+  {
+    key: "guides-install-anycap",
+    kind: "seo",
+    path: "/guides/install-anycap",
+    priority: 0.88,
   },
   {
     key: "guides-mcp-vs-skills",

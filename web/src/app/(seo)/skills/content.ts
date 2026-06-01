@@ -244,7 +244,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Learn",
         title: "What agents can't do",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary: "Use this when you want the capability-gap narrative before choosing the next product or capability page.",
       },
       {
@@ -257,7 +257,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     ctas: [
       { label: "Install AnyCap", href: "/start" },
       { label: "Why One CLI Matters", href: "/cli" },
-      { label: "See Capability Gaps", href: "/learn/what-is-the-most-advanced-ai" },
+      { label: "See Capability Gaps", href: "/learn/what-agents-cant-do" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "en",
@@ -351,7 +351,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Aprender",
         title: "O que agentes não conseguem fazer",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary: "Comece aqui se você quiser a narrativa sobre lacunas de capacidade antes de escolher a próxima página de produto ou capacidade.",
       },
       {
@@ -364,7 +364,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     ctas: [
       { label: "Instalar o AnyCap", href: "/start" },
       { label: "Por que uma CLI importa", href: "/cli" },
-      { label: "Ver lacunas de capacidade", href: "/learn/what-is-the-most-advanced-ai" },
+      { label: "Ver lacunas de capacidade", href: "/learn/what-agents-cant-do" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "pt-br",
@@ -458,7 +458,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Pelajari",
         title: "Apa yang tidak bisa dilakukan agen",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary: "Gunakan ini ketika Anda ingin narasi celah kapabilitas sebelum memilih halaman produk atau kapabilitas berikutnya.",
       },
       {
@@ -471,7 +471,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     ctas: [
       { label: "Pasang AnyCap", href: "/start" },
       { label: "Mengapa Satu CLI Penting", href: "/cli" },
-      { label: "Lihat Celah Kapabilitas", href: "/learn/what-is-the-most-advanced-ai" },
+      { label: "Lihat Celah Kapabilitas", href: "/learn/what-agents-cant-do" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "id",
@@ -565,7 +565,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
       {
         eyebrow: "Learn",
         title: "Was Agents nicht können",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         summary: "Nutzen Sie das für das Capability-Lücken-Narrativ, bevor Sie die nächste Produkt- oder Capability-Seite wählen.",
       },
       {
@@ -578,7 +578,7 @@ const contentByLocale: Record<SiteLocale, SkillsPageData> = {
     ctas: [
       { label: "AnyCap installieren", href: "/start" },
       { label: "Warum eine CLI zählt", href: "/cli" },
-      { label: "Capability-Lücken sehen", href: "/learn/what-is-the-most-advanced-ai" },
+      { label: "Capability-Lücken sehen", href: "/learn/what-agents-cant-do" },
     ],
     skillsHubJsonLd: buildSkillsHubJsonLd(
       "de",

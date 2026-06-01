@@ -10,6 +10,7 @@ import {
   type PublicRouteKey,
   type SiteLocale,
 } from "@/lib/site";
+import { noIndexSeoPaths } from "@/lib/seo/noindex-paths";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 
 function cloneOpenGraph(openGraph: Metadata["openGraph"]): Metadata["openGraph"] {
@@ -103,7 +104,7 @@ export function createLocalizedMetadataForPath(
       images: hasValues(twitterImages) ? twitterImages : [defaultSocialImage.url],
     } as Metadata["twitter"],
     robots: createRobotsMetadata({
-      allowIndexing: isIndexedPathForLocale,
+      allowIndexing: isIndexedPathForLocale && !noIndexSeoPaths.has(normalizedPath),
     }),
   };
 }

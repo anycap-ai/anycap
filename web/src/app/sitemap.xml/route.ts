@@ -6,7 +6,12 @@ export const runtime = "edge";
 
 const XML_HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
+  // Browser revalidates on every request; CF Edge holds the rendered XML for 24h
+  // and serves it stale for up to 7d while revalidating. Sitemap content only
+  // changes at build time (generate-sitemap-lastmod runs in CI).
   "Cache-Control": "public, max-age=0, must-revalidate",
+  "CDN-Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+  "Cloudflare-CDN-Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
 } as const;
 
 export async function GET() {

@@ -68,7 +68,7 @@ const enContent = {
     creditNote: {
       eyebrow: "Limited-time start credit",
       title: "250 free credits for new sign-ups",
-      body: "As of this page update, new sign-ups receive 250 free credits ($5 value) through Apr 30. That is enough room for a small still-first validation loop before you decide whether the persona deserves more spend.",
+      body: "As of this page update, new sign-ups receive 250 free credits ($5 value) through Jun 30. That is enough room for a small still-first validation loop before you decide whether the persona deserves more spend.",
       href: "/pricing",
       ctaLabel: "See pricing",
     },
@@ -105,7 +105,7 @@ const enContent = {
         "The low-cost move is not to chase a full influencer platform immediately. It is to prove the persona first.",
         "Still-image validation is the cheapest useful step because it reveals whether the face, niche, and framing are worth carrying into video.",
         "Nano Banana 2 is the best first pass when you need several realistic options quickly. Nano Banana Pro is the cleanup step when one option already looks promising.",
-        "As of this update, new sign-ups receive 250 free credits ($5 value) through Apr 30, which makes the first still-validation loop easier to test without upfront spend.",
+        "As of this update, new sign-ups receive 250 free credits ($5 value) through Jun 30, which makes the first still-validation loop easier to test without upfront spend.",
       ],
     },
     workflow: {
@@ -289,7 +289,7 @@ const enContent = {
         {
           question: "Is there a limited-time free-credit offer right now?",
           answer:
-        "At the time this page was updated, new sign-ups received 250 free credits ($5 value) through Apr 30. The best use of that bonus is to test the still-first workflow early rather than spending it all on a bigger end-to-end creator stack immediately.",
+        "At the time this page was updated, new sign-ups received 250 free credits ($5 value) through Jun 30. The best use of that bonus is to test the still-first workflow early rather than spending it all on a bigger end-to-end creator stack immediately.",
         },
       ],
     },

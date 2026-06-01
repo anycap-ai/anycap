@@ -271,7 +271,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Map the capability gap",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         body: "Use this page if you want the shortest explanation of what breaks first when chat alone is not enough.",
       },
       {
@@ -506,7 +506,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Mapeie a lacuna de capacidades",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         body: "Use esta pagina se quiser a explicacao mais curta sobre o que quebra primeiro quando o chat sozinho nao basta.",
       },
       {
@@ -741,7 +741,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Petakan gap kapabilitas",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         body: "Gunakan halaman ini untuk memahami dengan cepat titik kegagalan saat chat saja tidak lagi cukup.",
       },
       {
@@ -976,7 +976,7 @@ const contentByLocale: Record<"en" | "pt-br" | "id" | "de", PageContent> = {
       },
       {
         title: "Die Capability-Luecke kartieren",
-        href: "/learn/what-is-the-most-advanced-ai",
+        href: "/learn/what-agents-cant-do",
         body: "Diese Seite nutzen, um die kuerzeste Erklaerung zu bekommen, was zuerst bricht, wenn Chat allein nicht ausreicht.",
       },
       {
