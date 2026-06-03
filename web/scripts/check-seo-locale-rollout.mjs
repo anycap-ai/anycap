@@ -6,6 +6,7 @@ import { collectFiles } from "./seo-tree.mjs";
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const routesFilePath = path.join(rootDir, "src", "lib", "seo", "routes.ts");
 const rolloutFilePath = path.join(rootDir, "src", "lib", "seo-locale-rollout.ts");
+const noIndexPathsFilePath = path.join(rootDir, "src", "lib", "seo", "noindex-paths.ts");
 
 const SUPPORTED_CHECK_LOCALES = ["pt-br", "id"];
 
@@ -94,6 +95,20 @@ function extractRolloutLocalesByRouteKey(source) {
   return rolloutByRouteKey;
 }
 
+function extractNoIndexSeoPaths(source) {
+  const pathsBlockMatch = source.match(/noIndexSeoPaths\s*=\s*new Set<string>\(\[([\s\S]*?)\]\)/);
+  if (!pathsBlockMatch) {
+    throw new Error("Unable to extract noindex SEO paths from noindex-paths.ts.");
+  }
+
+  const [, pathsBlock] = pathsBlockMatch;
+  return new Set(
+    [...pathsBlock.matchAll(/["']([^"']+)["']/g)]
+      .map((match) => match[1])
+      .filter(Boolean),
+  );
+}
+
 function escapeForRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -165,9 +180,11 @@ function main() {
   const targetLocales = parseTargetLocales(process.argv.slice(2));
   const routesSource = readFileSync(routesFilePath, "utf8");
   const rolloutSource = readFileSync(rolloutFilePath, "utf8");
+  const noIndexPathsSource = readFileSync(noIndexPathsFilePath, "utf8");
 
   const routeMap = extractRouteMapFromRoutes(routesSource);
   const rolloutByRouteKey = extractRolloutLocalesByRouteKey(rolloutSource);
+  const noIndexSeoPaths = extractNoIndexSeoPaths(noIndexPathsSource);
   const contentFiles = collectFiles(path.join(rootDir, "src", "app", "(seo)")).filter((filePath) =>
     filePath.endsWith("/content.ts"),
   );
@@ -184,6 +201,10 @@ function main() {
     }
 
     const routePath = toRoutePathFromContentFile(contentFilePath);
+    if (noIndexSeoPaths.has(routePath)) {
+      continue;
+    }
+
     const routeKey = routeMap.get(routePath);
     if (!routeKey) {
       missingManualRoutes.push({
@@ -208,6 +229,10 @@ function main() {
   const strictTranslationLocales = new Set(["id"]);
 
   for (const [routePath, routeKey] of routeMap.entries()) {
+    if (noIndexSeoPaths.has(routePath)) {
+      continue;
+    }
+
     const configuredLocales = rolloutByRouteKey.get(routeKey) ?? [];
     const routeSource = readRouteSourceByPath(routePath);
 

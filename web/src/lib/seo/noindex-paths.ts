@@ -16,3 +16,9 @@ export const noIndexSeoPaths = new Set<string>([
   "/learn/what-is-an-ai-influencer",
   "/learn/ai-video-generator-from-image",
 ]);
+
+export function isNoIndexSeoPath(pathname: string): boolean {
+  const normalizedPath =
+    !pathname || pathname === "/" ? "/" : pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return noIndexSeoPaths.has(normalizedPath);
+}

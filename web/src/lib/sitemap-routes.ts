@@ -4,7 +4,7 @@ import sitemapLastmodManifest from "@/generated/sitemap-lastmod.json";
 import {
   getAllSeoIndexedLocales,
   getLocalizedRouteUrl,
-  isSeoIndexedPathForLocale,
+  isSeoIndexablePathForLocale,
   publicRouteDefinitions,
   siteConfig,
   type SiteLocale,
@@ -110,7 +110,7 @@ export function getLocaleSitemapPath(locale: SiteLocale): string {
 
 export function getLocaleSitemapRoutes(locale: SiteLocale): LocalizedSitemapRoute[] {
   return getSitemapSourceRoutes()
-    .filter((route) => isSeoIndexedPathForLocale(route.path, locale))
+    .filter((route) => isSeoIndexablePathForLocale(route.path, locale))
     .map((route) => ({
       ...route,
       locale,

@@ -15,8 +15,6 @@ type SeoLocaleRolloutConfig = Partial<
 
 export const defaultSeoIndexedLocaleCodes = ["en"] as const satisfies readonly SiteLocale[];
 
-const ptBrRolloutSeoLocales = ["en", "pt-br"] as const satisfies readonly SiteLocale[];
-const ptBrAndIdRolloutSeoLocales = ["en", "pt-br", "id"] as const satisfies readonly SiteLocale[];
 const ptBrIdAndDeRolloutSeoLocales = ["en", "pt-br", "id", "de"] as const satisfies readonly SiteLocale[];
 
 export const seoIndexedLocaleCodesByRouteKey = {
@@ -74,22 +72,10 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "learn": ptBrIdAndDeRolloutSeoLocales,
   "learn-add-multimodal-capabilities-to-saas-chatbot": ptBrIdAndDeRolloutSeoLocales,
   "learn-claude-opus-4-7-capabilities": ptBrIdAndDeRolloutSeoLocales,
-  "learn-what-is-an-ai-influencer": ptBrAndIdRolloutSeoLocales,
-  "learn-ai-video-generator-from-image": ptBrAndIdRolloutSeoLocales,
   "learn-best-ai-for-cursor": ptBrIdAndDeRolloutSeoLocales,
-  "learn-create-ai-influencer-for-free": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-make-ai-influencers": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-make-ai-influencer-videos": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-make-image-transparent": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-change-photo-background": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-make-background-white-for-product-photos": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-remove-people-from-photos": ptBrAndIdRolloutSeoLocales,
-  "learn-smart-goal-generator": ptBrAndIdRolloutSeoLocales,
   "guides-install-anycap": ptBrIdAndDeRolloutSeoLocales,
   "learn-what-agents-cant-do": ptBrIdAndDeRolloutSeoLocales,
   "learn-what-is-the-most-advanced-ai": ptBrIdAndDeRolloutSeoLocales,
-  "learn-how-to-brighten-a-photo-online": ptBrAndIdRolloutSeoLocales,
-  "learn-how-to-make-a-photo-into-a-drawing": ptBrAndIdRolloutSeoLocales,
   "models": ptBrIdAndDeRolloutSeoLocales,
   "models-seedream-5": ptBrIdAndDeRolloutSeoLocales,
   "models-nano-banana-pro": ptBrIdAndDeRolloutSeoLocales,

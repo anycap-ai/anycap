@@ -3,6 +3,7 @@ import {
   defaultSeoIndexedLocaleCodes,
   seoIndexedLocaleCodesByRouteKey,
 } from "@/lib/seo-locale-rollout";
+import { isNoIndexSeoPath } from "@/lib/seo/noindex-paths";
 import { manualSeoRouteDefinitions } from "@/lib/seo/routes";
 
 const ROOT_PATH = "/";
@@ -291,6 +292,14 @@ export function isSeoIndexedPathForLocale(
   return getSeoIndexedLocalesForPath(pathname).includes(locale);
 }
 
+export function isSeoIndexablePathForLocale(
+  pathname: string,
+  locale: SiteLocale,
+): boolean {
+  const normalizedPath = normalizePublicPath(pathname);
+  return isSeoIndexedPathForLocale(normalizedPath, locale) && !isNoIndexSeoPath(normalizedPath);
+}
+
 export function getLocaleFromHeader(value?: string | null): SiteLocale {
   if (value && isSupportedLocale(value)) {
     return value;
@@ -413,6 +422,10 @@ export function getAllLocalizedPublicRoutes() {
 
 export function getLocalizedAlternates(pathname: string): Record<string, string> {
   const normalizedPath = normalizePublicPath(pathname);
+  if (isNoIndexSeoPath(normalizedPath)) {
+    return {};
+  }
+
   const alternates = Object.fromEntries(
     getSeoIndexedLocalesForPath(normalizedPath).map((locale) => [
       getLocaleConfig(locale).htmlLang,
