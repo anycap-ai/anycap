@@ -3,14 +3,13 @@ import {
   buildLocalizedPath,
   getLocaleConfig,
   getLocalizedAlternates,
-  isSeoIndexedPathForLocale,
+  isSeoIndexablePathForLocale,
   getPublicRouteByKey,
   normalizePublicPath,
   siteConfig,
   type PublicRouteKey,
   type SiteLocale,
 } from "@/lib/site";
-import { noIndexSeoPaths } from "@/lib/seo/noindex-paths";
 import { createRobotsMetadata, defaultSocialImage } from "@/lib/seo-metadata";
 
 function cloneOpenGraph(openGraph: Metadata["openGraph"]): Metadata["openGraph"] {
@@ -48,7 +47,7 @@ export function createLocalizedMetadataForPath(
 ): Metadata {
   const normalizedPath = normalizePublicPath(pathname);
   const localizedPath = buildLocalizedPath(locale, normalizedPath);
-  const isIndexedPathForLocale = isSeoIndexedPathForLocale(normalizedPath, locale);
+  const isIndexablePathForLocale = isSeoIndexablePathForLocale(normalizedPath, locale);
   const localeDetails = getLocaleConfig(locale);
   const openGraph = cloneOpenGraph(baseMetadata.openGraph);
   const twitter = cloneTwitterCard(baseMetadata.twitter);
@@ -70,7 +69,7 @@ export function createLocalizedMetadataForPath(
     twitterDescription ??
     baseMetadata.description ??
     siteConfig.defaultDescription;
-  const languageAlternates = isIndexedPathForLocale
+  const languageAlternates = isIndexablePathForLocale
     ? {
         ...(baseMetadata.alternates?.languages ?? {}),
         ...getLocalizedAlternates(normalizedPath),
@@ -104,7 +103,7 @@ export function createLocalizedMetadataForPath(
       images: hasValues(twitterImages) ? twitterImages : [defaultSocialImage.url],
     } as Metadata["twitter"],
     robots: createRobotsMetadata({
-      allowIndexing: isIndexedPathForLocale && !noIndexSeoPaths.has(normalizedPath),
+      allowIndexing: isIndexablePathForLocale,
     }),
   };
 }
