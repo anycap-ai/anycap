@@ -16,6 +16,7 @@ type SeoLocaleRolloutConfig = Partial<
 export const defaultSeoIndexedLocaleCodes = ["en"] as const satisfies readonly SiteLocale[];
 
 const ptBrIdAndDeRolloutSeoLocales = ["en", "pt-br", "id", "de"] as const satisfies readonly SiteLocale[];
+const ptBrAndIdRolloutSeoLocales = ["en", "pt-br", "id"] as const satisfies readonly SiteLocale[];
 
 export const seoIndexedLocaleCodesByRouteKey = {
   "home": ptBrIdAndDeRolloutSeoLocales,
@@ -32,10 +33,7 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "capabilities-video-generation": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-web-search": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-web-crawl": ptBrIdAndDeRolloutSeoLocales,
-  "compare-anycap-vs-composio": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-openai-agent-builder": ptBrIdAndDeRolloutSeoLocales,
-  "compare-anycap-vs-openclaw-image-generation": ptBrIdAndDeRolloutSeoLocales,
-  "compare-anycap-vs-openclaw-video-generation": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-fal-ai": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-replicate": ptBrIdAndDeRolloutSeoLocales,
   "compare-fal-ai-alternatives-for-agents": ptBrIdAndDeRolloutSeoLocales,
@@ -55,7 +53,7 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "glossary-agent-harness": ptBrIdAndDeRolloutSeoLocales,
   "glossary-agentic-workflow": ptBrIdAndDeRolloutSeoLocales,
   "guides": ptBrIdAndDeRolloutSeoLocales,
-  "guides-agent-skills-for-developer-tools": ptBrIdAndDeRolloutSeoLocales,
+  "guides-agent-skills-for-developer-tools": ptBrAndIdRolloutSeoLocales,
   "pricing": ptBrIdAndDeRolloutSeoLocales,
   "privacy": ptBrIdAndDeRolloutSeoLocales,
   "skills": ptBrIdAndDeRolloutSeoLocales,
@@ -85,8 +83,5 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "models-seedance-1-5-pro": ptBrIdAndDeRolloutSeoLocales,
   "models-elevenlabs-music": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-video-analysis": ptBrIdAndDeRolloutSeoLocales,
-  "compare-anycap-vs-modal": ptBrIdAndDeRolloutSeoLocales,
-  "compare-anycap-vs-together-ai": ptBrIdAndDeRolloutSeoLocales,
-  "compare-fal-ai-vs-replicate": ptBrIdAndDeRolloutSeoLocales,
   "for-gemini-cli": ptBrIdAndDeRolloutSeoLocales,
 } as const satisfies SeoLocaleRolloutConfig;
