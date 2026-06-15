@@ -24,8 +24,14 @@ func TestDeviceCodeFlow(t *testing.T) {
 	if len(loginSessionID) == 0 {
 		t.Fatal("expected non-empty login_session_id")
 	}
-	if len(userCode) != 9 || userCode[4] != '-' {
-		t.Fatalf("expected user_code in XXXX-XXXX format, got %s", userCode)
+	if len(userCode) != 8 {
+		t.Fatalf("expected 8-character user_code, got %s", userCode)
+	}
+	for _, ch := range userCode {
+		if (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+			continue
+		}
+		t.Fatalf("expected alphanumeric user_code, got %s", userCode)
 	}
 
 	// Step 2: Poll (mock auto-approves)

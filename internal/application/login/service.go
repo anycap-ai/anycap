@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"path"
 	"strings"
@@ -32,7 +33,7 @@ type Service struct {
 	loginAPIKeyTTL        time.Duration
 	stateGenerator        func() string
 	sessionIDGenerator    func() string
-	userCodeGenerator     func() string
+	userCodeGenerator     func() (string, error)
 	now                   func() time.Time
 	signupRewardDeadline  time.Time
 }
@@ -48,7 +49,7 @@ func NewService(
 	deviceVerificationURL string,
 	stateGenerator func() string,
 	sessionIDGenerator func() string,
-	userCodeGenerator func() string,
+	userCodeGenerator func() (string, error),
 	now func() time.Time,
 	loginAPIKeyTTL time.Duration,
 	signupRewardDeadline time.Time,
@@ -151,7 +152,11 @@ func (s *Service) Init(ctx context.Context, method string) (model.LoginInitResul
 func (s *Service) createDeviceSession(ctx context.Context, session *model.LoginSession) error {
 	var err error
 	for range deviceUserCodeMaxAttempts {
-		session.UserCode = s.userCodeGenerator()
+		userCode, genErr := s.userCodeGenerator()
+		if genErr != nil {
+			return fmt.Errorf("%w: generate device user code: %w", model.ErrInternal, genErr)
+		}
+		session.UserCode = userCode
 		err = s.sessions.CreateSession(ctx, *session)
 		if err == nil {
 			return nil

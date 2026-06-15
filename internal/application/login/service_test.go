@@ -3,6 +3,7 @@ package login
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/url"
 	"strings"
 	"testing"
@@ -239,7 +240,7 @@ func newServiceForTestWithCredit(now func() time.Time, apiKeys *fakeLoginAPIKeyS
 		"https://anycap.ai/auth/device",
 		func() string { return "state-test" },
 		func() string { return "lsn-test" },
-		func() string { return "CODE-TEST" },
+		func() (string, error) { return "CODETEST", nil },
 		now,
 		7*24*time.Hour,
 		signupRewardDeadline,
@@ -310,11 +311,8 @@ func TestService_InitDeviceUsesRandomUserCodeByDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
-	if strings.HasPrefix(result.UserCode, "ANYCAP-") {
-		t.Fatalf("expected unprefixed random user code, got %q", result.UserCode)
-	}
-	if !isGroupedUserCode(result.UserCode) {
-		t.Fatalf("expected user code in XXXX-XXXX format, got %q", result.UserCode)
+	if !isUserCode(result.UserCode) {
+		t.Fatalf("expected 8-character user code, got %q", result.UserCode)
 	}
 }
 
@@ -324,7 +322,7 @@ func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
 	users := &fakeUserProvisioner{users: map[string]model.User{}}
 	sessions := newFakeLoginSessionRepo()
 	sessions.createErrs = []error{port.ErrLoginUserCodeConflict, nil}
-	codes := []string{"CODE-ONE", "CODE-TWO"}
+	codes := []string{"CODEONE1", "CODETWO2"}
 	service := NewService(
 		users,
 		&fakeLoginCreditClient{},
@@ -333,10 +331,10 @@ func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
 		"https://anycap.ai/auth/device",
 		func() string { return "state-test" },
 		func() string { return "lsn-test" },
-		func() string {
+		func() (string, error) {
 			code := codes[0]
 			codes = codes[1:]
-			return code
+			return code, nil
 		},
 		now,
 		7*24*time.Hour,
@@ -347,15 +345,43 @@ func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
-	if result.UserCode != "CODE-TWO" {
+	if result.UserCode != "CODETWO2" {
 		t.Fatalf("expected retried user code, got %q", result.UserCode)
 	}
 	if sessions.createCalls != 2 {
 		t.Fatalf("expected 2 create attempts, got %d", sessions.createCalls)
 	}
 	stored := sessions.sessions[result.LoginSessionID]
-	if stored.UserCode != "CODE-TWO" {
+	if stored.UserCode != "CODETWO2" {
 		t.Fatalf("expected stored retried user code, got %q", stored.UserCode)
+	}
+}
+
+func TestService_InitDeviceFailsWhenUserCodeGenerationFails(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	service := NewService(
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		sessions,
+		"https://anycap.ai/auth/device",
+		func() string { return "state-test" },
+		func() string { return "lsn-test" },
+		func() (string, error) { return "", errors.New("random source unavailable") },
+		now,
+		7*24*time.Hour,
+		time.Time{},
+	)
+
+	_, err := service.Init(context.Background(), model.LoginFlowDevice)
+	if !errors.Is(err, model.ErrInternal) {
+		t.Fatalf("expected ErrInternal, got %v", err)
+	}
+	if sessions.createCalls != 0 {
+		t.Fatalf("expected no create attempts, got %d", sessions.createCalls)
 	}
 }
 
@@ -387,14 +413,11 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 	}
 }
 
-func isGroupedUserCode(code string) bool {
-	if len(code) != 9 || code[4] != '-' {
+func isUserCode(code string) bool {
+	if len(code) != 8 {
 		return false
 	}
-	for i, ch := range code {
-		if i == 4 {
-			continue
-		}
+	for _, ch := range code {
 		if (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
 			continue
 		}

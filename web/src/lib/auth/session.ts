@@ -21,7 +21,7 @@ export function normalizeReturnTo(raw: string | null | undefined, fallback = "/d
 
 export function normalizeUserCode(raw: string | null | undefined): string {
   if (!raw) return "";
-  return raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 32);
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 }
 
 export function savePendingLogin(state: PendingLoginState): void {

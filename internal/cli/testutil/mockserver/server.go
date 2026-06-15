@@ -788,19 +788,14 @@ func randomHex(n int) string {
 }
 
 func randomUserCode() string {
-	const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ"
-	const digits = "0123456789"
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
 
-	code := make([]byte, 9)
-	for i := 0; i < 4; i++ {
-		code[i] = alpha[int(b[i])%len(alpha)]
-	}
-	code[4] = '-'
-	for i := 0; i < 4; i++ {
-		code[5+i] = digits[int(b[4+i])%len(digits)]
+	code := make([]byte, 8)
+	for i := range code {
+		code[i] = charset[int(b[i])%len(charset)]
 	}
 	return string(code)
 }

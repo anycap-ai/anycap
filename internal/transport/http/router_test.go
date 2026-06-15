@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -650,9 +651,9 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 			sessionSeq++
 			return "lsn-" + string(rune('0'+sessionSeq))
 		},
-		func() string {
+		func() (string, error) {
 			sessionSeq++
-			return "CODE-" + string(rune('0'+sessionSeq))
+			return fmt.Sprintf("CODE%04d", sessionSeq), nil
 		},
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,

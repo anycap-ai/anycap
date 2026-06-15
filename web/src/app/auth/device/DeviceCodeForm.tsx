@@ -26,7 +26,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   const normalizedCode = useMemo(
-    () => code.trim().toUpperCase().replace(/[^A-Z0-9-]/g, ""),
+    () => code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8),
     [code],
   );
 
@@ -74,7 +74,7 @@ export function DeviceCodeForm({ initialCode }: Props) {
           <input
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase())}
-            placeholder="ABCD-1234"
+            placeholder="ABCD1234"
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}

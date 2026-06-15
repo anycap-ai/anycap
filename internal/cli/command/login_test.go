@@ -638,7 +638,7 @@ func TestLoginInvalidStoredCredentialStartsFreshFlow(t *testing.T) {
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/auth/device-code":
 			deviceCodeCalls++
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"status":"success","data":{"login_session_id":"lsn-test","user_code":"ABC-123","verification_uri":"https://anycap.ai/auth/device","interval":1,"expires_in":300}}`))
+			_, _ = w.Write([]byte(`{"status":"success","data":{"login_session_id":"lsn-test","user_code":"ABC12345","verification_uri":"https://anycap.ai/auth/device","interval":1,"expires_in":300}}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/auth/device-poll":
 			devicePollCalls++
 			w.Header().Set("Content-Type", "application/json")

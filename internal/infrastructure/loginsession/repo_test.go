@@ -75,7 +75,7 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 		ID:           "lsn-1",
 		FlowType:     model.LoginFlowBrowserPoll,
 		State:        "state-1",
-		UserCode:     "CODE-1",
+		UserCode:     "CODE0001",
 		BrowserToken: "bt-1",
 		PollToken:    "pt-1",
 		Status:       model.LoginSessionStatusPending,
@@ -105,7 +105,7 @@ func TestLoginSessionRepo_CreateSessionMapsUserCodeConflict(t *testing.T) {
 	err := repo.CreateSession(context.Background(), model.LoginSession{
 		ID:        "lsn-1",
 		FlowType:  model.LoginFlowDevice,
-		UserCode:  "ABCD-1234",
+		UserCode:  "ABCD1234",
 		Status:    model.LoginSessionStatusPending,
 		ExpiresAt: time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC),
 		CreatedAt: time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC),
@@ -123,7 +123,7 @@ func TestLoginSessionRepo_GetByID(t *testing.T) {
 			*(dest[0].(*string)) = "lsn-1"
 			*(dest[1].(*string)) = model.LoginFlowBrowserPoll
 			*(dest[2].(*string)) = "state-1"
-			*(dest[3].(*string)) = "CODE-1"
+			*(dest[3].(*string)) = "CODE0001"
 			*(dest[4].(*string)) = "bt-1"
 			*(dest[5].(*string)) = "pt-1"
 			*(dest[6].(*sql.NullTime)) = sql.NullTime{}
@@ -161,7 +161,7 @@ func TestLoginSessionRepo_GetByUserCode(t *testing.T) {
 			*(dest[0].(*string)) = "lsn-device"
 			*(dest[1].(*string)) = model.LoginFlowDevice
 			*(dest[2].(*string)) = "state-device"
-			*(dest[3].(*string)) = "CODE-2"
+			*(dest[3].(*string)) = "CODE0002"
 			*(dest[4].(*string)) = ""
 			*(dest[5].(*string)) = ""
 			*(dest[6].(*sql.NullTime)) = sql.NullTime{}
@@ -179,7 +179,7 @@ func TestLoginSessionRepo_GetByUserCode(t *testing.T) {
 	}
 	repo := NewLoginSessionRepo(db)
 
-	got, err := repo.GetByUserCode(context.Background(), "CODE-2")
+	got, err := repo.GetByUserCode(context.Background(), "CODE0002")
 	if err != nil {
 		t.Fatalf("GetByUserCode() error = %v", err)
 	}
