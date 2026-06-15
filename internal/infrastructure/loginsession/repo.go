@@ -3,11 +3,21 @@ package loginsession
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/userid"
+)
+
+const (
+	postgresUniqueViolationCode  = "23505"
+	loginSessionsUserCodeKeyName = "login_sessions_user_code_key"
 )
 
 type LoginSessionRepo struct {
@@ -27,7 +37,22 @@ func (r *LoginSessionRepo) CreateSession(ctx context.Context, session model.Logi
 			status, expires_at, created_at, last_polled_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 	`, session.ID, session.FlowType, emptyToNil(session.State), emptyToNil(session.UserCode), emptyToNil(session.BrowserToken), emptyToNil(session.PollToken), timeToNil(session.UserCodeExpiresAt), stringToInt64Nil(session.AuthorizedUserID), emptyToNil(session.Auth0Subject), emptyToNil(session.AuthUserEmail), emptyToNil(session.AuthUserName), emptyToNil(session.AuthUserPicture), session.Status, session.ExpiresAt, session.CreatedAt, timeToNil(session.LastPolledAt))
+	return translateCreateSessionError(err)
+}
+
+func translateCreateSessionError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == postgresUniqueViolationCode && isUserCodeConstraint(pgErr.ConstraintName) {
+		return fmt.Errorf("%w: %s", port.ErrLoginUserCodeConflict, pgErr.ConstraintName)
+	}
 	return err
+}
+
+func isUserCodeConstraint(name string) bool {
+	return name == loginSessionsUserCodeKeyName
 }
 
 func (r *LoginSessionRepo) GetByID(ctx context.Context, sessionID string) (model.LoginSession, error) {

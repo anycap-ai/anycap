@@ -7,7 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/sqlstore"
 )
 
@@ -87,6 +90,28 @@ func TestLoginSessionRepo_CreateSession(t *testing.T) {
 	}
 	if len(db.args) != 16 {
 		t.Fatalf("expected 16 args, got %d", len(db.args))
+	}
+}
+
+func TestLoginSessionRepo_CreateSessionMapsUserCodeConflict(t *testing.T) {
+	db := &fakeLoginSessionDB{
+		execErr: &pgconn.PgError{
+			Code:           postgresUniqueViolationCode,
+			ConstraintName: loginSessionsUserCodeKeyName,
+		},
+	}
+	repo := NewLoginSessionRepo(db)
+
+	err := repo.CreateSession(context.Background(), model.LoginSession{
+		ID:        "lsn-1",
+		FlowType:  model.LoginFlowDevice,
+		UserCode:  "ABCD-1234",
+		Status:    model.LoginSessionStatusPending,
+		ExpiresAt: time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC),
+		CreatedAt: time.Date(2026, 3, 25, 9, 55, 0, 0, time.UTC),
+	})
+	if !errors.Is(err, port.ErrLoginUserCodeConflict) {
+		t.Fatalf("expected ErrLoginUserCodeConflict, got %v", err)
 	}
 }
 

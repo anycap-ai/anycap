@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	"gitlab.knoffice.tech/open/common-go/logging"
 	"gitlab.knoffice.tech/open/common-go/trace"
 
@@ -133,7 +134,9 @@ func (f *fakeUserProvisioner) GetUserByID(_ context.Context, userID string) (mod
 }
 
 type fakeLoginSessionRepo struct {
-	sessions map[string]model.LoginSession
+	sessions    map[string]model.LoginSession
+	createErrs  []error
+	createCalls int
 }
 
 func captureLogs(t *testing.T) *bytes.Buffer {
@@ -163,6 +166,14 @@ func newFakeLoginSessionRepo() *fakeLoginSessionRepo {
 }
 
 func (r *fakeLoginSessionRepo) CreateSession(_ context.Context, session model.LoginSession) error {
+	r.createCalls++
+	if len(r.createErrs) > 0 {
+		err := r.createErrs[0]
+		r.createErrs = r.createErrs[1:]
+		if err != nil {
+			return err
+		}
+	}
 	r.sessions[session.ID] = session
 	return nil
 }
@@ -276,6 +287,78 @@ func TestService_InitDevice(t *testing.T) {
 	}
 }
 
+func TestService_InitDeviceUsesRandomUserCodeByDefault(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	service := NewService(
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		sessions,
+		"https://anycap.ai/auth/device",
+		nil,
+		nil,
+		nil,
+		now,
+		7*24*time.Hour,
+		time.Time{},
+	)
+
+	result, err := service.Init(context.Background(), model.LoginFlowDevice)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if strings.HasPrefix(result.UserCode, "ANYCAP-") {
+		t.Fatalf("expected unprefixed random user code, got %q", result.UserCode)
+	}
+	if !isGroupedUserCode(result.UserCode) {
+		t.Fatalf("expected user code in XXXX-XXXX format, got %q", result.UserCode)
+	}
+}
+
+func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
+	apiKeys := &fakeLoginAPIKeyService{}
+	users := &fakeUserProvisioner{users: map[string]model.User{}}
+	sessions := newFakeLoginSessionRepo()
+	sessions.createErrs = []error{port.ErrLoginUserCodeConflict, nil}
+	codes := []string{"CODE-ONE", "CODE-TWO"}
+	service := NewService(
+		users,
+		&fakeLoginCreditClient{},
+		apiKeys,
+		sessions,
+		"https://anycap.ai/auth/device",
+		func() string { return "state-test" },
+		func() string { return "lsn-test" },
+		func() string {
+			code := codes[0]
+			codes = codes[1:]
+			return code
+		},
+		now,
+		7*24*time.Hour,
+		time.Time{},
+	)
+
+	result, err := service.Init(context.Background(), model.LoginFlowDevice)
+	if err != nil {
+		t.Fatalf("Init() error = %v", err)
+	}
+	if result.UserCode != "CODE-TWO" {
+		t.Fatalf("expected retried user code, got %q", result.UserCode)
+	}
+	if sessions.createCalls != 2 {
+		t.Fatalf("expected 2 create attempts, got %d", sessions.createCalls)
+	}
+	stored := sessions.sessions[result.LoginSessionID]
+	if stored.UserCode != "CODE-TWO" {
+		t.Fatalf("expected stored retried user code, got %q", stored.UserCode)
+	}
+}
+
 func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 	now := func() time.Time { return time.Date(2026, 3, 29, 10, 0, 0, 0, time.UTC) }
 	apiKeys := &fakeLoginAPIKeyService{}
@@ -302,6 +385,22 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 	if !strings.HasPrefix(result.LoginSessionID, "lsn_") {
 		t.Fatalf("expected login session id with lsn_ prefix, got %q", result.LoginSessionID)
 	}
+}
+
+func isGroupedUserCode(code string) bool {
+	if len(code) != 9 || code[4] != '-' {
+		return false
+	}
+	for i, ch := range code {
+		if i == 4 {
+			continue
+		}
+		if (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func TestService_Init_LogsMissingSessionRepoWithTraceID(t *testing.T) {

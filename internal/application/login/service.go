@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"path"
 	"strings"
@@ -13,8 +14,11 @@ import (
 	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
-const loginCredentialTypeAPIKey = "api_key"
-const devicePollInterval = 5 * time.Second
+const (
+	loginCredentialTypeAPIKey = "api_key"
+	devicePollInterval        = 5 * time.Second
+	deviceUserCodeMaxAttempts = 5
+)
 
 type Service struct {
 	users interface {
@@ -60,9 +64,7 @@ func NewService(
 		}
 	}
 	if userCodeGenerator == nil {
-		userCodeGenerator = func() string {
-			return "ANYCAP-" + time.Now().UTC().Format("150405")
-		}
+		userCodeGenerator = defaultDeviceUserCode
 	}
 	if now == nil {
 		now = time.Now
@@ -126,9 +128,8 @@ func (s *Service) Init(ctx context.Context, method string) (model.LoginInitResul
 		}, nil
 	case model.LoginFlowDevice:
 		session.State = s.stateGenerator()
-		session.UserCode = s.userCodeGenerator()
 		session.UserCodeExpiresAt = now.Add(5 * time.Minute)
-		if err := s.sessions.CreateSession(ctx, session); err != nil {
+		if err := s.createDeviceSession(ctx, &session); err != nil {
 			logger.WithError(err).Error("create device login session failed")
 			return model.LoginInitResult{}, err
 		}
@@ -145,6 +146,21 @@ func (s *Service) Init(ctx context.Context, method string) (model.LoginInitResul
 		logger.Warn("unsupported login init method")
 		return model.LoginInitResult{}, model.ErrInvalidParam
 	}
+}
+
+func (s *Service) createDeviceSession(ctx context.Context, session *model.LoginSession) error {
+	var err error
+	for range deviceUserCodeMaxAttempts {
+		session.UserCode = s.userCodeGenerator()
+		err = s.sessions.CreateSession(ctx, *session)
+		if err == nil {
+			return nil
+		}
+		if !errors.Is(err, port.ErrLoginUserCodeConflict) {
+			return err
+		}
+	}
+	return err
 }
 
 func (s *Service) BrowserVerify(ctx context.Context, browserToken string, principal model.Principal, authUser model.AuthUser) (model.DeviceVerifyResult, error) {
