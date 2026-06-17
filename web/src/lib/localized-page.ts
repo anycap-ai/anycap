@@ -15,6 +15,8 @@ import { getContactMetadata } from "@/app/(seo)/contact/content";
 import { getForMetadata } from "@/app/(seo)/for/content";
 import { getForCodexMetadata } from "@/app/(seo)/for/codex/content";
 import { getForCursorMetadata } from "@/app/(seo)/for/cursor/content";
+import { getForGeminiCliMetadata } from "@/app/(seo)/for/gemini-cli/content";
+import { getModelsMetadata } from "@/app/(seo)/models/metadata";
 import { getGlossaryMetadata } from "@/app/(seo)/glossary/content";
 import {
   getAgentHarnessGlossaryMetadata,
@@ -58,6 +60,7 @@ const localizedMetadataByRouteKey: Partial<
   for: getForMetadata,
   "for-codex": getForCodexMetadata,
   "for-cursor": getForCursorMetadata,
+  "for-gemini-cli": getForGeminiCliMetadata,
   glossary: getGlossaryMetadata,
   "glossary-agent-harness": getAgentHarnessGlossaryMetadata,
   "glossary-agentic-workflow": getAgenticWorkflowGlossaryMetadata,
@@ -65,6 +68,7 @@ const localizedMetadataByRouteKey: Partial<
   "guides-context-engineering-for-agents":
     getContextEngineeringForAgentsMetadata,
   learn: getLearnMetadata,
+  models: getModelsMetadata,
   "learn-best-ai-for-cursor": getBestAICursorMetadata,
   "guides-install-anycap": getInstallAnycapMetadata,
   "learn-what-agents-cant-do": getWhatAgentsCantDoMetadata,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getHostedPageHubLinks } from "@/lib/seo/hosted-pages";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const LEARN_PATH = "/learn";
@@ -121,6 +122,11 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
       faqTitle: "Common questions before you pick a path",
     },
     adjacentHubs: [
+      ...getHostedPageHubLinks("en").map((link) => ({
+        title: link.label,
+        href: link.href,
+        description: link.description,
+      })),
       {
         title: "Guides",
         href: "/guides",
@@ -229,6 +235,11 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
       faqTitle: "Perguntas comuns antes de escolher um caminho",
     },
     adjacentHubs: [
+      ...getHostedPageHubLinks("pt-br").map((link) => ({
+        title: link.label,
+        href: link.href,
+        description: link.description,
+      })),
       {
         title: "Guias",
         href: "/guides",
@@ -337,6 +348,11 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
       faqTitle: "Pertanyaan umum sebelum Anda memilih jalur",
     },
     adjacentHubs: [
+      ...getHostedPageHubLinks("id").map((link) => ({
+        title: link.label,
+        href: link.href,
+        description: link.description,
+      })),
       {
         title: "Panduan",
         href: "/guides",
@@ -445,6 +461,11 @@ const learnPageByLocale: Record<SiteLocale, LearnPageData> = {
       faqTitle: "Häufige Fragen, bevor Sie einen Pfad wählen",
     },
     adjacentHubs: [
+      ...getHostedPageHubLinks("de").map((link) => ({
+        title: link.label,
+        href: link.href,
+        description: link.description,
+      })),
       {
         title: "Leitfäden",
         href: "/guides",

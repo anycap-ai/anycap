@@ -10,6 +10,7 @@ import { pricingGenerationGroups, type PricingGenerationGroup } from "@/lib/capa
 import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { catalogModels } from "@/lib/seo/model-catalog";
+import { getModelsMetadata, MODELS_PATH } from "./metadata";
 
 export const runtime = "edge";
 
@@ -797,17 +798,11 @@ contentByLocale.de = {
   }),
 };
 
-export const metadata: Metadata = createLocalizedMetadataForPath(defaultLocale, "/models", {
-  title: "Models — Multimodal models available through AnyCap",
-  description:
-    "Multimodal models available through AnyCap for AI agent workflows, including active image, video, and music models with CLI IDs, modes, and workflow guidance.",
-  openGraph: {
-    type: "website",
-    title: "Models — Multimodal models available through AnyCap",
-    description:
-      "Explore the multimodal models available through AnyCap and learn which model fits each agent workflow.",
-  },
-});
+export const metadata: Metadata = createLocalizedMetadataForPath(
+  defaultLocale,
+  MODELS_PATH,
+  getModelsMetadata(defaultLocale),
+);
 
 export default async function ModelsPage() {
   const locale = await getRequestLocale();

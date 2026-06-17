@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CapabilityGapRow } from "@/components/landing/CapabilityGapTable";
+import { buildHostedPagePath } from "@/lib/seo/hosted-pages";
 import { createTechArticleJsonLd } from "@/lib/schema";
 import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
@@ -226,6 +227,13 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
     ],
     relatedCards: [
       {
+        eyebrow: "Published content",
+        title: "AnyCap Page hub",
+        href: buildHostedPagePath("en", "/blog"),
+        summary:
+          "Browse hosted guides, blog posts, and news published through AnyCap Page from the same domain.",
+      },
+      {
         eyebrow: "Deficiency hub",
         title: "What agents can't do",
         href: "/learn/what-agents-cant-do",
@@ -371,6 +379,13 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
     ],
     relatedCards: [
+      {
+        eyebrow: "Conteúdo publicado",
+        title: "Hub AnyCap Page",
+        href: buildHostedPagePath("pt-br", "/blog"),
+        summary:
+          "Explore guias, posts e notícias hospedados no mesmo domínio por meio do AnyCap Page.",
+      },
       {
         eyebrow: "Hub de deficiências",
         title: "O que os agentes não conseguem fazer",
@@ -518,6 +533,13 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
     ],
     relatedCards: [
       {
+        eyebrow: "Konten terpublikasi",
+        title: "Hub AnyCap Page",
+        href: buildHostedPagePath("id", "/blog"),
+        summary:
+          "Telusuri panduan, posting blog, dan berita yang dihosting di domain yang sama melalui AnyCap Page.",
+      },
+      {
         eyebrow: "Hub kekurangan",
         title: "Apa yang tidak bisa dilakukan agen",
         href: "/learn/what-agents-cant-do",
@@ -663,6 +685,13 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       },
     ],
     relatedCards: [
+      {
+        eyebrow: "Veröffentlichte Inhalte",
+        title: "AnyCap Page Hub",
+        href: buildHostedPagePath("de", "/blog"),
+        summary:
+          "Durchsuchen Sie gehostete Leitfäden, Blogposts und News auf derselben Domain über AnyCap Page.",
+      },
       {
         eyebrow: "Defizit-Hub",
         title: "Was Agenten nicht können",

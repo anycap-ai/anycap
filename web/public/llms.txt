@@ -101,7 +101,7 @@ Claude Code now runs Claude Opus 4.7 — the strongest reasoning and coding agen
 - [Glossary](https://anycap.ai/glossary): Core AnyCap concepts and technical terms.
 - [Agent Harness](https://anycap.ai/glossary/agent-harness): The execution layer around an AI model.
 - [Context Engineering](https://anycap.ai/glossary/context-engineering): Structuring context for better agent execution.
-- [Agent Capability Runtime](https://anycap.ai/glossary/agent-capability-runtime): The runtime layer that exposes capabilities to agents.
+- [Agent Capability Runtime](https://anycap.ai/glossary/agent-harness): The runtime layer that exposes capabilities to agents.
 - [Agentic Workflow](https://anycap.ai/glossary/agentic-workflow): Multi-step agent execution patterns that chain tools, reasoning, and capabilities.
 - [Model Context Protocol](https://anycap.ai/glossary/model-context-protocol): Open protocol for connecting agents to tools and data sources.
 

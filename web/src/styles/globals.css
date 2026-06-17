@@ -47,6 +47,9 @@ summary {
 @theme {
   --animate-blink: blink 1s step-end infinite;
   --animate-fade-in: fade-in 0.4s ease-out both;
+  /* Header switches from hamburger to full inline nav only once the logo,
+     centered nav, and community/auth cluster all fit on one row. */
+  --breakpoint-wide: 1430px;
 }
 
 @keyframes blink {

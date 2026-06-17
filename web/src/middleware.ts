@@ -58,6 +58,7 @@ const securityHeaders: Record<string, string> = {
 const legacyRouteRedirects = new Map<string, string>([
   ["/for-human", "/"],
   ["/capabilities/image-read", "/capabilities/image-understanding"],
+  ["/glossary/agent-capability-runtime", "/glossary/agent-harness"],
 ]);
 
 function applySecurityHeaders(response: NextResponse): NextResponse {

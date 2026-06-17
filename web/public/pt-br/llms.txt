@@ -84,4 +84,4 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 - [Glossario](https://anycap.ai/pt-br/glossary): conceitos e termos tecnicos centrais do AnyCap.
 - [Agent Harness](https://anycap.ai/pt-br/glossary/agent-harness): camada de execucao ao redor de um modelo de IA.
 - [Context Engineering](https://anycap.ai/pt-br/glossary/context-engineering): estrutura de contexto para melhor execucao de agentes.
-- [Agent Capability Runtime](https://anycap.ai/pt-br/glossary/agent-capability-runtime): camada de runtime que expoe capabilities aos agentes.
+- [Agent Capability Runtime](https://anycap.ai/glossary/agent-harness): camada de runtime que expoe capabilities aos agentes.

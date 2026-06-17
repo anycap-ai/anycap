@@ -12,7 +12,7 @@ const primaryActionClass =
   "px-3.5 py-2 text-[14px] text-[#f4f5f0] bg-[#1c1f17] border border-[#1c1f17] hover:bg-[#3a3e32] hover:border-[#3a3e32] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out sm:px-5 sm:text-[15px]";
 
 const secondaryActionClass =
-  "hidden xl:inline-block px-5 py-2 text-[15px] text-[#3f4437] bg-[#fffffc] border border-[#d4dbb8] hover:bg-white hover:border-[#b8c09a] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
+  "hidden wide:inline-block px-5 py-2 text-[15px] text-[#3f4437] bg-[#fffffc] border border-[#d4dbb8] hover:bg-white hover:border-[#b8c09a] active:scale-[0.97] tracking-[0.3px] rounded-lg transition-all duration-200 ease-out";
 
 export function AuthNav({ variant = "human" }: { variant?: "human" | "seo" }) {
   const { user } = useUser();

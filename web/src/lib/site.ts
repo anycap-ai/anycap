@@ -388,20 +388,24 @@ export function getSeoRouteBySegments(segments: string[]): SeoRouteDefinition | 
 }
 
 export function localizePublicPath(locale: SiteLocale, pathname: string): string {
-  if (!pathname.startsWith("/")) {
-    return pathname;
-  }
+	if (!pathname.startsWith("/")) {
+		return pathname;
+	}
 
-  if (hasLocalePrefix(pathname)) {
-    return pathname;
-  }
+	if (hasLocalePrefix(pathname)) {
+		return pathname;
+	}
 
-  const matchedRoute = getPublicRouteByPath(pathname);
-  if (!matchedRoute) {
-    return pathname;
-  }
+	const matchedRoute = getPublicRouteByPath(pathname);
+	if (!matchedRoute) {
+		return pathname;
+	}
 
-  return buildLocalizedPath(locale, matchedRoute.path);
+	const linkLocale = isSeoIndexedPathForLocale(matchedRoute.path, locale)
+		? locale
+		: defaultLocale;
+
+	return buildLocalizedPath(linkLocale, matchedRoute.path);
 }
 
 export function getLocalizedRouteUrl(locale: SiteLocale, pathname: string): string {
