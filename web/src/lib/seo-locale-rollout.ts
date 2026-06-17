@@ -18,11 +18,22 @@ export const defaultSeoIndexedLocaleCodes = ["en"] as const satisfies readonly S
 const ptBrIdAndDeRolloutSeoLocales = ["en", "pt-br", "id", "de"] as const satisfies readonly SiteLocale[];
 const ptBrAndIdRolloutSeoLocales = ["en", "pt-br", "id"] as const satisfies readonly SiteLocale[];
 
+// A route may only opt a locale into indexing if that locale renders real
+// translated content. When a route has no translation for a locale the page
+// falls back to English, which Google folds into the EN canonical
+// (DUPLICATE_GOOGLE_CHOSE_DIFFERENT_CANONICAL). Keep this list aligned with the
+// actual translation coverage, not aspirational rollout.
+//   - `home` / `agent`: only the English surface is translated (landing copy and
+//     the agent page are not localized) -> EN only.
+//   - `for` / `guides` / `glossary` / `compare` hub *index* pages: German hub
+//     copy is missing (see `hubBaseDefinitionsByLocale` in seo/hub-pages.ts), so
+//     `/de/{hub}` renders English -> drop `de`. Their leaf pages are translated
+//     and keep their own (broader) rollout keys below.
 export const seoIndexedLocaleCodesByRouteKey = {
-  "home": ptBrIdAndDeRolloutSeoLocales,
+  "home": defaultSeoIndexedLocaleCodes,
   "about": ptBrIdAndDeRolloutSeoLocales,
   "cli": ptBrIdAndDeRolloutSeoLocales,
-  "agent": ptBrIdAndDeRolloutSeoLocales,
+  "agent": defaultSeoIndexedLocaleCodes,
   "capabilities": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-audio-understanding": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-drive": ptBrIdAndDeRolloutSeoLocales,
@@ -39,20 +50,20 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "compare-fal-ai-alternatives-for-agents": ptBrIdAndDeRolloutSeoLocales,
   "compare-replicate-alternatives-for-agents": ptBrIdAndDeRolloutSeoLocales,
   "compare-claude-opus-4-7-vs-sonnet-4-6": ptBrIdAndDeRolloutSeoLocales,
-  "compare": ptBrIdAndDeRolloutSeoLocales,
+  "compare": ptBrAndIdRolloutSeoLocales,
   "contact": ptBrIdAndDeRolloutSeoLocales,
   "for-claude-code": ptBrIdAndDeRolloutSeoLocales,
   "for-codex": ptBrIdAndDeRolloutSeoLocales,
   "for-cursor": ptBrIdAndDeRolloutSeoLocales,
-  "for": ptBrIdAndDeRolloutSeoLocales,
+  "for": ptBrAndIdRolloutSeoLocales,
   "for-claude-code-image-generation": ptBrIdAndDeRolloutSeoLocales,
   "for-claude-code-opus-4-7": ptBrIdAndDeRolloutSeoLocales,
   "for-claude-code-video-generation": ptBrIdAndDeRolloutSeoLocales,
   "for-manus": ptBrIdAndDeRolloutSeoLocales,
-  "glossary": ptBrIdAndDeRolloutSeoLocales,
+  "glossary": ptBrAndIdRolloutSeoLocales,
   "glossary-agent-harness": ptBrIdAndDeRolloutSeoLocales,
   "glossary-agentic-workflow": ptBrIdAndDeRolloutSeoLocales,
-  "guides": ptBrIdAndDeRolloutSeoLocales,
+  "guides": ptBrAndIdRolloutSeoLocales,
   "guides-agent-skills-for-developer-tools": ptBrAndIdRolloutSeoLocales,
   "pricing": ptBrIdAndDeRolloutSeoLocales,
   "privacy": ptBrIdAndDeRolloutSeoLocales,

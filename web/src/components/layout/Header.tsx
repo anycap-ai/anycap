@@ -127,36 +127,31 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
   }
 
   return (
-    <>
-      <header
-        className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-4 py-3 backdrop-blur-sm sm:px-5 sm:py-4 md:px-16 md:py-6 lg:px-24"
-        style={{ top: topOffset }}
-      >
-        <div className="relative flex items-center gap-2 sm:gap-3">
-          <Link href={localizedLogoHref} className="shrink-0">
-            <span className="block md:hidden"><AnycapLogo size={36} /></span>
-            <span className="hidden md:block"><AnycapLogo size={42} /></span>
-          </Link>
-          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
-            <nav className="hidden min-w-0 items-center gap-0.5 sm:gap-2 xl:absolute xl:left-1/2 xl:flex xl:-translate-x-1/2">
-              {links.map(renderEntry)}
-            </nav>
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 xl:hidden">
-              {authSlot}
-              <MobileNavMenu entries={mobileEntries} />
-            </div>
-          </div>
-        </div>
-      </header>
+    <header
+      className="fixed left-0 right-0 z-40 bg-[#f4f5f0]/80 px-4 py-3 backdrop-blur-sm sm:px-5 sm:py-4 md:px-16 md:py-6 lg:px-24"
+      style={{ top: topOffset }}
+    >
+      <div className="flex items-center gap-3 sm:gap-4">
+        <Link href={localizedLogoHref} className="shrink-0">
+          <span className="block md:hidden"><AnycapLogo size={36} /></span>
+          <span className="hidden md:block"><AnycapLogo size={42} /></span>
+        </Link>
 
-      <div
-        className="fixed right-4 z-[60] hidden h-[90px] items-center gap-2 sm:right-5 md:right-16 lg:right-24 xl:flex"
-        style={{ top: topOffset }}
-      >
-        <CommunityActions variant="desktop" />
-        {authSlot}
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 wide:flex">
+          {links.map(renderEntry)}
+        </nav>
+
+        <div className="hidden shrink-0 items-center gap-2 wide:flex">
+          <CommunityActions variant="desktop" />
+          {authSlot}
+        </div>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 wide:hidden">
+          {authSlot}
+          <MobileNavMenu entries={mobileEntries} />
+        </div>
       </div>
-    </>
+    </header>
   );
 }
 

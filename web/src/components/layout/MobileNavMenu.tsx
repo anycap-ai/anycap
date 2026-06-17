@@ -88,7 +88,7 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
   }
 
   return (
-    <div className="static lg:hidden">
+    <div className="static wide:hidden">
       <button
         type="button"
         aria-label={open ? "Close navigation menu" : "Open navigation menu"}

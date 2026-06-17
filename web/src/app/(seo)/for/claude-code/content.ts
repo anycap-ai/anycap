@@ -437,18 +437,25 @@ const englishCopy: ForClaudeCodeCopy = {
   capabilityCardsTitle: "Start with the first missing capability",
   capabilityCards: [
     {
-      eyebrow: "Creative output",
-      title: "Image Generation",
-      href: "/capabilities/image-generation",
-      summary: "Best next page when Claude Code needs visuals, mockups, launch assets, or other image output.",
+      eyebrow: "Setup guide",
+      title: "Image Generation in Claude Code",
+      href: "/for/claude-code/image-generation",
+      summary: "Install path, model choices, and prompt patterns for image generation inside Claude Code.",
       command: "anycap image generate",
     },
     {
-      eyebrow: "Motion output",
-      title: "Video Generation",
-      href: "/capabilities/video-generation",
-      summary: "Best next page when Claude Code needs demos, walkthroughs, or short-form video output.",
+      eyebrow: "Setup guide",
+      title: "Video Generation in Claude Code",
+      href: "/for/claude-code/video-generation",
+      summary: "Add text-to-video and image-to-video workflows to Claude Code through AnyCap.",
       command: "anycap video generate",
+    },
+    {
+      eyebrow: "Model workflow",
+      title: "Claude Opus 4.7",
+      href: "/for/claude-code/opus-4-7",
+      summary: "Capability patterns for image and video production inside Claude Opus 4.7.",
+      command: "anycap image generate",
     },
     {
       eyebrow: "Vision",

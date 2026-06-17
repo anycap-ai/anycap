@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import {
   buildLocalizedPath,
+  defaultLocale,
   getLocaleConfig,
   getLocalizedAlternates,
   isSeoIndexablePathForLocale,
@@ -46,8 +47,10 @@ export function createLocalizedMetadataForPath(
   baseMetadata: Metadata
 ): Metadata {
   const normalizedPath = normalizePublicPath(pathname);
-  const localizedPath = buildLocalizedPath(locale, normalizedPath);
   const isIndexablePathForLocale = isSeoIndexablePathForLocale(normalizedPath, locale);
+  const canonicalLocale = isIndexablePathForLocale ? locale : defaultLocale;
+  const localizedPath = buildLocalizedPath(locale, normalizedPath);
+  const canonicalPath = buildLocalizedPath(canonicalLocale, normalizedPath);
   const localeDetails = getLocaleConfig(locale);
   const openGraph = cloneOpenGraph(baseMetadata.openGraph);
   const twitter = cloneTwitterCard(baseMetadata.twitter);
@@ -81,14 +84,14 @@ export function createLocalizedMetadataForPath(
     metadataBase: new URL(siteConfig.url),
     alternates: {
       ...baseAlternates,
-      canonical: localizedPath,
+      canonical: canonicalPath,
       ...(languageAlternates ? { languages: languageAlternates } : {}),
     },
     openGraph: openGraph
       ? {
           ...openGraph,
           locale: localeDetails.ogLocale,
-          url: localizedPath,
+          url: canonicalPath,
           siteName: openGraph.siteName ?? siteConfig.siteName,
           title: openGraph.title ?? socialTitle,
           description: openGraph.description ?? socialDescription,

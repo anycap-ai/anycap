@@ -35,7 +35,7 @@ const mobileCardBase =
 
 const styles: Record<CommunityActionsVariant, ActionStyle> = {
   desktop: {
-    groupClassName: "hidden items-center gap-2 xl:flex",
+    groupClassName: "flex items-center gap-2",
     githubClassName:
       `${desktopBase} border border-[#d8dcd0] bg-[#fff] text-[#1c1f17] shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:border-[#b8bdaf] hover:bg-[#fff]`,
     discordClassName:

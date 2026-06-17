@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
 import { EmailActionButton } from "@/components/ui/EmailActionButton";
+import { getHostedPageHubLinks } from "@/lib/seo/hosted-pages";
 import { getRequestLocale } from "@/lib/request-locale";
 import { localizePublicPath } from "@/lib/site";
 
@@ -70,14 +71,22 @@ const columns: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
+const hostedHubColumnTitleByLocale = {
+  en: "Published on AnyCap",
+  "pt-br": "Publicado no AnyCap",
+  id: "Dipublikasikan di AnyCap",
+  de: "Auf AnyCap veröffentlicht",
+} as const;
+
 export async function Footer() {
   const locale = await getRequestLocale();
+  const hostedPageLinks = getHostedPageHubLinks(locale);
 
   return (
     <footer className="px-5 md:px-16 lg:px-24 pt-16 pb-10 border-t border-[#d4dbb8]">
       <div className="mx-auto max-w-[1280px]">
         {/* Column links */}
-        <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
           {columns.map(({ title, links }) => (
             <div key={title}>
               <p className={columnTitleClass} style={mono}>{title}</p>
@@ -97,6 +106,24 @@ export async function Footer() {
               </ul>
             </div>
           ))}
+          <div>
+            <p className={columnTitleClass} style={mono}>
+              {hostedHubColumnTitleByLocale[locale]}
+            </p>
+            <ul className="space-y-1">
+              {hostedPageLinks.map(({ href, label }) => (
+                <li key={href}>
+                  <a
+                    href={href}
+                    className={linkClass}
+                    style={mono}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div>
             <p className={columnTitleClass} style={mono}>Company</p>
             <ul className="space-y-1">
