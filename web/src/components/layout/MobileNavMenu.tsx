@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CommunityActions } from "@/components/ui/CommunityActions";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
@@ -99,8 +100,9 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-full z-50 mt-3 origin-top rounded-[24px] border border-[#d4dbb8] bg-[#f8f9f3]/95 p-3 shadow-[0_20px_60px_rgba(28,31,23,0.14)] backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-full z-[60] mt-3 origin-top rounded-[24px] border border-[#d4dbb8] bg-[#f8f9f3]/95 p-3 shadow-[0_20px_60px_rgba(28,31,23,0.14)] backdrop-blur-xl">
           <nav className="max-h-[min(72dvh,36rem)] overflow-y-auto">
+            <CommunityActions variant="mobileCards" onActionClick={() => setOpen(false)} />
             <div className="space-y-2">
               {entries.map((entry) =>
                 entry.kind === "link" ? (
@@ -165,19 +167,6 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
               )}
             </div>
 
-            <div className="mt-3 border-t border-[#e0e5d2] pt-3">
-              <a
-                href="https://github.com/anycap-ai/anycap"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-2xl border border-[#e0e5d2] bg-[#fffffc]/90 px-4 py-3 text-[15px] text-[#1c1f17] transition-colors duration-150 hover:bg-[#eef2e5]"
-                style={mono}
-                onClick={() => setOpen(false)}
-              >
-                <span>GitHub</span>
-                <ExternalIcon />
-              </a>
-            </div>
           </nav>
         </div>
       ) : null}
@@ -266,20 +255,6 @@ function Chevron({ open }: { open: boolean }) {
         d="M2 3L4 5L6 3"
         stroke="currentColor"
         strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ExternalIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path
-        d="M3 9L9 3M4 3H9V8"
-        stroke="currentColor"
-        strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

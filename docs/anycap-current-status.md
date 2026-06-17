@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-04-21
+> Last updated: 2026-06-17
 
 ## 1. Capabilities (Cap)
 
@@ -324,6 +324,8 @@ Localized landing page with a separate `/for-human` variant. Supports i18n routi
 
 Home and `/agent` keep HTML as the default human-facing response. Markdown negotiation for agent-readable content is still available through `/llms.txt`, explicit markdown `Accept` headers, or `view=agent`.
 
+Public pages group external community links in the header: GitHub for the repository and Discord for feedback. The dashboard shell includes the same GitHub and Discord links in the top-right page chrome.
+
 ### SEO Content (32 pages)
 
 | Category | Pages |
@@ -375,6 +377,7 @@ Built-in feedback loop via `anycap feedback`:
 - **Types**: bug report, feature request, general
 - **Context**: can attach request ID from a previous call
 - **Notifications**: feedback forwarded to team via Lark webhook
+- **Community discussion**: public web pages and the dashboard link to Discord for product discussion and feedback
 
 ## 9. Distribution
 

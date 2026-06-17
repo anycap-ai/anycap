@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnycapLogo } from "@/components/brand/AnycapLogo";
+import { CommunityActions } from "@/components/ui/CommunityActions";
 import { UserAvatarMenu, UserAvatar } from "@/components/ui/UserAvatarMenu";
 import { useUser } from "@/lib/api/hooks";
 
@@ -41,9 +42,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="dashboard-shell min-h-screen bg-[#f2f3ef]" style={{ fontFamily: "var(--font-mono), system-ui, sans-serif" }}>
       {/* ── Mobile header ── */}
-      <header className="flex items-center border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-4 sm:px-6 lg:hidden">
+      <header className="relative flex items-center border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-4 sm:px-6 lg:hidden">
         <Link href="/">
-          <AnycapLogo size={24} />
+          <AnycapLogo size={32} />
         </Link>
         <div className="ml-auto">
           <UserAvatarMenu
@@ -57,8 +58,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Mobile nav ── */}
-      <nav className="overflow-x-auto border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-3 sm:px-6 lg:hidden">
+      <nav className="relative overflow-x-auto border-b border-[#dce0d2] bg-[#f2f3ef] px-5 py-3 sm:px-6 lg:hidden">
         <div className="flex min-w-max gap-2">
+          <CommunityActions variant="mobilePills" />
           {allItems.map((item) =>
             item.disabled ? (
               <span
@@ -92,12 +94,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {/* Logo */}
           <div className="px-7 py-8">
             <Link href="/">
-              <AnycapLogo size={28} />
+              <AnycapLogo size={36} />
             </Link>
           </div>
 
           {/* Nav sections */}
-          <nav className="flex-1 px-4 mt-1">
+          <nav className="flex-1 px-4">
             {navSections.map((section, si) => (
               <div key={si}>
                 {si > 0 && (
@@ -153,7 +155,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* ── Main content ── */}
-        <main className="flex-1 min-w-0 px-5 py-10 sm:px-8 sm:py-12 md:px-16 md:py-14">
+        <main className="relative flex-1 min-w-0 px-5 py-10 sm:px-8 sm:py-12 md:px-16 md:py-14 xl:pt-24">
+          <CommunityActions
+            variant="desktop"
+            className="absolute right-16 top-6 z-[60]"
+          />
           <div className="max-w-[1200px]">{children}</div>
         </main>
       </div>

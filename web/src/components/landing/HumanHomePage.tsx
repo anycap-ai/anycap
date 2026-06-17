@@ -10,7 +10,6 @@ import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
 import { siteConfig } from "@/lib/site";
 
-const githubHref = "https://github.com/anycap-ai/anycap";
 const websiteId = `${siteConfig.url}#website`;
 const homePageId = `${siteConfig.url}#home`;
 
@@ -116,24 +115,6 @@ export function HumanHomePage() {
                   buttonClassName="w-full justify-center sm:w-auto"
                 />
               </div>
-              <a
-                href={githubHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ccd1c3] bg-[#fafbf8] px-6 py-4 text-[13px] text-[#3a3e32] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:border-[#b8bdaf] hover:bg-[#f0f2eb] hover:text-[#1c1f17] sm:w-auto sm:justify-start"
-                style={mono}
-              >
-                View on GitHub
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-60">
-                  <path
-                    d="M3 9L9 3M4 3h5v5"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </a>
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <span className="text-[11px] tracking-[0.6px] text-[#6b7d3a]" style={mono}>

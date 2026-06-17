@@ -1,4 +1,5 @@
 export const contactEmail = "admin@anycap.ai";
+export const discordInviteUrl = "https://discord.gg/WeP8Qf9Jqh";
 
 function escapeHtml(value: string) {
   return value
