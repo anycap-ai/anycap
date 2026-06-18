@@ -1,0 +1,4 @@
+interface:
+  display_name: "World Cup Predict"
+  short_description: "Predict World Cup winners & scorelines with verifiable pre-match intel via AnyCap"
+  default_prompt: "Predict this World Cup matchup: who wins and the likely scoreline"
