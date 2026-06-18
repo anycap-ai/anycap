@@ -6,10 +6,9 @@
     "status": "published"
   },
   "skills": {
-    "baseline_commit": "f5510f6",
-    "released_version": "0.3.6",
-    "source_head": "b0a1437",
-    "draft_version": "0.4.0",
-    "status": "approved"
+    "baseline_commit": "ac50aab",
+    "released_version": "0.4.0",
+    "source_head": "ac50aab",
+    "status": "published"
   }
 }
