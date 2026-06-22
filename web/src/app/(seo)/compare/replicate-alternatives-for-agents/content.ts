@@ -93,7 +93,7 @@ const en: ReplicateAlternativesPageData = {
     {
       dimension: "Pricing model",
       replicate: "Per-prediction pricing varies by model and hardware",
-      anycap: "Pay-as-you-go with $5 free credit, no monthly fee",
+      anycap: "Pay-as-you-go with no monthly fee",
     },
   ],
   alternativesTitle: "Alternatives compared",
@@ -198,7 +198,7 @@ const en: ReplicateAlternativesPageData = {
     {
       question: "Which is cheaper for image generation?",
       answer:
-        "Pricing depends on the specific model and volume. AnyCap offers $5 in free credit and pay-as-you-go pricing with no monthly fee. Replicate charges per prediction with rates that vary by model and GPU. For agent workflows, the total cost also includes integration time — AnyCap's single-install approach can reduce setup overhead significantly.",
+        "Pricing depends on the specific model and volume. AnyCap uses pay-as-you-go pricing with no monthly fee. Replicate charges per prediction with rates that vary by model and GPU. For agent workflows, the total cost also includes integration time — AnyCap's single-install approach can reduce setup overhead significantly.",
     },
     {
       question: "What if I need a model that AnyCap does not offer?",
@@ -279,7 +279,7 @@ const ptBr: ReplicateAlternativesPageData = {
     {
       dimension: "Modelo de preço",
       replicate: "Preço por prediction varia por modelo e hardware",
-      anycap: "Pay-as-you-go com US$ 5 de crédito grátis, sem mensalidade",
+      anycap: "Pay-as-you-go sem mensalidade",
     },
   ],
   alternativesTitle: "Alternativas comparadas",
@@ -384,7 +384,7 @@ const ptBr: ReplicateAlternativesPageData = {
     {
       question: "Qual é mais barato para geração de imagem?",
       answer:
-        "O preço depende do modelo e do volume. O AnyCap oferece US$ 5 de crédito grátis e preço pay-as-you-go sem mensalidade. O Replicate cobra por prediction com taxas que variam por modelo e GPU. Em fluxos de agente, o custo total também inclui tempo de integração — a abordagem de instalação única do AnyCap pode reduzir bastante o overhead de setup.",
+        "O preço depende do modelo e do volume. O AnyCap usa preço pay-as-you-go sem mensalidade. O Replicate cobra por prediction com taxas que variam por modelo e GPU. Em fluxos de agente, o custo total também inclui tempo de integração — a abordagem de instalação única do AnyCap pode reduzir bastante o overhead de setup.",
     },
     {
       question: "E se eu precisar de um modelo que o AnyCap não oferece?",
@@ -465,7 +465,7 @@ const id: ReplicateAlternativesPageData = {
     {
       dimension: "Model harga",
       replicate: "Harga per prediksi bervariasi menurut model dan perangkat keras",
-      anycap: "Bayar sesuai pemakaian dengan kredit gratis $5, tanpa biaya bulanan",
+      anycap: "Bayar sesuai pemakaian tanpa biaya bulanan",
     },
   ],
   alternativesTitle: "Alternatif yang dibandingkan",
@@ -574,7 +574,7 @@ const id: ReplicateAlternativesPageData = {
     {
       question: "Mana yang lebih murah untuk pembuatan gambar?",
       answer:
-        "Harga bergantung pada model spesifik dan volume. AnyCap menawarkan $5 kredit gratis dan harga bayar sesuai pemakaian tanpa biaya bulanan. Replicate mengenakan biaya per prediksi dengan tarif yang bervariasi menurut model dan GPU. Untuk alur kerja agen, total biaya juga mencakup waktu integrasi — pendekatan instalasi tunggal AnyCap dapat mengurangi overhead penyiapan secara signifikan.",
+        "Harga bergantung pada model spesifik dan volume. AnyCap memakai harga bayar sesuai pemakaian tanpa biaya bulanan. Replicate mengenakan biaya per prediksi dengan tarif yang bervariasi menurut model dan GPU. Untuk alur kerja agen, total biaya juga mencakup waktu integrasi — pendekatan instalasi tunggal AnyCap dapat mengurangi overhead penyiapan secara signifikan.",
     },
     {
       question: "Bagaimana jika saya membutuhkan model yang tidak ditawarkan AnyCap?",

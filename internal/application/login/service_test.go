@@ -32,9 +32,11 @@ type fakeUserProvisioner struct {
 	links   map[string]string
 }
 
-type fakeLoginCreditClient struct {
-	grants   []string
-	grantErr error
+type fakeLoginSignupRewarder struct {
+	grants []struct {
+		UserID      string
+		CreatedUser bool
+	}
 }
 
 func (f *fakeLoginAPIKeyService) AuthenticateAPIKey(_ context.Context, _ string) (model.Principal, error) {
@@ -79,21 +81,11 @@ func (f *fakeLoginAPIKeyService) UpdateAPIKey(_ context.Context, _, _ string, _ 
 	return model.APIKey{}, nil
 }
 
-func (f *fakeLoginCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
-	return model.Balance{}, nil
-}
-
-func (f *fakeLoginCreditClient) Deduct(_ context.Context, _ string, _ int64, _ string, _ string) error {
-	return nil
-}
-
-func (f *fakeLoginCreditClient) GrantSignupReward(_ context.Context, userID string) error {
-	f.grants = append(f.grants, userID)
-	return f.grantErr
-}
-
-func (f *fakeLoginCreditClient) ListTransactions(_ context.Context, _ string, _, _ int) ([]model.CreditTransaction, int, error) {
-	return nil, 0, nil
+func (f *fakeLoginSignupRewarder) GrantForNewUser(_ context.Context, userID string, createdUser bool) {
+	f.grants = append(f.grants, struct {
+		UserID      string
+		CreatedUser bool
+	}{UserID: userID, CreatedUser: createdUser})
 }
 
 func (f *fakeUserProvisioner) FindOrCreateByAuthIdentity(_ context.Context, provider string, authUser model.AuthUser, _ time.Time) (model.User, bool, error) {
@@ -228,13 +220,13 @@ func (r *fakeLoginSessionRepo) MarkPolled(_ context.Context, sessionID string, p
 }
 
 func newServiceForTest(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, sessions *fakeLoginSessionRepo) *Service {
-	return newServiceForTestWithCredit(now, apiKeys, users, &fakeLoginCreditClient{}, sessions, time.Time{})
+	return newServiceForTestWithSignupReward(now, apiKeys, users, &fakeLoginSignupRewarder{}, sessions)
 }
 
-func newServiceForTestWithCredit(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, credit *fakeLoginCreditClient, sessions *fakeLoginSessionRepo, signupRewardDeadline time.Time) *Service {
+func newServiceForTestWithSignupReward(now func() time.Time, apiKeys *fakeLoginAPIKeyService, users *fakeUserProvisioner, signupReward *fakeLoginSignupRewarder, sessions *fakeLoginSessionRepo) *Service {
 	return NewService(
 		users,
-		credit,
+		signupReward,
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -243,7 +235,6 @@ func newServiceForTestWithCredit(now func() time.Time, apiKeys *fakeLoginAPIKeyS
 		func() (string, error) { return "CODETEST", nil },
 		now,
 		7*24*time.Hour,
-		signupRewardDeadline,
 	)
 }
 
@@ -295,7 +286,7 @@ func TestService_InitDeviceUsesRandomUserCodeByDefault(t *testing.T) {
 	sessions := newFakeLoginSessionRepo()
 	service := NewService(
 		users,
-		&fakeLoginCreditClient{},
+		&fakeLoginSignupRewarder{},
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -304,7 +295,6 @@ func TestService_InitDeviceUsesRandomUserCodeByDefault(t *testing.T) {
 		nil,
 		now,
 		7*24*time.Hour,
-		time.Time{},
 	)
 
 	result, err := service.Init(context.Background(), model.LoginFlowDevice)
@@ -325,7 +315,7 @@ func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
 	codes := []string{"CODEONE1", "CODETWO2"}
 	service := NewService(
 		users,
-		&fakeLoginCreditClient{},
+		&fakeLoginSignupRewarder{},
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -338,7 +328,6 @@ func TestService_InitDeviceRetriesUserCodeConflict(t *testing.T) {
 		},
 		now,
 		7*24*time.Hour,
-		time.Time{},
 	)
 
 	result, err := service.Init(context.Background(), model.LoginFlowDevice)
@@ -364,7 +353,7 @@ func TestService_InitDeviceFailsWhenUserCodeGenerationFails(t *testing.T) {
 	sessions := newFakeLoginSessionRepo()
 	service := NewService(
 		users,
-		&fakeLoginCreditClient{},
+		&fakeLoginSignupRewarder{},
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -373,7 +362,6 @@ func TestService_InitDeviceFailsWhenUserCodeGenerationFails(t *testing.T) {
 		func() (string, error) { return "", errors.New("random source unavailable") },
 		now,
 		7*24*time.Hour,
-		time.Time{},
 	)
 
 	_, err := service.Init(context.Background(), model.LoginFlowDevice)
@@ -392,7 +380,7 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 	sessions := newFakeLoginSessionRepo()
 	service := NewService(
 		users,
-		&fakeLoginCreditClient{},
+		&fakeLoginSignupRewarder{},
 		apiKeys,
 		sessions,
 		"https://anycap.ai/auth/device",
@@ -401,7 +389,6 @@ func TestService_InitUsesExternalLoginSessionIDByDefault(t *testing.T) {
 		nil,
 		now,
 		7*24*time.Hour,
-		time.Time{},
 	)
 
 	result, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
@@ -501,21 +488,20 @@ func TestService_BrowserVerifyThenPollIssuesSingleAPIKey(t *testing.T) {
 	}
 }
 
-func TestService_BrowserVerifyGrantsSignupRewardForNewUser(t *testing.T) {
+func TestService_BrowserVerifyDelegatesSignupRewardForNewUser(t *testing.T) {
 	now := func() time.Time { return time.Date(2026, 4, 3, 10, 0, 0, 0, time.UTC) }
 	apiKeys := &fakeLoginAPIKeyService{}
-	credit := &fakeLoginCreditClient{}
+	signupReward := &fakeLoginSignupRewarder{}
 	users := &fakeUserProvisioner{users: map[string]model.User{
 		"2000000001": {ID: "2000000001", Email: "new@example.com", Name: "New User", Status: model.UserStatusActive},
 	}}
 	sessions := newFakeLoginSessionRepo()
-	service := newServiceForTestWithCredit(
+	service := newServiceForTestWithSignupReward(
 		now,
 		apiKeys,
 		users,
-		credit,
+		signupReward,
 		sessions,
-		time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
 	)
 
 	initResult, err := service.Init(context.Background(), model.LoginFlowBrowserPoll)
@@ -536,8 +522,8 @@ func TestService_BrowserVerifyGrantsSignupRewardForNewUser(t *testing.T) {
 		t.Fatalf("BrowserVerify() error = %v", err)
 	}
 
-	if len(credit.grants) != 1 || credit.grants[0] != "2000000001" {
-		t.Fatalf("expected signup reward grant for browser login, got %#v", credit.grants)
+	if len(signupReward.grants) != 1 || signupReward.grants[0].UserID != "2000000001" || !signupReward.grants[0].CreatedUser {
+		t.Fatalf("expected signup reward delegation for browser login, got %#v", signupReward.grants)
 	}
 }
 
@@ -573,21 +559,20 @@ func TestService_VerifyDeviceCodeThenPoll(t *testing.T) {
 	}
 }
 
-func TestService_VerifyDeviceCodeGrantsSignupRewardForNewUser(t *testing.T) {
+func TestService_VerifyDeviceCodeDelegatesSignupRewardForNewUser(t *testing.T) {
 	now := func() time.Time { return time.Date(2026, 4, 3, 10, 0, 0, 0, time.UTC) }
 	apiKeys := &fakeLoginAPIKeyService{createdResult: model.CreatedAPIKey{APIKey: model.APIKey{ID: "key-2"}, RawKey: "ak-test-2"}}
-	credit := &fakeLoginCreditClient{}
+	signupReward := &fakeLoginSignupRewarder{}
 	users := &fakeUserProvisioner{users: map[string]model.User{
 		"2000000002": {ID: "2000000002", Email: "device@example.com", Name: "Device User", Status: model.UserStatusActive},
 	}}
 	sessions := newFakeLoginSessionRepo()
-	service := newServiceForTestWithCredit(
+	service := newServiceForTestWithSignupReward(
 		now,
 		apiKeys,
 		users,
-		credit,
+		signupReward,
 		sessions,
-		time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
 	)
 
 	initResult, err := service.Init(context.Background(), model.LoginFlowDevice)
@@ -604,8 +589,8 @@ func TestService_VerifyDeviceCodeGrantsSignupRewardForNewUser(t *testing.T) {
 		t.Fatalf("VerifyDeviceCode() error = %v", err)
 	}
 
-	if len(credit.grants) != 1 || credit.grants[0] != "2000000002" {
-		t.Fatalf("expected signup reward grant for device login, got %#v", credit.grants)
+	if len(signupReward.grants) != 1 || signupReward.grants[0].UserID != "2000000002" || !signupReward.grants[0].CreatedUser {
+		t.Fatalf("expected signup reward delegation for device login, got %#v", signupReward.grants)
 	}
 }
 
@@ -624,50 +609,5 @@ func TestService_ExchangeIssuesAPIKeyForJWTPrincipal(t *testing.T) {
 	}
 	if result.APIKey != "ak-test-3" || result.APIKeyID != "key-3" {
 		t.Fatalf("unexpected exchange result: %#v", result)
-	}
-}
-
-func TestService_GrantSignupRewardBeforeDeadline(t *testing.T) {
-	credit := &fakeLoginCreditClient{}
-	service := &Service{
-		credit:               credit,
-		now:                  func() time.Time { return time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC) },
-		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
-	}
-
-	service.grantSignupReward(context.Background(), "user-before-deadline", true)
-
-	if len(credit.grants) != 1 {
-		t.Fatalf("expected one signup reward grant, got %d", len(credit.grants))
-	}
-}
-
-func TestService_GrantSignupRewardSkipsAfterDeadline(t *testing.T) {
-	credit := &fakeLoginCreditClient{}
-	service := &Service{
-		credit:               credit,
-		now:                  func() time.Time { return time.Date(2026, 4, 11, 0, 0, 0, 0, time.UTC) },
-		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
-	}
-
-	service.grantSignupReward(context.Background(), "user-after-deadline", true)
-
-	if len(credit.grants) != 0 {
-		t.Fatalf("expected no signup reward grant after deadline, got %d", len(credit.grants))
-	}
-}
-
-func TestService_GrantSignupRewardSkipsExistingUser(t *testing.T) {
-	credit := &fakeLoginCreditClient{}
-	service := &Service{
-		credit:               credit,
-		now:                  func() time.Time { return time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC) },
-		signupRewardDeadline: time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC),
-	}
-
-	service.grantSignupReward(context.Background(), "existing-user", false)
-
-	if len(credit.grants) != 0 {
-		t.Fatalf("expected no signup reward grant for existing user, got %d", len(credit.grants))
 	}
 }

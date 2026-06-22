@@ -639,7 +639,7 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 	systemHandler := system.NewHandler(systemService, passthroughMapper)
 	loginHandler := login.NewHandler(loginapp.NewService(
 		users,
-		credit.NewStubClient(nil),
+		nil,
 		apiKeys,
 		loginSessions,
 		"https://anycap.local/auth/device",
@@ -657,7 +657,6 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 		},
 		func() time.Time { return time.Date(2026, 3, 25, 10, 0, 0, 0, time.UTC) },
 		7*24*time.Hour,
-		time.Time{},
 	), passthroughMapper)
 	catalogRepo := nexushub.NewCatalogStubWith([]model.ModelSpec{
 		{

@@ -35,7 +35,7 @@ func buildStubAuthComposition(cfg config.Config, shared sharedComposition) authC
 		apiKeyService:   apiKeys,
 		loginService: loginapp.NewService(
 			users,
-			shared.creditClient,
+			shared.signupReward,
 			apiKeys,
 			loginSessions,
 			buildDeviceVerificationURL(cfg),
@@ -44,9 +44,8 @@ func buildStubAuthComposition(cfg config.Config, shared sharedComposition) authC
 			nil,
 			nil,
 			cfg.LoginAPIKeyTTL,
-			cfg.Credit.SignupRewardDeadline,
 		),
-		identityTokens: buildIdentityTokenAuthenticator(cfg, users, shared.creditClient),
+		identityTokens: buildIdentityTokenAuthenticator(cfg, users, shared.signupReward),
 		idResolver:     idresolver.PassthroughIDResolver{},
 		idMapper:       presenter.PassthroughIDMapper{},
 	}
@@ -75,7 +74,7 @@ func buildPersistentAuthComposition(cfg config.Config, db *sqlstore.SQLDB, share
 		apiKeyService:   apiKeyService,
 		loginService: loginapp.NewService(
 			users,
-			shared.creditClient,
+			shared.signupReward,
 			apiKeyService,
 			loginSessionRepo,
 			buildDeviceVerificationURL(cfg),
@@ -84,9 +83,8 @@ func buildPersistentAuthComposition(cfg config.Config, db *sqlstore.SQLDB, share
 			nil,
 			nil,
 			cfg.LoginAPIKeyTTL,
-			cfg.Credit.SignupRewardDeadline,
 		),
-		identityTokens: buildIdentityTokenAuthenticator(cfg, users, shared.creditClient),
+		identityTokens: buildIdentityTokenAuthenticator(cfg, users, shared.signupReward),
 		idResolver:     externalIDMapper,
 		idMapper:       externalIDMapper,
 	}

@@ -5,7 +5,7 @@ import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 export const CREATE_AI_INFLUENCER_FOR_FREE_PATH = "/learn/create-ai-influencer-for-free";
 
 const PAGE_RESOURCE_BASE = "https://cdn.anycap.ai/page_resource/learning";
-const LAST_UPDATED_ISO = "2026-04-09";
+const LAST_UPDATED_ISO = "2026-06-22";
 const HERO_IMAGE = {
   src: `${PAGE_RESOURCE_BASE}/create-ai-influencer-for-free-hero.png`,
   width: 1792,
@@ -49,7 +49,7 @@ const enContent = {
       { name: "Create AI Influencer for Free", href: CREATE_AI_INFLUENCER_FOR_FREE_PATH },
     ],
     eyebrow: "Learn",
-    lastUpdatedLabel: "Last updated April 9, 2026",
+    lastUpdatedLabel: "Last updated June 22, 2026",
     hero: {
       titleLine1: "Create AI influencer for free",
       titleLine2: "by validating the still first",
@@ -59,16 +59,16 @@ const enContent = {
       afterLink: "can support.",
       summaryLabel: "Answer-first summary",
       summaryText:
-        "The right reading of `free` is `do not pay for more complexity before the still works.` Start with a few realistic portraits. Keep one winner. Refine only that winner. Then decide whether it deserves video, publishing, or more iteration. This approach is more useful than pretending the entire creator pipeline should be free forever. Right now, the limited-time 250 free credits for new sign-ups also make that first validation loop easier to test.",
+        "The right reading of `free` is `do not pay for more complexity before the still works.` Start with a few realistic portraits. Keep one winner. Refine only that winner. Then decide whether it deserves video, publishing, or more iteration. This approach is more useful than pretending the entire creator pipeline should be free forever.",
       imageAlt:
         "Profile-ready portrait of a fictional beauty influencer with glossy shoulder-length waves, soft glam makeup, and a cream knit top in a bright neutral apartment interior.",
       imageCaption:
         "This image exists to show the page's real recommendation: start with one realistic still that could plausibly work as a profile or promo image before you pay for motion, narration, or a larger creator stack.",
     },
     creditNote: {
-      eyebrow: "Limited-time start credit",
-      title: "250 free credits for new sign-ups",
-      body: "As of this page update, new sign-ups receive 250 free credits ($5 value) through Jun 30. That is enough room for a small still-first validation loop before you decide whether the persona deserves more spend.",
+      eyebrow: "Prototype budget",
+      title: "Keep the first loop small",
+      body: "Check the current credit model before you scale beyond still-image validation. The useful first spend is the smallest loop that proves whether the persona is worth continuing.",
       href: "/pricing",
       ctaLabel: "See pricing",
     },
@@ -105,7 +105,7 @@ const enContent = {
         "The low-cost move is not to chase a full influencer platform immediately. It is to prove the persona first.",
         "Still-image validation is the cheapest useful step because it reveals whether the face, niche, and framing are worth carrying into video.",
         "Nano Banana 2 is the best first pass when you need several realistic options quickly. Nano Banana Pro is the cleanup step when one option already looks promising.",
-        "As of this update, new sign-ups receive 250 free credits ($5 value) through Jun 30, which makes the first still-validation loop easier to test without upfront spend.",
+        "Keep the first still-validation loop small enough that a failed persona does not pull you into a larger creator stack.",
       ],
     },
     workflow: {
@@ -287,9 +287,9 @@ const enContent = {
             "Yes. That is often the cheapest route. If you already have a usable draft or reference image, switch into a Nano Banana Pro image-to-image pass and preserve the identity while improving the scene, lighting, and framing.",
         },
         {
-          question: "Is there a limited-time free-credit offer right now?",
+          question: "How should I budget the first test?",
           answer:
-        "At the time this page was updated, new sign-ups received 250 free credits ($5 value) through Jun 30. The best use of that bonus is to test the still-first workflow early rather than spending it all on a bigger end-to-end creator stack immediately.",
+            "Start with the smallest still-image loop that can prove the persona direction. Check the pricing page for current credit rates before you move into more variants, video, or a bigger end-to-end creator stack.",
         },
       ],
     },
@@ -365,7 +365,7 @@ const contentByLocale = {
       { name: "Criar AI influencer de graça", href: CREATE_AI_INFLUENCER_FOR_FREE_PATH },
     ],
     eyebrow: "Aprender",
-    lastUpdatedLabel: "Atualizado em 9 de abril de 2026",
+    lastUpdatedLabel: "Atualizado em 22 de junho de 2026",
     hero: {
       titleLine1: "Crie um AI influencer de graça",
       titleLine2: "validando o still primeiro",
@@ -375,16 +375,16 @@ const contentByLocale = {
       afterLink: "consegue apoiar.",
       summaryLabel: "Resumo direto",
       summaryText:
-        "A leitura correta de `grátis` é `não pague por mais complexidade antes de o still funcionar.` Comece com alguns retratos realistas. Guarde um vencedor. Refine só esse vencedor. Depois decida se ele merece vídeo, publicação ou mais iteração. Essa abordagem é mais útil do que fingir que todo o pipeline de creator deveria ser gratuito para sempre. No momento, os 250 créditos grátis por tempo limitado para novos cadastros também deixam esse primeiro loop de validação mais fácil de testar.",
+        "A leitura correta de `grátis` é `não pague por mais complexidade antes de o still funcionar.` Comece com alguns retratos realistas. Guarde um vencedor. Refine só esse vencedor. Depois decida se ele merece vídeo, publicação ou mais iteração. Essa abordagem é mais útil do que fingir que todo o pipeline de creator deveria ser gratuito para sempre.",
       imageAlt:
         "Retrato pronto para perfil de uma influenciadora de beleza fictícia com ondas na altura dos ombros, maquiagem soft glam e um top de tricô creme em um interior de apartamento neutro e iluminado.",
       imageCaption:
         "Esta imagem existe para mostrar a recomendação real da página: comece com um still realista que possa funcionar de forma plausível como imagem de perfil ou peça promocional antes de pagar por motion, narração ou uma stack maior de creator.",
     },
     creditNote: {
-      eyebrow: "Crédito inicial por tempo limitado",
-      title: "250 créditos grátis para novos cadastros",
-      body: "Na atualização desta página, novos cadastros recebem 250 créditos grátis (valor de US$5) até 10 de abril. Isso já dá espaço para um pequeno loop de validação still-first antes de decidir se a persona merece mais investimento.",
+      eyebrow: "Budget de protótipo",
+      title: "Mantenha o primeiro loop pequeno",
+      body: "Confira o modelo de créditos atual antes de escalar além da validação com still image. O primeiro gasto útil é o menor loop que prova se a persona merece continuar.",
       href: "/pricing",
       ctaLabel: "Ver preços",
     },
@@ -421,7 +421,7 @@ const contentByLocale = {
         "O movimento de baixo custo não é correr para uma plataforma completa de influencer. É provar a persona primeiro.",
         "A validação com still image é a etapa útil mais barata porque revela se rosto, nicho e enquadramento merecem seguir para vídeo.",
         "Nano Banana 2 é o melhor primeiro passe quando você precisa de várias opções realistas rapidamente. Nano Banana Pro é a etapa de limpeza quando uma opção já parece promissora.",
-        "Nesta atualização, novos cadastros recebem 250 créditos grátis (US$5 em valor) até 10 de abril, o que deixa o primeiro loop de validação de still mais fácil de testar sem gasto inicial.",
+        "Mantenha o primeiro loop de validação com still pequeno o bastante para que uma persona ruim não puxe você para uma stack de creator maior.",
       ],
     },
     workflow: {
@@ -603,9 +603,9 @@ const contentByLocale = {
             "Sim. Muitas vezes esse é o caminho mais barato. Se você já tiver um rascunho ou imagem de referência útil, mude para um passe image-to-image com Nano Banana Pro e preserve a identidade enquanto melhora cena, luz e enquadramento.",
         },
         {
-          question: "Existe alguma oferta de créditos grátis por tempo limitado agora?",
+          question: "Como devo estimar o budget do primeiro teste?",
           answer:
-            "Na atualização desta página, novos cadastros receberam 250 créditos grátis (US$5 em valor) até 10 de abril. O melhor uso desse bônus é testar cedo o workflow still-first em vez de gastá-lo todo de uma vez em uma stack completa de creator.",
+            "Comece pelo menor loop de still image capaz de provar a direção da persona. Confira a página de preços para as taxas de crédito atuais antes de avançar para mais variações, vídeo ou uma stack completa de creator.",
         },
       ],
     },
@@ -678,7 +678,7 @@ const contentByLocale = {
       { name: "Buat AI influencer gratis", href: CREATE_AI_INFLUENCER_FOR_FREE_PATH },
     ],
     eyebrow: "Pelajari",
-    lastUpdatedLabel: "Diperbarui 9 April 2026",
+    lastUpdatedLabel: "Diperbarui 22 Juni 2026",
     hero: {
       titleLine1: "Buat AI influencer gratis",
       titleLine2: "dengan memvalidasi still lebih dulu",
@@ -688,16 +688,16 @@ const contentByLocale = {
       afterLink: ".",
       summaryLabel: "Ringkasan cepat",
       summaryText:
-        "Pembacaan yang tepat atas kata `gratis` adalah `jangan bayar kompleksitas tambahan sebelum still-nya bekerja.` Mulailah dengan beberapa potret realistis. Simpan satu pemenang. Refine hanya pemenang itu. Lalu putuskan apakah hasil itu layak naik ke video, publishing, atau iterasi tambahan. Pendekatan ini lebih berguna daripada berpura-pura bahwa seluruh pipeline creator seharusnya gratis selamanya. Saat ini, 250 kredit gratis dalam periode terbatas untuk pengguna baru juga membuat loop validasi pertama itu lebih mudah diuji.",
+        "Pembacaan yang tepat atas kata `gratis` adalah `jangan bayar kompleksitas tambahan sebelum still-nya bekerja.` Mulailah dengan beberapa potret realistis. Simpan satu pemenang. Refine hanya pemenang itu. Lalu putuskan apakah hasil itu layak naik ke video, publishing, atau iterasi tambahan. Pendekatan ini lebih berguna daripada berpura-pura bahwa seluruh pipeline creator seharusnya gratis selamanya.",
       imageAlt:
         "Potret siap profil dari AI beauty influencer fiktif dengan rambut bergelombang mengilap sebahu, makeup soft glam, dan atasan rajut warna krem di interior apartemen netral yang terang.",
       imageCaption:
         "Gambar ini ada untuk menunjukkan rekomendasi nyata dari halaman ini: mulai dari satu still realistis yang masuk akal dipakai sebagai gambar profil atau promo sebelum membayar motion, narasi, atau creator stack yang lebih besar.",
     },
     creditNote: {
-      eyebrow: "Kredit awal terbatas",
-      title: "250 kredit gratis untuk pendaftar baru",
-      body: "Pada saat halaman ini diperbarui, pendaftar baru menerima 250 kredit gratis (senilai $5) hingga 10 Apr. Itu cukup untuk menjalankan loop validasi still-first kecil sebelum memutuskan apakah persona ini pantas mendapat budget lebih besar.",
+      eyebrow: "Budget prototipe",
+      title: "Jaga loop pertama tetap kecil",
+      body: "Cek model kredit terbaru sebelum naik dari validasi still-image. Pengeluaran pertama yang berguna adalah loop terkecil yang membuktikan apakah persona ini layak dilanjutkan.",
       href: "/pricing",
       ctaLabel: "Lihat pricing",
     },
@@ -734,7 +734,7 @@ const contentByLocale = {
         "Langkah berbiaya rendah bukan langsung mengejar platform influencer penuh. Langkahnya adalah membuktikan persona terlebih dahulu.",
         "Validasi still-image adalah langkah berguna termurah karena mengungkap apakah wajah, niche, dan framing pantas dibawa ke video.",
         "Nano Banana 2 adalah first pass terbaik ketika kamu memerlukan beberapa opsi realistis dengan cepat. Nano Banana Pro adalah tahap cleanup ketika satu opsi sudah terlihat menjanjikan.",
-        "Pada saat pembaruan ini, pendaftar baru menerima 250 kredit gratis (senilai $5) hingga 10 Apr, sehingga loop validasi still pertama lebih mudah diuji tanpa biaya di muka.",
+        "Jaga loop validasi still pertama cukup kecil agar persona yang gagal tidak menarikmu ke creator stack yang lebih besar.",
       ],
     },
     workflow: {
@@ -916,9 +916,9 @@ const contentByLocale = {
             "Ya. Itu sering kali menjadi rute termurah. Jika kamu sudah punya draft atau reference image yang usable, pindahlah ke image-to-image pass Nano Banana Pro dan pertahankan identitas sambil memperbaiki adegan, pencahayaan, dan framing.",
         },
         {
-          question: "Apakah sekarang ada penawaran kredit gratis terbatas?",
+          question: "Bagaimana saya mengatur budget untuk tes pertama?",
           answer:
-            "Pada saat halaman ini diperbarui, pendaftar baru menerima 250 kredit gratis (senilai $5) hingga 10 Apr. Cara terbaik memanfaatkan bonus itu adalah menguji workflow still-first lebih awal, bukannya langsung menghabiskannya untuk creator stack end-to-end yang lebih besar.",
+            "Mulailah dari loop still-image terkecil yang bisa membuktikan arah persona. Cek halaman pricing untuk tarif kredit terbaru sebelum lanjut ke lebih banyak variasi, video, atau creator stack end-to-end yang lebih besar.",
         },
       ],
     },

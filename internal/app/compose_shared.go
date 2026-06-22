@@ -5,6 +5,7 @@ import (
 
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	modelrouteapp "gitlab.knoffice.tech/engineering/anycap/internal/application/modelroute"
+	signuprewardapp "gitlab.knoffice.tech/engineering/anycap/internal/application/signupreward"
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
@@ -28,12 +29,14 @@ type sharedComposition struct {
 	videoExecutionClient port.NexusHubClient
 	musicExecutionClient port.NexusHubClient
 	creditClient         port.CreditClient
+	signupReward         port.SignupRewarder
 	paymentClient        port.PaymentClient
 	creditPacks          []model.CreditPackSpec
 }
 
 func buildSharedComposition(cfg config.Config, info buildinfo.Info) sharedComposition {
 	catalogRepo, modelRouteRepo, refresher := buildCatalogAndModelRouteRepos(cfg)
+	creditClient := buildCreditClient(cfg)
 	return sharedComposition{
 		config:               cfg,
 		buildInfo:            info,
@@ -49,8 +52,12 @@ func buildSharedComposition(cfg config.Config, info buildinfo.Info) sharedCompos
 		imageExecutionClient: buildImageExecutionClient(cfg),
 		videoExecutionClient: buildVideoExecutionClient(cfg),
 		musicExecutionClient: buildMusicExecutionClient(cfg),
-		creditClient:         buildCreditClient(cfg),
-		paymentClient:        buildPaymentClient(cfg),
-		creditPacks:          buildCreditPackSpecs(cfg.CreditPacks),
+		creditClient:         creditClient,
+		signupReward: signuprewardapp.NewService(creditClient, signuprewardapp.Config{
+			Enabled:  cfg.Credit.SignupRewardEnabled,
+			Deadline: cfg.Credit.SignupRewardDeadline,
+		}),
+		paymentClient: buildPaymentClient(cfg),
+		creditPacks:   buildCreditPackSpecs(cfg.CreditPacks),
 	}
 }

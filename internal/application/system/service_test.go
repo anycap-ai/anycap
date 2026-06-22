@@ -37,6 +37,13 @@ type fakeSystemCreditClient struct {
 	grants       []string
 }
 
+type fakeSystemSignupRewarder struct {
+	grants []struct {
+		UserID      string
+		CreatedUser bool
+	}
+}
+
 func (f *fakeSystemCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
 	return f.balance, nil
 }
@@ -60,6 +67,13 @@ func (f *fakeSystemCreditClient) ListTransactions(_ context.Context, _ string, l
 		end = len(f.transactions)
 	}
 	return append([]model.CreditTransaction(nil), f.transactions[start:end]...), len(f.transactions), nil
+}
+
+func (f *fakeSystemSignupRewarder) GrantForNewUser(_ context.Context, userID string, createdUser bool) {
+	f.grants = append(f.grants, struct {
+		UserID      string
+		CreatedUser bool
+	}{UserID: userID, CreatedUser: createdUser})
 }
 
 type fakeCallLogRepo struct {
@@ -371,8 +385,8 @@ func TestService_CurrentUser(t *testing.T) {
 	}
 }
 
-func TestService_CurrentUserGrantsSignupRewardForNewUser(t *testing.T) {
-	credit := &fakeSystemCreditClient{}
+func TestService_CurrentUserDelegatesSignupRewardForNewUser(t *testing.T) {
+	signupReward := &fakeSystemSignupRewarder{}
 	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
 	service.SetUserReader(&fakeUserReader{
 		users: map[string]model.User{
@@ -385,7 +399,7 @@ func TestService_CurrentUserGrantsSignupRewardForNewUser(t *testing.T) {
 			},
 		},
 	})
-	service.SetCreditClient(credit)
+	service.SetSignupRewarder(signupReward)
 
 	_, err := service.CurrentUser(context.Background(), &model.Principal{
 		UserID:      "2000000001",
@@ -395,36 +409,8 @@ func TestService_CurrentUserGrantsSignupRewardForNewUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CurrentUser() error = %v", err)
 	}
-	if len(credit.grants) != 1 || credit.grants[0] != "2000000001" {
-		t.Fatalf("expected signup reward grant for first web request, got %#v", credit.grants)
-	}
-}
-
-func TestService_CurrentUserSkipsSignupRewardAfterDeadline(t *testing.T) {
-	credit := &fakeSystemCreditClient{}
-	service := NewService("anycap-server", "test", "stub", buildinfo.Info{Version: "dev"}, nil)
-	service.signupRewardDeadline = time.Now().Add(-time.Hour)
-	service.SetUserReader(&fakeUserReader{
-		users: map[string]model.User{
-			"2000000001": {
-				ID:     "2000000001",
-				Email:  "user@example.com",
-				Status: model.UserStatusActive,
-			},
-		},
-	})
-	service.SetCreditClient(credit)
-
-	_, err := service.CurrentUser(context.Background(), &model.Principal{
-		UserID:      "2000000001",
-		AuthType:    "auth0_jwt",
-		CreatedUser: true,
-	})
-	if err != nil {
-		t.Fatalf("CurrentUser() error = %v", err)
-	}
-	if len(credit.grants) != 0 {
-		t.Fatalf("expected no signup reward grant after deadline, got %#v", credit.grants)
+	if len(signupReward.grants) != 1 || signupReward.grants[0].UserID != "2000000001" || !signupReward.grants[0].CreatedUser {
+		t.Fatalf("expected signup reward delegation for first web request, got %#v", signupReward.grants)
 	}
 }
 

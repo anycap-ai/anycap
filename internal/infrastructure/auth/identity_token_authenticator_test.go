@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
-	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 )
 
@@ -17,8 +16,11 @@ type fakeIdentityTokenVerifier struct {
 	err      error
 }
 
-type fakeSignupRewardCreditClient struct {
-	grants []string
+type fakeSignupRewarder struct {
+	grants []struct {
+		UserID      string
+		CreatedUser bool
+	}
 }
 
 func (f *fakeIdentityTokenVerifier) VerifyIdentityToken(_ context.Context, _ string) (model.AuthUser, error) {
@@ -35,21 +37,11 @@ func (f *fakeIdentityTokenVerifier) FetchIdentityProfile(_ context.Context, _ st
 	return f.profile, nil
 }
 
-func (f *fakeSignupRewardCreditClient) GetBalance(_ context.Context, _ string) (model.Balance, error) {
-	return model.Balance{}, nil
-}
-
-func (f *fakeSignupRewardCreditClient) Deduct(_ context.Context, _ string, _ int64, _, _ string) error {
-	return nil
-}
-
-func (f *fakeSignupRewardCreditClient) GrantSignupReward(_ context.Context, userID string) error {
-	f.grants = append(f.grants, userID)
-	return nil
-}
-
-func (f *fakeSignupRewardCreditClient) ListTransactions(_ context.Context, _ string, _, _ int) ([]model.CreditTransaction, int, error) {
-	return nil, 0, nil
+func (f *fakeSignupRewarder) GrantForNewUser(_ context.Context, userID string, createdUser bool) {
+	f.grants = append(f.grants, struct {
+		UserID      string
+		CreatedUser bool
+	}{UserID: userID, CreatedUser: createdUser})
 }
 
 func TestIdentityTokenAuthenticator_AuthenticateIdentityToken(t *testing.T) {
@@ -63,7 +55,7 @@ func TestIdentityTokenAuthenticator_AuthenticateIdentityToken(t *testing.T) {
 		},
 	}, users, nil, func() time.Time {
 		return time.Date(2026, 3, 27, 9, 0, 0, 0, time.UTC)
-	}, time.Time{})
+	})
 
 	principal, err := authenticator.AuthenticateIdentityToken(context.Background(), "jwt-token")
 	if err != nil {
@@ -83,7 +75,7 @@ func TestIdentityTokenAuthenticator_AuthenticateIdentityToken(t *testing.T) {
 func TestIdentityTokenAuthenticator_PropagatesVerifierError(t *testing.T) {
 	authenticator := NewIdentityTokenAuthenticator(&fakeIdentityTokenVerifier{
 		err: errors.New("boom"),
-	}, userstore.NewMemoryProvisioner(), nil, nil, time.Time{})
+	}, userstore.NewMemoryProvisioner(), nil, nil)
 
 	if _, err := authenticator.AuthenticateIdentityToken(context.Background(), "jwt-token"); err == nil {
 		t.Fatal("expected error, got nil")
@@ -104,7 +96,7 @@ func TestIdentityTokenAuthenticator_HydratesMissingProfileFromFetcher(t *testing
 		},
 	}, users, nil, func() time.Time {
 		return time.Date(2026, 3, 27, 9, 0, 0, 0, time.UTC)
-	}, time.Time{})
+	})
 
 	principal, err := authenticator.AuthenticateIdentityToken(context.Background(), "jwt-token")
 	if err != nil {
@@ -115,18 +107,18 @@ func TestIdentityTokenAuthenticator_HydratesMissingProfileFromFetcher(t *testing
 	}
 }
 
-func TestIdentityTokenAuthenticator_GrantsSignupRewardForNewUserOnly(t *testing.T) {
+func TestIdentityTokenAuthenticator_DelegatesSignupRewardCreationState(t *testing.T) {
 	users := userstore.NewMemoryProvisioner()
-	credit := &fakeSignupRewardCreditClient{}
+	signupReward := &fakeSignupRewarder{}
 	authenticator := NewIdentityTokenAuthenticator(&fakeIdentityTokenVerifier{
 		authUser: model.AuthUser{
 			UserID: "auth0|demo-user",
 			Email:  "demo@example.com",
 			Name:   "Demo User",
 		},
-	}, users, credit, func() time.Time {
+	}, users, signupReward, func() time.Time {
 		return time.Date(2026, 4, 6, 9, 0, 0, 0, time.UTC)
-	}, time.Date(2026, 4, 10, 23, 59, 59, 0, time.UTC))
+	})
 
 	first, err := authenticator.AuthenticateIdentityToken(context.Background(), "jwt-token")
 	if err != nil {
@@ -144,9 +136,13 @@ func TestIdentityTokenAuthenticator_GrantsSignupRewardForNewUserOnly(t *testing.
 		t.Fatalf("expected second principal to be existing user, got %#v", second)
 	}
 
-	if len(credit.grants) != 1 || credit.grants[0] != first.UserID {
-		t.Fatalf("expected exactly one signup reward grant for %q, got %#v", first.UserID, credit.grants)
+	if len(signupReward.grants) != 2 {
+		t.Fatalf("expected signup reward delegation for each authentication, got %#v", signupReward.grants)
+	}
+	if signupReward.grants[0].UserID != first.UserID || !signupReward.grants[0].CreatedUser {
+		t.Fatalf("expected first signup reward delegation for new user, got %#v", signupReward.grants[0])
+	}
+	if signupReward.grants[1].UserID != second.UserID || signupReward.grants[1].CreatedUser {
+		t.Fatalf("expected second signup reward delegation for existing user, got %#v", signupReward.grants[1])
 	}
 }
-
-var _ port.CreditClient = (*fakeSignupRewardCreditClient)(nil)

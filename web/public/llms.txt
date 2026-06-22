@@ -11,7 +11,7 @@ AnyCap is an AI agent capability runtime for coding agents. It gives agents one 
 - [Install guide](https://anycap.ai/guides/install-anycap): Human-readable setup guide for the CLI, auth, and verification flow.
 - [install.txt](https://anycap.ai/install.txt): Machine-readable installation instructions for agent workflows.
 - [CLI overview](https://anycap.ai/cli): Public overview of the command surface and workflow shape.
-- [Pricing](https://anycap.ai/pricing): Credit model, free credit, and pay-as-you-go details.
+- [Pricing](https://anycap.ai/pricing): Credit model, credit packs, and pay-as-you-go details.
 
 ## Agent Guides
 

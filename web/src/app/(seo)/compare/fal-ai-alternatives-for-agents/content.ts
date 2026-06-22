@@ -85,7 +85,7 @@ const en: FalAiAlternativesPageData = {
     {
       dimension: "Pricing model",
       falai: "Per-second GPU billing, varies by model and hardware",
-      anycap: "Pay-as-you-go with $5 free credit, no monthly fee",
+      anycap: "Pay-as-you-go with no monthly fee",
     },
   ],
   alternativesTitle: "Alternatives compared",
@@ -259,7 +259,7 @@ const ptBr: FalAiAlternativesPageData = {
     {
       dimension: "Modelo de preço",
       falai: "Cobrança por segundo de GPU, varia por modelo e hardware",
-      anycap: "Pay-as-you-go com US$ 5 de crédito grátis, sem mensalidade",
+      anycap: "Pay-as-you-go sem mensalidade",
     },
   ],
   alternativesTitle: "Alternativas comparadas",
@@ -433,7 +433,7 @@ const id: FalAiAlternativesPageData = {
     {
       dimension: "Model harga",
       falai: "Penagihan GPU per detik, bervariasi menurut model dan perangkat keras",
-      anycap: "Bayar sesuai pemakaian dengan $5 kredit gratis, tanpa biaya bulanan",
+      anycap: "Bayar sesuai pemakaian tanpa biaya bulanan",
     },
   ],
   alternativesTitle: "Alternatif yang dibandingkan",

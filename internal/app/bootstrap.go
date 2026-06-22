@@ -333,7 +333,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
 		systemService.SetUserReader(authComp.userReader)
 		systemService.SetCreditClient(shared.creditClient)
-		systemService.SetSignupRewardDeadline(cfg.Credit.SignupRewardDeadline)
+		systemService.SetSignupRewarder(shared.signupReward)
 		systemService.SetPaymentClient(shared.paymentClient)
 		systemService.SetCallLogRepo(billingComp.callLogs)
 		systemService.SetCreditPacks(shared.creditPacks)
@@ -413,7 +413,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 		systemService := systemapp.NewService(cfg.AppName, cfg.AppEnv, cfg.RuntimeMode, info, authComp.apiKeyService)
 		systemService.SetUserReader(authComp.userReader)
 		systemService.SetCreditClient(shared.creditClient)
-		systemService.SetSignupRewardDeadline(cfg.Credit.SignupRewardDeadline)
+		systemService.SetSignupRewarder(shared.signupReward)
 		systemService.SetPaymentClient(shared.paymentClient)
 		systemService.SetCallLogRepo(billingComp.callLogs)
 		systemService.SetCreditPacks(shared.creditPacks)
@@ -982,14 +982,14 @@ func buildAuthMiddleware(cfg config.Config, apiKeys port.APIKeyService, identity
 	return middleware.Auth(apiKeys, identityTokens)
 }
 
-func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner, creditClient port.CreditClient) port.IdentityTokenAuthenticator {
+func buildIdentityTokenAuthenticator(cfg config.Config, users port.UserProvisioner, signupReward port.SignupRewarder) port.IdentityTokenAuthenticator {
 	if !cfg.Auth0Enabled || users == nil {
 		return nil
 	}
 	return auth.NewIdentityTokenAuthenticator(auth.NewJWTVerifier(auth.JWTVerifierConfig{
 		Issuer:   cfg.Auth0Issuer,
 		Audience: cfg.Auth0Audience,
-	}, nil), users, creditClient, nil, cfg.Credit.SignupRewardDeadline)
+	}, nil), users, signupReward, nil)
 }
 
 func shouldBypassAuthForLocalTest(_ config.Config) bool {

@@ -89,7 +89,7 @@ export function AgentBubble() {
             Let me show you what I can do<span className="text-[#5f7a29]">.</span>
           </p>
           <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
-            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Jun 30</span>.
+            One balance for image, video, audio, web, Drive, and Page workflows.
           </p>
           <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
             Go to dashboard
@@ -115,10 +115,10 @@ export function AgentBubble() {
             Let me show you what I can do<span className="text-[#5f7a29]">.</span>
           </p>
           <p className="mt-1.5 text-[12px] leading-[1.55] text-[#495240]">
-            250 free credits (<span className="font-semibold text-[#1f2619]">$5 value</span>) for new sign-ups. Ends <span className="font-semibold text-[#1f2619]">Jun 30</span>.
+            One balance for image, video, audio, web, Drive, and Page workflows.
           </p>
           <span className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.3px] text-[#5f7a29] transition-colors duration-200 group-hover:text-[#4a6520]">
-            Try it free
+            Try AnyCap
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="translate-x-0 transition-transform duration-300 group-hover:translate-x-1">
               <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

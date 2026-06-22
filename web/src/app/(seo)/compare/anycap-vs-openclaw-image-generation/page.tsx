@@ -20,7 +20,7 @@ const lastUpdatedIso = "2026-04-06";
 export const metadata: Metadata = {
   title: "AnyCap vs OpenClaw image generation — one key vs provider-key setup",
   description:
-    "Compare AnyCap and OpenClaw for agent image generation. AnyCap gives teams one key across image models, a clearer hosted dashboard, $5 free credit, Drive and Page sharing, and support beyond OpenClaw.",
+    "Compare AnyCap and OpenClaw for agent image generation. AnyCap gives teams one key across image models, a clearer hosted dashboard, Drive and Page sharing, and support beyond OpenClaw.",
   alternates: { canonical: "/compare/anycap-vs-openclaw-image-generation" },
   openGraph: {
     type: "website",
@@ -63,10 +63,10 @@ const comparisons = [
       "Primary surface is the agent runtime and local configuration. Image generation is documented as a tool backed by external providers.",
   },
   {
-    dimension: "Free start",
-    anycap: "$5 free credit on signup, then pay-as-you-go with no subscription.",
+    dimension: "Billing model",
+    anycap: "Pay-as-you-go with one prepaid balance and no subscription.",
     openclaw:
-      "Public image-generation docs focus on provider configuration rather than a hosted credit balance or free starter credit.",
+      "Public image-generation docs focus on provider configuration rather than a hosted shared prepaid balance.",
   },
   {
     dimension: "Sharing outputs",
@@ -126,7 +126,7 @@ const sourceLinks = [
   {
     label: "AnyCap pricing",
     href: "/pricing",
-    note: "$5 free credit and pay-as-you-go pricing.",
+    note: "Pay-as-you-go pricing and credit packs.",
   },
   {
     label: "Install AnyCap",
@@ -199,8 +199,8 @@ export default function AnycapVsOpenClawImageGenerationPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
                 Choose AnyCap when you want one key for multiple image models, support across
-                OpenClaw plus other agents, a simpler dashboard for outputs, $5 free credit on
-                signup, and built-in Drive or Page sharing for generated artifacts. Choose
+                OpenClaw plus other agents, one prepaid balance, a simpler dashboard for outputs,
+                and built-in Drive or Page sharing for generated artifacts. Choose
                 OpenClaw when you prefer a local-first agent environment and want to manage the
                 provider layer yourself.
               </p>
@@ -515,8 +515,8 @@ export default function AnycapVsOpenClawImageGenerationPage() {
                   The AnyCap side of the comparison is based on currently published product pages
                   for pricing, installation, image generation, and Drive. Claims on this page are
                   meant to stay inside what a reader can verify from public sources: one login and
-                  one key positioning, $5 free credit, hosted dashboard flows, and Drive or Page
-                  sharing for artifacts.
+                  one key positioning, hosted dashboard flows, pay-as-you-go pricing, and Drive
+                  or Page sharing for artifacts.
                 </p>
                 <div className="rounded-xl border border-[#d4dbb8] bg-[#f9faf5] p-5">
                   <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>

@@ -24,7 +24,7 @@ const guideJsonLd = createTechArticleJsonLd({
     "anycap image generate",
   ],
   datePublished: "2026-04-10",
-  dateModified: "2026-04-10",
+  dateModified: "2026-06-22",
 });
 
 const faqItems = [
@@ -46,7 +46,7 @@ const faqItems = [
   {
     question: "How much does image generation cost?",
     answer:
-      "AnyCap uses pay-as-you-go pricing with no monthly fee. New users receive $5 in free credit. Pricing varies by model — see the pricing page for per-generation rates.",
+      "AnyCap uses pay-as-you-go pricing with no monthly fee. Pricing varies by model — see the pricing page for per-generation rates.",
   },
 ] as const;
 
@@ -69,7 +69,7 @@ const idFaqItems = [
   {
     question: "Berapa biaya generasi gambar?",
     answer:
-      "AnyCap menggunakan skema bayar sesuai pemakaian tanpa biaya bulanan. Pengguna baru mendapat kredit gratis $5. Biaya berbeda antar model, lihat halaman pricing untuk tarif per generasi.",
+      "AnyCap menggunakan skema bayar sesuai pemakaian tanpa biaya bulanan. Biaya berbeda antar model, lihat halaman pricing untuk tarif per generasi.",
   },
 ] as const;
 
@@ -92,7 +92,7 @@ const deFaqItems = [
   {
     question: "Wie viel kostet die Bildgenerierung?",
     answer:
-      "AnyCap nutzt nutzungsbasierte Preise ohne monatliche Gebühr. Neue Nutzer erhalten 5 USD Startguthaben. Die Preise variieren je nach Modell — Tarife pro Generierung finden Sie auf der Preisseite.",
+      "AnyCap nutzt nutzungsbasierte Preise ohne monatliche Gebühr. Die Preise variieren je nach Modell — Tarife pro Generierung finden Sie auf der Preisseite.",
   },
 ] as const;
 
@@ -115,7 +115,7 @@ const ptBrFaqItems = [
   {
     question: "Quanto custa a geracao de imagem?",
     answer:
-      "O AnyCap usa precificacao por uso, sem taxa mensal. Novos usuarios recebem $5 em credito gratuito. Os precos variam por modelo, consulte a pagina de precos para as taxas por geracao.",
+      "O AnyCap usa precificacao por uso, sem taxa mensal. Os precos variam por modelo, consulte a pagina de precos para as taxas por geracao.",
   },
 ] as const;
 

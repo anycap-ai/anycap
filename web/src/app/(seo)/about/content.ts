@@ -174,7 +174,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       {
         label: "Pricing",
         href: "/pricing",
-        detail: "Public explanation of free credit and pay-as-you-go positioning.",
+        detail: "Public explanation of credit packs and pay-as-you-go positioning.",
       },
     ],
     whatIsTitle: "What AnyCap is",
@@ -403,7 +403,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       {
         label: "Preços",
         href: "/pricing",
-        detail: "Explicação pública do posicionamento com créditos grátis e pay-as-you-go.",
+        detail: "Explicação pública do posicionamento com pacotes de crédito e pay-as-you-go.",
       },
     ],
     whatIsTitle: "O que o AnyCap é",
@@ -654,7 +654,7 @@ contentByLocale.id = {
     {
       label: "Harga",
       href: "/pricing",
-      detail: "Penjelasan publik soal positioning kredit gratis dan pay-as-you-go.",
+      detail: "Penjelasan publik soal paket kredit dan positioning pay-as-you-go.",
     },
   ],
   whatIsTitle: "Apa itu AnyCap",
@@ -902,7 +902,7 @@ contentByLocale.de = {
       {
         label: "Preise",
         href: "/pricing",
-        detail: "Öffentliche Erläuterung des Free-Credit- und Pay-as-you-go-Positioning.",
+        detail: "Öffentliche Erläuterung von Credit-Paketen und Pay-as-you-go-Positioning.",
       },
     ],
     whatIsTitle: "Was AnyCap ist",

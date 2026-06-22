@@ -14,7 +14,7 @@ const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as con
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_PATH = "/guides/claude-opus-4-7-image-video-workflow";
 const PAGE_PUBLISHED_ISO = "2026-04-17";
-const PAGE_LAST_MODIFIED_ISO = "2026-04-17";
+const PAGE_LAST_MODIFIED_ISO = "2026-06-22";
 
 type WorkflowStep = {
   step: string;
@@ -78,7 +78,7 @@ const enContent: PageContent = {
     { name: "Claude Opus 4.7 Image + Video Workflow" },
   ],
   eyebrow: "Guides x Claude Opus 4.7",
-  lastUpdatedLabel: "Updated April 17, 2026",
+  lastUpdatedLabel: "Updated June 22, 2026",
   heroTitle: [
     "Claude Opus 4.7 image + video workflow",
     "with AnyCap — one terminal, every modality.",
@@ -273,7 +273,7 @@ const enContent: PageContent = {
     {
       question: "Where do I see real-time costs?",
       answer:
-        "AnyCap uses pay-as-you-go pricing with $5 free credit. Per-model rates and credit usage are available on the pricing page.",
+        "AnyCap uses pay-as-you-go pricing with one prepaid balance. Per-model rates and credit usage are available on the pricing page.",
     },
   ],
   articleJsonLd: createTechArticleJsonLd({
@@ -302,7 +302,7 @@ const ptBrContent: PageContent = {
     { name: "Workflow de Imagem + Vídeo no Claude Opus 4.7" },
   ],
   eyebrow: "Guias x Claude Opus 4.7",
-  lastUpdatedLabel: "Atualizado em 17 de abril de 2026",
+  lastUpdatedLabel: "Atualizado em 22 de junho de 2026",
   heroTitle: [
     "Workflow de imagem + vídeo no Claude Opus 4.7",
     "com AnyCap — um terminal, todas as modalidades.",
@@ -472,7 +472,7 @@ const ptBrContent: PageContent = {
     {
       question: "Onde vejo o custo em tempo real?",
       answer:
-        "O AnyCap usa preço sob demanda com US$ 5 de crédito grátis. Tarifas por modelo e uso de crédito ficam na página de preços.",
+        "O AnyCap usa preço sob demanda com um saldo pré-pago. Tarifas por modelo e uso de crédito ficam na página de preços.",
     },
   ],
   articleJsonLd: createTechArticleJsonLd({
@@ -501,7 +501,7 @@ const deContent: PageContent = {
     { name: "Claude Opus 4.7 Bild- und Video-Workflow" },
   ],
   eyebrow: "Anleitungen x Claude Opus 4.7",
-  lastUpdatedLabel: "Aktualisiert am 17. April 2026",
+  lastUpdatedLabel: "Aktualisiert am 22. Juni 2026",
   heroTitle: [
     "Claude Opus 4.7 Bild- und Video-Workflow",
     "mit AnyCap — ein Terminal, jede Modalität.",
@@ -696,7 +696,7 @@ const deContent: PageContent = {
     {
       question: "Wo sehe ich Echtzeit-Kosten?",
       answer:
-        "AnyCap nutzt nutzungsbasierte Preise mit 5 USD Startguthaben. Modellbezogene Tarife und Credit-Verbrauch finden Sie auf der Preisseite.",
+        "AnyCap nutzt nutzungsbasierte Preise mit einem Prepaid-Guthaben. Modellbezogene Tarife und Credit-Verbrauch finden Sie auf der Preisseite.",
     },
   ],
   articleJsonLd: createTechArticleJsonLd({
@@ -725,7 +725,7 @@ const idContent: PageContent = {
     { name: "Workflow Image + Video Claude Opus 4.7" },
   ],
   eyebrow: "Panduan x Claude Opus 4.7",
-  lastUpdatedLabel: "Diperbarui 17 April 2026",
+  lastUpdatedLabel: "Diperbarui 22 Juni 2026",
   heroTitle: [
     "Workflow image + video Claude Opus 4.7",
     "dengan AnyCap — satu terminal, semua modalitas.",
@@ -920,7 +920,7 @@ const idContent: PageContent = {
     {
       question: "Di mana lihat biaya real-time?",
       answer:
-        "AnyCap pakai harga pay-as-you-go dengan kredit gratis $5. Tarif per model dan penggunaan kredit tersedia di halaman pricing.",
+        "AnyCap pakai harga pay-as-you-go dengan satu saldo prabayar. Tarif per model dan penggunaan kredit tersedia di halaman pricing.",
     },
   ],
   articleJsonLd: createTechArticleJsonLd({

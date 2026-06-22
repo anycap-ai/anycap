@@ -361,7 +361,7 @@ Public pages group external community links in the header: GitHub for the reposi
 - **Recoverable states**: if AnyCap already persisted provider success and cost, the worker can complete delayed credit consume without re-calling the provider
 - **NexusHub trace propagation**: generate requests send `trace_id` plus `biz_id=anycap` in `X-Nexus-Extra` for future task reverse lookup and offline reconciliation
 - **Current recovery limitation**: the concrete NexusHub reverse-lookup HTTP path for `trace_id + biz_id -> task_id` is not wired yet, so requests that lose the local `provider_task_id` before persistence still fall back to the existing degraded path instead of full automatic lookup recovery
-- **Signup reward**: optional credit signup reward can be granted to newly created users at login, with package-based credit issuance and an env-configurable deadline cutoff
+- **Signup reward**: disabled by default and guarded by `ANYCAP_CREDIT_SIGNUP_REWARD_ENABLED`; when enabled, newly created users can receive package-based credit issuance before the optional deadline cutoff
 - **Call logging**: every invocation logged with user, model, cost, duration, request ID
 - **Usage reporting**: aggregated statistics available in dashboard and via API
 - **One-time credit purchase API**: authenticated users can list configured credit packs via `GET /v1/pricing/credit-packs` and create checkout sessions via `POST /v1/billing/checkout`

@@ -7,7 +7,7 @@ AnyCap e um runtime de capabilities para agentes de IA voltado a coding agents. 
 - [Guia de instalacao](https://anycap.ai/pt-br/guides/install-anycap): passo a passo legivel para humanos.
 - [install.txt](https://anycap.ai/pt-br/install.txt): instrucoes de instalacao legiveis para agentes.
 - [Visao geral da CLI](https://anycap.ai/pt-br/cli): panorama da superficie de comandos.
-- [Precos](https://anycap.ai/pt-br/pricing): creditos, credito gratis e pagamento por uso.
+- [Precos](https://anycap.ai/pt-br/pricing): creditos, pacotes pre-pagos e pagamento por uso.
 
 ## Guias para agentes
 

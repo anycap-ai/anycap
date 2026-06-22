@@ -24,6 +24,7 @@ type Service struct {
 	usage                      port.UsageReader
 	users                      port.UserReader
 	credit                     port.CreditClient
+	signupReward               port.SignupRewarder
 	payment                    port.PaymentClient
 	callLogs                   port.CallLogRepo
 	packs                      []model.CreditPackSpec
@@ -31,7 +32,6 @@ type Service struct {
 	provider                   featureProvider
 	checkoutReturnOriginAllow  map[string]struct{}
 	checkoutIdempotencyClaimer checkoutIdempotencyClaimer
-	signupRewardDeadline       time.Time
 }
 
 type featureProvider interface {
@@ -90,8 +90,8 @@ func (s *Service) SetCreditClient(credit port.CreditClient) {
 	s.credit = credit
 }
 
-func (s *Service) SetSignupRewardDeadline(deadline time.Time) {
-	s.signupRewardDeadline = deadline.UTC()
+func (s *Service) SetSignupRewarder(signupReward port.SignupRewarder) {
+	s.signupReward = signupReward
 }
 
 func (s *Service) SetPaymentClient(payment port.PaymentClient) {
@@ -183,18 +183,10 @@ func (s *Service) CurrentUser(ctx context.Context, principal *model.Principal) (
 }
 
 func (s *Service) ensureSignupReward(ctx context.Context, principal *model.Principal) {
-	if s == nil || principal == nil || !principal.CreatedUser || principal.UserID == "" || s.credit == nil {
+	if s == nil || principal == nil || s.signupReward == nil {
 		return
 	}
-	if !s.signupRewardDeadline.IsZero() && time.Now().UTC().After(s.signupRewardDeadline.UTC()) {
-		return
-	}
-	if err := s.credit.GrantSignupReward(ctx, principal.UserID); err != nil {
-		logging.WithContext(ctx).WithFields(logging.Fields{
-			"flow":    "system.grant_signup_reward",
-			"user_id": principal.UserID,
-		}).WithError(err).Warn("grant signup reward failed")
-	}
+	s.signupReward.GrantForNewUser(ctx, principal.UserID, principal.CreatedUser)
 }
 
 func (s *Service) CreditBalance(ctx context.Context, principal *model.Principal) (model.Balance, error) {

@@ -6,7 +6,6 @@ import (
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/port"
-	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
 type IdentityTokenVerifier interface {
@@ -18,23 +17,21 @@ type IdentityTokenProfileFetcher interface {
 }
 
 type IdentityTokenAuthenticator struct {
-	verifier             IdentityTokenVerifier
-	users                port.UserProvisioner
-	credit               port.CreditClient
-	now                  func() time.Time
-	signupRewardDeadline time.Time
+	verifier     IdentityTokenVerifier
+	users        port.UserProvisioner
+	signupReward port.SignupRewarder
+	now          func() time.Time
 }
 
-func NewIdentityTokenAuthenticator(verifier IdentityTokenVerifier, users port.UserProvisioner, credit port.CreditClient, now func() time.Time, signupRewardDeadline time.Time) *IdentityTokenAuthenticator {
+func NewIdentityTokenAuthenticator(verifier IdentityTokenVerifier, users port.UserProvisioner, signupReward port.SignupRewarder, now func() time.Time) *IdentityTokenAuthenticator {
 	if now == nil {
 		now = time.Now
 	}
 	return &IdentityTokenAuthenticator{
-		verifier:             verifier,
-		users:                users,
-		credit:               credit,
-		now:                  now,
-		signupRewardDeadline: signupRewardDeadline,
+		verifier:     verifier,
+		users:        users,
+		signupReward: signupReward,
+		now:          now,
 	}
 }
 
@@ -78,18 +75,10 @@ func (a *IdentityTokenAuthenticator) AuthenticateIdentityToken(ctx context.Conte
 }
 
 func (a *IdentityTokenAuthenticator) grantSignupReward(ctx context.Context, userID string, createdUser bool) {
-	if !createdUser || a.credit == nil || userID == "" {
+	if a == nil || a.signupReward == nil {
 		return
 	}
-	if !a.signupRewardDeadline.IsZero() && a.now().UTC().After(a.signupRewardDeadline.UTC()) {
-		return
-	}
-	if err := a.credit.GrantSignupReward(ctx, userID); err != nil {
-		logging.WithContext(ctx).WithFields(logging.Fields{
-			"flow":    "auth.grant_signup_reward",
-			"user_id": userID,
-		}).WithError(err).Warn("grant signup reward failed")
-	}
+	a.signupReward.GrantForNewUser(ctx, userID, createdUser)
 }
 
 func shouldHydrateAuthProfile(authUser model.AuthUser) bool {

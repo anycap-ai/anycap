@@ -19,7 +19,7 @@ AnyCap is designed for terminal-based agent workflows. The CLI returns structure
 - Machine install guide: [AnyCap install.txt](https://anycap.ai/install.txt)
 - Install: \`curl -fsSL https://anycap.ai/install.sh | sh\` or \`npm install -g @anycap/cli\`
 - Skill install: \`npx -y skills add anycap-ai/anycap -y\` or \`npx -y skills add anycap-ai/anycap -a <agent> -y\`
-- Pricing: $5 free credit on signup, then pay-as-you-go with no markup over official provider rates
+- Pricing: Pay-as-you-go with no markup over official provider rates
 - License: MIT
 - Official repository: [AnyCap GitHub repository](https://github.com/anycap-ai/anycap)
 - Last updated: 2026-04-08
@@ -126,7 +126,7 @@ Roadmap: speech, sandbox, browser automation.
 
 ## Pricing
 
-$5 free credit on signup - no payment required. After that, pay-as-you-go at the same rate as official model providers. No markup, no subscription.
+Pay-as-you-go at the same rate as official model providers. No markup, no subscription.
 
 ## Why AnyCap
 
@@ -180,10 +180,10 @@ O AnyCap foi pensado para workflows de agentes no terminal. A CLI retorna saida 
 - Guia de instalacao para maquinas: [AnyCap install.txt](https://anycap.ai/pt-br/install.txt)
 - Instalacao: \`curl -fsSL https://anycap.ai/install.sh | sh\` ou \`npm install -g @anycap/cli\`
 - Instalacao da skill: \`npx -y skills add anycap-ai/anycap -y\` ou \`npx -y skills add anycap-ai/anycap -a <agent> -y\`
-- Precos: US$ 5 em credito gratis no cadastro, depois pagamento por uso sem markup sobre as tarifas oficiais dos provedores
+- Precos: pacotes de credito pre-pagos, depois pagamento por uso sem markup sobre as tarifas oficiais dos provedores
 - Licenca: MIT
 - Repositorio oficial: [Repositorio AnyCap no GitHub](https://github.com/anycap-ai/anycap)
-- Ultima atualizacao: 2026-04-08
+- Ultima atualizacao: 2026-06-22
 
 ## Onboarding
 
@@ -287,7 +287,7 @@ Roadmap: fala, sandbox e automacao de navegador.
 
 ## Precos
 
-US$ 5 em credito gratis no cadastro - sem pagamento obrigatorio. Depois disso, pagamento por uso na mesma taxa dos provedores oficiais de modelo. Sem markup e sem assinatura.
+Use um saldo pre-pago para imagem, video, audio, web, Drive e Page. Pagamento por uso na mesma taxa dos provedores oficiais de modelo. Sem markup e sem assinatura.
 
 ## Por Que Usar o AnyCap
 

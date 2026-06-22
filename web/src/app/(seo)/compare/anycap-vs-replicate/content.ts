@@ -190,8 +190,8 @@ const en: ComparePageData = {
       replicate: "Find a video model, learn its input schema, add new prediction code",
     },
     {
-      metric: "Free credit to start",
-      anycap: "$5 free credit, no card required",
+      metric: "Billing model",
+      anycap: "One prepaid balance, no monthly subscription",
       replicate: "Pay-per-prediction, pricing varies by model and hardware tier",
     },
   ],
@@ -426,8 +426,8 @@ const ptBr: ComparePageData = {
       replicate: "Encontrar um modelo de vídeo, aprender o schema de input e adicionar novo código de prediction",
     },
     {
-      metric: "Crédito inicial grátis",
-      anycap: "US$ 5 de crédito grátis, sem cartão",
+      metric: "Modelo de cobrança",
+      anycap: "Um saldo pré-pago, sem assinatura mensal",
       replicate: "Pay-per-prediction, com preço variando por modelo e hardware",
     },
   ],
@@ -705,8 +705,8 @@ const id: ComparePageData = {
       replicate: "Temukan model video, pelajari skema inputnya, tambahkan kode prediksi baru",
     },
     {
-      metric: "Kredit gratis untuk memulai",
-      anycap: "$5 kredit gratis, tanpa kartu",
+      metric: "Model penagihan",
+      anycap: "Satu saldo prabayar, tanpa langganan bulanan",
       replicate: "Bayar per prediksi, harga bervariasi menurut model dan tingkat perangkat keras",
     },
   ],
@@ -995,8 +995,8 @@ const de: ComparePageData = {
       replicate: "Videomodell finden, Input-Schema lernen, neuen Prediction-Code hinzufügen",
     },
     {
-      metric: "Startguthaben kostenlos",
-      anycap: "$5 kostenloses Guthaben, keine Karte erforderlich",
+      metric: "Abrechnungsmodell",
+      anycap: "Ein Prepaid-Guthaben, kein monatliches Abo",
       replicate: "Pay-per-Prediction, Preise variieren je nach Modell und Hardware-Stufe",
     },
   ],

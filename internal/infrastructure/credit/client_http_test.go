@@ -180,7 +180,6 @@ func TestHTTPClient_GrantSignupRewardByPackageType(t *testing.T) {
 		BaseURL:                    "https://credit.example.com",
 		BizToken:                   "biz-token-123",
 		Timeout:                    5 * time.Second,
-		SignupRewardEnabled:        true,
 		SignupRewardPackageType:    "REWARD",
 		SignupRewardPackageSubtype: "SIGNUP_BONUS",
 	}, httpClient)
@@ -190,20 +189,18 @@ func TestHTTPClient_GrantSignupRewardByPackageType(t *testing.T) {
 	}
 }
 
-func TestHTTPClient_GrantSignupRewardDisabled(t *testing.T) {
+func TestHTTPClient_GrantSignupRewardSkipsMissingPackageConfig(t *testing.T) {
 	httpClient := &http.Client{
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-			t.Fatalf("expected no request when signup reward disabled, got %s", req.URL.Path)
+			t.Fatalf("expected no request when signup reward package is not configured, got %s", req.URL.Path)
 			return nil, nil
 		}),
 	}
 
 	client := NewHTTPClient(config.CreditConfig{
-		BaseURL:                    "https://credit.example.com",
-		BizToken:                   "biz-token-123",
-		Timeout:                    5 * time.Second,
-		SignupRewardPackageType:    "REWARD",
-		SignupRewardPackageSubtype: "SIGNUP_BONUS",
+		BaseURL:  "https://credit.example.com",
+		BizToken: "biz-token-123",
+		Timeout:  5 * time.Second,
 	}, httpClient)
 
 	if err := client.GrantSignupReward(context.Background(), "2000000001"); err != nil {

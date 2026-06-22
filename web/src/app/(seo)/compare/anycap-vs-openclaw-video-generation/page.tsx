@@ -21,7 +21,7 @@ const heroImagePath = `${CDN_BASE}/anycap-vs-openclaw-video-generation-hero.png`
 export const metadata: Metadata = {
   title: "AnyCap vs OpenClaw video generation — one key vs provider-key setup",
   description:
-    "Compare AnyCap and OpenClaw for agent video generation. AnyCap gives teams one key across video models, a clearer hosted artifact workflow, $5 free credit, and coverage beyond OpenClaw. OpenClaw gives a broader bring-your-own-provider video tool with more public mode breadth.",
+    "Compare AnyCap and OpenClaw for agent video generation. AnyCap gives teams one key across video models, a clearer hosted artifact workflow, pay-as-you-go pricing, and coverage beyond OpenClaw. OpenClaw gives a broader bring-your-own-provider video tool with more public mode breadth.",
   alternates: { canonical: "/compare/anycap-vs-openclaw-video-generation" },
   openGraph: {
     type: "website",
@@ -78,10 +78,10 @@ const comparisons = [
       "Public docs focus on provider-backed generation, task lifecycle, and model routing rather than a hosted artifact-sharing surface.",
   },
   {
-    dimension: "Free start",
-    anycap: "$5 free credit on signup, then pay-as-you-go with no subscription.",
+    dimension: "Billing model",
+    anycap: "Pay-as-you-go with one prepaid balance and no subscription.",
     openclaw:
-      "Public video-generation docs focus on provider setup rather than a hosted starter balance or shared prepaid credit model.",
+      "Public video-generation docs focus on provider setup rather than a hosted shared prepaid credit model.",
   },
   {
     dimension: "Best operator model",
@@ -151,7 +151,7 @@ const sourceLinks = [
   {
     label: "AnyCap pricing",
     href: "/pricing",
-    note: "$5 free credit and pay-as-you-go pricing.",
+    note: "Pay-as-you-go pricing and credit packs.",
   },
   {
     label: "Install AnyCap",
@@ -232,8 +232,8 @@ export default function AnycapVsOpenClawVideoGenerationPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-[#4d5145] md:text-[15px]">
                 Choose AnyCap when you want one key for multiple video models, support across
-                OpenClaw plus other agents, a simpler hosted artifact workflow, and $5 free credit
-                on signup. Choose OpenClaw when you prefer a native OpenClaw runtime, want to
+                OpenClaw plus other agents, a simpler hosted artifact workflow, and one prepaid
+                balance. Choose OpenClaw when you prefer a native OpenClaw runtime, want to
                 manage the provider layer directly, and need the broader public mode surface that
                 includes videoToVideo.
               </p>
@@ -483,8 +483,8 @@ export default function AnycapVsOpenClawVideoGenerationPage() {
                   The AnyCap side of the comparison is based on currently published product pages
                   for video generation, pricing, installation, and Drive. Claims on this page stay
                   inside what a reader can verify from public sources: one login and one key
-                  positioning, $5 free credit, a simpler hosted artifact workflow, and broader
-                  cross-agent portability.
+                  positioning, pay-as-you-go pricing, a simpler hosted artifact workflow, and
+                  broader cross-agent portability.
                 </p>
                 <div className="rounded-xl border border-[#d4dbb8] bg-[#f9faf5] p-5">
                   <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>

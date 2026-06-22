@@ -26,7 +26,7 @@ type Service struct {
 		port.UserProvisioner
 		port.UserReader
 	}
-	credit                port.CreditClient
+	signupReward          port.SignupRewarder
 	apiKeys               port.APIKeyService
 	sessions              port.LoginSessionRepo
 	deviceVerificationURL string
@@ -35,7 +35,6 @@ type Service struct {
 	sessionIDGenerator    func() string
 	userCodeGenerator     func() (string, error)
 	now                   func() time.Time
-	signupRewardDeadline  time.Time
 }
 
 func NewService(
@@ -43,7 +42,7 @@ func NewService(
 		port.UserProvisioner
 		port.UserReader
 	},
-	credit port.CreditClient,
+	signupReward port.SignupRewarder,
 	apiKeys port.APIKeyService,
 	sessions port.LoginSessionRepo,
 	deviceVerificationURL string,
@@ -52,7 +51,6 @@ func NewService(
 	userCodeGenerator func() (string, error),
 	now func() time.Time,
 	loginAPIKeyTTL time.Duration,
-	signupRewardDeadline time.Time,
 ) *Service {
 	if stateGenerator == nil {
 		stateGenerator = func() string {
@@ -76,7 +74,7 @@ func NewService(
 
 	return &Service{
 		users:                 users,
-		credit:                credit,
+		signupReward:          signupReward,
 		apiKeys:               apiKeys,
 		sessions:              sessions,
 		deviceVerificationURL: deviceVerificationURL,
@@ -85,7 +83,6 @@ func NewService(
 		sessionIDGenerator:    sessionIDGenerator,
 		userCodeGenerator:     userCodeGenerator,
 		now:                   now,
-		signupRewardDeadline:  signupRewardDeadline,
 	}
 }
 
@@ -409,18 +406,10 @@ func (s *Service) createLoginAPIKey(ctx context.Context, userID string) (model.C
 }
 
 func (s *Service) grantSignupReward(ctx context.Context, userID string, createdUser bool) {
-	if !createdUser || s.credit == nil || userID == "" {
+	if s == nil || s.signupReward == nil {
 		return
 	}
-	if !s.signupRewardDeadline.IsZero() && s.now().UTC().After(s.signupRewardDeadline.UTC()) {
-		return
-	}
-	if err := s.credit.GrantSignupReward(ctx, userID); err != nil {
-		logging.WithContext(ctx).WithFields(logging.Fields{
-			"flow":    "login.grant_signup_reward",
-			"user_id": userID,
-		}).WithError(err).Warn("grant signup reward failed")
-	}
+	s.signupReward.GrantForNewUser(ctx, userID, createdUser)
 }
 
 func (s *Service) browserLoginURL(browserToken string) string {

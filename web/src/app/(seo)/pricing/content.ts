@@ -152,9 +152,9 @@ const creditPackages: readonly Omit<PricingCreditPackage, "bestFor" | "descripti
 
 const pricingPrinciplesEn: readonly PricingPrinciple[] = [
   {
-    title: "Start free, then buy only when the workflow proves out",
+    title: "Start from the workflow, then buy only when it proves out",
     description:
-      "Every new account starts with $5 free credit, so teams can test real image, video, audio, and web workflows before committing to a larger prepaid pack.",
+      "Estimate the image, video, audio, and web steps your agent will actually run, then choose a prepaid pack only when you need balance.",
   },
   {
     title: "Keep one balance across the workflows agents actually need",
@@ -188,9 +188,9 @@ const checklistEn: readonly PricingChecklistItem[] = [
 
 const pricingPrinciplesId: readonly PricingPrinciple[] = [
   {
-    title: "Mulai gratis, lalu beli hanya ketika alur kerja sudah terbukti",
+    title: "Mulai dari alur kerja, lalu beli ketika alur itu terbukti",
     description:
-      "Setiap akun baru dimulai dengan kredit gratis $5, sehingga tim dapat menguji alur gambar, video, audio, dan web nyata sebelum berkomitmen pada paket prabayar yang lebih besar.",
+      "Perkirakan langkah gambar, video, audio, dan web yang benar-benar akan dijalankan agen Anda, lalu pilih paket prabayar saat membutuhkan saldo.",
   },
   {
     title: "Pertahankan satu saldo untuk semua alur kerja yang benar-benar dibutuhkan agen",
@@ -224,9 +224,9 @@ const checklistId: readonly PricingChecklistItem[] = [
 
 const faqItemsEn: readonly PricingFaqItem[] = [
   {
-    question: "Is there a free tier?",
+    question: "Do I need a subscription?",
     answer:
-      "Every account starts with $5 free credit, which is 250 credits at the current base conversion, and no payment information is required to begin testing workflows.",
+      "No. AnyCap uses one-time prepaid credit packs. Buy a pack when you need balance; there is no monthly subscription.",
   },
   {
     question: "Do credits expire?",
@@ -255,9 +255,9 @@ const faqItemsEn: readonly PricingFaqItem[] = [
 
 const faqItemsId: readonly PricingFaqItem[] = [
   {
-    question: "Apakah ada tingkat gratis?",
+    question: "Apakah saya perlu berlangganan?",
     answer:
-      "Setiap akun dimulai dengan kredit gratis $5, setara 250 kredit pada konversi dasar saat ini, dan tidak perlu informasi pembayaran untuk mulai menguji alur kerja.",
+      "Tidak. AnyCap memakai paket kredit prabayar sekali beli. Beli paket saat membutuhkan saldo; tidak ada langganan bulanan.",
   },
   {
     question: "Apakah kredit kedaluwarsa?",
@@ -286,9 +286,9 @@ const faqItemsId: readonly PricingFaqItem[] = [
 
 const pricingPrinciplesDe: readonly PricingPrinciple[] = [
   {
-    title: "Kostenlos starten und erst zahlen, wenn der Workflow sich bewährt",
+    title: "Vom Workflow starten und erst kaufen, wenn er sich bewährt",
     description:
-      "Jeder neue Account beginnt mit $5 Free-Credit, sodass Teams reale Bild-, Video-, Audio- und Web-Workflows testen können, bevor sie sich auf ein größeres Prepaid-Paket festlegen.",
+      "Schätzen Sie die Bild-, Video-, Audio- und Web-Schritte, die Ihr Agent tatsächlich ausführt, und wählen Sie ein Prepaid-Paket, wenn Sie Guthaben benötigen.",
   },
   {
     title: "Ein Guthaben für all die Workflows, die Agents wirklich brauchen",
@@ -322,9 +322,9 @@ const checklistDe: readonly PricingChecklistItem[] = [
 
 const faqItemsDe: readonly PricingFaqItem[] = [
   {
-    question: "Gibt es einen kostenlosen Tarif?",
+    question: "Brauche ich ein Abo?",
     answer:
-      "Jeder Account startet mit $5 Free-Credit, was bei der aktuellen Basisumrechnung 250 Credits entspricht, und es sind keine Zahlungsinformationen nötig, um Workflows zu testen.",
+      "Nein. AnyCap nutzt einmalige Prepaid-Credit-Pakete. Kaufen Sie ein Paket, wenn Sie Guthaben benötigen; es gibt kein monatliches Abo.",
   },
   {
     question: "Verfallen Credits?",
@@ -421,12 +421,12 @@ const pricingPackagesByLocale: Record<SiteLocale, readonly PricingCreditPackage[
 const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   en: {
     metadata: {
-      title: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
+      title: "AnyCap Pricing — Pay-as-you-go, No Markup",
       description:
-        "Get $5 free credit, then pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
-      openGraphTitle: "AnyCap Pricing — Pay-as-you-go, No Markup, $5 Free Credit",
+        "Pay as you go with no subscription and no markup. Use one balance across image, video, audio, web, storage, and publishing workflows in AnyCap.",
+      openGraphTitle: "AnyCap Pricing — Pay-as-you-go, No Markup",
       openGraphDescription:
-        "One balance across image, video, audio, web, storage, and publishing workflows. $5 free credit, pay as you go, no subscription.",
+        "One balance across image, video, audio, web, storage, and publishing workflows. Pay as you go with no subscription.",
       pageName: "AnyCap Pricing",
       pageDescription:
         "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
@@ -440,11 +440,11 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       titleLine1: "Simple, transparent",
       titleLine2: "pricing.",
       intro:
-        "Start with the AI agent capabilities coding agents miss most often. AnyCap gives you one prepaid balance for those workflows, then lets that same balance extend across the broader runtime as your stack grows. No markup over official rates. No subscription. Every new account starts with $5 free credit.",
+        "Start with the AI agent capabilities coding agents miss most often. AnyCap gives you one prepaid balance for those workflows, then lets that same balance extend across the broader runtime as your stack grows. No markup over official rates. No subscription.",
       factsLabel: "Pricing facts",
       factsText:
-        "AnyCap uses prepaid credits. New accounts receive $5 in free credit. After that, the public AnyCap capability inventory is billed at the same rate as the official model provider, with no subscription fee and no platform markup. The same balance can also be used across image, video, audio, web, storage, and publishing workflows. Credit packages are one-time purchases, and larger packages include bonus credits.",
-      lastUpdatedLabel: "Last updated April 8, 2026",
+        "AnyCap uses prepaid credits. The public AnyCap capability inventory is billed at the same rate as the official model provider, with no subscription fee and no platform markup. The same balance can also be used across image, video, audio, web, storage, and publishing workflows. Credit packages are one-time purchases, and larger packages include bonus credits.",
+      lastUpdatedLabel: "Last updated June 22, 2026",
     },
     sectionTitles: {
       pricingPrinciples: "How AnyCap pricing works",
@@ -456,7 +456,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       faq: "Common questions",
     },
     pricingPrinciplesIntro:
-      "The pricing model is intentionally simple: start free, buy one-time credit packs when you need more balance, and keep that same balance available across the workflows your agents already run.",
+      "The pricing model is intentionally simple: estimate the workflow, buy one-time credit packs when you need more balance, and keep that same balance available across the workflows your agents already run.",
     pricingPrinciples: pricingPrinciplesEn,
     creditPackages: pricingPackagesByLocale.en,
     creditPackagesIntro:
@@ -523,7 +523,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       description:
         "AnyCap pricing page. Pay-as-you-go credits across image, video, audio, web, storage, and publishing workflows.",
       url: getLocalizedRouteUrl("en", PRICING_PATH),
-      dateModified: "2026-04-08",
+      dateModified: "2026-06-22",
       mainEntity: {
         "@type": "Product",
         name: "AnyCap Credits",
@@ -549,10 +549,10 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
     metadata: {
       title: "Preços do AnyCap — Pague conforme usa, sem markup",
       description:
-        "Receba US$ 5 em crédito grátis e depois pague conforme usa, sem assinatura e sem markup. Use um único saldo em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação no AnyCap.",
+        "Pague conforme usa, sem assinatura e sem markup. Use um único saldo em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação no AnyCap.",
       openGraphTitle: "Preços do AnyCap — Pague conforme usa, sem markup",
       openGraphDescription:
-        "Um único saldo para fluxos de imagem, vídeo, áudio, web, armazenamento e publicação. US$ 5 em crédito grátis, pague conforme usa, sem assinatura.",
+        "Um único saldo para fluxos de imagem, vídeo, áudio, web, armazenamento e publicação. Pague conforme usa, sem assinatura.",
       pageName: "Preços do AnyCap",
       pageDescription:
         "Página de preços do AnyCap. Créditos pagos por uso em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação.",
@@ -566,11 +566,11 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       titleLine1: "Preços simples e",
       titleLine2: "transparentes.",
       intro:
-        "Comece pelas capacidades para agentes de IA que os agentes de código mais sentem falta. O AnyCap dá a você um saldo pré-pago para esses fluxos e permite que esse mesmo saldo se estenda pelo runtime mais amplo conforme sua stack cresce. Sem markup sobre as taxas oficiais. Sem assinatura. Toda nova conta começa com US$ 5 em crédito grátis.",
+        "Comece pelas capacidades para agentes de IA que os agentes de código mais sentem falta. O AnyCap dá a você um saldo pré-pago para esses fluxos e permite que esse mesmo saldo se estenda pelo runtime mais amplo conforme sua stack cresce. Sem markup sobre as taxas oficiais. Sem assinatura.",
       factsLabel: "Dados sobre os preços",
       factsText:
-        "O AnyCap usa créditos pré-pagos. Novas contas recebem US$ 5 em crédito grátis. Depois disso, o inventário público de capacidades do AnyCap é cobrado pela mesma taxa do provedor oficial, sem mensalidade e sem markup da plataforma. O mesmo saldo também pode ser usado em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação. Os pacotes de crédito são compras únicas, e pacotes maiores incluem créditos bônus.",
-      lastUpdatedLabel: "Atualizado em 8 de abril de 2026",
+        "O AnyCap usa créditos pré-pagos. O inventário público de capacidades do AnyCap é cobrado pela mesma taxa do provedor oficial, sem mensalidade e sem markup da plataforma. O mesmo saldo também pode ser usado em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação. Os pacotes de crédito são compras únicas, e pacotes maiores incluem créditos bônus.",
+      lastUpdatedLabel: "Atualizado em 22 de junho de 2026",
     },
     sectionTitles: {
       pricingPrinciples: "Como funciona o preço do AnyCap",
@@ -582,12 +582,12 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       faq: "Perguntas frequentes",
     },
     pricingPrinciplesIntro:
-      "O modelo de preços é intencionalmente simples: comece grátis, compre pacotes de créditos únicos quando precisar de mais saldo e mantenha esse mesmo saldo disponível nos fluxos que seus agentes já executam.",
+      "O modelo de preços é intencionalmente simples: estime o fluxo, compre pacotes de créditos únicos quando precisar de mais saldo e mantenha esse mesmo saldo disponível nos fluxos que seus agentes já executam.",
     pricingPrinciples: [
       {
-        title: "Comece grátis e só compre quando o fluxo provar valor",
+        title: "Comece pelo fluxo e só compre quando ele provar valor",
         description:
-          "Toda nova conta começa com US$ 5 em crédito grátis, então equipes podem testar fluxos reais de imagem, vídeo, áudio e web antes de se comprometer com um pacote pré-pago maior.",
+          "Estime as etapas de imagem, vídeo, áudio e web que seu agente realmente vai executar e escolha um pacote pré-pago quando precisar de saldo.",
       },
       {
         title: "Mantenha um único saldo para os fluxos que os agentes realmente precisam",
@@ -672,9 +672,9 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
     },
     faqItems: [
       {
-        question: "Existe um plano gratuito?",
+        question: "Preciso de uma assinatura?",
         answer:
-          "Toda conta começa com US$ 5 em crédito grátis, o que equivale a 250 créditos na conversão base atual, e não é necessário informar dados de pagamento para começar a testar fluxos.",
+          "Não. O AnyCap usa pacotes de créditos pré-pagos comprados uma única vez. Compre um pacote quando precisar de saldo; não há assinatura mensal.",
       },
       {
         question: "Os créditos expiram?",
@@ -711,7 +711,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       description:
         "Página de preços do AnyCap. Créditos pagos por uso em fluxos de imagem, vídeo, áudio, web, armazenamento e publicação.",
       url: getLocalizedRouteUrl("pt-br", PRICING_PATH),
-      dateModified: "2026-04-08",
+      dateModified: "2026-06-22",
       mainEntity: {
         "@type": "Product",
         name: "Créditos do AnyCap",
@@ -733,9 +733,9 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
     },
     faqJsonLd: createFaqPageJsonLd([
       {
-        question: "Existe um plano gratuito?",
+        question: "Preciso de uma assinatura?",
         answer:
-          "Toda conta começa com US$ 5 em crédito grátis, o que equivale a 250 créditos na conversão base atual, e não é necessário informar dados de pagamento para começar a testar fluxos.",
+          "Não. O AnyCap usa pacotes de créditos pré-pagos comprados uma única vez. Compre um pacote quando precisar de saldo; não há assinatura mensal.",
       },
       {
         question: "Os créditos expiram?",
@@ -764,12 +764,12 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   },
   id: {
     metadata: {
-      title: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup, kredit gratis $5",
+      title: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup",
       description:
-        "Dapatkan kredit gratis $5, lalu bayar sesuai pemakaian tanpa langganan dan tanpa markup. Gunakan satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi di AnyCap.",
-      openGraphTitle: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup, kredit gratis $5",
+        "Bayar sesuai pemakaian tanpa langganan dan tanpa markup. Gunakan satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi di AnyCap.",
+      openGraphTitle: "Harga AnyCap — bayar sesuai pemakaian, tanpa markup",
       openGraphDescription:
-        "Satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi. Kredit gratis $5, bayar sesuai pemakaian, tanpa langganan.",
+        "Satu saldo untuk alur gambar, video, audio, web, penyimpanan, dan publikasi. Bayar sesuai pemakaian tanpa langganan.",
       pageName: "Harga AnyCap",
       pageDescription:
         "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
@@ -783,11 +783,11 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       titleLine1: "Harga sederhana dan",
       titleLine2: "transparan.",
       intro:
-        "Mulailah dari kapabilitas agen AI yang paling sering tidak dimiliki agen coding. AnyCap memberi Anda satu saldo prabayar untuk alur kerja tersebut, lalu membiarkan saldo yang sama dipakai di runtime yang lebih luas saat stack Anda bertumbuh. Tanpa markup di atas tarif resmi. Tanpa langganan. Setiap akun baru dimulai dengan kredit gratis $5.",
+        "Mulailah dari kapabilitas agen AI yang paling sering tidak dimiliki agen coding. AnyCap memberi Anda satu saldo prabayar untuk alur kerja tersebut, lalu membiarkan saldo yang sama dipakai di runtime yang lebih luas saat stack Anda bertumbuh. Tanpa markup di atas tarif resmi. Tanpa langganan.",
       factsLabel: "Fakta harga",
       factsText:
-        "AnyCap memakai kredit prabayar. Akun baru menerima kredit gratis $5. Setelah itu, inventaris kapabilitas publik AnyCap ditagih dengan tarif yang sama seperti penyedia model resmi, tanpa biaya langganan dan tanpa markup platform. Saldo yang sama juga dapat digunakan di alur gambar, video, audio, web, penyimpanan, dan publikasi. Paket kredit dibeli satu kali, dan paket yang lebih besar mencakup kredit bonus.",
-      lastUpdatedLabel: "Terakhir diperbarui 8 April 2026",
+        "AnyCap memakai kredit prabayar. Inventaris kapabilitas publik AnyCap ditagih dengan tarif yang sama seperti penyedia model resmi, tanpa biaya langganan dan tanpa markup platform. Saldo yang sama juga dapat digunakan di alur gambar, video, audio, web, penyimpanan, dan publikasi. Paket kredit dibeli satu kali, dan paket yang lebih besar mencakup kredit bonus.",
+      lastUpdatedLabel: "Terakhir diperbarui 22 Juni 2026",
     },
     sectionTitles: {
       pricingPrinciples: "Cara kerja harga AnyCap",
@@ -799,7 +799,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       faq: "Pertanyaan umum",
     },
     pricingPrinciplesIntro:
-      "Model harga ini sengaja dibuat sederhana: mulai gratis, beli paket kredit satu kali saat Anda butuh saldo lebih, dan pertahankan saldo yang sama untuk alur kerja yang sudah dijalankan agen Anda.",
+      "Model harga ini sengaja dibuat sederhana: perkirakan alur kerja, beli paket kredit sekali saat Anda butuh saldo lebih, dan pertahankan saldo yang sama untuk alur kerja yang sudah dijalankan agen Anda.",
     pricingPrinciples: pricingPrinciplesId,
     creditPackages: pricingPackagesByLocale.id,
     creditPackagesIntro:
@@ -867,7 +867,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       description:
         "Halaman harga AnyCap. Kredit bayar sesuai pemakaian untuk alur gambar, video, audio, web, penyimpanan, dan publikasi.",
       url: getLocalizedRouteUrl("id", PRICING_PATH),
-      dateModified: "2026-04-08",
+      dateModified: "2026-06-22",
       mainEntity: {
         "@type": "Product",
         name: "Kredit AnyCap",
@@ -891,12 +891,12 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
   },
   de: {
     metadata: {
-      title: "AnyCap Preise — Pay-as-you-go, ohne Markup, $5 Free-Credit",
+      title: "AnyCap Preise — Pay-as-you-go, ohne Markup",
       description:
-        "Erhalten Sie $5 Free-Credit, dann zahlen Sie nutzungsbasiert ohne Abo und ohne Markup. Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows in AnyCap.",
-      openGraphTitle: "AnyCap Preise — Pay-as-you-go, ohne Markup, $5 Free-Credit",
+        "Zahlen Sie nutzungsbasiert ohne Abo und ohne Markup. Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows in AnyCap.",
+      openGraphTitle: "AnyCap Preise — Pay-as-you-go, ohne Markup",
       openGraphDescription:
-        "Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows. $5 Free-Credit, Pay-as-you-go, ohne Abo.",
+        "Ein Guthaben über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows. Pay-as-you-go ohne Abo.",
       pageName: "AnyCap Preise",
       pageDescription:
         "AnyCap-Preisseite. Pay-as-you-go-Credits über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows.",
@@ -910,11 +910,11 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       titleLine1: "Einfache, transparente",
       titleLine2: "Preise.",
       intro:
-        "Starten Sie mit den KI-Agent-Capabilities, die Coding-Agents am häufigsten fehlen. AnyCap gibt Ihnen ein Prepaid-Guthaben für diese Workflows und lässt dasselbe Guthaben über den breiteren Runtime hinweg wachsen, während Ihr Stack größer wird. Kein Markup über offizielle Tarife. Kein Abo. Jeder neue Account startet mit $5 Free-Credit.",
+        "Starten Sie mit den KI-Agent-Capabilities, die Coding-Agents am häufigsten fehlen. AnyCap gibt Ihnen ein Prepaid-Guthaben für diese Workflows und lässt dasselbe Guthaben über den breiteren Runtime hinweg wachsen, während Ihr Stack größer wird. Kein Markup über offizielle Tarife. Kein Abo.",
       factsLabel: "Preisfakten",
       factsText:
-        "AnyCap nutzt Prepaid-Credits. Neue Accounts erhalten $5 Free-Credit. Danach wird das öffentliche AnyCap-Capability-Inventar zum gleichen Tarif wie beim offiziellen Modell-Provider abgerechnet, ohne Abo-Gebühr und ohne Plattform-Markup. Dasselbe Guthaben kann auch über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows hinweg genutzt werden. Credit-Pakete sind Einmalkäufe, und größere Pakete enthalten Bonus-Credits.",
-      lastUpdatedLabel: "Zuletzt aktualisiert am 8. April 2026",
+        "AnyCap nutzt Prepaid-Credits. Das öffentliche AnyCap-Capability-Inventar wird zum gleichen Tarif wie beim offiziellen Modell-Provider abgerechnet, ohne Abo-Gebühr und ohne Plattform-Markup. Dasselbe Guthaben kann auch über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows hinweg genutzt werden. Credit-Pakete sind Einmalkäufe, und größere Pakete enthalten Bonus-Credits.",
+      lastUpdatedLabel: "Zuletzt aktualisiert am 22. Juni 2026",
     },
     sectionTitles: {
       pricingPrinciples: "So funktioniert AnyCap-Pricing",
@@ -926,7 +926,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       faq: "Häufige Fragen",
     },
     pricingPrinciplesIntro:
-      "Das Preismodell ist bewusst einfach: Kostenlos starten, einmalige Credit-Packs kaufen, wenn mehr Guthaben nötig ist, und dasselbe Guthaben für die Workflows verfügbar halten, die Ihre Agents bereits ausführen.",
+      "Das Preismodell ist bewusst einfach: Workflow schätzen, einmalige Credit-Packs kaufen, wenn mehr Guthaben nötig ist, und dasselbe Guthaben für die Workflows verfügbar halten, die Ihre Agents bereits ausführen.",
     pricingPrinciples: pricingPrinciplesDe,
     creditPackages: pricingPackagesByLocale.de,
     creditPackagesIntro:
@@ -993,7 +993,7 @@ const contentByLocale: Record<SiteLocale, PricingPageContent> = {
       description:
         "AnyCap-Preisseite. Pay-as-you-go-Credits über Bild-, Video-, Audio-, Web-, Storage- und Publishing-Workflows.",
       url: getLocalizedRouteUrl("de", PRICING_PATH),
-      dateModified: "2026-04-08",
+      dateModified: "2026-06-22",
       mainEntity: {
         "@type": "Product",
         name: "AnyCap Credits",
