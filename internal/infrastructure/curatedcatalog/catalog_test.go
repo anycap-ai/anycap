@@ -293,3 +293,310 @@ func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
 		t.Fatalf("wire field refer_image_urls must stay hidden")
 	}
 }
+
+func TestCatalog_OverridesVideoReferImagesForSeedanceAndKling(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:    "kling-3.0",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "cloudsway_kling_3.0", AlgoType: "img_2_video"},
+				},
+			},
+			{
+				ModelID:    "seedance-2",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "img_2_video"},
+				},
+			},
+			{
+				ModelID:    "seedance-2-fast",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2-fast", AlgoType: "img_2_video"},
+				},
+			},
+			{
+				ModelID:    "hailuo-2.3",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "cloudsway_hailuo_2.3", AlgoType: "img_2_video"},
+				},
+			},
+		},
+	}
+
+	productionAnnotation := map[string]any{
+		"resource": map[string]any{
+			"oneOf": []any{
+				map[string]any{"key": "resource_url", "type": "url"},
+				map[string]any{"key": "resource_path", "type": "storage"},
+				map[string]any{"key": "video_option.first_frame_url", "type": "url"},
+				map[string]any{"key": "video_option.first_frame_resource_path", "type": "storage"},
+			},
+		},
+	}
+	videoSchema := map[string]any{
+		"properties": map[string]any{
+			"prompt":       map[string]any{"type": "string"},
+			"resource_url": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"type":             map[string]any{"type": "string", "enum": []any{"img_2_video"}},
+					"duration":         map[string]any{"type": "integer", "enum": []any{5}},
+					"refer_image_urls": map[string]any{"type": "array"},
+					"refer_video_url":  map[string]any{"type": "string"},
+				},
+			},
+		},
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"cloudsway_kling_3.0": {
+			AbilityKey: "cloudsway_kling_3.0",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
+			},
+		},
+		"ark-doubao-seedance-2": {
+			AbilityKey: "ark-doubao-seedance-2",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
+			},
+		},
+		"ark-doubao-seedance-2-fast": {
+			AbilityKey: "ark-doubao-seedance-2-fast",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
+			},
+		},
+		"cloudsway_hailuo_2.3": {
+			AbilityKey: "cloudsway_hailuo_2.3",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
+			},
+		},
+	}
+
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+
+	for _, modelID := range []string{"kling-3.0", "seedance-2", "seedance-2-fast"} {
+		spec, err := cat.GetModel(context.Background(), model.CapabilityVideo, modelID)
+		if err != nil {
+			t.Fatalf("GetModel %s error: %v", modelID, err)
+		}
+		route := spec.Operations[model.OperationGenerate].Routes[0]
+		if len(route.ResourceTargets) == 0 {
+			t.Fatalf("expected %s resource targets", modelID)
+		}
+		if got := route.ResourceTargets[0]; got.Key != "video_option.refer_image_urls" || got.Kind != model.ResourceKindURLArray {
+			t.Fatalf("expected %s override to prepend refer_image_urls url_array, got %+v", modelID, route.ResourceTargets)
+		}
+		if !hasResourceTarget(route.ResourceTargets, "video_option.refer_video_url", model.ResourceKindURL) {
+			t.Fatalf("expected %s override to include refer_video_url target, got %+v", modelID, route.ResourceTargets)
+		}
+		modeSchema := spec.Operations[model.OperationGenerate].ModeSchemas[model.ModeImageToVideo]
+		params, _ := modeSchema["model_params"].(map[string]any)
+		images, _ := params["images"].(map[string]any)
+		if images == nil {
+			t.Fatalf("expected %s schema to expose synthetic images, got %+v", modelID, params)
+		}
+		if images["maxItems"] != 9 {
+			t.Fatalf("expected %s images.maxItems=9, got %v", modelID, images["maxItems"])
+		}
+		videos, _ := params["videos"].(map[string]any)
+		if videos == nil {
+			t.Fatalf("expected %s schema to expose synthetic videos, got %+v", modelID, params)
+		}
+		if videos["maxItems"] != 3 {
+			t.Fatalf("expected %s videos.maxItems=3, got %v", modelID, videos["maxItems"])
+		}
+	}
+
+	hailuo, err := cat.GetModel(context.Background(), model.CapabilityVideo, "hailuo-2.3")
+	if err != nil {
+		t.Fatalf("GetModel hailuo error: %v", err)
+	}
+	hailuoRoute := hailuo.Operations[model.OperationGenerate].Routes[0]
+	if got := hailuoRoute.ResourceTargets[0]; got.Key != "resource_url" || got.Kind != model.ResourceKindURL {
+		t.Fatalf("non-overridden model should preserve production annotation order, got %+v", hailuoRoute.ResourceTargets)
+	}
+}
+
+func TestCatalog_OverridesSeedance2Resolution1080p(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:    "seedance-2",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "text-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "txt_2_video"},
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "img_2_video"},
+				},
+			},
+			{
+				ModelID:    "seedance-2-fast",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "text-to-video", AbilityKey: "ark-doubao-seedance-2-fast", AlgoType: "txt_2_video"},
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2-fast", AlgoType: "img_2_video"},
+				},
+			},
+		},
+	}
+
+	videoSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"video_option": map[string]any{
+					"properties": map[string]any{
+						"type":       map[string]any{"type": "string", "enum": []any{algo}},
+						"resolution": map[string]any{"type": "string", "enum": []any{"480p", "720p"}},
+					},
+				},
+			},
+		}
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"ark-doubao-seedance-2": {
+			AbilityKey: "ark-doubao-seedance-2",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_video": {Schema: videoSchema("txt_2_video")},
+				"img_2_video": {Schema: videoSchema("img_2_video")},
+			},
+		},
+		"ark-doubao-seedance-2-fast": {
+			AbilityKey: "ark-doubao-seedance-2-fast",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_video": {Schema: videoSchema("txt_2_video")},
+				"img_2_video": {Schema: videoSchema("img_2_video")},
+			},
+		},
+	}
+
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+
+	for _, tc := range []struct {
+		modelID       string
+		mode          model.Mode
+		expect1080p   bool
+		assertMessage string
+	}{
+		{modelID: "seedance-2", mode: model.ModeTextToVideo, expect1080p: true, assertMessage: "to include"},
+		{modelID: "seedance-2", mode: model.ModeImageToVideo, expect1080p: true, assertMessage: "to include"},
+		{modelID: "seedance-2-fast", mode: model.ModeTextToVideo, assertMessage: "not to include"},
+		{modelID: "seedance-2-fast", mode: model.ModeImageToVideo, assertMessage: "not to include"},
+	} {
+		spec, err := cat.GetModel(context.Background(), model.CapabilityVideo, tc.modelID)
+		if err != nil {
+			t.Fatalf("GetModel %s error: %v", tc.modelID, err)
+		}
+		modeSchema := spec.Operations[model.OperationGenerate].ModeSchemas[tc.mode]
+		params, _ := modeSchema["model_params"].(map[string]any)
+		resolution, _ := params["resolution"].(map[string]any)
+		has1080p := enumContains(resolution["enum"], "1080p")
+		if has1080p != tc.expect1080p {
+			t.Fatalf("expected %s %s resolution enum %s 1080p, got %+v", tc.modelID, tc.mode, tc.assertMessage, resolution["enum"])
+		}
+	}
+}
+
+func TestCatalog_ExposesKlingMultiShotVideo(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:    "kling-3.0",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "multi-shot-video", AbilityKey: "cloudsway_kling_3.0", AlgoType: "multi_shot_video"},
+				},
+			},
+			{
+				ModelID:    "kling-3.0-omni",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "multi-shot-video", AbilityKey: "tengda_kling_3.0_omni", AlgoType: "multi_shot_video"},
+				},
+			},
+		},
+	}
+	multiShotSchema := map[string]any{
+		"properties": map[string]any{
+			"prompt": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"type": map[string]any{"type": "string", "enum": []any{"multi_shot_video"}},
+					"duration": map[string]any{
+						"type": "integer",
+						"enum": []any{3, 4, 5},
+					},
+					"multi_shot_clips": map[string]any{
+						"type": "array",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"prompt":   map[string]any{"type": "string"},
+								"duration": map[string]any{"type": "integer", "minimum": 1},
+								"index":    map[string]any{"type": "integer"},
+							},
+						},
+					},
+					"ratio": map[string]any{"type": "string"},
+				},
+			},
+		},
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"cloudsway_kling_3.0": {
+			AbilityKey: "cloudsway_kling_3.0",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"multi_shot_video": {Schema: multiShotSchema, Annotation: map[string]any{}},
+			},
+		},
+		"tengda_kling_3.0_omni": {
+			AbilityKey: "tengda_kling_3.0_omni",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"multi_shot_video": {Schema: multiShotSchema, Annotation: map[string]any{}},
+			},
+		},
+	}
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+
+	for _, modelID := range []string{"kling-3.0", "kling-3.0-omni"} {
+		spec, err := cat.GetModel(context.Background(), model.CapabilityVideo, modelID)
+		if err != nil {
+			t.Fatalf("GetModel %s error: %v", modelID, err)
+		}
+		route := spec.Operations[model.OperationGenerate].Routes[0]
+		if route.Mode != model.ModeMultiShotVideo || route.AlgoType != "multi_shot_video" {
+			t.Fatalf("expected multi-shot route for %s, got %+v", modelID, route)
+		}
+		if !hasResourceTarget(route.ResourceTargets, "video_option.refer_image_urls", model.ResourceKindURLArray) {
+			t.Fatalf("expected %s multi-shot route to accept reference images, got %+v", modelID, route.ResourceTargets)
+		}
+		modeSchema := spec.Operations[model.OperationGenerate].ModeSchemas[model.ModeMultiShotVideo]
+		params, _ := modeSchema["model_params"].(map[string]any)
+		if _, ok := params["multi_shot_clips"].(map[string]any); !ok {
+			t.Fatalf("expected %s schema to expose multi_shot_clips, got %+v", modelID, params)
+		}
+		images, _ := params["images"].(map[string]any)
+		if images == nil || images["maxItems"] != 9 {
+			t.Fatalf("expected %s schema images maxItems=9, got %+v", modelID, images)
+		}
+	}
+}
+
+func enumContains(raw any, want string) bool {
+	items, ok := raw.([]any)
+	if !ok {
+		return false
+	}
+	for _, item := range items {
+		if item == want {
+			return true
+		}
+	}
+	return false
+}

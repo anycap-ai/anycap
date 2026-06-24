@@ -27,29 +27,37 @@ package curatedcatalog
 //   - Server-injected and reference-media wire fields are dropped (see
 //     droppedTopLevelFields and droppedOptionFields). They never escape
 //     to the agent-facing schema; reference media is exposed via the
-//     synthetic "images" field (see withImages below).
+//     synthetic "images"/"videos" fields (see referenceMediaParams below).
 //   - Any other top-level property the schema introduces is preserved
 //     verbatim under its original name (forward-compat).
 //
-// When withImages is true, a synthetic "images" array is appended:
+// When the route supports reference images, a synthetic "images" array is appended:
 //
 //	"images": {"type":"array","items":{"type":"string","format":"file-or-url"}, ...}
+//
+// When the route supports reference videos, a synthetic "videos" array is appended:
+//
+//	"videos": {"type":"array","items":{"type":"string","format":"file-or-url"}, ...}
 //
 // CLI's resolveFileParams recognizes format=file-or-url and uploads
 // local file paths or accepts plain http(s) URLs. The server then maps
 // the uploaded URLs into the right upstream slot using the route's
-// ResourceTargets. The decision to set withImages lives in the catalog
+// ResourceTargets. The decision to set these fields lives in the catalog
 // layer and is driven by Discovery's annotation.resource block.
 //
 // Returned shape: {"model_params": {...}}, mirroring the legacy
 // PlatformClient.GetOperationSchemas response so the CLI's
 // `models <m> schema` output stays stable.
 func flattenDiscoverySchema(schema map[string]any, withImages bool) map[string]any {
+	return flattenDiscoverySchemaWithMedia(schema, referenceMediaParams{Images: withImages})
+}
+
+func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMediaParams) map[string]any {
 	if len(schema) == 0 {
 		return nil
 	}
 	props, _ := schema["properties"].(map[string]any)
-	if len(props) == 0 && !withImages {
+	if len(props) == 0 && !media.Images && !media.Videos {
 		return nil
 	}
 
@@ -73,10 +81,16 @@ func flattenDiscoverySchema(schema map[string]any, withImages bool) map[string]a
 		}
 	}
 
-	if withImages {
+	if media.Images {
 		// First-wins: never overwrite a real schema field named "images".
 		if _, exists := flat["images"]; !exists {
 			flat["images"] = imagesParamSchema()
+		}
+	}
+	if media.Videos {
+		// First-wins: never overwrite a real schema field named "videos".
+		if _, exists := flat["videos"]; !exists {
+			flat["videos"] = videosParamSchema()
 		}
 	}
 
@@ -92,7 +106,8 @@ func flattenDiscoverySchema(schema map[string]any, withImages bool) map[string]a
 // upstream provider via RouteBinding.ResourceTargets.
 func imagesParamSchema() map[string]any {
 	return map[string]any{
-		"type": "array",
+		"type":     "array",
+		"maxItems": 9,
 		"items": map[string]any{
 			"type":   "string",
 			"format": "file-or-url",
@@ -101,12 +116,26 @@ func imagesParamSchema() map[string]any {
 	}
 }
 
+func videosParamSchema() map[string]any {
+	return map[string]any{
+		"type":     "array",
+		"maxItems": 3,
+		"items": map[string]any{
+			"type":   "string",
+			"format": "file-or-url",
+		},
+		"description": "Reference video(s). Pass local file paths or http(s) URLs; AnyCap uploads files automatically and forwards them to the upstream provider.",
+	}
+}
+
 // droppedTopLevelFields are fields the server injects or that contain
 // reference media in upstream wire format. They never appear in the
-// agent-facing schema. Reference media is exposed as the synthetic
-// "images" field instead.
+// agent-facing schema. Reference media is exposed as synthetic
+// "images"/"videos" fields instead.
 var droppedTopLevelFields = map[string]struct{}{
 	"gen_type":      {},
+	"model":         {},
+	"resource_id":   {},
 	"resource_url":  {},
 	"resource_path": {},
 }
@@ -124,9 +153,17 @@ var droppedOptionFields = map[string]struct{}{
 	"refer_image_urls":          {},
 	"refer_image_resource_path": {},
 	"refer_image_resource_url":  {},
+	"refer_video_resource_path": {},
+	"refer_video_url":           {},
+	"refer_video_urls":          {},
 	"reference_image_urls":      {},
 	"reference_image_url":       {},
+	"reference_video_urls":      {},
 	"reference_video_url":       {},
+	"first_frame_resource_path": {},
+	"first_frame_url":           {},
+	"last_frame_resource_path":  {},
+	"last_frame_url":            {},
 	"first_image_url":           {},
 	"last_image_url":            {},
 	"image_url":                 {},

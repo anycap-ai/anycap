@@ -41,7 +41,10 @@ func SelectRoute(spec *ModelSpec, operation Operation, mode Mode) (RouteBinding,
 // InferVideoMode infers the mode from request content.
 // Returns empty string if no inference can be made.
 func InferVideoMode(req GenerateVideoRequest) Mode {
-	if len(req.ReferenceImageURLs) > 0 {
+	if len(req.MultiShotClips) > 0 {
+		return ModeMultiShotVideo
+	}
+	if len(req.ReferenceImageURLs) > 0 || len(req.ReferenceVideoURLs) > 0 {
 		return ModeImageToVideo
 	}
 	return ModeTextToVideo

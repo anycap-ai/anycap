@@ -152,6 +152,7 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 		}
 
 		resourceTargets := parseResourceTargets(entry.Annotation)
+		resourceTargets = applyResourceTargetOverrides(op.AbilityKey, op.AlgoType, entry.Schema, resourceTargets)
 
 		// Route binding (used by execution path).
 		opSpec.Routes = append(opSpec.Routes, model.RouteBinding{
@@ -174,10 +175,11 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 			addModeOnce(&opSpec, model.Mode(op.Mode), modeDesc)
 		}
 
-		// Schema enrichment. The synthetic "images" parameter is added
-		// when Discovery declares at least one reference target for this
-		// algo; CLI then knows it can pass --param images=...
-		flat := flattenDiscoverySchema(entry.Schema, len(resourceTargets) > 0)
+		// Schema enrichment. Synthetic reference-media parameters are added
+		// when Discovery declares matching resource targets for this algo;
+		// CLI then knows it can pass --param images=... / --param videos=...
+		flat := flattenDiscoverySchemaWithMedia(entry.Schema, referenceMediaParamsFromTargets(resourceTargets))
+		flat = applySchemaOverrides(op.AbilityKey, op.AlgoType, flat)
 		if len(flat) > 0 {
 			if op.Mode != "" {
 				if opSpec.ModeSchemas == nil {

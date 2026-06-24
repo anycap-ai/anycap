@@ -209,6 +209,92 @@ func TestGenerateVideo_GenerateAudioNilOmitted(t *testing.T) {
 	}
 }
 
+func TestGenerateVideo_PropagatesImageAndVideoReferences(t *testing.T) {
+	srv, captured := captureLastSubmit(t)
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "tok"})
+
+	_, err := client.GenerateVideo(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-9",
+		Prompt:             "p",
+		Model:              "seedance-2-fast",
+		Mode:               model.ModeImageToVideo,
+		ReferenceImageURLs: []string{"https://cdn/a.png", "https://cdn/b.png"},
+		ReferenceVideoURLs: []string{"https://cdn/ref.mp4"},
+	}, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: "ark-doubao-seedance-2-fast",
+		GenType:    string(model.CapabilityVideo),
+		AlgoType:   "img_2_video",
+		Priority:   100,
+		Enabled:    true,
+		ResourceTargets: []model.ResourceTarget{
+			{Key: "video_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+			{Key: "video_option.refer_video_url", Kind: model.ResourceKindURL},
+		},
+	})
+	if err != nil {
+		t.Fatalf("GenerateVideo error: %v", err)
+	}
+
+	payload := decodePayload(t, captured.ReqPayload)
+	if payload.VideoOption == nil {
+		t.Fatal("expected video_option")
+	}
+	if got := payload.VideoOption.ReferImageURLs; len(got) != 2 || got[0] != "https://cdn/a.png" || got[1] != "https://cdn/b.png" {
+		t.Fatalf("expected two refer_image_urls, got %v", got)
+	}
+	if payload.VideoOption.ReferVideoURL != "https://cdn/ref.mp4" {
+		t.Fatalf("expected refer_video_url, got %q", payload.VideoOption.ReferVideoURL)
+	}
+	if payload.ResourceURL != "https://cdn/a.png" {
+		t.Fatalf("expected first image in resource_url, got %q", payload.ResourceURL)
+	}
+}
+
+func TestGenerateVideo_PropagatesMultiShotClips(t *testing.T) {
+	srv, captured := captureLastSubmit(t)
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "tok"})
+
+	_, err := client.GenerateVideo(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-9",
+		Model:              "kling-3.0",
+		Mode:               model.ModeMultiShotVideo,
+		Duration:           3,
+		ReferenceImageURLs: []string{"https://cdn/ref-a.png", "https://cdn/ref-b.png"},
+		MultiShotClips: []model.VideoShotClip{
+			{Prompt: "wide establishing shot", Duration: 1},
+			{Prompt: "close-up movement", Duration: 2},
+		},
+	}, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: "cloudsway_kling_3.0",
+		GenType:    string(model.CapabilityVideo),
+		AlgoType:   "multi_shot_video",
+		Priority:   100,
+		Enabled:    true,
+		ResourceTargets: []model.ResourceTarget{
+			{Key: "video_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+		},
+	})
+	if err != nil {
+		t.Fatalf("GenerateVideo error: %v", err)
+	}
+
+	payload := decodePayload(t, captured.ReqPayload)
+	if payload.VideoOption == nil {
+		t.Fatal("expected video_option")
+	}
+	if payload.VideoOption.Type != "multi_shot_video" {
+		t.Fatalf("expected multi_shot_video, got %q", payload.VideoOption.Type)
+	}
+	if got := payload.VideoOption.MultiShotClips; len(got) != 2 || got[0].Prompt != "wide establishing shot" || got[1].Duration != 2 {
+		t.Fatalf("unexpected multi_shot_clips: %+v", got)
+	}
+	if got := payload.VideoOption.ReferImageURLs; len(got) != 2 || got[0] != "https://cdn/ref-a.png" || got[1] != "https://cdn/ref-b.png" {
+		t.Fatalf("expected reference images to round trip, got %v", got)
+	}
+}
+
 func TestGenerateMusic_PropagatesModelVariant(t *testing.T) {
 	srv, captured := captureLastSubmit(t)
 	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "tok"})

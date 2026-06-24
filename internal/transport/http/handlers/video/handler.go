@@ -3,6 +3,7 @@ package video
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	videoapp "gitlab.knoffice.tech/engineering/anycap/internal/application/video"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -47,13 +48,26 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
+	multiShotClips := make([]model.VideoShotClip, 0, len(payload.EffectiveMultiShotClips()))
+	for _, clip := range payload.EffectiveMultiShotClips() {
+		multiShotClips = append(multiShotClips, model.VideoShotClip{
+			Index:    clip.Index,
+			Prompt:   clip.Prompt,
+			Duration: clip.Duration,
+		})
+	}
+	mode := model.Mode(payload.Mode)
+	if mode == "" && isMultiShotGenerationType(payload.GenerationType) {
+		mode = model.ModeMultiShotVideo
+	}
+
 	result, err := h.service.Generate(c, model.GenerateVideoRequest{
 		RequestID:          trace.GetTraceID(c),
 		UserID:             principal.UserID,
 		APIKeyID:           principal.APIKeyID,
 		Prompt:             payload.Prompt,
 		Model:              payload.Model,
-		Mode:               model.Mode(payload.Mode),
+		Mode:               mode,
 		NegativePrompt:     payload.NegativePrompt,
 		Ratio:              payload.AspectRatio,
 		Resolution:         payload.Resolution,
@@ -61,7 +75,9 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Format:             payload.Format,
 		FPS:                payload.FPS,
 		GenerateAudio:      payload.GenerateAudio,
-		ReferenceImageURLs: append([]string(nil), payload.Images...),
+		ReferenceImageURLs: append([]string(nil), payload.EffectiveImages()...),
+		ReferenceVideoURLs: append([]string(nil), payload.EffectiveVideos()...),
+		MultiShotClips:     multiShotClips,
 	})
 	if err != nil {
 		middleware.ReportError(ctx, err)
@@ -76,4 +92,11 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	}
 
 	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
+}
+
+func isMultiShotGenerationType(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	normalized = strings.ReplaceAll(normalized, "_", "-")
+	normalized = strings.ReplaceAll(normalized, " ", "-")
+	return normalized == "multi-shot-video"
 }

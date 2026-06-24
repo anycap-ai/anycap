@@ -2,6 +2,7 @@ package nexushub
 
 import (
 	"context"
+	"strings"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/open/common-go/logging"
@@ -59,6 +60,55 @@ func applyResourceTargets(
 	}).Warn("nexushub: no resource target accepted reference urls; dropped")
 }
 
+func applyImageResourceTargets(
+	ctx context.Context,
+	payload *atomicProcessPayload,
+	abilityKey string,
+	targets []model.ResourceTarget,
+	urls []string,
+) {
+	applyResourceTargets(ctx, payload, abilityKey, filterResourceTargets(targets, isImageReferenceTarget), urls)
+}
+
+func applyVideoResourceTargets(
+	ctx context.Context,
+	payload *atomicProcessPayload,
+	abilityKey string,
+	targets []model.ResourceTarget,
+	urls []string,
+) {
+	applyResourceTargets(ctx, payload, abilityKey, filterResourceTargets(targets, isVideoReferenceTarget), urls)
+}
+
+func filterResourceTargets(targets []model.ResourceTarget, accept func(model.ResourceTarget) bool) []model.ResourceTarget {
+	out := make([]model.ResourceTarget, 0, len(targets))
+	for _, target := range targets {
+		if accept(target) {
+			out = append(out, target)
+		}
+	}
+	return out
+}
+
+func isImageReferenceTarget(target model.ResourceTarget) bool {
+	if isVideoReferenceTarget(target) {
+		return false
+	}
+	key := strings.ToLower(target.Key)
+	if key == "resource_url" || key == "resource_path" {
+		return true
+	}
+	return strings.Contains(key, "image") ||
+		strings.Contains(key, "first_frame") ||
+		strings.Contains(key, "last_frame")
+}
+
+func isVideoReferenceTarget(target model.ResourceTarget) bool {
+	key := strings.ToLower(target.Key)
+	return strings.Contains(key, "refer_video") ||
+		strings.Contains(key, "reference_video")
+}
+
 // writeURLArrayTarget writes urls into the named slot. Returns true on
 // success; returns false (without mutating) when the key is unknown.
 //
@@ -70,6 +120,19 @@ func writeURLArrayTarget(payload *atomicProcessPayload, key string, urls []strin
 	case "image_option.refer_image_urls":
 		opt := ensureImageOption(payload)
 		opt.ReferImageURLs = append(opt.ReferImageURLs[:0], urls...)
+		return true
+	case "video_option.refer_image_urls":
+		opt := ensureVideoOption(payload)
+		opt.ReferImageURLs = append(opt.ReferImageURLs[:0], urls...)
+		// NexusHub Core still validates img_2_video against the top-level
+		// first-frame slot even when a model also consumes multiple references.
+		if payload.ResourceURL == "" {
+			payload.ResourceURL = urls[0]
+		}
+		return true
+	case "video_option.refer_video_urls":
+		opt := ensureVideoOption(payload)
+		opt.ReferVideoURLs = append(opt.ReferVideoURLs[:0], urls...)
 		return true
 	default:
 		return false
@@ -85,6 +148,18 @@ func writeURLTarget(payload *atomicProcessPayload, key, url string) bool {
 	case "resource_url":
 		payload.ResourceURL = url
 		return true
+	case "video_option.first_frame_url":
+		opt := ensureVideoOption(payload)
+		opt.FirstFrameURL = url
+		return true
+	case "video_option.last_frame_url":
+		opt := ensureVideoOption(payload)
+		opt.LastFrameURL = url
+		return true
+	case "video_option.refer_video_url":
+		opt := ensureVideoOption(payload)
+		opt.ReferVideoURL = url
+		return true
 	default:
 		return false
 	}
@@ -98,4 +173,11 @@ func ensureImageOption(payload *atomicProcessPayload) *atomicImageOption {
 		payload.ImageOption = &atomicImageOption{}
 	}
 	return payload.ImageOption
+}
+
+func ensureVideoOption(payload *atomicProcessPayload) *atomicVideoOption {
+	if payload.VideoOption == nil {
+		payload.VideoOption = &atomicVideoOption{}
+	}
+	return payload.VideoOption
 }
