@@ -26,11 +26,12 @@ const (
 type Mode string
 
 const (
-	ModeTextToImage  Mode = "text-to-image"
-	ModeImageToImage Mode = "image-to-image"
-	ModeTextToVideo  Mode = "text-to-video"
-	ModeImageToVideo Mode = "image-to-video"
-	ModeTextToMusic  Mode = "text-to-music"
+	ModeTextToImage    Mode = "text-to-image"
+	ModeImageToImage   Mode = "image-to-image"
+	ModeTextToVideo    Mode = "text-to-video"
+	ModeImageToVideo   Mode = "image-to-video"
+	ModeMultiShotVideo Mode = "multi-shot-video"
+	ModeTextToMusic    Mode = "text-to-music"
 )
 
 // RouteType 表示路由方式。

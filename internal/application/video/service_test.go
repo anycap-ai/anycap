@@ -21,6 +21,7 @@ type zeroCostNexusClient struct{}
 
 type fakeUploadResolver struct {
 	calledWith []string
+	calls      [][]string
 }
 
 type fakeArtifactPublisher struct {
@@ -64,7 +65,12 @@ func (zeroCostNexusClient) GetTaskIDByTrace(_ context.Context, _ string, _ strin
 
 func (f *fakeUploadResolver) ResolveReferenceURLs(_ context.Context, urls []string) ([]string, error) {
 	f.calledWith = append([]string(nil), urls...)
-	return []string{"https://cdn.anycap.local/resolved-frame.png"}, nil
+	f.calls = append(f.calls, append([]string(nil), urls...))
+	out := make([]string, 0, len(urls))
+	for _, u := range urls {
+		out = append(out, "https://cdn.anycap.local/resolved/"+u)
+	}
+	return out, nil
 }
 
 func (f *fakeArtifactPublisher) Publish(_ context.Context, _ model.ArtifactPublishRequest) (model.ArtifactPublishResult, error) {
@@ -191,6 +197,37 @@ func TestGenerateVideo_ResolvesResourceURL(t *testing.T) {
 
 	if len(resolver.calledWith) != 1 || resolver.calledWith[0] != "https://example.com/frame.png" {
 		t.Fatalf("expected resolver to receive single resource url, got %#v", resolver.calledWith)
+	}
+}
+
+func TestGenerateVideo_ResolvesImageAndVideoReferences(t *testing.T) {
+	logs := calllog.NewMemoryCallLogRepo()
+	service := NewService(testCatalog(), nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 10}), logs)
+	resolver := &fakeUploadResolver{}
+	service.SetUploadRefResolver(resolver)
+
+	_, err := service.Generate(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-1",
+		APIKeyID:           "akid_1",
+		RequestID:          "req-1",
+		Prompt:             "paper crane",
+		Model:              "veo-mini",
+		Mode:               model.ModeImageToVideo,
+		ReferenceImageURLs: []string{"image-a.png", "image-b.png"},
+		ReferenceVideoURLs: []string{"clip-a.mp4"},
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+
+	if len(resolver.calls) != 2 {
+		t.Fatalf("expected resolver to be called for images and videos, got %#v", resolver.calls)
+	}
+	if len(resolver.calls[0]) != 2 || resolver.calls[0][0] != "image-a.png" || resolver.calls[0][1] != "image-b.png" {
+		t.Fatalf("expected first resolver call to contain images, got %#v", resolver.calls[0])
+	}
+	if len(resolver.calls[1]) != 1 || resolver.calls[1][0] != "clip-a.mp4" {
+		t.Fatalf("expected second resolver call to contain video, got %#v", resolver.calls[1])
 	}
 }
 

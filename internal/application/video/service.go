@@ -105,6 +105,16 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		}
 		req.ReferenceImageURLs = resolved
 	}
+	if len(req.ReferenceVideoURLs) > 0 && s.uploadResolver != nil {
+		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, req.ReferenceVideoURLs)
+		if resolveErr != nil {
+			logger.WithFields(logging.Fields{
+				"reference_video_count": len(req.ReferenceVideoURLs),
+			}).WithError(resolveErr).Error("video reference video resolution failed")
+			return model.GenerateVideoResult{}, resolveErr
+		}
+		req.ReferenceVideoURLs = resolved
+	}
 
 	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,

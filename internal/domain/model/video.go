@@ -1,37 +1,63 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrVideoExecutionNotConfigured = errors.New("video execution is not configured")
 )
 
 type GenerateVideoRequest struct {
-	RequestID          string   `json:"request_id,omitempty"`
-	UserID             string   `json:"user_id,omitempty"`
-	APIKeyID           string   `json:"api_key_id,omitempty"`
-	Prompt             string   `json:"prompt"`
-	Model              string   `json:"model"`
-	Mode               Mode     `json:"mode,omitempty"`
-	NegativePrompt     string   `json:"negative_prompt,omitempty"`
-	Ratio              string   `json:"ratio,omitempty"`
-	Resolution         string   `json:"resolution,omitempty"`
-	Duration           int      `json:"duration,omitempty"`
-	Format             string   `json:"format,omitempty"`
-	FPS                int      `json:"fps,omitempty"`
-	GenerateAudio      *bool    `json:"generate_audio,omitempty"`
-	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
+	RequestID          string          `json:"request_id,omitempty"`
+	UserID             string          `json:"user_id,omitempty"`
+	APIKeyID           string          `json:"api_key_id,omitempty"`
+	Prompt             string          `json:"prompt"`
+	Model              string          `json:"model"`
+	Mode               Mode            `json:"mode,omitempty"`
+	NegativePrompt     string          `json:"negative_prompt,omitempty"`
+	Ratio              string          `json:"ratio,omitempty"`
+	Resolution         string          `json:"resolution,omitempty"`
+	Duration           int             `json:"duration,omitempty"`
+	Format             string          `json:"format,omitempty"`
+	FPS                int             `json:"fps,omitempty"`
+	GenerateAudio      *bool           `json:"generate_audio,omitempty"`
+	ReferenceImageURLs []string        `json:"reference_image_urls,omitempty"`
+	ReferenceVideoURLs []string        `json:"reference_video_urls,omitempty"`
+	MultiShotClips     []VideoShotClip `json:"multi_shot_clips,omitempty"`
 }
 
 func (r GenerateVideoRequest) Validate() error {
-	if r.Prompt == "" {
+	if r.Prompt == "" && len(r.MultiShotClips) == 0 {
 		return ErrPromptRequired
 	}
 	if r.Model == "" {
 		return ErrModelRequired
 	}
+	if len(r.MultiShotClips) > 0 {
+		total := 0
+		for i, clip := range r.MultiShotClips {
+			if clip.Prompt == "" {
+				return fmt.Errorf("%w: multi_shot_clips[%d].prompt is required", ErrInvalidParam, i)
+			}
+			if clip.Duration < 1 || clip.Duration > 3 {
+				return fmt.Errorf("%w: multi_shot_clips[%d].duration must be between 1 and 3 seconds", ErrInvalidParam, i)
+			}
+			total += clip.Duration
+		}
+		if r.Duration > 0 && total != r.Duration {
+			return fmt.Errorf("%w: sum of shot durations must equal total video duration (%ds)", ErrInvalidParam, r.Duration)
+		}
+	}
 
 	return nil
+}
+
+type VideoShotClip struct {
+	Index    int    `json:"index,omitempty"`
+	Prompt   string `json:"prompt"`
+	Duration int    `json:"duration"`
 }
 
 type GenerateVideoResult struct {

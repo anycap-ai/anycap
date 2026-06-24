@@ -173,6 +173,42 @@
           "ability_key": "cloudsway_kling_3.0",
           "algo_type": "img_2_video",
           "mode_description": "Generate a video sequence from a single image or multiple reference images. The model animates the scene by introducing motion, camera dynamics, and temporal progression while preserving the original visual structure."
+        },
+        {
+          "operation": "generate",
+          "mode": "multi-shot-video",
+          "ability_key": "cloudsway_kling_3.0",
+          "algo_type": "multi_shot_video",
+          "mode_description": "Generate a multi-shot video from shot-level prompts and durations, optionally guided by multiple reference images."
+        }
+      ]
+    },
+    {
+      "model_id": "kling-3.0-omni",
+      "capability": "video",
+      "display_name": "Kling 3.0 Omni",
+      "model_description": "Kling 3.0 Omni is a multimodal Kling video model for text-to-video, image-to-video, reference-guided, and multi-shot video workflows. It supports shot-level prompts and durations for structured multi-shot generation.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "tengda_kling_3.0_omni",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate videos directly from text prompts."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "tengda_kling_3.0_omni",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate a video sequence from one or more reference images."
+        },
+        {
+          "operation": "generate",
+          "mode": "multi-shot-video",
+          "ability_key": "tengda_kling_3.0_omni",
+          "algo_type": "multi_shot_video",
+          "mode_description": "Generate a multi-shot video from shot-level prompts and durations, optionally guided by multiple reference images."
         }
       ]
     },
@@ -253,7 +289,7 @@
           "mode": "image-to-video",
           "ability_key": "ark-doubao-seedance-2",
           "algo_type": "img_2_video",
-          "mode_description": "Generate video sequences from a reference image while preserving the original composition."
+          "mode_description": "Generate video sequences from one or more reference images while preserving the original composition."
         }
       ]
     },
@@ -275,7 +311,7 @@
           "mode": "image-to-video",
           "ability_key": "ark-doubao-seedance-2-fast",
           "algo_type": "img_2_video",
-          "mode_description": "Generate video sequences from a reference image with faster turnaround."
+          "mode_description": "Generate video sequences from one or more reference images with faster turnaround."
         }
       ]
     },

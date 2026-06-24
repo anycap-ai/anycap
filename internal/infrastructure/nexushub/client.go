@@ -87,7 +87,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 			"model_id":   req.Model,
 		},
 	}
-	applyResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
+	applyImageResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
 
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -216,13 +216,15 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 			FPS:            req.FPS,
 			GenerateAudio:  req.GenerateAudio,
 			NegativePrompt: req.NegativePrompt,
+			MultiShotClips: buildAtomicVideoShotClips(req.MultiShotClips),
 		},
 		MetaOption: map[string]any{
 			"request_id": req.RequestID,
 			"model_id":   req.Model,
 		},
 	}
-	applyResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
+	applyImageResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
+	applyVideoResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceVideoURLs)
 
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -448,6 +450,25 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	return result, nil
 }
 
+func buildAtomicVideoShotClips(clips []model.VideoShotClip) []atomicVideoShotClip {
+	if len(clips) == 0 {
+		return nil
+	}
+	out := make([]atomicVideoShotClip, 0, len(clips))
+	for i, clip := range clips {
+		index := clip.Index
+		if index == 0 && i > 0 {
+			index = i
+		}
+		out = append(out, atomicVideoShotClip{
+			Index:    index,
+			Prompt:   clip.Prompt,
+			Duration: clip.Duration,
+		})
+	}
+	return out
+}
+
 // buildMusicOption constructs the NexusHub music_option payload from the
 // domain request, including provider-specific nested options when needed.
 func buildMusicOption(req model.GenerateMusicRequest) *atomicMusicOption {
@@ -623,6 +644,7 @@ type submitUserInfo struct {
 type atomicProcessPayload struct {
 	GenType      string              `json:"gen_type"`
 	Prompt       string              `json:"prompt,omitempty"`
+	ResourcePath string              `json:"resource_path,omitempty"`
 	ResourceURL  string              `json:"resource_url,omitempty"`
 	ImageOption  *atomicImageOption  `json:"image_option,omitempty"`
 	VideoOption  *atomicVideoOption  `json:"video_option,omitempty"`
@@ -647,14 +669,29 @@ type atomicImageOption struct {
 }
 
 type atomicVideoOption struct {
-	Type           string `json:"type,omitempty"`
-	Ratio          string `json:"ratio,omitempty"`
-	Resolution     string `json:"resolution,omitempty"`
-	Duration       int    `json:"duration,omitempty"`
-	Format         string `json:"format,omitempty"`
-	FPS            int    `json:"fps,omitempty"`
-	GenerateAudio  *bool  `json:"generate_audio,omitempty"`
-	NegativePrompt string `json:"negative_prompt,omitempty"`
+	Type                   string                `json:"type,omitempty"`
+	Ratio                  string                `json:"ratio,omitempty"`
+	Resolution             string                `json:"resolution,omitempty"`
+	Duration               int                   `json:"duration,omitempty"`
+	Format                 string                `json:"format,omitempty"`
+	FPS                    int                   `json:"fps,omitempty"`
+	GenerateAudio          *bool                 `json:"generate_audio,omitempty"`
+	NegativePrompt         string                `json:"negative_prompt,omitempty"`
+	FirstFrameResourcePath string                `json:"first_frame_resource_path,omitempty"`
+	FirstFrameURL          string                `json:"first_frame_url,omitempty"`
+	LastFrameResourcePath  string                `json:"last_frame_resource_path,omitempty"`
+	LastFrameURL           string                `json:"last_frame_url,omitempty"`
+	ReferVideoResourcePath string                `json:"refer_video_resource_path,omitempty"`
+	ReferVideoURL          string                `json:"refer_video_url,omitempty"`
+	ReferVideoURLs         []string              `json:"refer_video_urls,omitempty"`
+	ReferImageURLs         []string              `json:"refer_image_urls,omitempty"`
+	MultiShotClips         []atomicVideoShotClip `json:"multi_shot_clips,omitempty"`
+}
+
+type atomicVideoShotClip struct {
+	Index    int    `json:"index,omitempty"`
+	Prompt   string `json:"prompt"`
+	Duration int    `json:"duration"`
 }
 
 type atomicMusicOption struct {

@@ -48,15 +48,24 @@ func TestFlattenDiscoverySchema_VideoImageToVideoIncludesResource(t *testing.T) 
 	schema := map[string]any{
 		"properties": map[string]any{
 			"gen_type":      map[string]any{"type": "string", "enum": []any{"video"}},
+			"model":         map[string]any{"type": "string"},
 			"prompt":        map[string]any{"type": "string"},
+			"resource_id":   map[string]any{"type": "string"},
 			"resource_url":  map[string]any{"type": "string"},
 			"resource_path": map[string]any{"type": "string"},
 			"video_option": map[string]any{
 				"properties": map[string]any{
-					"type":       map[string]any{"type": "string", "enum": []any{"img_2_video"}},
-					"duration":   map[string]any{"type": "integer", "enum": []any{5, 10}},
-					"ratio":      map[string]any{"type": "string", "enum": []any{"16:9"}},
-					"resolution": map[string]any{"type": "string", "enum": []any{"720p", "1080p"}},
+					"type":                      map[string]any{"type": "string", "enum": []any{"img_2_video"}},
+					"duration":                  map[string]any{"type": "integer", "enum": []any{5, 10}},
+					"ratio":                     map[string]any{"type": "string", "enum": []any{"16:9"}},
+					"resolution":                map[string]any{"type": "string", "enum": []any{"720p", "1080p"}},
+					"first_frame_resource_path": map[string]any{"type": "string"},
+					"first_frame_url":           map[string]any{"type": "string"},
+					"last_frame_resource_path":  map[string]any{"type": "string"},
+					"last_frame_url":            map[string]any{"type": "string"},
+					"refer_video_resource_path": map[string]any{"type": "string"},
+					"refer_video_url":           map[string]any{"type": "string"},
+					"refer_image_urls":          map[string]any{"type": "array"},
 				},
 			},
 		},
@@ -70,8 +79,27 @@ func TestFlattenDiscoverySchema_VideoImageToVideoIncludesResource(t *testing.T) 
 	if _, exists := params["resource_url"]; exists {
 		t.Fatalf("resource_url should not appear in flattened params: %v", params)
 	}
+	if _, exists := params["resource_id"]; exists {
+		t.Fatalf("resource_id should not appear in flattened params: %v", params)
+	}
+	if _, exists := params["model"]; exists {
+		t.Fatalf("internal req_payload model should not appear in flattened params: %v", params)
+	}
 	if _, exists := params["gen_type"]; exists {
 		t.Fatalf("gen_type should not appear in flattened params: %v", params)
+	}
+	for _, key := range []string{
+		"first_frame_resource_path",
+		"first_frame_url",
+		"last_frame_resource_path",
+		"last_frame_url",
+		"refer_video_resource_path",
+		"refer_video_url",
+		"refer_image_urls",
+	} {
+		if _, exists := params[key]; exists {
+			t.Fatalf("%s should not appear in flattened params: %v", key, params)
+		}
 	}
 }
 
@@ -210,6 +238,9 @@ func TestFlattenDiscoverySchema_WithImagesSynthesizesField(t *testing.T) {
 	if images["type"] != "array" {
 		t.Fatalf("expected images.type=array, got %v", images["type"])
 	}
+	if images["maxItems"] != 9 {
+		t.Fatalf("expected images.maxItems=9, got %v", images["maxItems"])
+	}
 	items, _ := images["items"].(map[string]any)
 	if items["format"] != "file-or-url" {
 		t.Fatalf("expected images.items.format=file-or-url, got %v", items["format"])
@@ -219,6 +250,41 @@ func TestFlattenDiscoverySchema_WithImagesSynthesizesField(t *testing.T) {
 	}
 	if _, exists := params["resource_url"]; exists {
 		t.Fatalf("wire field resource_url must stay hidden")
+	}
+}
+
+func TestFlattenDiscoverySchema_WithVideosSynthesizesField(t *testing.T) {
+	schema := map[string]any{
+		"properties": map[string]any{
+			"prompt": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"refer_video_url": map[string]any{"type": "string"},
+					"ratio":           map[string]any{"type": "string"},
+				},
+			},
+		},
+	}
+	got := flattenDiscoverySchemaWithMedia(schema, referenceMediaParams{Videos: true})
+	params, _ := got["model_params"].(map[string]any)
+	mustMapKeys(t, params, []string{"prompt", "aspect_ratio", "videos"})
+
+	videos, ok := params["videos"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected videos object, got %T", params["videos"])
+	}
+	if videos["type"] != "array" {
+		t.Fatalf("expected videos.type=array, got %v", videos["type"])
+	}
+	if videos["maxItems"] != 3 {
+		t.Fatalf("expected videos.maxItems=3, got %v", videos["maxItems"])
+	}
+	items, _ := videos["items"].(map[string]any)
+	if items["format"] != "file-or-url" {
+		t.Fatalf("expected videos.items.format=file-or-url, got %v", items["format"])
+	}
+	if _, exists := params["refer_video_url"]; exists {
+		t.Fatalf("wire field refer_video_url must stay hidden")
 	}
 }
 
