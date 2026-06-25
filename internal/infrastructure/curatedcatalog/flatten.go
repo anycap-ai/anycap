@@ -27,7 +27,7 @@ package curatedcatalog
 //   - Server-injected and reference-media wire fields are dropped (see
 //     droppedTopLevelFields and droppedOptionFields). They never escape
 //     to the agent-facing schema; reference media is exposed via the
-//     synthetic "images"/"videos" fields (see referenceMediaParams below).
+//     synthetic "images"/"videos"/"audios" fields (see referenceMediaParams below).
 //   - Any other top-level property the schema introduces is preserved
 //     verbatim under its original name (forward-compat).
 //
@@ -57,7 +57,7 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 		return nil
 	}
 	props, _ := schema["properties"].(map[string]any)
-	if len(props) == 0 && !media.Images && !media.Videos {
+	if len(props) == 0 && !media.Images && !media.Videos && !media.Audios {
 		return nil
 	}
 
@@ -91,6 +91,12 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 		// First-wins: never overwrite a real schema field named "videos".
 		if _, exists := flat["videos"]; !exists {
 			flat["videos"] = videosParamSchema()
+		}
+	}
+	if media.Audios {
+		// First-wins: never overwrite a real schema field named "audios".
+		if _, exists := flat["audios"]; !exists {
+			flat["audios"] = audiosParamSchema()
 		}
 	}
 
@@ -128,10 +134,22 @@ func videosParamSchema() map[string]any {
 	}
 }
 
+func audiosParamSchema() map[string]any {
+	return map[string]any{
+		"type":     "array",
+		"maxItems": 3,
+		"items": map[string]any{
+			"type":   "string",
+			"format": "file-or-url",
+		},
+		"description": "Reference audio(s). Pass local file paths or http(s) URLs; AnyCap uploads files automatically and forwards them to the upstream provider.",
+	}
+}
+
 // droppedTopLevelFields are fields the server injects or that contain
 // reference media in upstream wire format. They never appear in the
 // agent-facing schema. Reference media is exposed as synthetic
-// "images"/"videos" fields instead.
+// "images"/"videos"/"audios" fields instead.
 var droppedTopLevelFields = map[string]struct{}{
 	"gen_type":      {},
 	"model":         {},
@@ -156,10 +174,14 @@ var droppedOptionFields = map[string]struct{}{
 	"refer_video_resource_path": {},
 	"refer_video_url":           {},
 	"refer_video_urls":          {},
+	"refer_audio_url":           {},
+	"refer_audio_urls":          {},
 	"reference_image_urls":      {},
 	"reference_image_url":       {},
 	"reference_video_urls":      {},
 	"reference_video_url":       {},
+	"reference_audio_urls":      {},
+	"reference_audio_url":       {},
 	"first_frame_resource_path": {},
 	"first_frame_url":           {},
 	"last_frame_resource_path":  {},

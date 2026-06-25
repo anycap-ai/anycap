@@ -503,6 +503,92 @@ func TestCatalog_OverridesSeedance2Resolution1080p(t *testing.T) {
 	}
 }
 
+func TestCatalog_ExposesSeedanceMultiModalReferenceVideo(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:    "seedance-2",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "multi-modal-reference", AbilityKey: "ark-doubao-seedance-2", AlgoType: "multi_modal_ref_2_video"},
+				},
+			},
+			{
+				ModelID:    "seedance-2-fast",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "multi-modal-reference", AbilityKey: "ark-doubao-seedance-2-fast", AlgoType: "multi_modal_ref_2_video"},
+				},
+			},
+		},
+	}
+	multiModalSchema := map[string]any{
+		"properties": map[string]any{
+			"prompt": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"type":                      map[string]any{"type": "string", "enum": []any{"multi_modal_ref_2_video"}},
+					"duration":                  map[string]any{"type": "integer", "enum": []any{4, 5, 6}},
+					"ratio":                     map[string]any{"type": "string", "enum": []any{"9:16", "16:9"}},
+					"resolution":                map[string]any{"type": "string", "enum": []any{"480p", "720p"}},
+					"refer_image_resource_path": map[string]any{"type": "array"},
+					"refer_image_urls":          map[string]any{"type": "array"},
+					"refer_video_urls":          map[string]any{"type": "array"},
+					"refer_audio_urls":          map[string]any{"type": "array"},
+				},
+			},
+		},
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"ark-doubao-seedance-2": {
+			AbilityKey: "ark-doubao-seedance-2",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"multi_modal_ref_2_video": {Schema: multiModalSchema, Annotation: map[string]any{}},
+			},
+		},
+		"ark-doubao-seedance-2-fast": {
+			AbilityKey: "ark-doubao-seedance-2-fast",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"multi_modal_ref_2_video": {Schema: multiModalSchema, Annotation: map[string]any{}},
+			},
+		},
+	}
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+
+	for _, modelID := range []string{"seedance-2", "seedance-2-fast"} {
+		spec, err := cat.GetModel(context.Background(), model.CapabilityVideo, modelID)
+		if err != nil {
+			t.Fatalf("GetModel %s error: %v", modelID, err)
+		}
+		route := spec.Operations[model.OperationGenerate].Routes[0]
+		if route.Mode != model.ModeMultiModalRef || route.AlgoType != "multi_modal_ref_2_video" {
+			t.Fatalf("expected multi-modal route for %s, got %+v", modelID, route)
+		}
+		for _, target := range []model.ResourceTarget{
+			{Key: "video_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+			{Key: "video_option.refer_video_urls", Kind: model.ResourceKindURLArray},
+			{Key: "video_option.refer_audio_urls", Kind: model.ResourceKindURLArray},
+		} {
+			if !hasResourceTarget(route.ResourceTargets, target.Key, target.Kind) {
+				t.Fatalf("expected %s route to include target %+v, got %+v", modelID, target, route.ResourceTargets)
+			}
+		}
+		modeSchema := spec.Operations[model.OperationGenerate].ModeSchemas[model.ModeMultiModalRef]
+		params, _ := modeSchema["model_params"].(map[string]any)
+		for key, maxItems := range map[string]any{"images": 9, "videos": 3, "audios": 3} {
+			field, _ := params[key].(map[string]any)
+			if field == nil || field["maxItems"] != maxItems {
+				t.Fatalf("expected %s %s maxItems=%v, got %+v", modelID, key, maxItems, field)
+			}
+		}
+		for _, wireKey := range []string{"refer_image_urls", "refer_video_urls", "refer_audio_urls"} {
+			if _, exists := params[wireKey]; exists {
+				t.Fatalf("wire field %s must stay hidden in %s schema: %+v", wireKey, modelID, params)
+			}
+		}
+	}
+}
+
 func TestCatalog_ExposesKlingMultiShotVideo(t *testing.T) {
 	curation := &config.ModelCurationConfig{
 		Models: []config.ModelCurationModelConfig{

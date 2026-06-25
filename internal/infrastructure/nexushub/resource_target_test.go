@@ -122,6 +122,32 @@ func TestApplyMediaResourceTargets_WritesImagesAndVideosSeparately(t *testing.T)
 	}
 }
 
+func TestApplyMediaResourceTargets_WritesImagesVideosAndAudiosSeparately(t *testing.T) {
+	payload := &atomicProcessPayload{VideoOption: &atomicVideoOption{Type: "multi_modal_ref_2_video"}}
+	targets := []model.ResourceTarget{
+		{Key: "video_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+		{Key: "video_option.refer_video_urls", Kind: model.ResourceKindURLArray},
+		{Key: "video_option.refer_audio_urls", Kind: model.ResourceKindURLArray},
+	}
+	images := []string{"https://cdn/a.png", "https://cdn/b.png"}
+	videos := []string{"https://cdn/ref.mp4", "https://cdn/ref-2.mp4"}
+	audios := []string{"https://cdn/ref.wav"}
+
+	applyImageResourceTargets(context.Background(), payload, "ability-media", targets, images)
+	applyVideoResourceTargets(context.Background(), payload, "ability-media", targets, videos)
+	applyAudioResourceTargets(context.Background(), payload, "ability-media", targets, audios)
+
+	if got := payload.VideoOption.ReferImageURLs; len(got) != 2 || got[0] != images[0] || got[1] != images[1] {
+		t.Fatalf("expected image references=%v, got %v", images, got)
+	}
+	if got := payload.VideoOption.ReferVideoURLs; len(got) != 2 || got[0] != videos[0] || got[1] != videos[1] {
+		t.Fatalf("expected video references=%v, got %v", videos, got)
+	}
+	if got := payload.VideoOption.ReferAudioURLs; len(got) != 1 || got[0] != audios[0] {
+		t.Fatalf("expected audio references=%v, got %v", audios, got)
+	}
+}
+
 func TestApplyResourceTargets_UnknownKeyLogsAndDrops(t *testing.T) {
 	buf := captureLogs(t)
 	payload := &atomicProcessPayload{}

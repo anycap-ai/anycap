@@ -31,6 +31,7 @@ const (
 	ModeTextToVideo    Mode = "text-to-video"
 	ModeImageToVideo   Mode = "image-to-video"
 	ModeMultiShotVideo Mode = "multi-shot-video"
+	ModeMultiModalRef  Mode = "multi-modal-reference"
 	ModeTextToMusic    Mode = "text-to-music"
 )
 

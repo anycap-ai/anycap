@@ -290,6 +290,13 @@
           "ability_key": "ark-doubao-seedance-2",
           "algo_type": "img_2_video",
           "mode_description": "Generate video sequences from one or more reference images while preserving the original composition."
+        },
+        {
+          "operation": "generate",
+          "mode": "multi-modal-reference",
+          "ability_key": "ark-doubao-seedance-2",
+          "algo_type": "multi_modal_ref_2_video",
+          "mode_description": "Generate videos from one or more image, video, or audio references with a guiding prompt."
         }
       ]
     },
@@ -312,6 +319,13 @@
           "ability_key": "ark-doubao-seedance-2-fast",
           "algo_type": "img_2_video",
           "mode_description": "Generate video sequences from one or more reference images with faster turnaround."
+        },
+        {
+          "operation": "generate",
+          "mode": "multi-modal-reference",
+          "ability_key": "ark-doubao-seedance-2-fast",
+          "algo_type": "multi_modal_ref_2_video",
+          "mode_description": "Generate videos from one or more image, video, or audio references with faster turnaround."
         }
       ]
     },

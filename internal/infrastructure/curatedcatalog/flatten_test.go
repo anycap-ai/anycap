@@ -288,6 +288,41 @@ func TestFlattenDiscoverySchema_WithVideosSynthesizesField(t *testing.T) {
 	}
 }
 
+func TestFlattenDiscoverySchema_WithAudiosSynthesizesField(t *testing.T) {
+	schema := map[string]any{
+		"properties": map[string]any{
+			"prompt": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"refer_audio_urls": map[string]any{"type": "array"},
+					"ratio":            map[string]any{"type": "string"},
+				},
+			},
+		},
+	}
+	got := flattenDiscoverySchemaWithMedia(schema, referenceMediaParams{Audios: true})
+	params, _ := got["model_params"].(map[string]any)
+	mustMapKeys(t, params, []string{"prompt", "aspect_ratio", "audios"})
+
+	audios, ok := params["audios"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected audios object, got %T", params["audios"])
+	}
+	if audios["type"] != "array" {
+		t.Fatalf("expected audios.type=array, got %v", audios["type"])
+	}
+	if audios["maxItems"] != 3 {
+		t.Fatalf("expected audios.maxItems=3, got %v", audios["maxItems"])
+	}
+	items, _ := audios["items"].(map[string]any)
+	if items["format"] != "file-or-url" {
+		t.Fatalf("expected audios.items.format=file-or-url, got %v", items["format"])
+	}
+	if _, exists := params["refer_audio_urls"]; exists {
+		t.Fatalf("wire field refer_audio_urls must stay hidden")
+	}
+}
+
 func TestFlattenDiscoverySchema_WithImagesPreservesRealImagesField(t *testing.T) {
 	// Defensive: if Discovery one day exposes a real "images" field at
 	// the top level, we should not clobber it with the synthetic schema.

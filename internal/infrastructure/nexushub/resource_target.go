@@ -80,6 +80,16 @@ func applyVideoResourceTargets(
 	applyResourceTargets(ctx, payload, abilityKey, filterResourceTargets(targets, isVideoReferenceTarget), urls)
 }
 
+func applyAudioResourceTargets(
+	ctx context.Context,
+	payload *atomicProcessPayload,
+	abilityKey string,
+	targets []model.ResourceTarget,
+	urls []string,
+) {
+	applyResourceTargets(ctx, payload, abilityKey, filterResourceTargets(targets, isAudioReferenceTarget), urls)
+}
+
 func filterResourceTargets(targets []model.ResourceTarget, accept func(model.ResourceTarget) bool) []model.ResourceTarget {
 	out := make([]model.ResourceTarget, 0, len(targets))
 	for _, target := range targets {
@@ -91,7 +101,7 @@ func filterResourceTargets(targets []model.ResourceTarget, accept func(model.Res
 }
 
 func isImageReferenceTarget(target model.ResourceTarget) bool {
-	if isVideoReferenceTarget(target) {
+	if isVideoReferenceTarget(target) || isAudioReferenceTarget(target) {
 		return false
 	}
 	key := strings.ToLower(target.Key)
@@ -107,6 +117,12 @@ func isVideoReferenceTarget(target model.ResourceTarget) bool {
 	key := strings.ToLower(target.Key)
 	return strings.Contains(key, "refer_video") ||
 		strings.Contains(key, "reference_video")
+}
+
+func isAudioReferenceTarget(target model.ResourceTarget) bool {
+	key := strings.ToLower(target.Key)
+	return strings.Contains(key, "refer_audio") ||
+		strings.Contains(key, "reference_audio")
 }
 
 // writeURLArrayTarget writes urls into the named slot. Returns true on
@@ -133,6 +149,10 @@ func writeURLArrayTarget(payload *atomicProcessPayload, key string, urls []strin
 	case "video_option.refer_video_urls":
 		opt := ensureVideoOption(payload)
 		opt.ReferVideoURLs = append(opt.ReferVideoURLs[:0], urls...)
+		return true
+	case "video_option.refer_audio_urls":
+		opt := ensureVideoOption(payload)
+		opt.ReferAudioURLs = append(opt.ReferAudioURLs[:0], urls...)
 		return true
 	default:
 		return false

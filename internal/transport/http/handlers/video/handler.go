@@ -60,6 +60,9 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	if mode == "" && isMultiShotGenerationType(payload.GenerationType) {
 		mode = model.ModeMultiShotVideo
 	}
+	if mode == "" && isMultiModalReferenceGenerationType(payload.GenerationType) {
+		mode = model.ModeMultiModalRef
+	}
 
 	result, err := h.service.Generate(c, model.GenerateVideoRequest{
 		RequestID:          trace.GetTraceID(c),
@@ -77,6 +80,7 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		GenerateAudio:      payload.GenerateAudio,
 		ReferenceImageURLs: append([]string(nil), payload.EffectiveImages()...),
 		ReferenceVideoURLs: append([]string(nil), payload.EffectiveVideos()...),
+		ReferenceAudioURLs: append([]string(nil), payload.EffectiveAudios()...),
 		MultiShotClips:     multiShotClips,
 	})
 	if err != nil {
@@ -99,4 +103,13 @@ func isMultiShotGenerationType(value string) bool {
 	normalized = strings.ReplaceAll(normalized, "_", "-")
 	normalized = strings.ReplaceAll(normalized, " ", "-")
 	return normalized == "multi-shot-video"
+}
+
+func isMultiModalReferenceGenerationType(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	normalized = strings.ReplaceAll(normalized, "_", "-")
+	normalized = strings.ReplaceAll(normalized, " ", "-")
+	return normalized == "multi-modal-reference" ||
+		normalized == "multi-modal-ref" ||
+		normalized == "multi-modal-ref-2-video"
 }

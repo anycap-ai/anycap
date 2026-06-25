@@ -44,6 +44,9 @@ func InferVideoMode(req GenerateVideoRequest) Mode {
 	if len(req.MultiShotClips) > 0 {
 		return ModeMultiShotVideo
 	}
+	if len(req.ReferenceAudioURLs) > 0 {
+		return ModeMultiModalRef
+	}
 	if len(req.ReferenceImageURLs) > 0 || len(req.ReferenceVideoURLs) > 0 {
 		return ModeImageToVideo
 	}

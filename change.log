@@ -1,5 +1,45 @@
 # Change Log
 
+## 2026-06-25 Seedance Multi-Modal Reference Schema
+
+### 中文
+
+#### Seedance 2.0 多模态参考输入
+
+- 为 `seedance-2` 和 `seedance-2-fast` 增加 `multi-modal-reference` 模式，对接上游 `multi_modal_ref_2_video` atomic node algo。
+- 在公开视频 schema 中暴露 `images`、`videos`、`audios` 三类参考输入：
+  - `images`: array, `maxItems: 9`
+  - `videos`: array, `maxItems: 3`
+  - `audios`: array, `maxItems: 3`
+- 将 AnyCap 对外参数映射到上游字段：
+  - `images` -> `video_option.refer_image_urls`
+  - `videos` -> `video_option.refer_video_urls`
+  - `audios` -> `video_option.refer_audio_urls`
+- 增加多模态参考模式校验：`images`、`videos`、`audios` 至少提供一种。
+
+#### 验证
+
+- 增加 domain、curated catalog、service、NexusHub payload mapping 测试，覆盖音频参考解析、schema 展示、路由目标覆盖和 payload 透传。
+
+### English
+
+#### Seedance 2.0 Multi-Modal Reference Inputs
+
+- Added `multi-modal-reference` mode for `seedance-2` and `seedance-2-fast`, backed by the upstream `multi_modal_ref_2_video` atomic node algo.
+- Exposed three public reference input fields in the video schema:
+  - `images`: array, `maxItems: 9`
+  - `videos`: array, `maxItems: 3`
+  - `audios`: array, `maxItems: 3`
+- Mapped AnyCap-facing fields to upstream payload keys:
+  - `images` -> `video_option.refer_image_urls`
+  - `videos` -> `video_option.refer_video_urls`
+  - `audios` -> `video_option.refer_audio_urls`
+- Added validation for multi-modal reference mode: at least one of `images`, `videos`, or `audios` is required.
+
+#### Validation
+
+- Added targeted tests for domain validation, curated catalog schema exposure, service-layer audio reference resolution, resource target overrides, and NexusHub payload mapping.
+
 ## 2026-06-24 Video Model Schema Updates
 
 ### 中文
