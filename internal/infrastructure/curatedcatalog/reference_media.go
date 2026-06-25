@@ -9,11 +9,16 @@ import (
 type referenceMediaParams struct {
 	Images bool
 	Videos bool
+	Audios bool
 }
 
 func referenceMediaParamsFromTargets(targets []model.ResourceTarget) referenceMediaParams {
 	var media referenceMediaParams
 	for _, target := range targets {
+		if targetLooksLikeAudioReference(target.Key) {
+			media.Audios = true
+			continue
+		}
 		if targetLooksLikeVideoReference(target.Key) {
 			media.Videos = true
 			continue
@@ -29,6 +34,12 @@ func targetLooksLikeVideoReference(key string) bool {
 	key = strings.ToLower(key)
 	return strings.Contains(key, "refer_video") ||
 		strings.Contains(key, "reference_video")
+}
+
+func targetLooksLikeAudioReference(key string) bool {
+	key = strings.ToLower(key)
+	return strings.Contains(key, "refer_audio") ||
+		strings.Contains(key, "reference_audio")
 }
 
 func targetLooksLikeImageReference(key string) bool {

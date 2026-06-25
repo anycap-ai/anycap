@@ -11,16 +11,18 @@ var algoTypeByMode = map[Mode]string{
 	ModeTextToVideo:    "txt_2_video",
 	ModeImageToVideo:   "img_2_video",
 	ModeMultiShotVideo: "multi_shot_video",
+	ModeMultiModalRef:  "multi_modal_ref_2_video",
 	ModeTextToMusic:    "text_2_music",
 }
 
 var modeByAlgoType = map[string]Mode{
-	"txt_2_img":        ModeTextToImage,
-	"img_2_img":        ModeImageToImage,
-	"txt_2_video":      ModeTextToVideo,
-	"img_2_video":      ModeImageToVideo,
-	"multi_shot_video": ModeMultiShotVideo,
-	"text_2_music":     ModeTextToMusic,
+	"txt_2_img":               ModeTextToImage,
+	"img_2_img":               ModeImageToImage,
+	"txt_2_video":             ModeTextToVideo,
+	"img_2_video":             ModeImageToVideo,
+	"multi_shot_video":        ModeMultiShotVideo,
+	"multi_modal_ref_2_video": ModeMultiModalRef,
+	"text_2_music":            ModeTextToMusic,
 }
 
 func CanonicalAlgoTypeForMode(mode Mode) (string, bool) {

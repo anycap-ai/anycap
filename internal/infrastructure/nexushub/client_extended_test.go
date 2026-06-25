@@ -251,6 +251,53 @@ func TestGenerateVideo_PropagatesImageAndVideoReferences(t *testing.T) {
 	}
 }
 
+func TestGenerateVideo_PropagatesMultiModalReferences(t *testing.T) {
+	srv, captured := captureLastSubmit(t)
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "tok"})
+
+	_, err := client.GenerateVideo(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-9",
+		Prompt:             "p",
+		Model:              "seedance-2",
+		Mode:               model.ModeMultiModalRef,
+		ReferenceImageURLs: []string{"https://cdn/a.png", "https://cdn/b.png"},
+		ReferenceVideoURLs: []string{"https://cdn/ref.mp4"},
+		ReferenceAudioURLs: []string{"https://cdn/ref.wav"},
+	}, model.RouteBinding{
+		RouteType:  model.RouteTypeDirect,
+		AbilityKey: "ark-doubao-seedance-2",
+		GenType:    string(model.CapabilityVideo),
+		AlgoType:   "multi_modal_ref_2_video",
+		Priority:   100,
+		Enabled:    true,
+		ResourceTargets: []model.ResourceTarget{
+			{Key: "video_option.refer_image_urls", Kind: model.ResourceKindURLArray},
+			{Key: "video_option.refer_video_urls", Kind: model.ResourceKindURLArray},
+			{Key: "video_option.refer_audio_urls", Kind: model.ResourceKindURLArray},
+		},
+	})
+	if err != nil {
+		t.Fatalf("GenerateVideo error: %v", err)
+	}
+
+	payload := decodePayload(t, captured.ReqPayload)
+	if payload.VideoOption == nil {
+		t.Fatal("expected video_option")
+	}
+	if payload.VideoOption.Type != "multi_modal_ref_2_video" {
+		t.Fatalf("expected multi_modal_ref_2_video, got %q", payload.VideoOption.Type)
+	}
+	if got := payload.VideoOption.ReferImageURLs; len(got) != 2 || got[0] != "https://cdn/a.png" || got[1] != "https://cdn/b.png" {
+		t.Fatalf("expected two refer_image_urls, got %v", got)
+	}
+	if got := payload.VideoOption.ReferVideoURLs; len(got) != 1 || got[0] != "https://cdn/ref.mp4" {
+		t.Fatalf("expected refer_video_urls, got %v", got)
+	}
+	if got := payload.VideoOption.ReferAudioURLs; len(got) != 1 || got[0] != "https://cdn/ref.wav" {
+		t.Fatalf("expected refer_audio_urls, got %v", got)
+	}
+}
+
 func TestGenerateVideo_PropagatesMultiShotClips(t *testing.T) {
 	srv, captured := captureLastSubmit(t)
 	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "tok"})

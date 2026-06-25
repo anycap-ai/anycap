@@ -25,6 +25,7 @@ type GenerateVideoRequest struct {
 	GenerateAudio      *bool           `json:"generate_audio,omitempty"`
 	ReferenceImageURLs []string        `json:"reference_image_urls,omitempty"`
 	ReferenceVideoURLs []string        `json:"reference_video_urls,omitempty"`
+	ReferenceAudioURLs []string        `json:"reference_audio_urls,omitempty"`
 	MultiShotClips     []VideoShotClip `json:"multi_shot_clips,omitempty"`
 }
 
@@ -34,6 +35,9 @@ func (r GenerateVideoRequest) Validate() error {
 	}
 	if r.Model == "" {
 		return ErrModelRequired
+	}
+	if r.Mode == ModeMultiModalRef && len(r.ReferenceImageURLs) == 0 && len(r.ReferenceVideoURLs) == 0 && len(r.ReferenceAudioURLs) == 0 {
+		return fmt.Errorf("%w: at least one reference input (image, video, or audio) is required", ErrInvalidParam)
 	}
 	if len(r.MultiShotClips) > 0 {
 		total := 0

@@ -13,6 +13,7 @@ type GenerateVideoRequest struct {
 	GenerateAudio  *bool           `json:"generate_audio,omitempty"`
 	Images         []string        `json:"images,omitempty"`
 	Videos         []string        `json:"videos,omitempty"`
+	Audios         []string        `json:"audios,omitempty"`
 	MultiShotClips []VideoShotClip `json:"multi_shot_clips,omitempty"`
 	ShotClips      []VideoShotClip `json:"shot_clips,omitempty"`
 	GenerationType string          `json:"generation_type,omitempty"`
@@ -21,6 +22,8 @@ type GenerateVideoRequest struct {
 	ReferenceImageURLs []string `json:"reference_image_urls,omitempty"`
 	// Deprecated: use Videos instead. Kept for backward compatibility.
 	ReferenceVideoURLs []string `json:"reference_video_urls,omitempty"`
+	// Deprecated: use Audios instead. Kept for backward compatibility.
+	ReferenceAudioURLs []string `json:"reference_audio_urls,omitempty"`
 }
 
 // EffectiveImages returns Images if set, otherwise falls back to ReferenceImageURLs.
@@ -37,6 +40,13 @@ func (r GenerateVideoRequest) EffectiveVideos() []string {
 		return r.Videos
 	}
 	return r.ReferenceVideoURLs
+}
+
+func (r GenerateVideoRequest) EffectiveAudios() []string {
+	if len(r.Audios) > 0 {
+		return r.Audios
+	}
+	return r.ReferenceAudioURLs
 }
 
 func (r GenerateVideoRequest) EffectiveMultiShotClips() []VideoShotClip {

@@ -215,19 +215,23 @@ func TestGenerateVideo_ResolvesImageAndVideoReferences(t *testing.T) {
 		Mode:               model.ModeImageToVideo,
 		ReferenceImageURLs: []string{"image-a.png", "image-b.png"},
 		ReferenceVideoURLs: []string{"clip-a.mp4"},
+		ReferenceAudioURLs: []string{"audio-a.wav"},
 	})
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
 
-	if len(resolver.calls) != 2 {
-		t.Fatalf("expected resolver to be called for images and videos, got %#v", resolver.calls)
+	if len(resolver.calls) != 3 {
+		t.Fatalf("expected resolver to be called for images, videos, and audios, got %#v", resolver.calls)
 	}
 	if len(resolver.calls[0]) != 2 || resolver.calls[0][0] != "image-a.png" || resolver.calls[0][1] != "image-b.png" {
 		t.Fatalf("expected first resolver call to contain images, got %#v", resolver.calls[0])
 	}
 	if len(resolver.calls[1]) != 1 || resolver.calls[1][0] != "clip-a.mp4" {
 		t.Fatalf("expected second resolver call to contain video, got %#v", resolver.calls[1])
+	}
+	if len(resolver.calls[2]) != 1 || resolver.calls[2][0] != "audio-a.wav" {
+		t.Fatalf("expected third resolver call to contain audio, got %#v", resolver.calls[2])
 	}
 }
 

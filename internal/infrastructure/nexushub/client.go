@@ -225,6 +225,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	}
 	applyImageResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
 	applyVideoResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceVideoURLs)
+	applyAudioResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceAudioURLs)
 
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -684,6 +685,7 @@ type atomicVideoOption struct {
 	ReferVideoResourcePath string                `json:"refer_video_resource_path,omitempty"`
 	ReferVideoURL          string                `json:"refer_video_url,omitempty"`
 	ReferVideoURLs         []string              `json:"refer_video_urls,omitempty"`
+	ReferAudioURLs         []string              `json:"refer_audio_urls,omitempty"`
 	ReferImageURLs         []string              `json:"refer_image_urls,omitempty"`
 	MultiShotClips         []atomicVideoShotClip `json:"multi_shot_clips,omitempty"`
 }

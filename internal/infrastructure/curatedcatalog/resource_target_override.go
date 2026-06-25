@@ -5,14 +5,18 @@ import "gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 const (
 	videoReferImageURLsTargetKey = "video_option.refer_image_urls"
 	videoReferVideoURLTargetKey  = "video_option.refer_video_url"
+	videoReferVideoURLsTargetKey = "video_option.refer_video_urls"
+	videoReferAudioURLsTargetKey = "video_option.refer_audio_urls"
 )
 
 var videoReferImageURLArrayOverrideKeys = map[string]struct{}{
-	"cloudsway_kling_3.0|img_2_video":        {},
-	"cloudsway_kling_3.0|multi_shot_video":   {},
-	"tengda_kling_3.0_omni|multi_shot_video": {},
-	"ark-doubao-seedance-2|img_2_video":      {},
-	"ark-doubao-seedance-2-fast|img_2_video": {},
+	"cloudsway_kling_3.0|img_2_video":                    {},
+	"cloudsway_kling_3.0|multi_shot_video":               {},
+	"tengda_kling_3.0_omni|multi_shot_video":             {},
+	"ark-doubao-seedance-2|img_2_video":                  {},
+	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"ark-doubao-seedance-2-fast|img_2_video":             {},
+	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
 }
 
 var videoReferVideoURLOverrideKeys = map[string]struct{}{
@@ -21,15 +25,27 @@ var videoReferVideoURLOverrideKeys = map[string]struct{}{
 	"ark-doubao-seedance-2-fast|img_2_video": {},
 }
 
+var videoReferVideoURLArrayOverrideKeys = map[string]struct{}{
+	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
+}
+
+var videoReferAudioURLArrayOverrideKeys = map[string]struct{}{
+	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
+}
+
 func applyResourceTargetOverrides(abilityKey, algo string, schema map[string]any, targets []model.ResourceTarget) []model.ResourceTarget {
 	key := abilityKey + "|" + algo
 	_, addImages := videoReferImageURLArrayOverrideKeys[key]
 	_, addVideos := videoReferVideoURLOverrideKeys[key]
-	if !addImages && !addVideos {
+	_, addVideoArray := videoReferVideoURLArrayOverrideKeys[key]
+	_, addAudios := videoReferAudioURLArrayOverrideKeys[key]
+	if !addImages && !addVideos && !addVideoArray && !addAudios {
 		return targets
 	}
 
-	out := make([]model.ResourceTarget, 0, len(targets)+2)
+	out := make([]model.ResourceTarget, 0, len(targets)+4)
 	if addImages && !hasResourceTarget(targets, videoReferImageURLsTargetKey, model.ResourceKindURLArray) {
 		out = append(out, model.ResourceTarget{
 			Key:  videoReferImageURLsTargetKey,
@@ -45,6 +61,18 @@ func applyResourceTargetOverrides(abilityKey, algo string, schema map[string]any
 		out = append(out, model.ResourceTarget{
 			Key:  videoReferVideoURLTargetKey,
 			Kind: model.ResourceKindURL,
+		})
+	}
+	if addVideoArray && !hasResourceTarget(out, videoReferVideoURLsTargetKey, model.ResourceKindURLArray) {
+		out = append(out, model.ResourceTarget{
+			Key:  videoReferVideoURLsTargetKey,
+			Kind: model.ResourceKindURLArray,
+		})
+	}
+	if addAudios && !hasResourceTarget(out, videoReferAudioURLsTargetKey, model.ResourceKindURLArray) {
+		out = append(out, model.ResourceTarget{
+			Key:  videoReferAudioURLsTargetKey,
+			Kind: model.ResourceKindURLArray,
 		})
 	}
 	if len(out) == len(targets) {
