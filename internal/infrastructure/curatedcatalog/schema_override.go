@@ -1,8 +1,8 @@
 package curatedcatalog
 
 var seedance1080pOverrideKeys = map[string]struct{}{
-	"ark-doubao-seedance-2|txt_2_video": {},
-	"ark-doubao-seedance-2|img_2_video": {},
+	"oversea-seedance-2|txt_2_video": {},
+	"oversea-seedance-2|img_2_video": {},
 }
 
 func applySchemaOverrides(abilityKey, algo string, flat map[string]any) map[string]any {

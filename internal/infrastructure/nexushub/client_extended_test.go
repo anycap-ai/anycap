@@ -138,7 +138,7 @@ func TestGenerateVideo_PropagatesFormatFPSAndAudio(t *testing.T) {
 		GenerateAudio: &genAudio,
 	}, model.RouteBinding{
 		RouteType:  model.RouteTypeDirect,
-		AbilityKey: "cloudsway_kling_3.0",
+		AbilityKey: "kling-3-0",
 		GenType:    string(model.CapabilityVideo),
 		AlgoType:   "txt_2_video",
 		Priority:   100,
@@ -265,7 +265,7 @@ func TestGenerateVideo_PropagatesMultiModalReferences(t *testing.T) {
 		ReferenceAudioURLs: []string{"https://cdn/ref.wav"},
 	}, model.RouteBinding{
 		RouteType:  model.RouteTypeDirect,
-		AbilityKey: "ark-doubao-seedance-2",
+		AbilityKey: "oversea-seedance-2",
 		GenType:    string(model.CapabilityVideo),
 		AlgoType:   "multi_modal_ref_2_video",
 		Priority:   100,
@@ -314,7 +314,7 @@ func TestGenerateVideo_PropagatesMultiShotClips(t *testing.T) {
 		},
 	}, model.RouteBinding{
 		RouteType:  model.RouteTypeDirect,
-		AbilityKey: "cloudsway_kling_3.0",
+		AbilityKey: "kling-3-0",
 		GenType:    string(model.CapabilityVideo),
 		AlgoType:   "multi_shot_video",
 		Priority:   100,
