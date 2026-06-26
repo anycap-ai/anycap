@@ -10,28 +10,28 @@ const (
 )
 
 var videoReferImageURLArrayOverrideKeys = map[string]struct{}{
-	"cloudsway_kling_3.0|img_2_video":                    {},
-	"cloudsway_kling_3.0|multi_shot_video":               {},
+	"kling-3-0|img_2_video":                              {},
+	"kling-3-0|multi_shot_video":                         {},
 	"tengda_kling_3.0_omni|multi_shot_video":             {},
-	"ark-doubao-seedance-2|img_2_video":                  {},
-	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"oversea-seedance-2|img_2_video":                     {},
+	"oversea-seedance-2|multi_modal_ref_2_video":         {},
 	"ark-doubao-seedance-2-fast|img_2_video":             {},
 	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
 }
 
 var videoReferVideoURLOverrideKeys = map[string]struct{}{
-	"cloudsway_kling_3.0|img_2_video":        {},
-	"ark-doubao-seedance-2|img_2_video":      {},
+	"kling-3-0|img_2_video":                  {},
+	"oversea-seedance-2|img_2_video":         {},
 	"ark-doubao-seedance-2-fast|img_2_video": {},
 }
 
 var videoReferVideoURLArrayOverrideKeys = map[string]struct{}{
-	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"oversea-seedance-2|multi_modal_ref_2_video":         {},
 	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
 }
 
 var videoReferAudioURLArrayOverrideKeys = map[string]struct{}{
-	"ark-doubao-seedance-2|multi_modal_ref_2_video":      {},
+	"oversea-seedance-2|multi_modal_ref_2_video":         {},
 	"ark-doubao-seedance-2-fast|multi_modal_ref_2_video": {},
 }
 

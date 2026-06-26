@@ -301,14 +301,14 @@ func TestCatalog_OverridesVideoReferImagesForSeedanceAndKling(t *testing.T) {
 				ModelID:    "kling-3.0",
 				Capability: "video",
 				Operations: []config.ModelCurationOperationConfig{
-					{Operation: "generate", Mode: "image-to-video", AbilityKey: "cloudsway_kling_3.0", AlgoType: "img_2_video"},
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "kling-3-0", AlgoType: "img_2_video"},
 				},
 			},
 			{
 				ModelID:    "seedance-2",
 				Capability: "video",
 				Operations: []config.ModelCurationOperationConfig{
-					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "img_2_video"},
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "oversea-seedance-2", AlgoType: "img_2_video"},
 				},
 			},
 			{
@@ -353,14 +353,14 @@ func TestCatalog_OverridesVideoReferImagesForSeedanceAndKling(t *testing.T) {
 		},
 	}
 	nodes := map[string]*nexushub.DiscoveryNode{
-		"cloudsway_kling_3.0": {
-			AbilityKey: "cloudsway_kling_3.0",
+		"kling-3-0": {
+			AbilityKey: "kling-3-0",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
 			},
 		},
-		"ark-doubao-seedance-2": {
-			AbilityKey: "ark-doubao-seedance-2",
+		"oversea-seedance-2": {
+			AbilityKey: "oversea-seedance-2",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"img_2_video": {Schema: videoSchema, Annotation: productionAnnotation},
 			},
@@ -431,8 +431,8 @@ func TestCatalog_OverridesSeedance2Resolution1080p(t *testing.T) {
 				ModelID:    "seedance-2",
 				Capability: "video",
 				Operations: []config.ModelCurationOperationConfig{
-					{Operation: "generate", Mode: "text-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "txt_2_video"},
-					{Operation: "generate", Mode: "image-to-video", AbilityKey: "ark-doubao-seedance-2", AlgoType: "img_2_video"},
+					{Operation: "generate", Mode: "text-to-video", AbilityKey: "oversea-seedance-2", AlgoType: "txt_2_video"},
+					{Operation: "generate", Mode: "image-to-video", AbilityKey: "oversea-seedance-2", AlgoType: "img_2_video"},
 				},
 			},
 			{
@@ -460,8 +460,8 @@ func TestCatalog_OverridesSeedance2Resolution1080p(t *testing.T) {
 		}
 	}
 	nodes := map[string]*nexushub.DiscoveryNode{
-		"ark-doubao-seedance-2": {
-			AbilityKey: "ark-doubao-seedance-2",
+		"oversea-seedance-2": {
+			AbilityKey: "oversea-seedance-2",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"txt_2_video": {Schema: videoSchema("txt_2_video")},
 				"img_2_video": {Schema: videoSchema("img_2_video")},
@@ -510,7 +510,7 @@ func TestCatalog_ExposesSeedanceMultiModalReferenceVideo(t *testing.T) {
 				ModelID:    "seedance-2",
 				Capability: "video",
 				Operations: []config.ModelCurationOperationConfig{
-					{Operation: "generate", Mode: "multi-modal-reference", AbilityKey: "ark-doubao-seedance-2", AlgoType: "multi_modal_ref_2_video"},
+					{Operation: "generate", Mode: "multi-modal-reference", AbilityKey: "oversea-seedance-2", AlgoType: "multi_modal_ref_2_video"},
 				},
 			},
 			{
@@ -540,8 +540,8 @@ func TestCatalog_ExposesSeedanceMultiModalReferenceVideo(t *testing.T) {
 		},
 	}
 	nodes := map[string]*nexushub.DiscoveryNode{
-		"ark-doubao-seedance-2": {
-			AbilityKey: "ark-doubao-seedance-2",
+		"oversea-seedance-2": {
+			AbilityKey: "oversea-seedance-2",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"multi_modal_ref_2_video": {Schema: multiModalSchema, Annotation: map[string]any{}},
 			},
@@ -596,7 +596,7 @@ func TestCatalog_ExposesKlingMultiShotVideo(t *testing.T) {
 				ModelID:    "kling-3.0",
 				Capability: "video",
 				Operations: []config.ModelCurationOperationConfig{
-					{Operation: "generate", Mode: "multi-shot-video", AbilityKey: "cloudsway_kling_3.0", AlgoType: "multi_shot_video"},
+					{Operation: "generate", Mode: "multi-shot-video", AbilityKey: "kling-3-0", AlgoType: "multi_shot_video"},
 				},
 			},
 			{
@@ -635,8 +635,8 @@ func TestCatalog_ExposesKlingMultiShotVideo(t *testing.T) {
 		},
 	}
 	nodes := map[string]*nexushub.DiscoveryNode{
-		"cloudsway_kling_3.0": {
-			AbilityKey: "cloudsway_kling_3.0",
+		"kling-3-0": {
+			AbilityKey: "kling-3-0",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"multi_shot_video": {Schema: multiShotSchema, Annotation: map[string]any{}},
 			},

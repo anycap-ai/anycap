@@ -163,21 +163,21 @@
         {
           "operation": "generate",
           "mode": "text-to-video",
-          "ability_key": "cloudsway_kling_3.0",
+          "ability_key": "kling-3-0",
           "algo_type": "txt_2_video",
           "mode_description": "Generate videos directly from text prompts. Users can describe scenes, actions, camera movements, and styles, and the model will synthesize a complete video sequence with temporal continuity."
         },
         {
           "operation": "generate",
           "mode": "image-to-video",
-          "ability_key": "cloudsway_kling_3.0",
+          "ability_key": "kling-3-0",
           "algo_type": "img_2_video",
           "mode_description": "Generate a video sequence from a single image or multiple reference images. The model animates the scene by introducing motion, camera dynamics, and temporal progression while preserving the original visual structure."
         },
         {
           "operation": "generate",
           "mode": "multi-shot-video",
-          "ability_key": "cloudsway_kling_3.0",
+          "ability_key": "kling-3-0",
           "algo_type": "multi_shot_video",
           "mode_description": "Generate a multi-shot video from shot-level prompts and durations, optionally guided by multiple reference images."
         }
@@ -280,21 +280,21 @@
         {
           "operation": "generate",
           "mode": "text-to-video",
-          "ability_key": "ark-doubao-seedance-2",
+          "ability_key": "oversea-seedance-2",
           "algo_type": "txt_2_video",
           "mode_description": "Generate video content directly from text prompts."
         },
         {
           "operation": "generate",
           "mode": "image-to-video",
-          "ability_key": "ark-doubao-seedance-2",
+          "ability_key": "oversea-seedance-2",
           "algo_type": "img_2_video",
           "mode_description": "Generate video sequences from one or more reference images while preserving the original composition."
         },
         {
           "operation": "generate",
           "mode": "multi-modal-reference",
-          "ability_key": "ark-doubao-seedance-2",
+          "ability_key": "oversea-seedance-2",
           "algo_type": "multi_modal_ref_2_video",
           "mode_description": "Generate videos from one or more image, video, or audio references with a guiding prompt."
         }
