@@ -124,7 +124,7 @@ Use drive when the human needs a shareable link to view or download a file:
 
 ```bash
 # Generate an image, upload to drive, share with the human
-anycap image generate --prompt "product hero" --model seedream-5 -o hero.png
+anycap image generate --prompt "product hero" --model <model-id> -o hero.png
 anycap drive upload hero.png --parent-path /campaign-assets
 SHARE=$(anycap drive share --src-path /campaign-assets/hero.png | jq -r '.url')
 echo "Shareable link: $SHARE"

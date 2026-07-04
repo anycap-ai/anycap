@@ -319,7 +319,7 @@ Main notes:
 
 - `anycap connect stop feishu` stops the local background connection for Feishu.
 - If Feishu replies that the local agent is offline, restart the local daemon on the machine that should receive the chat.
-- The local daemon now owns the Feishu long connection. The server still stores conversation/session/mailbox state, but the daemon receives bot messages directly.
+- The local daemon now owns the Feishu long connection and sends final agent replies through the same personal bot. The server still stores conversation/session/mailbox state, but it does not need the user's Feishu App ID/App Secret for the normal `connect feishu` path.
 - Feishu-triggered local executor sessions include an `anycap-local-session` context block. With Codex, if the human asks to continue/resume the local Codex session from Feishu, AnyCap scans local Codex session metadata, picks the most recent non-`exec` session for the daemon workspace, resumes it by explicit session id, and persists that thread as `executor_ref` for later Feishu turns. When the human asks how to open/view/recover the conversation on their Mac, reply with the precise local command using the current `executor_ref` or, if provided, `local_resume_ref`, for example `cd "/path/to/repo" && codex resume <id>`. Do not suggest `codex resume --last` unless no exact `executor_ref` or `local_resume_ref` is available.
 - Default Codex mode for Feishu is safe, which maps to Codex `--full-auto`.
 - If the human needs MCP/plugin access, such as Computer Use, Figma, Canva, or custom MCP servers, ask whether to start with `--codex-exec-mode danger-full-access`, and only use it when they explicitly choose it.
@@ -434,11 +434,8 @@ Read [references/crawl.md](references/crawl.md) when you need to read a specific
 anycap crawl https://example.com | jq -r '.data.markdown'
 ```
 
-**Coming soon:**
-
-- Text-to-speech / voice synthesis
-
-Use `anycap feedback --type feature` to request prioritization of upcoming capabilities.
+Use `anycap feedback --type feature` to request prioritization when a needed
+capability is not available in the current CLI.
 
 **Download** -- save any remote file locally.
 
@@ -550,22 +547,22 @@ anycap status | jq -r '.status'
 anycap image models | jq -r '.models[].model'
 
 # List modes for a model
-anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
+anycap video models <model-id> | jq -r '.model.operations[].modes[].mode'
 
 # Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
+anycap image generate --prompt "..." --model <model-id> -o descriptive-name.png | jq -r '.local_path'
 
 # Edit an existing image (image-to-image mode)
-anycap image generate --prompt "remove the background" --model nano-banana-2 --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
+anycap image generate --prompt "remove the background" --model <model-id> --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
 
 # Generate a video (text-to-video, mode inferred) and get its path
-anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
+anycap video generate --prompt "..." --model <model-id> -o clip.mp4 | jq -r '.local_path'
 
 # Generate a video with explicit mode (image-to-video, local file auto-uploaded)
-anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
+anycap video generate --prompt "animate this" --model <model-id> --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
 
 # Generate music and get the first audio path
-anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
+anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'
@@ -619,7 +616,7 @@ anycap crawl https://example.com | jq -r '.data.markdown'
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model seedream-5 | jq -r '.request_id')
+REQ_ID=$(anycap image generate --prompt "..." --model <model-id> | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 

@@ -1,3 +1,5 @@
+import type { SiteLocale } from "@/lib/site";
+
 export type CatalogModelCapability = "image" | "video" | "music";
 
 export type CatalogModel = {
@@ -296,6 +298,23 @@ const videoModels = [
     examplePrompt: "quick cinematic preview of a SaaS product scene with smooth camera movement",
     outputFile: "veo-3-1-fast.mp4",
   },
+  {
+    slug: "gemini-omni-flash-preview",
+    modelId: "gemini-omni-flash-preview",
+    displayName: "Gemini Omni Flash Preview",
+    provider: "Google",
+    creditEstimate: "Varies by catalog pricing",
+    description:
+      "Gemini Omni Flash Preview is an active AnyCap video model for edit-video workflows. It refines an input video from natural language instructions while preserving the original footage.",
+    bestFor:
+      "Editing or refining existing footage with natural language instructions, such as adjusting scenes, applying changes, or iterating on a source video.",
+    tradeoff:
+      "It is edit-video only in the current AnyCap catalog, so choose a text-to-video or image-to-video model when the workflow needs to generate a clip from scratch.",
+    evidenceNote:
+      "AnyCap CLI verifies the active model ID and edit-video mode; page copy avoids unverified claims about generation quality or platform availability.",
+    examplePrompt: "brighten the lighting in this clip and add a subtle slow zoom while keeping the original subject",
+    outputFile: "gemini-omni-flash-preview.mp4",
+  },
 ] as const satisfies readonly Omit<CatalogModel, "path" | "capability" | "capabilityLabel" | "operation" | "modes" | "status">[];
 
 const musicModels = [
@@ -383,6 +402,16 @@ function withImageDefaults(
   };
 }
 
+function videoModesFor(modelId: string): readonly string[] {
+  if (modelId === "kling-o1") {
+    return ["image-to-video"];
+  }
+  if (modelId === "gemini-omni-flash-preview") {
+    return ["edit-video"];
+  }
+  return ["text-to-video", "image-to-video"];
+}
+
 function withVideoDefaults(
   model: (typeof videoModels)[number],
 ): CatalogModel {
@@ -392,7 +421,7 @@ function withVideoDefaults(
     capability: "video",
     capabilityLabel: "Video generation",
     operation: "generate",
-    modes: model.modelId === "kling-o1" ? ["image-to-video"] : ["text-to-video", "image-to-video"],
+    modes: videoModesFor(model.modelId),
     status: "active",
   };
 }
@@ -420,6 +449,67 @@ export const catalogModels: readonly CatalogModel[] = [
 export const catalogModelsBySlug = Object.fromEntries(
   catalogModels.map((model) => [model.slug, model]),
 ) as Record<string, CatalogModel>;
+
+type LocalizedCatalogModelFields = Pick<
+  CatalogModel,
+  "capabilityLabel" | "creditEstimate" | "description" | "bestFor" | "tradeoff" | "evidenceNote" | "examplePrompt"
+>;
+
+const localizedCatalogModelFieldsBySlug: Partial<
+  Record<string, Partial<Record<SiteLocale, LocalizedCatalogModelFields>>>
+> = {
+  "gemini-omni-flash-preview": {
+    "pt-br": {
+      capabilityLabel: "Geração de vídeo",
+      creditEstimate: "Varia conforme a precificação do catálogo",
+      description:
+        "Gemini Omni Flash Preview é um modelo de vídeo ativo no AnyCap para fluxos de edit-video. Ele refina um vídeo de entrada a partir de instruções em linguagem natural, preservando a gravação original.",
+      bestFor:
+        "Editar ou refinar vídeos existentes com instruções em linguagem natural, como ajustar cenas, aplicar mudanças ou iterar sobre um vídeo de origem.",
+      tradeoff:
+        "No catálogo atual do AnyCap ele é apenas edit-video, então escolha um modelo text-to-video ou image-to-video quando o fluxo precisar criar um clipe do zero.",
+      evidenceNote:
+        "O AnyCap CLI verifica o ID ativo do modelo e o modo edit-video; a página evita afirmações não verificadas sobre qualidade de geração ou disponibilidade da plataforma.",
+      examplePrompt:
+        "clareie a iluminação deste clipe e adicione um zoom lento sutil mantendo o sujeito original",
+    },
+    id: {
+      capabilityLabel: "Generasi video",
+      creditEstimate: "Bervariasi sesuai harga katalog",
+      description:
+        "Gemini Omni Flash Preview adalah model video aktif di AnyCap untuk alur edit-video. Model ini menyempurnakan video input dari instruksi bahasa natural sambil mempertahankan rekaman asli.",
+      bestFor:
+        "Mengedit atau menyempurnakan footage yang sudah ada dengan instruksi bahasa natural, seperti menyesuaikan scene, menerapkan perubahan, atau mengiterasi video sumber.",
+      tradeoff:
+        "Di katalog AnyCap saat ini model ini hanya mendukung edit-video, jadi pilih model text-to-video atau image-to-video saat alur perlu membuat klip dari awal.",
+      evidenceNote:
+        "AnyCap CLI memverifikasi ID model aktif dan mode edit-video; halaman ini menghindari klaim yang belum terverifikasi tentang kualitas generasi atau ketersediaan platform.",
+      examplePrompt:
+        "terangkan pencahayaan klip ini dan tambahkan slow zoom halus sambil mempertahankan subjek asli",
+    },
+    de: {
+      capabilityLabel: "Videogenerierung",
+      creditEstimate: "Variiert je nach Katalogpreis",
+      description:
+        "Gemini Omni Flash Preview ist in AnyCap als aktives Videomodell fuer edit-video Workflows verfuegbar. Es verfeinert ein Eingangsvideo anhand natuerlichsprachlicher Anweisungen und erhaelt dabei das Originalmaterial.",
+      bestFor:
+        "Bearbeitung oder Verfeinerung bestehender Videos mit natuerlichsprachlichen Anweisungen, etwa fuer Szenenanpassungen, gezielte Aenderungen oder Iterationen an einem Quellvideo.",
+      tradeoff:
+        "Im aktuellen AnyCap Katalog ist es nur fuer edit-video verfuegbar. Waehlen Sie ein text-to-video oder image-to-video Modell, wenn der Workflow einen Clip von Grund auf erzeugen soll.",
+      evidenceNote:
+        "Der AnyCap CLI verifiziert die aktive Modell-ID und den edit-video Modus; die Seite vermeidet nicht belegte Aussagen zu Generierungsqualitaet oder Plattformverfuegbarkeit.",
+      examplePrompt:
+        "helle die Beleuchtung in diesem Clip auf und fuege einen dezenten langsamen Zoom hinzu, waehrend das Originalmotiv erhalten bleibt",
+    },
+  },
+};
+
+export function getCatalogModelForLocale(slug: string, locale: SiteLocale): CatalogModel {
+  const model = catalogModelsBySlug[slug];
+  const localizedFields = localizedCatalogModelFieldsBySlug[slug]?.[locale];
+
+  return localizedFields ? { ...model, ...localizedFields } : model;
+}
 
 export const handWrittenModelSlugs = new Set([
   "seedream-5",

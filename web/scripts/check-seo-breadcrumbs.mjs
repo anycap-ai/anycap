@@ -7,7 +7,11 @@ const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const seoAppDir = path.join(rootDir, "src", "app", "(seo)");
 
 function hasBreadcrumbCoverage(content) {
-  return content.includes("BreadcrumbJsonLd") || content.includes("HubIndexPage");
+  return (
+    content.includes("BreadcrumbJsonLd") ||
+    content.includes("HubIndexPage") ||
+    content.includes("CapabilityDetailPage")
+  );
 }
 
 const missingBreadcrumbs = collectPageFiles(seoAppDir)

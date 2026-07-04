@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { FadeIn } from "@/components/ui/FadeIn";
 import { GroundedSearchDemo } from "@/components/landing/GroundedSearchDemo";
-import { createTechArticleJsonLd } from "@/lib/schema";
+import { CapabilityDetailPage } from "@/components/seo/CapabilityDetailPage";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const runtime = "edge";
 
-const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
-const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const PAGE_LAST_MODIFIED_ISO = "2026-04-13";
 
 const metadataByLocale: Record<
@@ -473,133 +469,66 @@ export default async function GroundedWebSearchPage() {
     datePublished: PAGE_LAST_MODIFIED_ISO,
     dateModified: PAGE_LAST_MODIFIED_ISO,
   });
+  const faqJsonLd = createFaqPageJsonLd(content.faqItems);
+  const useCases = content.useCases.map((useCase, index) => {
+    const [title, ...rest] = useCase.split(".");
+    return {
+      title: title.length > 70 ? `Use case ${index + 1}` : title,
+      description: rest.join(".").trim() || useCase,
+    };
+  });
 
   return (
-    <>
-      <BreadcrumbJsonLd items={content.breadcrumb} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
-      />
-
-      <article className="px-6 md:px-12 lg:px-20">
-        <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
-          <FadeIn>
-            <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              {content.eyebrow}
-            </p>
-            <h1
-              className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
-            >
-              {content.title}
-            </h1>
-            <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              {content.intro}
-            </p>
-          </FadeIn>
-
-          <FadeIn className="mt-10">
-            <GroundedSearchDemo />
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.usageHeading}
-              </h2>
-              <div className="max-w-[860px] space-y-6">
-                {content.usageExamples.map((example) => (
-                  <div key={example.title}>
-                    <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
-                      {example.title}
-                    </p>
-                    <div className="bg-[#1c1f17] px-5 py-4">
-                      <p className="break-all text-[13px] text-[#d4e0a4]" style={mono}>
-                        {example.code}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.useCasesHeading}
-              </h2>
-              <div className="grid max-w-[920px] gap-4 sm:grid-cols-2">
-                {content.useCases.map((useCase) => (
-                  <div key={useCase} className="border-l-[3px] border-[#6b7d3a] pl-5">
-                    <p className="text-sm leading-6 text-[#4d5145]">{useCase}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.relatedHeading}
-              </h2>
-              <div className="grid max-w-[1100px] gap-4 sm:grid-cols-3">
-                {content.relatedPages.map((page) => (
-                  <Link
-                    key={page.href}
-                    href={page.href}
-                    className="rounded-xl border border-[#d4dbb8] p-5 transition-colors hover:border-[#6b7d3a]"
-                  >
-                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                      {page.eyebrow}
-                    </p>
-                    <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                      {page.title}
-                    </h3>
-                    <p className="text-sm leading-6 text-[#4d5145]">{page.body}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.faqHeading}
-              </h2>
-              <div className="max-w-[860px] space-y-6">
-                {content.faqItems.map((item) => (
-                  <div key={item.question} className="rounded-xl border border-[#d4dbb8] p-5">
-                    <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                      {item.question}
-                    </h3>
-                    <p className="text-sm leading-6 text-[#4d5145]">{item.answer}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-        </div>
-      </article>
-    </>
+    <CapabilityDetailPage
+      breadcrumbItems={content.breadcrumb}
+      jsonLd={capabilityGuideJsonLd}
+      faqJsonLd={faqJsonLd}
+      eyebrow={content.eyebrow}
+      lastUpdatedLabel="Last updated April 13, 2026"
+      title={content.title}
+      accentTitle="for AI agents"
+      intro={content.intro}
+      searchIntents={content.jsonLdKeywords}
+      actions={[
+        { label: "Equip your Agent", href: "/start", primary: true },
+        { label: "Web Search", href: "/capabilities/web-search" },
+        { label: "Web Crawl", href: "/capabilities/web-crawl" },
+      ]}
+      demo={<GroundedSearchDemo />}
+      demoTitle="Answer with sources"
+      demoBody="The agent gets a synthesized response while preserving source attribution."
+      proofPoints={[
+        "Grounded search returns answer-ready synthesis instead of only a raw list of URLs.",
+        "Citations stay visible for research, audit, and freshness-sensitive workflows.",
+        "The same AnyCap runtime can move from grounded answers into crawl, writing, or reporting.",
+      ]}
+      summaryLabel="The short answer"
+      summaryText="Use grounded web search when an agent needs a direct answer with visible source backing, not just a set of pages to inspect."
+      workflowTitle="How grounded search fits an AnyCap workflow"
+      workflowSteps={[
+        {
+          title: "Ask",
+          body: "The agent sends a freshness-sensitive question through AnyCap search with a prompt.",
+        },
+        {
+          title: "Ground",
+          body: "AnyCap returns a synthesized answer with source metadata so the agent can preserve attribution.",
+        },
+        {
+          title: "Decide",
+          body: "The answer can feed a research memo, audit, comparison, report, or follow-up crawl step.",
+        },
+      ]}
+      usageTitle={content.usageHeading}
+      usageExamples={content.usageExamples}
+      useCasesTitle={content.useCasesHeading}
+      useCases={useCases}
+      relatedTitle={content.relatedHeading}
+      relatedCards={content.relatedPages}
+      faqTitle={content.faqHeading}
+      faqItems={content.faqItems}
+      finalTitle="Let your agent answer with sources."
+      finalBody="Use grounded search when the workflow needs both a concise answer and the source trail behind it."
+    />
   );
 }

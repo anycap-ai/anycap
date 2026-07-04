@@ -95,12 +95,12 @@ Create images from text prompts:
 
 ```bash
 # Basic text-to-image (mode inferred)
-anycap image generate --prompt "a paper crane on a wooden table" --model nano-banana-2
+anycap image generate --prompt "a paper crane on a wooden table" --model <model-id>
 
 # With parameters from schema
 anycap image generate \
   --prompt "a mountain landscape at sunset" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --param aspect_ratio=16:9 \
   -o landscape.png
 ```
@@ -113,7 +113,7 @@ Transform or edit an existing image using a text prompt. Pass the reference imag
 # Edit with local file (auto-uploaded)
 anycap image generate \
   --prompt "make it look like a watercolor painting" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./photo.png \
   -o photo-watercolor.png
@@ -121,7 +121,7 @@ anycap image generate \
 # Edit with remote URL
 anycap image generate \
   --prompt "remove the background" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=https://example.com/photo.jpg \
   -o no-bg.png
@@ -129,7 +129,7 @@ anycap image generate \
 # Use with annotated image for precise edits
 anycap image generate \
   --prompt "#1: Replace the desk with a standing desk. #2: Add a cat. Keep all other elements unchanged." \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./workspace-annotated.png \
   -o workspace-v2.png
@@ -143,7 +143,7 @@ Some models accept multiple reference images for style transfer, composition ble
 # Multiple local files (each auto-uploaded)
 anycap image generate \
   --prompt "combine the architecture style of the first image with the color palette of the second" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images='["./style-ref.png","./color-ref.png"]' \
   -o blended.png
@@ -151,7 +151,7 @@ anycap image generate \
 # Mix of local files and URLs
 anycap image generate \
   --prompt "a portrait in the style of the reference images" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images='["./local-ref.png","https://example.com/style-ref.jpg"]' \
   -o portrait-styled.png
@@ -193,7 +193,7 @@ File-or-url parameters (like `images`) accept local file paths or HTTP URLs. Loc
 The output is a flat JSON object optimized for agent consumption:
 
 ```json
-{"status":"success","local_path":"/absolute/path/to/img.png","model":"nano-banana-2","credits_used":1,"request_id":"req_abc123"}
+{"status":"success","local_path":"/absolute/path/to/img.png","model":"<model-id>","credits_used":1,"request_id":"req_abc123"}
 ```
 
 | Field | Description |
@@ -215,25 +215,25 @@ anycap image generate --prompt "..." --model <model-id> | jq -r '.local_path'
 ```bash
 # Find models and their modes
 anycap image models
-anycap image models nano-banana-2 | jq '.model.operations[] | {operation, modes: [.modes[].mode]}'
+anycap image models <model-id> | jq '.model.operations[] | {operation, modes: [.modes[].mode]}'
 
 # Check text-to-image parameters
-anycap image models nano-banana-2 schema --mode text-to-image
+anycap image models <model-id> schema --mode text-to-image
 
 # Generate text-to-image
 anycap image generate \
   --prompt "a watercolor painting of a Japanese garden" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --param aspect_ratio=16:9 \
   -o garden.png
 
 # Check image-to-image parameters
-anycap image models nano-banana-2 schema --mode image-to-image
+anycap image models <model-id> schema --mode image-to-image
 
 # Transform an image (image-to-image)
 anycap image generate \
   --prompt "make it look like an oil painting" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./garden.png \
   -o garden-oil.png

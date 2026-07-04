@@ -269,7 +269,7 @@ const contentByLocale: Record<SiteLocale, AboutPageData> = {
       description:
         `About page for AnyCap, an AI agent capability runtime that adds ${capabilitySummary} through one interface.`,
       url: getLocalizedRouteUrl("en", "/about"),
-      inLanguage: "en",
+      inLanguage: "en-US",
       isPartOf: {
         "@id": `${siteConfig.url}#website`,
       },
@@ -749,7 +749,7 @@ contentByLocale.id = {
     description:
       `Halaman tentang AnyCap, runtime capability untuk agen AI yang menambahkan ${capabilitySummary} lewat satu antarmuka.`,
     url: getLocalizedRouteUrl("id", "/about"),
-    inLanguage: "id",
+    inLanguage: "id-ID",
     isPartOf: {
       "@id": `${siteConfig.url}#website`,
     },
@@ -997,7 +997,7 @@ contentByLocale.de = {
       description:
         `Über-Seite für AnyCap, einen Capability-Runtime für KI-Agents, der ${capabilitySummary} über eine Schnittstelle ergänzt.`,
       url: getLocalizedRouteUrl("de", "/about"),
-      inLanguage: "de",
+      inLanguage: "de-DE",
       isPartOf: {
         "@id": `${siteConfig.url}#website`,
       },

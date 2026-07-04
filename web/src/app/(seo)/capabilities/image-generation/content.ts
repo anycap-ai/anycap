@@ -54,13 +54,6 @@ type ImageGenerationNextAction = {
   primary?: boolean;
 };
 
-type ImageGenerationOpusCallout = {
-  eyebrow: string;
-  title: string;
-  body: string;
-  ctas: readonly { label: string; href: string }[];
-};
-
 type ImageGenerationPageContent = {
   metadata: {
     title: string;
@@ -81,7 +74,6 @@ type ImageGenerationPageContent = {
     summaryLabel: string;
     summaryText: string;
   };
-  opusCallout: ImageGenerationOpusCallout;
   demo: {
     labels: ImageGenerationDemoLabels;
     lines: readonly DemoLine[];
@@ -145,16 +137,6 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryLabel: "Answer-first summary",
       summaryText:
         "Use Seedream 5 when the agent needs a stronger first-pass image, Nano Banana Pro when the workflow starts from an existing asset and needs targeted revisions, and Nano Banana 2 when speed and throughput matter more than maximizing polish on the first result.",
-    },
-    opusCallout: {
-      eyebrow: "Used with Claude Opus 4.7",
-      title: "Claude Code on Opus 4.7 + AnyCap image generation = insane",
-      body:
-        "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate images. Pair it with AnyCap and the same terminal session reaches the active AnyCap image catalog, including Seedream 5, GPT Image 2, FLUX.1 Kontext Max, Nano Banana Pro, and Nano Banana 2 through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for image-heavy agent workflows in 2026.",
-      ctas: [
-        { label: "Claude Code image generation →", href: "/for/claude-code/image-generation" },
-        { label: "Claude Opus 4.7 capabilities →", href: "/learn/claude-opus-4-7-capabilities" },
-      ],
     },
     demo: {
       labels: {
@@ -410,16 +392,6 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryText:
         "Use o Seedream 5 quando o agente precisar de uma primeira imagem mais forte, o Nano Banana Pro quando o fluxo começar de um ativo existente e exigir revisões direcionadas, e o Nano Banana 2 quando velocidade e volume importarem mais do que o acabamento máximo no primeiro resultado.",
     },
-    opusCallout: {
-      eyebrow: "Usado com Claude Opus 4.7",
-      title: "Claude Code no Opus 4.7 + AnyCap geração de imagem = absurdo",
-      body:
-        "O Claude Code agora roda no Claude Opus 4.7 — o agente de raciocínio e código mais forte que a Anthropic já lançou. O Opus 4.7 ainda não gera imagens nativamente. Combine com o AnyCap e a mesma sessão de terminal alcança Seedream 5, Nano Banana Pro e Nano Banana 2 com uma CLI e um login. O combo Opus 4.7 + AnyCap é o default recomendado para fluxos de agente focados em imagem em 2026.",
-      ctas: [
-        { label: "Claude Code geração de imagem →", href: "/for/claude-code/image-generation" },
-        { label: "Capacidades do Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
-      ],
-    },
     demo: {
       labels: {
         header: "agente com AnyCap",
@@ -649,16 +621,6 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryText:
         "Gunakan Seedream 5 saat agen membutuhkan gambar awal yang lebih kuat, Nano Banana Pro saat alur dimulai dari aset yang sudah ada dan perlu revisi terarah, dan Nano Banana 2 saat kecepatan serta throughput lebih penting daripada hasil paling rapi pada percobaan pertama.",
     },
-    opusCallout: {
-      eyebrow: "Digunakan dengan Claude Opus 4.7",
-      title: "Claude Code di Opus 4.7 + AnyCap generasi gambar = gila",
-      body:
-        "Claude Code kini menjalankan Claude Opus 4.7 — agen reasoning dan coding terkuat dari Anthropic. Opus 4.7 belum bisa menghasilkan gambar secara native. Pasangkan dengan AnyCap dan sesi terminal yang sama menjangkau Seedream 5, Nano Banana Pro, dan Nano Banana 2 melalui satu CLI dan satu login. Kombinasi Opus 4.7 + AnyCap adalah default yang direkomendasikan untuk alur agen berbasis gambar di 2026.",
-      ctas: [
-        { label: "Claude Code generasi gambar →", href: "/for/claude-code/image-generation" },
-        { label: "Kapabilitas Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
-      ],
-    },
     demo: {
       labels: {
         header: "agen dengan AnyCap",
@@ -886,16 +848,6 @@ const contentByLocale: Record<SiteLocale, ImageGenerationPageContent> = {
       summaryLabel: "Kurz vorab",
       summaryText:
         "Setzen Sie auf Seedream 5, wenn der Agent ein starkes Erstbild braucht, auf Nano Banana Pro, wenn der Workflow von einem bestehenden Asset ausgeht und gezielte Überarbeitungen erfordert, und auf Nano Banana 2, wenn Tempo und Durchsatz wichtiger sind als der letzte Feinschliff.",
-    },
-    opusCallout: {
-      eyebrow: "Im Einsatz mit Claude Opus 4.7",
-      title: "Claude Code auf Opus 4.7 + AnyCap-Bildgenerierung – die starke Kombination",
-      body:
-        "Claude Code läuft jetzt auf Claude Opus 4.7 – dem stärksten Reasoning- und Coding-Modell, das Anthropic je veröffentlicht hat. Bilder generiert Opus 4.7 nach wie vor nicht selbst. In Kombination mit AnyCap erreicht dieselbe Terminal-Sitzung Seedream 5, Nano Banana Pro und Nano Banana 2 über eine CLI und ein einziges Login. Opus 4.7 + AnyCap ist 2026 die empfohlene Standardkonfiguration für bildlastige Agenten-Workflows.",
-      ctas: [
-        { label: "Bildgenerierung in Claude Code →", href: "/for/claude-code/image-generation" },
-        { label: "Funktionsumfang von Claude Opus 4.7 →", href: "/learn/claude-opus-4-7-capabilities" },
-      ],
     },
     demo: {
       labels: {

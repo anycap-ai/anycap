@@ -294,6 +294,87 @@ func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
 	}
 }
 
+func TestCatalog_ExposesNanoBananaLite(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{{
+			ModelID:          "nano-banana-lite",
+			Capability:       "image",
+			DisplayName:      "Nano Banana 2 Lite",
+			ModelDescription: "Lite image model",
+			Operations: []config.ModelCurationOperationConfig{
+				{Operation: "generate", Mode: "text-to-image", AbilityKey: "nano_banana_lite", AlgoType: "txt_2_img", ModeDescription: "Generate images directly from text prompts."},
+				{Operation: "generate", Mode: "image-to-image", AbilityKey: "nano_banana_lite", AlgoType: "img_2_img", ModeDescription: "Edit or transform images using prompts."},
+			},
+		}},
+	}
+
+	imageSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"image_option": map[string]any{
+					"properties": map[string]any{
+						"type":  map[string]any{"type": "string", "enum": []any{algo}},
+						"ratio": map[string]any{"type": "string", "enum": []any{"1:1", "16:9"}},
+					},
+				},
+			},
+		}
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"nano_banana_lite": {
+			AbilityKey: "nano_banana_lite",
+			State:      "active",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"txt_2_img": {Schema: imageSchema("txt_2_img")},
+				"img_2_img": {Schema: imageSchema("img_2_img")},
+			},
+		},
+	}
+
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+	spec, err := cat.GetModel(context.Background(), model.CapabilityImage, "nano-banana-lite")
+	if err != nil {
+		t.Fatalf("GetModel error: %v", err)
+	}
+	if spec.DisplayName != "Nano Banana 2 Lite" {
+		t.Fatalf("unexpected display name: %s", spec.DisplayName)
+	}
+
+	gen, ok := spec.Operations[model.OperationGenerate]
+	if !ok {
+		t.Fatalf("expected generate operation present")
+	}
+	if len(gen.Routes) != 2 {
+		t.Fatalf("expected two generate routes, got %+v", gen.Routes)
+	}
+	if len(gen.Modes) != 2 {
+		t.Fatalf("expected two generate modes, got %+v", gen.Modes)
+	}
+
+	var sawText, sawImage bool
+	for _, route := range gen.Routes {
+		if route.AbilityKey != "nano_banana_lite" {
+			t.Fatalf("unexpected ability key: %+v", route)
+		}
+		switch route.Mode {
+		case model.ModeTextToImage:
+			sawText = route.AlgoType == "txt_2_img"
+		case model.ModeImageToImage:
+			sawImage = route.AlgoType == "img_2_img"
+		}
+	}
+	if !sawText || !sawImage {
+		t.Fatalf("expected text-to-image and image-to-image routes, got %+v", gen.Routes)
+	}
+	if _, ok := gen.ModeSchemas[model.ModeTextToImage]; !ok {
+		t.Fatalf("expected text-to-image schema")
+	}
+	if _, ok := gen.ModeSchemas[model.ModeImageToImage]; !ok {
+		t.Fatalf("expected image-to-image schema")
+	}
+}
+
 func TestCatalog_OverridesVideoReferImagesForSeedanceAndKling(t *testing.T) {
 	curation := &config.ModelCurationConfig{
 		Models: []config.ModelCurationModelConfig{

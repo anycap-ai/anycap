@@ -166,7 +166,7 @@ Music generation can produce multiple audio clips. The output is a JSON object w
 ```json
 {
   "status": "success",
-  "model": "suno-v5",
+  "model": "<model-id>",
   "credits_used": 5,
   "outputs": [
     {"local_path": "/absolute/path/to/lofi-drive.mp3", "url": "https://..."},
@@ -208,17 +208,16 @@ anycap music generate --prompt "..." --model <model-id> | jq -r '.outputs[].loca
 # Find available models
 anycap music models
 
-# Check what modes suno-v5 supports
-anycap music models suno-v5 | jq '.model.operations[].modes[].mode'
+# Check what modes the selected model supports
+anycap music models <model-id> | jq '.model.operations[].modes[].mode'
 
 # Check parameters for text-to-music
-anycap music models suno-v5 schema --mode text-to-music
+anycap music models <model-id> schema --mode text-to-music
 
-# --- Suno V5 ---
 # Generate with a descriptive prompt and tags
 anycap music generate \
   --prompt "chill lo-fi hip hop beat for studying" \
-  --model suno-v5 \
+  --model <model-id> \
   --tags "lofi,chill,study" \
   --instrumental \
   -o study-lofi.mp3
@@ -226,27 +225,26 @@ anycap music generate \
 # Generate a full song with lyrics
 anycap music generate \
   --prompt "upbeat pop song about summer" \
-  --model suno-v5 \
+  --model <model-id> \
   --title "Endless Summer" \
   --lyrics "Verse: Sun is shining, waves are calling..." \
   --tags "pop,summer,upbeat" \
   --param vocal_gender=f \
   -o endless-summer.mp3
 
-# --- ElevenLabs Music ---
-# Check ElevenLabs parameters
-anycap music models elevanlabs-music schema
+# Check duration-related parameters if the selected model supports them
+anycap music models <model-id> schema
 
 # Generate with duration control (music_length_ms)
 anycap music generate \
   --prompt "ambient electronic soundscape with ethereal pads" \
-  --model elevanlabs-music \
+  --model <model-id> \
   -o ambient-soundscape.mp3
 
 # Generate a 60-second clip
 anycap music generate \
   --prompt "upbeat jazz piano trio" \
-  --model elevanlabs-music \
+  --model <model-id> \
   --param music_length_ms=60000 \
   -o jazz-trio.mp3
 ```

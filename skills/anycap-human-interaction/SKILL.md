@@ -289,7 +289,7 @@ anycap annotate poll --session <session_id> \
 # Apply changes via image-to-image
 anycap image generate \
   --prompt "<annotations as prompt>. Keep all other elements unchanged." \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./hero-banner-annotated.png \
   -o hero-banner-v2.png

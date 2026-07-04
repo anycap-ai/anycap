@@ -254,7 +254,7 @@ anycap annotate photo.png -o photo_annotated.png
 # 2. Use the annotated image as reference for image-to-image generation
 anycap image generate \
   --prompt "#1 Remove the object. #2 Move the element following the arrow." \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./photo_annotated.png \
   -o photo_edited.png

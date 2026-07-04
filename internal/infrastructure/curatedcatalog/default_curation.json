@@ -23,6 +23,28 @@
       ]
     },
     {
+      "model_id": "nano-banana-lite",
+      "capability": "image",
+      "display_name": "Nano Banana 2 Lite",
+      "model_description": "Nano Banana 2 Lite is a lightweight image generation and conversational image editing model optimized for fast, cost-efficient creative iteration. It supports both text-to-image and image-to-image workflows, making it suitable for high-volume drafts, quick variants, and agent loops where speed and scalability matter more than peak visual fidelity.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-image",
+          "ability_key": "nano_banana_lite",
+          "algo_type": "txt_2_img",
+          "mode_description": "Generate images directly from text prompts."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-image",
+          "ability_key": "nano_banana_lite",
+          "algo_type": "img_2_img",
+          "mode_description": "Edit or transform images using prompts."
+        }
+      ]
+    },
+    {
       "model_id": "nano-banana-pro",
       "capability": "image",
       "display_name": "Nano Banana Pro",
