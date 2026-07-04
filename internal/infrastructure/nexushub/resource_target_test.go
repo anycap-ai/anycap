@@ -148,6 +148,26 @@ func TestApplyMediaResourceTargets_WritesImagesVideosAndAudiosSeparately(t *test
 	}
 }
 
+func TestApplyMediaResourceTargets_EditVideoResourceURLTaggedAsVideo(t *testing.T) {
+	payload := &atomicProcessPayload{VideoOption: &atomicVideoOption{Type: "edit_video"}}
+	targets := []model.ResourceTarget{
+		{Key: "resource_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaVideo},
+		{Key: "resource_path", Kind: model.ResourceKindStorage, Media: model.ResourceMediaVideo},
+	}
+	videos := []string{"https://cdn/source.mp4"}
+
+	// resource_url is media-tagged as video, so it must NOT accept images.
+	applyImageResourceTargets(context.Background(), payload, "gemini-omni-flash-preview", targets, []string{"https://cdn/a.png"})
+	if payload.ResourceURL != "" {
+		t.Fatalf("expected image references to be rejected by video-tagged resource_url, got %q", payload.ResourceURL)
+	}
+
+	applyVideoResourceTargets(context.Background(), payload, "gemini-omni-flash-preview", targets, videos)
+	if payload.ResourceURL != videos[0] {
+		t.Fatalf("expected input video to land in resource_url=%q, got %q", videos[0], payload.ResourceURL)
+	}
+}
+
 func TestApplyResourceTargets_UnknownKeyLogsAndDrops(t *testing.T) {
 	buf := captureLogs(t)
 	payload := &atomicProcessPayload{}

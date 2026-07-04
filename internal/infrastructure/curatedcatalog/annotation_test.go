@@ -63,3 +63,30 @@ func TestParseResourceTargets_SkipsUnknownKindsAndMissingKeys(t *testing.T) {
 		t.Fatalf("parseResourceTargets mismatch:\n got:  %+v\n want: %+v", got, want)
 	}
 }
+
+func TestParseResourceTargets_MediaTypedBlocks(t *testing.T) {
+	annotation := map[string]any{
+		"video_resource": map[string]any{
+			"description": "Input video resource for video editing.",
+			"oneOf": []any{
+				map[string]any{"description": "Input video URL.", "key": "resource_url", "type": "url"},
+				map[string]any{"description": "Stored input video resource path.", "key": "resource_path", "type": "storage"},
+			},
+		},
+		"audio_resource": map[string]any{
+			"oneOf": []any{
+				map[string]any{"key": "video_option.refer_audio_urls", "type": "url_array"},
+			},
+		},
+	}
+
+	got := parseResourceTargets(annotation)
+	want := []model.ResourceTarget{
+		{Key: "resource_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaVideo},
+		{Key: "resource_path", Kind: model.ResourceKindStorage, Media: model.ResourceMediaVideo},
+		{Key: "video_option.refer_audio_urls", Kind: model.ResourceKindURLArray, Media: model.ResourceMediaAudio},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parseResourceTargets mismatch:\n got:  %+v\n want: %+v", got, want)
+	}
+}

@@ -39,6 +39,9 @@ func (r GenerateVideoRequest) Validate() error {
 	if r.Mode == ModeMultiModalRef && len(r.ReferenceImageURLs) == 0 && len(r.ReferenceVideoURLs) == 0 && len(r.ReferenceAudioURLs) == 0 {
 		return fmt.Errorf("%w: at least one reference input (image, video, or audio) is required", ErrInvalidParam)
 	}
+	if r.Mode == ModeEditVideo && len(r.ReferenceVideoURLs) == 0 {
+		return fmt.Errorf("%w: an input video is required for edit-video mode", ErrInvalidParam)
+	}
 	if len(r.MultiShotClips) > 0 {
 		total := 0
 		for i, clip := range r.MultiShotClips {

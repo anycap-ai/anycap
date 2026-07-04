@@ -396,6 +396,21 @@
       ]
     },
     {
+      "model_id": "gemini-omni-flash-preview",
+      "capability": "video",
+      "display_name": "Gemini Omni Flash Preview",
+      "model_description": "Gemini Omni Flash Preview is a multimodal Gemini model for video editing. It edits or refines an input video with natural language instructions, preserving the original footage while applying the requested changes.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "edit-video",
+          "ability_key": "gemini-omni-flash-preview",
+          "algo_type": "edit_video",
+          "mode_description": "Edit or refine an input video with natural language instructions. Provide the source video and describe the desired changes in the prompt."
+        }
+      ]
+    },
+    {
       "model_id": "elevanlabs-music",
       "capability": "music",
       "display_name": "ElevenLabs Music",

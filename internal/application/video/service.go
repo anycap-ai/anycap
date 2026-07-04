@@ -90,6 +90,15 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		mode = model.InferVideoMode(req)
 	}
 	route, err := model.SelectRoute(spec, model.OperationGenerate, mode)
+	if err != nil && req.Mode == "" && mode != "" {
+		// The inferred mode is not supported by this model. If the model
+		// exposes a single mode (e.g. edit-video only), fall back to the
+		// implicit selection SelectRoute performs for an empty mode.
+		if fallbackRoute, fallbackErr := model.SelectRoute(spec, model.OperationGenerate, ""); fallbackErr == nil {
+			route, err = fallbackRoute, nil
+			mode = route.Mode
+		}
+	}
 	if err != nil {
 		logger.WithField("mode", mode).WithError(err).Warn("video route selection failed")
 		return model.GenerateVideoResult{}, err

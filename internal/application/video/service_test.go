@@ -311,3 +311,45 @@ func TestGenerateVideo_PublishFailureDoesNotDeductCredit(t *testing.T) {
 		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
 	}
 }
+
+func TestGenerateVideo_EditVideoOnlyModelFallsBackToSingleMode(t *testing.T) {
+	catalog := nexushub.NewCatalogStubWith([]model.ModelSpec{
+		{
+			ModelID:     "gemini-omni-flash-preview",
+			Capability:  model.CapabilityVideo,
+			DisplayName: "Gemini Omni Flash Preview",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					Routes: []model.RouteBinding{{
+						RouteType:  model.RouteTypeDirect,
+						AbilityKey: "gemini-omni-flash-preview",
+						GenType:    string(model.CapabilityVideo),
+						Mode:       model.ModeEditVideo,
+						AlgoType:   "edit_video",
+						Priority:   100,
+						Enabled:    true,
+					}},
+				},
+			},
+		},
+	})
+	service := NewService(catalog, nexushub.NewStubClient(), credit.NewStubClient(map[string]int64{"user-1": 10}), calllog.NewMemoryCallLogRepo())
+
+	// No explicit mode: InferVideoMode sees a video reference and guesses
+	// image-to-video, which this model does not support. The service must
+	// fall back to the model's only mode (edit-video).
+	result, err := service.Generate(context.Background(), model.GenerateVideoRequest{
+		UserID:             "user-1",
+		RequestID:          "req-1",
+		Prompt:             "remove the background people",
+		Model:              "gemini-omni-flash-preview",
+		ReferenceVideoURLs: []string{"https://cdn/source.mp4"},
+	})
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if result.Status != "success" {
+		t.Fatalf("expected success, got %q", result.Status)
+	}
+}

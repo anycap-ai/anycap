@@ -75,3 +75,38 @@ func TestInferVideoMode_AudioReference(t *testing.T) {
 		t.Fatalf("expected %s, got %s", ModeMultiModalRef, got)
 	}
 }
+
+func TestGenerateVideoRequestValidate_RejectsEditVideoWithoutInputVideo(t *testing.T) {
+	req := GenerateVideoRequest{
+		Model:  "gemini-omni-flash-preview",
+		Mode:   ModeEditVideo,
+		Prompt: "remove the background people",
+	}
+	err := req.Validate()
+	if !errors.Is(err, ErrInvalidParam) {
+		t.Fatalf("expected ErrInvalidParam, got %v", err)
+	}
+}
+
+func TestGenerateVideoRequestValidate_AllowsEditVideoWithInputVideo(t *testing.T) {
+	req := GenerateVideoRequest{
+		Model:              "gemini-omni-flash-preview",
+		Mode:               ModeEditVideo,
+		Prompt:             "remove the background people",
+		ReferenceVideoURLs: []string{"https://cdn/source.mp4"},
+	}
+	if err := req.Validate(); err != nil {
+		t.Fatalf("Validate() error = %v", err)
+	}
+}
+
+func TestCanonicalModeMapping_EditVideo(t *testing.T) {
+	algoType, ok := CanonicalAlgoTypeForMode(ModeEditVideo)
+	if !ok || algoType != "edit_video" {
+		t.Fatalf("expected edit_video, got %q (ok=%v)", algoType, ok)
+	}
+	mode, ok := CanonicalModeForAlgoType("edit_video")
+	if !ok || mode != ModeEditVideo {
+		t.Fatalf("expected %s, got %q (ok=%v)", ModeEditVideo, mode, ok)
+	}
+}
