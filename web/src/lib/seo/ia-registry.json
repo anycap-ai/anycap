@@ -110,6 +110,7 @@
     { "id": "models-hailuo-2-3", "kind": "detail", "label": "Hailuo 2.3", "path": "/models/hailuo-2-3", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-veo-3-1", "kind": "detail", "label": "Veo 3.1", "path": "/models/veo-3-1", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-veo-3-1-fast", "kind": "detail", "label": "Veo 3.1 Fast", "path": "/models/veo-3-1-fast", "eyebrow": "Model", "parentId": "hub-models" },
+    { "id": "models-gemini-omni-flash-preview", "kind": "detail", "label": "Gemini Omni Flash Preview", "path": "/models/gemini-omni-flash-preview", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-sora-2-pro", "kind": "detail", "label": "Sora 2 Pro", "path": "/models/sora-2-pro", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-kling-3-0", "kind": "detail", "label": "Kling 3.0", "path": "/models/kling-3-0", "eyebrow": "Model", "parentId": "hub-models" },
     { "id": "models-kling-o1", "kind": "detail", "label": "Kling O1", "path": "/models/kling-o1", "eyebrow": "Model", "parentId": "hub-models" },

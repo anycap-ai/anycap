@@ -27,7 +27,6 @@ AnyCap CLI must be installed and authenticated. Read the `anycap-cli` skill if s
 | Image | `anycap image generate` | Annotate + image-to-image | 5-30s |
 | Video | `anycap video generate` | Re-generate with adjusted params | 30-120s |
 | Music | `anycap music generate` | Re-generate with adjusted prompt | 30-90s |
-| Audio | Coming soon | -- | -- |
 
 All generation commands follow the same pattern:
 
@@ -37,7 +36,9 @@ All generation commands follow the same pattern:
 3. Generate           anycap {cap} generate --model <model> --prompt "..." -o output.ext
 ```
 
-Always use `-o` with a descriptive filename.
+Always choose model IDs from the live model catalog and inspect the schema for
+the selected mode before relying on model-specific parameters. Always use `-o`
+with a descriptive filename.
 
 ## Image Production
 
@@ -48,7 +49,7 @@ Generate an image from a text prompt:
 ```bash
 anycap image generate \
   --prompt "a cozy home office with a wooden desk, laptop, coffee cup, and plants by the window" \
-  --model nano-banana-2 \
+  --model <model-id> \
   -o workspace-v1.png
 ```
 
@@ -59,7 +60,7 @@ Use `--mode image-to-image` with a reference image to edit or transform an exist
 ```bash
 anycap image generate \
   --prompt "make it a watercolor painting" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./photo.png \
   -o photo-watercolor.png
@@ -75,7 +76,7 @@ Some models accept multiple reference images for style transfer, composition ble
 # Combine style from one image with composition from another
 anycap image generate \
   --prompt "merge the architectural style of the first image with the color palette of the second" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images='["./style-ref.png","./color-ref.png"]' \
   -o blended.png
@@ -83,7 +84,7 @@ anycap image generate \
 # Mix local files and URLs
 anycap image generate \
   --prompt "a portrait in the style of the reference images" \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images='["./local-ref.png","https://example.com/style-ref.jpg"]' \
   -o portrait-styled.png
@@ -117,7 +118,7 @@ graph TD
 ```bash
 anycap image generate \
   --prompt "a landing page hero banner with mountains and sunrise" \
-  --model nano-banana-2 \
+  --model <model-id> \
   -o banner-v1.png
 ```
 
@@ -183,7 +184,7 @@ Use the **annotated image** (with visual markers) as the reference:
 ```bash
 anycap image generate \
   --prompt "#1: Replace the desk with a standing desk. #2: Add a cat. Keep all other elements unchanged." \
-  --model nano-banana-2 \
+  --model <model-id> \
   --mode image-to-image \
   --param images=./banner-v1-annotated.png \
   -o banner-v2.png
@@ -206,7 +207,7 @@ If the human wants more changes, use the latest version as input and repeat from
 ```bash
 anycap video generate \
   --prompt "a cat walking on the beach at sunset, cinematic, slow motion" \
-  --model veo-3.1 \
+  --model <model-id> \
   -o cat-beach.mp4
 ```
 
@@ -217,7 +218,7 @@ Animate a still image:
 ```bash
 anycap video generate \
   --prompt "gentle camera pan across the landscape, wind blowing through trees" \
-  --model seedance-1.5-pro \
+  --model <model-id> \
   --mode image-to-video \
   --param images=./landscape.png \
   -o landscape-animated.mp4
@@ -256,14 +257,14 @@ For best results with image-to-video:
 ```bash
 anycap music generate \
   --prompt "upbeat electronic track with synth leads and driving bass, 120 BPM" \
-  --model suno-v5 \
+  --model <model-id> \
   -o background-track.mp3
 ```
 
 Music generation may return multiple clips. Extract the first:
 
 ```bash
-anycap music generate --prompt "..." --model suno-v5 -o track.mp3 \
+anycap music generate --prompt "..." --model <model-id> -o track.mp3 \
   | jq -r '.outputs[0].local_path'
 ```
 
@@ -272,10 +273,6 @@ anycap music generate --prompt "..." --model suno-v5 -o track.mp3 \
 - Be specific about genre, tempo, instruments, and mood in prompts.
 - Music generation takes 30-90s. Use async execution when possible.
 - Check model parameters via schema -- some models support `duration`, `genre`, `tags`.
-
-## Audio Production
-
-Audio generation is on the roadmap and not yet available. Audio **understanding** (analysis) is available via `anycap actions audio-read`.
 
 ## Delivery
 
@@ -298,26 +295,26 @@ A complete workflow producing a promotional package:
 # 1. Generate hero image
 anycap image generate \
   --prompt "modern SaaS dashboard with data visualizations, dark mode, purple accents" \
-  --model nano-banana-2 -o hero-v1.png
+  --model <image-model-id> -o hero-v1.png
 
 # 2. Refine via annotation (agent asks human to mark changes)
 anycap annotate hero-v1.png --no-wait -o hero-v1-annotated.png
 # ... human annotates, agent polls result ...
 anycap image generate \
   --prompt "#1: Make the chart larger. #2: Change accent color to blue." \
-  --model nano-banana-2 --mode image-to-image \
+  --model <image-model-id> --mode image-to-image \
   --param images=./hero-v1-annotated.png -o hero-v2.png
 
 # 3. Create an animated version
 anycap video generate \
   --prompt "slow zoom into the dashboard, data points animate in sequentially" \
-  --model seedance-1.5-pro --mode image-to-video \
+  --model <video-model-id> --mode image-to-video \
   --param images=./hero-v2.png -o hero-animation.mp4
 
 # 4. Generate background music
 anycap music generate \
   --prompt "ambient tech background music, minimal, clean, 90 BPM" \
-  --model suno-v5 -o background-music.mp3
+  --model <music-model-id> -o background-music.mp3
 
 # 5. Deliver
 anycap drive upload hero-v2.png hero-animation.mp4 background-music.mp3

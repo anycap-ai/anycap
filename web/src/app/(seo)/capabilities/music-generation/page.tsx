@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import { LocalizedLink as Link } from "@/components/ui/LocalizedLink";
-import { BreadcrumbJsonLd } from "@/components/layout/BreadcrumbJsonLd";
-import { EarlyAccessBanner } from "@/components/landing/EarlyAccessBanner";
-import { FadeIn } from "@/components/ui/FadeIn";
 import { MusicGenDemo } from "@/components/landing/MusicGenDemo";
-import { createFaqPageJsonLd, createTechArticleJsonLd, hasJsonLdContent } from "@/lib/schema";
+import { CapabilityDetailPage } from "@/components/seo/CapabilityDetailPage";
+import { createFaqPageJsonLd, createTechArticleJsonLd } from "@/lib/schema";
 import { getRequestLocale } from "@/lib/request-locale";
 import { defaultLocale, getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 import { getCatalogModelsByCapability } from "@/lib/seo/model-catalog";
 
 export const runtime = "edge";
 
-const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
-const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 const lastUpdatedIso = "2026-04-05";
 
 type MusicGenerationPageContent = {
@@ -566,204 +561,78 @@ export default async function MusicGenerationPage() {
   });
   const faqJsonLd = createFaqPageJsonLd(content.faqItems);
   const localizedModels = getMusicModels(locale);
+  const useCases = content.useCases.map((useCase, index) => {
+    const [title, ...rest] = useCase.split(".");
+    return {
+      title: title.length > 70 ? `Use case ${index + 1}` : title,
+      description: rest.join(".").trim() || useCase,
+    };
+  });
 
   return (
-    <>
-      <BreadcrumbJsonLd items={content.breadcrumbItems} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(capabilityGuideJsonLd) }}
-      />
-      {hasJsonLdContent(faqJsonLd) ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      ) : null}
-
-      <article className="px-6 md:px-12 lg:px-20">
-        <div className="mx-auto max-w-[1280px] py-12 md:py-20 lg:py-24">
-          <FadeIn>
-            <p className="mb-4 text-[11px] tracking-[0.8px] text-[#6b7d3a]" style={mono}>
-              {content.eyebrow}
-            </p>
-            <p className="text-[11px] text-[#5a5e52] tracking-[0.5px] mb-3" style={mono}>
-              {locale === "pt-br"
-                ? "Atualizado em"
-                : locale === "id"
-                  ? "Diperbarui"
-                  : locale === "de"
-                    ? "Zuletzt aktualisiert"
-                    : "Last updated"}{" "}
-              {content.lastUpdatedLabel}
-            </p>
-            <h1
-              className="leading-[1.1] tracking-[-0.02em] text-[#1c1f17]"
-              style={{ ...pixel, fontSize: "clamp(32px, 6vw, 72px)" }}
-            >
-              {content.title}
-            </h1>
-            <p className="mt-6 max-w-[780px] text-base leading-7 text-[#4d5145] md:text-lg">
-              {content.intro}
-            </p>
-            <div className="mt-8 max-w-[860px] border border-[#d4dbb8] bg-[#f9faf5]/80 p-6">
-              <p className="mb-3 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                {content.summaryEyebrow}
-              </p>
-              <p className="text-sm leading-6 text-[#4d5145]">{content.summaryBody}</p>
-            </div>
-          </FadeIn>
-
-          <FadeIn className="mt-8">
-            <EarlyAccessBanner />
-          </FadeIn>
-
-          <FadeIn className="mt-10">
-            <MusicGenDemo />
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.modelSectionTitle}
-              </h2>
-              <div className="overflow-x-auto rounded-xl border border-[#d4dbb8]">
-                <table className="w-full text-left">
-                  <thead className="bg-[#f9faf5]">
-                    <tr className="border-b border-[#d4dbb8]">
-                      {content.tableHeaders.map((header) => (
-                        <th
-                          key={header}
-                          className="px-5 py-3 text-[11px] tracking-[0.5px] text-[#5a5e52]"
-                          style={mono}
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localizedModels.map((model) => (
-                      <tr key={model.modelId} className="border-b border-[#d4dbb8]/50 last:border-b-0">
-                        <td className="px-5 py-4 text-sm font-medium text-[#1c1f17]">
-                          <Link href={model.href} className="transition-colors hover:text-[#6b7d3a]">
-                            {model.name}
-                          </Link>
-                        </td>
-                        <td className="px-5 py-4 text-sm text-[#4d5145]" style={mono}>
-                          {model.modelId}
-                        </td>
-                        <td className="px-5 py-4 text-sm text-[#4d5145]">{model.modes}</td>
-                        <td className="px-5 py-4 text-sm text-[#4d5145]">{model.bestFor}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.usageTitle}
-              </h2>
-              <div className="max-w-[860px] space-y-6">
-                {content.usageExamples.map((example) => (
-                  <div key={example.title}>
-                    <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
-                      {example.title}
-                    </p>
-                    <div className="bg-[#1c1f17] px-5 py-4">
-                      <p className="break-all text-[13px] text-[#d4e0a4]" style={mono}>
-                        {example.code}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-6 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.useCasesTitle}
-              </h2>
-              <div className="grid max-w-[920px] gap-4 sm:grid-cols-2">
-                {content.useCases.map((useCase) => (
-                  <div key={useCase} className="border-l-[3px] border-[#6b7d3a] pl-5">
-                    <p className="text-sm leading-6 text-[#4d5145]">{useCase}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.relatedPagesTitle}
-              </h2>
-              <div className="grid max-w-[1100px] gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {content.relatedPages.map((page) => (
-                  <Link
-                    key={page.href}
-                    href={page.href}
-                    className="rounded-xl border border-[#d4dbb8] p-5 transition-colors hover:border-[#6b7d3a]"
-                  >
-                    <p className="mb-2 text-[11px] tracking-[0.5px] text-[#6b7d3a]" style={mono}>
-                      {page.eyebrow}
-                    </p>
-                    <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                      {page.title}
-                    </h3>
-                    <p className="text-sm leading-6 text-[#4d5145]">{page.body}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.faqTitle}
-              </h2>
-              <div className="max-w-[860px] space-y-6">
-                {content.faqItems.map((item) => (
-                  <div key={item.question} className="rounded-xl border border-[#d4dbb8] p-5">
-                    <h3 className="mb-2 text-[15px] font-bold text-[#1c1f17]" style={mono}>
-                      {item.question}
-                    </h3>
-                    <p className="text-sm leading-6 text-[#4d5145]">{item.answer}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </FadeIn>
-        </div>
-      </article>
-    </>
+    <CapabilityDetailPage
+      breadcrumbItems={content.breadcrumbItems}
+      jsonLd={capabilityGuideJsonLd}
+      faqJsonLd={faqJsonLd}
+      eyebrow={content.eyebrow}
+      lastUpdatedLabel={`Last updated ${content.lastUpdatedLabel}`}
+      title={content.title}
+      accentTitle="for AI agents"
+      intro={content.intro}
+      searchIntents={content.capabilityGuide.keywords}
+      actions={[
+        { label: "Equip your Agent", href: "/start", primary: true },
+        { label: "Video Generation", href: "/capabilities/video-generation" },
+        { label: "AnyCap CLI", href: "/cli" },
+      ]}
+      demo={<MusicGenDemo />}
+      demoTitle="Score the workflow"
+      demoBody="A prompt becomes a reusable soundtrack draft in the same agent runtime."
+      proofPoints={[
+        "Prompt-based music generation can sit beside image, video, and page workflows.",
+        "Agents can discover active music models before choosing a provider-specific model ID.",
+        "Generated tracks can support launch videos, demos, ads, and prototypes without a separate audio toolchain.",
+      ]}
+      summaryLabel={content.summaryEyebrow.replace("Answer-first", "The short")}
+      summaryText={content.summaryBody}
+      workflowTitle="How music generation fits an AnyCap workflow"
+      workflowSteps={[
+        {
+          title: "Brief",
+          body: "The agent turns a product, campaign, or video need into a prompt for soundtrack or song generation.",
+        },
+        {
+          title: "Generate",
+          body: "AnyCap runs the selected music model through the same CLI surface used by the rest of the capability stack.",
+        },
+        {
+          title: "Attach",
+          body: "The resulting track can move into video generation, Drive delivery, Page publishing, or a review loop.",
+        },
+      ]}
+      usageTitle={content.usageTitle}
+      usageExamples={content.usageExamples}
+      useCasesTitle={content.useCasesTitle}
+      useCases={useCases}
+      relatedTitle={content.modelSectionTitle}
+      relatedCards={[
+        ...localizedModels.slice(0, 3).map((model) => ({
+          eyebrow: model.modelId,
+          title: model.name,
+          href: model.href,
+          body: `${model.modes}: ${model.bestFor}`,
+        })),
+        ...content.relatedPages.slice(0, 3).map((page) => ({
+          eyebrow: page.eyebrow,
+          title: page.title,
+          href: page.href,
+          body: page.body,
+        })),
+      ]}
+      faqTitle={content.faqTitle}
+      faqItems={content.faqItems}
+      finalTitle="Let your agent compose the soundtrack."
+      finalBody="Use AnyCap when a visual or launch workflow also needs music without leaving the same agent command surface."
+    />
   );
 }

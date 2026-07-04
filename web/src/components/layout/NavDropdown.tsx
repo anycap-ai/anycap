@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { HoverDropdown, dropdownItemClass } from "@/components/ui/HoverDropdown";
+import { NavIcon, type NavIconKey } from "@/components/layout/NavIcon";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
@@ -11,6 +12,7 @@ const triggerClass =
 export type DropdownItem = {
   href: string;
   label: string;
+  icon?: NavIconKey;
   section?: string;
   description?: string;
 };
@@ -19,6 +21,7 @@ type NavDropdownProps = {
   label: string;
   href?: string;
   items: DropdownItem[];
+  icon?: NavIconKey;
   hideBelow?: "sm" | "md" | "lg" | "xl";
   align?: "left" | "right";
 };
@@ -30,7 +33,7 @@ const hideBelowBlockClass: Record<string, string> = {
   xl: "hidden xl:block",
 };
 
-export function NavDropdown({ label, href, items, hideBelow, align = "right" }: NavDropdownProps) {
+export function NavDropdown({ label, href, items, icon, hideBelow, align = "right" }: NavDropdownProps) {
   const outerClass = hideBelow ? hideBelowBlockClass[hideBelow] ?? "" : "";
   const hasRichItems = items.some((item) => item.description || item.section);
   const groupedItems = items.reduce<Record<string, DropdownItem[]>>((acc, item) => {
@@ -55,6 +58,7 @@ export function NavDropdown({ label, href, items, hideBelow, align = "right" }: 
               style={mono}
               onClick={close}
             >
+              {icon ? <NavIcon icon={icon} className="mr-2 h-6 w-6 rounded-md [&_svg]:h-3.5 [&_svg]:w-3.5" /> : null}
               {label}
             </Link>
             <button
@@ -76,6 +80,7 @@ export function NavDropdown({ label, href, items, hideBelow, align = "right" }: 
             style={mono}
             onClick={toggle}
           >
+            {icon ? <NavIcon icon={icon} className="h-6 w-6 rounded-md [&_svg]:h-3.5 [&_svg]:w-3.5" /> : null}
             {label}
             <Chevron open={open} />
           </button>
@@ -99,22 +104,25 @@ export function NavDropdown({ label, href, items, hideBelow, align = "right" }: 
                       {section}
                     </p>
                     <div className="mt-1 space-y-1">
-                      {sectionItems.map(({ href: itemHref, label: itemLabel, description }) => (
+                      {sectionItems.map(({ href: itemHref, label: itemLabel, icon: itemIcon, description }) => (
                         <Link
                           key={itemHref}
                           href={itemHref}
                           prefetch={false}
-                          className="block rounded-lg px-3 py-3 transition-colors duration-150 hover:bg-[#eef2e5]"
+                          className="flex gap-3 rounded-lg px-3 py-3 transition-colors duration-150 hover:bg-[#eef2e5]"
                           onClick={close}
                         >
-                          <span className="block text-[14px] text-[#28301f]" style={mono}>
-                            {itemLabel}
-                          </span>
-                          {description ? (
-                            <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">
-                              {description}
+                          {itemIcon ? <NavIcon icon={itemIcon} /> : null}
+                          <span className="min-w-0">
+                            <span className="block text-[14px] text-[#28301f]" style={mono}>
+                              {itemLabel}
                             </span>
-                          ) : null}
+                            {description ? (
+                              <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">
+                                {description}
+                              </span>
+                            ) : null}
+                          </span>
                         </Link>
                       ))}
                     </div>
@@ -124,15 +132,16 @@ export function NavDropdown({ label, href, items, hideBelow, align = "right" }: 
             </div>
           </div>
         ) : (
-          items.map(({ href: itemHref, label: itemLabel }) => (
+          items.map(({ href: itemHref, label: itemLabel, icon: itemIcon }) => (
             <Link
               key={itemHref}
               href={itemHref}
               prefetch={false}
-              className={dropdownItemClass}
+              className={`${dropdownItemClass} flex items-center gap-3`}
               style={mono}
               onClick={close}
             >
+              {itemIcon ? <NavIcon icon={itemIcon} /> : null}
               {itemLabel}
             </Link>
           ))

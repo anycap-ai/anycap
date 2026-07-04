@@ -112,7 +112,7 @@ Image-to-video with explicit mode (local file -- auto-uploaded):
 ```bash
 anycap video generate \
   --prompt "animate this scene with gentle wind" \
-  --model seedance-1.5-pro \
+  --model <model-id> \
   --mode image-to-video \
   --param images=/path/to/photo.png
 ```
@@ -122,7 +122,7 @@ Image-to-video with a remote URL:
 ```bash
 anycap video generate \
   --prompt "animate this scene with gentle wind" \
-  --model seedance-1.5-pro \
+  --model <model-id> \
   --mode image-to-video \
   --param images=https://example.com/photo.jpg
 ```
@@ -163,7 +163,7 @@ Values are auto-parsed as JSON when possible:
 The output is a flat JSON object optimized for agent consumption:
 
 ```json
-{"status":"success","local_path":"/absolute/path/to/video.mp4","model":"veo-3.1","credits_used":5,"request_id":"req_abc123"}
+{"status":"success","local_path":"/absolute/path/to/video.mp4","model":"<model-id>","credits_used":5,"request_id":"req_abc123"}
 ```
 
 | Field | Description |
@@ -186,28 +186,28 @@ anycap video generate --prompt "..." --model <model-id> | jq -r '.local_path'
 # Find available models
 anycap video models
 
-# Check what modes seedance-1.5-pro supports
-anycap video models seedance-1.5-pro | jq '.model.operations[].modes[].mode'
+# Check what modes the selected model supports
+anycap video models <model-id> | jq '.model.operations[].modes[].mode'
 # -> "text-to-video", "image-to-video"
 
 # Check text-to-video parameters
-anycap video models seedance-1.5-pro schema --mode text-to-video
+anycap video models <model-id> schema --mode text-to-video
 
 # Generate text-to-video
 anycap video generate \
   --prompt "a watercolor animation of cherry blossoms falling" \
-  --model seedance-1.5-pro \
+  --model <model-id> \
   --param aspect_ratio=16:9 \
   --param duration=5 \
   -o cherry-blossoms.mp4
 
 # Check image-to-video parameters
-anycap video models seedance-1.5-pro schema --mode image-to-video
+anycap video models <model-id> schema --mode image-to-video
 
 # Generate image-to-video (local file)
 anycap video generate \
   --prompt "animate this landscape with clouds moving" \
-  --model seedance-1.5-pro \
+  --model <model-id> \
   --mode image-to-video \
   --param images=./landscape.jpg \
   --param duration=8 \

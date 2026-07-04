@@ -53,9 +53,11 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
         kind: "section",
         label: entry.label,
         href: entry.href ? localizePublicPath(locale, entry.href) : undefined,
+        icon: entry.icon,
         items: entry.items.map((item) => ({
           label: item.label,
           href: localizePublicPath(locale, item.href),
+          icon: item.icon,
           description: item.description,
         })),
       };
@@ -67,6 +69,7 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
       kind: "link",
       label: entry.label,
       href: external ? entry.href : localizePublicPath(locale, entry.href),
+      icon: entry.icon,
       external,
     };
   });
@@ -87,6 +90,7 @@ export async function Header({ logoHref = "/", links, authSlot, topOffset = "0px
           label={entry.label}
           href={entry.href ? localize(entry.href) : undefined}
           items={localizedItems}
+          icon={entry.icon}
           hideBelow={entry.hideBelow}
           align={entry.align}
         />

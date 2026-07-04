@@ -11,8 +11,8 @@ import {
 } from "@/lib/site";
 
 const protectedPaths = ["/dashboard"];
-const passthroughPrefixes = ["/auth", "/dashboard"];
-const globalUiPrefixes = ["/auth", "/dashboard"];
+const passthroughPrefixes = ["/auth", "/dashboard", "/boutique-main-site-preview"];
+const globalUiPrefixes = ["/auth", "/dashboard", "/boutique-main-site-preview"];
 const globalUiPaths = new Set(["/"]);
 const metadataRoutePaths = new Set(["/twitter-image"]);
 

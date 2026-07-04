@@ -434,11 +434,8 @@ Read [references/crawl.md](references/crawl.md) when you need to read a specific
 anycap crawl https://example.com | jq -r '.data.markdown'
 ```
 
-**Coming soon:**
-
-- Text-to-speech / voice synthesis
-
-Use `anycap feedback --type feature` to request prioritization of upcoming capabilities.
+Use `anycap feedback --type feature` to request prioritization when a needed
+capability is not available in the current CLI.
 
 **Download** -- save any remote file locally.
 
@@ -550,22 +547,22 @@ anycap status | jq -r '.status'
 anycap image models | jq -r '.models[].model'
 
 # List modes for a model
-anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
+anycap video models <model-id> | jq -r '.model.operations[].modes[].mode'
 
 # Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
+anycap image generate --prompt "..." --model <model-id> -o descriptive-name.png | jq -r '.local_path'
 
 # Edit an existing image (image-to-image mode)
-anycap image generate --prompt "remove the background" --model nano-banana-2 --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
+anycap image generate --prompt "remove the background" --model <model-id> --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
 
 # Generate a video (text-to-video, mode inferred) and get its path
-anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
+anycap video generate --prompt "..." --model <model-id> -o clip.mp4 | jq -r '.local_path'
 
 # Generate a video with explicit mode (image-to-video, local file auto-uploaded)
-anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
+anycap video generate --prompt "animate this" --model <model-id> --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
 
 # Generate music and get the first audio path
-anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
+anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'
@@ -619,7 +616,7 @@ anycap crawl https://example.com | jq -r '.data.markdown'
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model seedream-5 | jq -r '.request_id')
+REQ_ID=$(anycap image generate --prompt "..." --model <model-id> | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 

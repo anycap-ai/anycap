@@ -93,6 +93,7 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "models-kling-3-0": ptBrIdAndDeRolloutSeoLocales,
   "models-seedance-1-5-pro": ptBrIdAndDeRolloutSeoLocales,
   "models-elevenlabs-music": ptBrIdAndDeRolloutSeoLocales,
+  "models-gemini-omni-flash-preview": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-video-analysis": ptBrIdAndDeRolloutSeoLocales,
   "for-gemini-cli": ptBrIdAndDeRolloutSeoLocales,
 } as const satisfies SeoLocaleRolloutConfig;

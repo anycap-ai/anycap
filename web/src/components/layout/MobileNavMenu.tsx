@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommunityActions } from "@/components/ui/CommunityActions";
+import { NavIcon, type NavIconKey } from "@/components/layout/NavIcon";
 
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
 
 type MobileNavLink = {
   href: string;
   label: string;
+  icon?: NavIconKey;
   description?: string;
   external?: boolean;
 };
@@ -19,12 +21,14 @@ export type MobileNavEntry =
       kind: "link";
       href: string;
       label: string;
+      icon?: NavIconKey;
       external?: boolean;
     }
   | {
       kind: "section";
       label: string;
       href?: string;
+      icon?: NavIconKey;
       items: MobileNavLink[];
     };
 
@@ -110,6 +114,7 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
                     key={entry.href}
                     href={entry.href}
                     label={entry.label}
+                    icon={entry.icon}
                     external={entry.external}
                     onNavigate={() => setOpen(false)}
                   />
@@ -123,17 +128,19 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
                         <Link
                           href={entry.href}
                           prefetch={false}
-                          className="min-w-0 flex-1 rounded-xl px-3 py-3 text-[15px] text-[#1c1f17] transition-colors duration-150 hover:bg-[#eef2e5]"
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-[15px] text-[#1c1f17] transition-colors duration-150 hover:bg-[#eef2e5]"
                           style={mono}
                           onClick={() => setOpen(false)}
                         >
+                          {entry.icon ? <NavIcon icon={entry.icon} /> : null}
                           {entry.label}
                         </Link>
                       ) : (
                         <div
-                          className="min-w-0 flex-1 px-3 py-3 text-[15px] text-[#1c1f17]"
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-[15px] text-[#1c1f17]"
                           style={mono}
                         >
+                          {entry.icon ? <NavIcon icon={entry.icon} /> : null}
                           {entry.label}
                         </div>
                       )}
@@ -155,6 +162,7 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
                             key={item.href}
                             href={item.href}
                             label={item.label}
+                            icon={item.icon}
                             description={item.description}
                             external={item.external}
                             onNavigate={() => setOpen(false)}
@@ -177,6 +185,7 @@ export function MobileNavMenu({ entries }: MobileNavMenuProps) {
 function MobileLink({
   href,
   label,
+  icon,
   description,
   external,
   onNavigate,
@@ -191,10 +200,7 @@ function MobileLink({
         style={mono}
         onClick={onNavigate}
       >
-        <span className="block">{label}</span>
-        {description ? (
-          <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">{description}</span>
-        ) : null}
+        <MobileLinkContent label={label} icon={icon} description={description} />
       </a>
     );
   }
@@ -207,11 +213,30 @@ function MobileLink({
       style={mono}
       onClick={onNavigate}
     >
-      <span className="block">{label}</span>
-      {description ? (
-        <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">{description}</span>
-      ) : null}
+      <MobileLinkContent label={label} icon={icon} description={description} />
     </Link>
+  );
+}
+
+function MobileLinkContent({
+  label,
+  icon,
+  description,
+}: {
+  label: string;
+  icon?: NavIconKey;
+  description?: string;
+}) {
+  return (
+    <span className="flex items-start gap-3">
+      {icon ? <NavIcon icon={icon} /> : null}
+      <span className="min-w-0">
+        <span className="block">{label}</span>
+        {description ? (
+          <span className="mt-1 block text-[12px] leading-5 text-[#6a715d]">{description}</span>
+        ) : null}
+      </span>
+    </span>
   );
 }
 

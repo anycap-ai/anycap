@@ -63,21 +63,25 @@ const defaultSeoIndexedLocales: readonly SiteLocale[] =
 export const localeConfig = {
   en: {
     htmlLang: "en",
+    hreflang: "en-US",
     ogLocale: "en_US",
     label: "English",
   },
   "pt-br": {
     htmlLang: "pt-BR",
+    hreflang: "pt-BR",
     ogLocale: "pt_BR",
     label: "Português (Brasil)",
   },
   id: {
     htmlLang: "id",
+    hreflang: "id-ID",
     ogLocale: "id_ID",
     label: "Bahasa Indonesia",
   },
   de: {
     htmlLang: "de",
+    hreflang: "de-DE",
     ogLocale: "de_DE",
     label: "Deutsch",
   },
@@ -85,6 +89,7 @@ export const localeConfig = {
   SiteLocale,
   {
     htmlLang: string;
+    hreflang: string;
     ogLocale: string;
     label: string;
   }
@@ -432,7 +437,7 @@ export function getLocalizedAlternates(pathname: string): Record<string, string>
 
   const alternates = Object.fromEntries(
     getSeoIndexedLocalesForPath(normalizedPath).map((locale) => [
-      getLocaleConfig(locale).htmlLang,
+      getLocaleConfig(locale).hreflang,
       buildLocalizedPath(locale, normalizedPath),
     ])
   ) as Record<string, string>;

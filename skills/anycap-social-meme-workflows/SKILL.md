@@ -84,17 +84,18 @@ For funny meme drawings, default to one of these repeatable presets:
 
 ### 2. Choose the model
 
-Default mapping:
+Choose from the live model catalog instead of relying on a hard-coded model
+list. Match the model to the job:
 
-- **Seedream 5** for stronger first-pass visuals
-- **Nano Banana Pro** when editing an existing image or screenshot
-- **Nano Banana 2** when you need many variants fast, especially for funny meme drawings
+- stronger first-pass visuals
+- editing an existing image or screenshot
+- fast variant generation, especially for funny meme drawings
 
-Always inspect the model list or schema if the workflow is unclear:
+Always inspect the model list and schema before generating:
 
 ```bash
 anycap image models
-anycap image models nano-banana-2 schema
+anycap image models <model-id> schema --operation generate --mode <mode>
 ```
 
 ### 3. Generate or edit the base visual
@@ -103,7 +104,7 @@ Text-to-image example:
 
 ```bash
 anycap image generate \
-  --model seedream-5 \
+  --model <model-id> \
   --prompt "reaction-image style visual, exaggerated expression, blank top and bottom safe space for meme caption, high contrast, clean composition" \
   --param aspect_ratio=1:1 \
   --param resolution=2k \
@@ -114,7 +115,7 @@ Image-to-image example:
 
 ```bash
 anycap image generate \
-  --model nano-banana-pro \
+  --model <model-id> \
   --mode image-to-image \
   --prompt "turn this into a sharper reaction meme image, preserve the subject, simplify background, leave clear safe space for top and bottom caption" \
   --param images=./source.png \
@@ -125,11 +126,11 @@ anycap image generate \
 
 Prompt for negative space explicitly. Ask for "blank caption-safe area", "clean top band", or "empty bottom margin" instead of asking the model to write the exact meme text.
 
-Funny meme drawings example with Nano Banana 2:
+Funny meme drawings example:
 
 ```bash
 anycap image generate \
-  --model nano-banana-2 \
+  --model <model-id> \
   --prompt "funny meme drawing, crude but charming internet doodle style, exhausted office goblin melting into an office chair while holding a tiny coffee cup, absurd tiny-problem energy, wildly exaggerated defeated expression, messy desk chaos without readable screens, thick sketch lines, off-white paper texture, muted green accents, obvious blank space for optional caption, no words, no letters, no watermark" \
   --param aspect_ratio=4:3 \
   --param resolution=2k \

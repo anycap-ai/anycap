@@ -453,6 +453,12 @@ export const manualSeoRouteDefinitions = [
     priority: 0.6,
   },
   {
+    key: "models-gemini-omni-flash-preview",
+    kind: "seo",
+    path: "/models/gemini-omni-flash-preview",
+    priority: 0.74,
+  },
+  {
     key: "models-mureka-v8",
     kind: "seo",
     path: "/models/mureka-v8",

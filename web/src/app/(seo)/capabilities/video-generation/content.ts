@@ -54,13 +54,6 @@ type VideoGenerationNextAction = {
   primary?: boolean;
 };
 
-type VideoGenerationOpusCallout = {
-  eyebrow: string;
-  title: string;
-  body: string;
-  ctas: readonly { label: string; href: string }[];
-};
-
 type VideoGenerationPageContent = {
   metadata: {
     title: string;
@@ -81,7 +74,6 @@ type VideoGenerationPageContent = {
     summaryLabel: string;
     summaryText: string;
   };
-  opusCallout: VideoGenerationOpusCallout;
   demo: {
     labels: VideoGenerationDemoLabels;
     lines: readonly DemoLine[];
@@ -112,19 +104,22 @@ type VideoGenerationPageContent = {
 const contentByLocale = {
   en: {
     metadata: {
-      title: "Video Generation API for AI agents - Text-to-video and image-to-video",
+      title: "Video Generation API for AI Agents - Text-to-video and image-to-video",
       description:
-        "Give AI agents video generation through AnyCap. Use active models such as Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
-      openGraphTitle: "Video Generation API for AI agents - Text-to-video and image-to-video",
+        "Give AI agents one video generation API surface for text-to-video, image-to-video, model discovery, review, and publishing workflows through the AnyCap CLI.",
+      openGraphTitle: "Video Generation API for AI Agents - Text-to-video and image-to-video",
       openGraphDescription:
-        "Give AI agents video generation through AnyCap. Use active models such as Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro for text-to-video, image-to-video, and video creation workflows through one CLI.",
-      articleHeadline: "Video Generation API for AI agents - Text-to-video and image-to-video",
+        "Give AI agents one video generation API surface for text-to-video, image-to-video, model discovery, review, and publishing workflows through the AnyCap CLI.",
+      articleHeadline: "Video Generation API for AI Agents - Text-to-video and image-to-video",
       articleDescription:
-        "Capability guide for using AnyCap video generation across AI agent workflows with active video models including Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, and Seedance 1.5 Pro.",
-      articleAbout: ["Video generation", "Text-to-video API", "Image-to-video", "AnyCap"],
+        "Product guide for using AnyCap video generation across AI agent workflows, including model discovery, text-to-video, image-to-video, CLI execution, and related publishing steps.",
+      articleAbout: ["Video generation", "Video generation API", "Text-to-video API", "Image-to-video", "AI agents", "AnyCap"],
       articleKeywords: [
         "video generation for ai agents",
+        "video generation api",
         "text to video api",
+        "gemini omni flash preview",
+        "edit video api",
         "video creation api",
         "image to video",
         "veo 3.1",
@@ -138,22 +133,12 @@ const contentByLocale = {
     eyebrow: "Capabilities",
     lastUpdatedLabel: "Last updated April 5, 2026",
     hero: {
-      title: "Video Generation",
+      title: "Video Generation API for AI Agents",
       intro:
-        "AnyCap video generation gives agents one CLI for text-to-video and image-to-video workflows. Agents can generate short cinematic clips from prompts, animate still images into motion, and run video creation tasks through one interface instead of stitching together separate video generation APIs. The result is a cleaner video generation layer for Claude Code, Cursor, Codex, and similar agent products.",
-      summaryLabel: "Answer-first summary",
+        "AnyCap gives agents one command surface for text-to-video, image-to-video, model discovery, and generated video delivery. Instead of hard-wiring one provider API into every agent, teams can let Claude Code, Codex, Cursor, and other agents choose a video model, generate the clip, inspect the result, and publish or share it from the same workflow.",
+      summaryLabel: "The short answer",
       summaryText:
-        "Use Veo 3.1 when the first-pass clip needs to look more premium from a text brief, Kling 3.0 when the workflow leans on cinematic motion or more exploratory image-to-video work, and Seedance 1.5 Pro when the team wants a steadier production-friendly default.",
-    },
-    opusCallout: {
-      eyebrow: "Used with Claude Opus 4.7",
-      title: "Claude Code on Opus 4.7 + AnyCap video generation = insane",
-      body:
-        "Claude Code now runs on Claude Opus 4.7 — the strongest reasoning and coding agent Anthropic has shipped. Opus 4.7 still does not natively generate video. Pair it with AnyCap and the same terminal session reaches Veo 3.1, Seedance 1.5 Pro, and Kling 3.0 through one CLI and one login. The Opus 4.7 + AnyCap combo is the recommended default for video-heavy agent workflows in 2026.",
-      ctas: [
-        { label: "Claude Code video generation →", href: "/for/claude-code/video-generation" },
-        { label: "Opus 4.7 image + video workflow →", href: "/guides/claude-opus-4-7-image-video-workflow" },
-      ],
+        "Use AnyCap when the job is not just generating a clip, but letting an agent create, edit, review, and route video output. The page is built for searches like video generation API, Gemini Omni Flash Preview, text-to-video API, image-to-video, edit-video, and video generation for AI agents.",
     },
     demo: {
       labels: {
@@ -196,27 +181,33 @@ const contentByLocale = {
         { type: "cursor", delay: 500 },
       ] as const,
     },
-    decisionTitle: "How to choose among video models",
+    decisionTitle: "Choose the right video model at runtime",
     decisionCardCta: "Open model guide →",
     decisionCardAriaLabelTemplate: "Read the {title} model guide",
     decisionCards: [
       {
+        eyebrow: "Trending edit-video route",
+        title: "Gemini Omni Flash Preview",
+        href: "/models/gemini-omni-flash-preview",
+        body: "Use it when the agent starts with an existing clip and needs natural-language video edits, refinements, or review loops without leaving the AnyCap workflow.",
+      },
+      {
         eyebrow: "Newer Seedance default",
         title: "Seedance 2.0",
         href: "/models/seedance-2",
-        body: "Best when the agent needs the newer Seedance entry for cinematic product videos and polished image-to-video workflows.",
+        body: "Use it when the agent needs a modern default for product clips, social motion, and image-to-video drafts without leaving the AnyCap workflow.",
       },
       {
         eyebrow: "Cinematic motion",
         title: "Kling 3.0",
         href: "/models/kling-3-0",
-        body: "Best when the workflow wants stronger motion style or more flexible image-to-video iteration.",
+        body: "Use it when the brief depends on camera movement, character motion, or exploratory image-to-video iteration.",
       },
       {
         eyebrow: "Premium first pass",
         title: "Veo 3.1",
         href: "/models/veo-3-1",
-        body: "Best when the text brief needs to become a more polished teaser or concept clip on the first generation.",
+        body: "Use it when the first pass needs to feel more polished from a text brief, especially for branded teasers and concept clips.",
       },
     ] as const,
     supportedModelsTitle: "Supported models",
@@ -258,6 +249,11 @@ const contentByLocale = {
           'anycap video generate --prompt "animate this still into a subtle camera move" --model seedance-1.5-pro --mode image-to-video --param images=./frame.jpg -o animated.mp4',
       },
       {
+        title: "Edit existing video",
+        code:
+          'anycap video generate --prompt "brighten the lighting and add a subtle slow zoom" --model gemini-omni-flash-preview --mode edit-video --param videos=./source.mp4 -o refined.mp4',
+      },
+      {
         title: "Discover models",
         code: "anycap video models",
       },
@@ -265,26 +261,38 @@ const contentByLocale = {
     useCasesTitle: "When agents need video generation",
     useCases: [
       {
-        title: "Demo videos",
-        description: "Generate launch clips, walkthroughs, and product demos through one command.",
+        title: "Launch and demo clips",
+        description: "Turn product briefs, changelog notes, or storyboard prompts into short launch clips from the agent session.",
       },
       {
-        title: "Storyboards to motion",
-        description: "Turn design stills, screenshots, or reference frames into animated video drafts.",
+        title: "Reference frame to motion",
+        description: "Animate design stills, screenshots, generated images, or product frames without changing providers or auth flows.",
       },
       {
-        title: "Social content",
+        title: "Agent-led social content",
         description:
-          "Produce short-form clips for campaigns, changelog announcements, and creator workflows.",
+          "Generate short-form clips for campaigns, creator workflows, and product announcements, then hand off the asset through Drive or Page.",
       },
       {
-        title: "Rapid prototyping",
+        title: "Video workflow prototyping",
         description:
-          "Explore visual concepts in motion before committing to a larger production pass.",
+          "Test model fit, prompt structure, duration, aspect ratio, and reference-image behavior before building a deeper integration.",
+      },
+      {
+        title: "Hot model capture",
+        description:
+          "Route interest in Gemini Omni Flash Preview into a real agent workflow for natural-language video edits and clip refinement.",
       },
     ] as const,
     relatedTitle: "Related models and guides",
     relatedCards: [
+      {
+        eyebrow: "Trending model",
+        title: "Gemini Omni Flash Preview",
+        href: "/models/gemini-omni-flash-preview",
+        description:
+          "Capture the current Gemini Omni Flash Preview interest with an edit-video workflow agents can actually run.",
+      },
       {
         eyebrow: "Model",
         title: "Veo 3.1",
@@ -310,12 +318,17 @@ const contentByLocale = {
       {
         question: "What does AnyCap video generation let agents do?",
         answer:
-          "It gives agents one command surface for text-to-video and image-to-video workflows. Teams can generate new clips, animate reference images, and run repeatable video creation tasks without separate provider-specific integrations.",
+          "It gives agents one command surface for text-to-video, image-to-video, model discovery, generated asset handling, and downstream sharing. Teams can generate new clips, animate reference images, and keep video creation inside the same agent workflow.",
       },
       {
         question: "Which video models are available through AnyCap today?",
         answer:
-          "The current AnyCap video generation catalog includes Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast, and Seedance 1.5 Pro. Each listed model is available through the same AnyCap video generation API, CLI, and auth flow.",
+          "The current AnyCap video catalog includes Gemini Omni Flash Preview for edit-video workflows, plus Veo 3.1, Veo 3.1 Fast, Sora 2 Pro, Kling 3.0, Kling O1, Hailuo 2.3, Seedance 2.0, Seedance 2.0 Fast, and Seedance 1.5 Pro for generation-oriented workflows. Each listed model is available through the same AnyCap video CLI and auth flow.",
+      },
+      {
+        question: "Why highlight Gemini Omni Flash Preview on a video generation page?",
+        answer:
+          "Search demand is moving toward Gemini Omni Flash Preview, but the current AnyCap catalog exposes it as an edit-video model. That makes it valuable on this page as the hot refinement route after an agent has a source clip to improve.",
       },
       {
         question: "Why does this page include image-to-video as well as text-to-video?",
@@ -325,19 +338,23 @@ const contentByLocale = {
       {
         question: "Is this page about a video generation API or a CLI workflow?",
         answer:
-          "It is both. Teams often search for a text-to-video API or video generation API, while agent execution usually happens through the AnyCap CLI.",
+          "It is both. Searchers often look for a text-to-video API or video generation API, while agent execution usually works best through a CLI or tool call. AnyCap gives the agent a CLI-first surface over multiple video models and provider workflows.",
+      },
+      {
+        question: "Why use AnyCap instead of wiring one video provider directly?",
+        answer:
+          "A direct provider integration can work when the agent always uses one model. AnyCap is better when the agent needs model choice, shared auth, CLI execution, video review, file handling, and a path to publish or share outputs without rebuilding every workflow per provider.",
       },
     ] as const,
     nextStepsTitle: "Next steps",
     nextActions: [
+      { label: "Install AnyCap", href: "/start", primary: true },
+      { label: "Claude Code video workflow", href: "/for/claude-code/video-generation" },
       {
         label: "View on GitHub",
         href: "https://github.com/anycap-ai/anycap",
         external: true,
-        primary: true,
       },
-      { label: "Explore capabilities", href: "/capabilities" },
-      { label: "Explore the CLI", href: "/cli" },
     ] as const,
   },
   "pt-br": {
@@ -375,16 +392,6 @@ const contentByLocale = {
       summaryLabel: "Resumo direto",
       summaryText:
         "Use o Veo 3.1 quando o primeiro clipe precisar parecer mais premium a partir de um briefing textual, o Kling 3.0 quando o fluxo depender mais de movimento cinematográfico ou de uma exploração mais flexível de imagem para vídeo, e o Seedance 1.5 Pro quando a equipe quiser um padrão mais estável e amigável para produção.",
-    },
-    opusCallout: {
-      eyebrow: "Usado com Claude Opus 4.7",
-      title: "Claude Code no Opus 4.7 + AnyCap geração de vídeo = absurdo",
-      body:
-        "O Claude Code agora roda no Claude Opus 4.7 — o agente de raciocínio e código mais forte que a Anthropic já lançou. O Opus 4.7 ainda não gera vídeo nativamente. Combine com o AnyCap e a mesma sessão de terminal alcança Veo 3.1, Seedance 1.5 Pro e Kling 3.0 com uma CLI e um login. O combo Opus 4.7 + AnyCap é o default recomendado para fluxos de agente focados em vídeo em 2026.",
-      ctas: [
-        { label: "Claude Code geração de vídeo →", href: "/for/claude-code/video-generation" },
-        { label: "Workflow de imagem + vídeo no Opus 4.7 →", href: "/guides/claude-opus-4-7-image-video-workflow" },
-      ],
     },
     demo: {
       labels: {
@@ -610,16 +617,6 @@ const contentByLocale = {
       summaryText:
         "Gunakan Veo 3.1 saat klip first-pass perlu terlihat lebih premium dari briefing teks, Kling 3.0 saat alur lebih bergantung pada gerakan sinematik atau iterasi image-to-video yang lebih fleksibel, dan Seedance 1.5 Pro saat tim menginginkan default yang lebih stabil dan ramah produksi.",
     },
-    opusCallout: {
-      eyebrow: "Digunakan dengan Claude Opus 4.7",
-      title: "Claude Code di Opus 4.7 + AnyCap generasi video = gila",
-      body:
-        "Claude Code kini menjalankan Claude Opus 4.7 — agen reasoning dan coding terkuat dari Anthropic. Opus 4.7 belum bisa menghasilkan video secara native. Pasangkan dengan AnyCap dan sesi terminal yang sama menjangkau Veo 3.1, Seedance 1.5 Pro, dan Kling 3.0 melalui satu CLI dan satu login. Kombinasi Opus 4.7 + AnyCap adalah default yang direkomendasikan untuk alur agen berbasis video di 2026.",
-      ctas: [
-        { label: "Claude Code generasi video →", href: "/for/claude-code/video-generation" },
-        { label: "Workflow gambar + video Opus 4.7 →", href: "/guides/claude-opus-4-7-image-video-workflow" },
-      ],
-    },
     demo: {
       labels: {
         header: "agen dengan AnyCap",
@@ -844,16 +841,6 @@ const contentByLocale = {
       summaryText:
         "Setzen Sie auf Veo 3.1, wenn der erste Clip aus einem Text-Briefing premium aussehen soll, auf Kling 3.0, wenn der Workflow auf cinematische Bewegung oder explorativere Image-to-Video-Arbeit setzt, und auf Seedance 1.5 Pro, wenn das Team einen stabileren produktionsfreundlichen Standard möchte.",
     },
-    opusCallout: {
-      eyebrow: "Im Einsatz mit Claude Opus 4.7",
-      title: "Claude Code auf Opus 4.7 + AnyCap-Videogenerierung – die starke Kombination",
-      body:
-        "Claude Code läuft jetzt auf Claude Opus 4.7 – dem stärksten Reasoning- und Coding-Agenten, den Anthropic je veröffentlicht hat. Videos generiert Opus 4.7 nach wie vor nicht selbst. In Kombination mit AnyCap erreicht dieselbe Terminal-Sitzung Veo 3.1, Seedance 1.5 Pro und Kling 3.0 über eine CLI und ein einziges Login. Opus 4.7 + AnyCap ist 2026 die empfohlene Standardkonfiguration für videolastige Agenten-Workflows.",
-      ctas: [
-        { label: "Videogenerierung in Claude Code →", href: "/for/claude-code/video-generation" },
-        { label: "Opus 4.7 Bild- und Video-Workflow →", href: "/guides/claude-opus-4-7-image-video-workflow" },
-      ],
-    },
     demo: {
       labels: {
         header: "Agent mit AnyCap",
@@ -1044,6 +1031,7 @@ const contentByLocale = {
 function getCatalogVideoModels(): VideoGenerationModel[] {
   const priority = new Map(
     [
+      "gemini-omni-flash-preview",
       "seedance-2",
       "kling-3.0",
       "seedance-2-fast",
