@@ -101,6 +101,12 @@ func filterResourceTargets(targets []model.ResourceTarget, accept func(model.Res
 }
 
 func isImageReferenceTarget(target model.ResourceTarget) bool {
+	switch target.Media {
+	case model.ResourceMediaImage:
+		return true
+	case model.ResourceMediaVideo, model.ResourceMediaAudio:
+		return false
+	}
 	if isVideoReferenceTarget(target) || isAudioReferenceTarget(target) {
 		return false
 	}
@@ -114,12 +120,24 @@ func isImageReferenceTarget(target model.ResourceTarget) bool {
 }
 
 func isVideoReferenceTarget(target model.ResourceTarget) bool {
+	switch target.Media {
+	case model.ResourceMediaVideo:
+		return true
+	case model.ResourceMediaImage, model.ResourceMediaAudio:
+		return false
+	}
 	key := strings.ToLower(target.Key)
 	return strings.Contains(key, "refer_video") ||
 		strings.Contains(key, "reference_video")
 }
 
 func isAudioReferenceTarget(target model.ResourceTarget) bool {
+	switch target.Media {
+	case model.ResourceMediaAudio:
+		return true
+	case model.ResourceMediaImage, model.ResourceMediaVideo:
+		return false
+	}
 	key := strings.ToLower(target.Key)
 	return strings.Contains(key, "refer_audio") ||
 		strings.Contains(key, "reference_audio")

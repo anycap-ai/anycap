@@ -14,16 +14,44 @@ import "gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 //	  }
 //	}
 //
+// Newer abilities declare the modality explicitly with media-typed
+// blocks ("image_resource", "video_resource", "audio_resource") of the
+// same shape; targets parsed from those carry the matching Media so
+// adapters do not have to guess from key names (e.g. edit_video's
+// input video arrives via the generic "resource_url" slot).
+//
 // Unknown or malformed entries are silently skipped so that adding a
 // new resource Kind upstream does not break older AnyCap servers.
 func parseResourceTargets(annotation map[string]any) []model.ResourceTarget {
 	if len(annotation) == 0 {
 		return nil
 	}
-	resource, ok := annotation["resource"].(map[string]any)
-	if !ok {
+
+	blocks := []struct {
+		key   string
+		media model.ResourceMedia
+	}{
+		{"resource", ""},
+		{"image_resource", model.ResourceMediaImage},
+		{"video_resource", model.ResourceMediaVideo},
+		{"audio_resource", model.ResourceMediaAudio},
+	}
+
+	var targets []model.ResourceTarget
+	for _, block := range blocks {
+		resource, ok := annotation[block.key].(map[string]any)
+		if !ok {
+			continue
+		}
+		targets = append(targets, parseResourceBlock(resource, block.media)...)
+	}
+	if len(targets) == 0 {
 		return nil
 	}
+	return targets
+}
+
+func parseResourceBlock(resource map[string]any, media model.ResourceMedia) []model.ResourceTarget {
 	rawAlternatives, ok := resource["oneOf"].([]any)
 	if !ok || len(rawAlternatives) == 0 {
 		return nil
@@ -41,8 +69,9 @@ func parseResourceTargets(annotation map[string]any) []model.ResourceTarget {
 			continue
 		}
 		targets = append(targets, model.ResourceTarget{
-			Key:  key,
-			Kind: model.ResourceKind(kind),
+			Key:   key,
+			Kind:  model.ResourceKind(kind),
+			Media: media,
 		})
 	}
 	return targets

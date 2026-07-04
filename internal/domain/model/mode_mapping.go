@@ -12,6 +12,7 @@ var algoTypeByMode = map[Mode]string{
 	ModeImageToVideo:   "img_2_video",
 	ModeMultiShotVideo: "multi_shot_video",
 	ModeMultiModalRef:  "multi_modal_ref_2_video",
+	ModeEditVideo:      "edit_video",
 	ModeTextToMusic:    "text_2_music",
 }
 
@@ -22,6 +23,7 @@ var modeByAlgoType = map[string]Mode{
 	"img_2_video":             ModeImageToVideo,
 	"multi_shot_video":        ModeMultiShotVideo,
 	"multi_modal_ref_2_video": ModeMultiModalRef,
+	"edit_video":              ModeEditVideo,
 	"text_2_music":            ModeTextToMusic,
 }
 

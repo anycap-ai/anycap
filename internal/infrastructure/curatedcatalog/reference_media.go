@@ -15,6 +15,17 @@ type referenceMediaParams struct {
 func referenceMediaParamsFromTargets(targets []model.ResourceTarget) referenceMediaParams {
 	var media referenceMediaParams
 	for _, target := range targets {
+		switch target.Media {
+		case model.ResourceMediaAudio:
+			media.Audios = true
+			continue
+		case model.ResourceMediaVideo:
+			media.Videos = true
+			continue
+		case model.ResourceMediaImage:
+			media.Images = true
+			continue
+		}
 		if targetLooksLikeAudioReference(target.Key) {
 			media.Audios = true
 			continue

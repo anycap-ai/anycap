@@ -63,6 +63,9 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 	if mode == "" && isMultiModalReferenceGenerationType(payload.GenerationType) {
 		mode = model.ModeMultiModalRef
 	}
+	if mode == "" && isEditVideoGenerationType(payload.GenerationType) {
+		mode = model.ModeEditVideo
+	}
 
 	result, err := h.service.Generate(c, model.GenerateVideoRequest{
 		RequestID:          trace.GetTraceID(c),
@@ -112,4 +115,11 @@ func isMultiModalReferenceGenerationType(value string) bool {
 	return normalized == "multi-modal-reference" ||
 		normalized == "multi-modal-ref" ||
 		normalized == "multi-modal-ref-2-video"
+}
+
+func isEditVideoGenerationType(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	normalized = strings.ReplaceAll(normalized, "_", "-")
+	normalized = strings.ReplaceAll(normalized, " ", "-")
+	return normalized == "edit-video" || normalized == "video-edit"
 }

@@ -32,6 +32,7 @@ const (
 	ModeImageToVideo   Mode = "image-to-video"
 	ModeMultiShotVideo Mode = "multi-shot-video"
 	ModeMultiModalRef  Mode = "multi-modal-reference"
+	ModeEditVideo      Mode = "edit-video"
 	ModeTextToMusic    Mode = "text-to-music"
 )
 
@@ -108,12 +109,25 @@ const (
 	ResourceKindStorageArray ResourceKind = "storage_array"
 )
 
+// ResourceMedia enumerates the media modality a reference slot carries.
+// It is populated when the Discovery annotation declares the modality
+// explicitly (image_resource / video_resource / audio_resource blocks);
+// empty means unknown and adapters fall back to key-name heuristics.
+type ResourceMedia string
+
+const (
+	ResourceMediaImage ResourceMedia = "image"
+	ResourceMediaVideo ResourceMedia = "video"
+	ResourceMediaAudio ResourceMedia = "audio"
+)
+
 // ResourceTarget describes one upstream slot a reference resource can
 // fill. Key is a dot-path interpreted by the destination adapter
 // (e.g. "image_option.refer_image_urls" for the NexusHub adapter).
 type ResourceTarget struct {
-	Key  string       `json:"key"`
-	Kind ResourceKind `json:"kind"`
+	Key   string        `json:"key"`
+	Kind  ResourceKind  `json:"kind"`
+	Media ResourceMedia `json:"media,omitempty"`
 }
 
 // HasReferenceMedia reports whether the binding accepts at least one

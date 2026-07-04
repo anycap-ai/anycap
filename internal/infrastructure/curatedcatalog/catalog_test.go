@@ -674,6 +674,78 @@ func TestCatalog_ExposesKlingMultiShotVideo(t *testing.T) {
 	}
 }
 
+func TestCatalog_ExposesGeminiOmniFlashEditVideo(t *testing.T) {
+	curation := &config.ModelCurationConfig{
+		Models: []config.ModelCurationModelConfig{
+			{
+				ModelID:    "gemini-omni-flash-preview",
+				Capability: "video",
+				Operations: []config.ModelCurationOperationConfig{
+					{Operation: "generate", Mode: "edit-video", AbilityKey: "gemini-omni-flash-preview", AlgoType: "edit_video"},
+				},
+			},
+		},
+	}
+	editVideoSchema := map[string]any{
+		"properties": map[string]any{
+			"prompt":       map[string]any{"type": "string"},
+			"resource_url": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"type": map[string]any{"type": "string", "enum": []any{"edit_video"}},
+				},
+			},
+		},
+	}
+	editVideoAnnotation := map[string]any{
+		"video_resource": map[string]any{
+			"description": "Input video resource for video editing.",
+			"oneOf": []any{
+				map[string]any{"description": "Input video URL.", "key": "resource_url", "type": "url"},
+				map[string]any{"description": "Stored input video resource path.", "key": "resource_path", "type": "storage"},
+			},
+		},
+	}
+	nodes := map[string]*nexushub.DiscoveryNode{
+		"gemini-omni-flash-preview": {
+			AbilityKey: "gemini-omni-flash-preview",
+			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+				"edit_video": {Schema: editVideoSchema, Annotation: editVideoAnnotation},
+			},
+		},
+	}
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+
+	spec, err := cat.GetModel(context.Background(), model.CapabilityVideo, "gemini-omni-flash-preview")
+	if err != nil {
+		t.Fatalf("GetModel error: %v", err)
+	}
+	route := spec.Operations[model.OperationGenerate].Routes[0]
+	if route.Mode != model.ModeEditVideo || route.AlgoType != "edit_video" {
+		t.Fatalf("expected edit-video route, got %+v", route)
+	}
+	if !hasResourceTarget(route.ResourceTargets, "resource_url", model.ResourceKindURL) {
+		t.Fatalf("expected route to include resource_url target, got %+v", route.ResourceTargets)
+	}
+	for _, target := range route.ResourceTargets {
+		if target.Key == "resource_url" && target.Media != model.ResourceMediaVideo {
+			t.Fatalf("expected resource_url target media=video, got %+v", target)
+		}
+	}
+	modeSchema := spec.Operations[model.OperationGenerate].ModeSchemas[model.ModeEditVideo]
+	params, _ := modeSchema["model_params"].(map[string]any)
+	videos, _ := params["videos"].(map[string]any)
+	if videos == nil {
+		t.Fatalf("expected schema to expose synthetic videos param, got %+v", params)
+	}
+	if _, exists := params["images"]; exists {
+		t.Fatalf("edit-video schema must not expose images param when only a video input is declared: %+v", params)
+	}
+	if _, exists := params["resource_url"]; exists {
+		t.Fatalf("wire field resource_url must stay hidden: %+v", params)
+	}
+}
+
 func enumContains(raw any, want string) bool {
 	items, ok := raw.([]any)
 	if !ok {
