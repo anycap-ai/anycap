@@ -95,6 +95,16 @@ func buildFeedbackMessage(fb model.Feedback) (string, string) {
 	if fb.RequestID != "" {
 		md += fmt.Sprintf("**Request ID:** `%s`\n", fb.RequestID)
 	}
+	if taskID := feedbackTaskID(fb); taskID != "" {
+		md += fmt.Sprintf("**Task ID:** `%s`\n", taskID)
+	}
+	if fb.Metadata != nil {
+		if v, ok := fb.Metadata["trace_id"]; ok {
+			if s := fmt.Sprintf("%v", v); s != "" {
+				md += fmt.Sprintf("**Trace ID:** `%s`\n", s)
+			}
+		}
+	}
 
 	md += fmt.Sprintf("\n---\n\n%s\n", fb.Message)
 
@@ -112,6 +122,20 @@ func buildFeedbackMessage(fb model.Feedback) (string, string) {
 	}
 
 	return title, md
+}
+
+// feedbackTaskID extracts an upstream gateway task id from feedback context,
+// if the client attached one (e.g. --context '{"task_id":"..."}').
+func feedbackTaskID(fb model.Feedback) string {
+	if fb.Context == nil {
+		return ""
+	}
+	if v, ok := fb.Context["task_id"]; ok {
+		if s := fmt.Sprintf("%v", v); s != "" {
+			return s
+		}
+	}
+	return ""
 }
 
 // StubNotifier is a no-op notifier that just logs feedback.

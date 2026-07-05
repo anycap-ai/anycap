@@ -275,6 +275,7 @@ func parseParamValue(v string) any {
 // generateResult holds the parsed fields from a generate response (image or video).
 type generateResult struct {
 	Status      string
+	TaskID      string
 	OutputURL   string
 	LocalPath   string
 	Model       string
@@ -316,6 +317,7 @@ func parseGenerateResponse(body []byte) (*generateResult, error) {
 	var env struct {
 		Status string `json:"status"`
 		Data   struct {
+			ID      string `json:"id"`
 			Model   string `json:"model"`
 			Outputs []struct {
 				URL string `json:"url"`
@@ -329,6 +331,7 @@ func parseGenerateResponse(body []byte) (*generateResult, error) {
 
 	result := &generateResult{
 		Status:      env.Status,
+		TaskID:      env.Data.ID,
 		Model:       env.Data.Model,
 		CreditsUsed: env.Data.CreditCost,
 	}
@@ -349,6 +352,9 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 	if r.OutputURL != "" {
 		result["url"] = r.OutputURL
 	}
+	if r.TaskID != "" {
+		result["task_id"] = r.TaskID
+	}
 	if requestID != "" {
 		result["request_id"] = requestID
 	}
@@ -362,6 +368,11 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 	}
 	if traceID := output.TraceID(); traceID != "" {
 		hint += " --trace-id '" + traceID + "'"
+	}
+	if r.TaskID != "" {
+		if ctxJSON, err := json.Marshal(map[string]string{"task_id": r.TaskID}); err == nil {
+			hint += " --context '" + string(ctxJSON) + "'"
+		}
 	}
 	result["hint"] = hint
 
