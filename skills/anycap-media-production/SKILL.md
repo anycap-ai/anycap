@@ -217,7 +217,7 @@ Animate a still image:
 ```bash
 anycap video generate \
   --prompt "gentle camera pan across the landscape, wind blowing through trees" \
-  --model seedance-1.5-pro \
+  --model seedance-2-fast \
   --mode image-to-video \
   --param images=./landscape.png \
   -o landscape-animated.mp4
@@ -248,6 +248,7 @@ For best results with image-to-video:
 - Video generation takes 30-120s. Use async execution when your runtime supports it.
 - Check model schema for supported parameters (`aspect_ratio`, `duration`, etc.).
 - Different models excel at different styles. Check available models with `anycap video models`.
+- For Seedance 2 workflows, use `seedance-2-fast` for quick drafts and `seedance-2` for final-quality takes. When the user provides image, video, or audio references, map each reference to one role before prompting. Read `anycap-seedance-2` when the task specifically calls for Seedance 2 prompt structure, reference consistency, continuation, retakes, or multi-modal references.
 
 ## Music Production
 
@@ -311,7 +312,7 @@ anycap image generate \
 # 3. Create an animated version
 anycap video generate \
   --prompt "slow zoom into the dashboard, data points animate in sequentially" \
-  --model seedance-1.5-pro --mode image-to-video \
+  --model seedance-2-fast --mode image-to-video \
   --param images=./hero-v2.png -o hero-animation.mp4
 
 # 4. Generate background music
