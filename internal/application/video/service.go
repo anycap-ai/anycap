@@ -114,6 +114,20 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		}
 		req.ReferenceImageURLs = resolved
 	}
+	if req.FirstFrameURL != "" && s.uploadResolver != nil {
+		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, []string{req.FirstFrameURL})
+		if resolveErr != nil {
+			return model.GenerateVideoResult{}, resolveErr
+		}
+		req.FirstFrameURL = resolved[0]
+	}
+	if req.LastFrameURL != "" && s.uploadResolver != nil {
+		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, []string{req.LastFrameURL})
+		if resolveErr != nil {
+			return model.GenerateVideoResult{}, resolveErr
+		}
+		req.LastFrameURL = resolved[0]
+	}
 	if len(req.ReferenceVideoURLs) > 0 && s.uploadResolver != nil {
 		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, req.ReferenceVideoURLs)
 		if resolveErr != nil {

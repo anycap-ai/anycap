@@ -76,6 +76,41 @@ func TestInferVideoMode_AudioReference(t *testing.T) {
 	}
 }
 
+func TestInferVideoMode_FirstAndLastFrames(t *testing.T) {
+	got := InferVideoMode(GenerateVideoRequest{
+		FirstFrameURL: "https://cdn/first.png",
+		LastFrameURL:  "https://cdn/last.png",
+	})
+	if got != ModeFirstLastFrameVideo {
+		t.Fatalf("expected %s, got %s", ModeFirstLastFrameVideo, got)
+	}
+}
+
+func TestGenerateVideoRequestValidate_RequiresBothFirstAndLastFrames(t *testing.T) {
+	err := (GenerateVideoRequest{
+		Model:         "seedance-2",
+		Mode:          ModeFirstLastFrameVideo,
+		Prompt:        "transition",
+		FirstFrameURL: "https://cdn/first.png",
+	}).Validate()
+	if !errors.Is(err, ErrInvalidParam) {
+		t.Fatalf("expected ErrInvalidParam, got %v", err)
+	}
+}
+
+func TestGenerateVideoRequestValidate_AllowsFirstAndLastFrames(t *testing.T) {
+	err := (GenerateVideoRequest{
+		Model:         "seedance-2",
+		Mode:          ModeFirstLastFrameVideo,
+		Prompt:        "transition",
+		FirstFrameURL: "https://cdn/first.png",
+		LastFrameURL:  "https://cdn/last.png",
+	}).Validate()
+	if err != nil {
+		t.Fatalf("Validate() error = %v", err)
+	}
+}
+
 func TestGenerateVideoRequestValidate_RejectsEditVideoWithoutInputVideo(t *testing.T) {
 	req := GenerateVideoRequest{
 		Model:  "gemini-omni-flash-preview",

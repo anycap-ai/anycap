@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini Omni Video Edit"
+  short_description: "Edit short videos with Gemini Omni Flash via AnyCap"
+  default_prompt: "Use $anycap-gemini-omni-video-edit to edit this video with Gemini Omni Flash through AnyCap."

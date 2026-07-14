@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth/auth0";
+import { isInternalDefaultLocaleRewrite } from "@/lib/default-locale-routing";
 import {
   buildLocalizedPath,
   defaultLocale,
@@ -149,6 +150,13 @@ async function runMiddleware(req: NextRequest): Promise<NextResponse> {
   const authResponse = await auth0.middleware(req);
   const normalizedPath = normalizePublicPath(req.nextUrl.pathname);
   const { locale, pathname } = stripLocalePrefix(normalizedPath);
+  const internalDefaultLocaleRewrite = isInternalDefaultLocaleRewrite({
+    locale,
+    defaultLocale,
+    forwardedLocale: req.headers.get(localeHeaderName),
+    forwardedPathname: req.headers.get(requestPathnameHeaderName),
+    pathname,
+  });
 
   if (req.nextUrl.pathname !== "/" && req.nextUrl.pathname.endsWith("/")) {
     return applyAuthResponse(redirectToPath(req, normalizedPath), authResponse);
@@ -184,14 +192,17 @@ async function runMiddleware(req: NextRequest): Promise<NextResponse> {
     return applyAuthResponse(NextResponse.redirect(redirectURL, 308), authResponse);
   }
 
-  if (locale === defaultLocale) {
+  if (locale === defaultLocale && !internalDefaultLocaleRewrite) {
     return applyAuthResponse(redirectToPath(req, pathname), authResponse);
   }
 
   if (locale) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set(localeHeaderName, locale);
-    requestHeaders.set(requestPathnameHeaderName, normalizedPath);
+    requestHeaders.set(
+      requestPathnameHeaderName,
+      internalDefaultLocaleRewrite ? pathname : normalizedPath,
+    );
     requestHeaders.set(
       "x-anycap-global-ui",
       globalUiPaths.has(pathname) ||
@@ -286,6 +297,9 @@ async function runMiddleware(req: NextRequest): Promise<NextResponse> {
           : "0",
       );
 
+      // Cloudflare keeps only the localized worker function for duplicated
+      // public routes. Forwarded locale/path headers distinguish this internal
+      // rewrite from a visitor explicitly requesting /en/..., which redirects.
       rewriteURL.pathname = internalDefaultLocalePath(normalizedPath);
       return applyAuthResponse(
         NextResponse.rewrite(rewriteURL, {

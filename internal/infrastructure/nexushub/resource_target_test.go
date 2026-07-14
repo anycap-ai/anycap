@@ -99,6 +99,31 @@ func TestApplyResourceTargets_WritesVideoSingleURLTargets(t *testing.T) {
 	}
 }
 
+func TestApplyNamedFrameResourceTargets_PrefersRoleSpecificVideoOption(t *testing.T) {
+	payload := &atomicProcessPayload{VideoOption: &atomicVideoOption{Type: "first_last_2_video"}}
+	firstURL := "https://cdn/first.png"
+	lastURL := "https://cdn/last.png"
+	targets := []model.ResourceTarget{
+		{Key: "resource_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleFirstFrame},
+		{Key: "video_option.first_frame_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleFirstFrame},
+		{Key: "resource_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleLastFrame},
+		{Key: "video_option.last_frame_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleLastFrame},
+	}
+
+	applyFirstFrameResourceTargets(context.Background(), payload, "ability-first-last", targets, firstURL)
+	applyLastFrameResourceTargets(context.Background(), payload, "ability-first-last", targets, lastURL)
+
+	if payload.VideoOption.FirstFrameURL != firstURL {
+		t.Fatalf("expected first_frame_url=%q, got %q", firstURL, payload.VideoOption.FirstFrameURL)
+	}
+	if payload.VideoOption.LastFrameURL != lastURL {
+		t.Fatalf("expected last_frame_url=%q, got %q", lastURL, payload.VideoOption.LastFrameURL)
+	}
+	if payload.ResourceURL != "" {
+		t.Fatalf("expected generic resource_url to remain empty, got %q", payload.ResourceURL)
+	}
+}
+
 func TestApplyMediaResourceTargets_WritesImagesAndVideosSeparately(t *testing.T) {
 	payload := &atomicProcessPayload{VideoOption: &atomicVideoOption{Type: "img_2_video"}}
 	targets := []model.ResourceTarget{

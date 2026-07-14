@@ -26,14 +26,15 @@ const (
 type Mode string
 
 const (
-	ModeTextToImage    Mode = "text-to-image"
-	ModeImageToImage   Mode = "image-to-image"
-	ModeTextToVideo    Mode = "text-to-video"
-	ModeImageToVideo   Mode = "image-to-video"
-	ModeMultiShotVideo Mode = "multi-shot-video"
-	ModeMultiModalRef  Mode = "multi-modal-reference"
-	ModeEditVideo      Mode = "edit-video"
-	ModeTextToMusic    Mode = "text-to-music"
+	ModeTextToImage         Mode = "text-to-image"
+	ModeImageToImage        Mode = "image-to-image"
+	ModeTextToVideo         Mode = "text-to-video"
+	ModeImageToVideo        Mode = "image-to-video"
+	ModeFirstLastFrameVideo Mode = "first-last-frame-to-video"
+	ModeMultiShotVideo      Mode = "multi-shot-video"
+	ModeMultiModalRef       Mode = "multi-modal-reference"
+	ModeEditVideo           Mode = "edit-video"
+	ModeTextToMusic         Mode = "text-to-music"
 )
 
 // RouteType 表示路由方式。
@@ -121,6 +122,15 @@ const (
 	ResourceMediaAudio ResourceMedia = "audio"
 )
 
+// ResourceRole identifies a named role for a resource target. Empty means the
+// target accepts generic reference media of the declared type.
+type ResourceRole string
+
+const (
+	ResourceRoleFirstFrame ResourceRole = "first_frame"
+	ResourceRoleLastFrame  ResourceRole = "last_frame"
+)
+
 // ResourceTarget describes one upstream slot a reference resource can
 // fill. Key is a dot-path interpreted by the destination adapter
 // (e.g. "image_option.refer_image_urls" for the NexusHub adapter).
@@ -128,6 +138,7 @@ type ResourceTarget struct {
 	Key   string        `json:"key"`
 	Kind  ResourceKind  `json:"kind"`
 	Media ResourceMedia `json:"media,omitempty"`
+	Role  ResourceRole  `json:"role,omitempty"`
 }
 
 // HasReferenceMedia reports whether the binding accepts at least one

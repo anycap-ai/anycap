@@ -37,6 +37,9 @@ next-env.d.ts
 # Air (live reload)
 /tmp/
 
+# Local research scratchpads
+/research-*/
+
 # Go binaries (root only)
 /anycap-server
 /anycap

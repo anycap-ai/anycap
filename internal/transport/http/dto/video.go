@@ -11,6 +11,8 @@ type GenerateVideoRequest struct {
 	Format         string          `json:"format,omitempty"`
 	FPS            int             `json:"fps,omitempty"`
 	GenerateAudio  *bool           `json:"generate_audio,omitempty"`
+	FirstFrame     string          `json:"first_frame,omitempty"`
+	LastFrame      string          `json:"last_frame,omitempty"`
 	Images         []string        `json:"images,omitempty"`
 	Videos         []string        `json:"videos,omitempty"`
 	Audios         []string        `json:"audios,omitempty"`

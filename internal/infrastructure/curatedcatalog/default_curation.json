@@ -31,14 +31,14 @@
         {
           "operation": "generate",
           "mode": "text-to-image",
-          "ability_key": "nano_banana_lite",
+          "ability_key": "nano-banana-lite",
           "algo_type": "txt_2_img",
           "mode_description": "Generate images directly from text prompts."
         },
         {
           "operation": "generate",
           "mode": "image-to-image",
-          "ability_key": "nano_banana_lite",
+          "ability_key": "nano-banana-lite",
           "algo_type": "img_2_img",
           "mode_description": "Edit or transform images using prompts."
         }
@@ -198,6 +198,13 @@
         },
         {
           "operation": "generate",
+          "mode": "first-last-frame-to-video",
+          "ability_key": "kling-3-0",
+          "algo_type": "first_last_2_video",
+          "mode_description": "Generate a video transition between named first and last frame images."
+        },
+        {
+          "operation": "generate",
           "mode": "multi-shot-video",
           "ability_key": "kling-3-0",
           "algo_type": "multi_shot_video",
@@ -312,6 +319,13 @@
           "ability_key": "oversea-seedance-2",
           "algo_type": "img_2_video",
           "mode_description": "Generate video sequences from one or more reference images while preserving the original composition."
+        },
+        {
+          "operation": "generate",
+          "mode": "first-last-frame-to-video",
+          "ability_key": "oversea-seedance-2",
+          "algo_type": "first_last_2_video",
+          "mode_description": "Generate a video transition between named first and last frame images."
         },
         {
           "operation": "generate",

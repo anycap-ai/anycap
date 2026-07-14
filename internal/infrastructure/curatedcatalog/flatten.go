@@ -57,7 +57,7 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 		return nil
 	}
 	props, _ := schema["properties"].(map[string]any)
-	if len(props) == 0 && !media.Images && !media.Videos && !media.Audios {
+	if len(props) == 0 && !media.Images && !media.Videos && !media.Audios && !media.FirstFrame && !media.LastFrame {
 		return nil
 	}
 
@@ -99,6 +99,16 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 			flat["audios"] = audiosParamSchema()
 		}
 	}
+	if media.FirstFrame {
+		if _, exists := flat["first_frame"]; !exists {
+			flat["first_frame"] = frameParamSchema("First-frame image. Pass a local file path or http(s) URL; AnyCap uploads files automatically.")
+		}
+	}
+	if media.LastFrame {
+		if _, exists := flat["last_frame"]; !exists {
+			flat["last_frame"] = frameParamSchema("Last-frame image. Pass a local file path or http(s) URL; AnyCap uploads files automatically.")
+		}
+	}
 
 	if len(flat) == 0 {
 		return nil
@@ -119,6 +129,14 @@ func imagesParamSchema() map[string]any {
 			"format": "file-or-url",
 		},
 		"description": "Reference image(s). Pass local file paths or http(s) URLs; AnyCap uploads files automatically and forwards them to the upstream provider.",
+	}
+}
+
+func frameParamSchema(description string) map[string]any {
+	return map[string]any{
+		"type":        "string",
+		"format":      "file-or-url",
+		"description": description,
 	}
 }
 

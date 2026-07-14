@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-06-17
+> Last updated: 2026-07-08
 
 ## 1. Capabilities (Cap)
 
@@ -291,6 +291,8 @@ Agent-facing skill documentation, following the entry skill + on-demand loading 
 | Web | Web search (grounding) and crawl |
 
 Distributed via GitHub. Agents install with `anycap skill install`.
+
+A dedicated `anycap-gemini-omni-video-edit` distributed skill now guides agents through Gemini Omni Flash Preview video editing with AnyCap, including live schema checks, product/object replacement prompts, QA, and retry strategy.
 
 ## 5. Dashboard
 

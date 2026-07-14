@@ -7,14 +7,24 @@ import (
 )
 
 type referenceMediaParams struct {
-	Images bool
-	Videos bool
-	Audios bool
+	Images     bool
+	Videos     bool
+	Audios     bool
+	FirstFrame bool
+	LastFrame  bool
 }
 
 func referenceMediaParamsFromTargets(targets []model.ResourceTarget) referenceMediaParams {
 	var media referenceMediaParams
 	for _, target := range targets {
+		switch target.Role {
+		case model.ResourceRoleFirstFrame:
+			media.FirstFrame = true
+			continue
+		case model.ResourceRoleLastFrame:
+			media.LastFrame = true
+			continue
+		}
 		switch target.Media {
 		case model.ResourceMediaAudio:
 			media.Audios = true

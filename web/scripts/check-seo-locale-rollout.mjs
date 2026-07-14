@@ -8,9 +8,9 @@ const routesFilePath = path.join(rootDir, "src", "lib", "seo", "routes.ts");
 const rolloutFilePath = path.join(rootDir, "src", "lib", "seo-locale-rollout.ts");
 const noIndexPathsFilePath = path.join(rootDir, "src", "lib", "seo", "noindex-paths.ts");
 
-const SUPPORTED_CHECK_LOCALES = ["pt-br", "id"];
+const SUPPORTED_CHECK_LOCALES = ["pt-br", "id", "de"];
 
-function parseTargetLocales(argv) {
+export function parseTargetLocales(argv) {
   const arg = argv.find((item) => item.startsWith("--locales="));
   if (!arg) {
     return ["pt-br"];
@@ -30,6 +30,19 @@ function parseTargetLocales(argv) {
   }
 
   return values.length > 0 ? values : ["pt-br"];
+}
+
+export function parseTargetPaths(argv) {
+  const arg = argv.find((item) => item.startsWith("--paths="));
+  if (!arg) return null;
+
+  const values = arg
+    .slice("--paths=".length)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return values.length > 0 ? new Set(values) : null;
 }
 
 function extractRouteMapFromRoutes(source) {
@@ -113,7 +126,44 @@ function escapeForRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function hasConcreteLocaleTranslation(content, locale) {
+function hasExplicitEnglishFallback(content, localeObjectLabel) {
+  return [
+    new RegExp(`${localeObjectLabel}\\s*:\\s*undefined\\b`),
+    new RegExp(
+      `${localeObjectLabel}\\s*:\\s*(?:localizedContentByLocale|contentByLocale)\\.en\\b`,
+    ),
+    new RegExp(`${localeObjectLabel}\\s*:\\s*englishContent\\b`),
+    new RegExp(`${localeObjectLabel}\\s*:\\s*en\\b`),
+  ].some((pattern) => pattern.test(content));
+}
+
+function hasNamedLocaleObjectBinding(content, localeObjectLabel) {
+  const match = content.match(
+    new RegExp(`${localeObjectLabel}\\s*:\\s*([A-Za-z_$][\\w$]*)\\s*[,}]`),
+  );
+  if (!match || ["englishContent", "en"].includes(match[1])) return false;
+
+  const declarationMatch = content.match(new RegExp(
+    `\\bconst\\s+${escapeForRegex(match[1])}(?:\\s*:[^=]+)?\\s*=\\s*\\{`,
+  ));
+  if (!declarationMatch) return false;
+
+  const objectPrefix = content.slice(
+    (declarationMatch.index ?? 0) + declarationMatch[0].length,
+    (declarationMatch.index ?? 0) + declarationMatch[0].length + 200,
+  );
+  if (
+    /^\s*\.\.\.(?:en|englishContent|(?:localizedContentByLocale|contentByLocale)\.en)\b/.test(
+      objectPrefix,
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+export function hasConcreteLocaleTranslation(content, locale) {
   const escapedLocale = escapeForRegex(locale);
   const localeObjectLabel = locale.includes("-")
     ? `["']${escapedLocale}["']`
@@ -121,8 +171,14 @@ function hasConcreteLocaleTranslation(content, locale) {
   const localeObjectPattern = new RegExp(`${localeObjectLabel}\\s*:\\s*\\{`);
   const localeSwitchPattern = new RegExp(`locale\\s*===\\s*["']${escapedLocale}["']`);
   const localeFactoryPattern = new RegExp(`\\(\\s*["']${escapedLocale}["']\\s*\\)`);
+
+  if (hasExplicitEnglishFallback(content, localeObjectLabel)) {
+    return false;
+  }
+
   const hasLocaleSignal =
     localeObjectPattern.test(content) ||
+    hasNamedLocaleObjectBinding(content, localeObjectLabel) ||
     localeSwitchPattern.test(content) ||
     localeFactoryPattern.test(content);
 
@@ -176,8 +232,9 @@ function readRouteSourceByPath(routePath) {
   return existingFiles.map((filePath) => readFileSync(filePath, "utf8")).join("\n");
 }
 
-function main() {
-  const targetLocales = parseTargetLocales(process.argv.slice(2));
+export function main(argv = process.argv.slice(2)) {
+  const targetLocales = parseTargetLocales(argv);
+  const targetPaths = parseTargetPaths(argv);
   const routesSource = readFileSync(routesFilePath, "utf8");
   const rolloutSource = readFileSync(rolloutFilePath, "utf8");
   const noIndexPathsSource = readFileSync(noIndexPathsFilePath, "utf8");
@@ -186,7 +243,7 @@ function main() {
   const rolloutByRouteKey = extractRolloutLocalesByRouteKey(rolloutSource);
   const noIndexSeoPaths = extractNoIndexSeoPaths(noIndexPathsSource);
   const contentFiles = collectFiles(path.join(rootDir, "src", "app", "(seo)")).filter((filePath) =>
-    filePath.endsWith("/content.ts"),
+    ["content.ts", "page.tsx"].includes(path.basename(filePath)),
   );
 
   const missingManualRoutes = [];
@@ -201,6 +258,7 @@ function main() {
     }
 
     const routePath = toRoutePathFromContentFile(contentFilePath);
+    if (targetPaths && !targetPaths.has(routePath)) continue;
     if (noIndexSeoPaths.has(routePath)) {
       continue;
     }
@@ -226,9 +284,12 @@ function main() {
     }
   }
 
-  const strictTranslationLocales = new Set(["id"]);
+  const strictTranslationLocales = argv.includes("--strict")
+    ? new Set(targetLocales)
+    : new Set(["id"]);
 
   for (const [routePath, routeKey] of routeMap.entries()) {
+    if (targetPaths && !targetPaths.has(routePath)) continue;
     if (noIndexSeoPaths.has(routePath)) {
       continue;
     }
@@ -299,4 +360,8 @@ function main() {
   process.exitCode = 1;
 }
 
-main();
+const isMainModule =
+  Boolean(process.argv[1]) &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isMainModule) main();

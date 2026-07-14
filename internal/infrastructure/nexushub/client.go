@@ -224,6 +224,12 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		},
 	}
 	applyImageResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceImageURLs)
+	if req.FirstFrameURL != "" {
+		applyFirstFrameResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.FirstFrameURL)
+	}
+	if req.LastFrameURL != "" {
+		applyLastFrameResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.LastFrameURL)
+	}
 	applyVideoResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceVideoURLs)
 	applyAudioResourceTargets(ctx, &payload, route.AbilityKey, route.ResourceTargets, req.ReferenceAudioURLs)
 
