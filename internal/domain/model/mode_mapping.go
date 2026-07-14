@@ -6,14 +6,15 @@ import (
 )
 
 var algoTypeByMode = map[Mode]string{
-	ModeTextToImage:    "txt_2_img",
-	ModeImageToImage:   "img_2_img",
-	ModeTextToVideo:    "txt_2_video",
-	ModeImageToVideo:   "img_2_video",
-	ModeMultiShotVideo: "multi_shot_video",
-	ModeMultiModalRef:  "multi_modal_ref_2_video",
-	ModeEditVideo:      "edit_video",
-	ModeTextToMusic:    "text_2_music",
+	ModeTextToImage:         "txt_2_img",
+	ModeImageToImage:        "img_2_img",
+	ModeTextToVideo:         "txt_2_video",
+	ModeImageToVideo:        "img_2_video",
+	ModeFirstLastFrameVideo: "first_last_2_video",
+	ModeMultiShotVideo:      "multi_shot_video",
+	ModeMultiModalRef:       "multi_modal_ref_2_video",
+	ModeEditVideo:           "edit_video",
+	ModeTextToMusic:         "text_2_music",
 }
 
 var modeByAlgoType = map[string]Mode{
@@ -21,6 +22,7 @@ var modeByAlgoType = map[string]Mode{
 	"img_2_img":               ModeImageToImage,
 	"txt_2_video":             ModeTextToVideo,
 	"img_2_video":             ModeImageToVideo,
+	"first_last_2_video":      ModeFirstLastFrameVideo,
 	"multi_shot_video":        ModeMultiShotVideo,
 	"multi_modal_ref_2_video": ModeMultiModalRef,
 	"edit_video":              ModeEditVideo,

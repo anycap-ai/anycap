@@ -90,3 +90,29 @@ func TestParseResourceTargets_MediaTypedBlocks(t *testing.T) {
 		t.Fatalf("parseResourceTargets mismatch:\n got:  %+v\n want: %+v", got, want)
 	}
 }
+
+func TestParseResourceTargets_FirstAndLastFrameBlocks(t *testing.T) {
+	annotation := map[string]any{
+		"first_frame": map[string]any{
+			"oneOf": []any{
+				map[string]any{"key": "resource_url", "type": "url"},
+				map[string]any{"key": "video_option.first_frame_url", "type": "url"},
+			},
+		},
+		"last_frame": map[string]any{
+			"oneOf": []any{
+				map[string]any{"key": "video_option.last_frame_url", "type": "url"},
+			},
+		},
+	}
+
+	got := parseResourceTargets(annotation)
+	want := []model.ResourceTarget{
+		{Key: "resource_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleFirstFrame},
+		{Key: "video_option.first_frame_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleFirstFrame},
+		{Key: "video_option.last_frame_url", Kind: model.ResourceKindURL, Media: model.ResourceMediaImage, Role: model.ResourceRoleLastFrame},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parseResourceTargets mismatch:\n got:  %+v\n want: %+v", got, want)
+	}
+}

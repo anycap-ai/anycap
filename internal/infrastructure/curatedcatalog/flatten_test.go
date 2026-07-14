@@ -103,6 +103,29 @@ func TestFlattenDiscoverySchema_VideoImageToVideoIncludesResource(t *testing.T) 
 	}
 }
 
+func TestFlattenDiscoverySchema_FirstLastFrameAddsNamedImageParams(t *testing.T) {
+	schema := map[string]any{
+		"properties": map[string]any{
+			"prompt": map[string]any{"type": "string"},
+			"video_option": map[string]any{
+				"properties": map[string]any{
+					"type": map[string]any{"type": "string", "enum": []any{"first_last_2_video"}},
+				},
+			},
+		},
+	}
+
+	got := flattenDiscoverySchemaWithMedia(schema, referenceMediaParams{FirstFrame: true, LastFrame: true})
+	params, _ := got["model_params"].(map[string]any)
+	mustMapKeys(t, params, []string{"prompt", "first_frame", "last_frame"})
+	for _, key := range []string{"first_frame", "last_frame"} {
+		field, _ := params[key].(map[string]any)
+		if field["type"] != "string" || field["format"] != "file-or-url" {
+			t.Fatalf("%s must be a file-or-url string, got %+v", key, field)
+		}
+	}
+}
+
 func TestFlattenDiscoverySchema_MusicTextToMusic(t *testing.T) {
 	schema := map[string]any{
 		"properties": map[string]any{

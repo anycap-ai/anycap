@@ -90,6 +90,25 @@ func applyAudioResourceTargets(
 	applyResourceTargets(ctx, payload, abilityKey, filterResourceTargets(targets, isAudioReferenceTarget), urls)
 }
 
+func applyFirstFrameResourceTargets(ctx context.Context, payload *atomicProcessPayload, abilityKey string, targets []model.ResourceTarget, url string) {
+	applyNamedFrameResourceTargets(ctx, payload, abilityKey, targets, model.ResourceRoleFirstFrame, "video_option.first_frame_url", url)
+}
+
+func applyLastFrameResourceTargets(ctx context.Context, payload *atomicProcessPayload, abilityKey string, targets []model.ResourceTarget, url string) {
+	applyNamedFrameResourceTargets(ctx, payload, abilityKey, targets, model.ResourceRoleLastFrame, "video_option.last_frame_url", url)
+}
+
+func applyNamedFrameResourceTargets(ctx context.Context, payload *atomicProcessPayload, abilityKey string, targets []model.ResourceTarget, role model.ResourceRole, preferredKey, url string) {
+	roleTargets := filterResourceTargets(targets, func(t model.ResourceTarget) bool { return t.Role == role })
+	for _, target := range roleTargets {
+		if target.Key == preferredKey && target.Kind == model.ResourceKindURL {
+			applyResourceTargets(ctx, payload, abilityKey, []model.ResourceTarget{target}, []string{url})
+			return
+		}
+	}
+	applyResourceTargets(ctx, payload, abilityKey, roleTargets, []string{url})
+}
+
 func filterResourceTargets(targets []model.ResourceTarget, accept func(model.ResourceTarget) bool) []model.ResourceTarget {
 	out := make([]model.ResourceTarget, 0, len(targets))
 	for _, target := range targets {

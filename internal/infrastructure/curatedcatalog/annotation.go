@@ -30,11 +30,14 @@ func parseResourceTargets(annotation map[string]any) []model.ResourceTarget {
 	blocks := []struct {
 		key   string
 		media model.ResourceMedia
+		role  model.ResourceRole
 	}{
-		{"resource", ""},
-		{"image_resource", model.ResourceMediaImage},
-		{"video_resource", model.ResourceMediaVideo},
-		{"audio_resource", model.ResourceMediaAudio},
+		{"resource", "", ""},
+		{"image_resource", model.ResourceMediaImage, ""},
+		{"video_resource", model.ResourceMediaVideo, ""},
+		{"audio_resource", model.ResourceMediaAudio, ""},
+		{"first_frame", model.ResourceMediaImage, model.ResourceRoleFirstFrame},
+		{"last_frame", model.ResourceMediaImage, model.ResourceRoleLastFrame},
 	}
 
 	var targets []model.ResourceTarget
@@ -43,7 +46,7 @@ func parseResourceTargets(annotation map[string]any) []model.ResourceTarget {
 		if !ok {
 			continue
 		}
-		targets = append(targets, parseResourceBlock(resource, block.media)...)
+		targets = append(targets, parseResourceBlock(resource, block.media, block.role)...)
 	}
 	if len(targets) == 0 {
 		return nil
@@ -51,7 +54,7 @@ func parseResourceTargets(annotation map[string]any) []model.ResourceTarget {
 	return targets
 }
 
-func parseResourceBlock(resource map[string]any, media model.ResourceMedia) []model.ResourceTarget {
+func parseResourceBlock(resource map[string]any, media model.ResourceMedia, role model.ResourceRole) []model.ResourceTarget {
 	rawAlternatives, ok := resource["oneOf"].([]any)
 	if !ok || len(rawAlternatives) == 0 {
 		return nil
@@ -72,6 +75,7 @@ func parseResourceBlock(resource map[string]any, media model.ResourceMedia) []mo
 			Key:   key,
 			Kind:  model.ResourceKind(kind),
 			Media: media,
+			Role:  role,
 		})
 	}
 	return targets

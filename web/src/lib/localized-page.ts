@@ -7,6 +7,7 @@ import { getAboutMetadata } from "@/app/(seo)/about/content";
 import { getCliMetadata } from "@/app/(seo)/cli/content";
 import { getCompareMetadata } from "@/app/(seo)/compare/content";
 import { getAnyCapVsFalAiMetadata } from "@/app/(seo)/compare/anycap-vs-fal-ai/content";
+import { getAnyCapVsComposioMetadata } from "@/app/(seo)/compare/anycap-vs-composio/metadata";
 import { getAnyCapVsOpenAIAgentBuilderMetadata } from "@/app/(seo)/compare/anycap-vs-openai-agent-builder/content";
 import { getAnyCapVsReplicateMetadata } from "@/app/(seo)/compare/anycap-vs-replicate/content";
 import { getFalAiAlternativesMetadata } from "@/app/(seo)/compare/fal-ai-alternatives-for-agents/content";
@@ -17,6 +18,7 @@ import { getForCodexMetadata } from "@/app/(seo)/for/codex/content";
 import { getForCursorMetadata } from "@/app/(seo)/for/cursor/content";
 import { getForGeminiCliMetadata } from "@/app/(seo)/for/gemini-cli/content";
 import { getModelsMetadata } from "@/app/(seo)/models/metadata";
+import { getGeminiOmniFlashPreviewMetadata } from "@/app/(seo)/models/gemini-omni-flash-preview/metadata";
 import { getGlossaryMetadata } from "@/app/(seo)/glossary/content";
 import {
   getAgentHarnessGlossaryMetadata,
@@ -49,6 +51,7 @@ const localizedMetadataByRouteKey: Partial<
   about: getAboutMetadata,
   cli: getCliMetadata,
   compare: getCompareMetadata,
+  "compare-anycap-vs-composio": getAnyCapVsComposioMetadata,
   "compare-anycap-vs-fal-ai": getAnyCapVsFalAiMetadata,
   "compare-anycap-vs-openai-agent-builder":
     getAnyCapVsOpenAIAgentBuilderMetadata,
@@ -85,6 +88,8 @@ const localizedMetadataByPath: Partial<Record<string, LocalizedMetadataResolver>
     "/guides/install-anycap": getInstallAnycapMetadata,
     "/guides/mcp-vs-skills": getMcpVsSkillsMetadata,
     "/learn/what-agents-cant-do": getWhatAgentsCantDoMetadata,
+    "/models/gemini-omni-flash-preview":
+      getGeminiOmniFlashPreviewMetadata,
   };
 
 export async function getValidatedLocale(

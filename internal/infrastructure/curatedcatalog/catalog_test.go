@@ -295,18 +295,7 @@ func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
 }
 
 func TestCatalog_ExposesNanoBananaLite(t *testing.T) {
-	curation := &config.ModelCurationConfig{
-		Models: []config.ModelCurationModelConfig{{
-			ModelID:          "nano-banana-lite",
-			Capability:       "image",
-			DisplayName:      "Nano Banana 2 Lite",
-			ModelDescription: "Lite image model",
-			Operations: []config.ModelCurationOperationConfig{
-				{Operation: "generate", Mode: "text-to-image", AbilityKey: "nano_banana_lite", AlgoType: "txt_2_img", ModeDescription: "Generate images directly from text prompts."},
-				{Operation: "generate", Mode: "image-to-image", AbilityKey: "nano_banana_lite", AlgoType: "img_2_img", ModeDescription: "Edit or transform images using prompts."},
-			},
-		}},
-	}
+	curation := config.NewModelCurationProvider(config.Config{})
 
 	imageSchema := func(algo string) map[string]any {
 		return map[string]any{
@@ -322,8 +311,8 @@ func TestCatalog_ExposesNanoBananaLite(t *testing.T) {
 		}
 	}
 	nodes := map[string]*nexushub.DiscoveryNode{
-		"nano_banana_lite": {
-			AbilityKey: "nano_banana_lite",
+		"nano-banana-lite": {
+			AbilityKey: "nano-banana-lite",
 			State:      "active",
 			ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
 				"txt_2_img": {Schema: imageSchema("txt_2_img")},
@@ -332,7 +321,7 @@ func TestCatalog_ExposesNanoBananaLite(t *testing.T) {
 		},
 	}
 
-	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: nodes})
+	cat := New(curation, &fakeDiscovery{nodes: nodes})
 	spec, err := cat.GetModel(context.Background(), model.CapabilityImage, "nano-banana-lite")
 	if err != nil {
 		t.Fatalf("GetModel error: %v", err)
@@ -354,7 +343,7 @@ func TestCatalog_ExposesNanoBananaLite(t *testing.T) {
 
 	var sawText, sawImage bool
 	for _, route := range gen.Routes {
-		if route.AbilityKey != "nano_banana_lite" {
+		if route.AbilityKey != "nano-banana-lite" {
 			t.Fatalf("unexpected ability key: %+v", route)
 		}
 		switch route.Mode {

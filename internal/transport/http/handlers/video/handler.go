@@ -81,6 +81,8 @@ func (h *Handler) Generate(c context.Context, ctx *app.RequestContext) {
 		Format:             payload.Format,
 		FPS:                payload.FPS,
 		GenerateAudio:      payload.GenerateAudio,
+		FirstFrameURL:      payload.FirstFrame,
+		LastFrameURL:       payload.LastFrame,
 		ReferenceImageURLs: append([]string(nil), payload.EffectiveImages()...),
 		ReferenceVideoURLs: append([]string(nil), payload.EffectiveVideos()...),
 		ReferenceAudioURLs: append([]string(nil), payload.EffectiveAudios()...),

@@ -44,6 +44,7 @@ export const seoIndexedLocaleCodesByRouteKey = {
   "capabilities-video-generation": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-web-search": ptBrIdAndDeRolloutSeoLocales,
   "capabilities-web-crawl": ptBrIdAndDeRolloutSeoLocales,
+  "compare-anycap-vs-composio": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-openai-agent-builder": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-fal-ai": ptBrIdAndDeRolloutSeoLocales,
   "compare-anycap-vs-replicate": ptBrIdAndDeRolloutSeoLocales,
