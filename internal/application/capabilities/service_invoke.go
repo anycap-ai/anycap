@@ -2,7 +2,9 @@ package capabilities
 
 import (
 	"context"
+	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -17,19 +19,19 @@ const (
 	audioReadCreditCost int64 = 10
 )
 
-func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
+func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "image.read")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("image read validation failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if s == nil || s.provider == nil {
 		logger.Error("image read provider not configured")
-		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
+		return model.InvocationResult[model.UnderstandResult]{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureReadBalance(ctx, userID, imageReadCreditCost, "image.read"); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -43,7 +45,7 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 			CreditCost: imageReadCreditCost,
 		}); billingErr != nil {
 			logger.WithError(billingErr).Error("create image read billing intent failed")
-			return model.UnderstandResult{}, billingErr
+			return model.InvocationResult[model.UnderstandResult]{}, billingErr
 		}
 	}
 	if !s.auditEnabled() {
@@ -52,28 +54,32 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 			if s.billing != nil {
 				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 			}
-			return model.UnderstandResult{}, err
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
-			return model.UnderstandResult{}, err
+		if err := validateUnderstandInvocation(result); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		result.CreditCost = imageReadCreditCost
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Value.Model, imageReadCreditCost, startedAt); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
+		}
+		result.Value.CreditCost = imageReadCreditCost
 		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
 		logger.WithError(err).Error("resolve image read actor failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveImageInputs(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
 		logger.WithError(err).Error("resolve image read inputs failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
+	var invocationMeta model.InvocationMeta
 	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
@@ -81,34 +87,42 @@ func (s *Service) ImageRead(ctx context.Context, req model.ImageReadRequest) (mo
 		RequestMeta: buildImageRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
-		return s.provider.ImageRead(ctx, resolvedReq)
+		invocation, err := s.provider.ImageRead(ctx, resolvedReq)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		invocationMeta = invocation.Meta
+		if err := validateUnderstandInvocation(invocation); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return invocation.Value, nil
 	})
 	if err != nil {
 		if s.billing != nil {
 			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 		}
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "image.read", result.Model, imageReadCreditCost, startedAt); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 	result.CreditCost = imageReadCreditCost
-	return result, nil
+	return model.InvocationResult[model.UnderstandResult]{Value: result, Meta: invocationMeta}, nil
 }
 
-func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
+func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "video.read")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("video read validation failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if s == nil || s.provider == nil {
 		logger.Error("video read provider not configured")
-		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
+		return model.InvocationResult[model.UnderstandResult]{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureReadBalance(ctx, userID, videoReadCreditCost, "video.read"); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -122,7 +136,7 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 			CreditCost: videoReadCreditCost,
 		}); billingErr != nil {
 			logger.WithError(billingErr).Error("create video read billing intent failed")
-			return model.UnderstandResult{}, billingErr
+			return model.InvocationResult[model.UnderstandResult]{}, billingErr
 		}
 	}
 	if !s.auditEnabled() {
@@ -131,28 +145,32 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 			if s.billing != nil {
 				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 			}
-			return model.UnderstandResult{}, err
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
-			return model.UnderstandResult{}, err
+		if err := validateUnderstandInvocation(result); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		result.CreditCost = videoReadCreditCost
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Value.Model, videoReadCreditCost, startedAt); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
+		}
+		result.Value.CreditCost = videoReadCreditCost
 		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
 		logger.WithError(err).Error("resolve video read actor failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveVideoInput(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
 		logger.WithError(err).Error("resolve video read input failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
+	var invocationMeta model.InvocationMeta
 	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
@@ -160,34 +178,42 @@ func (s *Service) VideoRead(ctx context.Context, req model.VideoReadRequest) (mo
 		RequestMeta: buildVideoRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
-		return s.provider.VideoRead(ctx, resolvedReq)
+		invocation, err := s.provider.VideoRead(ctx, resolvedReq)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		invocationMeta = invocation.Meta
+		if err := validateUnderstandInvocation(invocation); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return invocation.Value, nil
 	})
 	if err != nil {
 		if s.billing != nil {
 			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 		}
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "video.read", result.Model, videoReadCreditCost, startedAt); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 	result.CreditCost = videoReadCreditCost
-	return result, nil
+	return model.InvocationResult[model.UnderstandResult]{Value: result, Meta: invocationMeta}, nil
 }
 
-func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "audio.read")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("audio read validation failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if s == nil || s.provider == nil {
 		logger.Error("audio read provider not configured")
-		return model.UnderstandResult{}, model.ErrCapabilitiesProviderNotConfigured
+		return model.InvocationResult[model.UnderstandResult]{}, model.ErrCapabilitiesProviderNotConfigured
 	}
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureReadBalance(ctx, userID, audioReadCreditCost, "audio.read"); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -201,7 +227,7 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 			CreditCost: audioReadCreditCost,
 		}); billingErr != nil {
 			logger.WithError(billingErr).Error("create audio read billing intent failed")
-			return model.UnderstandResult{}, billingErr
+			return model.InvocationResult[model.UnderstandResult]{}, billingErr
 		}
 	}
 	if !s.auditEnabled() {
@@ -210,28 +236,32 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 			if s.billing != nil {
 				_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 			}
-			return model.UnderstandResult{}, err
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
-			return model.UnderstandResult{}, err
+		if err := validateUnderstandInvocation(result); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, err
 		}
-		result.CreditCost = audioReadCreditCost
+		if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Value.Model, audioReadCreditCost, startedAt); err != nil {
+			return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
+		}
+		result.Value.CreditCost = audioReadCreditCost
 		return result, nil
 	}
 
 	actor, err := s.resolveActor(ctx)
 	if err != nil {
 		logger.WithError(err).Error("resolve audio read actor failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	resolvedReq, artifacts, err := s.resolveAudioInput(ctx, actor.Space.ID, actor.UserID, req)
 	if err != nil {
 		logger.WithError(err).Error("resolve audio read input failed")
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 
 	userIDStr := strconv.FormatInt(actor.UserID, 10)
+	var invocationMeta model.InvocationMeta
 	result, err := s.runUnderstandTask(ctx, understandTaskInput{
 		SpaceID:     actor.Space.ID,
 		UserID:      userIDStr,
@@ -239,19 +269,38 @@ func (s *Service) AudioRead(ctx context.Context, req model.AudioReadRequest) (mo
 		RequestMeta: buildAudioRequestMeta(req, len(artifacts)),
 		Artifacts:   artifacts,
 	}, func(ctx context.Context) (model.UnderstandResult, error) {
-		return s.provider.AudioRead(ctx, resolvedReq)
+		invocation, err := s.provider.AudioRead(ctx, resolvedReq)
+		if err != nil {
+			return model.UnderstandResult{}, err
+		}
+		invocationMeta = invocation.Meta
+		if err := validateUnderstandInvocation(invocation); err != nil {
+			return model.UnderstandResult{}, err
+		}
+		return invocation.Value, nil
 	})
 	if err != nil {
 		if s.billing != nil {
 			_ = s.billing.MarkUncertain(ctx, model.BillingProviderAgentPlatform, requestID, err.Error())
 		}
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, err
 	}
 	if err := s.finalizeSuccessfulRead(ctx, userID, "", requestID, "audio.read", result.Model, audioReadCreditCost, startedAt); err != nil {
-		return model.UnderstandResult{}, err
+		return model.InvocationResult[model.UnderstandResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 	result.CreditCost = audioReadCreditCost
-	return result, nil
+	return model.InvocationResult[model.UnderstandResult]{Value: result, Meta: invocationMeta}, nil
+}
+
+func validateUnderstandInvocation(result model.InvocationResult[model.UnderstandResult]) error {
+	if strings.TrimSpace(result.Value.Content) != "" {
+		return nil
+	}
+	return model.WrapInvocationError(
+		model.InvocationErrorCodeUpstreamEmptyResult,
+		errors.New("provider completed without usable understanding content"),
+		model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+	)
 }
 
 func (s *Service) ensureReadBalance(ctx context.Context, userID string, cost int64, capability string) error {

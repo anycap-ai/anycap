@@ -15,13 +15,13 @@ func NewStubClient() *StubClient {
 	return &StubClient{}
 }
 
-func (c *StubClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.GenerateImageResult, error) {
+func (c *StubClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
 	safePrompt := url.PathEscape(strings.ReplaceAll(req.Prompt, " ", "-"))
 	if req.Model == "" {
 		req.Model = "flux-dev"
 	}
 
-	return model.GenerateImageResult{
+	result := model.GenerateImageResult{
 		ID:         fmt.Sprintf("img_%s", req.RequestID),
 		Status:     "success",
 		Model:      req.Model,
@@ -32,16 +32,17 @@ func (c *StubClient) GenerateImage(_ context.Context, req model.GenerateImageReq
 			MIMEType: "image/png",
 		}},
 		Usage: map[string]any{"credits": 1},
-	}, nil
+	}
+	return invocationSuccess(result, model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status, Stage: model.InvocationStageDecodeResult})
 }
 
-func (c *StubClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
+func (c *StubClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
 	safePrompt := url.PathEscape(strings.ReplaceAll(req.Prompt, " ", "-"))
 	if req.Model == "" {
 		req.Model = "kling-v1"
 	}
 
-	return model.GenerateVideoResult{
+	result := model.GenerateVideoResult{
 		ID:         fmt.Sprintf("vid_%s", req.RequestID),
 		Status:     "success",
 		Model:      req.Model,
@@ -52,10 +53,11 @@ func (c *StubClient) GenerateVideo(_ context.Context, req model.GenerateVideoReq
 			MIMEType: "video/mp4",
 		}},
 		Usage: map[string]any{"credits": 5},
-	}, nil
+	}
+	return invocationSuccess(result, model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status, Stage: model.InvocationStageDecodeResult})
 }
 
-func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
+func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
 	safeInput := strings.TrimSpace(req.Prompt)
 	if safeInput == "" {
 		safeInput = strings.TrimSpace(req.Tags)
@@ -65,7 +67,7 @@ func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicReq
 		req.Model = "mureka-v6"
 	}
 
-	return model.GenerateMusicResult{
+	result := model.GenerateMusicResult{
 		ID:         fmt.Sprintf("mus_%s", req.RequestID),
 		Status:     "success",
 		Model:      req.Model,
@@ -76,7 +78,8 @@ func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicReq
 			MIMEType: "audio/mpeg",
 		}},
 		Usage: map[string]any{"credits": 2},
-	}, nil
+	}
+	return invocationSuccess(result, model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status, Stage: model.InvocationStageDecodeResult})
 }
 
 func (c *StubClient) GetSubmitResult(_ context.Context, taskID string) (model.ProviderTaskResult, error) {

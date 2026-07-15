@@ -49,13 +49,13 @@ func (h *Handler) Search(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "web.search")
 	if h.service == nil {
 		logger.Error("web search service unavailable")
-		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "web_service_unavailable", "web service is not configured")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusServiceUnavailable, "web_service_unavailable", "web service is not configured", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 	reqCtx := middleware.ContextWithUserID(c, principal.UserID)
@@ -63,7 +63,7 @@ func (h *Handler) Search(c context.Context, ctx *app.RequestContext) {
 	var req model.WebSearchRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		logger.WithError(err).Warn("invalid web search request body")
-		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) Search(c context.Context, ctx *app.RequestContext) {
 	case "general":
 		h.searchGeneral(c, ctx, reqCtx, req)
 	default:
-		handlers.WriteError(c, ctx, consts.StatusUnprocessableEntity, "invalid_param", "mode must be 'general' or 'grounding'")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusUnprocessableEntity, "invalid_param", "mode must be 'general' or 'grounding'", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 }
 
@@ -89,18 +89,18 @@ func (h *Handler) searchGrounding(c context.Context, ctx *app.RequestContext, re
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("web search grounding failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeWebInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
 	// Strip internal details (model, usage, duration_ms) before returning.
-	handlers.WriteSuccess(c, ctx, groundingSearchResponse{
-		Mode:           result.Mode,
-		Query:          result.Query,
-		Content:        result.Content,
-		SearchMetadata: result.SearchMetadata,
-		CreditCost:     result.CreditCost,
-	})
+	handlers.WriteInvocationSuccess(c, ctx, groundingSearchResponse{
+		Mode:           result.Value.Mode,
+		Query:          result.Value.Query,
+		Content:        result.Value.Content,
+		SearchMetadata: result.Value.SearchMetadata,
+		CreditCost:     result.Value.CreditCost,
+	}, result.Meta)
 }
 
 func (h *Handler) searchGeneral(c context.Context, ctx *app.RequestContext, reqCtx context.Context, req model.WebSearchRequest) {
@@ -114,24 +114,24 @@ func (h *Handler) searchGeneral(c context.Context, ctx *app.RequestContext, reqC
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("web search general failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeWebInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(c, ctx, result)
+	handlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
 }
 
 func (h *Handler) Crawl(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "web.crawl")
 	if h.service == nil {
 		logger.Error("web crawl service unavailable")
-		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "web_service_unavailable", "web service is not configured")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusServiceUnavailable, "web_service_unavailable", "web service is not configured", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok || principal == nil {
-		handlers.WriteError(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 	reqCtx := middleware.ContextWithUserID(c, principal.UserID)
@@ -139,7 +139,7 @@ func (h *Handler) Crawl(c context.Context, ctx *app.RequestContext) {
 	var req model.WebCrawlRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		logger.WithError(err).Warn("invalid web crawl request body")
-		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -151,11 +151,19 @@ func (h *Handler) Crawl(c context.Context, ctx *app.RequestContext) {
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("web crawl failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeWebInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(c, ctx, result)
+	handlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
+}
+
+func writeWebInvocationError(c context.Context, ctx *app.RequestContext, err error, status int, code, message string) {
+	if _, ok := model.InvocationMetaFromError(err); ok {
+		handlers.WriteInvocationError(c, ctx, err)
+		return
+	}
+	handlers.WriteInvocationErrorPayload(c, ctx, status, code, message, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 }
 
 func classifyWebError(err error) (httpStatus int, code string, message string) {

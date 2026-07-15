@@ -99,11 +99,12 @@ func resolveCapabilityFeature(path string) string {
 // current user. Responds with 503 (disabled) or 403 (not allowed) and
 // aborts the request chain if access is denied. Otherwise calls ctx.Next.
 func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider FeatureAccessProvider, feat string) {
+	SetCapability(ctx, feat)
 	principal, _ := GetPrincipal(ctx)
 	allowed, enabled := provider.EnabledFor(principal, feat)
 	if !enabled {
 		requestID := trace.GetTraceID(c)
-		ctx.JSON(503, map[string]any{
+		payload := map[string]any{
 			"id":     requestID,
 			"status": "error",
 			"error": map[string]any{
@@ -111,13 +112,17 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 				"message": feat + " is not available on this server",
 			},
 			"hint": "this feature is not yet available; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access",
-		})
+		}
+		if diagnostics := invocationDiagnostics(c, ctx); diagnostics != nil {
+			payload["diagnostics"] = diagnostics
+		}
+		ctx.JSON(503, payload)
 		ctx.Abort()
 		return
 	}
 	if !allowed {
 		requestID := trace.GetTraceID(c)
-		ctx.JSON(403, map[string]any{
+		payload := map[string]any{
 			"id":     requestID,
 			"status": "error",
 			"error": map[string]any{
@@ -125,7 +130,11 @@ func checkFeatureAccess(c context.Context, ctx *app.RequestContext, provider Fea
 				"message": feat + " is not allowed for the current user",
 			},
 			"hint": "you don't have access to this feature; use 'anycap feedback --type feature -m \"<describe your use case>\"' to request access",
-		})
+		}
+		if diagnostics := invocationDiagnostics(c, ctx); diagnostics != nil {
+			payload["diagnostics"] = diagnostics
+		}
+		ctx.JSON(403, payload)
 		ctx.Abort()
 		return
 	}

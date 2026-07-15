@@ -92,7 +92,7 @@ func Run[T any](ctx context.Context, e *Executor, input Input, hooks Hooks[T]) (
 
 	if hooks.AfterSuccess != nil {
 		if err := hooks.AfterSuccess(ctx, &result); err != nil {
-			return zero, err
+			return zero, wrapInvocationHookError(hooks, err, model.InvocationStagePublish)
 		}
 	}
 
@@ -113,7 +113,7 @@ func Run[T any](ctx context.Context, e *Executor, input Input, hooks Hooks[T]) (
 				"provider_task": success.ProviderTaskID,
 				"credit_cost":   success.CreditCost,
 			}).WithError(err).Error("record billing provider success failed")
-			return zero, model.ErrBillingUncertain
+			return zero, wrapInvocationHookError(hooks, model.ErrBillingUncertain, model.InvocationStageBilling)
 		}
 	}
 
@@ -143,21 +143,21 @@ func Run[T any](ctx context.Context, e *Executor, input Input, hooks Hooks[T]) (
 	if success.CreditCost > 0 {
 		if e == nil || e.credit == nil {
 			logger.Error("credit client not configured for charged execution")
-			return zero, model.ErrInternal
+			return zero, wrapInvocationHookError(hooks, model.ErrInternal, model.InvocationStageBilling)
 		}
 		if err := e.credit.Deduct(ctx, input.UserID, success.CreditCost, input.Capability, deductKey); err != nil {
 			if e.billing != nil {
 				_ = e.billing.MarkUncertain(ctx, input.Provider, input.RequestID, err.Error())
 			}
 			logger.WithField("credit_cost", success.CreditCost).WithError(err).Error("credit deduction failed")
-			return zero, model.ErrBillingUncertain
+			return zero, wrapInvocationHookError(hooks, model.ErrBillingUncertain, model.InvocationStageBilling)
 		}
 	}
 
 	if e != nil && e.billing != nil {
 		if err := e.billing.MarkDeducted(ctx, input.Provider, input.RequestID); err != nil {
 			logger.WithError(err).Error("finalize billing intent failed")
-			return zero, model.ErrBillingUncertain
+			return zero, wrapInvocationHookError(hooks, model.ErrBillingUncertain, model.InvocationStageBilling)
 		}
 	}
 
@@ -173,4 +173,12 @@ func Run[T any](ctx context.Context, e *Executor, input Input, hooks Hooks[T]) (
 	}
 
 	return result, nil
+}
+
+func wrapInvocationHookError[T any](hooks Hooks[T], err error, stage model.InvocationStage) error {
+	if err == nil || hooks.InvocationMeta == nil {
+		return err
+	}
+	meta := model.MergeInvocationMeta(hooks.InvocationMeta(), model.InvocationMeta{Stage: stage})
+	return model.WrapInvocationError("", err, meta)
 }

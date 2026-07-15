@@ -2,6 +2,7 @@ package image
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/application/execflow"
@@ -48,13 +49,13 @@ func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
 }
 
 // Generate is a convenience wrapper for Execute with OperationGenerate.
-func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) (model.GenerateImageResult, error) {
+func (s *Service) Generate(ctx context.Context, req model.GenerateImageRequest) (model.InvocationResult[model.GenerateImageResult], error) {
 	return s.Execute(ctx, req, model.OperationGenerate)
 }
 
 // Execute runs an image operation (generate, edit, upscale, etc.).
 // The operation determines which route is selected from the model catalog.
-func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, operation model.Operation) (model.GenerateImageResult, error) {
+func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, operation model.Operation) (model.InvocationResult[model.GenerateImageResult], error) {
 	action := "image." + string(operation)
 	logger := logging.WithContext(ctx).WithFields(logging.Fields{
 		"capability": action,
@@ -64,35 +65,35 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("image request validation failed")
-		return model.GenerateImageResult{}, err
+		return model.InvocationResult[model.GenerateImageResult]{}, err
 	}
 	if s == nil || s.catalog == nil || s.nexusHub == nil {
 		logger.Error("image execution not configured")
-		return model.GenerateImageResult{}, model.ErrImageExecutionNotConfigured
+		return model.InvocationResult[model.GenerateImageResult]{}, model.ErrImageExecutionNotConfigured
 	}
 	if s.credit == nil {
 		logger.Error("image credit client not configured")
-		return model.GenerateImageResult{}, model.ErrInternal
+		return model.InvocationResult[model.GenerateImageResult]{}, model.ErrInternal
 	}
 	if req.UserID == "" {
 		logger.Warn("missing user id for image request")
-		return model.GenerateImageResult{}, model.ErrAuthInvalid
+		return model.InvocationResult[model.GenerateImageResult]{}, model.ErrAuthInvalid
 	}
 
 	balance, err := s.credit.GetBalance(ctx, req.UserID)
 	if err != nil {
 		logger.WithError(err).Error("image credit balance lookup failed")
-		return model.GenerateImageResult{}, err
+		return model.InvocationResult[model.GenerateImageResult]{}, err
 	}
 	if balance.Available < 1 {
 		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for image request")
-		return model.GenerateImageResult{}, model.ErrInsufficientCredit
+		return model.InvocationResult[model.GenerateImageResult]{}, model.ErrInsufficientCredit
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityImage, req.Model)
 	if err != nil {
 		logger.WithError(err).Error("image model lookup failed")
-		return model.GenerateImageResult{}, err
+		return model.InvocationResult[model.GenerateImageResult]{}, err
 	}
 	mode := req.Mode
 	if mode == "" {
@@ -103,7 +104,7 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		logger.WithFields(logging.Fields{
 			"mode": mode,
 		}).WithError(err).Warn("image route selection failed")
-		return model.GenerateImageResult{}, err
+		return model.InvocationResult[model.GenerateImageResult]{}, err
 	}
 
 	if len(req.ReferenceImageURLs) > 0 && s.uploadResolver != nil {
@@ -112,11 +113,12 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 			logger.WithFields(logging.Fields{
 				"reference_image_count": len(req.ReferenceImageURLs),
 			}).WithError(resolveErr).Error("image reference resolution failed")
-			return model.GenerateImageResult{}, resolveErr
+			return model.InvocationResult[model.GenerateImageResult]{}, resolveErr
 		}
 		req.ReferenceImageURLs = resolved
 	}
 
+	var invocationMeta model.InvocationMeta
 	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
@@ -127,15 +129,25 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		MinCredit:  1,
 	}, execflow.Hooks[model.GenerateImageResult]{
 		Invoke: func(ctx context.Context) (model.GenerateImageResult, error) {
-			result, err := s.nexusHub.GenerateImage(ctx, req, route)
+			invocation, err := s.nexusHub.GenerateImage(ctx, req, route)
 			if err != nil {
 				logger.WithFields(logging.Fields{
 					"ability_key": route.AbilityKey,
 					"mode":        mode,
 				}).WithError(err).Error("image generation failed")
+				return model.GenerateImageResult{}, err
 			}
-			return result, err
+			invocationMeta = invocation.Meta
+			if !execflow.HasUsableOutput(invocation.Value.Outputs) {
+				return model.GenerateImageResult{}, model.WrapInvocationError(
+					model.InvocationErrorCodeUpstreamEmptyResult,
+					errors.New("provider completed without a usable image result"),
+					model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+				)
+			}
+			return invocation.Value, nil
 		},
+		InvocationMeta: func() model.InvocationMeta { return invocationMeta },
 		OnProviderSuccess: func(result model.GenerateImageResult) execflow.ProviderSuccessMeta {
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
@@ -210,8 +222,8 @@ func (s *Service) Execute(ctx context.Context, req model.GenerateImageRequest, o
 		},
 	})
 	if err != nil {
-		return model.GenerateImageResult{}, err
+		return model.InvocationResult[model.GenerateImageResult]{}, err
 	}
 
-	return result, nil
+	return model.InvocationResult[model.GenerateImageResult]{Value: result, Meta: invocationMeta}, nil
 }

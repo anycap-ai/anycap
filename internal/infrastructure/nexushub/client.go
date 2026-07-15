@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mime"
 	"net/http"
@@ -52,20 +53,28 @@ func NewClient(cfg ClientConfig) *Client {
 	}
 }
 
-func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageRequest, route model.RouteBinding) (model.GenerateImageResult, error) {
+func invocationFailure[T any](code string, err error, meta model.InvocationMeta) (model.InvocationResult[T], error) {
+	return model.InvocationResult[T]{}, model.WrapInvocationError(code, err, meta)
+}
+
+func invocationSuccess[T any](value T, meta model.InvocationMeta) (model.InvocationResult[T], error) {
+	return model.InvocationResult[T]{Value: value, Meta: meta}, nil
+}
+
+func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageRequest, route model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "configuration", nil, "nexushub image client not configured")
-		return model.GenerateImageResult{}, model.ErrImageExecutionNotConfigured
+		return invocationFailure[model.GenerateImageResult]("", model.ErrImageExecutionNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 	if route.AbilityKey == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "route_validation", nil, "nexushub image route missing ability key")
-		return model.GenerateImageResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+		return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	uid, err := parseNexusHubUID(req.UserID)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "user_id_parse", err, "invalid nexushub user id")
-		return model.GenerateImageResult{}, err
+		return invocationFailure[model.GenerateImageResult]("", err, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	payload := atomicProcessPayload{
@@ -92,7 +101,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "marshal_req_payload", err, "marshal nexushub image req_payload failed")
-		return model.GenerateImageResult{}, fmt.Errorf("marshal req_payload: %w", err)
+		return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("marshal req_payload: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	body := submitAtomicProcessRequest{
@@ -117,13 +126,13 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "marshal_submit_request", err, "marshal nexushub image submit request failed")
-		return model.GenerateImageResult{}, fmt.Errorf("marshal submit request: %w", err)
+		return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("marshal submit request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "build_request", err, "build nexushub image request failed")
-		return model.GenerateImageResult{}, fmt.Errorf("build request: %w", err)
+		return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("build request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	setNexusExtraHeader(ctx, httpReq)
@@ -131,14 +140,18 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "http_request", err, "submit nexushub image request failed")
-		return model.GenerateImageResult{}, fmt.Errorf("submit atomic process: %w", err)
+		code := ""
+		if errors.Is(err, context.DeadlineExceeded) {
+			code = model.InvocationErrorCodeUpstreamTimeout
+		}
+		return invocationFailure[model.GenerateImageResult](code, fmt.Errorf("submit atomic process: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
 
 	var parsed submitAtomicProcessResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "decode_submit_response", err, "decode nexushub image submit response failed")
-		return model.GenerateImageResult{}, fmt.Errorf("decode submit response: %w", err)
+		return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("decode submit response: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -146,7 +159,17 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 			"status_code": resp.StatusCode,
 			"base_code":   parsed.Base.Code,
 		})
-		return model.GenerateImageResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+		return invocationFailure[model.GenerateImageResult]("", mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message), model.InvocationMeta{
+			TaskID:         parsed.TaskID,
+			ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+			Stage:          model.InvocationStageSubmit,
+		})
+	}
+
+	meta := model.InvocationMeta{
+		TaskID:         parsed.TaskID,
+		ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+		Stage:          model.InvocationStageDecodeResult,
 	}
 
 	result := model.GenerateImageResult{
@@ -163,7 +186,7 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 		var respPayload atomicRespPayload
 		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
 			logNexusHubCapabilityError(ctx, string(model.CapabilityImage), req.Model, route.AbilityKey, "decode_resp_payload", err, "decode nexushub image response payload failed")
-			return model.GenerateImageResult{}, fmt.Errorf("decode resp_payload: %w", err)
+			return invocationFailure[model.GenerateImageResult]("", fmt.Errorf("decode resp_payload: %w", err), meta)
 		}
 
 		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
@@ -185,23 +208,23 @@ func (c *Client) GenerateImage(ctx context.Context, req model.GenerateImageReque
 		result.Outputs = outputs
 	}
 
-	return result, nil
+	return invocationSuccess(result, meta)
 }
 
-func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoRequest, route model.RouteBinding) (model.GenerateVideoResult, error) {
+func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoRequest, route model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "configuration", nil, "nexushub video client not configured")
-		return model.GenerateVideoResult{}, model.ErrVideoExecutionNotConfigured
+		return invocationFailure[model.GenerateVideoResult]("", model.ErrVideoExecutionNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 	if route.AbilityKey == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "route_validation", nil, "nexushub video route missing ability key")
-		return model.GenerateVideoResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+		return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	uid, err := parseNexusHubUID(req.UserID)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "user_id_parse", err, "invalid nexushub user id")
-		return model.GenerateVideoResult{}, err
+		return invocationFailure[model.GenerateVideoResult]("", err, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	payload := atomicProcessPayload{
@@ -236,7 +259,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "marshal_req_payload", err, "marshal nexushub video req_payload failed")
-		return model.GenerateVideoResult{}, fmt.Errorf("marshal req_payload: %w", err)
+		return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("marshal req_payload: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	body := submitAtomicProcessRequest{
@@ -261,13 +284,13 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "marshal_submit_request", err, "marshal nexushub video submit request failed")
-		return model.GenerateVideoResult{}, fmt.Errorf("marshal submit request: %w", err)
+		return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("marshal submit request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "build_request", err, "build nexushub video request failed")
-		return model.GenerateVideoResult{}, fmt.Errorf("build request: %w", err)
+		return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("build request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	setNexusExtraHeader(ctx, httpReq)
@@ -275,14 +298,18 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "http_request", err, "submit nexushub video request failed")
-		return model.GenerateVideoResult{}, fmt.Errorf("submit atomic process: %w", err)
+		code := ""
+		if errors.Is(err, context.DeadlineExceeded) {
+			code = model.InvocationErrorCodeUpstreamTimeout
+		}
+		return invocationFailure[model.GenerateVideoResult](code, fmt.Errorf("submit atomic process: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
 
 	var parsed submitAtomicProcessResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "decode_submit_response", err, "decode nexushub video submit response failed")
-		return model.GenerateVideoResult{}, fmt.Errorf("decode submit response: %w", err)
+		return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("decode submit response: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -290,7 +317,17 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 			"status_code": resp.StatusCode,
 			"base_code":   parsed.Base.Code,
 		})
-		return model.GenerateVideoResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+		return invocationFailure[model.GenerateVideoResult]("", mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message), model.InvocationMeta{
+			TaskID:         parsed.TaskID,
+			ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+			Stage:          model.InvocationStageSubmit,
+		})
+	}
+
+	meta := model.InvocationMeta{
+		TaskID:         parsed.TaskID,
+		ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+		Stage:          model.InvocationStageDecodeResult,
 	}
 
 	result := model.GenerateVideoResult{
@@ -307,7 +344,7 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		var respPayload atomicRespPayload
 		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
 			logNexusHubCapabilityError(ctx, string(model.CapabilityVideo), req.Model, route.AbilityKey, "decode_resp_payload", err, "decode nexushub video response payload failed")
-			return model.GenerateVideoResult{}, fmt.Errorf("decode resp_payload: %w", err)
+			return invocationFailure[model.GenerateVideoResult]("", fmt.Errorf("decode resp_payload: %w", err), meta)
 		}
 
 		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
@@ -329,23 +366,23 @@ func (c *Client) GenerateVideo(ctx context.Context, req model.GenerateVideoReque
 		result.Outputs = outputs
 	}
 
-	return result, nil
+	return invocationSuccess(result, meta)
 }
 
-func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicRequest, route model.RouteBinding) (model.GenerateMusicResult, error) {
+func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicRequest, route model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "configuration", nil, "nexushub music client not configured")
-		return model.GenerateMusicResult{}, model.ErrMusicExecutionNotConfigured
+		return invocationFailure[model.GenerateMusicResult]("", model.ErrMusicExecutionNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 	if route.AbilityKey == "" {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "route_validation", nil, "nexushub music route missing ability key")
-		return model.GenerateMusicResult{}, fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured)
+		return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	uid, err := parseNexusHubUID(req.UserID)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "user_id_parse", err, "invalid nexushub user id")
-		return model.GenerateMusicResult{}, err
+		return invocationFailure[model.GenerateMusicResult]("", err, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	payload := atomicProcessPayload{
@@ -361,7 +398,7 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "marshal_req_payload", err, "marshal nexushub music req_payload failed")
-		return model.GenerateMusicResult{}, fmt.Errorf("marshal req_payload: %w", err)
+		return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("marshal req_payload: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	body := submitAtomicProcessRequest{
@@ -386,13 +423,13 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "marshal_submit_request", err, "marshal nexushub music submit request failed")
-		return model.GenerateMusicResult{}, fmt.Errorf("marshal submit request: %w", err)
+		return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("marshal submit request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "build_request", err, "build nexushub music request failed")
-		return model.GenerateMusicResult{}, fmt.Errorf("build request: %w", err)
+		return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("build request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	setNexusExtraHeader(ctx, httpReq)
@@ -400,14 +437,18 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "http_request", err, "submit nexushub music request failed")
-		return model.GenerateMusicResult{}, fmt.Errorf("submit atomic process: %w", err)
+		code := ""
+		if errors.Is(err, context.DeadlineExceeded) {
+			code = model.InvocationErrorCodeUpstreamTimeout
+		}
+		return invocationFailure[model.GenerateMusicResult](code, fmt.Errorf("submit atomic process: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
 
 	var parsed submitAtomicProcessResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "decode_submit_response", err, "decode nexushub music submit response failed")
-		return model.GenerateMusicResult{}, fmt.Errorf("decode submit response: %w", err)
+		return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("decode submit response: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -415,7 +456,17 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 			"status_code": resp.StatusCode,
 			"base_code":   parsed.Base.Code,
 		})
-		return model.GenerateMusicResult{}, mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+		return invocationFailure[model.GenerateMusicResult]("", mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message), model.InvocationMeta{
+			TaskID:         parsed.TaskID,
+			ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+			Stage:          model.InvocationStageSubmit,
+		})
+	}
+
+	meta := model.InvocationMeta{
+		TaskID:         parsed.TaskID,
+		ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+		Stage:          model.InvocationStageDecodeResult,
 	}
 
 	result := model.GenerateMusicResult{
@@ -432,7 +483,7 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 		var respPayload atomicRespPayload
 		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
 			logNexusHubCapabilityError(ctx, string(model.CapabilityMusic), req.Model, route.AbilityKey, "decode_resp_payload", err, "decode nexushub music response payload failed")
-			return model.GenerateMusicResult{}, fmt.Errorf("decode resp_payload: %w", err)
+			return invocationFailure[model.GenerateMusicResult]("", fmt.Errorf("decode resp_payload: %w", err), meta)
 		}
 
 		outputs := make([]model.Artifact, 0, len(respPayload.Resources))
@@ -454,7 +505,7 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 		result.Outputs = outputs
 	}
 
-	return result, nil
+	return invocationSuccess(result, meta)
 }
 
 func buildAtomicVideoShotClips(clips []model.VideoShotClip) []atomicVideoShotClip {
@@ -778,7 +829,7 @@ func normalizeNexusHubStatus(status string) string {
 
 func normalizeNexusHubTaskStatus(status string) string {
 	switch strings.ToLower(status) {
-	case "succeeded", "success", "completed":
+	case "succeed", "succeeded", "success", "completed":
 		return "success"
 	case "failed", "failure", "error":
 		return "failed"

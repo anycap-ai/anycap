@@ -2,6 +2,7 @@ package feedback
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -35,6 +36,16 @@ func (s *Service) Submit(ctx context.Context, fb model.Feedback) (string, error)
 
 	fb.ID = generateID()
 	fb.CreatedAt = time.Now().UTC()
+	fb.Diagnostics = normalizeFeedbackDiagnostics(fb)
+	if fb.Diagnostics.Stage != "" && !validFeedbackStage(fb.Diagnostics.Stage) {
+		return "", fmt.Errorf("%w: invalid diagnostics stage", model.ErrInvalidParam)
+	}
+	if diagnosticsJSON, err := diagnosticsMap(fb.Diagnostics); err == nil && len(diagnosticsJSON) > 0 {
+		if fb.Metadata == nil {
+			fb.Metadata = make(map[string]any)
+		}
+		fb.Metadata["diagnostics"] = diagnosticsJSON
+	}
 
 	// Inject server environment into metadata for notification context.
 	if s.env != "" {
@@ -59,6 +70,45 @@ func (s *Service) Submit(ctx context.Context, fb model.Feedback) (string, error)
 	}
 
 	return fb.ID, nil
+}
+
+func normalizeFeedbackDiagnostics(fb model.Feedback) model.FeedbackDiagnostics {
+	diagnostics := fb.Diagnostics
+	if diagnostics.RequestID == "" {
+		diagnostics.RequestID = fb.RequestID
+	}
+	if diagnostics.TraceID == "" && fb.Metadata != nil {
+		if value, ok := fb.Metadata["trace_id"].(string); ok {
+			diagnostics.TraceID = value
+		}
+	}
+	if diagnostics.TaskID == "" && fb.Context != nil {
+		if value, ok := fb.Context["task_id"].(string); ok {
+			diagnostics.TaskID = value
+		}
+	}
+	return diagnostics
+}
+
+func validFeedbackStage(stage string) bool {
+	switch stage {
+	case "prepare", "submit", "poll", "decode_result", "validate_result", "publish", "billing":
+		return true
+	default:
+		return false
+	}
+}
+
+func diagnosticsMap(diagnostics model.FeedbackDiagnostics) (map[string]any, error) {
+	data, err := json.Marshal(diagnostics)
+	if err != nil {
+		return nil, err
+	}
+	var out map[string]any
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func generateID() string {

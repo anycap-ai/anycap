@@ -3,7 +3,9 @@ package web
 
 import (
 	"context"
+	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -56,21 +58,21 @@ func (s *Service) SetCallLogRepo(callLogs port.CallLogRepo) {
 }
 
 // SearchGrounding performs an LLM grounding search.
-func (s *Service) SearchGrounding(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGroundingResult, error) {
+func (s *Service) SearchGrounding(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGroundingResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "web.search")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("web search validation failed")
-		return model.WebSearchGroundingResult{}, err
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, err
 	}
 
 	if s == nil || s.searchProvider == nil {
 		logger.Error("web search grounding provider not configured")
-		return model.WebSearchGroundingResult{}, model.ErrWebSearchProviderNotConfigured
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, model.ErrWebSearchProviderNotConfigured
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureBalance(ctx, userID, groundingSearchCreditCost, "web.search"); err != nil {
-		return model.WebSearchGroundingResult{}, err
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -79,34 +81,41 @@ func (s *Service) SearchGrounding(ctx context.Context, req model.WebSearchReques
 	result, err := s.searchProvider.SearchGrounding(ctx, req.Query, req.Instruction, req.Model)
 	if err != nil {
 		logger.WithError(err).Error("web search grounding upstream call failed")
-		return model.WebSearchGroundingResult{}, err
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, err
+	}
+	if strings.TrimSpace(result.Value.Content) == "" {
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, model.WrapInvocationError(
+			model.InvocationErrorCodeUpstreamEmptyResult,
+			errors.New("provider completed without usable grounding content"),
+			model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+		)
 	}
 
-	if err := s.finalizeSuccess(ctx, userID, requestID, "web.search", result.Model, groundingSearchCreditCost, startedAt); err != nil {
-		return model.WebSearchGroundingResult{}, err
+	if err := s.finalizeSuccess(ctx, userID, requestID, "web.search", result.Value.Model, groundingSearchCreditCost, startedAt); err != nil {
+		return model.InvocationResult[model.WebSearchGroundingResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 
-	result.Query = req.Query
-	result.CreditCost = groundingSearchCreditCost
+	result.Value.Query = req.Query
+	result.Value.CreditCost = groundingSearchCreditCost
 	return result, nil
 }
 
 // SearchGeneral performs a general web search returning a list of results.
-func (s *Service) SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error) {
+func (s *Service) SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGeneralResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "web.search")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("web search validation failed")
-		return model.WebSearchGeneralResult{}, err
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, err
 	}
 
 	if s == nil || s.generalSearchProvider == nil {
 		logger.Error("web general search provider not configured")
-		return model.WebSearchGeneralResult{}, model.ErrWebGeneralSearchProviderNotConfigured
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, model.ErrWebGeneralSearchProviderNotConfigured
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureBalance(ctx, userID, generalSearchCreditCost, "web.search"); err != nil {
-		return model.WebSearchGeneralResult{}, err
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -115,33 +124,33 @@ func (s *Service) SearchGeneral(ctx context.Context, req model.WebSearchRequest)
 	result, err := s.generalSearchProvider.SearchGeneral(ctx, req)
 	if err != nil {
 		logger.WithError(err).Error("web general search upstream call failed")
-		return model.WebSearchGeneralResult{}, err
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, err
 	}
 
 	if err := s.finalizeSuccess(ctx, userID, requestID, "web.search", "", generalSearchCreditCost, startedAt); err != nil {
-		return model.WebSearchGeneralResult{}, err
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(result.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 
-	result.Query = req.Query
-	result.CreditCost = generalSearchCreditCost
+	result.Value.Query = req.Query
+	result.Value.CreditCost = generalSearchCreditCost
 	return result, nil
 }
 
 // Crawl converts a web page to Markdown.
-func (s *Service) Crawl(ctx context.Context, req model.WebCrawlRequest) (model.WebCrawlResult, error) {
+func (s *Service) Crawl(ctx context.Context, req model.WebCrawlRequest) (model.InvocationResult[model.WebCrawlResult], error) {
 	logger := logging.WithContext(ctx).WithField("capability", "web.crawl")
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("web crawl validation failed")
-		return model.WebCrawlResult{}, err
+		return model.InvocationResult[model.WebCrawlResult]{}, err
 	}
 	if s == nil || s.crawler == nil {
 		logger.Error("web crawl provider not configured")
-		return model.WebCrawlResult{}, model.ErrWebCrawlerNotConfigured
+		return model.InvocationResult[model.WebCrawlResult]{}, model.ErrWebCrawlerNotConfigured
 	}
 
 	userID := middleware.UserIDFromContext(ctx)
 	if err := s.ensureBalance(ctx, userID, crawlCreditCost, "web.crawl"); err != nil {
-		return model.WebCrawlResult{}, err
+		return model.InvocationResult[model.WebCrawlResult]{}, err
 	}
 
 	startedAt := time.Now()
@@ -150,19 +159,26 @@ func (s *Service) Crawl(ctx context.Context, req model.WebCrawlRequest) (model.W
 	markdown, err := s.crawler.Crawl(ctx, req.URL)
 	if err != nil {
 		logger.WithError(err).Error("web crawl upstream call failed")
-		return model.WebCrawlResult{}, err
+		return model.InvocationResult[model.WebCrawlResult]{}, err
+	}
+	if strings.TrimSpace(markdown.Value.Markdown) == "" {
+		return model.InvocationResult[model.WebCrawlResult]{}, model.WrapInvocationError(
+			model.InvocationErrorCodeUpstreamEmptyResult,
+			model.ErrUpstreamUnavailable,
+			model.MergeInvocationMeta(markdown.Meta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+		)
 	}
 
 	if err := s.finalizeSuccess(ctx, userID, requestID, "web.crawl", "", crawlCreditCost, startedAt); err != nil {
-		return model.WebCrawlResult{}, err
+		return model.InvocationResult[model.WebCrawlResult]{}, model.WrapInvocationError("", err, model.MergeInvocationMeta(markdown.Meta, model.InvocationMeta{Stage: model.InvocationStageBilling}))
 	}
 
-	return model.WebCrawlResult{
+	return model.InvocationResult[model.WebCrawlResult]{Value: model.WebCrawlResult{
 		URL:        req.URL,
-		Title:      markdown.Title,
-		Markdown:   markdown.Markdown,
+		Title:      markdown.Value.Title,
+		Markdown:   markdown.Value.Markdown,
 		CreditCost: crawlCreditCost,
-	}, nil
+	}, Meta: markdown.Meta}, nil
 }
 
 func (s *Service) ensureBalance(ctx context.Context, userID string, cost int64, capability string) error {

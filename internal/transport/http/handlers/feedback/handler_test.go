@@ -33,7 +33,7 @@ func TestHandler_Submit_PersistsClientTraceIDInMetadata(t *testing.T) {
 	h.Use(commonmw.TraceMiddleware())
 	h.POST("/v1/feedback", handler.Submit)
 
-	body := []byte(`{"type":"bug","message":"broken","request_id":"req_prev_1","trace_id":"trc_prev_1","metadata":{"cli_version":"0.1.0"}}`)
+	body := []byte(`{"type":"bug","message":"broken","request_id":"req_prev_1","trace_id":"trc_prev_1","diagnostics":{"trace_id":"trc_original","task_id":"task_original","capability":"music.generate","stage":"validate_result"},"metadata":{"cli_version":"0.1.0"}}`)
 	w := ut.PerformRequest(
 		h.Engine,
 		http.MethodPost,
@@ -51,6 +51,9 @@ func TestHandler_Submit_PersistsClientTraceIDInMetadata(t *testing.T) {
 	}
 	if repo.inserted.Metadata["trace_id"] != "trc_prev_1" {
 		t.Fatalf("expected metadata trace_id trc_prev_1, got %#v", repo.inserted.Metadata["trace_id"])
+	}
+	if repo.inserted.Diagnostics.TraceID != "trc_original" || repo.inserted.Diagnostics.TaskID != "task_original" || repo.inserted.Diagnostics.Capability != "music.generate" || repo.inserted.Diagnostics.Stage != "validate_result" {
+		t.Fatalf("expected invocation diagnostics, got %+v", repo.inserted.Diagnostics)
 	}
 
 	var resp map[string]any

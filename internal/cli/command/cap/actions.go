@@ -99,6 +99,9 @@ Examples:
 			if modelFlag != "" {
 				body["model"] = modelFlag
 			}
+			if err := writeInvocationStarted(cmd, "image.read", modelFlag); err != nil {
+				return err
+			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("image"), body)
 			if err != nil {
@@ -165,6 +168,9 @@ Examples:
 			}
 			if modelFlag != "" {
 				body["model"] = modelFlag
+			}
+			if err := writeInvocationStarted(cmd, "video.read", modelFlag); err != nil {
+				return err
 			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("video"), body)
@@ -235,6 +241,9 @@ Examples:
 			}
 			if modelFlag != "" {
 				body["model"] = modelFlag
+			}
+			if err := writeInvocationStarted(cmd, "audio.read", modelFlag); err != nil {
+				return err
 			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.CapabilityReadPath("audio"), body)

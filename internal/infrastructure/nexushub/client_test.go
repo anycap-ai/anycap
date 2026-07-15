@@ -144,17 +144,52 @@ func TestClient_GenerateImage(t *testing.T) {
 		t.Fatalf("expected 1 reference image, got %d", len(payload.ImageOption.ReferImageURLs))
 	}
 
-	if result.ID != "task-123" {
-		t.Fatalf("expected result id task-123, got %q", result.ID)
+	if result.Meta.TaskID != "task-123" || result.Meta.ProviderStatus != "success" {
+		t.Fatalf("metadata = %+v", result.Meta)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success status, got %q", result.Status)
+	if result.Value.ID != "task-123" {
+		t.Fatalf("expected result id task-123, got %q", result.Value.ID)
 	}
-	if len(result.Outputs) != 1 || result.Outputs[0].URL != "https://cdn.anycap.local/generated.png" {
-		t.Fatalf("unexpected outputs: %#v", result.Outputs)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success status, got %q", result.Value.Status)
 	}
-	if result.CreditCost != 2 {
-		t.Fatalf("expected credit cost 2 from nexus_cost, got %d", result.CreditCost)
+	if len(result.Value.Outputs) != 1 || result.Value.Outputs[0].URL != "https://cdn.anycap.local/generated.png" {
+		t.Fatalf("unexpected outputs: %#v", result.Value.Outputs)
+	}
+	if result.Value.CreditCost != 2 {
+		t.Fatalf("expected credit cost 2 from nexus_cost, got %d", result.Value.CreditCost)
+	}
+}
+
+func TestClient_GenerateImageAcceptedTaskDoesNotPollAndPreservesMetadata(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path == submitAtomicProcessPath {
+			_ = json.NewEncoder(w).Encode(submitAtomicProcessResponse{
+				Base:   submitBaseResponse{Code: 0, Message: "success"},
+				TaskID: "image-task-accepted",
+				Status: "processing",
+			})
+			return
+		}
+		t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "nexus-token"})
+	result, err := client.GenerateImage(context.Background(), model.GenerateImageRequest{
+		RequestID: "trc_image_no_poll",
+		UserID:    "user-123",
+		Prompt:    "paper crane",
+		Model:     "flux-dev",
+	}, model.RouteBinding{AbilityKey: "flux_dev", GenType: string(model.CapabilityImage)})
+	if err != nil {
+		t.Fatalf("GenerateImage() error = %v", err)
+	}
+	if result.Meta.TaskID != "image-task-accepted" || result.Meta.ProviderStatus != "processing" {
+		t.Fatalf("metadata = %+v", result.Meta)
+	}
+	if result.Value.ID != result.Meta.TaskID || len(result.Value.Outputs) != 0 {
+		t.Fatalf("result = %+v", result.Value)
 	}
 }
 
@@ -241,17 +276,80 @@ func TestClient_GenerateMusic(t *testing.T) {
 		t.Fatalf("expected continue clip id to round trip, got %q", payload.MusicOption.ContinueClipID)
 	}
 
-	if result.ID != "music-task-123" {
-		t.Fatalf("expected result id music-task-123, got %q", result.ID)
+	if result.Value.ID != "music-task-123" {
+		t.Fatalf("expected result id music-task-123, got %q", result.Value.ID)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success status, got %q", result.Status)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success status, got %q", result.Value.Status)
 	}
-	if len(result.Outputs) != 1 || result.Outputs[0].URL != "https://cdn.anycap.local/generated.mp3" {
-		t.Fatalf("unexpected outputs: %#v", result.Outputs)
+	if len(result.Value.Outputs) != 1 || result.Value.Outputs[0].URL != "https://cdn.anycap.local/generated.mp3" {
+		t.Fatalf("unexpected outputs: %#v", result.Value.Outputs)
 	}
-	if result.CreditCost != 3 {
-		t.Fatalf("expected credit cost 3 from nexus_cost, got %d", result.CreditCost)
+	if result.Value.CreditCost != 3 {
+		t.Fatalf("expected credit cost 3 from nexus_cost, got %d", result.Value.CreditCost)
+	}
+}
+
+func TestClient_GenerateMusicAcceptedTaskDoesNotPollAndPreservesMetadata(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost && r.URL.Path == submitAtomicProcessPath {
+			_ = json.NewEncoder(w).Encode(submitAtomicProcessResponse{
+				Base:   submitBaseResponse{Code: 0, Message: "success"},
+				TaskID: "music-task-accepted",
+				Status: "processing",
+			})
+			return
+		}
+		t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "nexus-token"})
+	result, err := client.GenerateMusic(context.Background(), model.GenerateMusicRequest{
+		RequestID: "trc_music_poll",
+		UserID:    "user-123",
+		Prompt:    "minimal cello",
+		Model:     "suno-v5.5",
+	}, model.RouteBinding{AbilityKey: "suno_v55", GenType: string(model.CapabilityMusic)})
+	if err != nil {
+		t.Fatalf("GenerateMusic() error = %v", err)
+	}
+	if result.Meta.TaskID != "music-task-accepted" || result.Meta.ProviderStatus != "processing" {
+		t.Fatalf("metadata = %+v", result.Meta)
+	}
+	if result.Value.ID != result.Meta.TaskID {
+		t.Fatalf("legacy result id = %q, task id = %q", result.Value.ID, result.Meta.TaskID)
+	}
+	if len(result.Value.Outputs) != 0 {
+		t.Fatalf("outputs = %+v, want empty", result.Value.Outputs)
+	}
+}
+
+func TestClient_GenerateMusicMalformedPayloadPreservesTaskMetadata(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(submitAtomicProcessResponse{
+			Base:        submitBaseResponse{Code: 0, Message: "success"},
+			TaskID:      "music-task-malformed",
+			Status:      "succeeded",
+			RespPayload: `{not-json`,
+		})
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "nexus-token"})
+	_, err := client.GenerateMusic(context.Background(), model.GenerateMusicRequest{
+		RequestID: "trc_music_malformed",
+		UserID:    "user-123",
+		Prompt:    "minimal cello",
+		Model:     "suno-v5.5",
+	}, model.RouteBinding{AbilityKey: "suno_v55", GenType: string(model.CapabilityMusic)})
+	if err == nil {
+		t.Fatal("expected malformed result error")
+	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "music-task-malformed" || meta.Stage != model.InvocationStageDecodeResult {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
 	}
 }
 
@@ -325,17 +423,52 @@ func TestClient_GenerateVideo(t *testing.T) {
 		t.Fatalf("expected resource url to round trip, got %q", payload.ResourceURL)
 	}
 
-	if result.ID != "video-task-123" {
-		t.Fatalf("expected result id video-task-123, got %q", result.ID)
+	if result.Meta.TaskID != "video-task-123" || result.Meta.ProviderStatus != "success" {
+		t.Fatalf("metadata = %+v", result.Meta)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success status, got %q", result.Status)
+	if result.Value.ID != "video-task-123" {
+		t.Fatalf("expected result id video-task-123, got %q", result.Value.ID)
 	}
-	if len(result.Outputs) != 1 || result.Outputs[0].URL != "https://cdn.anycap.local/generated.mp4" {
-		t.Fatalf("unexpected outputs: %#v", result.Outputs)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success status, got %q", result.Value.Status)
 	}
-	if result.CreditCost != 5 {
-		t.Fatalf("expected credit cost 5 from nexus_cost, got %d", result.CreditCost)
+	if len(result.Value.Outputs) != 1 || result.Value.Outputs[0].URL != "https://cdn.anycap.local/generated.mp4" {
+		t.Fatalf("unexpected outputs: %#v", result.Value.Outputs)
+	}
+	if result.Value.CreditCost != 5 {
+		t.Fatalf("expected credit cost 5 from nexus_cost, got %d", result.Value.CreditCost)
+	}
+}
+
+func TestClient_GenerateVideoAcceptedTaskDoesNotPollAndPreservesMetadata(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path == submitAtomicProcessPath {
+			_ = json.NewEncoder(w).Encode(submitAtomicProcessResponse{
+				Base:   submitBaseResponse{Code: 0, Message: "success"},
+				TaskID: "video-task-accepted",
+				Status: "processing",
+			})
+			return
+		}
+		t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
+	}))
+	defer srv.Close()
+
+	client := NewClient(ClientConfig{BaseURL: srv.URL, Token: "nexus-token"})
+	result, err := client.GenerateVideo(context.Background(), model.GenerateVideoRequest{
+		RequestID: "trc_video_no_poll",
+		UserID:    "user-123",
+		Prompt:    "paper crane",
+		Model:     "veo-mini",
+	}, model.RouteBinding{AbilityKey: "veo-mini", GenType: string(model.CapabilityVideo)})
+	if err != nil {
+		t.Fatalf("GenerateVideo() error = %v", err)
+	}
+	if result.Meta.TaskID != "video-task-accepted" || result.Meta.ProviderStatus != "processing" {
+		t.Fatalf("metadata = %+v", result.Meta)
+	}
+	if result.Value.ID != result.Meta.TaskID || len(result.Value.Outputs) != 0 {
+		t.Fatalf("result = %+v", result.Value)
 	}
 }
 
@@ -539,6 +672,10 @@ func TestClient_GenerateVideo_NexusHub500ValidationError(t *testing.T) {
 	// Error message must contain the useful detail
 	if !strings.Contains(err.Error(), "supported durations are [8,4,6]") {
 		t.Fatalf("expected duration constraint in error, got: %v", err)
+	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "task-failed" || meta.Stage != model.InvocationStageSubmit {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
 	}
 }
 

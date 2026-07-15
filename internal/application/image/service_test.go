@@ -24,6 +24,7 @@ type fakeUsageWriter struct {
 }
 
 type zeroCostNexusClient struct{}
+type emptyOutputNexusClient struct{ zeroCostNexusClient }
 type failingUsageWriter struct{}
 type fakeArtifactPublisher struct {
 	result model.ArtifactPublishResult
@@ -35,6 +36,7 @@ type fakeBillingCoordinator struct {
 	providerSuccess []model.RecordBillingProviderSuccessInput
 	uncertain       []string
 	deducted        []string
+	recordErr       error
 }
 
 func (f *fakeUsageWriter) InsertUsageEvent(_ context.Context, event model.UsageEventRecord) error {
@@ -47,21 +49,27 @@ func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.Provide
 	return nil
 }
 
-func (zeroCostNexusClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.GenerateImageResult, error) {
-	return model.GenerateImageResult{
+func (zeroCostNexusClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
+	result := model.GenerateImageResult{
 		ID:      "img-zero-cost",
 		Status:  "success",
 		Model:   req.Model,
 		Outputs: []model.Artifact{{Type: "image", URL: "https://cdn.anycap.local/generated.png", MIMEType: "image/png"}},
-	}, nil
+	}
+	return model.InvocationResult[model.GenerateImageResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
 }
 
-func (zeroCostNexusClient) GenerateVideo(_ context.Context, _ model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
+func (zeroCostNexusClient) GenerateVideo(_ context.Context, _ model.GenerateVideoRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
 	panic("unexpected GenerateVideo call")
 }
 
-func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
+func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusicRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
 	panic("unexpected GenerateMusic call")
+}
+
+func (emptyOutputNexusClient) GenerateImage(_ context.Context, req model.GenerateImageRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
+	result := model.GenerateImageResult{ID: "img-empty", Status: "success", Model: req.Model, Outputs: []model.Artifact{{Type: "image", URL: "  "}}}
+	return model.InvocationResult[model.GenerateImageResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
 }
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
@@ -122,7 +130,7 @@ func (f *fakeBillingCoordinator) CreateOrGetIntent(_ context.Context, input mode
 
 func (f *fakeBillingCoordinator) RecordProviderSuccess(_ context.Context, input model.RecordBillingProviderSuccessInput) error {
 	f.providerSuccess = append(f.providerSuccess, input)
-	return nil
+	return f.recordErr
 }
 
 func (f *fakeBillingCoordinator) RecordProviderFailure(_ context.Context, _, _, _, _ string) error {
@@ -223,14 +231,14 @@ func TestGenerateImage_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success, got %q", result.Status)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success, got %q", result.Value.Status)
 	}
-	if result.Model != "flux-dev" {
-		t.Fatalf("expected flux-dev, got %s", result.Model)
+	if result.Value.Model != "flux-dev" {
+		t.Fatalf("expected flux-dev, got %s", result.Value.Model)
 	}
-	if len(result.Outputs) != 1 {
-		t.Fatalf("expected 1 output, got %d", len(result.Outputs))
+	if len(result.Value.Outputs) != 1 {
+		t.Fatalf("expected 1 output, got %d", len(result.Value.Outputs))
 	}
 	if logs.Count() != 1 {
 		t.Fatalf("expected 1 call log, got %d", logs.Count())
@@ -272,7 +280,7 @@ func TestGenerateImage_SuccessPersistsUsageLedger(t *testing.T) {
 	if writer.events[0].OccurredAt == (time.Time{}) {
 		t.Fatalf("expected occurred_at to be set, got %#v", writer.events[0])
 	}
-	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
+	if writer.runs[0].ProviderTaskID != result.Value.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
 	}
 }
@@ -294,8 +302,8 @@ func TestGenerateImage_DoesNotDeductWhenProviderCostMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.CreditCost != 0 {
-		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.CreditCost)
+	if result.Value.CreditCost != 0 {
+		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.Value.CreditCost)
 	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
@@ -399,6 +407,10 @@ func TestGenerateImage_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	if !errors.Is(err, model.ErrUpstreamUnavailable) {
 		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
 	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "img_req-1" || meta.Stage != model.InvocationStagePublish {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
+	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
 	if err != nil {
@@ -406,6 +418,32 @@ func TestGenerateImage_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	}
 	if balance.Available != 2 {
 		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
+	}
+}
+
+func TestGenerateImage_RejectsEmptyProviderOutputWithTaskMetadata(t *testing.T) {
+	service := NewService(testCatalog(), emptyOutputNexusClient{}, credit.NewStubClient(map[string]int64{"user-1": 2}), calllog.NewMemoryCallLogRepo())
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{UserID: "user-1", RequestID: "req-empty", Prompt: "paper crane", Model: "flux-dev"})
+	var invocationErr *model.InvocationError
+	if !errors.As(err, &invocationErr) {
+		t.Fatalf("expected invocation error, got %v", err)
+	}
+	if invocationErr.Code != model.InvocationErrorCodeUpstreamEmptyResult || invocationErr.Meta.TaskID != "img-empty" || invocationErr.Meta.Stage != model.InvocationStageValidateResult {
+		t.Fatalf("invocation error = %+v", invocationErr)
+	}
+}
+
+func TestGenerateImage_BillingFailurePreservesTaskMetadata(t *testing.T) {
+	billingCoord := &fakeBillingCoordinator{recordErr: errors.New("billing store down")}
+	service := NewService(testCatalog(), zeroCostNexusClient{}, credit.NewStubClient(map[string]int64{"user-1": 2}), calllog.NewMemoryCallLogRepo())
+	service.SetBillingCoordinator(billingCoord)
+	_, err := service.Generate(context.Background(), model.GenerateImageRequest{UserID: "user-1", RequestID: "req-billing", Prompt: "paper crane", Model: "flux-dev"})
+	var invocationErr *model.InvocationError
+	if !errors.As(err, &invocationErr) {
+		t.Fatalf("expected invocation error, got %v", err)
+	}
+	if invocationErr.Meta.TaskID != "img-zero-cost" || invocationErr.Meta.Stage != model.InvocationStageBilling {
+		t.Fatalf("invocation error = %+v", invocationErr)
 	}
 }
 

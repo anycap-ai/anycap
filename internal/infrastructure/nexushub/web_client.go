@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -93,12 +94,12 @@ func NewWebClient(cfg WebClientConfig) *WebClient {
 // SearchGeneral performs a general web search via NexusHub (302 AI general-search).
 // When After or Before is set, it routes to the exa provider for precise date
 // filtering; otherwise it uses Google (search1) as the default.
-func (c *WebClient) SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error) {
+func (c *WebClient) SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGeneralResult], error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
-		return model.WebSearchGeneralResult{}, model.ErrWebGeneralSearchProviderNotConfigured
+		return invocationFailure[model.WebSearchGeneralResult]("", model.ErrWebGeneralSearchProviderNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 	if strings.TrimSpace(req.Query) == "" {
-		return model.WebSearchGeneralResult{}, model.ErrSearchQueryRequired
+		return invocationFailure[model.WebSearchGeneralResult]("", model.ErrSearchQueryRequired, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	maxResults := req.MaxResults
@@ -159,8 +160,9 @@ func (c *WebClient) SearchGeneral(ctx context.Context, req model.WebSearchReques
 
 	parsed, err := c.submit(ctx, "web.search", c.searchAbilityKey, payload)
 	if err != nil {
-		return model.WebSearchGeneralResult{}, err
+		return model.InvocationResult[model.WebSearchGeneralResult]{}, err
 	}
+	meta := model.InvocationMeta{TaskID: parsed.TaskID, ProviderStatus: normalizeNexusHubTaskStatus(parsed.Status), Stage: model.InvocationStageDecodeResult}
 
 	results, err := decodeSearchResults(parsed.RespPayload)
 	if err != nil {
@@ -170,24 +172,24 @@ func (c *WebClient) SearchGeneral(ctx context.Context, req model.WebSearchReques
 			"ability_key": c.searchAbilityKey,
 			"stage":       "decode_resp_payload",
 		}).WithError(err).Error("decode nexushub search response payload failed")
-		return model.WebSearchGeneralResult{}, err
+		return invocationFailure[model.WebSearchGeneralResult]("", err, meta)
 	}
 
-	return model.WebSearchGeneralResult{
+	return invocationSuccess(model.WebSearchGeneralResult{
 		Mode:    "general",
 		Results: results,
-	}, nil
+	}, meta)
 }
 
 // ---- WebCrawler ----
 
 // Crawl converts a URL to Markdown via NexusHub (302 AI firecrawl-scrape).
-func (c *WebClient) Crawl(ctx context.Context, url string) (port.CrawlOutput, error) {
+func (c *WebClient) Crawl(ctx context.Context, url string) (model.InvocationResult[port.CrawlOutput], error) {
 	if c == nil || c.baseURL == "" || c.token == "" {
-		return port.CrawlOutput{}, model.ErrWebCrawlerNotConfigured
+		return invocationFailure[port.CrawlOutput]("", model.ErrWebCrawlerNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 	if strings.TrimSpace(url) == "" {
-		return port.CrawlOutput{}, model.ErrCrawlURLRequired
+		return invocationFailure[port.CrawlOutput]("", model.ErrCrawlURLRequired, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	payload := atomicProcessPayload{
@@ -203,8 +205,9 @@ func (c *WebClient) Crawl(ctx context.Context, url string) (port.CrawlOutput, er
 
 	parsed, err := c.submit(ctx, "web.crawl", c.scrapeAbilityKey, payload)
 	if err != nil {
-		return port.CrawlOutput{}, err
+		return model.InvocationResult[port.CrawlOutput]{}, err
 	}
+	meta := model.InvocationMeta{TaskID: parsed.TaskID, ProviderStatus: normalizeNexusHubTaskStatus(parsed.Status), Stage: model.InvocationStageDecodeResult}
 
 	out, err := decodeScrapeResult(parsed.RespPayload)
 	if err != nil {
@@ -214,9 +217,9 @@ func (c *WebClient) Crawl(ctx context.Context, url string) (port.CrawlOutput, er
 			"ability_key": c.scrapeAbilityKey,
 			"stage":       "decode_resp_payload",
 		}).WithError(err).Error("decode nexushub scrape response payload failed")
-		return port.CrawlOutput{}, err
+		return invocationFailure[port.CrawlOutput]("", err, meta)
 	}
-	return out, nil
+	return invocationSuccess(out, meta)
 }
 
 // submit posts an atomic process request and returns the parsed envelope.
@@ -226,7 +229,7 @@ func (c *WebClient) submit(ctx context.Context, capability, abilityKey string, p
 	reqPayload, err := json.Marshal(payload)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, capability, "", abilityKey, "marshal_req_payload", err, "marshal nexushub web req_payload failed")
-		return submitAtomicProcessResponse{}, fmt.Errorf("marshal req_payload: %w", err)
+		return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("marshal req_payload: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	body := submitAtomicProcessRequest{
@@ -246,13 +249,13 @@ func (c *WebClient) submit(ctx context.Context, capability, abilityKey string, p
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, capability, "", abilityKey, "marshal_submit_request", err, "marshal nexushub web submit request failed")
-		return submitAtomicProcessResponse{}, fmt.Errorf("marshal submit request: %w", err)
+		return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("marshal submit request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logNexusHubCapabilityError(ctx, capability, "", abilityKey, "build_request", err, "build nexushub web request failed")
-		return submitAtomicProcessResponse{}, fmt.Errorf("build request: %w", err)
+		return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("build request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	setNexusExtraHeader(ctx, httpReq)
@@ -260,14 +263,18 @@ func (c *WebClient) submit(ctx context.Context, capability, abilityKey string, p
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		logNexusHubCapabilityError(ctx, capability, "", abilityKey, "http_request", err, "submit nexushub web request failed")
-		return submitAtomicProcessResponse{}, fmt.Errorf("submit atomic process: %w", err)
+		code := ""
+		if errors.Is(err, context.DeadlineExceeded) {
+			code = model.InvocationErrorCodeUpstreamTimeout
+		}
+		return submitAtomicProcessResponse{}, model.WrapInvocationError(code, fmt.Errorf("submit atomic process: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
 
 	var parsed submitAtomicProcessResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		logNexusHubCapabilityError(ctx, capability, "", abilityKey, "decode_submit_response", err, "decode nexushub web submit response failed")
-		return submitAtomicProcessResponse{}, fmt.Errorf("decode submit response: %w", err)
+		return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("decode submit response: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	if resp.StatusCode != http.StatusOK || parsed.Base.Code != 0 {
@@ -276,7 +283,11 @@ func (c *WebClient) submit(ctx context.Context, capability, abilityKey string, p
 			"status_code": resp.StatusCode,
 			"base_code":   parsed.Base.Code,
 		})
-		return submitAtomicProcessResponse{}, mapped
+		return submitAtomicProcessResponse{}, model.WrapInvocationError("", mapped, model.InvocationMeta{
+			TaskID:         parsed.TaskID,
+			ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+			Stage:          model.InvocationStageSubmit,
+		})
 	}
 
 	// Some abilities (e.g. general-search with crawl_results >= 2) complete the
@@ -417,9 +428,6 @@ func decodeScrapeResult(respPayload string) (port.CrawlOutput, error) {
 	var sd nexusScrapeData
 	if err := json.Unmarshal(data, &sd); err != nil {
 		return port.CrawlOutput{}, fmt.Errorf("decode scrape data: %w", err)
-	}
-	if sd.Markdown == "" {
-		return port.CrawlOutput{}, fmt.Errorf("nexushub scrape returned empty markdown")
 	}
 	return port.CrawlOutput{
 		Title:    sd.Metadata.Title,

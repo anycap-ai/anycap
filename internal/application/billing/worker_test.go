@@ -13,15 +13,15 @@ type fakeBillingNexusClient struct {
 	traces  map[string]string
 }
 
-func (f *fakeBillingNexusClient) GenerateImage(context.Context, model.GenerateImageRequest, model.RouteBinding) (model.GenerateImageResult, error) {
+func (f *fakeBillingNexusClient) GenerateImage(context.Context, model.GenerateImageRequest, model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
 	panic("unexpected GenerateImage call")
 }
 
-func (f *fakeBillingNexusClient) GenerateVideo(context.Context, model.GenerateVideoRequest, model.RouteBinding) (model.GenerateVideoResult, error) {
+func (f *fakeBillingNexusClient) GenerateVideo(context.Context, model.GenerateVideoRequest, model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
 	panic("unexpected GenerateVideo call")
 }
 
-func (f *fakeBillingNexusClient) GenerateMusic(context.Context, model.GenerateMusicRequest, model.RouteBinding) (model.GenerateMusicResult, error) {
+func (f *fakeBillingNexusClient) GenerateMusic(context.Context, model.GenerateMusicRequest, model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
 	panic("unexpected GenerateMusic call")
 }
 

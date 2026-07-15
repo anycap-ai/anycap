@@ -14,22 +14,22 @@ type CrawlOutput struct {
 
 // WebCrawler converts a URL to Markdown content.
 type WebCrawler interface {
-	Crawl(ctx context.Context, url string) (CrawlOutput, error)
+	Crawl(ctx context.Context, url string) (model.InvocationResult[CrawlOutput], error)
 }
 
 // WebSearchProvider performs LLM grounding search via an upstream provider.
 type WebSearchProvider interface {
-	SearchGrounding(ctx context.Context, query, instruction, modelName string) (model.WebSearchGroundingResult, error)
+	SearchGrounding(ctx context.Context, query, instruction, modelName string) (model.InvocationResult[model.WebSearchGroundingResult], error)
 }
 
 // WebGeneralSearchProvider performs general web search via an upstream provider.
 type WebGeneralSearchProvider interface {
-	SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error)
+	SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGeneralResult], error)
 }
 
 // WebService is the application-level interface for web search and crawl.
 type WebService interface {
-	Crawl(ctx context.Context, req model.WebCrawlRequest) (model.WebCrawlResult, error)
-	SearchGrounding(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGroundingResult, error)
-	SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.WebSearchGeneralResult, error)
+	Crawl(ctx context.Context, req model.WebCrawlRequest) (model.InvocationResult[model.WebCrawlResult], error)
+	SearchGrounding(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGroundingResult], error)
+	SearchGeneral(ctx context.Context, req model.WebSearchRequest) (model.InvocationResult[model.WebSearchGeneralResult], error)
 }

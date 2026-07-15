@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -71,6 +72,23 @@ func TestFeatureGate_BlocksDisabledFeature(t *testing.T) {
 	}
 	if errObj["message"] != "music.generate is not available on this server" {
 		t.Fatalf("unexpected message: %v", errObj["message"])
+	}
+	diagnostics, _ := body["diagnostics"].(map[string]any)
+	if diagnostics == nil || diagnostics["stage"] != "prepare" || diagnostics["trace_id"] == "" || diagnostics["request_id"] == "" {
+		t.Fatalf("expected prepare diagnostics, got %#v", body["diagnostics"])
+	}
+}
+
+func TestFeatureGate_DynamicImageEditIncludesPrepareDiagnostics(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(commonmw.TraceMiddleware(), FeatureGate(fakeFeatureProvider{enabledFor: func(_ *model.Principal, feature string) (bool, bool) {
+		return false, feature != "image.edit"
+	}}))
+	h.POST("/v1/image/:operation", func(_ context.Context, ctx *app.RequestContext) { ctx.String(http.StatusOK, "ok") })
+
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/image/edit", nil)
+	if w.Code != http.StatusServiceUnavailable || !bytes.Contains(w.Body.Bytes(), []byte(`"stage":"prepare"`)) {
+		t.Fatalf("expected disabled image edit diagnostics, got status=%d body=%s", w.Code, w.Body.String())
 	}
 }
 

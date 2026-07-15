@@ -497,6 +497,7 @@ Feedback is enabled by default. To disable it, run `anycap config set feedback f
 
 ```bash
 anycap feedback --type bug -m "image generate returned 500 for prompt X" --request-id <id>
+anycap feedback --type bug -m "generation returned no output" --diagnostics '{"trace_id":"trc_...","task_id":"task_...","capability":"music.generate","model":"suno-v5","stage":"validate_result","error_code":"UPSTREAM_EMPTY_RESULT"}'
 anycap feedback --type feature -m "support batch image generation"
 anycap feedback --type other -m "schema for model Y is missing aspect_ratio"
 ```
@@ -508,6 +509,8 @@ Options:
 | `--type` | yes | `bug`, `feature`, or `other` |
 | `-m, --message` | yes | Description of the issue or idea |
 | `--request-id` | no | Request ID from a previous command (found in JSON output) |
+| `--trace-id` | no | Trace ID from the original invocation |
+| `--diagnostics` | no | Original invocation diagnostics as JSON; accepts trace/request/task/upstream IDs, capability, model, stage, error code, and invocation time |
 | `--context` | no | Additional context as JSON |
 
 When to submit feedback:
@@ -519,7 +522,9 @@ When to submit feedback:
 
 ## Output Format
 
-All commands produce JSON on stdout. Every response includes a `request_id` field for tracing.
+Commands keep stdout as one final JSON document. Model invocations also write one `invocation_started` JSON event to stderr after local validation and before the server request.
+
+Invocation responses promote available `trace_id`, `request_id`, `task_id`, `upstream_request_id`, and `stage` fields to the top level. Preserve these fields when reporting silent, empty, timeout, or provider failures; server-error hints include a copyable `--diagnostics` payload.
 
 Successful response:
 
@@ -533,7 +538,7 @@ Error response:
 {"error": "...", "message": "...", "hint": "...", "request_id": "req_abc123"}
 ```
 
-Save the `request_id` when submitting feedback about a failed request.
+Save all returned diagnostic IDs when submitting feedback about a failed request.
 
 ### Parsing with jq
 

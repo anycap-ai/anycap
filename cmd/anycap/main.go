@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -46,7 +47,15 @@ func main() {
 			// Brief sleep to allow the background telemetry goroutine to fire.
 			time.Sleep(100 * time.Millisecond)
 		}
-		_ = output.WriteError(os.Stdout, code, message, hint, requestID)
+		diagnostics := output.InvocationDiagnostics{RequestID: requestID}
+		var apiErr *httpclient.APIError
+		if errors.As(err, &apiErr) {
+			diagnostics.TraceID = apiErr.TraceID
+			diagnostics.TaskID = apiErr.TaskID
+			diagnostics.UpstreamRequestID = apiErr.UpstreamRequestID
+			diagnostics.Stage = apiErr.Stage
+		}
+		_ = output.WriteErrorWithDiagnostics(os.Stdout, code, message, hint, diagnostics)
 		os.Exit(1)
 	}
 }
@@ -116,20 +125,41 @@ func hintForAPIError(e *httpclient.APIError) string {
 	case e.Code == "UPSTREAM_UNAVAILABLE":
 		return "upstream provider unavailable, retry later or check provider quota/configuration"
 	case e.StatusCode >= 500:
-		return feedbackHint(e.RequestID)
+		return feedbackHint(e)
 	default:
 		return ""
 	}
 }
 
 // feedbackHint builds a hint suggesting the agent report the error via feedback.
-func feedbackHint(requestID string) string {
+func feedbackHint(apiErr *httpclient.APIError) string {
 	parts := "anycap feedback --type bug -m '<describe>'"
-	if requestID != "" {
-		parts += fmt.Sprintf(" --request-id '%s'", requestID)
+	if apiErr.RequestID != "" {
+		parts += fmt.Sprintf(" --request-id '%s'", apiErr.RequestID)
 	}
-	if tid := output.TraceID(); tid != "" {
-		parts += fmt.Sprintf(" --trace-id '%s'", tid)
+	traceID := apiErr.TraceID
+	if traceID == "" {
+		traceID = output.TraceID()
+	}
+	if traceID != "" {
+		parts += fmt.Sprintf(" --trace-id '%s'", traceID)
+	}
+	diagnostics := map[string]string{
+		"trace_id":            traceID,
+		"request_id":          apiErr.RequestID,
+		"task_id":             apiErr.TaskID,
+		"upstream_request_id": apiErr.UpstreamRequestID,
+		"stage":               apiErr.Stage,
+		"error_code":          apiErr.Code,
+		"invoked_at":          time.Now().UTC().Format(time.RFC3339),
+	}
+	for key, value := range diagnostics {
+		if value == "" {
+			delete(diagnostics, key)
+		}
+	}
+	if data, err := json.Marshal(diagnostics); err == nil {
+		parts += " --diagnostics '" + strings.ReplaceAll(string(data), "'", "'\\''") + "'"
 	}
 	return "server error; report with: " + parts
 }

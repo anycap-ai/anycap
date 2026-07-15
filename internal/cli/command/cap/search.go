@@ -89,6 +89,9 @@ LLM grounding search (--prompt, 5 credits):
 			}
 
 			client := clientFactory()
+			if err := writeInvocationStarted(cmd, "web.search", ""); err != nil {
+				return err
+			}
 			resp, err := client.PostJSON(cmd.Context(), api.WebSearchPath, body)
 			if err != nil {
 				return err

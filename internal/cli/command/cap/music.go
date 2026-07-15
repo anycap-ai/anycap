@@ -145,6 +145,9 @@ Examples:
 			if err := resolveFileParams(cmd.Context(), client, "music", model, mode, body, verboseWriter(cmd)); err != nil {
 				return err
 			}
+			if err := writeInvocationStarted(cmd, "music.generate", model); err != nil {
+				return err
+			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.GeneratePath("music"), body)
 			if err != nil {
@@ -215,10 +218,12 @@ type musicOutput struct {
 
 // musicResult holds the parsed music generation response.
 type musicResult struct {
-	Status      string        `json:"-"`
-	Model       string        `json:"-"`
-	CreditsUsed int           `json:"-"`
-	Outputs     []musicOutput `json:"-"`
+	Status      string                   `json:"-"`
+	Model       string                   `json:"-"`
+	CreditsUsed int                      `json:"-"`
+	Outputs     []musicOutput            `json:"-"`
+	TaskID      string                   `json:"-"`
+	Diagnostics cliInvocationDiagnostics `json:"-"`
 }
 
 // parseMusicResponse extracts all outputs from a music generate response.
@@ -226,6 +231,7 @@ func parseMusicResponse(body []byte) (*musicResult, error) {
 	var env struct {
 		Status string `json:"status"`
 		Data   struct {
+			ID      string `json:"id"`
 			Model   string `json:"model"`
 			Outputs []struct {
 				Type     string `json:"type"`
@@ -234,6 +240,7 @@ func parseMusicResponse(body []byte) (*musicResult, error) {
 			} `json:"outputs"`
 			CreditCost int `json:"credit_cost"`
 		} `json:"data"`
+		Diagnostics cliInvocationDiagnostics `json:"diagnostics"`
 	}
 	if err := json.Unmarshal(body, &env); err != nil {
 		return nil, err
@@ -243,7 +250,12 @@ func parseMusicResponse(body []byte) (*musicResult, error) {
 		Status:      env.Status,
 		Model:       env.Data.Model,
 		CreditsUsed: env.Data.CreditCost,
+		Diagnostics: env.Diagnostics,
 	}
+	if result.Diagnostics.TaskID == "" {
+		result.Diagnostics.TaskID = env.Data.ID
+	}
+	result.TaskID = result.Diagnostics.TaskID
 	for _, o := range env.Data.Outputs {
 		result.Outputs = append(result.Outputs, musicOutput{
 			URL:      o.URL,
@@ -308,9 +320,7 @@ func writeMusicResult(w io.Writer, r *musicResult, requestID string) error {
 		"credits_used": r.CreditsUsed,
 		"outputs":      outputs,
 	}
-	if requestID != "" {
-		result["request_id"] = requestID
-	}
+	applyCLIDiagnostics(result, r.Diagnostics, requestID)
 	data, err := json.Marshal(result)
 	if err != nil {
 		return err
