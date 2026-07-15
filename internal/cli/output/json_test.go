@@ -68,3 +68,57 @@ func TestWriteServerContent_PassthroughError(t *testing.T) {
 		t.Fatalf("expected error passthrough, got status %v", out["status"])
 	}
 }
+
+func TestWriteServerJSONPromotesInvocationDiagnostics(t *testing.T) {
+	payload := []byte(`{"id":"trc_1","status":"success","data":{"id":"task_1"},"diagnostics":{"trace_id":"trc_1","request_id":"req_1","task_id":"task_1","upstream_request_id":"gateway_1","stage":"decode_result"}}`)
+	var buf bytes.Buffer
+	if err := WriteServerJSON(&buf, payload, "req_header"); err != nil {
+		t.Fatal(err)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]any{
+		"trace_id":            "trc_1",
+		"request_id":          "req_1",
+		"task_id":             "task_1",
+		"upstream_request_id": "gateway_1",
+		"stage":               "decode_result",
+	} {
+		if out[key] != want {
+			t.Fatalf("%s = %#v, want %#v; output=%#v", key, out[key], want, out)
+		}
+	}
+}
+
+func TestWriteServerContentPromotesInvocationDiagnostics(t *testing.T) {
+	payload := []byte(`{"status":"success","data":{"content":"hello"},"diagnostics":{"trace_id":"trc_read","request_id":"req_read","upstream_request_id":"gateway_read","stage":"decode_result"}}`)
+	var buf bytes.Buffer
+	if err := WriteServerContent(&buf, payload, "header_read"); err != nil {
+		t.Fatal(err)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if out["trace_id"] != "trc_read" || out["request_id"] != "req_read" || out["upstream_request_id"] != "gateway_read" || out["stage"] != "decode_result" {
+		t.Fatalf("output = %#v", out)
+	}
+}
+
+func TestWriteErrorWithDiagnosticsPromotesSafeFields(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteErrorWithDiagnostics(&buf, "UPSTREAM_TIMEOUT", "timed out", "retry", InvocationDiagnostics{
+		TraceID: "trc_error", RequestID: "req_error", TaskID: "task_error", UpstreamRequestID: "gateway_error", Stage: "poll",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if out["trace_id"] != "trc_error" || out["request_id"] != "req_error" || out["task_id"] != "task_error" || out["upstream_request_id"] != "gateway_error" || out["stage"] != "poll" {
+		t.Fatalf("output = %#v", out)
+	}
+}

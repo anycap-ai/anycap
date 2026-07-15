@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/open/common-go/logging"
+	"gitlab.knoffice.tech/open/common-go/trace"
 )
 
 // Client calls Agent Platform's capabilities API for image/video understanding.
@@ -60,7 +63,7 @@ type upstreamError struct {
 }
 
 // ImageRead calls POST /api/v1/capabilities/image/read.
-func (c *Client) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
+func (c *Client) ImageRead(ctx context.Context, req model.ImageReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	body := map[string]any{}
 
 	if len(req.Images) > 0 {
@@ -103,7 +106,7 @@ func (c *Client) ImageRead(ctx context.Context, req model.ImageReadRequest) (mod
 }
 
 // VideoRead calls POST /api/v1/capabilities/video/read.
-func (c *Client) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
+func (c *Client) VideoRead(ctx context.Context, req model.VideoReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	body := map[string]any{}
 	if req.URL != "" {
 		body["url"] = req.URL
@@ -119,7 +122,7 @@ func (c *Client) VideoRead(ctx context.Context, req model.VideoReadRequest) (mod
 }
 
 // AudioRead calls POST /api/v1/capabilities/audio/read.
-func (c *Client) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+func (c *Client) AudioRead(ctx context.Context, req model.AudioReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	body := map[string]any{}
 	if req.URL != "" {
 		body["url"] = req.URL
@@ -163,7 +166,7 @@ type searchCitationResponse struct {
 }
 
 // SearchGrounding calls POST /api/v1/capabilities/search for LLM grounding search.
-func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelName string) (model.WebSearchGroundingResult, error) {
+func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelName string) (model.InvocationResult[model.WebSearchGroundingResult], error) {
 	logger := logging.WithContext(ctx).WithFields(logging.Fields{
 		"provider": "agentplatform",
 		"path":     "/api/v1/capabilities/search",
@@ -182,14 +185,14 @@ func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelN
 	payload, err := json.Marshal(body)
 	if err != nil {
 		logger.WithError(err).Error("marshal search grounding request failed")
-		return model.WebSearchGroundingResult{}, fmt.Errorf("marshal request: %w", err)
+		return agentInvocationFailure[model.WebSearchGroundingResult]("", fmt.Errorf("marshal request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	url := c.baseURL + "/api/v1/capabilities/search"
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		logger.WithError(err).Error("build search grounding request failed")
-		return model.WebSearchGroundingResult{}, fmt.Errorf("create request: %w", err)
+		return agentInvocationFailure[model.WebSearchGroundingResult]("", fmt.Errorf("create request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -200,19 +203,21 @@ func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelN
 	if userID := middleware.UserIDFromContext(ctx); userID != "" {
 		httpReq.Header.Set("X-User-ID", userID)
 	}
+	setTraceHeader(ctx, httpReq)
 
 	start := time.Now()
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		logger.WithError(err).Error("search grounding request failed")
-		return model.WebSearchGroundingResult{}, fmt.Errorf("search grounding request failed: %w", err)
+		return agentInvocationFailure[model.WebSearchGroundingResult](invocationTimeoutCode(err), fmt.Errorf("search grounding request failed: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
+	meta := invocationMetaFromResponse(ctx, resp)
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.WithError(err).Error("read search grounding response body failed")
-		return model.WebSearchGroundingResult{}, fmt.Errorf("read response body: %w", err)
+		return agentInvocationFailure[model.WebSearchGroundingResult]("", fmt.Errorf("read response body: %w", err), model.MergeInvocationMeta(meta, model.InvocationMeta{Stage: model.InvocationStageDecodeResult}))
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -222,24 +227,24 @@ func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelN
 				"status_code": resp.StatusCode,
 				"error_code":  ue.Detail.Error,
 			}).Error("search grounding returned non-200")
-			return model.WebSearchGroundingResult{}, &UpstreamError{
+			return agentInvocationFailure[model.WebSearchGroundingResult]("", &UpstreamError{
 				StatusCode: resp.StatusCode,
 				Code:       ue.Detail.Error,
 				Message:    ue.Detail.Message,
-			}
+			}, meta)
 		}
 		logger.WithField("status_code", resp.StatusCode).Error("search grounding returned unexpected non-200")
-		return model.WebSearchGroundingResult{}, &UpstreamError{
+		return agentInvocationFailure[model.WebSearchGroundingResult]("", &UpstreamError{
 			StatusCode: resp.StatusCode,
 			Code:       "upstream_error",
 			Message:    string(respBody),
-		}
+		}, meta)
 	}
 
 	var result searchGroundingResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		logger.WithError(err).Error("decode search grounding response failed")
-		return model.WebSearchGroundingResult{}, fmt.Errorf("decode response: %w", err)
+		return agentInvocationFailure[model.WebSearchGroundingResult]("", fmt.Errorf("decode response: %w", err), model.MergeInvocationMeta(meta, model.InvocationMeta{Stage: model.InvocationStageDecodeResult}))
 	}
 
 	durationMs := result.DurationMs
@@ -283,10 +288,11 @@ func (c *Client) SearchGrounding(ctx context.Context, query, instruction, modelN
 		out.SearchMetadata = meta
 	}
 
-	return out, nil
+	meta.Stage = model.InvocationStageDecodeResult
+	return model.InvocationResult[model.WebSearchGroundingResult]{Value: out, Meta: meta}, nil
 }
 
-func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body map[string]any) (model.UnderstandResult, error) {
+func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body map[string]any) (model.InvocationResult[model.UnderstandResult], error) {
 	logger := logging.WithContext(ctx).WithFields(logging.Fields{
 		"provider": "agentplatform",
 		"path":     path,
@@ -294,14 +300,14 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	payload, err := json.Marshal(body)
 	if err != nil {
 		logger.WithError(err).Error("marshal agentplatform request failed")
-		return model.UnderstandResult{}, fmt.Errorf("marshal request: %w", err)
+		return agentInvocationFailure[model.UnderstandResult]("", fmt.Errorf("marshal request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
 	}
 
 	url := c.baseURL + path
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		logger.WithError(err).Error("build agentplatform request failed")
-		return model.UnderstandResult{}, fmt.Errorf("create request: %w", err)
+		return agentInvocationFailure[model.UnderstandResult]("", fmt.Errorf("create request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -312,19 +318,21 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 	if userID := middleware.UserIDFromContext(ctx); userID != "" {
 		httpReq.Header.Set("X-User-ID", userID)
 	}
+	setTraceHeader(ctx, httpReq)
 
 	start := time.Now()
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		logger.WithError(err).Error("agentplatform request failed")
-		return model.UnderstandResult{}, fmt.Errorf("capabilities request to %s failed: %w", path, err)
+		return agentInvocationFailure[model.UnderstandResult](invocationTimeoutCode(err), fmt.Errorf("capabilities request to %s failed: %w", path, err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
 	}
 	defer resp.Body.Close()
+	meta := invocationMetaFromResponse(ctx, resp)
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.WithError(err).Error("read agentplatform response body failed")
-		return model.UnderstandResult{}, fmt.Errorf("read response body: %w", err)
+		return agentInvocationFailure[model.UnderstandResult]("", fmt.Errorf("read response body: %w", err), model.MergeInvocationMeta(meta, model.InvocationMeta{Stage: model.InvocationStageDecodeResult}))
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -334,25 +342,25 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 				"status_code": resp.StatusCode,
 				"error_code":  ue.Detail.Error,
 			}).Error("agentplatform returned non-200")
-			return model.UnderstandResult{}, &UpstreamError{
+			return agentInvocationFailure[model.UnderstandResult]("", &UpstreamError{
 				StatusCode: resp.StatusCode,
 				Code:       ue.Detail.Error,
 				Message:    ue.Detail.Message,
-			}
+			}, meta)
 		}
 
 		logger.WithField("status_code", resp.StatusCode).Error("agentplatform returned unexpected non-200")
-		return model.UnderstandResult{}, &UpstreamError{
+		return agentInvocationFailure[model.UnderstandResult]("", &UpstreamError{
 			StatusCode: resp.StatusCode,
 			Code:       "upstream_error",
 			Message:    string(respBody),
-		}
+		}, meta)
 	}
 
 	var result upstreamResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		logger.WithError(err).Error("decode agentplatform response failed")
-		return model.UnderstandResult{}, fmt.Errorf("decode response: %w", err)
+		return agentInvocationFailure[model.UnderstandResult]("", fmt.Errorf("decode response: %w", err), model.MergeInvocationMeta(meta, model.InvocationMeta{Stage: model.InvocationStageDecodeResult}))
 	}
 
 	// If upstream didn't report duration, calculate it ourselves.
@@ -361,7 +369,8 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 		durationMs = time.Since(start).Milliseconds()
 	}
 
-	return model.UnderstandResult{
+	meta.Stage = model.InvocationStageDecodeResult
+	return model.InvocationResult[model.UnderstandResult]{Value: model.UnderstandResult{
 		Content: result.Content,
 		Model:   result.Model,
 		Usage: model.Usage{
@@ -372,7 +381,40 @@ func (c *Client) doCapabilitiesRequest(ctx context.Context, path string, body ma
 			CacheWriteTokens: result.Usage.CacheWriteTokens,
 		},
 		DurationMs: durationMs,
-	}, nil
+	}, Meta: meta}, nil
+}
+
+func agentInvocationFailure[T any](code string, err error, meta model.InvocationMeta) (model.InvocationResult[T], error) {
+	return model.InvocationResult[T]{}, model.WrapInvocationError(code, err, meta)
+}
+
+func setTraceHeader(ctx context.Context, req *http.Request) {
+	if traceID := strings.TrimSpace(trace.GetTraceID(ctx)); traceID != "" {
+		req.Header.Set("X-Trace-ID", traceID)
+	}
+}
+
+func invocationMetaFromResponse(ctx context.Context, resp *http.Response) model.InvocationMeta {
+	meta := model.InvocationMeta{Stage: model.InvocationStageSubmit}
+	if resp == nil {
+		return meta
+	}
+	localTraceID := strings.TrimSpace(trace.GetTraceID(ctx))
+	for _, name := range []string{"X-Trace-ID", "X-Request-ID", "X-Request-Id"} {
+		requestID := strings.TrimSpace(resp.Header.Get(name))
+		if requestID != "" && requestID != localTraceID {
+			meta.UpstreamRequestID = requestID
+			break
+		}
+	}
+	return meta
+}
+
+func invocationTimeoutCode(err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return model.InvocationErrorCodeUpstreamTimeout
+	}
+	return ""
 }
 
 // UpstreamError represents a non-200 response from agent-platform.

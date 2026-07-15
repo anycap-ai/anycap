@@ -3,11 +3,14 @@ package nexushub
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
 
 func TestResultPoller_Resolve_InlinePayload(t *testing.T) {
@@ -83,6 +86,26 @@ func TestResultPoller_Resolve_PollsUntilReady(t *testing.T) {
 	}
 }
 
+func TestResultPoller_ResolveRetainsSubmittedTaskIDWhenPollOmitsIt(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"base":         map[string]any{"code": 0, "message": "success"},
+			"status":       "succeed",
+			"resp_payload": `{"resources":[]}`,
+		})
+	}))
+	defer srv.Close()
+
+	p := newResultPoller(srv.Client(), srv.URL, "tok", time.Millisecond, 1)
+	got, err := p.resolve(context.Background(), "music.generate", "k", submitAtomicProcessResponse{TaskID: "atomic_retained"})
+	if err != nil {
+		t.Fatalf("resolve error: %v", err)
+	}
+	if got.TaskID != "atomic_retained" {
+		t.Fatalf("task id = %q, want atomic_retained", got.TaskID)
+	}
+}
+
 func TestResultPoller_Resolve_TerminalFailure(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := map[string]any{
@@ -103,6 +126,10 @@ func TestResultPoller_Resolve_TerminalFailure(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "bad input") {
 		t.Errorf("unexpected error: %v", err)
+	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "atomic_fail" || meta.Stage != model.InvocationStagePoll {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
 	}
 }
 
@@ -129,6 +156,13 @@ func TestResultPoller_Resolve_ExhaustsAttempts(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "not ready") {
 		t.Errorf("unexpected error: %v", err)
+	}
+	var invocationErr *model.InvocationError
+	if !errors.As(err, &invocationErr) {
+		t.Fatal("expected typed invocation error")
+	}
+	if invocationErr.Code != model.InvocationErrorCodeUpstreamTimeout || invocationErr.Meta.TaskID != "atomic_never" || invocationErr.Meta.Stage != model.InvocationStagePoll {
+		t.Fatalf("invocation error = %+v", invocationErr)
 	}
 }
 

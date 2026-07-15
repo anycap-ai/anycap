@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"testing"
@@ -217,6 +218,23 @@ func TestRateLimit_UsesRegisteredRouteCapabilityBeforeHandlerMiddleware(t *testi
 	second := ut.PerformRequest(h.Engine, http.MethodPost, "/image/generate", nil)
 	if second.Code != http.StatusTooManyRequests {
 		t.Fatalf("expected second request 429, got %d body=%s", second.Code, second.Body.String())
+	}
+	if !bytes.Contains(second.Body.Bytes(), []byte(`"stage":"prepare"`)) {
+		t.Fatalf("expected prepare diagnostics, got %s", second.Body.String())
+	}
+}
+
+func TestRateLimit_DynamicImageEditIncludesPrepareDiagnostics(t *testing.T) {
+	h := newRateLimitTestServer()
+	limiter := infraratelimit.NewInMemoryLimiter()
+	registerRateLimitedRoute(h, http.MethodPost, "/v1/image/edit", model.Principal{UserID: "2000000001", AuthType: "local_bypass"}, "image.edit", limiter, staticRateLimitResolver{"image.edit": 1})
+
+	if first := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/image/edit", nil); first.Code != http.StatusOK {
+		t.Fatalf("first request status=%d body=%s", first.Code, first.Body.String())
+	}
+	second := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/image/edit", nil)
+	if second.Code != http.StatusTooManyRequests || !bytes.Contains(second.Body.Bytes(), []byte(`"stage":"prepare"`)) {
+		t.Fatalf("expected rate-limit diagnostics, status=%d body=%s", second.Code, second.Body.String())
 	}
 }
 

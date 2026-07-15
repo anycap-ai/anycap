@@ -16,7 +16,8 @@ func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthentic
 	return func(ctx context.Context, c *app.RequestContext) {
 		header := string(c.Request.Header.Peek("Authorization"))
 		if !strings.HasPrefix(strings.ToLower(header), "bearer ") {
-			c.AbortWithStatusJSON(401, dto.ErrorEnvelope(trace.GetTraceID(ctx), "AUTH_INVALID", "missing or invalid bearer token"))
+			payload := dto.ErrorEnvelope(trace.GetTraceID(ctx), "AUTH_INVALID", "missing or invalid bearer token")
+			c.AbortWithStatusJSON(401, invocationErrorEnvelope(ctx, c, payload))
 			return
 		}
 
@@ -38,6 +39,7 @@ func Auth(apiKeys port.APIKeyService, identityTokens port.IdentityTokenAuthentic
 			ReportError(c, err)
 			status, payload := dto.MapDomainError(err)
 			payload.ID = trace.GetTraceID(ctx)
+			payload = invocationErrorEnvelope(ctx, c, payload)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}

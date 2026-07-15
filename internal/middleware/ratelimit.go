@@ -49,6 +49,7 @@ func RateLimit(limiter port.RateLimiter, resolver CapabilityRateLimitResolver) a
 		if err != nil {
 			status, payload := dto.MapDomainError(err)
 			payload.ID = trace.GetTraceID(ctx)
+			payload = invocationErrorEnvelope(ctx, c, payload)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}
@@ -60,6 +61,7 @@ func RateLimit(limiter port.RateLimiter, resolver CapabilityRateLimitResolver) a
 		if !allowed {
 			status, payload := dto.MapDomainError(model.ErrRateLimited)
 			payload.ID = trace.GetTraceID(ctx)
+			payload = invocationErrorEnvelope(ctx, c, payload)
 			c.AbortWithStatusJSON(status, payload)
 			return
 		}

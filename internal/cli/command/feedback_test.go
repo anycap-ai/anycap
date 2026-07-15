@@ -90,6 +90,7 @@ func TestFeedbackCommand_WithContext(t *testing.T) {
 		"--context", `{"max_batch":10}`,
 		"--request-id", "req_original_789",
 		"--trace-id", "trc_original_789",
+		"--diagnostics", `{"task_id":"task_original_789","upstream_request_id":"gateway_original_789","capability":"music.generate","model":"suno-v5","stage":"validate_result","error_code":"UPSTREAM_EMPTY_RESULT","invoked_at":"2026-07-15T01:30:59Z"}`,
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -111,6 +112,10 @@ func TestFeedbackCommand_WithContext(t *testing.T) {
 	}
 	if receivedBody["trace_id"] != "trc_original_789" {
 		t.Errorf("expected trace_id, got %v", receivedBody["trace_id"])
+	}
+	diagnostics, ok := receivedBody["diagnostics"].(map[string]any)
+	if !ok || diagnostics["task_id"] != "task_original_789" || diagnostics["upstream_request_id"] != "gateway_original_789" || diagnostics["capability"] != "music.generate" || diagnostics["stage"] != "validate_result" {
+		t.Fatalf("expected structured diagnostics, got %#v", receivedBody["diagnostics"])
 	}
 }
 
@@ -141,6 +146,22 @@ func TestFeedbackCommand_InvalidContextJSON(t *testing.T) {
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("expected error for invalid context JSON")
+	}
+}
+
+func TestFeedbackCommandRejectsInvalidDiagnosticsStage(t *testing.T) {
+	cmd := NewRootCmd(Options{BuildInfo: buildinfo.Info{Version: "dev"}, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, Stdin: strings.NewReader("")})
+	cmd.SetArgs([]string{"feedback", "--type", "bug", "-m", "test", "--diagnostics", `{"stage":"provider_secret_stage"}`})
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "invalid stage") {
+		t.Fatalf("expected invalid diagnostics stage error, got %v", err)
+	}
+}
+
+func TestFeedbackCommandRejectsNullDiagnostics(t *testing.T) {
+	cmd := NewRootCmd(Options{BuildInfo: buildinfo.Info{Version: "dev"}, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, Stdin: strings.NewReader("")})
+	cmd.SetArgs([]string{"feedback", "--type", "bug", "-m", "test", "--diagnostics", `null`})
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "JSON object") {
+		t.Fatalf("expected diagnostics object error, got %v", err)
 	}
 }
 

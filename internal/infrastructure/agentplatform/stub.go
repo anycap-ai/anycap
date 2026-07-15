@@ -14,7 +14,7 @@ func NewStubClient() *StubClient {
 	return &StubClient{}
 }
 
-func (c *StubClient) ImageRead(_ context.Context, req model.ImageReadRequest) (model.UnderstandResult, error) {
+func (c *StubClient) ImageRead(_ context.Context, req model.ImageReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	var source string
 	if len(req.Images) > 0 {
 		source = fmt.Sprintf("%d images", len(req.Images))
@@ -29,7 +29,7 @@ func (c *StubClient) ImageRead(_ context.Context, req model.ImageReadRequest) (m
 		instruction = "Describe this image"
 	}
 
-	return model.UnderstandResult{
+	return stubUnderstandResult(model.UnderstandResult{
 		Content: fmt.Sprintf("[stub] Analyzed image from %s. Instruction: %q. This is a placeholder response for local development.", source, instruction),
 		Model:   "stub",
 		Usage: model.Usage{
@@ -38,16 +38,16 @@ func (c *StubClient) ImageRead(_ context.Context, req model.ImageReadRequest) (m
 			TotalTokens:  30,
 		},
 		DurationMs: 1,
-	}, nil
+	})
 }
 
-func (c *StubClient) VideoRead(_ context.Context, req model.VideoReadRequest) (model.UnderstandResult, error) {
+func (c *StubClient) VideoRead(_ context.Context, req model.VideoReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	instruction := req.Instruction
 	if instruction == "" {
 		instruction = "Describe this video"
 	}
 
-	return model.UnderstandResult{
+	return stubUnderstandResult(model.UnderstandResult{
 		Content: fmt.Sprintf("[stub] Analyzed video from %s. Instruction: %q. This is a placeholder response for local development.", req.URL, instruction),
 		Model:   "stub",
 		Usage: model.Usage{
@@ -56,16 +56,16 @@ func (c *StubClient) VideoRead(_ context.Context, req model.VideoReadRequest) (m
 			TotalTokens:  80,
 		},
 		DurationMs: 1,
-	}, nil
+	})
 }
 
-func (c *StubClient) AudioRead(_ context.Context, req model.AudioReadRequest) (model.UnderstandResult, error) {
+func (c *StubClient) AudioRead(_ context.Context, req model.AudioReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	instruction := req.Instruction
 	if instruction == "" {
 		instruction = "Describe this audio"
 	}
 
-	return model.UnderstandResult{
+	return stubUnderstandResult(model.UnderstandResult{
 		Content: fmt.Sprintf("[stub] Analyzed audio from %s. Instruction: %q. This is a placeholder response for local development.", req.URL, instruction),
 		Model:   "stub",
 		Usage: model.Usage{
@@ -74,5 +74,12 @@ func (c *StubClient) AudioRead(_ context.Context, req model.AudioReadRequest) (m
 			TotalTokens:  65,
 		},
 		DurationMs: 1,
+	})
+}
+
+func stubUnderstandResult(result model.UnderstandResult) (model.InvocationResult[model.UnderstandResult], error) {
+	return model.InvocationResult[model.UnderstandResult]{
+		Value: result,
+		Meta:  model.InvocationMeta{ProviderStatus: "success", Stage: model.InvocationStageDecodeResult},
 	}, nil
 }

@@ -18,6 +18,7 @@ type fakeUsageWriter struct {
 }
 
 type zeroCostNexusClient struct{}
+type emptyOutputNexusClient struct{ zeroCostNexusClient }
 
 type fakeUploadResolver struct {
 	calledWith []string
@@ -38,21 +39,27 @@ func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.Provide
 	return nil
 }
 
-func (zeroCostNexusClient) GenerateImage(_ context.Context, _ model.GenerateImageRequest, _ model.RouteBinding) (model.GenerateImageResult, error) {
+func (zeroCostNexusClient) GenerateImage(_ context.Context, _ model.GenerateImageRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
 	panic("unexpected GenerateImage call")
 }
 
-func (zeroCostNexusClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
-	return model.GenerateVideoResult{
+func (zeroCostNexusClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
+	result := model.GenerateVideoResult{
 		ID:      "vid-zero-cost",
 		Status:  "success",
 		Model:   req.Model,
 		Outputs: []model.Artifact{{Type: "video", URL: "https://cdn.anycap.local/generated.mp4", MIMEType: "video/mp4"}},
-	}, nil
+	}
+	return model.InvocationResult[model.GenerateVideoResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
 }
 
-func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
+func (zeroCostNexusClient) GenerateMusic(_ context.Context, _ model.GenerateMusicRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
 	panic("unexpected GenerateMusic call")
+}
+
+func (emptyOutputNexusClient) GenerateVideo(_ context.Context, req model.GenerateVideoRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
+	result := model.GenerateVideoResult{ID: "vid-empty", Status: "success", Model: req.Model, Outputs: []model.Artifact{{Type: "video", URL: "\n"}}}
+	return model.InvocationResult[model.GenerateVideoResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
 }
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
@@ -127,8 +134,8 @@ func TestGenerateVideo_SuccessPersistsAPIKeyID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success, got %q", result.Status)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success, got %q", result.Value.Status)
 	}
 
 	items, err := logs.ListByUserID(context.Background(), "user-1", 10)
@@ -171,7 +178,7 @@ func TestGenerateVideo_SuccessPersistsUsageLedger(t *testing.T) {
 	if writer.events[0].OccurredAt == (time.Time{}) {
 		t.Fatalf("expected occurred_at to be set, got %#v", writer.events[0])
 	}
-	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
+	if writer.runs[0].ProviderTaskID != result.Value.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
 	}
 }
@@ -252,8 +259,8 @@ func TestGenerateVideo_DoesNotDeductWhenProviderCostMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.CreditCost != 0 {
-		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.CreditCost)
+	if result.Value.CreditCost != 0 {
+		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.Value.CreditCost)
 	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
@@ -302,6 +309,10 @@ func TestGenerateVideo_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	if !errors.Is(err, model.ErrUpstreamUnavailable) {
 		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
 	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "vid_req-1" || meta.Stage != model.InvocationStagePublish {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
+	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
 	if err != nil {
@@ -309,6 +320,18 @@ func TestGenerateVideo_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	}
 	if balance.Available != 10 {
 		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
+	}
+}
+
+func TestGenerateVideo_RejectsEmptyProviderOutputWithTaskMetadata(t *testing.T) {
+	service := NewService(testCatalog(), emptyOutputNexusClient{}, credit.NewStubClient(map[string]int64{"user-1": 10}), calllog.NewMemoryCallLogRepo())
+	_, err := service.Generate(context.Background(), model.GenerateVideoRequest{UserID: "user-1", RequestID: "req-empty", Prompt: "paper crane", Model: "veo-mini"})
+	var invocationErr *model.InvocationError
+	if !errors.As(err, &invocationErr) {
+		t.Fatalf("expected invocation error, got %v", err)
+	}
+	if invocationErr.Code != model.InvocationErrorCodeUpstreamEmptyResult || invocationErr.Meta.TaskID != "vid-empty" || invocationErr.Meta.Stage != model.InvocationStageValidateResult {
+		t.Fatalf("invocation error = %+v", invocationErr)
 	}
 }
 
@@ -349,7 +372,7 @@ func TestGenerateVideo_EditVideoOnlyModelFallsBackToSingleMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success, got %q", result.Status)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success, got %q", result.Value.Status)
 	}
 }

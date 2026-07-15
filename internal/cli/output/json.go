@@ -41,7 +41,9 @@ func WriteJSON(w io.Writer, payload []byte) error {
 
 // WriteServerJSON writes a server JSON response, injecting request_id.
 func WriteServerJSON(w io.Writer, payload []byte, requestID string) error {
-	return WriteJSON(w, injectRequestID(payload, requestID))
+	payload = injectRequestID(payload, requestID)
+	payload = promoteInvocationDiagnostics(payload)
+	return WriteJSON(w, payload)
 }
 
 // WriteServerContent extracts the "content" field from the server envelope
@@ -56,7 +58,8 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 			Content    string `json:"content"`
 			CreditCost int64  `json:"credit_cost"`
 		} `json:"data"`
-		Error json.RawMessage `json:"error,omitempty"`
+		Error       json.RawMessage       `json:"error,omitempty"`
+		Diagnostics invocationDiagnostics `json:"diagnostics"`
 	}
 	if err := json.Unmarshal(payload, &env); err != nil {
 		return WriteServerJSON(w, payload, requestID)
@@ -74,6 +77,7 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 	if requestID != "" {
 		out["request_id"] = requestID
 	}
+	applyInvocationDiagnostics(out, env.Diagnostics)
 	data, err := json.Marshal(out)
 	if err != nil {
 		return WriteServerJSON(w, payload, requestID)
@@ -82,19 +86,83 @@ func WriteServerContent(w io.Writer, payload []byte, requestID string) error {
 	return WriteJSON(w, data)
 }
 
+type InvocationDiagnostics struct {
+	TraceID           string `json:"trace_id"`
+	RequestID         string `json:"request_id"`
+	TaskID            string `json:"task_id"`
+	UpstreamRequestID string `json:"upstream_request_id"`
+	Stage             string `json:"stage"`
+}
+
+type invocationDiagnostics = InvocationDiagnostics
+
+func promoteInvocationDiagnostics(payload []byte) []byte {
+	var envelope struct {
+		Diagnostics invocationDiagnostics `json:"diagnostics"`
+	}
+	if err := json.Unmarshal(payload, &envelope); err != nil {
+		return payload
+	}
+	var out map[string]any
+	if err := json.Unmarshal(payload, &out); err != nil {
+		return payload
+	}
+	applyInvocationDiagnostics(out, envelope.Diagnostics)
+	promoted, err := json.Marshal(out)
+	if err != nil {
+		return payload
+	}
+	return promoted
+}
+
+func applyInvocationDiagnostics(out map[string]any, diagnostics invocationDiagnostics) {
+	if diagnostics.TraceID != "" {
+		out["trace_id"] = diagnostics.TraceID
+	}
+	if diagnostics.RequestID != "" {
+		out["request_id"] = diagnostics.RequestID
+	}
+	if diagnostics.TaskID != "" {
+		out["task_id"] = diagnostics.TaskID
+	}
+	if diagnostics.UpstreamRequestID != "" {
+		out["upstream_request_id"] = diagnostics.UpstreamRequestID
+	}
+	if diagnostics.Stage != "" {
+		out["stage"] = diagnostics.Stage
+	}
+}
+
 // WriteError writes a structured JSON error to the writer.
 // When hint or requestID are non-empty, they are included in the output.
 // trace_id is injected automatically by WriteJSON.
 func WriteError(w io.Writer, code, message, hint, requestID string) error {
+	return WriteErrorWithDiagnostics(w, code, message, hint, InvocationDiagnostics{RequestID: requestID})
+}
+
+// WriteErrorWithDiagnostics writes a structured error with safe invocation identifiers.
+func WriteErrorWithDiagnostics(w io.Writer, code, message, hint string, diagnostics InvocationDiagnostics) error {
 	obj := map[string]string{"error": code, "message": message}
 	if hint != "" {
 		obj["hint"] = hint
 	}
-	if requestID != "" {
-		obj["request_id"] = requestID
-	}
+	applyInvocationDiagnosticsString(obj, diagnostics)
 	data, _ := json.Marshal(obj)
 	return WriteJSON(w, data)
+}
+
+func applyInvocationDiagnosticsString(out map[string]string, diagnostics InvocationDiagnostics) {
+	for key, value := range map[string]string{
+		"trace_id":            diagnostics.TraceID,
+		"request_id":          diagnostics.RequestID,
+		"task_id":             diagnostics.TaskID,
+		"upstream_request_id": diagnostics.UpstreamRequestID,
+		"stage":               diagnostics.Stage,
+	} {
+		if value != "" {
+			out[key] = value
+		}
+	}
 }
 
 // injectTraceID adds a trace_id field to a JSON object payload using the global trace ID.

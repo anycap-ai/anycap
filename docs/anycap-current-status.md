@@ -265,7 +265,7 @@ Auth0 JWT users are mapped to local AnyCap users through `auth_identities`. The 
 
 - JSON to stdout by default (non-TTY), human-readable in TTY
 - `--json` / `--pretty` to override
-- All responses include `request_id` for debugging and feedback
+- Model invocation responses include additive diagnostics with trace/request IDs, downstream task/request IDs when available, and a controlled failure stage. CLI stdout remains one final JSON document and emits one machine-readable invocation-start event on stderr.
 
 ### Feature Gating
 
@@ -377,8 +377,8 @@ Public pages group external community links in the header: GitHub for the reposi
 Built-in feedback loop via `anycap feedback`:
 
 - **Types**: bug report, feature request, general
-- **Context**: can attach request ID from a previous call
-- **Notifications**: feedback forwarded to team via Lark webhook
+- **Context**: can attach legacy request/trace/context fields or a structured diagnostics object containing the original trace, task, upstream request, capability, model, stage, error code, and invocation time
+- **Notifications**: feedback forwarded to the team via Lark webhook with original invocation diagnostics rendered separately from the feedback submission trace
 - **Community discussion**: public web pages and the dashboard link to Discord for product discussion and feedback
 
 ## 9. Distribution

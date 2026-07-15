@@ -121,6 +121,9 @@ Examples:
 			if err := resolveFileParams(cmd.Context(), client, "video", model, mode, body, verboseWriter(cmd)); err != nil {
 				return err
 			}
+			if err := writeInvocationStarted(cmd, "video.generate", model); err != nil {
+				return err
+			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.GeneratePath("video"), body)
 			if err != nil {

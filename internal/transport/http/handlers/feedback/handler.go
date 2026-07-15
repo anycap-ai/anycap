@@ -53,14 +53,23 @@ func (h *Handler) Submit(c context.Context, ctx *app.RequestContext) {
 			return
 		}
 	}
+	var diagnostics model.FeedbackDiagnostics
+	if len(payload.Diagnostics) > 0 {
+		if err := json.Unmarshal(payload.Diagnostics, &diagnostics); err != nil {
+			logger.WithError(err).Warn("invalid feedback diagnostics payload")
+			ctx.JSON(400, dto.ErrorEnvelope(reqID, "INVALID_PARAM", "diagnostics must be a valid JSON object"))
+			return
+		}
+	}
 
 	fb := model.Feedback{
-		UserID:    userID,
-		Type:      payload.Type,
-		Message:   payload.Message,
-		Context:   fbContext,
-		RequestID: payload.RequestID,
-		Metadata:  payload.Metadata,
+		UserID:      userID,
+		Type:        payload.Type,
+		Message:     payload.Message,
+		Context:     fbContext,
+		RequestID:   payload.RequestID,
+		Metadata:    payload.Metadata,
+		Diagnostics: diagnostics,
 	}
 	if payload.TraceID != "" {
 		if fb.Metadata == nil {

@@ -25,10 +25,14 @@ func (e *AuthError) Error() string {
 // APIError is returned when the server responds with a 4xx/5xx error.
 // It preserves the structured error code and message from the server JSON envelope.
 type APIError struct {
-	StatusCode int
-	Code       string
-	Message    string
-	RequestID  string
+	StatusCode        int
+	Code              string
+	Message           string
+	RequestID         string
+	TraceID           string
+	TaskID            string
+	UpstreamRequestID string
+	Stage             string
 }
 
 func (e *APIError) Error() string {
@@ -166,10 +170,6 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 		requestID = httpResp.Header.Get("X-Request-Id")
 	}
 
-	if httpResp.StatusCode == http.StatusUnauthorized {
-		return nil, &AuthError{Body: strings.TrimSpace(string(data))}
-	}
-
 	if httpResp.StatusCode >= http.StatusBadRequest {
 		// Try to parse server JSON error envelope: {"error":{"code":"...","message":"..."}}
 		var env struct {
@@ -177,14 +177,31 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body []byte) (*
 				Code    string `json:"code"`
 				Message string `json:"message"`
 			} `json:"error"`
+			Diagnostics struct {
+				TraceID           string `json:"trace_id"`
+				RequestID         string `json:"request_id"`
+				TaskID            string `json:"task_id"`
+				UpstreamRequestID string `json:"upstream_request_id"`
+				Stage             string `json:"stage"`
+			} `json:"diagnostics"`
 		}
 		if json.Unmarshal(data, &env) == nil && env.Error.Code != "" {
-			return nil, &APIError{
-				StatusCode: httpResp.StatusCode,
-				Code:       env.Error.Code,
-				Message:    env.Error.Message,
-				RequestID:  requestID,
+			if env.Diagnostics.RequestID != "" {
+				requestID = env.Diagnostics.RequestID
 			}
+			return nil, &APIError{
+				StatusCode:        httpResp.StatusCode,
+				Code:              env.Error.Code,
+				Message:           env.Error.Message,
+				RequestID:         requestID,
+				TraceID:           env.Diagnostics.TraceID,
+				TaskID:            env.Diagnostics.TaskID,
+				UpstreamRequestID: env.Diagnostics.UpstreamRequestID,
+				Stage:             env.Diagnostics.Stage,
+			}
+		}
+		if httpResp.StatusCode == http.StatusUnauthorized {
+			return nil, &AuthError{Body: strings.TrimSpace(string(data))}
 		}
 		return nil, &APIError{
 			StatusCode: httpResp.StatusCode,

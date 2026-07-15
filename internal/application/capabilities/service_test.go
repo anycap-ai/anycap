@@ -35,40 +35,92 @@ type fakeCapabilitiesBillingCoordinator struct {
 	deducted        []string
 }
 
-func (f *fakeCapabilitiesProvider) ImageRead(_ context.Context, _ model.ImageReadRequest) (model.UnderstandResult, error) {
+func (f *fakeCapabilitiesProvider) ImageRead(_ context.Context, _ model.ImageReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	if f.imageErr != nil {
-		return model.UnderstandResult{}, f.imageErr
+		return model.InvocationResult[model.UnderstandResult]{}, f.imageErr
 	}
 	if f.imageResult.Content != "" {
-		return f.imageResult, nil
+		return model.InvocationResult[model.UnderstandResult]{Value: f.imageResult, Meta: model.InvocationMeta{UpstreamRequestID: "upreq_image", ProviderStatus: "success"}}, nil
 	}
 	return agentplatform.NewStubClient().ImageRead(context.Background(), model.ImageReadRequest{
 		URL: "https://example.com/fallback-image.jpg",
 	})
 }
 
-func (f *fakeCapabilitiesProvider) VideoRead(_ context.Context, _ model.VideoReadRequest) (model.UnderstandResult, error) {
+func (f *fakeCapabilitiesProvider) VideoRead(_ context.Context, _ model.VideoReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	if f.videoErr != nil {
-		return model.UnderstandResult{}, f.videoErr
+		return model.InvocationResult[model.UnderstandResult]{}, f.videoErr
 	}
 	if f.videoResult.Content != "" {
-		return f.videoResult, nil
+		return model.InvocationResult[model.UnderstandResult]{Value: f.videoResult, Meta: model.InvocationMeta{UpstreamRequestID: "upreq_video", ProviderStatus: "success"}}, nil
 	}
 	return agentplatform.NewStubClient().VideoRead(context.Background(), model.VideoReadRequest{
 		URL: "https://example.com/fallback-video.mp4",
 	})
 }
 
-func (f *fakeCapabilitiesProvider) AudioRead(_ context.Context, _ model.AudioReadRequest) (model.UnderstandResult, error) {
+func (f *fakeCapabilitiesProvider) AudioRead(_ context.Context, _ model.AudioReadRequest) (model.InvocationResult[model.UnderstandResult], error) {
 	if f.audioErr != nil {
-		return model.UnderstandResult{}, f.audioErr
+		return model.InvocationResult[model.UnderstandResult]{}, f.audioErr
 	}
 	if f.audioResult.Content != "" {
-		return f.audioResult, nil
+		return model.InvocationResult[model.UnderstandResult]{Value: f.audioResult, Meta: model.InvocationMeta{UpstreamRequestID: "upreq_audio", ProviderStatus: "success"}}, nil
 	}
 	return agentplatform.NewStubClient().AudioRead(context.Background(), model.AudioReadRequest{
 		URL: "https://example.com/fallback-audio.mp3",
 	})
+}
+
+func TestService_ReadRejectsBlankProviderContentWithDiagnostics(t *testing.T) {
+	tests := []struct {
+		name           string
+		provider       *fakeCapabilitiesProvider
+		invoke         func(*Service) error
+		wantUpstreamID string
+	}{
+		{
+			name:     "image",
+			provider: &fakeCapabilitiesProvider{imageResult: model.UnderstandResult{Content: " \n"}},
+			invoke: func(s *Service) error {
+				_, err := s.ImageRead(middleware.ContextWithUserID(context.Background(), "user-1"), model.ImageReadRequest{URL: "https://example.com/image.png"})
+				return err
+			},
+			wantUpstreamID: "upreq_image",
+		},
+		{
+			name:     "video",
+			provider: &fakeCapabilitiesProvider{videoResult: model.UnderstandResult{Content: "\t"}},
+			invoke: func(s *Service) error {
+				_, err := s.VideoRead(middleware.ContextWithUserID(context.Background(), "user-1"), model.VideoReadRequest{URL: "https://example.com/video.mp4"})
+				return err
+			},
+			wantUpstreamID: "upreq_video",
+		},
+		{
+			name:     "audio",
+			provider: &fakeCapabilitiesProvider{audioResult: model.UnderstandResult{Content: "  "}},
+			invoke: func(s *Service) error {
+				_, err := s.AudioRead(middleware.ContextWithUserID(context.Background(), "user-1"), model.AudioReadRequest{URL: "https://example.com/audio.mp3"})
+				return err
+			},
+			wantUpstreamID: "upreq_audio",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := NewService(tt.provider, s3store.NewStubClient())
+			svc.SetCreditClient(credit.NewStubClient(map[string]int64{"user-1": 20}))
+			err := tt.invoke(svc)
+			var invocationErr *model.InvocationError
+			if !errors.As(err, &invocationErr) {
+				t.Fatalf("expected invocation error, got %v", err)
+			}
+			if invocationErr.Code != model.InvocationErrorCodeUpstreamEmptyResult || invocationErr.Meta.UpstreamRequestID != tt.wantUpstreamID || invocationErr.Meta.Stage != model.InvocationStageValidateResult {
+				t.Fatalf("invocation error = %+v", invocationErr)
+			}
+		})
+	}
 }
 
 func (f *fakeCapabilitiesBillingCoordinator) CreateOrGetIntent(_ context.Context, input model.CreateBillingIntentInput) (model.BillingIntent, error) {
@@ -153,11 +205,11 @@ func TestService_ImageRead_URL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.Content == "" {
+	if result.Value.Content == "" {
 		t.Error("expected non-empty content")
 	}
-	if result.Model != "stub" {
-		t.Errorf("expected model=stub, got %s", result.Model)
+	if result.Value.Model != "stub" {
+		t.Errorf("expected model=stub, got %s", result.Value.Model)
 	}
 }
 
@@ -171,7 +223,7 @@ func TestService_ImageRead_Base64(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.Content == "" {
+	if result.Value.Content == "" {
 		t.Error("expected non-empty content")
 	}
 }
@@ -208,11 +260,11 @@ func TestService_VideoRead_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.Content == "" {
+	if result.Value.Content == "" {
 		t.Error("expected non-empty content")
 	}
-	if result.Model != "stub" {
-		t.Errorf("expected model=stub, got %s", result.Model)
+	if result.Value.Model != "stub" {
+		t.Errorf("expected model=stub, got %s", result.Value.Model)
 	}
 }
 
@@ -230,11 +282,11 @@ func TestService_ImageRead_DeductsFixedCreditOnSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.Content == "" {
+	if result.Value.Content == "" {
 		t.Fatal("expected non-empty result")
 	}
-	if result.CreditCost != 5 {
-		t.Fatalf("expected CreditCost 5, got %d", result.CreditCost)
+	if result.Value.CreditCost != 5 {
+		t.Fatalf("expected CreditCost 5, got %d", result.Value.CreditCost)
 	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")

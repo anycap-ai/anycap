@@ -3,11 +3,13 @@ package nexushub
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/open/common-go/logging"
 )
 
@@ -64,18 +66,23 @@ func (p resultPoller) resolve(ctx context.Context, capability, abilityKey string
 }
 
 func (p resultPoller) poll(ctx context.Context, capability, abilityKey, taskID string) (submitAtomicProcessResponse, error) {
+	meta := model.InvocationMeta{TaskID: taskID, Stage: model.InvocationStagePoll}
 	for attempt := 0; attempt < p.maxAttempts; attempt++ {
 		httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, p.baseURL+getSubmitResultPath+taskID, nil)
 		if err != nil {
 			logNexusHubCapabilityError(ctx, capability, "", abilityKey, "build_result_request", err, "build nexushub result request failed")
-			return submitAtomicProcessResponse{}, fmt.Errorf("build result request: %w", err)
+			return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("build result request: %w", err), meta)
 		}
 		httpReq.Header.Set("X-Token", p.token)
 
 		resp, err := p.httpClient.Do(httpReq)
 		if err != nil {
 			logNexusHubCapabilityError(ctx, capability, "", abilityKey, "result_http_request", err, "get nexushub result failed")
-			return submitAtomicProcessResponse{}, fmt.Errorf("get submit result: %w", err)
+			code := ""
+			if errors.Is(err, context.DeadlineExceeded) {
+				code = model.InvocationErrorCodeUpstreamTimeout
+			}
+			return submitAtomicProcessResponse{}, model.WrapInvocationError(code, fmt.Errorf("get submit result: %w", err), meta)
 		}
 
 		var parsed submitAtomicProcessResponse
@@ -84,7 +91,7 @@ func (p resultPoller) poll(ctx context.Context, capability, abilityKey, taskID s
 		resp.Body.Close()
 		if decodeErr != nil {
 			logNexusHubCapabilityError(ctx, capability, "", abilityKey, "decode_result_response", decodeErr, "decode nexushub result response failed")
-			return submitAtomicProcessResponse{}, fmt.Errorf("decode result response: %w", decodeErr)
+			return submitAtomicProcessResponse{}, model.WrapInvocationError("", fmt.Errorf("decode result response: %w", decodeErr), model.MergeInvocationMeta(meta, model.InvocationMeta{Stage: model.InvocationStageDecodeResult}))
 		}
 
 		if statusCode != http.StatusOK || parsed.Base.Code != 0 {
@@ -93,24 +100,36 @@ func (p resultPoller) poll(ctx context.Context, capability, abilityKey, taskID s
 				"status_code": statusCode,
 				"base_code":   parsed.Base.Code,
 			})
-			return submitAtomicProcessResponse{}, mapped
+			return submitAtomicProcessResponse{}, model.WrapInvocationError("", mapped, meta)
 		}
 
 		status := normalizeNexusHubTaskStatus(parsed.Status)
+		meta.ProviderStatus = status
 		if status == "failed" || status == "canceled" {
 			mapped := mapSubmitError(statusCode, parsed.ErrCode, firstNonEmpty(parsed.ErrMsg, parsed.Base.Message))
-			return submitAtomicProcessResponse{}, mapped
+			return submitAtomicProcessResponse{}, model.WrapInvocationError("", mapped, meta)
 		}
 
 		if strings.TrimSpace(parsed.RespPayload) != "" {
+			if parsed.TaskID == "" {
+				parsed.TaskID = taskID
+			}
 			return parsed, nil
 		}
 
 		select {
 		case <-ctx.Done():
-			return submitAtomicProcessResponse{}, ctx.Err()
+			code := ""
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				code = model.InvocationErrorCodeUpstreamTimeout
+			}
+			return submitAtomicProcessResponse{}, model.WrapInvocationError(code, ctx.Err(), meta)
 		case <-time.After(p.interval):
 		}
 	}
-	return submitAtomicProcessResponse{}, fmt.Errorf("nexushub result not ready after polling task %s", taskID)
+	return submitAtomicProcessResponse{}, model.WrapInvocationError(
+		model.InvocationErrorCodeUpstreamTimeout,
+		fmt.Errorf("nexushub result not ready after polling task %s", taskID),
+		meta,
+	)
 }

@@ -18,6 +18,7 @@ type fakeUsageWriter struct {
 }
 
 type zeroCostNexusClient struct{}
+type emptyOutputNexusClient struct{ zeroCostNexusClient }
 type fakeArtifactPublisher struct {
 	err error
 }
@@ -32,21 +33,27 @@ func (f *fakeUsageWriter) InsertProviderRun(_ context.Context, run model.Provide
 	return nil
 }
 
-func (zeroCostNexusClient) GenerateImage(_ context.Context, _ model.GenerateImageRequest, _ model.RouteBinding) (model.GenerateImageResult, error) {
+func (zeroCostNexusClient) GenerateImage(_ context.Context, _ model.GenerateImageRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateImageResult], error) {
 	panic("unexpected GenerateImage call")
 }
 
-func (zeroCostNexusClient) GenerateVideo(_ context.Context, _ model.GenerateVideoRequest, _ model.RouteBinding) (model.GenerateVideoResult, error) {
+func (zeroCostNexusClient) GenerateVideo(_ context.Context, _ model.GenerateVideoRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateVideoResult], error) {
 	panic("unexpected GenerateVideo call")
 }
 
-func (zeroCostNexusClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.GenerateMusicResult, error) {
-	return model.GenerateMusicResult{
+func (zeroCostNexusClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
+	result := model.GenerateMusicResult{
 		ID:      "mus-zero-cost",
 		Status:  "success",
 		Model:   req.Model,
 		Outputs: []model.Artifact{{Type: "music", URL: "https://cdn.anycap.local/generated.mp3", MIMEType: "audio/mpeg"}},
-	}, nil
+	}
+	return model.InvocationResult[model.GenerateMusicResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
+}
+
+func (emptyOutputNexusClient) GenerateMusic(_ context.Context, req model.GenerateMusicRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateMusicResult], error) {
+	result := model.GenerateMusicResult{ID: "mus-empty", Status: "success", Model: req.Model}
+	return model.InvocationResult[model.GenerateMusicResult]{Value: result, Meta: model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status}}, nil
 }
 
 func (zeroCostNexusClient) GetSubmitResult(_ context.Context, _ string) (model.ProviderTaskResult, error) {
@@ -142,14 +149,14 @@ func TestGenerateMusic_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.Status != "success" {
-		t.Fatalf("expected success, got %q", result.Status)
+	if result.Value.Status != "success" {
+		t.Fatalf("expected success, got %q", result.Value.Status)
 	}
-	if result.Model != "mureka-v6" {
-		t.Fatalf("expected mureka-v6, got %s", result.Model)
+	if result.Value.Model != "mureka-v6" {
+		t.Fatalf("expected mureka-v6, got %s", result.Value.Model)
 	}
-	if len(result.Outputs) != 1 {
-		t.Fatalf("expected 1 output, got %d", len(result.Outputs))
+	if len(result.Value.Outputs) != 1 {
+		t.Fatalf("expected 1 output, got %d", len(result.Value.Outputs))
 	}
 	if logs.Count() != 1 {
 		t.Fatalf("expected 1 call log, got %d", logs.Count())
@@ -191,7 +198,7 @@ func TestGenerateMusic_SuccessPersistsUsageLedger(t *testing.T) {
 	if writer.events[0].OccurredAt == (time.Time{}) {
 		t.Fatalf("expected occurred_at to be set, got %#v", writer.events[0])
 	}
-	if writer.runs[0].ProviderTaskID != result.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
+	if writer.runs[0].ProviderTaskID != result.Value.ID || writer.runs[0].UsageEventID != writer.events[0].ID {
 		t.Fatalf("unexpected provider run linkage: event=%#v run=%#v", writer.events[0], writer.runs[0])
 	}
 }
@@ -213,8 +220,8 @@ func TestGenerateMusic_DoesNotDeductWhenProviderCostMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if result.CreditCost != 0 {
-		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.CreditCost)
+	if result.Value.CreditCost != 0 {
+		t.Fatalf("expected zero response credit cost when provider cost missing, got %d", result.Value.CreditCost)
 	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
@@ -288,6 +295,10 @@ func TestGenerateMusic_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	if !errors.Is(err, model.ErrUpstreamUnavailable) {
 		t.Fatalf("expected ErrUpstreamUnavailable, got %v", err)
 	}
+	meta, ok := model.InvocationMetaFromError(err)
+	if !ok || meta.TaskID != "mus_req-1" || meta.Stage != model.InvocationStagePublish {
+		t.Fatalf("diagnostics = %+v, found = %v", meta, ok)
+	}
 
 	balance, err := creditClient.GetBalance(context.Background(), "user-1")
 	if err != nil {
@@ -295,5 +306,17 @@ func TestGenerateMusic_PublishFailureDoesNotDeductCredit(t *testing.T) {
 	}
 	if balance.Available != 3 {
 		t.Fatalf("expected credit unchanged after publish failure, got %d", balance.Available)
+	}
+}
+
+func TestGenerateMusic_RejectsEmptyProviderOutputWithTaskMetadata(t *testing.T) {
+	service := NewService(testCatalog(), emptyOutputNexusClient{}, credit.NewStubClient(map[string]int64{"user-1": 3}), calllog.NewMemoryCallLogRepo())
+	_, err := service.Generate(context.Background(), model.GenerateMusicRequest{UserID: "user-1", RequestID: "req-empty", Prompt: "lofi", Model: "mureka-v6"})
+	var invocationErr *model.InvocationError
+	if !errors.As(err, &invocationErr) {
+		t.Fatalf("expected invocation error, got %v", err)
+	}
+	if invocationErr.Code != model.InvocationErrorCodeUpstreamEmptyResult || invocationErr.Meta.TaskID != "mus-empty" || invocationErr.Meta.Stage != model.InvocationStageValidateResult {
+		t.Fatalf("invocation error = %+v", invocationErr)
 	}
 }

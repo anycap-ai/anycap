@@ -3,6 +3,7 @@ package nexushub
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -94,20 +95,23 @@ func TestWebClient_SearchGeneral_Search1(t *testing.T) {
 		t.Errorf("crawl_results = %v, want 2", gotPayload.SearchOption.CrawlResults)
 	}
 
-	if result.Mode != "general" {
-		t.Errorf("mode = %q, want general", result.Mode)
+	if result.Meta.TaskID != "atomic_1" || result.Meta.ProviderStatus != "success" {
+		t.Fatalf("metadata = %+v", result.Meta)
 	}
-	if len(result.Results) != 2 {
-		t.Fatalf("results len = %d, want 2", len(result.Results))
+	if result.Value.Mode != "general" {
+		t.Errorf("mode = %q, want general", result.Value.Mode)
 	}
-	if result.Results[0].URL != "https://go.dev" {
-		t.Errorf("result0 url = %q", result.Results[0].URL)
+	if len(result.Value.Results) != 2 {
+		t.Fatalf("results len = %d, want 2", len(result.Value.Results))
 	}
-	if result.Results[0].Description != "desc" {
-		t.Errorf("result0 description = %q", result.Results[0].Description)
+	if result.Value.Results[0].URL != "https://go.dev" {
+		t.Errorf("result0 url = %q", result.Value.Results[0].URL)
 	}
-	if result.Results[0].Content != "full" {
-		t.Errorf("result0 content = %q", result.Results[0].Content)
+	if result.Value.Results[0].Description != "desc" {
+		t.Errorf("result0 description = %q", result.Value.Results[0].Description)
+	}
+	if result.Value.Results[0].Content != "full" {
+		t.Errorf("result0 content = %q", result.Value.Results[0].Content)
 	}
 }
 
@@ -151,10 +155,10 @@ func TestWebClient_SearchGeneral_ExaDateRange(t *testing.T) {
 		t.Errorf("crawl_results = %v, want 0", gotPayload.SearchOption.CrawlResults)
 	}
 
-	if len(result.Results) != 1 {
-		t.Fatalf("results len = %d, want 1", len(result.Results))
+	if len(result.Value.Results) != 1 {
+		t.Fatalf("results len = %d, want 1", len(result.Value.Results))
 	}
-	r0 := result.Results[0]
+	r0 := result.Value.Results[0]
 	if r0.URL != "https://news.example" {
 		t.Errorf("url = %q", r0.URL)
 	}
@@ -206,11 +210,14 @@ func TestWebClient_Crawl(t *testing.T) {
 		t.Error("onlyMainContent = false, want true")
 	}
 
-	if out.Title != "Hello" {
-		t.Errorf("title = %q, want Hello", out.Title)
+	if out.Meta.TaskID != "atomic_3" || out.Meta.ProviderStatus != "success" {
+		t.Fatalf("metadata = %+v", out.Meta)
 	}
-	if out.Markdown != "# Hello" {
-		t.Errorf("markdown = %q", out.Markdown)
+	if out.Value.Title != "Hello" {
+		t.Errorf("title = %q, want Hello", out.Value.Title)
+	}
+	if out.Value.Markdown != "# Hello" {
+		t.Errorf("markdown = %q", out.Value.Markdown)
 	}
 }
 
@@ -227,12 +234,12 @@ func TestWebClient_Crawl_EmptyMarkdown(t *testing.T) {
 	defer srv.Close()
 
 	client := NewWebClient(WebClientConfig{BaseURL: srv.URL, Token: "tok"})
-	_, err := client.Crawl(context.Background(), "https://example.com")
-	if err == nil {
-		t.Fatal("expected error for empty markdown")
+	result, err := client.Crawl(context.Background(), "https://example.com")
+	if err != nil {
+		t.Fatalf("Crawl() error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "empty markdown") {
-		t.Errorf("unexpected error: %v", err)
+	if result.Value.Markdown != "" || result.Meta.TaskID != "atomic_4" {
+		t.Fatalf("result = %+v", result)
 	}
 }
 
@@ -258,10 +265,10 @@ func TestWebClient_Submit_BaseCodeError(t *testing.T) {
 
 func TestWebClient_NotConfigured(t *testing.T) {
 	client := NewWebClient(WebClientConfig{})
-	if _, err := client.SearchGeneral(context.Background(), model.WebSearchRequest{Query: "x"}); err != model.ErrWebGeneralSearchProviderNotConfigured {
+	if _, err := client.SearchGeneral(context.Background(), model.WebSearchRequest{Query: "x"}); !errors.Is(err, model.ErrWebGeneralSearchProviderNotConfigured) {
 		t.Errorf("SearchGeneral err = %v, want ErrWebGeneralSearchProviderNotConfigured", err)
 	}
-	if _, err := client.Crawl(context.Background(), "https://example.com"); err != model.ErrWebCrawlerNotConfigured {
+	if _, err := client.Crawl(context.Background(), "https://example.com"); !errors.Is(err, model.ErrWebCrawlerNotConfigured) {
 		t.Errorf("Crawl err = %v, want ErrWebCrawlerNotConfigured", err)
 	}
 }
@@ -335,7 +342,10 @@ func TestWebClient_SearchGeneral_AsyncPoll(t *testing.T) {
 	if pollCount < 2 {
 		t.Errorf("expected at least 2 polls, got %d", pollCount)
 	}
-	if len(result.Results) != 1 || result.Results[0].URL != "https://go.dev" {
-		t.Fatalf("unexpected results: %+v", result.Results)
+	if result.Meta.TaskID != "atomic_async" || result.Meta.ProviderStatus != "success" {
+		t.Fatalf("metadata = %+v", result.Meta)
+	}
+	if len(result.Value.Results) != 1 || result.Value.Results[0].URL != "https://go.dev" {
+		t.Fatalf("unexpected results: %+v", result.Value.Results)
 	}
 }

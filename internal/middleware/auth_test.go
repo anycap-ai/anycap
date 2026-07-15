@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -41,6 +42,36 @@ func TestAuthMiddleware_RejectMissingBearer(t *testing.T) {
 	resp := ut.PerformRequest(h.Engine, http.MethodGet, "/protected", nil)
 	if resp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestAuthMiddleware_ModelInvocationIncludesPrepareDiagnostics(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(commonmw.TraceMiddleware())
+	CapabilityPOST(h.Group("/v1/image"), "/generate", "image.generate", Auth(apikey.NewMemoryService(), nil), func(ctx context.Context, c *app.RequestContext) { c.String(200, "ok") })
+
+	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/image/generate", nil)
+	var envelope struct {
+		Diagnostics struct {
+			Stage string `json:"stage"`
+		} `json:"diagnostics"`
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Code != http.StatusUnauthorized || envelope.Diagnostics.Stage != "prepare" {
+		t.Fatalf("status=%d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestAuthMiddleware_DynamicImageEditIncludesPrepareDiagnostics(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(commonmw.TraceMiddleware(), Auth(apikey.NewMemoryService(), nil))
+	h.POST("/v1/image/:operation", func(ctx context.Context, c *app.RequestContext) { c.String(200, "ok") })
+
+	resp := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/image/edit", nil)
+	if resp.Code != http.StatusUnauthorized || !bytes.Contains(resp.Body.Bytes(), []byte(`"stage":"prepare"`)) {
+		t.Fatalf("status=%d body=%s", resp.Code, resp.Body.String())
 	}
 }
 

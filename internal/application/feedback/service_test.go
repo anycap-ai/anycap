@@ -76,6 +76,45 @@ func TestSubmit_Success(t *testing.T) {
 	}
 }
 
+func TestSubmitStoresNormalizedInvocationDiagnosticsInMetadata(t *testing.T) {
+	repo := &memRepo{}
+	svc := NewService(repo, nil, "test")
+	_, err := svc.Submit(context.Background(), model.Feedback{
+		Type:    "bug",
+		Message: "silent result",
+		Diagnostics: model.FeedbackDiagnostics{
+			TraceID: "trc_original", TaskID: "task_original", UpstreamRequestID: "gateway_original",
+			Capability: "music.generate", Model: "suno-v5", Stage: "validate_result", ErrorCode: "UPSTREAM_EMPTY_RESULT",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	diagnostics, ok := repo.items[0].Metadata["diagnostics"].(map[string]any)
+	if !ok {
+		t.Fatalf("metadata diagnostics = %#v", repo.items[0].Metadata["diagnostics"])
+	}
+	if diagnostics["trace_id"] != "trc_original" || diagnostics["task_id"] != "task_original" || diagnostics["capability"] != "music.generate" || diagnostics["error_code"] != "UPSTREAM_EMPTY_RESULT" {
+		t.Fatalf("diagnostics = %#v", diagnostics)
+	}
+}
+
+func TestSubmitNormalizesLegacyInvocationFields(t *testing.T) {
+	repo := &memRepo{}
+	svc := NewService(repo, nil, "test")
+	_, err := svc.Submit(context.Background(), model.Feedback{
+		Type: "bug", Message: "legacy report", RequestID: "req_legacy",
+		Context: map[string]any{"task_id": "task_legacy"}, Metadata: map[string]any{"trace_id": "trc_legacy"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	diagnostics := repo.items[0].Metadata["diagnostics"].(map[string]any)
+	if diagnostics["trace_id"] != "trc_legacy" || diagnostics["request_id"] != "req_legacy" || diagnostics["task_id"] != "task_legacy" {
+		t.Fatalf("diagnostics = %#v", diagnostics)
+	}
+}
+
 func TestSubmit_InvalidType(t *testing.T) {
 	svc := NewService(&memRepo{}, nil, "test")
 

@@ -53,6 +53,15 @@ func userRequestContext(c context.Context, ctx *app.RequestContext) (context.Con
 	return middleware.ContextWithUserID(c, principal.UserID), true
 }
 
+func readUserRequestContext(c context.Context, ctx *app.RequestContext) (context.Context, bool) {
+	principal, ok := middleware.GetPrincipal(ctx)
+	if !ok || principal == nil {
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusUnauthorized, "auth_invalid", "missing principal", model.InvocationMeta{Stage: model.InvocationStagePrepare})
+		return nil, false
+	}
+	return middleware.ContextWithUserID(c, principal.UserID), true
+}
+
 func (h *Handler) Presign(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "asset.upload.prepare")
 	if h.service == nil {
@@ -96,10 +105,10 @@ func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "image.read")
 	if h.service == nil {
 		logger.Error("capabilities image read service unavailable")
-		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
-	reqCtx, ok := userRequestContext(c, ctx)
+	reqCtx, ok := readUserRequestContext(c, ctx)
 	if !ok {
 		return
 	}
@@ -107,7 +116,7 @@ func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 	var req model.ImageReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		logger.WithError(err).Warn("invalid image read request body")
-		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -119,21 +128,21 @@ func (h *Handler) ImageRead(c context.Context, ctx *app.RequestContext) {
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("image read failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeReadInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(c, ctx, result)
+	handlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
 }
 
 func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "video.read")
 	if h.service == nil {
 		logger.Error("capabilities video read service unavailable")
-		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
-	reqCtx, ok := userRequestContext(c, ctx)
+	reqCtx, ok := readUserRequestContext(c, ctx)
 	if !ok {
 		return
 	}
@@ -141,7 +150,7 @@ func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 	var req model.VideoReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		logger.WithError(err).Warn("invalid video read request body")
-		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -153,21 +162,21 @@ func (h *Handler) VideoRead(c context.Context, ctx *app.RequestContext) {
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("video read failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeReadInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(c, ctx, result)
+	handlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
 }
 
 func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
 	logger := logging.WithContext(c).WithField("capability", "audio.read")
 	if h.service == nil {
 		logger.Error("capabilities audio read service unavailable")
-		handlers.WriteError(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusServiceUnavailable, "capabilities_service_unavailable", "capabilities service is not configured", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
-	reqCtx, ok := userRequestContext(c, ctx)
+	reqCtx, ok := readUserRequestContext(c, ctx)
 	if !ok {
 		return
 	}
@@ -175,7 +184,7 @@ func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
 	var req model.AudioReadRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &req); err != nil {
 		logger.WithError(err).Warn("invalid audio read request body")
-		handlers.WriteError(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body")
+		handlers.WriteInvocationErrorPayload(c, ctx, consts.StatusBadRequest, "invalid_param", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -187,11 +196,19 @@ func (h *Handler) AudioRead(c context.Context, ctx *app.RequestContext) {
 			"status_code": code,
 			"error_code":  errCode,
 		}).WithError(err).Error("audio read failed")
-		handlers.WriteError(c, ctx, code, errCode, msg)
+		writeReadInvocationError(c, ctx, err, code, errCode, msg)
 		return
 	}
 
-	handlers.WriteSuccess(c, ctx, result)
+	handlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
+}
+
+func writeReadInvocationError(c context.Context, ctx *app.RequestContext, err error, status int, code, message string) {
+	if _, ok := model.InvocationMetaFromError(err); ok {
+		handlers.WriteInvocationError(c, ctx, err)
+		return
+	}
+	handlers.WriteInvocationErrorPayload(c, ctx, status, code, message, model.InvocationMeta{Stage: model.InvocationStagePrepare})
 }
 
 func classifyCapError(err error) (httpStatus int, code string, message string) {

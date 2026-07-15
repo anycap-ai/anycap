@@ -2,6 +2,7 @@ package video
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/application/execflow"
@@ -47,7 +48,7 @@ func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
 	s.artifactPub = publisher
 }
 
-func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) (model.GenerateVideoResult, error) {
+func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) (model.InvocationResult[model.GenerateVideoResult], error) {
 	logger := logging.WithContext(ctx).WithFields(logging.Fields{
 		"capability": "video.generate",
 		"model":      req.Model,
@@ -55,35 +56,35 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("video request validation failed")
-		return model.GenerateVideoResult{}, err
+		return model.InvocationResult[model.GenerateVideoResult]{}, err
 	}
 	if s == nil || s.catalog == nil || s.nexusHub == nil {
 		logger.Error("video execution not configured")
-		return model.GenerateVideoResult{}, model.ErrVideoExecutionNotConfigured
+		return model.InvocationResult[model.GenerateVideoResult]{}, model.ErrVideoExecutionNotConfigured
 	}
 	if s.credit == nil {
 		logger.Error("video credit client not configured")
-		return model.GenerateVideoResult{}, model.ErrInternal
+		return model.InvocationResult[model.GenerateVideoResult]{}, model.ErrInternal
 	}
 	if req.UserID == "" {
 		logger.Warn("missing user id for video request")
-		return model.GenerateVideoResult{}, model.ErrAuthInvalid
+		return model.InvocationResult[model.GenerateVideoResult]{}, model.ErrAuthInvalid
 	}
 
 	balance, err := s.credit.GetBalance(ctx, req.UserID)
 	if err != nil {
 		logger.WithError(err).Error("video credit balance lookup failed")
-		return model.GenerateVideoResult{}, err
+		return model.InvocationResult[model.GenerateVideoResult]{}, err
 	}
 	if balance.Available < 1 {
 		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for video request")
-		return model.GenerateVideoResult{}, model.ErrInsufficientCredit
+		return model.InvocationResult[model.GenerateVideoResult]{}, model.ErrInsufficientCredit
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityVideo, req.Model)
 	if err != nil {
 		logger.WithError(err).Error("video model lookup failed")
-		return model.GenerateVideoResult{}, err
+		return model.InvocationResult[model.GenerateVideoResult]{}, err
 	}
 	mode := req.Mode
 	if mode == "" {
@@ -101,7 +102,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 	}
 	if err != nil {
 		logger.WithField("mode", mode).WithError(err).Warn("video route selection failed")
-		return model.GenerateVideoResult{}, err
+		return model.InvocationResult[model.GenerateVideoResult]{}, err
 	}
 
 	if len(req.ReferenceImageURLs) > 0 && s.uploadResolver != nil {
@@ -110,21 +111,21 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			logger.WithFields(logging.Fields{
 				"reference_image_count": len(req.ReferenceImageURLs),
 			}).WithError(resolveErr).Error("video reference resolution failed")
-			return model.GenerateVideoResult{}, resolveErr
+			return model.InvocationResult[model.GenerateVideoResult]{}, resolveErr
 		}
 		req.ReferenceImageURLs = resolved
 	}
 	if req.FirstFrameURL != "" && s.uploadResolver != nil {
 		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, []string{req.FirstFrameURL})
 		if resolveErr != nil {
-			return model.GenerateVideoResult{}, resolveErr
+			return model.InvocationResult[model.GenerateVideoResult]{}, resolveErr
 		}
 		req.FirstFrameURL = resolved[0]
 	}
 	if req.LastFrameURL != "" && s.uploadResolver != nil {
 		resolved, resolveErr := s.uploadResolver.ResolveReferenceURLs(ctx, []string{req.LastFrameURL})
 		if resolveErr != nil {
-			return model.GenerateVideoResult{}, resolveErr
+			return model.InvocationResult[model.GenerateVideoResult]{}, resolveErr
 		}
 		req.LastFrameURL = resolved[0]
 	}
@@ -134,7 +135,7 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			logger.WithFields(logging.Fields{
 				"reference_video_count": len(req.ReferenceVideoURLs),
 			}).WithError(resolveErr).Error("video reference video resolution failed")
-			return model.GenerateVideoResult{}, resolveErr
+			return model.InvocationResult[model.GenerateVideoResult]{}, resolveErr
 		}
 		req.ReferenceVideoURLs = resolved
 	}
@@ -144,11 +145,12 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 			logger.WithFields(logging.Fields{
 				"reference_audio_count": len(req.ReferenceAudioURLs),
 			}).WithError(resolveErr).Error("video reference audio resolution failed")
-			return model.GenerateVideoResult{}, resolveErr
+			return model.InvocationResult[model.GenerateVideoResult]{}, resolveErr
 		}
 		req.ReferenceAudioURLs = resolved
 	}
 
+	var invocationMeta model.InvocationMeta
 	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
@@ -159,15 +161,25 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		MinCredit:  1,
 	}, execflow.Hooks[model.GenerateVideoResult]{
 		Invoke: func(ctx context.Context) (model.GenerateVideoResult, error) {
-			result, err := s.nexusHub.GenerateVideo(ctx, req, route)
+			invocation, err := s.nexusHub.GenerateVideo(ctx, req, route)
 			if err != nil {
 				logger.WithFields(logging.Fields{
 					"ability_key": route.AbilityKey,
 					"mode":        mode,
 				}).WithError(err).Error("video generation failed")
+				return model.GenerateVideoResult{}, err
 			}
-			return result, err
+			invocationMeta = invocation.Meta
+			if !execflow.HasUsableOutput(invocation.Value.Outputs) {
+				return model.GenerateVideoResult{}, model.WrapInvocationError(
+					model.InvocationErrorCodeUpstreamEmptyResult,
+					errors.New("provider completed without a usable video result"),
+					model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+				)
+			}
+			return invocation.Value, nil
 		},
+		InvocationMeta: func() model.InvocationMeta { return invocationMeta },
 		OnProviderSuccess: func(result model.GenerateVideoResult) execflow.ProviderSuccessMeta {
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
@@ -242,8 +254,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateVideoRequest) 
 		},
 	})
 	if err != nil {
-		return model.GenerateVideoResult{}, err
+		return model.InvocationResult[model.GenerateVideoResult]{}, err
 	}
 
-	return result, nil
+	return model.InvocationResult[model.GenerateVideoResult]{Value: result, Meta: invocationMeta}, nil
 }

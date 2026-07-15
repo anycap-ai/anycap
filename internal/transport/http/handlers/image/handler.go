@@ -8,6 +8,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/dto"
+	sharedhandlers "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers"
 	"gitlab.knoffice.tech/open/common-go/logging"
 	"gitlab.knoffice.tech/open/common-go/trace"
 
@@ -46,14 +47,14 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 	var payload dto.GenerateImageRequest
 	if err := json.Unmarshal(ctx.Request.Body(), &payload); err != nil {
 		logger.WithError(err).Warn("invalid image request body")
-		ctx.JSON(400, dto.ErrorEnvelope(trace.GetTraceID(c), "INVALID_PARAM", "invalid json request body"))
+		sharedhandlers.WriteInvocationErrorPayload(c, ctx, 400, "INVALID_PARAM", "invalid json request body", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
 	principal, ok := middleware.GetPrincipal(ctx)
 	if !ok {
 		logger.Warn("missing principal for image request")
-		ctx.JSON(401, dto.ErrorEnvelope(trace.GetTraceID(c), "AUTH_INVALID", "invalid api key"))
+		sharedhandlers.WriteInvocationErrorPayload(c, ctx, 401, "AUTH_INVALID", "invalid api key", model.InvocationMeta{Stage: model.InvocationStagePrepare})
 		return
 	}
 
@@ -85,10 +86,9 @@ func (h *Handler) Execute(c context.Context, ctx *app.RequestContext) {
 			"status_code": status,
 			"error_code":  response.Error.Code,
 		}).Error("image request failed")
-		response.ID = trace.GetTraceID(c)
-		ctx.JSON(status, response)
+		sharedhandlers.WriteInvocationError(c, ctx, err)
 		return
 	}
 
-	ctx.JSON(200, dto.SuccessEnvelope(trace.GetTraceID(c), result))
+	sharedhandlers.WriteInvocationSuccess(c, ctx, result.Value, result.Meta)
 }

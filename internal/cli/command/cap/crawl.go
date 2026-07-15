@@ -34,6 +34,9 @@ Examples:
 			body := map[string]any{
 				"url": targetURL,
 			}
+			if err := writeInvocationStarted(cmd, "web.crawl", ""); err != nil {
+				return err
+			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.WebCrawlPath, body)
 			if err != nil {

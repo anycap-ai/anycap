@@ -2,6 +2,7 @@ package music
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/application/execflow"
@@ -42,7 +43,7 @@ func (s *Service) SetArtifactPublisher(publisher port.ArtifactPublisher) {
 	s.artifactPub = publisher
 }
 
-func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) (model.GenerateMusicResult, error) {
+func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) (model.InvocationResult[model.GenerateMusicResult], error) {
 	logger := logging.WithContext(ctx).WithFields(logging.Fields{
 		"capability": "music.generate",
 		"model":      req.Model,
@@ -50,35 +51,35 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 
 	if err := req.Validate(); err != nil {
 		logger.WithError(err).Warn("music request validation failed")
-		return model.GenerateMusicResult{}, err
+		return model.InvocationResult[model.GenerateMusicResult]{}, err
 	}
 	if s == nil || s.catalog == nil || s.nexusHub == nil {
 		logger.Error("music execution not configured")
-		return model.GenerateMusicResult{}, model.ErrMusicExecutionNotConfigured
+		return model.InvocationResult[model.GenerateMusicResult]{}, model.ErrMusicExecutionNotConfigured
 	}
 	if s.credit == nil {
 		logger.Error("music credit client not configured")
-		return model.GenerateMusicResult{}, model.ErrInternal
+		return model.InvocationResult[model.GenerateMusicResult]{}, model.ErrInternal
 	}
 	if req.UserID == "" {
 		logger.Warn("missing user id for music request")
-		return model.GenerateMusicResult{}, model.ErrAuthInvalid
+		return model.InvocationResult[model.GenerateMusicResult]{}, model.ErrAuthInvalid
 	}
 
 	balance, err := s.credit.GetBalance(ctx, req.UserID)
 	if err != nil {
 		logger.WithError(err).Error("music credit balance lookup failed")
-		return model.GenerateMusicResult{}, err
+		return model.InvocationResult[model.GenerateMusicResult]{}, err
 	}
 	if balance.Available < 1 {
 		logger.WithField("available_credit", balance.Available).Warn("insufficient credit for music request")
-		return model.GenerateMusicResult{}, model.ErrInsufficientCredit
+		return model.InvocationResult[model.GenerateMusicResult]{}, model.ErrInsufficientCredit
 	}
 
 	spec, err := s.catalog.GetModel(ctx, model.CapabilityMusic, req.Model)
 	if err != nil {
 		logger.WithError(err).Error("music model lookup failed")
-		return model.GenerateMusicResult{}, err
+		return model.InvocationResult[model.GenerateMusicResult]{}, err
 	}
 	mode := req.Mode
 	if mode == "" {
@@ -87,9 +88,10 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 	route, err := model.SelectRoute(spec, model.OperationGenerate, mode)
 	if err != nil {
 		logger.WithField("mode", mode).WithError(err).Warn("music route selection failed")
-		return model.GenerateMusicResult{}, err
+		return model.InvocationResult[model.GenerateMusicResult]{}, err
 	}
 
+	var invocationMeta model.InvocationMeta
 	result, err := execflow.Run(ctx, execflow.NewExecutor(s.credit, s.billing, s.usage, s.callLogs), execflow.Input{
 		UserID:     req.UserID,
 		APIKeyID:   req.APIKeyID,
@@ -100,15 +102,25 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		MinCredit:  1,
 	}, execflow.Hooks[model.GenerateMusicResult]{
 		Invoke: func(ctx context.Context) (model.GenerateMusicResult, error) {
-			result, err := s.nexusHub.GenerateMusic(ctx, req, route)
+			invocation, err := s.nexusHub.GenerateMusic(ctx, req, route)
 			if err != nil {
 				logger.WithFields(logging.Fields{
 					"ability_key": route.AbilityKey,
 					"mode":        mode,
 				}).WithError(err).Error("music generation failed")
+				return model.GenerateMusicResult{}, err
 			}
-			return result, err
+			invocationMeta = invocation.Meta
+			if !execflow.HasUsableOutput(invocation.Value.Outputs) {
+				return model.GenerateMusicResult{}, model.WrapInvocationError(
+					model.InvocationErrorCodeUpstreamEmptyResult,
+					errors.New("provider completed without a usable music result"),
+					model.MergeInvocationMeta(invocationMeta, model.InvocationMeta{Stage: model.InvocationStageValidateResult}),
+				)
+			}
+			return invocation.Value, nil
 		},
+		InvocationMeta: func() model.InvocationMeta { return invocationMeta },
 		OnProviderSuccess: func(result model.GenerateMusicResult) execflow.ProviderSuccessMeta {
 			return execflow.ProviderSuccessMeta{
 				ProviderTaskID: result.ID,
@@ -183,8 +195,8 @@ func (s *Service) Generate(ctx context.Context, req model.GenerateMusicRequest) 
 		},
 	})
 	if err != nil {
-		return model.GenerateMusicResult{}, err
+		return model.InvocationResult[model.GenerateMusicResult]{}, err
 	}
 
-	return result, nil
+	return model.InvocationResult[model.GenerateMusicResult]{Value: result, Meta: invocationMeta}, nil
 }

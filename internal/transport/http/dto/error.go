@@ -13,11 +13,32 @@ type ErrorPayload struct {
 	Message string `json:"message"`
 }
 
+// InvocationDiagnostics contains the allow-listed identifiers and stage exposed
+// for product-facing provider invocations.
+type InvocationDiagnostics struct {
+	TraceID           string                `json:"trace_id"`
+	RequestID         string                `json:"request_id"`
+	TaskID            string                `json:"task_id,omitempty"`
+	UpstreamRequestID string                `json:"upstream_request_id,omitempty"`
+	Stage             model.InvocationStage `json:"stage,omitempty"`
+}
+
 type Envelope struct {
-	ID     string        `json:"id,omitempty"`
-	Status string        `json:"status"`
-	Data   any           `json:"data,omitempty"`
-	Error  *ErrorPayload `json:"error,omitempty"`
+	ID          string                 `json:"id,omitempty"`
+	Status      string                 `json:"status"`
+	Data        any                    `json:"data,omitempty"`
+	Error       *ErrorPayload          `json:"error,omitempty"`
+	Diagnostics *InvocationDiagnostics `json:"diagnostics,omitempty"`
+}
+
+func NewInvocationDiagnostics(traceID, requestID string, meta model.InvocationMeta) InvocationDiagnostics {
+	return InvocationDiagnostics{
+		TraceID:           traceID,
+		RequestID:         requestID,
+		TaskID:            meta.TaskID,
+		UpstreamRequestID: meta.UpstreamRequestID,
+		Stage:             meta.Stage,
+	}
 }
 
 func SuccessEnvelope(requestID string, data any) Envelope {
@@ -26,6 +47,12 @@ func SuccessEnvelope(requestID string, data any) Envelope {
 		Status: "success",
 		Data:   data,
 	}
+}
+
+func SuccessInvocationEnvelope(requestID string, data any, diagnostics InvocationDiagnostics) Envelope {
+	envelope := SuccessEnvelope(requestID, data)
+	envelope.Diagnostics = &diagnostics
+	return envelope
 }
 
 func ErrorEnvelope(requestID, code, message string) Envelope {
@@ -39,7 +66,23 @@ func ErrorEnvelope(requestID, code, message string) Envelope {
 	}
 }
 
+func ErrorInvocationEnvelope(requestID, code, message string, diagnostics InvocationDiagnostics) Envelope {
+	envelope := ErrorEnvelope(requestID, code, message)
+	envelope.Diagnostics = &diagnostics
+	return envelope
+}
+
 func MapDomainError(err error) (int, Envelope) {
+	var invocationErr *model.InvocationError
+	if errors.As(err, &invocationErr) {
+		switch invocationErr.Code {
+		case model.InvocationErrorCodeUpstreamTimeout:
+			return consts.StatusGatewayTimeout, ErrorEnvelope("", invocationErr.Code, "upstream provider timed out")
+		case model.InvocationErrorCodeUpstreamEmptyResult:
+			return consts.StatusBadGateway, ErrorEnvelope("", invocationErr.Code, "provider completed without a usable result")
+		}
+	}
+
 	switch {
 	case isDomainError(err, "validation"):
 		return consts.StatusBadRequest, ErrorEnvelope("", "validation", err.Error())

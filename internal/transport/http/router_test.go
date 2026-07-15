@@ -1730,6 +1730,84 @@ func TestRouter_ProtectedRoutes(t *testing.T) {
 	}
 }
 
+func TestRouter_InvocationSuccessEnvelopeKeepsLegacyDataAndAddsDiagnostics(t *testing.T) {
+	tests := []struct {
+		name       string
+		path       string
+		body       string
+		wantTaskID bool
+	}{
+		{name: "image", path: "/v1/image/generate", body: `{"prompt":"paper crane","model":"flux-dev"}`, wantTaskID: true},
+		{name: "video", path: "/v1/video/generate", body: `{"prompt":"paper crane","model":"veo-mini"}`, wantTaskID: true},
+		{name: "music", path: "/v1/music/generate", body: `{"prompt":"lofi","model":"mureka-v6"}`, wantTaskID: true},
+		{name: "image read", path: "/v1/capabilities/image/read", body: `{"url":"https://example.com/image.png"}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h, rawKey := newRouterForTest(t, 10)
+			body := []byte(tt.body)
+			resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, tt.path,
+				&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+				ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+				ut.Header{Key: "Content-Type", Value: "application/json"},
+			)
+			if resp.Code != http.StatusOK {
+				t.Fatalf("status = %d, body = %s", resp.Code, resp.Body.String())
+			}
+
+			var envelope map[string]any
+			if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
+				t.Fatal(err)
+			}
+			data, ok := envelope["data"].(map[string]any)
+			if !ok {
+				t.Fatalf("data = %#v", envelope["data"])
+			}
+			if _, leaked := data["Value"]; leaked {
+				t.Fatalf("invocation wrapper leaked into data: %#v", data)
+			}
+			if _, leaked := data["Meta"]; leaked {
+				t.Fatalf("invocation metadata leaked into data: %#v", data)
+			}
+			diagnostics, ok := envelope["diagnostics"].(map[string]any)
+			if !ok {
+				t.Fatalf("diagnostics = %#v, body = %s", envelope["diagnostics"], resp.Body.String())
+			}
+			if diagnostics["trace_id"] == "" || diagnostics["request_id"] != diagnostics["trace_id"] || envelope["id"] != diagnostics["trace_id"] {
+				t.Fatalf("identifier contract failed: envelope=%#v", envelope)
+			}
+			if tt.wantTaskID && diagnostics["task_id"] == "" {
+				t.Fatalf("expected task_id: %#v", diagnostics)
+			}
+			if tt.wantTaskID && data["id"] != diagnostics["task_id"] {
+				t.Fatalf("legacy data.id = %#v, diagnostics.task_id = %#v", data["id"], diagnostics["task_id"])
+			}
+		})
+	}
+}
+
+func TestRouter_InvocationValidationFailureIncludesTraceDiagnostics(t *testing.T) {
+	h, rawKey := newRouterForTest(t, 10)
+	body := []byte(`{"prompt":`)
+	resp := ut.PerformRequest(h.engine.Engine, http.MethodPost, "/v1/image/generate",
+		&ut.Body{Body: bytes.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Authorization", Value: "Bearer " + rawKey},
+		ut.Header{Key: "Content-Type", Value: "application/json"},
+	)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, body = %s", resp.Code, resp.Body.String())
+	}
+	var envelope map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	diagnostics, ok := envelope["diagnostics"].(map[string]any)
+	if !ok || diagnostics["trace_id"] == "" || diagnostics["request_id"] != diagnostics["trace_id"] {
+		t.Fatalf("diagnostics = %#v, body = %s", envelope["diagnostics"], resp.Body.String())
+	}
+}
+
 func TestRouter_FunctionRoutes_UseCapabilityRateLimit(t *testing.T) {
 	tests := []struct {
 		name       string

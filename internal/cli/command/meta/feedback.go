@@ -27,6 +27,7 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 		context      string
 		requestID    string
 		traceID      string
+		diagnostics  string
 	)
 
 	cmd := &cobra.Command{
@@ -52,6 +53,23 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 				}
 				contextJSON = json.RawMessage(context)
 			}
+			var diagnosticsJSON json.RawMessage
+			if diagnostics != "" {
+				if !json.Valid([]byte(diagnostics)) {
+					return fmt.Errorf("--diagnostics must be valid JSON, got: %s", diagnostics)
+				}
+				var fields map[string]any
+				if err := json.Unmarshal([]byte(diagnostics), &fields); err != nil {
+					return fmt.Errorf("--diagnostics must be a JSON object")
+				}
+				if fields == nil {
+					return fmt.Errorf("--diagnostics must be a JSON object")
+				}
+				if stage, ok := fields["stage"].(string); ok && stage != "" && !validDiagnosticsStage(stage) {
+					return fmt.Errorf("--diagnostics contains invalid stage %q", stage)
+				}
+				diagnosticsJSON = json.RawMessage(diagnostics)
+			}
 
 			// Build request payload
 			payload := map[string]any{
@@ -71,6 +89,9 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 			if traceID != "" {
 				payload["trace_id"] = traceID
 			}
+			if diagnosticsJSON != nil {
+				payload["diagnostics"] = diagnosticsJSON
+			}
 
 			resp, err := clientFactory().PostJSON(cmd.Context(), api.FeedbackPath, payload)
 			if err != nil {
@@ -86,10 +107,20 @@ func NewFeedbackCmd(clientFactory func() *httpclient.Client, stdout io.Writer) *
 	cmd.Flags().StringVar(&context, "context", "", "Additional context as JSON")
 	cmd.Flags().StringVar(&requestID, "request-id", "", "Related request ID from a previous command")
 	cmd.Flags().StringVar(&traceID, "trace-id", "", "Related trace ID from a previous command invocation")
+	cmd.Flags().StringVar(&diagnostics, "diagnostics", "", "Original invocation diagnostics as JSON")
 	_ = cmd.MarkFlagRequired("type")
 	_ = cmd.MarkFlagRequired("message")
 
 	return cmd
+}
+
+func validDiagnosticsStage(stage string) bool {
+	switch stage {
+	case "prepare", "submit", "poll", "decode_result", "validate_result", "publish", "billing":
+		return true
+	default:
+		return false
+	}
 }
 
 func isValidType(t string) bool {

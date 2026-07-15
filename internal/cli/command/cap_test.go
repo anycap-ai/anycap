@@ -98,10 +98,10 @@ func TestImageReadWithFile(t *testing.T) {
 		t.Fatalf("image read --file failed: %v\nstderr: %s", err, stderr.String())
 	}
 
-	// Verify no intermediate progress messages leaked to stderr
+	// Verify stderr contains only the machine-readable invocation start event.
 	stderrOut := stderr.String()
-	if stderrOut != "" {
-		t.Fatalf("expected no stderr output, got: %s", stderrOut)
+	if strings.Count(stderrOut, "\n") != 1 || !strings.Contains(stderrOut, `"event":"invocation_started"`) || !strings.Contains(stderrOut, `"capability":"image.read"`) {
+		t.Fatalf("expected one invocation start event, got: %s", stderrOut)
 	}
 
 	// Verify clean JSON result on stdout (content only, no model/usage)
@@ -269,10 +269,10 @@ func TestVideoReadWithFile(t *testing.T) {
 		t.Fatalf("video read --file failed: %v\nstderr: %s", err, stderr.String())
 	}
 
-	// Verify no intermediate progress messages leaked to stderr
+	// Verify stderr contains only the machine-readable invocation start event.
 	stderrOut := stderr.String()
-	if stderrOut != "" {
-		t.Fatalf("expected no stderr output, got: %s", stderrOut)
+	if strings.Count(stderrOut, "\n") != 1 || !strings.Contains(stderrOut, `"event":"invocation_started"`) || !strings.Contains(stderrOut, `"capability":"video.read"`) {
+		t.Fatalf("expected one invocation start event, got: %s", stderrOut)
 	}
 
 	// Verify clean JSON result (content only)

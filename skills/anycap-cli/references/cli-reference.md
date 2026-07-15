@@ -400,6 +400,7 @@ Submit bug reports and feature requests. Enabled by default; disable with `anyca
 
 ```bash
 anycap feedback --type bug -m "image generate returned 500" --request-id req_abc123
+anycap feedback --type bug -m "silent generation" --diagnostics '{"trace_id":"trc_abc","task_id":"task_abc","stage":"validate_result","error_code":"UPSTREAM_EMPTY_RESULT"}'
 anycap feedback --type feature -m "support batch generation"
 anycap feedback --type other -m "schema missing aspect_ratio for model X"
 ```
@@ -409,6 +410,8 @@ anycap feedback --type other -m "schema missing aspect_ratio for model X"
 | `--type` | yes | `bug`, `feature`, or `other` |
 | `-m, --message` | yes | Description |
 | `--request-id` | no | Request ID from a previous command |
+| `--trace-id` | no | Trace ID from the original invocation |
+| `--diagnostics` | no | Original invocation diagnostics as a JSON object |
 | `--context` | no | Additional context as JSON |
 
 ## Advanced

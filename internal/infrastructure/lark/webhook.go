@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
@@ -92,17 +93,23 @@ func buildFeedbackMessage(fb model.Feedback) (string, string) {
 	if fb.UserID != "" {
 		md += fmt.Sprintf("**User:** %s\n", fb.UserID)
 	}
-	if fb.RequestID != "" {
-		md += fmt.Sprintf("**Request ID:** `%s`\n", fb.RequestID)
-	}
-	if taskID := feedbackTaskID(fb); taskID != "" {
-		md += fmt.Sprintf("**Task ID:** `%s`\n", taskID)
-	}
-	if fb.Metadata != nil {
-		if v, ok := fb.Metadata["trace_id"]; ok {
-			if s := fmt.Sprintf("%v", v); s != "" {
-				md += fmt.Sprintf("**Trace ID:** `%s`\n", s)
-			}
+	diagnostics := feedbackDiagnostics(fb)
+	for _, field := range []struct {
+		label string
+		value string
+	}{
+		{"Trace ID", diagnostics.TraceID},
+		{"Request ID", diagnostics.RequestID},
+		{"Task ID", diagnostics.TaskID},
+		{"Upstream Request ID", diagnostics.UpstreamRequestID},
+		{"Capability", diagnostics.Capability},
+		{"Model", diagnostics.Model},
+		{"Stage", diagnostics.Stage},
+		{"Error Code", diagnostics.ErrorCode},
+		{"Invoked At", diagnostics.InvokedAt},
+	} {
+		if field.value != "" {
+			md += fmt.Sprintf("**%s:** `%s`\n", field.label, sanitizeInlineCode(field.value))
 		}
 	}
 
@@ -124,6 +131,12 @@ func buildFeedbackMessage(fb model.Feedback) (string, string) {
 	return title, md
 }
 
+func sanitizeInlineCode(value string) string {
+	value = strings.ReplaceAll(value, "`", "'")
+	value = strings.ReplaceAll(value, "\r", " ")
+	return strings.ReplaceAll(value, "\n", " ")
+}
+
 // feedbackTaskID extracts an upstream gateway task id from feedback context,
 // if the client attached one (e.g. --context '{"task_id":"..."}').
 func feedbackTaskID(fb model.Feedback) string {
@@ -136,6 +149,44 @@ func feedbackTaskID(fb model.Feedback) string {
 		}
 	}
 	return ""
+}
+
+func feedbackDiagnostics(fb model.Feedback) model.FeedbackDiagnostics {
+	diagnostics := fb.Diagnostics
+	if diagnostics.RequestID == "" {
+		diagnostics.RequestID = fb.RequestID
+	}
+	if diagnostics.TaskID == "" {
+		diagnostics.TaskID = feedbackTaskID(fb)
+	}
+	if diagnostics.TraceID == "" && fb.Metadata != nil {
+		if value, ok := fb.Metadata["trace_id"]; ok {
+			diagnostics.TraceID = fmt.Sprintf("%v", value)
+		}
+	}
+	if fb.Metadata != nil {
+		if raw, ok := fb.Metadata["diagnostics"]; ok {
+			data, err := json.Marshal(raw)
+			if err == nil {
+				var stored model.FeedbackDiagnostics
+				if json.Unmarshal(data, &stored) == nil {
+					diagnostics = mergeFeedbackDiagnostics(diagnostics, stored)
+				}
+			}
+		}
+	}
+	return diagnostics
+}
+
+func mergeFeedbackDiagnostics(primary, fallback model.FeedbackDiagnostics) model.FeedbackDiagnostics {
+	fields := []*string{&primary.TraceID, &primary.RequestID, &primary.TaskID, &primary.UpstreamRequestID, &primary.Capability, &primary.Model, &primary.Stage, &primary.ErrorCode, &primary.InvokedAt}
+	values := []string{fallback.TraceID, fallback.RequestID, fallback.TaskID, fallback.UpstreamRequestID, fallback.Capability, fallback.Model, fallback.Stage, fallback.ErrorCode, fallback.InvokedAt}
+	for i, field := range fields {
+		if *field == "" {
+			*field = values[i]
+		}
+	}
+	return primary
 }
 
 // StubNotifier is a no-op notifier that just logs feedback.

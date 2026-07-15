@@ -215,6 +215,9 @@ func newImageOperationCmd(clientFactory func() *httpclient.Client, stdout io.Wri
 			if err := resolveFileParams(cmd.Context(), client, "image", model, mode, body, verboseWriter(cmd)); err != nil {
 				return err
 			}
+			if err := writeInvocationStarted(cmd, "image."+cfg.Operation, model); err != nil {
+				return err
+			}
 
 			resp, err := client.PostJSON(cmd.Context(), api.OperationPath("image", cfg.Operation), body)
 			if err != nil {
@@ -280,6 +283,7 @@ type generateResult struct {
 	LocalPath   string
 	Model       string
 	CreditsUsed int
+	Diagnostics cliInvocationDiagnostics
 }
 
 // defaultImageFilename generates a clean default filename for a generated image.
@@ -324,6 +328,7 @@ func parseGenerateResponse(body []byte) (*generateResult, error) {
 			} `json:"outputs"`
 			CreditCost int `json:"credit_cost"`
 		} `json:"data"`
+		Diagnostics cliInvocationDiagnostics `json:"diagnostics"`
 	}
 	if err := json.Unmarshal(body, &env); err != nil {
 		return nil, err
@@ -334,7 +339,12 @@ func parseGenerateResponse(body []byte) (*generateResult, error) {
 		TaskID:      env.Data.ID,
 		Model:       env.Data.Model,
 		CreditsUsed: env.Data.CreditCost,
+		Diagnostics: env.Diagnostics,
 	}
+	if result.Diagnostics.TaskID == "" {
+		result.Diagnostics.TaskID = env.Data.ID
+	}
+	result.TaskID = result.Diagnostics.TaskID
 	if len(env.Data.Outputs) > 0 {
 		result.OutputURL = env.Data.Outputs[0].URL
 	}
@@ -355,9 +365,7 @@ func writeGenerateResult(w io.Writer, r *generateResult, requestID string) error
 	if r.TaskID != "" {
 		result["task_id"] = r.TaskID
 	}
-	if requestID != "" {
-		result["request_id"] = requestID
-	}
+	applyCLIDiagnostics(result, r.Diagnostics, requestID)
 
 	// Inject feedback hint so the agent knows to ask the user for feedback.
 	hint := "Present the result to the user. If the user is not satisfied, " +
