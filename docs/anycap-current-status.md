@@ -203,6 +203,9 @@ anycap
 ├── music
 │   ├── generate              Generate music from prompt
 │   └── models                List models / show detail / fetch schema
+├── audio
+│   ├── generate              Generate audio from text, audio, or image input
+│   └── models                List models / show detail / fetch schema
 ├── actions
 │   ├── image-read            Analyze images
 │   ├── video-read            Analyze video
