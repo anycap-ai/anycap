@@ -1,16 +1,14 @@
 {
   "cli": {
-    "baseline_commit": "8f0d35d",
-    "released_version": "0.4.1",
+    "baseline_commit": "811aeb37",
+    "released_version": "0.4.2",
     "source_head": "811aeb37",
-    "draft_version": "0.4.2",
-    "status": "approved"
+    "status": "published"
   },
   "skills": {
-    "baseline_commit": "8f0d35d",
-    "released_version": "0.4.1",
+    "baseline_commit": "811aeb37",
+    "released_version": "0.4.2",
     "source_head": "811aeb37",
-    "draft_version": "0.4.2",
-    "status": "approved"
+    "status": "published"
   }
 }
