@@ -1,8 +1,8 @@
 {
   "cli": {
-    "baseline_commit": "cc97ca4",
-    "released_version": "0.3.2",
-    "source_head": "d4f189d",
+    "baseline_commit": "fbfee64",
+    "released_version": "0.3.6",
+    "source_head": "fbfee64",
     "status": "published"
   },
   "skills": {
