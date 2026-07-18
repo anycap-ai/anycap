@@ -501,14 +501,14 @@
       "model_id": "doubao-seed-audio-1-0",
       "capability": "audio",
       "display_name": "Doubao Seed Audio 1.0",
-      "model_description": "Doubao Seed Audio 1.0 generates sound effects and environmental audio from text, audio, or image references.",
+      "model_description": "Doubao Seed Audio 1.0 generates speech, multi-speaker dialogue, and complete audio scenes from text, audio, or image references.",
       "operations": [
         {
           "operation": "generate",
           "mode": "text-to-audio",
           "ability_key": "doubao-seed-audio-1-0",
           "algo_type": "txt_2_audio",
-          "mode_description": "Generate audio from a text prompt, with optional NexusHub speaker IDs."
+          "mode_description": "Generate speech, dialogue, or a complete audio scene from a text prompt, with optional NexusHub speaker IDs."
         },
         {
           "operation": "generate",

@@ -239,6 +239,10 @@ func TestDefaultCurationIncludesDoubaoSeedAudio(t *testing.T) {
 		if curated.Capability != "audio" {
 			t.Fatalf("capability = %q, want audio", curated.Capability)
 		}
+		const wantDescription = "Doubao Seed Audio 1.0 generates speech, multi-speaker dialogue, and complete audio scenes from text, audio, or image references."
+		if curated.ModelDescription != wantDescription {
+			t.Fatalf("model description = %q, want %q", curated.ModelDescription, wantDescription)
+		}
 		want := map[string]string{
 			"text-to-audio":  "txt_2_audio",
 			"audio-to-audio": "audio_2_audio",
