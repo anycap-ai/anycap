@@ -26,6 +26,8 @@ Generation outputs are published as AnyCap short links on `artifact.anycap.{dev,
 
 Each capability has a dynamic model catalog. Agents can:
 
+The bundled video catalog includes Seedance 2.0, Seedance 2.0 Fast, and Seedance 2.0 Mini; availability at runtime still depends on the corresponding NexusHub Discovery route.
+
 - **List models**: `anycap {image,video,music} models` — see all available models with their supported operations
 - **Inspect a model**: `anycap {image,video,music} models <model>` — view model details
 - **Discover parameters**: `anycap {image,video,music} models <model> schema --operation <op>` — get the request schema for a specific operation
