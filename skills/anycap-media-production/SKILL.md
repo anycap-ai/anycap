@@ -1,6 +1,6 @@
 ---
 name: anycap-media-production
-description: "Produce media assets using AnyCap: generate images, videos, music, and audio from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, audio soundscapes, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, audio generation from references, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music/audio, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
+description: "Produce media assets using AnyCap: generate images, videos, music, speech, dialogue, and complete audio scenes from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, voice content, dialogue, complete audio scenes, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, audio generation from references, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music/audio, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
 metadata:
   version: dev
   website: https://anycap.ai
@@ -277,34 +277,34 @@ anycap music generate --prompt "..." --model <model-id> -o track.mp3 \
 
 ## Audio Production
 
-Audio generation is distinct from music composition. Use it for environmental soundscapes, sound effects, and complete audio scenes generated from text or reference media.
+Audio generation covers speech synthesis, dialogue, and complete audio scenes generated from text or reference media. A scene can combine voices, background music, ambience, and sound effects; use the separate music capability when the deliverable is primarily a song or instrumental track.
 
 ```bash
 # Discover live modes and controls first
 anycap audio models <model-id> schema --mode text-to-audio
 
-# Generate a soundscape from text
+# Generate speech with supporting ambience from text
 anycap audio generate \
-  --prompt "night forest ambience, soft wind, distant owl, no music" \
+  --prompt 'A calm narrator says: "Welcome to the evening program." Soft room ambience underneath.' \
   --model <model-id> \
   --mode text-to-audio \
-  -o night-forest.mp3
+  -o evening-introduction.mp3
 
-# Transform a reference audio file
+# Guide a new voice performance with reference audio
 anycap audio generate \
-  --prompt "keep the timing but make the room larger and more reverberant" \
+  --prompt "create a new spoken welcome with the reference delivery style" \
   --model <model-id> \
   --mode audio-to-audio \
   --param audios=./reference.wav \
-  -o large-room.mp3
+  -o guided-welcome.mp3
 
-# Create the soundscape implied by an image
+# Create a narrated audio scene from an image
 anycap audio generate \
-  --prompt "natural sounds implied by this scene" \
+  --prompt "a guide describes this scene while matching ambience plays underneath" \
   --model <model-id> \
   --mode image-to-audio \
   --param images=./scene.png \
-  -o scene-audio.mp3
+  -o narrated-scene.mp3
 ```
 
 Use the live schema for reference limits and audio controls. Local reference files are uploaded automatically. The JSON output preserves duration, size, subtitle, and usage data when the provider returns them.

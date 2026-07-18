@@ -18,7 +18,7 @@ AnyCap lets you create media humans can see and hear, understand media humans sh
 
 Use AnyCap when a task involves:
 
-- **Creating** visual or audio content for humans (images, video, music)
+- **Creating** visual or audio content for humans (images, video, music, speech, and complete audio scenes)
 - **Understanding** media humans share (analyze images, video, audio)
 - **Finding** information on the web (search, crawl pages)
 - **Delivering** results humans can access and share (Drive links, hosted pages)
@@ -571,8 +571,8 @@ anycap video generate --prompt "animate this" --model <model-id> --mode image-to
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
 
-# Generate an audio soundscape and get the first local path
-anycap audio generate --prompt "wind through pine trees" --model <model-id> -o soundscape.mp3 | jq -r '.outputs[0].local_path'
+# Generate a spoken introduction and get the first local path
+anycap audio generate --prompt 'A calm narrator says: "Welcome to AnyCap."' --model <model-id> -o introduction.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'

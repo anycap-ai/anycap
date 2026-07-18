@@ -11,7 +11,7 @@
 | Image generation | `anycap image generate` | Text-to-image with model selection, negative prompt, aspect ratio, resolution, reference images |
 | Video generation | `anycap video generate` | Text-to-video and image-to-video with duration, aspect ratio, resolution, reference images |
 | Music generation | `anycap music generate` | Instrumental and custom modes, vocal synthesis (gender selection), tags/title/lyrics, continuation from existing clip |
-| Audio generation | `anycap audio generate` | Text-to-audio, audio-to-audio, and image-to-audio with schema-driven controls and local reference-file upload |
+| Audio generation | `anycap audio generate` | Speech synthesis, dialogue, and complete audio scenes through text-to-audio, audio-to-audio, and image-to-audio, with schema-driven voice controls and local reference-file upload |
 
 Generation outputs are published as AnyCap short links on `artifact.anycap.{dev,cloud}`. Provider origin URLs are not exposed in API responses. Link tokens are short-lived and resolve to internally managed R2 objects.
 
@@ -44,6 +44,9 @@ Models advertise which operations they support. Schema discovery works for all, 
 | `upscale` | Upscale image resolution | Schema only, no execution |
 | `from_image` | Generate video from a reference image | Handled via reference images in `generate` |
 | `speak` | Text-to-speech | Schema only, no execution |
+
+Doubao Seed Audio speech synthesis is executable through `audio.generate` in
+`text-to-audio` mode. The legacy catalog `speak` operation remains schema-only.
 
 ### Web Search and Crawl
 
