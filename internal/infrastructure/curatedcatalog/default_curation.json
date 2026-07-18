@@ -366,6 +366,42 @@
       ]
     },
     {
+      "model_id": "seedance-2-mini",
+      "capability": "video",
+      "display_name": "Seedance 2.0 Mini",
+      "model_description": "Seedance 2.0 Mini is a lightweight variant of Seedance 2.0 designed for efficient video generation and rapid iteration across text, image, frame, and multi-modal reference workflows.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-video",
+          "ability_key": "oversea-seedance-2-mini",
+          "algo_type": "txt_2_video",
+          "mode_description": "Generate video content directly from text prompts with efficient turnaround."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-video",
+          "ability_key": "oversea-seedance-2-mini",
+          "algo_type": "img_2_video",
+          "mode_description": "Generate video sequences from one or more reference images."
+        },
+        {
+          "operation": "generate",
+          "mode": "first-last-frame-to-video",
+          "ability_key": "oversea-seedance-2-mini",
+          "algo_type": "first_last_2_video",
+          "mode_description": "Generate a video transition between named first and last frame images."
+        },
+        {
+          "operation": "generate",
+          "mode": "multi-modal-reference",
+          "ability_key": "oversea-seedance-2-mini",
+          "algo_type": "multi_modal_ref_2_video",
+          "mode_description": "Generate videos from one or more image, video, or audio references with a guiding prompt."
+        }
+      ]
+    },
+    {
       "model_id": "veo-3.1",
       "capability": "video",
       "display_name": "Veo 3.1",

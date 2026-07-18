@@ -2,6 +2,7 @@ package curatedcatalog
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"testing"
@@ -186,6 +187,43 @@ func TestCatalog_CuratedAbilityKeysDeduplicates(t *testing.T) {
 	if len(keys) != 3 {
 		t.Fatalf("expected 3 unique ability keys, got %d: %+v", len(keys), keys)
 	}
+}
+
+func TestDefaultCurationIncludesSeedance2Mini(t *testing.T) {
+	var cfg config.ModelCurationConfig
+	if err := json.Unmarshal(defaultCurationJSON, &cfg); err != nil {
+		t.Fatalf("decode default curation: %v", err)
+	}
+
+	for _, curated := range cfg.Models {
+		if curated.ModelID != "seedance-2-mini" {
+			continue
+		}
+		if curated.Capability != "video" {
+			t.Fatalf("expected video capability, got %q", curated.Capability)
+		}
+		expected := map[string]string{
+			"text-to-video":             "txt_2_video",
+			"image-to-video":            "img_2_video",
+			"first-last-frame-to-video": "first_last_2_video",
+			"multi-modal-reference":     "multi_modal_ref_2_video",
+		}
+		for _, operation := range curated.Operations {
+			if operation.AbilityKey != "oversea-seedance-2-mini" {
+				t.Fatalf("unexpected ability key for %s: %q", operation.Mode, operation.AbilityKey)
+			}
+			if algo, ok := expected[operation.Mode]; !ok || algo != operation.AlgoType {
+				t.Fatalf("unexpected route: %+v", operation)
+			}
+			delete(expected, operation.Mode)
+		}
+		if len(expected) != 0 {
+			t.Fatalf("missing Seedance 2 Mini modes: %+v", expected)
+		}
+		return
+	}
+
+	t.Fatal("expected default curation to include seedance-2-mini")
 }
 
 func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
