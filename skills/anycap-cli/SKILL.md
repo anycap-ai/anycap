@@ -1,8 +1,8 @@
 ---
 name: anycap-cli
-description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
+description: "AnyCap CLI -- create media humans can see and hear (generate images, video, music, and audio), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music/audio generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.4.0
+  version: 0.4.1
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -349,7 +349,7 @@ Before generating content, ask the user which model they want to use. Run `anyca
 
 ### Generation Workflow
 
-Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`) as CLI subcommands:
+Capabilities follow a three-step pattern. Each capability (image, video, music, audio) supports one or more **operations** (e.g., `generate`) as CLI subcommands:
 
 ```
 1. Discover models    anycap {cap} models
@@ -380,8 +380,10 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 | Snapshot | [snapshot.md](references/snapshot.md) | `create`, `restore` | 5-60s + upload/download |
 | Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
+| Audio | [audio-generation.md](references/audio-generation.md) | `generate` | Model-dependent |
 
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
+Audio generation may also return multiple outputs and preserves duration, size, subtitle, and usage metadata in JSON.
 
 If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
@@ -434,11 +436,8 @@ Read [references/crawl.md](references/crawl.md) when you need to read a specific
 anycap crawl https://example.com | jq -r '.data.markdown'
 ```
 
-**Coming soon:**
-
-- Text-to-speech / voice synthesis
-
-Use `anycap feedback --type feature` to request prioritization of upcoming capabilities.
+Use `anycap feedback --type feature` to request prioritization when a needed
+capability is not available in the current CLI.
 
 **Download** -- save any remote file locally.
 
@@ -500,6 +499,7 @@ Feedback is enabled by default. To disable it, run `anycap config set feedback f
 
 ```bash
 anycap feedback --type bug -m "image generate returned 500 for prompt X" --request-id <id>
+anycap feedback --type bug -m "generation returned no output" --diagnostics '{"trace_id":"trc_...","task_id":"task_...","capability":"music.generate","model":"suno-v5","stage":"validate_result","error_code":"UPSTREAM_EMPTY_RESULT"}'
 anycap feedback --type feature -m "support batch image generation"
 anycap feedback --type other -m "schema for model Y is missing aspect_ratio"
 ```
@@ -511,6 +511,8 @@ Options:
 | `--type` | yes | `bug`, `feature`, or `other` |
 | `-m, --message` | yes | Description of the issue or idea |
 | `--request-id` | no | Request ID from a previous command (found in JSON output) |
+| `--trace-id` | no | Trace ID from the original invocation |
+| `--diagnostics` | no | Original invocation diagnostics as JSON; accepts trace/request/task/upstream IDs, capability, model, stage, error code, and invocation time |
 | `--context` | no | Additional context as JSON |
 
 When to submit feedback:
@@ -522,7 +524,9 @@ When to submit feedback:
 
 ## Output Format
 
-All commands produce JSON on stdout. Every response includes a `request_id` field for tracing.
+Commands keep stdout as one final JSON document. Model invocations also write one `invocation_started` JSON event to stderr after local validation and before the server request.
+
+Invocation responses promote available `trace_id`, `request_id`, `task_id`, `upstream_request_id`, and `stage` fields to the top level. Preserve these fields when reporting silent, empty, timeout, or provider failures; server-error hints include a copyable `--diagnostics` payload.
 
 Successful response:
 
@@ -536,7 +540,7 @@ Error response:
 {"error": "...", "message": "...", "hint": "...", "request_id": "req_abc123"}
 ```
 
-Save the `request_id` when submitting feedback about a failed request.
+Save all returned diagnostic IDs when submitting feedback about a failed request.
 
 ### Parsing with jq
 
@@ -550,22 +554,25 @@ anycap status | jq -r '.status'
 anycap image models | jq -r '.models[].model'
 
 # List modes for a model
-anycap video models seedance-1.5-pro | jq -r '.model.operations[].modes[].mode'
+anycap video models <model-id> | jq -r '.model.operations[].modes[].mode'
 
 # Get the local file path from a generate response (use -o for a descriptive name)
-anycap image generate --prompt "..." --model nano-banana-2 -o descriptive-name.png | jq -r '.local_path'
+anycap image generate --prompt "..." --model <model-id> -o descriptive-name.png | jq -r '.local_path'
 
 # Edit an existing image (image-to-image mode)
-anycap image generate --prompt "remove the background" --model nano-banana-2 --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
+anycap image generate --prompt "remove the background" --model <model-id> --mode image-to-image --param images=./photo.png -o edited.png | jq -r '.local_path'
 
 # Generate a video (text-to-video, mode inferred) and get its path
-anycap video generate --prompt "..." --model veo-3.1 -o clip.mp4 | jq -r '.local_path'
+anycap video generate --prompt "..." --model <model-id> -o clip.mp4 | jq -r '.local_path'
 
 # Generate a video with explicit mode (image-to-video, local file auto-uploaded)
-anycap video generate --prompt "animate this" --model seedance-1.5-pro --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
+anycap video generate --prompt "animate this" --model <model-id> --mode image-to-video --param images=./photo.jpg -o animated.mp4 | jq -r '.local_path'
 
 # Generate music and get the first audio path
-anycap music generate --prompt "..." --model suno-v5 -o track.mp3 | jq -r '.outputs[0].local_path'
+anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
+
+# Generate an audio soundscape and get the first local path
+anycap audio generate --prompt "wind through pine trees" --model <model-id> -o soundscape.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'
@@ -619,7 +626,7 @@ anycap crawl https://example.com | jq -r '.data.markdown'
 anycap ... | jq -r '.message // empty'
 
 # Save request_id for feedback
-REQ_ID=$(anycap image generate --prompt "..." --model seedream-5 | jq -r '.request_id')
+REQ_ID=$(anycap image generate --prompt "..." --model <model-id> | jq -r '.request_id')
 anycap feedback --type bug -m "describe the issue" --request-id "$REQ_ID"
 ```
 

@@ -161,7 +161,7 @@ Generated images must faithfully represent the underlying data and analysis. Do 
 # Generate an explanatory diagram
 anycap image generate \
   --prompt "clean comparison diagram showing [concept based on verified data]" \
-  --model seedream-5 -o research-topic/assets/comparison-diagram.png
+  --model <model-id> -o research-topic/assets/comparison-diagram.png
 ```
 
 ### Sharing Images in Reports

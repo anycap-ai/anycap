@@ -54,14 +54,18 @@ Use prompts like:
 short looping social clip, exaggerated reaction, punchline-friendly pacing, first frame should work as a standalone meme image
 ```
 
-## Recommended Model Defaults
+## Model Selection
 
-| Need | Model |
+Choose models from the live AnyCap catalog for the current run. Use these needs
+to guide selection after running `anycap image models` and inspecting schema for
+the relevant mode.
+
+| Need | Selection cue |
 | --- | --- |
-| Better first-pass image | `seedream-5` |
-| Edit existing screenshot or photo | `nano-banana-pro` |
-| Fast variant generation | `nano-banana-2` |
-| Funny meme drawings | `nano-banana-2` |
+| Better first-pass image | Strong text-to-image quality for the desired style |
+| Edit existing screenshot or photo | Supports image-to-image with reference images |
+| Fast variant generation | Low-latency or low-cost model suitable for multiple drafts |
+| Funny meme drawings | Handles doodle-like style and simple composition reliably |
 
 ## Style Presets Worth Keeping
 
@@ -70,11 +74,11 @@ These presets are useful because they can do two jobs at once:
 - give the skill a repeatable visual direction
 - support more than one article without collapsing into template-spam
 
-| Preset | Best use inside the skill | Search-fit verdict | Recommended SEO role | Model |
+| Preset | Best use inside the skill | Search-fit verdict | Recommended SEO role | Model selection cue |
 | --- | --- | --- | --- | --- |
-| `classic-doodle` | broad doodle, blob, or stick-figure humor with clean negative space | strongest | core cluster + reusable examples | `nano-banana-2` |
-| `bad-drawing` | intentionally clumsy meme art where the joke comes from low-fi execution | good | supporting page or subsection under doodle cluster | `nano-banana-2` |
-| `rage-comic-adjacent` | black-and-white panel humor inspired by early internet comics without copying exact legacy faces | situational | heat-content or side article, not core cluster | `nano-banana-2` |
+| `classic-doodle` | broad doodle, blob, or stick-figure humor with clean negative space | strongest | core cluster + reusable examples | fast image model with strong doodle handling |
+| `bad-drawing` | intentionally clumsy meme art where the joke comes from low-fi execution | good | supporting page or subsection under doodle cluster | fast image model with controllable simple style |
+| `rage-comic-adjacent` | black-and-white panel humor inspired by early internet comics without copying exact legacy faces | situational | heat-content or side article, not core cluster | image model that follows black-and-white panel prompts |
 
 ### Why this split
 
@@ -94,7 +98,7 @@ This is one of the highest-fit subworkflows for AnyCap because the image itself 
 
 ### Recommended workflow
 
-1. Start with `nano-banana-2`
+1. Pick an image model from `anycap image models` that supports the needed mode
 2. Generate two to four variants with slightly different absurd situations
 3. Keep the cleanest drawing-only winner
 4. Add exact text only if the joke still needs wording
@@ -103,7 +107,7 @@ This is one of the highest-fit subworkflows for AnyCap because the image itself 
 
 ```bash
 anycap image generate \
-  --model nano-banana-2 \
+  --model <model-id> \
   --prompt "funny meme drawing, crude but charming internet doodle style, exhausted office goblin melting into an office chair while holding a tiny coffee cup, absurd tiny-problem energy, wildly exaggerated defeated expression, messy desk chaos without readable screens, thick sketch lines, off-white paper texture, muted green accents, obvious blank space for optional caption, no words, no letters, no watermark" \
   --param aspect_ratio=4:3 \
   --param resolution=2k \

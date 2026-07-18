@@ -1,4 +1,0 @@
-interface:
-  display_name: "AnyCap Seedance 2"
-  short_description: "Compile Seedance prompts and reference contracts for AnyCap."
-  default_prompt: "Use $anycap-seedance-2 to compile my scene and references into a controllable Seedance 2.0 prompt for AnyCap."
