@@ -2,13 +2,15 @@
   "cli": {
     "baseline_commit": "fbfee64",
     "released_version": "0.3.6",
-    "source_head": "fbfee64",
-    "status": "published"
+    "source_head": "8f0d35d",
+    "draft_version": "0.4.1",
+    "status": "drafted"
   },
   "skills": {
     "baseline_commit": "ac50aab",
     "released_version": "0.4.0",
-    "source_head": "ac50aab",
-    "status": "published"
+    "source_head": "8f0d35d",
+    "draft_version": "0.4.1",
+    "status": "drafted"
   }
 }
