@@ -1,6 +1,6 @@
 # Audio Generation
 
-Generate complete audio scenes and soundscapes from text, audio, or image inputs. Generated outputs are downloaded automatically and returned as JSON with their local paths and audio metadata.
+Generate speech, dialogue, and complete audio scenes from text, audio, or image inputs. A complete scene can combine voices, background music, ambience, and sound effects. Generated outputs are downloaded automatically and returned as JSON with their local paths and audio metadata.
 
 ## Discover Before Generating
 
@@ -20,14 +20,14 @@ Do not guess formats, sample rates, numeric ranges, or reference limits. Read th
 
 ### Text to Audio
 
-Generate audio from a prompt. A model may expose an optional `speaker_ids` array; when present, follow its schema limit.
+Generate synthesized speech, dialogue, or a complete mixed audio scene from a prompt. A model may expose an optional `speaker_ids` array for a voice reference; when present, follow its schema limit.
 
 ```bash
 anycap audio generate \
-  --prompt "wind moving through tall pine trees, distant birds, natural stereo ambience" \
+  --prompt 'A calm narrator says: "Welcome to AnyCap." Warm delivery with quiet studio ambience.' \
   --model <model-id> \
   --mode text-to-audio \
-  -o forest-wind.mp3
+  -o welcome-introduction.mp3
 ```
 
 If the schema advertises speaker references:
@@ -43,15 +43,15 @@ anycap audio generate \
 
 ### Audio to Audio
 
-Guide generation with reference audio. `audios` accepts a local path or an `http(s)` URL; local files are uploaded automatically.
+Guide a new voice performance or complete scene with reference audio. This is reference-guided generation, not a general-purpose audio editor. `audios` accepts a local path or an `http(s)` URL; local files are uploaded automatically.
 
 ```bash
 anycap audio generate \
-  --prompt "preserve the rhythm but make the texture warmer and more organic" \
+  --prompt 'Create a new spoken welcome with the reference delivery style and a warmer room tone.' \
   --model <model-id> \
   --mode audio-to-audio \
   --param audios=./reference.wav \
-  -o warmer-version.mp3
+  -o guided-welcome.mp3
 ```
 
 For multiple references, pass a JSON array only when the live schema permits it:
@@ -62,15 +62,15 @@ For multiple references, pass a JSON array only when the live schema permits it:
 
 ### Image to Audio
 
-Generate a matching soundscape from an image reference. `images` accepts a local path or URL.
+Generate speech, dialogue, or a complete audio scene guided by an image. `images` accepts a local path or URL.
 
 ```bash
 anycap audio generate \
-  --prompt "create the natural environmental soundscape implied by this scene" \
+  --prompt 'A guide briefly describes this scene while matching ambience plays underneath.' \
   --model <model-id> \
   --mode image-to-audio \
   --param images=./scene.png \
-  -o scene-soundscape.mp3
+  -o guided-scene.mp3
 ```
 
 ## Common Controls
@@ -79,12 +79,12 @@ Controls are schema-driven and can include `format`, `sample_rate`, `speech_rate
 
 ```bash
 anycap audio generate \
-  --prompt "steady rain on a metal roof" \
+  --prompt 'A clear voice says: "The program is about to begin."' \
   --model <model-id> \
   --param format=mp3 \
   --param sample_rate=24000 \
   --param enable_subtitle=true \
-  -o metal-roof-rain.mp3
+  -o program-introduction.mp3
 ```
 
 The example values are illustrative. Confirm them against the selected model and mode schema before use.
@@ -109,4 +109,3 @@ anycap audio generate --prompt "..." --model <model-id> -o output.mp3 \
 ```
 
 If an individual download fails after provider generation succeeded, that output contains an `error` field instead of hiding the successful provider result.
-

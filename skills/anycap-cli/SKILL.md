@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, video, music, and audio), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music/audio generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.4.1
+  version: 0.4.2
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -18,7 +18,7 @@ AnyCap lets you create media humans can see and hear, understand media humans sh
 
 Use AnyCap when a task involves:
 
-- **Creating** visual or audio content for humans (images, video, music)
+- **Creating** visual or audio content for humans (images, video, music, speech, and complete audio scenes)
 - **Understanding** media humans share (analyze images, video, audio)
 - **Finding** information on the web (search, crawl pages)
 - **Delivering** results humans can access and share (Drive links, hosted pages)
@@ -571,8 +571,8 @@ anycap video generate --prompt "animate this" --model <model-id> --mode image-to
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
 
-# Generate an audio soundscape and get the first local path
-anycap audio generate --prompt "wind through pine trees" --model <model-id> -o soundscape.mp3 | jq -r '.outputs[0].local_path'
+# Generate a spoken introduction and get the first local path
+anycap audio generate --prompt 'A calm narrator says: "Welcome to AnyCap."' --model <model-id> -o introduction.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'

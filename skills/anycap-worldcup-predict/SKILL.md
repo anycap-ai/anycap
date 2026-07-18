@@ -2,7 +2,7 @@
 name: anycap-worldcup-predict
 description: "World Cup match prediction and pre-match intel for football (soccer) fans: predict who will win and a likely scoreline, backed by structured, verifiable evidence -- player profiles, squad dossiers, current form, head-to-head records, and past-tournament history -- using AnyCap web search and crawl. Weighs FIFA ranking, recent form, head-to-head, and key players, plus any user-defined dimensions (home advantage, injuries, rest, weather, vibes), then makes a clearly-labeled for-fun call with a confidence level and a mandatory disclaimer. Built on the 'search less, not faster' strategy: narrow the search space first, retrieve only what matters, then verify against authoritative sources. Use when a fan wants a World Cup match prediction, predicted score, or who-will-win call; wants a player's profile, bio, form, or stats; wants a full World Cup squad or national-team lineup table; wants to size up two teams before a match; or wants head-to-head and past World Cup context. Trigger on: World Cup prediction, predict the score, who will win, match prediction, predicted scoreline, World Cup, World Cup squad, national team lineup, pre-match analysis, matchup, player form, footballer stats, player profile, head-to-head, or scout a team."
 metadata:
-  version: 0.4.1
+  version: 0.4.2
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI (authenticated). Works with any agent that supports shell commands.
