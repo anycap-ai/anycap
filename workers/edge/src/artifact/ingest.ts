@@ -45,9 +45,9 @@ function ingestError(
 	return errorJSON(status, message);
 }
 
-function normalizeMediaType(raw: string | undefined): "image" | "video" | "music" | null {
+function normalizeMediaType(raw: string | undefined): "image" | "video" | "music" | "audio" | null {
 	const mediaType = (raw || "").trim().toLowerCase();
-	if (mediaType === "image" || mediaType === "video" || mediaType === "music") {
+	if (mediaType === "image" || mediaType === "video" || mediaType === "music" || mediaType === "audio") {
 		return mediaType;
 	}
 	return null;
@@ -61,7 +61,7 @@ function normalizeContentType(raw: string | undefined): string {
 	return value;
 }
 
-function isAllowedMIME(mediaType: "image" | "video" | "music", mime: string): boolean {
+function isAllowedMIME(mediaType: "image" | "video" | "music" | "audio", mime: string): boolean {
 	if (!mime) {
 		return false;
 	}

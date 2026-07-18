@@ -147,4 +147,43 @@ describe("artifact ingest route", () => {
 		expect(mockR2.putCalls[0]?.key).toBe("caps/outputs/o/ca_demo");
 		expect(mockR2.putCalls[0]?.contentType).toBe("image/png");
 	});
+
+	it("ingests generated audio and stores it in R2", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				new Response("generated-audio", {
+					status: 200,
+					headers: {
+						"content-type": "audio/mpeg",
+					},
+				}),
+			),
+		);
+
+		const mockR2 = createMockR2();
+		const env = createEnv({
+			ANYCAP_CLOUD_R2: mockR2.bucket,
+			ANYCAP_ARTIFACT_INGEST_TOKEN: "ingest-token",
+			ARTIFACT_SOURCE_HOST_ALLOWLIST: "",
+		});
+		const response = await handleArtifactIngest(
+			buildIngestRequest({
+				source_url: "https://provider.example.com/generated.mp3",
+				object_key: "caps/outputs/o/ca_audio",
+				media_type: "audio",
+				max_bytes: 1024,
+			}),
+			env,
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockR2.putCalls).toEqual([
+			{
+				key: "caps/outputs/o/ca_audio",
+				contentType: "audio/mpeg",
+				size: 15,
+			},
+		]);
+	});
 });
