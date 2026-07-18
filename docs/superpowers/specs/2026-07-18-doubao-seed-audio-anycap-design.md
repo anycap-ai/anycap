@@ -13,14 +13,18 @@ formats into the public HTTP or CLI contracts.
 | NexusHub Discovery `doubao-seed-audio-1-0` | Active `audio` scheduler node |
 | NexusHub Discovery `ark-doubao-seed-audio-1-0` | Active Ark direct node |
 | Persisted Tool Definition | `txt_2_audio`, `audio_2_audio`, and `image_2_audio` |
+| Live text-to-audio schema | Optional speaker reference plus speech rate, pitch, loudness, and subtitle controls |
 | Live Core smoke task `atomic_78e5e6d3-a2c3-44d5-8f8c-06eb422fa69c` | 10.5-second MP3 succeeded through scheduler and Ark |
 | Live signed artifact | Range GET returned `206` and `audio/mpeg` for 84,524 bytes |
 | AnyCap image/video/music services | Existing domain -> application -> infrastructure -> transport pattern |
 
 ## Public Contract
 
-The public operation is `audio.generate`, not `audio.speak`. Seed Audio
-generates complete audio scenes and is not limited to text-to-speech.
+The public operation remains `audio.generate`, not `audio.speak`. Seed Audio is
+speech-centric audio generation: it covers speech synthesis and dialogue while
+also being able to orchestrate complete audio scenes that include voice,
+background music, ambience, and sound effects. It is broader than classic TTS
+and must not be positioned as an environmental-sound or SFX-only model.
 
 `POST /v1/audio/generate` accepts:
 
@@ -28,7 +32,7 @@ generates complete audio scenes and is not limited to text-to-speech.
 {
   "model": "doubao-seed-audio-1-0",
   "mode": "text-to-audio",
-  "prompt": "A calm dawn soundscape",
+  "prompt": "A calm narrator welcomes listeners while soft morning ambience plays",
   "format": "mp3",
   "sample_rate": 24000,
   "speech_rate": 0,
@@ -52,6 +56,23 @@ Mode mapping:
 The domain request owns these stable public concepts. The NexusHub adapter
 constructs the generic gateway envelope with `gen_type`, `prompt`, and
 `audio_option`; transport and CLI never expose raw `audio_option.references`.
+
+## Product Positioning
+
+AnyCap groups the capability under audio generation because the same model can
+produce speech, dialogue, and complete mixed audio scenes. User-facing copy
+should lead with speech and dialogue, then describe music, ambience, and sound
+effects as parts of the broader scene-generation capability.
+
+The canonical English model description is:
+
+> Doubao Seed Audio 1.0 generates speech, multi-speaker dialogue, and complete
+> audio scenes from text, audio, or image references.
+
+CLI and agent documentation should use speech-first examples, keep the three
+verified modes discoverable, and tell callers to inspect the live schema before
+using speaker references or voice controls. No route, mode, request field, or
+response shape changes as part of this positioning correction.
 
 ## Architecture
 
@@ -153,12 +174,14 @@ logic in AnyCap.
 - Handler/router tests for capability registration and feature denial.
 - CLI command tests for schema discovery, local file upload, JSON output, and
   download behavior.
+- Catalog tests pin the speech-first public description so it cannot regress to
+  SFX-only wording.
 - Focused package tests, `go test ./...`, `go vet ./...`, and a dev smoke test.
 
 ## Constraints
 
-- Work directly on `feat_new_model`.
-- Do not create a branch or worktree.
-- Do not commit, push, merge, tag, release, or deploy without explicit user
-  instruction.
+- Preserve the released `audio.generate` HTTP and CLI contracts.
+- Keep catalog, distributed skill, embedded skill, and current-product status
+  copy aligned.
+- Do not push, merge, tag, release, or deploy without explicit user approval.
 - Preserve unrelated user changes.
