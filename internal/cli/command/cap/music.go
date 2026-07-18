@@ -270,31 +270,7 @@ func parseMusicResponse(body []byte) (*musicResult, error) {
 // If -o is given and there's a single output, use it directly.
 // Otherwise, generate numbered filenames: music_20260330_150000_1.mp3, music_20260330_150000_2.mp3
 func musicOutputPath(userPath, outputURL, timestamp string, index, total int) string {
-	ext := path.Ext(fileutil.FilenameFromURL(outputURL))
-	if ext == "" {
-		ext = ".mp3"
-	}
-
-	// Single output with -o specified: use as-is.
-	if total == 1 && userPath != "" {
-		return userPath
-	}
-
-	// Multiple outputs with -o: inject index before extension.
-	if userPath != "" {
-		userExt := path.Ext(userPath)
-		base := strings.TrimSuffix(userPath, userExt)
-		if userExt == "" {
-			userExt = ext
-		}
-		return fmt.Sprintf("%s_%d%s", base, index+1, userExt)
-	}
-
-	// No -o: auto-generate.
-	if total == 1 {
-		return "music_" + timestamp + ext
-	}
-	return fmt.Sprintf("music_%s_%d%s", timestamp, index+1, ext)
+	return mediaOutputPath("music", userPath, outputURL, timestamp, index, total, ".mp3")
 }
 
 // writeMusicResult writes a structured JSON result for music generation.

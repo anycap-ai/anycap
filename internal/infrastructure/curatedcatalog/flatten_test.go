@@ -4,7 +4,102 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
 )
+
+func TestFlattenDiscoverySchema_AudioModes(t *testing.T) {
+	commonAudioOption := func(algo, modality string, minItems, maxItems int) map[string]any {
+		referenceProps := map[string]any{
+			"modality": map[string]any{"type": "string", "enum": []any{modality}},
+		}
+		if modality == "speaker" {
+			referenceProps["speaker_id"] = map[string]any{"type": "string", "minLength": 1}
+		} else {
+			referenceProps["url"] = map[string]any{"type": "string"}
+			referenceProps["resource_path"] = map[string]any{"type": "string"}
+			referenceProps["data"] = map[string]any{"type": "string"}
+		}
+		references := map[string]any{
+			"type":     "array",
+			"maxItems": maxItems,
+			"items": map[string]any{
+				"type":       "object",
+				"properties": referenceProps,
+			},
+		}
+		if minItems > 0 {
+			references["minItems"] = minItems
+		}
+		return map[string]any{
+			"properties": map[string]any{
+				"type":            map[string]any{"type": "string", "enum": []any{algo}},
+				"format":          map[string]any{"type": "string", "enum": []any{"mp3", "wav"}},
+				"sample_rate":     map[string]any{"type": "integer", "enum": []any{8000, 24000, 48000}},
+				"speech_rate":     map[string]any{"type": "integer", "minimum": -50, "maximum": 100},
+				"loudness_rate":   map[string]any{"type": "integer", "minimum": -50, "maximum": 100},
+				"pitch_rate":      map[string]any{"type": "integer", "minimum": -12, "maximum": 12},
+				"enable_subtitle": map[string]any{"type": "boolean"},
+				"references":      references,
+			},
+		}
+	}
+
+	tests := []struct {
+		name      string
+		algo      string
+		modality  string
+		minItems  int
+		maxItems  int
+		reference string
+		wantMin   int
+		wantMax   int
+	}{
+		{name: "text", algo: "txt_2_audio", modality: "speaker", maxItems: 1, reference: "speaker_ids", wantMax: 1},
+		{name: "audio", algo: "audio_2_audio", modality: "audio", minItems: 1, maxItems: 3, reference: "audios", wantMin: 1, wantMax: 3},
+		{name: "image", algo: "image_2_audio", modality: "image", minItems: 1, maxItems: 1, reference: "images", wantMin: 1, wantMax: 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			schema := map[string]any{
+				"properties": map[string]any{
+					"gen_type":     map[string]any{"type": "string", "enum": []any{"audio"}},
+					"prompt":       map[string]any{"type": "string", "maxLength": 3000},
+					"audio_option": commonAudioOption(tt.algo, tt.modality, tt.minItems, tt.maxItems),
+				},
+			}
+
+			got := flattenDiscoverySchemaForOperation(model.CapabilityAudio, tt.algo, schema, referenceMediaParams{})
+			params, _ := got["model_params"].(map[string]any)
+			for _, key := range []string{"prompt", "format", "sample_rate", "speech_rate", "loudness_rate", "pitch_rate", "enable_subtitle", tt.reference} {
+				if _, ok := params[key]; !ok {
+					t.Fatalf("expected %q in projected params: %+v", key, params)
+				}
+			}
+			for _, key := range []string{"type", "references", "audio_option"} {
+				if _, ok := params[key]; ok {
+					t.Fatalf("upstream field %q leaked into projected params: %+v", key, params)
+				}
+			}
+			ref, _ := params[tt.reference].(map[string]any)
+			if tt.wantMin > 0 && ref["minItems"] != tt.wantMin {
+				t.Fatalf("%s minItems = %v, want %d", tt.reference, ref["minItems"], tt.wantMin)
+			}
+			if ref["maxItems"] != tt.wantMax {
+				t.Fatalf("%s maxItems = %v, want %d", tt.reference, ref["maxItems"], tt.wantMax)
+			}
+			items, _ := ref["items"].(map[string]any)
+			wantFormat := ""
+			if tt.reference != "speaker_ids" {
+				wantFormat = "file-or-url"
+			}
+			if items["type"] != "string" || (wantFormat != "" && items["format"] != wantFormat) {
+				t.Fatalf("unexpected %s items: %+v", tt.reference, items)
+			}
+		})
+	}
+}
 
 func TestFlattenDiscoverySchema_ImageTextToImage(t *testing.T) {
 	schema := map[string]any{

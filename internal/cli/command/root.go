@@ -106,6 +106,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 	rootCmd.AddCommand(cap.NewImageCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(cap.NewVideoCmd(clientFactory, opts.Stdout))
 	rootCmd.AddCommand(cap.NewMusicCmd(clientFactory, opts.Stdout))
+	rootCmd.AddCommand(cap.NewAudioCmd(clientFactory, opts.Stdout))
 
 	rootCmd.PersistentPreRunE = autoUpdatePreRun(opts.BuildInfo.Version, opts.Stderr, &verbose)
 

@@ -17,6 +17,7 @@ func TestDefaults(t *testing.T) {
 		{"image.read defaults on", ImageRead, true},
 		{"video.read defaults on", VideoRead, true},
 		{"audio.read defaults on", AudioRead, true},
+		{"audio.generate defaults on", AudioGenerate, true},
 		{"drive defaults on", Drive, true},
 		{"page defaults on", Page, true},
 		{"unknown defaults off", "unknown.feature", false},

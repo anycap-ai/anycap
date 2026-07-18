@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	audioapp "gitlab.knoffice.tech/engineering/anycap/internal/application/audio"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
 	driveapp "gitlab.knoffice.tech/engineering/anycap/internal/application/drive"
@@ -37,6 +38,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/usage"
 	userstore "gitlab.knoffice.tech/engineering/anycap/internal/infrastructure/user"
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/audio"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
 	drivehandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
@@ -718,14 +720,32 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 				},
 			},
 		},
+		{
+			ModelID:     "doubao-seed-audio-1-0",
+			Capability:  model.CapabilityAudio,
+			DisplayName: "Doubao Seed Audio 1.0",
+			Status:      "active",
+			Operations: map[model.Operation]model.OperationSpec{
+				model.OperationGenerate: {
+					RequestHints: map[string]any{"prompt": map[string]any{"type": "string"}},
+					Routes: []model.RouteBinding{{
+						RouteType: model.RouteTypeScheduler, AbilityKey: "doubao-seed-audio-1-0",
+						GenType: string(model.CapabilityAudio), AlgoType: "txt_2_audio", Mode: model.ModeTextToAudio,
+						Priority: 100, Enabled: true,
+					}},
+				},
+			},
+		},
 	})
 	imageHandler := image.NewHandler(imageapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	videoHandler := video.NewHandler(videoapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	musicHandler := music.NewHandler(musicapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
+	audioHandler := audio.NewHandler(audioapp.NewService(catalogRepo, nexushub.NewStubClient(), creditClient, callLogs))
 	catalogService := catalogapp.NewService(catalogRepo)
 	imageCatalog := catalog.NewHandler(catalogService, model.CapabilityImage)
 	videoCatalog := catalog.NewHandler(catalogService, model.CapabilityVideo)
 	musicCatalog := catalog.NewHandler(catalogService, model.CapabilityMusic)
+	audioCatalog := catalog.NewHandler(catalogService, model.CapabilityAudio)
 	capHandler := capabilities.NewHandler(capapp.NewService(agentplatform.NewStubClient(), s3store.NewStubClient()))
 	feedbackHandler := feedback.NewHandler(feedbackapp.NewService(feedbackstore.NewMemoryFeedbackRepo(), lark.NewStubNotifier(), "test"))
 	passthroughResolver := idresolver.PassthroughIDResolver{}
@@ -791,6 +811,7 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 			imageCatalog,
 			videoCatalog,
 			musicCatalog,
+			audioCatalog,
 			RouteRegistrarFunc(func(group *route.RouterGroup) {
 				protected := group.Group("", protectedMiddlewares...)
 				systemHandler.RegisterProtectedRoutes(protected)
@@ -798,6 +819,7 @@ func newRouterForTestWithOptions(t *testing.T, rpm int, overrides map[string]int
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				audioHandler.RegisterRoutes(protected)
 				if !separateAdminServer {
 					modelRouteHandler.RegisterRoutes(protected)
 				}
@@ -1740,6 +1762,7 @@ func TestRouter_InvocationSuccessEnvelopeKeepsLegacyDataAndAddsDiagnostics(t *te
 		{name: "image", path: "/v1/image/generate", body: `{"prompt":"paper crane","model":"flux-dev"}`, wantTaskID: true},
 		{name: "video", path: "/v1/video/generate", body: `{"prompt":"paper crane","model":"veo-mini"}`, wantTaskID: true},
 		{name: "music", path: "/v1/music/generate", body: `{"prompt":"lofi","model":"mureka-v6"}`, wantTaskID: true},
+		{name: "audio", path: "/v1/audio/generate", body: `{"prompt":"wind through pine trees","model":"doubao-seed-audio-1-0"}`, wantTaskID: true},
 		{name: "image read", path: "/v1/capabilities/image/read", body: `{"url":"https://example.com/image.png"}`},
 	}
 
@@ -1837,6 +1860,13 @@ func TestRouter_FunctionRoutes_UseCapabilityRateLimit(t *testing.T) {
 			method:     http.MethodPost,
 			path:       "/v1/music/generate",
 			body:       `{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`,
+		},
+		{
+			name:       "audio generate",
+			capability: "audio.generate",
+			method:     http.MethodPost,
+			path:       "/v1/audio/generate",
+			body:       `{"prompt":"wind through pine trees","model":"doubao-seed-audio-1-0"}`,
 		},
 		{
 			name:       "capabilities presign",
@@ -2039,6 +2069,13 @@ func TestRouter_GenerateRoutesPersistAPIKeyIDInCallLogs(t *testing.T) {
 			path:       "/v1/music/generate",
 			body:       `{"prompt":"lofi night drive","model":"mureka-v6","make_instrumental":true}`,
 			capability: "music.generate",
+		},
+		{
+			name:       "audio",
+			method:     http.MethodPost,
+			path:       "/v1/audio/generate",
+			body:       `{"prompt":"wind through pine trees","model":"doubao-seed-audio-1-0"}`,
+			capability: "audio.generate",
 		},
 	}
 

@@ -13,3 +13,10 @@ type NexusHubClient interface {
 	GetSubmitResult(ctx context.Context, taskID string) (model.ProviderTaskResult, error)
 	GetTaskIDByTrace(ctx context.Context, traceID, bizID string) (string, error)
 }
+
+// AudioGenerationClient is intentionally capability-scoped. Keeping audio
+// generation separate avoids widening the legacy multi-capability NexusHubClient
+// contract and forcing unrelated application test doubles to implement it.
+type AudioGenerationClient interface {
+	GenerateAudio(ctx context.Context, req model.GenerateAudioRequest, route model.RouteBinding) (model.InvocationResult[model.GenerateAudioResult], error)
+}

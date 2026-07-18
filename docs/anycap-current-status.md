@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-07-08
+> Last updated: 2026-07-18
 
 ## 1. Capabilities (Cap)
 
@@ -11,6 +11,7 @@
 | Image generation | `anycap image generate` | Text-to-image with model selection, negative prompt, aspect ratio, resolution, reference images |
 | Video generation | `anycap video generate` | Text-to-video and image-to-video with duration, aspect ratio, resolution, reference images |
 | Music generation | `anycap music generate` | Instrumental and custom modes, vocal synthesis (gender selection), tags/title/lyrics, continuation from existing clip |
+| Audio generation | `anycap audio generate` | Text-to-audio, audio-to-audio, and image-to-audio with schema-driven controls and local reference-file upload |
 
 Generation outputs are published as AnyCap short links on `artifact.anycap.{dev,cloud}`. Provider origin URLs are not exposed in API responses. Link tokens are short-lived and resolve to internally managed R2 objects.
 
@@ -28,9 +29,9 @@ Each capability has a dynamic model catalog. Agents can:
 
 The bundled video catalog includes Seedance 2.0, Seedance 2.0 Fast, and Seedance 2.0 Mini; availability at runtime still depends on the corresponding NexusHub Discovery route.
 
-- **List models**: `anycap {image,video,music} models` — see all available models with their supported operations
-- **Inspect a model**: `anycap {image,video,music} models <model>` — view model details
-- **Discover parameters**: `anycap {image,video,music} models <model> schema --operation <op>` — get the request schema for a specific operation
+- **List models**: `anycap {image,video,music,audio} models` — see all available models with their supported operations
+- **Inspect a model**: `anycap {image,video,music,audio} models <model>` — view model details
+- **Discover parameters**: `anycap {image,video,music,audio} models <model> schema --operation <op>` — get the request schema for a specific operation
 
 ### Operation Types
 
@@ -353,7 +354,7 @@ Public pages group external community links in the header: GitHub for the reposi
 ## 7. Billing & Usage
 
 - **Credit-based billing**: each capability call has a credit cost
-- **Model direct-output pricing**: image/video/music direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
+- **Model direct-output pricing**: image/video/music/audio direct-output capabilities use upstream `nexus_cost` with `1 credit = $0.02`, rounded up, minimum 1 credit
 - **Action read pricing**: `image.read` costs 5 credits on success, `video.read` costs 10 credits on success, and `audio.read` costs 10 credits on success
 - **Web pricing**: `web.search` (grounding) costs 5 credits, `web.crawl` costs 1 credit
 - **Balance check**: enforced before every execution

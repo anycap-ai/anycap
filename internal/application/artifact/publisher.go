@@ -256,7 +256,7 @@ func inferFilenameHint(rawURL string, mediaType model.CapsArtifactMediaType) str
 	switch mediaType {
 	case model.CapsArtifactMediaTypeVideo:
 		return "output.mp4"
-	case model.CapsArtifactMediaTypeMusic:
+	case model.CapsArtifactMediaTypeMusic, model.CapsArtifactMediaTypeAudio:
 		return "output.mp3"
 	default:
 		return "output.png"
@@ -271,7 +271,7 @@ func fallbackMIME(mime string, mediaType model.CapsArtifactMediaType) string {
 	switch mediaType {
 	case model.CapsArtifactMediaTypeVideo:
 		return "video/mp4"
-	case model.CapsArtifactMediaTypeMusic:
+	case model.CapsArtifactMediaTypeMusic, model.CapsArtifactMediaTypeAudio:
 		return "audio/mpeg"
 	default:
 		return "image/png"

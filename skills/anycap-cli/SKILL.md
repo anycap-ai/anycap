@@ -1,6 +1,6 @@
 ---
 name: anycap-cli
-description: "AnyCap CLI -- create media humans can see and hear (generate images, produce video, compose music), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
+description: "AnyCap CLI -- create media humans can see and hear (generate images, video, music, and audio), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music/audio generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
   version: dev
   website: https://anycap.ai
@@ -349,7 +349,7 @@ Before generating content, ask the user which model they want to use. Run `anyca
 
 ### Generation Workflow
 
-Capabilities follow a three-step pattern. Each capability (image, video, music) supports one or more **operations** (e.g., `generate`) as CLI subcommands:
+Capabilities follow a three-step pattern. Each capability (image, video, music, audio) supports one or more **operations** (e.g., `generate`) as CLI subcommands:
 
 ```
 1. Discover models    anycap {cap} models
@@ -380,8 +380,10 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 | Snapshot | [snapshot.md](references/snapshot.md) | `create`, `restore` | 5-60s + upload/download |
 | Video | [video-generation.md](references/video-generation.md) | `generate` | 30-120s |
 | Music | [music-generation.md](references/music-generation.md) | `text-to-music` | 30-90s |
+| Audio | [audio-generation.md](references/audio-generation.md) | `generate` | Model-dependent |
 
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
+Audio generation may also return multiple outputs and preserves duration, size, subtitle, and usage metadata in JSON.
 
 If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
 
@@ -568,6 +570,9 @@ anycap video generate --prompt "animate this" --model <model-id> --mode image-to
 
 # Generate music and get the first audio path
 anycap music generate --prompt "..." --model <model-id> -o track.mp3 | jq -r '.outputs[0].local_path'
+
+# Generate an audio soundscape and get the first local path
+anycap audio generate --prompt "wind through pine trees" --model <model-id> -o soundscape.mp3 | jq -r '.outputs[0].local_path'
 
 # Annotate (non-blocking, for agent workflows)
 anycap annotate photo.png --no-wait | jq -r '.poll_command'

@@ -13,6 +13,7 @@ import (
 
 	agentcontrolapp "gitlab.knoffice.tech/engineering/anycap/internal/application/agentcontrol"
 	artifactapp "gitlab.knoffice.tech/engineering/anycap/internal/application/artifact"
+	audioapp "gitlab.knoffice.tech/engineering/anycap/internal/application/audio"
 	billingapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billing"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	catalogapp "gitlab.knoffice.tech/engineering/anycap/internal/application/catalog"
@@ -51,6 +52,7 @@ import (
 	"gitlab.knoffice.tech/engineering/anycap/internal/middleware"
 	transporthttp "gitlab.knoffice.tech/engineering/anycap/internal/transport/http"
 	agentcontrolhandler "gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/agentcontrol"
+	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/audio"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/capabilities"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/catalog"
 	"gitlab.knoffice.tech/engineering/anycap/internal/transport/http/handlers/drive"
@@ -104,6 +106,7 @@ type serverDependencies struct {
 	imageService            *imageapp.Service
 	videoService            *videoapp.Service
 	musicService            *musicapp.Service
+	audioService            *audioapp.Service
 	spaceService            *spaceapp.Service
 	driveService            *driveapp.Service
 	pageService             *pageapp.Service
@@ -165,6 +168,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 	imageHandler := image.NewHandler(deps.imageService)
 	videoHandler := video.NewHandler(deps.videoService)
 	musicHandler := music.NewHandler(deps.musicService)
+	audioHandler := audio.NewHandler(deps.audioService)
 	driveHandler := drive.NewHandler(deps.driveService, deps.idResolver, deps.idMapper)
 	pageHandler := page.NewHandler(deps.pageService, deps.idResolver, deps.idMapper)
 	capHandler := capabilities.NewHandler(deps.capabilitiesService)
@@ -227,6 +231,7 @@ func NewServer(cfg config.Config, info buildinfo.Info) *Server {
 				imageHandler.RegisterRoutes(protected)
 				videoHandler.RegisterRoutes(protected)
 				musicHandler.RegisterRoutes(protected)
+				audioHandler.RegisterRoutes(protected)
 				driveHandler.RegisterRoutes(protected)
 				pageHandler.RegisterRoutes(protected)
 				capHandler.RegisterRoutes(protected)
@@ -267,6 +272,7 @@ func buildServerFeatures(cfg config.Config) map[string]bool {
 		feature.VideoRead:     cfg.AgentPlatform.Enabled(),
 		feature.AudioRead:     cfg.AgentPlatform.Enabled(),
 		feature.AudioModels:   hasCatalogProvider(cfg),
+		feature.AudioGenerate: hasAudioExecutionProvider(cfg) && hasDiscoveryCatalogProvider(cfg),
 		feature.MusicGenerate: hasMusicExecutionProvider(cfg),
 		feature.MusicModels:   hasCatalogProvider(cfg),
 		feature.Drive:         true,
@@ -347,6 +353,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			imageService:          mediaComp.imageService,
 			videoService:          mediaComp.videoService,
 			musicService:          mediaComp.musicService,
+			audioService:          mediaComp.audioService,
 			spaceService:          nil,
 			driveService:          nil,
 			pageService:           nil,
@@ -429,6 +436,7 @@ func buildServerDependencies(cfg config.Config, info buildinfo.Info) (serverDepe
 			imageService:            mediaComp.imageService,
 			videoService:            mediaComp.videoService,
 			musicService:            mediaComp.musicService,
+			audioService:            mediaComp.audioService,
 			spaceService:            storageComp.spaceService,
 			driveService:            storageComp.driveService,
 			pageService:             storageComp.pageService,
@@ -957,6 +965,19 @@ func buildMusicExecutionClient(cfg config.Config) port.NexusHubClient {
 	return nexushub.NewStubClient()
 }
 
+func buildAudioExecutionClient(cfg config.Config) port.AudioGenerationClient {
+	coreBaseURL := cfg.ResolvedNexusHubCoreBaseURL()
+	coreToken := cfg.ResolvedNexusHubCoreToken()
+
+	if hasAudioExecutionProvider(cfg) {
+		logging.WithField("base_url", coreBaseURL).Info("audio-execution using nexushub client")
+		return nexushub.NewClient(nexushub.ClientConfig{BaseURL: coreBaseURL, Token: coreToken})
+	}
+
+	logging.GetLogger().Info("audio-execution using stub client")
+	return nexushub.NewStubClient()
+}
+
 func hasImageExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
 }
@@ -967,6 +988,14 @@ func hasVideoExecutionProvider(cfg config.Config) bool {
 
 func hasMusicExecutionProvider(cfg config.Config) bool {
 	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func hasAudioExecutionProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubCoreBaseURL() != "" && cfg.ResolvedNexusHubCoreToken() != ""
+}
+
+func hasDiscoveryCatalogProvider(cfg config.Config) bool {
+	return cfg.ResolvedNexusHubPlatformBaseURL() != ""
 }
 
 func hasWebExecutionProvider(cfg config.Config) bool {

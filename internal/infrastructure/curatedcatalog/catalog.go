@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 
 	"gitlab.knoffice.tech/engineering/anycap/internal/config"
@@ -156,7 +157,7 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 
 		// Route binding (used by execution path).
 		opSpec.Routes = append(opSpec.Routes, model.RouteBinding{
-			RouteType:       model.RouteTypeDirect,
+			RouteType:       routeTypeForDiscoveryProvider(node.Provider),
 			AbilityKey:      op.AbilityKey,
 			GenType:         string(capability),
 			AlgoType:        op.AlgoType,
@@ -178,7 +179,7 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 		// Schema enrichment. Synthetic reference-media parameters are added
 		// when Discovery declares matching resource targets for this algo;
 		// CLI then knows it can pass --param images=... / --param videos=...
-		flat := flattenDiscoverySchemaWithMedia(entry.Schema, referenceMediaParamsFromTargets(resourceTargets))
+		flat := flattenDiscoverySchemaForOperation(capability, op.AlgoType, entry.Schema, referenceMediaParamsFromTargets(resourceTargets))
 		flat = applySchemaOverrides(op.AbilityKey, op.AlgoType, flat)
 		if len(flat) > 0 {
 			if op.Mode != "" {
@@ -202,6 +203,13 @@ func (c *Catalog) buildSpec(ctx context.Context, m config.ModelCurationModelConf
 		return nil, nil
 	}
 	return spec, nil
+}
+
+func routeTypeForDiscoveryProvider(provider string) model.RouteType {
+	if strings.EqualFold(strings.TrimSpace(provider), string(model.RouteTypeScheduler)) {
+		return model.RouteTypeScheduler
+	}
+	return model.RouteTypeDirect
 }
 
 func (c *Catalog) snapshot() *config.ModelCurationConfig {

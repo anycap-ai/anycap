@@ -29,7 +29,7 @@ func TestBuildServerDependencies_StubMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildServerDependencies() error = %v", err)
 	}
-	if deps.apiKeyService == nil || deps.imageService == nil || deps.loginService == nil {
+	if deps.apiKeyService == nil || deps.imageService == nil || deps.audioService == nil || deps.loginService == nil {
 		t.Fatal("expected stub dependencies to be initialized")
 	}
 	if deps.rateLimitResolver == nil {
@@ -350,6 +350,34 @@ func TestBuildServerFeatures_DriveAndPageEnabledByDefault(t *testing.T) {
 	}
 }
 
+func TestBuildServerFeatures_AudioGenerateRequiresCoreExecutionProvider(t *testing.T) {
+	t.Setenv("ANYCAP_FEATURE_AUDIO_GENERATE", "")
+	if buildServerFeatures(config.Config{})[feature.AudioGenerate] {
+		t.Fatal("expected audio generation disabled without NexusHub Core credentials")
+	}
+	if buildServerFeatures(config.Config{
+		NexusHubCoreBaseURL: "http://core.example.com",
+		NexusHubCoreToken:   "core-token",
+	})[feature.AudioGenerate] {
+		t.Fatal("expected audio generation disabled without a catalog provider")
+	}
+	if buildServerFeatures(config.Config{
+		NexusHubCoreBaseURL: "http://core.example.com",
+		NexusHubCoreToken:   "core-token",
+		PGDSN:               "postgres://catalog.example.com/anycap",
+	})[feature.AudioGenerate] {
+		t.Fatal("expected audio generation disabled when PostgreSQL is configured without NexusHub Discovery")
+	}
+	features := buildServerFeatures(config.Config{
+		NexusHubCoreBaseURL:     "http://core.example.com",
+		NexusHubCoreToken:       "core-token",
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+	})
+	if !features[feature.AudioGenerate] {
+		t.Fatal("expected audio generation enabled with execution and catalog providers")
+	}
+}
+
 func TestBuildServerDependencies_Auth0EnabledUsesRealClient(t *testing.T) {
 	deps, err := buildServerDependencies(config.Config{
 		AppName:          "anycap-server",
@@ -534,6 +562,24 @@ func TestBuildImageExecutionClient_DoesNotUsePlatformConfigForExecution(t *testi
 
 	if _, ok := client.(*nexushub.StubClient); !ok {
 		t.Fatalf("expected stub client when only platform config is set, got %T", client)
+	}
+}
+
+func TestBuildAudioExecutionClientUsesOnlyCoreExecutionConfig(t *testing.T) {
+	realClient := buildAudioExecutionClient(config.Config{
+		NexusHubCoreBaseURL: "http://core.example.com",
+		NexusHubCoreToken:   "core-token",
+	})
+	if _, ok := realClient.(*nexushub.Client); !ok {
+		t.Fatalf("expected real audio execution client, got %T", realClient)
+	}
+
+	stubClient := buildAudioExecutionClient(config.Config{
+		NexusHubPlatformBaseURL: "http://platform.example.com",
+		NexusHubPlatformToken:   "platform-token",
+	})
+	if _, ok := stubClient.(*nexushub.StubClient); !ok {
+		t.Fatalf("expected audio stub client with platform-only config, got %T", stubClient)
 	}
 }
 

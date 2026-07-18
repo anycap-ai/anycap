@@ -28,7 +28,7 @@ func TestRootHelpIncludesCoreCommands(t *testing.T) {
 	}
 
 	output := stdout.String()
-	for _, expected := range []string{"login", "logout", "status", "connect", "image"} {
+	for _, expected := range []string{"login", "logout", "status", "connect", "image", "audio"} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected %q in help output: %s", expected, output)
 		}

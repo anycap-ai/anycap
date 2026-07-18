@@ -74,6 +74,14 @@
       "enabled": true,
       "rollout": "all"
     },
+    "audio.generate": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": [
+        "internal",
+        "beta_users"
+      ]
+    },
     "drive": {
       "enabled": true,
       "rollout": "all"

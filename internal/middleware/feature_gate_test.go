@@ -92,6 +92,26 @@ func TestFeatureGate_DynamicImageEditIncludesPrepareDiagnostics(t *testing.T) {
 	}
 }
 
+func TestFeatureGate_BlocksDisabledAudioGenerate(t *testing.T) {
+	h := server.Default(server.WithHostPorts(":0"))
+	h.Use(commonmw.TraceMiddleware(), FeatureGate(fakeFeatureProvider{
+		enabledFor: func(_ *model.Principal, feature string) (bool, bool) {
+			if feature != "audio.generate" {
+				t.Fatalf("resolved feature = %q, want audio.generate", feature)
+			}
+			return false, false
+		},
+	}))
+	h.POST("/v1/audio/generate", func(_ context.Context, ctx *app.RequestContext) {
+		ctx.JSON(http.StatusOK, map[string]string{"status": "ok"})
+	})
+
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/v1/audio/generate", nil)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected disabled audio generation to return 503, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestFeatureGate_Returns403WhenUserNotAllowed(t *testing.T) {
 	h := server.Default(server.WithHostPorts(":0"))
 	h.Use(

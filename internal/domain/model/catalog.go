@@ -35,6 +35,9 @@ const (
 	ModeMultiModalRef       Mode = "multi-modal-reference"
 	ModeEditVideo           Mode = "edit-video"
 	ModeTextToMusic         Mode = "text-to-music"
+	ModeTextToAudio         Mode = "text-to-audio"
+	ModeAudioToAudio        Mode = "audio-to-audio"
+	ModeImageToAudio        Mode = "image-to-audio"
 )
 
 // RouteType 表示路由方式。

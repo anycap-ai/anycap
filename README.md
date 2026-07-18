@@ -24,7 +24,7 @@ AnyCap 是一个面向 AI Agent 的 capability runtime。这个仓库当前以 `
 │   │   └── system/         # 系统状态和健康相关用例
 │   ├── cli/                # CLI 的私有实现目录
 │   │   ├── command/        # Cobra 命令树与命令分区装配位置
-│   │   │   ├── cap/        # Cap 能力命令，例如 image、video、music
+│   │   │   ├── cap/        # Cap 能力命令，例如 image、video、music、audio
 │   │   │   ├── infra/      # Infra 资源命令，例如 drive、browser、sandbox
 │   │   │   ├── meta/       # 管理命令，例如 login、status、config、skill
 │   │   │   └── extension/  # 动态扩展命令，例如 run

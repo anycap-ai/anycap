@@ -1,6 +1,6 @@
 ---
 name: anycap-media-production
-description: "Produce media assets using AnyCap: generate images, videos, and music from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
+description: "Produce media assets using AnyCap: generate images, videos, music, and audio from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, audio soundscapes, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, audio generation from references, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music/audio, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
 metadata:
   version: dev
   website: https://anycap.ai
@@ -27,6 +27,7 @@ AnyCap CLI must be installed and authenticated. Read the `anycap-cli` skill if s
 | Image | `anycap image generate` | Annotate + image-to-image | 5-30s |
 | Video | `anycap video generate` | Re-generate with adjusted params | 30-120s |
 | Music | `anycap music generate` | Re-generate with adjusted prompt | 30-90s |
+| Audio | `anycap audio generate` | Re-generate with adjusted prompt or references | Model-dependent |
 
 All generation commands follow the same pattern:
 
@@ -273,6 +274,40 @@ anycap music generate --prompt "..." --model <model-id> -o track.mp3 \
 - Be specific about genre, tempo, instruments, and mood in prompts.
 - Music generation takes 30-90s. Use async execution when possible.
 - Check model parameters via schema -- some models support `duration`, `genre`, `tags`.
+
+## Audio Production
+
+Audio generation is distinct from music composition. Use it for environmental soundscapes, sound effects, and complete audio scenes generated from text or reference media.
+
+```bash
+# Discover live modes and controls first
+anycap audio models <model-id> schema --mode text-to-audio
+
+# Generate a soundscape from text
+anycap audio generate \
+  --prompt "night forest ambience, soft wind, distant owl, no music" \
+  --model <model-id> \
+  --mode text-to-audio \
+  -o night-forest.mp3
+
+# Transform a reference audio file
+anycap audio generate \
+  --prompt "keep the timing but make the room larger and more reverberant" \
+  --model <model-id> \
+  --mode audio-to-audio \
+  --param audios=./reference.wav \
+  -o large-room.mp3
+
+# Create the soundscape implied by an image
+anycap audio generate \
+  --prompt "natural sounds implied by this scene" \
+  --model <model-id> \
+  --mode image-to-audio \
+  --param images=./scene.png \
+  -o scene-audio.mp3
+```
+
+Use the live schema for reference limits and audio controls. Local reference files are uploaded automatically. The JSON output preserves duration, size, subtitle, and usage data when the provider returns them.
 
 ## Delivery
 

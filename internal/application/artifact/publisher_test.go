@@ -234,3 +234,12 @@ func TestPublisher_Publish_IngestFailureMarksArtifactFailed(t *testing.T) {
 		t.Fatalf("expected no link written when ingest fails, got %d", len(linkStore.keys))
 	}
 }
+
+func TestAudioArtifactFallbacks(t *testing.T) {
+	if got := inferFilenameHint("https://provider.example.com/", model.CapsArtifactMediaTypeAudio); got != "output.mp3" {
+		t.Fatalf("inferFilenameHint() = %q, want output.mp3", got)
+	}
+	if got := fallbackMIME("", model.CapsArtifactMediaTypeAudio); got != "audio/mpeg" {
+		t.Fatalf("fallbackMIME() = %q, want audio/mpeg", got)
+	}
+}
