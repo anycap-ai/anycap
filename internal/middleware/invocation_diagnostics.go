@@ -35,7 +35,7 @@ func isModelInvocationCapability(capability string) bool {
 		return true
 	}
 	switch capability {
-	case "video.generate", "music.generate", "image.read", "video.read", "audio.read", "web.search", "web.crawl":
+	case "video.generate", "music.generate", "audio.generate", "image.read", "video.read", "audio.read", "web.search", "web.crawl":
 		return true
 	default:
 		return false

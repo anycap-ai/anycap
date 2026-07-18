@@ -1,5 +1,7 @@
 package curatedcatalog
 
+import "gitlab.knoffice.tech/engineering/anycap/internal/domain/model"
+
 // flattenDiscoverySchema converts the new NexusHub tool_definition schema
 // (a JSON Schema with nested image_option/video_option/music_option) into
 // the legacy flat shape used by the AnyCap CLI:
@@ -74,6 +76,8 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 			mergeOption(flat, raw, videoOptionRenames)
 		case "music_option":
 			mergeOption(flat, raw, musicOptionRenames)
+		case "audio_option":
+			mergeOption(flat, raw, audioOptionRenames)
 		default:
 			if _, exists := flat[key]; !exists {
 				flat[key] = raw
@@ -114,6 +118,32 @@ func flattenDiscoverySchemaWithMedia(schema map[string]any, media referenceMedia
 		return nil
 	}
 	return map[string]any{"model_params": flat}
+}
+
+// flattenDiscoverySchemaForOperation projects a Discovery schema into AnyCap's
+// public parameter shape. Audio references need operation-specific names because
+// NexusHub models speakers, audio inputs, and image inputs through the same
+// audio_option.references wire field.
+func flattenDiscoverySchemaForOperation(capability model.Capability, algo string, schema map[string]any, media referenceMediaParams) map[string]any {
+	if capability != model.CapabilityAudio {
+		return flattenDiscoverySchemaWithMedia(schema, media)
+	}
+
+	flat := flattenDiscoverySchemaWithMedia(schema, referenceMediaParams{})
+	if len(flat) == 0 {
+		return nil
+	}
+	params, _ := flat["model_params"].(map[string]any)
+	mode, _ := model.CanonicalModeForAlgoType(algo)
+	switch mode {
+	case model.ModeTextToAudio:
+		params["speaker_ids"] = speakerIDsParamSchema()
+	case model.ModeAudioToAudio:
+		params["audios"] = mediaReferencesParamSchema("Reference audio", 1, 3)
+	case model.ModeImageToAudio:
+		params["images"] = mediaReferencesParamSchema("Reference image", 1, 1)
+	}
+	return flat
 }
 
 // imagesParamSchema returns the synthetic schema for the AnyCap
@@ -164,6 +194,30 @@ func audiosParamSchema() map[string]any {
 	}
 }
 
+func speakerIDsParamSchema() map[string]any {
+	return map[string]any{
+		"type":     "array",
+		"maxItems": 1,
+		"items": map[string]any{
+			"type": "string",
+		},
+		"description": "Optional NexusHub speaker ID for text-to-audio generation. At most one speaker may be supplied.",
+	}
+}
+
+func mediaReferencesParamSchema(label string, minItems, maxItems int) map[string]any {
+	return map[string]any{
+		"type":     "array",
+		"minItems": minItems,
+		"maxItems": maxItems,
+		"items": map[string]any{
+			"type":   "string",
+			"format": "file-or-url",
+		},
+		"description": label + " input(s). Pass local file paths or http(s) URLs; AnyCap uploads local files before invoking NexusHub.",
+	}
+}
+
 // droppedTopLevelFields are fields the server injects or that contain
 // reference media in upstream wire format. They never appear in the
 // agent-facing schema. Reference media is exposed as synthetic
@@ -181,7 +235,8 @@ var droppedTopLevelFields = map[string]struct{}{
 // URLs) or carry the server-injected algo type. Same rationale as
 // droppedTopLevelFields.
 var droppedOptionFields = map[string]struct{}{
-	"type": {}, // server-injected algo_type discriminator
+	"type":       {}, // server-injected algo_type discriminator
+	"references": {}, // exposed through operation-specific AnyCap parameters
 
 	// Reference image fields (NexusHub wire format). Surfaced to the
 	// agent through the synthetic "images" parameter when annotation
@@ -238,6 +293,17 @@ var musicOptionRenames = map[string]string{
 	"duration": "duration",
 	"format":   "format",
 	"model":    "model_variant",
+}
+
+// audioOptionRenames maps public audio controls one-to-one. The polymorphic
+// references array and algo type are intentionally handled separately above.
+var audioOptionRenames = map[string]string{
+	"format":          "format",
+	"sample_rate":     "sample_rate",
+	"speech_rate":     "speech_rate",
+	"loudness_rate":   "loudness_rate",
+	"pitch_rate":      "pitch_rate",
+	"enable_subtitle": "enable_subtitle",
 }
 
 // mergeOption flattens one *_option subtree into the top-level params

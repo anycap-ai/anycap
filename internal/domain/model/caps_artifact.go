@@ -16,6 +16,7 @@ const (
 	CapsArtifactMediaTypeImage CapsArtifactMediaType = "image"
 	CapsArtifactMediaTypeVideo CapsArtifactMediaType = "video"
 	CapsArtifactMediaTypeMusic CapsArtifactMediaType = "music"
+	CapsArtifactMediaTypeAudio CapsArtifactMediaType = "audio"
 )
 
 type CapsArtifact struct {

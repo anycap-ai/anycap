@@ -2,12 +2,15 @@
 
 ## Overview
 
-AnyCap server currently supports two dconf-backed runtime config surfaces:
+AnyCap server currently supports three dconf-backed runtime config surfaces:
 
 - feature access policy
 - capability rate limit policy
+- model curation
 
-Both use the shared `gitlab.knoffice.tech/open/common-go/dconf` client and both fall back safely to existing env/static behavior when dconf is disabled, unavailable, or invalid.
+All three use the shared `gitlab.knoffice.tech/open/common-go/dconf` client and
+fall back safely to their existing local configuration when DConf is disabled,
+unavailable, or invalid.
 
 ## Shared DConf Runtime Env
 
@@ -21,7 +24,7 @@ DCONF_NACOS_CONTEXT_PATH=/nacos
 DCONF_NACOS_TIMEOUT_MS=5000
 ```
 
-Feature access and rate limit each have their own enable switch, group, and data id.
+Each surface has its own enable switch, group, and data ID.
 
 ## Feature Access DConf
 
@@ -47,7 +50,7 @@ If loading fails, AnyCap falls back to:
 
 Reference file:
 
-- [`configs/server/dconf/feature_access.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/feature_access.example.json)
+- [`configs/server/dconf/feature_access.example.json`](../../configs/server/dconf/feature_access.example.json)
 
 Example:
 
@@ -77,6 +80,11 @@ Example:
       "feature_access_groups": ["internal"]
     },
     "music.generate": {
+      "enabled": true,
+      "rollout": "groups",
+      "feature_access_groups": ["internal", "beta_users"]
+    },
+    "audio.generate": {
       "enabled": true,
       "rollout": "groups",
       "feature_access_groups": ["internal", "beta_users"]
@@ -153,7 +161,7 @@ If loading fails, AnyCap falls back to:
 
 Reference file:
 
-- [`configs/server/dconf/rate_limit.example.json`](/Users/sczhao/dev/Projects/converge-ai/ai-infra/anycap/configs/server/dconf/rate_limit.example.json)
+- [`configs/server/dconf/rate_limit.example.json`](../../configs/server/dconf/rate_limit.example.json)
 
 Example:
 
@@ -164,6 +172,7 @@ Example:
     "image.generate": 10,
     "video.generate": 5,
     "music.generate": 8,
+    "audio.generate": 8,
     "image.read": 30,
     "video.read": 20,
     "audio.read": 20,
@@ -201,8 +210,14 @@ When dconf is enabled, AnyCap loads the curated public model list from the
 specified group/data id. If dconf load fails, AnyCap falls back to:
 
 1. `ANYCAP_MODEL_CURATION_FILE` on disk (when set and valid JSON)
-2. Embedded default JSON shipped with the binary (23 models curated from the
-   live NexusHub Discovery snapshot)
+2. Embedded default JSON shipped with the binary, curated from the live
+   NexusHub Discovery snapshot
+
+The DConf and file forms are complete replacement snapshots; they are not
+merged with the embedded default. When either override is active, copy the
+current embedded curation as the base and include every model that should
+remain public. In particular, an existing production DConf snapshot must add
+`doubao-seed-audio-1-0` before `audio.generate` can resolve its catalog route.
 
 The Catalog joins each curation entry with the live NexusHub Discovery
 snapshot (`tool_definition[algo].schema`) to build the final model spec
@@ -234,6 +249,31 @@ keep working.
           "ability_key": "ark-doubao-seedream-5",
           "algo_type": "img_2_img",
           "mode_description": "Edit or transform images using prompts."
+        }
+      ]
+    },
+    {
+      "model_id": "doubao-seed-audio-1-0",
+      "capability": "audio",
+      "display_name": "Doubao Seed Audio 1.0",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "txt_2_audio"
+        },
+        {
+          "operation": "generate",
+          "mode": "audio-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "audio_2_audio"
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "image_2_audio"
         }
       ]
     }

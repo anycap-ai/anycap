@@ -69,6 +69,17 @@ func InferMusicMode(_ GenerateMusicRequest) Mode {
 	return ModeTextToMusic
 }
 
+// InferAudioMode infers the audio generation mode from reference inputs.
+func InferAudioMode(req GenerateAudioRequest) Mode {
+	if len(req.ReferenceImageURLs) > 0 {
+		return ModeImageToAudio
+	}
+	if len(req.ReferenceAudioURLs) > 0 {
+		return ModeAudioToAudio
+	}
+	return ModeTextToAudio
+}
+
 func selectRouteByMode(modelID string, operation Operation, mode Mode, routes []RouteBinding) (RouteBinding, error) {
 	var (
 		selected RouteBinding

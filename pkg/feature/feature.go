@@ -30,6 +30,7 @@ const (
 	VideoRead     = "video.read"
 	AudioRead     = "audio.read"
 	AudioModels   = "audio.models"
+	AudioGenerate = "audio.generate"
 	MusicGenerate = "music.generate"
 	MusicModels   = "music.models"
 	Drive         = "drive"
@@ -51,6 +52,7 @@ var defaults = map[string]bool{
 	VideoRead:     true,
 	AudioRead:     true,
 	AudioModels:   true,
+	AudioGenerate: true,
 	MusicGenerate: true,
 	MusicModels:   true,
 	Drive:         true,

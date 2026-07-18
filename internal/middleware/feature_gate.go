@@ -17,7 +17,7 @@ type FeatureAccessProvider interface {
 // capabilityPrefixes lists capabilities that follow the /v1/{cap}/{operation} pattern.
 // Adding a new capability here automatically enables dynamic feature gating
 // for all its operations (generate, edit, upscale, etc.).
-var capabilityPrefixes = []string{"image", "video", "music"}
+var capabilityPrefixes = []string{"image", "video", "music", "audio"}
 
 // featureRule maps a URL path prefix to a feature flag name.
 // Used only for non-standard paths that don't follow the /v1/{cap}/{op} pattern.

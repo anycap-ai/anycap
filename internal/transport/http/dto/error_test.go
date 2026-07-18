@@ -82,3 +82,13 @@ func TestMapDomainErrorMapsInvocationCodes(t *testing.T) {
 		})
 	}
 }
+
+func TestMapDomainErrorMapsAudioProviderNotConfigured(t *testing.T) {
+	status, envelope := MapDomainError(model.ErrAudioExecutionNotConfigured)
+	if status != 503 {
+		t.Fatalf("status = %d, want 503", status)
+	}
+	if envelope.Error == nil || envelope.Error.Code != "AUDIO_PROVIDER_NOT_CONFIGURED" {
+		t.Fatalf("error = %+v", envelope.Error)
+	}
+}

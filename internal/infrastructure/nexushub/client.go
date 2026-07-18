@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -508,6 +509,211 @@ func (c *Client) GenerateMusic(ctx context.Context, req model.GenerateMusicReque
 	return invocationSuccess(result, meta)
 }
 
+// GenerateAudio invokes NexusHub's common atomic audio contract. Scheduler and
+// direct nodes share the same submit envelope; route selection is handled by the
+// catalog/application layers and the selected ability_key is submitted here.
+func (c *Client) GenerateAudio(ctx context.Context, req model.GenerateAudioRequest, route model.RouteBinding) (model.InvocationResult[model.GenerateAudioResult], error) {
+	if c == nil || c.baseURL == "" || c.token == "" {
+		logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "configuration", nil, "nexushub audio client not configured")
+		return invocationFailure[model.GenerateAudioResult]("", model.ErrAudioExecutionNotConfigured, model.InvocationMeta{Stage: model.InvocationStagePrepare})
+	}
+	if route.AbilityKey == "" {
+		logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "route_validation", nil, "nexushub audio route missing ability key")
+		return invocationFailure[model.GenerateAudioResult]("", fmt.Errorf("%w: missing ability_key", model.ErrModelRouteNotConfigured), model.InvocationMeta{Stage: model.InvocationStagePrepare})
+	}
+
+	uid, err := parseNexusHubUID(req.UserID)
+	if err != nil {
+		logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "user_id_parse", err, "invalid nexushub user id")
+		return invocationFailure[model.GenerateAudioResult]("", err, model.InvocationMeta{Stage: model.InvocationStagePrepare})
+	}
+
+	payload := atomicProcessPayload{
+		GenType:     route.GenType,
+		Prompt:      req.Prompt,
+		AudioOption: buildAtomicAudioOption(req, route),
+		MetaOption: map[string]any{
+			"request_id": req.RequestID,
+			"model_id":   req.Model,
+		},
+	}
+	reqPayload, err := json.Marshal(payload)
+	if err != nil {
+		logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "marshal_req_payload", err, "marshal nexushub audio req_payload failed")
+		return invocationFailure[model.GenerateAudioResult]("", fmt.Errorf("marshal req_payload: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
+	}
+
+	parsed, meta, err := c.submitAtomicProcess(ctx, atomicSubmitInput{
+		UID:        uid,
+		Capability: model.CapabilityAudio,
+		ModelID:    req.Model,
+		RequestID:  req.RequestID,
+		AbilityKey: route.AbilityKey,
+		ReqPayload: string(reqPayload),
+	})
+	if err != nil {
+		return model.InvocationResult[model.GenerateAudioResult]{}, err
+	}
+
+	result := model.GenerateAudioResult{
+		ID:     parsed.TaskID,
+		Status: normalizeNexusHubStatus(parsed.Status),
+		Model:  req.Model,
+		Usage:  parsed.NexusUsage,
+	}
+	if parsed.NexusCost > 0 {
+		result.CreditCost = model.CreditsFromUSD(parsed.NexusCost)
+	}
+
+	if parsed.RespPayload != "" {
+		var respPayload atomicRespPayload
+		if err := json.Unmarshal([]byte(parsed.RespPayload), &respPayload); err != nil {
+			logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "decode_resp_payload", err, "decode nexushub audio response payload failed")
+			return invocationFailure[model.GenerateAudioResult]("", fmt.Errorf("decode resp_payload: %w", err), meta)
+		}
+
+		outputs := make([]model.AudioArtifact, 0, len(respPayload.Resources))
+		for _, resource := range respPayload.Resources {
+			var metadata atomicAudioMetadata
+			if len(resource.MetaData) > 0 {
+				if err := json.Unmarshal(resource.MetaData, &metadata); err != nil {
+					logNexusHubCapabilityError(ctx, string(model.CapabilityAudio), req.Model, route.AbilityKey, "decode_resource_metadata", err, "decode nexushub audio resource metadata failed")
+					return invocationFailure[model.GenerateAudioResult]("", fmt.Errorf("decode audio resource metadata: %w", err), meta)
+				}
+			}
+
+			resourceURL := firstPublicHTTPURL(resource.URL, metadata.URL)
+			outputs = append(outputs, model.AudioArtifact{
+				Artifact: model.Artifact{
+					Type:     "audio",
+					URL:      resourceURL,
+					MIMEType: audioMIMEType(metadata.Format, resourceURL),
+				},
+				DurationSeconds:         metadata.Duration,
+				OriginalDurationSeconds: metadata.OriginalDuration,
+				SizeBytes:               metadata.AudioSize,
+				Subtitle:                metadata.Subtitle,
+			})
+			if result.CreditCost == 0 && resource.CreditCost > 0 {
+				result.CreditCost = resource.CreditCost
+			}
+		}
+		result.Outputs = outputs
+	}
+
+	return invocationSuccess(result, meta)
+}
+
+func firstPublicHTTPURL(candidates ...string) string {
+	for _, candidate := range candidates {
+		trimmed := strings.TrimSpace(candidate)
+		parsed, err := url.Parse(trimmed)
+		if err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			continue
+		}
+		return trimmed
+	}
+	return ""
+}
+
+type atomicSubmitInput struct {
+	UID        int64
+	Capability model.Capability
+	ModelID    string
+	RequestID  string
+	AbilityKey string
+	ReqPayload string
+}
+
+// submitAtomicProcess owns the provider-neutral submit envelope and HTTP error
+// semantics. Capability adapters remain responsible only for their payload and
+// response projection.
+func (c *Client) submitAtomicProcess(ctx context.Context, input atomicSubmitInput) (submitAtomicProcessResponse, model.InvocationMeta, error) {
+	body := submitAtomicProcessRequest{
+		AbilityKey: input.AbilityKey,
+		ReqPayload: input.ReqPayload,
+		Token:      c.token,
+		BizInfo: submitBizInfo{
+			BizID:     defaultNexusHubBizID,
+			EnterFrom: defaultNexusHubEnterFrom,
+		},
+		UserInfo: submitUserInfo{UID: input.UID},
+		Extra: map[string]any{
+			"model_id":   input.ModelID,
+			"capability": string(input.Capability),
+			"operation":  string(model.OperationGenerate),
+			"request_id": input.RequestID,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		logNexusHubCapabilityError(ctx, string(input.Capability), input.ModelID, input.AbilityKey, "marshal_submit_request", err, "marshal nexushub submit request failed")
+		return submitAtomicProcessResponse{}, model.InvocationMeta{}, model.WrapInvocationError("", fmt.Errorf("marshal submit request: %w", err), model.InvocationMeta{Stage: model.InvocationStagePrepare})
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+submitAtomicProcessPath, bytes.NewReader(bodyBytes))
+	if err != nil {
+		logNexusHubCapabilityError(ctx, string(input.Capability), input.ModelID, input.AbilityKey, "build_request", err, "build nexushub submit request failed")
+		return submitAtomicProcessResponse{}, model.InvocationMeta{}, model.WrapInvocationError("", fmt.Errorf("build request: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	setNexusExtraHeader(ctx, httpReq)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		logNexusHubCapabilityError(ctx, string(input.Capability), input.ModelID, input.AbilityKey, "http_request", err, "submit nexushub request failed")
+		code := ""
+		if errors.Is(err, context.DeadlineExceeded) {
+			code = model.InvocationErrorCodeUpstreamTimeout
+		}
+		return submitAtomicProcessResponse{}, model.InvocationMeta{}, model.WrapInvocationError(code, fmt.Errorf("submit atomic process: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
+	}
+	defer resp.Body.Close()
+
+	var parsed submitAtomicProcessResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		logNexusHubCapabilityError(ctx, string(input.Capability), input.ModelID, input.AbilityKey, "decode_submit_response", err, "decode nexushub submit response failed")
+		return submitAtomicProcessResponse{}, model.InvocationMeta{}, model.WrapInvocationError("", fmt.Errorf("decode submit response: %w", err), model.InvocationMeta{Stage: model.InvocationStageSubmit})
+	}
+
+	if resp.StatusCode != http.StatusOK || parsed.Base.Code != 0 {
+		mappedErr := mapSubmitError(resp.StatusCode, parsed.Base.Code, parsed.Base.Message)
+		meta := model.InvocationMeta{TaskID: parsed.TaskID, ProviderStatus: normalizeNexusHubStatus(parsed.Status), Stage: model.InvocationStageSubmit}
+		logNexusHubCapabilityError(ctx, string(input.Capability), input.ModelID, input.AbilityKey, "submit_status", mappedErr, "nexushub submit returned an error", logging.Fields{"status_code": resp.StatusCode, "base_code": parsed.Base.Code})
+		return submitAtomicProcessResponse{}, meta, model.WrapInvocationError("", mappedErr, meta)
+	}
+
+	meta := model.InvocationMeta{
+		TaskID:         parsed.TaskID,
+		ProviderStatus: normalizeNexusHubStatus(parsed.Status),
+		Stage:          model.InvocationStageDecodeResult,
+	}
+	return parsed, meta, nil
+}
+
+func buildAtomicAudioOption(req model.GenerateAudioRequest, route model.RouteBinding) *atomicAudioOption {
+	option := &atomicAudioOption{
+		Type:           route.AlgoType,
+		Format:         req.Format,
+		SampleRate:     req.SampleRate,
+		SpeechRate:     req.SpeechRate,
+		LoudnessRate:   req.LoudnessRate,
+		PitchRate:      req.PitchRate,
+		EnableSubtitle: req.EnableSubtitle,
+	}
+	for _, speakerID := range req.SpeakerIDs {
+		option.References = append(option.References, atomicAudioReference{Modality: "speaker", SpeakerID: speakerID})
+	}
+	for _, referenceURL := range req.ReferenceAudioURLs {
+		option.References = append(option.References, atomicAudioReference{Modality: "audio", URL: referenceURL})
+	}
+	for _, referenceURL := range req.ReferenceImageURLs {
+		option.References = append(option.References, atomicAudioReference{Modality: "image", URL: referenceURL})
+	}
+	return option
+}
+
 func buildAtomicVideoShotClips(clips []model.VideoShotClip) []atomicVideoShotClip {
 	if len(clips) == 0 {
 		return nil
@@ -707,8 +913,26 @@ type atomicProcessPayload struct {
 	ImageOption  *atomicImageOption  `json:"image_option,omitempty"`
 	VideoOption  *atomicVideoOption  `json:"video_option,omitempty"`
 	MusicOption  *atomicMusicOption  `json:"music_option,omitempty"`
+	AudioOption  *atomicAudioOption  `json:"audio_option,omitempty"`
 	SearchOption *atomicSearchOption `json:"search_option,omitempty"`
 	MetaOption   map[string]any      `json:"meta_option,omitempty"`
+}
+
+type atomicAudioOption struct {
+	Type           string                 `json:"type,omitempty"`
+	Format         string                 `json:"format,omitempty"`
+	SampleRate     int                    `json:"sample_rate,omitempty"`
+	SpeechRate     *int                   `json:"speech_rate,omitempty"`
+	LoudnessRate   *int                   `json:"loudness_rate,omitempty"`
+	PitchRate      *int                   `json:"pitch_rate,omitempty"`
+	EnableSubtitle bool                   `json:"enable_subtitle,omitempty"`
+	References     []atomicAudioReference `json:"references,omitempty"`
+}
+
+type atomicAudioReference struct {
+	Modality  string `json:"modality"`
+	SpeakerID string `json:"speaker_id,omitempty"`
+	URL       string `json:"url,omitempty"`
 }
 
 type atomicImageOption struct {
@@ -794,9 +1018,19 @@ type atomicRespPayload struct {
 }
 
 type atomicResource struct {
-	URL        string `json:"url,omitempty"`
-	Path       string `json:"path,omitempty"`
-	CreditCost int64  `json:"credit_cost,omitempty"`
+	URL        string          `json:"url,omitempty"`
+	Path       string          `json:"path,omitempty"`
+	MetaData   json.RawMessage `json:"meta_data,omitempty"`
+	CreditCost int64           `json:"credit_cost,omitempty"`
+}
+
+type atomicAudioMetadata struct {
+	URL              string          `json:"url,omitempty"`
+	Format           string          `json:"format,omitempty"`
+	Duration         float64         `json:"duration,omitempty"`
+	OriginalDuration float64         `json:"original_duration,omitempty"`
+	AudioSize        int64           `json:"audio_size,omitempty"`
+	Subtitle         json.RawMessage `json:"subtitle,omitempty"`
 }
 
 func parseNexusHubUID(userID string) (int64, error) {
@@ -846,7 +1080,25 @@ func guessMIMEType(resourceURL string) string {
 	if resourceURL == "" {
 		return ""
 	}
-	return mime.TypeByExtension(filepath.Ext(resourceURL))
+	resourcePath := resourceURL
+	if parsed, err := url.Parse(resourceURL); err == nil && parsed.Path != "" {
+		resourcePath = parsed.Path
+	}
+	return mime.TypeByExtension(filepath.Ext(resourcePath))
+}
+
+func audioMIMEType(format, resourceURL string) string {
+	switch strings.ToLower(strings.TrimSpace(format)) {
+	case "mp3":
+		return "audio/mpeg"
+	case "wav", "wave":
+		return "audio/wav"
+	case "flac":
+		return "audio/flac"
+	case "pcm":
+		return "audio/L16"
+	}
+	return guessMIMEType(resourceURL)
 }
 
 func setNexusExtraHeader(ctx context.Context, req *http.Request) {

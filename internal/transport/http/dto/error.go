@@ -112,6 +112,8 @@ func MapDomainError(err error) (int, Envelope) {
 		return consts.StatusServiceUnavailable, ErrorEnvelope("", "VIDEO_PROVIDER_NOT_CONFIGURED", model.ErrVideoExecutionNotConfigured.Error())
 	case errors.Is(err, model.ErrMusicExecutionNotConfigured):
 		return consts.StatusServiceUnavailable, ErrorEnvelope("", "MUSIC_PROVIDER_NOT_CONFIGURED", model.ErrMusicExecutionNotConfigured.Error())
+	case errors.Is(err, model.ErrAudioExecutionNotConfigured):
+		return consts.StatusServiceUnavailable, ErrorEnvelope("", "AUDIO_PROVIDER_NOT_CONFIGURED", model.ErrAudioExecutionNotConfigured.Error())
 	case errors.Is(err, model.ErrInsufficientCredit):
 		return consts.StatusPaymentRequired, ErrorEnvelope("", model.ErrInsufficientCredit.Code, model.ErrInsufficientCredit.Message)
 	case errors.Is(err, model.ErrBillingUncertain):

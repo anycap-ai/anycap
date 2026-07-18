@@ -498,6 +498,35 @@
       ]
     },
     {
+      "model_id": "doubao-seed-audio-1-0",
+      "capability": "audio",
+      "display_name": "Doubao Seed Audio 1.0",
+      "model_description": "Doubao Seed Audio 1.0 generates sound effects and environmental audio from text, audio, or image references.",
+      "operations": [
+        {
+          "operation": "generate",
+          "mode": "text-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "txt_2_audio",
+          "mode_description": "Generate audio from a text prompt, with optional NexusHub speaker IDs."
+        },
+        {
+          "operation": "generate",
+          "mode": "audio-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "audio_2_audio",
+          "mode_description": "Generate audio guided by one to three reference audio inputs."
+        },
+        {
+          "operation": "generate",
+          "mode": "image-to-audio",
+          "ability_key": "doubao-seed-audio-1-0",
+          "algo_type": "image_2_audio",
+          "mode_description": "Generate audio guided by one reference image."
+        }
+      ]
+    },
+    {
       "model_id": "suno-v5",
       "capability": "music",
       "display_name": "Suno V5",

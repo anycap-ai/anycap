@@ -226,6 +226,93 @@ func TestDefaultCurationIncludesSeedance2Mini(t *testing.T) {
 	t.Fatal("expected default curation to include seedance-2-mini")
 }
 
+func TestDefaultCurationIncludesDoubaoSeedAudio(t *testing.T) {
+	var cfg config.ModelCurationConfig
+	if err := json.Unmarshal(defaultCurationJSON, &cfg); err != nil {
+		t.Fatalf("decode default curation: %v", err)
+	}
+
+	for _, curated := range cfg.Models {
+		if curated.ModelID != "doubao-seed-audio-1-0" {
+			continue
+		}
+		if curated.Capability != "audio" {
+			t.Fatalf("capability = %q, want audio", curated.Capability)
+		}
+		want := map[string]string{
+			"text-to-audio":  "txt_2_audio",
+			"audio-to-audio": "audio_2_audio",
+			"image-to-audio": "image_2_audio",
+		}
+		for _, operation := range curated.Operations {
+			if operation.AbilityKey != "doubao-seed-audio-1-0" {
+				t.Fatalf("ability_key = %q", operation.AbilityKey)
+			}
+			if want[operation.Mode] != operation.AlgoType {
+				t.Fatalf("unexpected audio operation: %+v", operation)
+			}
+			delete(want, operation.Mode)
+		}
+		if len(want) != 0 {
+			t.Fatalf("missing audio modes: %+v", want)
+		}
+		return
+	}
+	t.Fatal("expected default curation to include doubao-seed-audio-1-0")
+}
+
+func TestCatalog_AudioSchedulerRouteAndSchemas(t *testing.T) {
+	audioSchema := func(algo string) map[string]any {
+		return map[string]any{
+			"properties": map[string]any{
+				"prompt": map[string]any{"type": "string"},
+				"audio_option": map[string]any{
+					"properties": map[string]any{
+						"type":        map[string]any{"type": "string", "enum": []any{algo}},
+						"format":      map[string]any{"type": "string", "enum": []any{"mp3", "wav"}},
+						"sample_rate": map[string]any{"type": "integer", "enum": []any{24000}},
+						"references":  map[string]any{"type": "array", "items": map[string]any{"type": "object"}},
+					},
+				},
+			},
+		}
+	}
+	curation := &config.ModelCurationConfig{Models: []config.ModelCurationModelConfig{{
+		ModelID:    "doubao-seed-audio-1-0",
+		Capability: "audio",
+		Operations: []config.ModelCurationOperationConfig{
+			{Operation: "generate", Mode: "text-to-audio", AbilityKey: "doubao-seed-audio-1-0", AlgoType: "txt_2_audio"},
+			{Operation: "generate", Mode: "audio-to-audio", AbilityKey: "doubao-seed-audio-1-0", AlgoType: "audio_2_audio"},
+			{Operation: "generate", Mode: "image-to-audio", AbilityKey: "doubao-seed-audio-1-0", AlgoType: "image_2_audio"},
+		},
+	}}}
+	node := &nexushub.DiscoveryNode{
+		AbilityKey: "doubao-seed-audio-1-0",
+		Provider:   "scheduler",
+		State:      "active",
+		ToolDefinition: map[string]nexushub.DiscoveryToolDefEntry{
+			"txt_2_audio":   {Schema: audioSchema("txt_2_audio")},
+			"audio_2_audio": {Schema: audioSchema("audio_2_audio")},
+			"image_2_audio": {Schema: audioSchema("image_2_audio")},
+		},
+	}
+	cat := New(fakeCuration{cfg: curation}, &fakeDiscovery{nodes: map[string]*nexushub.DiscoveryNode{node.AbilityKey: node}})
+
+	spec, err := cat.GetModel(context.Background(), model.CapabilityAudio, "doubao-seed-audio-1-0")
+	if err != nil {
+		t.Fatalf("GetModel() error = %v", err)
+	}
+	op := spec.Operations[model.OperationGenerate]
+	if len(op.Routes) != 3 || len(op.ModeSchemas) != 3 {
+		t.Fatalf("unexpected generate operation: %+v", op)
+	}
+	for _, route := range op.Routes {
+		if route.RouteType != model.RouteTypeScheduler {
+			t.Fatalf("route type = %q, want scheduler", route.RouteType)
+		}
+	}
+}
+
 func TestCatalog_AnnotatedRouteExposesImagesAndResourceTargets(t *testing.T) {
 	curation := &config.ModelCurationConfig{
 		Models: []config.ModelCurationModelConfig{{

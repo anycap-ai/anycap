@@ -5,6 +5,7 @@
     "image.edit": 10,
     "video.generate": 5,
     "music.generate": 8,
+    "audio.generate": 8,
     "image.read": 30,
     "video.read": 20,
     "audio.read": 20,

@@ -28,6 +28,7 @@ type sharedComposition struct {
 	imageExecutionClient port.NexusHubClient
 	videoExecutionClient port.NexusHubClient
 	musicExecutionClient port.NexusHubClient
+	audioExecutionClient port.AudioGenerationClient
 	creditClient         port.CreditClient
 	signupReward         port.SignupRewarder
 	paymentClient        port.PaymentClient
@@ -52,6 +53,7 @@ func buildSharedComposition(cfg config.Config, info buildinfo.Info) sharedCompos
 		imageExecutionClient: buildImageExecutionClient(cfg),
 		videoExecutionClient: buildVideoExecutionClient(cfg),
 		musicExecutionClient: buildMusicExecutionClient(cfg),
+		audioExecutionClient: buildAudioExecutionClient(cfg),
 		creditClient:         creditClient,
 		signupReward: signuprewardapp.NewService(creditClient, signuprewardapp.Config{
 			Enabled:  cfg.Credit.SignupRewardEnabled,

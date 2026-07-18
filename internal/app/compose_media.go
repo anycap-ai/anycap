@@ -1,6 +1,7 @@
 package app
 
 import (
+	audioapp "gitlab.knoffice.tech/engineering/anycap/internal/application/audio"
 	billingapp "gitlab.knoffice.tech/engineering/anycap/internal/application/billing"
 	capapp "gitlab.knoffice.tech/engineering/anycap/internal/application/capabilities"
 	imageapp "gitlab.knoffice.tech/engineering/anycap/internal/application/image"
@@ -15,6 +16,7 @@ type mediaComposition struct {
 	imageService        *imageapp.Service
 	videoService        *videoapp.Service
 	musicService        *musicapp.Service
+	audioService        *audioapp.Service
 	capabilitiesService *capapp.Service
 	usageSyncWorker     *usageapp.Worker
 	billingWorker       *billingapp.Worker
@@ -30,6 +32,9 @@ func buildStubMediaComposition(_ config.Config, shared sharedComposition, billin
 	musicService := musicapp.NewService(shared.catalogRepo, shared.musicExecutionClient, shared.creditClient, billingComp.callLogs)
 	musicService.SetUsageWriter(billingComp.usageWriter)
 	musicService.SetBillingCoordinator(billingComp.billingService)
+	audioService := audioapp.NewService(shared.catalogRepo, shared.audioExecutionClient, shared.creditClient, billingComp.callLogs)
+	audioService.SetUsageWriter(billingComp.usageWriter)
+	audioService.SetBillingCoordinator(billingComp.billingService)
 	capService := capapp.NewService(shared.capProvider, shared.cloudObjectStore, capapp.WithPresignGetExpiry(shared.capGetExpiry))
 	capService.SetCreditClient(shared.creditClient)
 	capService.SetCallLogRepo(billingComp.callLogs)
@@ -39,6 +44,7 @@ func buildStubMediaComposition(_ config.Config, shared sharedComposition, billin
 		imageService:        imageService,
 		videoService:        videoService,
 		musicService:        musicService,
+		audioService:        audioService,
 		capabilitiesService: capService,
 	}
 }
@@ -69,6 +75,10 @@ func buildPersistentMediaComposition(cfg config.Config, shared sharedComposition
 	musicService := musicapp.NewService(shared.catalogRepo, shared.musicExecutionClient, shared.creditClient, billingComp.callLogs)
 	musicService.SetUsageWriter(billingComp.usageWriter)
 	musicService.SetBillingCoordinator(billingComp.billingService)
+	audioService := audioapp.NewService(shared.catalogRepo, shared.audioExecutionClient, shared.creditClient, billingComp.callLogs)
+	audioService.SetUsageWriter(billingComp.usageWriter)
+	audioService.SetBillingCoordinator(billingComp.billingService)
+	audioService.SetUploadRefResolver(capService)
 
 	artifactPublisher := buildArtifactPublisher(
 		cfg,
@@ -83,6 +93,7 @@ func buildPersistentMediaComposition(cfg config.Config, shared sharedComposition
 		imageService.SetArtifactPublisher(artifactPublisher)
 		videoService.SetArtifactPublisher(artifactPublisher)
 		musicService.SetArtifactPublisher(artifactPublisher)
+		audioService.SetArtifactPublisher(artifactPublisher)
 	}
 
 	var usageSyncWorker *usageapp.Worker
@@ -120,6 +131,7 @@ func buildPersistentMediaComposition(cfg config.Config, shared sharedComposition
 		imageService:        imageService,
 		videoService:        videoService,
 		musicService:        musicService,
+		audioService:        audioService,
 		capabilitiesService: capService,
 		usageSyncWorker:     usageSyncWorker,
 		billingWorker:       billingWorker,

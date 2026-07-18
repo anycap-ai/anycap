@@ -82,6 +82,28 @@ func (c *StubClient) GenerateMusic(_ context.Context, req model.GenerateMusicReq
 	return invocationSuccess(result, model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status, Stage: model.InvocationStageDecodeResult})
 }
 
+func (c *StubClient) GenerateAudio(_ context.Context, req model.GenerateAudioRequest, _ model.RouteBinding) (model.InvocationResult[model.GenerateAudioResult], error) {
+	safePrompt := url.PathEscape(strings.ReplaceAll(req.Prompt, " ", "-"))
+	if req.Model == "" {
+		req.Model = "doubao-seed-audio-1-0"
+	}
+	result := model.GenerateAudioResult{
+		ID:         fmt.Sprintf("aud_%s", req.RequestID),
+		Status:     "success",
+		Model:      req.Model,
+		CreditCost: 2,
+		Outputs: []model.AudioArtifact{{
+			Artifact: model.Artifact{
+				Type:     "audio",
+				URL:      fmt.Sprintf("https://files.anycap.local/generated/%s/%s.mp3", req.Model, safePrompt),
+				MIMEType: "audio/mpeg",
+			},
+		}},
+		Usage: map[string]any{"credits": 2},
+	}
+	return invocationSuccess(result, model.InvocationMeta{TaskID: result.ID, ProviderStatus: result.Status, Stage: model.InvocationStageDecodeResult})
+}
+
 func (c *StubClient) GetSubmitResult(_ context.Context, taskID string) (model.ProviderTaskResult, error) {
 	return model.ProviderTaskResult{
 		TaskID:     taskID,
