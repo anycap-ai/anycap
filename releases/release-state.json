@@ -2,13 +2,15 @@
   "cli": {
     "baseline_commit": "8f0d35d",
     "released_version": "0.4.1",
-    "source_head": "8f0d35d",
-    "status": "published"
+    "source_head": "811aeb37",
+    "draft_version": "0.4.2",
+    "status": "drafted"
   },
   "skills": {
     "baseline_commit": "8f0d35d",
     "released_version": "0.4.1",
-    "source_head": "8f0d35d",
-    "status": "published"
+    "source_head": "811aeb37",
+    "draft_version": "0.4.2",
+    "status": "drafted"
   }
 }
