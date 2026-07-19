@@ -801,12 +801,12 @@
       { label: "Research", family: "Search", type: "research", x: 0.58, y: 0.16, curve: -58, radius: 28, aspect: 1.4 },
       { label: "Editorial image", family: "Image", type: "image", x: 0.68, y: 0.30, curve: 54, radius: 32, aspect: 1.45 },
       { label: "Screenshot analysis", family: "Vision", type: "screenshot", x: 0.82, y: 0.20, curve: -44, radius: 28, aspect: 1.4 },
-      { label: "Vision crop", family: "Vision", type: "vision", x: 0.93, y: 0.11, mobileX: 0.77, mobileY: 0.43, curve: 42, radius: 24, aspect: 1.2 },
+      { label: "Vision crop", family: "Vision", type: "vision", x: 0.93, y: 0.11, standardX: 0.932, standardY: 0.10, mobileX: 0.77, mobileY: 0.43, curve: 42, radius: 24, aspect: 1.2 },
       { label: "Cinematic video", family: "Video", type: "video", x: 0.72, y: 0.43, mobileX: 0.24, mobileY: 0.50, curve: -56, radius: 35, aspect: 1.65, width: "clamp(190px, 19vw, 276px)" },
-      { label: "Audio", family: "Voice", type: "audio", x: 0.64, y: 0.61, compactX: 0.70, compactY: 0.68, curve: 48, radius: 32, aspect: 1.55, width: "clamp(170px, 17vw, 246px)" },
+      { label: "Audio", family: "Voice", type: "audio", x: 0.64, y: 0.61, compactX: 0.70, compactY: 0.68, standardX: 0.70, standardY: 0.68, curve: 48, radius: 32, aspect: 1.55, width: "clamp(170px, 17vw, 246px)" },
       { label: "Transcript", family: "Voice", type: "transcript", x: 0.81, y: 0.59, mobileX: 0.74, mobileY: 0.54, curve: -44, radius: 27, aspect: 1.35 },
       { label: "Share link", family: "Share", type: "share", x: 0.91, y: 0.43, mobileX: 0.24, mobileY: 0.72, curve: 48, radius: 26, aspect: 1.3 },
-      { label: "Music track", family: "Music", type: "music", x: 0.65, y: 0.76, curve: -50, radius: 29, aspect: 1.4 },
+      { label: "Music track", family: "Music", type: "music", x: 0.65, y: 0.76, standardY: 0.767, curve: -50, radius: 29, aspect: 1.4 },
       { label: "Search result", family: "Search", type: "search", x: 0.52, y: 0.83, curve: 52, radius: 29, aspect: 1.45 },
       { label: "Code snippet", family: "Pages", type: "code", x: 0.75, y: 0.86, curve: -46, radius: 28, aspect: 1.35, width: "clamp(160px, 16vw, 224px)" },
       { label: "Generated variants", family: "Image", type: "variants", x: 0.44, y: 0.91, curve: 48, radius: 25, aspect: 1.3 },
@@ -1122,6 +1122,7 @@
       const random = mulberry32(0x414e5943);
       const mobileLayout = viewportWidth < 768;
       const compactDesktop = !mobileLayout && viewportWidth < 1280;
+      const standardDesktopLayout = viewportWidth >= 1280 && viewportWidth < 1707;
       const coreScale = mobileLayout
         ? Math.min(bounds.width, bounds.height) * 0.30
         : compactDesktop
@@ -1142,10 +1143,14 @@
         ...endpoint,
         x: (mobileLayout
           ? (endpoint.mobileX ?? clamp01(endpoint.x * 0.72 + 0.14))
-          : compactDesktop ? (endpoint.compactX ?? endpoint.x) : endpoint.x) * bounds.width,
+          : compactDesktop
+            ? (endpoint.compactX ?? endpoint.x)
+            : standardDesktopLayout ? (endpoint.standardX ?? endpoint.x) : endpoint.x) * bounds.width,
         y: (mobileLayout
           ? (endpoint.mobileY ?? clamp01(endpoint.y * 0.58 + 0.36))
-          : compactDesktop ? (endpoint.compactY ?? endpoint.y) : endpoint.y) * bounds.height,
+          : compactDesktop
+            ? (endpoint.compactY ?? endpoint.y)
+            : standardDesktopLayout ? (endpoint.standardY ?? endpoint.y) : endpoint.y) * bounds.height,
       }));
       connectionPaths = endpoints.map((endpoint, index) => {
         const direction = index % 2 === 0 ? 1 : -1;

@@ -75,6 +75,7 @@ const authoredContracts = [
   "const installPulseBounds",
   "const desktopCopyClearance = 28",
   "const portalParticleExtent = 0.61",
+  "const standardDesktopLayout = viewportWidth >= 1280 && viewportWidth < 1707",
   "function phaseProgress",
   "function endpointRouteProgress",
   "function updateRouteProgress",
@@ -126,6 +127,31 @@ assert.match(source, /compressed:\s*0\.98[\s\S]*released:\s*1\.03/, "install pul
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
 assert.match(source, /const standardDesktopCenterX = resolveDesktopPortalCenter\([\s\S]*?compactDesktop \? bounds\.width \* 0\.56 : standardDesktopCenterX/, "standard desktop portal center uses measured copy clearance while compact geometry stays unchanged");
 assert.match(source, /: Math\.min\(bounds\.width \* 0\.25, bounds\.height \* 0\.34, 320\)/, "standard desktop portal remains substantial with an explicit size cap");
+assert.match(source, /type: "audio"[^\n]*standardX: 0\.70, standardY: 0\.68/, "standard desktop Audio uses the lower-right route endpoint");
+assert.match(source, /type: "music"[^\n]*standardY: 0\.767/, "standard desktop Music preserves clearance below Audio and above Code");
+assert.match(source, /type: "vision"[^\n]*standardX: 0\.932, standardY: 0\.10/, "standard desktop Vision crop clears Screenshot analysis deterministically");
+assert.match(source, /standardDesktopLayout \? \(endpoint\.standardX \?\? endpoint\.x\) : endpoint\.x/, "standard desktop endpoint x overrides are isolated from wide defaults");
+assert.match(source, /standardDesktopLayout \? \(endpoint\.standardY \?\? endpoint\.y\) : endpoint\.y/, "standard desktop endpoint y overrides are isolated from wide defaults");
+
+const standardViewportCases = [
+  { width: 1280, height: 800, portalCenter: 725 },
+  { width: 1366, height: 768, portalCenter: 748 },
+  { width: 1440, height: 900, portalCenter: 800 },
+];
+for (const { width, height, portalCenter } of standardViewportCases) {
+  const audioWidth = Math.min(246, width * 0.17);
+  const audioLeft = width * 0.70 - audioWidth / 2;
+  assert.ok(audioLeft - (portalCenter + 74 / 2) >= 20, `${width}px Audio keeps at least 20px from portal figures`);
+  assert.ok(height * (0.68 - 0.59) > (70 + 64) / 2, `${width}px Audio clears Transcript vertically`);
+  assert.ok(height * (0.767 - 0.68) > (70 + 62) / 2, `${width}px Audio clears Music vertically`);
+  assert.ok(height * (0.86 - 0.767) > (78 + 62) / 2, `${width}px Music remains clear of Code`);
+}
+for (const width of [1599, 1600]) {
+  const defaultCardWidth = Math.min(176, width * 0.11);
+  const horizontalGap = width * (0.932 - 0.82) - defaultCardWidth;
+  const verticalGap = 900 * (0.20 - 0.10) - (78 + 88) / 2;
+  assert.ok(horizontalGap >= 3 && verticalGap >= 7, `${width}px Vision and Screenshot retain deterministic x/y gaps`);
+}
 
 const portalCenterFunctionMatch = source.match(/function resolveDesktopPortalCenter\([^)]*\)\s*\{[\s\S]*?\n    \}/);
 assert.ok(portalCenterFunctionMatch, "desktop portal center resolver is extractable for numeric verification");
