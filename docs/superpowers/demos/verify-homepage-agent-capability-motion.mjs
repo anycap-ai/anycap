@@ -158,7 +158,7 @@ assert.match(source, /const standardDesktopCenterX = resolveDesktopPortalCenter\
 assert.match(source, /: Math\.min\(bounds\.width \* 0\.25, bounds\.height \* 0\.34, 320\)/, "standard desktop portal remains substantial with an explicit size cap");
 assert.match(source, /type: "audio"[^\n]*standardX: 0\.70, standardY: 0\.68/, "standard desktop Audio uses the lower-right route endpoint");
 assert.match(source, /type: "video"[^\n]*standardY: 0\.435/, "standard desktop Cinematic label clears Editorial image");
-assert.match(source, /type: "transcript"[^\n]*standardY: 0\.565/, "standard desktop Transcript clears the lower Audio endpoint");
+assert.match(source, /type: "transcript"[^\n]*standardX: 0\.87, standardY: 0\.565/, "standard desktop Transcript clears Audio and the Cinematic label band");
 assert.match(source, /type: "music"[^\n]*standardY: 0\.795/, "standard desktop Music preserves its label footprint below Audio");
 assert.match(source, /type: "code"[^\n]*standardY: 0\.935/, "standard desktop Code preserves its label footprint below Music");
 assert.match(source, /type: "variants"[^\n]*standardY: 0\.93/, "standard desktop Generated variants label clears Search result");
@@ -173,7 +173,14 @@ assert.match(source, /modelActiveIndex:\s*anchor\.activeIndex[\s\S]*?modelWave:\
 assert.match(source, /const localModelProgress = particle\.modelActiveIndex < 0[\s\S]*?modelWaveProgress\(particle\.modelWave, progress\)[\s\S]*?resolveParticlePosition\(particle, phases, localRouteProgress, localModelProgress, pulseScale\)/, "routed particles consume their owning model-local progress");
 assert.match(source, /function drawModelConnections\(progress\)[\s\S]*?modelWaveProgress\(path\.modelWave, progress\)/, "model paths consume the same model-local progress");
 assert.match(source, /modelReveal = activeIndex < 0[\s\S]*?modelWaveProgress\(modelState\.modelWave, progress\)/, "model text consumes the same model-local progress");
+assert.match(source, /const modelParticleReveal = particle\.role === "portal"[\s\S]*?smoothstep\(0\.12, 0\.72, localModelProgress\)[\s\S]*?particle\.alpha[\s\S]*?modelParticleReveal/, "non-portal particle alpha follows its owning model-local wave");
 assert.doesNotMatch(source, /mix\(x, particle\.connected\.x, phases\.models\)/, "routed particles no longer connect on one global model phase");
+
+const earlyModelParticleReveal = (() => {
+  const amount = Math.min(1, Math.max(0, (0.20 - 0.12) / (0.72 - 0.12)));
+  return amount * amount * (3 - 2 * amount);
+})();
+assert.ok(earlyModelParticleReveal < 0.05, "future-wave particle clusters remain effectively invisible near local progress .2");
 
 const standardViewportCases = [
   { width: 1280, height: 800, portalCenter: 725 },
@@ -200,6 +207,14 @@ for (const height of [720, 768, 800]) {
   assert.ok(cinematicLabelTop - editorialBodyBottom >= 2, `${height}px Cinematic label clears Editorial body`);
   assert.ok(audioBodyTop - transcriptBodyBottom >= 1.5, `${height}px Audio body clears wrapped Transcript body`);
   assert.ok(variantsLabelTop - searchBodyBottom >= 1.5, `${height}px Generated variants label clears Search result body`);
+}
+{
+  const width = 1280;
+  const cinematicWidth = Math.min(276, width * 0.19);
+  const transcriptWidth = Math.min(176, width * 0.11);
+  const cinematicBodyRight = width * 0.72 + cinematicWidth / 2;
+  const transcriptLabelLeft = width * 0.87 - transcriptWidth / 2 + 4;
+  assert.ok(transcriptLabelLeft - cinematicBodyRight >= 3.9, "1280px Transcript label clears Cinematic body horizontally");
 }
 for (const height of [720, 768, 800, 900]) {
   const labelHeight = 10;
