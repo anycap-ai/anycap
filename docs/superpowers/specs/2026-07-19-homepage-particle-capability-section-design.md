@@ -18,14 +18,18 @@ The demo contains one scroll-pinned section and nothing else. It removes the
 standalone demo hero, page chrome, bridge copy, terminal-style call to action,
 extra sections, and the blue-grey prototype background.
 
-The motion tells a single sequence:
+The motion tells one before-and-after sequence:
 
-1. fragmented particles converge into one AnyCap capability core;
-2. the core opens into multiple connected capability paths;
-3. those paths resolve into creation, understanding, retrieval, storage, and
-   delivery outcomes;
-4. the final composition keeps every outcome visibly connected to the same
-   center.
+1. an agent enters with a narrow, visibly limited capability path;
+2. `anycap install` docks an AnyCap module onto the agent and ignites the
+   central portal;
+3. current mainstream model anchors connect into the portal as one model
+   layer;
+4. model input crosses the AnyCap layer and bursts outward as creation,
+   understanding, retrieval, storage, and delivery capabilities;
+5. finished artifacts resolve from those streams while additional unlabeled
+   routes continue beyond the frame, showing that more models and capabilities
+   will keep joining the same layer.
 
 The visible copy remains concise:
 
@@ -33,6 +37,16 @@ The visible copy remains concise:
 - `Every way to finish.`
 - `Human + agent`
 - `Create. Understand. Find. Manage. Deliver.`
+
+The motion may also show three short, non-interactive proof lines:
+
+- `anycap install` during the docking beat;
+- `Codex · Claude Code · Cursor · any agent` beside the incoming agent lane;
+- `More models. More capabilities. Continuously added.` in the final extension
+  field.
+
+These lines are evidence inside the narrative, not buttons, badges, or a second
+headline.
 
 ## Brand And Layout Fidelity
 
@@ -95,6 +109,34 @@ The center resolves as a thick, hollow particle portal containing one human
 figure and one agent figure. Two understated cursor lanes enter from the copy
 side and reinforce that both actors use the same capability layer.
 
+## Agent, Model, And Capability Layers
+
+The agent is the protagonist of the transition, not just another decorative
+cursor. Before installation, its route is thin, dim, and terminates early. A
+small AnyCap square then travels along the command lane, docks beside the agent,
+and expands into the central portal. The portal must feel assembled from
+particles with weight and suction; it must not simply fade or scale into view.
+
+The model layer sits visually behind and upstream of the portal. Desktop shows
+six to eight text-only model anchors selected from the current sorted inventory
+in `web/src/lib/model-hub.ts` at implementation time. Selection should cover
+image, video, music, and audio rather than overrepresenting one family. Model
+names use restrained Inter text and particle halos; provider logos, trademark
+marks, colorful brand treatments, and a logo wall are not used. Mobile shows
+three representative anchors.
+
+Model streams travel inward toward AnyCap before capability streams travel
+outward. This direction reversal is essential: it makes AnyCap read as the
+layer that converts model access into usable agent capability. The existing 13
+artifact micro-compositions remain the proof of what the connected agent can
+finish.
+
+The final extension field contains additional faint branches, partial clusters,
+and clipped paths that continue past the viewport. Only the closest few receive
+small generic labels such as `More models` or `More capabilities`; distant
+nodes remain unlabeled. This produces an open system rather than a finite list
+of 13 features.
+
 ## Motion Choreography
 
 The section wrapper provides approximately 320 dynamic viewport heights of
@@ -102,34 +144,57 @@ scroll range. Its inner stage pins at `top top` for one viewport height. The
 pinned element itself remains static; GSAP animates its children and drives a
 single normalized progress value for the canvas renderer.
 
-The progress range is divided into four overlapping phases:
+The progress range is divided into five overlapping acts. Percentages describe
+the normalized scroll timeline and are allowed to overlap at the boundaries.
 
-### Converge
+### 0-18%: Limited Agent
 
-Loose particles move inward and resolve into the AnyCap square. The headline is
-already visible so the section does not begin as an empty screen.
+Loose particles drift with a slight directional bias rather than random noise.
+The agent enters from the copy side on one narrow route. The route stops before
+the wider capability field, making the initial limitation legible without an
+error state or negative copy. The human lane remains present at lower emphasis.
 
-### Open
+### 18-36%: Install And Ignite
 
-The center breathes once, then particle streams extend outward. The movement
-communicates that one installation unlocks multiple capability families.
+The transient `anycap install` command resolves, sends a compact AnyCap square
+along the agent route, and docks it beside the agent. Nearby particles
+accelerate inward, overshoot by no more than 3 percent of the portal width, and
+settle into the thick hollow frame. A single restrained compression-and-release
+pulse gives the portal weight. The command then recedes so it cannot be read as
+a CTA.
 
-### Resolve
+### 36-62%: Model Layer Connects
 
-Streams settle into distinct endpoint constellations. Capability labels enter
-with short transform and opacity transitions as their constellations become
-legible.
+Model anchors wake in two or three staggered waves. Their particles and thin
+routes travel toward the portal, with nearer anchors moving first and distant
+anchors following. Each anchor briefly sharpens as its stream reaches AnyCap,
+then returns to secondary contrast. No model card scales up independently and
+all connection timing remains visibly tied to the portal.
 
-### Hold
+### 56-86%: Capability Flood And Artifact Resolve
 
-The center, connecting paths, and all endpoints remain visible long enough to
-read before the pin releases. There is no loop, scroll cue, or unrelated
-continuous motion.
+As model streams cross the portal, their inward motion changes to outward
+capability streams. Capability families do not open simultaneously: Create
+opens first, Understand and Find overlap next, then Manage and Deliver complete
+the field. For every artifact, particles arrive before the DOM surface becomes
+legible. The surface then resolves with opacity, a maximum 14-pixel rise, and a
+`0.94` to `1` scale change. This arrival-before-surface rule prevents the final
+frame from feeling like unrelated cards fading in.
 
-GSAP ScrollTrigger uses `start: "top top"`, `pin: true`, `scrub: 0.8`, and an
-end distance derived from the section scroll range. The animation timeline uses
-linear scroll mapping. Rendering interpolates particle positions to avoid
-abrupt state changes.
+### 86-100%: Open Horizon And Hold
+
+The 13 artifacts hold while lower-alpha branches continue toward partial
+clusters and beyond the viewport. The line `More models. More capabilities.
+Continuously added.` resolves only after the primary outputs are readable. All
+motion settles into a stable final composition before the pin releases. There
+is no loop, scroll cue, ambient orbit, or unrelated continuous motion.
+
+GSAP ScrollTrigger uses `start: "top top"`, `pin: true`, and one numeric scrub
+value in the `0.65` to `0.9` range, tuned in the real browser. The animation
+timeline keeps linear scroll mapping while the renderer applies phase-local
+smoothstep and short overshoot curves. This preserves exact scroll control
+without making every object move at the same speed. Rendering interpolates
+cached particle positions to avoid abrupt state changes.
 
 ## Responsive And Accessibility Behavior
 
@@ -141,13 +206,21 @@ particle count, and shows three representative artifacts: Cinematic video,
 Transcript, and Delivered. The remaining particle routes preserve the sense of
 the wider capability field without making the viewport unreadable.
 
+On mobile, the install beat remains explicit, three model anchors connect in a
+single wave, and capability families collapse into three composite routes. The
+open-horizon branches continue mostly downward so they do not create horizontal
+overflow.
+
 When `prefers-reduced-motion: reduce` is active, pinning and scrubbing are
-disabled. The section renders the final connected composition as a static
-frame. All copy and capability labels remain readable without JavaScript.
+disabled. The section renders the final post-install connected composition as a
+static frame, including representative model anchors and the open-horizon
+extension. All copy and capability labels remain readable without JavaScript.
 
 ## Performance Boundaries
 
 - Use one canvas and one ScrollTrigger for the section.
+- Use one normalized state object for all five acts; do not create separate
+  ScrollTriggers for model anchors, artifacts, or the continuation field.
 - Cap device pixel ratio at 2.
 - Scale particle count by viewport width and reduced-motion preference.
 - Cache particle source and target positions after layout.
@@ -157,6 +230,9 @@ frame. All copy and capability labels remain readable without JavaScript.
 - Pause canvas rendering when the section is not active.
 - Refresh ScrollTrigger only after fonts are ready and after meaningful layout
   changes.
+- Precompute inward model paths, portal positions, outward capability paths,
+  and continuation paths during layout; never calculate bezier controls inside
+  the render loop.
 
 ## Demo Architecture
 
@@ -185,8 +261,16 @@ Verification covers:
 - desktop and mobile layouts have no horizontal overflow;
 - ScrollTrigger creates one pinned sequence and releases cleanly;
 - the first, middle, and final scroll states match the approved narrative;
+- the initial frame shows a limited agent path, the installation beat visibly
+  docks AnyCap to the agent, and model particles travel inward before
+  capability particles travel outward;
+- desktop shows six to eight current model anchors sourced from
+  `web/src/lib/model-hub.ts`, while mobile shows three;
+- each artifact remains hidden until its particle stream reaches the endpoint;
 - the final desktop frame contains the particle portal, human and agent figures,
   cursor lanes, and all 13 artifact micro-compositions;
+- the final frame contains continuation branches beyond the 13 artifacts and
+  the exact line `More models. More capabilities. Continuously added.`;
 - the final mobile frame keeps the portal readable and shows the three selected
   artifact micro-compositions without copy collisions;
 - reduced motion displays the static final composition;
@@ -198,12 +282,14 @@ Verification covers:
 
 - changing the homepage hero or any other production section;
 - changing production copy, routes, metadata, structured data, or analytics;
-- adding model logos, agent logos, provider branding, or a logo wall;
+- adding model or agent logos, provider branding, or a logo wall; restrained
+  text-only names from the current model inventory are in scope;
 - building an interactive dashboard or duplicating the homepage hero,
   navigation, terminal, or conversion controls;
 - adding dark mode, theme switching, cursor effects, parallax, or smooth-scroll
   libraries;
-- adding an install button or another conversion call to action;
+- adding an install button or another conversion call to action; the transient
+  `anycap install` command is a motion beat, not an interactive control;
 - integrating the section into the production homepage before the user approves
   the visual demo;
 - creating another git branch.
