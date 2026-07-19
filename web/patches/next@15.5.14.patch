@@ -1,0 +1,59 @@
+diff --git a/dist/build/templates/edge-ssr-app.js b/dist/build/templates/edge-ssr-app.js
+--- a/dist/build/templates/edge-ssr-app.js
++++ b/dist/build/templates/edge-ssr-app.js
+@@ -37,5 +37,6 @@ const _apppaths = require("../../shared/lib/router/utils/app-paths");
+ const _apiutils = require("../../server/api-utils");
+ const _webonclose = require("../../server/web/web-on-close");
++const _streamingmetadata = require("../../server/lib/streaming-metadata");
+ function _getRequireWildcardCache(nodeInterop) {
+     if (typeof WeakMap !== "function") return null;
+     var cacheBabelInterop = new WeakMap();
+@@ -114,7 +115,8 @@ async function requestHandler(req, event) {
+     }
+     const { query, params, buildId, buildManifest, prerenderManifest, reactLoadableManifest, clientReferenceManifest, subresourceIntegrityManifest, dynamicCssManifest, nextFontManifest, resolvedPathname, serverActionsManifest, interceptionRoutePatterns, routerServerContext } = prepareResult;
+     const isPossibleServerAction = (0, _serveractionrequestmeta.getIsPossibleServerAction)(req);
+-    const botType = (0, _isbot.getBotType)(req.headers.get('User-Agent') || '');
++    const userAgent = req.headers.get('User-Agent') || '';
++    const botType = (0, _isbot.getBotType)(userAgent);
+     const { isOnDemandRevalidate } = (0, _apiutils.checkIsOnDemandRevalidate)(req, prerenderManifest.preview);
+     const closeController = new _webonclose.CloseController();
+     const renderContext = {
+@@ -136,7 +138,7 @@ async function requestHandler(req, event) {
+             page: srcPage,
+             postponed: undefined,
+             shouldWaitOnAllReady: false,
+-            serveStreamingMetadata: true,
++            serveStreamingMetadata: (0, _streamingmetadata.shouldServeStreamingMetadata)(userAgent, nextConfig.htmlLimitedBots),
+             supportsDynamicResponse: true,
+             buildManifest,
+             nextFontManifest,
+diff --git a/dist/esm/build/templates/edge-ssr-app.js b/dist/esm/build/templates/edge-ssr-app.js
+--- a/dist/esm/build/templates/edge-ssr-app.js
++++ b/dist/esm/build/templates/edge-ssr-app.js
+@@ -15,6 +15,7 @@ import { interopDefault } from '../../lib/interop-default';
+ import { normalizeAppPath } from '../../shared/lib/router/utils/app-paths';
+ import { checkIsOnDemandRevalidate } from '../../server/api-utils';
+ import { CloseController } from '../../server/web/web-on-close';
++import { shouldServeStreamingMetadata } from '../../server/lib/streaming-metadata';
+ // OPTIONAL_IMPORT:incrementalCacheHandler
+ // Initialize the cache handlers interface.
+ initializeCacheHandlers();
+@@ -51,7 +52,8 @@ async function requestHandler(req, event) {
+     }
+     const { query, params, buildId, buildManifest, prerenderManifest, reactLoadableManifest, clientReferenceManifest, subresourceIntegrityManifest, dynamicCssManifest, nextFontManifest, resolvedPathname, serverActionsManifest, interceptionRoutePatterns, routerServerContext } = prepareResult;
+     const isPossibleServerAction = getIsPossibleServerAction(req);
+-    const botType = getBotType(req.headers.get('User-Agent') || '');
++    const userAgent = req.headers.get('User-Agent') || '';
++    const botType = getBotType(userAgent);
+     const { isOnDemandRevalidate } = checkIsOnDemandRevalidate(req, prerenderManifest.preview);
+     const closeController = new CloseController();
+     const renderContext = {
+@@ -73,7 +75,7 @@ async function requestHandler(req, event) {
+             page: srcPage,
+             postponed: undefined,
+             shouldWaitOnAllReady: false,
+-            serveStreamingMetadata: true,
++            serveStreamingMetadata: shouldServeStreamingMetadata(userAgent, nextConfig.htmlLimitedBots),
+             supportsDynamicResponse: true,
+             buildManifest,
+             nextFontManifest,

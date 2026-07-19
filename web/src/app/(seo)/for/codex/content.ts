@@ -5,7 +5,7 @@ import { getLocaleConfig, siteConfig, type SiteLocale } from "@/lib/site";
 
 export const FOR_CODEX_PATH = "/for/codex";
 
-const LAST_UPDATED_ISO = "2026-04-05";
+const LAST_UPDATED_ISO = "2026-07-11";
 const CODEX_DOCS_URL = "https://developers.openai.com/codex/use-cases";
 const VIDEO_SRC = "https://cdn.anycap.ai/page_resource/for_agent/for_codex.mp4";
 const VIDEO_POSTER_URL = `${siteConfig.url}/opengraph-image.png`;
@@ -54,11 +54,30 @@ type FaqItem = {
   answer: string;
 };
 
-type WorkflowPanel = {
+type CodexTaskPathKey = "generate-video" | "image-to-video" | "analyze-video";
+
+type CodexTaskPathCopy = {
   title: string;
+  description: string;
+  fit: string;
+  limitation: string;
+  authorityCtaLabel: string;
+  installCtaLabel: string;
+};
+
+type CodexTaskPathFact = {
+  key: CodexTaskPathKey;
   command: string;
   outputLines: readonly string[];
+  additionalFieldKeys: readonly string[];
+  authorityHref:
+    | "/capabilities/video-generation"
+    | "/capabilities/video-analysis"
+    | "/guides/how-to-add-video-generation-to-ai-agent";
+  installHref: "/start";
 };
+
+type CodexTaskPath = CodexTaskPathFact & CodexTaskPathCopy;
 
 type PageContent = {
   metadata: {
@@ -113,11 +132,17 @@ type PageContent = {
     description: string;
     cards: readonly { title: string; description: string }[];
   };
-  workflow: {
+  taskPaths: {
     eyebrow: string;
     title: string;
     description: string;
-    panels: readonly WorkflowPanel[];
+    commandLabel: string;
+    outputLabel: string;
+    additionalFieldsLabel: string;
+    additionalFieldsIntro: string;
+    fitLabel: string;
+    limitationLabel: string;
+    items: Record<CodexTaskPathKey, CodexTaskPathCopy>;
   };
   gapTable: {
     eyebrow: string;
@@ -168,6 +193,74 @@ type PageContent = {
   };
 };
 
+const CODEX_TASK_PATH_ORDER: readonly CodexTaskPathKey[] = [
+  "generate-video",
+  "image-to-video",
+  "analyze-video",
+];
+
+const CODEX_TASK_PATH_FACTS: Record<CodexTaskPathKey, CodexTaskPathFact> = {
+  "generate-video": {
+    key: "generate-video",
+    command:
+      'anycap video generate --model <model-id> --mode text-to-video --prompt "a short product walkthrough with a slow camera push-in" -o codex-demo.mp4',
+    outputLines: [
+      "{",
+      '  "status": "success",',
+      '  "local_path": "/workspace/codex-demo.mp4",',
+      '  "model": "<model-id>",',
+      '  "credits_used": 20,',
+      '  "request_id": "req_abc123"',
+      "}",
+    ],
+    additionalFieldKeys: ["url", "task_id", "trace_id", "hint"],
+    authorityHref: "/capabilities/video-generation",
+    installHref: "/start",
+  },
+  "image-to-video": {
+    key: "image-to-video",
+    command:
+      'anycap video generate --model <model-id> --mode image-to-video --prompt "animate this product frame with subtle camera movement" --param images=./product-frame.png -o animated-frame.mp4',
+    outputLines: [
+      "{",
+      '  "status": "success",',
+      '  "local_path": "/workspace/animated-frame.mp4",',
+      '  "model": "<model-id>",',
+      '  "credits_used": 20,',
+      '  "request_id": "req_def456"',
+      "}",
+    ],
+    additionalFieldKeys: ["url", "task_id", "trace_id", "hint"],
+    authorityHref: "/guides/how-to-add-video-generation-to-ai-agent",
+    installHref: "/start",
+  },
+  "analyze-video": {
+    key: "analyze-video",
+    command:
+      'anycap actions video-read --file ./recording.mp4 --instruction "Summarize the key events, QA findings, and recommended next action"',
+    outputLines: [
+      "{",
+      '  "status": "success",',
+      '  "content": "The recording shows the checkout modal clipping its submit button on a narrow viewport.",',
+      '  "credit_cost": 10,',
+      '  "request_id": "req_ghi789"',
+      "}",
+    ],
+    additionalFieldKeys: ["trace_id"],
+    authorityHref: "/capabilities/video-analysis",
+    installHref: "/start",
+  },
+};
+
+function buildCodexTaskPaths(
+  copy: Record<CodexTaskPathKey, CodexTaskPathCopy>,
+): readonly CodexTaskPath[] {
+  return CODEX_TASK_PATH_ORDER.map((key) => ({
+    ...CODEX_TASK_PATH_FACTS[key],
+    ...copy[key],
+  }));
+}
+
 function makeGapRows(rows: readonly GapRowSource[]): readonly CapabilityGapRow[] {
   return rows.map((row) => ({
     capability: row.capability,
@@ -181,15 +274,15 @@ function makeGapRows(rows: readonly GapRowSource[]): readonly CapabilityGapRow[]
 
 const englishContent = {
   metadata: {
-    title: "Codex + AnyCap — Add Image, Video & Vision",
+    title: "Codex Video Generation & Analysis with AnyCap",
     description:
-      "Install one skill, tell Codex what you need, and let AnyCap supply image generation, video generation, image understanding, and video analysis through one CLI.",
-    openGraphTitle: "Codex tools and capabilities — Add image, video, and vision with AnyCap",
+      "Add video generation, image-to-video, and video analysis to Codex through one skill and CLI. See real commands, outputs, limits, and setup.",
+    openGraphTitle: "Codex Video Generation & Analysis with AnyCap",
     openGraphDescription:
-      "Install one skill, tell Codex what you need, and let AnyCap supply image generation, video generation, image understanding, and video analysis through one CLI.",
-    articleHeadline: "Codex tools and capabilities — Add image, video, and vision with AnyCap",
+      "Add video generation, image-to-video, and video analysis to Codex through one skill and CLI. See real commands, outputs, limits, and setup.",
+    articleHeadline: "Codex Video Generation & Analysis with AnyCap",
     articleDescription:
-      "Guide for adding image generation, video generation, image understanding, and video analysis to OpenAI Codex through one capability runtime.",
+      "Add video generation, image-to-video, and video analysis to Codex through one skill and CLI. See real commands, outputs, limits, and setup.",
     articleAbout: ["Codex", "AnyCap CLI", "agent skills", "capability runtime"],
     articleKeywords: [
       "codex tools",
@@ -208,7 +301,7 @@ const englishContent = {
   ],
   hero: {
     eyebrow: "For Codex",
-    lastUpdatedLabel: "Last updated April 5, 2026",
+    lastUpdatedLabel: "Last updated July 11, 2026",
     titleLine1: "Codex is strong at code and terminal work.",
     titleLine2: "It still needs image, video, and vision tools.",
     videoSrc: VIDEO_SRC,
@@ -287,43 +380,43 @@ const englishContent = {
       },
     ],
   },
-  workflow: {
-    eyebrow: "Real workflow",
-    title: "What a Codex + AnyCap session looks like",
+  taskPaths: {
+    eyebrow: "Choose a video task",
+    title: "What should Codex do next?",
     description:
-      "These are real CLI commands and outputs. Each example runs directly inside the Codex terminal session — no external tools, dashboards, or browser tabs.",
-    panels: [
-      {
-        title: "Image generation — text-to-image",
-        command:
-          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
-        outputLines: [
-          "Generating image with seedream-5...",
-          "Image saved to dashboard-hero.png (1024x1024, 487KB)",
-          "CDN URL: https://cdn.anycap.ai/...",
-        ],
+      "Choose the path that matches the next Codex step. Commands use current AnyCap CLI syntax, while the JSON snippets show representative rather than exhaustive response fields. The 20-credit generation totals are illustrative and vary by model and output settings; every successful video-read request costs a fixed 10 credits.",
+    commandLabel: "Command",
+    outputLabel: "Result",
+    additionalFieldsLabel: "Additional successful output fields",
+    additionalFieldsIntro: "The JSON above is representative. When available, the CLI may also include:",
+    fitLabel: "Best when",
+    limitationLabel: "Not a fit when",
+    items: {
+      "generate-video": {
+        title: "Generate video from a text brief",
+        description: "Create a new video clip directly from a scene description in the Codex terminal.",
+        fit: "A new clip should start from a scene you can describe in words.",
+        limitation: "You need a manual timeline editor or deterministic frame-level control.",
+        authorityCtaLabel: "Open video generation",
+        installCtaLabel: "Install AnyCap",
       },
-      {
-        title: "Image understanding — screenshot analysis",
-        command:
-          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
-        outputLines: [
-          "The modal overlay clips the submit button at viewport widths below 640px.",
-          "The button is partially hidden behind the bottom edge of the dialog container.",
-          "This appears to be a CSS overflow issue on the parent .modal-body element.",
-        ],
+      "image-to-video": {
+        title: "Turn an image into video",
+        description: "Animate an existing still while preserving its starting composition or identity.",
+        fit: "Composition or identity must begin with an existing still.",
+        limitation: "The selected model lacks image-to-video support or the still is not ready.",
+        authorityCtaLabel: "Open the image-to-video guide",
+        installCtaLabel: "Install AnyCap",
       },
-      {
-        title: "Video generation — demo clip",
-        command:
-          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
-        outputLines: [
-          "Generating video with veo-3-1...",
-          "Video ready (8s, 1080p, 12.4MB)",
-          "CDN URL: https://cdn.anycap.ai/...",
-        ],
+      "analyze-video": {
+        title: "Analyze an existing video",
+        description: "Turn a recording into grounded findings and a useful next step inside the same task.",
+        fit: "A recording must become QA notes, extracted content, or a next action.",
+        limitation: "You need a fixed typed schema for scenes or events.",
+        authorityCtaLabel: "Open video analysis",
+        installCtaLabel: "Install AnyCap",
       },
-    ],
+    },
   },
   gapTable: {
     eyebrow: "Capability gap",
@@ -437,14 +530,14 @@ const englishContent = {
       title: "Image Understanding",
       href: "/capabilities/image-understanding",
       summary: "Best next page when Codex needs to interpret screenshots, diagrams, OCR, or design feedback.",
-      command: "anycap image read",
+      command: "anycap actions image-read",
     },
     {
       eyebrow: "Analysis",
       title: "Video Analysis",
       href: "/capabilities/video-analysis",
       summary: "Best next page when Codex needs to inspect recordings and extract structured details.",
-      command: "anycap video read",
+      command: "anycap actions video-read",
     },
   ],
   modelSection: {
@@ -562,15 +655,15 @@ const englishContent = {
 
 const portugueseContent = {
   metadata: {
-    title: "Ferramentas e capacidades para Codex — Adicione imagem, vídeo e visão com o AnyCap",
+    title: "Geração e análise de vídeo no Codex com AnyCap",
     description:
-      "Adicione uma skill ao Codex, diga o que você precisa em linguagem natural e deixe o AnyCap fornecer geração de imagem, geração de vídeo, compreensão de imagem e análise de vídeo por meio de uma única CLI.",
-    openGraphTitle: "Ferramentas e capacidades para Codex — Adicione imagem, vídeo e visão com o AnyCap",
+      "Adicione geração de vídeo, image-to-video e análise de vídeo ao Codex com uma skill e uma CLI, incluindo comandos, resultados, limites e setup.",
+    openGraphTitle: "Geração e análise de vídeo no Codex com AnyCap",
     openGraphDescription:
-      "Adicione uma skill ao Codex, diga o que você precisa em linguagem natural e deixe o AnyCap fornecer geração de imagem, geração de vídeo, compreensão de imagem e análise de vídeo por meio de uma única CLI.",
-    articleHeadline: "Ferramentas e capacidades para Codex — Adicione imagem, vídeo e visão com o AnyCap",
+      "Adicione geração de vídeo, image-to-video e análise de vídeo ao Codex com uma skill e uma CLI, incluindo comandos, resultados, limites e setup.",
+    articleHeadline: "Geração e análise de vídeo no Codex com AnyCap",
     articleDescription:
-      "Guia para adicionar geração de imagem, geração de vídeo, compreensão de imagem e análise de vídeo ao OpenAI Codex por meio de um único runtime de capacidades.",
+      "Adicione geração de vídeo, image-to-video e análise de vídeo ao Codex com uma skill e uma CLI, incluindo comandos, resultados, limites e setup.",
     articleAbout: ["Codex", "AnyCap CLI", "skills de agente", "runtime de capacidades"],
     articleKeywords: [
       "ferramentas do codex",
@@ -589,7 +682,7 @@ const portugueseContent = {
   ],
   hero: {
     eyebrow: "Para Codex",
-    lastUpdatedLabel: "Atualizado em 5 de abril de 2026",
+    lastUpdatedLabel: "Atualizado em 11 de julho de 2026",
     titleLine1: "O Codex é forte em código e trabalho no terminal.",
     titleLine2: "Mas ainda precisa de ferramentas de imagem, vídeo e visão.",
     videoSrc: VIDEO_SRC,
@@ -668,43 +761,43 @@ const portugueseContent = {
       },
     ],
   },
-  workflow: {
-    eyebrow: "Fluxo real",
-    title: "Como é uma sessão de Codex + AnyCap",
+  taskPaths: {
+    eyebrow: "Escolha uma tarefa de vídeo",
+    title: "O que o Codex deve fazer agora?",
     description:
-      "Estes são comandos e saídas reais da CLI. Cada exemplo roda diretamente dentro da sessão de terminal do Codex — sem ferramentas externas, dashboards ou abas do navegador.",
-    panels: [
-      {
-        title: "Geração de imagem — text-to-image",
-        command:
-          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
-        outputLines: [
-          "Gerando imagem com seedream-5...",
-          "Imagem salva em dashboard-hero.png (1024x1024, 487KB)",
-          "URL da CDN: https://cdn.anycap.ai/...",
-        ],
+      "Escolha o caminho que corresponde ao próximo passo do Codex. Os comandos usam a sintaxe atual da CLI do AnyCap, enquanto os trechos JSON mostram campos representativos, não formatos de resposta exaustivos. Os totais de 20 créditos nos exemplos de geração são ilustrativos e variam conforme o modelo e as configurações de saída; cada solicitação video-read concluída com sucesso custa 10 créditos fixos.",
+    commandLabel: "Comando",
+    outputLabel: "Resultado",
+    additionalFieldsLabel: "Campos adicionais em respostas bem-sucedidas",
+    additionalFieldsIntro: "O JSON acima é representativo. Quando disponíveis, a CLI também pode incluir:",
+    fitLabel: "Melhor quando",
+    limitationLabel: "Não é ideal quando",
+    items: {
+      "generate-video": {
+        title: "Gerar vídeo a partir de um briefing de texto",
+        description: "Crie um novo clipe diretamente de uma descrição de cena no terminal do Codex.",
+        fit: "Um novo clipe deve começar a partir de uma cena descrita em palavras.",
+        limitation: "Você precisa de um editor manual de timeline ou controle determinístico quadro a quadro.",
+        authorityCtaLabel: "Abrir geração de vídeo",
+        installCtaLabel: "Instalar o AnyCap",
       },
-      {
-        title: "Compreensão de imagem — análise de screenshot",
-        command:
-          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
-        outputLines: [
-          "A camada modal corta o botão de envio em larguras de viewport abaixo de 640px.",
-          "O botão fica parcialmente escondido atrás da borda inferior do contêiner do diálogo.",
-          "Isso parece ser um problema de overflow CSS no elemento pai `.modal-body`.",
-        ],
+      "image-to-video": {
+        title: "Transformar uma imagem em vídeo",
+        description: "Anime uma imagem estática existente preservando sua composição ou identidade inicial.",
+        fit: "A composição ou a identidade precisa começar por uma imagem estática existente.",
+        limitation: "O modelo selecionado não oferece image-to-video ou a imagem estática ainda não está pronta.",
+        authorityCtaLabel: "Abrir o guia de image-to-video",
+        installCtaLabel: "Instalar o AnyCap",
       },
-      {
-        title: "Geração de vídeo — clipe demo",
-        command:
-          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
-        outputLines: [
-          "Gerando vídeo com veo-3-1...",
-          "Vídeo pronto (8s, 1080p, 12.4MB)",
-          "URL da CDN: https://cdn.anycap.ai/...",
-        ],
+      "analyze-video": {
+        title: "Analisar um vídeo existente",
+        description: "Converta uma gravação em descobertas fundamentadas e um próximo passo útil na mesma tarefa.",
+        fit: "Uma gravação precisa virar notas de QA, conteúdo extraído ou uma próxima ação.",
+        limitation: "Você precisa de um schema tipado e fixo para cenas ou eventos.",
+        authorityCtaLabel: "Abrir análise de vídeo",
+        installCtaLabel: "Instalar o AnyCap",
       },
-    ],
+    },
   },
   gapTable: {
     eyebrow: "Lacuna de capacidade",
@@ -818,14 +911,14 @@ const portugueseContent = {
       title: "Compreensão de imagem",
       href: "/capabilities/image-understanding",
       summary: "Melhor página seguinte quando o Codex precisa interpretar screenshots, diagramas, OCR ou feedback de design.",
-      command: "anycap image read",
+      command: "anycap actions image-read",
     },
     {
       eyebrow: "Análise",
       title: "Análise de vídeo",
       href: "/capabilities/video-analysis",
       summary: "Melhor página seguinte quando o Codex precisa inspecionar gravações e extrair detalhes estruturados.",
-      command: "anycap video read",
+      command: "anycap actions video-read",
     },
   ],
   modelSection: {
@@ -943,15 +1036,15 @@ const portugueseContent = {
 
 const indonesianContent = {
   metadata: {
-    title: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+    title: "Generasi dan analisis video di Codex dengan AnyCap",
     description:
-      "Pasang satu skill, beri tahu Codex apa yang Anda butuhkan, dan biarkan AnyCap menyediakan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat satu CLI.",
-    openGraphTitle: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+      "Tambahkan generasi video, image-to-video, dan analisis video ke Codex melalui satu skill dan CLI dengan command, output, batasan, dan setup nyata.",
+    openGraphTitle: "Generasi dan analisis video di Codex dengan AnyCap",
     openGraphDescription:
-      "Pasang satu skill, beri tahu Codex apa yang Anda butuhkan, dan biarkan AnyCap menyediakan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video lewat satu CLI.",
-    articleHeadline: "Alat dan kemampuan Codex — Tambahkan gambar, video, dan visi dengan AnyCap",
+      "Tambahkan generasi video, image-to-video, dan analisis video ke Codex melalui satu skill dan CLI dengan command, output, batasan, dan setup nyata.",
+    articleHeadline: "Generasi dan analisis video di Codex dengan AnyCap",
     articleDescription:
-      "Panduan menambahkan pembuatan gambar, pembuatan video, pemahaman gambar, dan analisis video ke OpenAI Codex melalui satu runtime kemampuan.",
+      "Tambahkan generasi video, image-to-video, dan analisis video ke Codex melalui satu skill dan CLI dengan command, output, batasan, dan setup nyata.",
     articleAbout: ["Codex", "AnyCap CLI", "skill agen", "runtime kemampuan"],
     articleKeywords: [
       "alat codex",
@@ -970,7 +1063,7 @@ const indonesianContent = {
   ],
   hero: {
     eyebrow: "Untuk Codex",
-    lastUpdatedLabel: "Terakhir diperbarui 5 April 2026",
+    lastUpdatedLabel: "Terakhir diperbarui 11 Juli 2026",
     titleLine1: "Codex kuat untuk kode dan kerja terminal.",
     titleLine2: "Ia masih membutuhkan alat gambar, video, dan visi.",
     videoSrc: VIDEO_SRC,
@@ -1049,43 +1142,43 @@ const indonesianContent = {
       },
     ],
   },
-  workflow: {
-    eyebrow: "Alur kerja nyata",
-    title: "Sesi Codex + AnyCap terlihat seperti ini",
+  taskPaths: {
+    eyebrow: "Pilih tugas video",
+    title: "Apa yang harus Codex lakukan selanjutnya?",
     description:
-      "Ini perintah dan keluaran CLI nyata. Setiap contoh berjalan langsung di sesi terminal Codex — tanpa alat eksternal, dasbor, atau tab browser.",
-    panels: [
-      {
-        title: "Pembuatan gambar — teks ke gambar",
-        command:
-          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
-        outputLines: [
-          "Membuat gambar dengan seedream-5...",
-          "Gambar disimpan ke dashboard-hero.png (1024x1024, 487KB)",
-          "URL CDN: https://cdn.anycap.ai/...",
-        ],
+      "Pilih jalur yang sesuai dengan langkah Codex berikutnya. Command menggunakan sintaks CLI AnyCap saat ini, sedangkan cuplikan JSON menampilkan field representatif, bukan bentuk respons yang lengkap. Total 20 kredit pada contoh generasi bersifat ilustratif dan bervariasi menurut model serta pengaturan output; setiap permintaan video-read yang berhasil dikenai biaya tetap 10 kredit.",
+    commandLabel: "Perintah",
+    outputLabel: "Hasil",
+    additionalFieldsLabel: "Field tambahan pada output yang berhasil",
+    additionalFieldsIntro: "JSON di atas bersifat representatif. Jika tersedia, CLI juga dapat menyertakan:",
+    fitLabel: "Cocok saat",
+    limitationLabel: "Tidak cocok saat",
+    items: {
+      "generate-video": {
+        title: "Buat video dari brief teks",
+        description: "Buat klip baru langsung dari deskripsi adegan di terminal Codex.",
+        fit: "Klip baru harus dimulai dari adegan yang dijelaskan dengan kata-kata.",
+        limitation: "Anda memerlukan editor timeline manual atau kontrol frame-level yang deterministik.",
+        authorityCtaLabel: "Buka generasi video",
+        installCtaLabel: "Instal AnyCap",
       },
-      {
-        title: "Pemahaman gambar — analisis tangkapan layar",
-        command:
-          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
-        outputLines: [
-          "Lapisan modal memotong tombol kirim pada lebar viewport di bawah 640px.",
-          "Tombol sebagian tersembunyi di balik tepi bawah wadah dialog.",
-          "Ini tampak seperti masalah overflow CSS pada elemen induk .modal-body.",
-        ],
+      "image-to-video": {
+        title: "Ubah gambar menjadi video",
+        description: "Animasikan gambar diam yang ada sambil mempertahankan komposisi atau identitas awalnya.",
+        fit: "Komposisi atau identitas harus dimulai dari gambar diam yang sudah ada.",
+        limitation: "Model yang dipilih tidak mendukung image-to-video atau gambar diamnya belum siap.",
+        authorityCtaLabel: "Buka panduan image-to-video",
+        installCtaLabel: "Instal AnyCap",
       },
-      {
-        title: "Pembuatan video — klip demo",
-        command:
-          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
-        outputLines: [
-          "Membuat video dengan veo-3-1...",
-          "Video siap (8s, 1080p, 12.4MB)",
-          "URL CDN: https://cdn.anycap.ai/...",
-        ],
+      "analyze-video": {
+        title: "Analisis video yang sudah ada",
+        description: "Ubah rekaman menjadi temuan yang berdasar dan tindakan berikutnya dalam tugas yang sama.",
+        fit: "Rekaman harus diubah menjadi catatan QA, konten yang diekstrak, atau tindakan berikutnya.",
+        limitation: "Anda memerlukan skema bertipe tetap untuk adegan atau peristiwa.",
+        authorityCtaLabel: "Buka analisis video",
+        installCtaLabel: "Instal AnyCap",
       },
-    ],
+    },
   },
   gapTable: {
     eyebrow: "Celah kemampuan",
@@ -1199,14 +1292,14 @@ const indonesianContent = {
       title: "Pemahaman Gambar",
       href: "/capabilities/image-understanding",
       summary: "Halaman berikutnya terbaik ketika Codex perlu menafsirkan tangkapan layar, diagram, OCR, atau umpan balik desain.",
-      command: "anycap image read",
+      command: "anycap actions image-read",
     },
     {
       eyebrow: "Analisis",
       title: "Analisis Video",
       href: "/capabilities/video-analysis",
       summary: "Halaman berikutnya terbaik ketika Codex perlu memeriksa rekaman dan mengekstrak detail terstruktur.",
-      command: "anycap video read",
+      command: "anycap actions video-read",
     },
   ],
   modelSection: {
@@ -1324,15 +1417,15 @@ const indonesianContent = {
 
 const germanContent = {
   metadata: {
-    title: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+    title: "Videogenerierung und Videoanalyse in Codex mit AnyCap",
     description:
-      "Installieren Sie einen Skill, sagen Sie Codex, was Sie brauchen, und lassen Sie AnyCap Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine CLI bereitstellen.",
-    openGraphTitle: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+      "Ergänzen Sie Codex über einen Skill und eine CLI um Videogenerierung, Image-to-Video und Videoanalyse samt Befehlen, Ergebnissen, Grenzen und Setup.",
+    openGraphTitle: "Videogenerierung und Videoanalyse in Codex mit AnyCap",
     openGraphDescription:
-      "Installieren Sie einen Skill, sagen Sie Codex, was Sie brauchen, und lassen Sie AnyCap Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse über eine CLI bereitstellen.",
-    articleHeadline: "Codex Tools und Capabilities – Bild, Video und Vision mit AnyCap hinzufügen",
+      "Ergänzen Sie Codex über einen Skill und eine CLI um Videogenerierung, Image-to-Video und Videoanalyse samt Befehlen, Ergebnissen, Grenzen und Setup.",
+    articleHeadline: "Videogenerierung und Videoanalyse in Codex mit AnyCap",
     articleDescription:
-      "Anleitung zum Hinzufügen von Bildgenerierung, Videogenerierung, Bildverständnis und Videoanalyse zu OpenAI Codex über eine einzige Capability-Runtime.",
+      "Ergänzen Sie Codex über einen Skill und eine CLI um Videogenerierung, Image-to-Video und Videoanalyse samt Befehlen, Ergebnissen, Grenzen und Setup.",
     articleAbout: ["Codex", "AnyCap CLI", "Agent-Skills", "Capability-Runtime"],
     articleKeywords: [
       "codex tools",
@@ -1351,7 +1444,7 @@ const germanContent = {
   ],
   hero: {
     eyebrow: "Für Codex",
-    lastUpdatedLabel: "Zuletzt aktualisiert am 5. April 2026",
+    lastUpdatedLabel: "Zuletzt aktualisiert am 11. Juli 2026",
     titleLine1: "Codex ist stark in Code und Terminal-Arbeit.",
     titleLine2: "Es braucht weiterhin Tools für Bild, Video und Vision.",
     videoSrc: VIDEO_SRC,
@@ -1430,43 +1523,44 @@ const germanContent = {
       },
     ],
   },
-  workflow: {
-    eyebrow: "Realer Workflow",
-    title: "Wie eine Sitzung mit Codex + AnyCap aussieht",
+  taskPaths: {
+    eyebrow: "Videoaufgabe auswählen",
+    title: "Was soll Codex als Nächstes tun?",
     description:
-      "Das sind echte CLI-Befehle und Ausgaben. Jedes Beispiel läuft direkt innerhalb der Codex-Terminal-Sitzung – ohne externe Tools, Dashboards oder Browser-Tabs.",
-    panels: [
-      {
-        title: "Bildgenerierung – Text zu Bild",
-        command:
-          'anycap image generate --model seedream-5 --prompt "a minimal SaaS dashboard on a light background, clean UI, rounded corners" -o dashboard-hero.png',
-        outputLines: [
-          "Generating image with seedream-5...",
-          "Image saved to dashboard-hero.png (1024x1024, 487KB)",
-          "CDN URL: https://cdn.anycap.ai/...",
-        ],
+      "Wählen Sie den Pfad für den nächsten Codex-Schritt. Die Befehle verwenden die aktuelle Syntax der AnyCap CLI, während die JSON-Ausschnitte repräsentative Felder statt vollständiger Antwortstrukturen zeigen. Die in den Generierungsbeispielen gezeigten 20 Credits sind Richtwerte und variieren je nach Modell und Ausgabeeinstellungen; jede erfolgreiche video-read-Anfrage kostet fest 10 Credits.",
+    commandLabel: "Befehl",
+    outputLabel: "Ergebnis",
+    additionalFieldsLabel: "Zusätzliche Felder bei erfolgreicher Ausgabe",
+    additionalFieldsIntro:
+      "Das JSON oben ist repräsentativ. Sofern verfügbar, kann die CLI zusätzlich enthalten:",
+    fitLabel: "Am besten wenn",
+    limitationLabel: "Nicht geeignet wenn",
+    items: {
+      "generate-video": {
+        title: "Video aus einem Textbriefing generieren",
+        description: "Erstellen Sie direkt im Codex-Terminal einen neuen Clip aus einer Szenenbeschreibung.",
+        fit: "Ein neuer Clip soll mit einer beschriebenen Szene beginnen.",
+        limitation: "Sie benötigen einen manuellen Timeline-Editor oder deterministische Kontrolle auf Einzelbild-Ebene.",
+        authorityCtaLabel: "Videogenerierung öffnen",
+        installCtaLabel: "AnyCap installieren",
       },
-      {
-        title: "Bildverständnis – Screenshot-Analyse",
-        command:
-          'anycap image read --file ./bug-screenshot.png --prompt "What UI issue do you see?"',
-        outputLines: [
-          "The modal overlay clips the submit button at viewport widths below 640px.",
-          "The button is partially hidden behind the bottom edge of the dialog container.",
-          "This appears to be a CSS overflow issue on the parent .modal-body element.",
-        ],
+      "image-to-video": {
+        title: "Ein Bild in ein Video verwandeln",
+        description: "Animieren Sie ein vorhandenes Standbild und bewahren Sie seine Komposition oder Identität.",
+        fit: "Komposition oder Identität müssen von einem vorhandenen Standbild ausgehen.",
+        limitation: "Das ausgewählte Modell unterstützt kein Image-to-Video oder das Standbild ist noch nicht bereit.",
+        authorityCtaLabel: "Image-to-Video-Leitfaden öffnen",
+        installCtaLabel: "AnyCap installieren",
       },
-      {
-        title: "Videogenerierung – Demo-Clip",
-        command:
-          'anycap video generate --model veo-3-1 --prompt "a developer typing in a dark terminal, smooth camera push-in, ambient desk lighting"',
-        outputLines: [
-          "Generating video with veo-3-1...",
-          "Video ready (8s, 1080p, 12.4MB)",
-          "CDN URL: https://cdn.anycap.ai/...",
-        ],
+      "analyze-video": {
+        title: "Ein vorhandenes Video analysieren",
+        description: "Überführen Sie eine Aufnahme in fundierte Erkenntnisse und einen nützlichen nächsten Schritt.",
+        fit: "Eine Aufnahme soll in QA-Notizen, extrahierte Inhalte oder eine nächste Aktion überführt werden.",
+        limitation: "Sie benötigen ein festes typisiertes Schema für Szenen oder Ereignisse.",
+        authorityCtaLabel: "Videoanalyse öffnen",
+        installCtaLabel: "AnyCap installieren",
       },
-    ],
+    },
   },
   gapTable: {
     eyebrow: "Capability-Lücke",
@@ -1580,14 +1674,14 @@ const germanContent = {
       title: "Bildverständnis",
       href: "/capabilities/image-understanding",
       summary: "Beste nächste Seite, wenn Codex Screenshots, Diagramme, OCR oder Design-Feedback interpretieren muss.",
-      command: "anycap image read",
+      command: "anycap actions image-read",
     },
     {
       eyebrow: "Analyse",
       title: "Videoanalyse",
       href: "/capabilities/video-analysis",
       summary: "Beste nächste Seite, wenn Codex Aufnahmen prüfen und strukturierte Details extrahieren muss.",
-      command: "anycap video read",
+      command: "anycap actions video-read",
     },
   ],
   modelSection: {
@@ -1744,11 +1838,16 @@ export function getForCodexPageData(locale: SiteLocale) {
     locale,
     about: [...content.metadata.articleAbout],
     keywords: [...content.metadata.articleKeywords],
+    datePublished: "2026-04-05",
     dateModified: LAST_UPDATED_ISO,
   });
 
   return {
     ...content,
+    taskPaths: {
+      ...content.taskPaths,
+      items: buildCodexTaskPaths(content.taskPaths.items),
+    },
     capabilityGuideJsonLd,
     faqJsonLd: createFaqPageJsonLd(content.faqItems),
     videoObjectJsonLd: {

@@ -37,6 +37,21 @@ export type CapabilityWorkflowStep = {
   body: string;
 };
 
+export type CapabilityDetailChrome = {
+  searchIntentLabel: string;
+  positioningLines: readonly [string, string];
+  positioningSummary: string;
+};
+
+const defaultCapabilityDetailChrome: CapabilityDetailChrome = {
+  searchIntentLabel: "Search intent",
+  positioningLines: [
+    "Agents do not need another disconnected tool.",
+    "They need the capability inside the workflow.",
+  ],
+  positioningSummary: "AnyCap turns capability access into agent action.",
+};
+
 export type CapabilityDetailPageProps = {
   breadcrumbItems: readonly { name: string; href?: string }[];
   jsonLd: Record<string, unknown>;
@@ -46,6 +61,7 @@ export type CapabilityDetailPageProps = {
   title: string;
   accentTitle?: string;
   intro: string;
+  chrome?: CapabilityDetailChrome;
   searchIntents: readonly string[];
   actions: readonly CapabilityAction[];
   demo?: ReactNode;
@@ -126,6 +142,7 @@ export function CapabilityDetailPage({
   title,
   accentTitle,
   intro,
+  chrome = defaultCapabilityDetailChrome,
   searchIntents,
   actions,
   demo,
@@ -188,7 +205,7 @@ export function CapabilityDetailPage({
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <span className="text-[11px] tracking-[0.6px] text-[#6b7d3a]" style={mono}>
-                    Search intent
+                    {chrome.searchIntentLabel}
                   </span>
                   {searchIntents.map((item) => (
                     <span
@@ -224,12 +241,12 @@ export function CapabilityDetailPage({
         <FadeIn from="right" className="mt-16 flex justify-start px-8 md:mt-28 md:justify-end md:px-16 lg:px-24">
           <div className="max-w-[620px] border-l-[3px] border-[#1c1f17] pl-5 text-left md:border-l-0 md:border-r-[3px] md:pl-0 md:pr-8 md:text-right">
             <p className="text-lg leading-[1.65] text-[#3a3e32] md:text-[22px]">
-              Agents do not need another disconnected tool.
+              {chrome.positioningLines[0]}
               <br />
-              They need the capability inside the workflow.
+              {chrome.positioningLines[1]}
             </p>
             <p className="mt-5 text-xl text-[#1c1f17] md:text-[24px]" style={pixel}>
-              AnyCap turns capability access into agent action.
+              {chrome.positioningSummary}
             </p>
           </div>
         </FadeIn>
@@ -286,7 +303,7 @@ export function CapabilityDetailPage({
         </div>
 
         <section className="grid gap-12 px-8 py-20 md:px-16 md:py-32 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:px-24">
-          <FadeIn>
+          <FadeIn className="min-w-0">
             <h2 className="mb-6 leading-[1.1] text-[#1c1f17]" style={{ ...pixel, fontSize: "clamp(28px, 4.5vw, 60px)" }}>
               {usageTitle}
             </h2>
@@ -296,11 +313,9 @@ export function CapabilityDetailPage({
                   <p className="mb-3 text-[11px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
                     {example.title}
                   </p>
-                  <div className="bg-[#1c1f17] px-5 py-4">
-                    <p className="break-all text-[13px] leading-6 text-[#d4e0a4]" style={mono}>
-                      {example.code}
-                    </p>
-                  </div>
+                  <pre className="overflow-x-auto bg-[#1c1f17] px-5 py-4 text-[13px] leading-6 text-[#d4e0a4]">
+                    <code style={mono}>{example.code}</code>
+                  </pre>
                 </div>
               ))}
             </div>

@@ -4,25 +4,30 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  next@15.5.14:
+    hash: 5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160
+    path: patches/next@15.5.14.patch
+
 importers:
 
   .:
     dependencies:
       '@auth0/nextjs-auth0':
         specifier: ^4.16.0
-        version: 4.16.0(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 4.16.0(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@next/third-parties':
         specifier: ^16.2.2
-        version: 16.2.2(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        version: 16.2.2(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       geist:
         specifier: ^1.7.0
-        version: 1.7.0(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
+        version: 1.7.0(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       marked:
         specifier: ^17.0.5
         version: 17.0.5
       next:
         specifier: ^15.3.3
-        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: ^19.1.0
         version: 19.2.4
@@ -35,7 +40,7 @@ importers:
     devDependencies:
       '@cloudflare/next-on-pages':
         specifier: ^1.13.16
-        version: 1.13.16(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.80.0)
+        version: 1.13.16(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.80.0)
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.5
@@ -2468,12 +2473,12 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@auth0/nextjs-auth0@4.16.0(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@auth0/nextjs-auth0@4.16.0(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@edge-runtime/cookies': 5.0.2
       '@panva/hkdf': 1.2.1
       jose: 6.2.2
-      next: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       oauth4webapi: 3.8.5
       openid-client: 6.8.2
       react: 19.2.4
@@ -2482,7 +2487,7 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
-  '@cloudflare/next-on-pages@1.13.16(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.80.0)':
+  '@cloudflare/next-on-pages@1.13.16(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.80.0)':
     dependencies:
       acorn: 8.16.0
       ast-types: 0.14.2
@@ -2493,7 +2498,7 @@ snapshots:
       esbuild: 0.15.18
       js-yaml: 4.1.1
       miniflare: 3.20250718.3
-      next: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       package-manager-manager: 0.2.0
       pcre-to-regexp: 1.1.0
       semver: 7.7.4
@@ -2860,9 +2865,9 @@ snapshots:
   '@next/swc-win32-x64-msvc@15.5.14':
     optional: true
 
-  '@next/third-parties@16.2.2(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
+  '@next/third-parties@16.2.2(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     dependencies:
-      next: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       third-party-capital: 1.0.20
 
@@ -3899,9 +3904,9 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  geist@1.7.0(next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)):
+  geist@1.7.0(next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)):
     dependencies:
-      next: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
   generator-function@2.0.1: {}
 
@@ -4294,7 +4299,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@15.5.14(patch_hash=5a14e9ca8774ea2b6d676b16432fdde7a245a617cb6ecaf9c24d1978961f9160)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 15.5.14
       '@swc/helpers': 0.5.15
