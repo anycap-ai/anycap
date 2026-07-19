@@ -31,7 +31,8 @@ The visible copy remains concise:
 
 - `One capability layer.`
 - `Every way to finish.`
-- `Human and agent work through the same capability field.`
+- `Human + agent`
+- `Create. Understand. Find. Manage. Deliver.`
 
 ## Brand And Layout Fidelity
 
@@ -64,8 +65,9 @@ microsite.
 
 ## Particle Composition
 
-The visual is a canvas-based particle field, not a collection of fake product
-cards.
+The visual combines one canvas-based particle field with restrained DOM
+artifact micro-compositions. It is not a dashboard or a card grid: the portal,
+particle routes, and sense of one capability layer remain the dominant image.
 
 Particles use the existing olive and near-black colors with restrained alpha.
 They form a central AnyCap square and fan out into asymmetric branches. Each
@@ -78,12 +80,20 @@ site:
 - manage: upload and storage;
 - deliver: pages and shareable outputs.
 
-Small Inter labels clarify the branch endpoints. Labels remain secondary to the
-particle motion and never become badges, pills, or fake application windows.
+Thirteen small artifacts make the endpoint story tangible: Research, Editorial
+image, Screenshot analysis, Vision crop, Cinematic video, Audio, Transcript,
+Share link, Music track, Search result, Generated variants, Code snippet, and
+Delivered. They are visual evidence of what humans and agents can finish, not
+interactive fake application windows. Their labels use Inter and remain
+secondary to the particle portal and streams.
 
 The final frame is intentionally more expansive than the previous demo. It
 shows many outputs around one stable center, with enough empty space to preserve
 the homepage's restrained density.
+
+The center resolves as a thick, hollow particle portal containing one human
+figure and one agent figure. Two understated cursor lanes enter from the copy
+side and reinforce that both actors use the same capability layer.
 
 ## Motion Choreography
 
@@ -126,9 +136,10 @@ abrupt state changes.
 At widths below 768px the composition becomes a single column. Copy remains at
 the top and the particle field uses the available width beneath it.
 
-Mobile keeps the same narrative but shortens the pinned distance and reduces
-particle count. This prevents the section from feeling like a full-page scroll
-trap.
+Mobile keeps the same narrative but shortens the pinned distance, reduces
+particle count, and shows three representative artifacts: Cinematic video,
+Transcript, and Delivered. The remaining particle routes preserve the sense of
+the wider capability field without making the viewport unreadable.
 
 When `prefers-reduced-motion: reduce` is active, pinning and scrubbing are
 disabled. The section renders the final connected composition as a static
@@ -174,6 +185,10 @@ Verification covers:
 - desktop and mobile layouts have no horizontal overflow;
 - ScrollTrigger creates one pinned sequence and releases cleanly;
 - the first, middle, and final scroll states match the approved narrative;
+- the final desktop frame contains the particle portal, human and agent figures,
+  cursor lanes, and all 13 artifact micro-compositions;
+- the final mobile frame keeps the portal readable and shows the three selected
+  artifact micro-compositions without copy collisions;
 - reduced motion displays the static final composition;
 - the canvas remains transparent and correctly resizes;
 - the browser console contains no runtime errors;
@@ -184,7 +199,8 @@ Verification covers:
 - changing the homepage hero or any other production section;
 - changing production copy, routes, metadata, structured data, or analytics;
 - adding model logos, agent logos, provider branding, or a logo wall;
-- building fake dashboard, terminal, media, or delivery cards;
+- building an interactive dashboard or duplicating the homepage hero,
+  navigation, terminal, or conversion controls;
 - adding dark mode, theme switching, cursor effects, parallax, or smooth-scroll
   libraries;
 - adding an install button or another conversion call to action;

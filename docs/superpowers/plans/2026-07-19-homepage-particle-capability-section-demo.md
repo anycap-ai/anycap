@@ -8,18 +8,29 @@
 
 **Tech Stack:** Semantic HTML, CSS, Canvas 2D, vanilla JavaScript, GSAP 3.13, ScrollTrigger, Node.js source-contract assertions, Codex in-app browser.
 
+## User Correction: Rich Artifact Composition
+
+This correction supersedes any simplified, label-only geometry or code sample
+later in this historical plan. The approved demo is still one middle section
+with no production integration, but its final frame must restore the supplied
+rich composition: a thick hollow particle portal, human and agent figures,
+Human and Agent cursor lanes, particle beams, and 13 restrained artifact
+micro-compositions. Those artifacts are endpoint evidence, not an interactive
+dashboard. The homepage hero, navigation, CTA, background, fonts, and other
+sections remain untouched.
+
 ## Global Constraints
 
 - Work only on branch `codex/doubao-audio-positioning`; create no branch or worktree.
 - Do not modify production files under `web/`.
-- The demo contains exactly one semantic `<section>` and no hero, navigation, footer, terminal, bridge, extra call to action, or fake product cards.
+- The demo contains exactly one semantic `<section>` and no hero, navigation, footer, terminal, bridge, or extra call to action.
 - Use background `#f4f5f0`, primary text `#1c1f17`, supporting text `#4d5145`, accent `#6b7d3a`, and divider `#d4dbb8`.
 - Use the real GeistPixelSquare weight-500 font for display copy, the homepage system sans-serif stack for body copy, and the real Inter weight-500 font for capability labels.
 - Use horizontal padding of 32px below 768px, 64px from 768px, and 96px from 1024px.
 - Reproduce the global grain as a fixed 200px canvas-generated grayscale tile at opacity `0.07` with `mix-blend-mode: multiply`.
 - Keep the particle canvas transparent; introduce no independent color field, glow, gradient wash, or theme inversion.
-- Visible copy is exactly `One capability layer.`, `Every way to finish.`, and `Human and agent work through the same capability field.`
-- Capability endpoints are `Image`, `Video`, `Music`, `Voice`, `Search`, `Vision`, `Storage`, `Pages`, and `Share`.
+- Visible copy is exactly `One capability layer.`, `Every way to finish.`, `Human + agent`, and `Create. Understand. Find. Manage. Deliver.`
+- Artifact endpoints are `Research`, `Editorial image`, `Screenshot analysis`, `Vision crop`, `Cinematic video`, `Audio`, `Transcript`, `Share link`, `Music track`, `Search result`, `Generated variants`, `Code snippet`, and `Delivered`.
 - Use one canvas, one ScrollTrigger, `start: "top top"`, `pin: true`, `scrub: 0.8`, and a desktop section height of `320dvh`.
 - Use no `window.addEventListener("scroll", ...)`, remote image, remote font, smooth-scroll library, cursor effect, parallax, or perpetual animation.
 - Cap canvas device pixel ratio at 2 and perform no layout reads inside the render loop.
@@ -68,8 +79,11 @@ for (const token of ["#f4f5f0", "#1c1f17", "#4d5145", "#6b7d3a", "#d4dbb8"]) {
 for (const text of [
   "One capability layer.",
   "Every way to finish.",
-  "Human and agent work through the same capability field.",
-  "Image", "Video", "Music", "Voice", "Search", "Vision", "Storage", "Pages", "Share",
+  "Human + agent",
+  "Create. Understand. Find. Manage. Deliver.",
+  "Research", "Editorial image", "Screenshot analysis", "Vision crop",
+  "Cinematic video", "Audio", "Transcript", "Share link", "Music track",
+  "Search result", "Generated variants", "Code snippet", "Delivered",
 ]) {
   assert.ok(html.includes(text), `contains ${text}`);
 }
@@ -395,7 +409,7 @@ Open the existing localhost companion and inspect at a desktop viewport. Verify 
 
 Expected: one section, one canvas, `rgb(244, 245, 240)`, GeistPixelSquare display font, Inter labels, one trigger, desktop particle count in the planned range, and overflow `0`.
 
-Capture and inspect the initial, middle, and final scroll states. The initial state shows loose particles converging on a central square; the middle state shows branches extending; the final state shows all nine endpoints connected to one stable center.
+Capture and inspect the initial, middle, and final scroll states. The initial state shows loose particles converging on the center; the middle state opens the thick hollow portal and extends the branches; the final desktop state shows the human and agent figures, cursor lanes, and all 13 artifacts connected to one stable center. The final mobile state shows Cinematic video, Transcript, and Delivered without colliding with the copy.
 
 - [ ] **Step 9: Verify mobile and reduced motion**
 
