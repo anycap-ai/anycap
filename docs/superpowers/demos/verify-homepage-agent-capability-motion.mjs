@@ -27,4 +27,46 @@ assert.deepEqual(remoteAssetReferences, [], "contains no remote assets");
 assert.ok(built.includes("GSAP 3.13.0"), "contains GSAP 3.13.0");
 assert.ok(built.includes("ScrollTrigger 3.13.0"), "contains ScrollTrigger 3.13.0");
 
-console.log("homepage agent capability demo build contract: pass");
+for (const text of [
+  "One capability layer.",
+  "Every way to finish.",
+  "Human + agent",
+  "Create. Understand. Find. Manage. Deliver.",
+  "anycap install",
+  "Codex · Claude Code · Cursor · any agent",
+  "More models. More capabilities. Continuously added.",
+  "Nano Banana 2 Lite",
+  "Seedance 2.0 Mini",
+  "Kling 3.0",
+  "Mureka V8",
+  "Suno V5.5",
+  "Doubao Seed Audio 1.0",
+  "GPT Image 2",
+]) assert.ok(source.includes(text), `source contains ${text}`);
+
+for (const contract of [
+  'class="agent-install-layer"',
+  'class="model-field"',
+  'class="horizon-field"',
+  "const narrativeRanges",
+  "const modelAnchorDefinitions",
+  "const capabilityWaveOrder",
+  "function phaseProgress",
+  "function buildLimitedAgentPoint",
+  "function buildContinuationPoint",
+  "function resolveParticlePosition",
+  "function drawModelConnections",
+  "phaseSnapshot",
+  'trigger: ".capability-stage"',
+  'start: "top top"',
+  "pin: true",
+  "scrub: 0.72",
+  "prefers-reduced-motion: reduce",
+]) assert.ok(source.includes(contract), `source contains ${contract}`);
+
+assert.doesNotMatch(source, /<button[^>]*>[\s\S]*?anycap install[\s\S]*?<\/button>/i, "install proof is not a button");
+assert.doesNotMatch(source, /Try AnyCap/i, "middle section has no hero CTA");
+assert.doesNotMatch(source, /window\.addEventListener\(["']scroll["']/, "no custom scroll listener");
+assert.doesNotMatch(source, /radial-gradient/i, "no independent gradient wash");
+
+console.log("homepage agent install capability motion contract: pass");

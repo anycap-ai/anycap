@@ -130,6 +130,101 @@
       height: 100%;
     }
 
+    .agent-install-layer,
+    .model-field,
+    .horizon-field {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      color: var(--text-primary);
+      font-family: "AnyCap Inter", ui-sans-serif, sans-serif;
+      pointer-events: none;
+    }
+
+    .agent-proof,
+    .install-command,
+    .install-module,
+    .model-anchor,
+    .horizon-field span {
+      position: absolute;
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+
+    .agent-proof {
+      top: 56%;
+      left: var(--page-padding);
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .install-command {
+      top: 61%;
+      left: var(--page-padding);
+      padding: 11px 14px;
+      border: 1px solid rgba(244, 245, 240, 0.14);
+      border-radius: 5px;
+      color: #eef0e7;
+      background: #1c1f17;
+      box-shadow: 0 14px 30px rgba(28, 31, 23, 0.18);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .install-command b {
+      margin-right: 7px;
+      color: #91a451;
+      font-weight: 500;
+    }
+
+    .install-module {
+      z-index: 2;
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--olive);
+      background: var(--surface);
+      box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 5px var(--olive);
+    }
+
+    .model-anchor {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.015em;
+      line-height: 1;
+      white-space: nowrap;
+      transform-origin: 0 50%;
+    }
+
+    .model-anchor i {
+      display: block;
+      flex: 0 0 auto;
+      width: 4px;
+      height: 4px;
+      background: var(--olive);
+    }
+
+    .horizon-field span {
+      right: var(--page-padding);
+      bottom: 8%;
+      color: var(--olive);
+      font-family: "AnyCap Pixel", ui-monospace, monospace;
+      font-size: clamp(12px, 1vw, 15px);
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      text-align: right;
+    }
+
     .artifact-field {
       position: absolute;
       inset: 0;
@@ -486,6 +581,16 @@
       .artifact-cap { font-size: 8px; }
       .cursor-lanes { display: none; }
       .cursor-lane { grid-template-columns: 38px 16px 1fr; margin: 14px 0; font-size: 9px; }
+      .agent-proof { top: 35%; font-size: 8px; }
+      .install-command { top: 39%; padding: 9px 11px; font-size: 10px; }
+      .model-anchor { font-size: 8px; }
+      .model-anchor[data-mobile="false"] { display: none; }
+      .horizon-field span {
+        right: var(--page-padding-mobile);
+        bottom: 4%;
+        width: calc(100% - 64px);
+        font-size: 11px;
+      }
     }
 
     @media (max-width: 390px) {
@@ -500,7 +605,12 @@
 
       .artifact-card,
       .portal-figures,
-      .cursor-lanes {
+      .cursor-lanes,
+      .agent-proof,
+      .install-command,
+      .install-module,
+      .model-anchor,
+      .horizon-field span {
         transition: none;
       }
     }
@@ -530,6 +640,15 @@
             <i class="portal-person portal-human"></i>
             <i class="portal-person portal-agent"></i>
           </div>
+          <div class="agent-install-layer" aria-hidden="true">
+            <span class="agent-proof">Codex · Claude Code · Cursor · any agent</span>
+            <span class="install-command"><b>›</b> anycap install</span>
+            <i class="install-module"></i>
+          </div>
+          <div class="model-field" aria-hidden="true"></div>
+          <div class="horizon-field" aria-hidden="true">
+            <span>More models. More capabilities. Continuously added.</span>
+          </div>
           <div class="artifact-field"></div>
         </div>
       </div>
@@ -552,6 +671,11 @@
     const artifactField = visual.querySelector(".artifact-field");
     const portalFigures = visual.querySelector(".portal-figures");
     const cursorLanes = visual.querySelector(".cursor-lanes");
+    const agentProof = visual.querySelector(".agent-proof");
+    const installCommand = visual.querySelector(".install-command");
+    const installModule = visual.querySelector(".install-module");
+    const modelField = visual.querySelector(".model-field");
+    const horizonCopy = visual.querySelector(".horizon-field span");
     const grain = document.querySelector(".grain");
 
     const clamp01 = (value) => Math.min(1, Math.max(0, value));
@@ -577,9 +701,57 @@
       { label: "Delivered", family: "Storage", type: "delivered", x: 0.92, y: 0.77, mobileX: 0.82, mobileY: 0.79, curve: -52, radius: 34, aspect: 1.45 },
     ];
 
+    const narrativeRanges = Object.freeze({
+      limited: [0.00, 0.18],
+      ignite: [0.18, 0.36],
+      models: [0.36, 0.62],
+      flood: [0.56, 0.86],
+      horizon: [0.86, 1.00],
+    });
+
+    const modelAnchorDefinitions = [
+      { label: "Nano Banana 2 Lite", family: "Image", x: 0.57, y: 0.12, mobile: true },
+      { label: "GPT Image 2", family: "Image", x: 0.72, y: 0.17 },
+      { label: "Seedance 2.0 Mini", family: "Video", x: 0.84, y: 0.11, mobile: true },
+      { label: "Kling 3.0", family: "Video", x: 0.94, y: 0.24 },
+      { label: "Mureka V8", family: "Music", x: 0.88, y: 0.39 },
+      { label: "Suno V5.5", family: "Music", x: 0.71, y: 0.34 },
+      { label: "Doubao Seed Audio 1.0", family: "Voice", x: 0.60, y: 0.27, mobile: true },
+    ];
+
+    const capabilityWaveOrder = Object.freeze({
+      Image: 0.00,
+      Video: 0.00,
+      Music: 0.00,
+      Voice: 0.00,
+      Vision: 0.18,
+      Search: 0.28,
+      Pages: 0.48,
+      Share: 0.48,
+      Storage: 0.48,
+    });
+
+    function phaseProgress(name, progress) {
+      const [start, end] = narrativeRanges[name];
+      return smoothstep(start, end, progress);
+    }
+
+    function phaseSnapshot(progress) {
+      const value = clamp01(progress);
+      return Object.freeze({
+        limited: phaseProgress("limited", value),
+        ignite: phaseProgress("ignite", value),
+        models: phaseProgress("models", value),
+        flood: phaseProgress("flood", value),
+        horizon: phaseProgress("horizon", value),
+      });
+    }
+
     let particles = [];
     let endpoints = [];
     let connectionPaths = [];
+    let modelAnchors = [];
+    let modelPaths = [];
     let center = { x: 0, y: 0 };
     let canvasWidth = 0;
     let canvasHeight = 0;
@@ -613,6 +785,16 @@
       return card;
     });
 
+    const modelAnchorElements = modelAnchorDefinitions.map((definition) => {
+      const anchor = document.createElement("span");
+      const square = document.createElement("i");
+      anchor.className = "model-anchor";
+      anchor.dataset.mobile = String(Boolean(definition.mobile));
+      anchor.append(square, document.createTextNode(definition.label));
+      modelField.append(anchor);
+      return anchor;
+    });
+
     function mulberry32(seed) {
       return function random() {
         let value = seed += 0x6d2b79f5;
@@ -630,6 +812,44 @@
         olive: random() > 0.18,
         alpha: 0.34 + random() * 0.56,
       };
+    }
+
+    function mixPoint(from, to, amount) {
+      return { x: mix(from.x, to.x, amount), y: mix(from.y, to.y, amount) };
+    }
+
+    function buildLimitedAgentPoint(index, count, bounds, center) {
+      const amount = index / Math.max(1, count - 1);
+      return {
+        x: mix(bounds.width * 0.22, center.x - bounds.width * 0.08, amount),
+        y: center.y + Math.sin(index * 1.91) * Math.min(12, bounds.height * 0.018),
+      };
+    }
+
+    function buildModelClusterPoint(index, anchor) {
+      const angle = index * 2.399963229728653;
+      const radius = 4 + Math.sqrt(index + 1) * 1.8;
+      return {
+        x: anchor.x + Math.cos(angle) * radius * 1.4,
+        y: anchor.y + Math.sin(angle) * radius,
+      };
+    }
+
+    function buildContinuationPoint(index, bounds, endpoint) {
+      const downward = bounds.width < 768;
+      const spread = 0.08 + (index % 17) / 80;
+      return downward
+        ? { x: endpoint.x + Math.sin(index * 2.17) * bounds.width * spread, y: bounds.height * (1.04 + (index % 23) / 70) }
+        : { x: bounds.width * (1.02 + (index % 29) / 90), y: endpoint.y + Math.sin(index * 1.73) * bounds.height * spread };
+    }
+
+    function resolveParticlePosition(particle, phases) {
+      let point = mixPoint(particle.loose, particle.limited, phases.limited);
+      point = mixPoint(point, particle.ready, phases.ignite);
+      if (particle.role !== "portal") point = mixPoint(point, particle.connected, phases.models);
+      if (particle.role !== "portal") point = mixPoint(point, particle.final, phases.flood);
+      if (particle.role === "continuation") point = mixPoint(point, particle.horizon, phases.horizon);
+      return point;
     }
 
     function buildCorePoint(index, count, center, scale, thickness = 0) {
@@ -681,6 +901,31 @@
         x: endpoint.x + Math.cos(angle) * radius * endpoint.aspect,
         y: endpoint.y + Math.sin(angle) * radius,
       };
+    }
+
+    function drawPartialQuadratic(from, control, to, amount, alpha) {
+      if (amount <= 0) return;
+      const steps = 18;
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      for (let step = 1; step <= steps; step += 1) {
+        const progress = amount * step / steps;
+        const point = quadraticPoint(from, control, to, progress);
+        context.lineTo(point.x, point.y);
+      }
+      context.globalAlpha = alpha;
+      context.stroke();
+    }
+
+    function drawModelConnections(amount) {
+      context.save();
+      context.strokeStyle = "#6b7d3a";
+      context.lineWidth = 1;
+      modelPaths.forEach((path, index) => {
+        const staggered = smoothstep(index * 0.055, 0.58 + index * 0.035, amount);
+        drawPartialQuadratic(path.from, path.control, path.to, staggered, staggered * 0.28);
+      });
+      context.restore();
     }
 
     function drawConnections(amount) {
@@ -751,17 +996,84 @@
         };
       });
 
-      const retainedCoreCount = Math.floor(particleCount * 0.52);
-      const flowingCount = particleCount - retainedCoreCount;
-      particles = Array.from({ length: particleCount }, (_, index) => {
-        const core = buildCorePoint(index, particleCount, center, coreScale);
+      const mobileAnchorPositions = [
+        { x: 0.12, y: 0.45 },
+        { x: 0.58, y: 0.43 },
+        { x: 0.16, y: 0.56 },
+      ];
+      let mobileAnchorIndex = 0;
+      modelAnchors = modelAnchorDefinitions.map((definition) => {
+        const mobilePosition = definition.mobile ? mobileAnchorPositions[mobileAnchorIndex++] : null;
         return {
-          ...buildLoosePoint(bounds, random),
-          portal: index < retainedCoreCount,
-          core,
-          final: index < retainedCoreCount
-            ? buildCorePoint(index, retainedCoreCount, center, coreScale, coreScale * 0.18)
-            : buildFinalPoint(index - retainedCoreCount, flowingCount, center, endpoints),
+          ...definition,
+          x: (mobileLayout ? (mobilePosition?.x ?? definition.x) : definition.x) * bounds.width,
+          y: (mobileLayout ? (mobilePosition?.y ?? definition.y) : definition.y) * bounds.height,
+        };
+      });
+      const activeModelAnchors = mobileLayout
+        ? modelAnchors.filter((anchor) => anchor.mobile)
+        : modelAnchors;
+      modelPaths = activeModelAnchors.map((anchor, index) => {
+        const deltaX = anchor.x - center.x;
+        const deltaY = anchor.y - center.y;
+        const edgeScale = coreScale * 0.5 / Math.max(Math.abs(deltaX), Math.abs(deltaY), 1);
+        const to = {
+          x: center.x + deltaX * edgeScale,
+          y: center.y + deltaY * edgeScale,
+        };
+        return {
+          from: anchor,
+          to,
+          control: {
+            x: mix(anchor.x, to.x, 0.52),
+            y: mix(anchor.y, to.y, 0.52) + (index % 2 === 0 ? -1 : 1) * (18 + index * 3),
+          },
+        };
+      });
+
+      const portalCount = Math.floor(particleCount * 0.44);
+      const routeCount = Math.floor(particleCount * 0.46);
+      const routedParticleCount = particleCount - portalCount;
+      particles = Array.from({ length: particleCount }, (_, index) => {
+        const loose = buildLoosePoint(bounds, random);
+        const role = index < portalCount
+          ? "portal"
+          : index < portalCount + routeCount ? "route" : "continuation";
+        if (role === "portal") {
+          const ready = buildCorePoint(index, portalCount, center, coreScale, coreScale * 0.18);
+          return {
+            radius: loose.radius,
+            olive: loose.olive,
+            alpha: loose.alpha,
+            role,
+            loose,
+            limited: buildLimitedAgentPoint(index, portalCount, bounds, center),
+            ready,
+            connected: ready,
+            final: ready,
+            horizon: ready,
+          };
+        }
+
+        const routeIndex = index - portalCount;
+        const anchor = activeModelAnchors[routeIndex % activeModelAnchors.length];
+        const anchorIndex = Math.floor(routeIndex / activeModelAnchors.length);
+        const ready = buildModelClusterPoint(anchorIndex, anchor);
+        const connected = buildCorePoint(routeIndex, routedParticleCount, center, coreScale);
+        const final = buildFinalPoint(routeIndex, routedParticleCount, center, endpoints);
+        return {
+          radius: loose.radius,
+          olive: loose.olive,
+          alpha: loose.alpha,
+          role,
+          loose,
+          limited: loose,
+          ready,
+          connected,
+          final,
+          horizon: role === "continuation"
+            ? buildContinuationPoint(routeIndex, bounds, endpoints[routeIndex % endpoints.length])
+            : final,
         };
       });
 
@@ -769,10 +1081,17 @@
         labelElements[index].style.left = `${endpoint.x}px`;
         labelElements[index].style.top = `${endpoint.y}px`;
       });
+      modelAnchors.forEach((anchor, index) => {
+        modelAnchorElements[index].style.left = `${anchor.x}px`;
+        modelAnchorElements[index].style.top = `${anchor.y}px`;
+        modelAnchorElements[index].dataset.edge = String(!mobileLayout && anchor.x > bounds.width * 0.82);
+      });
       portalFigures.style.left = `${center.x}px`;
       portalFigures.style.top = `${center.y + coreScale * 0.18}px`;
       cursorLanes.style.left = `${Math.max(20, center.x - coreScale * 1.03)}px`;
       cursorLanes.style.top = `${center.y + coreScale * 0.26}px`;
+      installModule.style.left = `${center.x - coreScale * 0.58}px`;
+      installModule.style.top = `${center.y - 7}px`;
       document.documentElement.dataset.demoParticles = String(particles.length);
       document.documentElement.dataset.overflowX = String(document.documentElement.scrollWidth > window.innerWidth);
       document.documentElement.dataset.canvasSize = `${Math.round(canvasWidth)}x${Math.round(canvasHeight)}`;
@@ -781,37 +1100,66 @@
 
     function renderAt(progress) {
       progress = clamp01(progress);
-      const converge = smoothstep(0.00, 0.24, progress);
-      const open = smoothstep(0.28, 0.72, progress);
-      const hold = smoothstep(0.78, 1.00, progress);
+      const phases = phaseSnapshot(progress);
       context.clearRect(0, 0, canvasWidth, canvasHeight);
-      drawConnections(open);
+      drawModelConnections(phases.models);
+      drawConnections(phases.flood);
 
       for (const particle of particles) {
-        const coreX = mix(particle.x, particle.core.x, converge);
-        const coreY = mix(particle.y, particle.core.y, converge);
-        const x = mix(coreX, particle.final.x, open);
-        const y = mix(coreY, particle.final.y, open);
-        context.globalAlpha = Math.min(1, particle.alpha * (particle.portal ? mix(1, 1.35, open) : 1));
+        const point = resolveParticlePosition(particle, phases);
+        context.globalAlpha = Math.min(1, particle.alpha * (particle.role === "portal" ? mix(1, 1.35, phases.ignite) : 1));
         context.fillStyle = particle.olive ? "#6b7d3a" : "#1c1f17";
-        const radius = particle.radius * (particle.portal ? mix(1, 2.25, open) : 1);
-        context.fillRect(x, y, radius, radius);
+        const radius = particle.radius * (particle.role === "portal" ? mix(1, 2.25, phases.ignite) : 1);
+        context.fillRect(point.x, point.y, radius, radius);
       }
       context.globalAlpha = 1;
 
-      const portalReveal = smoothstep(0.10, 0.30, progress);
-      const cursorReveal = smoothstep(0.06, 0.24, progress);
+      const portalReveal = smoothstep(0.21, 0.34, progress);
+      const cursorReveal = smoothstep(0.04, 0.16, progress);
+      const cursorRecede = smoothstep(0.31, 0.40, progress);
       portalFigures.style.opacity = String(portalReveal);
       portalFigures.style.transform = `translate(-50%, -15%) scale(${mix(0.92, 1, portalReveal)})`;
-      cursorLanes.style.opacity = String(cursorReveal * mix(1, 0.58, hold));
+      cursorLanes.style.opacity = String(cursorReveal * mix(1, 0.42, cursorRecede));
       cursorLanes.style.transform = `translateX(${mix(-18, 0, cursorReveal)}px)`;
 
-      labelElements.forEach((label, index) => {
-        const stagger = Math.min(index * 0.014, 0.14);
-        const artifactReveal = smoothstep(0.44 + stagger, 0.70 + stagger, progress);
-        label.style.opacity = String(artifactReveal * mix(0.88, 1, hold));
-        label.style.transform = `translate(-50%, calc(-50% + ${mix(18, 0, artifactReveal)}px)) scale(${mix(0.92, 1, artifactReveal)})`;
+      const proofReveal = smoothstep(0.08, 0.17, progress);
+      const installReveal = smoothstep(0.19, 0.25, progress);
+      const installRecede = smoothstep(0.31, 0.38, progress);
+      const installOpacity = installReveal * (1 - installRecede);
+      agentProof.style.opacity = String(proofReveal * (1 - installRecede));
+      agentProof.style.transform = `translateY(${mix(8, 0, proofReveal)}px)`;
+      installCommand.style.opacity = String(installOpacity);
+      installCommand.style.transform = `translateY(${mix(10, 0, installReveal)}px) scale(${mix(0.97, 1, installReveal)})`;
+      installModule.style.opacity = String(installReveal * (1 - smoothstep(0.34, 0.41, progress)));
+      installModule.style.transform = `translateX(${mix(-48, 0, installReveal)}px) scale(${mix(0.72, 1, installReveal)})`;
+
+      modelAnchorElements.forEach((anchor, index) => {
+        const modelReveal = smoothstep(0.36 + index * 0.025, 0.46 + index * 0.025, progress);
+        const modelOpacity = modelReveal * mix(1, 0.24, phases.flood);
+        const edgeOffset = anchor.dataset.edge === "true" ? "-100%" : "-50%";
+        anchor.style.opacity = String(modelOpacity);
+        anchor.style.transform = `translate(${edgeOffset}, ${mix(9, 0, modelReveal)}px) scale(${mix(0.96, 1, modelReveal)})`;
       });
+
+      labelElements.forEach((label, index) => {
+        const familyDelay = capabilityWaveOrder[endpointDefinitions[index].family] ?? 0.48;
+        const artifactStart = 0.56 + familyDelay * 0.18 + index * 0.006;
+        const artifactReveal = smoothstep(artifactStart, artifactStart + 0.12, progress);
+        label.style.opacity = String(artifactReveal);
+        label.style.transform = `translate(-50%, calc(-50% + ${mix(14, 0, artifactReveal)}px)) scale(${mix(0.94, 1, artifactReveal)})`;
+      });
+
+      const horizonReveal = smoothstep(0.90, 0.98, progress);
+      horizonCopy.style.opacity = String(horizonReveal);
+      horizonCopy.style.transform = `translateY(${mix(12, 0, horizonReveal)}px)`;
+
+      document.documentElement.dataset.motionAct = progress < 0.18
+        ? "limited"
+        : progress < 0.36
+          ? "install"
+          : progress < 0.56
+            ? "models"
+            : progress < 0.86 ? "capabilities" : "horizon";
     }
 
     function createGrain() {
@@ -873,7 +1221,7 @@
               start: "top top",
               end: () => conditions.mobile ? "+=150%" : "+=220%",
               pin: true,
-              scrub: 0.8,
+              scrub: 0.72,
               invalidateOnRefresh: true,
               onUpdate: (trigger) => {
                 document.documentElement.dataset.scrollProgress = trigger.progress.toFixed(3);
@@ -886,7 +1234,13 @@
               },
             },
           });
-          timeline.to(state, { progress: 1, duration: 1, onUpdate: () => renderAt(state.progress) });
+          timeline
+            .addLabel("limited", 0.00)
+            .addLabel("install", 0.18)
+            .addLabel("models", 0.36)
+            .addLabel("capabilities", 0.56)
+            .addLabel("horizon", 0.86)
+            .to(state, { progress: 1, duration: 1, onUpdate: () => renderAt(state.progress) }, 0);
           document.documentElement.dataset.triggerCount = String(ScrollTrigger.getAll().length);
         },
       );
@@ -914,6 +1268,7 @@
       get particleCount() { return particles.length; },
       get active() { return Boolean(ScrollTrigger.getAll()[0]?.isActive); },
       renderAt,
+      phaseSnapshot,
     };
 
     const fontsReady = document.fonts?.ready ?? Promise.resolve();
