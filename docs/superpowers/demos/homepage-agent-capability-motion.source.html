@@ -975,11 +975,16 @@
 
       const random = mulberry32(0x414e5943);
       const mobileLayout = viewportWidth < 768;
+      const compactDesktop = viewportWidth < 1280;
       center = {
-        x: bounds.width * (mobileLayout ? 0.50 : 0.43),
+        x: bounds.width * (mobileLayout ? 0.50 : compactDesktop ? 0.56 : 0.43),
         y: bounds.height * (mobileLayout ? 0.67 : 0.54),
       };
-      const coreScale = Math.min(bounds.width, bounds.height) * (mobileLayout ? 0.30 : 0.34);
+      const coreScale = mobileLayout
+        ? Math.min(bounds.width, bounds.height) * 0.30
+        : compactDesktop
+          ? Math.min(bounds.width * 0.26, bounds.height * 0.38, 320)
+          : Math.min(bounds.width, bounds.height) * 0.34;
       endpoints = endpointDefinitions.map((endpoint) => ({
         ...endpoint,
         x: (mobileLayout ? (endpoint.mobileX ?? clamp01(endpoint.x * 0.72 + 0.14)) : endpoint.x) * bounds.width,
@@ -1135,7 +1140,8 @@
 
       modelAnchorElements.forEach((anchor, index) => {
         const modelReveal = smoothstep(0.36 + index * 0.025, 0.46 + index * 0.025, progress);
-        const modelOpacity = modelReveal * mix(1, 0.24, phases.flood);
+        const modelRecede = smoothstep(0.56, 0.68, progress);
+        const modelOpacity = modelReveal * mix(1, 0.035, modelRecede);
         const edgeOffset = anchor.dataset.edge === "true" ? "-100%" : "-50%";
         anchor.style.opacity = String(modelOpacity);
         anchor.style.transform = `translate(${edgeOffset}, ${mix(9, 0, modelReveal)}px) scale(${mix(0.96, 1, modelReveal)})`;
