@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth/auth0";
 import { isInternalDefaultLocaleRewrite } from "@/lib/default-locale-routing";
+import { legacyRouteRedirects } from "@/lib/legacy-route-redirects";
 import {
   buildLocalizedPath,
   defaultLocale,
@@ -56,12 +57,6 @@ const securityHeaders: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   "Content-Security-Policy": cspDirectives,
 };
-const legacyRouteRedirects = new Map<string, string>([
-  ["/for-human", "/"],
-  ["/capabilities/image-read", "/capabilities/image-understanding"],
-  ["/glossary/agent-capability-runtime", "/glossary/agent-harness"],
-]);
-
 function applySecurityHeaders(response: NextResponse): NextResponse {
   for (const [key, value] of Object.entries(securityHeaders)) {
     response.headers.set(key, value);

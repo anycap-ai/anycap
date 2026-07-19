@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   trailingSlash: false,
+  // Keep crawler-visible metadata in the document head for every user agent.
+  htmlLimitedBots: /.*/,
   async redirects() {
     return [
       {
