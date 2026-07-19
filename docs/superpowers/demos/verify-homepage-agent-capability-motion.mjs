@@ -128,6 +128,7 @@ assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/nosc
 assert.match(source, /const standardDesktopCenterX = resolveDesktopPortalCenter\([\s\S]*?compactDesktop \? bounds\.width \* 0\.56 : standardDesktopCenterX/, "standard desktop portal center uses measured copy clearance while compact geometry stays unchanged");
 assert.match(source, /: Math\.min\(bounds\.width \* 0\.25, bounds\.height \* 0\.34, 320\)/, "standard desktop portal remains substantial with an explicit size cap");
 assert.match(source, /type: "audio"[^\n]*standardX: 0\.70, standardY: 0\.68/, "standard desktop Audio uses the lower-right route endpoint");
+assert.match(source, /type: "transcript"[^\n]*standardY: 0\.57/, "standard desktop Transcript clears the lower Audio endpoint");
 assert.match(source, /type: "music"[^\n]*standardY: 0\.767/, "standard desktop Music preserves clearance below Audio and above Code");
 assert.match(source, /type: "vision"[^\n]*standardX: 0\.932, standardY: 0\.10/, "standard desktop Vision crop clears Screenshot analysis deterministically");
 assert.match(source, /standardDesktopLayout \? \(endpoint\.standardX \?\? endpoint\.x\) : endpoint\.x/, "standard desktop endpoint x overrides are isolated from wide defaults");
@@ -142,7 +143,7 @@ for (const { width, height, portalCenter } of standardViewportCases) {
   const audioWidth = Math.min(246, width * 0.17);
   const audioLeft = width * 0.70 - audioWidth / 2;
   assert.ok(audioLeft - (portalCenter + 74 / 2) >= 20, `${width}px Audio keeps at least 20px from portal figures`);
-  assert.ok(height * (0.68 - 0.59) > (70 + 64) / 2, `${width}px Audio clears Transcript vertically`);
+  assert.ok(height * (0.68 - 0.57) > (70 + 90) / 2, `${width}px Audio clears a wrapped Transcript vertically`);
   assert.ok(height * (0.767 - 0.68) > (70 + 62) / 2, `${width}px Audio clears Music vertically`);
   assert.ok(height * (0.86 - 0.767) > (78 + 62) / 2, `${width}px Music remains clear of Code`);
 }
