@@ -18,6 +18,7 @@ export const runtime = "edge";
 const CDN_BASE = "https://cdn.anycap.ai/page_resource/models";
 const pixel = { fontFamily: "var(--font-geist-pixel-square), monospace" } as const;
 const mono = { fontFamily: "var(--font-mono), monospace", fontWeight: 500 } as const;
+const publishedIso = "2026-04-05";
 const lastUpdatedIso = "2026-07-19";
 
 type ModelGroupCard = {
@@ -722,18 +723,19 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     articleJsonLd: createTechArticleJsonLd({
       headline: "Models — Multimodal models available through AnyCap",
       description:
-        "Comparison hub for the multimodal models available through AnyCap, including image, video, and music models, with workflow guidance and current credit ranges.",
+        "Comparison hub for the multimodal models available through AnyCap, including image, video, music, and audio models, with workflow guidance and current credit ranges.",
       path: "/models",
-      about: ["AnyCap models", "Image generation", "Video generation", "Music generation"],
+      about: ["AnyCap models", "Image generation", "Video generation", "Music generation", "Audio generation"],
       keywords: [
         "anycap models",
         "image generation models",
         "video generation models",
         "music generation models",
+        "audio generation models",
         "seedream 5 vs nano banana 2",
         "veo 3.1 vs kling 3.0",
       ],
-      datePublished: lastUpdatedIso,
+      datePublished: publishedIso,
       dateModified: lastUpdatedIso,
     }),
   },
@@ -799,18 +801,19 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
     articleJsonLd: createTechArticleJsonLd({
       headline: "Modelos — Modelos multimodais disponíveis no AnyCap",
       description:
-        "Hub de comparação para os modelos multimodais disponíveis no AnyCap, incluindo modelos de imagem, vídeo e música, com orientação de fluxo e faixas atuais de crédito.",
+        "Hub de comparação para os modelos multimodais disponíveis no AnyCap, incluindo modelos de imagem, vídeo, música e áudio, com orientação de fluxo e faixas atuais de crédito.",
       path: "/models",
-      about: ["Modelos AnyCap", "Geração de imagem", "Geração de vídeo", "Geração de música"],
+      about: ["Modelos AnyCap", "Geração de imagem", "Geração de vídeo", "Geração de música", "Geração de áudio"],
       keywords: [
         "modelos anycap",
         "modelos de geração de imagem",
         "modelos de geração de vídeo",
         "modelos de geração de música",
+        "modelos de geração de áudio",
         "seedream 5 vs nano banana 2",
         "veo 3.1 vs kling 3.0",
       ],
-      datePublished: lastUpdatedIso,
+      datePublished: publishedIso,
       dateModified: lastUpdatedIso,
     }),
   },
@@ -879,18 +882,19 @@ contentByLocale.id = {
   articleJsonLd: createTechArticleJsonLd({
     headline: "Model — Model multimodal yang tersedia melalui AnyCap",
     description:
-      "Hub perbandingan untuk model multimodal yang tersedia melalui AnyCap, termasuk model gambar, video, dan musik, dengan panduan alur kerja dan rentang kredit saat ini.",
+      "Hub perbandingan untuk model multimodal yang tersedia melalui AnyCap, termasuk model gambar, video, musik, dan audio, dengan panduan alur kerja dan rentang kredit saat ini.",
     path: "/models",
-    about: ["Model AnyCap", "Pembuatan gambar", "Pembuatan video", "Pembuatan musik"],
+    about: ["Model AnyCap", "Pembuatan gambar", "Pembuatan video", "Pembuatan musik", "Pembuatan audio"],
     keywords: [
       "model anycap",
       "model pembuatan gambar",
       "model pembuatan video",
       "model pembuatan musik",
+      "model pembuatan audio",
       "seedream 5 vs nano banana 2",
       "veo 3.1 vs kling 3.0",
     ],
-    datePublished: lastUpdatedIso,
+    datePublished: publishedIso,
     dateModified: lastUpdatedIso,
   }),
 };
@@ -956,18 +960,19 @@ contentByLocale.de = {
   articleJsonLd: createTechArticleJsonLd({
     headline: "Modelle – Multimodale Modelle, verfügbar über AnyCap",
     description:
-      "Vergleichshub für die multimodalen Modelle, die über AnyCap verfügbar sind, einschließlich Bild-, Video- und Musikmodelle, mit Workflow-Anleitung und aktuellen Credit-Bereichen.",
+      "Vergleichshub für die multimodalen Modelle, die über AnyCap verfügbar sind, einschließlich Bild-, Video-, Musik- und Audiomodelle, mit Workflow-Anleitung und aktuellen Credit-Bereichen.",
     path: "/models",
-    about: ["AnyCap-Modelle", "Bildgenerierung", "Videogenerierung", "Musikgenerierung"],
+    about: ["AnyCap-Modelle", "Bildgenerierung", "Videogenerierung", "Musikgenerierung", "Audiogenerierung"],
     keywords: [
       "anycap modelle",
       "bildgenerierungsmodelle",
       "videogenerierungsmodelle",
       "musikgenerierungsmodelle",
+      "audiogenerierungsmodelle",
       "seedream 5 vs nano banana 2",
       "veo 3.1 vs kling 3.0",
     ],
-    datePublished: lastUpdatedIso,
+    datePublished: publishedIso,
     dateModified: lastUpdatedIso,
   }),
 };
