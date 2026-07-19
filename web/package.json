@@ -2,6 +2,7 @@
   "name": "anycap-web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "generate:seo-routes": "node ./scripts/generate-seo-route-manifest.mjs",
     "generate:localized-seo-pages": "node ./scripts/generate-localized-seo-pages.mjs",
