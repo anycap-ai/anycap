@@ -1,6 +1,7 @@
 export type NavIconKey =
   | "about"
   | "agent-skills"
+  | "audio-generation"
   | "audio-understanding"
   | "capabilities"
   | "claude-code"
@@ -33,6 +34,7 @@ type NavIconProps = {
 const pathByIcon: Record<NavIconKey, string> = {
   about: "M9 5.25H9.01M8.25 8.25H9V12.25M5.25 15.25H12.75L15.25 12.75V5.25L12.75 2.75H5.25L2.75 5.25V12.75L5.25 15.25Z",
   "agent-skills": "M4 12.75L7.25 15.25L14.25 5.25M4.25 5.75H9.25M4.25 8.75H7.25",
+  "audio-generation": "M3.75 7H6.25L9.5 4.5V13.5L6.25 11H3.75V7ZM11.75 7C12.4 7.55 12.75 8.2 12.75 9C12.75 9.8 12.4 10.45 11.75 11M13.5 5.5C14.5 6.45 15 7.6 15 9C15 10.4 14.5 11.55 13.5 12.5",
   "audio-understanding": "M4.5 8.75V10.25M7.5 6.25V12.75M10.5 4.75V14.25M13.5 7.25V11.75",
   capabilities: "M5 5H8V8H5V5ZM10 5H13V8H10V5ZM5 10H8V13H5V10ZM10 10H13V13H10V10Z",
   "claude-code": "M9 3L14.25 6V12L9 15L3.75 12V6L9 3ZM9 6.25V11.75M6.25 9H11.75",

@@ -61,6 +61,14 @@ export const capabilitiesDropdown: NavDropdownDef = {
       description: "Produce music tracks through one runtime.",
     },
     {
+      href: "/capabilities",
+      label: "Audio Generation",
+      icon: "audio-generation",
+      section: "Generate",
+      description:
+        "Generate speech, dialogue, sound effects, and complete audio scenes from text, audio, or image input.",
+    },
+    {
       href: "/capabilities/image-understanding",
       label: "Image Understanding",
       icon: "image-understanding",

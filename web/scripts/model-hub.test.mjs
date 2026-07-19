@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 async function loadInventory() {
   try {
@@ -8,6 +10,9 @@ async function loadInventory() {
     assert.fail(`model hub inventory must exist: ${error.message}`);
   }
 }
+
+const navigationPath = fileURLToPath(new URL("../src/lib/seo-navigation.ts", import.meta.url));
+const navigationSource = readFileSync(navigationPath, "utf8");
 
 const expectedByCapability = {
   image: [
@@ -113,4 +118,30 @@ test("uses only existing fallback routes", async () => {
   assert.equal(byId["kling-3.0-omni"].href, "/capabilities/video-generation");
   assert.equal(byId["seedance-2-mini"].href, "/capabilities/video-generation");
   assert.equal(byId["doubao-seed-audio-1-0"].href, "/capabilities");
+});
+
+test("places audio generation after music with a safe capability fallback", () => {
+  const musicIndex = navigationSource.indexOf('label: "Music Generation"');
+  const audioIndex = navigationSource.indexOf('label: "Audio Generation"');
+  const understandingIndex = navigationSource.indexOf('label: "Image Understanding"');
+
+  assert.notEqual(musicIndex, -1);
+  assert.equal(audioIndex > musicIndex, true, "Audio Generation must follow Music Generation");
+  assert.equal(
+    understandingIndex > audioIndex,
+    true,
+    "Audio Generation must remain inside the Generate section",
+  );
+  const audioBlock = navigationSource.slice(
+    navigationSource.lastIndexOf("{", audioIndex),
+    understandingIndex,
+  );
+  assert.match(audioBlock, /href: "\/capabilities"/);
+  assert.match(audioBlock, /label: "Audio Generation"/);
+  assert.match(audioBlock, /icon: "audio-generation"/);
+  assert.match(audioBlock, /section: "Generate"/);
+  assert.match(
+    audioBlock,
+    /description:\s*"Generate speech, dialogue, sound effects, and complete audio scenes from text, audio, or image input\."/,
+  );
 });
