@@ -225,6 +225,71 @@
       text-align: right;
     }
 
+    .capability-field:has(.noscript-capability-proof) {
+      height: 100dvh;
+      min-height: 100dvh;
+    }
+
+    .noscript-capability-proof {
+      position: absolute;
+      top: 56%;
+      right: var(--page-padding);
+      left: var(--page-padding);
+      z-index: 7;
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
+      gap: 18px 48px;
+      padding: 22px 0;
+      border-block: 1px solid var(--pale-sage);
+      color: var(--text-primary);
+      background: var(--surface);
+      font-family: "AnyCap Inter", ui-sans-serif, sans-serif;
+    }
+
+    .noscript-capability-proof h3,
+    .noscript-capability-proof p {
+      margin: 0;
+    }
+
+    .noscript-capability-proof h3,
+    .noscript-horizon {
+      color: var(--olive);
+      font-family: "AnyCap Pixel", ui-monospace, monospace;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .noscript-models,
+    .noscript-capabilities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .noscript-models li::before,
+    .noscript-capabilities li::before {
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      margin-right: 7px;
+      background: var(--olive);
+      content: "";
+      vertical-align: 2px;
+    }
+
+    .noscript-horizon {
+      grid-column: 1 / -1;
+      text-align: right;
+    }
+
     .artifact-field {
       position: absolute;
       inset: 0;
@@ -591,6 +656,17 @@
         width: calc(100% - 64px);
         font-size: 11px;
       }
+      .noscript-capability-proof {
+        top: 42%;
+        right: var(--page-padding-mobile);
+        left: var(--page-padding-mobile);
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px 0;
+      }
+      .noscript-models,
+      .noscript-capabilities { gap: 6px 12px; font-size: 8px; }
+      .noscript-horizon { grid-column: auto; font-size: 11px; }
     }
 
     @media (max-width: 390px) {
@@ -652,6 +728,32 @@
           <div class="artifact-field"></div>
         </div>
       </div>
+      <noscript>
+        <div class="noscript-capability-proof">
+          <h3>Connected capability proof</h3>
+          <ul class="noscript-models" aria-label="Representative models">
+            <li>Nano Banana 2 Lite</li>
+            <li>Seedance 2.0 Mini</li>
+            <li>Doubao Seed Audio 1.0</li>
+          </ul>
+          <ul class="noscript-capabilities" aria-label="Available capabilities">
+            <li>Research</li>
+            <li>Editorial image</li>
+            <li>Screenshot analysis</li>
+            <li>Vision crop</li>
+            <li>Cinematic video</li>
+            <li>Audio</li>
+            <li>Transcript</li>
+            <li>Share link</li>
+            <li>Music track</li>
+            <li>Search result</li>
+            <li>Code snippet</li>
+            <li>Generated variants</li>
+            <li>Delivered</li>
+          </ul>
+          <p class="noscript-horizon">More models. More capabilities. Continuously added.</p>
+        </div>
+      </noscript>
     </section>
   </main>
   <div class="grain" aria-hidden="true"></div>
@@ -710,13 +812,13 @@
     });
 
     const modelAnchorDefinitions = [
-      { label: "Nano Banana 2 Lite", family: "Image", x: 0.57, y: 0.12, mobile: true },
+      { label: "Nano Banana 2 Lite", family: "Image", x: 0.57, y: 0.12, mobile: true, representative: true },
       { label: "GPT Image 2", family: "Image", x: 0.72, y: 0.17 },
-      { label: "Seedance 2.0 Mini", family: "Video", x: 0.84, y: 0.11, mobile: true },
+      { label: "Seedance 2.0 Mini", family: "Video", x: 0.84, y: 0.11, mobile: true, representative: true },
       { label: "Kling 3.0", family: "Video", x: 0.94, y: 0.24 },
       { label: "Mureka V8", family: "Music", x: 0.88, y: 0.39 },
       { label: "Suno V5.5", family: "Music", x: 0.71, y: 0.34 },
-      { label: "Doubao Seed Audio 1.0", family: "Voice", x: 0.60, y: 0.27, mobile: true },
+      { label: "Doubao Seed Audio 1.0", family: "Voice", x: 0.60, y: 0.27, mobile: true, representative: true },
     ];
 
     const capabilityWaveOrder = Object.freeze({
@@ -730,6 +832,10 @@
       Share: 0.48,
       Storage: 0.48,
     });
+
+    const artifactArrivalThreshold = 0.84;
+    const routeProgressState = new Float32Array(endpointDefinitions.length);
+    const installPulseBounds = Object.freeze({ compressed: 0.98, released: 1.03 });
 
     function phaseProgress(name, progress) {
       const [start, end] = narrativeRanges[name];
@@ -745,6 +851,33 @@
         flood: phaseProgress("flood", value),
         horizon: phaseProgress("horizon", value),
       });
+    }
+
+    function endpointRouteProgress(index, progress) {
+      const endpoint = endpointDefinitions[index];
+      const familyDelay = capabilityWaveOrder[endpoint.family] ?? 0.48;
+      const routeStart = narrativeRanges.flood[0] + familyDelay * 0.18 + index * 0.006;
+      const routeEnd = Math.min(0.94, routeStart + 0.22);
+      return smoothstep(routeStart, routeEnd, clamp01(progress));
+    }
+
+    function updateRouteProgress(progress) {
+      for (let index = 0; index < routeProgressState.length; index += 1) {
+        routeProgressState[index] = endpointRouteProgress(index, progress);
+      }
+      return routeProgressState;
+    }
+
+    function installPulseScale(progress) {
+      const local = phaseProgress("ignite", progress);
+      if (local <= 0 || local >= 1) return 1;
+      if (local < 0.32) {
+        return mix(1, installPulseBounds.compressed, smoothstep(0, 0.32, local));
+      }
+      if (local < 0.68) {
+        return mix(installPulseBounds.compressed, installPulseBounds.released, smoothstep(0.32, 0.68, local));
+      }
+      return mix(installPulseBounds.released, 1, smoothstep(0.68, 1, local));
     }
 
     let particles = [];
@@ -814,10 +947,6 @@
       };
     }
 
-    function mixPoint(from, to, amount) {
-      return { x: mix(from.x, to.x, amount), y: mix(from.y, to.y, amount) };
-    }
-
     function buildLimitedAgentPoint(index, count, bounds, center) {
       const amount = index / Math.max(1, count - 1);
       return {
@@ -826,12 +955,15 @@
       };
     }
 
-    function buildModelClusterPoint(index, anchor) {
-      const angle = index * 2.399963229728653;
-      const radius = 4 + Math.sqrt(index + 1) * 1.8;
+    function buildModelRoutePoint(index, anchor, center) {
+      const deltaX = center.x - anchor.x;
+      const deltaY = center.y - anchor.y;
+      const inverseLength = 1 / Math.max(1, Math.hypot(deltaX, deltaY));
+      const forward = 5 + (index % 19) * 2.2;
+      const lane = (Math.floor(index / 19) % 5 - 2) * 1.8;
       return {
-        x: anchor.x + Math.cos(angle) * radius * 1.4,
-        y: anchor.y + Math.sin(angle) * radius,
+        x: anchor.x + deltaX * inverseLength * forward - deltaY * inverseLength * lane,
+        y: anchor.y + deltaY * inverseLength * forward + deltaX * inverseLength * lane,
       };
     }
 
@@ -843,13 +975,26 @@
         : { x: bounds.width * (1.02 + (index % 29) / 90), y: endpoint.y + Math.sin(index * 1.73) * bounds.height * spread };
     }
 
-    function resolveParticlePosition(particle, phases) {
-      let point = mixPoint(particle.loose, particle.limited, phases.limited);
-      point = mixPoint(point, particle.ready, phases.ignite);
-      if (particle.role !== "portal") point = mixPoint(point, particle.connected, phases.models);
-      if (particle.role !== "portal") point = mixPoint(point, particle.final, phases.flood);
-      if (particle.role === "continuation") point = mixPoint(point, particle.horizon, phases.horizon);
-      return point;
+    function resolveParticlePosition(particle, phases, localRouteProgress, pulseScale) {
+      let x = mix(particle.loose.x, particle.limited.x, phases.limited);
+      let y = mix(particle.loose.y, particle.limited.y, phases.limited);
+      x = mix(x, particle.ready.x, phases.ignite);
+      y = mix(y, particle.ready.y, phases.ignite);
+      if (particle.role === "portal") {
+        particle.renderX = center.x + (x - center.x) * pulseScale;
+        particle.renderY = center.y + (y - center.y) * pulseScale;
+        return;
+      }
+      x = mix(x, particle.connected.x, phases.models);
+      y = mix(y, particle.connected.y, phases.models);
+      x = mix(x, particle.final.x, localRouteProgress);
+      y = mix(y, particle.final.y, localRouteProgress);
+      if (particle.role === "continuation") {
+        x = mix(x, particle.horizon.x, phases.horizon);
+        y = mix(y, particle.horizon.y, phases.horizon);
+      }
+      particle.renderX = x;
+      particle.renderY = y;
     }
 
     function buildCorePoint(index, count, center, scale, thickness = 0) {
@@ -905,14 +1050,15 @@
 
     function drawPartialQuadratic(from, control, to, amount, alpha) {
       if (amount <= 0) return;
-      const steps = 18;
+      const splitControlX = mix(from.x, control.x, amount);
+      const splitControlY = mix(from.y, control.y, amount);
+      const splitTargetX = mix(control.x, to.x, amount);
+      const splitTargetY = mix(control.y, to.y, amount);
+      const splitEndX = mix(splitControlX, splitTargetX, amount);
+      const splitEndY = mix(splitControlY, splitTargetY, amount);
       context.beginPath();
       context.moveTo(from.x, from.y);
-      for (let step = 1; step <= steps; step += 1) {
-        const progress = amount * step / steps;
-        const point = quadraticPoint(from, control, to, progress);
-        context.lineTo(point.x, point.y);
-      }
+      context.quadraticCurveTo(splitControlX, splitControlY, splitEndX, splitEndY);
       context.globalAlpha = alpha;
       context.stroke();
     }
@@ -928,23 +1074,13 @@
       context.restore();
     }
 
-    function drawConnections(amount) {
-      if (amount <= 0) return;
+    function drawConnections() {
       context.save();
-      context.globalAlpha = amount * 0.16;
       context.strokeStyle = "#6b7d3a";
       context.lineWidth = 1;
-      for (const path of connectionPaths) {
-        context.beginPath();
-        context.moveTo(center.x, center.y);
-        context.quadraticCurveTo(
-          path.control.x,
-          path.control.y,
-          mix(center.x, path.endpoint.x, amount),
-          mix(center.y, path.endpoint.y, amount),
-        );
-        context.stroke();
-      }
+      connectionPaths.forEach((path, index) => {
+        drawPartialQuadratic(center, path.control, path.endpoint, routeProgressState[index], routeProgressState[index] * 0.16);
+      });
       context.restore();
     }
 
@@ -1010,18 +1146,26 @@
         { x: 0.58, y: 0.43 },
         { x: 0.16, y: 0.56 },
       ];
+      const finalModelPositions = mobileLayout
+        ? [{ x: 0.08, y: 0.67 }, { x: 0.08, y: 0.72 }, { x: 0.08, y: 0.77 }]
+        : [{ x: 0.075, y: 0.70 }, { x: 0.075, y: 0.755 }, { x: 0.075, y: 0.81 }];
       let mobileAnchorIndex = 0;
+      let representativeIndex = 0;
+      let activeAnchorIndex = 0;
       modelAnchors = modelAnchorDefinitions.map((definition) => {
         const mobilePosition = definition.mobile ? mobileAnchorPositions[mobileAnchorIndex++] : null;
+        const finalPosition = definition.representative ? finalModelPositions[representativeIndex++] : null;
+        const active = !mobileLayout || Boolean(definition.mobile);
         return {
           ...definition,
+          activeIndex: active ? activeAnchorIndex++ : -1,
           x: (mobileLayout ? (mobilePosition?.x ?? definition.x) : definition.x) * bounds.width,
           y: (mobileLayout ? (mobilePosition?.y ?? definition.y) : definition.y) * bounds.height,
+          finalX: (finalPosition?.x ?? definition.x) * bounds.width,
+          finalY: (finalPosition?.y ?? definition.y) * bounds.height,
         };
       });
-      const activeModelAnchors = mobileLayout
-        ? modelAnchors.filter((anchor) => anchor.mobile)
-        : modelAnchors;
+      const activeModelAnchors = modelAnchors.filter((anchor) => anchor.activeIndex >= 0);
       modelPaths = activeModelAnchors.map((anchor, index) => {
         const deltaX = anchor.x - center.x;
         const deltaY = anchor.y - center.y;
@@ -1055,19 +1199,23 @@
             olive: loose.olive,
             alpha: loose.alpha,
             role,
+            endpointIndex: -1,
             loose,
             limited: buildLimitedAgentPoint(index, portalCount, bounds, center),
             ready,
             connected: ready,
             final: ready,
             horizon: ready,
+            renderX: loose.x,
+            renderY: loose.y,
           };
         }
 
         const routeIndex = index - portalCount;
+        const endpointIndex = routeIndex % endpoints.length;
         const anchor = activeModelAnchors[routeIndex % activeModelAnchors.length];
         const anchorIndex = Math.floor(routeIndex / activeModelAnchors.length);
-        const ready = buildModelClusterPoint(anchorIndex, anchor);
+        const ready = buildModelRoutePoint(anchorIndex, anchor, center);
         const connected = buildCorePoint(routeIndex, routedParticleCount, center, coreScale);
         const final = buildFinalPoint(routeIndex, routedParticleCount, center, endpoints);
         return {
@@ -1075,14 +1223,17 @@
           olive: loose.olive,
           alpha: loose.alpha,
           role,
+          endpointIndex,
           loose,
           limited: loose,
           ready,
           connected,
           final,
           horizon: role === "continuation"
-            ? buildContinuationPoint(routeIndex, bounds, endpoints[routeIndex % endpoints.length])
+            ? buildContinuationPoint(routeIndex, bounds, endpoints[endpointIndex])
             : final,
+          renderX: loose.x,
+          renderY: loose.y,
         };
       });
 
@@ -1094,6 +1245,8 @@
         modelAnchorElements[index].style.left = `${anchor.x}px`;
         modelAnchorElements[index].style.top = `${anchor.y}px`;
         modelAnchorElements[index].dataset.edge = String(!mobileLayout && anchor.x > bounds.width * 0.82);
+        modelAnchorElements[index].dataset.activeIndex = String(anchor.activeIndex);
+        modelAnchorElements[index].dataset.representative = String(Boolean(anchor.representative));
       });
       portalFigures.style.left = `${center.x}px`;
       portalFigures.style.top = `${center.y + coreScale * 0.18}px`;
@@ -1110,16 +1263,19 @@
     function renderAt(progress) {
       progress = clamp01(progress);
       const phases = phaseSnapshot(progress);
+      const pulseScale = installPulseScale(progress);
+      updateRouteProgress(progress);
       context.clearRect(0, 0, canvasWidth, canvasHeight);
       drawModelConnections(phases.models);
-      drawConnections(phases.flood);
+      drawConnections();
 
       for (const particle of particles) {
-        const point = resolveParticlePosition(particle, phases);
+        const localRouteProgress = routeProgressState[particle.endpointIndex] ?? 0;
+        resolveParticlePosition(particle, phases, localRouteProgress, pulseScale);
         context.globalAlpha = Math.min(1, particle.alpha * (particle.role === "portal" ? mix(1, 1.35, phases.ignite) : 1));
         context.fillStyle = particle.olive ? "#6b7d3a" : "#1c1f17";
         const radius = particle.radius * (particle.role === "portal" ? mix(1, 2.25, phases.ignite) : 1);
-        context.fillRect(point.x, point.y, radius, radius);
+        context.fillRect(particle.renderX, particle.renderY, radius, radius);
       }
       context.globalAlpha = 1;
 
@@ -1127,7 +1283,7 @@
       const cursorReveal = smoothstep(0.04, 0.16, progress);
       const cursorRecede = smoothstep(0.31, 0.40, progress);
       portalFigures.style.opacity = String(portalReveal);
-      portalFigures.style.transform = `translate(-50%, -15%) scale(${mix(0.92, 1, portalReveal)})`;
+      portalFigures.style.transform = `translate(-50%, -15%) scale(${mix(0.92, 1, portalReveal) * pulseScale})`;
       cursorLanes.style.opacity = String(cursorReveal * mix(1, 0.42, cursorRecede));
       cursorLanes.style.transform = `translateX(${mix(-18, 0, cursorReveal)}px)`;
 
@@ -1143,18 +1299,33 @@
       installModule.style.transform = `translateX(${mix(-48, 0, installReveal)}px) scale(${mix(0.72, 1, installReveal)})`;
 
       modelAnchorElements.forEach((anchor, index) => {
-        const modelReveal = smoothstep(0.36 + index * 0.025, 0.46 + index * 0.025, progress);
+        const modelState = modelAnchors[index];
+        const activeIndex = modelState.activeIndex;
+        const modelReveal = activeIndex < 0
+          ? 0
+          : smoothstep(0.36 + activeIndex * 0.025, 0.46 + activeIndex * 0.025, progress);
         const modelRecede = smoothstep(0.56, 0.68, progress);
-        const modelOpacity = modelReveal * mix(1, 0.035, modelRecede);
+        const finalModelReveal = smoothstep(0.86, 0.95, progress);
+        const finalModelOpacity = 0.42;
+        const representative = Boolean(modelState.representative);
+        const recededOpacity = modelReveal * mix(1, representative ? 0.035 : 0.01, modelRecede);
+        const modelOpacity = representative
+          ? mix(recededOpacity, finalModelOpacity, finalModelReveal)
+          : recededOpacity * (1 - finalModelReveal);
         const edgeOffset = anchor.dataset.edge === "true" ? "-100%" : "-50%";
+        const initialPercent = edgeOffset === "-100%" ? -100 : -50;
+        const finalX = representative ? modelState.finalX - modelState.x : 0;
+        const finalY = representative ? modelState.finalY - modelState.y : 0;
+        const translatePercent = mix(initialPercent, 0, representative ? finalModelReveal : 0);
+        const translateX = finalX * finalModelReveal;
+        const translateY = mix(9, 0, modelReveal) + finalY * finalModelReveal;
         anchor.style.opacity = String(modelOpacity);
-        anchor.style.transform = `translate(${edgeOffset}, ${mix(9, 0, modelReveal)}px) scale(${mix(0.96, 1, modelReveal)})`;
+        anchor.style.transform = `translate(calc(${translatePercent}% + ${translateX}px), ${translateY}px) scale(${mix(0.96, 1, modelReveal)})`;
       });
 
       labelElements.forEach((label, index) => {
-        const familyDelay = capabilityWaveOrder[endpointDefinitions[index].family] ?? 0.48;
-        const artifactStart = 0.56 + familyDelay * 0.18 + index * 0.006;
-        const artifactReveal = smoothstep(artifactStart, artifactStart + 0.12, progress);
+        const localRouteProgress = routeProgressState[index];
+        const artifactReveal = smoothstep(artifactArrivalThreshold, 1, localRouteProgress);
         label.style.opacity = String(artifactReveal);
         label.style.transform = `translate(-50%, calc(-50% + ${mix(14, 0, artifactReveal)}px)) scale(${mix(0.94, 1, artifactReveal)})`;
       });
@@ -1279,6 +1450,9 @@
       get active() { return Boolean(ScrollTrigger.getAll()[0]?.isActive); },
       renderAt,
       phaseSnapshot,
+      routeProgress: endpointRouteProgress,
+      pulseScale: installPulseScale,
+      arrivalThreshold: artifactArrivalThreshold,
     };
 
     const fontsReady = document.fonts?.ready ?? Promise.resolve();
