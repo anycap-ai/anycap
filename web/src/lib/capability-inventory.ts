@@ -1,12 +1,12 @@
 import type { CapabilityGapRow } from "@/components/landing/CapabilityGapTable";
+import {
+  getModelHubModels,
+  type ModelHubModel,
+} from "@/lib/model-hub";
 
 export type AgentCapabilityGapAgent = "claude-code" | "cursor" | "codex" | "manus";
 
-export type GenerationModel = {
-  model: string;
-  modes: string[];
-  credits: string;
-};
+export type GenerationModel = ModelHubModel;
 
 export type PricingGenerationGroup = {
   title: string;
@@ -22,15 +22,7 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
     description: "Charged per call. Supports text-to-image and image-to-image modes.",
     unitLabel: "/call",
     headers: ["Model", "Modes", "Credits / call"],
-    models: [
-      { model: "FLUX.1 Kontext Max", modes: ["text-to-image", "image-to-image"], credits: "varies" },
-      { model: "GPT Image 2", modes: ["text-to-image", "image-to-image"], credits: "varies" },
-      { model: "Nano Banana Pro", modes: ["text-to-image", "image-to-image"], credits: "~7" },
-      { model: "Nano Banana 2", modes: ["text-to-image", "image-to-image"], credits: "~4" },
-      { model: "Qwen Image", modes: ["text-to-image", "image-to-image"], credits: "varies" },
-      { model: "Seedream 4.5", modes: ["text-to-image", "image-to-image"], credits: "varies" },
-      { model: "Seedream 5", modes: ["text-to-image", "image-to-image"], credits: "~2" },
-    ],
+    models: getModelHubModels("image"),
   },
   {
     title: "Video generation",
@@ -38,33 +30,21 @@ export const pricingGenerationGroups: PricingGenerationGroup[] = [
       "Charged per second of generated output. Supports text-to-video and image-to-video modes.",
     unitLabel: "/sec",
     headers: ["Model", "Modes", "Credits / sec"],
-    models: [
-      { model: "Hailuo 2.3", modes: ["text-to-video", "image-to-video"], credits: "varies" },
-      { model: "Veo 3.1", modes: ["text-to-video", "image-to-video"], credits: "~20" },
-      { model: "Veo 3.1 Fast", modes: ["text-to-video", "image-to-video"], credits: "varies" },
-      { model: "Sora 2 Pro", modes: ["text-to-video", "image-to-video"], credits: "varies" },
-      {
-        model: "Seedance 1.5 Pro",
-        modes: ["text-to-video", "image-to-video"],
-        credits: "~14",
-      },
-      { model: "Seedance 2.0", modes: ["text-to-video", "image-to-video"], credits: "varies" },
-      { model: "Seedance 2.0 Fast", modes: ["text-to-video", "image-to-video"], credits: "varies" },
-      { model: "Kling 3.0", modes: ["text-to-video", "image-to-video"], credits: "~9" },
-      { model: "Kling O1", modes: ["image-to-video"], credits: "varies" },
-    ],
+    models: getModelHubModels("video"),
   },
   {
     title: "Music generation",
     description: "Charged per second of generated audio.",
     unitLabel: "/sec",
     headers: ["Model", "Modes", "Credits / sec"],
-    models: [
-      { model: "ElevenLabs Music", modes: ["text-to-music"], credits: "~1" },
-      { model: "Mureka V8", modes: ["text-to-music"], credits: "varies" },
-      { model: "Suno V5", modes: ["text-to-music"], credits: "varies" },
-      { model: "Suno V5.5", modes: ["text-to-music"], credits: "varies" },
-    ],
+    models: getModelHubModels("music"),
+  },
+  {
+    title: "Audio generation",
+    description: "Charged per successful generated output from text, audio, or image input.",
+    unitLabel: "/call",
+    headers: ["Model", "Modes", "Credits / call"],
+    models: getModelHubModels("audio"),
   },
 ];
 

@@ -12,6 +12,7 @@
     "check:seo-locale-rollout": "node ./scripts/check-seo-locale-rollout.mjs",
     "check:seo-hub-locale-rollout": "node ./scripts/check-seo-hub-locale-rollout.mjs",
     "check:seo-ia": "node ./scripts/check-seo-information-architecture.mjs",
+    "check:model-hub": "node --test ./scripts/model-hub.test.mjs",
     "generate:sitemap-lastmod": "node ./scripts/generate-sitemap-lastmod.mjs",
     "publish:indexnow": "node ./scripts/publish-indexnow.mjs",
     "build": "pnpm run sync:seo-locales && pnpm run check:edge-runtime && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run check:seo-locale-rollout && pnpm run check:seo-hub-locale-rollout && pnpm run generate:sitemap-lastmod && next build",
