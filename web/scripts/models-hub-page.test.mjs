@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const pagePath = fileURLToPath(new URL("../src/app/(seo)/models/page.tsx", import.meta.url));
 const pageSource = readFileSync(pagePath, "utf8");
+const llmsPath = fileURLToPath(new URL("../public/llms.txt", import.meta.url));
+const llmsSource = readFileSync(llmsPath, "utf8");
+const statusPath = fileURLToPath(new URL("../../docs/anycap-current-status.md", import.meta.url));
+const statusSource = readFileSync(statusPath, "utf8");
 
 test("marks the models hub as updated on July 19, 2026", () => {
   assert.match(pageSource, /const lastUpdatedIso = "2026-07-19"/);
@@ -35,4 +39,10 @@ test("localizes the audio generation comparison group", () => {
 test("explicitly localizes music and preserves unknown comparison groups", () => {
   assert.equal((pageSource.match(/group\.title === "Music generation"/g) ?? []).length, 3);
   assert.match(pageSource, /return group;/);
+});
+
+test("keeps public model-hub descriptions aligned", () => {
+  assert.match(llmsSource, /image, video, music, and audio generation models/);
+  assert.match(statusSource, /> Last updated: 2026-07-19/);
+  assert.match(statusSource, /Newest-first models hub/i);
 });

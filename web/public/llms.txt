@@ -47,7 +47,7 @@ Claude Code now runs Claude Opus 4.7 — the strongest reasoning and coding agen
 
 ## Models
 
-- [Models overview](https://anycap.ai/models): Multimodal model catalog and model-selection guidance for agent workflows.
+- [Models overview](https://anycap.ai/models): Current image, video, music, and audio generation models, with the newest AnyCap additions and capability updates shown first.
 - [Veo 3.1](https://anycap.ai/models/veo-3-1): Premium text-to-video and image-to-video for agent workflows.
 - [Kling 3.0](https://anycap.ai/models/kling-3-0): Realistic motion and cinematic image-to-video workflows.
 - [Seedream 5](https://anycap.ai/models/seedream-5): Polished first-pass image generation.

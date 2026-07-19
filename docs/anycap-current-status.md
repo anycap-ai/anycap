@@ -1,6 +1,6 @@
 # AnyCap — Current Product Status
 
-> Last updated: 2026-07-18
+> Last updated: 2026-07-19
 
 ## 1. Capabilities (Cap)
 
@@ -346,9 +346,11 @@ Public pages group external community links in the header: GitHub for the reposi
 | Guides | Install AnyCap, agent skills, context engineering, workspace context, agent harness, add tools to Claude Code |
 | Glossary | Agent capability runtime, agent harness, context engineering |
 | Compare | AnyCap vs Composio, AnyCap vs OpenAI Agent Builder, AnyCap vs Replicate, AnyCap vs fal.ai |
-| Models | Overview, Seedream 5, Nano Banana Pro, Veo 3.1 |
+| Models | Newest-first models hub across image, video, music, and audio generation, plus existing model detail guides |
 | Learn | What agents can't do |
 | Top-level | Start, CLI, Skills, About |
+
+The `/models` hub is sourced from the current web capability inventory, includes all production generation models verified on 2026-07-19, and orders both recent additions and capability tables by AnyCap availability or material capability-update date.
 
 ### AI Discoverability
 
