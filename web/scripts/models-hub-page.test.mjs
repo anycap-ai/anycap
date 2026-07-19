@@ -31,3 +31,8 @@ test("localizes the audio generation comparison group", () => {
     assert.equal(pageSource.includes(label), true, label);
   }
 });
+
+test("explicitly localizes music and preserves unknown comparison groups", () => {
+  assert.equal((pageSource.match(/group\.title === "Music generation"/g) ?? []).length, 3);
+  assert.match(pageSource, /return group;/);
+});

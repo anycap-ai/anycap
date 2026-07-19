@@ -537,16 +537,20 @@ function localizePricingGroups(locale: SiteLocale): PricingGenerationGroup[] {
         };
       }
 
-      return {
-        ...group,
-        title: "Musikgenerierung",
-        description: "Abrechnung pro Sekunde generiertem Audio.",
-        headers: ["Modell", "Modus", "Credits / Sek."],
-        models: group.models.map((model) => ({
-          ...model,
-          modes: model.modes,
-        })),
-      };
+      if (group.title === "Music generation") {
+        return {
+          ...group,
+          title: "Musikgenerierung",
+          description: "Abrechnung pro Sekunde generiertem Audio.",
+          headers: ["Modell", "Modus", "Credits / Sek."],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes,
+          })),
+        };
+      }
+
+      return group;
     }
 
     if (locale === "id") {
@@ -586,16 +590,20 @@ function localizePricingGroups(locale: SiteLocale): PricingGenerationGroup[] {
         };
       }
 
-      return {
-        ...group,
-        title: "Pembuatan musik",
-        description: "Dikenakan per detik audio yang dihasilkan.",
-        headers: ["Model", "Mode", "Kredit / dtk"],
-        models: group.models.map((model) => ({
-          ...model,
-          modes: model.modes,
-        })),
-      };
+      if (group.title === "Music generation") {
+        return {
+          ...group,
+          title: "Pembuatan musik",
+          description: "Dikenakan per detik audio yang dihasilkan.",
+          headers: ["Model", "Mode", "Kredit / dtk"],
+          models: group.models.map((model) => ({
+            ...model,
+            modes: model.modes,
+          })),
+        };
+      }
+
+      return group;
     }
 
     if (group.title === "Image generation") {
@@ -634,16 +642,20 @@ function localizePricingGroups(locale: SiteLocale): PricingGenerationGroup[] {
       };
     }
 
-    return {
-      ...group,
-      title: "Geração de música",
-      description: "Cobrado por segundo de áudio gerado.",
-      headers: ["Modelo", "Modos", "Créditos / seg"],
-      models: group.models.map((model) => ({
-        ...model,
-        modes: model.modes,
-      })),
-    };
+    if (group.title === "Music generation") {
+      return {
+        ...group,
+        title: "Geração de música",
+        description: "Cobrado por segundo de áudio gerado.",
+        headers: ["Modelo", "Modos", "Créditos / seg"],
+        models: group.models.map((model) => ({
+          ...model,
+          modes: model.modes,
+        })),
+      };
+    }
+
+    return group;
   });
 }
 
