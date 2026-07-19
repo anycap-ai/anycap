@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AnyCap capability field</title>
+  <link rel="icon" href="data:,">
+  <style>
+    @font-face {
+      font-family: "AnyCap Pixel";
+      src: url("vendor/geist-pixel-square.woff2") format("woff2");
+      font-display: swap;
+      font-style: normal;
+      font-weight: 400 700;
+    }
+
+    @font-face {
+      font-family: "AnyCap Inter";
+      src: url("vendor/inter-latin.woff2") format("woff2");
+      font-display: swap;
+      font-style: normal;
+      font-weight: 100 900;
+    }
+
+    :root {
+      --surface: #f4f5f0;
+      --text-primary: #1c1f17;
+      --text-secondary: #4d5145;
+      --olive: #6b7d3a;
+      --pale-sage: #d4dbb8;
+      --page-padding-mobile: 32px;
+      --page-padding-tablet: 64px;
+      --page-padding-desktop: 96px;
+      --page-padding: var(--page-padding-desktop);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--surface);
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: 100%;
+    }
+
+    .capability-field {
+      position: relative;
+      height: 320dvh;
+      border-block: 1px solid var(--pale-sage);
+      background: var(--surface);
+    }
+
+    .capability-stage {
+      position: relative;
+      width: min(100%, 1536px);
+      height: 100dvh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .capability-copy {
+      position: absolute;
+      top: 38%;
+      left: var(--page-padding);
+      z-index: 6;
+      width: min(34vw, 500px);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .capability-copy h2 {
+      margin: 0;
+      font-family: "AnyCap Pixel", ui-monospace, monospace;
+      font-size: clamp(34px, 2.8vw, 46px);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 0.97;
+    }
+
+    .capability-copy h2 span {
+      display: block;
+    }
+
+    .capability-copy h2 span:first-child {
+      color: var(--olive);
+    }
+
+    .capability-subtitle {
+      margin: 30px 0 0;
+      color: var(--text-secondary);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(15px, 1.15vw, 18px);
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    .capability-subtitle strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .particle-visual {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .particle-visual canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .artifact-field {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .artifact-card {
+      position: absolute;
+      width: var(--artifact-width, clamp(116px, 11vw, 176px));
+      overflow: visible;
+      border: 1px solid rgba(77, 81, 69, 0.34);
+      border-radius: 6px;
+      color: var(--text-primary);
+      background: rgba(244, 245, 240, 0.94);
+      box-shadow: 0 12px 26px rgba(28, 31, 23, 0.10);
+      font-family: "AnyCap Inter", ui-sans-serif, sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      line-height: 1.35;
+      opacity: 0;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+
+    .artifact-card.dark {
+      border-color: rgba(244, 245, 240, 0.14);
+      color: #eef0e7;
+      background: #1c1f17;
+      box-shadow: 0 14px 30px rgba(28, 31, 23, 0.18);
+    }
+
+    .artifact-cap {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 4px;
+      color: #36401f;
+      font-family: "AnyCap Pixel", ui-monospace, monospace;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .artifact-card.dark .artifact-cap {
+      color: var(--text-secondary);
+    }
+
+    .artifact-body {
+      min-height: 62px;
+      overflow: hidden;
+      border-radius: 5px;
+    }
+
+    .research-copy,
+    .transcript-body,
+    .share-body,
+    .code-body {
+      padding: 10px;
+    }
+
+    .research-copy p,
+    .share-body p {
+      margin: 0;
+    }
+
+    .photo-swatch {
+      position: relative;
+      min-height: 86px;
+      background:
+        linear-gradient(165deg, transparent 45%, rgba(20, 27, 16, 0.68) 46% 61%, transparent 62%),
+        linear-gradient(20deg, #d8ddc7 0 35%, #83916a 36% 55%, #2c3628 56% 100%);
+    }
+
+    .photo-swatch::after {
+      position: absolute;
+      inset: 12% 18%;
+      border: 1px solid rgba(244, 245, 240, 0.88);
+      content: "";
+    }
+
+    .screenshot-body {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      min-height: 76px;
+    }
+
+    .screenshot-preview {
+      margin: 8px;
+      background:
+        linear-gradient(90deg, transparent 0 14%, rgba(212, 219, 184, 0.20) 15% 16%, transparent 17%),
+        #22261d;
+      box-shadow: inset 0 0 0 1px rgba(244, 245, 240, 0.08);
+    }
+
+    .issue-list {
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      padding: 8px 8px 8px 0;
+      color: var(--text-secondary);
+      font-size: 7px;
+    }
+
+    .filmstrip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      min-height: 72px;
+      padding: 10px;
+      background: #1c1f17;
+    }
+
+    .filmstrip i,
+    .search-thumbs i,
+    .variant-strip i {
+      display: block;
+      background: linear-gradient(145deg, #242b20, #72806a 52%, #d5d9c8);
+      box-shadow: inset 0 0 0 1px rgba(244, 245, 240, 0.08);
+    }
+
+    .waveform {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      min-height: 68px;
+      padding: 12px;
+      background: #1c1f17;
+    }
+
+    .waveform i {
+      flex: 1;
+      height: var(--wave, 50%);
+      background: #d7ddc4;
+      opacity: 0.8;
+    }
+
+    .transcript-body {
+      display: grid;
+      gap: 6px;
+      color: #dfe4d2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 7px;
+    }
+
+    .transcript-body b,
+    .share-body b {
+      color: #91a451;
+      font-weight: 500;
+    }
+
+    .share-body {
+      min-height: 58px;
+      color: #dfe4d2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .folder-body {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 60px;
+      padding: 10px;
+    }
+
+    .folder-icon {
+      width: 32px;
+      height: 25px;
+      border-radius: 3px;
+      background: var(--olive);
+    }
+
+    .folder-icon::before {
+      display: block;
+      width: 15px;
+      height: 5px;
+      border-radius: 2px 2px 0 0;
+      background: var(--olive);
+      content: "";
+      transform: translateY(-4px);
+    }
+
+    .search-thumbs,
+    .variant-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      min-height: 54px;
+      padding: 8px;
+    }
+
+    .code-body {
+      min-height: 76px;
+      color: #e0e5d5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 7px;
+      white-space: pre-line;
+    }
+
+    .delivered-card {
+      --artifact-width: clamp(128px, 12vw, 188px);
+    }
+
+    .delivered-card .photo-swatch {
+      min-height: 104px;
+    }
+
+    .delivered-copy {
+      padding: 10px;
+      color: #f0f2e9;
+      background: #1c1f17;
+      font-family: "AnyCap Pixel", ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .portal-figures {
+      position: absolute;
+      z-index: 5;
+      width: 74px;
+      height: 92px;
+      opacity: 0;
+      transform: translate(-50%, -15%);
+      pointer-events: none;
+    }
+
+    .portal-person {
+      position: absolute;
+      bottom: 0;
+      width: 14px;
+      height: 44px;
+      color: var(--text-primary);
+      background: currentColor;
+      box-shadow: 0 0 0 2px rgba(244, 245, 240, 0.40);
+    }
+
+    .portal-person::before {
+      position: absolute;
+      top: -13px;
+      left: 2px;
+      width: 10px;
+      height: 10px;
+      background: currentColor;
+      content: "";
+    }
+
+    .portal-person::after {
+      position: absolute;
+      right: -5px;
+      bottom: 0;
+      width: 4px;
+      height: 24px;
+      background: currentColor;
+      box-shadow: -13px 0 currentColor;
+      content: "";
+    }
+
+    .portal-human { left: 18px; }
+    .portal-agent { right: 15px; color: var(--olive); height: 36px; }
+
+    .cursor-lanes {
+      position: absolute;
+      z-index: 5;
+      width: clamp(180px, 18vw, 280px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .cursor-lane {
+      display: grid;
+      grid-template-columns: 44px 18px 1fr;
+      align-items: center;
+      gap: 8px;
+      margin: 22px 0;
+      color: var(--text-primary);
+      font-family: "AnyCap Inter", ui-sans-serif, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .cursor-lane.agent { color: var(--olive); }
+
+    .cursor-arrow {
+      width: 16px;
+      height: 22px;
+      background: currentColor;
+      clip-path: polygon(0 0, 100% 70%, 62% 72%, 78% 100%, 60% 100%, 44% 74%, 18% 100%);
+    }
+
+    .cursor-trail {
+      height: 1px;
+      background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 7px);
+      opacity: 0.36;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.07;
+      mix-blend-mode: multiply;
+    }
+
+    @media (max-width: 1023px) {
+      :root {
+        --page-padding: var(--page-padding-tablet);
+      }
+
+      .capability-copy { width: min(35vw, 440px); }
+      .artifact-card { transform-origin: 50% 50%; }
+    }
+
+    @media (max-width: 767px) {
+      :root {
+        --page-padding: var(--page-padding-mobile);
+      }
+
+      .capability-field {
+        height: 250dvh;
+      }
+
+      .capability-copy {
+        top: 20%;
+        width: calc(100% - 64px);
+        max-width: 430px;
+        transform: none;
+      }
+
+      .capability-copy h2 {
+        font-size: clamp(34px, 9.5vw, 50px);
+        letter-spacing: -0.03em;
+        line-height: 0.98;
+      }
+
+      .capability-subtitle {
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .artifact-card { width: 104px; font-size: 7px; }
+      .artifact-card:nth-child(1),
+      .artifact-card:nth-child(2),
+      .artifact-card:nth-child(3),
+      .artifact-card:nth-child(4),
+      .artifact-card:nth-child(6),
+      .artifact-card:nth-child(8),
+      .artifact-card:nth-child(9),
+      .artifact-card:nth-child(10),
+      .artifact-card:nth-child(11),
+      .artifact-card:nth-child(12) { display: none; }
+      .artifact-cap { font-size: 8px; }
+      .cursor-lanes { display: none; }
+      .cursor-lane { grid-template-columns: 38px 16px 1fr; margin: 14px 0; font-size: 9px; }
+    }
+
+    @media (max-width: 390px) {
+      .capability-copy { top: 16%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .capability-field {
+        height: auto;
+        min-height: 100dvh;
+      }
+
+      .artifact-card,
+      .portal-figures,
+      .cursor-lanes {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="capability-field" aria-labelledby="capability-title">
+      <div class="capability-stage">
+        <div class="capability-copy">
+          <h2 id="capability-title">
+            <span>One capability layer.</span>
+            <span>Every way to finish.</span>
+          </h2>
+          <p class="capability-subtitle">
+            <strong>Human + agent</strong>
+            Create. Understand. Find. Manage. Deliver.
+          </p>
+        </div>
+        <div class="particle-visual" aria-hidden="true">
+          <canvas></canvas>
+          <div class="cursor-lanes">
+            <div class="cursor-lane human"><span>Human</span><i class="cursor-arrow"></i><i class="cursor-trail"></i></div>
+            <div class="cursor-lane agent"><span>Agent</span><i class="cursor-arrow"></i><i class="cursor-trail"></i></div>
+          </div>
+          <div class="portal-figures">
+            <i class="portal-person portal-human"></i>
+            <i class="portal-person portal-agent"></i>
+          </div>
+          <div class="artifact-field"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="grain" aria-hidden="true"></div>
+
+  <script>
+/*__INLINE_GSAP__*/
+
+
+
+/*__INLINE_SCROLLTRIGGER__*/
+
+
+
+    const visual = document.querySelector(".particle-visual");
+    const canvas = visual.querySelector("canvas");
+    const context = canvas.getContext("2d");
+    const artifactField = visual.querySelector(".artifact-field");
+    const portalFigures = visual.querySelector(".portal-figures");
+    const cursorLanes = visual.querySelector(".cursor-lanes");
+    const grain = document.querySelector(".grain");
+
+    const clamp01 = (value) => Math.min(1, Math.max(0, value));
+    const mix = (from, to, amount) => from + (to - from) * amount;
+    const smoothstep = (from, to, value) => {
+      const amount = clamp01((value - from) / (to - from));
+      return amount * amount * (3 - 2 * amount);
+    };
+
+    const endpointDefinitions = [
+      { label: "Research", family: "Search", type: "research", x: 0.58, y: 0.16, curve: -58, radius: 28, aspect: 1.4 },
+      { label: "Editorial image", family: "Image", type: "image", x: 0.68, y: 0.30, curve: 54, radius: 32, aspect: 1.45 },
+      { label: "Screenshot analysis", family: "Vision", type: "screenshot", x: 0.82, y: 0.20, curve: -44, radius: 28, aspect: 1.4 },
+      { label: "Vision crop", family: "Vision", type: "vision", x: 0.93, y: 0.11, mobileX: 0.77, mobileY: 0.43, curve: 42, radius: 24, aspect: 1.2 },
+      { label: "Cinematic video", family: "Video", type: "video", x: 0.72, y: 0.43, mobileX: 0.24, mobileY: 0.50, curve: -56, radius: 35, aspect: 1.65, width: "clamp(190px, 19vw, 276px)" },
+      { label: "Audio", family: "Voice", type: "audio", x: 0.64, y: 0.61, curve: 48, radius: 32, aspect: 1.55, width: "clamp(170px, 17vw, 246px)" },
+      { label: "Transcript", family: "Voice", type: "transcript", x: 0.81, y: 0.59, mobileX: 0.74, mobileY: 0.54, curve: -44, radius: 27, aspect: 1.35 },
+      { label: "Share link", family: "Share", type: "share", x: 0.91, y: 0.43, mobileX: 0.24, mobileY: 0.72, curve: 48, radius: 26, aspect: 1.3 },
+      { label: "Music track", family: "Music", type: "music", x: 0.65, y: 0.76, curve: -50, radius: 29, aspect: 1.4 },
+      { label: "Search result", family: "Search", type: "search", x: 0.52, y: 0.83, curve: 52, radius: 29, aspect: 1.45 },
+      { label: "Code snippet", family: "Pages", type: "code", x: 0.75, y: 0.86, curve: -46, radius: 28, aspect: 1.35, width: "clamp(160px, 16vw, 224px)" },
+      { label: "Generated variants", family: "Image", type: "variants", x: 0.44, y: 0.91, curve: 48, radius: 25, aspect: 1.3 },
+      { label: "Delivered", family: "Storage", type: "delivered", x: 0.92, y: 0.77, mobileX: 0.82, mobileY: 0.79, curve: -52, radius: 34, aspect: 1.45 },
+    ];
+
+    let particles = [];
+    let endpoints = [];
+    let connectionPaths = [];
+    let center = { x: 0, y: 0 };
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let canvasPixelRatio = 0;
+    let particleBudget = 0;
+    const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function artifactMarkup(endpoint) {
+      const cap = `<span class="artifact-cap">${endpoint.label}</span>`;
+      if (endpoint.type === "research") return `${cap}<div class="artifact-body research-copy"><p>Biomimicry in<br>interface design<br>increases task<br>completion by 34%.</p></div>`;
+      if (endpoint.type === "image" || endpoint.type === "vision") return `${cap}<div class="artifact-body photo-swatch"></div>`;
+      if (endpoint.type === "screenshot") return `${cap}<div class="artifact-body screenshot-body"><div class="screenshot-preview"></div><div class="issue-list"><span>3 issues found</span><span>Contrast</span><span>Alignment</span><span>Redundancy</span></div></div>`;
+      if (endpoint.type === "video") return `${cap}<div class="artifact-body filmstrip"><i></i><i></i><i></i><i></i><i></i></div>`;
+      if (endpoint.type === "audio") return `${cap}<div class="artifact-body waveform">${Array.from({ length: 28 }, (_, index) => `<i style="--wave:${24 + (index * 37) % 72}%"></i>`).join("")}</div>`;
+      if (endpoint.type === "transcript") return `${cap}<div class="artifact-body transcript-body"><span><b>00:00</b> AnyCap is a capability layer.</span><span><b>00:04</b> It turns your intent...</span><span><b>00:08</b> into every way to finish.</span></div>`;
+      if (endpoint.type === "share") return `${cap}<div class="artifact-body share-body"><p><b>anycap.link/7f3g9</b></p><p>Anyone with the link<br>can view.</p></div>`;
+      if (endpoint.type === "music") return `${cap}<div class="artifact-body folder-body"><i class="folder-icon"></i><span>Project_Horizon<br><small>12 items</small></span></div>`;
+      if (endpoint.type === "search") return `${cap}<div class="artifact-body search-thumbs"><i></i><i></i><i></i><i></i></div>`;
+      if (endpoint.type === "code") return `${cap}<div class="artifact-body code-body">const hero = await anycap.produce({<br>  type: 'image',<br>  style: 'minimalist'<br>});</div>`;
+      if (endpoint.type === "variants") return `${cap}<div class="artifact-body variant-strip"><i></i><i></i><i></i><i></i></div>`;
+      return `${cap}<div class="artifact-body"><div class="photo-swatch"></div><div class="delivered-copy">Project complete<br><small>All assets generated and ready to ship.</small></div></div>`;
+    }
+
+    const labelElements = endpointDefinitions.map((endpoint) => {
+      const card = document.createElement("article");
+      const darkTypes = new Set(["video", "audio", "transcript", "share", "music", "code"]);
+      card.className = `artifact-card artifact-${endpoint.type}${darkTypes.has(endpoint.type) ? " dark" : ""}${endpoint.type === "delivered" ? " delivered-card" : ""}`;
+      if (endpoint.width) card.style.setProperty("--artifact-width", endpoint.width);
+      card.innerHTML = artifactMarkup(endpoint);
+      artifactField.append(card);
+      return card;
+    });
+
+    function mulberry32(seed) {
+      return function random() {
+        let value = seed += 0x6d2b79f5;
+        value = Math.imul(value ^ value >>> 15, value | 1);
+        value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+        return ((value ^ value >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function buildLoosePoint(bounds, random) {
+      return {
+        x: random() * bounds.width,
+        y: random() * bounds.height,
+        radius: 0.55 + random() * 1.35,
+        olive: random() > 0.18,
+        alpha: 0.34 + random() * 0.56,
+      };
+    }
+
+    function buildCorePoint(index, count, center, scale, thickness = 0) {
+      const side = index % 4;
+      const layers = thickness > 0 ? 8 : 1;
+      const layer = Math.floor(index / 4) % layers;
+      const positionIndex = Math.floor(index / (4 * layers));
+      const position = positionIndex / Math.max(1, Math.ceil(count / (4 * layers)) - 1);
+      const half = scale / 2;
+      const edge = mix(-half, half, position);
+      const jitter = Math.sin(index * 12.9898) * scale * 0.012;
+      const thicknessOffset = thickness > 0 ? mix(-thickness / 2, thickness / 2, layer / Math.max(1, layers - 1)) : 0;
+
+      if (side === 0) return { x: center.x + edge, y: center.y - half + thicknessOffset + jitter };
+      if (side === 1) return { x: center.x + half - thicknessOffset + jitter, y: center.y + edge };
+      if (side === 2) return { x: center.x - edge, y: center.y + half - thicknessOffset + jitter };
+      return { x: center.x - half + thicknessOffset + jitter, y: center.y - edge };
+    }
+
+    function quadraticPoint(from, control, to, amount) {
+      const inverse = 1 - amount;
+      return {
+        x: inverse * inverse * from.x + 2 * inverse * amount * control.x + amount * amount * to.x,
+        y: inverse * inverse * from.y + 2 * inverse * amount * control.y + amount * amount * to.y,
+      };
+    }
+
+    function buildFinalPoint(index, count, center, endpoints) {
+      const group = index % endpoints.length;
+      const endpoint = endpoints[group];
+      const groupSize = Math.ceil(count / endpoints.length);
+      const local = Math.floor(index / endpoints.length);
+      const pathSize = Math.max(8, Math.floor(groupSize * 0.48));
+
+      if (local < pathSize) {
+        const amount = local / Math.max(1, pathSize - 1);
+        const direction = group % 2 === 0 ? 1 : -1;
+        const control = {
+          x: mix(center.x, endpoint.x, 0.52),
+          y: mix(center.y, endpoint.y, 0.52) + direction * endpoint.curve,
+        };
+        return quadraticPoint(center, control, endpoint, amount);
+      }
+
+      const clusterIndex = local - pathSize;
+      const angle = clusterIndex * 2.399963229728653;
+      const radius = Math.min(endpoint.radius, Math.sqrt(clusterIndex + 1) * 2.65);
+      return {
+        x: endpoint.x + Math.cos(angle) * radius * endpoint.aspect,
+        y: endpoint.y + Math.sin(angle) * radius,
+      };
+    }
+
+    function drawConnections(amount) {
+      if (amount <= 0) return;
+      context.save();
+      context.globalAlpha = amount * 0.16;
+      context.strokeStyle = "#6b7d3a";
+      context.lineWidth = 1;
+      for (const path of connectionPaths) {
+        context.beginPath();
+        context.moveTo(center.x, center.y);
+        context.quadraticCurveTo(
+          path.control.x,
+          path.control.y,
+          mix(center.x, path.endpoint.x, amount),
+          mix(center.y, path.endpoint.y, amount),
+        );
+        context.stroke();
+      }
+      context.restore();
+    }
+
+    function layout() {
+      const bounds = visual.getBoundingClientRect();
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const standardCount = viewportWidth < 768 ? 560 : viewportWidth < 1100 ? 900 : 1440;
+      const particleCount = reduceMotionQuery.matches ? Math.round(standardCount * 0.5) : standardCount;
+      const layoutChanged = bounds.width !== canvasWidth
+        || bounds.height !== canvasHeight
+        || pixelRatio !== canvasPixelRatio
+        || particleCount !== particleBudget;
+      if (!layoutChanged) {
+        document.documentElement.dataset.overflowX = String(document.documentElement.scrollWidth > window.innerWidth);
+        return false;
+      }
+
+      canvasWidth = bounds.width;
+      canvasHeight = bounds.height;
+      canvasPixelRatio = pixelRatio;
+      particleBudget = particleCount;
+      canvas.width = Math.round(canvasWidth * pixelRatio);
+      canvas.height = Math.round(canvasHeight * pixelRatio);
+      canvas.style.width = `${canvasWidth}px`;
+      canvas.style.height = `${canvasHeight}px`;
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      const random = mulberry32(0x414e5943);
+      const mobileLayout = viewportWidth < 768;
+      center = {
+        x: bounds.width * (mobileLayout ? 0.50 : 0.43),
+        y: bounds.height * (mobileLayout ? 0.67 : 0.54),
+      };
+      const coreScale = Math.min(bounds.width, bounds.height) * (mobileLayout ? 0.30 : 0.34);
+      endpoints = endpointDefinitions.map((endpoint) => ({
+        ...endpoint,
+        x: (mobileLayout ? (endpoint.mobileX ?? clamp01(endpoint.x * 0.72 + 0.14)) : endpoint.x) * bounds.width,
+        y: (mobileLayout ? (endpoint.mobileY ?? clamp01(endpoint.y * 0.58 + 0.36)) : endpoint.y) * bounds.height,
+      }));
+      connectionPaths = endpoints.map((endpoint, index) => {
+        const direction = index % 2 === 0 ? 1 : -1;
+        return {
+          endpoint,
+          control: {
+            x: mix(center.x, endpoint.x, 0.52),
+            y: mix(center.y, endpoint.y, 0.52) + direction * endpoint.curve,
+          },
+        };
+      });
+
+      const retainedCoreCount = Math.floor(particleCount * 0.52);
+      const flowingCount = particleCount - retainedCoreCount;
+      particles = Array.from({ length: particleCount }, (_, index) => {
+        const core = buildCorePoint(index, particleCount, center, coreScale);
+        return {
+          ...buildLoosePoint(bounds, random),
+          portal: index < retainedCoreCount,
+          core,
+          final: index < retainedCoreCount
+            ? buildCorePoint(index, retainedCoreCount, center, coreScale, coreScale * 0.18)
+            : buildFinalPoint(index - retainedCoreCount, flowingCount, center, endpoints),
+        };
+      });
+
+      endpoints.forEach((endpoint, index) => {
+        labelElements[index].style.left = `${endpoint.x}px`;
+        labelElements[index].style.top = `${endpoint.y}px`;
+      });
+      portalFigures.style.left = `${center.x}px`;
+      portalFigures.style.top = `${center.y + coreScale * 0.18}px`;
+      cursorLanes.style.left = `${Math.max(20, center.x - coreScale * 1.03)}px`;
+      cursorLanes.style.top = `${center.y + coreScale * 0.26}px`;
+      document.documentElement.dataset.demoParticles = String(particles.length);
+      document.documentElement.dataset.overflowX = String(document.documentElement.scrollWidth > window.innerWidth);
+      document.documentElement.dataset.canvasSize = `${Math.round(canvasWidth)}x${Math.round(canvasHeight)}`;
+      return true;
+    }
+
+    function renderAt(progress) {
+      progress = clamp01(progress);
+      const converge = smoothstep(0.00, 0.24, progress);
+      const open = smoothstep(0.28, 0.72, progress);
+      const hold = smoothstep(0.78, 1.00, progress);
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      drawConnections(open);
+
+      for (const particle of particles) {
+        const coreX = mix(particle.x, particle.core.x, converge);
+        const coreY = mix(particle.y, particle.core.y, converge);
+        const x = mix(coreX, particle.final.x, open);
+        const y = mix(coreY, particle.final.y, open);
+        context.globalAlpha = Math.min(1, particle.alpha * (particle.portal ? mix(1, 1.35, open) : 1));
+        context.fillStyle = particle.olive ? "#6b7d3a" : "#1c1f17";
+        const radius = particle.radius * (particle.portal ? mix(1, 2.25, open) : 1);
+        context.fillRect(x, y, radius, radius);
+      }
+      context.globalAlpha = 1;
+
+      const portalReveal = smoothstep(0.10, 0.30, progress);
+      const cursorReveal = smoothstep(0.06, 0.24, progress);
+      portalFigures.style.opacity = String(portalReveal);
+      portalFigures.style.transform = `translate(-50%, -15%) scale(${mix(0.92, 1, portalReveal)})`;
+      cursorLanes.style.opacity = String(cursorReveal * mix(1, 0.58, hold));
+      cursorLanes.style.transform = `translateX(${mix(-18, 0, cursorReveal)}px)`;
+
+      labelElements.forEach((label, index) => {
+        const stagger = Math.min(index * 0.014, 0.14);
+        const artifactReveal = smoothstep(0.44 + stagger, 0.70 + stagger, progress);
+        label.style.opacity = String(artifactReveal * mix(0.88, 1, hold));
+        label.style.transform = `translate(-50%, calc(-50% + ${mix(18, 0, artifactReveal)}px)) scale(${mix(0.92, 1, artifactReveal)})`;
+      });
+    }
+
+    function createGrain() {
+      const grainCanvas = document.createElement("canvas");
+      const size = 200;
+      grainCanvas.width = size;
+      grainCanvas.height = size;
+      const grainContext = grainCanvas.getContext("2d");
+      const imageData = grainContext.createImageData(size, size);
+      const data = imageData.data;
+      for (let index = 0; index < data.length; index += 4) {
+        const value = Math.random() * 255;
+        data[index] = value;
+        data[index + 1] = value;
+        data[index + 2] = value;
+        data[index + 3] = 255;
+      }
+      grainContext.putImageData(imageData, 0, 0);
+      grain.style.backgroundImage = `url(${grainCanvas.toDataURL("image/png")})`;
+      grain.style.backgroundRepeat = "repeat";
+    }
+
+    const gsap = window.gsap;
+    const ScrollTrigger = window.ScrollTrigger;
+    document.documentElement.dataset.gsapRuntime = String(Boolean(gsap && ScrollTrigger));
+    gsap.registerPlugin(ScrollTrigger);
+
+    const state = { progress: 0 };
+    let media;
+    let resizeObserver;
+
+    function initializeMotion() {
+      layout();
+      renderAt(reduceMotionQuery.matches ? 1 : 0);
+      media = gsap.matchMedia();
+      media.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          desktop: "(min-width: 768px)",
+          mobile: "(max-width: 767px)",
+        },
+        ({ conditions }) => {
+          document.documentElement.dataset.mediaRan = "true";
+          document.documentElement.dataset.reducedMotion = String(Boolean(conditions.reduceMotion));
+          layout();
+          if (conditions.reduceMotion) {
+            state.progress = 1;
+            renderAt(1);
+            document.documentElement.dataset.triggerCount = "0";
+            return;
+          }
+
+          state.progress = 0;
+          renderAt(0);
+          const timeline = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: ".capability-stage",
+              start: "top top",
+              end: () => conditions.mobile ? "+=150%" : "+=220%",
+              pin: true,
+              scrub: 0.8,
+              invalidateOnRefresh: true,
+              onUpdate: (trigger) => {
+                document.documentElement.dataset.scrollProgress = trigger.progress.toFixed(3);
+              },
+              onLeave: () => {
+                document.documentElement.dataset.pinReleased = "true";
+              },
+              onEnterBack: () => {
+                document.documentElement.dataset.pinReleased = "false";
+              },
+            },
+          });
+          timeline.to(state, { progress: 1, duration: 1, onUpdate: () => renderAt(state.progress) });
+          document.documentElement.dataset.triggerCount = String(ScrollTrigger.getAll().length);
+        },
+      );
+
+      let resizeFrame = 0;
+      resizeObserver = new ResizeObserver(() => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          if (!layout()) return;
+          renderAt(state.progress);
+          ScrollTrigger.refresh();
+        });
+      });
+      resizeObserver.observe(visual);
+      document.documentElement.dataset.demoReady = "true";
+    }
+
+    createGrain();
+    layout();
+    renderAt(reduceMotionQuery.matches ? 1 : 0);
+
+    window.__ANYCAP_DEMO__ = {
+      get progress() { return state.progress; },
+      get reducedMotion() { return matchMedia("(prefers-reduced-motion: reduce)").matches; },
+      get particleCount() { return particles.length; },
+      get active() { return Boolean(ScrollTrigger.getAll()[0]?.isActive); },
+      renderAt,
+    };
+
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+    fontsReady.then(() => {
+      document.documentElement.dataset.fontsReady = "true";
+      document.documentElement.dataset.pixelFontLoaded = String(document.fonts?.check('500 16px "AnyCap Pixel"') ?? true);
+      document.documentElement.dataset.interFontLoaded = String(document.fonts?.check('500 16px "AnyCap Inter"') ?? true);
+      initializeMotion();
+    });
+  </script>
+</body>
+</html>
