@@ -771,6 +771,7 @@
     const canvas = visual.querySelector("canvas");
     const context = canvas.getContext("2d");
     const artifactField = visual.querySelector(".artifact-field");
+    const capabilityHeading = document.querySelector(".capability-copy h2");
     const portalFigures = visual.querySelector(".portal-figures");
     const cursorLanes = visual.querySelector(".cursor-lanes");
     const agentProof = visual.querySelector(".agent-proof");
@@ -786,6 +787,15 @@
       const amount = clamp01((value - from) / (to - from));
       return amount * amount * (3 - 2 * amount);
     };
+    const desktopCopyClearance = 28;
+    const portalParticleExtent = 0.61;
+
+    function resolveDesktopPortalCenter(preferredX, coreScale, boundsWidth, copyRight) {
+      const particleExtent = coreScale * portalParticleExtent;
+      const minimumCenter = copyRight + desktopCopyClearance + particleExtent;
+      const maximumCenter = boundsWidth - desktopCopyClearance - particleExtent;
+      return Math.min(maximumCenter, Math.max(preferredX, minimumCenter));
+    }
 
     const endpointDefinitions = [
       { label: "Research", family: "Search", type: "research", x: 0.58, y: 0.16, curve: -58, radius: 28, aspect: 1.4 },
@@ -1112,15 +1122,22 @@
       const random = mulberry32(0x414e5943);
       const mobileLayout = viewportWidth < 768;
       const compactDesktop = !mobileLayout && viewportWidth < 1280;
-      center = {
-        x: bounds.width * (mobileLayout ? 0.50 : compactDesktop ? 0.56 : 0.43),
-        y: bounds.height * (mobileLayout ? 0.67 : 0.54),
-      };
       const coreScale = mobileLayout
         ? Math.min(bounds.width, bounds.height) * 0.30
         : compactDesktop
           ? Math.min(bounds.width * 0.26, bounds.height * 0.38, 320)
-          : Math.min(bounds.width, bounds.height) * 0.34;
+          : Math.min(bounds.width * 0.25, bounds.height * 0.34, 320);
+      const preferredCenterX = bounds.width * 0.43;
+      const copyRight = mobileLayout || compactDesktop
+        ? 0
+        : capabilityHeading.getBoundingClientRect().right - bounds.left;
+      const standardDesktopCenterX = resolveDesktopPortalCenter(preferredCenterX, coreScale, bounds.width, copyRight);
+      center = {
+        x: mobileLayout
+          ? bounds.width * 0.50
+          : compactDesktop ? bounds.width * 0.56 : standardDesktopCenterX,
+        y: bounds.height * (mobileLayout ? 0.67 : 0.54),
+      };
       endpoints = endpointDefinitions.map((endpoint) => ({
         ...endpoint,
         x: (mobileLayout

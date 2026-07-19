@@ -73,9 +73,12 @@ const authoredContracts = [
   "const routeProgressState",
   "const artifactArrivalThreshold = 0.84",
   "const installPulseBounds",
+  "const desktopCopyClearance = 28",
+  "const portalParticleExtent = 0.61",
   "function phaseProgress",
   "function endpointRouteProgress",
   "function updateRouteProgress",
+  "function resolveDesktopPortalCenter",
   "function buildLimitedAgentPoint",
   "function buildModelRoutePoint",
   "function buildContinuationPoint",
@@ -89,6 +92,7 @@ const authoredContracts = [
   "activeIndex",
   "representative: true",
   "routeProgress: endpointRouteProgress",
+  "capabilityHeading.getBoundingClientRect()",
   "phaseSnapshot",
   'trigger: ".capability-stage"',
   'start: "top top"',
@@ -120,6 +124,19 @@ assert.match(source, /drawPartialQuadratic\(center, path\.control, path\.endpoin
 assert.match(source, /const modelReveal = activeIndex < 0[\s\S]*?activeIndex \* 0\.025/, "model staggering uses active visible indices");
 assert.match(source, /compressed:\s*0\.98[\s\S]*released:\s*1\.03/, "install pulse stays within the approved three-percent bound");
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
+assert.match(source, /const standardDesktopCenterX = resolveDesktopPortalCenter\([\s\S]*?compactDesktop \? bounds\.width \* 0\.56 : standardDesktopCenterX/, "standard desktop portal center uses measured copy clearance while compact geometry stays unchanged");
+assert.match(source, /: Math\.min\(bounds\.width \* 0\.25, bounds\.height \* 0\.34, 320\)/, "standard desktop portal remains substantial with an explicit size cap");
+
+const portalCenterFunctionMatch = source.match(/function resolveDesktopPortalCenter\([^)]*\)\s*\{[\s\S]*?\n    \}/);
+assert.ok(portalCenterFunctionMatch, "desktop portal center resolver is extractable for numeric verification");
+const resolveDesktopPortalCenter = new Function(
+  "desktopCopyClearance",
+  "portalParticleExtent",
+  `${portalCenterFunctionMatch[0]}; return resolveDesktopPortalCenter;`,
+)(28, 0.61);
+const standardDesktopCenter = resolveDesktopPortalCenter(1440 * 0.43, 306, 1440, 586);
+assert.ok(Math.abs(standardDesktopCenter - 306 * 0.61 - 586 - 28) < Number.EPSILON, "1440px portal particle extent clears the measured headline by 28px");
+assert.equal(resolveDesktopPortalCenter(1920 * 0.43, 320, 1920, 536), 1920 * 0.43, "wide desktop keeps its safe preferred portal center");
 
 const pulseStart = source.indexOf("function installPulseScale(progress)");
 const pulseEnd = source.indexOf("\n\n    let particles", pulseStart);
