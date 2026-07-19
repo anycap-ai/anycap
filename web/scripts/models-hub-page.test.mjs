@@ -42,7 +42,25 @@ test("explicitly localizes music and preserves unknown comparison groups", () =>
 });
 
 test("keeps public model-hub descriptions aligned", () => {
-  assert.match(llmsSource, /image, video, music, and audio generation models/);
+  assert.match(
+    llmsSource,
+    /- \[Models overview\]\(https:\/\/anycap\.ai\/models\): Current image, video, music, and audio generation models, with the newest AnyCap additions and capability updates shown first\./,
+  );
   assert.match(statusSource, /> Last updated: 2026-07-19/);
-  assert.match(statusSource, /Newest-first models hub/i);
+  assert.match(
+    statusSource,
+    /\| Models \| Newest-first models hub across image, video, music, and audio generation, plus existing model detail guides \|/,
+  );
+  assert.match(
+    statusSource,
+    /The `\/models` hub is sourced from the current web capability inventory, includes all production generation models verified on 2026-07-19, and orders both recent additions and capability tables by AnyCap availability or material capability-update date\./,
+  );
+  for (const path of [
+    "/models/nano-banana-2-lite",
+    "/models/kling-3-0-omni",
+    "/models/seedance-2-0-mini",
+    "/models/doubao-seed-audio-1-0",
+  ]) {
+    assert.equal(llmsSource.includes(path), false, path);
+  }
 });
