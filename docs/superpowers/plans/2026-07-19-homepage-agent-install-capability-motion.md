@@ -479,7 +479,7 @@ Required evidence:
 - `0.95`: motion act `horizon`, all 13 desktop artifacts visible, continuation branches leave the frame, and exact continuation copy visible;
 - desktop 1440x900: no overlaps, clipping, horizontal overflow, runtime warning, or console error; one trigger releases cleanly;
 - mobile 375x812: three model anchors, three artifacts, no copy collision or horizontal overflow; one trigger releases cleanly;
-- reduced motion 1440x900: final static state, seven model anchors, 13 artifacts, zero triggers, no overflow;
+- reduced motion 1440x900: final static state, three representative model anchors, 13 artifacts, zero triggers, no overflow;
 - main-site background, display font, body font, label font, grain, and horizontal padding remain unchanged.
 
 - [ ] **Step 10: Commit the motion implementation**
