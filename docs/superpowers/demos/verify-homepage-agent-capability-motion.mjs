@@ -7,21 +7,32 @@ const directory = fileURLToPath(new URL(".", import.meta.url));
 const sourcePath = `${directory}/homepage-agent-capability-motion.source.html`;
 const planPath = `${directory}/../plans/2026-07-19-homepage-agent-install-capability-motion.md`;
 const builtPath = process.argv[2];
+const pixelFontReference = "vendor/geist-pixel-square.woff2";
+const interFontReference = "vendor/inter-latin.woff2";
 
 assert.ok(builtPath, "pass the absolute built companion path");
 
 const builtDirectory = dirname(builtPath);
-const [source, built, plan, gsapRuntime, scrollTriggerRuntime] = await Promise.all([
+const [source, built, plan, gsapRuntime, scrollTriggerRuntime, pixelFont, interFont] = await Promise.all([
   readFile(sourcePath, "utf8"),
   readFile(builtPath, "utf8"),
   readFile(planPath, "utf8"),
   readFile(`${builtDirectory}/vendor/gsap.min.js`, "utf8"),
   readFile(`${builtDirectory}/vendor/ScrollTrigger.min.js`, "utf8"),
+  readFile(`${builtDirectory}/${pixelFontReference}`),
+  readFile(`${builtDirectory}/${interFontReference}`),
 ]);
+const pixelFontDataUrl = `data:font/woff2;base64,${pixelFont.toString("base64")}`;
+const interFontDataUrl = `data:font/woff2;base64,${interFont.toString("base64")}`;
 const expectedBuilt = source
   .replace("/*__INLINE_GSAP__*/", () => gsapRuntime)
-  .replace("/*__INLINE_SCROLLTRIGGER__*/", () => scrollTriggerRuntime);
-assert.equal(built, expectedBuilt, "built companion is exactly derived from tracked source and local vendor runtimes");
+  .replace("/*__INLINE_SCROLLTRIGGER__*/", () => scrollTriggerRuntime)
+  .replace(pixelFontReference, () => pixelFontDataUrl)
+  .replace(interFontReference, () => interFontDataUrl);
+assert.equal(built, expectedBuilt, "built companion is exactly derived from tracked source and local script/font runtimes");
+assert.ok(source.includes(pixelFontReference) && source.includes(interFontReference), "tracked source keeps readable local font references");
+assert.ok(built.includes(pixelFontDataUrl) && built.includes(interFontDataUrl), "built companion embeds both exact WOFF2 font payloads");
+assert.ok(!built.includes(pixelFontReference) && !built.includes(interFontReference), "built companion makes no standalone font requests");
 assert.ok(plan.includes("reduced motion 1440x900: final static state, three representative model anchors, 13 artifacts"), "plan reduced-motion acceptance matches the intentional representative final state");
 assert.ok(!plan.includes("reduced motion 1440x900: final static state, seven model anchors"), "plan no longer requires hidden non-representative anchors in the final state");
 const assetReferences = [
@@ -146,9 +157,11 @@ assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/nosc
 assert.match(source, /const standardDesktopCenterX = resolveDesktopPortalCenter\([\s\S]*?compactDesktop \? bounds\.width \* 0\.56 : standardDesktopCenterX/, "standard desktop portal center uses measured copy clearance while compact geometry stays unchanged");
 assert.match(source, /: Math\.min\(bounds\.width \* 0\.25, bounds\.height \* 0\.34, 320\)/, "standard desktop portal remains substantial with an explicit size cap");
 assert.match(source, /type: "audio"[^\n]*standardX: 0\.70, standardY: 0\.68/, "standard desktop Audio uses the lower-right route endpoint");
-assert.match(source, /type: "transcript"[^\n]*standardY: 0\.57/, "standard desktop Transcript clears the lower Audio endpoint");
+assert.match(source, /type: "video"[^\n]*standardY: 0\.435/, "standard desktop Cinematic label clears Editorial image");
+assert.match(source, /type: "transcript"[^\n]*standardY: 0\.565/, "standard desktop Transcript clears the lower Audio endpoint");
 assert.match(source, /type: "music"[^\n]*standardY: 0\.795/, "standard desktop Music preserves its label footprint below Audio");
 assert.match(source, /type: "code"[^\n]*standardY: 0\.935/, "standard desktop Code preserves its label footprint below Music");
+assert.match(source, /type: "variants"[^\n]*standardY: 0\.93/, "standard desktop Generated variants label clears Search result");
 assert.match(source, /type: "vision"[^\n]*standardX: 0\.932, standardY: 0\.10/, "standard desktop Vision crop clears Screenshot analysis deterministically");
 assert.match(source, /standardDesktopLayout \? \(endpoint\.standardX \?\? endpoint\.x\) : endpoint\.x/, "standard desktop endpoint x overrides are isolated from wide defaults");
 assert.match(source, /standardDesktopLayout \? \(endpoint\.standardY \?\? endpoint\.y\) : endpoint\.y/, "standard desktop endpoint y overrides are isolated from wide defaults");
@@ -171,9 +184,22 @@ for (const { width, height, portalCenter } of standardViewportCases) {
   const audioWidth = Math.min(246, width * 0.17);
   const audioLeft = width * 0.70 - audioWidth / 2;
   assert.ok(audioLeft - (portalCenter + 74 / 2) >= 20, `${width}px Audio keeps at least 20px from portal figures`);
-  assert.ok(height * (0.68 - 0.57) > (70 + 90) / 2, `${width}px Audio clears a wrapped Transcript vertically`);
+  assert.ok(height * (0.68 - 0.565) > (70 + 92) / 2, `${width}px Audio clears a wrapped Transcript vertically`);
   assert.ok(height * (0.795 - 0.68) > (70 + 62) / 2, `${width}px Audio clears Music vertically`);
   assert.ok(height * (0.935 - 0.795) > (78 + 62) / 2, `${width}px Music remains clear of Code`);
+}
+for (const height of [720, 768, 800]) {
+  const labelHeight = 10;
+  const labelOffset = 4;
+  const editorialBodyBottom = height * 0.30 + 88 / 2;
+  const cinematicLabelTop = height * 0.435 - 74 / 2 - labelOffset - labelHeight;
+  const transcriptBodyBottom = height * 0.565 + 92 / 2;
+  const audioBodyTop = height * 0.68 - 70 / 2;
+  const searchBodyBottom = height * 0.83 + 56 / 2;
+  const variantsLabelTop = height * 0.93 - 56 / 2 - labelOffset - labelHeight;
+  assert.ok(cinematicLabelTop - editorialBodyBottom >= 2, `${height}px Cinematic label clears Editorial body`);
+  assert.ok(audioBodyTop - transcriptBodyBottom >= 1.5, `${height}px Audio body clears wrapped Transcript body`);
+  assert.ok(variantsLabelTop - searchBodyBottom >= 1.5, `${height}px Generated variants label clears Search result body`);
 }
 for (const height of [720, 768, 800, 900]) {
   const labelHeight = 10;
