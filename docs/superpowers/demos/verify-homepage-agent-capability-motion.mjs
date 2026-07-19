@@ -68,5 +68,6 @@ assert.doesNotMatch(source, /<button[^>]*>[\s\S]*?anycap install[\s\S]*?<\/butto
 assert.doesNotMatch(source, /Try AnyCap/i, "middle section has no hero CTA");
 assert.doesNotMatch(source, /window\.addEventListener\(["']scroll["']/, "no custom scroll listener");
 assert.doesNotMatch(source, /radial-gradient/i, "no independent gradient wash");
+assert.match(source, /\.waveform\s*\{[^}]*?(?:^|[;{\s])height:\s*68px;/ms, "waveform has an explicit height for percentage-based bars");
 
 console.log("homepage agent install capability motion contract: pass");
