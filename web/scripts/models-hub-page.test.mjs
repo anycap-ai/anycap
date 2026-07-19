@@ -23,6 +23,17 @@ test("provides localized latest-additions copy", () => {
   }
 });
 
+test("includes audio in the first model-selection step for every locale", () => {
+  for (const label of [
+    "Start with the output type: image, video, music, or audio.",
+    "Comece pelo tipo de saída: imagem, vídeo, música ou áudio.",
+    "Mulai dari jenis output: gambar, video, musik, atau audio.",
+    "Beginnen Sie mit dem Output-Typ: Bild, Video, Musik oder Audio.",
+  ]) {
+    assert.equal(pageSource.includes(label), true, label);
+  }
+});
+
 test("renders recency from the shared model inventory", () => {
   assert.match(pageSource, /sortModelHubModels/);
   assert.match(pageSource, /model\.updatedAt/);

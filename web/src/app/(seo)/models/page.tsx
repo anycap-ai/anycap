@@ -678,7 +678,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       "The current public AnyCap generation catalog spans image, video, music, and audio. Recent additions include Doubao Seed Audio 1.0 and Seedance 2.0 Mini, while Kling 3.0 and Seedance 2.0 now expose additional control modes. Choose by output type, input and reference requirements, first-pass quality, iteration speed, and the live model schema.",
     chooseTitle: "How to choose the right model",
     chooseItems: [
-      "Start with the output type: image, video, or music.",
+      "Start with the output type: image, video, music, or audio.",
       "Then decide whether the task needs a polished first pass, faster iteration, or revision from an existing asset.",
       "Use the model guide pages when the choice depends on motion style, editing workflow, or cost tradeoffs.",
     ],
@@ -755,7 +755,7 @@ const contentByLocale: Record<SiteLocale, PageContent> = {
       "O catálogo público atual de geração do AnyCap cobre imagem, vídeo, música e áudio. As adições recentes incluem Doubao Seed Audio 1.0 e Seedance 2.0 Mini, enquanto Kling 3.0 e Seedance 2.0 agora expõem modos adicionais de controle. Escolha pelo tipo de saída, requisitos de entrada e referência, qualidade da primeira versão, velocidade de iteração e schema atual do modelo.",
     chooseTitle: "Como escolher o modelo certo",
     chooseItems: [
-      "Comece pelo tipo de saída: imagem, vídeo ou música.",
+      "Comece pelo tipo de saída: imagem, vídeo, música ou áudio.",
       "Depois decida se a tarefa precisa de uma primeira versão mais refinada, iteração mais rápida ou revisão a partir de um ativo existente.",
       "Use as páginas-guia de modelos quando a escolha depender do estilo de movimento, do fluxo de edição ou de tradeoffs de custo.",
     ],
@@ -835,7 +835,7 @@ contentByLocale.id = {
     "Katalog generasi publik AnyCap saat ini mencakup gambar, video, musik, dan audio. Penambahan terbaru termasuk Doubao Seed Audio 1.0 dan Seedance 2.0 Mini, sementara Kling 3.0 dan Seedance 2.0 kini menyediakan mode kontrol tambahan. Pilih berdasarkan jenis output, kebutuhan input dan referensi, kualitas hasil awal, kecepatan iterasi, dan schema model langsung.",
   chooseTitle: "Cara memilih model yang tepat",
   chooseItems: [
-    "Mulailah dari jenis output: gambar, video, atau musik.",
+    "Mulai dari jenis output: gambar, video, musik, atau audio.",
     "Lalu tentukan apakah tugas membutuhkan hasil awal yang lebih rapi, iterasi yang lebih cepat, atau revisi dari aset yang sudah ada.",
     "Gunakan halaman panduan model saat pilihannya bergantung pada gaya gerak, alur pengeditan, atau tradeoff biaya.",
   ],
@@ -912,7 +912,7 @@ contentByLocale.de = {
     "Der aktuelle öffentliche AnyCap-Generierungskatalog umfasst Bild, Video, Musik und Audio. Zu den neuesten Ergänzungen gehören Doubao Seed Audio 1.0 und Seedance 2.0 Mini; Kling 3.0 und Seedance 2.0 bieten inzwischen zusätzliche Steuerungsmodi. Entscheidend sind Ausgabetyp, Eingabe- und Referenzanforderungen, Qualität des ersten Ergebnisses, Iterationsgeschwindigkeit und das aktuelle Modellschema.",
   chooseTitle: "So wählen Sie das richtige Modell",
   chooseItems: [
-    "Beginnen Sie mit dem Output-Typ: Bild, Video oder Musik.",
+    "Beginnen Sie mit dem Output-Typ: Bild, Video, Musik oder Audio.",
     "Entscheiden Sie dann, ob die Aufgabe einen polierten Erstdurchlauf, schnellere Iteration oder eine Überarbeitung aus einem bestehenden Asset braucht.",
     "Nutzen Sie die Modell-Leitfadenseiten, wenn die Wahl von Bewegungsstil, Bearbeitungs-Workflow oder Kostenabwägung abhängt.",
   ],
