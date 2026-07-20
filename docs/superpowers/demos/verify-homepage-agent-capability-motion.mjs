@@ -105,6 +105,12 @@ assert.match(source, /function createStaticFinalRenderer\(canvas\)[\s\S]*?get pa
 assert.match(source, /if \(!gl\) return createStaticFinalRenderer\(canvas\);/, "WebGL-null creation reaches the responsive fallback");
 assert.match(source, /stroke-dasharray="2\.6 6\.2"/, "fallback ribbons use broad square-dashed particle marks");
 assert.match(source, /canvas\.style\.backgroundSize = "100% 100%";/, "fallback SVG fills the current canvas without fixed cover cropping");
+assert.match(source, /\.capability-field\[data-renderer="static"\] \{\s*height: 100dvh;\s*min-height: 100dvh;\s*\}/, "static mode collapses the narrative wrapper to one viewport");
+assert.match(source, /function syncRendererState\(\)/, "renderer state synchronization is explicit");
+assert.ok(source.includes('capabilityField.dataset.renderer = rendererState'), "static/WebGL state is exposed on the capability field");
+assert.ok(source.includes('document.documentElement.dataset.demoRenderer = rendererState'), "static/WebGL state is exposed on the root");
+assert.match(source, /renderer\.layout\(bounds\.width, bounds\.height, reduced\);\s*syncRendererState\(\);/, "layout deterministically refreshes renderer state before geometry-dependent behavior");
+assert.match(source, /if \(reduceMotionQuery\.matches \|\| capabilityField\.dataset\.renderer === "static"\)/, "motion controller uses the synchronized field state when skipping ScrollTrigger");
 assert.doesNotMatch(source, /viewBox=["']0 0 1200 800["']/, "fallback has no fixed desktop coordinate system");
 assert.doesNotMatch(source, /count = width < 768 \? 9000 : DESKTOP_PARTICLE_MIN;/, "fallback does not fabricate WebGL particle counts");
 const staticMobileEnds = JSON.parse(source.match(/const staticMobileEnds = (\[\[[^;]+\]\]);/)?.[1] ?? "[]");
@@ -173,15 +179,36 @@ assert.deepEqual(revealWindows, {
 for (const cluster of ["latest", "core", "delivery", "horizon"]) {
   assert.ok(particleCompletion[cluster] < revealWindows[cluster][0], `${cluster} particles arrive before its DOM reveal starts`);
 }
-const artifactTiming = Object.fromEntries(
-  [...source.matchAll(/const ARTIFACT_(REVEAL_START|REVEAL_STAGGER|REVEAL_COMPLETE) = (0\.\d+);/g)]
-    .map((match) => [match[1].toLowerCase(), Number(match[2])]),
-);
-assert.deepEqual(artifactTiming, { reveal_start: 0.748, reveal_stagger: 0.003, reveal_complete: 0.768 }, "artifact timing stays explicit");
-assert.ok(particleCompletion.core < artifactTiming.reveal_start, "core particle mass arrives before artifacts start revealing");
-assert.ok(artifactTiming.reveal_complete + artifactTiming.reveal_stagger * 4 <= revealWindows.core[1], "all artifact reveals finish inside the core phase endpoint");
-assert.match(source, /const artifactStart = ARTIFACT_REVEAL_START \+ \(index % 5\) \* ARTIFACT_REVEAL_STAGGER;/, "artifact reveal start uses the causal timing constants");
-assert.match(source, /const artifactComplete = ARTIFACT_REVEAL_COMPLETE \+ \(index % 5\) \* ARTIFACT_REVEAL_STAGGER;/, "artifact reveal completion uses the causal timing constants");
+const artifactDefinitionsSource = source.match(/const artifactDefinitions = \[([\s\S]*?)\n    \];/)?.[1] ?? "";
+const artifactDefinitionCount = (artifactDefinitionsSource.match(/\{ label:/g) ?? []).length;
+const artifactRoles = [...artifactDefinitionsSource.matchAll(/role: "(core|delivery)"/g)].map((match) => match[1]);
+assert.equal(artifactDefinitionCount, 13, "all thirteen artifact definitions remain present");
+assert.equal(artifactRoles.length, artifactDefinitionCount, "every artifact has an explicit narrative role");
+assert.equal(artifactRoles.filter((role) => role === "delivery").length, 2, "exactly two artifacts are delivery evidence");
+assert.match(artifactDefinitionsSource, /label: "Share link"[^\n]*role: "delivery"/, "Share link is delivery evidence");
+assert.match(artifactDefinitionsSource, /label: "Delivered"[^\n]*role: "delivery"/, "Delivered is delivery evidence");
+assert.equal(artifactRoles.filter((role) => role === "core").length, 11, "remaining artifacts are core evidence");
+assert.match(source, /const artifactRoleIndexes = artifactDefinitions\.map\(\(definition\) => \{[\s\S]*?artifactRoleCounts\[definition\.role\]/, "artifact staggering uses an index local to its narrative role");
+const artifactTimingMatches = [...source.matchAll(/(core|delivery): \{ start: (0\.\d+), complete: (0\.\d+), stagger: (0\.\d+), slots: (\d+) \}/g)];
+const artifactTiming = Object.fromEntries(artifactTimingMatches.map((match) => [match[1], {
+  start: Number(match[2]),
+  complete: Number(match[3]),
+  stagger: Number(match[4]),
+  slots: Number(match[5]),
+}]));
+assert.deepEqual(artifactTiming, {
+  core: { start: 0.748, complete: 0.768, stagger: 0.003, slots: 5 },
+  delivery: { start: 0.885, complete: 0.914, stagger: 0.006, slots: 2 },
+}, "artifact timing is explicit for each narrative role");
+for (const role of ["core", "delivery"]) {
+  const timing = artifactTiming[role];
+  assert.ok(particleCompletion[role] < timing.start, `${role} particle mass arrives before ${role} artifacts start revealing`);
+  assert.ok(timing.complete + timing.stagger * (timing.slots - 1) <= revealWindows[role][1], `${role} artifacts finish inside the ${role} phase endpoint`);
+}
+assert.match(source, /const timing = ARTIFACT_REVEAL_TIMING\[definition\.role\];/, "artifact reveal selects timing by explicit narrative role");
+assert.match(source, /const artifactStart = timing\.start \+ \(roleIndex % timing\.slots\) \* timing\.stagger;/, "artifact reveal start uses its role-local timing");
+assert.match(source, /const artifactComplete = timing\.complete \+ \(roleIndex % timing\.slots\) \* timing\.stagger;/, "artifact reveal completion uses its role-local timing");
+assert.doesNotMatch(source, /ARTIFACT_REVEAL_(?:START|STAGGER|COMPLETE)/, "no blanket core timing constants remain for every artifact");
 assert.match(source, /: reducedMotion \|\| lowPower\s*\? DESKTOP_PARTICLE_MIN/, "desktop reduced and low-power WebGL paths retain the desktop particle minimum");
 assert.doesNotMatch(source, /\b14000\b/, "no desktop path drops below the 18k minimum");
 assert.ok(source.includes("gl_PointSize = clamp(aSize, 0.8, 4.8) * uDpr;"), "effective CSS point size is clamped to 0.8-4.8 before DPR scaling");
@@ -214,7 +241,11 @@ assert.ok(plan.includes("field.offsetHeight - window.innerHeight"), "implementat
 assert.ok(plan.includes("18,000 to 30,000 particles applies only to WebGL"), "plan scopes particle telemetry to real WebGL paths");
 assert.ok(plan.includes("fallback reports zero WebGL particles"), "plan requires honest fallback telemetry");
 assert.ok(plan.includes("particle completion must be strictly earlier than the corresponding DOM reveal start"), "plan records causal particle-before-surface timing");
+assert.ok(plan.includes("collapse a static field to exactly `100dvh`"), "plan prevents blank fallback narrative scroll");
+assert.ok(plan.includes("`Share link` and `Delivered` are delivery evidence"), "plan records role-specific delivery artifact timing");
+assert.ok(plan.includes("suppress that always-present semantic summary"), "plan prevents duplicate no-JS evidence");
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
+assert.match(source, /<noscript>\s*<style>\.capability-semantic-summary \{ display: none !important; \}<\/style>\s*<div class="noscript-capability-proof">/, "no-JS mode suppresses the JavaScript semantic summary before exposing its proof");
 assert.doesNotMatch(source, /<button[^>]*>[\s\S]*?anycap install[\s\S]*?<\/button>/i, "install proof is not a button");
 assert.doesNotMatch(source, /Try AnyCap/i, "middle section has no hero CTA");
 assert.doesNotMatch(source, /radial-gradient/i, "source has no independent gradient wash");

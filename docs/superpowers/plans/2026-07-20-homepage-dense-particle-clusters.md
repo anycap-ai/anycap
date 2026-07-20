@@ -24,6 +24,7 @@
 - Delivery labels are Drive, Share, Page, Publish, and Delivered.
 - Keep only the human and agent figures inside the portal plus the transient `anycap install` proof; remove cursor lanes and the agent-name proof line.
 - Keep the canvas, figures, clusters, and artifacts decorative, and provide an always-present visually hidden semantic summary outside that `aria-hidden` visual tree for models, capabilities, delivery, horizon, and representative artifacts.
+- In no-JavaScript mode, suppress that always-present semantic summary and expose only the dedicated `<noscript>` proof so assistive technology does not receive duplicate evidence.
 - Do not use provider logos, a card grid, radial particle clouds, glow, neon, glassmorphism, remote assets, custom scroll listeners, or one tween per particle.
 - Reduced motion renders the final clustered composition without pinning.
 - Keep `.capability-field` at `340dvh` on desktop and `240dvh` on mobile. Derive the single ScrollTrigger end dynamically from the positive `field.offsetHeight - window.innerHeight` distance so desktop resolves to about `240vh`, mobile resolves to about `140vh`, and normalized progress reaches `1` at the bottom of either page.
@@ -171,11 +172,13 @@ instead.
 
 Portal target generation assigns 42 percent of desktop WebGL particles across six nested square frames with turbulent edge offsets. Encode normalized portal layer/depth in particle data and consume it in the vertex shader so inner/deeper layers start first and outer layers finish by `0.32`. Around the portal center, apply a short scale pulse bounded to `0.98` compression and `1.03` release overshoot, returning to `1` before the Latest models phase. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha; clamp the shader's effective CSS size to that exact range before DPR scaling. Every desktop WebGL branch, including reduced-motion and low-power WebGL, must report at least `DESKTOP_PARTICLE_MIN`.
 
-The WebGL-null fallback generates its final SVG from the current layout width and height. It contains six nested portal layers and seven broad square-dashed ribbons whose endpoints remain inside both desktop and `390×844` canvases. It reports `particleCount: 0`, because it is not a WebGL particle renderer, and regenerates on meaningful responsive layout changes.
+The WebGL-null fallback generates its final SVG from the current layout width and height. It contains six nested portal layers and seven broad square-dashed ribbons whose endpoints remain inside both desktop and `390×844` canvases. It reports `particleCount: 0`, because it is not a WebGL particle renderer, and regenerates on meaningful responsive layout changes. Synchronize the renderer type onto `.capability-field` and the document root, then collapse a static field to exactly `100dvh`; static mode creates no ScrollTrigger and must not leave the desktop `240dvh` or mobile `140dvh` narrative remainder blank.
 
 - [ ] **Step 4: Couple DOM reveal to particle arrival**
 
-Use one `renderAt(progress)` function; particle completion must be strictly earlier than the corresponding DOM reveal start, so particle mass is already in place before text or artifacts become perceptibly legible. Latest particles complete at `0.50` before a `0.505–0.53` DOM reveal; core particles complete at `0.74` before a `0.745–0.78` core reveal and artifacts begin at `0.748`; delivery particles complete at `0.88` before a `0.885–0.92` reveal; horizon particles complete at `0.97` before a `0.975–1.00` reveal. Apply only opacity and transform. Artifact surfaces must finish no later than `0.78`.
+Use one `renderAt(progress)` function; particle completion must be strictly earlier than the corresponding DOM reveal start, so particle mass is already in place before text or artifacts become perceptibly legible. Latest particles complete at `0.50` before a `0.505–0.53` DOM reveal; core particles complete at `0.74` before a `0.745–0.78` core reveal; delivery particles complete at `0.88` before a `0.885–0.92` reveal; horizon particles complete at `0.97` before a `0.975–1.00` reveal. Apply only opacity and transform.
+
+Every artifact definition carries an explicit `core` or `delivery` narrative role. Core artifacts start at `0.748` and all finish by `0.78`. `Share link` and `Delivered` are delivery evidence: they start only after delivery particle completion, at `0.885` and `0.891`, and finish by `0.92`. Artifact timing is selected from the definition's role rather than applying one core interval to all thirteen surfaces.
 
 - [ ] **Step 5: Preserve one GSAP ScrollTrigger**
 
@@ -246,7 +249,7 @@ At 390×844 confirm no horizontal overflow, the portal remains readable, at leas
 
 - [ ] **Step 5: Inspect runtime health**
 
-Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null. At desktop and `390×844`, confirm the fallback's six portal layers and seven broad ribbons remain inside the canvas and its reported WebGL particle count is zero.
+Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null. At desktop and `390×844`, confirm the fallback's six portal layers and seven broad ribbons remain inside the canvas, its reported WebGL particle count is zero, its field height is exactly one viewport, and no blank narrative scroll remains. With JavaScript disabled, confirm assistive evidence appears only once through the `<noscript>` proof.
 
 - [ ] **Step 6: Commit any verification fixes**
 

@@ -57,6 +57,11 @@
       background: var(--surface);
     }
 
+    .capability-field[data-renderer="static"] {
+      height: 100dvh;
+      min-height: 100dvh;
+    }
+
     .capability-stage {
       position: relative;
       width: min(100%, 1536px);
@@ -475,6 +480,7 @@
         </div>
       </div>
       <noscript>
+        <style>.capability-semantic-summary { display: none !important; }</style>
         <div class="noscript-capability-proof">
           <h3>Connected capability proof</h3>
           <ul class="noscript-models" aria-label="Representative models"><li>Seedance 2.0 Mini</li><li>Doubao Seed Audio 1.0</li><li>Kling 3.0</li></ul>
@@ -522,9 +528,10 @@
       delivery: [0.885, 0.92],
       horizon: [0.975, 1.00],
     };
-    const ARTIFACT_REVEAL_START = 0.748;
-    const ARTIFACT_REVEAL_STAGGER = 0.003;
-    const ARTIFACT_REVEAL_COMPLETE = 0.768;
+    const ARTIFACT_REVEAL_TIMING = {
+      core: { start: 0.748, complete: 0.768, stagger: 0.003, slots: 5 },
+      delivery: { start: 0.885, complete: 0.914, stagger: 0.006, slots: 2 },
+    };
     const PARTICLE_STRIDE = 13;
 
     const clamp01 = (value) => Math.min(1, Math.max(0, value));
@@ -929,20 +936,27 @@
     };
 
     const artifactDefinitions = [
-      { label: "Research", type: "research", x: 0.58, y: 0.18, mobile: false },
-      { label: "Editorial image", type: "image", x: 0.70, y: 0.30, mobile: false },
-      { label: "Screenshot analysis", type: "screenshot", x: 0.84, y: 0.22, mobile: false },
-      { label: "Vision crop", type: "vision", x: 0.94, y: 0.13, mobile: false },
-      { label: "Cinematic video", type: "video", x: 0.69, y: 0.45, mobile: true },
-      { label: "Audio", type: "audio", x: 0.62, y: 0.63, mobile: false },
-      { label: "Transcript", type: "transcript", x: 0.83, y: 0.57, mobile: false },
-      { label: "Share link", type: "share", x: 0.93, y: 0.43, mobile: true },
-      { label: "Music track", type: "music", x: 0.68, y: 0.79, mobile: false },
-      { label: "Search result", type: "search", x: 0.51, y: 0.84, mobile: false },
-      { label: "Code snippet", type: "code", x: 0.80, y: 0.91, mobile: false },
-      { label: "Generated variants", type: "variants", x: 0.54, y: 0.95, mobile: false },
-      { label: "Delivered", type: "delivered", x: 0.92, y: 0.77, mobile: true },
+      { label: "Research", type: "research", role: "core", x: 0.58, y: 0.18, mobile: false },
+      { label: "Editorial image", type: "image", role: "core", x: 0.70, y: 0.30, mobile: false },
+      { label: "Screenshot analysis", type: "screenshot", role: "core", x: 0.84, y: 0.22, mobile: false },
+      { label: "Vision crop", type: "vision", role: "core", x: 0.94, y: 0.13, mobile: false },
+      { label: "Cinematic video", type: "video", role: "core", x: 0.69, y: 0.45, mobile: true },
+      { label: "Audio", type: "audio", role: "core", x: 0.62, y: 0.63, mobile: false },
+      { label: "Transcript", type: "transcript", role: "core", x: 0.83, y: 0.57, mobile: false },
+      { label: "Share link", type: "share", role: "delivery", x: 0.93, y: 0.43, mobile: true },
+      { label: "Music track", type: "music", role: "core", x: 0.68, y: 0.79, mobile: false },
+      { label: "Search result", type: "search", role: "core", x: 0.51, y: 0.84, mobile: false },
+      { label: "Code snippet", type: "code", role: "core", x: 0.80, y: 0.91, mobile: false },
+      { label: "Generated variants", type: "variants", role: "core", x: 0.54, y: 0.95, mobile: false },
+      { label: "Delivered", type: "delivered", role: "delivery", x: 0.92, y: 0.77, mobile: true },
     ];
+
+    const artifactRoleCounts = { core: 0, delivery: 0 };
+    const artifactRoleIndexes = artifactDefinitions.map((definition) => {
+      const roleIndex = artifactRoleCounts[definition.role];
+      artifactRoleCounts[definition.role] += 1;
+      return roleIndex;
+    });
 
     function artifactMarkup(definition) {
       const cap = `<span class="artifact-cap">${definition.label}</span>`;
@@ -971,6 +985,14 @@
     });
 
     const renderer = createDenseParticleRenderer(canvas);
+
+    function syncRendererState() {
+      const rendererState = canvas.dataset.renderer === "static" ? "static" : "webgl2";
+      capabilityField.dataset.renderer = rendererState;
+      document.documentElement.dataset.demoRenderer = rendererState;
+    }
+
+    syncRendererState();
     const state = { progress: 0 };
     let scrollController = null;
     let resizeFrame = 0;
@@ -1019,8 +1041,11 @@
       applyReveal(deliveryElements, deliveryReveal);
 
       artifactElements.forEach((element, index) => {
-        const artifactStart = ARTIFACT_REVEAL_START + (index % 5) * ARTIFACT_REVEAL_STAGGER;
-        const artifactComplete = ARTIFACT_REVEAL_COMPLETE + (index % 5) * ARTIFACT_REVEAL_STAGGER;
+        const definition = artifactDefinitions[index];
+        const roleIndex = artifactRoleIndexes[index];
+        const timing = ARTIFACT_REVEAL_TIMING[definition.role];
+        const artifactStart = timing.start + (roleIndex % timing.slots) * timing.stagger;
+        const artifactComplete = timing.complete + (roleIndex % timing.slots) * timing.stagger;
         const arrival = smoothstep(artifactStart, artifactComplete, progress);
         element.style.opacity = String(arrival);
         element.style.transform = `translate(-50%, calc(-50% + ${mix(14, 0, arrival)}px)) scale(${mix(0.94, 1, arrival)}) rotate(${(index % 3 - 1) * 0.6}deg)`;
@@ -1043,6 +1068,7 @@
       if (!changed) return false;
       lastLayout = { width: bounds.width, height: bounds.height, dpr, reduced };
       renderer.layout(bounds.width, bounds.height, reduced);
+      syncRendererState();
       const geometry = compositionGeometry(bounds.width, bounds.height);
       portalFigures.style.left = `${geometry.centerX}px`;
       portalFigures.style.top = `${geometry.centerY + geometry.portalSize * 0.18}px`;
@@ -1068,7 +1094,7 @@
       if (destroyed) return;
       if (scrollController) scrollController.kill();
       scrollController = null;
-      if (reduceMotionQuery.matches || canvas.dataset.renderer === "static") {
+      if (reduceMotionQuery.matches || capabilityField.dataset.renderer === "static") {
         document.documentElement.dataset.triggerCount = "0";
         renderAt(1);
         return;
