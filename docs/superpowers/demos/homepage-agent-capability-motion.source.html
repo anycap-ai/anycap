@@ -518,6 +518,17 @@
     const DESKTOP_PARTICLE_MAX = 30000;
     const PORTAL_LAYER_COUNT = 6;
     const RIBBON_COUNT = 7;
+    const RIBBON_PARTICLE_ROLES = [1, 1, 2, 2, 2, 3, 4];
+    const LATEST_PARTICLE_COMPLETE = 0.50;
+    const CORE_PARTICLE_COMPLETE = 0.74;
+    const DELIVERY_PARTICLE_COMPLETE = 0.88;
+    const HORIZON_PARTICLE_COMPLETE = 0.97;
+    const REVEAL_WINDOWS = {
+      latest: [0.32, 0.53],
+      core: [0.48, 0.78],
+      delivery: [0.72, 0.92],
+      horizon: [0.90, 1.00],
+    };
     const PARTICLE_STRIDE = 12;
 
     const clamp01 = (value) => Math.min(1, Math.max(0, value));
@@ -571,7 +582,7 @@
           const dpr = Math.min(window.devicePixelRatio || 1, 2);
           canvas.width = Math.max(1, Math.round(width * dpr));
           canvas.height = Math.max(1, Math.round(height * dpr));
-          count = reducedMotion || width < 768 ? 9000 : DESKTOP_PARTICLE_MIN;
+          count = width < 768 ? 9000 : DESKTOP_PARTICLE_MIN;
         },
         render() {},
         destroy() { canvas.style.backgroundImage = ""; },
@@ -605,12 +616,24 @@
         }
         void main() {
           float assemble = ease(0.16 + aDelay * 0.035, 0.32 + aDelay * 0.035, uProgress);
-          float leavePortal = ease(0.38 + aDelay * 0.16, 0.80 + aDelay * 0.08, uProgress);
+          float leaveStart = 0.82 + aDelay * 0.05;
+          float leaveEnd = ${HORIZON_PARTICLE_COMPLETE.toFixed(2)};
+          if (aRole < 1.5) {
+            leaveStart = 0.30 + aDelay * 0.08;
+            leaveEnd = ${LATEST_PARTICLE_COMPLETE.toFixed(2)};
+          } else if (aRole < 2.5) {
+            leaveStart = 0.42 + aDelay * 0.08;
+            leaveEnd = ${CORE_PARTICLE_COMPLETE.toFixed(2)};
+          } else if (aRole < 3.5) {
+            leaveStart = 0.64 + aDelay * 0.07;
+            leaveEnd = ${DELIVERY_PARTICLE_COMPLETE.toFixed(2)};
+          }
+          float leavePortal = ease(leaveStart, leaveEnd, uProgress);
           vec2 position = mix(aSource, aPortal, assemble);
           if (aRole > 0.5) position = mix(position, aFinal, leavePortal);
           vec2 clip = position / uResolution * 2.0 - 1.0;
           gl_Position = vec4(clip.x, -clip.y, mix(-0.3, 0.3, aDepth), 1.0);
-          gl_PointSize = aSize * uDpr * mix(0.78, 1.12, aDepth);
+          gl_PointSize = clamp(aSize, 0.8, 4.8) * uDpr;
           float limited = aRole < 0.5 ? mix(0.07, 1.0, assemble) : ease(0.26, 0.43, uProgress);
           vAlpha = aAlpha * limited;
           vOlive = aOlive;
@@ -749,7 +772,7 @@
         particleCount = width < 768
           ? (reducedMotion ? 7000 : 9000)
           : reducedMotion || lowPower
-            ? 14000
+            ? DESKTOP_PARTICLE_MIN
             : Math.round(mix(DESKTOP_PARTICLE_MIN, DESKTOP_PARTICLE_MAX, areaRatio));
         const portalCount = Math.floor(particleCount * 0.42);
         const ribbonCount = Math.floor(particleCount * 0.48);
@@ -786,7 +809,7 @@
             const source = geometry.mobile
               ? { x: width * (0.15 + (wave % 3) * 0.34) + (random() - 0.5) * 30, y: height * (0.56 + Math.floor(wave / 3) * 0.035) }
               : { x: width * (0.63 + (wave % 3) * 0.13) + (random() - 0.5) * 44, y: height * (0.11 + Math.floor(wave / 3) * 0.075) };
-            writeParticle(data, index, source, portalLane, final, size, olive, alpha, delay, 1, depth);
+            writeParticle(data, index, source, portalLane, final, size, olive, alpha, delay, RIBBON_PARTICLE_ROLES[wave], depth);
             continue;
           }
 
@@ -796,7 +819,7 @@
             ? { x: width * (0.05 + random() * 0.90), y: height * (0.82 + random() * 0.30) }
             : { x: width * (0.78 + random() * 0.35), y: height * (0.05 + branch * 0.14) + (random() - 0.5) * 80 };
           const source = { x: random() * width, y: random() * height };
-          writeParticle(data, index, source, portalLane, edge, size * 0.76, olive, alpha * 0.48, delay, 2, depth);
+          writeParticle(data, index, source, portalLane, edge, Math.max(0.8, size * 0.76), olive, alpha * 0.48, delay, 4, depth);
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -903,6 +926,7 @@
     const state = { progress: 0 };
     let scrollController = null;
     let resizeFrame = 0;
+    let destroyed = false;
     let lastLayout = { width: 0, height: 0, dpr: 0, reduced: null };
 
     function applyReveal(elements, reveal) {
@@ -914,6 +938,7 @@
     }
 
     function renderAt(progress) {
+      if (destroyed) return;
       progress = clamp01(progress);
       state.progress = progress;
       renderer.render(progress);
@@ -922,10 +947,10 @@
       const installReveal = smoothstep(0.17, 0.25, progress);
       const installRecede = smoothstep(0.29, 0.36, progress);
       const portalReveal = smoothstep(0.20, 0.32, progress);
-      const latestReveal = smoothstep(0.34, 0.53, progress);
-      const coreReveal = smoothstep(0.54, 0.78, progress);
-      const deliveryReveal = smoothstep(0.76, 0.92, progress);
-      const horizonReveal = smoothstep(0.91, 1, progress);
+      const latestReveal = smoothstep(...REVEAL_WINDOWS.latest, progress);
+      const coreReveal = smoothstep(...REVEAL_WINDOWS.core, progress);
+      const deliveryReveal = smoothstep(...REVEAL_WINDOWS.delivery, progress);
+      const horizonReveal = smoothstep(...REVEAL_WINDOWS.horizon, progress);
 
       cursorLanes.style.opacity = String(limitedReveal * (1 - smoothstep(0.29, 0.39, progress)));
       cursorLanes.style.transform = `translateX(${mix(-18, 0, limitedReveal)}px)`;
@@ -951,7 +976,9 @@
       applyReveal(deliveryElements, deliveryReveal);
 
       artifactElements.forEach((element, index) => {
-        const arrival = smoothstep(0.62 + (index % 5) * 0.025, 0.82 + (index % 5) * 0.025, progress);
+        const artifactStart = 0.48 + (index % 5) * 0.01;
+        const artifactComplete = 0.72 + (index % 5) * 0.012;
+        const arrival = smoothstep(artifactStart, artifactComplete, progress);
         element.style.opacity = String(arrival);
         element.style.transform = `translate(-50%, calc(-50% + ${mix(14, 0, arrival)}px)) scale(${mix(0.94, 1, arrival)}) rotate(${(index % 3 - 1) * 0.6}deg)`;
       });
@@ -961,6 +988,7 @@
     }
 
     function layout(force = false) {
+      if (destroyed) return false;
       const bounds = visual.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const reduced = reduceMotionQuery.matches;
@@ -992,6 +1020,7 @@
     }
 
     function createMotionController() {
+      if (destroyed) return;
       if (scrollController) scrollController.kill();
       scrollController = null;
       if (reduceMotionQuery.matches || canvas.dataset.renderer === "static") {
@@ -1003,7 +1032,7 @@
       scrollController = ScrollTrigger.create({
         trigger: ".capability-stage",
         start: "top top",
-        end: "+=340%",
+        end: "+=240%",
         pin: true,
         scrub: 0.72,
         onUpdate: ({ progress }) => renderAt(progress),
@@ -1019,8 +1048,11 @@
     gsap.registerPlugin(ScrollTrigger);
 
     const resizeObserver = new ResizeObserver(() => {
+      if (destroyed) return;
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
+        resizeFrame = 0;
+        if (destroyed) return;
         if (!layout()) return;
         renderAt(reduceMotionQuery.matches ? 1 : state.progress);
         ScrollTrigger.refresh();
@@ -1028,11 +1060,14 @@
     });
     resizeObserver.observe(visual);
 
-    reduceMotionQuery.addEventListener("change", () => {
+    function handleMotionPreferenceChange() {
+      if (destroyed) return;
       layout(true);
       createMotionController();
       ScrollTrigger.refresh();
-    });
+    }
+
+    reduceMotionQuery.addEventListener("change", handleMotionPreferenceChange);
 
     window.__ANYCAP_DEMO__ = {
       get progress() { return state.progress; },
@@ -1042,14 +1077,21 @@
       get active() { return Boolean(scrollController?.isActive); },
       renderAt,
       destroy() {
+        if (destroyed) return;
+        destroyed = true;
         scrollController?.kill();
+        scrollController = null;
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = 0;
         resizeObserver.disconnect();
+        reduceMotionQuery.removeEventListener("change", handleMotionPreferenceChange);
         renderer.destroy();
       },
     };
 
     const fontsReady = document.fonts?.ready ?? Promise.resolve();
     fontsReady.then(() => {
+      if (destroyed) return;
       document.documentElement.dataset.fontsReady = "true";
       document.documentElement.dataset.pixelFontLoaded = String(document.fonts?.check('500 16px "AnyCap Pixel"') ?? true);
       document.documentElement.dataset.interFontLoaded = String(document.fonts?.check('500 16px "AnyCap Inter"') ?? true);

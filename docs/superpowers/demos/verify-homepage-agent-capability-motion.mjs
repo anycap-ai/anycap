@@ -95,6 +95,40 @@ for (const model of ["Seedance 2.0 Mini", "Doubao Seed Audio 1.0", "Kling 3.0", 
 assert.equal((source.match(/ScrollTrigger\.create\(/g) ?? []).length, 1);
 assert.doesNotMatch(source, /getContext\(["']2d["']\)/);
 assert.doesNotMatch(source, /window\.addEventListener\(["']scroll["']/);
+assert.ok(source.includes("const RIBBON_PARTICLE_ROLES = [1, 1, 2, 2, 2, 3, 4]"), "ribbons map deterministically to latest, core, delivery, and horizon arrivals");
+assert.ok(source.includes("RIBBON_PARTICLE_ROLES[wave]"), "ribbon role mapping is written into particle data");
+const particleCompletion = Object.fromEntries(
+  [...source.matchAll(/const (LATEST|CORE|DELIVERY|HORIZON)_PARTICLE_COMPLETE = (0\.\d+);/g)]
+    .map((match) => [match[1].toLowerCase(), Number(match[2])]),
+);
+assert.deepEqual(particleCompletion, { latest: 0.5, core: 0.74, delivery: 0.88, horizon: 0.97 }, "cluster particle completion thresholds stay explicit");
+for (const constant of ["LATEST", "CORE", "DELIVERY", "HORIZON"]) {
+  assert.ok(source.includes(`\${${constant}_PARTICLE_COMPLETE.toFixed(2)}`), `${constant.toLowerCase()} particle completion drives the vertex shader`);
+}
+assert.ok(particleCompletion.latest < 0.53, "latest particles arrive before latest labels finish revealing");
+assert.ok(particleCompletion.core < 0.78, "core particles arrive before core labels finish revealing");
+assert.ok(particleCompletion.delivery < 0.92, "delivery particles arrive before delivery labels finish revealing");
+assert.ok(particleCompletion.horizon < 1, "horizon particles arrive before horizon copy finishes revealing");
+assert.ok(source.includes("latest: [0.32, 0.53]"), "latest DOM reveal uses the specified interval");
+assert.ok(source.includes("core: [0.48, 0.78]"), "core DOM reveal uses the specified interval");
+assert.ok(source.includes("delivery: [0.72, 0.92]"), "delivery DOM reveal uses the specified interval");
+assert.ok(source.includes("horizon: [0.90, 1.00]"), "horizon DOM reveal uses the specified interval");
+assert.match(source, /const artifactStart = 0\.48 \+ \(index % 5\) \* 0\.01;/, "artifacts start inside the core interval");
+assert.match(source, /const artifactComplete = 0\.72 \+ \(index % 5\) \* 0\.012;/, "artifacts complete no later than 0.768 inside the core interval");
+assert.match(source, /count = width < 768 \? 9000 : DESKTOP_PARTICLE_MIN;/, "static fallback retains the desktop particle minimum");
+assert.match(source, /: reducedMotion \|\| lowPower\s*\? DESKTOP_PARTICLE_MIN/, "desktop reduced and low-power WebGL paths retain the desktop particle minimum");
+assert.doesNotMatch(source, /\b14000\b/, "no desktop path drops below the 18k minimum");
+assert.ok(source.includes("gl_PointSize = clamp(aSize, 0.8, 4.8) * uDpr;"), "effective CSS point size is clamped to 0.8-4.8 before DPR scaling");
+assert.ok(source.includes("Math.max(0.8, size * 0.76)"), "scatter particles retain the 0.8 CSS-pixel floor");
+assert.match(source, /function handleMotionPreferenceChange\(\)/, "motion preference listener has a removable named callback");
+assert.ok(source.includes('reduceMotionQuery.addEventListener("change", handleMotionPreferenceChange)'), "named motion preference listener is installed");
+assert.ok(source.includes('reduceMotionQuery.removeEventListener("change", handleMotionPreferenceChange)'), "named motion preference listener is removed at teardown");
+assert.match(source, /destroy\(\) \{[\s\S]*?cancelAnimationFrame\(resizeFrame\);[\s\S]*?resizeObserver\.disconnect\(\);[\s\S]*?renderer\.destroy\(\);/, "demo teardown cancels queued resize work before destroying the renderer");
+assert.match(source, /\.capability-field \{[\s\S]*?height: 340dvh;/, "desktop wrapper keeps the 340dvh narrative height");
+assert.ok(source.includes('end: "+=240%"'), "ScrollTrigger end matches the wrapper's 240vh available scroll range");
+assert.doesNotMatch(source, /end:\s*["']\+=340%["']/, "ScrollTrigger does not request unreachable scroll distance");
+assert.ok(plan.includes('end: "+=240%"'), "implementation plan records the reachable ScrollTrigger end");
+assert.ok(plan.includes("340dvh wrapper provides 240dvh of available scroll"), "implementation plan explains the wrapper/end constraint");
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
 assert.doesNotMatch(source, /<button[^>]*>[\s\S]*?anycap install[\s\S]*?<\/button>/i, "install proof is not a button");
 assert.doesNotMatch(source, /Try AnyCap/i, "middle section has no hero CTA");

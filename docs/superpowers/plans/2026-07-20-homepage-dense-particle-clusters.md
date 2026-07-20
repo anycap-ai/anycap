@@ -16,7 +16,7 @@
 - Preserve `#f4f5f0`, `#1c1f17`, `#4d5145`, `#6b7d3a`, `#d4dbb8`, the current grain, GeistPixelSquare 500, system sans body, and Inter 500 labels.
 - Keep the visible copy exactly `One capability layer.`, `Every way to finish.`, `Human + agent`, and `Create. Understand. Find. Manage. Deliver.`
 - Keep the homepage hero, navigation, CTA, footer, and production page untouched.
-- Desktop uses 18,000 to 30,000 square particles; mobile and fallback use fewer particles while retaining thick continuous ribbons.
+- Every desktop path, including reduced-motion, low-power WebGL, and static fallback, uses 18,000 to 30,000 square particles; only mobile may use fewer particles while retaining thick continuous ribbons.
 - The portal uses five to seven depth layers and six to eight broad outgoing ribbons.
 - Right-side labels are `Latest models`, `Core capabilities`, `Delivery layer`, and `More models. More capabilities. Continuously added.`
 - Recent representative models are Seedance 2.0 Mini, Doubao Seed Audio 1.0, Kling 3.0, Seedance 2.0, and Nano Banana 2 Lite, verified against `web/src/lib/model-hub.ts`.
@@ -24,6 +24,7 @@
 - Delivery labels are Drive, Share, Page, Publish, and Delivered.
 - Do not use provider logos, a card grid, radial particle clouds, glow, neon, glassmorphism, remote assets, custom scroll listeners, or one tween per particle.
 - Reduced motion renders the final clustered composition without pinning.
+- Keep `.capability-field` at `340dvh`; the 340dvh wrapper provides 240dvh of available scroll after subtracting the 100dvh viewport, so the single ScrollTrigger must end at `+=240%` and reach normalized progress `1` at the bottom of the page.
 
 ---
 
@@ -166,11 +167,11 @@ program. If `canvas.getContext("webgl2", { alpha: true, antialias: false,
 premultipliedAlpha: true })` returns null, return the static final-state renderer
 instead.
 
-Portal target generation assigns 42 percent of desktop particles across six nested square frames with turbulent edge offsets. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha.
+Portal target generation assigns 42 percent of desktop particles across six nested square frames with turbulent edge offsets. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha; clamp the shader's effective CSS size to that exact range before DPR scaling. Every desktop branch, including reduced-motion, low-power, and static fallback, must report at least `DESKTOP_PARTICLE_MIN`.
 
 - [ ] **Step 4: Couple DOM reveal to particle arrival**
 
-Use one `renderAt(progress)` function. Latest models resolve during `0.32–0.53`, core capabilities and artifacts during `0.48–0.78`, delivery during `0.72–0.92`, and horizon during `0.90–1.00`. Apply only opacity and transform. Particles reach each cluster before its labels become fully legible.
+Use one `renderAt(progress)` function. Latest models resolve during `0.32–0.53`, core capabilities and artifacts during `0.48–0.78`, delivery during `0.72–0.92`, and horizon during `0.90–1.00`. Apply only opacity and transform. Map ribbons to cluster-specific particle completion thresholds: latest `0.50`, core/artifact `0.74`, delivery `0.88`, and horizon `0.97`, each strictly before the corresponding DOM reveal completion. Artifact surfaces must finish no later than `0.78`.
 
 - [ ] **Step 5: Preserve one GSAP ScrollTrigger**
 
@@ -180,14 +181,14 @@ Create exactly one controller:
 ScrollTrigger.create({
   trigger: ".capability-stage",
   start: "top top",
-  end: "+=340%",
+  end: "+=240%",
   pin: true,
   scrub: 0.72,
   onUpdate: ({ progress }) => renderAt(progress),
 });
 ```
 
-Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. Resize uses `requestAnimationFrame`, calls renderer layout only when width, height, DPR, or motion preference changes, and never listens for scroll directly.
+Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. The `340dvh` wrapper provides exactly `240dvh` of available scroll, so `+=240%` makes bottom scroll reach normalized progress `1` and the horizon act. Resize uses `requestAnimationFrame`, calls renderer layout only when width, height, DPR, or motion preference changes, and never listens for scroll directly. Teardown cancels any queued resize frame and removes the named media-query change listener before destroying the renderer.
 
 - [ ] **Step 6: Run the contract until it passes**
 
