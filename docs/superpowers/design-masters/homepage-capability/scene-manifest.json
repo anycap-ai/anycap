@@ -1,17 +1,460 @@
 {
   "version": 1,
-  "artboard": { "width": 1672, "height": 941, "aspect": "16:9" },
+  "artboard": {
+    "width": 1672,
+    "height": 941,
+    "aspect": "16:9"
+  },
+  "camera": {
+    "id": "canonical-camera",
+    "projection": "perspective",
+    "position": [0, 0, 8],
+    "target": [0.62, 0.52, 0],
+    "fov": 34,
+    "artboardMapping": {
+      "coordinateSpace": "normalized",
+      "referenceWidth": 1672,
+      "referenceHeight": 941,
+      "fit": "canonical-16:9"
+    },
+    "desktopCropPolicy": {
+      "tallerViewport": "center-artboard-vertically",
+      "widerViewport": "crop-open-horizon",
+      "stretch": false
+    }
+  },
+  "mobile": {
+    "derivedFromCanonicalManifest": true,
+    "shrinkDesktopMaster": false,
+    "sequence": [
+      "copy",
+      "portal",
+      "representative-artifacts"
+    ],
+    "flowDirection": "vertical",
+    "representativeArtifactIds": [
+      "artifact-editorial-image",
+      "artifact-cinematic-video",
+      "artifact-audio",
+      "artifact-delivered"
+    ]
+  },
   "reference": "reference-target.png",
   "finalMaster": "final-master.png",
-  "brand": { "surface": "#f4f5f0", "primary": "#1c1f17", "olive": "#6b7d3a", "secondary": "#4d5145", "paleSage": "#c8d4a0" },
-  "layerOrder": ["background", "copy", "backgroundParticles", "portalTunnel", "humanAgentPair", "artifactSurfaces", "capabilityAnnotations", "foregroundParticles", "atmosphere"],
-  "components": ["CapabilityScene", "PortalTunnel", "HumanAgentPair", "ParticleFlow", "ArtifactSurface", "CapabilityAnnotations", "SceneAtmosphere"],
-  "artifacts": ["Research", "Editorial image", "Screenshot analysis", "Vision crop", "Published page", "Cinematic video", "Audio", "Transcript", "Share link", "Music track", "Search result", "Generated variants", "Code snippet", "Delivered"],
+  "brand": {
+    "surface": "#f4f5f0",
+    "primary": "#1c1f17",
+    "olive": "#6b7d3a",
+    "secondary": "#4d5145",
+    "paleSage": "#c8d4a0"
+  },
+  "layerOrder": [
+    "background",
+    "copy",
+    "backgroundParticles",
+    "portalTunnel",
+    "humanAgentPair",
+    "artifactSurfaces",
+    "capabilityAnnotations",
+    "foregroundParticles",
+    "atmosphere"
+  ],
+  "components": [
+    "CapabilityScene",
+    "PortalTunnel",
+    "HumanAgentPair",
+    "ParticleFlow",
+    "ArtifactSurface",
+    "CapabilityAnnotations",
+    "SceneAtmosphere"
+  ],
+  "artifacts": [
+    "Research",
+    "Editorial image",
+    "Screenshot analysis",
+    "Vision crop",
+    "Published page",
+    "Cinematic video",
+    "Audio",
+    "Transcript",
+    "Share link",
+    "Music track",
+    "Search result",
+    "Generated variants",
+    "Code snippet",
+    "Delivered"
+  ],
+  "sceneEntries": [
+    {
+      "id": "copy",
+      "kind": "copy",
+      "owner": "CapabilityScene",
+      "x": 0.125,
+      "y": 0.49,
+      "z": 10,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "limited",
+      "mobilePolicy": "reposition"
+    },
+    {
+      "id": "portal",
+      "kind": "portal",
+      "owner": "PortalTunnel",
+      "x": 0.395,
+      "y": 0.52,
+      "z": 2,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "install",
+      "mobilePolicy": "reposition"
+    },
+    {
+      "id": "human",
+      "kind": "human",
+      "owner": "HumanAgentPair",
+      "x": 0.378,
+      "y": 0.595,
+      "z": 4,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "limited",
+      "mobilePolicy": "keep"
+    },
+    {
+      "id": "agent",
+      "kind": "agent",
+      "owner": "HumanAgentPair",
+      "x": 0.402,
+      "y": 0.605,
+      "z": 4,
+      "scale": 0.86,
+      "rotation": 0,
+      "revealPhase": "limited",
+      "mobilePolicy": "keep"
+    },
+    {
+      "id": "particle-pass-background",
+      "kind": "background-particles",
+      "owner": "ParticleFlow",
+      "x": 0.67,
+      "y": 0.5,
+      "z": -2,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "limited",
+      "mobilePolicy": "reposition"
+    },
+    {
+      "id": "particle-pass-foreground",
+      "kind": "foreground-particles",
+      "owner": "ParticleFlow",
+      "x": 0.7,
+      "y": 0.57,
+      "z": 8,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "reposition"
+    },
+    {
+      "id": "atmosphere",
+      "kind": "atmosphere",
+      "owner": "SceneAtmosphere",
+      "x": 0.5,
+      "y": 0.5,
+      "z": 12,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "limited",
+      "mobilePolicy": "keep"
+    },
+    {
+      "id": "annotation-latest-models",
+      "kind": "annotation",
+      "group": "latest-models",
+      "labels": [
+        "Latest models",
+        "Seedance 2.0 Mini",
+        "Doubao Seed Audio 1.0",
+        "Kling 3.0"
+      ],
+      "owner": "CapabilityAnnotations",
+      "x": 0.72,
+      "y": 0.12,
+      "z": 3,
+      "scale": 0.82,
+      "rotation": -2,
+      "revealPhase": "portal",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "annotation-core-capabilities",
+      "kind": "annotation",
+      "group": "core-capabilities",
+      "labels": [
+        "Core capabilities",
+        "Image",
+        "Video",
+        "Audio",
+        "Music",
+        "Understanding",
+        "Search"
+      ],
+      "owner": "CapabilityAnnotations",
+      "x": 0.7,
+      "y": 0.48,
+      "z": 3,
+      "scale": 0.78,
+      "rotation": 1,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "annotation-delivery-layer",
+      "kind": "annotation",
+      "group": "delivery-layer",
+      "labels": [
+        "Delivery layer",
+        "Drive",
+        "Share",
+        "Page",
+        "Publish",
+        "Delivered"
+      ],
+      "owner": "CapabilityAnnotations",
+      "x": 0.87,
+      "y": 0.66,
+      "z": 3,
+      "scale": 0.76,
+      "rotation": 1,
+      "revealPhase": "delivered",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "annotation-horizon-continuation",
+      "kind": "annotation",
+      "group": "horizon-continuation",
+      "labels": [
+        "More models. More capabilities. Continuously added."
+      ],
+      "owner": "CapabilityAnnotations",
+      "x": 0.79,
+      "y": 0.94,
+      "z": 1,
+      "scale": 0.7,
+      "rotation": 0,
+      "revealPhase": "delivered",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-research",
+      "kind": "artifact",
+      "artifact": "Research",
+      "owner": "ArtifactSurface",
+      "x": 0.575,
+      "y": 0.155,
+      "z": 1,
+      "scale": 0.78,
+      "rotation": -4,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-editorial-image",
+      "kind": "artifact",
+      "artifact": "Editorial image",
+      "owner": "ArtifactSurface",
+      "x": 0.69,
+      "y": 0.235,
+      "z": 3,
+      "scale": 1,
+      "rotation": -1,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "representative"
+    },
+    {
+      "id": "artifact-screenshot-analysis",
+      "kind": "artifact",
+      "artifact": "Screenshot analysis",
+      "owner": "ArtifactSurface",
+      "x": 0.825,
+      "y": 0.155,
+      "z": 2,
+      "scale": 0.86,
+      "rotation": 1,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-vision-crop",
+      "kind": "artifact",
+      "artifact": "Vision crop",
+      "owner": "ArtifactSurface",
+      "x": 0.945,
+      "y": 0.11,
+      "z": 4,
+      "scale": 0.86,
+      "rotation": 4,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-published-page",
+      "kind": "artifact",
+      "artifact": "Published page",
+      "owner": "ArtifactSurface",
+      "x": 0.93,
+      "y": 0.33,
+      "z": 4,
+      "scale": 1,
+      "rotation": -2,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-cinematic-video",
+      "kind": "artifact",
+      "artifact": "Cinematic video",
+      "owner": "ArtifactSurface",
+      "x": 0.7,
+      "y": 0.43,
+      "z": 5,
+      "scale": 1,
+      "rotation": 0,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "representative"
+    },
+    {
+      "id": "artifact-audio",
+      "kind": "artifact",
+      "artifact": "Audio",
+      "owner": "ArtifactSurface",
+      "x": 0.66,
+      "y": 0.56,
+      "z": 5,
+      "scale": 1,
+      "rotation": 1,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "representative"
+    },
+    {
+      "id": "artifact-transcript",
+      "kind": "artifact",
+      "artifact": "Transcript",
+      "owner": "ArtifactSurface",
+      "x": 0.83,
+      "y": 0.59,
+      "z": 4,
+      "scale": 0.94,
+      "rotation": 2,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-share-link",
+      "kind": "artifact",
+      "artifact": "Share link",
+      "owner": "ArtifactSurface",
+      "x": 0.87,
+      "y": 0.5,
+      "z": 5,
+      "scale": 0.86,
+      "rotation": 0,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-music-track",
+      "kind": "artifact",
+      "artifact": "Music track",
+      "owner": "ArtifactSurface",
+      "x": 0.585,
+      "y": 0.67,
+      "z": 5,
+      "scale": 0.86,
+      "rotation": 4,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-search-result",
+      "kind": "artifact",
+      "artifact": "Search result",
+      "owner": "ArtifactSurface",
+      "x": 0.57,
+      "y": 0.8,
+      "z": 4,
+      "scale": 0.86,
+      "rotation": 5,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-generated-variants",
+      "kind": "artifact",
+      "artifact": "Generated variants",
+      "owner": "ArtifactSurface",
+      "x": 0.49,
+      "y": 0.9,
+      "z": 6,
+      "scale": 0.72,
+      "rotation": 4,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-code-snippet",
+      "kind": "artifact",
+      "artifact": "Code snippet",
+      "owner": "ArtifactSurface",
+      "x": 0.72,
+      "y": 0.78,
+      "z": 6,
+      "scale": 0.92,
+      "rotation": 3,
+      "revealPhase": "avalanche",
+      "mobilePolicy": "hide"
+    },
+    {
+      "id": "artifact-delivered",
+      "kind": "artifact",
+      "artifact": "Delivered",
+      "owner": "ArtifactSurface",
+      "x": 0.93,
+      "y": 0.82,
+      "z": 7,
+      "scale": 1,
+      "rotation": 2,
+      "revealPhase": "delivered",
+      "mobilePolicy": "representative"
+    }
+  ],
   "keyframes": [
-    { "id": "limited", "progress": 0.08, "file": "keyframes/01-limited.png" },
-    { "id": "install", "progress": 0.24, "file": "keyframes/02-install.png" },
-    { "id": "portal", "progress": 0.44, "file": "keyframes/03-portal.png" },
-    { "id": "avalanche", "progress": 0.72, "file": "keyframes/04-avalanche.png" },
-    { "id": "delivered", "progress": 1, "file": "keyframes/05-delivered.png" }
+    {
+      "id": "limited",
+      "progress": 0.08,
+      "file": "keyframes/01-limited.png"
+    },
+    {
+      "id": "install",
+      "progress": 0.24,
+      "file": "keyframes/02-install.png"
+    },
+    {
+      "id": "portal",
+      "progress": 0.44,
+      "file": "keyframes/03-portal.png"
+    },
+    {
+      "id": "avalanche",
+      "progress": 0.72,
+      "file": "keyframes/04-avalanche.png"
+    },
+    {
+      "id": "delivered",
+      "progress": 1,
+      "file": "keyframes/05-delivered.png"
+    }
   ]
 }
