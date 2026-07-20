@@ -16,8 +16,9 @@
 - Preserve `#f4f5f0`, `#1c1f17`, `#4d5145`, `#6b7d3a`, `#d4dbb8`, the current grain, GeistPixelSquare 500, system sans body, and Inter 500 labels.
 - Keep the visible copy exactly `One capability layer.`, `Every way to finish.`, `Human + agent`, and `Create. Understand. Find. Manage. Deliver.`
 - Keep the homepage hero, navigation, CTA, footer, and production page untouched.
-- The 18,000 to 30,000 particles applies only to WebGL desktop paths, including reduced-motion and low-power WebGL; mobile WebGL may use fewer while retaining thick continuous ribbons. The static fallback reports zero WebGL particles and is validated as a responsive SVG composition instead of claiming particle telemetry.
-- The portal uses five to seven depth layers and six to eight broad outgoing ribbons.
+- The 18,000 to 42,000 particles applies only to WebGL desktop paths, including reduced-motion and low-power WebGL; mobile WebGL may use fewer while retaining thick continuous ribbons. The static fallback reports zero WebGL particles and is validated as a responsive SVG composition instead of claiming particle telemetry.
+- Desktop geometry shares one canonical 16:9 artboard: copy begins near 4 percent width, the portal centers near 39.5 percent width, and its outer frame occupies about 25.5 percent width.
+- The portal uses eight perspective depth layers. Twenty-two percent of particles form a shared porous trunk and forty-four percent form eight overlapping broad outgoing volumes before the open-horizon scatter.
 - Right-side labels are `Latest models`, `Core capabilities`, `Delivery layer`, and `More models. More capabilities. Continuously added.`
 - Recent representative models are Seedance 2.0 Mini, Doubao Seed Audio 1.0, Kling 3.0, Seedance 2.0, and Nano Banana 2 Lite, verified against `web/src/lib/model-hub.ts`.
 - Core capabilities are Image, Video, Audio, Music, Understanding, and Search.
@@ -157,7 +158,7 @@ Build label elements from these arrays and use text only. The latest cluster mus
 
 - [ ] **Step 3: Implement `createDenseParticleRenderer`**
 
-Create one WebGL2 program with interleaved source/final position, size, olive mix, alpha, delay, and role attributes. The vertex shader interpolates from the limited path through the six-layer portal and into seven ribbon/cluster targets based on normalized progress. The fragment shader discards pixels outside a square point sprite and mixes `#1c1f17` with `#6b7d3a`.
+Create one WebGL2 program with interleaved source/final position, size, olive mix, alpha, delay, and role attributes. The vertex shader interpolates from the limited path through the eight-layer perspective portal, a shared trunk, and eight volume/cluster targets based on normalized progress. The fragment shader discards pixels outside a square point sprite and mixes `#1c1f17` with `#6b7d3a`.
 
 The public interface is `createDenseParticleRenderer(canvas)`, returning
 `layout(width: number, height: number, reducedMotion: boolean): void`,
@@ -170,15 +171,15 @@ program. If `canvas.getContext("webgl2", { alpha: true, antialias: false,
 premultipliedAlpha: true })` returns null, return the static final-state renderer
 instead.
 
-Portal target generation assigns 42 percent of desktop WebGL particles across six nested square frames with turbulent edge offsets. Encode normalized portal layer/depth in particle data and consume it in the vertex shader so inner/deeper layers start first and outer layers finish by `0.32`. Around the portal center, apply a short scale pulse bounded to `0.98` compression and `1.03` release overshoot, returning to `1` before the Latest models phase. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha; clamp the shader's effective CSS size to that exact range before DPR scaling. Every desktop WebGL branch, including reduced-motion and low-power WebGL, must report at least `DESKTOP_PARTICLE_MIN`.
+Portal target generation assigns 28 percent of desktop WebGL particles across eight rectangular perspective slices with turbulent wall depth. Encode normalized portal layer/depth in particle data and consume it in the vertex shader so inner/deeper layers start first and outer layers finish by `0.32`. Around the portal center, apply a short scale pulse bounded to `0.98` compression and `1.03` release overshoot, returning to `1` before the Latest models phase. Shared-trunk generation assigns 22 percent to the dense portal exit; volume generation assigns 44 percent across eight cubic volumes with visible separation and clipped endpoints beyond the right edge. The remaining 6 percent produces the entry trail, ground plane, near/far scatter, and open-horizon branches. Sizes range from 0.7 to 8.4 CSS pixels with depth-correlated alpha; portal size also follows its perspective layer. Every desktop WebGL branch, including reduced-motion and low-power WebGL, must report at least `DESKTOP_PARTICLE_MIN`.
 
-The WebGL-null fallback generates its final SVG from the current layout width and height. It contains six nested portal layers and seven broad square-dashed ribbons whose endpoints remain inside both desktop and `390×844` canvases. It reports `particleCount: 0`, because it is not a WebGL particle renderer, and regenerates on meaningful responsive layout changes. Synchronize the renderer type onto `.capability-field` and the document root, then collapse a static field to exactly `100dvh`; static mode creates no ScrollTrigger and must not leave the desktop `240dvh` or mobile `140dvh` narrative remainder blank.
+The WebGL-null fallback generates its final SVG from the current layout width and height. It contains eight perspective portal layers and eight desktop broad square-dashed volumes (seven responsive mobile ribbons). It reports `particleCount: 0`, because it is not a WebGL particle renderer, and regenerates on meaningful responsive layout changes. Synchronize the renderer type onto `.capability-field` and the document root, then collapse a static field to exactly `100dvh`; static mode creates no ScrollTrigger and must not leave the desktop `240dvh` or mobile `140dvh` narrative remainder blank.
 
 - [ ] **Step 4: Couple DOM reveal to particle arrival**
 
 Use one `renderAt(progress)` function; particle completion must be strictly earlier than the corresponding DOM reveal start, so particle mass is already in place before text or artifacts become perceptibly legible. Latest particles complete at `0.50` before a `0.505–0.53` DOM reveal; core particles complete at `0.74` before a `0.745–0.78` core reveal; delivery particles complete at `0.88` before a `0.885–0.92` reveal; horizon particles complete at `0.97` before a `0.975–1.00` reveal. Apply only opacity and transform.
 
-Every artifact definition carries an explicit `core` or `delivery` narrative role. Core artifacts start at `0.748` and all finish by `0.78`. `Share link` and `Delivered` are delivery evidence: they start only after delivery particle completion, at `0.885` and `0.891`, and finish by `0.92`. Artifact timing is selected from the definition's role rather than applying one core interval to all thirteen surfaces.
+Every artifact definition carries an explicit `core` or `delivery` narrative role. Core artifacts start at `0.748` and all finish by `0.78`. `Share link`, `Published page`, and `Delivered` are delivery evidence: they start only after delivery particle completion and finish by `0.92`. Artifact timing is selected from the definition's role rather than applying one core interval to all fourteen surfaces.
 
 - [ ] **Step 5: Preserve one GSAP ScrollTrigger**
 
@@ -241,7 +242,7 @@ Run the Task 1 verification command and `git diff --check`. Expected: both pass.
 
 - [ ] **Step 3: Inspect deterministic browser states**
 
-At 1440×900 use `window.__ANYCAP_DEMO__.renderAt(0)`, `.renderAt(0.5)`, and `.renderAt(1)`. Confirm the final WebGL state has a thick portal, seven broad ribbons, four readable clusters, embedded artifacts, no copy collision, and 18,000–30,000 particles. Confirm the middle state shows model streams entering before capability streams leave.
+At 1440×900 use `window.__ANYCAP_DEMO__.renderAt(0)`, `.renderAt(0.5)`, and `.renderAt(1)`. Confirm the final WebGL state has a thick eight-layer portal, one porous shared trunk, eight broad volume streams, four readable clusters, fourteen embedded artifacts, no copy collision, and 18,000–42,000 particles. Confirm the middle state shows model streams entering before capability streams leave.
 
 - [ ] **Step 4: Inspect mobile and reduced motion**
 
@@ -249,7 +250,7 @@ At 390×844 confirm no horizontal overflow, the portal remains readable, at leas
 
 - [ ] **Step 5: Inspect runtime health**
 
-Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null. At desktop and `390×844`, confirm the fallback's six portal layers and seven broad ribbons remain inside the canvas, its reported WebGL particle count is zero, its field height is exactly one viewport, and no blank narrative scroll remains. With JavaScript disabled, confirm assistive evidence appears only once through the `<noscript>` proof.
+Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null. At desktop and `390×844`, confirm the fallback's eight portal layers and broad responsive volumes remain inside the canvas, its reported WebGL particle count is zero, its field height is exactly one viewport, and no blank narrative scroll remains. With JavaScript disabled, confirm assistive evidence appears only once through the `<noscript>` proof.
 
 - [ ] **Step 6: Commit any verification fixes**
 

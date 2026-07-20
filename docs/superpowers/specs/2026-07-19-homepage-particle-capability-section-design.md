@@ -20,7 +20,7 @@ untouched.
 
 The final desktop frame has three dominant spatial zones:
 
-1. the left 27 to 30 percent contains the existing concise section narrative;
+1. the left 21 to 22 percent contains the existing concise section narrative;
 2. the center-left contains a large, thick, hollow particle portal with a human
    and an agent standing inside;
 3. the center and right contain a dense, perspective particle avalanche that
@@ -67,7 +67,7 @@ particles; the headline and body remain fully readable at every progress state.
 ### Portal
 
 The portal is the strongest object in the composition. It occupies roughly one
-third of the desktop width and is assembled from five to seven nested depth
+quarter of the desktop width and is assembled from eight nested perspective depth
 layers of olive and near-black square particles. Its outer edges are turbulent,
 its inner opening remains readable, and its depth layers create the impression
 of a heavy tunnel rather than a flat dotted square.
@@ -186,7 +186,7 @@ emphasis.
 ### 16–32%: Install And Assemble
 
 A transient `anycap install` command sends a compact AnyCap square to the
-agent. Surrounding particles accelerate inward and assemble the five-to-seven
+agent. Surrounding particles accelerate inward and assemble the eight
 layer portal with a restrained compression and release. The portal is built
 from depth outward; it does not simply fade or scale into view.
 
@@ -228,7 +228,7 @@ without decoupling the animation from scroll.
 
 ## Rendering Architecture
 
-The dense field uses a WebGL2 particle renderer with 18,000 to 30,000 square
+The dense field uses a WebGL2 particle renderer with 18,000 to 42,000 square
 point sprites on desktop. WebGL owns portal particles, broad ribbons, turbulent
 scatter, depth, and progress-based morphing. A DOM overlay owns copy, model
 names, capability labels, and artifact surfaces.
@@ -271,7 +271,7 @@ All text remains accessible as DOM content.
   render loop.
 - Pause rendering when the section is outside its active scroll range.
 - Refresh layout after fonts are ready and after meaningful viewport changes.
-- Keep the visible desktop field between 18,000 and 30,000 particles; reduce
+- Keep the visible desktop field between 18,000 and 42,000 particles; reduce
   count for mobile, low-power conditions, and reduced motion.
 
 ## Verification
@@ -283,7 +283,7 @@ Verification is browser-behavior based for the standalone visual companion:
 - desktop and mobile have no horizontal overflow;
 - one pinned ScrollTrigger sequence starts and releases cleanly;
 - the initial frame shows a limited agent path;
-- installation visibly assembles a thick five-to-seven-layer portal;
+- installation visibly assembles a thick eight-layer perspective portal;
 - model particles travel inward before capability particles travel outward;
 - the latest-model cluster matches current names in `web/src/lib/model-hub.ts`;
 - the core cluster clearly exposes Image, Video, Audio, Music, Understanding,

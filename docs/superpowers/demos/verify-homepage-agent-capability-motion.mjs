@@ -59,8 +59,8 @@ for (const contract of [
   "#version 300 es",
   "gl.POINTS",
   "const DESKTOP_PARTICLE_MIN = 18000",
-  "const DESKTOP_PARTICLE_MAX = 30000",
-  "const PORTAL_LAYER_COUNT = 6",
+  "const DESKTOP_PARTICLE_MAX = 42000",
+  "const PORTAL_LAYER_COUNT = 8",
   "const RIBBON_COUNT = 7",
   'class="cluster cluster-latest"',
   'class="cluster cluster-core"',
@@ -97,8 +97,8 @@ assert.doesNotMatch(source, /getContext\(["']2d["']\)/);
 assert.doesNotMatch(source, /window\.addEventListener\(["']scroll["']/);
 assert.match(source, /function createStaticFinalSvg\(width, height\)/, "fallback SVG is generated for the current layout dimensions");
 assert.match(source, /viewBox="0 0 \$\{width\} \$\{height\}"/, "fallback SVG viewBox follows the current layout dimensions");
-assert.match(source, /Array\.from\(\{ length: PORTAL_LAYER_COUNT \}/, "fallback creates all six portal depth layers");
-assert.match(source, /Array\.from\(\{ length: RIBBON_COUNT \}/, "fallback creates all seven particle ribbons");
+assert.match(source, /Array\.from\(\{ length: PORTAL_LAYER_COUNT \}/, "fallback creates all eight portal depth layers");
+assert.match(source, /Array\.from\(\{ length: mobile \? RIBBON_COUNT : VOLUME_STREAM_COUNT \}/, "fallback creates seven mobile ribbons and eight desktop particle volumes");
 assert.match(source, /canvas\.dataset\.staticPortalLayers = String\(PORTAL_LAYER_COUNT\)/, "fallback exposes its real portal-layer structure");
 assert.match(source, /canvas\.dataset\.staticRibbons = String\(RIBBON_COUNT\)/, "fallback exposes its real ribbon structure");
 assert.match(source, /function createStaticFinalRenderer\(canvas\)[\s\S]*?get particleCount\(\) \{ return 0; \}/, "fallback reports no WebGL particles instead of fictitious telemetry");
@@ -152,12 +152,13 @@ for (const summaryEvidence of [
   "Editorial image",
   "Cinematic video",
   "Transcript",
+  "Published page",
   "Code snippet",
 ]) assert.ok(semanticSummary.includes(summaryEvidence), `semantic summary includes ${summaryEvidence}`);
 assert.doesNotMatch(source, /cursor-lanes|cursor-lane|cursorLanes/, "obsolete cursor lanes are removed from markup, CSS, and JavaScript");
 assert.doesNotMatch(source, /agent-proof|agentProof|Codex · Claude Code · Cursor · any agent/, "obsolete agent proof line is removed");
 assert.ok(source.includes("const RIBBON_PARTICLE_ROLES = [1, 1, 2, 2, 2, 3, 4]"), "ribbons map deterministically to latest, core, delivery, and horizon arrivals");
-assert.ok(source.includes("RIBBON_PARTICLE_ROLES[wave]"), "ribbon role mapping is written into particle data");
+assert.ok(source.includes("RIBBON_PARTICLE_ROLES[wave % RIBBON_PARTICLE_ROLES.length]"), "volume stream roles map deterministically into particle data");
 const particleCompletion = Object.fromEntries(
   [...source.matchAll(/const (LATEST|CORE|DELIVERY|HORIZON)_PARTICLE_COMPLETE = (0\.\d+);/g)]
     .map((match) => [match[1].toLowerCase(), Number(match[2])]),
@@ -182,10 +183,11 @@ for (const cluster of ["latest", "core", "delivery", "horizon"]) {
 const artifactDefinitionsSource = source.match(/const artifactDefinitions = \[([\s\S]*?)\n    \];/)?.[1] ?? "";
 const artifactDefinitionCount = (artifactDefinitionsSource.match(/\{ label:/g) ?? []).length;
 const artifactRoles = [...artifactDefinitionsSource.matchAll(/role: "(core|delivery)"/g)].map((match) => match[1]);
-assert.equal(artifactDefinitionCount, 13, "all thirteen artifact definitions remain present");
+assert.equal(artifactDefinitionCount, 14, "all fourteen target artifact definitions remain present");
 assert.equal(artifactRoles.length, artifactDefinitionCount, "every artifact has an explicit narrative role");
-assert.equal(artifactRoles.filter((role) => role === "delivery").length, 2, "exactly two artifacts are delivery evidence");
+assert.equal(artifactRoles.filter((role) => role === "delivery").length, 3, "exactly three artifacts are delivery evidence");
 assert.match(artifactDefinitionsSource, /label: "Share link"[^\n]*role: "delivery"/, "Share link is delivery evidence");
+assert.match(artifactDefinitionsSource, /label: "Published page"[^\n]*role: "delivery"/, "Published page is delivery evidence");
 assert.match(artifactDefinitionsSource, /label: "Delivered"[^\n]*role: "delivery"/, "Delivered is delivery evidence");
 assert.equal(artifactRoles.filter((role) => role === "core").length, 11, "remaining artifacts are core evidence");
 assert.match(source, /const artifactRoleIndexes = artifactDefinitions\.map\(\(definition\) => \{[\s\S]*?artifactRoleCounts\[definition\.role\]/, "artifact staggering uses an index local to its narrative role");
@@ -198,7 +200,7 @@ const artifactTiming = Object.fromEntries(artifactTimingMatches.map((match) => [
 }]));
 assert.deepEqual(artifactTiming, {
   core: { start: 0.748, complete: 0.768, stagger: 0.003, slots: 5 },
-  delivery: { start: 0.885, complete: 0.914, stagger: 0.006, slots: 2 },
+  delivery: { start: 0.885, complete: 0.914, stagger: 0.003, slots: 3 },
 }, "artifact timing is explicit for each narrative role");
 for (const role of ["core", "delivery"]) {
   const timing = artifactTiming[role];
@@ -211,7 +213,25 @@ assert.match(source, /const artifactComplete = timing\.complete \+ \(roleIndex %
 assert.doesNotMatch(source, /ARTIFACT_REVEAL_(?:START|STAGGER|COMPLETE)/, "no blanket core timing constants remain for every artifact");
 assert.match(source, /: reducedMotion \|\| lowPower\s*\? DESKTOP_PARTICLE_MIN/, "desktop reduced and low-power WebGL paths retain the desktop particle minimum");
 assert.doesNotMatch(source, /\b14000\b/, "no desktop path drops below the 18k minimum");
-assert.ok(source.includes("gl_PointSize = clamp(aSize, 0.8, 4.8) * uDpr;"), "effective CSS point size is clamped to 0.8-4.8 before DPR scaling");
+assert.ok(source.includes("const PORTAL_LAYER_COUNT = 8"), "the final composition uses eight perspective portal slices");
+assert.ok(source.includes("const VOLUME_STREAM_COUNT = 8"), "the final composition uses eight overlapping particle volumes");
+assert.match(source, /function perspectivePortalPoint\(/, "portal geometry is a perspective volume rather than flat concentric outlines");
+assert.match(source, /function sharedTrunkPoint\(/, "all right-side particle volumes pass through one dense shared trunk");
+assert.match(source, /function volumeStreamTarget\(/, "final branches are sampled as broad particle volumes");
+assert.match(source, /const artHeight = mobile \? height : Math\.min\(height, width \* 9 \/ 16\);/, "desktop composition is mapped through one canonical 16:9 artboard");
+assert.match(source, /portalSize[\s\S]*?width \* 0\.255/, "desktop portal is approximately 25.5 percent of the artboard width");
+assert.match(source, /centerX:[\s\S]*?width \* 0\.395/, "desktop portal is anchored near 39.5 percent of the artboard width");
+assert.match(source, /const trunkCount = Math\.floor\(particleCount \* 0\.22\);/, "at least twenty-two percent of the particles form the shared trunk");
+assert.match(source, /const volumeCount = Math\.floor\(particleCount \* 0\.44\);/, "forty-four percent of the particles form the overlapping branch volumes");
+assert.ok(source.includes("gl_PointSize = clamp(aSize, 0.7, 8.4) * uDpr;"), "effective CSS point size reaches 8.4px for near-field depth");
+assert.match(source, /const portalParticleSize = mix\(0\.8, 7\.2, final\.portalLayer \*\* 1\.8\)/, "portal point size follows perspective depth so the eight slices remain readable");
+assert.match(source, /const portalOlive = random\(\) \* 0\.62;/, "the portal uses a darker near-black-to-olive palette than the outgoing field");
+assert.match(source, /capabilityCopy\.style\.top = `\$\{geometry\.artTop \+ geometry\.artHeight \* 0\.47\}px`;/, "desktop copy aligns vertically with the canonical target artboard");
+assert.match(source, /geometry\.portalSize \* mix\(0\.045, 0\.095, amount\)/, "branch volume widths preserve visible separation between the streams");
+assert.match(source, /final, size \* 0\.82, olive, alpha \* 0\.72/, "the shared trunk stays porous enough to reveal its branch structure");
+assert.match(source, /\.artifact-field \{ z-index: 3; \}/, "artifact surfaces remain legible above the background particle mass");
+assert.match(source, /font-size: clamp\(29px, 1\.9vw, 34px\);/, "desktop headline stays on the two approved lines");
+assert.match(artifactDefinitionsSource, /label: "Published page"[^\n]*type: "page"/, "the target's Published page artifact is present");
 assert.ok(source.includes("Math.max(0.8, size * 0.76)"), "scatter particles retain the 0.8 CSS-pixel floor");
 const vertexShader = source.match(/const vertexSource = `([\s\S]*?)`;/)?.[1] ?? "";
 assert.match(vertexShader, /in float aPortalLayer;/, "portal layer is a shader attribute");
@@ -238,11 +258,11 @@ assert.ok(source.includes('end: () => `+=${capabilityScrollDistance()}`'), "Scro
 assert.doesNotMatch(source, /end:\s*["'][^"']*%["']/, "ScrollTrigger does not use a fixed percentage end");
 assert.ok(plan.includes('end: () => `+=${capabilityScrollDistance()}`'), "implementation plan records the dynamic reachable ScrollTrigger end");
 assert.ok(plan.includes("field.offsetHeight - window.innerHeight"), "implementation plan derives the end from actual wrapper and viewport heights");
-assert.ok(plan.includes("18,000 to 30,000 particles applies only to WebGL"), "plan scopes particle telemetry to real WebGL paths");
+assert.ok(plan.includes("18,000 to 42,000 particles applies only to WebGL"), "plan scopes particle telemetry to real WebGL paths");
 assert.ok(plan.includes("fallback reports zero WebGL particles"), "plan requires honest fallback telemetry");
 assert.ok(plan.includes("particle completion must be strictly earlier than the corresponding DOM reveal start"), "plan records causal particle-before-surface timing");
 assert.ok(plan.includes("collapse a static field to exactly `100dvh`"), "plan prevents blank fallback narrative scroll");
-assert.ok(plan.includes("`Share link` and `Delivered` are delivery evidence"), "plan records role-specific delivery artifact timing");
+assert.ok(plan.includes("`Share link`, `Published page`, and `Delivered` are delivery evidence"), "plan records role-specific delivery artifact timing");
 assert.ok(plan.includes("suppress that always-present semantic summary"), "plan prevents duplicate no-JS evidence");
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
 assert.match(source, /<noscript>\s*<style>\.capability-semantic-summary \{ display: none !important; \}<\/style>\s*<div class="noscript-capability-proof">/, "no-JS mode suppresses the JavaScript semantic summary before exposing its proof");
