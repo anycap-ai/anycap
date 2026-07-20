@@ -16,12 +16,14 @@
 - Preserve `#f4f5f0`, `#1c1f17`, `#4d5145`, `#6b7d3a`, `#d4dbb8`, the current grain, GeistPixelSquare 500, system sans body, and Inter 500 labels.
 - Keep the visible copy exactly `One capability layer.`, `Every way to finish.`, `Human + agent`, and `Create. Understand. Find. Manage. Deliver.`
 - Keep the homepage hero, navigation, CTA, footer, and production page untouched.
-- Every desktop path, including reduced-motion, low-power WebGL, and static fallback, uses 18,000 to 30,000 square particles; only mobile may use fewer particles while retaining thick continuous ribbons.
+- The 18,000 to 30,000 particles applies only to WebGL desktop paths, including reduced-motion and low-power WebGL; mobile WebGL may use fewer while retaining thick continuous ribbons. The static fallback reports zero WebGL particles and is validated as a responsive SVG composition instead of claiming particle telemetry.
 - The portal uses five to seven depth layers and six to eight broad outgoing ribbons.
 - Right-side labels are `Latest models`, `Core capabilities`, `Delivery layer`, and `More models. More capabilities. Continuously added.`
 - Recent representative models are Seedance 2.0 Mini, Doubao Seed Audio 1.0, Kling 3.0, Seedance 2.0, and Nano Banana 2 Lite, verified against `web/src/lib/model-hub.ts`.
 - Core capabilities are Image, Video, Audio, Music, Understanding, and Search.
 - Delivery labels are Drive, Share, Page, Publish, and Delivered.
+- Keep only the human and agent figures inside the portal plus the transient `anycap install` proof; remove cursor lanes and the agent-name proof line.
+- Keep the canvas, figures, clusters, and artifacts decorative, and provide an always-present visually hidden semantic summary outside that `aria-hidden` visual tree for models, capabilities, delivery, horizon, and representative artifacts.
 - Do not use provider logos, a card grid, radial particle clouds, glow, neon, glassmorphism, remote assets, custom scroll listeners, or one tween per particle.
 - Reduced motion renders the final clustered composition without pinning.
 - Keep `.capability-field` at `340dvh` on desktop and `240dvh` on mobile. Derive the single ScrollTrigger end dynamically from the positive `field.offsetHeight - window.innerHeight` distance so desktop resolves to about `240vh`, mobile resolves to about `140vh`, and normalized progress reaches `1` at the bottom of either page.
@@ -38,7 +40,7 @@
 **Interfaces:**
 
 - Consumes: tracked source and self-contained built companion.
-- Produces: structural assertions for `createDenseParticleRenderer(canvas)`, WebGL2 shaders, 18k desktop minimum, four cluster layers, current model names, reduced motion, and one ScrollTrigger.
+- Produces: structural assertions for `createDenseParticleRenderer(canvas)`, WebGL2 shaders, the WebGL-only 18k desktop minimum, a responsive static fallback, four cluster layers, current model names, accessible semantic evidence, reduced motion, and one ScrollTrigger.
 
 - [ ] **Step 1: Write failing dense-renderer assertions**
 
@@ -134,7 +136,7 @@ Use this semantic overlay inside `.particle-visual` after the canvas:
 <div class="artifact-field"></div>
 ```
 
-Position clusters asymmetrically: latest across the upper-right ribbon, core through the middle and lower-middle, delivery near the far-right convergence, and horizon clipped near the outer edge. Preserve the portal figures and install proof.
+Position clusters asymmetrically: latest across the upper-right ribbon, core through the middle and lower-middle, delivery near the far-right convergence, and horizon clipped near the outer edge. Preserve only the portal figures and transient install proof. After `.particle-visual`, add the always-present visually hidden semantic summary so JavaScript and reduced-motion screen-reader users receive the same evidence without exposing decorative visuals.
 
 - [ ] **Step 2: Add deterministic cluster data**
 
@@ -167,11 +169,13 @@ program. If `canvas.getContext("webgl2", { alpha: true, antialias: false,
 premultipliedAlpha: true })` returns null, return the static final-state renderer
 instead.
 
-Portal target generation assigns 42 percent of desktop particles across six nested square frames with turbulent edge offsets. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha; clamp the shader's effective CSS size to that exact range before DPR scaling. Every desktop branch, including reduced-motion, low-power, and static fallback, must report at least `DESKTOP_PARTICLE_MIN`.
+Portal target generation assigns 42 percent of desktop WebGL particles across six nested square frames with turbulent edge offsets. Encode normalized portal layer/depth in particle data and consume it in the vertex shader so inner/deeper layers start first and outer layers finish by `0.32`. Around the portal center, apply a short scale pulse bounded to `0.98` compression and `1.03` release overshoot, returning to `1` before the Latest models phase. Ribbon generation assigns 48 percent across seven cubic paths whose thickness increases toward cluster destinations. The remaining 10 percent produces near/far scatter and clipped open-horizon branches. Sizes range from 0.8 to 4.8 CSS pixels with depth-correlated alpha; clamp the shader's effective CSS size to that exact range before DPR scaling. Every desktop WebGL branch, including reduced-motion and low-power WebGL, must report at least `DESKTOP_PARTICLE_MIN`.
+
+The WebGL-null fallback generates its final SVG from the current layout width and height. It contains six nested portal layers and seven broad square-dashed ribbons whose endpoints remain inside both desktop and `390×844` canvases. It reports `particleCount: 0`, because it is not a WebGL particle renderer, and regenerates on meaningful responsive layout changes.
 
 - [ ] **Step 4: Couple DOM reveal to particle arrival**
 
-Use one `renderAt(progress)` function. Latest models resolve during `0.32–0.53`, core capabilities and artifacts during `0.48–0.78`, delivery during `0.72–0.92`, and horizon during `0.90–1.00`. Apply only opacity and transform. Map ribbons to cluster-specific particle completion thresholds: latest `0.50`, core/artifact `0.74`, delivery `0.88`, and horizon `0.97`, each strictly before the corresponding DOM reveal completion. Artifact surfaces must finish no later than `0.78`.
+Use one `renderAt(progress)` function; particle completion must be strictly earlier than the corresponding DOM reveal start, so particle mass is already in place before text or artifacts become perceptibly legible. Latest particles complete at `0.50` before a `0.505–0.53` DOM reveal; core particles complete at `0.74` before a `0.745–0.78` core reveal and artifacts begin at `0.748`; delivery particles complete at `0.88` before a `0.885–0.92` reveal; horizon particles complete at `0.97` before a `0.975–1.00` reveal. Apply only opacity and transform. Artifact surfaces must finish no later than `0.78`.
 
 - [ ] **Step 5: Preserve one GSAP ScrollTrigger**
 
@@ -188,7 +192,7 @@ ScrollTrigger.create({
 });
 ```
 
-Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. Define `capabilityScrollDistance()` as `Math.max(1, field.offsetHeight - window.innerHeight)` using the actual `.capability-field` element, and return that relative pixel distance from the dynamic `end` callback. ScrollTrigger reevaluates it on refresh, so both the desktop `340dvh` wrapper and mobile `240dvh` wrapper reach normalized progress `1` and the horizon act at their real bottom scroll. Resize uses `requestAnimationFrame`, calls renderer layout only when width, height, DPR, or motion preference changes, and never listens for scroll directly. Teardown cancels any queued resize frame and removes the named media-query change listener before destroying the renderer.
+Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. Define `capabilityScrollDistance()` as `Math.max(1, field.offsetHeight - window.innerHeight)` using the actual `.capability-field` element, and return that relative pixel distance from the dynamic `end` callback. ScrollTrigger reevaluates it on refresh, so both the desktop `340dvh` wrapper and mobile `240dvh` wrapper reach normalized progress `1` and the horizon act at their real bottom scroll. Resize uses a named `window` resize callback plus `ResizeObserver`, coalesces both with `requestAnimationFrame`, and calls renderer layout only when width, height, DPR, or motion preference changes; it never listens for scroll directly. Teardown cancels any queued resize frame and removes the named resize and media-query change listeners before destroying the renderer.
 
 - [ ] **Step 6: Run the contract until it passes**
 
@@ -234,7 +238,7 @@ Run the Task 1 verification command and `git diff --check`. Expected: both pass.
 
 - [ ] **Step 3: Inspect deterministic browser states**
 
-At 1440×900 use `window.__ANYCAP_DEMO__.renderAt(0)`, `.renderAt(0.5)`, and `.renderAt(1)`. Confirm the final state has a thick portal, seven broad ribbons, four readable clusters, embedded artifacts, no copy collision, and 18,000–30,000 particles. Confirm the middle state shows model streams entering before capability streams leave.
+At 1440×900 use `window.__ANYCAP_DEMO__.renderAt(0)`, `.renderAt(0.5)`, and `.renderAt(1)`. Confirm the final WebGL state has a thick portal, seven broad ribbons, four readable clusters, embedded artifacts, no copy collision, and 18,000–30,000 particles. Confirm the middle state shows model streams entering before capability streams leave.
 
 - [ ] **Step 4: Inspect mobile and reduced motion**
 
@@ -242,7 +246,7 @@ At 390×844 confirm no horizontal overflow, the portal remains readable, at leas
 
 - [ ] **Step 5: Inspect runtime health**
 
-Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null.
+Confirm no console errors, no remote requests, WebGL2 is active on supported Chromium, and the fallback final composition appears if WebGL2 creation is forced to return null. At desktop and `390×844`, confirm the fallback's six portal layers and seven broad ribbons remain inside the canvas and its reported WebGL particle count is zero.
 
 - [ ] **Step 6: Commit any verification fixes**
 

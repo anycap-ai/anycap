@@ -126,36 +126,22 @@
     .cluster-field { z-index: 4; }
     .artifact-field { z-index: 1; }
 
-    .agent-proof,
     .install-command,
     .install-module,
     .cluster,
     .cluster-item,
     .artifact-card,
-    .portal-figures,
-    .cursor-lanes {
+    .portal-figures {
       opacity: 0;
       will-change: transform, opacity;
     }
 
-    .agent-proof,
     .install-command,
     .install-module,
     .cluster,
     .cluster-item,
     .artifact-card,
-    .portal-figures,
-    .cursor-lanes { position: absolute; }
-
-    .agent-proof {
-      top: 56%;
-      left: var(--page-padding);
-      color: var(--text-secondary);
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-    }
+    .portal-figures { position: absolute; }
 
     .install-command {
       top: 61%;
@@ -362,11 +348,17 @@
     .portal-human { left: 18px; }
     .portal-agent { right: 15px; height: 36px; color: var(--olive); }
 
-    .cursor-lanes { z-index: 7; width: clamp(180px, 18vw, 280px); pointer-events: none; }
-    .cursor-lane { display: grid; grid-template-columns: 44px 18px 1fr; align-items: center; gap: 8px; margin: 22px 0; font-size: 11px; font-weight: 500; }
-    .cursor-lane.agent { color: var(--olive); }
-    .cursor-arrow { width: 16px; height: 22px; background: currentColor; clip-path: polygon(0 0, 100% 70%, 62% 72%, 78% 100%, 60% 100%, 44% 74%, 18% 100%); }
-    .cursor-trail { height: 1px; background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 7px); opacity: 0.36; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     .grain {
       position: fixed;
@@ -415,9 +407,7 @@
       .capability-copy { top: 12%; width: calc(100% - 64px); max-width: 430px; transform: none; }
       .capability-copy h2 { font-size: clamp(34px, 9.5vw, 50px); line-height: 0.98; }
       .capability-subtitle { margin-top: 16px; font-size: 14px; }
-      .agent-proof { top: 30%; font-size: 8px; }
       .install-command { top: 34%; padding: 9px 11px; font-size: 10px; }
-      .cursor-lanes { display: none; }
       .cluster-title { font-size: 9px; }
       .cluster-item { font-size: 8px; }
       .cluster-latest { top: 53%; left: 12%; width: 80%; height: 12%; }
@@ -442,8 +432,6 @@
       .capability-field { height: auto; min-height: 100dvh; }
       .artifact-card,
       .portal-figures,
-      .cursor-lanes,
-      .agent-proof,
       .install-command,
       .install-module,
       .cluster,
@@ -461,13 +449,8 @@
         </div>
         <div class="particle-visual" aria-hidden="true">
           <canvas></canvas>
-          <div class="cursor-lanes">
-            <div class="cursor-lane human"><span>Human</span><i class="cursor-arrow"></i><i class="cursor-trail"></i></div>
-            <div class="cursor-lane agent"><span>Agent</span><i class="cursor-arrow"></i><i class="cursor-trail"></i></div>
-          </div>
           <div class="portal-figures"><i class="portal-person portal-human"></i><i class="portal-person portal-agent"></i></div>
           <div class="agent-install-layer" aria-hidden="true">
-            <span class="agent-proof">Codex · Claude Code · Cursor · any agent</span>
             <span class="install-command"><b>›</b> anycap install</span>
             <i class="install-module"></i>
           </div>
@@ -478,6 +461,17 @@
             <div class="cluster cluster-horizon"><span>More models. More capabilities. Continuously added.</span></div>
           </div>
           <div class="artifact-field"></div>
+        </div>
+        <div class="capability-semantic-summary visually-hidden">
+          <h3>Latest models</h3>
+          <ul><li>Seedance 2.0 Mini</li><li>Doubao Seed Audio 1.0</li><li>Kling 3.0</li><li>Seedance 2.0</li><li>Nano Banana 2 Lite</li></ul>
+          <h3>Core capabilities</h3>
+          <ul><li>Image</li><li>Video</li><li>Audio</li><li>Music</li><li>Understanding</li><li>Search</li></ul>
+          <h3>Delivery layer</h3>
+          <ul><li>Drive</li><li>Share</li><li>Page</li><li>Publish</li><li>Delivered</li></ul>
+          <p>More models. More capabilities. Continuously added.</p>
+          <h3>Representative output evidence</h3>
+          <ul><li>Research</li><li>Editorial image</li><li>Screenshot analysis</li><li>Vision crop</li><li>Cinematic video</li><li>Audio</li><li>Transcript</li><li>Share link</li><li>Music track</li><li>Search result</li><li>Generated variants</li><li>Code snippet</li><li>Delivered output</li></ul>
         </div>
       </div>
       <noscript>
@@ -506,8 +500,6 @@
     const canvas = visual.querySelector("canvas");
     const artifactField = visual.querySelector(".artifact-field");
     const portalFigures = visual.querySelector(".portal-figures");
-    const cursorLanes = visual.querySelector(".cursor-lanes");
-    const agentProof = visual.querySelector(".agent-proof");
     const installCommand = visual.querySelector(".install-command");
     const installModule = visual.querySelector(".install-module");
     const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -525,12 +517,15 @@
     const DELIVERY_PARTICLE_COMPLETE = 0.88;
     const HORIZON_PARTICLE_COMPLETE = 0.97;
     const REVEAL_WINDOWS = {
-      latest: [0.32, 0.53],
-      core: [0.48, 0.78],
-      delivery: [0.72, 0.92],
-      horizon: [0.90, 1.00],
+      latest: [0.505, 0.53],
+      core: [0.745, 0.78],
+      delivery: [0.885, 0.92],
+      horizon: [0.975, 1.00],
     };
-    const PARTICLE_STRIDE = 12;
+    const ARTIFACT_REVEAL_START = 0.748;
+    const ARTIFACT_REVEAL_STAGGER = 0.003;
+    const ARTIFACT_REVEAL_COMPLETE = 0.768;
+    const PARTICLE_STRIDE = 13;
 
     const clamp01 = (value) => Math.min(1, Math.max(0, value));
     const mix = (from, to, amount) => from + (to - from) * amount;
@@ -572,22 +567,60 @@
       };
     }
 
+    function createStaticFinalSvg(width, height) {
+      const geometry = compositionGeometry(width, height);
+      const mobile = geometry.mobile;
+      const portalLayers = Array.from({ length: PORTAL_LAYER_COUNT }, (_, layer) => {
+        const half = geometry.portalSize * (0.50 - layer * 0.045);
+        const x = geometry.centerX - half;
+        const y = geometry.centerY - half;
+        const size = half * 2;
+        const strokeWidth = mobile ? Math.max(5, width * 0.014) : Math.max(7, width * 0.006);
+        return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${size.toFixed(2)}" height="${size.toFixed(2)}" stroke-width="${strokeWidth.toFixed(2)}" stroke-dasharray="2.4 5.4" opacity="${(0.78 - layer * 0.065).toFixed(2)}"/>`;
+      }).join("");
+      const staticDesktopEnds = [[0.94, 0.12], [0.96, 0.25], [0.93, 0.39], [0.96, 0.52], [0.93, 0.66], [0.96, 0.79], [0.92, 0.92]];
+      const staticMobileEnds = [[0.14, 0.57], [0.86, 0.61], [0.17, 0.69], [0.83, 0.74], [0.14, 0.82], [0.86, 0.88], [0.50, 0.96]];
+      const ends = mobile ? staticMobileEnds : staticDesktopEnds;
+      const ribbonWidth = mobile ? Math.max(8, width * 0.024) : Math.max(11, width * 0.009);
+      const ribbons = Array.from({ length: RIBBON_COUNT }, (_, ribbon) => {
+        const end = { x: ends[ribbon][0] * width, y: ends[ribbon][1] * height };
+        const from = mobile
+          ? { x: geometry.centerX + (ribbon - 3) * geometry.portalSize * 0.075, y: geometry.centerY + geometry.portalSize * 0.48 }
+          : { x: geometry.centerX + geometry.portalSize * 0.48, y: geometry.centerY + (ribbon - 3) * geometry.portalSize * 0.072 };
+        const controlA = mobile
+          ? { x: mix(from.x, end.x, 0.30), y: mix(from.y, end.y, 0.28) }
+          : { x: mix(from.x, end.x, 0.30), y: from.y + (ribbon - 3) * 18 };
+        const controlB = mobile
+          ? { x: mix(from.x, end.x, 0.68), y: mix(from.y, end.y, 0.72) }
+          : { x: mix(from.x, end.x, 0.70), y: end.y - (ribbon - 3) * 16 };
+        return `<path d="M${from.x.toFixed(2)} ${from.y.toFixed(2)} C${controlA.x.toFixed(2)} ${controlA.y.toFixed(2)} ${controlB.x.toFixed(2)} ${controlB.y.toFixed(2)} ${end.x.toFixed(2)} ${end.y.toFixed(2)}" stroke-width="${(ribbonWidth * (0.90 + ribbon * 0.035)).toFixed(2)}" stroke-dasharray="2.6 6.2" opacity="${(0.46 + (ribbon % 3) * 0.09).toFixed(2)}"/>`;
+      }).join("");
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" overflow="hidden"><g fill="none" stroke="#6b7d3a" stroke-linecap="butt" stroke-linejoin="miter">${portalLayers}${ribbons}</g></svg>`;
+    }
+
     function createStaticFinalRenderer(canvas) {
-      const staticSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><g fill="none" stroke="#6b7d3a" stroke-width="9" stroke-dasharray="2 5" opacity=".62"><rect x="405" y="235" width="300" height="330"/><rect x="416" y="246" width="278" height="308"/><rect x="428" y="258" width="254" height="284"/><rect x="439" y="269" width="232" height="262"/><rect x="451" y="281" width="208" height="238"/><rect x="462" y="292" width="186" height="216"/><path d="M650 315 C790 165 940 170 1260 75"/><path d="M658 345 C810 240 970 245 1260 210"/><path d="M665 375 C825 315 985 325 1260 315"/><path d="M665 405 C825 405 1000 425 1260 415"/><path d="M665 435 C825 500 995 530 1260 550"/><path d="M658 465 C800 585 970 620 1260 650"/><path d="M650 490 C780 650 950 690 1260 735"/></g></svg>`;
-      canvas.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(staticSvg)}")`;
-      canvas.style.backgroundSize = "cover";
       canvas.dataset.renderer = "static";
-      let count = 0;
+      canvas.dataset.staticPortalLayers = String(PORTAL_LAYER_COUNT);
+      canvas.dataset.staticRibbons = String(RIBBON_COUNT);
       return {
-        layout(width, height, reducedMotion) {
+        layout(width, height) {
           const dpr = Math.min(window.devicePixelRatio || 1, 2);
           canvas.width = Math.max(1, Math.round(width * dpr));
           canvas.height = Math.max(1, Math.round(height * dpr));
-          count = width < 768 ? 9000 : DESKTOP_PARTICLE_MIN;
+          canvas.style.width = `${width}px`;
+          canvas.style.height = `${height}px`;
+          canvas.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(createStaticFinalSvg(width, height))}")`;
+          canvas.style.backgroundPosition = "0 0";
+          canvas.style.backgroundRepeat = "no-repeat";
+          canvas.style.backgroundSize = "100% 100%";
         },
         render() {},
-        destroy() { canvas.style.backgroundImage = ""; },
-        get particleCount() { return count; },
+        destroy() {
+          canvas.style.backgroundImage = "";
+          delete canvas.dataset.staticPortalLayers;
+          delete canvas.dataset.staticRibbons;
+        },
+        get particleCount() { return 0; },
       };
     }
 
@@ -606,7 +639,9 @@
         layout(location=6) in float aDelay;
         layout(location=7) in float aRole;
         layout(location=8) in float aDepth;
+        layout(location=9) in float aPortalLayer;
         uniform vec2 uResolution;
+        uniform vec2 uPortalCenter;
         uniform float uDpr;
         uniform float uProgress;
         out float vOlive;
@@ -616,7 +651,10 @@
           return t * t * (3.0 - 2.0 * t);
         }
         void main() {
-          float assemble = ease(0.16 + aDelay * 0.035, 0.32 + aDelay * 0.035, uProgress);
+          float portalOrder = 1.0 - aPortalLayer;
+          float assembleStart = 0.16 + portalOrder * 0.035 + aDelay * 0.006;
+          float assembleEnd = 0.27 + portalOrder * 0.046 + aDelay * 0.004;
+          float assemble = ease(assembleStart, assembleEnd, uProgress);
           float leaveStart = 0.82 + aDelay * 0.05;
           float leaveEnd = ${HORIZON_PARTICLE_COMPLETE.toFixed(2)};
           if (aRole < 1.5) {
@@ -631,6 +669,11 @@
           }
           float leavePortal = ease(leaveStart, leaveEnd, uProgress);
           vec2 position = mix(aSource, aPortal, assemble);
+          float compressionWave = ease(0.20, 0.235, uProgress) - ease(0.235, 0.265, uProgress);
+          float releaseWave = ease(0.255, 0.285, uProgress) - ease(0.285, 0.32, uProgress);
+          float portalScale = 1.0 - 0.02 * compressionWave + 0.03 * releaseWave;
+          vec2 pulsedPosition = uPortalCenter + (position - uPortalCenter) * portalScale;
+          position = mix(position, pulsedPosition, assemble * (1.0 - leavePortal));
           if (aRole > 0.5) position = mix(position, aFinal, leavePortal);
           vec2 clip = position / uResolution * 2.0 - 1.0;
           gl_Position = vec4(clip.x, -clip.y, mix(-0.3, 0.3, aDepth), 1.0);
@@ -677,6 +720,7 @@
       const buffer = gl.createBuffer();
       const vertexArray = gl.createVertexArray();
       const resolutionLocation = gl.getUniformLocation(program, "uResolution");
+      const portalCenterLocation = gl.getUniformLocation(program, "uPortalCenter");
       const dprLocation = gl.getUniformLocation(program, "uDpr");
       const progressLocation = gl.getUniformLocation(program, "uProgress");
       let particleCount = 0;
@@ -688,7 +732,7 @@
       gl.bindVertexArray(vertexArray);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       const stride = PARTICLE_STRIDE * Float32Array.BYTES_PER_ELEMENT;
-      const attributes = [2, 2, 2, 1, 1, 1, 1, 1, 1];
+      const attributes = [2, 2, 2, 1, 1, 1, 1, 1, 1, 1];
       let offset = 0;
       attributes.forEach((size, location) => {
         gl.enableVertexAttribArray(location);
@@ -696,7 +740,7 @@
         offset += size;
       });
 
-      function writeParticle(data, index, source, portal, final, size, olive, alpha, delay, role, depth) {
+      function writeParticle(data, index, source, portal, final, size, olive, alpha, delay, role, depth, portalLayer) {
         const base = index * PARTICLE_STRIDE;
         data[base] = source.x;
         data[base + 1] = source.y;
@@ -710,6 +754,7 @@
         data[base + 9] = delay;
         data[base + 10] = role;
         data[base + 11] = depth;
+        data[base + 12] = portalLayer;
       }
 
       function portalPoint(index, count, geometry, random) {
@@ -719,10 +764,11 @@
         const half = geometry.portalSize * (0.50 - layer * 0.045);
         const edge = mix(-half, half, position);
         const turbulence = (random() - 0.5) * (6 + layer * 1.5) + Math.sin(index * 0.73) * 2.4;
-        if (side === 0) return { x: geometry.centerX + edge, y: geometry.centerY - half + turbulence };
-        if (side === 1) return { x: geometry.centerX + half + turbulence, y: geometry.centerY + edge };
-        if (side === 2) return { x: geometry.centerX - edge, y: geometry.centerY + half + turbulence };
-        return { x: geometry.centerX - half + turbulence, y: geometry.centerY - edge };
+        const portalLayer = layer / Math.max(1, PORTAL_LAYER_COUNT - 1);
+        if (side === 0) return { x: geometry.centerX + edge, y: geometry.centerY - half + turbulence, portalLayer };
+        if (side === 1) return { x: geometry.centerX + half + turbulence, y: geometry.centerY + edge, portalLayer };
+        if (side === 2) return { x: geometry.centerX - edge, y: geometry.centerY + half + turbulence, portalLayer };
+        return { x: geometry.centerX - half + turbulence, y: geometry.centerY - edge, portalLayer };
       }
 
       function ribbonTarget(index, count, geometry, width, height, random) {
@@ -794,7 +840,7 @@
           if (index < portalCount) {
             const final = portalPoint(index, portalCount, geometry, random);
             const source = index < portalCount * 0.18 ? limited : { x: random() * width, y: random() * height };
-            writeParticle(data, index, source, final, final, size, olive, alpha, delay, 0, depth);
+            writeParticle(data, index, source, final, final, size, olive, alpha, delay, 0, final.portalLayer, final.portalLayer);
             continue;
           }
 
@@ -810,7 +856,7 @@
             const source = geometry.mobile
               ? { x: width * (0.15 + (wave % 3) * 0.34) + (random() - 0.5) * 30, y: height * (0.56 + Math.floor(wave / 3) * 0.035) }
               : { x: width * (0.63 + (wave % 3) * 0.13) + (random() - 0.5) * 44, y: height * (0.11 + Math.floor(wave / 3) * 0.075) };
-            writeParticle(data, index, source, portalLane, final, size, olive, alpha, delay, RIBBON_PARTICLE_ROLES[wave], depth);
+            writeParticle(data, index, source, portalLane, final, size, olive, alpha, delay, RIBBON_PARTICLE_ROLES[wave], depth, depth);
             continue;
           }
 
@@ -820,7 +866,7 @@
             ? { x: width * (0.05 + random() * 0.90), y: height * (0.82 + random() * 0.30) }
             : { x: width * (0.78 + random() * 0.35), y: height * (0.05 + branch * 0.14) + (random() - 0.5) * 80 };
           const source = { x: random() * width, y: random() * height };
-          writeParticle(data, index, source, portalLane, edge, Math.max(0.8, size * 0.76), olive, alpha * 0.48, delay, 4, depth);
+          writeParticle(data, index, source, portalLane, edge, Math.max(0.8, size * 0.76), olive, alpha * 0.48, delay, 4, depth, depth);
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -828,6 +874,7 @@
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.useProgram(program);
         gl.uniform2f(resolutionLocation, resolutionWidth, resolutionHeight);
+        gl.uniform2f(portalCenterLocation, geometry.centerX, geometry.centerY);
         gl.uniform1f(dprLocation, pixelRatio);
         canvas.dataset.renderer = "webgl2";
       }
@@ -944,7 +991,6 @@
       state.progress = progress;
       renderer.render(progress);
 
-      const limitedReveal = smoothstep(0.02, 0.14, progress);
       const installReveal = smoothstep(0.17, 0.25, progress);
       const installRecede = smoothstep(0.29, 0.36, progress);
       const portalReveal = smoothstep(0.20, 0.32, progress);
@@ -953,10 +999,6 @@
       const deliveryReveal = smoothstep(...REVEAL_WINDOWS.delivery, progress);
       const horizonReveal = smoothstep(...REVEAL_WINDOWS.horizon, progress);
 
-      cursorLanes.style.opacity = String(limitedReveal * (1 - smoothstep(0.29, 0.39, progress)));
-      cursorLanes.style.transform = `translateX(${mix(-18, 0, limitedReveal)}px)`;
-      agentProof.style.opacity = String(limitedReveal * (1 - installRecede));
-      agentProof.style.transform = `translateY(${mix(8, 0, limitedReveal)}px)`;
       installCommand.style.opacity = String(installReveal * (1 - installRecede));
       installCommand.style.transform = `translateY(${mix(10, 0, installReveal)}px) scale(${mix(0.97, 1, installReveal)})`;
       installModule.style.opacity = String(installReveal * (1 - smoothstep(0.33, 0.40, progress)));
@@ -977,8 +1019,8 @@
       applyReveal(deliveryElements, deliveryReveal);
 
       artifactElements.forEach((element, index) => {
-        const artifactStart = 0.48 + (index % 5) * 0.01;
-        const artifactComplete = 0.72 + (index % 5) * 0.012;
+        const artifactStart = ARTIFACT_REVEAL_START + (index % 5) * ARTIFACT_REVEAL_STAGGER;
+        const artifactComplete = ARTIFACT_REVEAL_COMPLETE + (index % 5) * ARTIFACT_REVEAL_STAGGER;
         const arrival = smoothstep(artifactStart, artifactComplete, progress);
         element.style.opacity = String(arrival);
         element.style.transform = `translate(-50%, calc(-50% + ${mix(14, 0, arrival)}px)) scale(${mix(0.94, 1, arrival)}) rotate(${(index % 3 - 1) * 0.6}deg)`;
@@ -1004,8 +1046,6 @@
       const geometry = compositionGeometry(bounds.width, bounds.height);
       portalFigures.style.left = `${geometry.centerX}px`;
       portalFigures.style.top = `${geometry.centerY + geometry.portalSize * 0.18}px`;
-      cursorLanes.style.left = `${Math.max(20, geometry.centerX - geometry.portalSize * 1.15)}px`;
-      cursorLanes.style.top = `${geometry.centerY + geometry.portalSize * 0.22}px`;
       installModule.style.left = `${geometry.centerX - geometry.portalSize * 0.60}px`;
       installModule.style.top = `${geometry.centerY - 7}px`;
       artifactDefinitions.forEach((definition, index) => {
@@ -1052,7 +1092,7 @@
     document.documentElement.dataset.gsapRuntime = String(Boolean(gsap && ScrollTrigger));
     gsap.registerPlugin(ScrollTrigger);
 
-    const resizeObserver = new ResizeObserver(() => {
+    function scheduleLayoutRefresh() {
       if (destroyed) return;
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
@@ -1062,8 +1102,15 @@
         renderAt(reduceMotionQuery.matches ? 1 : state.progress);
         ScrollTrigger.refresh();
       });
-    });
+    }
+
+    function handleViewportResize() {
+      scheduleLayoutRefresh();
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleLayoutRefresh);
     resizeObserver.observe(visual);
+    window.addEventListener("resize", handleViewportResize, { passive: true });
 
     function handleMotionPreferenceChange() {
       if (destroyed) return;
@@ -1089,6 +1136,7 @@
         cancelAnimationFrame(resizeFrame);
         resizeFrame = 0;
         resizeObserver.disconnect();
+        window.removeEventListener("resize", handleViewportResize);
         reduceMotionQuery.removeEventListener("change", handleMotionPreferenceChange);
         renderer.destroy();
       },
