@@ -36,6 +36,10 @@ async function verifyManifest() {
   assert.equal(manifest.version, 1);
   assert.deepEqual(manifest.artboard, { width: 1672, height: 941, aspect: "16:9" });
   assert.ok(manifest.camera, "manifest has a canonical camera contract");
+  assert.equal(manifest.camera.projection, "perspective", "camera projection is canonical");
+  assert.deepEqual(manifest.camera.position, [0, 0, 8], "camera position is canonical");
+  assert.deepEqual(manifest.camera.target, [0.62, 0.52, 0], "camera target is canonical");
+  assert.equal(manifest.camera.fov, 34, "camera fov is canonical");
   assert.deepEqual(manifest.camera.artboardMapping, {
     coordinateSpace: "normalized",
     referenceWidth: 1672,
