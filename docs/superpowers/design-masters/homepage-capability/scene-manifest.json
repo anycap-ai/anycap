@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "artboard": { "width": 1672, "height": 941, "aspect": "16:9" },
+  "reference": "reference-target.png",
+  "finalMaster": "final-master.png",
+  "brand": { "surface": "#f4f5f0", "primary": "#1c1f17", "olive": "#6b7d3a", "secondary": "#4d5145", "paleSage": "#c8d4a0" },
+  "layerOrder": ["background", "copy", "backgroundParticles", "portalTunnel", "humanAgentPair", "artifactSurfaces", "capabilityAnnotations", "foregroundParticles", "atmosphere"],
+  "components": ["CapabilityScene", "PortalTunnel", "HumanAgentPair", "ParticleFlow", "ArtifactSurface", "CapabilityAnnotations", "SceneAtmosphere"],
+  "artifacts": ["Research", "Editorial image", "Screenshot analysis", "Vision crop", "Published page", "Cinematic video", "Audio", "Transcript", "Share link", "Music track", "Search result", "Generated variants", "Code snippet", "Delivered"],
+  "keyframes": [
+    { "id": "limited", "progress": 0.08, "file": "keyframes/01-limited.png" },
+    { "id": "install", "progress": 0.24, "file": "keyframes/02-install.png" },
+    { "id": "portal", "progress": 0.44, "file": "keyframes/03-portal.png" },
+    { "id": "avalanche", "progress": 0.72, "file": "keyframes/04-avalanche.png" },
+    { "id": "delivered", "progress": 1, "file": "keyframes/05-delivered.png" }
+  ]
+}
