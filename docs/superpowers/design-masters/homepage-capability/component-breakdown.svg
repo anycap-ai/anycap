@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="diagram-title diagram-description">
+  <title id="diagram-title">Capability scene implementation ownership</title>
+  <desc id="diagram-description">A left to right implementation map. The left stack lists the nine scene-manifest depth layers in render order. The center records the shared manifest, camera, and progress contract. The right stack lists seven components. Pale sage connectors show the components that own each layer.</desc>
+
+  <rect width="1600" height="900" fill="#f4f5f0"/>
+  <style>
+    .eyebrow { fill: #6b7d3a; font: 700 13px system-ui, sans-serif; letter-spacing: 1.8px; }
+    .title { fill: #1c1f17; font: 700 32px system-ui, sans-serif; letter-spacing: -0.8px; }
+    .subtitle { fill: #4d5145; font: 400 16px system-ui, sans-serif; }
+    .column { fill: #1c1f17; font: 700 14px system-ui, sans-serif; letter-spacing: 1.4px; }
+    .label { fill: #1c1f17; font: 600 17px system-ui, sans-serif; }
+    .detail { fill: #4d5145; font: 400 14px system-ui, sans-serif; }
+    .tiny { fill: #4d5145; font: 500 12px system-ui, sans-serif; letter-spacing: 0.6px; }
+    .layer { fill: #f4f5f0; stroke: #6b7d3a; stroke-width: 1.5; }
+    .contract { fill: #f4f5f0; stroke: #6b7d3a; stroke-width: 2; }
+    .component { fill: #f4f5f0; stroke: #6b7d3a; stroke-width: 1.5; }
+    .contract-link { fill: none; stroke: #6b7d3a; stroke-width: 1.5; stroke-linecap: round; }
+    .ownership-link { fill: none; stroke: #c8d4a0; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+
+  <text x="80" y="64" class="eyebrow">HOMEPAGE CAPABILITY / IMPLEMENTATION MAP</text>
+  <text x="80" y="106" class="title">Component and layer breakdown</text>
+  <text x="80" y="136" class="subtitle">One shared scene contract, explicit depth-pass ownership, and no hidden rendering responsibilities.</text>
+  <line x1="80" y1="162" x2="1520" y2="162" stroke="#c8d4a0" stroke-width="2"/>
+
+  <text x="100" y="204" class="column">DEPTH STACK</text>
+  <text x="590" y="204" class="column">SHARED SCENE CONTRACT</text>
+  <text x="1190" y="204" class="column">IMPLEMENTATION OWNERS</text>
+  <text x="100" y="226" class="tiny">scene-manifest.json / back → front</text>
+  <text x="1190" y="226" class="tiny">components / orchestration → specialist</text>
+
+  <!-- CapabilityScene owns every render pass. Its outside bracket keeps the broad relationship legible. -->
+  <path class="ownership-link" d="M1190 266 H1128 V232 H56 V776 M56 252 H100 M56 312 H100 M56 372 H100 M56 432 H100 M56 492 H100 M56 552 H100 M56 612 H100 M56 672 H100 M56 732 H100"/>
+
+  <!-- Explicit specialist ownership connectors. Routed outside labels and the shared contract. -->
+  <path class="ownership-link" d="M1190 336 H1100 V432 H470"/>
+  <path class="ownership-link" d="M1190 406 H1070 V492 H470"/>
+  <path class="ownership-link" d="M1190 476 H1040 V372 H470 M1190 476 H1020 V672 H470"/>
+  <path class="ownership-link" d="M1190 546 H1000 V552 H470"/>
+  <path class="ownership-link" d="M1190 616 H1060 V312 H470 M1190 616 H960 V612 H470"/>
+  <path class="ownership-link" d="M1190 686 H1030 V252 H470 M1190 686 H900 V732 H470"/>
+
+  <!-- Layer order follows scene-manifest.json exactly. -->
+  <rect x="100" y="232" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="258" class="label">background</text>
+  <text x="438" y="258" text-anchor="end" class="tiny">01</text>
+
+  <rect x="100" y="292" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="318" class="label">copy</text>
+  <text x="438" y="318" text-anchor="end" class="tiny">02</text>
+
+  <rect x="100" y="352" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="378" class="label">backgroundParticles</text>
+  <text x="438" y="378" text-anchor="end" class="tiny">03</text>
+
+  <rect x="100" y="412" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="438" class="label">portalTunnel</text>
+  <text x="438" y="438" text-anchor="end" class="tiny">04</text>
+
+  <rect x="100" y="472" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="498" class="label">humanAgentPair</text>
+  <text x="438" y="498" text-anchor="end" class="tiny">05</text>
+
+  <rect x="100" y="532" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="558" class="label">artifactSurfaces</text>
+  <text x="438" y="558" text-anchor="end" class="tiny">06</text>
+
+  <rect x="100" y="592" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="618" class="label">capabilityAnnotations</text>
+  <text x="438" y="618" text-anchor="end" class="tiny">07</text>
+
+  <rect x="100" y="652" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="678" class="label">foregroundParticles</text>
+  <text x="438" y="678" text-anchor="end" class="tiny">08</text>
+
+  <rect x="100" y="712" width="370" height="40" rx="8" class="layer"/>
+  <text x="122" y="738" class="label">atmosphere</text>
+  <text x="438" y="738" text-anchor="end" class="tiny">09</text>
+
+  <!-- Left-to-center-to-right flow: layer data enters the shared contract, which every owner consumes. -->
+  <path class="contract-link" d="M470 252 H530 V292 H590"/>
+  <path class="contract-link" d="M980 292 H1140"/>
+  <rect x="590" y="248" width="390" height="130" rx="12" class="contract"/>
+  <text x="620" y="283" class="label">scene-manifest.json</text>
+  <text x="620" y="311" class="detail">+ canonical camera</text>
+  <text x="620" y="337" class="detail">+ normalized progress</text>
+  <text x="620" y="360" class="tiny">single source of timing, depth, and camera truth</text>
+  <text x="1030" y="280" class="tiny">consumed by every owner</text>
+
+  <!-- Component names follow scene-manifest.json exactly. -->
+  <rect x="1190" y="242" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="272" class="label">CapabilityScene</text>
+  <rect x="1190" y="312" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="342" class="label">PortalTunnel</text>
+  <rect x="1190" y="382" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="412" class="label">HumanAgentPair</text>
+  <rect x="1190" y="452" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="482" class="label">ParticleFlow</text>
+  <rect x="1190" y="522" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="552" class="label">ArtifactSurface</text>
+  <rect x="1190" y="592" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="622" class="label">CapabilityAnnotations</text>
+  <rect x="1190" y="662" width="300" height="48" rx="9" class="component"/>
+  <text x="1212" y="692" class="label">SceneAtmosphere</text>
+
+  <line x1="80" y1="802" x2="1520" y2="802" stroke="#c8d4a0" stroke-width="2"/>
+  <circle cx="100" cy="838" r="7" fill="#c8d4a0"/>
+  <text x="118" y="843" class="detail">Pale sage lines trace implementation ownership from components back to their render passes.</text>
+  <text x="1520" y="843" text-anchor="end" class="tiny">CapabilityScene encloses all passes; specialist components own the listed subsets.</text>
+</svg>
