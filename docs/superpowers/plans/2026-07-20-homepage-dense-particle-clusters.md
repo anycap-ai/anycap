@@ -24,7 +24,7 @@
 - Delivery labels are Drive, Share, Page, Publish, and Delivered.
 - Do not use provider logos, a card grid, radial particle clouds, glow, neon, glassmorphism, remote assets, custom scroll listeners, or one tween per particle.
 - Reduced motion renders the final clustered composition without pinning.
-- Keep `.capability-field` at `340dvh`; the 340dvh wrapper provides 240dvh of available scroll after subtracting the 100dvh viewport, so the single ScrollTrigger must end at `+=240%` and reach normalized progress `1` at the bottom of the page.
+- Keep `.capability-field` at `340dvh` on desktop and `240dvh` on mobile. Derive the single ScrollTrigger end dynamically from the positive `field.offsetHeight - window.innerHeight` distance so desktop resolves to about `240vh`, mobile resolves to about `140vh`, and normalized progress reaches `1` at the bottom of either page.
 
 ---
 
@@ -181,14 +181,14 @@ Create exactly one controller:
 ScrollTrigger.create({
   trigger: ".capability-stage",
   start: "top top",
-  end: "+=240%",
+  end: () => `+=${capabilityScrollDistance()}`,
   pin: true,
   scrub: 0.72,
   onUpdate: ({ progress }) => renderAt(progress),
 });
 ```
 
-Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. The `340dvh` wrapper provides exactly `240dvh` of available scroll, so `+=240%` makes bottom scroll reach normalized progress `1` and the horizon act. Resize uses `requestAnimationFrame`, calls renderer layout only when width, height, DPR, or motion preference changes, and never listens for scroll directly. Teardown cancels any queued resize frame and removes the named media-query change listener before destroying the renderer.
+Reduced motion calls `renderAt(1)` and creates no ScrollTrigger. Define `capabilityScrollDistance()` as `Math.max(1, field.offsetHeight - window.innerHeight)` using the actual `.capability-field` element, and return that relative pixel distance from the dynamic `end` callback. ScrollTrigger reevaluates it on refresh, so both the desktop `340dvh` wrapper and mobile `240dvh` wrapper reach normalized progress `1` and the horizon act at their real bottom scroll. Resize uses `requestAnimationFrame`, calls renderer layout only when width, height, DPR, or motion preference changes, and never listens for scroll directly. Teardown cancels any queued resize frame and removes the named media-query change listener before destroying the renderer.
 
 - [ ] **Step 6: Run the contract until it passes**
 

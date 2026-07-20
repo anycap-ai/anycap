@@ -125,10 +125,13 @@ assert.ok(source.includes('reduceMotionQuery.addEventListener("change", handleMo
 assert.ok(source.includes('reduceMotionQuery.removeEventListener("change", handleMotionPreferenceChange)'), "named motion preference listener is removed at teardown");
 assert.match(source, /destroy\(\) \{[\s\S]*?cancelAnimationFrame\(resizeFrame\);[\s\S]*?resizeObserver\.disconnect\(\);[\s\S]*?renderer\.destroy\(\);/, "demo teardown cancels queued resize work before destroying the renderer");
 assert.match(source, /\.capability-field \{[\s\S]*?height: 340dvh;/, "desktop wrapper keeps the 340dvh narrative height");
-assert.ok(source.includes('end: "+=240%"'), "ScrollTrigger end matches the wrapper's 240vh available scroll range");
-assert.doesNotMatch(source, /end:\s*["']\+=340%["']/, "ScrollTrigger does not request unreachable scroll distance");
-assert.ok(plan.includes('end: "+=240%"'), "implementation plan records the reachable ScrollTrigger end");
-assert.ok(plan.includes("340dvh wrapper provides 240dvh of available scroll"), "implementation plan explains the wrapper/end constraint");
+assert.match(source, /@media \(max-width: 767px\) \{[\s\S]*?\.capability-field \{ height: 240dvh; \}/, "mobile wrapper keeps the 240dvh narrative height");
+assert.ok(source.includes('const capabilityField = document.querySelector(".capability-field")'), "dynamic end reads the actual capability field");
+assert.match(source, /function capabilityScrollDistance\(\) \{\s*return Math\.max\(1, capabilityField\.offsetHeight - window\.innerHeight\);\s*\}/, "dynamic end derives the positive scrollable field distance");
+assert.ok(source.includes('end: () => `+=${capabilityScrollDistance()}`'), "ScrollTrigger refresh resolves a reachable end for the current viewport");
+assert.doesNotMatch(source, /end:\s*["'][^"']*%["']/, "ScrollTrigger does not use a fixed percentage end");
+assert.ok(plan.includes('end: () => `+=${capabilityScrollDistance()}`'), "implementation plan records the dynamic reachable ScrollTrigger end");
+assert.ok(plan.includes("field.offsetHeight - window.innerHeight"), "implementation plan derives the end from actual wrapper and viewport heights");
 assert.match(source, /<noscript>[\s\S]*?noscript-capability-proof[\s\S]*?<\/noscript>/, "one-section no-JS fallback is present");
 assert.doesNotMatch(source, /<button[^>]*>[\s\S]*?anycap install[\s\S]*?<\/button>/i, "install proof is not a button");
 assert.doesNotMatch(source, /Try AnyCap/i, "middle section has no hero CTA");
