@@ -17,6 +17,12 @@ const canonicalAnnotationLabels = new Map([
   ["delivery-layer", ["Delivery layer", "Drive", "Share", "Page", "Publish", "Delivered"]],
   ["horizon-continuation", ["More models. More capabilities. Continuously added."]],
 ]);
+const canonicalAnnotationAnchors = new Map([
+  ["latest-models", { anchor: "top-left", x: 0.412679, y: 0.077577, pixelX: 690, pixelY: 73 }],
+  ["core-capabilities", { anchor: "top-left", x: 0.517344, y: 0.391073, pixelX: 865, pixelY: 368 }],
+  ["delivery-layer", { anchor: "top-left", x: 0.771531, y: 0.671626, pixelX: 1290, pixelY: 632 }],
+  ["horizon-continuation", { anchor: "top-left", x: 0.595096, y: 0.945802, pixelX: 995, pixelY: 890 }],
+]);
 const canonicalOwners = new Set(["CapabilityScene", "PortalTunnel", "HumanAgentPair", "ParticleFlow", "ArtifactSurface", "CapabilityAnnotations", "SceneAtmosphere"]);
 const canonicalRevealPhases = new Set(["limited", "install", "portal", "avalanche", "delivered"]);
 
@@ -105,7 +111,13 @@ async function verifyManifest() {
   assert.equal(annotationEntries.length, canonicalAnnotationGroups.length, "manifest has four annotation groups");
   assert.ok(annotationEntries.every((entry) => entry.owner === "CapabilityAnnotations"), "CapabilityAnnotations owns every annotation entry");
   assert.deepEqual(annotationEntries.map((entry) => entry.group).sort(), [...canonicalAnnotationGroups].sort(), "annotation entries cover the canonical narrative groups");
-  for (const entry of annotationEntries) assert.deepEqual(entry.labels, canonicalAnnotationLabels.get(entry.group), `${entry.id} uses only the verified annotation strings`);
+  for (const entry of annotationEntries) {
+    assert.deepEqual(entry.labels, canonicalAnnotationLabels.get(entry.group), `${entry.id} uses only the verified annotation strings`);
+    const expectedAnchor = canonicalAnnotationAnchors.get(entry.group);
+    assert.deepEqual({ anchor: entry.anchor, x: entry.x, y: entry.y }, { anchor: expectedAnchor.anchor, x: expectedAnchor.x, y: expectedAnchor.y }, `${entry.id} uses the canonical normalized top-left anchor`);
+    assert.ok(Math.abs(entry.x * manifest.artboard.width - expectedAnchor.pixelX) <= 1, `${entry.id} x reproduces the approved raster within one pixel`);
+    assert.ok(Math.abs(entry.y * manifest.artboard.height - expectedAnchor.pixelY) <= 1, `${entry.id} y reproduces the approved raster within one pixel`);
+  }
   assert.deepEqual(manifest.keyframes.map((frame) => frame.id), ["limited", "install", "portal", "avalanche", "delivered"]);
   assert.equal(manifest.finalMaster, "final-master.png");
   return manifest;
