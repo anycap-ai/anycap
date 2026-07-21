@@ -1,30 +1,41 @@
 import type { Metadata } from "next";
 import { createLocalizedMetadataForPath } from "@/lib/localized-metadata";
 import { defaultLocale, type SiteLocale } from "@/lib/site";
+import { VIDEO_AGENT_GUIDE_PATH } from "./content";
 
-const PATH = "/guides/how-to-add-video-generation-to-ai-agent";
-
-export function getPageMetadata(locale: SiteLocale): Metadata {
-  if (locale === "pt-br") {
-    return createLocalizedMetadataForPath(locale, PATH, {
-      title: "Como adicionar geracao de video a um agente de IA - guia passo a passo",
-      description:
-        "Guia passo a passo para adicionar capacidades de geracao de video a qualquer agente de IA usando a CLI do AnyCap e modelos como Veo 3.1 e Kling 3.0.",
-    });
-  }
-
-  if (locale === "id") {
-    return createLocalizedMetadataForPath(locale, PATH, {
-      title: "Cara menambahkan generasi video ke agen AI - panduan langkah demi langkah",
-      description:
-        "Panduan langkah demi langkah untuk menambahkan kapabilitas generasi video ke agen AI apa pun menggunakan AnyCap CLI, discovery model, struktur prompt, dan contoh workflow asinkron.",
-    });
-  }
-
-  return createLocalizedMetadataForPath(locale, PATH, {
+const metadataByLocale: Record<SiteLocale, { title: string; description: string }> = {
+  en: {
     title: "How to Add Video Generation to an AI Agent — Step-by-Step Setup Guide",
     description:
-      "Step-by-step guide to adding video generation to Claude Code, Cursor, Codex, and other AI agents with AnyCap CLI, model discovery, prompt tips, and workflow examples.",
+      "Step-by-step guide to adding video generation to Claude Code, Cursor, and Codex with the AnyCap CLI, including model and schema discovery plus practical workflow examples.",
+  },
+  "pt-br": {
+    title: "Como adicionar geração de vídeo a um agente de IA — guia passo a passo",
+    description:
+      "Guia passo a passo para adicionar geração de vídeo ao Claude Code, Cursor e Codex com a CLI do AnyCap, incluindo descoberta de modelos e schemas e exemplos práticos de fluxo.",
+  },
+  id: {
+    title: "Cara menambahkan generasi video ke agen AI — panduan langkah demi langkah",
+    description:
+      "Panduan langkah demi langkah untuk menambahkan generasi video ke Claude Code, Cursor, dan Codex dengan AnyCap CLI, termasuk penemuan model dan skema serta contoh alur praktis.",
+  },
+  de: {
+    title: "Videogenerierung zu einem KI-Agenten hinzufügen — Einrichtungsanleitung",
+    description:
+      "Einrichtungsanleitung für Videogenerierung in Claude Code, Cursor und Codex mit der AnyCap CLI, einschließlich Modell- und Schemaermittlung sowie praktischer Workflow-Beispiele.",
+  },
+};
+
+export function getPageMetadata(locale: SiteLocale): Metadata {
+  const copy = metadataByLocale[locale];
+
+  return createLocalizedMetadataForPath(locale, VIDEO_AGENT_GUIDE_PATH, {
+    ...copy,
+    openGraph: {
+      type: "article",
+      title: copy.title,
+      description: copy.description,
+    },
   });
 }
 

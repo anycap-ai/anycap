@@ -15,10 +15,14 @@
     "check:seo-ia": "node ./scripts/check-seo-information-architecture.mjs",
     "check:model-hub": "node --test ./scripts/model-hub.test.mjs ./scripts/models-hub-page.test.mjs",
     "test:agent-core": "node --import tsx --test ./scripts/agent-core-*.test.mjs",
+    "test:seo-foundation": "node --test ./scripts/check-seo-locale-rollout.test.mjs ./scripts/generate-sitemap-lastmod.test.mjs ./scripts/next-metadata-head.test.mjs ./scripts/legacy-route-redirects.test.mjs",
+    "check:seo-p0-locales": "node ./scripts/check-seo-locale-rollout.mjs --locales=pt-br,id,de --paths=/for/codex,/capabilities/video-generation,/capabilities/video-analysis,/guides/how-to-add-video-generation-to-ai-agent --strict",
+    "check:seo-p0-contracts": "node ./scripts/check-main-site-seo-p0.mjs",
+    "check:seo-p0": "pnpm run test:seo-foundation && pnpm run check:seo-p0-locales && pnpm run check:seo-p0-contracts",
     "generate:sitemap-lastmod": "node ./scripts/generate-sitemap-lastmod.mjs",
     "publish:indexnow": "node ./scripts/publish-indexnow.mjs",
-    "build": "pnpm run sync:seo-locales && pnpm run check:model-hub && pnpm run check:edge-runtime && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run check:seo-locale-rollout && pnpm run check:seo-hub-locale-rollout && pnpm run generate:sitemap-lastmod && next build",
-    "build:cf": "pnpm run sync:seo-locales && pnpm run check:model-hub && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run check:seo-locale-rollout && pnpm run check:seo-hub-locale-rollout && pnpm run generate:sitemap-lastmod && node ./scripts/pages-build.mjs && pnpm run publish:indexnow",
+    "build": "pnpm run sync:seo-locales && pnpm run check:model-hub && pnpm run check:edge-runtime && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run check:seo-locale-rollout && pnpm run check:seo-hub-locale-rollout && pnpm run check:seo-p0 && pnpm run generate:sitemap-lastmod && next build",
+    "build:cf": "pnpm run sync:seo-locales && pnpm run check:model-hub && pnpm run check:seo-breadcrumbs && pnpm run check:seo-ia && pnpm run check:seo-locale-rollout && pnpm run check:seo-hub-locale-rollout && pnpm run check:seo-p0 && pnpm run generate:sitemap-lastmod && node ./scripts/pages-build.mjs && pnpm run publish:indexnow",
     "start": "next start",
     "lint": "next lint"
   },
@@ -47,5 +51,10 @@
     "tsx": "4.23.1",
     "typescript": "^5",
     "wrangler": "^4.80.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "next@15.5.14": "patches/next@15.5.14.patch"
+    }
   }
 }

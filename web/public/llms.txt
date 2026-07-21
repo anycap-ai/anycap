@@ -147,7 +147,7 @@ Claude Code now runs Claude Opus 4.7 — the strongest reasoning and coding agen
 - [Deep Research Tools Compared](https://anycap.ai/page/en-US/news/deep-research-tools-ai-agents-compared): Side-by-side comparison of ChatGPT Deep Research, Perplexity Sonar Pro, and AnyCap DeepResearch.
 - [GPT Image 2 First Look](https://anycap.ai/page/en-US/news/gpt-image-2-first-look-developers): GPT Image 2 API review — quality, pricing, and integration guide for developers.
 - [What Is Contextual Refinement](https://anycap.ai/page/en-US/news/what-is-contextual-refinement-ai): What contextual refinement means for AI agent output quality.
-- [Cursor AI 2026 New Features](https://anycap.ai/page/en-US/news/cursor-ai-2026-new-features-guide): Cursor AI 2026 new features and capability extension guide.
+- [Cursor AI 2026 New Features](https://anycap.ai/page/en-US/ai/cursor-ai-2026-new-features-guide): Cursor AI 2026 new features and capability extension guide.
 - [Kling AI 2026 Review](https://anycap.ai/page/en-US/news/kling-ai-review-2026): Kling AI 2026 review — pricing, API access, and Kling 3.0 developer guide.
 - [Claude Code SDK Developer Guide](https://anycap.ai/page/en-US/news/claude-code-sdk-developer-guide): Claude Code SDK developer guide for building agents programmatically.
 - [Claude Code Shortcuts and Tips](https://anycap.ai/page/en-US/news/claude-code-shortcuts-tips): Claude Code keyboard shortcuts and workflow patterns for 2–3x productivity.
