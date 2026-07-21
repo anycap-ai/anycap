@@ -5,6 +5,7 @@ import { useRef } from "react";
 import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
+import type { AgentCore3DBridge } from "./agent-core-3d-state";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import {
   beginAgentCorePointerSession,
@@ -25,8 +26,10 @@ const TELEMETRY_CELL_COUNT = 12;
 const PARTICLE_COUNT = 40;
 const BURST_DURATION_MS = 900;
 const DRAG_THRESHOLD_PX = 5;
+const CORE_DRAG_WORLD_SPAN = 4.8;
 
 type UseAgentCoreTimelineOptions = {
+  bridge: AgentCore3DBridge;
   sectionRef: React.RefObject<HTMLElement | null>;
   sceneRef: React.RefObject<HTMLDivElement | null>;
   headRef: React.RefObject<HTMLDivElement | null>;
@@ -85,6 +88,10 @@ function rectShape(rect: DOMRect) {
   return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
 }
 
+function clampNormalized(value: number): number {
+  return Math.max(-1, Math.min(1, value));
+}
+
 function measureSocketTarget(
   core: HTMLButtonElement,
   socket: HTMLDivElement,
@@ -137,6 +144,7 @@ function measureDockTarget(
 }
 
 export function useAgentCoreTimeline({
+  bridge,
   sectionRef,
   sceneRef,
   headRef,
@@ -170,10 +178,13 @@ export function useAgentCoreTimeline({
       const socket = socketRef.current;
       const dock = dockRef.current;
       const canvas = activationCanvasRef.current;
+      const fallbackCore = scene?.querySelector<HTMLElement>("[data-agent-core-fallback-core]");
 
       if (!section || !scene || !head || !core || !socket || !dock || !canvas || !contextSafe) {
         return;
       }
+
+      const coreVisualTargets: HTMLElement[] = fallbackCore ? [core, fallbackCore] : [core];
 
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
       const finePointer = window.matchMedia("(any-pointer: fine)");
@@ -184,6 +195,36 @@ export function useAgentCoreTimeline({
       let isReturning = false;
       let sectionIsVisible = false;
       let installationTimeline: gsap.core.Timeline | null = null;
+
+      const invalidateBridge = () => {
+        bridge.invalidate?.();
+      };
+
+      const resetBridge = () => {
+        bridge.pointerTarget.x = 0;
+        bridge.pointerTarget.y = 0;
+        bridge.pointerCurrent.yaw = 0;
+        bridge.pointerCurrent.pitch = 0;
+        bridge.installProgress = 0;
+        bridge.connected = false;
+        bridge.dragOffset.x = 0;
+        bridge.dragOffset.y = 0;
+        bridge.dragOffset.z = 0;
+        invalidateBridge();
+      };
+
+      const setBridgeConnected = () => {
+        bridge.pointerTarget.x = 0;
+        bridge.pointerTarget.y = 0;
+        bridge.pointerCurrent.yaw = 0;
+        bridge.pointerCurrent.pitch = 0;
+        bridge.installProgress = 1;
+        bridge.connected = true;
+        bridge.dragOffset.x = 0;
+        bridge.dragOffset.y = 0;
+        bridge.dragOffset.z = 0;
+        invalidateBridge();
+      };
 
       const clearCanvas = () => {
         const canvasContext = canvas.getContext("2d");
@@ -276,11 +317,16 @@ export function useAgentCoreTimeline({
       if (reducedMotion.matches) {
         const target = measureSocketTarget(core, socket);
         gsap.set(head, { rotationX: -2, rotationY: 0, transformOrigin: headTransformOrigin });
-        gsap.set(core, { x: target.x, y: target.y, scale: target.scale, rotation: 0 });
+        gsap.set(coreVisualTargets, { x: target.x, y: target.y, scale: target.scale, rotation: 0 });
+        setBridgeConnected();
         setFinalTelemetry();
         phaseRef.current = "connected";
         onPhaseChange("connected");
-        return;
+        return () => {
+          resetBridge();
+          clearCanvas();
+          return;
+        };
       }
 
       gsap.set(head, { transformOrigin: headTransformOrigin, transformPerspective: 900 });
@@ -326,11 +372,28 @@ export function useAgentCoreTimeline({
       });
       const setCoreX = gsap.quickSetter(core, "x", "px");
       const setCoreY = gsap.quickSetter(core, "y", "px");
+      const setFallbackCoreX = fallbackCore
+        ? gsap.quickSetter(fallbackCore, "x", "px")
+        : noop;
+      const setFallbackCoreY = fallbackCore
+        ? gsap.quickSetter(fallbackCore, "y", "px")
+        : noop;
+
+      const setPointerTarget = (x: number, y: number, amplitude = 1) => {
+        const normalizedX =
+          clampNormalized(((x - sceneBounds.left) / sceneBounds.width) * 2 - 1) * amplitude;
+        const normalizedY =
+          clampNormalized(((y - sceneBounds.top) / sceneBounds.height) * 2 - 1) * amplitude;
+        bridge.pointerTarget.x = normalizedX;
+        bridge.pointerTarget.y = normalizedY;
+        invalidateBridge();
+      };
 
       const pointHeadAt = (x: number, y: number, amplitude = 1) => {
         const rotation = clampHeadRotation({ x, y }, rectShape(sceneBounds));
         headYawTo(rotation.yaw * amplitude);
         headPitchTo(rotation.pitch * amplitude);
+        setPointerTarget(x, y, amplitude);
       };
 
       const onScenePointerMove = contextSafe((event: PointerEvent) => {
@@ -350,6 +413,9 @@ export function useAgentCoreTimeline({
         if (phaseRef.current === "dragging" || phaseRef.current === "installing") return;
         headYawTo(0);
         headPitchTo(phaseRef.current === "connected" ? -2 : 0);
+        bridge.pointerTarget.x = 0;
+        bridge.pointerTarget.y = 0;
+        invalidateBridge();
       });
 
       section.addEventListener("pointermove", onScenePointerMove);
@@ -371,11 +437,14 @@ export function useAgentCoreTimeline({
 
         if (phaseRef.current === "awaiting") setPhase("drag-start");
         setPhase("drop-accepted");
+        bridge.connected = false;
+        invalidateBridge();
 
         installationTimeline = gsap.timeline({
           paused: true,
           defaults: { ease: "power2.out" },
           onComplete: () => {
+            setBridgeConnected();
             setFinalTelemetry();
             setPhase("install-complete");
           },
@@ -385,7 +454,29 @@ export function useAgentCoreTimeline({
           .addLabel("scene-in", 0)
           .addLabel("pickup", 0)
           .to(
-            core,
+            bridge,
+            {
+              installProgress: 1,
+              duration: 0.68,
+              ease: "power3.inOut",
+              onUpdate: invalidateBridge,
+            },
+            "pickup",
+          )
+          .to(
+            bridge.dragOffset,
+            {
+              x: 0,
+              y: 0,
+              z: 0,
+              duration: 0.32,
+              ease: "power2.inOut",
+              onUpdate: invalidateBridge,
+            },
+            "pickup",
+          )
+          .to(
+            coreVisualTargets,
             {
               y: target.y - 20,
               scale: Math.max(target.currentScale, target.scale * 1.08),
@@ -405,7 +496,7 @@ export function useAgentCoreTimeline({
           )
           .addLabel("dock", ">")
           .to(
-            core,
+            coreVisualTargets,
             {
               x: target.x,
               y: target.y,
@@ -419,11 +510,15 @@ export function useAgentCoreTimeline({
           .addLabel("activate", ">")
           .call(startParticleBurst, [], "activate")
           .to(
-            core,
+            coreVisualTargets,
             { scale: target.scale * 0.92, duration: 0.14, ease: "power2.in" },
             "activate",
           )
-          .to(core, { scale: target.scale, duration: 0.2, ease: "back.out(1.35)" }, ">")
+          .to(
+            coreVisualTargets,
+            { scale: target.scale, duration: 0.2, ease: "back.out(1.35)" },
+            ">",
+          )
           .to(head, { rotationX: -2, rotationY: 0, duration: 0.34 }, "activate")
           .call(() => {
             if (statusRef.current) statusRef.current.textContent = "Connected";
@@ -469,7 +564,7 @@ export function useAgentCoreTimeline({
 
         installationTimeline
           .addLabel("hold", "capabilities+=0.82")
-          .to(core, { scale: target.scale, duration: 0.2 }, "hold")
+          .to(coreVisualTargets, { scale: target.scale, duration: 0.2 }, "hold")
           .play(0);
       });
 
@@ -520,13 +615,21 @@ export function useAgentCoreTimeline({
         if (Math.hypot(deltaX, deltaY) >= DRAG_THRESHOLD_PX) drag.moved = true;
         setCoreX(drag.coreX + deltaX);
         setCoreY(drag.coreY + deltaY);
+        setFallbackCoreX(drag.coreX + deltaX);
+        setFallbackCoreY(drag.coreY + deltaY);
+        const normalizedX = clampNormalized(deltaX / sceneBounds.width);
+        const normalizedY = clampNormalized(deltaY / sceneBounds.height);
+        bridge.dragOffset.x = normalizedX * CORE_DRAG_WORLD_SPAN;
+        bridge.dragOffset.y = -normalizedY * CORE_DRAG_WORLD_SPAN;
+        bridge.dragOffset.z = Math.min(0.28, Math.hypot(normalizedX, normalizedY) * 0.45);
+        invalidateBridge();
         pointHeadAt(drag.coreCenterX + deltaX, drag.coreCenterY + deltaY);
       });
 
       const rejectDrop = (session: DragSession) => {
         const { dockX, dockY } = session;
         isReturning = true;
-        gsap.to(core, {
+        gsap.to(coreVisualTargets, {
           x: dockX,
           y: dockY,
           scale: 1,
@@ -539,8 +642,20 @@ export function useAgentCoreTimeline({
             setPhase("drop-rejected");
           },
         });
+        gsap.to(bridge.dragOffset, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 0.46,
+          ease: "back.out(1.35)",
+          overwrite: true,
+          onUpdate: invalidateBridge,
+        });
         headYawTo(0);
         headPitchTo(0);
+        bridge.pointerTarget.x = 0;
+        bridge.pointerTarget.y = 0;
+        invalidateBridge();
       };
 
       const finalizePointerSession = contextSafe((
@@ -643,6 +758,7 @@ export function useAgentCoreTimeline({
         }
         drag = null;
         cancelCanvasBurst();
+        resetBridge();
       };
     },
     { scope: sectionRef },

@@ -10,6 +10,12 @@ const corePath = fileURLToPath(new URL("../src/components/landing/agent-core/Any
 const telemetryPath = fileURLToPath(new URL("../src/components/landing/agent-core/CapabilityTelemetry.tsx", import.meta.url));
 const stylesPath = fileURLToPath(new URL("../src/components/landing/agent-core/agent-core.module.css", import.meta.url));
 const homepagePath = fileURLToPath(new URL("../src/components/landing/HumanHomePage.tsx", import.meta.url));
+const canvasPath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/AgentCoreCanvas.tsx", import.meta.url),
+);
+const robot3DPath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/AgentCoreRobot3D.tsx", import.meta.url),
+);
 
 function source(path) {
   return readFileSync(path, "utf8");
@@ -145,4 +151,32 @@ test("locks telemetry, accessibility, manifest, and static-only source contracts
     taskFourComponents,
     /\b(?:getContext|fillRect|strokeRect|clearRect|beginPath|moveTo|lineTo|arc|fill|stroke|drawImage|putImageData|createImageData)\s*\(/,
   );
+});
+
+test("creates one mutable 3D bridge and shares it with the scene and timeline", () => {
+  const section = source(sectionPath);
+
+  assert.match(section, /createAgentCore3DBridge/);
+  assert.equal((section.match(/createAgentCore3DBridge\(\)/g) ?? []).length, 1);
+  assert.match(section, /useAgentCoreTimeline\(\{[\s\S]*?bridge,/);
+  assert.match(section, /<AgentCoreScene[\s\S]*?bridge=\{bridge\}/);
+  assert.match(section, /aria-live="polite"/);
+});
+
+test("mounts the transparent 3D Canvas over the approved WebP fallback", () => {
+  const scene = source(scenePath);
+  const canvas = `${source(canvasPath)}\n${source(robot3DPath)}`;
+  const core = source(corePath);
+  const styles = source(stylesPath);
+
+  assert.match(scene, /<AgentCoreCanvas\s+bridge=\{bridge\}\s+fallback=\{fallback\}/);
+  assert.match(scene, /data-agent-core-fallback/);
+  for (const file of ["robot-body.webp", "robot-head.webp", "anycap-core.webp", "core-dock.webp"]) {
+    assert.ok(scene.includes(file) || source(headPath).includes(file), file);
+  }
+  assert.match(canvas, /background:\s*["']transparent["']/);
+  assert.doesNotMatch(core, /from "next\/image"|<Image/);
+  assert.match(styles, /\.core\s*\{[\s\S]*?aspect-ratio:\s*1\s*;/);
+  assert.match(styles, /\.core\s*\{[\s\S]*?background:\s*transparent\s*;/);
+  assert.match(core, /aria-label="Install the AnyCap Core"/);
 });

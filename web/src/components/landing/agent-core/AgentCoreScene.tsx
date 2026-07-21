@@ -2,11 +2,14 @@ import Image from "next/image";
 import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
+import type { AgentCore3DBridge } from "./agent-core-3d-state";
+import { AgentCoreCanvas } from "./AgentCoreCanvas";
 import { AgentHeadTracker } from "./AgentHeadTracker";
 import { AnyCapCoreControl } from "./AnyCapCoreControl";
 import styles from "./agent-core.module.css";
 
 export type AgentCoreSceneProps = {
+  bridge: AgentCore3DBridge;
   connected: boolean;
   sceneRef: React.RefObject<HTMLDivElement | null>;
   headRef: React.RefObject<HTMLDivElement | null>;
@@ -76,6 +79,7 @@ const sceneStyle = {
 } as React.CSSProperties;
 
 export function AgentCoreScene({
+  bridge,
   connected,
   sceneRef,
   headRef,
@@ -91,19 +95,9 @@ export function AgentCoreScene({
   onClick,
   onKeyDown,
 }: AgentCoreSceneProps) {
-  return (
-    <div
-      ref={sceneRef}
-      className={`${styles.scene} ${styles.awaitingVisual}${
-        connected ? ` ${styles.sceneConnected}` : ""
-      }`}
-      style={sceneStyle}
-      data-connected={connected}
-      data-agent-core-entrance
-    >
-      <div className={styles.table} aria-hidden="true" />
-
-      <div className={styles.body} aria-hidden="true">
+  const fallback = (
+    <div className={styles.fallbackVisual} data-agent-core-fallback aria-hidden="true">
+      <div className={styles.body}>
         <Image
           src="/visuals/agent-core/robot-body.webp"
           alt=""
@@ -117,16 +111,7 @@ export function AgentCoreScene({
 
       <AgentHeadTracker headRef={headRef} />
 
-      <div ref={socketRef} className={styles.socket} aria-hidden="true" />
-      <canvas
-        ref={activationCanvasRef}
-        className={styles.activationCanvas}
-        width={160}
-        height={160}
-        aria-hidden="true"
-      />
-
-      <div ref={dockRef} className={styles.dock} aria-hidden="true">
+      <div className={styles.dock}>
         <Image
           src="/visuals/agent-core/core-dock.webp"
           alt=""
@@ -137,6 +122,47 @@ export function AgentCoreScene({
           className={styles.layerImage}
         />
       </div>
+
+      <div className={styles.fallbackCore} data-agent-core-fallback-core>
+        <Image
+          src="/visuals/agent-core/anycap-core.webp"
+          alt=""
+          width={512}
+          height={512}
+          sizes="(min-width: 1280px) 10vw, (min-width: 768px) 8vw, 16vw"
+          draggable={false}
+          className={styles.layerImage}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      ref={sceneRef}
+      className={`${styles.scene} ${styles.awaitingVisual}${
+        connected ? ` ${styles.sceneConnected}` : ""
+      }`}
+      style={sceneStyle}
+      data-connected={connected}
+      data-agent-core-entrance
+    >
+      <div className={styles.table} aria-hidden="true" />
+
+      <div className={styles.canvasLayer} aria-hidden="true">
+        <AgentCoreCanvas bridge={bridge} fallback={fallback} />
+      </div>
+
+      <div ref={socketRef} className={styles.socket} aria-hidden="true" />
+      <canvas
+        ref={activationCanvasRef}
+        className={styles.activationCanvas}
+        width={160}
+        height={160}
+        aria-hidden="true"
+      />
+
+      <div ref={dockRef} className={styles.dockTarget} aria-hidden="true" />
 
       <AnyCapCoreControl
         coreRef={coreRef}

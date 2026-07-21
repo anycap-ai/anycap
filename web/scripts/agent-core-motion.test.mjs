@@ -100,3 +100,43 @@ test("consumes the pure pointer reducer through one finalization path", () => {
   assert.match(hook, /finalizePointerSession\(event, "lost-capture"\)/);
   assert.match(section, /onLostPointerCapture/);
 });
+
+test("drives the mutable 3D bridge from normalized section pointer and drag input", () => {
+  const source = readFileSync(hookPath, "utf8");
+
+  assert.match(source, /bridge:\s*AgentCore3DBridge/);
+  assert.match(source, /bridge\.pointerTarget\.x\s*=\s*normalizedX/);
+  assert.match(source, /bridge\.pointerTarget\.y\s*=\s*normalizedY/);
+  assert.match(source, /bridge\.dragOffset\.x\s*=/);
+  assert.match(source, /bridge\.dragOffset\.y\s*=/);
+  assert.match(source, /bridge\.invalidate\?\.\(\)/);
+});
+
+test("tweens 3D installation progress inside the existing six-label narrative", () => {
+  const source = readFileSync(hookPath, "utf8");
+  const timelineSource = source.slice(
+    source.indexOf('addLabel("scene-in"'),
+    source.indexOf('.play(0)'),
+  );
+
+  assert.match(timelineSource, /installProgress:\s*1/);
+  assert.match(timelineSource, /onUpdate:\s*invalidateBridge/);
+  assert.match(timelineSource, /dragOffset/);
+  for (const label of ["scene-in", "pickup", "dock", "activate", "capabilities", "hold"]) {
+    assert.ok(timelineSource.includes(`addLabel("${label}"`), label);
+  }
+});
+
+test("sets final 3D values for connected and reduced-motion states and resets on cleanup", () => {
+  const source = readFileSync(hookPath, "utf8");
+  const reducedBranch = source.slice(
+    source.indexOf("if (reducedMotion.matches)"),
+    source.indexOf("ScrollTrigger.create"),
+  );
+  const cleanup = source.slice(source.lastIndexOf("return () =>"));
+
+  assert.match(source, /bridge\.connected\s*=\s*true/);
+  assert.match(source, /bridge\.installProgress\s*=\s*1/);
+  assert.match(reducedBranch, /setBridgeConnected\(\)/);
+  assert.match(cleanup, /resetBridge\(\)/);
+});
