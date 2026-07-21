@@ -8,6 +8,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { ScrambleText } from "@/components/ui/ScrambleText";
 import { ParticleAgent } from "@/components/landing/ParticleAgent";
 import { AgentBubble } from "@/components/landing/AgentBubble";
+import { AgentCoreInstallSection } from "@/components/landing/agent-core/AgentCoreInstallSection";
 import { siteConfig } from "@/lib/site";
 
 const websiteId = `${siteConfig.url}#website`;
@@ -73,7 +74,7 @@ export function HumanHomePage() {
               style={{ ...pixel, fontSize: "clamp(36px, 5.5vw, 76px)" }}
             >
               <span className="sr-only">
-                Your Agent can do anything. It just needs AnyCap.
+                Your agent can do more. It just needs AnyCap.
               </span>
               <span aria-hidden>
               <ScrambleText text="Your" speed={30} ticks={3} />{" "}
@@ -175,6 +176,12 @@ export function HumanHomePage() {
       </FadeIn>
 
       <div className="mt-24 px-8 md:mt-36 md:px-16 lg:px-24">
+        <hr className="border-t border-[#d4dbb8]" />
+      </div>
+
+      <AgentCoreInstallSection />
+
+      <div className="px-8 md:px-16 lg:px-24">
         <hr className="border-t border-[#d4dbb8]" />
       </div>
 

@@ -1,0 +1,357 @@
+.section {
+  min-height: 100svh;
+  padding: 8rem 6rem;
+  position: relative;
+  overflow-x: clip;
+}
+
+.layout {
+  display: grid;
+  grid-template-areas: "copy telemetry scene";
+  grid-template-columns: minmax(290px, 0.78fr) minmax(260px, 0.58fr) minmax(520px, 1.28fr);
+  align-items: center;
+  gap: clamp(28px, 3vw, 64px);
+  min-height: calc(100svh - 16rem);
+}
+
+.copy {
+  grid-area: copy;
+  align-self: center;
+  min-width: 0;
+}
+
+.heading {
+  color: #1c1f17;
+  font-family: var(--font-geist-pixel-square), monospace;
+  font-size: clamp(31px, 2.55vw, 48px);
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.heading span {
+  display: block;
+}
+
+.heading span:first-child {
+  color: #6b7d3a;
+}
+
+.audience {
+  margin-top: clamp(32px, 4.25vw, 64px);
+  color: #1c1f17;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(15px, 1.18vw, 19px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.supporting {
+  margin-top: 8px;
+  max-width: 39ch;
+  color: #3a3e32;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(13px, 1vw, 16px);
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.command {
+  margin-top: clamp(28px, 3.25vw, 48px);
+  color: #6b7d3a;
+  font-family: var(--font-logo), monospace;
+  font-size: clamp(14px, 1.15vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.commandCursor {
+  display: inline-block;
+  width: 0.58em;
+  height: 0.76em;
+  margin-left: 0.35em;
+  background-color: #6b7d3a;
+}
+
+.telemetry {
+  grid-area: telemetry;
+  align-self: center;
+  min-width: 0;
+  color: #1c1f17;
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+
+.telemetryStatus,
+.noScriptStatus {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #aeb79a;
+  color: #6b7d3a;
+  font-size: clamp(12px, 0.98vw, 15px);
+  line-height: 1.4;
+}
+
+.telemetryRows {
+  display: grid;
+  gap: clamp(20px, 2.6vw, 34px);
+  margin-top: 24px;
+}
+
+.telemetryRow {
+  min-width: 0;
+}
+
+.telemetryLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: clamp(12px, 1vw, 16px);
+  line-height: 1.35;
+}
+
+.telemetryValue {
+  flex: 0 0 auto;
+  color: #6b7d3a;
+  font-family: var(--font-logo), monospace;
+  font-weight: 700;
+}
+
+.telemetryCells {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.telemetryCell {
+  display: block;
+  aspect-ratio: 1.34;
+  border: 1px solid #b8bdaf;
+}
+
+.telemetryCellConnected {
+  border-color: #6b7d3a;
+  background-color: #6b7d3a;
+}
+
+.scene {
+  grid-area: scene;
+  aspect-ratio: 0.94;
+  position: relative;
+  align-self: end;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.layerImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.table {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 0;
+  height: 10%;
+  border-top: 1px solid #dce0d2;
+  pointer-events: none;
+}
+
+.body {
+  position: absolute;
+  z-index: 1;
+  top: var(--agent-body-top);
+  left: var(--agent-body-left);
+  width: var(--agent-body-width);
+  pointer-events: none;
+}
+
+.head {
+  position: absolute;
+  z-index: 2;
+  top: var(--agent-head-top);
+  left: var(--agent-head-left);
+  width: var(--agent-head-width);
+  transform-origin: 51% 92%;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.socket,
+.activationCanvas {
+  position: absolute;
+  top: var(--agent-socket-top);
+  left: var(--agent-socket-left);
+  width: var(--agent-socket-size);
+  aspect-ratio: 1;
+}
+
+.socket {
+  z-index: 3;
+  background: transparent;
+  pointer-events: none;
+}
+
+.activationCanvas {
+  z-index: 4;
+  height: auto;
+  pointer-events: none;
+}
+
+.dock {
+  position: absolute;
+  z-index: 3;
+  top: var(--agent-dock-top);
+  left: var(--agent-dock-left);
+  width: var(--agent-dock-width);
+  pointer-events: none;
+}
+
+.core {
+  position: absolute;
+  z-index: 5;
+  top: var(--agent-core-top);
+  left: var(--agent-core-left);
+  width: var(--agent-core-width);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  touch-action: none;
+  cursor: grab;
+  will-change: transform;
+}
+
+.core:active {
+  cursor: grabbing;
+}
+
+.core:focus-visible {
+  outline: 3px solid #6b7d3a;
+  outline-offset: 5px;
+}
+
+.sceneConnected .core {
+  cursor: default;
+}
+
+.layout > noscript {
+  grid-area: telemetry;
+  align-self: center;
+  min-width: 0;
+}
+
+.noScriptTelemetry {
+  color: #1c1f17;
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+
+.noScriptRows {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.noScriptRows p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.noScriptRows p span:last-child {
+  color: #6b7d3a;
+  font-family: var(--font-logo), monospace;
+  font-weight: 700;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .section {
+    min-height: 100svh;
+    padding: 6rem 4rem;
+  }
+
+  .layout {
+    grid-template-areas:
+      "copy scene"
+      "telemetry scene";
+    grid-template-columns: minmax(240px, 0.78fr) minmax(360px, 1.22fr);
+    align-items: center;
+    min-height: calc(100svh - 12rem);
+  }
+
+  .copy {
+    align-self: end;
+  }
+
+  .telemetry {
+    align-self: start;
+  }
+
+  .telemetryRows {
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .scene {
+    align-self: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
+    min-height: 0;
+    padding: 5rem 2rem;
+    overflow-x: clip;
+  }
+
+  .layout {
+    grid-template-areas:
+      "copy"
+      "scene"
+      "telemetry";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 48px;
+    min-height: 0;
+  }
+
+  .heading {
+    font-size: clamp(29px, 9vw, 42px);
+  }
+
+  .audience {
+    margin-top: 32px;
+  }
+
+  .command {
+    margin-top: 28px;
+  }
+
+  .scene {
+    width: 100%;
+    max-width: 640px;
+    justify-self: center;
+  }
+
+  .core,
+  .core:active,
+  .sceneConnected .core {
+    cursor: pointer;
+  }
+
+  .telemetryRows {
+    gap: 22px;
+  }
+
+  .layout > noscript {
+    grid-area: telemetry;
+  }
+}
