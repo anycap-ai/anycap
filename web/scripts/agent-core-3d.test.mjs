@@ -102,3 +102,40 @@ test("Canvas is lazy, transparent, demand-rendered, and caps desktop and mobile 
   assert.match(canvasSource, /MOBILE_DPR_CAP\s*=\s*1\.25/);
   assert.match(sceneSource, /fallback=/);
 });
+
+test("caller keeps its fallback mounted until the suspended R3F scene reports ready", async () => {
+  const [robotSource, canvasSource] = await Promise.all([
+    readFile(robotSourceUrl, "utf8"),
+    readFile(canvasSourceUrl, "utf8"),
+  ]);
+
+  assert.match(canvasSource, /const \[ready, setReady\] = useState\(false\)/);
+  assert.match(canvasSource, /!ready\s*\?/);
+  assert.match(canvasSource, /<LazyAgentCoreCanvas[\s\S]*onReady=\{\(\) => setReady\(true\)\}/);
+  assert.match(robotSource, /<Suspense[\s\S]*<AgentCoreRobot3D[\s\S]*<SceneReadyReporter/);
+  assert.doesNotMatch(robotSource, /onCreated=\{\([\s\S]{0,160}setReady\(true\)/);
+});
+
+test("demand rendering continues only for internal smoothing convergence", async () => {
+  const robotSource = await readFile(robotSourceUrl, "utf8");
+
+  assert.match(robotSource, /if \(headIsMoving\) invalidate\(\)/);
+  assert.doesNotMatch(robotSource, /installProgress\s*>\s*0\s*&&\s*bridge\.installProgress\s*<\s*1/);
+});
+
+test("WebGL context lifecycle restores the fallback and cleans up listeners", async () => {
+  const robotSource = await readFile(robotSourceUrl, "utf8");
+
+  assert.match(robotSource, /webglcontextlost/);
+  assert.match(robotSource, /webglcontextrestored/);
+  assert.match(robotSource, /onUnavailable\(\)/);
+  assert.match(robotSource, /removeEventListener\(\s*["']webglcontextlost["']/);
+  assert.match(robotSource, /removeEventListener\(\s*["']webglcontextrestored["']/);
+});
+
+test("DPR cap follows the mobile breakpoint after mount", async () => {
+  const canvasSource = await readFile(canvasSourceUrl, "utf8");
+
+  assert.match(canvasSource, /addEventListener\(\s*["']change["']/);
+  assert.match(canvasSource, /removeEventListener\(\s*["']change["']/);
+});

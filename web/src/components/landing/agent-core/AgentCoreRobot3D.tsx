@@ -2,7 +2,7 @@
 
 import { RoundedBox } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import type { Group, MeshStandardMaterial } from "three";
 
 import {
@@ -25,7 +25,11 @@ type AgentCoreRobot3DProps = {
 type AgentCoreCanvasLeafProps = AgentCoreRobot3DProps & {
   fallback: React.ReactNode;
   dprCap: number;
+  onReady: () => void;
+  onUnavailable: () => void;
 };
+
+type SceneReadyRef = React.MutableRefObject<boolean>;
 
 function ShellMaterial({ color = IVORY }: { color?: string }) {
   return <meshStandardMaterial color={color} roughness={0.82} metalness={0.04} />;
@@ -217,7 +221,7 @@ export function AgentCoreRobot3D({ bridge }: AgentCoreRobot3DProps) {
 
     const headIsMoving =
       Math.abs(nextYaw - target.yaw) > 0.0002 || Math.abs(nextPitch - target.pitch) > 0.0002;
-    if (headIsMoving || (bridge.installProgress > 0 && bridge.installProgress < 1)) invalidate();
+    if (headIsMoving) invalidate();
   });
 
   return (
@@ -232,16 +236,72 @@ export function AgentCoreRobot3D({ bridge }: AgentCoreRobot3DProps) {
   );
 }
 
-export function AgentCoreCanvasLeaf({ bridge, fallback, dprCap }: AgentCoreCanvasLeafProps) {
-  const [ready, setReady] = useState(false);
+function SceneReadyReporter({ onReady, sceneReadyRef }: { onReady: () => void; sceneReadyRef: SceneReadyRef }) {
+  const reportedRef = useRef(false);
+
+  useFrame(() => {
+    if (reportedRef.current) return;
+    reportedRef.current = true;
+    sceneReadyRef.current = true;
+    onReady();
+  });
+
+  return null;
+}
+
+function WebGLContextLifecycle({
+  onReady,
+  onUnavailable,
+  sceneReadyRef,
+}: {
+  onReady: () => void;
+  onUnavailable: () => void;
+  sceneReadyRef: SceneReadyRef;
+}) {
+  const gl = useThree((state) => state.gl);
+  const invalidate = useThree((state) => state.invalidate);
+  const reportReadyAfterRestoreRef = useRef(false);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      reportReadyAfterRestoreRef.current = false;
+      onUnavailable();
+    };
+    const handleContextRestored = () => {
+      reportReadyAfterRestoreRef.current = sceneReadyRef.current;
+      invalidate();
+    };
+
+    canvas.addEventListener("webglcontextlost", handleContextLost);
+    canvas.addEventListener("webglcontextrestored", handleContextRestored);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", handleContextLost);
+      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
+    };
+  }, [gl, invalidate, onUnavailable, sceneReadyRef]);
+
+  useFrame(() => {
+    if (!reportReadyAfterRestoreRef.current) return;
+    reportReadyAfterRestoreRef.current = false;
+    onReady();
+  });
+
+  return null;
+}
+
+export function AgentCoreCanvasLeaf({
+  bridge,
+  fallback,
+  dprCap,
+  onReady,
+  onUnavailable,
+}: AgentCoreCanvasLeafProps) {
+  const sceneReadyRef = useRef(false);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {!ready ? (
-        <div style={{ position: "absolute", inset: 0 }} aria-hidden="true">
-          {fallback}
-        </div>
-      ) : null}
+    <div style={{ width: "100%", height: "100%" }}>
       <Canvas
         orthographic
         camera={{ position: [0, 0.08, 8], zoom: 104, near: 0.1, far: 30 }}
@@ -252,16 +312,21 @@ export function AgentCoreCanvasLeaf({ bridge, fallback, dprCap }: AgentCoreCanva
         fallback={fallback}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
-          setReady(true);
         }}
         style={{ position: "absolute", inset: 0, background: "transparent" }}
       >
+        <WebGLContextLifecycle
+          onReady={onReady}
+          onUnavailable={onUnavailable}
+          sceneReadyRef={sceneReadyRef}
+        />
         <ambientLight intensity={1.1} />
         <directionalLight position={[-4, 6, 7]} intensity={2.3} color="#fffdf2" />
         <directionalLight position={[4, 1, 5]} intensity={0.75} color="#c8d4a0" />
         <pointLight position={[0, -0.5, 4]} intensity={0.34} color="#6b7d3a" />
         <Suspense fallback={null}>
           <AgentCoreRobot3D bridge={bridge} />
+          <SceneReadyReporter onReady={onReady} sceneReadyRef={sceneReadyRef} />
         </Suspense>
       </Canvas>
     </div>
