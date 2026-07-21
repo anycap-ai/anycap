@@ -74,6 +74,12 @@ const fallbackShifts = deriveAgentCoreFallbackShifts({
     placement: assets.dock.canonicalPlacement,
     localAnchor: assets.dock.localAnchors.coreSeat,
   },
+  fallbackCore: {
+    width: assets.core.width,
+    height: assets.core.height,
+    dockContact: assets.core.localAnchors.dockContact,
+    socketAttachment: assets.core.localAnchors.socketAttachment,
+  },
   targets: { tableCore, chestSocket },
 });
 

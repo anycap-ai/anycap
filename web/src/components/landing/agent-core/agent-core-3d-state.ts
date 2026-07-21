@@ -65,6 +65,12 @@ type AgentCoreFallbackShiftOptions = {
   sceneLeft: number;
   robotSocket: AgentCoreFallbackAnchor;
   dockSeat: AgentCoreFallbackAnchor;
+  fallbackCore: {
+    width: number;
+    height: number;
+    dockContact: AgentCore3DPointer;
+    socketAttachment: AgentCore3DPointer;
+  };
   targets: ReturnType<typeof projectAgentCoreInteractiveTargets>;
 };
 
@@ -235,6 +241,7 @@ export function deriveAgentCoreFallbackShifts({
   sceneLeft,
   robotSocket,
   dockSeat,
+  fallbackCore,
   targets,
 }: AgentCoreFallbackShiftOptions): {
   robot: AgentCore3DPointer;
@@ -247,15 +254,38 @@ export function deriveAgentCoreFallbackShifts({
   });
   const projectedRobotSocket = projectAnchor(robotSocket);
   const projectedDockSeat = projectAnchor(dockSeat);
+  const projectCoreAnchor = (
+    projection: AgentCoreSceneProjection,
+    anchor: AgentCore3DPointer,
+  ) => {
+    const renderedCoreHeight =
+      projection.normalized.height * (fallbackCore.height / fallbackCore.width);
+    return {
+      x:
+        projection.normalized.left +
+        (anchor.x / fallbackCore.width) * projection.normalized.width,
+      y:
+        projection.normalized.top +
+        (anchor.y / fallbackCore.height) * renderedCoreHeight,
+    };
+  };
+  const projectedCoreDockContact = projectCoreAnchor(
+    targets.tableCore,
+    fallbackCore.dockContact,
+  );
+  const projectedCoreSocketAttachment = projectCoreAnchor(
+    targets.chestSocket,
+    fallbackCore.socketAttachment,
+  );
 
   return {
     robot: {
-      x: targets.chestSocket.normalized.centerX - projectedRobotSocket.x,
-      y: targets.chestSocket.normalized.centerY - projectedRobotSocket.y,
+      x: projectedCoreSocketAttachment.x - projectedRobotSocket.x,
+      y: projectedCoreSocketAttachment.y - projectedRobotSocket.y,
     },
     dock: {
-      x: targets.tableCore.normalized.centerX - projectedDockSeat.x,
-      y: targets.tableCore.normalized.centerY - projectedDockSeat.y,
+      x: projectedCoreDockContact.x - projectedDockSeat.x,
+      y: projectedCoreDockContact.y - projectedDockSeat.y,
     },
   };
 }

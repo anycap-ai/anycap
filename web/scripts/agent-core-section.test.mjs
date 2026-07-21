@@ -211,6 +211,10 @@ test("reframes only the fallback robot and dock around their manifest physical a
   assert.match(scene, /deriveAgentCoreFallbackShifts/);
   assert.match(scene, /localAnchors\.socketCenter/);
   assert.match(scene, /localAnchors\.coreSeat/);
+  assert.match(scene, /width:\s*assets\.core\.width/);
+  assert.match(scene, /height:\s*assets\.core\.height/);
+  assert.match(scene, /dockContact:\s*assets\.core\.localAnchors\.dockContact/);
+  assert.match(scene, /socketAttachment:\s*assets\.core\.localAnchors\.socketAttachment/);
   for (const variable of [
     "--agent-fallback-robot-shift-x",
     "--agent-fallback-robot-shift-y",

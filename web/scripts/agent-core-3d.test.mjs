@@ -129,7 +129,7 @@ test("procedural overlays project the table Core and chest socket from one 4.8-w
   }
 });
 
-test("manifest fallback groups shift their physical anchors onto the procedural targets", async () => {
+test("manifest fallback groups align to the Core contact anchors at awaiting and installed sizes", async () => {
   assert.equal(
     typeof agentCore3DState.deriveAgentCoreFallbackShifts,
     "function",
@@ -142,7 +142,6 @@ test("manifest fallback groups shift their physical anchors onto the procedural 
       "utf8",
     ),
   );
-  const targets = projectAgentCoreInteractiveTargets(100);
   const sceneLeft = manifest.assets.body.canonicalPlacement.x;
   const sceneWidth = manifest.artboard.width - sceneLeft;
   const normalizedAnchor = (placement, anchor) => ({
@@ -157,43 +156,104 @@ test("manifest fallback groups shift their physical anchors onto the procedural 
     manifest.assets.dock.canonicalPlacement,
     manifest.assets.dock.localAnchors.coreSeat,
   );
-  const shifts = agentCore3DState.deriveAgentCoreFallbackShifts({
-    artboard: manifest.artboard,
-    sceneLeft,
-    robotSocket: {
-      placement: manifest.assets.body.canonicalPlacement,
-      localAnchor: manifest.assets.body.localAnchors.socketCenter,
-    },
-    dockSeat: {
-      placement: manifest.assets.dock.canonicalPlacement,
-      localAnchor: manifest.assets.dock.localAnchors.coreSeat,
-    },
-    targets,
-  });
   const closeTo = (actual, expected, label) => {
-    assert.ok(Math.abs(actual - expected) < 1e-12, `${label}: ${actual} !== ${expected}`);
+    assert.ok(Math.abs(actual - expected) < 1e-9, `${label}: ${actual} !== ${expected}`);
   };
+  const coreAsset = manifest.assets.core;
+  const projectCoreAnchor = (projection, anchor) => ({
+    x: projection.css.left + (anchor.x / coreAsset.width) * projection.css.width,
+    y: projection.css.top + (anchor.y / coreAsset.height) * projection.css.height,
+  });
 
-  closeTo(
-    robotSocket.x + shifts.robot.x,
-    targets.chestSocket.normalized.centerX,
-    "fallback chest socket x",
+  assert.notDeepEqual(
+    coreAsset.localAnchors.dockContact,
+    coreAsset.localAnchors.visualCenter,
+    "awaiting contact is not the image center",
   );
-  closeTo(
-    robotSocket.y + shifts.robot.y,
-    targets.chestSocket.normalized.centerY,
-    "fallback chest socket y",
+  assert.notDeepEqual(
+    coreAsset.localAnchors.socketAttachment,
+    coreAsset.localAnchors.visualCenter,
+    "installed attachment is not the image center",
   );
-  closeTo(
-    dockSeat.x + shifts.dock.x,
-    targets.tableCore.normalized.centerX,
-    "fallback dock seat x",
+  assert.deepEqual(
+    coreAsset.localAnchors.visualCenter,
+    { x: coreAsset.width / 2, y: coreAsset.height / 2 },
+    "manifest visual center matches the CSS transform origin",
   );
-  closeTo(
-    dockSeat.y + shifts.dock.y,
-    targets.tableCore.normalized.centerY,
-    "fallback dock seat y",
-  );
+
+  for (const responsiveSceneWidth of [320, 499, 640]) {
+    const targets = projectAgentCoreInteractiveTargets(responsiveSceneWidth);
+    const responsiveSceneHeight = responsiveSceneWidth / AGENT_CORE_SCENE_ASPECT;
+    const coreDockContact = projectCoreAnchor(
+      targets.tableCore,
+      coreAsset.localAnchors.dockContact,
+    );
+    const installScale = targets.chestSocket.css.width / targets.tableCore.css.width;
+    const coreSocketAttachment = {
+      x:
+        targets.chestSocket.css.centerX +
+        ((coreAsset.localAnchors.socketAttachment.x - coreAsset.width / 2) /
+          coreAsset.width) *
+          targets.tableCore.css.width *
+          installScale,
+      y:
+        targets.chestSocket.css.centerY +
+        ((coreAsset.localAnchors.socketAttachment.y - coreAsset.height / 2) /
+          coreAsset.height) *
+          targets.tableCore.css.height *
+          installScale,
+    };
+    const shifts = agentCore3DState.deriveAgentCoreFallbackShifts({
+      artboard: manifest.artboard,
+      sceneLeft,
+      robotSocket: {
+        placement: manifest.assets.body.canonicalPlacement,
+        localAnchor: manifest.assets.body.localAnchors.socketCenter,
+      },
+      dockSeat: {
+        placement: manifest.assets.dock.canonicalPlacement,
+        localAnchor: manifest.assets.dock.localAnchors.coreSeat,
+      },
+      fallbackCore: {
+        width: coreAsset.width,
+        height: coreAsset.height,
+        dockContact: coreAsset.localAnchors.dockContact,
+        socketAttachment: coreAsset.localAnchors.socketAttachment,
+      },
+      targets,
+    });
+
+    assert.notEqual(
+      targets.tableCore.css.width,
+      targets.chestSocket.css.width,
+      `${responsiveSceneWidth}px install scale changes the fallback Core size`,
+    );
+    closeTo(
+      targets.tableCore.css.width * installScale,
+      targets.chestSocket.css.width,
+      `${responsiveSceneWidth}px CSS install scale reaches socket size`,
+    );
+    closeTo(
+      (dockSeat.x + shifts.dock.x) * responsiveSceneWidth,
+      coreDockContact.x,
+      `${responsiveSceneWidth}px dock seat x equals Core dockContact`,
+    );
+    closeTo(
+      (dockSeat.y + shifts.dock.y) * responsiveSceneHeight,
+      coreDockContact.y,
+      `${responsiveSceneWidth}px dock seat y equals Core dockContact`,
+    );
+    closeTo(
+      (robotSocket.x + shifts.robot.x) * responsiveSceneWidth,
+      coreSocketAttachment.x,
+      `${responsiveSceneWidth}px robot socket x equals Core socketAttachment`,
+    );
+    closeTo(
+      (robotSocket.y + shifts.robot.y) * responsiveSceneHeight,
+      coreSocketAttachment.y,
+      `${responsiveSceneWidth}px robot socket y equals Core socketAttachment`,
+    );
+  }
 });
 
 test("100px pointer deltas produce exactly 100px of projected Core movement at every scene width", () => {
