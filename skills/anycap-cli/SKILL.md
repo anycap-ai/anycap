@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, video, music, and audio), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music/audio generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.4.2
+  version: 0.5.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -119,6 +119,34 @@ export ANYCAP_CONFIG_DIR=./.anycap   # store config in the working directory
 - `ANYCAP_CONFIG_DIR` redirects all CLI state (config, credentials, update markers) to the specified path. Relative paths are resolved to absolute paths automatically.
 
 Read [references/cli-reference.md](references/cli-reference.md) for all available keys and environment variable overrides.
+
+## Local stdio MCP
+
+AnyCap exposes its MCP server through the existing `anycap mcp` command. It is
+the same CLI binary, authentication store, HTTP client, media resolver, and
+uploader—not a separate runtime or package.
+
+Use this entry point when an MCP host needs stable AnyCap tools. Check the
+installed version before configuration:
+
+```bash
+anycap mcp --help
+```
+
+The current command exposes 23 tools: four explicit local authentication tools
+and 19 business tools. Existing CLI login state is shared. MCP login never runs
+at startup; use `anycap_auth_status`, `anycap_login`, and
+`anycap_login_poll` when authentication is needed inside the MCP session.
+
+Local image, video, and audio paths require an allowed root. Pass repeatable
+`--allow-root` arguments in the host configuration or expose file roots through
+the MCP client. For the complete host configuration, tool inventory, login
+flow, and one-call local image-to-video example, load
+[references/cli-reference.md](references/cli-reference.md#local-stdio-mcp).
+
+The repository includes MCP Registry metadata in the existing `@anycap/cli`
+package template, but do not claim npm or Registry availability for this MCP
+version until the corresponding release is independently verified.
 
 ## Agent Daemon (Feishu Chat)
 

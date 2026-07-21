@@ -7,6 +7,7 @@ Complete reference for AnyCap CLI commands, authentication methods, configuratio
 - [Global Flags](#global-flags)
 - [Authentication](#authentication)
 - [Configuration](#configuration)
+- [Local stdio MCP](#local-stdio-mcp)
 - [Utility Commands](#utility-commands)
 
 ## Global Flags
@@ -161,6 +162,119 @@ endpoint = "https://api.anycap.ai"
 auto_update = true
 feedback = true
 ```
+
+## Local stdio MCP
+
+`anycap mcp` runs the MCP server inside the existing AnyCap CLI binary. It uses
+the official Go SDK for protocol framing and tool lifecycle, then reuses the
+CLI's authentication, HTTP client, recursive model-schema resolver, and bounded
+uploader.
+
+Verify that the installed version contains the command:
+
+```bash
+anycap mcp --help
+```
+
+### MCP host configuration
+
+Use the installed binary directly:
+
+```json
+{
+  "mcpServers": {
+    "anycap": {
+      "type": "stdio",
+      "command": "anycap",
+      "args": [
+        "mcp",
+        "--allow-root",
+        "/absolute/path/to/media"
+      ]
+    }
+  }
+}
+```
+
+`--allow-root` is optional and repeatable. Each MCP host uses different config
+file locations and wrapper fields, but the process command must resolve to
+`anycap mcp`. The repository also prepares MCP Registry metadata in the existing
+`@anycap/cli` package. Do not recommend an npm or Registry install until the
+specific released version is verified to contain this command.
+
+stdout belongs exclusively to MCP protocol traffic. Send process diagnostics
+to stderr and do not insert shell wrappers that print banners to stdout.
+
+### Authentication
+
+CLI and MCP share one credential runtime. Precedence is `ANYCAP_API_KEY`, then
+the environment-compatible OS keyring entry, then the owner-only credential
+file. Credentials are reloaded on every tool call, so login completed while the
+MCP process is running takes effect without restart.
+
+For MCP-native device login:
+
+1. Call `anycap_auth_status`.
+2. If unauthenticated, call `anycap_login` and show its verification URL and
+   user code to the human.
+3. After the human confirms, call `anycap_login_poll` with the returned
+   `login_session_id`. If the provider reports pending, retry according to the
+   returned interval.
+4. Call `anycap_status` to verify the account and server.
+
+No authentication tool returns the raw credential. `anycap_logout` deletes
+only persistent local credentials; it does not revoke a remote credential and
+cannot remove an active `ANYCAP_API_KEY` environment value.
+
+### Local media and one-call i2v
+
+The seven media tools that accept files can receive HTTP(S) URLs, existing
+AnyCap upload references, or local paths:
+
+- `anycap_image_generate`, `anycap_image_edit`, `anycap_image_upscale`,
+  `anycap_image_read`
+- `anycap_video_generate`, `anycap_video_read`
+- `anycap_audio_read`
+
+Local access is limited to the union of repeatable `--allow-root` arguments,
+the platform path-list in `ANYCAP_MCP_FILE_ROOTS`, and file roots advertised by
+the MCP client. With no configured/client roots, the process working directory
+is the fallback. If a client advertises roots but root discovery fails, access
+fails closed. Canonical checks reject traversal, sibling-prefix confusion, and
+symlink escape.
+
+For one-call image-to-video, authorize the image directory in the host config,
+then call:
+
+```json
+{
+  "name": "anycap_video_generate",
+  "arguments": {
+    "model": "<model-id>",
+    "mode": "image-to-video",
+    "prompt": "Animate the subject with a slow camera push-in",
+    "images": ["/absolute/path/to/media/reference.jpg"]
+  }
+}
+```
+
+The MCP server reads the exact selected model schema, finds local references
+recursively, uploads authorized files, and sends only AnyCap upload references
+to the generation API. It does not encode the image into a protocol frame or
+expose local paths, storage keys, or presigned upload URLs in the result.
+
+### Tool inventory (23)
+
+| Group | Tools | What they do |
+|---|---|---|
+| Local auth (4) | `anycap_auth_status`, `anycap_login`, `anycap_login_poll`, `anycap_logout` | Inspect shared auth, complete device login, and clear persistent local credentials |
+| Status/discovery (3) | `anycap_status`, `anycap_list_models`, `anycap_model_schema` | Check account/server state and discover current model contracts |
+| Image (4) | `anycap_image_generate`, `anycap_image_edit`, `anycap_image_upscale`, `anycap_image_read` | Generate, edit, upscale, and understand images |
+| Video (2) | `anycap_video_generate`, `anycap_video_read` | Generate and understand videos |
+| Music/audio (2) | `anycap_music_generate`, `anycap_audio_read` | Generate music and analyze/transcribe audio |
+| Web (2) | `anycap_web_search`, `anycap_web_crawl` | General/grounding search and page-to-Markdown crawl |
+| Drive read-only (3) | `anycap_drive_list`, `anycap_drive_get`, `anycap_drive_resolve_path` | List and resolve Drive nodes without mutation |
+| Page read-only (3) | `anycap_page_list`, `anycap_page_get`, `anycap_page_versions` | Inspect Page sites and versions without mutation |
 
 ## Utility Commands
 
@@ -360,6 +474,7 @@ anycap agent runners serve --name local-mac --platform feishu --executor cursor 
 - `agent daemon start` is still available as the lower-level implementation path.
 - `agent runners serve` is still useful for debugging and operator workflows.
 - `agent runners serve` defaults to safe Codex execution and also accepts `--codex-exec-mode danger-full-access` when the human explicitly wants broader MCP/plugin access during debugging.
+- `agent runners serve` accepts `--session-watch-interval` to tune how often the runner checks whether an active local session was interrupted; the default is `500ms`.
 - `agent runners serve` also accepts `--claude-permission-mode`, `--claude-allowed-tools`, and `--claude-bin` when debugging Claude Code execution.
 - `agent runners serve` also accepts `--cursor-bin`, `--cursor-model`, and `--cursor-force` when debugging Cursor Agent execution.
 - `anycap agent im-bindings ...`, `/bind`, and the server-owned shared Feishu bot are all legacy/debug compatibility paths.
