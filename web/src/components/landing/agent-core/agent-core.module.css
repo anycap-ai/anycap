@@ -2,7 +2,6 @@
   min-height: 100svh;
   padding: 8rem 6rem;
   position: relative;
-  overflow-x: clip;
 }
 
 .layout {
@@ -18,18 +17,20 @@
   grid-area: copy;
   align-self: center;
   min-width: 0;
+  container-type: inline-size;
 }
 
 .heading {
   color: #1c1f17;
   font-family: var(--font-geist-pixel-square), monospace;
-  font-size: clamp(31px, 2.55vw, 48px);
+  font-size: clamp(19px, 8cqi, 42px);
   letter-spacing: -0.025em;
   line-height: 1.08;
 }
 
 .heading span {
   display: block;
+  white-space: nowrap;
 }
 
 .heading span:first-child {
@@ -241,6 +242,10 @@
   cursor: default;
 }
 
+.awaitingVisual {
+  visibility: visible;
+}
+
 .layout > noscript {
   grid-area: telemetry;
   align-self: center;
@@ -271,6 +276,12 @@
   color: #6b7d3a;
   font-family: var(--font-logo), monospace;
   font-weight: 700;
+}
+
+@media (min-width: 1280px) and (max-width: 1342px) {
+  .section {
+    padding-inline: 4rem;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1279px) {
@@ -321,10 +332,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 48px;
     min-height: 0;
-  }
-
-  .heading {
-    font-size: clamp(29px, 9vw, 42px);
   }
 
   .audience {

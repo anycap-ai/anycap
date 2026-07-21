@@ -74,7 +74,7 @@ export function HumanHomePage() {
               style={{ ...pixel, fontSize: "clamp(36px, 5.5vw, 76px)" }}
             >
               <span className="sr-only">
-                Your agent can do more. It just needs AnyCap.
+                Your Agent can do anything. It just needs AnyCap.
               </span>
               <span aria-hidden>
               <ScrambleText text="Your" speed={30} ticks={3} />{" "}
