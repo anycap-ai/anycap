@@ -288,9 +288,11 @@
   }
 
   .scene {
-    width: min(calc(100% + 150px), calc((100svh - 4rem) * 0.94));
+    width: min(calc(100% + 36px), calc((100svh - 4rem) * 0.94));
+    align-self: center;
     justify-self: end;
-    left: clamp(20px, 2vw, 32px);
+    right: clamp(56px, 4vw, 72px);
+    left: auto;
   }
 }
 
