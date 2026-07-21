@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type React from "react";
 
 import { AgentCoreScene } from "./AgentCoreScene";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import type { AgentCorePhase } from "./agent-core-state";
 import { CapabilityTelemetry } from "./CapabilityTelemetry";
 import styles from "./agent-core.module.css";
+import { useAgentCoreTimeline } from "./useAgentCoreTimeline";
 
 const stats = getAgentCoreStats();
 
@@ -22,13 +22,30 @@ export function AgentCoreInstallSection() {
   const statusRef = useRef<HTMLSpanElement | null>(null);
   const valueRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const [phase] = useState<AgentCorePhase>("awaiting");
+  const [phase, onPhaseChange] = useState<AgentCorePhase>("awaiting");
+
+  const {
+    onClick,
+    onKeyDown,
+    onPointerCancel,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+  } = useAgentCoreTimeline({
+    sectionRef,
+    sceneRef,
+    headRef,
+    coreRef,
+    activationCanvasRef,
+    socketRef,
+    dockRef,
+    statusRef,
+    valueRefs,
+    fillRefs,
+    onPhaseChange,
+  });
 
   const connected = phase === "connected";
-  const onPointerDown: React.PointerEventHandler<HTMLButtonElement> = () => undefined;
-  const onPointerMove: React.PointerEventHandler<HTMLButtonElement> = () => undefined;
-  const onPointerUp: React.PointerEventHandler<HTMLButtonElement> = () => undefined;
-  const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = () => undefined;
 
   return (
     <section
@@ -39,7 +56,7 @@ export function AgentCoreInstallSection() {
       aria-labelledby="agent-core-heading"
     >
       <div className={styles.layout}>
-        <div className={styles.copy}>
+        <div className={styles.copy} data-agent-core-entrance>
           <h2 id="agent-core-heading" className={styles.heading}>
             <span>One capability layer.</span>
             <span>Every way to finish.</span>
@@ -70,8 +87,14 @@ export function AgentCoreInstallSection() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          onClick={onClick}
           onKeyDown={onKeyDown}
         />
+
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {connected ? "AnyCap Core connected. Twelve capabilities are ready." : ""}
+        </span>
 
         <noscript>
           <style>{`[data-agent-core-section] .${styles.awaitingVisual} { display: none !important; }`}</style>

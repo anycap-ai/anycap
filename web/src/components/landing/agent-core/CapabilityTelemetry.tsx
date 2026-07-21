@@ -24,6 +24,7 @@ export function CapabilityTelemetry({
     <section
       className={`${styles.telemetry} ${styles.awaitingVisual}`}
       aria-label="Capability telemetry"
+      data-agent-core-entrance
     >
       <p className={styles.telemetryStatus}>
         Core status /{" "}

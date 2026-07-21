@@ -17,6 +17,8 @@ export type AgentCoreSceneProps = {
   onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
   onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
   onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
+  onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
   onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
 };
 
@@ -83,6 +85,8 @@ export function AgentCoreScene({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onPointerCancel,
+  onClick,
   onKeyDown,
 }: AgentCoreSceneProps) {
   return (
@@ -93,6 +97,7 @@ export function AgentCoreScene({
       }`}
       style={sceneStyle}
       data-connected={connected}
+      data-agent-core-entrance
     >
       <div className={styles.table} aria-hidden="true" />
 
@@ -136,6 +141,8 @@ export function AgentCoreScene({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onClick={onClick}
         onKeyDown={onKeyDown}
       />
     </div>
