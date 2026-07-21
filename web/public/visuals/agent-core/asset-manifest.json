@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "artboard": { "width": 1672, "height": 941 },
+  "assets": {
+    "body": { "file": "robot-body.webp", "width": 1024, "height": 1024, "maxBytes": 900000 },
+    "head": { "file": "robot-head.webp", "width": 768, "height": 768, "maxBytes": 420000 },
+    "core": { "file": "anycap-core.webp", "width": 512, "height": 512, "maxBytes": 240000 },
+    "dock": { "file": "core-dock.webp", "width": 640, "height": 320, "maxBytes": 180000 }
+  },
+  "anchors": {
+    "headPivot": { "x": 0.706, "y": 0.468 },
+    "socketCenter": { "x": 0.697, "y": 0.625 },
+    "dockCenter": { "x": 0.637, "y": 0.898 }
+  }
+}
