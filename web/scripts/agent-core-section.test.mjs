@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -10,12 +10,20 @@ const corePath = fileURLToPath(new URL("../src/components/landing/agent-core/Any
 const telemetryPath = fileURLToPath(new URL("../src/components/landing/agent-core/CapabilityTelemetry.tsx", import.meta.url));
 const stylesPath = fileURLToPath(new URL("../src/components/landing/agent-core/agent-core.module.css", import.meta.url));
 const homepagePath = fileURLToPath(new URL("../src/components/landing/HumanHomePage.tsx", import.meta.url));
-const canvasPath = fileURLToPath(
+const agentCoreCanvasPath = fileURLToPath(
   new URL("../src/components/landing/agent-core/AgentCoreCanvas.tsx", import.meta.url),
 );
-const robot3DPath = fileURLToPath(
+const agentCoreRobot3DPath = fileURLToPath(
   new URL("../src/components/landing/agent-core/AgentCoreRobot3D.tsx", import.meta.url),
 );
+const agentCore3DStatePath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/agent-core-3d-state.ts", import.meta.url),
+);
+const hookPath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url),
+);
+const packageJsonPath = fileURLToPath(new URL("../package.json", import.meta.url));
+const lockfilePath = fileURLToPath(new URL("../pnpm-lock.yaml", import.meta.url));
 
 function source(path) {
   return readFileSync(path, "utf8");
@@ -141,7 +149,7 @@ test("locks telemetry, accessibility, manifest, and static-only source contracts
     scene,
     /import\s+assetManifest\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/public\/visuals\/agent-core\/asset-manifest\.json"\s*;/,
   );
-  assert.match(scene, /const\s*\{\s*artboard,\s*assets\s*\}\s*=\s*assetManifest\s*;/);
+  assert.match(scene, /const\s*\{\s*artboard,\s*assets,\s*anchors\s*\}\s*=\s*assetManifest\s*;/);
   assert.doesNotMatch(taskFourComponents, /\bgsap\b|ScrollTrigger|useGSAP/);
   assert.doesNotMatch(
     taskFourComponents,
@@ -153,92 +161,63 @@ test("locks telemetry, accessibility, manifest, and static-only source contracts
   );
 });
 
-test("creates one mutable 3D bridge and shares it with the scene and timeline", () => {
+test("renders the approved master layers as the primary robot surface", () => {
   const section = source(sectionPath);
+  const scene = source(scenePath);
+  const coreControl = source(corePath);
+  const hook = source(hookPath);
 
-  assert.match(section, /createAgentCore3DBridge/);
-  assert.equal((section.match(/createAgentCore3DBridge\(\)/g) ?? []).length, 1);
-  assert.match(section, /useAgentCoreTimeline\(\{[\s\S]*?bridge,/);
-  assert.match(section, /<AgentCoreScene[\s\S]*?bridge=\{bridge\}/);
-  assert.match(section, /aria-live="polite"/);
+  assert.match(scene, /robot-body\.webp/);
+  assert.match(scene, /<AgentHeadTracker\s+headRef=\{headRef\}/);
+  assert.match(scene, /core-dock\.webp/);
+  assert.match(coreControl, /anycap-core\.webp/);
+  assert.doesNotMatch(scene, /AgentCoreCanvas|fallbackHidden|canvasReady/);
+  assert.doesNotMatch(`${section}\n${hook}`, /createAgentCore3DBridge|bridge=/);
+
+  const directLayerOrder = [
+    "<div className={styles.table}",
+    "<div className={styles.body}",
+    "<AgentHeadTracker headRef={headRef}",
+    "<div ref={socketRef} className={styles.socket}",
+    "<canvas",
+    "<div ref={dockRef} className={styles.dock}",
+    "<AnyCapCoreControl",
+  ].map((marker) => scene.indexOf(marker));
+  assert.ok(directLayerOrder.every((index) => index >= 0), "every approved direct layer exists");
+  assert.deepEqual(directLayerOrder, [...directLayerOrder].sort((left, right) => left - right));
 });
 
-test("mounts one stable approved WebP fallback beside the transparent 3D Canvas", () => {
+test("exposes every approved manifest placement as a scene CSS variable", () => {
   const scene = source(scenePath);
-  const canvas = `${source(canvasPath)}\n${source(robot3DPath)}`;
-  const core = source(corePath);
-  const styles = source(stylesPath);
 
-  assert.match(scene, /<AgentCoreCanvas[\s\S]*bridge=\{bridge\}[\s\S]*onReady=\{showCanvas\}/);
-  assert.equal((scene.match(/data-agent-core-fallback(?:\s|>)/g) ?? []).length, 1);
-  assert.doesNotMatch(
-    source(canvasPath),
-    /fallback:\s*React(?:\.React)?Node|AgentCoreCanvasErrorBoundary\s+fallback=/,
-  );
-  const robot = source(robot3DPath);
-  const canvasOpening = robot.slice(robot.indexOf("<Canvas"), robot.indexOf("onCreated="));
-  assert.doesNotMatch(canvasOpening, /fallback=/);
-  for (const file of ["robot-body.webp", "robot-head.webp", "anycap-core.webp", "core-dock.webp"]) {
-    assert.ok(scene.includes(file) || source(headPath).includes(file), file);
-  }
-  assert.match(canvas, /background:\s*["']transparent["']/);
-  assert.doesNotMatch(core, /from "next\/image"|<Image/);
-  assert.match(styles, /\.core\s*\{[\s\S]*?aspect-ratio:\s*1\s*;/);
-  assert.match(styles, /\.core\s*\{[\s\S]*?background:\s*transparent\s*;/);
-  assert.match(core, /aria-label="Install the AnyCap Core"/);
-});
-
-test("derives every interactive overlay from the procedural camera poses", () => {
-  const scene = source(scenePath);
-  const hook = source(
-    fileURLToPath(
-      new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url),
-    ),
-  );
-
-  assert.match(scene, /projectAgentCoreInteractiveTargets/);
-  assert.match(scene, /tableCore\.normalized/);
-  assert.match(scene, /chestSocket\.normalized/);
-  assert.doesNotMatch(scene, /anchors\.socketCenter|assets\.core\.canonicalPlacement/);
-  assert.match(hook, /mapAgentCorePointerDeltaToWorld/);
-  assert.doesNotMatch(hook, /CORE_DRAG_WORLD_SPAN|coreAnchor|dockAnchor/);
-});
-
-test("reframes only the fallback robot and dock around their manifest physical anchors", () => {
-  const scene = source(scenePath);
-  const styles = source(stylesPath);
-
-  assert.match(scene, /deriveAgentCoreFallbackShifts/);
-  assert.match(scene, /localAnchors\.socketCenter/);
-  assert.match(scene, /localAnchors\.coreSeat/);
-  assert.match(scene, /width:\s*assets\.core\.width/);
-  assert.match(scene, /height:\s*assets\.core\.height/);
-  assert.match(scene, /dockContact:\s*assets\.core\.localAnchors\.dockContact/);
-  assert.match(scene, /socketAttachment:\s*assets\.core\.localAnchors\.socketAttachment/);
   for (const variable of [
-    "--agent-fallback-robot-shift-x",
-    "--agent-fallback-robot-shift-y",
-    "--agent-fallback-dock-shift-x",
-    "--agent-fallback-dock-shift-y",
+    "--agent-body-left",
+    "--agent-body-top",
+    "--agent-body-width",
+    "--agent-head-left",
+    "--agent-head-top",
+    "--agent-head-width",
+    "--agent-core-left",
+    "--agent-core-top",
+    "--agent-core-width",
+    "--agent-dock-left",
+    "--agent-dock-top",
+    "--agent-dock-width",
+    "--agent-socket-left",
+    "--agent-socket-top",
+    "--agent-socket-size",
   ]) {
-    assert.ok(scene.includes(`\"${variable}\"`), variable);
+    assert.ok(scene.includes(`"${variable}"`), variable);
   }
-  assert.match(
-    scene,
-    /className=\{styles\.fallbackRobot\}[\s\S]*className=\{styles\.body\}[\s\S]*<AgentHeadTracker[\s\S]*<\/div>/,
-  );
-  assert.match(
-    scene,
-    /className=\{styles\.fallbackDock\}[\s\S]*className=\{styles\.dock\}/,
-  );
-  assert.match(
-    styles,
-    /\.fallbackRobot\s*\{[^}]*transform:\s*translate\(var\(--agent-fallback-robot-shift-x\),\s*var\(--agent-fallback-robot-shift-y\)\)/,
-  );
-  assert.match(
-    styles,
-    /\.fallbackDock\s*\{[^}]*transform:\s*translate\(var\(--agent-fallback-dock-shift-x\),\s*var\(--agent-fallback-dock-shift-y\)\)/,
-  );
-  assert.match(scene, /"--agent-table-core-left":\s*`\$\{tableCore\.normalized\.left/);
-  assert.match(scene, /"--agent-socket-left":\s*`\$\{chestSocket\.normalized\.left/);
+});
+
+test("does not ship a lower-fidelity full-robot WebGL replacement", () => {
+  const packageJson = source(packageJsonPath);
+  const lockfile = source(lockfilePath);
+
+  assert.equal(existsSync(agentCoreCanvasPath), false);
+  assert.equal(existsSync(agentCoreRobot3DPath), false);
+  assert.equal(existsSync(agentCore3DStatePath), false);
+  assert.doesNotMatch(packageJson, /@react-three|"three"|@types\/three/);
+  assert.doesNotMatch(lockfile, /@react-three|@types\/three|^\s{2}three@/m);
 });

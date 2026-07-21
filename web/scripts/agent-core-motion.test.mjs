@@ -101,56 +101,21 @@ test("consumes the pure pointer reducer through one finalization path", () => {
   assert.match(section, /onLostPointerCapture/);
 });
 
-test("drives the mutable 3D bridge from normalized section pointer and drag input", () => {
-  const source = readFileSync(hookPath, "utf8");
-
-  assert.match(source, /bridge:\s*AgentCore3DBridge/);
-  assert.match(source, /bridge\.pointerTarget\.x\s*=\s*normalizedX/);
-  assert.match(source, /bridge\.pointerTarget\.y\s*=\s*normalizedY/);
-  assert.match(source, /bridge\.dragOffset\.x\s*=/);
-  assert.match(source, /bridge\.dragOffset\.y\s*=/);
-  assert.match(source, /bridge\.invalidate\?\.\(\)/);
-});
-
-test("tweens 3D installation progress inside the existing six-label narrative", () => {
+test("keeps DOM Core motion inside the existing six-label narrative", () => {
   const source = readFileSync(hookPath, "utf8");
   const timelineSource = source.slice(
     source.indexOf('addLabel("scene-in"'),
     source.indexOf('.play(0)'),
   );
 
-  assert.match(timelineSource, /installProgress:\s*1/);
-  assert.match(timelineSource, /onUpdate:\s*invalidateBridge/);
-  assert.match(timelineSource, /dragOffset/);
+  assert.match(source, /const core = coreRef\.current/);
+  assert.match(source, /const dock = dockRef\.current/);
+  assert.match(source, /const socket = socketRef\.current/);
+  assert.match(timelineSource, /\.to\(\s*core,/);
+  assert.match(source, /dock\.getBoundingClientRect\(\)/);
+  assert.match(source, /socket\.getBoundingClientRect\(\)/);
+  assert.doesNotMatch(source, /AgentCore3DBridge|bridge\./);
   for (const label of ["scene-in", "pickup", "dock", "activate", "capabilities", "hold"]) {
     assert.ok(timelineSource.includes(`addLabel("${label}"`), label);
   }
-});
-
-test("starts a separate bounded activation tween at the existing activate label", () => {
-  const source = readFileSync(hookPath, "utf8");
-  const activationNarrative = source.slice(
-    source.indexOf('addLabel("activate"'),
-    source.indexOf('addLabel("capabilities"'),
-  );
-
-  assert.match(activationNarrative, /\.to\(\s*bridge,\s*\{[\s\S]*activationProgress:\s*1/);
-  assert.match(activationNarrative, /onUpdate:\s*invalidateBridge/);
-  assert.doesNotMatch(activationNarrative, /repeat:\s*-1|yoyo:\s*true/);
-});
-
-test("sets final 3D values for connected and reduced-motion states and resets on cleanup", () => {
-  const source = readFileSync(hookPath, "utf8");
-  const reducedBranch = source.slice(
-    source.indexOf("if (reducedMotion.matches)"),
-    source.indexOf("ScrollTrigger.create"),
-  );
-  const cleanup = source.slice(source.lastIndexOf("return () =>"));
-
-  assert.match(source, /bridge\.connected\s*=\s*true/);
-  assert.match(source, /bridge\.installProgress\s*=\s*1/);
-  assert.match(source, /bridge\.activationProgress\s*=\s*1/);
-  assert.match(reducedBranch, /setBridgeConnected\(\)/);
-  assert.match(source, /bridge\.activationProgress\s*=\s*0/);
-  assert.match(cleanup, /resetBridge\(\)/);
 });

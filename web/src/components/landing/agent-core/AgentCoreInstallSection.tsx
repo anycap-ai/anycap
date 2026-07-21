@@ -2,10 +2,6 @@
 
 import { useRef, useState } from "react";
 
-import {
-  createAgentCore3DBridge,
-  type AgentCore3DBridge,
-} from "./agent-core-3d-state";
 import { AgentCoreScene } from "./AgentCoreScene";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import type { AgentCorePhase } from "./agent-core-state";
@@ -16,9 +12,6 @@ import { useAgentCoreTimeline } from "./useAgentCoreTimeline";
 const stats = getAgentCoreStats();
 
 export function AgentCoreInstallSection() {
-  const bridgeRef = useRef<AgentCore3DBridge | null>(null);
-  if (bridgeRef.current === null) bridgeRef.current = createAgentCore3DBridge();
-  const bridge = bridgeRef.current;
   const sectionRef = useRef<HTMLElement | null>(null);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const headRef = useRef<HTMLDivElement | null>(null);
@@ -40,7 +33,6 @@ export function AgentCoreInstallSection() {
     onPointerMove,
     onPointerUp,
   } = useAgentCoreTimeline({
-    bridge,
     sectionRef,
     sceneRef,
     headRef,
@@ -86,7 +78,6 @@ export function AgentCoreInstallSection() {
         />
 
         <AgentCoreScene
-          bridge={bridge}
           connected={connected}
           sceneRef={sceneRef}
           headRef={headRef}

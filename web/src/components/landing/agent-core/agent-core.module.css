@@ -163,42 +163,6 @@
   pointer-events: none;
 }
 
-.canvasLayer,
-.fallbackVisual {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.canvasLayer {
-  z-index: 1;
-}
-
-.fallbackVisual {
-  z-index: 2;
-  visibility: visible;
-}
-
-.fallbackHidden {
-  visibility: hidden;
-}
-
-.fallbackRobot {
-  position: absolute;
-  inset: 0;
-  transform: translate(var(--agent-fallback-robot-shift-x), var(--agent-fallback-robot-shift-y));
-  pointer-events: none;
-}
-
-.fallbackDock {
-  position: absolute;
-  inset: 0;
-  transform: translate(var(--agent-fallback-dock-shift-x), var(--agent-fallback-dock-shift-y));
-  pointer-events: none;
-}
-
 .body {
   position: absolute;
   z-index: 1;
@@ -249,34 +213,12 @@
   pointer-events: none;
 }
 
-.dockTarget {
-  position: absolute;
-  z-index: 3;
-  top: var(--agent-table-core-top);
-  left: var(--agent-table-core-left);
-  width: var(--agent-table-core-size);
-  aspect-ratio: 1;
-  background: transparent;
-  pointer-events: none;
-}
-
-.fallbackCore {
-  position: absolute;
-  z-index: 5;
-  top: var(--agent-table-core-top);
-  left: var(--agent-table-core-left);
-  width: var(--agent-table-core-size);
-  pointer-events: none;
-  will-change: transform;
-}
-
 .core {
   position: absolute;
   z-index: 5;
-  top: var(--agent-table-core-top);
-  left: var(--agent-table-core-left);
-  width: var(--agent-table-core-size);
-  aspect-ratio: 1;
+  top: var(--agent-core-top);
+  left: var(--agent-core-left);
+  width: var(--agent-core-width);
   margin: 0;
   padding: 0;
   border: 0;

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type React from "react";
 
 import styles from "./agent-core.module.css";
@@ -36,6 +37,16 @@ export function AnyCapCoreControl({
       onPointerCancel={onPointerCancel}
       onClick={onClick}
       onKeyDown={onKeyDown}
-    />
+    >
+      <Image
+        src="/visuals/agent-core/anycap-core.webp"
+        alt=""
+        width={512}
+        height={512}
+        sizes="(min-width: 1280px) 10vw, (min-width: 768px) 8vw, 16vw"
+        draggable={false}
+        className={styles.layerImage}
+      />
+    </button>
   );
 }
