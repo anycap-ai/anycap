@@ -333,6 +333,8 @@ Dashboard pages share a unified light olive/sage control-surface shell with cons
 
 Localized landing page with a separate `/for-human` variant. Supports i18n routing.
 
+The homepage includes an interactive procedural 3D upper-body agent and AnyCap Core installation section with source-backed capability telemetry, pointer and keyboard interaction, responsive tap behavior, and a reduced-motion fallback.
+
 Home and `/agent` keep HTML as the default human-facing response. Markdown negotiation for agent-readable content is still available through `/llms.txt`, explicit markdown `Accept` headers, or `view=agent`.
 
 Public pages group external community links in the header: GitHub for the repository and Discord for feedback. The dashboard shell includes the same GitHub and Discord links in the top-right page chrome.
