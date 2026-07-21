@@ -57,6 +57,13 @@ export const pricingActionRows = [
   { action: "Web Crawl", unit: "per request", credits: 1 },
 ] as const;
 
+export type AgentCoreCapabilityGroupId =
+  | "create"
+  | "understand"
+  | "search"
+  | "manage"
+  | "deliver";
+
 type AgentGapCopy = Record<AgentCapabilityGapAgent, string>;
 
 type GapCatalogEntry = {
@@ -66,6 +73,7 @@ type GapCatalogEntry = {
   nextStepLabel: string;
   nextStepHref: string;
   includeInPricingSummary?: boolean;
+  agentCoreGroup?: Exclude<AgentCoreCapabilityGroupId, "create">;
 };
 
 const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
@@ -116,6 +124,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Read screenshots, diagrams, and visual references",
     nextStepLabel: "Image Understanding page",
     nextStepHref: "/capabilities/image-understanding",
+    agentCoreGroup: "understand",
   },
   {
     capability: "Video analysis",
@@ -128,6 +137,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Inspect recordings from the same CLI",
     nextStepLabel: "Video Analysis page",
     nextStepHref: "/capabilities/video-analysis",
+    agentCoreGroup: "understand",
   },
   {
     capability: "Audio understanding",
@@ -140,6 +150,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Transcribe and analyze audio through one runtime",
     nextStepLabel: "Audio Understanding page",
     nextStepHref: "/capabilities/audio-understanding",
+    agentCoreGroup: "understand",
   },
   {
     capability: "Web search",
@@ -152,6 +163,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Search the web from the same capability layer",
     nextStepLabel: "Web Search page",
     nextStepHref: "/capabilities/web-search",
+    agentCoreGroup: "search",
   },
   {
     capability: "Grounded web search",
@@ -164,6 +176,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Run grounded search when the answer needs citations",
     nextStepLabel: "Grounded Web Search page",
     nextStepHref: "/capabilities/grounded-web-search",
+    agentCoreGroup: "search",
   },
   {
     capability: "Web crawl",
@@ -176,6 +189,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     anycapValue: "Crawl pages and extract content from one CLI",
     nextStepLabel: "Web Crawl page",
     nextStepHref: "/capabilities/web-crawl",
+    agentCoreGroup: "search",
   },
   {
     capability: "Drive storage",
@@ -189,6 +203,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     nextStepLabel: "Pricing page",
     nextStepHref: "/pricing",
     includeInPricingSummary: false,
+    agentCoreGroup: "manage",
   },
   {
     capability: "Page hosting",
@@ -202,6 +217,7 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
     nextStepLabel: "Pricing page",
     nextStepHref: "/pricing",
     includeInPricingSummary: false,
+    agentCoreGroup: "deliver",
   },
   {
     capability: "One auth flow",
@@ -221,6 +237,19 @@ const pricingCapabilityGapCatalog: GapCatalogEntry[] = [
 export const pricingCapabilitySummary = pricingCapabilityGapCatalog
   .filter((entry) => entry.includeInPricingSummary !== false)
   .map((entry) => entry.capability);
+
+export const agentCoreCapabilityGroups = [
+  {
+    id: "create",
+    capabilities: pricingGenerationGroups.map((group) => group.title),
+  },
+  ...(["understand", "search", "manage", "deliver"] as const).map((id) => ({
+    id,
+    capabilities: pricingCapabilityGapCatalog
+      .filter((entry) => entry.agentCoreGroup === id)
+      .map((entry) => entry.capability),
+  })),
+] as const;
 
 export function buildAgentCapabilityGapRows(
   agent: AgentCapabilityGapAgent,
