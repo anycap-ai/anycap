@@ -1,11 +1,95 @@
 {
-  "version": 1,
+  "version": 2,
   "artboard": { "width": 1672, "height": 941 },
   "assets": {
-    "body": { "file": "robot-body.webp", "width": 1024, "height": 1024, "maxBytes": 900000 },
-    "head": { "file": "robot-head.webp", "width": 768, "height": 768, "maxBytes": 420000 },
-    "core": { "file": "anycap-core.webp", "width": 512, "height": 512, "maxBytes": 240000 },
-    "dock": { "file": "core-dock.webp", "width": 640, "height": 320, "maxBytes": 180000 }
+    "body": {
+      "file": "robot-body.webp",
+      "width": 1024,
+      "height": 1024,
+      "maxBytes": 900000,
+      "alpha": { "required": true, "mode": "straight" },
+      "sourceCrop": { "x": 134, "y": 151, "width": 756, "height": 722 },
+      "canonicalPlacement": {
+        "x": 790.972299,
+        "y": 202.686981,
+        "scale": 0.806094,
+        "anchor": "socketCenter",
+        "target": { "x": 1165, "y": 588 }
+      },
+      "localAnchors": {
+        "headPivot": { "x": 508, "y": 327 },
+        "socketCenter": { "x": 464, "y": 478 }
+      },
+      "identity": "approved-agent-upper-body",
+      "role": "base",
+      "intendedUse": "Static torso, segmented neck, arms, and empty chest socket."
+    },
+    "head": {
+      "file": "robot-head.webp",
+      "width": 768,
+      "height": 768,
+      "maxBytes": 420000,
+      "alpha": { "required": true, "mode": "straight" },
+      "sourceCrop": { "x": 143, "y": 28, "width": 481, "height": 712 },
+      "canonicalPlacement": {
+        "x": 984.796348,
+        "y": 64.803371,
+        "scale": 0.507022,
+        "anchor": "headPivot",
+        "target": { "x": 1180, "y": 440 }
+      },
+      "localAnchors": {
+        "headPivot": { "x": 385, "y": 740 }
+      },
+      "identity": "approved-agent-head",
+      "role": "articulated",
+      "intendedUse": "Rotates around the stable neck-facing head pivot."
+    },
+    "core": {
+      "file": "anycap-core.webp",
+      "width": 512,
+      "height": 512,
+      "maxBytes": 240000,
+      "alpha": { "required": true, "mode": "straight" },
+      "sourceCrop": { "x": 26, "y": 16, "width": 460, "height": 480 },
+      "canonicalPlacement": {
+        "x": 1010.266667,
+        "y": 761.266667,
+        "scale": 0.264583,
+        "anchor": "visualCenter",
+        "target": { "x": 1078, "y": 829 }
+      },
+      "localAnchors": {
+        "visualCenter": { "x": 256, "y": 256 },
+        "socketAttachment": { "x": 220, "y": 256 },
+        "dockContact": { "x": 220, "y": 495 }
+      },
+      "identity": "approved-anycap-core",
+      "role": "interactive",
+      "intendedUse": "Moves from the physical dock to the chest socket during installation."
+    },
+    "dock": {
+      "file": "core-dock.webp",
+      "width": 640,
+      "height": 320,
+      "maxBytes": 180000,
+      "alpha": { "required": true, "mode": "straight" },
+      "sourceCrop": { "x": 16, "y": 111, "width": 608, "height": 98 },
+      "canonicalPlacement": {
+        "x": 979.736842,
+        "y": 848.368421,
+        "scale": 0.297697,
+        "anchor": "visualCenter",
+        "target": { "x": 1075, "y": 896 }
+      },
+      "localAnchors": {
+        "visualCenter": { "x": 320, "y": 160 },
+        "coreSeat": { "x": 320, "y": 132 }
+      },
+      "identity": "approved-core-dock",
+      "role": "support",
+      "intendedUse": "Physically supports the Core in the awaiting state."
+    }
   },
   "anchors": {
     "headPivot": { "x": 0.706, "y": 0.468 },
