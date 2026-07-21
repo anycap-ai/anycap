@@ -1,8 +1,14 @@
+"use client";
+
 import Image from "next/image";
+import { useCallback, useState, type CSSProperties } from "react";
 import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
-import type { AgentCore3DBridge } from "./agent-core-3d-state";
+import {
+  projectAgentCoreInteractiveTargets,
+  type AgentCore3DBridge,
+} from "./agent-core-3d-state";
 import { AgentCoreCanvas } from "./AgentCoreCanvas";
 import { AgentHeadTracker } from "./AgentHeadTracker";
 import { AnyCapCoreControl } from "./AnyCapCoreControl";
@@ -36,10 +42,9 @@ type ManifestAsset = {
   };
 };
 
-const { artboard, assets, anchors } = assetManifest;
+const { artboard, assets } = assetManifest;
 const sceneLeft = assets.body.canonicalPlacement.x;
 const sceneWidth = artboard.width - sceneLeft;
-const socketSize = 16;
 
 function toPercent(value: number, total: number) {
   return `${(value / total) * 100}%`;
@@ -55,10 +60,8 @@ function getPlacement(asset: ManifestAsset) {
 
 const bodyPlacement = getPlacement(assets.body);
 const headPlacement = getPlacement(assets.head);
-const corePlacement = getPlacement(assets.core);
 const dockPlacement = getPlacement(assets.dock);
-const socketCenterX = ((anchors.socketCenter.x * artboard.width - sceneLeft) / sceneWidth) * 100;
-const socketCenterY = anchors.socketCenter.y * 100;
+const { tableCore, chestSocket } = projectAgentCoreInteractiveTargets(100);
 
 const sceneStyle = {
   "--agent-body-left": bodyPlacement.left,
@@ -67,16 +70,16 @@ const sceneStyle = {
   "--agent-head-left": headPlacement.left,
   "--agent-head-top": headPlacement.top,
   "--agent-head-width": headPlacement.width,
-  "--agent-core-left": corePlacement.left,
-  "--agent-core-top": corePlacement.top,
-  "--agent-core-width": corePlacement.width,
+  "--agent-table-core-left": `${tableCore.normalized.left * 100}%`,
+  "--agent-table-core-top": `${tableCore.normalized.top * 100}%`,
+  "--agent-table-core-size": `${tableCore.normalized.width * 100}%`,
   "--agent-dock-left": dockPlacement.left,
   "--agent-dock-top": dockPlacement.top,
   "--agent-dock-width": dockPlacement.width,
-  "--agent-socket-left": `${socketCenterX - socketSize / 2}%`,
-  "--agent-socket-top": `${socketCenterY - socketSize / 2}%`,
-  "--agent-socket-size": `${socketSize}%`,
-} as React.CSSProperties;
+  "--agent-socket-left": `${chestSocket.normalized.left * 100}%`,
+  "--agent-socket-top": `${chestSocket.normalized.top * 100}%`,
+  "--agent-socket-size": `${chestSocket.normalized.width * 100}%`,
+} as CSSProperties;
 
 export function AgentCoreScene({
   bridge,
@@ -95,47 +98,9 @@ export function AgentCoreScene({
   onClick,
   onKeyDown,
 }: AgentCoreSceneProps) {
-  const fallback = (
-    <div className={styles.fallbackVisual} data-agent-core-fallback aria-hidden="true">
-      <div className={styles.body}>
-        <Image
-          src="/visuals/agent-core/robot-body.webp"
-          alt=""
-          width={1024}
-          height={1024}
-          sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
-          draggable={false}
-          className={styles.layerImage}
-        />
-      </div>
-
-      <AgentHeadTracker headRef={headRef} />
-
-      <div className={styles.dock}>
-        <Image
-          src="/visuals/agent-core/core-dock.webp"
-          alt=""
-          width={640}
-          height={320}
-          sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
-          draggable={false}
-          className={styles.layerImage}
-        />
-      </div>
-
-      <div className={styles.fallbackCore} data-agent-core-fallback-core>
-        <Image
-          src="/visuals/agent-core/anycap-core.webp"
-          alt=""
-          width={512}
-          height={512}
-          sizes="(min-width: 1280px) 10vw, (min-width: 768px) 8vw, 16vw"
-          draggable={false}
-          className={styles.layerImage}
-        />
-      </div>
-    </div>
-  );
+  const [canvasReady, setCanvasReady] = useState(false);
+  const showCanvas = useCallback(() => setCanvasReady(true), []);
+  const showFallback = useCallback(() => setCanvasReady(false), []);
 
   return (
     <div
@@ -150,7 +115,55 @@ export function AgentCoreScene({
       <div className={styles.table} aria-hidden="true" />
 
       <div className={styles.canvasLayer} aria-hidden="true">
-        <AgentCoreCanvas bridge={bridge} fallback={fallback} />
+        <AgentCoreCanvas
+          bridge={bridge}
+          onReady={showCanvas}
+          onUnavailable={showFallback}
+        />
+      </div>
+
+      <div
+        className={`${styles.fallbackVisual}${canvasReady ? ` ${styles.fallbackHidden}` : ""}`}
+        data-agent-core-fallback
+        aria-hidden="true"
+      >
+        <div className={styles.body}>
+          <Image
+            src="/visuals/agent-core/robot-body.webp"
+            alt=""
+            width={1024}
+            height={1024}
+            sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
+            draggable={false}
+            className={styles.layerImage}
+          />
+        </div>
+
+        <AgentHeadTracker headRef={headRef} />
+
+        <div className={styles.dock}>
+          <Image
+            src="/visuals/agent-core/core-dock.webp"
+            alt=""
+            width={640}
+            height={320}
+            sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
+            draggable={false}
+            className={styles.layerImage}
+          />
+        </div>
+
+        <div className={styles.fallbackCore} data-agent-core-fallback-core>
+          <Image
+            src="/visuals/agent-core/anycap-core.webp"
+            alt=""
+            width={512}
+            height={512}
+            sizes="(min-width: 1280px) 10vw, (min-width: 768px) 8vw, 16vw"
+            draggable={false}
+            className={styles.layerImage}
+          />
+        </div>
       </div>
 
       <div ref={socketRef} className={styles.socket} aria-hidden="true" />

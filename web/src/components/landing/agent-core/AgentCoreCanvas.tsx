@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import React, { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 
 import type { AgentCore3DBridge } from "./agent-core-3d-state";
 
@@ -10,11 +10,12 @@ export const MOBILE_DPR_CAP = 1.25;
 
 type AgentCoreCanvasProps = {
   bridge: AgentCore3DBridge;
-  fallback: ReactNode;
+  onReady: () => void;
+  onUnavailable: () => void;
 };
 
 type AgentCoreCanvasErrorBoundaryProps = {
-  fallback: ReactNode;
+  onUnavailable: () => void;
   children: ReactNode;
 };
 
@@ -41,11 +42,11 @@ class AgentCoreCanvasErrorBoundary extends Component<
   }
 
   componentDidCatch(_error: Error, _info: ErrorInfo) {
-    // The approved WebP composition remains visible through the fallback.
+    this.props.onUnavailable();
   }
 
   render() {
-    if (this.state.failed) return this.props.fallback;
+    if (this.state.failed) return null;
     return this.props.children;
   }
 }
@@ -67,24 +68,17 @@ function useDprCap(): number {
   return dprCap;
 }
 
-export function AgentCoreCanvas({ bridge, fallback }: AgentCoreCanvasProps) {
-  const [ready, setReady] = useState(false);
+export function AgentCoreCanvas({ bridge, onReady, onUnavailable }: AgentCoreCanvasProps) {
   const dprCap = useDprCap();
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {!ready ? (
-        <div style={{ position: "absolute", inset: 0, zIndex: 1 }} aria-hidden="true">
-          {fallback}
-        </div>
-      ) : null}
-      <AgentCoreCanvasErrorBoundary fallback={fallback}>
+      <AgentCoreCanvasErrorBoundary onUnavailable={onUnavailable}>
         <LazyAgentCoreCanvas
           bridge={bridge}
-          fallback={fallback}
           dprCap={dprCap}
-          onReady={() => setReady(true)}
-          onUnavailable={() => setReady(false)}
+          onReady={onReady}
+          onUnavailable={onUnavailable}
         />
       </AgentCoreCanvasErrorBoundary>
     </div>

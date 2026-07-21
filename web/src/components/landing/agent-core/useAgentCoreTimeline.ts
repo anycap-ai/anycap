@@ -5,7 +5,10 @@ import { useRef } from "react";
 import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
-import type { AgentCore3DBridge } from "./agent-core-3d-state";
+import {
+  mapAgentCorePointerDeltaToWorld,
+  type AgentCore3DBridge,
+} from "./agent-core-3d-state";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import {
   beginAgentCorePointerSession,
@@ -26,7 +29,6 @@ const TELEMETRY_CELL_COUNT = 12;
 const PARTICLE_COUNT = 40;
 const BURST_DURATION_MS = 900;
 const DRAG_THRESHOLD_PX = 5;
-const CORE_DRAG_WORLD_SPAN = 4.8;
 
 type UseAgentCoreTimelineOptions = {
   bridge: AgentCore3DBridge;
@@ -111,7 +113,7 @@ function measureSocketTarget(
   return {
     x: currentX + centerX - (coreBounds.left + coreBounds.width / 2),
     y: currentY + centerY - (coreBounds.top + coreBounds.height / 2),
-    scale: currentScale * scaleRatio * 0.82,
+    scale: currentScale * scaleRatio,
     currentScale,
     centerX,
     centerY,
@@ -126,20 +128,18 @@ function measureDockTarget(
   const dockBounds = dock.getBoundingClientRect();
   const coreX = numericGsapProperty(core, "x");
   const coreY = numericGsapProperty(core, "y");
-  const coreAnchor = assetManifest.assets.core.localAnchors.dockContact;
-  const dockAnchor = assetManifest.assets.dock.localAnchors.coreSeat;
-  const coreContactX = coreBounds.left + (coreAnchor.x / assetManifest.assets.core.width) * coreBounds.width;
-  const coreContactY = coreBounds.top + (coreAnchor.y / assetManifest.assets.core.height) * coreBounds.height;
-  const dockSeatX = dockBounds.left + (dockAnchor.x / assetManifest.assets.dock.width) * dockBounds.width;
-  const dockSeatY = dockBounds.top + (dockAnchor.y / assetManifest.assets.dock.height) * dockBounds.height;
+  const coreCenterX = coreBounds.left + coreBounds.width / 2;
+  const coreCenterY = coreBounds.top + coreBounds.height / 2;
+  const dockCenterX = dockBounds.left + dockBounds.width / 2;
+  const dockCenterY = dockBounds.top + dockBounds.height / 2;
 
   return {
-    coreCenterX: coreBounds.left + coreBounds.width / 2,
-    coreCenterY: coreBounds.top + coreBounds.height / 2,
+    coreCenterX,
+    coreCenterY,
     coreX,
     coreY,
-    dockX: coreX + dockSeatX - coreContactX,
-    dockY: coreY + dockSeatY - coreContactY,
+    dockX: coreX + dockCenterX - coreCenterX,
+    dockY: coreY + dockCenterY - coreCenterY,
   };
 }
 
@@ -617,11 +617,13 @@ export function useAgentCoreTimeline({
         setCoreY(drag.coreY + deltaY);
         setFallbackCoreX(drag.coreX + deltaX);
         setFallbackCoreY(drag.coreY + deltaY);
-        const normalizedX = clampNormalized(deltaX / sceneBounds.width);
-        const normalizedY = clampNormalized(deltaY / sceneBounds.height);
-        bridge.dragOffset.x = normalizedX * CORE_DRAG_WORLD_SPAN;
-        bridge.dragOffset.y = -normalizedY * CORE_DRAG_WORLD_SPAN;
-        bridge.dragOffset.z = Math.min(0.28, Math.hypot(normalizedX, normalizedY) * 0.45);
+        const worldDelta = mapAgentCorePointerDeltaToWorld(
+          { x: deltaX, y: deltaY },
+          sceneBounds.width,
+        );
+        bridge.dragOffset.x = worldDelta.x;
+        bridge.dragOffset.y = worldDelta.y;
+        bridge.dragOffset.z = Math.min(0.28, Math.hypot(worldDelta.x, worldDelta.y) * 0.09);
         invalidateBridge();
         pointHeadAt(drag.coreCenterX + deltaX, drag.coreCenterY + deltaY);
       });

@@ -2,10 +2,11 @@
 
 import { RoundedBox } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef } from "react";
-import type { Group, MeshStandardMaterial } from "three";
+import { Suspense, useEffect, useLayoutEffect, useRef } from "react";
+import type { Group, MeshStandardMaterial, OrthographicCamera } from "three";
 
 import {
+  AGENT_CORE_WORLD_SPAN,
   mapCoreInstallPose,
   mapHeadTarget,
   smoothAgentCoreValue,
@@ -23,13 +24,26 @@ type AgentCoreRobot3DProps = {
 };
 
 type AgentCoreCanvasLeafProps = AgentCoreRobot3DProps & {
-  fallback: React.ReactNode;
   dprCap: number;
   onReady: () => void;
   onUnavailable: () => void;
 };
 
 type SceneReadyRef = React.MutableRefObject<boolean>;
+
+function ProceduralOrthographicCamera() {
+  const camera = useThree((state) => state.camera) as OrthographicCamera;
+  const size = useThree((state) => state.size);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useLayoutEffect(() => {
+    camera.zoom = size.width / AGENT_CORE_WORLD_SPAN;
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [camera, invalidate, size.width]);
+
+  return null;
+}
 
 function ShellMaterial({ color = IVORY }: { color?: string }) {
   return <meshStandardMaterial color={color} roughness={0.82} metalness={0.04} />;
@@ -293,7 +307,6 @@ function WebGLContextLifecycle({
 
 export function AgentCoreCanvasLeaf({
   bridge,
-  fallback,
   dprCap,
   onReady,
   onUnavailable,
@@ -304,17 +317,17 @@ export function AgentCoreCanvasLeaf({
     <div style={{ width: "100%", height: "100%" }}>
       <Canvas
         orthographic
-        camera={{ position: [0, 0.08, 8], zoom: 104, near: 0.1, far: 30 }}
+        camera={{ position: [0, 0.08, 8], zoom: 1, near: 0.1, far: 30 }}
         frameloop="demand"
         dpr={[1, dprCap]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
         resize={{ debounce: { resize: 0, scroll: 50 } }}
-        fallback={fallback}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
         }}
         style={{ position: "absolute", inset: 0, background: "transparent" }}
       >
+        <ProceduralOrthographicCamera />
         <WebGLContextLifecycle
           onReady={onReady}
           onUnavailable={onUnavailable}

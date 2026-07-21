@@ -141,7 +141,7 @@ test("locks telemetry, accessibility, manifest, and static-only source contracts
     scene,
     /import\s+assetManifest\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/public\/visuals\/agent-core\/asset-manifest\.json"\s*;/,
   );
-  assert.match(scene, /const\s*\{\s*artboard,\s*assets,\s*anchors\s*\}\s*=\s*assetManifest\s*;/);
+  assert.match(scene, /const\s*\{\s*artboard,\s*assets\s*\}\s*=\s*assetManifest\s*;/);
   assert.doesNotMatch(taskFourComponents, /\bgsap\b|ScrollTrigger|useGSAP/);
   assert.doesNotMatch(
     taskFourComponents,
@@ -163,14 +163,21 @@ test("creates one mutable 3D bridge and shares it with the scene and timeline", 
   assert.match(section, /aria-live="polite"/);
 });
 
-test("mounts the transparent 3D Canvas over the approved WebP fallback", () => {
+test("mounts one stable approved WebP fallback beside the transparent 3D Canvas", () => {
   const scene = source(scenePath);
   const canvas = `${source(canvasPath)}\n${source(robot3DPath)}`;
   const core = source(corePath);
   const styles = source(stylesPath);
 
-  assert.match(scene, /<AgentCoreCanvas\s+bridge=\{bridge\}\s+fallback=\{fallback\}/);
-  assert.match(scene, /data-agent-core-fallback/);
+  assert.match(scene, /<AgentCoreCanvas[\s\S]*bridge=\{bridge\}[\s\S]*onReady=\{showCanvas\}/);
+  assert.equal((scene.match(/data-agent-core-fallback(?:\s|>)/g) ?? []).length, 1);
+  assert.doesNotMatch(
+    source(canvasPath),
+    /fallback:\s*React(?:\.React)?Node|AgentCoreCanvasErrorBoundary\s+fallback=/,
+  );
+  const robot = source(robot3DPath);
+  const canvasOpening = robot.slice(robot.indexOf("<Canvas"), robot.indexOf("onCreated="));
+  assert.doesNotMatch(canvasOpening, /fallback=/);
   for (const file of ["robot-body.webp", "robot-head.webp", "anycap-core.webp", "core-dock.webp"]) {
     assert.ok(scene.includes(file) || source(headPath).includes(file), file);
   }
@@ -179,4 +186,20 @@ test("mounts the transparent 3D Canvas over the approved WebP fallback", () => {
   assert.match(styles, /\.core\s*\{[\s\S]*?aspect-ratio:\s*1\s*;/);
   assert.match(styles, /\.core\s*\{[\s\S]*?background:\s*transparent\s*;/);
   assert.match(core, /aria-label="Install the AnyCap Core"/);
+});
+
+test("derives every interactive overlay from the procedural camera poses", () => {
+  const scene = source(scenePath);
+  const hook = source(
+    fileURLToPath(
+      new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url),
+    ),
+  );
+
+  assert.match(scene, /projectAgentCoreInteractiveTargets/);
+  assert.match(scene, /tableCore\.normalized/);
+  assert.match(scene, /chestSocket\.normalized/);
+  assert.doesNotMatch(scene, /anchors\.socketCenter|assets\.core\.canonicalPlacement/);
+  assert.match(hook, /mapAgentCorePointerDeltaToWorld/);
+  assert.doesNotMatch(hook, /CORE_DRAG_WORLD_SPAN|coreAnchor|dockAnchor/);
 });

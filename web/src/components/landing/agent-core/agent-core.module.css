@@ -176,6 +176,15 @@
   z-index: 1;
 }
 
+.fallbackVisual {
+  z-index: 2;
+  visibility: visible;
+}
+
+.fallbackHidden {
+  visibility: hidden;
+}
+
 .body {
   position: absolute;
   z-index: 1;
@@ -229,10 +238,10 @@
 .dockTarget {
   position: absolute;
   z-index: 3;
-  top: var(--agent-dock-top);
-  left: var(--agent-dock-left);
-  width: var(--agent-dock-width);
-  aspect-ratio: 2;
+  top: var(--agent-table-core-top);
+  left: var(--agent-table-core-left);
+  width: var(--agent-table-core-size);
+  aspect-ratio: 1;
   background: transparent;
   pointer-events: none;
 }
@@ -240,9 +249,9 @@
 .fallbackCore {
   position: absolute;
   z-index: 5;
-  top: var(--agent-core-top);
-  left: var(--agent-core-left);
-  width: var(--agent-core-width);
+  top: var(--agent-table-core-top);
+  left: var(--agent-table-core-left);
+  width: var(--agent-table-core-size);
   pointer-events: none;
   will-change: transform;
 }
@@ -250,9 +259,9 @@
 .core {
   position: absolute;
   z-index: 5;
-  top: var(--agent-core-top);
-  left: var(--agent-core-left);
-  width: var(--agent-core-width);
+  top: var(--agent-table-core-top);
+  left: var(--agent-table-core-left);
+  width: var(--agent-table-core-size);
   aspect-ratio: 1;
   margin: 0;
   padding: 0;

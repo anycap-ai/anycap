@@ -20,6 +20,25 @@ export type AgentCore3DPose = {
   scale: number;
 };
 
+export type AgentCoreSceneProjection = {
+  normalized: {
+    centerX: number;
+    centerY: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
+  css: {
+    centerX: number;
+    centerY: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
+};
+
 export type AgentCore3DBridge = {
   pointerTarget: AgentCore3DPointer;
   pointerCurrent: AgentCore3DRotation;
@@ -32,6 +51,10 @@ export type AgentCore3DBridge = {
 
 const HEAD_YAW_LIMIT = 0.16;
 const HEAD_PITCH_LIMIT = 0.09;
+const CORE_FACE_WORLD_SIZE = 0.92;
+
+export const AGENT_CORE_WORLD_SPAN = 4.8;
+export const AGENT_CORE_SCENE_ASPECT = 0.94;
 
 const TABLE_POSE: AgentCore3DPose = {
   position: [0.38, -2.08, 0.72],
@@ -107,6 +130,64 @@ export function mapCoreInstallPose(progress: number): AgentCore3DPose {
       interpolate(value, SOCKET_POSE.rotation[index], easedProgress),
     ) as AgentCore3DPose["rotation"],
     scale: interpolate(TABLE_POSE.scale, SOCKET_POSE.scale, easedProgress),
+  };
+}
+
+export function agentCoreOrthographicZoom(sceneWidth: number): number {
+  return sceneWidth / AGENT_CORE_WORLD_SPAN;
+}
+
+export function projectAgentCorePoseToScene(
+  pose: AgentCore3DPose,
+  sceneWidth: number,
+): AgentCoreSceneProjection {
+  const sceneHeight = sceneWidth / AGENT_CORE_SCENE_ASPECT;
+  const zoom = agentCoreOrthographicZoom(sceneWidth);
+  const centerX = sceneWidth / 2 + pose.position[0] * zoom;
+  const centerY = sceneHeight / 2 - pose.position[1] * zoom;
+  const size = CORE_FACE_WORLD_SIZE * pose.scale * zoom;
+  const left = centerX - size / 2;
+  const top = centerY - size / 2;
+
+  return {
+    normalized: {
+      centerX: centerX / sceneWidth,
+      centerY: centerY / sceneHeight,
+      left: left / sceneWidth,
+      top: top / sceneHeight,
+      width: size / sceneWidth,
+      height: size / sceneHeight,
+    },
+    css: {
+      centerX,
+      centerY,
+      left,
+      top,
+      width: size,
+      height: size,
+    },
+  };
+}
+
+export function projectAgentCoreInteractiveTargets(sceneWidth: number): {
+  tableCore: AgentCoreSceneProjection;
+  chestSocket: AgentCoreSceneProjection;
+} {
+  return {
+    tableCore: projectAgentCorePoseToScene(mapCoreInstallPose(0), sceneWidth),
+    chestSocket: projectAgentCorePoseToScene(mapCoreInstallPose(1), sceneWidth),
+  };
+}
+
+export function mapAgentCorePointerDeltaToWorld(
+  delta: AgentCore3DPointer,
+  sceneWidth: number,
+): AgentCore3DVector {
+  const zoom = agentCoreOrthographicZoom(sceneWidth);
+  return {
+    x: delta.x / zoom,
+    y: -delta.y / zoom,
+    z: 0,
   };
 }
 

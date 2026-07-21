@@ -3,9 +3,15 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
+  AGENT_CORE_SCENE_ASPECT,
+  AGENT_CORE_WORLD_SPAN,
+  agentCoreOrthographicZoom,
   createAgentCore3DBridge,
+  mapAgentCorePointerDeltaToWorld,
   mapCoreInstallPose,
   mapHeadTarget,
+  projectAgentCoreInteractiveTargets,
+  projectAgentCorePoseToScene,
 } from "../src/components/landing/agent-core/agent-core-3d-state.ts";
 
 const robotSourceUrl = new URL(
@@ -65,6 +71,49 @@ test("each 3D bridge begins in the awaiting state without shared mutable values"
   assert.equal(first.invalidate, null);
 });
 
+test("procedural overlays project the table Core and chest socket from one 4.8-world-unit contract", () => {
+  assert.equal(AGENT_CORE_WORLD_SPAN, 4.8);
+  assert.equal(AGENT_CORE_SCENE_ASPECT, 0.94);
+
+  for (const sceneWidth of [320, 499, 640]) {
+    const targets = projectAgentCoreInteractiveTargets(sceneWidth);
+    const tableProjection = projectAgentCorePoseToScene(mapCoreInstallPose(0), sceneWidth);
+    const socketProjection = projectAgentCorePoseToScene(mapCoreInstallPose(1), sceneWidth);
+
+    assert.deepEqual(targets.tableCore, tableProjection, `${sceneWidth}px table Core`);
+    assert.deepEqual(targets.chestSocket, socketProjection, `${sceneWidth}px chest socket`);
+    assert.equal(targets.tableCore.css.width, targets.tableCore.css.height);
+    assert.equal(targets.chestSocket.css.width, targets.chestSocket.css.height);
+  }
+});
+
+test("100px pointer deltas produce exactly 100px of projected Core movement at every scene width", () => {
+  const closeTo = (actual, expected, label) => {
+    assert.ok(Math.abs(actual - expected) < 1e-9, `${label}: ${actual} !== ${expected}`);
+  };
+
+  for (const sceneWidth of [320, 499, 640]) {
+    const tablePose = mapCoreInstallPose(0);
+    const before = projectAgentCorePoseToScene(tablePose, sceneWidth);
+    const worldDelta = mapAgentCorePointerDeltaToWorld({ x: 100, y: 100 }, sceneWidth);
+    const after = projectAgentCorePoseToScene(
+      {
+        ...tablePose,
+        position: [
+          tablePose.position[0] + worldDelta.x,
+          tablePose.position[1] + worldDelta.y,
+          tablePose.position[2],
+        ],
+      },
+      sceneWidth,
+    );
+
+    closeTo(agentCoreOrthographicZoom(sceneWidth), sceneWidth / 4.8, `${sceneWidth}px zoom`);
+    closeTo(after.css.centerX - before.css.centerX, 100, `${sceneWidth}px horizontal delta`);
+    closeTo(after.css.centerY - before.css.centerY, 100, `${sceneWidth}px vertical delta`);
+  }
+});
+
 test("procedural scene exposes semantic groups and contains no model service path", async () => {
   const [robotSource, canvasSource] = await Promise.all([
     readFile(robotSourceUrl, "utf8"),
@@ -100,20 +149,53 @@ test("Canvas is lazy, transparent, demand-rendered, and caps desktop and mobile 
   assert.match(sceneSource, /frameloop=["']demand["']/);
   assert.match(canvasSource, /DESKTOP_DPR_CAP\s*=\s*1\.5/);
   assert.match(canvasSource, /MOBILE_DPR_CAP\s*=\s*1\.25/);
-  assert.match(sceneSource, /fallback=/);
+  assert.match(robotSource, /size\.width\s*\/\s*AGENT_CORE_WORLD_SPAN/);
+  assert.match(robotSource, /camera\.updateProjectionMatrix\(\)/);
+  assert.match(robotSource, /invalidate\(\)/);
 });
 
-test("caller keeps its fallback mounted until the suspended R3F scene reports ready", async () => {
+test("the caller owns one stable fallback layer and only toggles its visibility", async () => {
+  const [robotSource, canvasSource] = await Promise.all([
+    readFile(robotSourceUrl, "utf8"),
+    readFile(canvasSourceUrl, "utf8"),
+  ]);
+  const sceneSource = await readFile(
+    new URL("../src/components/landing/agent-core/AgentCoreScene.tsx", import.meta.url),
+    "utf8",
+  );
+  const timelineSource = await readFile(
+    new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.equal((sceneSource.match(/data-agent-core-fallback(?:\s|>)/g) ?? []).length, 1);
+  assert.match(sceneSource, /const \[canvasReady, setCanvasReady\] = useState\(false\)/);
+  assert.match(sceneSource, /className=\{`\$\{styles\.fallbackVisual\}[\s\S]*styles\.fallbackHidden/);
+  assert.match(sceneSource, /<AgentCoreCanvas[\s\S]*onReady=\{showCanvas\}[\s\S]*onUnavailable=\{showFallback\}/);
+  assert.doesNotMatch(sceneSource, /fallback=\{fallback\}/);
+  assert.doesNotMatch(canvasSource, /fallback:\s*ReactNode|AgentCoreCanvasErrorBoundary\s+fallback=/);
+  const canvasOpening = robotSource.slice(
+    robotSource.indexOf("<Canvas"),
+    robotSource.indexOf("onCreated="),
+  );
+  assert.doesNotMatch(canvasOpening, /fallback=/);
+  assert.match(robotSource, /<Suspense[\s\S]*<AgentCoreRobot3D[\s\S]*<SceneReadyReporter/);
+  assert.match(timelineSource, /querySelector<HTMLElement>\("\[data-agent-core-fallback-core\]"\)/);
+  assert.match(timelineSource, /coreVisualTargets:\s*HTMLElement\[\][\s\S]*fallbackCore/);
+  assert.doesNotMatch(robotSource, /onCreated=\{\([\s\S]{0,160}setReady\(true\)/);
+});
+
+test("dynamic, render, and context failures keep the stable caller fallback visible until a frame restores it", async () => {
   const [robotSource, canvasSource] = await Promise.all([
     readFile(robotSourceUrl, "utf8"),
     readFile(canvasSourceUrl, "utf8"),
   ]);
 
-  assert.match(canvasSource, /const \[ready, setReady\] = useState\(false\)/);
-  assert.match(canvasSource, /!ready\s*\?/);
-  assert.match(canvasSource, /<LazyAgentCoreCanvas[\s\S]*onReady=\{\(\) => setReady\(true\)\}/);
-  assert.match(robotSource, /<Suspense[\s\S]*<AgentCoreRobot3D[\s\S]*<SceneReadyReporter/);
-  assert.doesNotMatch(robotSource, /onCreated=\{\([\s\S]{0,160}setReady\(true\)/);
+  assert.match(canvasSource, /componentDidCatch[\s\S]*this\.props\.onUnavailable\(\)/);
+  assert.match(canvasSource, /if \(this\.state\.failed\) return null/);
+  assert.match(robotSource, /handleContextLost[\s\S]*onUnavailable\(\)/);
+  assert.match(robotSource, /handleContextRestored[\s\S]*invalidate\(\)/);
+  assert.match(robotSource, /useFrame\(\(\) => \{[\s\S]*reportReadyAfterRestoreRef[\s\S]*onReady\(\)/);
 });
 
 test("demand rendering continues only for internal smoothing convergence", async () => {
