@@ -8,6 +8,7 @@ export type AnyCapCoreControlProps = {
   onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
   onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
   onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
+  onLostPointerCapture: React.PointerEventHandler<HTMLButtonElement>;
   onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
@@ -18,6 +19,7 @@ export function AnyCapCoreControl({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onLostPointerCapture,
   onPointerCancel,
   onClick,
   onKeyDown,
@@ -31,6 +33,7 @@ export function AnyCapCoreControl({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onLostPointerCapture={onLostPointerCapture}
       onPointerCancel={onPointerCancel}
       onClick={onClick}
       onKeyDown={onKeyDown}

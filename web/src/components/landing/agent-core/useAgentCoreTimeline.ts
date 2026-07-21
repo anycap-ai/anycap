@@ -7,11 +7,14 @@ import type React from "react";
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import {
+  beginAgentCorePointerSession,
   clampHeadRotation,
+  finishAgentCorePointerSession,
   isCoreDropAccepted,
   nextAgentCorePhase,
   type AgentCoreEvent,
   type AgentCorePhase,
+  type AgentCorePointerSession,
 } from "./agent-core-state";
 import styles from "./agent-core.module.css";
 
@@ -43,14 +46,14 @@ type InteractionBridge = {
   install: () => void;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
+  onLostPointerCapture: React.PointerEventHandler<HTMLButtonElement>;
   onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
   onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
   onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
   onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
 };
 
-type DragSession = {
-  pointerId: number;
+type DragSession = AgentCorePointerSession & {
   pointerX: number;
   pointerY: number;
   coreCenterX: number;
@@ -151,6 +154,7 @@ export function useAgentCoreTimeline({
     install: noop,
     onClick: noop,
     onKeyDown: noop,
+    onLostPointerCapture: noop,
     onPointerCancel: noop,
     onPointerDown: noop,
     onPointerMove: noop,
@@ -172,7 +176,7 @@ export function useAgentCoreTimeline({
       }
 
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-      const finePointer = window.matchMedia("(pointer: fine)");
+      const finePointer = window.matchMedia("(any-pointer: fine)");
       let sceneBounds = scene.getBoundingClientRect();
       let canvasFrame: number | null = null;
       let drag: DragSession | null = null;
@@ -330,9 +334,12 @@ export function useAgentCoreTimeline({
       };
 
       const onScenePointerMove = contextSafe((event: PointerEvent) => {
+        const isFinePointerEvent =
+          event.isPrimary && (event.pointerType === "mouse" || event.pointerType === "pen");
         if (
           !sectionIsVisible ||
           !finePointer.matches ||
+          !isFinePointerEvent ||
           phaseRef.current === "dragging" ||
           phaseRef.current === "installing"
         ) return;
@@ -466,18 +473,20 @@ export function useAgentCoreTimeline({
           .play(0);
       });
 
-      const releaseCapture = (event: CorePointerEvent) => {
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId);
-        }
-      };
-
       const onPointerDown = contextSafe((event: CorePointerEvent) => {
         if (phaseRef.current !== "awaiting") return;
+        const start = beginAgentCorePointerSession(drag, {
+          pointerId: event.pointerId,
+          pointerType: event.pointerType,
+          isPrimary: event.isPrimary,
+          button: event.button,
+        });
+        if (start.action === "ignore" || !start.session) return;
+
         suppressNextClick = false;
-        if (event.pointerType === "touch") {
+        if (start.action === "capture-touch") {
           drag = {
-            pointerId: event.pointerId,
+            ...start.session,
             pointerX: event.clientX,
             pointerY: event.clientY,
             coreCenterX: 0,
@@ -494,7 +503,7 @@ export function useAgentCoreTimeline({
 
         const measuredDock = measureDockTarget(core, dock);
         drag = {
-          pointerId: event.pointerId,
+          ...start.session,
           pointerX: event.clientX,
           pointerY: event.clientY,
           ...measuredDock,
@@ -505,7 +514,7 @@ export function useAgentCoreTimeline({
       });
 
       const onPointerMove = contextSafe((event: CorePointerEvent) => {
-        if (!drag || event.pointerId !== drag.pointerId || event.pointerType === "touch") return;
+        if (!drag || event.pointerId !== drag.pointerId || drag.kind !== "drag") return;
         const deltaX = event.clientX - drag.pointerX;
         const deltaY = event.clientY - drag.pointerY;
         if (Math.hypot(deltaX, deltaY) >= DRAG_THRESHOLD_PX) drag.moved = true;
@@ -514,9 +523,8 @@ export function useAgentCoreTimeline({
         pointHeadAt(drag.coreCenterX + deltaX, drag.coreCenterY + deltaY);
       });
 
-      const rejectDrop = () => {
-        if (!drag) return;
-        const { dockX, dockY } = drag;
+      const rejectDrop = (session: DragSession) => {
+        const { dockX, dockY } = session;
         isReturning = true;
         gsap.to(core, {
           x: dockX,
@@ -535,45 +543,54 @@ export function useAgentCoreTimeline({
         headPitchTo(0);
       };
 
-      const onPointerUp = contextSafe((event: CorePointerEvent) => {
-        if (!drag || event.pointerId !== drag.pointerId) return;
-        releaseCapture(event);
+      const finalizePointerSession = contextSafe((
+        event: CorePointerEvent,
+        reason: "up" | "cancel" | "lost-capture",
+      ) => {
+        const session = drag;
+        if (!session) return;
 
-        if (event.pointerType === "touch") {
-          drag = null;
-          suppressNextClick = true;
-          install();
-          return;
+        let dropAccepted = false;
+        if (reason === "up" && session.kind === "drag" && session.moved) {
+          const coreBounds = core.getBoundingClientRect();
+          const socketBounds = socket.getBoundingClientRect();
+          dropAccepted = isCoreDropAccepted(
+            {
+              x: coreBounds.left + coreBounds.width / 2,
+              y: coreBounds.top + coreBounds.height / 2,
+            },
+            rectShape(socketBounds),
+          );
         }
 
-        const moved = drag.moved;
-        const coreBounds = core.getBoundingClientRect();
-        const socketBounds = socket.getBoundingClientRect();
-        const accepted = isCoreDropAccepted(
-          {
-            x: coreBounds.left + coreBounds.width / 2,
-            y: coreBounds.top + coreBounds.height / 2,
-          },
-          rectShape(socketBounds),
-        );
-
-        if (moved) {
-          suppressNextClick = true;
-          if (accepted) install();
-          else rejectDrop();
-          drag = null;
-          return;
-        }
+        const finished = finishAgentCorePointerSession(session, {
+          pointerId: event.pointerId,
+          reason,
+          moved: session.moved,
+          dropAccepted,
+        });
+        if (finished.action === "ignore") return;
 
         drag = null;
+        suppressNextClick = true;
+        if (reason !== "lost-capture" && core.hasPointerCapture(session.pointerId)) {
+          core.releasePointerCapture(session.pointerId);
+        }
+
+        if (finished.action === "install") install();
+        else if (finished.action === "return-dock") rejectDrop(session);
+      });
+
+      const onPointerUp = contextSafe((event: CorePointerEvent) => {
+        finalizePointerSession(event, "up");
       });
 
       const onPointerCancel = contextSafe((event: CorePointerEvent) => {
-        if (!drag || event.pointerId !== drag.pointerId) return;
-        releaseCapture(event);
-        suppressNextClick = true;
-        if (event.pointerType !== "touch") rejectDrop();
-        drag = null;
+        finalizePointerSession(event, "cancel");
+      });
+
+      const onLostPointerCapture = contextSafe((event: CorePointerEvent) => {
+        finalizePointerSession(event, "lost-capture");
       });
 
       const onClick = contextSafe(() => {
@@ -594,6 +611,7 @@ export function useAgentCoreTimeline({
         install,
         onClick,
         onKeyDown,
+        onLostPointerCapture,
         onPointerCancel,
         onPointerDown,
         onPointerMove,
@@ -605,6 +623,7 @@ export function useAgentCoreTimeline({
           install: noop,
           onClick: noop,
           onKeyDown: noop,
+          onLostPointerCapture: noop,
           onPointerCancel: noop,
           onPointerDown: noop,
           onPointerMove: noop,
@@ -633,6 +652,7 @@ export function useAgentCoreTimeline({
     install: () => bridgeRef.current.install(),
     onClick: (event) => bridgeRef.current.onClick(event),
     onKeyDown: (event) => bridgeRef.current.onKeyDown(event),
+    onLostPointerCapture: (event) => bridgeRef.current.onLostPointerCapture(event),
     onPointerCancel: (event) => bridgeRef.current.onPointerCancel(event),
     onPointerDown: (event) => bridgeRef.current.onPointerDown(event),
     onPointerMove: (event) => bridgeRef.current.onPointerMove(event),

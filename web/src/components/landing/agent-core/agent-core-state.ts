@@ -8,6 +8,76 @@ export type AgentCoreEvent =
 type Point = { x: number; y: number };
 type Rect = { left: number; top: number; width: number; height: number };
 
+export type AgentCorePointerSession = {
+  pointerId: number;
+  kind: "drag" | "touch";
+};
+
+type AgentCorePointerStart = {
+  pointerId: number;
+  pointerType: string;
+  isPrimary: boolean;
+  button: number;
+};
+
+type AgentCorePointerFinish = {
+  pointerId: number;
+  reason: "up" | "cancel" | "lost-capture";
+  moved: boolean;
+  dropAccepted: boolean;
+};
+
+type AgentCorePointerStartResult = {
+  session: AgentCorePointerSession | null;
+  action: "ignore" | "capture-drag" | "capture-touch";
+};
+
+type AgentCorePointerFinishResult = {
+  session: AgentCorePointerSession | null;
+  action: "ignore" | "install" | "return-dock" | "close";
+};
+
+export function beginAgentCorePointerSession(
+  activeSession: AgentCorePointerSession | null,
+  event: AgentCorePointerStart,
+): AgentCorePointerStartResult {
+  if (activeSession || !event.isPrimary) {
+    return { session: activeSession, action: "ignore" };
+  }
+  if (event.pointerType === "touch") {
+    return {
+      session: { pointerId: event.pointerId, kind: "touch" },
+      action: "capture-touch",
+    };
+  }
+  if ((event.pointerType === "mouse" || event.pointerType === "pen") && event.button === 0) {
+    return {
+      session: { pointerId: event.pointerId, kind: "drag" },
+      action: "capture-drag",
+    };
+  }
+  return { session: null, action: "ignore" };
+}
+
+export function finishAgentCorePointerSession(
+  activeSession: AgentCorePointerSession | null,
+  event: AgentCorePointerFinish,
+): AgentCorePointerFinishResult {
+  if (!activeSession || activeSession.pointerId !== event.pointerId) {
+    return { session: activeSession, action: "ignore" };
+  }
+  if (event.reason === "up") {
+    if (activeSession.kind === "touch" || !event.moved || event.dropAccepted) {
+      return { session: null, action: "install" };
+    }
+    return { session: null, action: "return-dock" };
+  }
+  if (activeSession.kind === "drag") {
+    return { session: null, action: "return-dock" };
+  }
+  return { session: null, action: "close" };
+}
+
 export function clampHeadRotation(point: Point, bounds: Rect) {
   const normalizedX = ((point.x - bounds.left) / bounds.width - 0.5) * 2;
   const normalizedY = ((point.y - bounds.top) / bounds.height - 0.5) * 2;

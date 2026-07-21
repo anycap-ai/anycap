@@ -27,6 +27,7 @@ export function AgentCoreInstallSection() {
   const {
     onClick,
     onKeyDown,
+    onLostPointerCapture,
     onPointerCancel,
     onPointerDown,
     onPointerMove,
@@ -87,6 +88,7 @@ export function AgentCoreInstallSection() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onLostPointerCapture={onLostPointerCapture}
           onPointerCancel={onPointerCancel}
           onClick={onClick}
           onKeyDown={onKeyDown}

@@ -33,7 +33,7 @@ test("provides keyboard, pointer, touch, and reduced-motion paths", () => {
   assert.match(section, /onPointerMove/);
   assert.match(section, /onPointerUp/);
   assert.match(section, /onKeyDown/);
-  assert.match(hook, /pointerType === "touch"/);
+  assert.match(hook, /capture-touch/);
   assert.match(hook, /prefers-reduced-motion: reduce/);
   assert.match(hook, /ScrollTrigger\.create/);
   assert.match(hook, /cancelAnimationFrame/);
@@ -86,4 +86,17 @@ test("scopes idle head tracking to the full section surface", () => {
   const source = readFileSync(hookPath, "utf8");
   assert.match(source, /section\.addEventListener\("pointermove",\s*onScenePointerMove\)/);
   assert.match(source, /section\.removeEventListener\("pointermove",\s*onScenePointerMove\)/);
+});
+
+test("consumes the pure pointer reducer through one finalization path", () => {
+  const hook = readFileSync(hookPath, "utf8");
+  const section = readFileSync(sectionPath, "utf8");
+  assert.match(hook, /beginAgentCorePointerSession/);
+  assert.match(hook, /finishAgentCorePointerSession/);
+  assert.match(hook, /any-pointer:\s*fine/);
+  assert.match(hook, /const finalizePointerSession = contextSafe/);
+  assert.match(hook, /finalizePointerSession\(event, "up"\)/);
+  assert.match(hook, /finalizePointerSession\(event, "cancel"\)/);
+  assert.match(hook, /finalizePointerSession\(event, "lost-capture"\)/);
+  assert.match(section, /onLostPointerCapture/);
 });
