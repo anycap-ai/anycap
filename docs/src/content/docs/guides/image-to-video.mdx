@@ -1,0 +1,60 @@
+---
+title: Generate Video from a Local Image
+description: Animate a local reference image through the AnyCap CLI or a single MCP video tool call.
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Steps>
+1. **Find a model that supports `image-to-video`.**
+
+   ```bash
+   anycap video models
+   anycap video models <model-id> \
+     | jq -r '.model.operations[].modes[].mode'
+   ```
+
+2. **Inspect the exact input contract.**
+
+   ```bash
+   anycap video models <model-id> schema --mode image-to-video
+   ```
+
+3. **Generate and download the video.**
+
+   ```bash
+   anycap video generate \
+     --prompt "animate the subject with a slow camera push-in" \
+     --model <model-id> \
+     --mode image-to-video \
+     --param images=./reference.jpg \
+     -o reference-motion.mp4
+   ```
+</Steps>
+
+## CLI and MCP inputs
+
+<Tabs>
+  <TabItem label="CLI">
+    The `images` parameter accepts a local path or HTTP(S) URL. The CLI uploads a local file before invoking the selected model.
+  </TabItem>
+  <TabItem label="MCP">
+    After authorizing the image directory, call:
+
+    ```json
+    {
+      "name": "anycap_video_generate",
+      "arguments": {
+        "model": "<model-id>",
+        "mode": "image-to-video",
+        "prompt": "Animate the subject with a slow camera push-in",
+        "images": ["/absolute/path/to/reference.jpg"]
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="MCP local access is explicit">
+The canonical image path must be under an effective MCP root. The server rejects traversal and symlink escape, uploads only authorized references, and does not return local paths or presigned upload URLs in the tool result.
+</Aside>

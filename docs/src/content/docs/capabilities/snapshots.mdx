@@ -1,0 +1,46 @@
+---
+title: Project Snapshots
+description: Package a recoverable working set into a password-protected, expiring AnyCap share URL.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Use Snapshot when another agent, machine, or account needs project state rather than one normal file.
+
+## Create a snapshot
+
+```bash
+anycap snapshot create --target . --name repo
+```
+
+The command packages allowed files, uploads `/_snapshots/repo.snapshot.tar`, and returns a password-protected share URL plus a ready-to-run restore command. The default expiration is 12 hours.
+
+Multiple inputs are supported:
+
+```bash
+anycap snapshot create \
+  --target ./src \
+  --target ./README.md \
+  --name implementation \
+  --expires 12h
+```
+
+Common generated directories, caches, virtual environments, and `.git` are skipped. Sensitive-file matches block creation unless you explicitly use `--force`.
+
+<Aside type="caution" title="Keep expiration short">
+The URL fragment carries the share password for local parsing. Treat the complete URL as a secret and use the shortest practical expiration.
+</Aside>
+
+## Restore
+
+```bash
+anycap snapshot restore \
+  'https://drive.anycap.cloud/s/abc#password=secret' \
+  --target ./restored
+```
+
+The destination must be empty or absent. Extraction rejects absolute paths, `..` traversal, symlinks, hardlinks, and non-regular archive entries.
+
+## Snapshot or Drive?
+
+Use Snapshot for a self-contained project handoff with one restore command. Use [Drive](/capabilities/delivery/) when a human only needs a normal file or folder link.

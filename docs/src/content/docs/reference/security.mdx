@@ -1,0 +1,42 @@
+---
+title: Security and Local File Access
+description: Understand AnyCap credential storage, MCP path authorization, local review servers, shares, and snapshot extraction protections.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Credentials
+
+- Prefer browser or headless device login for humans.
+- Store CI API keys in a secret manager and pipe them through stdin or expose them only to the required process.
+- `ANYCAP_API_KEY` takes precedence over keyring and file credentials.
+- `anycap logout` removes persistent local credentials but does not revoke a remote key or remove an environment value.
+
+## MCP filesystem boundary
+
+Local media access is limited to the union of command-line roots, `ANYCAP_MCP_FILE_ROOTS`, and client-advertised roots. When none exist, the process working directory is the fallback.
+
+Before upload, AnyCap canonicalizes paths and rejects:
+
+- `..` traversal
+- sibling-prefix confusion
+- symlink escape
+- paths outside every effective root
+
+Grant the narrowest useful directory. A global MCP definition with a permanent absolute root makes that directory available to every session that can invoke the server.
+
+## Annotation and Draw servers
+
+These tools bind to `127.0.0.1` by default. They use protections for write requests but do not implement user authentication.
+
+<Aside type="danger" title="Protect remote sessions">
+When binding to `0.0.0.0`, use an authenticated reverse proxy, OAuth proxy, or VPN. Do not expose a review URL directly to the public internet.
+</Aside>
+
+## Share links
+
+Drive and Snapshot links can grant access to uploaded data. Use short expirations, avoid sending links through public channels, and unshare files when collaboration ends.
+
+## Snapshot extraction
+
+Restore requires an empty or absent destination and rejects absolute paths, traversal, symlinks, hardlinks, and non-regular archive entries. Snapshot creation blocks known sensitive-file matches unless `--force` is explicitly supplied.

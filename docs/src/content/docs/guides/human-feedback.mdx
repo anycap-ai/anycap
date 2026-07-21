@@ -1,0 +1,57 @@
+---
+title: Review Media with Human Feedback
+description: Collect spatial annotations and narrated review feedback, then use it to revise an AnyCap-generated asset.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Use non-blocking annotation when an agent must pause for a human review without holding an interactive command open.
+
+<Steps>
+1. **Start a review session.**
+
+   ```bash
+   anycap annotate ./draft.png --no-wait
+   ```
+
+   Save the returned `session`, `url`, `poll_command`, and `stop_command`. Show the URL to the reviewer.
+
+2. **Wait for human confirmation.**
+
+   The reviewer draws rectangles, arrows, points, or freehand notes, optionally records narration, then clicks **Done**.
+
+3. **Retrieve structured feedback.**
+
+   ```bash
+   anycap annotate poll --session <session-id>
+   ```
+
+4. **Analyze narration when present.**
+
+   ```bash
+   anycap actions video-read \
+     --file .anycap/annotate/<session-id>/recording.webm \
+     --instruction "List requested changes, their locations, and any constraints"
+   ```
+
+5. **Revise the annotated image.**
+
+   ```bash
+   anycap image generate \
+     --prompt "#1 remove the object; #2 move the headline right; preserve everything else" \
+     --model <model-id> \
+     --mode image-to-image \
+     --param images=./draft_annotated.png \
+     -o draft-v2.png
+   ```
+
+6. **Stop the local session.**
+
+   ```bash
+   anycap annotate stop --session <session-id>
+   ```
+</Steps>
+
+<Aside type="note" title="URL reviews rely on recording">
+Cross-origin pages cannot produce a composited annotated image. In URL mode, ask the reviewer to record the browser tab and narrate while navigating. URL mode is intentionally single-user.
+</Aside>

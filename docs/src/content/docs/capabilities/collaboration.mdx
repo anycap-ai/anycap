@@ -1,0 +1,53 @@
+---
+title: Annotate and Draw
+description: Collect spatial feedback on media and collaborate on editable diagrams in a browser.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Annotate media or a webpage
+
+Start a non-blocking image review:
+
+```bash
+anycap annotate ./design.png --no-wait
+```
+
+Show the returned URL to the reviewer. After they click **Done**:
+
+```bash
+anycap annotate poll --session <session-id>
+anycap annotate stop --session <session-id>
+```
+
+Image, video, and audio sessions support multiple collaborators with synchronized annotations and cursors. URL/iframe mode is single-user because its screen recording is the primary feedback artifact.
+
+If the result contains a recording, analyze the narrated review:
+
+```bash
+anycap actions video-read \
+  --file .anycap/annotate/<session-id>/recording.webm \
+  --instruction "List requested changes and where they apply"
+```
+
+## Draw diagrams
+
+Start an editable Mermaid-based whiteboard:
+
+```bash
+anycap draw --init architecture.mmd --no-wait --port 18400
+```
+
+Push a revised structure without restarting the session:
+
+```bash
+anycap draw update --session <session-id> --init architecture-v2.mmd
+anycap draw poll --session <session-id>
+anycap draw stop --session <session-id>
+```
+
+Structural updates replace diagram elements while preserving human-drawn annotations. Manual positions on generated diagram elements are reset, so encode layout changes in the Mermaid source.
+
+<Aside type="danger" title="Public bind requires access control">
+Annotation and Draw servers do not provide their own user authentication. If you bind to `0.0.0.0` outside a trusted LAN, place the session behind an authenticated reverse proxy, OAuth proxy, or VPN.
+</Aside>
