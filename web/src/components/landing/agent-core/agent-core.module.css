@@ -278,6 +278,22 @@
   font-weight: 700;
 }
 
+@media (min-width: 1280px) {
+  .section {
+    padding-block: 2rem;
+  }
+
+  .layout {
+    min-height: calc(100svh - 4rem);
+  }
+
+  .scene {
+    width: min(calc(100% + 150px), calc((100svh - 4rem) * 0.94));
+    justify-self: end;
+    left: clamp(20px, 2vw, 32px);
+  }
+}
+
 @media (min-width: 1280px) and (max-width: 1342px) {
   .section {
     padding-inline: 4rem;
