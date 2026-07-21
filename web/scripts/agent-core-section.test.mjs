@@ -203,3 +203,38 @@ test("derives every interactive overlay from the procedural camera poses", () =>
   assert.match(hook, /mapAgentCorePointerDeltaToWorld/);
   assert.doesNotMatch(hook, /CORE_DRAG_WORLD_SPAN|coreAnchor|dockAnchor/);
 });
+
+test("reframes only the fallback robot and dock around their manifest physical anchors", () => {
+  const scene = source(scenePath);
+  const styles = source(stylesPath);
+
+  assert.match(scene, /deriveAgentCoreFallbackShifts/);
+  assert.match(scene, /localAnchors\.socketCenter/);
+  assert.match(scene, /localAnchors\.coreSeat/);
+  for (const variable of [
+    "--agent-fallback-robot-shift-x",
+    "--agent-fallback-robot-shift-y",
+    "--agent-fallback-dock-shift-x",
+    "--agent-fallback-dock-shift-y",
+  ]) {
+    assert.ok(scene.includes(`\"${variable}\"`), variable);
+  }
+  assert.match(
+    scene,
+    /className=\{styles\.fallbackRobot\}[\s\S]*className=\{styles\.body\}[\s\S]*<AgentHeadTracker[\s\S]*<\/div>/,
+  );
+  assert.match(
+    scene,
+    /className=\{styles\.fallbackDock\}[\s\S]*className=\{styles\.dock\}/,
+  );
+  assert.match(
+    styles,
+    /\.fallbackRobot\s*\{[^}]*transform:\s*translate\(var\(--agent-fallback-robot-shift-x\),\s*var\(--agent-fallback-robot-shift-y\)\)/,
+  );
+  assert.match(
+    styles,
+    /\.fallbackDock\s*\{[^}]*transform:\s*translate\(var\(--agent-fallback-dock-shift-x\),\s*var\(--agent-fallback-dock-shift-y\)\)/,
+  );
+  assert.match(scene, /"--agent-table-core-left":\s*`\$\{tableCore\.normalized\.left/);
+  assert.match(scene, /"--agent-socket-left":\s*`\$\{chestSocket\.normalized\.left/);
+});

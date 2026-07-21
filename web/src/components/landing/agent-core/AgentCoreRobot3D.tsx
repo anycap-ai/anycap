@@ -7,6 +7,7 @@ import type { Group, MeshStandardMaterial, OrthographicCamera } from "three";
 
 import {
   AGENT_CORE_WORLD_SPAN,
+  mapAgentCoreActivation,
   mapCoreInstallPose,
   mapHeadTarget,
   smoothAgentCoreValue,
@@ -87,7 +88,11 @@ function Torso() {
   );
 }
 
-function Head({ visorMaterialRef }: { visorMaterialRef: React.RefObject<MeshStandardMaterial | null> }) {
+function Head({
+  visorMaterialRefs,
+}: {
+  visorMaterialRefs: React.MutableRefObject<Array<MeshStandardMaterial | null>>;
+}) {
   return (
     <group name="Head" position={[0, 1.47, 0]}>
       <mesh scale={[0.8, 0.98, 0.72]}>
@@ -102,7 +107,9 @@ function Head({ visorMaterialRef }: { visorMaterialRef: React.RefObject<MeshStan
           <mesh key={index} position={[(index - 5) * 0.104, 0, 0]}>
             <boxGeometry args={[0.065, 0.095, 0.025]} />
             <meshStandardMaterial
-              ref={index === 5 ? visorMaterialRef : undefined}
+              ref={(material) => {
+                visorMaterialRefs.current[index] = material;
+              }}
               color={index > 3 && index < 7 ? OLIVE : "#252923"}
               emissive={OLIVE}
               emissiveIntensity={0.04}
@@ -185,7 +192,9 @@ export function AgentCoreRobot3D({ bridge }: AgentCoreRobot3DProps) {
   const socketLayersRef = useRef<Group>(null);
   const coreRef = useRef<Group>(null);
   const coreAccentMaterialRef = useRef<MeshStandardMaterial>(null);
-  const visorMaterialRef = useRef<MeshStandardMaterial>(null);
+  const visorMaterialRefs = useRef<Array<MeshStandardMaterial | null>>(
+    Array.from({ length: 11 }, () => null),
+  );
   const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
@@ -222,16 +231,16 @@ export function AgentCoreRobot3D({ bridge }: AgentCoreRobot3DProps) {
       coreRef.current.scale.setScalar(pose.scale);
     }
 
-    const activation = Math.max(bridge.installProgress, bridge.connected ? 1 : 0);
+    const activation = mapAgentCoreActivation(bridge.activationProgress);
     if (socketLayersRef.current) {
-      socketLayersRef.current.scale.setScalar(1 - activation * 0.08);
+      socketLayersRef.current.scale.setScalar(activation.socketScale);
     }
     if (coreAccentMaterialRef.current) {
-      coreAccentMaterialRef.current.emissiveIntensity = 0.02 + activation * 1.1;
+      coreAccentMaterialRef.current.emissiveIntensity = activation.coreEmissiveIntensity;
     }
-    if (visorMaterialRef.current) {
-      visorMaterialRef.current.emissiveIntensity = 0.04 + activation * 0.72;
-    }
+    visorMaterialRefs.current.forEach((material, index) => {
+      if (material) material.emissiveIntensity = activation.visorEmissiveIntensities[index];
+    });
 
     const headIsMoving =
       Math.abs(nextYaw - target.yaw) > 0.0002 || Math.abs(nextPitch - target.pitch) > 0.0002;
@@ -239,10 +248,10 @@ export function AgentCoreRobot3D({ bridge }: AgentCoreRobot3DProps) {
   });
 
   return (
-    <group name="RobotRoot" position={[0, 0.08, 0]}>
+    <group name="RobotRoot" position={[0, 0, 0]}>
       <Torso />
       <group name="NeckPivot" ref={neckPivotRef} position={[0, 0.08, 0]}>
-        <Head visorMaterialRef={visorMaterialRef} />
+        <Head visorMaterialRefs={visorMaterialRefs} />
       </group>
       <ChestSocket layersRef={socketLayersRef} />
       <AnyCapCore coreRef={coreRef} accentMaterialRef={coreAccentMaterialRef} />
@@ -317,7 +326,7 @@ export function AgentCoreCanvasLeaf({
     <div style={{ width: "100%", height: "100%" }}>
       <Canvas
         orthographic
-        camera={{ position: [0, 0.08, 8], zoom: 1, near: 0.1, far: 30 }}
+        camera={{ position: [0, 0, 8], rotation: [0, 0, 0], zoom: 1, near: 0.1, far: 30 }}
         frameloop="demand"
         dpr={[1, dprCap]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}

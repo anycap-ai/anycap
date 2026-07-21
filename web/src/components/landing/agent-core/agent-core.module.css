@@ -185,6 +185,20 @@
   visibility: hidden;
 }
 
+.fallbackRobot {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--agent-fallback-robot-shift-x), var(--agent-fallback-robot-shift-y));
+  pointer-events: none;
+}
+
+.fallbackDock {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--agent-fallback-dock-shift-x), var(--agent-fallback-dock-shift-y));
+  pointer-events: none;
+}
+
 .body {
   position: absolute;
   z-index: 1;

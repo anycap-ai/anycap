@@ -206,6 +206,7 @@ export function useAgentCoreTimeline({
         bridge.pointerCurrent.yaw = 0;
         bridge.pointerCurrent.pitch = 0;
         bridge.installProgress = 0;
+        bridge.activationProgress = 0;
         bridge.connected = false;
         bridge.dragOffset.x = 0;
         bridge.dragOffset.y = 0;
@@ -219,6 +220,7 @@ export function useAgentCoreTimeline({
         bridge.pointerCurrent.yaw = 0;
         bridge.pointerCurrent.pitch = 0;
         bridge.installProgress = 1;
+        bridge.activationProgress = 1;
         bridge.connected = true;
         bridge.dragOffset.x = 0;
         bridge.dragOffset.y = 0;
@@ -438,6 +440,7 @@ export function useAgentCoreTimeline({
         if (phaseRef.current === "awaiting") setPhase("drag-start");
         setPhase("drop-accepted");
         bridge.connected = false;
+        bridge.activationProgress = 0;
         invalidateBridge();
 
         installationTimeline = gsap.timeline({
@@ -509,6 +512,16 @@ export function useAgentCoreTimeline({
           )
           .addLabel("activate", ">")
           .call(startParticleBurst, [], "activate")
+          .to(
+            bridge,
+            {
+              activationProgress: 1,
+              duration: 0.52,
+              ease: "power2.inOut",
+              onUpdate: invalidateBridge,
+            },
+            "activate",
+          )
           .to(
             coreVisualTargets,
             { scale: target.scale * 0.92, duration: 0.14, ease: "power2.in" },

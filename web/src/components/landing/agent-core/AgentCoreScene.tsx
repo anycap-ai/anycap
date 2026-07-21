@@ -6,6 +6,7 @@ import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
 import {
+  deriveAgentCoreFallbackShifts,
   projectAgentCoreInteractiveTargets,
   type AgentCore3DBridge,
 } from "./agent-core-3d-state";
@@ -62,6 +63,19 @@ const bodyPlacement = getPlacement(assets.body);
 const headPlacement = getPlacement(assets.head);
 const dockPlacement = getPlacement(assets.dock);
 const { tableCore, chestSocket } = projectAgentCoreInteractiveTargets(100);
+const fallbackShifts = deriveAgentCoreFallbackShifts({
+  artboard,
+  sceneLeft,
+  robotSocket: {
+    placement: assets.body.canonicalPlacement,
+    localAnchor: assets.body.localAnchors.socketCenter,
+  },
+  dockSeat: {
+    placement: assets.dock.canonicalPlacement,
+    localAnchor: assets.dock.localAnchors.coreSeat,
+  },
+  targets: { tableCore, chestSocket },
+});
 
 const sceneStyle = {
   "--agent-body-left": bodyPlacement.left,
@@ -70,6 +84,10 @@ const sceneStyle = {
   "--agent-head-left": headPlacement.left,
   "--agent-head-top": headPlacement.top,
   "--agent-head-width": headPlacement.width,
+  "--agent-fallback-robot-shift-x": `${fallbackShifts.robot.x * 100}%`,
+  "--agent-fallback-robot-shift-y": `${fallbackShifts.robot.y * 100}%`,
+  "--agent-fallback-dock-shift-x": `${fallbackShifts.dock.x * 100}%`,
+  "--agent-fallback-dock-shift-y": `${fallbackShifts.dock.y * 100}%`,
   "--agent-table-core-left": `${tableCore.normalized.left * 100}%`,
   "--agent-table-core-top": `${tableCore.normalized.top * 100}%`,
   "--agent-table-core-size": `${tableCore.normalized.width * 100}%`,
@@ -127,30 +145,34 @@ export function AgentCoreScene({
         data-agent-core-fallback
         aria-hidden="true"
       >
-        <div className={styles.body}>
-          <Image
-            src="/visuals/agent-core/robot-body.webp"
-            alt=""
-            width={1024}
-            height={1024}
-            sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
-            draggable={false}
-            className={styles.layerImage}
-          />
+        <div className={styles.fallbackRobot}>
+          <div className={styles.body}>
+            <Image
+              src="/visuals/agent-core/robot-body.webp"
+              alt=""
+              width={1024}
+              height={1024}
+              sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
+              draggable={false}
+              className={styles.layerImage}
+            />
+          </div>
+
+          <AgentHeadTracker headRef={headRef} />
         </div>
 
-        <AgentHeadTracker headRef={headRef} />
-
-        <div className={styles.dock}>
-          <Image
-            src="/visuals/agent-core/core-dock.webp"
-            alt=""
-            width={640}
-            height={320}
-            sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
-            draggable={false}
-            className={styles.layerImage}
-          />
+        <div className={styles.fallbackDock}>
+          <div className={styles.dock}>
+            <Image
+              src="/visuals/agent-core/core-dock.webp"
+              alt=""
+              width={640}
+              height={320}
+              sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
+              draggable={false}
+              className={styles.layerImage}
+            />
+          </div>
         </div>
 
         <div className={styles.fallbackCore} data-agent-core-fallback-core>

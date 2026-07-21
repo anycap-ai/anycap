@@ -127,6 +127,18 @@ test("tweens 3D installation progress inside the existing six-label narrative", 
   }
 });
 
+test("starts a separate bounded activation tween at the existing activate label", () => {
+  const source = readFileSync(hookPath, "utf8");
+  const activationNarrative = source.slice(
+    source.indexOf('addLabel("activate"'),
+    source.indexOf('addLabel("capabilities"'),
+  );
+
+  assert.match(activationNarrative, /\.to\(\s*bridge,\s*\{[\s\S]*activationProgress:\s*1/);
+  assert.match(activationNarrative, /onUpdate:\s*invalidateBridge/);
+  assert.doesNotMatch(activationNarrative, /repeat:\s*-1|yoyo:\s*true/);
+});
+
 test("sets final 3D values for connected and reduced-motion states and resets on cleanup", () => {
   const source = readFileSync(hookPath, "utf8");
   const reducedBranch = source.slice(
@@ -137,6 +149,8 @@ test("sets final 3D values for connected and reduced-motion states and resets on
 
   assert.match(source, /bridge\.connected\s*=\s*true/);
   assert.match(source, /bridge\.installProgress\s*=\s*1/);
+  assert.match(source, /bridge\.activationProgress\s*=\s*1/);
   assert.match(reducedBranch, /setBridgeConnected\(\)/);
+  assert.match(source, /bridge\.activationProgress\s*=\s*0/);
   assert.match(cleanup, /resetBridge\(\)/);
 });

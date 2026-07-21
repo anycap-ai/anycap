@@ -39,10 +39,40 @@ export type AgentCoreSceneProjection = {
   };
 };
 
+export type AgentCoreActivation = {
+  socketScale: number;
+  coreEmissiveIntensity: number;
+  visorEmissiveIntensities: number[];
+};
+
+type AgentCoreFallbackAnchor = {
+  placement: {
+    x: number;
+    y: number;
+    scale: number;
+  };
+  localAnchor: {
+    x: number;
+    y: number;
+  };
+};
+
+type AgentCoreFallbackShiftOptions = {
+  artboard: {
+    width: number;
+    height: number;
+  };
+  sceneLeft: number;
+  robotSocket: AgentCoreFallbackAnchor;
+  dockSeat: AgentCoreFallbackAnchor;
+  targets: ReturnType<typeof projectAgentCoreInteractiveTargets>;
+};
+
 export type AgentCore3DBridge = {
   pointerTarget: AgentCore3DPointer;
   pointerCurrent: AgentCore3DRotation;
   installProgress: number;
+  activationProgress: number;
   connected: boolean;
   dragOffset: AgentCore3DVector;
   sceneActive: boolean;
@@ -86,10 +116,31 @@ export function createAgentCore3DBridge(): AgentCore3DBridge {
     pointerTarget: { x: 0, y: 0 },
     pointerCurrent: { yaw: 0, pitch: 0 },
     installProgress: 0,
+    activationProgress: 0,
     connected: false,
     dragOffset: { x: 0, y: 0, z: 0 },
     sceneActive: false,
     invalidate: null,
+  };
+}
+
+export function mapAgentCoreActivation(progress: number): AgentCoreActivation {
+  const activation = clamp(progress, 0, 1);
+  const pulse = Math.sin(Math.PI * activation);
+
+  return {
+    socketScale: 1 - activation * 0.08,
+    coreEmissiveIntensity: 0.02 + activation * 0.3 + pulse * 0.58,
+    visorEmissiveIntensities: Array.from({ length: 11 }, (_, index) => {
+      const distanceFromCenter = Math.abs(index - 5) / 5;
+      const activationStart = distanceFromCenter * 0.6;
+      const cellProgress = clamp(
+        (activation - activationStart) / (1 - activationStart),
+        0,
+        1,
+      );
+      return 0.04 + cellProgress * 0.48;
+    }),
   };
 }
 
@@ -176,6 +227,36 @@ export function projectAgentCoreInteractiveTargets(sceneWidth: number): {
   return {
     tableCore: projectAgentCorePoseToScene(mapCoreInstallPose(0), sceneWidth),
     chestSocket: projectAgentCorePoseToScene(mapCoreInstallPose(1), sceneWidth),
+  };
+}
+
+export function deriveAgentCoreFallbackShifts({
+  artboard,
+  sceneLeft,
+  robotSocket,
+  dockSeat,
+  targets,
+}: AgentCoreFallbackShiftOptions): {
+  robot: AgentCore3DPointer;
+  dock: AgentCore3DPointer;
+} {
+  const sceneWidth = artboard.width - sceneLeft;
+  const projectAnchor = ({ placement, localAnchor }: AgentCoreFallbackAnchor) => ({
+    x: (placement.x + localAnchor.x * placement.scale - sceneLeft) / sceneWidth,
+    y: (placement.y + localAnchor.y * placement.scale) / artboard.height,
+  });
+  const projectedRobotSocket = projectAnchor(robotSocket);
+  const projectedDockSeat = projectAnchor(dockSeat);
+
+  return {
+    robot: {
+      x: targets.chestSocket.normalized.centerX - projectedRobotSocket.x,
+      y: targets.chestSocket.normalized.centerY - projectedRobotSocket.y,
+    },
+    dock: {
+      x: targets.tableCore.normalized.centerX - projectedDockSeat.x,
+      y: targets.tableCore.normalized.centerY - projectedDockSeat.y,
+    },
   };
 }
 

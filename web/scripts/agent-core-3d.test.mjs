@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import * as agentCore3DState from "../src/components/landing/agent-core/agent-core-3d-state.ts";
 import {
   AGENT_CORE_SCENE_ASPECT,
   AGENT_CORE_WORLD_SPAN,
@@ -65,10 +66,51 @@ test("each 3D bridge begins in the awaiting state without shared mutable values"
   assert.deepEqual(first.pointerTarget, { x: 0, y: 0 });
   assert.deepEqual(first.pointerCurrent, { yaw: 0, pitch: 0 });
   assert.equal(first.installProgress, 0);
+  assert.equal(first.activationProgress, 0);
   assert.equal(first.connected, false);
   assert.deepEqual(first.dragOffset, { x: 0, y: 0, z: 0 });
   assert.equal(first.sceneActive, false);
   assert.equal(first.invalidate, null);
+});
+
+test("activation stays dormant before activate, pulses once, and settles connected", () => {
+  assert.equal(
+    typeof agentCore3DState.mapAgentCoreActivation,
+    "function",
+    "pure activation mapping helper",
+  );
+
+  const awaiting = agentCore3DState.mapAgentCoreActivation(0);
+  const midpoint = agentCore3DState.mapAgentCoreActivation(0.5);
+  const connected = agentCore3DState.mapAgentCoreActivation(1);
+
+  assert.equal(awaiting.socketScale, 1, "no socket contraction before activate");
+  assert.equal(awaiting.coreEmissiveIntensity, 0.02, "no Core glow before activate");
+  assert.deepEqual(
+    awaiting.visorEmissiveIntensities,
+    Array.from({ length: 11 }, () => 0.04),
+    "no visor glow before activate",
+  );
+  assert.ok(
+    midpoint.coreEmissiveIntensity > connected.coreEmissiveIntensity,
+    "bounded Core pulse peaks above its settled connected intensity",
+  );
+  assert.equal(connected.socketScale, 0.92, "socket finishes contracted");
+  assert.ok(
+    midpoint.visorEmissiveIntensities[5] > awaiting.visorEmissiveIntensities[5],
+    "centre visor cell has activated by the midpoint",
+  );
+  assert.equal(
+    agentCore3DState.mapAgentCoreActivation(0.15).visorEmissiveIntensities[0],
+    awaiting.visorEmissiveIntensities[0],
+    "edge visor cell remains dormant after the centre begins",
+  );
+  assert.ok(
+    connected.visorEmissiveIntensities.every(
+      (intensity) => intensity > awaiting.visorEmissiveIntensities[0],
+    ),
+    "all visor cells finish illuminated",
+  );
 });
 
 test("procedural overlays project the table Core and chest socket from one 4.8-world-unit contract", () => {
@@ -85,6 +127,73 @@ test("procedural overlays project the table Core and chest socket from one 4.8-w
     assert.equal(targets.tableCore.css.width, targets.tableCore.css.height);
     assert.equal(targets.chestSocket.css.width, targets.chestSocket.css.height);
   }
+});
+
+test("manifest fallback groups shift their physical anchors onto the procedural targets", async () => {
+  assert.equal(
+    typeof agentCore3DState.deriveAgentCoreFallbackShifts,
+    "function",
+    "pure fallback alignment helper",
+  );
+
+  const manifest = JSON.parse(
+    await readFile(
+      new URL("../public/visuals/agent-core/asset-manifest.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const targets = projectAgentCoreInteractiveTargets(100);
+  const sceneLeft = manifest.assets.body.canonicalPlacement.x;
+  const sceneWidth = manifest.artboard.width - sceneLeft;
+  const normalizedAnchor = (placement, anchor) => ({
+    x: (placement.x + anchor.x * placement.scale - sceneLeft) / sceneWidth,
+    y: (placement.y + anchor.y * placement.scale) / manifest.artboard.height,
+  });
+  const robotSocket = normalizedAnchor(
+    manifest.assets.body.canonicalPlacement,
+    manifest.assets.body.localAnchors.socketCenter,
+  );
+  const dockSeat = normalizedAnchor(
+    manifest.assets.dock.canonicalPlacement,
+    manifest.assets.dock.localAnchors.coreSeat,
+  );
+  const shifts = agentCore3DState.deriveAgentCoreFallbackShifts({
+    artboard: manifest.artboard,
+    sceneLeft,
+    robotSocket: {
+      placement: manifest.assets.body.canonicalPlacement,
+      localAnchor: manifest.assets.body.localAnchors.socketCenter,
+    },
+    dockSeat: {
+      placement: manifest.assets.dock.canonicalPlacement,
+      localAnchor: manifest.assets.dock.localAnchors.coreSeat,
+    },
+    targets,
+  });
+  const closeTo = (actual, expected, label) => {
+    assert.ok(Math.abs(actual - expected) < 1e-12, `${label}: ${actual} !== ${expected}`);
+  };
+
+  closeTo(
+    robotSocket.x + shifts.robot.x,
+    targets.chestSocket.normalized.centerX,
+    "fallback chest socket x",
+  );
+  closeTo(
+    robotSocket.y + shifts.robot.y,
+    targets.chestSocket.normalized.centerY,
+    "fallback chest socket y",
+  );
+  closeTo(
+    dockSeat.x + shifts.dock.x,
+    targets.tableCore.normalized.centerX,
+    "fallback dock seat x",
+  );
+  closeTo(
+    dockSeat.y + shifts.dock.y,
+    targets.tableCore.normalized.centerY,
+    "fallback dock seat y",
+  );
 });
 
 test("100px pointer deltas produce exactly 100px of projected Core movement at every scene width", () => {
@@ -152,6 +261,31 @@ test("Canvas is lazy, transparent, demand-rendered, and caps desktop and mobile 
   assert.match(robotSource, /size\.width\s*\/\s*AGENT_CORE_WORLD_SPAN/);
   assert.match(robotSource, /camera\.updateProjectionMatrix\(\)/);
   assert.match(robotSource, /invalidate\(\)/);
+});
+
+test("the procedural projection contract matches an axis-aligned R3F camera and root", async () => {
+  const robotSource = await readFile(robotSourceUrl, "utf8");
+
+  assert.match(
+    robotSource,
+    /camera=\{\{\s*position:\s*\[0,\s*0,\s*8\],\s*rotation:\s*\[0,\s*0,\s*0\]/,
+  );
+  assert.match(robotSource, /<group name="RobotRoot" position=\{\[0,\s*0,\s*0\]\}>/);
+  assert.match(robotSource, /camera\.zoom\s*=\s*size\.width\s*\/\s*AGENT_CORE_WORLD_SPAN/);
+});
+
+test("R3F activation reads only activation progress and retains all eleven visor materials", async () => {
+  const robotSource = await readFile(robotSourceUrl, "utf8");
+  const activationFrame = robotSource.slice(
+    robotSource.indexOf("const activation ="),
+    robotSource.indexOf("const headIsMoving"),
+  );
+
+  assert.match(activationFrame, /bridge\.activationProgress/);
+  assert.doesNotMatch(activationFrame, /bridge\.installProgress|bridge\.connected/);
+  assert.match(robotSource, /visorMaterialRefs/);
+  assert.match(robotSource, /Array\.from\(\{ length: 11 \}/);
+  assert.match(robotSource, /visorEmissiveIntensities\[index\]/);
 });
 
 test("the caller owns one stable fallback layer and only toggles its visibility", async () => {
