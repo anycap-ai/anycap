@@ -1,7 +1,9 @@
 # Agent Core True-3D Gaze and Autonomous Installation Design
 
-**Status:** Draft for written-spec review  
-**Approved direction:** true three-dimensional gaze with a custom rigged robot, natural head limits, and autonomous Core installation  
+**Status:** Draft for written-spec review
+
+**Approved direction:** true three-dimensional gaze with a custom rigged robot, natural head limits, and autonomous Core installation
+
 **Target branch:** `codex/doubao-audio-positioning`
 
 ## 1. Intent
