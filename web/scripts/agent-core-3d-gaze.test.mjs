@@ -45,12 +45,14 @@ test("keeps zero-size bounds finite", () => {
 
 test("splits rotation across neck and head", () => {
   assert.deepEqual(splitGazeRotation({ yaw: 70, pitch: 20 }), {
-    neck: { yaw: 21, pitch: 6 },
-    head: { yaw: 49, pitch: 14 },
+    neck: { yaw: 21, pitch: 6, roll: 0 },
+    head: { yaw: 49, pitch: 14, roll: 0 },
   });
 });
 
 test("never chooses a full-spin path", () => {
   assert.equal(shortestAngleDelta(170, -170), 20);
   assert.equal(shortestAngleDelta(-170, 170), -20);
+  assert.equal(shortestAngleDelta(720, 0), 0);
+  assert.equal(shortestAngleDelta(0, 720), 0);
 });

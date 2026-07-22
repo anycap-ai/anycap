@@ -58,26 +58,18 @@ export function splitGazeRotation(angles: GazeAngles): {
   const neck = {
     yaw: clamped.yaw * NECK_SHARE,
     pitch: clamped.pitch * NECK_SHARE,
+    roll: clamped.roll * NECK_SHARE,
   };
   const head = {
     yaw: clamped.yaw - neck.yaw,
     pitch: clamped.pitch - neck.pitch,
+    roll: clamped.roll - neck.roll,
   };
 
-  if (angles.roll === undefined) {
-    return { neck, head } as {
-      neck: Required<GazeAngles>;
-      head: Required<GazeAngles>;
-    };
-  }
-
-  return {
-    neck: { ...neck, roll: clamped.roll * NECK_SHARE },
-    head: { ...head, roll: clamped.roll * (1 - NECK_SHARE) },
-  };
+  return { neck, head };
 }
 
 export function shortestAngleDelta(fromDegrees: number, toDegrees: number): number {
   const delta = toDegrees - fromDegrees;
-  return ((delta + 540) % 360) - 180;
+  return ((((delta + 180) % 360) + 360) % 360) - 180;
 }
