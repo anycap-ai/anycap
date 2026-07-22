@@ -9,6 +9,7 @@ const headPath = fileURLToPath(new URL("../src/components/landing/agent-core/Age
 const corePath = fileURLToPath(new URL("../src/components/landing/agent-core/AnyCapCoreControl.tsx", import.meta.url));
 const telemetryPath = fileURLToPath(new URL("../src/components/landing/agent-core/CapabilityTelemetry.tsx", import.meta.url));
 const stylesPath = fileURLToPath(new URL("../src/components/landing/agent-core/agent-core.module.css", import.meta.url));
+const manifestPath = fileURLToPath(new URL("../public/visuals/agent-core/asset-manifest.json", import.meta.url));
 const homepagePath = fileURLToPath(new URL("../src/components/landing/HumanHomePage.tsx", import.meta.url));
 const agentCoreCanvasPath = fileURLToPath(
   new URL("../src/components/landing/agent-core/AgentCoreCanvas.tsx", import.meta.url),
@@ -28,6 +29,22 @@ const lockfilePath = fileURLToPath(new URL("../pnpm-lock.yaml", import.meta.url)
 function source(path) {
   return readFileSync(path, "utf8");
 }
+
+test("locks the canonical master geometry and direct layout", () => {
+  const manifest = JSON.parse(source(manifestPath));
+  const css = source(stylesPath);
+
+  assert.deepEqual(manifest.artboard, { width: 1672, height: 941 });
+  assert.deepEqual(manifest.anchors.socketCenter, { x: 0.697, y: 0.625 });
+  assert.deepEqual(manifest.anchors.dockCenter, { x: 0.637, y: 0.898 });
+  assert.match(css, /grid-template-areas:\s*"copy telemetry scene"/);
+  assert.match(
+    css,
+    /grid-template-columns:\s*minmax\(290px, 0\.78fr\)\s+minmax\(260px, 0\.58fr\)\s+minmax\(520px, 1\.28fr\)/,
+  );
+  assert.match(css, /font-family:\s*var\(--font-geist-pixel-square\), monospace/);
+  assert.doesNotMatch(css, /\.(?:canvasLayer|fallbackVisual|fallbackHidden)\b/);
+});
 
 test("preserves the hero and inserts the agent Core section exactly once", () => {
   const homepage = source(homepagePath);
