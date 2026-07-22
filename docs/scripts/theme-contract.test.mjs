@@ -6,6 +6,7 @@ const stylesheet = await readFile(new URL('../src/styles/custom.css', import.met
 const assetPreparation = await readFile(new URL('./prepare-assets.mjs', import.meta.url), 'utf8');
 const homepage = await readFile(new URL('../src/content/docs/index.mdx', import.meta.url), 'utf8');
 const logo = await readFile(new URL('../src/assets/anycap-logo.svg', import.meta.url), 'utf8');
+const favicon = await readFile(new URL('../public/favicon.svg', import.meta.url), 'utf8');
 const docsConfig = await readFile(new URL('../astro.config.mjs', import.meta.url), 'utf8');
 const modelsPage = await readFile(new URL('../src/content/docs/capabilities/models.mdx', import.meta.url), 'utf8').catch(
   () => '',
@@ -52,6 +53,13 @@ test('uses the main-site brand mark without duplicating it in the homepage hero'
   assert.match(logo, /fill="#6b7d3a"/);
   assert.match(logo, /rotate\(-5 100 100\)/);
   assert.match(logo, /<tspan fill="#1c1f17">any<\/tspan><tspan fill="#6b7d3a">cap<\/tspan>/);
+});
+
+test('uses the main-site nested-square mark for the browser favicon', () => {
+  assert.match(favicon, /viewBox="5 5 190 190"/);
+  assert.match(favicon, /<mask id="m">/);
+  assert.match(favicon, /rotate\(-5 100 100\)/);
+  assert.match(favicon, /rect x="49" y="49" width="102" height="102" rx="3" fill="#6b7d3a"/);
 });
 
 test('uses the same off-white page canvas as the main site', () => {
