@@ -12,6 +12,7 @@ import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import type { AgentCorePhase } from "./agent-core-state";
 import { CapabilityTelemetry } from "./CapabilityTelemetry";
 import styles from "./agent-core.module.css";
+import { useAgentCoreGaze3D } from "./useAgentCoreGaze3D";
 import { useAgentCoreTimeline } from "./useAgentCoreTimeline";
 
 const stats = getAgentCoreStats();
@@ -87,12 +88,15 @@ export function AgentCoreInstallSection() {
   const handleStageError = useCallback(() => setStageReady(false), []);
   const handlePhaseChange = useCallback(
     (nextPhase: AgentCorePhase) => {
+      bridge.pointer.active = false;
       updateBridgePhase(bridge, nextPhase);
       bridge.invalidate?.();
       onPhaseChange(nextPhase);
     },
     [bridge, onPhaseChange],
   );
+
+  useAgentCoreGaze3D(sectionRef, bridge, stageReady);
 
   const {
     onClick,

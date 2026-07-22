@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   clampGaze,
   mapPointerToGaze,
@@ -8,6 +10,8 @@ import {
 } from "../src/components/landing/agent-core/agent-core-gaze.ts";
 
 const bounds = { left: 100, top: 50, width: 1000, height: 600 };
+const gazeHookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreGaze3D.ts", import.meta.url));
+const rigPath = fileURLToPath(new URL("../src/components/landing/agent-core/AgentCoreRig3D.tsx", import.meta.url));
 
 test("maps the section edges to natural gaze limits", () => {
   assert.deepEqual(mapPointerToGaze({ x: 100, y: 350 }, bounds), { yaw: -70, pitch: 0 });
@@ -55,4 +59,39 @@ test("never chooses a full-spin path", () => {
   assert.equal(shortestAngleDelta(-170, 170), -20);
   assert.equal(shortestAngleDelta(720, 0), 0);
   assert.equal(shortestAngleDelta(0, 720), 0);
+});
+
+test("owns ready-stage pointer gaze through the mutable bridge", () => {
+  const gazeHook = readFileSync(gazeHookPath, "utf8");
+  assert.match(gazeHook, /section\.addEventListener\("pointermove"/);
+  assert.match(gazeHook, /section\.getBoundingClientRect\(\)/);
+  assert.match(gazeHook, /any-pointer: fine/);
+  assert.match(gazeHook, /phase === "connected" \? 0\.6 : 1/);
+  assert.match(gazeHook, /gazeMode !== "user"/);
+  assert.match(gazeHook, /bridge\.pointer\.(?:x|y|active)\s*=/);
+  assert.match(gazeHook, /bridge\.invalidate\?\.\(\)/);
+  assert.match(gazeHook, /new IntersectionObserver/);
+  assert.match(gazeHook, /section\.removeEventListener\("pointermove"/);
+  assert.match(gazeHook, /observer\.disconnect\(\)/);
+  assert.doesNotMatch(gazeHook, /setState|setRotation|requestAnimationFrame/);
+});
+
+test("damps real neck and head bones without moving the root or torso", () => {
+  const rig = readFileSync(rigPath, "utf8");
+  for (const boneName of ["neck_lower", "neck_upper", "head"]) {
+    assert.match(rig, new RegExp(`getObjectByName\\(\\"${boneName}\\"\\)`));
+  }
+  assert.match(rig, /useFrame\(\([^)]*delta/);
+  assert.match(rig, /splitGazeRotation/);
+  assert.match(rig, /clampGaze/);
+  assert.match(rig, /Quaternion/);
+  assert.match(rig, /rotateTowards/);
+  assert.match(rig, /angleTo/);
+  assert.match(rig, /CONVERGENCE_EPSILON/);
+  assert.match(rig, /setJointTarget\(gazeRig, gazeRig\.neckLower, split\.neck\)/);
+  assert.match(rig, /setJointTarget\(gazeRig, gazeRig\.neckUpper, split\.head\)/);
+  assert.doesNotMatch(rig, /setJointTarget\(gazeRig, gazeRig\.head/);
+  assert.match(rig, /if \(angularError > CONVERGENCE_EPSILON\) invalidate\(\)/);
+  assert.doesNotMatch(rig, /getObjectByName\("(?:AgentRoot|torso)"\)[\s\S]{0,120}quaternion/);
+  assert.doesNotMatch(rig, /setState|setRotation/);
 });

@@ -4,6 +4,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const hookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url));
+const gazeHookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreGaze3D.ts", import.meta.url));
 const sectionPath = fileURLToPath(new URL("../src/components/landing/agent-core/AgentCoreInstallSection.tsx", import.meta.url));
 
 test("uses one scoped GSAP lifecycle and one unpinned entrance trigger", () => {
@@ -86,6 +87,18 @@ test("scopes idle head tracking to the full section surface", () => {
   const source = readFileSync(hookPath, "utf8");
   assert.match(source, /section\.addEventListener\("pointermove",\s*onScenePointerMove\)/);
   assert.match(source, /section\.removeEventListener\("pointermove",\s*onScenePointerMove\)/);
+});
+
+test("hands full-section gaze to the 3D bridge only after stage readiness", () => {
+  const gazeHook = readFileSync(gazeHookPath, "utf8");
+  const section = readFileSync(sectionPath, "utf8");
+  assert.match(section, /useAgentCoreGaze3D\(sectionRef, bridge, stageReady\)/);
+  assert.match(gazeHook, /section\.addEventListener\("pointermove"/);
+  assert.match(gazeHook, /section\.addEventListener\("pointerleave"/);
+  assert.match(gazeHook, /section\.removeEventListener\("pointermove"/);
+  assert.match(gazeHook, /section\.removeEventListener\("pointerleave"/);
+  assert.match(gazeHook, /bridge\.pointer\.active = false/);
+  assert.doesNotMatch(gazeHook, /headRef|style\.|gsap|setState|setRotation/);
 });
 
 test("consumes the pure pointer reducer through one finalization path", () => {
