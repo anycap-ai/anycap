@@ -90,22 +90,13 @@ export function AgentCoreInstallSection() {
 
   useAgentCoreGaze3D(sectionRef, bridge, stageReady);
 
-  const {
-    onClick,
-    onKeyDown,
-    onLostPointerCapture,
-    onPointerCancel,
-    onPointerDown,
-    onPointerMove,
-    onPointerUp,
-  } = useAgentCoreTimeline({
+  const { onClick, onKeyDown } = useAgentCoreTimeline({
     sectionRef,
     sceneRef,
     headRef,
     coreRef,
     activationCanvasRef,
     socketRef,
-    dockRef,
     statusRef,
     valueRefs,
     fillRefs,
@@ -163,11 +154,6 @@ export function AgentCoreInstallSection() {
           activationCanvasRef={activationCanvasRef}
           socketRef={socketRef}
           dockRef={dockRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onLostPointerCapture={onLostPointerCapture}
-          onPointerCancel={onPointerCancel}
           onClick={onClick}
           onKeyDown={onKeyDown}
         />

@@ -12,6 +12,7 @@ export type AgentCore3DBridge = {
   pointer: { x: number; y: number; active: boolean };
   progress: number;
   invalidate: (() => void) | null;
+  commitRestPose: (() => void) | null;
 };
 
 export type AgentCoreLegacyHeadTarget = {
@@ -39,7 +40,16 @@ export function createAgentCore3DBridge(): AgentCore3DBridge {
     pointer: { x: 0, y: 0, active: false },
     progress: 0,
     invalidate: null,
+    commitRestPose: null,
   };
+}
+
+export function commitAgentCoreRestPoseBeforeConnected(
+  bridge: Pick<AgentCore3DBridge, "commitRestPose">,
+  enterConnected: () => void,
+) {
+  bridge.commitRestPose?.();
+  enterConnected();
 }
 
 export function createAgentCoreLegacyGazeOwnership(): AgentCoreLegacyGazeOwnership {

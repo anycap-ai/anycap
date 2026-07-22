@@ -6,6 +6,7 @@ import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
 import {
+  commitAgentCoreRestPoseBeforeConnected,
   resolveAgentCoreLegacyInstallGaze,
   type AgentCore3DBridge,
   type AgentCoreLegacyGazeOwnership,
@@ -37,7 +38,6 @@ type UseAgentCoreTimelineOptions = {
   headRef: React.RefObject<HTMLDivElement | null>;
   coreRef: React.RefObject<HTMLButtonElement | null>;
   socketRef: React.RefObject<HTMLDivElement | null>;
-  dockRef: React.RefObject<HTMLDivElement | null>;
   statusRef: React.RefObject<HTMLSpanElement | null>;
   valueRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   fillRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
@@ -51,11 +51,6 @@ type InteractionBridge = {
   install: () => void;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
-  onLostPointerCapture: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
 };
 
 type SocketTarget = {
@@ -73,11 +68,6 @@ function emptyInteractionBridge(): InteractionBridge {
     install: noop,
     onClick: noop,
     onKeyDown: noop,
-    onLostPointerCapture: noop,
-    onPointerCancel: noop,
-    onPointerDown: noop,
-    onPointerMove: noop,
-    onPointerUp: noop,
   };
 }
 
@@ -487,7 +477,10 @@ export function useAgentCoreTimeline({
           .call(() => transition("activated"), [], "returning")
           .addLabel("hold", INSTALL_DURATION_SECONDS)
           .call(() => {
-            transition("returned");
+            commitAgentCoreRestPoseBeforeConnected(
+              bridge,
+              () => transition("returned"),
+            );
             setFinalTelemetry();
             writeLegacyHeadTarget({ yaw: 0, pitch: -2, duration: 0.34 });
           }, [], "hold")
@@ -502,7 +495,6 @@ export function useAgentCoreTimeline({
       });
 
       bridgeRef.current = {
-        ...emptyInteractionBridge(),
         install,
         onClick,
         onKeyDown,
@@ -530,10 +522,5 @@ export function useAgentCoreTimeline({
     install: () => bridgeRef.current.install(),
     onClick: (event) => bridgeRef.current.onClick(event),
     onKeyDown: (event) => bridgeRef.current.onKeyDown(event),
-    onLostPointerCapture: (event) => bridgeRef.current.onLostPointerCapture(event),
-    onPointerCancel: (event) => bridgeRef.current.onPointerCancel(event),
-    onPointerDown: (event) => bridgeRef.current.onPointerDown(event),
-    onPointerMove: (event) => bridgeRef.current.onPointerMove(event),
-    onPointerUp: (event) => bridgeRef.current.onPointerUp(event),
   };
 }

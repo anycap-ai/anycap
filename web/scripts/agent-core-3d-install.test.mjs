@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { Object3D, Vector3 } from "three";
+import { Bone, Object3D, Quaternion, Vector3 } from "three";
+import modelContract from "../public/visuals/agent-core-3d/model-contract.json" with { type: "json" };
 import {
   initialInstallState,
   INSTALL_PHASES,
@@ -19,9 +20,22 @@ const rigPath = fileURLToPath(
 const stagePath = fileURLToPath(
   new URL("../src/components/landing/agent-core/AgentCoreStage3D.tsx", import.meta.url),
 );
+const timelinePath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url),
+);
 
 function source(path) {
   return existsSync(path) ? readFileSync(path, "utf8") : "";
+}
+
+function assertVectorClose(actual, expected, epsilon = 1e-6) {
+  assert.equal(actual.length, expected.length);
+  actual.forEach((value, index) => {
+    assert.ok(
+      Math.abs(value - expected[index]) <= epsilon,
+      `component ${index}: expected ${expected[index]}, received ${value}`,
+    );
+  });
 }
 
 function stateAt(phase) {
@@ -190,33 +204,82 @@ test("performs real Three.js parenting and deterministic waypoint resolution", a
       .filter(install3D.isIKPhase),
     ["reaching", "grasping", "carrying", "docking", "returning"],
   );
-  assert.deepEqual(
-    install3D.installWaypointToRigLocal({ x: 0.92, y: -0.72, z: 0.38 }).toArray(),
-    [0.92, 0.38, 0.72],
-  );
-  const stageWorld = install3D
-    .installWaypointToStageWorld({ x: 0.92, y: -0.72, z: 0.38 })
-    .toArray();
-  assert.ok(Math.abs(stageWorld[0] - 0.82) < Number.EPSILON);
-  assert.deepEqual(stageWorld.slice(1), [0.38, 0.72]);
-  assert.deepEqual(
-    install3D.resolveIKWaypoint("reaching", 0.78 / 3).toArray(),
-    [INSTALL_WAYPOINTS.grip.x, INSTALL_WAYPOINTS.grip.z, -INSTALL_WAYPOINTS.grip.y],
-  );
-  assert.deepEqual(
-    install3D.resolveIKWaypoint("carrying", 1.68 / 3).toArray(),
-    [
-      INSTALL_WAYPOINTS.preSocket.x,
-      INSTALL_WAYPOINTS.preSocket.z,
-      -INSTALL_WAYPOINTS.preSocket.y,
-    ],
-  );
-  assert.deepEqual(
+  const auditedEndpoints = modelContract.task7WaypointAdapter?.auditedEndpoints;
+  assert.ok(auditedEndpoints, "the runtime model contract exposes the audited v006 adapter");
+  for (const name of ["dock", "socket", "rest"]) {
+    const endpoint = auditedEndpoints[name];
+    assertVectorClose(
+      install3D.installWaypointToRigLocal(INSTALL_WAYPOINTS[name]).toArray(),
+      endpoint.gltfLocal,
+    );
+    assertVectorClose(
+      install3D.installWaypointToStageWorld(INSTALL_WAYPOINTS[name]).toArray(),
+      endpoint.stageWorld,
+    );
+  }
+  assertVectorClose(
     install3D.resolveIKWaypoint("docking", 2 / 3).toArray(),
-    [INSTALL_WAYPOINTS.socket.x, INSTALL_WAYPOINTS.socket.z, -INSTALL_WAYPOINTS.socket.y],
+    auditedEndpoints.socket.gltfLocal,
   );
-  assert.deepEqual(
+  assertVectorClose(
     install3D.resolveIKWaypoint("returning", 1).toArray(),
-    [INSTALL_WAYPOINTS.rest.x, INSTALL_WAYPOINTS.rest.z, -INSTALL_WAYPOINTS.rest.y],
+    auditedEndpoints.rest.gltfLocal,
   );
+});
+
+test("commits every authored arm quaternion before the connected transition", async () => {
+  const install3D = await import(
+    "../src/components/landing/agent-core/useAgentCoreInstall3D.ts"
+  );
+  const bridge3D = await import(
+    "../src/components/landing/agent-core/agent-core-3d-bridge.ts"
+  );
+  const timeline = source(timelinePath);
+  const hold = timeline.slice(
+    timeline.indexOf('.addLabel("hold"'),
+    timeline.indexOf(".play(0)"),
+  );
+  assert.match(
+    hold,
+    /commitAgentCoreRestPoseBeforeConnected\(\s*bridge,\s*\(\) => transition\("returned"\),?\s*\)/,
+  );
+
+  const axis = new Vector3(0, 1, 0);
+  const joints = [0.13, -0.26, 0.39, -0.52].map((angle) => {
+    const bone = new Bone();
+    bone.quaternion.setFromAxisAngle(axis, angle);
+    return bone;
+  });
+  const target = new Bone();
+  target.position.set(-0.128913, 0.217794, 0.175895);
+  target.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), 0.18);
+  const pose = install3D.captureArmRestPose(target, joints);
+  const authoredQuaternions = joints.map((joint) => joint.quaternion.clone());
+  const authoredTargetPosition = target.position.clone();
+  const authoredTargetQuaternion = target.quaternion.clone();
+
+  joints.forEach((joint, index) => {
+    joint.quaternion.setFromAxisAngle(axis, 0.8 + index * 0.1);
+  });
+  target.position.set(9, 8, 7);
+  target.quaternion.copy(new Quaternion().setFromAxisAngle(axis, 1.4));
+  let state = stateAt("returning");
+  let exactAtConnectedBoundary = false;
+  bridge3D.commitAgentCoreRestPoseBeforeConnected(
+    { commitRestPose: () => install3D.commitArmRestPose(pose) },
+    () => {
+      exactAtConnectedBoundary = joints.every((joint, index) =>
+        joint.quaternion.equals(authoredQuaternions[index]),
+      );
+      state = nextInstallState(state, "returned");
+    },
+  );
+
+  assert.equal(exactAtConnectedBoundary, true);
+  assert.equal(state.phase, "connected");
+  joints.forEach((joint, index) => {
+    assert.equal(joint.quaternion.equals(authoredQuaternions[index]), true, `joint ${index}`);
+  });
+  assert.equal(target.position.equals(authoredTargetPosition), true);
+  assert.equal(target.quaternion.equals(authoredTargetQuaternion), true);
 });

@@ -15,11 +15,6 @@ export type AgentCoreSceneProps = {
   activationCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   socketRef: React.RefObject<HTMLDivElement | null>;
   dockRef: React.RefObject<HTMLDivElement | null>;
-  onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
-  onLostPointerCapture: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
 };
@@ -85,11 +80,6 @@ export function AgentCoreScene({
   activationCanvasRef,
   socketRef,
   dockRef,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onLostPointerCapture,
-  onPointerCancel,
   onClick,
   onKeyDown,
 }: AgentCoreSceneProps) {
@@ -146,11 +136,6 @@ export function AgentCoreScene({
 
       <AnyCapCoreControl
         coreRef={coreRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onLostPointerCapture={onLostPointerCapture}
-        onPointerCancel={onPointerCancel}
         onClick={onClick}
         onKeyDown={onKeyDown}
       />

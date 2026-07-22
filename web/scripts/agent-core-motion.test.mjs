@@ -7,6 +7,7 @@ const hookPath = fileURLToPath(new URL("../src/components/landing/agent-core/use
 const install3DPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreInstall3D.ts", import.meta.url));
 const gazeHookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreGaze3D.ts", import.meta.url));
 const sectionPath = fileURLToPath(new URL("../src/components/landing/agent-core/AgentCoreInstallSection.tsx", import.meta.url));
+const scenePath = fileURLToPath(new URL("../src/components/landing/agent-core/AgentCoreScene.tsx", import.meta.url));
 const coreControlPath = fileURLToPath(new URL("../src/components/landing/agent-core/AnyCapCoreControl.tsx", import.meta.url));
 
 test("uses one scoped GSAP lifecycle and one unpinned entrance trigger", () => {
@@ -55,12 +56,25 @@ test("names the complete autonomous installation narrative without DOM Core flig
 test("provides native click, tap, Enter, Space, and reduced-motion paths", () => {
   const hook = readFileSync(hookPath, "utf8");
   const section = readFileSync(sectionPath, "utf8");
+  const scene = readFileSync(scenePath, "utf8");
   const coreControl = readFileSync(coreControlPath, "utf8");
 
   assert.match(coreControl, /<button/);
   assert.match(coreControl, /onClick=\{onClick\}/);
   assert.match(coreControl, /onKeyDown=\{onKeyDown\}/);
   assert.doesNotMatch(coreControl, /onPointerMove|setPointerCapture|onLostPointerCapture/);
+  for (const deadProp of [
+    "onPointerDown",
+    "onPointerMove",
+    "onPointerUp",
+    "onLostPointerCapture",
+    "onPointerCancel",
+  ]) {
+    const propPattern = new RegExp(`\\b${deadProp}\\b`);
+    assert.doesNotMatch(hook, propPattern);
+    assert.doesNotMatch(section, propPattern);
+    assert.doesNotMatch(scene, propPattern);
+  }
   assert.match(section, /onClick/);
   assert.match(section, /onKeyDown/);
   assert.match(hook, /event\.key !== "Enter" && event\.key !== " "/);
@@ -126,7 +140,7 @@ test("hands full-section gaze to the 3D bridge only after stage readiness", () =
   assert.match(timeline, /resolveAgentCoreLegacyInstallGaze/);
   const installTimeline = timeline.slice(
     timeline.indexOf("installationTimeline = gsap.timeline"),
-    timeline.indexOf("const onPointerDown"),
+    timeline.indexOf(".play(0)"),
   );
   assert.doesNotMatch(installTimeline, /\.to\(\s*head,/);
   assert.match(gazeHook, /section\.addEventListener\("pointermove"/);

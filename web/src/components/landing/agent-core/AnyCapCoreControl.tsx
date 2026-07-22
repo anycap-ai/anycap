@@ -3,8 +3,10 @@ import type React from "react";
 
 import styles from "./agent-core.module.css";
 
-export type AnyCapCoreControlProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+export type AnyCapCoreControlProps = {
   coreRef: React.RefObject<HTMLButtonElement | null>;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+  onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
 };
 
 export function AnyCapCoreControl({

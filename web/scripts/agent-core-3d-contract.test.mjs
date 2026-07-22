@@ -10,6 +10,25 @@ test("locks the approved custom-rig contract", () => {
   assert.deepEqual(contract.gazeLimitsDegrees.yaw, [-70, 70]);
   assert.deepEqual(contract.gazeLimitsDegrees.pitch, [-25, 25]);
   assert.deepEqual(contract.gazeLimitsDegrees.roll, [-3, 3]);
+  assert.deepEqual(contract.task7WaypointAdapter, {
+    scale: [-0.2826086956521739, 0.33088235294117646, -0.0736842105263158],
+    offset: [0.035, 0.38323529411764706, 0.198],
+    r3fRootTranslation: [-0.1, 0, 0],
+    auditedEndpoints: {
+      dock: {
+        gltfLocal: [-0.225, 0.145, 0.17],
+        stageWorld: [-0.325, 0.145, 0.17],
+      },
+      socket: {
+        gltfLocal: [0.035, 0.37, 0.142],
+        stageWorld: [-0.065, 0.37, 0.142],
+      },
+      rest: {
+        gltfLocal: [-0.128913, 0.217794, 0.175895],
+        stageWorld: [-0.228913, 0.217794, 0.175895],
+      },
+    },
+  });
   assert.deepEqual(contract.asset, {
     file: "agent-core-upper-body.glb",
     maxBytes: 3145728,

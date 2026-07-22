@@ -14,6 +14,7 @@ import {
   type IK,
 } from "three/addons/animation/CCDIKSolver.js";
 
+import modelContract from "../../../../public/visuals/agent-core-3d/model-contract.json";
 import type { AgentCore3DBridge } from "./agent-core-3d-bridge";
 import {
   INSTALL_WAYPOINTS,
@@ -23,8 +24,8 @@ import {
 } from "./agent-core-install-state";
 
 const INSTALL_DURATION_SECONDS = 3;
-const R3F_ROOT_POSITION = { x: -0.1, y: 0, z: 0 } as const;
 const ARM_CHAIN_NAMES = ["hand_R", "forearm_R", "upper_arm_R", "clavicle_R"] as const;
+const waypointAdapter = modelContract.task7WaypointAdapter;
 const IK_PHASES = new Set<AgentCoreInstallPhase>([
   "reaching",
   "grasping",
@@ -33,23 +34,49 @@ const IK_PHASES = new Set<AgentCoreInstallPhase>([
   "returning",
 ]);
 
-type RestJoint = {
+export type RestJoint = {
   bone: Bone;
   quaternion: Quaternion;
+};
+
+export type ArmRestPose = {
+  ikTarget: Object3D;
+  ikTargetPosition: Vector3;
+  ikTargetQuaternion: Quaternion;
+  restQuaternions: RestJoint[];
 };
 
 type ArmIKRig = {
   solver: CCDIKSolver;
   ikTarget: Bone;
-  ikTargetRestPosition: Vector3;
-  ikTargetRestQuaternion: Quaternion;
-  restQuaternions: RestJoint[];
+  restPose: ArmRestPose;
   core: Object3D;
   coreOriginalParent: Object3D;
   dock: Object3D;
   grip: Object3D;
   socket: Object3D;
 };
+
+export function captureArmRestPose(
+  ikTarget: Object3D,
+  bones: readonly Bone[],
+): ArmRestPose {
+  return {
+    ikTarget,
+    ikTargetPosition: ikTarget.position.clone(),
+    ikTargetQuaternion: ikTarget.quaternion.clone(),
+    restQuaternions: bones.map((bone) => ({
+      bone,
+      quaternion: bone.quaternion.clone(),
+    })),
+  };
+}
+
+export function commitArmRestPose(restPose: ArmRestPose) {
+  for (const rest of restPose.restQuaternions) rest.bone.quaternion.copy(rest.quaternion);
+  restPose.ikTarget.position.copy(restPose.ikTargetPosition);
+  restPose.ikTarget.quaternion.copy(restPose.ikTargetQuaternion);
+}
 
 function semanticObject(scene: Object3D, name: string): Object3D {
   const object = scene.getObjectByName(name);
@@ -158,12 +185,7 @@ function prepareArmIK(scene: Object3D): ArmIKRig {
   return {
     solver,
     ikTarget: target,
-    ikTargetRestPosition: target.position.clone(),
-    ikTargetRestQuaternion: target.quaternion.clone(),
-    restQuaternions: [clavicle, upperArm, forearm, hand].map((bone) => ({
-      bone,
-      quaternion: bone.quaternion.clone(),
-    })),
+    restPose: captureArmRestPose(target, [clavicle, upperArm, forearm, hand]),
     core,
     coreOriginalParent,
     dock: semanticObject(scene, "core_dock"),
@@ -214,14 +236,19 @@ function segmentProgress(time: number, start: number, end: number): number {
   return MathUtils.clamp((time - start) / (end - start), 0, 1);
 }
 
-// INSTALL_WAYPOINTS are locked in Blender narrative axes. glTF exports them as
-// (x, z, -y); the fixed Task 6A R3F group offset is outside AgentRoot, so IK
-// consumes this rig-local conversion without the stage translation.
+// Task 7 controller coordinates are not direct Blender or glTF coordinates.
+// The v006 asset contract supplies the component-wise affine adapter into the
+// semantic AgentRoot space. Task 6A's R3F translation remains outside the rig.
 export function installWaypointToRigLocal(
   waypoint: InstallWaypoint,
   target = new Vector3(),
 ): Vector3 {
-  return target.set(waypoint.x, waypoint.z, -waypoint.y);
+  const { scale, offset } = waypointAdapter;
+  return target.set(
+    waypoint.x * scale[0] + offset[0],
+    waypoint.y * scale[1] + offset[1],
+    waypoint.z * scale[2] + offset[2],
+  );
 }
 
 export function installWaypointToStageWorld(
@@ -229,9 +256,9 @@ export function installWaypointToStageWorld(
   target = new Vector3(),
 ): Vector3 {
   const worldTarget = installWaypointToRigLocal(waypoint, target);
-  worldTarget.x += R3F_ROOT_POSITION.x;
-  worldTarget.y += R3F_ROOT_POSITION.y;
-  worldTarget.z += R3F_ROOT_POSITION.z;
+  worldTarget.x += waypointAdapter.r3fRootTranslation[0];
+  worldTarget.y += waypointAdapter.r3fRootTranslation[1];
+  worldTarget.z += waypointAdapter.r3fRootTranslation[2];
   return worldTarget;
 }
 
@@ -316,18 +343,26 @@ export function useAgentCoreInstall3D(scene: Object3D, bridge: AgentCore3DBridge
 
   useEffect(() => {
     const ikHelper = rig.solver.createHelper(0.01);
+    const applyRestPose = () => {
+      commitArmRestPose(rig.restPose);
+      scene.updateMatrixWorld(true);
+    };
+    const commitRestPose = () => {
+      applyRestPose();
+      bridge.invalidate?.();
+    };
     scene.updateMatrixWorld(true);
     synchronizeCoreOwner(rig, bridge.coreOwner);
     ownerRef.current = bridge.coreOwner;
+    bridge.commitRestPose = commitRestPose;
     bridge.invalidate?.();
 
     return () => {
-      for (const rest of rig.restQuaternions) rest.bone.quaternion.copy(rest.quaternion);
-      rig.ikTarget.position.copy(rig.ikTargetRestPosition);
-      rig.ikTarget.quaternion.copy(rig.ikTargetRestQuaternion);
+      applyRestPose();
       rig.coreOriginalParent.attach(rig.core);
       ikHelper.dispose();
       ownerRef.current = null;
+      if (bridge.commitRestPose === commitRestPose) bridge.commitRestPose = null;
     };
   }, [bridge, rig, scene]);
 
@@ -351,7 +386,7 @@ export function useAgentCoreInstall3D(scene: Object3D, bridge: AgentCore3DBridge
         2.35,
         3,
       );
-      for (const { bone, quaternion: restQuaternion } of rig.restQuaternions) {
+      for (const { bone, quaternion: restQuaternion } of rig.restPose.restQuaternions) {
         bone.quaternion.slerp(restQuaternion, returnProgress);
       }
     }
