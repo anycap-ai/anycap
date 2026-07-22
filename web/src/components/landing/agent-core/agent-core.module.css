@@ -146,6 +146,39 @@
   isolation: isolate;
 }
 
+.fallbackVisual,
+.stage3D {
+  position: absolute;
+  inset: 0;
+}
+
+.fallbackVisual {
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 180ms ease-out;
+}
+
+.stage3D {
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+
+.stage3D canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.stageReady {
+  opacity: 1;
+}
+
+.stageReady + .fallbackVisual {
+  opacity: 0;
+}
+
 .layerImage {
   display: block;
   width: 100%;

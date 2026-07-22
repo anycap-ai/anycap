@@ -8,6 +8,7 @@ import styles from "./agent-core.module.css";
 
 export type AgentCoreSceneProps = {
   connected: boolean;
+  stage: React.ReactNode;
   sceneRef: React.RefObject<HTMLDivElement | null>;
   headRef: React.RefObject<HTMLDivElement | null>;
   coreRef: React.RefObject<HTMLButtonElement | null>;
@@ -77,6 +78,7 @@ const sceneStyle = {
 
 export function AgentCoreScene({
   connected,
+  stage,
   sceneRef,
   headRef,
   coreRef,
@@ -101,53 +103,57 @@ export function AgentCoreScene({
       data-connected={connected}
       data-agent-core-entrance
     >
-      <div className={styles.table} aria-hidden="true" />
+      {stage}
 
-      <div className={styles.body} aria-hidden="true">
-        <Image
-          src="/visuals/agent-core/robot-body.webp"
-          alt=""
-          width={1024}
-          height={1024}
-          sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
-          draggable={false}
-          className={styles.layerImage}
+      <div className={styles.fallbackVisual}>
+        <div className={styles.table} aria-hidden="true" />
+
+        <div className={styles.body} aria-hidden="true">
+          <Image
+            src="/visuals/agent-core/robot-body.webp"
+            alt=""
+            width={1024}
+            height={1024}
+            sizes="(min-width: 1280px) 50vw, (min-width: 768px) 52vw, calc(100vw - 64px)"
+            draggable={false}
+            className={styles.layerImage}
+          />
+        </div>
+
+        <AgentHeadTracker headRef={headRef} />
+
+        <div ref={socketRef} className={styles.socket} aria-hidden="true" />
+        <canvas
+          ref={activationCanvasRef}
+          className={styles.activationCanvas}
+          width={160}
+          height={160}
+          aria-hidden="true"
+        />
+
+        <div ref={dockRef} className={styles.dock} aria-hidden="true">
+          <Image
+            src="/visuals/agent-core/core-dock.webp"
+            alt=""
+            width={640}
+            height={320}
+            sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
+            draggable={false}
+            className={styles.layerImage}
+          />
+        </div>
+
+        <AnyCapCoreControl
+          coreRef={coreRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onLostPointerCapture={onLostPointerCapture}
+          onPointerCancel={onPointerCancel}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
         />
       </div>
-
-      <AgentHeadTracker headRef={headRef} />
-
-      <div ref={socketRef} className={styles.socket} aria-hidden="true" />
-      <canvas
-        ref={activationCanvasRef}
-        className={styles.activationCanvas}
-        width={160}
-        height={160}
-        aria-hidden="true"
-      />
-
-      <div ref={dockRef} className={styles.dock} aria-hidden="true">
-        <Image
-          src="/visuals/agent-core/core-dock.webp"
-          alt=""
-          width={640}
-          height={320}
-          sizes="(min-width: 1280px) 14vw, (min-width: 768px) 13vw, 23vw"
-          draggable={false}
-          className={styles.layerImage}
-        />
-      </div>
-
-      <AnyCapCoreControl
-        coreRef={coreRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onLostPointerCapture={onLostPointerCapture}
-        onPointerCancel={onPointerCancel}
-        onClick={onClick}
-        onKeyDown={onKeyDown}
-      />
     </div>
   );
 }

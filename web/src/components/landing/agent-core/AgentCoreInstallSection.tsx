@@ -1,8 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { Component, useCallback, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 
 import { AgentCoreScene } from "./AgentCoreScene";
+import {
+  createAgentCore3DBridge,
+  type AgentCore3DBridge,
+} from "./agent-core-3d-bridge";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import type { AgentCorePhase } from "./agent-core-state";
 import { CapabilityTelemetry } from "./CapabilityTelemetry";
@@ -10,6 +15,55 @@ import styles from "./agent-core.module.css";
 import { useAgentCoreTimeline } from "./useAgentCoreTimeline";
 
 const stats = getAgentCoreStats();
+const AgentCoreStage3D = dynamic(() => import("./AgentCoreStage3D").then(({ AgentCoreStage3D }) => AgentCoreStage3D), {
+  loading: () => null,
+  ssr: false,
+});
+
+type StageBoundaryProps = {
+  children: ReactNode;
+  onError: () => void;
+};
+
+class AgentCoreStageBoundary extends Component<StageBoundaryProps, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(_error: Error, _info: ErrorInfo) {
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function updateBridgePhase(bridge: AgentCore3DBridge, phase: AgentCorePhase) {
+  if (phase === "connected") {
+    bridge.phase = "connected";
+    bridge.coreOwner = "socket";
+    bridge.gazeMode = "user";
+    bridge.progress = 1;
+  } else if (phase === "installing") {
+    bridge.phase = "carrying";
+    bridge.coreOwner = "hand";
+    bridge.gazeMode = "socket";
+    bridge.progress = 0.5;
+  } else if (phase === "dragging") {
+    bridge.phase = "targeting";
+    bridge.coreOwner = "dock";
+    bridge.gazeMode = "core";
+    bridge.progress = 0;
+  } else {
+    bridge.phase = "awaiting";
+    bridge.coreOwner = "dock";
+    bridge.gazeMode = "user";
+    bridge.progress = 0;
+  }
+}
 
 export function AgentCoreInstallSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -23,6 +77,22 @@ export function AgentCoreInstallSection() {
   const valueRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const [phase, onPhaseChange] = useState<AgentCorePhase>("awaiting");
+  const [stageReady, setStageReady] = useState(false);
+  const bridgeRef = useRef<AgentCore3DBridge | null>(null);
+  if (bridgeRef.current === null) bridgeRef.current = createAgentCore3DBridge();
+  const bridge = bridgeRef.current;
+  updateBridgePhase(bridge, phase);
+
+  const handleStageReady = useCallback(() => setStageReady(true), []);
+  const handleStageError = useCallback(() => setStageReady(false), []);
+  const handlePhaseChange = useCallback(
+    (nextPhase: AgentCorePhase) => {
+      updateBridgePhase(bridge, nextPhase);
+      bridge.invalidate?.();
+      onPhaseChange(nextPhase);
+    },
+    [bridge, onPhaseChange],
+  );
 
   const {
     onClick,
@@ -43,7 +113,7 @@ export function AgentCoreInstallSection() {
     statusRef,
     valueRefs,
     fillRefs,
-    onPhaseChange,
+    onPhaseChange: handlePhaseChange,
   });
 
   const connected = phase === "connected";
@@ -79,6 +149,16 @@ export function AgentCoreInstallSection() {
 
         <AgentCoreScene
           connected={connected}
+          stage={
+            <AgentCoreStageBoundary onError={handleStageError}>
+              <AgentCoreStage3D
+                bridge={bridge}
+                ready={stageReady}
+                onReady={handleStageReady}
+                onError={handleStageError}
+              />
+            </AgentCoreStageBoundary>
+          }
           sceneRef={sceneRef}
           headRef={headRef}
           coreRef={coreRef}

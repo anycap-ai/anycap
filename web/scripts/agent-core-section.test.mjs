@@ -25,6 +25,18 @@ const hookPath = fileURLToPath(
 );
 const packageJsonPath = fileURLToPath(new URL("../package.json", import.meta.url));
 const lockfilePath = fileURLToPath(new URL("../pnpm-lock.yaml", import.meta.url));
+const stagePath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/AgentCoreStage3D.tsx", import.meta.url),
+);
+const rigPath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/AgentCoreRig3D.tsx", import.meta.url),
+);
+const bridgePath = fileURLToPath(
+  new URL("../src/components/landing/agent-core/agent-core-3d-bridge.ts", import.meta.url),
+);
+const modelContractPath = fileURLToPath(
+  new URL("../public/visuals/agent-core-3d/model-contract.json", import.meta.url),
+);
 
 function source(path) {
   return readFileSync(path, "utf8");
@@ -43,7 +55,7 @@ test("locks the canonical master geometry and direct layout", () => {
     /grid-template-columns:\s*minmax\(290px, 0\.78fr\)\s+minmax\(260px, 0\.58fr\)\s+minmax\(520px, 1\.28fr\)/,
   );
   assert.match(css, /font-family:\s*var\(--font-geist-pixel-square\), monospace/);
-  assert.doesNotMatch(css, /\.(?:canvasLayer|fallbackVisual|fallbackHidden)\b/);
+  assert.doesNotMatch(css, /\.(?:canvasLayer|fallbackHidden)\b/);
 });
 
 test("preserves the hero and inserts the agent Core section exactly once", () => {
@@ -178,7 +190,7 @@ test("locks telemetry, accessibility, manifest, and static-only source contracts
   );
 });
 
-test("renders the approved master layers as the primary robot surface", () => {
+test("keeps the approved master layers mounted as the guarded fallback surface", () => {
   const section = source(sectionPath);
   const scene = source(scenePath);
   const coreControl = source(corePath);
@@ -189,7 +201,10 @@ test("renders the approved master layers as the primary robot surface", () => {
   assert.match(scene, /core-dock\.webp/);
   assert.match(coreControl, /anycap-core\.webp/);
   assert.doesNotMatch(scene, /AgentCoreCanvas|fallbackHidden|canvasReady/);
-  assert.doesNotMatch(`${section}\n${hook}`, /createAgentCore3DBridge|bridge=/);
+  assert.match(section, /createAgentCore3DBridge/);
+  assert.match(section, /bridge=\{bridge\}/);
+  assert.match(section, /onPhaseChange:\s*handlePhaseChange/);
+  assert.match(section, /updateBridgePhase\(bridge, nextPhase\)[\s\S]*bridge\.invalidate\?\.\(\)/);
 
   const directLayerOrder = [
     "<div className={styles.table}",
@@ -228,13 +243,62 @@ test("exposes every approved manifest placement as a scene CSS variable", () => 
   }
 });
 
-test("does not ship a lower-fidelity full-robot WebGL replacement", () => {
+test("loads the approved local GLB through a guarded demand-rendered stage", () => {
+  const section = source(sectionPath);
+  const scene = source(scenePath);
+  const styles = source(stylesPath);
+  const stage = source(stagePath);
+  const rig = source(rigPath);
+  const bridge = source(bridgePath);
   const packageJson = source(packageJsonPath);
   const lockfile = source(lockfilePath);
+  const contract = JSON.parse(source(modelContractPath));
+  const { forbidden: _forbiddenTokens, ...runtimeContract } = contract;
+  const runtimeLockfile = lockfile
+    .split("\n")
+    .filter((line) => !/^\s*deprecated:/.test(line))
+    .join("\n");
 
   assert.equal(existsSync(agentCoreCanvasPath), false);
   assert.equal(existsSync(agentCoreRobot3DPath), false);
   assert.equal(existsSync(agentCore3DStatePath), false);
-  assert.doesNotMatch(packageJson, /@react-three|"three"|@types\/three/);
-  assert.doesNotMatch(lockfile, /@react-three|@types\/three|^\s{2}three@/m);
+  assert.match(section, /dynamic\(.*AgentCoreStage3D/);
+  assert.match(section, /<AgentCoreScene/);
+  assert.match(stage, /frameloop="demand"/);
+  assert.match(stage, /alpha:\s*true/);
+  assert.match(stage, /dpr=\{isMobile \? \[1, 1\.25\] : \[1, 1\.5\]\}/);
+  assert.match(rig, /agent-core-upper-body\.glb/);
+  assert.match(rig, /useGLTF/);
+  assert.doesNotMatch(rig, /boxGeometry|sphereGeometry|capsuleGeometry|cylinderGeometry/);
+  assert.match(bridge, /createAgentCore3DBridge/);
+  assert.match(styles, /\.stageReady[\s\S]*\.fallbackVisual/);
+  assert.match(scene, /styles\.fallbackVisual/);
+  assert.match(packageJson, /"@react-three\/fiber":\s*"9\.6\.1"/);
+  assert.match(packageJson, /"@react-three\/drei":\s*"10\.7\.7"/);
+  assert.match(packageJson, /"three":\s*"0\.185\.1"/);
+  assert.match(packageJson, /"@types\/three":\s*"0\.185\.1"/);
+  assert.match(lockfile, /@react-three\/fiber/);
+  assert.doesNotMatch(
+    `${stage}\n${rig}\n${JSON.stringify(runtimeContract)}\n${packageJson}\n${runtimeLockfile}`,
+    /https?:\/\//,
+  );
+});
+
+test("keeps the fallback visible until rig readiness and restores it on failure", () => {
+  const section = source(sectionPath);
+  const scene = source(scenePath);
+  const stage = source(stagePath);
+  const styles = source(stylesPath);
+
+  assert.match(section, /onReady=\{handleStageReady\}/);
+  assert.match(section, /onError=\{handleStageError\}/);
+  assert.match(section, /handleStageReady[\s\S]*setStageReady\(true\)/);
+  assert.match(section, /handleStageError[\s\S]*setStageReady\(false\)/);
+  assert.doesNotMatch(section, /(?:onLoad|onLoadStart)[\s\S]{0,120}setStageReady\(true\)/);
+  assert.match(styles, /\.fallbackVisual\s*\{[^}]*opacity:\s*1\s*;/);
+  assert.match(styles, /\.stageReady\s*\+\s*\.fallbackVisual\s*\{[^}]*opacity:\s*0\s*;/);
+  assert.ok(scene.indexOf("{stage}") < scene.indexOf("styles.fallbackVisual"));
+  assert.match(stage, /classList\.remove\(styles\.stageReady\)[\s\S]*onError\(\)/);
+  assert.match(stage, /stageHealthy\.current\s*=\s*false[\s\S]*onError\(\)/);
+  assert.match(stage, /if\s*\(stageHealthy\.current\)\s*onReady\(\)/);
 });
