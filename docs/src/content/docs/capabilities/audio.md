@@ -1,31 +1,23 @@
 ---
-title: Music and Audio Generation
-description: Generate music, speech, dialogue, and complete audio scenes through live AnyCap model schemas.
+title: Audio Generation
+description: Generate audio scenes, speech, and dialogue through live AnyCap model schemas.
 ---
 
-## Generate music
+## Audio generation
+
+Audio is a generation capability distinct from music. The selected model may expose one or more of these mode values; inspect the live catalog before choosing one:
+
+| Mode | Use it for |
+| --- | --- |
+| `text-to-audio` | Create an audio scene, speech, or dialogue from a prompt |
+| `audio-to-audio` | Guide a new result with supported audio references |
+| `image-to-audio` | Guide an audio scene with a supported image reference |
 
 ```bash
-anycap music models
-anycap music models <model-id> schema --mode text-to-music
-anycap music generate \
-  --prompt "warm lo-fi study beat" \
-  --model <model-id> \
-  --tags "lofi,warm,study" \
-  --instrumental \
-  -o study-beat.mp3
+# Print the modes advertised by every audio model right now.
+anycap audio models \
+  | jq -r '.models[] | .model as $model | .operations[]?.modes[]?.mode | [$model, .] | @tsv'
 ```
-
-Use `--title`, `--lyrics`, and schema-advertised parameters when the selected model supports them. A request can return multiple clips under `outputs`.
-
-```bash
-anycap music generate --prompt "..." --model <model-id> \
-  | jq -r '.outputs[].local_path'
-```
-
-## Generate audio scenes
-
-Audio models may support text, audio, or image input:
 
 ```bash
 anycap audio models
@@ -37,13 +29,10 @@ anycap audio generate \
   -o welcome.mp3
 ```
 
-Other schema-discovered modes can include:
-
-- `audio-to-audio` for reference-guided performance or scene generation
-- `image-to-audio` for a scene guided by an image
-
-These are generation workflows, not claims of a general-purpose audio editor. Confirm formats, sample rates, reference limits, subtitles, and voice controls against the live schema.
+These are generation workflows, not claims of a general-purpose audio editor. Confirm formats, sample rates, reference limits, subtitles, and voice controls against the selected live schema.
 
 ## Output metadata
 
 Audio outputs can include `local_path`, `mime_type`, duration, byte size, subtitle data, usage, and diagnostic IDs. If one local download fails after provider generation succeeds, that output reports its own `error` instead of hiding the successful provider result.
+
+For composed tracks, see [Music generation](/capabilities/music/).

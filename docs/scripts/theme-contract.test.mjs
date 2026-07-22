@@ -8,6 +8,10 @@ const homepage = await readFile(new URL('../src/content/docs/index.mdx', import.
 const logo = await readFile(new URL('../src/assets/anycap-logo.svg', import.meta.url), 'utf8');
 const favicon = await readFile(new URL('../public/favicon.svg', import.meta.url), 'utf8');
 const docsConfig = await readFile(new URL('../astro.config.mjs', import.meta.url), 'utf8');
+const capabilitiesPage = await readFile(new URL('../src/content/docs/capabilities/index.mdx', import.meta.url), 'utf8');
+const audioPage = await readFile(new URL('../src/content/docs/capabilities/audio.md', import.meta.url), 'utf8');
+const musicPage = await readFile(new URL('../src/content/docs/capabilities/music.mdx', import.meta.url), 'utf8').catch(() => '');
+const videoPage = await readFile(new URL('../src/content/docs/capabilities/video.md', import.meta.url), 'utf8');
 const modelsPage = await readFile(new URL('../src/content/docs/capabilities/models.mdx', import.meta.url), 'utf8').catch(
   () => '',
 );
@@ -89,6 +93,28 @@ test('routes model discovery to the live catalog instead of duplicating availabi
   assert.match(modelsPage, /anycap music models/);
   assert.match(modelsPage, /anycap audio models/);
   assert.match(modelsPage, /not duplicated in this documentation site/);
+  assert.match(modelsPage, /List every currently advertised mode/);
+});
+
+test('makes audio and model-specific modes discoverable from capabilities', () => {
+  assert.match(
+    docsConfig,
+    /\{ label: 'Video', link: '\/capabilities\/video\/' \},[\s\S]*\{ label: 'Audio', link: '\/capabilities\/audio\/' \},[\s\S]*\{ label: 'Music', link: '\/capabilities\/music\/' \}/,
+  );
+  assert.match(capabilitiesPage, /\[audio\]\(\/capabilities\/audio\/#audio-generation\)/);
+  assert.match(capabilitiesPage, /\[music\]\(\/capabilities\/music\/\)/);
+  assert.match(audioPage, /## Audio generation/);
+  assert.match(audioPage, /`text-to-audio`/);
+  assert.match(audioPage, /`audio-to-audio`/);
+  assert.match(audioPage, /`image-to-audio`/);
+  assert.doesNotMatch(audioPage, /anycap music models/);
+  assert.match(musicPage, /title: Music Generation/);
+  assert.match(musicPage, /`text-to-music`/);
+  assert.match(musicPage, /anycap music models/);
+  assert.match(videoPage, /`edit-video`/);
+  assert.match(videoPage, /`first-last-frame-to-video`/);
+  assert.match(videoPage, /`multi-shot-video`/);
+  assert.match(videoPage, /`multi-modal-reference`/);
 });
 
 test('shows direct CLI and MCP integration paths in the homepage hero', () => {

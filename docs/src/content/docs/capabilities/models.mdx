@@ -31,6 +31,18 @@ anycap video models \
   | jq -r '.models[] | [.model, (.display_name // .name), ([.operations[]?.modes[]?.mode] | unique | join(", "))] | @tsv'
 ```
 
+## List every currently advertised mode
+
+Run this whenever you need the complete mode surface rather than an example from a capability guide. It reads the live catalog, so it includes newly added modes and omits retired ones:
+
+```bash
+for capability in image video music audio; do
+  anycap "$capability" models \
+    | jq -r --arg capability "$capability" \
+      '.models[] | .model as $model | .operations[]?.modes[]?.mode | [$capability, $model, .] | @tsv'
+done
+```
+
 Then inspect the schema for the one model and mode you selected. The schema is the authority for accepted parameters such as aspect ratio, duration, resolution, or reference inputs.
 
 ```bash
@@ -41,4 +53,4 @@ anycap video models <model-id> schema --mode image-to-video
 Do not copy a model ID or parameter set from an older tutorial without checking the live catalog. A model can be added, retired, or change modes without a documentation-site release.
 </Aside>
 
-See [Generation and editing](/capabilities/image/), [Video generation](/capabilities/video/), and [Music and audio generation](/capabilities/audio/) for capability-specific workflows.
+See [Generation and editing](/capabilities/image/), [Video generation](/capabilities/video/), [Audio generation](/capabilities/audio/), and [Music generation](/capabilities/music/) for capability-specific workflows.
