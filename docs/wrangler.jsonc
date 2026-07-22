@@ -2,7 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anycap-docs",
   "compatibility_date": "2026-07-21",
+  "main": "./worker.mjs",
   "assets": {
+    "binding": "ASSETS",
     "directory": "./dist",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"

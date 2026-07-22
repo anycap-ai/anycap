@@ -9,12 +9,16 @@ const logo = await readFile(new URL('../src/assets/anycap-logo.svg', import.meta
 const favicon = await readFile(new URL('../public/favicon.svg', import.meta.url), 'utf8');
 const docsConfig = await readFile(new URL('../astro.config.mjs', import.meta.url), 'utf8');
 const capabilitiesPage = await readFile(new URL('../src/content/docs/capabilities/index.mdx', import.meta.url), 'utf8');
-const audioPage = await readFile(new URL('../src/content/docs/capabilities/audio.md', import.meta.url), 'utf8');
+const audioPage = await readFile(new URL('../src/content/docs/capabilities/audio.mdx', import.meta.url), 'utf8');
 const musicPage = await readFile(new URL('../src/content/docs/capabilities/music.mdx', import.meta.url), 'utf8').catch(() => '');
-const videoPage = await readFile(new URL('../src/content/docs/capabilities/video.md', import.meta.url), 'utf8');
+const videoPage = await readFile(new URL('../src/content/docs/capabilities/video.mdx', import.meta.url), 'utf8');
 const modelsPage = await readFile(new URL('../src/content/docs/capabilities/models.mdx', import.meta.url), 'utf8').catch(
   () => '',
 );
+const liveCatalogComponent = await readFile(new URL('../src/components/LiveModelCatalog.astro', import.meta.url), 'utf8').catch(
+  () => '',
+);
+const docsWorker = await readFile(new URL('../worker.mjs', import.meta.url), 'utf8').catch(() => '');
 
 test('uses the main-site typography roles', () => {
   assert.match(stylesheet, /--sl-font:\s*Inter,/);
@@ -84,6 +88,7 @@ test('uses rendered icons and styled documentation footer controls', () => {
   assert.doesNotMatch(docsConfig, /editLink:/);
   assert.match(stylesheet, /footer\.sl-flex \.pagination-links a \{[\s\S]*border: 0;/);
   assert.match(stylesheet, /footer\.sl-flex \.pagination-links a \{[\s\S]*border-radius: 0;/);
+  assert.match(stylesheet, /\[data-has-hero\] footer\.sl-flex \.pagination-links[\s\S]*display: none;/);
 });
 
 test('routes model discovery to the live catalog instead of duplicating availability claims', () => {
@@ -116,6 +121,21 @@ test('makes audio and model-specific modes discoverable from capabilities', () =
   assert.match(videoPage, /`first-last-frame-to-video`/);
   assert.match(videoPage, /`multi-shot-video`/);
   assert.match(videoPage, /`multi-modal-reference`/);
+});
+
+test('shows live supported models and conversion CTAs before generation workflows', () => {
+  for (const [page, capability] of [
+    [videoPage, 'video'],
+    [audioPage, 'audio'],
+    [musicPage, 'music'],
+  ]) {
+    assert.match(page, new RegExp(`<LiveModelCatalog capability="${capability}"`));
+  }
+  assert.match(liveCatalogComponent, /\/api\/model-catalog\//);
+  assert.match(liveCatalogComponent, /View all models/);
+  assert.match(liveCatalogComponent, /Install the CLI/);
+  assert.match(docsWorker, /\/v1\/\$\{capability\}\/models/);
+  assert.match(docsWorker, /env\.ASSETS\.fetch/);
 });
 
 test('shows direct CLI and MCP integration paths in the homepage hero', () => {

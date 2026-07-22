@@ -263,6 +263,112 @@
     color: var(--ac-ink);
   }
 
+  .live-model-catalog {
+    border-top: 1px solid var(--ac-border);
+    margin-block: 2.75rem;
+    padding-top: 1.65rem;
+  }
+
+  .live-model-catalog-header {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+    justify-content: space-between;
+  }
+
+  .live-model-catalog h2 {
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .live-model-catalog p {
+    color: var(--ac-muted);
+    margin-block: 0.6rem 0;
+    max-width: 42rem;
+  }
+
+  .live-model-catalog-eyebrow {
+    color: var(--ac-accent) !important;
+    font-family: var(--sl-font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin: 0 0 0.35rem !important;
+    text-transform: uppercase;
+  }
+
+  .live-model-catalog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .model-catalog-cta {
+    align-items: center;
+    border: 1px solid var(--ac-border);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.88rem;
+    font-weight: 650;
+    min-height: 2.5rem;
+    padding-inline: 1rem;
+    text-decoration: none;
+  }
+
+  .model-catalog-cta.primary {
+    background: var(--ac-accent);
+    border-color: var(--ac-accent);
+    color: #f4f5f0;
+  }
+
+  .model-catalog-cta.secondary {
+    color: var(--ac-ink);
+  }
+
+  .model-catalog-cta:hover {
+    background: var(--ac-ink);
+    border-color: var(--ac-ink);
+    color: var(--ac-page);
+  }
+
+  .live-model-catalog-status {
+    font-size: 0.86rem;
+  }
+
+  .live-model-list {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+  }
+
+  .live-model-list li {
+    background: color-mix(in srgb, var(--ac-raised) 65%, transparent);
+    border: 1px solid var(--ac-border);
+    border-radius: 0.45rem;
+    display: grid;
+    gap: 0.35rem;
+    min-height: 4.75rem;
+    padding: 0.75rem;
+  }
+
+  .live-model-list strong {
+    color: var(--ac-ink);
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .live-model-list span {
+    color: var(--ac-muted);
+    font-family: var(--sl-font-mono);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
   table {
     display: table;
     width: 100%;
@@ -334,6 +440,10 @@
     letter-spacing: -0.02em;
   }
 
+  [data-has-hero] footer.sl-flex .pagination-links {
+    display: none;
+  }
+
   @media (max-width: 50rem) {
     [data-has-hero] .hero {
       padding-block: 2.5rem;
@@ -342,6 +452,10 @@
     table {
       display: block;
       overflow-x: auto;
+    }
+
+    .live-model-catalog-actions {
+      width: 100%;
     }
   }
 
