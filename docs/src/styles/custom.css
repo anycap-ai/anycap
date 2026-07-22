@@ -47,7 +47,7 @@
   }
 
   :root[data-theme='light'] {
-    --ac-page: #f9faf5;
+    --ac-page: #f4f5f0;
     --ac-surface: #f4f5f0;
     --ac-raised: #fbfcf8;
     --ac-ink: #1c1f17;

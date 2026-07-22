@@ -3,7 +3,7 @@ import { extname, join, relative, resolve } from 'node:path';
 
 const dist = resolve('dist');
 const canonicalOrigin = 'https://docs.anyware.ai';
-const expectedIndexablePages = 28;
+const expectedIndexablePages = 29;
 const errors = [];
 
 async function walk(directory) {

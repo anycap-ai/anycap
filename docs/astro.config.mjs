@@ -35,7 +35,7 @@ export default defineConfig({
         Head: './src/components/Head.astro',
       },
       head: [
-        { tag: 'meta', attrs: { name: 'theme-color', content: '#f9faf5' } },
+        { tag: 'meta', attrs: { name: 'theme-color', content: '#f4f5f0' } },
         { tag: 'meta', attrs: { name: 'color-scheme', content: 'light dark' } },
         {
           tag: 'meta',
@@ -74,6 +74,7 @@ export default defineConfig({
           label: 'Capabilities',
           items: [
             { label: 'Overview', link: '/capabilities/' },
+            { label: 'Models', link: '/capabilities/models/' },
             { label: 'Image', link: '/capabilities/image/' },
             { label: 'Video', link: '/capabilities/video/' },
             { label: 'Media understanding', link: '/capabilities/media-understanding/' },

@@ -18,5 +18,5 @@
     <rect x="83" y="83" width="34" height="34" rx="2" fill="#f4f5f0"/>
   </svg>
   <text x="90" y="64" fill="#1c1f17" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3">any</text>
-  <text x="185" y="64" fill="#6b7d3a" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3">cap</text>
+  <text x="167" y="64" fill="#6b7d3a" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3">cap</text>
 </svg>
