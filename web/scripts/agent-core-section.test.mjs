@@ -207,12 +207,12 @@ test("keeps the approved master layers mounted as the guarded fallback surface",
   assert.match(section, /updateBridgePhase\(bridge, nextPhase\)[\s\S]*bridge\.invalidate\?\.\(\)/);
 
   const directLayerOrder = [
-    "<div className={styles.table}",
     "<div className={styles.body}",
     "<AgentHeadTracker headRef={headRef}",
     "<div ref={socketRef} className={styles.socket}",
     "<canvas",
     "<div ref={dockRef} className={styles.dock}",
+    "<div className={styles.table}",
     "<AnyCapCoreControl",
   ].map((marker) => scene.indexOf(marker));
   assert.ok(directLayerOrder.every((index) => index >= 0), "every approved direct layer exists");
@@ -308,7 +308,10 @@ test("keeps the native Core focus treatment visible after the 3D stage is ready"
   const core = source(corePath);
   const styles = source(stylesPath);
 
-  assert.match(scene, /\n      <\/div>\n\n      <AnyCapCoreControl/);
+  assert.match(
+    scene,
+    /\n      <\/div>\n\n      <div className=\{styles\.table\} aria-hidden="true" \/>\n\n      <AnyCapCoreControl/,
+  );
   assert.match(core, /styles\.coreArtwork/);
   assert.match(styles, /\.coreArtwork\s*\{[^}]*opacity:\s*1\s*;/);
   assert.match(
@@ -317,4 +320,81 @@ test("keeps the native Core focus treatment visible after the 3D stage is ready"
   );
   assert.match(styles, /\.core:focus-visible\s*\{[^}]*outline:\s*3px solid #6b7d3a\s*;/);
   assert.doesNotMatch(styles, /\.stageReady\s*~\s*\.core\s*\{[^}]*opacity:\s*0\s*;/);
+});
+
+test("uses the approved width-derived desktop artboard and top-right scene", () => {
+  const styles = source(stylesPath);
+
+  assert.match(
+    styles,
+    /@media\s*\(min-width:\s*1280px\)[\s\S]*?\.section\s*\{[^}]*--agent-artboard-height:\s*min\(100svh,\s*calc\(100vw \* 941 \/ 1672\)\)\s*;[^}]*height:\s*var\(--agent-artboard-height\)\s*;[^}]*min-height:\s*var\(--agent-artboard-height\)\s*;[^}]*padding-block:\s*0\s*;[^}]*\}/,
+  );
+  assert.match(
+    styles,
+    /@media\s*\(min-width:\s*1280px\)[\s\S]*?\.layout\s*\{[^}]*height:\s*var\(--agent-artboard-height\)\s*;[^}]*min-height:\s*var\(--agent-artboard-height\)\s*;[^}]*\}/,
+  );
+  assert.match(
+    styles,
+    /@media\s*\(min-width:\s*1280px\)[\s\S]*?\.scene\s*\{[^}]*width:\s*calc\(var\(--agent-artboard-height\) \* 0\.94\)\s*;[^}]*height:\s*var\(--agent-artboard-height\)\s*;[^}]*align-self:\s*start\s*;[^}]*justify-self:\s*end\s*;[^}]*margin-right:\s*-6rem\s*;[^}]*\}/,
+  );
+  assert.match(
+    styles,
+    /@media\s*\(min-width:\s*1280px\)\s*and\s*\(max-width:\s*1342px\)[\s\S]*?\.scene\s*\{[^}]*margin-right:\s*-4rem\s*;[^}]*\}/,
+  );
+});
+
+test("locks the approved camera framing and uniform root placement", () => {
+  const stage = source(stagePath);
+
+  assert.match(
+    stage,
+    /camera=\{\{\s*position:\s*\[0,\s*0\.5,\s*1\.95\],\s*fov:\s*32,\s*near:\s*0\.01,\s*far:\s*20\s*\}\}/,
+  );
+  assert.match(stage, /\.lookAt\(0,\s*0\.5,\s*0\.04\)/);
+  assert.match(
+    stage,
+    /<group\s+position=\{\[-0\.1,\s*0,\s*0\]\}>\s*<AgentCoreRig3D[\s\S]*?<\/group>/,
+  );
+  assert.doesNotMatch(stage, /<group[^>]*\bscale=/);
+});
+
+test("locks the approved low-ambient lighting and exposure", () => {
+  const stage = source(stagePath);
+
+  assert.match(stage, /gl\.toneMappingExposure\s*=\s*0\.85\s*;/);
+  assert.match(stage, /<ambientLight\s+intensity=\{0\.3\}\s*\/>/);
+  assert.match(
+    stage,
+    /<hemisphereLight\s+args=\{\["#f4f1e9",\s*"#30352d",\s*0\.58\]\}\s*\/>/,
+  );
+  assert.match(
+    stage,
+    /<directionalLight\s+position=\{\[-3,\s*4,\s*4\]\}\s+intensity=\{1\.75\}\s*\/>/,
+  );
+  assert.match(
+    stage,
+    /<directionalLight\s+position=\{\[3,\s*1\.2,\s*2\.2\]\}\s+intensity=\{0\.38\}\s*\/>/,
+  );
+});
+
+test("keeps the table horizon and native Core above the fading artwork and inert Canvas", () => {
+  const scene = source(scenePath);
+  const styles = source(stylesPath);
+
+  assert.match(
+    scene,
+    /<div className=\{styles\.fallbackVisual\}>[\s\S]*?<\/div>\s*<div className=\{styles\.table\} aria-hidden="true"\s*\/>\s*<AnyCapCoreControl/,
+  );
+  assert.ok(scene.indexOf("{stage}") < scene.indexOf("styles.fallbackVisual"));
+  assert.ok(scene.indexOf("styles.fallbackVisual") < scene.indexOf("styles.table"));
+  assert.ok(scene.indexOf("styles.table") < scene.indexOf("<AnyCapCoreControl"));
+  assert.match(
+    styles,
+    /\.table\s*\{[^}]*top:\s*91\.9%\s*;[^}]*height:\s*1px\s*;[^}]*border-top:\s*1px solid #dce0d2\s*;[^}]*pointer-events:\s*none\s*;[^}]*\}/,
+  );
+  assert.match(styles, /\.stage3D\s*\{[^}]*pointer-events:\s*none\s*;/);
+  assert.match(styles, /\.core\s*\{[^}]*z-index:\s*5\s*;/);
+  assert.match(styles, /\.stageReady\s*~\s*\.core\s+\.coreArtwork\s*\{[^}]*opacity:\s*0\s*;/);
+  assert.doesNotMatch(styles, /\.stageReady\s*~\s*\.core\s*\{[^}]*opacity:\s*0\s*;/);
+  assert.match(styles, /\.core:focus-visible\s*\{[^}]*outline:\s*3px solid #6b7d3a\s*;/);
 });

@@ -198,9 +198,11 @@
 
 .table {
   position: absolute;
-  inset: auto 0 0;
-  z-index: 0;
-  height: 10%;
+  top: 91.9%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  height: 1px;
   border-top: 1px solid #dce0d2;
   pointer-events: none;
 }
@@ -322,25 +324,34 @@
 
 @media (min-width: 1280px) {
   .section {
-    padding-block: 2rem;
+    --agent-artboard-height: min(100svh, calc(100vw * 941 / 1672));
+
+    height: var(--agent-artboard-height);
+    min-height: var(--agent-artboard-height);
+    padding-block: 0;
   }
 
   .layout {
-    min-height: calc(100svh - 4rem);
+    height: var(--agent-artboard-height);
+    min-height: var(--agent-artboard-height);
   }
 
   .scene {
-    width: min(calc(100% + 36px), calc((100svh - 4rem) * 0.94));
-    align-self: center;
+    width: calc(var(--agent-artboard-height) * 0.94);
+    height: var(--agent-artboard-height);
+    align-self: start;
     justify-self: end;
-    right: clamp(56px, 4vw, 72px);
-    left: auto;
+    margin-right: -6rem;
   }
 }
 
 @media (min-width: 1280px) and (max-width: 1342px) {
   .section {
     padding-inline: 4rem;
+  }
+
+  .scene {
+    margin-right: -4rem;
   }
 }
 

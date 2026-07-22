@@ -106,8 +106,6 @@ export function AgentCoreScene({
       {stage}
 
       <div className={styles.fallbackVisual}>
-        <div className={styles.table} aria-hidden="true" />
-
         <div className={styles.body} aria-hidden="true">
           <Image
             src="/visuals/agent-core/robot-body.webp"
@@ -142,8 +140,9 @@ export function AgentCoreScene({
             className={styles.layerImage}
           />
         </div>
-
       </div>
+
+      <div className={styles.table} aria-hidden="true" />
 
       <AnyCapCoreControl
         coreRef={coreRef}

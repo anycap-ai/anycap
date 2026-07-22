@@ -68,22 +68,24 @@ export function AgentCoreStage3D({ bridge, ready, onReady, onError }: AgentCoreS
       <Canvas
         frameloop="demand"
         dpr={isMobile ? [1, 1.25] : [1, 1.5]}
-        camera={{ position: [0, 0.51, 2.3], fov: 32, near: 0.01, far: 20 }}
+        camera={{ position: [0, 0.5, 1.95], fov: 32, near: 0.01, far: 20 }}
         gl={{ alpha: true, antialias: !isMobile, powerPreference: "high-performance" }}
         onCreated={({ camera, gl }) => {
           gl.outputColorSpace = SRGBColorSpace;
           gl.toneMapping = ACESFilmicToneMapping;
-          gl.toneMappingExposure = 0.95;
-          (camera as PerspectiveCamera).lookAt(0, 0.5, 0);
+          gl.toneMappingExposure = 0.85;
+          (camera as PerspectiveCamera).lookAt(0, 0.5, 0.04);
           camera.updateProjectionMatrix();
         }}
       >
-        <ambientLight intensity={1.35} />
-        <hemisphereLight args={["#f4f5f0", "#8f927f", 1.15]} />
-        <directionalLight position={[-2.4, 3.2, 3.6]} intensity={2.4} />
-        <directionalLight position={[2.8, 1.4, 1.8]} intensity={1.1} />
+        <ambientLight intensity={0.3} />
+        <hemisphereLight args={["#f4f1e9", "#30352d", 0.58]} />
+        <directionalLight position={[-3, 4, 4]} intensity={1.75} />
+        <directionalLight position={[3, 1.2, 2.2]} intensity={0.38} />
         <Suspense fallback={null}>
-          <AgentCoreRig3D bridge={bridge} onReady={handleRigReady} />
+          <group position={[-0.1, 0, 0]}>
+            <AgentCoreRig3D bridge={bridge} onReady={handleRigReady} />
+          </group>
         </Suspense>
       </Canvas>
     </div>
