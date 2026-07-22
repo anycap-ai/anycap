@@ -28,7 +28,7 @@ DOCS_PORT=4400 make docs-preview
 WORKER_PORT=8800 make docs-worker-preview
 ```
 
-The canonical site URL is `https://docs.anyware.ai`.
+The canonical site URL is `https://docs.anycap.ai`.
 
 ## Deployment
 
@@ -49,7 +49,7 @@ After the first successful workflow run:
 2. Select **Workers & Pages**.
 3. Open the `anycap-docs` Worker.
 4. Open **Settings → Domains & Routes**.
-5. Add the custom domain `docs.anyware.ai`.
+5. Add the custom domain `docs.anycap.ai`.
 
 No domain route is committed to `wrangler.jsonc`, so deployment does not require zone-level DNS permissions and cannot overwrite domain routing.
 
