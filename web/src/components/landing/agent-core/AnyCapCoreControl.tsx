@@ -45,7 +45,7 @@ export function AnyCapCoreControl({
         height={512}
         sizes="(min-width: 1280px) 10vw, (min-width: 768px) 8vw, 16vw"
         draggable={false}
-        className={styles.layerImage}
+        className={`${styles.layerImage} ${styles.coreArtwork}`}
       />
     </button>
   );

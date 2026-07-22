@@ -179,6 +179,15 @@
   opacity: 0;
 }
 
+.coreArtwork {
+  opacity: 1;
+  transition: opacity 180ms ease-out;
+}
+
+.stageReady ~ .core .coreArtwork {
+  opacity: 0;
+}
+
 .layerImage {
   display: block;
   width: 100%;

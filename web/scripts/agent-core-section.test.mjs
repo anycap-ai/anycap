@@ -302,3 +302,19 @@ test("keeps the fallback visible until rig readiness and restores it on failure"
   assert.match(stage, /stageHealthy\.current\s*=\s*false[\s\S]*onError\(\)/);
   assert.match(stage, /if\s*\(stageHealthy\.current\)\s*onReady\(\)/);
 });
+
+test("keeps the native Core focus treatment visible after the 3D stage is ready", () => {
+  const scene = source(scenePath);
+  const core = source(corePath);
+  const styles = source(stylesPath);
+
+  assert.match(scene, /\n      <\/div>\n\n      <AnyCapCoreControl/);
+  assert.match(core, /styles\.coreArtwork/);
+  assert.match(styles, /\.coreArtwork\s*\{[^}]*opacity:\s*1\s*;/);
+  assert.match(
+    styles,
+    /\.stageReady\s*~\s*\.core\s+\.coreArtwork\s*\{[^}]*opacity:\s*0\s*;/,
+  );
+  assert.match(styles, /\.core:focus-visible\s*\{[^}]*outline:\s*3px solid #6b7d3a\s*;/);
+  assert.doesNotMatch(styles, /\.stageReady\s*~\s*\.core\s*\{[^}]*opacity:\s*0\s*;/);
+});

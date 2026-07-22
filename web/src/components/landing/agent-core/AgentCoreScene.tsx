@@ -143,17 +143,18 @@ export function AgentCoreScene({
           />
         </div>
 
-        <AnyCapCoreControl
-          coreRef={coreRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onLostPointerCapture={onLostPointerCapture}
-          onPointerCancel={onPointerCancel}
-          onClick={onClick}
-          onKeyDown={onKeyDown}
-        />
       </div>
+
+      <AnyCapCoreControl
+        coreRef={coreRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onLostPointerCapture={onLostPointerCapture}
+        onPointerCancel={onPointerCancel}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+      />
     </div>
   );
 }
