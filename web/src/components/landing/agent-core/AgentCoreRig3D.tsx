@@ -22,6 +22,7 @@ import {
   splitGazeRotation,
   type GazeAngles,
 } from "./agent-core-gaze";
+import { useAgentCoreInstall3D } from "./useAgentCoreInstall3D";
 
 // Approved local asset: agent-core-upper-body.glb. The runtime path stays contract-derived.
 const LOCAL_MODEL_URL = `/visuals/agent-core-3d/${modelContract.asset.file}`;
@@ -227,6 +228,7 @@ export function AgentCoreRig3D({ bridge, onReady }: AgentCoreRig3DProps) {
   const gltf = useGLTF(LOCAL_MODEL_URL);
   const scene = useMemo(() => validateAndPrepareModel(gltf.scene), [gltf.scene]);
   const gazeRig = useMemo(() => prepareGazeRig(scene), [scene]);
+  useAgentCoreInstall3D(scene, bridge);
   const invalidate = useThree((state) => state.invalidate);
   const readyFrame = useRef<number | null>(null);
   const firstFrame = useRef(false);

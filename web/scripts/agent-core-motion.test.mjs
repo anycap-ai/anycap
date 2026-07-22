@@ -4,8 +4,10 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const hookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreTimeline.ts", import.meta.url));
+const install3DPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreInstall3D.ts", import.meta.url));
 const gazeHookPath = fileURLToPath(new URL("../src/components/landing/agent-core/useAgentCoreGaze3D.ts", import.meta.url));
 const sectionPath = fileURLToPath(new URL("../src/components/landing/agent-core/AgentCoreInstallSection.tsx", import.meta.url));
+const coreControlPath = fileURLToPath(new URL("../src/components/landing/agent-core/AnyCapCoreControl.tsx", import.meta.url));
 
 test("uses one scoped GSAP lifecycle and one unpinned entrance trigger", () => {
   const source = readFileSync(hookPath, "utf8");
@@ -17,24 +19,51 @@ test("uses one scoped GSAP lifecycle and one unpinned entrance trigger", () => {
   assert.doesNotMatch(source, /pin:\s*true|window\.addEventListener\(["']scroll/);
 });
 
-test("names every installation phase and uses measured geometry", () => {
+test("names the complete autonomous installation narrative without DOM Core flight", () => {
   const source = readFileSync(hookPath, "utf8");
-  for (const label of ["scene-in", "pickup", "dock", "activate", "capabilities", "hold"]) {
+  for (const label of [
+    "targeting",
+    "reaching",
+    "grasping",
+    "carrying",
+    "docking",
+    "activating",
+    "capabilities",
+    "returning",
+    "hold",
+  ]) {
     assert.ok(source.includes(`addLabel("${label}"`), label);
   }
-  assert.match(source, /getBoundingClientRect\(\)/);
-  assert.match(source, /isCoreDropAccepted/);
-  assert.match(source, /gsap\.quickTo/);
+  assert.match(source, /INSTALL_DURATION_SECONDS\s*=\s*3/);
+  for (const [label, time] of [
+    ["targeting", "0"],
+    ["reaching", "0\\.18"],
+    ["grasping", "0\\.78"],
+    ["carrying", "1"],
+    ["docking", "1\\.68"],
+    ["activating", "2"],
+    ["capabilities", "2\\.15"],
+    ["returning", "2\\.35"],
+  ]) assert.match(source, new RegExp(`addLabel\\("${label}", ${time}\\)`));
+  assert.match(source, /addLabel\("hold", INSTALL_DURATION_SECONDS\)/);
+  assert.match(source, /\.to\(\s*bridge,/);
+  assert.match(source, /getAgentCoreStats/);
+  assert.doesNotMatch(source, /\.to\(\s*core,[\s\S]*target\.x/);
+  assert.doesNotMatch(source, /isCoreDropAccepted|beginAgentCorePointerSession|setPointerCapture/);
 });
 
-test("provides keyboard, pointer, touch, and reduced-motion paths", () => {
+test("provides native click, tap, Enter, Space, and reduced-motion paths", () => {
   const hook = readFileSync(hookPath, "utf8");
   const section = readFileSync(sectionPath, "utf8");
-  assert.match(section, /onPointerDown/);
-  assert.match(section, /onPointerMove/);
-  assert.match(section, /onPointerUp/);
+  const coreControl = readFileSync(coreControlPath, "utf8");
+
+  assert.match(coreControl, /<button/);
+  assert.match(coreControl, /onClick=\{onClick\}/);
+  assert.match(coreControl, /onKeyDown=\{onKeyDown\}/);
+  assert.doesNotMatch(coreControl, /onPointerMove|setPointerCapture|onLostPointerCapture/);
+  assert.match(section, /onClick/);
   assert.match(section, /onKeyDown/);
-  assert.match(hook, /capture-touch/);
+  assert.match(hook, /event\.key !== "Enter" && event\.key !== " "/);
   assert.match(hook, /prefers-reduced-motion: reduce/);
   assert.match(hook, /ScrollTrigger\.create/);
   assert.match(hook, /cancelAnimationFrame/);
@@ -43,15 +72,16 @@ test("provides keyboard, pointer, touch, and reduced-motion paths", () => {
 
 test("gates one install and tears down every long-lived browser resource", () => {
   const source = readFileSync(hookPath, "utf8");
-  assert.match(
-    source,
-    /phaseRef\.current !== "awaiting"[\s\S]*phaseRef\.current !== "dragging"/,
-  );
+  const install3D = readFileSync(install3DPath, "utf8");
+
+  assert.match(source, /stateRef\.current\.started/);
   assert.match(source, /gsap\.timeline\(\{\s*paused:\s*true/);
   assert.match(source, /removeEventListener\("pointermove"/);
   assert.match(source, /observer\.disconnect\(\)/);
   assert.match(source, /entranceTrigger\.kill\(\)/);
-  assert.match(source, /releasePointerCapture/);
+  assert.match(source, /installationTimeline\?\.kill\(\)/);
+  assert.doesNotMatch(source, /setPointerCapture|releasePointerCapture/);
+  assert.match(install3D, /ikHelper\.dispose\(\)/);
 });
 
 test("uses only a bounded local square-particle confirmation", () => {
@@ -71,16 +101,8 @@ test("finalizes reduced motion before creating observers or ScrollTrigger", () =
   assert.ok(reducedBranch >= 0 && reducedReturn > reducedBranch, "reduced-motion return");
   assert.ok(reducedReturn < source.indexOf("ScrollTrigger.create"), "no reduced trigger");
   assert.ok(reducedReturn < source.indexOf("new IntersectionObserver"), "no reduced observer");
-});
-
-test("keeps rejected drag input closed until the measured dock return completes", () => {
-  const source = readFileSync(hookPath, "utf8");
-  const rejectedDrop = source.slice(
-    source.indexOf("const rejectDrop"),
-    source.indexOf("const onPointerUp"),
-  );
-  assert.match(rejectedDrop, /isReturning\s*=\s*true/);
-  assert.match(rejectedDrop, /ease:\s*"back\.out\(1\.35\)"[\s\S]*onComplete:[\s\S]*setPhase\("drop-rejected"\)/);
+  assert.match(source.slice(reducedBranch, reducedReturn), /coreOwner:\s*"socket"/);
+  assert.match(source.slice(reducedBranch, reducedReturn), /setFinalTelemetry\(\)/);
 });
 
 test("scopes idle head tracking to the full section surface", () => {
@@ -115,34 +137,54 @@ test("hands full-section gaze to the 3D bridge only after stage readiness", () =
   assert.doesNotMatch(gazeHook, /headRef|style\.|gsap|setState|setRotation/);
 });
 
-test("consumes the pure pointer reducer through one finalization path", () => {
-  const hook = readFileSync(hookPath, "utf8");
-  const section = readFileSync(sectionPath, "utf8");
-  assert.match(hook, /beginAgentCorePointerSession/);
-  assert.match(hook, /finishAgentCorePointerSession/);
-  assert.match(hook, /any-pointer:\s*fine/);
-  assert.match(hook, /const finalizePointerSession = contextSafe/);
-  assert.match(hook, /finalizePointerSession\(event, "up"\)/);
-  assert.match(hook, /finalizePointerSession\(event, "cancel"\)/);
-  assert.match(hook, /finalizePointerSession\(event, "lost-capture"\)/);
-  assert.match(section, /onLostPointerCapture/);
-});
-
-test("keeps DOM Core motion inside the existing six-label narrative", () => {
+test("drives semantic IK and Core ownership while DOM handles telemetry only", () => {
   const source = readFileSync(hookPath, "utf8");
+  const install3D = readFileSync(install3DPath, "utf8");
   const timelineSource = source.slice(
-    source.indexOf('addLabel("scene-in"'),
+    source.indexOf('addLabel("targeting"'),
     source.indexOf('.play(0)'),
   );
 
+  assert.match(install3D, /CCDIKSolver/);
+  assert.match(install3D, /attachCoreToGrip/);
+  assert.match(install3D, /attachCoreToSocket/);
   assert.match(source, /const core = coreRef\.current/);
-  assert.match(source, /const dock = dockRef\.current/);
   assert.match(source, /const socket = socketRef\.current/);
-  assert.match(timelineSource, /\.to\(\s*core,/);
-  assert.match(source, /dock\.getBoundingClientRect\(\)/);
   assert.match(source, /socket\.getBoundingClientRect\(\)/);
-  assert.doesNotMatch(source, /AgentCore3DBridge|bridge\./);
-  for (const label of ["scene-in", "pickup", "dock", "activate", "capabilities", "hold"]) {
+  assert.match(source, /AgentCore3DBridge|bridge\./);
+  assert.doesNotMatch(timelineSource, /\.to\(\s*core,/);
+  for (const label of [
+    "targeting",
+    "reaching",
+    "grasping",
+    "carrying",
+    "docking",
+    "activating",
+    "capabilities",
+    "returning",
+    "hold",
+  ]) {
     assert.ok(timelineSource.includes(`addLabel("${label}"`), label);
   }
+});
+
+test("keeps source-backed telemetry, one live completion announcement, and one-shot completion", () => {
+  const hook = readFileSync(hookPath, "utf8");
+  const section = readFileSync(sectionPath, "utf8");
+
+  assert.match(hook, /getAgentCoreStats/);
+  assert.match(hook, /formatAgentCoreValue/);
+  assert.match(hook, /setFinalTelemetry/);
+  assert.match(section, /aria-live="polite"/);
+  assert.match(section, /AnyCap Core connected\. Twelve capabilities are ready\./);
+  assert.match(hook, /stateRef\.current\.started/);
+  assert.match(hook, /nextInstallState/);
+  const installSource = hook.slice(
+    hook.indexOf("const install = contextSafe"),
+    hook.indexOf("installationTimeline = gsap.timeline"),
+  );
+  assert.ok(
+    installSource.indexOf('transition("activate")') < installSource.indexOf("getBoundingClientRect"),
+    "one-shot state closes synchronously before measurement and timeline creation",
+  );
 });

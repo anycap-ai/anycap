@@ -3,24 +3,12 @@ import type React from "react";
 
 import styles from "./agent-core.module.css";
 
-export type AnyCapCoreControlProps = {
+export type AnyCapCoreControlProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   coreRef: React.RefObject<HTMLButtonElement | null>;
-  onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerMove: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
-  onLostPointerCapture: React.PointerEventHandler<HTMLButtonElement>;
-  onPointerCancel: React.PointerEventHandler<HTMLButtonElement>;
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-  onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
 };
 
 export function AnyCapCoreControl({
   coreRef,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onLostPointerCapture,
-  onPointerCancel,
   onClick,
   onKeyDown,
 }: AnyCapCoreControlProps) {
@@ -30,11 +18,7 @@ export function AnyCapCoreControl({
       type="button"
       className={styles.core}
       aria-label="Install the AnyCap Core"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onLostPointerCapture={onLostPointerCapture}
-      onPointerCancel={onPointerCancel}
+      style={{ cursor: "pointer", touchAction: "manipulation", willChange: "auto" }}
       onClick={onClick}
       onKeyDown={onKeyDown}
     >

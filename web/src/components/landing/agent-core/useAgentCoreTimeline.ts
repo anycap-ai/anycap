@@ -7,29 +7,29 @@ import type React from "react";
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
 import {
   resolveAgentCoreLegacyInstallGaze,
+  type AgentCore3DBridge,
   type AgentCoreLegacyGazeOwnership,
   type AgentCoreLegacyHeadTarget,
+  type GazeMode,
 } from "./agent-core-3d-bridge";
-import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import {
-  beginAgentCorePointerSession,
-  clampHeadRotation,
-  finishAgentCorePointerSession,
-  isCoreDropAccepted,
-  nextAgentCorePhase,
-  type AgentCoreEvent,
-  type AgentCorePhase,
-  type AgentCorePointerSession,
-} from "./agent-core-state";
+  initialInstallState,
+  nextInstallState,
+  type AgentCoreInstallEvent,
+  type AgentCoreInstallPhase,
+  type AgentCoreInstallState,
+} from "./agent-core-install-state";
+import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
+import { clampHeadRotation } from "./agent-core-state";
 import styles from "./agent-core.module.css";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const stats = getAgentCoreStats();
+const INSTALL_DURATION_SECONDS = 3;
 const TELEMETRY_CELL_COUNT = 12;
 const PARTICLE_COUNT = 40;
 const BURST_DURATION_MS = 900;
-const DRAG_THRESHOLD_PX = 5;
 
 type UseAgentCoreTimelineOptions = {
   sectionRef: React.RefObject<HTMLElement | null>;
@@ -42,11 +42,10 @@ type UseAgentCoreTimelineOptions = {
   valueRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   fillRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   activationCanvasRef: React.RefObject<HTMLCanvasElement | null>;
+  bridge: AgentCore3DBridge;
   legacyGazeOwnership: AgentCoreLegacyGazeOwnership;
-  onPhaseChange: (phase: AgentCorePhase) => void;
+  onPhaseChange: (phase: AgentCoreInstallPhase) => void;
 };
-
-type CorePointerEvent = React.PointerEvent<HTMLButtonElement>;
 
 type InteractionBridge = {
   install: () => void;
@@ -59,28 +58,28 @@ type InteractionBridge = {
   onPointerUp: React.PointerEventHandler<HTMLButtonElement>;
 };
 
-type DragSession = AgentCorePointerSession & {
-  pointerX: number;
-  pointerY: number;
-  coreCenterX: number;
-  coreCenterY: number;
-  coreX: number;
-  coreY: number;
-  dockX: number;
-  dockY: number;
-  moved: boolean;
-};
-
 type SocketTarget = {
   x: number;
   y: number;
   scale: number;
-  currentScale: number;
   centerX: number;
   centerY: number;
 };
 
 const noop = () => undefined;
+
+function emptyInteractionBridge(): InteractionBridge {
+  return {
+    install: noop,
+    onClick: noop,
+    onKeyDown: noop,
+    onLostPointerCapture: noop,
+    onPointerCancel: noop,
+    onPointerDown: noop,
+    onPointerMove: noop,
+    onPointerUp: noop,
+  };
+}
 
 function numericGsapProperty(element: Element, property: string): number {
   const value = Number(gsap.getProperty(element, property));
@@ -91,10 +90,7 @@ function rectShape(rect: DOMRect) {
   return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
 }
 
-function measureSocketTarget(
-  core: HTMLButtonElement,
-  socket: HTMLDivElement,
-): SocketTarget {
+function measureSocketTarget(core: HTMLButtonElement, socket: HTMLDivElement): SocketTarget {
   const coreBounds = core.getBoundingClientRect();
   const socketBounds = socket.getBoundingClientRect();
   const currentX = numericGsapProperty(core, "x");
@@ -111,35 +107,18 @@ function measureSocketTarget(
     x: currentX + centerX - (coreBounds.left + coreBounds.width / 2),
     y: currentY + centerY - (coreBounds.top + coreBounds.height / 2),
     scale: currentScale * scaleRatio * 0.82,
-    currentScale,
     centerX,
     centerY,
   };
 }
 
-function measureDockTarget(
-  core: HTMLButtonElement,
-  dock: HTMLDivElement,
-): Pick<DragSession, "coreCenterX" | "coreCenterY" | "coreX" | "coreY" | "dockX" | "dockY"> {
-  const coreBounds = core.getBoundingClientRect();
-  const dockBounds = dock.getBoundingClientRect();
-  const coreX = numericGsapProperty(core, "x");
-  const coreY = numericGsapProperty(core, "y");
-  const coreAnchor = assetManifest.assets.core.localAnchors.dockContact;
-  const dockAnchor = assetManifest.assets.dock.localAnchors.coreSeat;
-  const coreContactX = coreBounds.left + (coreAnchor.x / assetManifest.assets.core.width) * coreBounds.width;
-  const coreContactY = coreBounds.top + (coreAnchor.y / assetManifest.assets.core.height) * coreBounds.height;
-  const dockSeatX = dockBounds.left + (dockAnchor.x / assetManifest.assets.dock.width) * dockBounds.width;
-  const dockSeatY = dockBounds.top + (dockAnchor.y / assetManifest.assets.dock.height) * dockBounds.height;
-
-  return {
-    coreCenterX: coreBounds.left + coreBounds.width / 2,
-    coreCenterY: coreBounds.top + coreBounds.height / 2,
-    coreX,
-    coreY,
-    dockX: coreX + dockSeatX - coreContactX,
-    dockY: coreY + dockSeatY - coreContactY,
-  };
+function narrativeGaze(phase: AgentCoreInstallPhase): GazeMode {
+  if (phase === "awaiting" || phase === "connected") return "user";
+  if (phase === "targeting" || phase === "reaching" || phase === "grasping" || phase === "carrying") {
+    return "core";
+  }
+  if (phase === "docking" || phase === "activating" || phase === "returning") return "socket";
+  return "neutral";
 }
 
 export function useAgentCoreTimeline({
@@ -148,25 +127,16 @@ export function useAgentCoreTimeline({
   headRef,
   coreRef,
   socketRef,
-  dockRef,
   statusRef,
   valueRefs,
   fillRefs,
   legacyGazeOwnership,
   activationCanvasRef,
+  bridge,
   onPhaseChange,
 }: UseAgentCoreTimelineOptions): InteractionBridge {
-  const phaseRef = useRef<AgentCorePhase>("awaiting");
-  const bridgeRef = useRef<InteractionBridge>({
-    install: noop,
-    onClick: noop,
-    onKeyDown: noop,
-    onLostPointerCapture: noop,
-    onPointerCancel: noop,
-    onPointerDown: noop,
-    onPointerMove: noop,
-    onPointerUp: noop,
-  });
+  const stateRef = useRef<AgentCoreInstallState>(initialInstallState());
+  const bridgeRef = useRef<InteractionBridge>(emptyInteractionBridge());
 
   useGSAP(
     (_, contextSafe) => {
@@ -175,20 +145,14 @@ export function useAgentCoreTimeline({
       const head = headRef.current;
       const core = coreRef.current;
       const socket = socketRef.current;
-      const dock = dockRef.current;
       const canvas = activationCanvasRef.current;
 
-      if (!section || !scene || !head || !core || !socket || !dock || !canvas || !contextSafe) {
-        return;
-      }
+      if (!section || !scene || !head || !core || !socket || !canvas || !contextSafe) return;
 
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
       const finePointer = window.matchMedia("(any-pointer: fine)");
       let sceneBounds = scene.getBoundingClientRect();
       let canvasFrame: number | null = null;
-      let drag: DragSession | null = null;
-      let suppressNextClick = false;
-      let isReturning = false;
       let sectionIsVisible = false;
       let installationTimeline: gsap.core.Timeline | null = null;
       let installHeadFocus: AgentCoreLegacyHeadTarget | null = null;
@@ -229,10 +193,9 @@ export function useAgentCoreTimeline({
           for (const particle of particles) {
             const inwardProgress = Math.min(1, progress / 0.62);
             const outwardProgress = Math.max(0, (progress - 0.62) / 0.38);
-            const radius =
-              progress < 0.62
-                ? particle.radius * (1 - inwardProgress)
-                : particle.outwardRadius * outwardProgress;
+            const radius = progress < 0.62
+              ? particle.radius * (1 - inwardProgress)
+              : particle.outwardRadius * outwardProgress;
             const x = centerX + Math.cos(particle.angle) * radius;
             const y = centerY + Math.sin(particle.angle) * radius;
             canvasContext.globalAlpha = progress < 0.62 ? 0.82 : 0.82 * (1 - outwardProgress);
@@ -247,7 +210,6 @@ export function useAgentCoreTimeline({
           canvasContext.globalAlpha = 1;
           if (progress >= 1) {
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            if (canvasFrame !== null) cancelAnimationFrame(canvasFrame);
             canvasFrame = null;
             return;
           }
@@ -255,13 +217,6 @@ export function useAgentCoreTimeline({
         };
 
         canvasFrame = requestAnimationFrame(drawFrame);
-      };
-
-      const setPhase = (event: AgentCoreEvent) => {
-        const nextPhase = nextAgentCorePhase(phaseRef.current, event);
-        if (nextPhase === phaseRef.current) return;
-        phaseRef.current = nextPhase;
-        onPhaseChange(nextPhase);
       };
 
       const setFinalTelemetry = () => {
@@ -278,16 +233,44 @@ export function useAgentCoreTimeline({
         });
       };
 
+      const placeFallbackCoreAtSocket = () => {
+        const target = measureSocketTarget(core, socket);
+        gsap.set(core, { x: target.x, y: target.y, scale: target.scale, rotation: 0 });
+      };
+
+      const commitState = (nextState: AgentCoreInstallState) => {
+        if (nextState === stateRef.current) return;
+        stateRef.current = nextState;
+        bridge.pointer.active = false;
+        bridge.phase = nextState.phase;
+        bridge.coreOwner = nextState.coreOwner;
+        bridge.gazeMode = narrativeGaze(nextState.phase);
+        onPhaseChange(nextState.phase);
+        bridge.invalidate?.();
+      };
+
+      const transition = (event: AgentCoreInstallEvent) => {
+        commitState(nextInstallState(stateRef.current, event));
+      };
+
       const pivot = assetManifest.assets.head.localAnchors.headPivot;
       const headTransformOrigin = `${(pivot.x / assetManifest.assets.head.width) * 100}% ${(pivot.y / assetManifest.assets.head.height) * 100}%`;
 
       if (reducedMotion.matches) {
-        const target = measureSocketTarget(core, socket);
-        gsap.set(head, { rotationX: -2, rotationY: 0, transformOrigin: headTransformOrigin });
-        gsap.set(core, { x: target.x, y: target.y, scale: target.scale, rotation: 0 });
+        const connectedState = nextInstallState(stateRef.current, "activate", {
+          reducedMotion: true,
+        });
+        stateRef.current = connectedState;
+        Object.assign(bridge, {
+          phase: "connected",
+          coreOwner: "socket",
+          gazeMode: "user",
+          progress: 1,
+        });
+        placeFallbackCoreAtSocket();
         setFinalTelemetry();
-        phaseRef.current = "connected";
         onPhaseChange("connected");
+        bridge.invalidate?.();
         return;
       }
 
@@ -332,13 +315,7 @@ export function useAgentCoreTimeline({
         ease: "power2.out",
         overwrite: "auto",
       });
-      const setCoreX = gsap.quickSetter(core, "x", "px");
-      const setCoreY = gsap.quickSetter(core, "y", "px");
-      let legacyHeadTarget: AgentCoreLegacyHeadTarget = {
-        yaw: 0,
-        pitch: 0,
-        duration: 0.24,
-      };
+      let legacyHeadTarget: AgentCoreLegacyHeadTarget = { yaw: 0, pitch: 0, duration: 0.24 };
 
       const writeLegacyHeadTarget = (target: AgentCoreLegacyHeadTarget) => {
         legacyHeadTarget = target;
@@ -357,10 +334,10 @@ export function useAgentCoreTimeline({
           headPitchTo.tween.pause();
         },
         reconcile: () => {
-          if (phaseRef.current === "installing" && installationTimeline && installHeadFocus) {
+          if (stateRef.current.started && stateRef.current.phase !== "connected" && installationTimeline && installHeadFocus) {
             legacyHeadTarget = resolveAgentCoreLegacyInstallGaze(
               installationTimeline.time(),
-              installationTimeline.labels.activate ?? Number.POSITIVE_INFINITY,
+              installationTimeline.labels.activating ?? Number.POSITIVE_INFINITY,
               installHeadFocus,
             );
           }
@@ -381,21 +358,22 @@ export function useAgentCoreTimeline({
       const onScenePointerMove = contextSafe((event: PointerEvent) => {
         const isFinePointerEvent =
           event.isPrimary && (event.pointerType === "mouse" || event.pointerType === "pen");
+        const phase = stateRef.current.phase;
         if (
           !sectionIsVisible ||
           !finePointer.matches ||
           !isFinePointerEvent ||
-          phaseRef.current === "dragging" ||
-          phaseRef.current === "installing"
+          (phase !== "awaiting" && phase !== "connected")
         ) return;
-        pointHeadAt(event.clientX, event.clientY, phaseRef.current === "connected" ? 0.55 : 1);
+        pointHeadAt(event.clientX, event.clientY, phase === "connected" ? 0.6 : 1);
       });
 
       const onScenePointerLeave = contextSafe(() => {
-        if (phaseRef.current === "dragging" || phaseRef.current === "installing") return;
+        const phase = stateRef.current.phase;
+        if (phase !== "awaiting" && phase !== "connected") return;
         writeLegacyHeadTarget({
           yaw: 0,
-          pitch: phaseRef.current === "connected" ? -2 : 0,
+          pitch: phase === "connected" ? -2 : 0,
           duration: 0.24,
         });
       });
@@ -405,76 +383,69 @@ export function useAgentCoreTimeline({
       window.addEventListener("resize", refreshSceneBounds, { passive: true });
 
       const install = contextSafe(() => {
-        if (
-          isReturning ||
-          phaseRef.current !== "awaiting" &&
-          phaseRef.current !== "dragging"
-        ) return;
+        if (stateRef.current.started) return;
+        transition("activate");
 
+        const coreBounds = core.getBoundingClientRect();
+        const coreCenter = {
+          x: coreBounds.left + coreBounds.width / 2,
+          y: coreBounds.top + coreBounds.height / 2,
+        };
         const target = measureSocketTarget(core, socket);
-        const targetRotation = clampHeadRotation(
-          { x: target.centerX, y: target.centerY },
-          rectShape(sceneBounds),
-        );
-        installHeadFocus = { ...targetRotation, duration: 0.22 };
-
-        if (phaseRef.current === "awaiting") setPhase("drag-start");
-        setPhase("drop-accepted");
+        installHeadFocus = {
+          ...clampHeadRotation(coreCenter, rectShape(sceneBounds)),
+          duration: 0.22,
+        };
 
         installationTimeline = gsap.timeline({
           paused: true,
-          defaults: { ease: "power2.out" },
+          defaults: { ease: "none" },
           onComplete: () => {
-            setFinalTelemetry();
-            setPhase("install-complete");
             installHeadFocus = null;
           },
         });
 
         installationTimeline
-          .addLabel("scene-in", 0)
-          .addLabel("pickup", 0)
+          .to(
+            bridge,
+            {
+              progress: 1,
+              duration: INSTALL_DURATION_SECONDS,
+              ease: "none",
+              onUpdate: () => bridge.invalidate?.(),
+            },
+            0,
+          )
+          .addLabel("targeting", 0)
           .call(() => {
             if (installHeadFocus) writeLegacyHeadTarget(installHeadFocus);
-          }, [], "pickup")
-          .to(
-            core,
-            {
-              y: target.y - 20,
-              scale: Math.max(target.currentScale, target.scale * 1.08),
-              rotation: -2,
+          }, [], "targeting")
+          .addLabel("reaching", 0.18)
+          .call(() => transition("targeted"), [], "reaching")
+          .addLabel("grasping", 0.78)
+          .call(() => transition("reached"), [], "grasping")
+          .addLabel("carrying", 1)
+          .call(() => transition("grasped"), [], "carrying")
+          .addLabel("docking", 1.68)
+          .call(() => {
+            transition("carried");
+            installHeadFocus = {
+              ...clampHeadRotation(
+                { x: target.centerX, y: target.centerY },
+                rectShape(sceneBounds),
+              ),
               duration: 0.22,
-            },
-            "pickup",
-          )
-          .addLabel("dock", ">")
-          .to(
-            core,
-            {
-              x: target.x,
-              y: target.y,
-              scale: target.scale,
-              rotation: 0,
-              duration: 0.46,
-              ease: "power3.inOut",
-            },
-            "dock",
-          )
-          .addLabel("activate", ">")
-          .call(startParticleBurst, [], "activate")
+            };
+            if (installHeadFocus) writeLegacyHeadTarget(installHeadFocus);
+          }, [], "docking")
+          .addLabel("activating", 2)
           .call(() => {
-            writeLegacyHeadTarget({ yaw: 0, pitch: -2, duration: 0.34 });
-          }, [], "activate")
-          .to(
-            core,
-            { scale: target.scale * 0.92, duration: 0.14, ease: "power2.in" },
-            "activate",
-          )
-          .to(core, { scale: target.scale, duration: 0.2, ease: "back.out(1.35)" }, ">")
-          .call(() => {
+            transition("docked");
+            placeFallbackCoreAtSocket();
+            startParticleBurst();
             if (statusRef.current) statusRef.current.textContent = "Connected";
-          }, [], "activate+=0.1")
-          .addLabel("capabilities", "activate+=0.18");
+          }, [], "activating")
+          .addLabel("capabilities", 2.15);
 
         stats.forEach((stat, rowIndex) => {
           const counter = { value: 0 };
@@ -487,9 +458,7 @@ export function useAgentCoreTimeline({
               ease: "power2.out",
               onUpdate: () => {
                 const valueNode = valueRefs.current[rowIndex];
-                if (valueNode) {
-                  valueNode.textContent = formatAgentCoreValue(Math.round(counter.value));
-                }
+                if (valueNode) valueNode.textContent = formatAgentCoreValue(Math.round(counter.value));
               },
             },
             rowStart,
@@ -514,138 +483,18 @@ export function useAgentCoreTimeline({
         });
 
         installationTimeline
-          .addLabel("hold", "capabilities+=0.82")
-          .to(core, { scale: target.scale, duration: 0.2 }, "hold")
+          .addLabel("returning", 2.35)
+          .call(() => transition("activated"), [], "returning")
+          .addLabel("hold", INSTALL_DURATION_SECONDS)
+          .call(() => {
+            transition("returned");
+            setFinalTelemetry();
+            writeLegacyHeadTarget({ yaw: 0, pitch: -2, duration: 0.34 });
+          }, [], "hold")
           .play(0);
       });
 
-      const onPointerDown = contextSafe((event: CorePointerEvent) => {
-        if (phaseRef.current !== "awaiting") return;
-        const start = beginAgentCorePointerSession(drag, {
-          pointerId: event.pointerId,
-          pointerType: event.pointerType,
-          isPrimary: event.isPrimary,
-          button: event.button,
-        });
-        if (start.action === "ignore" || !start.session) return;
-
-        suppressNextClick = false;
-        if (start.action === "capture-touch") {
-          drag = {
-            ...start.session,
-            pointerX: event.clientX,
-            pointerY: event.clientY,
-            coreCenterX: 0,
-            coreCenterY: 0,
-            coreX: 0,
-            coreY: 0,
-            dockX: 0,
-            dockY: 0,
-            moved: false,
-          };
-          event.currentTarget.setPointerCapture(event.pointerId);
-          return;
-        }
-
-        const measuredDock = measureDockTarget(core, dock);
-        drag = {
-          ...start.session,
-          pointerX: event.clientX,
-          pointerY: event.clientY,
-          ...measuredDock,
-          moved: false,
-        };
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setPhase("drag-start");
-      });
-
-      const onPointerMove = contextSafe((event: CorePointerEvent) => {
-        if (!drag || event.pointerId !== drag.pointerId || drag.kind !== "drag") return;
-        const deltaX = event.clientX - drag.pointerX;
-        const deltaY = event.clientY - drag.pointerY;
-        if (Math.hypot(deltaX, deltaY) >= DRAG_THRESHOLD_PX) drag.moved = true;
-        setCoreX(drag.coreX + deltaX);
-        setCoreY(drag.coreY + deltaY);
-        pointHeadAt(drag.coreCenterX + deltaX, drag.coreCenterY + deltaY);
-      });
-
-      const rejectDrop = (session: DragSession) => {
-        const { dockX, dockY } = session;
-        isReturning = true;
-        gsap.to(core, {
-          x: dockX,
-          y: dockY,
-          scale: 1,
-          rotation: 0,
-          duration: 0.46,
-          ease: "back.out(1.35)",
-          overwrite: true,
-          onComplete: () => {
-            isReturning = false;
-            setPhase("drop-rejected");
-          },
-        });
-        writeLegacyHeadTarget({ yaw: 0, pitch: 0, duration: 0.24 });
-      };
-
-      const finalizePointerSession = contextSafe((
-        event: CorePointerEvent,
-        reason: "up" | "cancel" | "lost-capture",
-      ) => {
-        const session = drag;
-        if (!session) return;
-
-        let dropAccepted = false;
-        if (reason === "up" && session.kind === "drag" && session.moved) {
-          const coreBounds = core.getBoundingClientRect();
-          const socketBounds = socket.getBoundingClientRect();
-          dropAccepted = isCoreDropAccepted(
-            {
-              x: coreBounds.left + coreBounds.width / 2,
-              y: coreBounds.top + coreBounds.height / 2,
-            },
-            rectShape(socketBounds),
-          );
-        }
-
-        const finished = finishAgentCorePointerSession(session, {
-          pointerId: event.pointerId,
-          reason,
-          moved: session.moved,
-          dropAccepted,
-        });
-        if (finished.action === "ignore") return;
-
-        drag = null;
-        suppressNextClick = true;
-        if (reason !== "lost-capture" && core.hasPointerCapture(session.pointerId)) {
-          core.releasePointerCapture(session.pointerId);
-        }
-
-        if (finished.action === "install") install();
-        else if (finished.action === "return-dock") rejectDrop(session);
-      });
-
-      const onPointerUp = contextSafe((event: CorePointerEvent) => {
-        finalizePointerSession(event, "up");
-      });
-
-      const onPointerCancel = contextSafe((event: CorePointerEvent) => {
-        finalizePointerSession(event, "cancel");
-      });
-
-      const onLostPointerCapture = contextSafe((event: CorePointerEvent) => {
-        finalizePointerSession(event, "lost-capture");
-      });
-
-      const onClick = contextSafe(() => {
-        if (suppressNextClick) {
-          suppressNextClick = false;
-          return;
-        }
-        install();
-      });
-
+      const onClick = contextSafe(() => install());
       const onKeyDown = contextSafe((event: React.KeyboardEvent<HTMLButtonElement>) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
@@ -653,27 +502,14 @@ export function useAgentCoreTimeline({
       });
 
       bridgeRef.current = {
+        ...emptyInteractionBridge(),
         install,
         onClick,
         onKeyDown,
-        onLostPointerCapture,
-        onPointerCancel,
-        onPointerDown,
-        onPointerMove,
-        onPointerUp,
       };
 
       return () => {
-        bridgeRef.current = {
-          install: noop,
-          onClick: noop,
-          onKeyDown: noop,
-          onLostPointerCapture: noop,
-          onPointerCancel: noop,
-          onPointerDown: noop,
-          onPointerMove: noop,
-          onPointerUp: noop,
-        };
+        bridgeRef.current = emptyInteractionBridge();
         section.removeEventListener("pointermove", onScenePointerMove);
         section.removeEventListener("pointerleave", onScenePointerLeave);
         window.removeEventListener("resize", refreshSceneBounds);
@@ -684,10 +520,6 @@ export function useAgentCoreTimeline({
         detachLegacyGazeRuntime();
         headYawTo.tween.kill();
         headPitchTo.tween.kill();
-        if (drag && core.hasPointerCapture(drag.pointerId)) {
-          core.releasePointerCapture(drag.pointerId);
-        }
-        drag = null;
         cancelCanvasBurst();
       };
     },

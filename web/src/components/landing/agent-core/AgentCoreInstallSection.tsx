@@ -10,8 +10,8 @@ import {
   type AgentCore3DBridge,
   type AgentCoreLegacyGazeOwnership,
 } from "./agent-core-3d-bridge";
+import type { AgentCoreInstallPhase } from "./agent-core-install-state";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
-import type { AgentCorePhase } from "./agent-core-state";
 import { CapabilityTelemetry } from "./CapabilityTelemetry";
 import styles from "./agent-core.module.css";
 import { useAgentCoreGaze3D } from "./useAgentCoreGaze3D";
@@ -44,28 +44,8 @@ class AgentCoreStageBoundary extends Component<StageBoundaryProps, { failed: boo
   }
 }
 
-function updateBridgePhase(bridge: AgentCore3DBridge, phase: AgentCorePhase) {
-  if (phase === "connected") {
-    bridge.phase = "connected";
-    bridge.coreOwner = "socket";
-    bridge.gazeMode = "user";
-    bridge.progress = 1;
-  } else if (phase === "installing") {
-    bridge.phase = "carrying";
-    bridge.coreOwner = "hand";
-    bridge.gazeMode = "socket";
-    bridge.progress = 0.5;
-  } else if (phase === "dragging") {
-    bridge.phase = "targeting";
-    bridge.coreOwner = "dock";
-    bridge.gazeMode = "core";
-    bridge.progress = 0;
-  } else {
-    bridge.phase = "awaiting";
-    bridge.coreOwner = "dock";
-    bridge.gazeMode = "user";
-    bridge.progress = 0;
-  }
+function updateBridgePhase(bridge: AgentCore3DBridge, phase: AgentCoreInstallPhase) {
+  bridge.phase = phase;
 }
 
 export function AgentCoreInstallSection() {
@@ -79,7 +59,7 @@ export function AgentCoreInstallSection() {
   const statusRef = useRef<HTMLSpanElement | null>(null);
   const valueRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const [phase, onPhaseChange] = useState<AgentCorePhase>("awaiting");
+  const [phase, onPhaseChange] = useState<AgentCoreInstallPhase>("awaiting");
   const [stageReady, setStageReady] = useState(false);
   const legacyGazeOwnershipRef = useRef<AgentCoreLegacyGazeOwnership | null>(null);
   if (legacyGazeOwnershipRef.current === null) {
@@ -89,7 +69,6 @@ export function AgentCoreInstallSection() {
   const bridgeRef = useRef<AgentCore3DBridge | null>(null);
   if (bridgeRef.current === null) bridgeRef.current = createAgentCore3DBridge();
   const bridge = bridgeRef.current;
-  updateBridgePhase(bridge, phase);
 
   const handleStageReady = useCallback(() => {
     legacyGazeOwnership.setStageReady(true);
@@ -100,7 +79,7 @@ export function AgentCoreInstallSection() {
     setStageReady(false);
   }, [legacyGazeOwnership]);
   const handlePhaseChange = useCallback(
-    (nextPhase: AgentCorePhase) => {
+    (nextPhase: AgentCoreInstallPhase) => {
       bridge.pointer.active = false;
       updateBridgePhase(bridge, nextPhase);
       bridge.invalidate?.();
@@ -130,6 +109,7 @@ export function AgentCoreInstallSection() {
     statusRef,
     valueRefs,
     fillRefs,
+    bridge,
     legacyGazeOwnership,
     onPhaseChange: handlePhaseChange,
   });
