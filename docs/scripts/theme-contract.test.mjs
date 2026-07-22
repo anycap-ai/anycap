@@ -81,6 +81,7 @@ test('routes model discovery to the live catalog instead of duplicating availabi
 
 test('shows direct CLI and MCP integration paths in the homepage hero', () => {
   assert.match(homepage, /text: Start in 30 seconds[\s\S]*link: \/getting-started\//);
+  assert.match(homepage, /text: Install the CLI[\s\S]*link: \/getting-started\/install\//);
   assert.match(homepage, /text: Connect through MCP[\s\S]*link: \/getting-started\/mcp\//);
   assert.match(homepage, /title="CLI"[\s\S]*href="\/getting-started\/install\/"/);
   assert.match(homepage, /title="Local MCP server"[\s\S]*href="\/getting-started\/mcp\/"/);
