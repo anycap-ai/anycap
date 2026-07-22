@@ -85,18 +85,29 @@ geometry, head/neck articulation, and a deterministic arm chain. React Three
 Fiber hosts the transparent scene; Three.js owns bones, quaternions, camera,
 materials, and IK; GSAP owns the narrative timeline and existing DOM telemetry.
 
-No Tripo, Meshy, Spline, remote model generator, runtime model service, or
-remote asset URL is permitted.
+The user-supplied Tripo GLB may be used as an offline high-poly reference asset.
+It is not production-ready geometry and may not be shipped directly. A new
+credit-consuming remote generation is a separate source route that requires
+explicit user authorization before it runs. No remote model generator, runtime
+model service, or remote asset URL is permitted in the browser. Any generated
+source must first pass local source-selection, topology, semantic-part, rig,
+material, size, and visual-fidelity gates.
 
 ## 5. Asset Production and Approval Gate
 
 ### 5.1 Authoring
 
-The model is authored offline in Blender or an equivalent local DCC and
-exported as GLB. Blender is an authoring dependency only; it is not shipped to
-the browser. The current environment does not yet contain Blender, so the
-implementation plan must explicitly establish the local authoring/export
-workflow before model work begins.
+The production model is finished offline in Blender and exported as GLB.
+Blender is an authoring dependency only; it is not shipped to the browser. The
+local Blender runtime is `/Applications/Blender.app/Contents/MacOS/Blender`.
+
+Choose one source route. The supplied high-poly file is reference-only and must
+not be remeshed again; its overlapping open patches already failed the visual
+gate. A separately user-authorized clean low-poly generation must be generated
+or retopologized before rigging. Remeshing a rigged result is not an allowed
+shortcut because it destroys the skeleton and skin bindings. Blender still owns
+semantic separation, the square socket/Core/dock rebuild, hand and grip
+controls, final rig/weights, materials, optimization, and export.
 
 The approved front-view master and the four current WebP layers are the visual
 references. The model must be newly authored to match them; the WebP body may
@@ -109,12 +120,13 @@ The exported asset must expose stable semantic names:
 ```text
 AgentRoot
 |- torso
-|- chest_socket
+|  `- chest_socket
 |- clavicle_R
 |  `- upper_arm_R
 |     `- forearm_R
 |        `- hand_R
 |           `- core_grip_R
+|- ik_target_R
 |- neck_lower
 |  `- neck_upper
 |     `- head
@@ -400,7 +412,8 @@ Automated validation must prove:
 - every required node and bone name exists exactly once;
 - head, neck, arm, hand grip, chest socket, Core, and dock anchors are finite;
 - material and texture references are local;
-- no Tripo, Meshy, Spline, remote model endpoint, or runtime asset URL exists.
+- no Tripo, Meshy, Spline, remote model endpoint, or runtime asset URL exists in
+  the shipped browser implementation;
 
 ### 14.2 Pure behavior tests
 
@@ -480,4 +493,5 @@ The feature is complete only when all of the following are proven:
 - facial expressions, speech, audio, lip sync, or autonomous chat;
 - multiple Core types, replay controls, personalization, or model selection;
 - runtime procedural replacement of the approved robot;
-- Tripo, Meshy, Spline, remote generation, or a hosted model dependency.
+- a Tripo, Meshy, Spline, remote generation, or hosted model dependency in the
+  shipped browser implementation.

@@ -10,6 +10,32 @@ test("locks the approved custom-rig contract", () => {
   assert.deepEqual(contract.gazeLimitsDegrees.yaw, [-70, 70]);
   assert.deepEqual(contract.gazeLimitsDegrees.pitch, [-25, 25]);
   assert.deepEqual(contract.gazeLimitsDegrees.roll, [-3, 3]);
+  assert.deepEqual(contract.asset, {
+    file: "agent-core-upper-body.glb",
+    maxBytes: 3145728,
+    maxTextureDimension: 2048,
+    maxDrawCalls: 45,
+    maxTriangles: 100000,
+    maxVertices: 75000,
+    maxBones: 32,
+    maxSkinInfluences: 4,
+  });
+  assert.deepEqual(contract.requiredHierarchy, {
+    torso: "AgentRoot",
+    chest_socket: "torso",
+    clavicle_R: "AgentRoot",
+    upper_arm_R: "clavicle_R",
+    forearm_R: "upper_arm_R",
+    hand_R: "forearm_R",
+    ik_target_R: "AgentRoot",
+    neck_lower: "AgentRoot",
+    neck_upper: "neck_lower",
+    head: "neck_upper",
+    visor: "head",
+    core_grip_R: "hand_R",
+    core: "AgentRoot",
+    core_dock: "AgentRoot",
+  });
   assert.equal(
     new Set([...contract.requiredNodes, ...contract.requiredBones]).size,
     contract.requiredNodes.length + contract.requiredBones.length,

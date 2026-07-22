@@ -5,7 +5,11 @@
     "file": "agent-core-upper-body.glb",
     "maxBytes": 3145728,
     "maxTextureDimension": 2048,
-    "maxDrawCalls": 45
+    "maxDrawCalls": 45,
+    "maxTriangles": 100000,
+    "maxVertices": 75000,
+    "maxBones": 32,
+    "maxSkinInfluences": 4
   },
   "camera": {
     "type": "perspective",
@@ -20,6 +24,22 @@
     "clavicle_R", "upper_arm_R", "forearm_R", "hand_R",
     "neck_lower", "neck_upper", "ik_target_R"
   ],
+  "requiredHierarchy": {
+    "torso": "AgentRoot",
+    "chest_socket": "torso",
+    "clavicle_R": "AgentRoot",
+    "upper_arm_R": "clavicle_R",
+    "forearm_R": "upper_arm_R",
+    "hand_R": "forearm_R",
+    "ik_target_R": "AgentRoot",
+    "neck_lower": "AgentRoot",
+    "neck_upper": "neck_lower",
+    "head": "neck_upper",
+    "visor": "head",
+    "core_grip_R": "hand_R",
+    "core": "AgentRoot",
+    "core_dock": "AgentRoot"
+  },
   "anchors": {
     "socketScreen": { "x": 0.697, "y": 0.625 },
     "dockScreen": { "x": 0.637, "y": 0.898 }

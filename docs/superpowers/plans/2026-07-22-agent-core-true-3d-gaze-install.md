@@ -17,7 +17,7 @@
 - The robot stays a matte ivory upper body with black segmented neck, horizontal pixel visor, olive seams, square chest socket, physical dock, and seated tabletop Core.
 - Horizontal gaze is clamped to approximately `±70°`, vertical gaze to `±25°`, and roll to `±3°`; the head must not spin continuously.
 - Selecting the Core makes the robot reach, grasp, carry, install, release, and return. The Core must not self-fly during the primary 3D path.
-- Use a local custom rigged GLB. Do not use runtime primitive robot construction, Tripo, Meshy, Spline, remote generation, remote model URLs, remote HDRs, or a physics engine.
+- Use a local custom rigged GLB. The user-supplied Tripo GLB is authorized only as an offline high-poly reference; never ship it directly or call a remote model service at runtime. A new credit-consuming generation is a separate route and requires explicit user authorization. Do not use runtime primitive robot construction, Meshy, Spline, remote model URLs, remote HDRs, or a physics engine.
 - Keep the current WebP composition visible until the first correct 3D frame and on every load, model, bone-validation, WebGL, or context-recovery failure.
 - Use `frameloop="demand"`, DPR caps of 1.5 desktop and 1.25 mobile, no post-processing, no camera controls, and no perpetual animation.
 - Do not make the 3D runtime primary until isolated turntable and installation-keyframe visual review passes.
@@ -79,7 +79,11 @@ Create the file with these exact top-level values and names:
     "file": "agent-core-upper-body.glb",
     "maxBytes": 3145728,
     "maxTextureDimension": 2048,
-    "maxDrawCalls": 45
+    "maxDrawCalls": 45,
+    "maxTriangles": 100000,
+    "maxVertices": 75000,
+    "maxBones": 32,
+    "maxSkinInfluences": 4
   },
   "camera": {
     "type": "perspective",
@@ -94,6 +98,22 @@ Create the file with these exact top-level values and names:
     "clavicle_R", "upper_arm_R", "forearm_R", "hand_R",
     "neck_lower", "neck_upper", "ik_target_R"
   ],
+  "requiredHierarchy": {
+    "torso": "AgentRoot",
+    "chest_socket": "torso",
+    "clavicle_R": "AgentRoot",
+    "upper_arm_R": "clavicle_R",
+    "forearm_R": "upper_arm_R",
+    "hand_R": "forearm_R",
+    "ik_target_R": "AgentRoot",
+    "neck_lower": "AgentRoot",
+    "neck_upper": "neck_lower",
+    "head": "neck_upper",
+    "visor": "head",
+    "core_grip_R": "hand_R",
+    "core": "AgentRoot",
+    "core_dock": "AgentRoot"
+  },
   "anchors": {
     "socketScreen": { "x": 0.697, "y": 0.625 },
     "dockScreen": { "x": 0.637, "y": 0.898 }
@@ -232,6 +252,33 @@ This sheet guides unseen surfaces; the approved front master remains primary.
 
 - [ ] **Step 3: Author the model and rig in Blender**
 
+Choose exactly one source route before authoring:
+
+- **Route A — user-supplied reference:** retain the existing high-poly GLB only
+  as a proportion/material reference and manually author a clean production
+  shell in Blender. Do not run another automated remesh on its overlapping open
+  patches.
+- **Route B — new clean low-poly generation:** only after explicit user
+  authorization for the credit-consuming call, generate a neutral multiview
+  A-pose source with open hands and no fused Core/dock/socket. It must pass the
+  incoming silhouette/topology gate in `tools/agent-core-3d/README.md` before
+  semantic modeling or rigging begins.
+
+For Route B, prepare generated geometry before Blender rigging in this exact
+order:
+
+1. retopology / Smart LowPoly with a web-oriented face budget;
+2. export the unrigged low-poly result with textures;
+3. rebuild semantic hard-surface parts in Blender;
+4. create and weight the final custom rig in Blender;
+5. export and validate the production GLB.
+
+Do not rig before retopology. Mesh-editing and remeshing operations reconstruct
+geometry and strip bones, skin weights, and animation bindings. Tripo auto-rig
+may be used only as a diagnostic reference; it cannot replace the custom
+`neck_lower` / `neck_upper` / right-arm / `ik_target_R` rig required by the
+autonomous hand-to-socket narrative.
+
 Create a cropped upper-body product model with these enforced properties:
 
 - front camera silhouette overlays the approved robot ROI without material
@@ -265,12 +312,23 @@ function readGlbJson(path) {
 test("ships one local validated rigged GLB", () => {
   const stat = statSync(glbPath);
   const gltf = readGlbJson(glbPath);
-  const names = new Set((gltf.nodes ?? []).map((node) => node.name));
+  const names = (gltf.nodes ?? []).map((node) => node.name).filter(Boolean);
+  const nameCounts = new Map(names.map((name) => [name, names.filter((item) => item === name).length]));
   assert.ok(stat.size <= contract.asset.maxBytes);
   for (const name of [...contract.requiredNodes, ...contract.requiredBones]) {
-    assert.ok(names.has(name), name);
+    assert.equal(nameCounts.get(name), 1, `${name} must exist exactly once`);
   }
+  // Resolve node indices and assert every required parent/child edge.
+  // Count mesh primitive triangles/vertices, skins/joints, materials, cameras,
+  // lights, accessors, and texture dimensions against the exact contract
+  // limits. Reject JOINTS_1/WEIGHTS_1 (or any higher-index influence set), and
+  // verify no vertex has more than four nonzero WEIGHTS_0 entries. Count draw
+  // calls per rendered node instance, not only unique primitive definitions.
+  // Reject every external buffer/image URI and every unapproved material name.
   for (const image of gltf.images ?? []) assert.equal(image.uri, undefined);
+  for (const buffer of gltf.buffers ?? []) assert.equal(buffer.uri, undefined);
+  assert.equal((gltf.cameras ?? []).length, 0);
+  assert.equal(gltf.extensions?.KHR_lights_punctual?.lights?.length ?? 0, 0);
 });
 ```
 
@@ -534,8 +592,8 @@ Expected: FAIL because stage, rig, bridge, and dependencies are absent.
 - [ ] **Step 3: Add exact compatible dependencies**
 
 ```bash
-cd web && pnpm add three@0.185.1 @react-three/fiber@9.6.1 \
-  @react-three/drei@10.7.7 && pnpm add -D @types/three@0.185.1
+cd web && pnpm add --save-exact three@0.185.1 @react-three/fiber@9.6.1 \
+  @react-three/drei@10.7.7 && pnpm add --save-exact -D @types/three@0.185.1
 ```
 
 Verify no unrelated manifest entry changes.
