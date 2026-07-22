@@ -63,6 +63,14 @@ test('uses the main-site brand mark without duplicating it in the homepage hero'
   assert.match(logo, /<tspan fill="#1c1f17">any<\/tspan><tspan fill="#6b7d3a">cap<\/tspan>/);
 });
 
+test('matches the main-site logo scale, gap, and Space Mono wordmark metrics', () => {
+  assert.match(logo, /viewBox="0 0 166 42"/);
+  assert.match(logo, /width="42" height="42"/);
+  assert.match(logo, /x="60\.06" y="31\.1"/);
+  assert.match(logo, /font-size="29\.82" font-weight="700" letter-spacing="-0\.5"/);
+  assert.match(stylesheet, /\.site-title img \{[\s\S]*width: 10\.375rem;[\s\S]*height: 2\.625rem;/);
+});
+
 test('uses the main-site nested-square mark for the browser favicon', () => {
   assert.match(favicon, /viewBox="5 5 190 190"/);
   assert.match(favicon, /<mask id="m">/);

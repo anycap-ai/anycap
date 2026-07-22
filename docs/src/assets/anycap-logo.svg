@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 166 42" role="img" aria-labelledby="title">
   <title id="title">AnyCap</title>
   <style>
     @font-face {
@@ -7,7 +7,7 @@
       font-weight: 700;
     }
   </style>
-  <svg x="0" y="8" width="76" height="76" viewBox="20 25 160 150" aria-hidden="true">
+  <svg x="0" y="0" width="42" height="42" viewBox="20 25 160 150" aria-hidden="true">
     <g transform="rotate(-5 100 100)">
       <rect x="15" y="15" width="170" height="170" rx="8" fill="#d4e0a4" opacity=".18"/>
     </g>
@@ -17,5 +17,5 @@
     <rect x="49" y="49" width="102" height="102" rx="3" fill="#6b7d3a"/>
     <rect x="83" y="83" width="34" height="34" rx="2" fill="#f4f5f0"/>
   </svg>
-  <text x="90" y="64" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3"><tspan fill="#1c1f17">any</tspan><tspan fill="#6b7d3a">cap</tspan></text>
+  <text x="60.06" y="31.1" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="29.82" font-weight="700" letter-spacing="-0.5"><tspan fill="#1c1f17">any</tspan><tspan fill="#6b7d3a">cap</tspan></text>
 </svg>
