@@ -11,6 +11,7 @@ Thumbs.db
 
 # Node
 node_modules/
+.worktrees/
 docs/.astro/
 docs/.wrangler/
 docs/dist/

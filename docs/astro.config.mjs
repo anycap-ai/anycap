@@ -25,9 +25,6 @@ export default defineConfig({
           href: 'https://github.com/anycap-ai/anycap',
         },
       ],
-      editLink: {
-        baseUrl: 'https://github.com/anycap-ai/anycap/edit/main/docs/',
-      },
       lastUpdated: true,
       disable404Route: true,
       customCss: ['./src/styles/custom.css'],
@@ -35,7 +32,7 @@ export default defineConfig({
         Head: './src/components/Head.astro',
       },
       head: [
-        { tag: 'meta', attrs: { name: 'theme-color', content: '#f9faf5' } },
+        { tag: 'meta', attrs: { name: 'theme-color', content: '#f4f5f0' } },
         { tag: 'meta', attrs: { name: 'color-scheme', content: 'light dark' } },
         {
           tag: 'meta',
@@ -74,11 +71,13 @@ export default defineConfig({
           label: 'Capabilities',
           items: [
             { label: 'Overview', link: '/capabilities/' },
+            { label: 'Models', link: '/capabilities/models/' },
             { label: 'Image', link: '/capabilities/image/' },
             { label: 'Video', link: '/capabilities/video/' },
+            { label: 'Audio', link: '/capabilities/audio/' },
+            { label: 'Music', link: '/capabilities/music/' },
             { label: 'Media understanding', link: '/capabilities/media-understanding/' },
             { label: 'Web search and crawl', link: '/capabilities/web/' },
-            { label: 'Music and audio', link: '/capabilities/audio/' },
             { label: 'Drive and Page', link: '/capabilities/delivery/' },
             { label: 'Annotate and Draw', link: '/capabilities/collaboration/' },
             { label: 'Snapshots', link: '/capabilities/snapshots/' },
