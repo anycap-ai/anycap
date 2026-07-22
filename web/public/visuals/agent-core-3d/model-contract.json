@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "artboard": { "width": 1672, "height": 941 },
+  "asset": {
+    "file": "agent-core-upper-body.glb",
+    "maxBytes": 3145728,
+    "maxTextureDimension": 2048,
+    "maxDrawCalls": 45
+  },
+  "camera": {
+    "type": "perspective",
+    "fovRange": [28, 34],
+    "controls": false
+  },
+  "requiredNodes": [
+    "AgentRoot", "torso", "chest_socket", "head", "visor",
+    "core", "core_dock", "core_grip_R"
+  ],
+  "requiredBones": [
+    "clavicle_R", "upper_arm_R", "forearm_R", "hand_R",
+    "neck_lower", "neck_upper", "ik_target_R"
+  ],
+  "anchors": {
+    "socketScreen": { "x": 0.697, "y": 0.625 },
+    "dockScreen": { "x": 0.637, "y": 0.898 }
+  },
+  "gazeLimitsDegrees": {
+    "yaw": [-70, 70],
+    "pitch": [-25, 25],
+    "roll": [-3, 3],
+    "neckShare": 0.3,
+    "headShare": 0.7
+  },
+  "materials": ["ivory_shell", "black_joint", "olive_detail", "socket_dark", "core_shell"],
+  "forbidden": ["tripo", "meshy", "spline", "http://", "https://"]
+}
