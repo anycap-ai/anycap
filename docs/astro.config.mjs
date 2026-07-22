@@ -25,9 +25,6 @@ export default defineConfig({
           href: 'https://github.com/anycap-ai/anycap',
         },
       ],
-      editLink: {
-        baseUrl: 'https://github.com/anycap-ai/anycap/edit/main/docs/',
-      },
       lastUpdated: true,
       disable404Route: true,
       customCss: ['./src/styles/custom.css'],

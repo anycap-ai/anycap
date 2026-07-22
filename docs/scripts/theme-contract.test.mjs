@@ -68,6 +68,9 @@ test('uses rendered icons and styled documentation footer controls', () => {
   assert.match(homepage, /<Card title="Understand" icon="document">/);
   assert.match(stylesheet, /footer\.sl-flex/);
   assert.match(stylesheet, /\.pagination-links/);
+  assert.doesNotMatch(docsConfig, /editLink:/);
+  assert.match(stylesheet, /footer\.sl-flex \.pagination-links a \{[\s\S]*border: 0;/);
+  assert.match(stylesheet, /footer\.sl-flex \.pagination-links a \{[\s\S]*border-radius: 0;/);
 });
 
 test('routes model discovery to the live catalog instead of duplicating availability claims', () => {

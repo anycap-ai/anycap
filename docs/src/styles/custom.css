@@ -309,17 +309,16 @@
   }
 
   footer.sl-flex .pagination-links a {
-    border-color: var(--ac-border);
-    border-radius: 0.75rem;
+    border: 0;
+    border-radius: 0;
     box-shadow: none;
     color: var(--ac-muted);
-    padding: 0.8rem 1rem;
-    transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    padding: 0.4rem 0;
+    transition: color 160ms ease;
   }
 
   footer.sl-flex .pagination-links a:hover {
-    background: color-mix(in srgb, var(--ac-accent) 8%, var(--ac-raised));
-    border-color: var(--ac-accent);
+    background: transparent;
     color: var(--ac-ink);
   }
 
