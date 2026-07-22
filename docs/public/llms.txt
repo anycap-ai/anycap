@@ -1,0 +1,25 @@
+# AnyCap Documentation
+
+> AnyCap is the capability runtime for AI agents. It provides image, video, music, audio, media understanding, web, Drive, Page, annotation, drawing, and snapshot workflows through one CLI and one authentication flow.
+
+## Start here
+
+- [Documentation overview](https://docs.anyware.ai/)
+- [Quickstart](https://docs.anyware.ai/getting-started/)
+- [Install the CLI](https://docs.anyware.ai/getting-started/install/)
+- [Authentication](https://docs.anyware.ai/getting-started/authentication/)
+- [Agent Skill](https://docs.anyware.ai/getting-started/agent-skill/)
+- [MCP setup](https://docs.anyware.ai/getting-started/mcp/)
+
+## Core references
+
+- [Capabilities](https://docs.anyware.ai/capabilities/)
+- [CLI reference](https://docs.anyware.ai/reference/cli/)
+- [MCP tools](https://docs.anyware.ai/reference/mcp-tools/)
+- [JSON output](https://docs.anyware.ai/reference/output/)
+- [Security](https://docs.anyware.ai/reference/security/)
+
+## Source
+
+- [GitHub repository](https://github.com/anycap-ai/anycap)
+- [AnyCap website](https://anycap.ai)

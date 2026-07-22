@@ -7,10 +7,12 @@
 [![Skills directory](https://img.shields.io/badge/skills.sh-anycap-6f42c1)](https://skills.sh/anycap-ai/anycap)
 
 > **The execution layer for coding agents.**
-> Give Claude Code, Cursor, and Codex real-world capabilities — image, video, vision, music, web search, and publishing — inside the agents you already use.
-> Install in plain English. No `npm` vs `brew` vs `curl` debate.
+> Give Claude Code, Cursor, Codex, and any client with local stdio MCP support real-world
+> capabilities — image, video, vision, music, web search, and publishing — inside the
+> agents you already use.
+> Connect through an Agent Skill or the built-in local MCP server.
 
-![AnyCap — the execution layer for coding agents](docs/images/hero.png)
+![AnyCap — the execution layer for coding agents](assets/hero.png)
 
 ---
 
@@ -28,16 +30,18 @@ instructions to install the AnyCap CLI and skill. If you can't access the URL, r
 ```
 
 That's it. The agent installs the CLI, installs the skill, logs you in, and verifies the
-connection — then every capability below becomes a single sentence. Prefer to do it by
-hand? Jump to [Manual install](#manual-install).
+connection — then every capability below becomes a single sentence. Prefer native MCP
+tool discovery? Jump to [Connect via MCP](#connect-via-mcp). Prefer to do it by hand?
+Jump to [Manual install](#manual-install).
 
 ## Contents
 
 - [What this fixes](#what-this-fixes)
 - [What your agent can do](#what-your-agent-can-do)
 - [Install by talking to your agent](#install-by-talking-to-your-agent)
-- [Why skills over SDKs](#why-skills-over-sdks)
+- [Skills and MCP, not SDK glue](#skills-and-mcp-not-sdk-glue)
 - [Manual install](#manual-install)
+- [Connect via MCP](#connect-via-mcp)
 - [Capabilities](#capabilities)
 - [Works with](#works-with)
 - [FAQ & troubleshooting](#faq--troubleshooting)
@@ -123,19 +127,20 @@ the full command surface, so future actions become one sentence:
 The agent picks the right capability, runs it, and hands you the result. You never touch a
 flag unless you want to.
 
-## Why skills over SDKs
+## Skills and MCP, not SDK glue
 
-Most tools ship an SDK and ask you to wire it in. AnyCap ships a **skill** — a single
-file your agent reads — plus a thin CLI it can call.
+Most tools ship an SDK and ask you to wire it in. AnyCap gives agents two integration
+paths on top of the same CLI runtime:
 
-- **No glue code.** The agent learns the whole command surface from one `SKILL.md`; you
-  don't import a library or manage API objects.
-- **Model- and agent-agnostic.** The same skill works across Claude Code, Cursor, Codex,
-  and [40+ agents](https://skills.sh). Swap agents, keep your capabilities.
-- **One auth, one CLI.** Image, video, vision, music, web, and publishing sit behind a
-  single login instead of a dozen API keys.
-- **Plain-English invocation.** Capabilities are triggered by intent, not by memorizing
-  flags.
+- **Agent Skill.** The agent reads `SKILL.md`, learns complete workflows, and invokes the
+  CLI from plain-English requests. The same skill works across Claude Code, Cursor,
+  Codex, and [40+ agents](https://skills.sh).
+- **MCP server.** Any MCP host can discover typed AnyCap tools through the built-in local
+  stdio server. No separate package or service is required.
+- **One auth, one CLI.** Both paths share the same login, configuration, HTTP client, and
+  local media handling.
+- **No glue code.** You do not import a library, manage API objects, or maintain a custom
+  tool wrapper.
 
 ## Manual install
 
@@ -167,14 +172,10 @@ npx -y skills add anycap-ai/anycap -s '*' -g -y
 <summary>More ways to install the skill</summary>
 
 ```bash
-# Direct download
-curl -fsSL https://raw.githubusercontent.com/anycap-ai/anycap/main/skills/anycap-cli/SKILL.md \
-  --create-dirs -o ~/.agents/skills/anycap-cli/SKILL.md
+# Via AnyCap CLI (installs complete skill directories and references)
+anycap skill install --target ~/.agents/skills/
 
-# Via AnyCap CLI
-anycap skill install --target ~/.agents/skills/anycap-cli/
-
-# Check if the skill is up to date
+# Check if the CLI skill is up to date
 anycap skill check --target ~/.agents/skills/anycap-cli/SKILL.md
 ```
 
@@ -186,6 +187,91 @@ anycap skill check --target ~/.agents/skills/anycap-cli/SKILL.md
 anycap login
 anycap status
 ```
+
+## Connect via MCP
+
+AnyCap CLI v0.5.0 includes a local [Model Context Protocol](https://modelcontextprotocol.io/)
+server. It runs over stdio inside the existing `anycap` binary, exposes 23 typed tools,
+and shares the CLI's credentials and configuration. It has been verified with MCP
+protocol version `2025-06-18`. There is no separate MCP package or background service to
+install.
+
+First verify that your installed CLI includes the server:
+
+```bash
+anycap mcp --help
+```
+
+If the command is missing, run `anycap update` and check again.
+
+### Claude Code
+
+Add AnyCap to the current project using Claude's machine-local scope and authorize local
+media under that project:
+
+```bash
+claude mcp add --scope local anycap -- anycap mcp --allow-root "$PWD"
+```
+
+Local scope avoids committing a machine-specific absolute path to the shared project
+configuration.
+
+### Codex
+
+The Codex CLI command creates a global server definition. Omit a permanent absolute root
+and let each project session provide client roots or use the server working-directory
+fallback:
+
+```bash
+codex mcp add anycap -- anycap mcp
+```
+
+### Cursor and other MCP clients
+
+Add this stdio server to your client's MCP configuration. Replace the example path with
+an absolute directory containing media that AnyCap may read:
+
+```json
+{
+  "mcpServers": {
+    "anycap": {
+      "type": "stdio",
+      "command": "anycap",
+      "args": [
+        "mcp",
+        "--allow-root",
+        "/absolute/path/to/media"
+      ]
+    }
+  }
+}
+```
+
+`--allow-root` is optional and repeatable. Effective local access is the union of these
+flags, `ANYCAP_MCP_FILE_ROOTS`, and roots advertised by the MCP client; if none are
+provided, the server falls back to its working directory. URL-based calls do not need
+local access. Keep every configured root as narrow as possible.
+
+Existing `anycap login` credentials are picked up automatically, including logins
+completed after the MCP process starts. MCP clients can also authenticate without
+leaving the session through `anycap_auth_status`, `anycap_login`, and
+`anycap_login_poll`. Authentication never opens a browser at server startup.
+
+The 23 tools cover:
+
+| Group | MCP tools |
+| ----- | --------- |
+| Authentication | Status, device login, login polling, and logout |
+| Discovery | AnyCap status, model listing, and model schemas |
+| Image | Generate, edit, upscale, and understand images |
+| Video | Generate and understand videos |
+| Music and audio | Generate music and analyze or transcribe audio |
+| Web | Search the live web and crawl pages to Markdown |
+| Drive | List and resolve files and folders (read-only) |
+| Page | Inspect sites and versions (read-only) |
+
+For the complete tool inventory, authentication flow, and local image-to-video example,
+see [the MCP reference](skills/anycap-cli/references/cli-reference.md#local-stdio-mcp).
 
 ## Capabilities
 
@@ -267,7 +353,8 @@ retire models, so treat the CLI output as the source of truth.
 
 ## Works with
 
-Claude Code · Cursor · Codex · Windsurf · OpenCode · 40+ agents via [skills.sh](https://skills.sh).
+Claude Code · Cursor · Codex · Windsurf · OpenCode · 40+ agents via
+[skills.sh](https://skills.sh) · any client that supports local stdio MCP servers.
 
 ## FAQ & troubleshooting
 
@@ -275,7 +362,16 @@ Claude Code · Cursor · Codex · Windsurf · OpenCode · 40+ agents via [skills
 <summary><strong>Do I need an API key for each capability?</strong></summary>
 
 No. One `anycap login` covers every capability — image, video, vision, music, web, and
-publishing share a single auth.
+publishing share a single auth. The CLI and MCP server use the same credentials.
+</details>
+
+<details>
+<summary><strong>Does the MCP server upload every local file?</strong></summary>
+
+No. Only local media explicitly passed to a compatible tool can be uploaded, and its
+canonical path must be inside an effective allowed root. Configure repeatable
+`--allow-root` flags or client-advertised roots to control access. URL-based inputs do
+not require local filesystem access.
 </details>
 
 <details>
@@ -313,6 +409,7 @@ from [Releases](https://github.com/anycap-ai/anycap/releases).
 
 ## Links
 
+- [Documentation](https://docs.anyware.ai) — Guides and reference
 - [llms.txt](llms.txt) — Give this to your agent
 - [Skill file](skills/anycap-cli/SKILL.md) — Full capability documentation
 - [GitHub Releases](https://github.com/anycap-ai/anycap/releases) — CLI binaries

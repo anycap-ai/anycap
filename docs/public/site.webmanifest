@@ -1,0 +1,16 @@
+{
+  "name": "AnyCap Documentation",
+  "short_name": "AnyCap Docs",
+  "description": "Documentation for AnyCap, the capability runtime for AI agents.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9faf5",
+  "theme_color": "#6b7d3a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+---
+title: Generate, Refine, and Share an Image
+description: Complete an AnyCap image workflow from live model discovery to a browser-ready Drive link.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This guide creates an image, performs a second image-to-image pass, and shares the finished file with a human.
+
+<Steps>
+1. **Choose a current model.**
+
+   ```bash
+   anycap image models
+   anycap image models <model-id> schema --mode text-to-image
+   ```
+
+2. **Generate the first version.**
+
+   ```bash
+   anycap image generate \
+     --prompt "cat in a tiny chef hat, editorial studio portrait" \
+     --model <model-id> \
+     -o chef-cat.png
+   ```
+
+3. **Inspect image-to-image controls.**
+
+   ```bash
+   anycap image models <model-id> schema --mode image-to-image
+   ```
+
+4. **Refine the local file.**
+
+   ```bash
+   anycap image generate \
+     --prompt "add warm window light; preserve the cat and chef hat" \
+     --model <model-id> \
+     --mode image-to-image \
+     --param images=./chef-cat.png \
+     -o chef-cat-warm.png
+   ```
+
+5. **Upload only the finished result.**
+
+   ```bash
+   anycap drive upload chef-cat-warm.png --parent-path /deliverables
+   anycap drive share --src-path /deliverables/chef-cat-warm.png --expires 7d
+   ```
+</Steps>
+
+<Aside type="tip" title="Drive is the delivery step">
+The edit command accepts `chef-cat.png` directly and uploads it internally. Drive is only needed when a human needs a shareable browser link.
+</Aside>
+
+## Automate the returned link
+
+```bash
+SHARE_URL=$(anycap drive share \
+  --src-path /deliverables/chef-cat-warm.png \
+  --expires 7d | jq -r '.url')
+printf 'Shareable image: %s\n' "$SHARE_URL"
+```
+
+Keep share expiration as short as the collaboration requires.

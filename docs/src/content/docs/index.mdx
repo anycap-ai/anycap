@@ -1,0 +1,102 @@
+---
+title: AnyCap Documentation
+description: Give AI agents image, video, audio, web, storage, and publishing capabilities through one CLI or local MCP server.
+template: splash
+hero:
+  tagline: The capability runtime for AI agents. Create media, understand files, search the live web, and publish results through one CLI and one authentication flow.
+  image:
+    file: ../../assets/anycap-logo.svg
+    alt: AnyCap
+  actions:
+    - text: Start in 30 seconds
+      link: /getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: Connect through MCP
+      link: /getting-started/mcp/
+      icon: external
+      variant: secondary
+head:
+  - tag: meta
+    attrs:
+      property: og:type
+      content: website
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## One runtime. Every capability your agent was missing.
+
+AnyCap gives Claude Code, Cursor, Codex, and other agents a consistent execution layer. Use the **Agent Skill** for natural-language workflows, the built-in **MCP server** for typed tool discovery, or call the **CLI** directly.
+
+<CardGrid>
+  <Card title="Create" icon="seti:image">
+    Generate and edit images, produce video, compose music, and build complete audio scenes.
+  </Card>
+  <Card title="Understand" icon="eye">
+    Read screenshots, compare images, summarize video, and transcribe or analyze audio.
+  </Card>
+  <Card title="Research" icon="magnifier">
+    Search the live web with structured results or grounded answers, then crawl pages to Markdown.
+  </Card>
+  <Card title="Deliver" icon="rocket">
+    Share files through Drive, publish static sites with Page, and hand projects between agents with Snapshot.
+  </Card>
+</CardGrid>
+
+## Choose your integration
+
+<LinkCard
+  title="Agent Skill"
+  description="Teach your agent how to install, authenticate, choose models, call the CLI, and deliver results from plain-English requests."
+  href="/getting-started/agent-skill/"
+/>
+
+<LinkCard
+  title="Local MCP server"
+  description="Expose 23 typed AnyCap tools to any host that supports local stdio MCP servers."
+  href="/getting-started/mcp/"
+/>
+
+## The shortest successful path
+
+```bash
+curl -fsSL https://anycap.ai/install.sh | sh
+anycap login
+anycap status
+```
+
+Then ask your agent to complete a task or run a capability directly:
+
+```bash
+anycap image models
+anycap image generate \
+  --prompt "minimal product hero, warm editorial light" \
+  --model <model-id> \
+  -o product-hero.png
+```
+
+## Learn by outcome
+
+<CardGrid>
+  <LinkCard
+    title="Generate and share an image"
+    description="Create an image, inspect the JSON result, upload it, and return a browser-ready link."
+    href="/guides/generate-and-share-image/"
+  />
+  <LinkCard
+    title="Animate a local image"
+    description="Discover an image-to-video model and pass a local reference file safely."
+    href="/guides/image-to-video/"
+  />
+  <LinkCard
+    title="Review with a human"
+    description="Collect spatial annotations and narrated feedback, then turn it into an actionable revision."
+    href="/guides/human-feedback/"
+  />
+  <LinkCard
+    title="Research the live web"
+    description="Choose between structured search, grounded search, and direct page crawling."
+    href="/guides/web-research/"
+  />
+</CardGrid>

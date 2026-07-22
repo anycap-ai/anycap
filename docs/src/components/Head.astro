@@ -1,0 +1,50 @@
+---
+import DefaultHead from '@astrojs/starlight/components/Head.astro';
+
+const { entry, lastUpdated } = Astro.locals.starlightRoute;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
+const isHome = Astro.url.pathname === '/';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': isHome ? 'WebSite' : 'TechArticle',
+  name: isHome ? 'AnyCap Documentation' : undefined,
+  headline: isHome ? undefined : entry.data.title,
+  description: entry.data.description,
+  url: canonicalUrl,
+  inLanguage: 'en',
+  mainEntityOfPage: isHome
+    ? undefined
+    : {
+        '@type': 'WebPage',
+        '@id': canonicalUrl,
+      },
+  isPartOf: isHome
+    ? undefined
+    : {
+        '@type': 'WebSite',
+        name: 'AnyCap Documentation',
+        url: 'https://docs.anyware.ai/',
+      },
+  author: isHome
+    ? undefined
+    : {
+        '@type': 'Organization',
+        name: 'AnyCap Team',
+        url: 'https://anycap.ai/',
+      },
+  publisher: {
+    '@type': 'Organization',
+    name: 'AnyCap',
+    url: 'https://anycap.ai/',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://docs.anyware.ai/favicon.svg',
+    },
+  },
+  dateModified: lastUpdated?.toISOString(),
+};
+const serializedSchema = JSON.stringify(schema).replaceAll('<', '\\u003c');
+---
+
+<DefaultHead />
+<script is:inline type="application/ld+json" set:html={serializedSchema} />

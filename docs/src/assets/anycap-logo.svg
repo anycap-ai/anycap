@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-labelledby="title">
+  <title id="title">AnyCap</title>
+  <g fill="currentColor">
+    <path d="M8 25h34V8h42v42H59v25H8z"/>
+    <path d="M65 66h19v19H65z"/>
+    <text x="106" y="72" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="66" font-weight="700" letter-spacing="-4">anycap</text>
+  </g>
+</svg>

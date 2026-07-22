@@ -1,0 +1,57 @@
+---
+title: Quickstart
+description: Install AnyCap, authenticate once, verify the connection, and run your first AI capability in about 30 seconds.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+AnyCap uses one CLI and one authentication flow for image, video, audio, media understanding, web, Drive, and Page workflows.
+
+<Steps>
+1. **Install the CLI.**
+
+   ```bash
+   curl -fsSL https://anycap.ai/install.sh | sh
+   ```
+
+2. **Authenticate.**
+
+   ```bash
+   anycap login
+   ```
+
+3. **Verify the runtime.**
+
+   ```bash
+   anycap status
+   ```
+
+4. **Discover a model and run a capability.**
+
+   ```bash
+   anycap image models
+   anycap image generate \
+     --prompt "a paper crane on a wooden table" \
+     --model <model-id> \
+     -o paper-crane.png
+   ```
+</Steps>
+
+<Aside type="tip" title="Prefer natural language?">
+Install the [AnyCap Agent Skill](/getting-started/agent-skill/) and ask your agent: “Install AnyCap and generate a launch image.” The skill teaches the agent the setup and capability workflow.
+</Aside>
+
+## What happened
+
+The generate command validated your inputs, called the selected model, downloaded the finished asset, and returned one JSON document. Using `-o` gives the result a stable, descriptive filename.
+
+```json
+{"status":"success","local_path":"/absolute/path/to/paper-crane.png","model":"<model-id>","credits_used":1,"request_id":"req_abc123"}
+```
+
+## Next steps
+
+- [Install for another platform](/getting-started/install/)
+- [Use headless or API-key authentication](/getting-started/authentication/)
+- [Connect AnyCap through MCP](/getting-started/mcp/)
+- [Browse all capabilities](/capabilities/)

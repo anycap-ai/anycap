@@ -11,6 +11,10 @@ Thumbs.db
 
 # Node
 node_modules/
+docs/.astro/
+docs/.wrangler/
+docs/dist/
+docs/public/assets/
 
 # Python
 __pycache__/

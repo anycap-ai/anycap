@@ -1,0 +1,78 @@
+---
+title: Connect AnyCap through MCP
+description: Configure the built-in AnyCap local stdio MCP server in Claude Code, Codex, Cursor, or another compatible host.
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+AnyCap CLI v0.5.0 includes a local stdio MCP server with 23 typed tools. It runs inside the existing CLI binary and shares the same authentication, HTTP client, model discovery, and local media handling. It has been verified with MCP protocol version `2025-06-18`.
+
+## Verify support
+
+```bash
+anycap mcp --help
+```
+
+If the command is missing, run `anycap update`.
+
+## Configure a host
+
+<Tabs>
+  <TabItem label="Claude Code">
+    Store the machine-specific absolute root in Claude's local project scope:
+
+    ```bash
+    claude mcp add --scope local anycap -- anycap mcp --allow-root "$PWD"
+    ```
+  </TabItem>
+  <TabItem label="Codex">
+    The Codex CLI command installs a global server definition. Omit a fixed root and let each project session advertise its root or use the server working directory fallback:
+
+    ```bash
+    codex mcp add anycap -- anycap mcp
+    ```
+  </TabItem>
+  <TabItem label="Generic stdio">
+    ```json
+    {
+      "mcpServers": {
+        "anycap": {
+          "type": "stdio",
+          "command": "anycap",
+          "args": ["mcp", "--allow-root", "/absolute/path/to/media"]
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="Do not commit personal absolute paths">
+Project-shared MCP configuration should not contain an expanded `"$PWD"`. It is machine-specific and can disclose a username or local directory. Use host-advertised roots, a portable working-directory root, or a local-scope configuration.
+</Aside>
+
+## Authenticate inside MCP
+
+MCP startup never opens a browser. Existing CLI login is loaded automatically and credentials are refreshed on every tool call.
+
+<Steps>
+1. Call `anycap_auth_status`.
+2. If unauthenticated, call `anycap_login` and show its verification URL and user code.
+3. After the human completes login, call `anycap_login_poll` with the returned session ID.
+4. Call `anycap_status` to verify the server and account.
+</Steps>
+
+## Authorize local files
+
+Effective local file access is the union of:
+
+- repeatable `--allow-root` flags
+- the platform path list in `ANYCAP_MCP_FILE_ROOTS`
+- roots advertised by the MCP client
+- the process working directory when no other roots are configured
+
+Canonical checks reject path traversal, sibling-prefix confusion, and symlink escape. Keep roots as narrow as possible. HTTP(S) URLs and existing AnyCap upload references do not require local access.
+
+## Explore the tools
+
+See the [MCP tool reference](/reference/mcp-tools/) for all 23 tools and their current read/write boundaries.

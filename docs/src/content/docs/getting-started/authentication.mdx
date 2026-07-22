@@ -1,0 +1,81 @@
+---
+title: Authentication
+description: Sign in to AnyCap interactively, use device login on headless systems, or configure an API key for CI.
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+One AnyCap login covers every capability. CLI and MCP calls share the same credential runtime.
+
+## Choose a login method
+
+<Tabs>
+  <TabItem label="Browser">
+    Use the default flow on a local desktop:
+
+    ```bash
+    anycap login
+    ```
+  </TabItem>
+  <TabItem label="Headless">
+    Use device authorization over SSH or in a container:
+
+    ```bash
+    anycap login --headless
+    ```
+  </TabItem>
+  <TabItem label="CI/CD">
+    Pipe a secret without placing it in shell history:
+
+    ```bash
+    echo "$ANYCAP_API_KEY" | anycap login --with-token
+    ```
+
+    You can also expose `ANYCAP_API_KEY` directly to the process.
+  </TabItem>
+</Tabs>
+
+## Non-blocking login for agents
+
+Tool-call runtimes should not block while a human uses the browser.
+
+<Steps>
+1. Start a login session.
+
+   ```bash
+   anycap login --headless --no-wait --json
+   ```
+
+2. Show the returned `verification_uri` and `user_code` to the human.
+3. After the human confirms completion, run the returned poll command or:
+
+   ```bash
+   anycap login poll --session <login-session-id> --json --wait
+   ```
+
+4. Verify the account.
+
+   ```bash
+   anycap status
+   ```
+</Steps>
+
+## Credential precedence
+
+At runtime, AnyCap checks credentials in this order:
+
+1. `ANYCAP_API_KEY`
+2. the operating-system keyring
+3. the owner-only credential file used on headless systems
+
+Credentials are never returned by authentication commands. On macOS and Windows, persistent credentials use the platform credential manager. Headless Linux automatically falls back to an encrypted local file.
+
+<Aside type="caution" title="Environment variables remain active">
+`anycap logout` removes persistent local credentials, but it cannot remove or revoke a value still supplied through `ANYCAP_API_KEY`.
+</Aside>
+
+## Log out
+
+```bash
+anycap logout
+```

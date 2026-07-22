@@ -1,0 +1,75 @@
+---
+title: MCP Tool Reference
+description: Review all 23 AnyCap MCP tools, authentication behavior, and read/write boundaries.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`anycap mcp` exposes 23 tools through a local stdio server.
+
+## Authentication
+
+| Tool | Purpose |
+| --- | --- |
+| `anycap_auth_status` | Inspect the shared local credential state |
+| `anycap_login` | Start device authorization without opening a browser at startup |
+| `anycap_login_poll` | Complete a previously started login session |
+| `anycap_logout` | Delete persistent local credentials |
+
+No authentication tool returns raw credentials. Logout cannot clear an active `ANYCAP_API_KEY` environment value or revoke a remote credential.
+
+## Status and discovery
+
+| Tool | Purpose |
+| --- | --- |
+| `anycap_status` | Check account and server state |
+| `anycap_list_models` | Discover current models by capability |
+| `anycap_model_schema` | Retrieve the exact selected operation and mode contract |
+
+## Image
+
+- `anycap_image_generate`
+- `anycap_image_edit`
+- `anycap_image_upscale`
+- `anycap_image_read`
+
+## Video
+
+- `anycap_video_generate`
+- `anycap_video_read`
+
+## Music and audio
+
+- `anycap_music_generate`
+- `anycap_audio_read`
+
+## Web
+
+- `anycap_web_search`
+- `anycap_web_crawl`
+
+## Drive: read-only
+
+- `anycap_drive_list`
+- `anycap_drive_get`
+- `anycap_drive_resolve_path`
+
+## Page: read-only
+
+- `anycap_page_list`
+- `anycap_page_get`
+- `anycap_page_versions`
+
+<Aside type="note" title="Mutation boundary">
+The current MCP surface does not expose Drive uploads, shares, deletes, or Page deployments. Use the CLI for those write operations.
+</Aside>
+
+## Local media tools
+
+Seven tools accept HTTP(S) URLs, existing AnyCap upload references, or authorized local paths:
+
+- image generate, edit, upscale, and read
+- video generate and read
+- audio read
+
+See [Security and local file access](/reference/security/) before granting roots.

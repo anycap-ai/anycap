@@ -1,0 +1,56 @@
+---
+title: Publish a Static Site
+description: Deploy a static directory with AnyCap Page, publish versions, and roll back safely.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+<Steps>
+1. **Build the site locally.**
+
+   ```bash
+   npm run build
+   ```
+
+2. **Create and publish the first version.**
+
+   ```bash
+   anycap page deploy ./dist --name "Launch Site" --publish
+   ```
+
+   AnyCap saves the new `site_id` in `anycap.toml`.
+
+3. **Deploy the next version.**
+
+   ```bash
+   anycap page deploy ./dist --publish
+   ```
+
+4. **Inspect or restore history.**
+
+   ```bash
+   anycap page versions
+   anycap page rollback --version <version>
+   ```
+</Steps>
+
+## One-shot publishing
+
+For a disposable report or preview that will not be updated:
+
+```bash
+anycap page deploy ./report.html --new --publish
+```
+
+The JSON response includes `page_url`, version, publication state, uploaded file count, and total bytes.
+
+## Access and SPA settings
+
+```bash
+anycap page set --access password --password "<secret>"
+anycap page set --spa-fallback
+```
+
+<Aside type="tip" title="Use named targets only when needed">
+The default `[page]` binding is the simplest path for one site. Add named targets only when the same working directory intentionally manages separate preview and release sites.
+</Aside>

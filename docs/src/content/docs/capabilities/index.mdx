@@ -1,0 +1,50 @@
+---
+title: Capabilities Overview
+description: Explore the creation, understanding, web, collaboration, storage, publishing, and handoff capabilities available through AnyCap.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+AnyCap groups capabilities around four jobs: create something, understand something, find current information, and deliver a result.
+
+<CardGrid>
+  <Card title="Create media" icon="seti:image">
+    [Images](/capabilities/image/), [video](/capabilities/video/), [music and audio](/capabilities/audio/).
+  </Card>
+  <Card title="Understand media" icon="eye">
+    Analyze images, video, and audio without managing a separate vision or transcription service.
+  </Card>
+  <Card title="Use the web" icon="earth">
+    Find structured results, synthesize cited answers, and convert known pages into Markdown.
+  </Card>
+  <Card title="Deliver and collaborate" icon="rocket">
+    Collect visual feedback, share files, publish pages, and hand projects between agents.
+  </Card>
+</CardGrid>
+
+## Generation workflow
+
+Image, video, music, and audio use a live model catalog. Do not assume that a model, mode, or parameter remains available.
+
+```bash
+# 1. Discover models
+anycap <capability> models
+
+# 2. Inspect the selected contract
+anycap <capability> models <model-id> schema --mode <mode>
+
+# 3. Generate and name the output
+anycap <capability> generate \
+  --model <model-id> \
+  --mode <mode> \
+  --prompt "..." \
+  -o descriptive-output.ext
+```
+
+## Local files
+
+Compatible commands accept a local path directly and upload it internally. Use `--file` for understanding actions and the model's documented `--param` field for generation. Drive is for sharing results with humans, not for moving files between AnyCap commands.
+
+## JSON-first output
+
+Every non-MCP command writes one final JSON document to stdout. Generation responses include local output paths, model information, credit usage when available, and diagnostic IDs.
