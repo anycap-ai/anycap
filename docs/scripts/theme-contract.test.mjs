@@ -51,13 +51,16 @@ test('uses the main-site brand mark without duplicating it in the homepage hero'
   assert.doesNotMatch(homepage, /hero:[\s\S]*?image:/);
   assert.match(logo, /fill="#6b7d3a"/);
   assert.match(logo, /rotate\(-5 100 100\)/);
-  assert.match(logo, /<text x="167"[^>]*>cap<\/text>/);
+  assert.match(logo, /<tspan fill="#1c1f17">any<\/tspan><tspan fill="#6b7d3a">cap<\/tspan>/);
 });
 
 test('uses the same off-white page canvas as the main site', () => {
   assert.match(stylesheet, /:root\[data-theme='light'\][\s\S]*--ac-page: #f4f5f0/);
   assert.match(stylesheet, /--sl-color-bg: var\(--ac-page\)/);
   assert.match(docsConfig, /theme-color', content: '#f4f5f0'/);
+  assert.match(stylesheet, /body::before/);
+  assert.match(stylesheet, /feTurbulence/);
+  assert.match(stylesheet, /opacity: 0\.07/);
 });
 
 test('uses rendered icons and styled documentation footer controls', () => {
@@ -77,7 +80,7 @@ test('routes model discovery to the live catalog instead of duplicating availabi
 });
 
 test('shows direct CLI and MCP integration paths in the homepage hero', () => {
-  assert.match(homepage, /text: Install the CLI[\s\S]*link: \/getting-started\/install\//);
+  assert.match(homepage, /text: Start in 30 seconds[\s\S]*link: \/getting-started\//);
   assert.match(homepage, /text: Connect through MCP[\s\S]*link: \/getting-started\/mcp\//);
   assert.match(homepage, /title="CLI"[\s\S]*href="\/getting-started\/install\/"/);
   assert.match(homepage, /title="Local MCP server"[\s\S]*href="\/getting-started\/mcp\/"/);
