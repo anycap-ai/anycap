@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@anycap/cli?color=cb3837&logo=npm)](https://www.npmjs.com/package/@anycap/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/anycap-ai/anycap?style=social)](https://github.com/anycap-ai/anycap/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/anycap-ai/anycap?style=social)](https://github.com/anycap-ai/anycap)
 [![Skills directory](https://img.shields.io/badge/skills.sh-anycap-6f42c1)](https://skills.sh/anycap-ai/anycap)
 
 > **The capability runtime for AI agents.**
@@ -80,8 +80,8 @@ For a generic stdio MCP client, configure `anycap mcp`. Add a narrowly scoped
 ```
 
 Do not commit personal absolute paths into shared project configuration. Read the
-[MCP setup guide](https://docs.anyware.ai/getting-started/mcp/) and
-[security guide](https://docs.anyware.ai/reference/security/) before granting local
+[MCP setup guide](https://docs.anycap.ai/getting-started/mcp/) and
+[security guide](https://docs.anycap.ai/reference/security/) before granting local
 file access.
 
 ## What agents can do
@@ -94,11 +94,11 @@ file access.
 | **Collaborate** | Gather visual annotations and work with shared drawing surfaces. |
 | **Deliver** | Upload and share files, publish static sites, and create project snapshots. |
 
-For a first end-to-end workflow, see [generate and share an image](https://docs.anyware.ai/guides/generate-and-share-image/).
-Other task-oriented guides cover [image-to-video](https://docs.anyware.ai/guides/image-to-video/),
-[human feedback](https://docs.anyware.ai/guides/human-feedback/),
-[web research](https://docs.anyware.ai/guides/web-research/), and
-[static-site publishing](https://docs.anyware.ai/guides/publish-site/).
+For a first end-to-end workflow, see [generate and share an image](https://docs.anycap.ai/guides/generate-and-share-image/).
+Other task-oriented guides cover [image-to-video](https://docs.anycap.ai/guides/image-to-video/),
+[human feedback](https://docs.anycap.ai/guides/human-feedback/),
+[web research](https://docs.anycap.ai/guides/web-research/), and
+[static-site publishing](https://docs.anycap.ai/guides/publish-site/).
 
 ## Discover live capabilities
 
@@ -126,11 +126,11 @@ anycap image generate --help
 
 ## Documentation and support
 
-- [Documentation](https://docs.anyware.ai) — quickstart, capability guides, and reference material.
-- [CLI reference](https://docs.anyware.ai/reference/cli/) — command groups, output conventions, and discovery.
-- [MCP tool reference](https://docs.anyware.ai/reference/mcp-tools/) — current tools and read/write boundaries.
-- [Authentication and configuration](https://docs.anyware.ai/getting-started/authentication/) — interactive, headless, and API-key workflows.
-- [Troubleshooting](https://docs.anyware.ai/getting-started/troubleshooting/) — installation and runtime diagnostics.
+- [Documentation](https://docs.anycap.ai/) — quickstart, capability guides, and reference material.
+- [CLI reference](https://docs.anycap.ai/reference/cli/) — command groups, output conventions, and discovery.
+- [MCP tool reference](https://docs.anycap.ai/reference/mcp-tools/) — current tools and read/write boundaries.
+- [Authentication and configuration](https://docs.anycap.ai/getting-started/authentication/) — interactive, headless, and API-key workflows.
+- [Troubleshooting](https://docs.anycap.ai/getting-started/troubleshooting/) — installation and runtime diagnostics.
 - [`llms.txt`](llms.txt) — concise installation and usage instructions for agents.
 - [Skills directory](https://skills.sh/anycap-ai/anycap) — install the Agent Skills collection.
 
