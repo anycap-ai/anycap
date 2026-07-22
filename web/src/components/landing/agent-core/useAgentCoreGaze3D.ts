@@ -6,9 +6,28 @@ import type { AgentCore3DBridge } from "./agent-core-3d-bridge";
 
 const clampNormalized = (value: number) => Math.max(-1, Math.min(1, value));
 
+type Bounds = { left: number; top: number; width: number; height: number };
+type Point = { x: number; y: number };
+
 function normalizedCoordinate(value: number, origin: number, size: number): number {
   if (!Number.isFinite(value) || !Number.isFinite(size) || size <= 0) return 0;
   return clampNormalized(((value - origin) / size - 0.5) * 2);
+}
+
+export function toAgentCoreDocumentBounds(bounds: Bounds, scroll: Point): Bounds {
+  return {
+    left: bounds.left + scroll.x,
+    top: bounds.top + scroll.y,
+    width: bounds.width,
+    height: bounds.height,
+  };
+}
+
+export function normalizeAgentCorePointer(point: Point, bounds: Bounds): Point {
+  return {
+    x: normalizedCoordinate(point.x, bounds.left, bounds.width),
+    y: normalizedCoordinate(point.y, bounds.top, bounds.height),
+  };
 }
 
 export function useAgentCoreGaze3D(
@@ -31,7 +50,10 @@ export function useAgentCoreGaze3D(
     }
 
     const finePointer = window.matchMedia("(any-pointer: fine)");
-    let bounds = section.getBoundingClientRect();
+    let bounds = toAgentCoreDocumentBounds(section.getBoundingClientRect(), {
+      x: window.scrollX,
+      y: window.scrollY,
+    });
     let sectionIsVisible = false;
 
     const deactivatePointer = () => {
@@ -41,7 +63,10 @@ export function useAgentCoreGaze3D(
     };
 
     const refreshBounds = () => {
-      bounds = section.getBoundingClientRect();
+      bounds = toAgentCoreDocumentBounds(section.getBoundingClientRect(), {
+        x: window.scrollX,
+        y: window.scrollY,
+      });
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -59,8 +84,9 @@ export function useAgentCoreGaze3D(
       }
 
       const amplitude = phase === "connected" ? 0.6 : 1;
-      bridge.pointer.x = normalizedCoordinate(event.clientX, bounds.left, bounds.width) * amplitude;
-      bridge.pointer.y = normalizedCoordinate(event.clientY, bounds.top, bounds.height) * amplitude;
+      const pointer = normalizeAgentCorePointer({ x: event.pageX, y: event.pageY }, bounds);
+      bridge.pointer.x = pointer.x * amplitude;
+      bridge.pointer.y = pointer.y * amplitude;
       bridge.pointer.active = true;
       bridge.invalidate?.();
     };

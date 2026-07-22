@@ -79,6 +79,8 @@ export function AgentCoreInstallSection() {
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const [phase, onPhaseChange] = useState<AgentCorePhase>("awaiting");
   const [stageReady, setStageReady] = useState(false);
+  const legacyGazeEnabledRef = useRef(true);
+  legacyGazeEnabledRef.current = !stageReady;
   const bridgeRef = useRef<AgentCore3DBridge | null>(null);
   if (bridgeRef.current === null) bridgeRef.current = createAgentCore3DBridge();
   const bridge = bridgeRef.current;
@@ -117,6 +119,7 @@ export function AgentCoreInstallSection() {
     statusRef,
     valueRefs,
     fillRefs,
+    legacyGazeEnabledRef,
     onPhaseChange: handlePhaseChange,
   });
 

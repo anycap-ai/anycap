@@ -76,6 +76,26 @@ test("owns ready-stage pointer gaze through the mutable bridge", () => {
   assert.doesNotMatch(gazeHook, /setState|setRotation|requestAnimationFrame/);
 });
 
+test("keeps normalized gaze stable when scrolling changes only viewport offset", async () => {
+  const gaze3D = await import("../src/components/landing/agent-core/useAgentCoreGaze3D.ts");
+  assert.equal(typeof gaze3D.toAgentCoreDocumentBounds, "function");
+  assert.equal(typeof gaze3D.normalizeAgentCorePointer, "function");
+
+  const beforeScroll = gaze3D.toAgentCoreDocumentBounds(
+    { left: 100, top: 50, width: 1000, height: 600 },
+    { x: 0, y: 0 },
+  );
+  const afterScroll = gaze3D.toAgentCoreDocumentBounds(
+    { left: 100, top: -250, width: 1000, height: 600 },
+    { x: 0, y: 300 },
+  );
+  assert.deepEqual(afterScroll, beforeScroll);
+  assert.deepEqual(
+    gaze3D.normalizeAgentCorePointer({ x: 600, y: 350 }, afterScroll),
+    { x: 0, y: 0 },
+  );
+});
+
 test("damps real neck and head bones without moving the root or torso", () => {
   const rig = readFileSync(rigPath, "utf8");
   for (const boneName of ["neck_lower", "neck_upper", "head"]) {

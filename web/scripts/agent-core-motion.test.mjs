@@ -91,8 +91,13 @@ test("scopes idle head tracking to the full section surface", () => {
 
 test("hands full-section gaze to the 3D bridge only after stage readiness", () => {
   const gazeHook = readFileSync(gazeHookPath, "utf8");
+  const timeline = readFileSync(hookPath, "utf8");
   const section = readFileSync(sectionPath, "utf8");
   assert.match(section, /useAgentCoreGaze3D\(sectionRef, bridge, stageReady\)/);
+  assert.match(section, /legacyGazeEnabledRef\.current = !stageReady/);
+  assert.match(section, /legacyGazeEnabledRef,/);
+  assert.match(timeline, /legacyGazeEnabledRef: React\.RefObject<boolean>/);
+  assert.match(timeline, /if \(!legacyGazeEnabledRef\.current\) return;/);
   assert.match(gazeHook, /section\.addEventListener\("pointermove"/);
   assert.match(gazeHook, /section\.addEventListener\("pointerleave"/);
   assert.match(gazeHook, /section\.removeEventListener\("pointermove"/);

@@ -37,6 +37,7 @@ type UseAgentCoreTimelineOptions = {
   valueRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   fillRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   activationCanvasRef: React.RefObject<HTMLCanvasElement | null>;
+  legacyGazeEnabledRef: React.RefObject<boolean>;
   onPhaseChange: (phase: AgentCorePhase) => void;
 };
 
@@ -146,6 +147,7 @@ export function useAgentCoreTimeline({
   statusRef,
   valueRefs,
   fillRefs,
+  legacyGazeEnabledRef,
   activationCanvasRef,
   onPhaseChange,
 }: UseAgentCoreTimelineOptions): InteractionBridge {
@@ -328,6 +330,7 @@ export function useAgentCoreTimeline({
       const setCoreY = gsap.quickSetter(core, "y", "px");
 
       const pointHeadAt = (x: number, y: number, amplitude = 1) => {
+        if (!legacyGazeEnabledRef.current) return;
         const rotation = clampHeadRotation({ x, y }, rectShape(sceneBounds));
         headYawTo(rotation.yaw * amplitude);
         headPitchTo(rotation.pitch * amplitude);
@@ -347,6 +350,7 @@ export function useAgentCoreTimeline({
       });
 
       const onScenePointerLeave = contextSafe(() => {
+        if (!legacyGazeEnabledRef.current) return;
         if (phaseRef.current === "dragging" || phaseRef.current === "installing") return;
         headYawTo(0);
         headPitchTo(phaseRef.current === "connected" ? -2 : 0);
@@ -394,15 +398,6 @@ export function useAgentCoreTimeline({
             },
             "pickup",
           )
-          .to(
-            head,
-            {
-              rotationY: targetRotation.yaw,
-              rotationX: targetRotation.pitch,
-              duration: 0.22,
-            },
-            "pickup",
-          )
           .addLabel("dock", ">")
           .to(
             core,
@@ -424,11 +419,24 @@ export function useAgentCoreTimeline({
             "activate",
           )
           .to(core, { scale: target.scale, duration: 0.2, ease: "back.out(1.35)" }, ">")
-          .to(head, { rotationX: -2, rotationY: 0, duration: 0.34 }, "activate")
           .call(() => {
             if (statusRef.current) statusRef.current.textContent = "Connected";
           }, [], "activate+=0.1")
           .addLabel("capabilities", "activate+=0.18");
+
+        if (legacyGazeEnabledRef.current) {
+          installationTimeline
+            .to(
+              head,
+              {
+                rotationY: targetRotation.yaw,
+                rotationX: targetRotation.pitch,
+                duration: 0.22,
+              },
+              "pickup",
+            )
+            .to(head, { rotationX: -2, rotationY: 0, duration: 0.34 }, "activate");
+        }
 
         stats.forEach((stat, rowIndex) => {
           const counter = { value: 0 };
@@ -539,8 +547,10 @@ export function useAgentCoreTimeline({
             setPhase("drop-rejected");
           },
         });
-        headYawTo(0);
-        headPitchTo(0);
+        if (legacyGazeEnabledRef.current) {
+          headYawTo(0);
+          headPitchTo(0);
+        }
       };
 
       const finalizePointerSession = contextSafe((
