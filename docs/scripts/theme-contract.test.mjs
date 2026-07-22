@@ -59,8 +59,9 @@ test('uses the same off-white page canvas as the main site', () => {
   assert.match(stylesheet, /--sl-color-bg: var\(--ac-page\)/);
   assert.match(docsConfig, /theme-color', content: '#f4f5f0'/);
   assert.match(stylesheet, /body::before/);
-  assert.match(stylesheet, /feTurbulence/);
+  assert.match(stylesheet, /url\("\/assets\/grain\.png"\)/);
   assert.match(stylesheet, /opacity: 0\.07/);
+  assert.match(assetPreparation, /grain\.png/);
 });
 
 test('uses rendered icons and styled documentation footer controls', () => {

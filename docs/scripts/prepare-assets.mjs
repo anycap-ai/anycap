@@ -7,6 +7,8 @@ const source = fileURLToPath(new URL('../../assets/hero.png', import.meta.url));
 const destinationDirectory = fileURLToPath(new URL('../public/assets/', import.meta.url));
 const destination = fileURLToPath(new URL('../public/assets/social-card.png', import.meta.url));
 const legacyDestination = fileURLToPath(new URL('../public/assets/hero.png', import.meta.url));
+const grainDestination = fileURLToPath(new URL('../public/assets/grain.png', import.meta.url));
+const grainSize = 200;
 const interSource = fileURLToPath(
   new URL('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2', import.meta.url)
 );
@@ -20,6 +22,20 @@ await mkdir(destinationDirectory, { recursive: true });
 await rm(legacyDestination, { force: true });
 await copyFile(interSource, interDestination);
 await copyFile(spaceMonoSource, spaceMonoDestination);
+const grainPixels = Buffer.alloc(grainSize * grainSize * 3);
+
+for (let index = 0; index < grainPixels.length; index += 3) {
+  const value = Math.floor(Math.random() * 256);
+  grainPixels[index] = value;
+  grainPixels[index + 1] = value;
+  grainPixels[index + 2] = value;
+}
+
+await sharp(grainPixels, {
+  raw: { width: grainSize, height: grainSize, channels: 3 },
+})
+  .png({ compressionLevel: 9, effort: 10 })
+  .toFile(grainDestination);
 await sharp(source)
   .resize(1200, 630, { fit: 'cover', position: 'centre' })
   .png({ compressionLevel: 9, effort: 10 })
@@ -28,3 +44,4 @@ await sharp(source)
 console.log(`Prepared docs asset: ${destination.replace(`${docsRoot}/`, '')} (1200x630)`);
 console.log(`Prepared docs font: ${interDestination.replace(`${docsRoot}/`, '')}`);
 console.log(`Prepared docs font: ${spaceMonoDestination.replace(`${docsRoot}/`, '')}`);
+console.log(`Prepared docs texture: ${grainDestination.replace(`${docsRoot}/`, '')} (${grainSize}x${grainSize})`);
