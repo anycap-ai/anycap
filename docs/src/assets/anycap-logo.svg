@@ -1,8 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-labelledby="title">
   <title id="title">AnyCap</title>
-  <g fill="currentColor">
-    <path d="M8 25h34V8h42v42H59v25H8z"/>
-    <path d="M65 66h19v19H65z"/>
-    <text x="106" y="72" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="66" font-weight="700" letter-spacing="-4">anycap</text>
-  </g>
+  <style>
+    @font-face {
+      font-family: 'Space Mono';
+      src: url('/assets/space-mono-700.woff2') format('woff2');
+      font-weight: 700;
+    }
+  </style>
+  <svg x="0" y="8" width="76" height="76" viewBox="20 25 160 150" aria-hidden="true">
+    <g transform="rotate(-5 100 100)">
+      <rect x="15" y="15" width="170" height="170" rx="8" fill="#d4e0a4" opacity=".18"/>
+    </g>
+    <g transform="rotate(-3 100 100)">
+      <rect x="28" y="28" width="144" height="144" rx="5" fill="#8fa34e" opacity=".42"/>
+    </g>
+    <rect x="49" y="49" width="102" height="102" rx="3" fill="#6b7d3a"/>
+    <rect x="83" y="83" width="34" height="34" rx="2" fill="#f4f5f0"/>
+  </svg>
+  <text x="90" y="64" fill="#1c1f17" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3">any</text>
+  <text x="185" y="64" fill="#6b7d3a" font-family="'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="52" font-weight="700" letter-spacing="-3">cap</text>
 </svg>
