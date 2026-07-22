@@ -96,6 +96,61 @@ test("keeps normalized gaze stable when scrolling changes only viewport offset",
   );
 });
 
+test("suspends and reconciles an active pointer tween across readiness", async () => {
+  const bridge3D = await import("../src/components/landing/agent-core/agent-core-3d-bridge.ts");
+  assert.equal(typeof bridge3D.createAgentCoreLegacyGazeOwnership, "function");
+  const ownership = bridge3D.createAgentCoreLegacyGazeOwnership();
+  const events = [];
+  const detach = ownership.attach({
+    suspend: () => events.push("pointer-paused"),
+    reconcile: () => events.push("pointer-reconciled"),
+  });
+
+  ownership.setStageReady(true);
+  ownership.setStageReady(true);
+  ownership.setStageReady(false);
+  assert.deepEqual(events, ["pointer-paused", "pointer-reconciled"]);
+
+  detach();
+  ownership.setStageReady(true);
+  assert.deepEqual(events, ["pointer-paused", "pointer-reconciled"]);
+});
+
+test("reconciles install gaze in both readiness directions", async () => {
+  const bridge3D = await import("../src/components/landing/agent-core/agent-core-3d-bridge.ts");
+  assert.equal(typeof bridge3D.resolveAgentCoreLegacyInstallGaze, "function");
+  const focus = { yaw: -18, pitch: 12, duration: 0.22 };
+
+  let timelineTime = 0.2;
+  const legacyFirst = bridge3D.createAgentCoreLegacyGazeOwnership();
+  const legacyFirstEvents = [];
+  legacyFirst.attach({
+    suspend: () => legacyFirstEvents.push("install-paused"),
+    reconcile: () => legacyFirstEvents.push(
+      bridge3D.resolveAgentCoreLegacyInstallGaze(timelineTime, 0.6, focus),
+    ),
+  });
+  legacyFirst.setStageReady(true);
+  timelineTime = 0.8;
+  legacyFirst.setStageReady(false);
+  assert.deepEqual(legacyFirstEvents, [
+    "install-paused",
+    { yaw: 0, pitch: -2, duration: 0.34 },
+  ]);
+
+  const readyFirst = bridge3D.createAgentCoreLegacyGazeOwnership();
+  const readyFirstEvents = [];
+  readyFirst.setStageReady(true);
+  readyFirst.attach({
+    suspend: () => readyFirstEvents.push("install-paused"),
+    reconcile: () => readyFirstEvents.push(
+      bridge3D.resolveAgentCoreLegacyInstallGaze(0.2, 0.6, focus),
+    ),
+  });
+  readyFirst.setStageReady(false);
+  assert.deepEqual(readyFirstEvents, ["install-paused", focus]);
+});
+
 test("damps real neck and head bones without moving the root or torso", () => {
   const rig = readFileSync(rigPath, "utf8");
   for (const boneName of ["neck_lower", "neck_upper", "head"]) {

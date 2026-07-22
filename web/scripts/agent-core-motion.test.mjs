@@ -94,10 +94,19 @@ test("hands full-section gaze to the 3D bridge only after stage readiness", () =
   const timeline = readFileSync(hookPath, "utf8");
   const section = readFileSync(sectionPath, "utf8");
   assert.match(section, /useAgentCoreGaze3D\(sectionRef, bridge, stageReady\)/);
-  assert.match(section, /legacyGazeEnabledRef\.current = !stageReady/);
-  assert.match(section, /legacyGazeEnabledRef,/);
-  assert.match(timeline, /legacyGazeEnabledRef: React\.RefObject<boolean>/);
-  assert.match(timeline, /if \(!legacyGazeEnabledRef\.current\) return;/);
+  assert.match(section, /legacyGazeOwnership\.setStageReady\(true\)/);
+  assert.match(section, /legacyGazeOwnership\.setStageReady\(false\)/);
+  assert.match(section, /legacyGazeOwnership,/);
+  assert.match(timeline, /legacyGazeOwnership: AgentCoreLegacyGazeOwnership/);
+  assert.match(timeline, /legacyGazeOwnership\.attach\(/);
+  assert.match(timeline, /headYawTo\.tween\.pause\(\)/);
+  assert.match(timeline, /headPitchTo\.tween\.pause\(\)/);
+  assert.match(timeline, /resolveAgentCoreLegacyInstallGaze/);
+  const installTimeline = timeline.slice(
+    timeline.indexOf("installationTimeline = gsap.timeline"),
+    timeline.indexOf("const onPointerDown"),
+  );
+  assert.doesNotMatch(installTimeline, /\.to\(\s*head,/);
   assert.match(gazeHook, /section\.addEventListener\("pointermove"/);
   assert.match(gazeHook, /section\.addEventListener\("pointerleave"/);
   assert.match(gazeHook, /section\.removeEventListener\("pointermove"/);

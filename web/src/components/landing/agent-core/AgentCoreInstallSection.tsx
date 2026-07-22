@@ -6,7 +6,9 @@ import { Component, useCallback, useRef, useState, type ErrorInfo, type ReactNod
 import { AgentCoreScene } from "./AgentCoreScene";
 import {
   createAgentCore3DBridge,
+  createAgentCoreLegacyGazeOwnership,
   type AgentCore3DBridge,
+  type AgentCoreLegacyGazeOwnership,
 } from "./agent-core-3d-bridge";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import type { AgentCorePhase } from "./agent-core-state";
@@ -79,15 +81,24 @@ export function AgentCoreInstallSection() {
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const [phase, onPhaseChange] = useState<AgentCorePhase>("awaiting");
   const [stageReady, setStageReady] = useState(false);
-  const legacyGazeEnabledRef = useRef(true);
-  legacyGazeEnabledRef.current = !stageReady;
+  const legacyGazeOwnershipRef = useRef<AgentCoreLegacyGazeOwnership | null>(null);
+  if (legacyGazeOwnershipRef.current === null) {
+    legacyGazeOwnershipRef.current = createAgentCoreLegacyGazeOwnership();
+  }
+  const legacyGazeOwnership = legacyGazeOwnershipRef.current;
   const bridgeRef = useRef<AgentCore3DBridge | null>(null);
   if (bridgeRef.current === null) bridgeRef.current = createAgentCore3DBridge();
   const bridge = bridgeRef.current;
   updateBridgePhase(bridge, phase);
 
-  const handleStageReady = useCallback(() => setStageReady(true), []);
-  const handleStageError = useCallback(() => setStageReady(false), []);
+  const handleStageReady = useCallback(() => {
+    legacyGazeOwnership.setStageReady(true);
+    setStageReady(true);
+  }, [legacyGazeOwnership]);
+  const handleStageError = useCallback(() => {
+    legacyGazeOwnership.setStageReady(false);
+    setStageReady(false);
+  }, [legacyGazeOwnership]);
   const handlePhaseChange = useCallback(
     (nextPhase: AgentCorePhase) => {
       bridge.pointer.active = false;
@@ -119,7 +130,7 @@ export function AgentCoreInstallSection() {
     statusRef,
     valueRefs,
     fillRefs,
-    legacyGazeEnabledRef,
+    legacyGazeOwnership,
     onPhaseChange: handlePhaseChange,
   });
 

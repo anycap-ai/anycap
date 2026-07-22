@@ -5,6 +5,11 @@ import { useRef } from "react";
 import type React from "react";
 
 import assetManifest from "../../../../public/visuals/agent-core/asset-manifest.json";
+import {
+  resolveAgentCoreLegacyInstallGaze,
+  type AgentCoreLegacyGazeOwnership,
+  type AgentCoreLegacyHeadTarget,
+} from "./agent-core-3d-bridge";
 import { formatAgentCoreValue, getAgentCoreStats } from "./agent-core-stats";
 import {
   beginAgentCorePointerSession,
@@ -37,7 +42,7 @@ type UseAgentCoreTimelineOptions = {
   valueRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   fillRefs: React.MutableRefObject<Array<HTMLSpanElement | null>>;
   activationCanvasRef: React.RefObject<HTMLCanvasElement | null>;
-  legacyGazeEnabledRef: React.RefObject<boolean>;
+  legacyGazeOwnership: AgentCoreLegacyGazeOwnership;
   onPhaseChange: (phase: AgentCorePhase) => void;
 };
 
@@ -147,7 +152,7 @@ export function useAgentCoreTimeline({
   statusRef,
   valueRefs,
   fillRefs,
-  legacyGazeEnabledRef,
+  legacyGazeOwnership,
   activationCanvasRef,
   onPhaseChange,
 }: UseAgentCoreTimelineOptions): InteractionBridge {
@@ -186,6 +191,7 @@ export function useAgentCoreTimeline({
       let isReturning = false;
       let sectionIsVisible = false;
       let installationTimeline: gsap.core.Timeline | null = null;
+      let installHeadFocus: AgentCoreLegacyHeadTarget | null = null;
 
       const clearCanvas = () => {
         const canvasContext = canvas.getContext("2d");
@@ -328,12 +334,48 @@ export function useAgentCoreTimeline({
       });
       const setCoreX = gsap.quickSetter(core, "x", "px");
       const setCoreY = gsap.quickSetter(core, "y", "px");
+      let legacyHeadTarget: AgentCoreLegacyHeadTarget = {
+        yaw: 0,
+        pitch: 0,
+        duration: 0.24,
+      };
+
+      const writeLegacyHeadTarget = (target: AgentCoreLegacyHeadTarget) => {
+        legacyHeadTarget = target;
+        if (!legacyGazeOwnership.legacyEnabled) return;
+        headYawTo.tween.duration(target.duration);
+        headPitchTo.tween.duration(target.duration);
+        headYawTo(target.yaw);
+        headPitchTo(target.pitch);
+        headYawTo.tween.play();
+        headPitchTo.tween.play();
+      };
+
+      const detachLegacyGazeRuntime = legacyGazeOwnership.attach({
+        suspend: () => {
+          headYawTo.tween.pause();
+          headPitchTo.tween.pause();
+        },
+        reconcile: () => {
+          if (phaseRef.current === "installing" && installationTimeline && installHeadFocus) {
+            legacyHeadTarget = resolveAgentCoreLegacyInstallGaze(
+              installationTimeline.time(),
+              installationTimeline.labels.activate ?? Number.POSITIVE_INFINITY,
+              installHeadFocus,
+            );
+          }
+          writeLegacyHeadTarget(legacyHeadTarget);
+        },
+      });
 
       const pointHeadAt = (x: number, y: number, amplitude = 1) => {
-        if (!legacyGazeEnabledRef.current) return;
+        if (!legacyGazeOwnership.legacyEnabled) return;
         const rotation = clampHeadRotation({ x, y }, rectShape(sceneBounds));
-        headYawTo(rotation.yaw * amplitude);
-        headPitchTo(rotation.pitch * amplitude);
+        writeLegacyHeadTarget({
+          yaw: rotation.yaw * amplitude,
+          pitch: rotation.pitch * amplitude,
+          duration: 0.24,
+        });
       };
 
       const onScenePointerMove = contextSafe((event: PointerEvent) => {
@@ -350,10 +392,12 @@ export function useAgentCoreTimeline({
       });
 
       const onScenePointerLeave = contextSafe(() => {
-        if (!legacyGazeEnabledRef.current) return;
         if (phaseRef.current === "dragging" || phaseRef.current === "installing") return;
-        headYawTo(0);
-        headPitchTo(phaseRef.current === "connected" ? -2 : 0);
+        writeLegacyHeadTarget({
+          yaw: 0,
+          pitch: phaseRef.current === "connected" ? -2 : 0,
+          duration: 0.24,
+        });
       });
 
       section.addEventListener("pointermove", onScenePointerMove);
@@ -372,6 +416,7 @@ export function useAgentCoreTimeline({
           { x: target.centerX, y: target.centerY },
           rectShape(sceneBounds),
         );
+        installHeadFocus = { ...targetRotation, duration: 0.22 };
 
         if (phaseRef.current === "awaiting") setPhase("drag-start");
         setPhase("drop-accepted");
@@ -382,12 +427,16 @@ export function useAgentCoreTimeline({
           onComplete: () => {
             setFinalTelemetry();
             setPhase("install-complete");
+            installHeadFocus = null;
           },
         });
 
         installationTimeline
           .addLabel("scene-in", 0)
           .addLabel("pickup", 0)
+          .call(() => {
+            if (installHeadFocus) writeLegacyHeadTarget(installHeadFocus);
+          }, [], "pickup")
           .to(
             core,
             {
@@ -413,6 +462,9 @@ export function useAgentCoreTimeline({
           )
           .addLabel("activate", ">")
           .call(startParticleBurst, [], "activate")
+          .call(() => {
+            writeLegacyHeadTarget({ yaw: 0, pitch: -2, duration: 0.34 });
+          }, [], "activate")
           .to(
             core,
             { scale: target.scale * 0.92, duration: 0.14, ease: "power2.in" },
@@ -423,20 +475,6 @@ export function useAgentCoreTimeline({
             if (statusRef.current) statusRef.current.textContent = "Connected";
           }, [], "activate+=0.1")
           .addLabel("capabilities", "activate+=0.18");
-
-        if (legacyGazeEnabledRef.current) {
-          installationTimeline
-            .to(
-              head,
-              {
-                rotationY: targetRotation.yaw,
-                rotationX: targetRotation.pitch,
-                duration: 0.22,
-              },
-              "pickup",
-            )
-            .to(head, { rotationX: -2, rotationY: 0, duration: 0.34 }, "activate");
-        }
 
         stats.forEach((stat, rowIndex) => {
           const counter = { value: 0 };
@@ -547,10 +585,7 @@ export function useAgentCoreTimeline({
             setPhase("drop-rejected");
           },
         });
-        if (legacyGazeEnabledRef.current) {
-          headYawTo(0);
-          headPitchTo(0);
-        }
+        writeLegacyHeadTarget({ yaw: 0, pitch: 0, duration: 0.24 });
       };
 
       const finalizePointerSession = contextSafe((
@@ -646,6 +681,7 @@ export function useAgentCoreTimeline({
         entranceTrigger.kill();
         entranceTimeline.kill();
         installationTimeline?.kill();
+        detachLegacyGazeRuntime();
         headYawTo.tween.kill();
         headPitchTo.tween.kill();
         if (drag && core.hasPointerCapture(drag.pointerId)) {
