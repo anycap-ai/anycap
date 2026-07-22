@@ -77,7 +77,7 @@ type CapabilitiesPageContent = {
     groundedWebSearch: string;
     webCrawl: string;
     drive: string;
-    speech: string;
+    audioGeneration: string;
   };
   capabilityDescriptions: {
     imageGeneration: string;
@@ -90,7 +90,7 @@ type CapabilitiesPageContent = {
     groundedWebSearch: string;
     webCrawl: string;
     drive: string;
-    speech: string;
+    audioGeneration: string;
   };
   sectionTitles: {
     browseInventory: string;
@@ -182,7 +182,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       groundedWebSearch: "Grounded Web Search",
       webCrawl: "Web Crawl",
       drive: "Drive",
-      speech: "Speech",
+      audioGeneration: "Audio Generation",
     },
     capabilityDescriptions: {
       imageGeneration:
@@ -202,7 +202,8 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
         "Get synthesized answers with citations grounded in live web search.",
       webCrawl: "Convert web pages into clean Markdown for downstream agent workflows.",
       drive: "Store outputs, organize assets, and share public URLs through AnyCap Drive.",
-      speech: "Text-to-speech and voice generation.",
+      audioGeneration:
+        "Generate speech, dialogue, sound effects, and complete audio scenes from text, audio, or image input.",
     },
     sectionTitles: {
       browseInventory: "Browse the live capability inventory",
@@ -335,7 +336,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       groundedWebSearch: "Busca na web fundamentada",
       webCrawl: "Crawl na web",
       drive: "Drive",
-      speech: "Fala",
+      audioGeneration: "Geração de áudio",
     },
     capabilityDescriptions: {
       imageGeneration:
@@ -355,7 +356,8 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
         "Obtenha respostas sintetizadas com citações fundamentadas em busca na web em tempo real.",
       webCrawl: "Converta páginas web em Markdown limpo para fluxos de agentes downstream.",
       drive: "Armazene saídas, organize ativos e compartilhe URLs públicas pelo AnyCap Drive.",
-      speech: "Conversão de texto em fala e geração de voz.",
+      audioGeneration:
+        "Gere fala, diálogos, efeitos sonoros e cenas de áudio completas a partir de texto, áudio ou imagem.",
     },
     sectionTitles: {
       browseInventory: "Navegue pelo inventário de capacidades disponíveis",
@@ -488,7 +490,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       groundedWebSearch: "Pencarian Web Ter-grounding",
       webCrawl: "Crawl Web",
       drive: "Drive",
-      speech: "Ucapan",
+      audioGeneration: "Pembuatan Audio",
     },
     capabilityDescriptions: {
       imageGeneration:
@@ -508,7 +510,8 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
         "Dapatkan jawaban sintetis dengan kutipan yang ter-grounding pada pencarian web langsung.",
       webCrawl: "Ubah halaman web menjadi Markdown bersih untuk alur agen lanjutan.",
       drive: "Simpan output, atur aset, dan bagikan URL publik melalui AnyCap Drive.",
-      speech: "Text-to-speech dan pembuatan suara.",
+      audioGeneration:
+        "Hasilkan ucapan, dialog, efek suara, dan adegan audio lengkap dari teks, audio, atau gambar.",
     },
     sectionTitles: {
       browseInventory: "Telusuri inventaris kapabilitas langsung",
@@ -641,7 +644,7 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
       groundedWebSearch: "Grounded Web Search",
       webCrawl: "Web Crawl",
       drive: "Drive",
-      speech: "Speech",
+      audioGeneration: "Audiogenerierung",
     },
     capabilityDescriptions: {
       imageGeneration:
@@ -661,7 +664,8 @@ const contentByLocale: Record<SiteLocale, CapabilitiesPageContent> = {
         "Synthetisierte Antworten mit Zitaten erhalten, gegroundet in Live-Web-Search.",
       webCrawl: "Webseiten in sauberes Markdown für nachgelagerte Agent-Workflows konvertieren.",
       drive: "Outputs speichern, Assets organisieren und öffentliche URLs über AnyCap Drive teilen.",
-      speech: "Text-to-Speech und Sprachgenerierung.",
+      audioGeneration:
+        "Erzeugen Sie Sprache, Dialoge, Soundeffekte und vollständige Audioszenen aus Text-, Audio- oder Bildeingaben.",
     },
     sectionTitles: {
       browseInventory: "Aktives Capability-Inventar durchsuchen",
@@ -741,7 +745,7 @@ function buildCapabilities(content: CapabilitiesPageContent): Capability[] {
     { name: n.groundedWebSearch, category: "Web", status: "available", description: d.groundedWebSearch, href: "/capabilities/grounded-web-search" },
     { name: n.webCrawl, category: "Web", status: "available", description: d.webCrawl, href: "/capabilities/web-crawl" },
     { name: n.drive, category: "Storage", status: "available", description: d.drive, href: "/capabilities/drive" },
-    { name: n.speech, category: "Audio", status: "coming_soon", description: d.speech, href: null },
+    { name: n.audioGeneration, category: "Audio", status: "available", description: d.audioGeneration, models: "Doubao Seed Audio 1.0", href: "/models" },
   ];
 }
 
@@ -844,12 +848,12 @@ function buildGapRows(content: CapabilitiesPageContent): CapabilityGapRow[] {
       ],
     },
     {
-      capability: n.speech,
+      capability: n.audioGeneration.toLowerCase(),
       cells: [
         { label: c.notBuiltIn, tone: "muted" },
         { label: c.notBuiltIn, tone: "muted" },
         { label: c.notBuiltIn, tone: "muted" },
-        { label: c.comingSoon, tone: "accent" },
+        { label: c.available, tone: "accent" },
       ],
     },
   ];

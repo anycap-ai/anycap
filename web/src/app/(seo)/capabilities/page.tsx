@@ -202,36 +202,40 @@ export default async function CapabilitiesPage() {
             </section>
           </FadeIn>
 
-          <div className="mt-16 md:mt-24">
-            <hr className="border-t border-[#d4dbb8]" />
-          </div>
-
-          <FadeIn>
-            <section className="mt-16 md:mt-24">
-              <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
-                {content.sectionTitles.comingSoon}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {comingSoon.map((capability) => (
-                  <div
-                    key={capability.name}
-                    className="rounded-xl border border-[#d4dbb8]/60 p-5 opacity-70"
-                  >
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#d4dbb8]" />
-                      <span className="text-[10px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
-                        {capability.category}
-                      </span>
-                    </div>
-                    <h3 className="mb-2 text-[14px] font-bold text-[#5a5e52]" style={mono}>
-                      {capability.name}
-                    </h3>
-                    <p className="text-sm leading-6 text-[#5a5e52]">{capability.description}</p>
-                  </div>
-                ))}
+          {comingSoon.length > 0 ? (
+            <>
+              <div className="mt-16 md:mt-24">
+                <hr className="border-t border-[#d4dbb8]" />
               </div>
-            </section>
-          </FadeIn>
+
+              <FadeIn>
+                <section className="mt-16 md:mt-24">
+                  <h2 className="mb-8 text-lg text-[#1c1f17] md:text-xl" style={pixel}>
+                    {content.sectionTitles.comingSoon}
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {comingSoon.map((capability) => (
+                      <div
+                        key={capability.name}
+                        className="rounded-xl border border-[#d4dbb8]/60 p-5 opacity-70"
+                      >
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-[#d4dbb8]" />
+                          <span className="text-[10px] tracking-[0.5px] text-[#5a5e52]" style={mono}>
+                            {capability.category}
+                          </span>
+                        </div>
+                        <h3 className="mb-2 text-[14px] font-bold text-[#5a5e52]" style={mono}>
+                          {capability.name}
+                        </h3>
+                        <p className="text-sm leading-6 text-[#5a5e52]">{capability.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </FadeIn>
+            </>
+          ) : null}
 
           <div className="mt-16 md:mt-24">
             <hr className="border-t border-[#d4dbb8]" />

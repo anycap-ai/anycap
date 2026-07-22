@@ -13,6 +13,10 @@ async function loadInventory() {
 
 const navigationPath = fileURLToPath(new URL("../src/lib/seo-navigation.ts", import.meta.url));
 const navigationSource = readFileSync(navigationPath, "utf8");
+const capabilitiesContentPath = fileURLToPath(
+  new URL("../src/app/(seo)/capabilities/content.ts", import.meta.url),
+);
+const capabilitiesContentSource = readFileSync(capabilitiesContentPath, "utf8");
 
 const expectedByCapability = {
   image: [
@@ -144,4 +148,17 @@ test("places audio generation after music with a safe capability fallback", () =
     audioBlock,
     /description:\s*"Generate speech, dialogue, sound effects, and complete audio scenes from text, audio, or image input\."/,
   );
+});
+
+test("marks audio generation as available in the public capability inventory", () => {
+  assert.match(capabilitiesContentSource, /audioGeneration: "Audio Generation"/);
+  assert.match(
+    capabilitiesContentSource,
+    /audioGeneration:\s*"Generate speech, dialogue, sound effects, and complete audio scenes from text, audio, or image input\."/,
+  );
+  assert.match(
+    capabilitiesContentSource,
+    /name: n\.audioGeneration, category: "Audio", status: "available", description: d\.audioGeneration, models: "Doubao Seed Audio 1\.0", href: "\/models"/,
+  );
+  assert.doesNotMatch(capabilitiesContentSource, /n\.speech, category: "Audio", status: "coming_soon"/);
 });
