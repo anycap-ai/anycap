@@ -91,7 +91,7 @@
     --sl-color-gray-5: var(--ac-border);
     --sl-color-gray-6: var(--ac-surface);
     --sl-color-gray-7: var(--ac-surface);
-    --sl-color-black: var(--ac-raised);
+    --sl-color-black: var(--ac-page);
     --sl-color-bg: var(--ac-page);
     --sl-color-bg-nav: color-mix(in srgb, var(--ac-page) 92%, transparent);
     --sl-color-bg-sidebar: var(--ac-surface);
@@ -160,6 +160,11 @@
   .site-title img {
     width: 9.5rem;
     height: auto;
+  }
+
+  .sidebar-pane,
+  .right-sidebar-container {
+    background-color: var(--ac-page);
   }
 
   .sidebar-pane {

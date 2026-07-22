@@ -74,6 +74,7 @@ test('uses the same off-white page canvas as the main site', () => {
   assert.match(stylesheet, /url\("\/assets\/grain\.png"\)/);
   assert.match(stylesheet, /opacity: 0\.07/);
   assert.match(assetPreparation, /grain\.png/);
+  assert.match(stylesheet, /\.sidebar-pane,\s*\.right-sidebar-container[\s\S]*background-color: var\(--ac-page\)/);
 });
 
 test('uses rendered icons and styled documentation footer controls', () => {
