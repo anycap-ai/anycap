@@ -18,6 +18,10 @@ import { useAgentCoreGaze3D } from "./useAgentCoreGaze3D";
 import { useAgentCoreTimeline } from "./useAgentCoreTimeline";
 
 const stats = getAgentCoreStats();
+// Keep the approved, art-directed 2D composition as the production default.
+// The current GLB is an interaction prototype and does not yet meet the visual
+// master; it must be explicitly enabled while it is being reviewed.
+const agentCore3DEnabled = process.env.NEXT_PUBLIC_AGENT_CORE_3D === "true";
 const AgentCoreStage3D = dynamic(() => import("./AgentCoreStage3D").then(({ AgentCoreStage3D }) => AgentCoreStage3D), {
   loading: () => null,
   ssr: false,
@@ -139,14 +143,16 @@ export function AgentCoreInstallSection() {
         <AgentCoreScene
           connected={connected}
           stage={
-            <AgentCoreStageBoundary onError={handleStageError}>
-              <AgentCoreStage3D
-                bridge={bridge}
-                ready={stageReady}
-                onReady={handleStageReady}
-                onError={handleStageError}
-              />
-            </AgentCoreStageBoundary>
+            agentCore3DEnabled ? (
+              <AgentCoreStageBoundary onError={handleStageError}>
+                <AgentCoreStage3D
+                  bridge={bridge}
+                  ready={stageReady}
+                  onReady={handleStageReady}
+                  onError={handleStageError}
+                />
+              </AgentCoreStageBoundary>
+            ) : null
           }
           sceneRef={sceneRef}
           headRef={headRef}
