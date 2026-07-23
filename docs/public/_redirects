@@ -6,3 +6,7 @@
 /mcp/ /getting-started/mcp/ 301
 /cli /reference/cli/ 301
 /cli/ /reference/cli/ 301
+/capabilities/music /capabilities/audio/ 301
+/capabilities/music/ /capabilities/audio/ 301
+/capabilities/models https://anycap.ai/models 301
+/capabilities/models/ https://anycap.ai/models 301

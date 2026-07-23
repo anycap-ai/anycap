@@ -12,6 +12,7 @@
     "check": "npm run prepare:assets && astro check",
     "build": "npm run prepare:assets && astro build",
     "audit:build": "node ./scripts/audit-build.mjs",
+    "verify:production-seo": "node ./scripts/verify-production-seo.mjs",
     "preview": "astro preview",
     "deploy": "npm run build && wrangler deploy"
   },

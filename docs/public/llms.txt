@@ -4,20 +4,20 @@
 
 ## Start here
 
-- [Documentation overview](https://docs.anyware.ai/)
-- [Quickstart](https://docs.anyware.ai/getting-started/)
-- [Install the CLI](https://docs.anyware.ai/getting-started/install/)
-- [Authentication](https://docs.anyware.ai/getting-started/authentication/)
-- [Agent Skill](https://docs.anyware.ai/getting-started/agent-skill/)
-- [MCP setup](https://docs.anyware.ai/getting-started/mcp/)
+- [Documentation overview](https://docs.anycap.ai/)
+- [Quickstart](https://docs.anycap.ai/getting-started/)
+- [Install the CLI](https://docs.anycap.ai/getting-started/install/)
+- [Authentication](https://docs.anycap.ai/getting-started/authentication/)
+- [Agent Skill](https://docs.anycap.ai/getting-started/agent-skill/)
+- [MCP setup](https://docs.anycap.ai/getting-started/mcp/)
 
 ## Core references
 
-- [Capabilities](https://docs.anyware.ai/capabilities/)
-- [CLI reference](https://docs.anyware.ai/reference/cli/)
-- [MCP tools](https://docs.anyware.ai/reference/mcp-tools/)
-- [JSON output](https://docs.anyware.ai/reference/output/)
-- [Security](https://docs.anyware.ai/reference/security/)
+- [Capabilities](https://docs.anycap.ai/capabilities/)
+- [CLI reference](https://docs.anycap.ai/reference/cli/)
+- [MCP tools](https://docs.anycap.ai/reference/mcp-tools/)
+- [JSON output](https://docs.anycap.ai/reference/output/)
+- [Security](https://docs.anycap.ai/reference/security/)
 
 ## Source
 

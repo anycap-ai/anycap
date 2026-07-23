@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://docs.anyware.ai/sitemap-index.xml
+Sitemap: https://docs.anycap.ai/sitemap-index.xml

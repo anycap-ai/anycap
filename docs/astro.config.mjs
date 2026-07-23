@@ -2,7 +2,7 @@ import sitemap from '@astrojs/sitemap';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 
-const site = 'https://docs.anyware.ai';
+const site = 'https://docs.anycap.ai';
 
 export default defineConfig({
   site,

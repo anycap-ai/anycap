@@ -2,7 +2,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { extname, join, relative, resolve } from 'node:path';
 
 const dist = resolve('dist');
-const canonicalOrigin = 'https://docs.anyware.ai';
+const canonicalOrigin = 'https://docs.anycap.ai';
 const expectedIndexablePages = 28;
 const errors = [];
 
@@ -63,7 +63,7 @@ for (const file of htmlFiles) {
     if (!hasTag(html, 'meta', { name: 'description', content: /\S/ })) {
       errors.push(`${name}: missing meta description`);
     }
-    if (!hasTag(html, 'meta', { property: 'og:image', content: /^https:\/\/docs\.anyware\.ai\// })) {
+    if (!hasTag(html, 'meta', { property: 'og:image', content: /^https:\/\/docs\.anycap\.ai\// })) {
       errors.push(`${name}: missing absolute Open Graph image`);
     }
     const canonical = html.match(/<link\b[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["'][^>]*>/i)?.[1];
@@ -114,6 +114,19 @@ const requiredArtifacts = [
 ];
 for (const artifact of requiredArtifacts) {
   if (!(await pathExists(join(dist, artifact)))) errors.push(`missing release artifact: ${artifact}`);
+}
+
+const redirects = await readFile(join(dist, '_redirects'), 'utf8');
+const requiredRedirects = [
+  '/capabilities/music /capabilities/audio/ 301',
+  '/capabilities/music/ /capabilities/audio/ 301',
+  '/capabilities/models https://anycap.ai/models 301',
+  '/capabilities/models/ https://anycap.ai/models 301',
+];
+for (const redirect of requiredRedirects) {
+  if (!redirects.includes(redirect)) {
+    errors.push(`_redirects is missing required legacy Docs redirect: ${redirect}`);
+  }
 }
 
 const robots = await readFile(join(dist, 'robots.txt'), 'utf8');

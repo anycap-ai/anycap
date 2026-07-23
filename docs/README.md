@@ -17,6 +17,7 @@ Production checks and previews:
 make docs-check
 make docs-build
 make docs-audit
+make docs-production-seo
 make docs-preview
 make docs-worker-preview
 ```
@@ -28,7 +29,12 @@ DOCS_PORT=4400 make docs-preview
 WORKER_PORT=8800 make docs-worker-preview
 ```
 
-The canonical site URL is `https://docs.anyware.ai`.
+The canonical site URL is `https://docs.anycap.ai`.
+
+`make docs-production-seo` compares the live Docs sitemap, robots, and
+self-canonicals with the just-built release output, then checks the legacy
+redirects. Run it after a production deployment; it is expected to fail while
+production still serves an older release.
 
 ## Deployment
 
@@ -49,7 +55,7 @@ After the first successful workflow run:
 2. Select **Workers & Pages**.
 3. Open the `anycap-docs` Worker.
 4. Open **Settings → Domains & Routes**.
-5. Add the custom domain `docs.anyware.ai`.
+5. Add the custom domain `docs.anycap.ai`.
 
 No domain route is committed to `wrangler.jsonc`, so deployment does not require zone-level DNS permissions and cannot overwrite domain routing.
 

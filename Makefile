@@ -3,7 +3,7 @@ DOCS_HOST ?= 127.0.0.1
 DOCS_PORT ?= 4321
 WORKER_PORT ?= 8787
 
-.PHONY: help docs-install docs-dev docs-check docs-build docs-audit docs-preview docs-worker-preview docs-deploy
+.PHONY: help docs-install docs-dev docs-check docs-build docs-audit docs-production-seo docs-preview docs-worker-preview docs-deploy
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-22s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -22,6 +22,9 @@ docs-build: ## Build the production documentation site
 
 docs-audit: docs-build ## Audit metadata, structured data, links, and release artifacts
 	@cd $(DOCS_DIR) && npm run audit:build
+
+docs-production-seo: docs-audit ## Verify the live Docs sitemap, canonicals, robots, and legacy redirects
+	@cd $(DOCS_DIR) && npm run verify:production-seo
 
 docs-preview: docs-audit ## Preview the production build locally
 	@cd $(DOCS_DIR) && npm run preview -- --host $(DOCS_HOST) --port $(DOCS_PORT)
