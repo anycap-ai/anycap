@@ -5,7 +5,6 @@ import test from 'node:test';
 const stylesheet = await readFile(new URL('../src/styles/custom.css', import.meta.url), 'utf8');
 const assetPreparation = await readFile(new URL('./prepare-assets.mjs', import.meta.url), 'utf8');
 const homepage = await readFile(new URL('../src/content/docs/index.mdx', import.meta.url), 'utf8');
-const logo = await readFile(new URL('../src/assets/anycap-logo.svg', import.meta.url), 'utf8');
 const favicon = await readFile(new URL('../public/favicon.svg', import.meta.url), 'utf8');
 const docsConfig = await readFile(new URL('../astro.config.mjs', import.meta.url), 'utf8');
 const capabilitiesPage = await readFile(new URL('../src/content/docs/capabilities/index.mdx', import.meta.url), 'utf8');
@@ -16,6 +15,9 @@ const modelsPage = await readFile(new URL('../src/content/docs/capabilities/mode
   () => '',
 );
 const liveCatalogComponent = await readFile(new URL('../src/components/LiveModelCatalog.astro', import.meta.url), 'utf8').catch(
+  () => '',
+);
+const siteTitleComponent = await readFile(new URL('../src/components/SiteTitle.astro', import.meta.url), 'utf8').catch(
   () => '',
 );
 const docsWorker = await readFile(new URL('../worker.mjs', import.meta.url), 'utf8').catch(() => '');
@@ -53,14 +55,25 @@ test('bundles the main-site Inter and Space Mono font roles', () => {
   assert.match(stylesheet, /--sl-font-mono: Inter,/);
   assert.match(assetPreparation, /inter-latin-wght-normal\.woff2/);
   assert.match(assetPreparation, /space-mono-latin-700-normal\.woff2/);
-  assert.match(logo, /space-mono-700\.woff2/);
+  assert.match(stylesheet, /font-family: "Space Mono"/);
+  assert.match(stylesheet, /space-mono-700\.woff2/);
 });
 
 test('uses the main-site brand mark without duplicating it in the homepage hero', () => {
   assert.doesNotMatch(homepage, /hero:[\s\S]*?image:/);
-  assert.match(logo, /fill="#6b7d3a"/);
-  assert.match(logo, /rotate\(-5 100 100\)/);
-  assert.match(logo, /<tspan fill="#1c1f17">any<\/tspan><tspan fill="#6b7d3a">cap<\/tspan>/);
+  assert.match(siteTitleComponent, /fill="#6b7d3a"/);
+  assert.match(siteTitleComponent, /rotate\(-5 100 100\)/);
+  assert.match(siteTitleComponent, /<span class="any">any<\/span><span class="cap">cap<\/span>/);
+});
+
+test('renders the header brand with the main-site font and links it to the main site', () => {
+  assert.match(docsConfig, /SiteTitle: '\.\/src\/components\/SiteTitle\.astro'/);
+  assert.match(siteTitleComponent, /href="https:\/\/anycap\.ai\/"/);
+  assert.match(siteTitleComponent, /font-family: "Space Mono"/);
+  assert.match(siteTitleComponent, /font-size: 29\.82px/);
+  assert.match(siteTitleComponent, /letter-spacing: -0\.5px/);
+  assert.match(siteTitleComponent, /width="42" height="42"/);
+  assert.match(stylesheet, /@font-face[\s\S]*font-family: "Space Mono"/);
 });
 
 test('uses the main-site nested-square mark for the browser favicon', () => {

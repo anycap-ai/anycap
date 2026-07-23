@@ -13,11 +13,6 @@ export default defineConfig({
       description:
         'Install AnyCap and give AI agents image, video, audio, web, storage, and publishing capabilities through one CLI or MCP server.',
       favicon: '/favicon.svg',
-      logo: {
-        src: './src/assets/anycap-logo.svg',
-        alt: 'AnyCap',
-        replacesTitle: true,
-      },
       social: [
         {
           icon: 'github',
@@ -30,6 +25,7 @@ export default defineConfig({
       customCss: ['./src/styles/custom.css'],
       components: {
         Head: './src/components/Head.astro',
+        SiteTitle: './src/components/SiteTitle.astro',
       },
       head: [
         { tag: 'meta', attrs: { name: 'theme-color', content: '#f4f5f0' } },
