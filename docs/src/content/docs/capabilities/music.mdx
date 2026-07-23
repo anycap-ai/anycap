@@ -1,0 +1,47 @@
+---
+title: Music Generation
+description: Generate instrumental tracks, songs, and music clips through live AnyCap model schemas.
+---
+
+import LiveModelCatalog from '../../../components/LiveModelCatalog.astro';
+
+<LiveModelCatalog capability="music" />
+
+## Modes
+
+| Mode | Use it for |
+| --- | --- |
+| `text-to-music` | Create an instrumental track or song from a prompt |
+
+The selected model may expose a different subset of controls. Check the live catalog before relying on a prompt field or optional parameter.
+
+```bash
+anycap music models \
+  | jq -r '.models[] | .model as $model | .operations[]?.modes[]?.mode | [$model, .] | @tsv'
+```
+
+## Generate music
+
+```bash
+anycap music models
+anycap music models <model-id> schema --mode text-to-music
+anycap music generate \
+  --prompt "warm lo-fi study beat" \
+  --model <model-id> \
+  --tags "lofi,warm,study" \
+  --instrumental \
+  -o study-beat.mp3
+```
+
+Use `--title`, `--lyrics`, and schema-advertised parameters only when the selected model supports them. A request can return multiple clips under `outputs`.
+
+```bash
+anycap music generate --prompt "..." --model <model-id> \
+  | jq -r '.outputs[].local_path'
+```
+
+## Output metadata
+
+Music generation can return one or more output clips, along with duration, byte size, usage, and diagnostic IDs. Inspect every `outputs[]` item rather than assuming a single file.
+
+For speech, dialogue, and audio scenes, see [Audio generation](/capabilities/audio/).

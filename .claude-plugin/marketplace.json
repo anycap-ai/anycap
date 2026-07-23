@@ -1,0 +1,15 @@
+{
+  "name": "anycap",
+  "description": "The AnyCap Agent Skills collection.",
+  "owner": {
+    "name": "AnyCap"
+  },
+  "plugins": [
+    {
+      "name": "anycap",
+      "source": "./",
+      "description": "Create and understand media, research the web, collaborate, and deliver results.",
+      "version": "0.5.0"
+    }
+  ]
+}

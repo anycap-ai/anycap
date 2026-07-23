@@ -1,0 +1,89 @@
+---
+type CatalogCapability = 'image' | 'video' | 'music' | 'audio';
+
+interface Props {
+  capability: CatalogCapability;
+}
+
+const { capability } = Astro.props;
+
+const capabilityLabels: Record<CatalogCapability, string> = {
+  image: 'image',
+  video: 'video',
+  music: 'music',
+  audio: 'audio',
+};
+
+const label = capabilityLabels[capability];
+---
+
+<section class="live-model-catalog" data-model-catalog={capability} aria-labelledby={`models-${capability}`}>
+  <div class="live-model-catalog-header">
+    <div>
+      <p class="live-model-catalog-eyebrow">Live catalog</p>
+      <h2 id={`models-${capability}`}>Supported {label} models</h2>
+      <p>Choose a model before you generate. Availability and modes are loaded from the current AnyCap catalog.</p>
+    </div>
+    <div class="live-model-catalog-actions">
+      <a class="model-catalog-cta primary" href="https://anycap.ai/models">View all models</a>
+      <a class="model-catalog-cta secondary" href="/getting-started/install/">Install the CLI</a>
+    </div>
+  </div>
+  <p class="live-model-catalog-status" aria-live="polite">Loading live models…</p>
+  <ul class="live-model-list" aria-live="polite"></ul>
+</section>
+
+<script>
+  type CatalogMode = { mode?: string };
+  type CatalogOperation = { modes?: CatalogMode[] };
+  type CatalogModel = {
+    display_name?: string;
+    model?: string;
+    operations?: CatalogOperation[];
+    status?: string;
+  };
+  type CatalogResponse = { models?: CatalogModel[] };
+
+  for (const catalog of document.querySelectorAll<HTMLElement>('[data-model-catalog]')) {
+    const capability = catalog.dataset.modelCatalog;
+    const status = catalog.querySelector('.live-model-catalog-status');
+    const list = catalog.querySelector('.live-model-list');
+
+    if (!capability || !status || !list) continue;
+
+    try {
+      const response = await fetch(`/api/model-catalog/${capability}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const payload: CatalogResponse = await response.json();
+      const models = Array.isArray(payload.models) ? payload.models.filter((model) => model.status === 'active') : [];
+
+      if (!response.ok || models.length === 0) throw new Error('No active models returned');
+
+      const fragment = document.createDocumentFragment();
+      for (const model of models) {
+        const item = document.createElement('li');
+        const name = document.createElement('strong');
+        const modes = document.createElement('span');
+        const availableModes = [
+          ...new Set(
+            (model.operations ?? [])
+              .flatMap((operation) => operation.modes ?? [])
+              .map((mode) => mode.mode)
+              .filter((mode): mode is string => Boolean(mode)),
+          ),
+        ];
+
+        name.textContent = model.display_name ?? model.model ?? 'Unnamed model';
+        modes.textContent = availableModes.join(' · ') || 'Schema available';
+        item.append(name, modes);
+        fragment.append(item);
+      }
+
+      list.replaceChildren(fragment);
+      status.textContent = `${models.length} active ${capability} model${models.length === 1 ? '' : 's'}`;
+    } catch {
+      status.textContent = 'Live model list is temporarily unavailable. Use the catalog to choose a model.';
+    }
+  }
+</script>

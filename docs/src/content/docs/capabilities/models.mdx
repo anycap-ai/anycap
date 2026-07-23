@@ -1,0 +1,56 @@
+---
+title: Models
+description: Discover the current AnyCap image, video, music, and audio model catalog without relying on stale static lists.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The live AnyCap CLI catalog is the source of truth for model availability, operations, modes, and request parameters. It changes independently of documentation releases, so the full model list is not duplicated in this documentation site.
+
+For a maintained public overview of the current supported models and workflow guidance, see the [AnyCap Model Guide](https://anycap.ai/models).
+
+## Discover the live catalog
+
+Use the capability that matches the output you need:
+
+| Capability | List current models | Inspect an exact contract |
+| --- | --- | --- |
+| Image generation and editing | `anycap image models` | `anycap image models <model-id> schema --mode <mode>` |
+| Video generation and editing | `anycap video models` | `anycap video models <model-id> schema --mode <mode>` |
+| Music generation | `anycap music models` | `anycap music models <model-id> schema --mode text-to-music` |
+| Audio generation | `anycap audio models` | `anycap audio models <model-id> schema --mode <mode>` |
+
+The current catalog covers image, video, music, and audio generation. It also includes media-understanding actions for images, video, and audio; those actions choose a strong default unless you explicitly pass `--model`.
+
+## Read the result before selecting a model
+
+Each `models` command returns machine-readable JSON. Start by listing the model ID, display name, and supported modes:
+
+```bash
+anycap video models \
+  | jq -r '.models[] | [.model, (.display_name // .name), ([.operations[]?.modes[]?.mode] | unique | join(", "))] | @tsv'
+```
+
+## List every currently advertised mode
+
+Run this whenever you need the complete mode surface rather than an example from a capability guide. It reads the live catalog, so it includes newly added modes and omits retired ones:
+
+```bash
+for capability in image video music audio; do
+  anycap "$capability" models \
+    | jq -r --arg capability "$capability" \
+      '.models[] | .model as $model | .operations[]?.modes[]?.mode | [$capability, $model, .] | @tsv'
+done
+```
+
+Then inspect the schema for the one model and mode you selected. The schema is the authority for accepted parameters such as aspect ratio, duration, resolution, or reference inputs.
+
+```bash
+anycap video models <model-id> schema --mode image-to-video
+```
+
+<Aside type="tip" title="Avoid model drift">
+Do not copy a model ID or parameter set from an older tutorial without checking the live catalog. A model can be added, retired, or change modes without a documentation-site release.
+</Aside>
+
+See [Generation and editing](/capabilities/image/), [Video generation](/capabilities/video/), [Audio generation](/capabilities/audio/), and [Music generation](/capabilities/music/) for capability-specific workflows.

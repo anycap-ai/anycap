@@ -1,0 +1,18 @@
+{
+  "name": "anycap",
+  "version": "0.5.0",
+  "description": "Multimodal capabilities for AI agents through the AnyCap CLI.",
+  "author": {
+    "name": "AnyCap"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AnyCap",
+    "shortDescription": "Create, understand, research, and deliver with AnyCap.",
+    "longDescription": "Use AnyCap Agent Skills to generate and understand media, research the live web, gather visual feedback, share files, and publish static sites.",
+    "developerName": "AnyCap",
+    "category": "Productivity",
+    "capabilities": ["Media generation", "Media understanding", "Web research", "Content delivery"],
+    "defaultPrompt": "Use AnyCap to complete this task with the appropriate capability and deliver the result."
+  }
+}
