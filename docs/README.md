@@ -17,6 +17,7 @@ Production checks and previews:
 make docs-check
 make docs-build
 make docs-audit
+make docs-production-seo
 make docs-preview
 make docs-worker-preview
 ```
@@ -29,6 +30,11 @@ WORKER_PORT=8800 make docs-worker-preview
 ```
 
 The canonical site URL is `https://docs.anycap.ai`.
+
+`make docs-production-seo` compares the live Docs sitemap, robots, and
+self-canonicals with the just-built release output, then checks the legacy
+redirects. Run it after a production deployment; it is expected to fail while
+production still serves an older release.
 
 ## Deployment
 

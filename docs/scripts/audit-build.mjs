@@ -116,6 +116,19 @@ for (const artifact of requiredArtifacts) {
   if (!(await pathExists(join(dist, artifact)))) errors.push(`missing release artifact: ${artifact}`);
 }
 
+const redirects = await readFile(join(dist, '_redirects'), 'utf8');
+const requiredRedirects = [
+  '/capabilities/music /capabilities/audio/ 301',
+  '/capabilities/music/ /capabilities/audio/ 301',
+  '/capabilities/models https://anycap.ai/models 301',
+  '/capabilities/models/ https://anycap.ai/models 301',
+];
+for (const redirect of requiredRedirects) {
+  if (!redirects.includes(redirect)) {
+    errors.push(`_redirects is missing required legacy Docs redirect: ${redirect}`);
+  }
+}
+
 const robots = await readFile(join(dist, 'robots.txt'), 'utf8');
 if (!robots.includes(`${canonicalOrigin}/sitemap-index.xml`)) {
   errors.push('robots.txt does not reference the canonical sitemap');
