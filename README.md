@@ -44,11 +44,35 @@ from [GitHub Releases](https://github.com/anycap-ai/anycap/releases).
 | Integration | Use it when | Entry point |
 | --- | --- | --- |
 | **Agent Skill** | You want an agent to choose the right workflow from a natural-language request. | [`skills/anycap-cli/SKILL.md`](skills/anycap-cli/SKILL.md) |
+| **Agent plugin** | You want to install the complete Skills collection through Claude Code or Codex. | [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) / [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) |
 | **Local stdio MCP** | Your agent host needs typed tool discovery. | `anycap mcp` |
 | **CLI** | You want shell automation or direct control. | `anycap <command>` |
 
-All three use the same installed runtime and authentication state. The Skill and MCP
-server can be used together.
+All integrations use the same installed runtime and authentication state. The Skills and
+MCP server can be used together.
+
+### Install as an agent plugin
+
+The repository declares the complete `skills/` tree as both a Claude Code plugin and a
+Codex plugin. Both hosts use the marketplace in `.claude-plugin/marketplace.json`; the
+Codex metadata in `.codex-plugin/plugin.json` points at the same shared Skills collection.
+
+In Claude Code, add the marketplace and install the plugin:
+
+```text
+/plugin marketplace add anycap-ai/anycap
+/plugin install anycap@anycap
+```
+
+From a shell with Codex installed, run:
+
+```bash
+codex plugin marketplace add anycap-ai/anycap
+codex plugin add anycap@anycap
+```
+
+The plugin installs the Skills collection only. Install the AnyCap CLI, run `anycap login`,
+and verify `anycap status` before using those Skills.
 
 ### Connect through MCP
 
