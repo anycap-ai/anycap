@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "asset": {
+    "file": "futuristic-white-robot.glb",
+    "fallback": "futuristic-robot-reference.png",
+    "reference": "futuristic-robot-reference.png",
+    "maxBytes": 2097152,
+    "maxReferenceBytes": 2097152,
+    "maxTriangles": 40000
+  },
+  "requiredNodes": [
+    "Armature",
+    "char1",
+    "neck",
+    "Head",
+    "headfront",
+    "head_end"
+  ],
+  "normalization": {
+    "scale": 2.06,
+    "offset": [1.38, -1.9, 0]
+  }
+}

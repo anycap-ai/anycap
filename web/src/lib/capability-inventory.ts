@@ -64,6 +64,95 @@ export type AgentCoreCapabilityGroupId =
   | "manage"
   | "deliver";
 
+export const agentCoreCapabilityPresentation: Record<
+  AgentCoreCapabilityGroupId,
+  { href: string; summary: string }
+> = {
+  create: {
+    href: "/capabilities",
+    summary: "Explore image, video, music, and audio creation",
+  },
+  understand: {
+    href: "/capabilities/image-understanding",
+    summary: "Explore image, video, and audio understanding",
+  },
+  search: {
+    href: "/capabilities/web-search",
+    summary: "Explore search, grounded answers, and web crawling",
+  },
+  manage: {
+    href: "/capabilities/drive",
+    summary: "Explore storage and shareable output URLs",
+  },
+  deliver: {
+    href: "/capabilities",
+    summary: "Explore publishing and finished-page delivery",
+  },
+};
+
+export const homeCapabilityMarqueeItems = [
+  {
+    label: "Build a launch campaign",
+    href: "/capabilities",
+    icon: "campaign",
+  },
+  {
+    label: "Turn product shots into video",
+    href: "/capabilities/video-generation",
+    icon: "video",
+  },
+  {
+    label: "Generate campaign visuals",
+    href: "/capabilities/image-generation",
+    icon: "image",
+  },
+  {
+    label: "Edit footage with a prompt",
+    href: "/models/gemini-omni-flash-preview",
+    icon: "edit",
+  },
+  {
+    label: "Create an original soundtrack",
+    href: "/capabilities/music-generation",
+    icon: "music",
+  },
+  {
+    label: "Read screenshots and diagrams",
+    href: "/capabilities/image-understanding",
+    icon: "vision",
+  },
+  {
+    label: "Review a screen recording",
+    href: "/capabilities/video-analysis",
+    icon: "review",
+  },
+  {
+    label: "Transcribe customer interviews",
+    href: "/capabilities/audio-understanding",
+    icon: "audio",
+  },
+  {
+    label: "Research a market with citations",
+    href: "/capabilities/grounded-web-search",
+    icon: "research",
+  },
+  {
+    label: "Crawl a competitor site",
+    href: "/capabilities/web-crawl",
+    icon: "crawl",
+  },
+  {
+    label: "Store and share every output",
+    href: "/capabilities/drive",
+    icon: "drive",
+  },
+  {
+    label: "Publish a finished page",
+    href: "/capabilities",
+    icon: "publish",
+  },
+] as const;
+
 type AgentGapCopy = Record<AgentCapabilityGapAgent, string>;
 
 type GapCatalogEntry = {

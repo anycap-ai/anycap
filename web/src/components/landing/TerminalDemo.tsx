@@ -24,9 +24,9 @@ const lines: Line[] = [
   { type: "tool", parallel: true, content: `run("anycap image generate --prompt 'capability unlock, before-after'")`, sub: "✓ cdn.anycap.cloud/img/c9d…", delay: 200 },
 
   { type: "text", content: "Analyzing compositions to pick the best shots.", delay: 700 },
-  { type: "tool", parallel: true, content: `run("anycap actions image-read --file a3f.png --instruction 'rate composition'")`, sub: '✓ "Clean depth, strong focus — 9/10"', delay: 300 },
-  { type: "tool", parallel: true, content: `run("anycap actions image-read --file b7e.png --instruction 'rate composition'")`, sub: '✓ "Busy background — 6/10"', delay: 200 },
-  { type: "tool", parallel: true, content: `run("anycap actions image-read --file c9d.png --instruction 'rate composition'")`, sub: '✓ "Dynamic layout, vivid color — 8/10"', delay: 200 },
+  { type: "tool", parallel: true, content: `run("anycap actions image-read --file a3f.png --instruction 'rate composition'")`, sub: '✓ "Clean depth, strong focus. 9/10"', delay: 300 },
+  { type: "tool", parallel: true, content: `run("anycap actions image-read --file b7e.png --instruction 'rate composition'")`, sub: '✓ "Busy background. 6/10"', delay: 200 },
+  { type: "tool", parallel: true, content: `run("anycap actions image-read --file c9d.png --instruction 'rate composition'")`, sub: '✓ "Dynamic layout, vivid color. 8/10"', delay: 200 },
 
   { type: "text", content: "Top 2 selected. Generating video clips.", delay: 700 },
   { type: "tool", parallel: true, content: `run("anycap video generate --prompt 'zoom into product hero' --file a3f.png")`, sub: "✓ cdn.anycap.cloud/vid/d4a…", delay: 300 },
@@ -40,7 +40,7 @@ const lines: Line[] = [
   { type: "tool", content: `run("anycap music generate --prompt 'upbeat minimal tech, 30s' --tags electronic")`, sub: "✓ cdn.anycap.cloud/music/f2c…", delay: 900 },
 
   { type: "text", content: "Composing final cut with ffmpeg.", delay: 600 },
-  { type: "tool", content: `run("ffmpeg -i d4a.mp4 -i e8b.mp4 -i f2c.mp3 -filter_complex concat out.mp4")`, sub: "✓ launch.mp4 — 30s, 1080p, 24.8 MB", delay: 900 },
+  { type: "tool", content: `run("ffmpeg -i d4a.mp4 -i e8b.mp4 -i f2c.mp3 -filter_complex concat out.mp4")`, sub: "✓ launch.mp4, 30s, 1080p, 24.8 MB", delay: 900 },
 
   { type: "text", content: "Uploading and sharing.", delay: 600 },
   { type: "tool", content: `run("anycap drive upload launch.mp4")`, sub: "✓ dn_xKmP… uploaded", delay: 500 },
@@ -52,7 +52,7 @@ const lines: Line[] = [
 
 function ProcessingDot() {
   return (
-    <span className="inline-block h-3 w-3 rounded-full border-[1.5px] border-[#808080] border-t-[#8fa34e] animate-spin" />
+    <span className="inline-block h-3 w-3 animate-spin rounded-full border-[1.5px] border-[#808080] border-t-[#8fa34e] motion-reduce:animate-none" />
   );
 }
 
@@ -160,10 +160,9 @@ function renderLine(line: Line, i: number, _isLast: boolean, showSpinner: boolea
 export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Trigger on scroll into view
   useEffect(() => {
@@ -189,7 +188,10 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
 
   // Auto-scroll to bottom as lines appear
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
   }, [visibleCount]);
 
   const handleClick = () => {
@@ -199,14 +201,25 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
   return (
     <div
       ref={ref}
-      className="relative flex min-h-0 flex-1 flex-col max-w-[800px] text-sm md:text-base leading-loose cursor-pointer"
+      className="group relative flex min-h-0 max-w-[800px] flex-1 cursor-pointer flex-col text-sm leading-loose md:text-base"
       style={mono}
+      role="button"
+      tabIndex={0}
+      aria-label="Set up AnyCap with your agent"
       onClick={handleClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onMouseMove={(e) => {
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
+      onPointerMove={(event) => {
         const rect = ref.current?.getBoundingClientRect();
-        if (rect) setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        const tooltip = tooltipRef.current;
+        if (!rect || !tooltip) return;
+        const x = event.clientX - rect.left + 12;
+        const y = Math.max(8, event.clientY - rect.top - 16);
+        tooltip.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }}
     >
       <style>{`
@@ -217,35 +230,22 @@ export function TerminalDemo({ headerRight }: { headerRight?: React.ReactNode })
         .terminal-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
         .terminal-scroll:hover { scrollbar-color: rgba(255,255,255,0.18) transparent; }
       `}</style>
-      {/* Hover tooltip — follows mouse, hidden on touch/mobile */}
+      {/* Hover tooltip follows mouse and stays hidden on touch/mobile. */}
       <div
-        className={`absolute z-10 hidden md:flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-lg pointer-events-none transition-opacity duration-150 ${
-          hovered ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ left: mousePos.x + 12, top: mousePos.y - 16 }}
+        ref={tooltipRef}
+        className="pointer-events-none absolute left-0 top-0 z-10 hidden items-center gap-2 rounded-full bg-white/95 px-4 py-2 opacity-0 shadow-lg transition-opacity duration-150 will-change-transform group-hover:opacity-100 group-focus-visible:opacity-100 md:flex"
       >
         <span className="text-[#6b7d3a] text-xs">✻</span>
         <span className="text-[#1c1f17] text-[11px] tracking-[0.3px] whitespace-nowrap" style={mono}>
           Click to set up with your agent
         </span>
       </div>
-      {/* Header — pinned */}
+      {/* Header stays pinned. */}
       {visibleCount > 0 && (
         <div className="flex items-center gap-2 mb-2 border-b border-[#2a2e22]">
           <span className="text-[#8fa34e]">✻</span>
           <span className="text-[#e0e0dc] text-base tracking-wide font-bold">agent with anycap</span>
           {headerRight && <div className="ml-auto">{headerRight}</div>}
-        </div>
-      )}
-      {/* Pinned intro: prompt + text + load_skill (lines 1-3) */}
-      {visibleCount > 1 && (
-        <div className="shrink-0">
-          {lines.slice(1, Math.min(visibleCount, PINNED_END)).map((line, idx) => {
-            const i = idx + 1;
-            const isLast = i === visibleCount - 1;
-            const showSpinner = isLast && visibleCount < lines.length;
-            return renderLine(line, i, isLast, showSpinner);
-          })}
         </div>
       )}
       {/* Scrollable content (everything after pinned lines) */}

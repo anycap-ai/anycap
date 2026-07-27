@@ -11,6 +11,7 @@ const telemetryPath = fileURLToPath(new URL("../src/components/landing/agent-cor
 const stylesPath = fileURLToPath(new URL("../src/components/landing/agent-core/agent-core.module.css", import.meta.url));
 const manifestPath = fileURLToPath(new URL("../public/visuals/agent-core/asset-manifest.json", import.meta.url));
 const homepagePath = fileURLToPath(new URL("../src/components/landing/HumanHomePage.tsx", import.meta.url));
+const terminalHeroPath = fileURLToPath(new URL("../src/components/landing/TerminalHero.tsx", import.meta.url));
 const agentCoreCanvasPath = fileURLToPath(
   new URL("../src/components/landing/agent-core/AgentCoreCanvas.tsx", import.meta.url),
 );
@@ -58,15 +59,16 @@ test("locks the canonical master geometry and direct layout", () => {
   assert.doesNotMatch(css, /\.(?:canvasLayer|fallbackHidden)\b/);
 });
 
-test("preserves the hero and inserts the agent Core section exactly once", () => {
+test("preserves the terminal comparison hero without reviving the retired agent Core section", () => {
   const homepage = source(homepagePath);
+  const terminalHero = source(terminalHeroPath);
   assert.match(
-    homepage,
+    terminalHero,
     /<span\s+className="sr-only">\s*Your Agent can do anything\. It just needs AnyCap\.\s*<\/span>/,
   );
-  assert.equal((homepage.match(/<AgentCoreInstallSection\s*\/>/g) ?? []).length, 1);
-  assert.ok(homepage.indexOf("NOW IT CAN.") < homepage.indexOf("<AgentCoreInstallSection"));
-  assert.ok(homepage.indexOf("<AgentCoreInstallSection") < homepage.indexOf("Any capability"));
+  assert.equal((homepage.match(/<TerminalHero\s*\/>/g) ?? []).length, 1);
+  assert.equal((homepage.match(/<AgentCoreInstallSection\s*\/>/g) ?? []).length, 0);
+  assert.ok(homepage.indexOf("<TerminalHero") < homepage.indexOf("Any capability"));
 });
 
 test("fits the exact responsive tracks at every narrow boundary without clipping", () => {

@@ -6,17 +6,9 @@ import { LoginButton } from "@/components/auth/LoginButton";
 
 const bubbleStyles = `
 @keyframes bubble-breathe {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow:
-      0 14px 30px rgba(0,0,0,0.08),
-      0 0 0 0 rgba(0,0,0,0);
-  }
+  0%, 100% { transform: scale(1); }
   50% {
     transform: scale(1.035);
-    box-shadow:
-      0 18px 40px rgba(0,0,0,0.12),
-      0 0 32px 4px rgba(107,125,58,0.10);
   }
 }
 
@@ -42,21 +34,43 @@ const bubbleStyles = `
 }
 .agent-bubble-main {
   opacity: 0;
+  transform-origin: top right;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.08);
   animation: bubble-enter 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 1.2s forwards;
 }
 .agent-bubble-main.entered {
   opacity: 1;
   animation: bubble-breathe 3.4s ease-in-out infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-dot-1,
+  .agent-dot-2,
+  .agent-bubble-main,
+  .agent-bubble-main.entered {
+    opacity: 1;
+    animation: none;
+  }
+}
 `;
 
-export function AgentBubble() {
+export function AgentBubble({
+  placement = "hero",
+}: {
+  placement?: "hero" | "workflow";
+}) {
   const { user, isLoading } = useUser();
 
   if (isLoading) return null;
 
   return (
-    <div className="absolute right-[112px] top-4 z-20 hidden max-w-[320px] xl:block">
+    <div
+      className={
+        placement === "workflow"
+          ? "absolute right-6 top-2 z-20 hidden max-w-[320px] overflow-visible lg:block xl:right-12"
+          : "absolute right-[112px] top-4 z-20 hidden max-w-[320px] xl:block"
+      }
+    >
       <style dangerouslySetInnerHTML={{ __html: bubbleStyles }} />
 
       {/* thought dots — appear first */}

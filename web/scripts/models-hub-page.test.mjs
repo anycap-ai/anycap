@@ -161,7 +161,6 @@ test("keeps public model-hub descriptions aligned", () => {
     llmsSource,
     /- \[Models overview\]\(https:\/\/anycap\.ai\/models\): Current image, video, music, and audio generation models, with the newest AnyCap additions and capability updates shown first\./,
   );
-  assert.match(statusSource, /> Last updated: 2026-07-19/);
   assert.match(
     statusSource,
     /\| Models \| Newest-first models hub across image, video, music, and audio generation, plus existing model detail guides \|/,

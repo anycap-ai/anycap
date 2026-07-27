@@ -282,8 +282,25 @@ export function ParticleAgent({ scale = 1, bg, className }: ParticleAgentProps) 
     offCanvas.height = H;
 
     let raf = 0;
+    let visible = false;
+    let reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    let lastRenderedAt = Number.NEGATIVE_INFINITY;
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
 
     function render(time: number) {
+      raf = 0;
+      if (!visible || document.hidden) return;
+
+      if (!reducedMotion && time - lastRenderedAt < 1000 / 30) {
+        raf = requestAnimationFrame(render);
+        return;
+      }
+      lastRenderedAt = time;
+
       const state = drawSilhouette(offCtx!, time);
       const img = offCtx!.getImageData(0, 0, W, H).data;
 
@@ -378,11 +395,57 @@ export function ParticleAgent({ scale = 1, bg, className }: ParticleAgentProps) 
         ctx!.restore();
       }
 
-      raf = requestAnimationFrame(render);
+      if (!reducedMotion) {
+        raf = requestAnimationFrame(render);
+      }
     }
 
-    raf = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(raf);
+    const startRendering = () => {
+      if (raf || !visible || document.hidden) return;
+      raf = requestAnimationFrame(render);
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) {
+          startRendering();
+        } else if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { rootMargin: "96px", threshold: 0.01 },
+    );
+
+    const handleMotionPreference = () => {
+      reducedMotion = reducedMotionQuery.matches;
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      startRendering();
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else {
+        startRendering();
+      }
+    };
+
+    observer.observe(canvas);
+    reducedMotionQuery.addEventListener("change", handleMotionPreference);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      observer.disconnect();
+      reducedMotionQuery.removeEventListener("change", handleMotionPreference);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      cancelAnimationFrame(raf);
+    };
   }, [bg]);
 
   return (

@@ -1,0 +1,703 @@
+.section {
+  --robot-backdrop: #efe9e6;
+  --robot-headroom: clamp(5.5rem, 7vw, 8rem);
+
+  isolation: isolate;
+  min-height: clamp(62rem, 72vw, 76rem);
+  background: var(--robot-backdrop);
+}
+
+.heroSection {
+  --robot-headroom: clamp(7rem, 10vh, 9rem);
+
+  min-height: max(calc(100dvh - 5rem), 62rem);
+}
+
+.heroContent {
+  display: grid;
+  width: min(100%, 36rem);
+  gap: clamp(1.5rem, 3vh, 2rem);
+}
+
+.heroCopy {
+  max-width: 36rem;
+}
+
+.heroTitle {
+  color: #1c1f17;
+  font-family: var(--font-geist-pixel-square), monospace;
+  font-size: clamp(2.75rem, 3.2vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.heroTitleLine {
+  display: block;
+}
+
+.heroDescription {
+  max-width: 31rem;
+  margin-top: 1.25rem;
+  color: #3a3e32;
+  font-size: clamp(0.95rem, 1.3vw, 1.125rem);
+  line-height: 1.65;
+}
+
+.heroAction {
+  width: fit-content;
+  margin-top: 1.5rem;
+  justify-content: flex-start;
+}
+
+.heroTelemetry {
+  width: min(100%, 36rem);
+}
+
+.heroTelemetry .telemetryInner {
+  padding: 0.75rem 0 0.8rem;
+}
+
+.heroTelemetry .telemetryHeader {
+  padding-bottom: 0.6rem;
+}
+
+.heroTelemetry .capabilityStage {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding-top: 0.7rem;
+}
+
+.heroTelemetry .featuredCapability {
+  grid-column: 1 / -1;
+  min-height: 10.25rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.heroTelemetry .featuredCapabilityValue {
+  margin-top: 0.35rem;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+}
+
+.heroTelemetry .featuredCapabilityStatement {
+  display: none;
+}
+
+.heroTelemetry .featuredModelBrands {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.8rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.heroTelemetry .featuredModelBrand {
+  gap: 0.3rem;
+  font-size: 0.56rem;
+}
+
+.heroTelemetry .featuredModelBrandIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.heroTelemetry .featuredModelMore {
+  align-self: center;
+  justify-self: start;
+  text-align: left;
+}
+
+.heroTelemetry .capabilityIndexItem {
+  min-height: 3.7rem;
+  padding: 0.6rem 0 0.45rem;
+}
+
+.heroTelemetry .capabilityIndexValue {
+  margin-top: 0.22rem;
+  font-size: 1.3rem;
+}
+
+.heroTelemetry .capabilityIndexAction {
+  display: none;
+}
+
+.sectionVisual {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  background: var(--robot-backdrop);
+  pointer-events: none;
+  contain: paint;
+}
+
+.sectionVisual::after {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(244 245 240 / 48%) 0,
+    transparent 1rem,
+    transparent calc(100% - 3.5rem),
+    rgb(244 245 240 / 94%) 100%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.video {
+  position: absolute;
+  inset: var(--robot-headroom) 0 0 auto;
+  width: auto;
+  height: calc(100% - var(--robot-headroom));
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(0.92) contrast(0.99);
+  backface-visibility: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 38%) 9%,
+    #000 21%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 38%) 9%,
+    #000 21%
+  );
+  transition: opacity 80ms linear;
+}
+
+.videoActive {
+  opacity: 1;
+}
+
+.videoInactive {
+  opacity: 0;
+}
+
+.crispFinalFrame {
+  position: absolute;
+  inset: var(--robot-headroom) 0 0 auto;
+  z-index: 1;
+  width: auto;
+  height: calc(100% - var(--robot-headroom));
+  object-fit: contain;
+  object-position: center;
+  opacity: 0;
+  filter: saturate(0.92) contrast(0.99);
+  backface-visibility: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 38%) 9%,
+    #000 21%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 38%) 9%,
+    #000 21%
+  );
+}
+
+.crispFinalFrameVisible {
+  opacity: 1;
+}
+
+.interactionZone {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 0 42%;
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.interactionZone:focus-visible {
+  outline: 1px solid rgb(111 132 64 / 45%);
+  outline-offset: -12px;
+}
+
+.telemetryPanel {
+  width: min(100%, 27rem);
+}
+
+.telemetryInner {
+  border-top: 1px solid rgb(107 125 58 / 42%);
+  border-bottom: 1px solid rgb(107 125 58 / 24%);
+  padding: 1rem 0 1.1rem;
+  color: #1c1f17;
+  font-family: var(--font-mono), sans-serif;
+}
+
+.telemetryHeader,
+.telemetryMetric {
+  display: grid;
+  align-items: center;
+}
+
+.telemetryHeader {
+  grid-template-columns: 1fr auto;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgb(107 125 58 / 20%);
+  color: #5d6938;
+  font-size: 0.72rem;
+  letter-spacing: 0.035em;
+}
+
+.telemetryStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: #6b7068;
+}
+
+.telemetryStatusDot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border: 1px solid #899476;
+  border-radius: 50%;
+  background: transparent;
+  transition:
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.telemetryInner[data-online="true"] .telemetryStatus {
+  color: #5d6f2f;
+}
+
+.telemetryInner[data-online="true"] .telemetryStatusDot {
+  background: #8fa34e;
+  box-shadow: 0 0 0.65rem rgb(143 163 78 / 62%);
+}
+
+.capabilityStage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.35rem;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.featuredCapability {
+  display: grid;
+  grid-column: 1 / -1;
+  min-height: 13.25rem;
+  padding: 1rem 1.05rem 1.1rem;
+  border: 1px solid rgb(107 125 58 / 22%);
+  border-radius: 0.75rem;
+  background: rgb(255 255 252 / 28%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.featuredCapabilityLink {
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.featuredCapabilityLink:hover,
+.featuredCapabilityLink:focus-visible {
+  border-color: rgb(107 125 58 / 48%);
+  background: rgb(255 255 252 / 52%);
+  transform: translateY(-0.15rem);
+}
+
+.featuredCapabilityLink:focus-visible,
+.capabilityIndexLink:focus-visible {
+  outline: 1px solid rgb(107 125 58 / 68%);
+  outline-offset: 0.22rem;
+}
+
+.featuredCapabilityTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #5d6938;
+  font-size: 0.68rem;
+  letter-spacing: 0.025em;
+}
+
+.featuredCapabilityTopline > span:last-child {
+  color: #7a7e71;
+  font-size: 0.58rem;
+}
+
+.featuredCapabilityValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+  color: #737a68;
+  font-family: var(--font-geist-pixel-square), monospace;
+  font-size: clamp(3rem, 6vw, 4.7rem);
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  transition: color 240ms ease;
+}
+
+.telemetryInner[data-online="true"] .featuredCapabilityValue {
+  color: #657735;
+}
+
+.featuredCapabilityValue > span {
+  color: #4d5145;
+  font-family: var(--font-mono), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.featuredCapabilityStatement {
+  align-self: end;
+  margin-top: 0.7rem;
+  color: #3a3e32;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.featuredModelBrands {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.65rem 0.55rem;
+  margin-top: 0.8rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgb(107 125 58 / 18%);
+  color: #626858;
+  font-size: 0.58rem;
+}
+
+.featuredModelBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(0.3rem);
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease;
+  white-space: nowrap;
+}
+
+.featuredModelBrand[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featuredModelBrandIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 0.25rem;
+  object-fit: contain;
+}
+
+.featuredModelBrand:nth-child(2) .featuredModelBrandIcon {
+  padding: 0.16rem;
+  background: #1c1f17;
+}
+
+.featuredModelMore {
+  opacity: 0;
+  color: #657735;
+  text-align: right;
+  transform: translateY(0.3rem);
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease;
+  white-space: nowrap;
+}
+
+.featuredModelMore[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.capabilityIndexItem {
+  position: relative;
+  display: grid;
+  min-height: 4.65rem;
+  padding: 0.75rem 0.1rem 0.65rem;
+  border-top: 1px solid rgb(107 125 58 / 20%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.capabilityIndexLink {
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.capabilityIndexLink:hover,
+.capabilityIndexLink:focus-visible {
+  border-color: rgb(107 125 58 / 64%);
+  transform: translateY(-0.12rem);
+}
+
+.capabilityIndexLabel {
+  color: #4d5145;
+  font-size: 0.7rem;
+}
+
+.capabilityIndexValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  color: #737a68;
+  font-family: var(--font-geist-pixel-square), monospace;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: color 240ms ease;
+}
+
+.telemetryInner[data-online="true"] .capabilityIndexValue {
+  color: #657735;
+}
+
+.capabilityIndexValue > span {
+  color: #858a7c;
+  font-family: var(--font-mono), sans-serif;
+  font-size: 0.54rem;
+  line-height: 1.25;
+}
+
+.capabilityIndexAction {
+  position: absolute;
+  right: 0.1rem;
+  bottom: 0.65rem;
+  opacity: 0;
+  color: #657735;
+  font-size: 0.54rem;
+  transform: translateX(-0.25rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.capabilityIndexLink:hover .capabilityIndexAction,
+.capabilityIndexLink:focus-visible .capabilityIndexAction {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.stage,
+.staticStage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f4f5f0;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 500ms ease-out;
+}
+
+.canvasReady {
+  opacity: 1;
+}
+
+.canvas canvas {
+  display: block;
+}
+
+.fallback,
+.staticStage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: 1;
+  transition: opacity 300ms ease-out;
+}
+
+.fallbackHidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (max-width: 767px) {
+  .section {
+    --robot-headroom: 2.5rem;
+
+    min-height: 58rem;
+  }
+
+  .heroSection {
+    --robot-headroom: 2rem;
+
+    min-height: 82rem;
+    padding-top: 3.5rem;
+  }
+
+  .heroContent {
+    width: 100%;
+    gap: 2rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.5rem, 10vw, 3.25rem);
+  }
+
+  .heroDescription {
+    max-width: 22rem;
+  }
+
+  .heroAction {
+    width: 100%;
+  }
+
+  .sectionVisual {
+    inset: 29rem 0 0;
+  }
+
+  .heroSection .sectionVisual {
+    inset: 40rem 0 0;
+  }
+
+  .sectionVisual::after {
+    background: linear-gradient(
+      to bottom,
+      rgb(244 245 240 / 92%) 0,
+      transparent 1.75rem,
+      transparent calc(100% - 1.75rem),
+      rgb(244 245 240 / 92%) 100%
+    );
+  }
+
+  .video {
+    inset: var(--robot-headroom) 0 0;
+    width: 100%;
+    height: calc(100% - var(--robot-headroom));
+    object-fit: cover;
+    object-position: 68% center;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .crispFinalFrame {
+    inset: var(--robot-headroom) 0 0;
+    width: 100%;
+    height: calc(100% - var(--robot-headroom));
+    object-position: 68% center;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .interactionZone {
+    inset: 29rem 0 0;
+  }
+
+  .heroSection .interactionZone {
+    inset: 40rem 0 0;
+  }
+
+  .telemetryPanel {
+    width: 100%;
+  }
+
+  .telemetryInner {
+    padding-top: 0.8rem;
+  }
+
+  .telemetryHeader {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .telemetryStatus {
+    justify-self: start;
+  }
+
+  .capabilityStage {
+    column-gap: 1rem;
+    row-gap: 0.75rem;
+    padding-top: 0.8rem;
+  }
+
+  .heroTelemetry .capabilityStage {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heroTelemetry .featuredCapability {
+    min-height: 12.5rem;
+  }
+
+  .heroTelemetry .featuredModelBrands {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .featuredCapability {
+    min-height: 14.5rem;
+  }
+
+  .featuredCapabilityValue {
+    font-size: clamp(3rem, 16vw, 4.4rem);
+  }
+
+  .featuredCapabilityTopline {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .featuredCapabilityTopline > span:last-child {
+    max-width: 7.5rem;
+    text-align: right;
+  }
+
+  .featuredModelBrands {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0.55rem;
+  }
+
+  .featuredModelMore {
+    text-align: right;
+  }
+
+  .capabilityIndexItem {
+    min-height: 4.4rem;
+  }
+
+  .fallback,
+  .staticStage img {
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas,
+  .fallback {
+    transition: none;
+  }
+
+  .video {
+    display: block;
+  }
+
+  .featuredCapabilityLink,
+  .featuredModelBrand,
+  .featuredModelMore,
+  .capabilityIndexLink,
+  .capabilityIndexAction {
+    transition: none;
+  }
+
+}
