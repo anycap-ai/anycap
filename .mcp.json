@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "anycap": {
+      "command": "anycap",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

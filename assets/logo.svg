@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">AnyCap</title>
+  <rect width="96" height="96" rx="20" fill="#111111"/>
+  <path d="M18 30h25V17h31v31H55v19H18z" fill="#ffffff"/>
+  <path d="M59 61h15v15H59z" fill="#ffffff"/>
+</svg>
