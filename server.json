@@ -1,0 +1,29 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.anycap-ai/anycap",
+  "title": "AnyCap",
+  "description": "Create and understand media, search the web, share files, and publish pages through one MCP server.",
+  "websiteUrl": "https://anycap.ai",
+  "repository": {
+    "url": "https://github.com/anycap-ai/anycap",
+    "source": "github"
+  },
+  "version": "0.5.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@anycap/cli",
+      "version": "0.5.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ]
+    }
+  ]
+}

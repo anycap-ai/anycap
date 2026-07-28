@@ -1,0 +1,32 @@
+{
+  "name": "anycap",
+  "displayName": "AnyCap",
+  "version": "0.5.0",
+  "description": "Give Cursor multimodal generation, media understanding, live web research, file sharing, and page publishing through the AnyCap CLI and MCP server.",
+  "author": {
+    "name": "AnyCap AI"
+  },
+  "publisher": "AnyCap AI",
+  "homepage": "https://anycap.ai",
+  "repository": "https://github.com/anycap-ai/anycap",
+  "license": "MIT",
+  "logo": "assets/logo.svg",
+  "keywords": [
+    "multimodal",
+    "image-generation",
+    "video-generation",
+    "audio",
+    "web-search",
+    "mcp",
+    "publishing"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "ai",
+    "media",
+    "research",
+    "delivery"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

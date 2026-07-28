@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "anycap": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anycap/cli@latest",
+        "mcp"
+      ]
+    }
+  }
+}
