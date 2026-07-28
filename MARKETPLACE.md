@@ -14,8 +14,9 @@ the published `@anycap/cli` package.
 | Cline MCP Marketplace | `llms-install.md` | Public GitHub repository and logo |
 | Official MCP Registry | `server.json` | Published npm package metadata |
 
-The root `mcp.json` is used by Cursor. Claude Code uses `.mcp.json`. Both start
-the same local stdio server with `anycap mcp`.
+The root `mcp.json` is used by Cursor. Claude Code uses `.mcp.json`. Both use
+`npx -y @anycap/cli@latest mcp` to start the same local stdio server without
+requiring a global CLI installation.
 
 ## Before submission
 

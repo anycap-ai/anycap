@@ -30,6 +30,8 @@ const cursor = read(".cursor-plugin/plugin.json");
 const claude = read(".claude-plugin/plugin.json");
 const gemini = read("gemini-extension.json");
 const registry = read("server.json");
+const cursorMcp = read("mcp.json");
+const claudeMcp = read(".mcp.json");
 
 const versions = new Map([
   [".cursor-plugin/plugin.json", cursor.version],
@@ -56,6 +58,21 @@ if (!fs.existsSync(cursor.logo)) {
 
 if (cursor.mcpServers !== "./mcp.json") {
   throw new Error("Cursor manifest must reference ./mcp.json");
+}
+
+for (const [file, config] of [
+  ["mcp.json", cursorMcp],
+  [".mcp.json", claudeMcp],
+  ["gemini-extension.json", gemini],
+]) {
+  const server = config.mcpServers?.anycap;
+  if (server?.command !== "npx") {
+    throw new Error(`${file} must launch AnyCap through npx`);
+  }
+  const expectedArgs = ["-y", "@anycap/cli@latest", "mcp"];
+  if (JSON.stringify(server.args) !== JSON.stringify(expectedArgs)) {
+    throw new Error(`${file} must use args ${JSON.stringify(expectedArgs)}`);
+  }
 }
 
 const packageEntry = registry.packages?.[0];
