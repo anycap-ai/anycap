@@ -1,0 +1,42 @@
+{
+  "name": "@anycap/cli",
+  "version": "0.0.0",
+  "mcpName": "io.github.anycap-ai/anycap",
+  "description": "AnyCap CLI - AI Agent capability runtime",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anycap-ai/anycap"
+  },
+  "homepage": "https://anycap.ai",
+  "bin": {
+    "anycap": "bin/anycap"
+  },
+  "files": [
+    "bin/",
+    "server.json"
+  ],
+  "scripts": {
+    "test": "node test/wrapper.test.js && node ../../scripts/release/validate-mcp-manifest.js server.json package.json && node ../../scripts/release/render-npm-main-package.test.js && node ../../scripts/release/validate-plugin-manifests.test.js"
+  },
+  "optionalDependencies": {
+    "@anycap/cli-darwin-arm64": "0.0.0",
+    "@anycap/cli-darwin-x64": "0.0.0",
+    "@anycap/cli-linux-arm64": "0.0.0",
+    "@anycap/cli-linux-x64": "0.0.0",
+    "@anycap/cli-win32-arm64": "0.0.0",
+    "@anycap/cli-win32-x64": "0.0.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "anycap",
+    "ai",
+    "agent",
+    "cli",
+    "capability",
+    "mcp",
+    "stdio"
+  ]
+}

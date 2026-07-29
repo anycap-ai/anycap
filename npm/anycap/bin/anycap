@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+"use strict";
+
+const { platform, arch } = require("os");
+const { spawn } = require("child_process");
+
+const PLATFORM_PACKAGES = {
+  "darwin-arm64": "@anycap/cli-darwin-arm64",
+  "darwin-x64": "@anycap/cli-darwin-x64",
+  "linux-arm64": "@anycap/cli-linux-arm64",
+  "linux-x64": "@anycap/cli-linux-x64",
+  "win32-arm64": "@anycap/cli-win32-arm64",
+  "win32-x64": "@anycap/cli-win32-x64",
+};
+
+function getBinaryPath() {
+  const key = `${platform()}-${arch()}`;
+  const pkg = PLATFORM_PACKAGES[key];
+
+  if (!pkg) {
+    console.error(
+      `Error: Unsupported platform ${key}.\n` +
+        `AnyCap CLI supports: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`
+    );
+    process.exit(1);
+  }
+
+  const binName = platform() === "win32" ? "anycap.exe" : "anycap";
+
+  try {
+    return require.resolve(`${pkg}/bin/${binName}`);
+  } catch (e) {
+    console.error(
+      `Error: Could not find the AnyCap binary for ${key}.\n` +
+        `The platform package "${pkg}" does not appear to be installed.\n` +
+        `Try reinstalling: npm install -g @anycap/cli`
+    );
+    process.exit(1);
+  }
+}
+
+const binary = getBinaryPath();
+const child = spawn(binary, process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+const forwardedSignals =
+  platform() === "win32" ? ["SIGINT", "SIGTERM"] : ["SIGINT", "SIGTERM", "SIGHUP"];
+const signalHandlers = new Map();
+
+function removeSignalHandlers() {
+  for (const [signal, handler] of signalHandlers) {
+    process.removeListener(signal, handler);
+  }
+  signalHandlers.clear();
+}
+
+for (const signal of forwardedSignals) {
+  const handler = () => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      return;
+    }
+    try {
+      child.kill(signal);
+    } catch (_error) {
+      // The child may have exited between the state check and signal delivery.
+    }
+  };
+  signalHandlers.set(signal, handler);
+  process.on(signal, handler);
+}
+
+child.once("error", (error) => {
+  removeSignalHandlers();
+  console.error(`Error: Failed to execute AnyCap CLI: ${error.message}`);
+  process.exitCode = 1;
+});
+
+child.once("exit", (code, signal) => {
+  removeSignalHandlers();
+
+  if (code !== null) {
+    process.exitCode = code;
+    return;
+  }
+
+  if (signal && platform() !== "win32") {
+    try {
+      process.kill(process.pid, signal);
+      return;
+    } catch (_error) {
+      // Fall back to a generic failure if this runtime cannot re-raise the signal.
+    }
+  }
+
+  process.exitCode = 1;
+});

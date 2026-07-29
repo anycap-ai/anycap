@@ -1,6 +1,6 @@
 {
   "name": "anycap",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Create and understand media, research the live web, share files, and publish pages through the AnyCap CLI and MCP server.",
   "mcpServers": {
     "anycap": {

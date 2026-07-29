@@ -1,10 +1,15 @@
 {
   "name": "anycap",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Multimodal capabilities for AI agents through the AnyCap CLI.",
   "author": {
     "name": "AnyCap"
   },
   "license": "MIT",
-  "keywords": ["multimodal", "media", "web-research", "agent-skills"]
+  "keywords": [
+    "multimodal",
+    "media",
+    "web-research",
+    "agent-skills"
+  ]
 }

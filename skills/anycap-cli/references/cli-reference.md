@@ -202,6 +202,15 @@ file locations and wrapper fields, but the process command must resolve to
 `@anycap/cli` package. Do not recommend an npm or Registry install until the
 specific released version is verified to contain this command.
 
+On Windows, Codex and other MCP hosts may advertise roots as file URIs such as
+`file:///C:/Users/Alice/project`. AnyCap normalizes these to Windows drive paths
+automatically. If the host advertises the directory containing the media, no
+extra per-file approval or `--allow-root` argument is required. Otherwise,
+configure an explicit root such as `--allow-root C:\Users\Alice\Pictures`.
+This permission only authorizes local file reads below that directory; video
+result polling happens inside the same tool call and requires no additional
+Codex approval.
+
 stdout belongs exclusively to MCP protocol traffic. Send process diagnostics
 to stderr and do not insert shell wrappers that print banners to stdout.
 

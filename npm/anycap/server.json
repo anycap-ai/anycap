@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.anycap-ai/anycap",
+  "title": "AnyCap",
+  "description": "Generate and understand media, search and crawl the web, and inspect AnyCap Drive and Page.",
+  "repository": {
+    "url": "https://github.com/anycap-ai/anycap",
+    "source": "github"
+  },
+  "websiteUrl": "https://anycap.ai",
+  "version": "0.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@anycap/cli",
+      "version": "0.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "named",
+          "name": "--allow-root",
+          "description": "Allow MCP tools to read media files below this local directory.",
+          "format": "filepath",
+          "isRequired": false,
+          "isRepeated": true,
+          "placeholder": "/absolute/path/to/media"
+        }
+      ]
+    }
+  ]
+}

@@ -1,13 +1,15 @@
 # Video Generation
 
-Generate videos from text prompts or animate reference images. The generated video is automatically downloaded to the current directory.
+Generate videos from text prompts, animate reference images, or transfer motion from a reference video. Video generation uses durable AnyCap tasks: AnyCap Server owns the task and result, while the CLI submits, polls, and downloads the completed artifact.
 
 ## Workflow
 
 ```mermaid
 graph LR
     A[List models] --> B[Get schema]
-    B --> C[Generate]
+    B --> C[Submit task]
+    C --> D[Poll AnyCap]
+    D --> E[Download]
 ```
 
 ### Step 1: Discover models
@@ -34,6 +36,7 @@ Models support different **modes** -- each mode represents a distinct input/outp
 |------|-------------|
 | `text-to-video` | Generate video from text prompt |
 | `image-to-video` | Animate a reference image into video |
+| `motion-control` | Animate a character image using motion from a reference video |
 
 Not all models support all modes. List modes for a model:
 
@@ -89,6 +92,46 @@ anycap video models <model-id> schema --mode text-to-video \
 
 The generated video is automatically saved to the current directory. Use `-o` to specify a custom path.
 
+By default, `video generate` waits by polling AnyCap Server and still returns one final JSON document. It emits the durable `task_id` plus resume commands on stderr as soon as the task is accepted, so an interrupted wait never loses the id. The task continues on the server if the CLI is interrupted. Bound the wait with `--timeout` (default 15m; `0` disables the limit); when the timeout elapses the command returns the pending task and resume commands instead of hanging.
+
+For agent runtimes with short tool timeouts, submit without waiting:
+
+```bash
+anycap video generate \
+  --prompt "a watercolor animation of cherry blossoms" \
+  --model <model-id> \
+  --no-wait
+```
+
+Save the returned `data.task_id`. Resume by waiting (downloads on completion) or poll once:
+
+```bash
+anycap video tasks wait <task-id>   # short-poll until terminal, then download
+anycap video tasks get  <task-id>   # single status check
+```
+
+If a wait is interrupted (Ctrl-C) or times out, the task keeps running and the
+output includes `wait_command` and `poll_command`. This is the intended
+"submit now, wait later" flow: `--no-wait` to submit, then `tasks wait` to
+resume. Tasks cannot be canceled; a submitted task always runs to a terminal
+state, so query it rather than trying to stop it.
+
+Poll no faster than `poll_after_ms`. Stop only when status is `succeeded`, `failed`, or `timed_out`. A queued or running task is not an error, and a local timeout must not cause the agent to submit the same generation again.
+
+Task error codes are stable AnyCap codes, independent of the upstream provider:
+
+| Code | Agent action |
+|---|---|
+| `VIDEO_INVALID_REQUEST` | Fix the request before creating another task |
+| `VIDEO_CONTENT_REJECTED` | Adjust prompt or references before retrying |
+| `VIDEO_UPSTREAM_UNAVAILABLE` | Retry later with a new task |
+| `VIDEO_TIMED_OUT` | Report the timeout; retry only when the user wants another generation |
+| `VIDEO_EMPTY_RESULT` | Report the provider produced no usable output |
+| `VIDEO_INSUFFICIENT_CREDIT` | Ask the user to resolve credit availability |
+| `VIDEO_BILLING_UNCERTAIN` | Do not resubmit automatically; surface for support/reconciliation |
+| `VIDEO_RETRY_REQUIRED` | Ask the user whether to create a new task; never resubmit automatically |
+| `VIDEO_INTERNAL_ERROR` | Report the task ID for diagnosis |
+
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o ocean-waves.mp4`). Without `-o`, the file gets a generic timestamped name like `video_20260327_103000.mp4`.
 
 Basic text-to-video generation (mode is inferred):
@@ -127,6 +170,23 @@ anycap video generate \
   --param images=https://example.com/photo.jpg
 ```
 
+Motion control uses exactly one character image and one motion reference video.
+The prompt is optional for this mode. Check the selected model's schema for
+supported orientation, sound, and resolution parameters:
+
+```bash
+anycap video models <model-id> schema --mode motion-control
+
+anycap video generate \
+  --model <model-id> \
+  --mode motion-control \
+  --param images=/path/to/character.png \
+  --param videos=/path/to/motion.mp4 \
+  --param character_orientation=image \
+  --param keep_original_sound=true \
+  -o motion-controlled.mp4
+```
+
 Save to a specific path:
 
 ```bash
@@ -140,11 +200,13 @@ anycap video generate \
 
 | Flag | Required | Description |
 |------|----------|-------------|
-| `--prompt` | yes | Text description of the video to generate |
+| `--prompt` | depends on mode | Text description of the video. Check the selected mode's schema |
 | `--model` | yes | Model ID from `video models` |
 | `--mode` | no | Generation mode (e.g. `text-to-video`, `image-to-video`). Inferred if omitted |
 | `--param` | no | Parameter as `key=value` (repeatable); discover via `video models <model> schema` |
 | `-o, --output` | no | Custom output path (default: current directory) |
+| `--no-wait` | no | Return the durable AnyCap task immediately instead of waiting |
+| `--timeout` | no | Overall time to wait for completion before returning the pending task (default 15m; `0` disables) |
 
 ### --param value types
 
@@ -173,6 +235,13 @@ The output is a flat JSON object optimized for agent consumption:
 | `model` | Model ID used for generation |
 | `credits_used` | Number of credits consumed |
 | `request_id` | Server request ID for debugging |
+| `task_id` | Durable AnyCap task ID; save it for recovery |
+
+For MCP, `anycap_video_generate` returns a task immediately. Call `anycap_video_task_get` with the returned `task_id`, honor `poll_after_ms`, and do not resubmit while that task remains non-terminal.
+
+Server-side recovery may resume polling an already checkpointed provider task.
+That is not a new generation. Creating another task is a retry and always
+requires an explicit user decision, including after `VIDEO_RETRY_REQUIRED`.
 
 Extract the local file path:
 

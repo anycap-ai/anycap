@@ -210,6 +210,15 @@ Extract the local file path:
 anycap image generate --prompt "..." --model <model-id> | jq -r '.local_path'
 ```
 
+### Content safety errors
+
+`CONTENT_REJECTED` means the selected model rejected the prompt or reference
+media during its content-safety review. It does not mean that schema-valid
+parameters such as aspect ratio, resolution, or format are invalid. Follow the
+response `hint`: adjust the prompt or reference media and retry, or select a
+different model because safety policies can differ. Do not automatically
+submit a parameter-schema bug for this error.
+
 ## Complete Example
 
 ```bash

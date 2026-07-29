@@ -1,11 +1,8 @@
 name: Publish npm
 
-# Triggered when GitLab CI creates a GitHub Release, or manually.
-# Uses OIDC trusted publishing -- no NPM_TOKEN needed.
-# Prerequisite: configure trusted publishers on npmjs.com for each
-# @anycap/* package pointing to this repo and workflow file.
-# Note: the very first version of each package must be published
-# manually with a token before OIDC can take over.
+# Synced to the public GitHub repository by scripts/release/sync-skills.sh.
+# Triggered when GitLab CI publishes a GitHub Release, or manually.
+# Uses npm OIDC trusted publishing; no npm token is stored in this workflow.
 
 on:
   release:
@@ -13,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to publish (e.g. v0.1.0)"
+        description: "Release tag to publish (e.g. v0.5.1)"
         required: true
 
 permissions:
@@ -35,8 +32,8 @@ jobs:
           - { go_os: darwin,  go_arch: arm64, npm_suffix: darwin-arm64, npm_os: darwin, npm_cpu: arm64, ext: tar.gz }
           - { go_os: linux,   go_arch: amd64, npm_suffix: linux-x64,   npm_os: linux,  npm_cpu: x64,   ext: tar.gz }
           - { go_os: linux,   go_arch: arm64, npm_suffix: linux-arm64, npm_os: linux,  npm_cpu: arm64, ext: tar.gz }
-          - { go_os: windows, go_arch: amd64, npm_suffix: win32-x64,   npm_os: win32,  npm_cpu: x64,   ext: zip }
-          - { go_os: windows, go_arch: arm64, npm_suffix: win32-arm64, npm_os: win32,  npm_cpu: arm64, ext: zip }
+          - { go_os: windows, go_arch: amd64, npm_suffix: win32-x64,   npm_os: win32, npm_cpu: x64,   ext: zip }
+          - { go_os: windows, go_arch: arm64, npm_suffix: win32-arm64, npm_os: win32, npm_cpu: arm64, ext: zip }
     steps:
       - uses: actions/setup-node@v4
         with:
@@ -88,34 +85,27 @@ jobs:
             }, null, 2) + '\n');
           "
 
-          echo "Generated package.json:"
-          cat pkg/package.json
-
-      - name: Publish (with retry and provenance fallback)
+      - name: Publish platform package
         run: |
+          set -euo pipefail
           PKG_NAME=$(node -p "require('./pkg/package.json').name")
           PKG_VERSION=$(node -p "require('./pkg/package.json').version")
 
-          # Skip if already published
           if npm view "${PKG_NAME}@${PKG_VERSION}" version 2>/dev/null | grep -q "${PKG_VERSION}"; then
             echo "${PKG_NAME}@${PKG_VERSION} already published, skipping."
             exit 0
           fi
 
           MAX_RETRIES=3
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Publish attempt ${i}/${MAX_RETRIES} (with provenance)..."
+          for attempt in $(seq 1 "$MAX_RETRIES"); do
             if npm publish pkg/ --provenance --access public; then
-              echo "Published successfully with provenance."
               exit 0
             fi
-            echo "Provenance publish failed."
-            if [ "$i" -lt "$MAX_RETRIES" ]; then
+            if [ "$attempt" -lt "$MAX_RETRIES" ]; then
               sleep 15
             fi
           done
 
-          echo "All provenance attempts failed. Publishing without provenance..."
           npm publish pkg/ --access public
 
   publish-main:
@@ -123,6 +113,8 @@ jobs:
     needs: [publish-platform]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -135,104 +127,39 @@ jobs:
           PLATFORMS=(darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-arm64 win32-x64)
           MISSING=0
 
-          for p in "${PLATFORMS[@]}"; do
-            PKG="@anycap/cli-${p}@${VERSION}"
-            echo -n "Checking ${PKG} ... "
-            if npm view "${PKG}" version 2>/dev/null | grep -q "${VERSION}"; then
-              echo "OK"
-            else
-              echo "MISSING"
+          for platform in "${PLATFORMS[@]}"; do
+            PACKAGE="@anycap/cli-${platform}@${VERSION}"
+            if ! npm view "${PACKAGE}" version 2>/dev/null | grep -q "${VERSION}"; then
+              echo "Missing ${PACKAGE}"
               MISSING=$((MISSING + 1))
             fi
           done
 
           if [ "$MISSING" -gt 0 ]; then
-            echo "ERROR: ${MISSING} platform package(s) missing from npm. Aborting main package publish."
+            echo "ERROR: ${MISSING} platform package(s) missing from npm."
             exit 1
           fi
 
-          echo "All platform packages verified."
-
-      - name: Generate package
+      - name: Render and validate main package
         run: |
           set -euo pipefail
           VERSION="${RELEASE_TAG#v}"
-          PKG="pkg"
-          mkdir -p "${PKG}/bin"
+          node scripts/release/render-npm-main-package.js npm/anycap pkg "${VERSION}"
+          node scripts/release/validate-mcp-manifest.js pkg/server.json pkg/package.json
 
-          # -- JS wrapper (bin/anycap) --
-          # Use heredoc with quoted delimiter to avoid shell expansion
-          cat > "${PKG}/bin/anycap" << 'WRAPPER'
-          #!/usr/bin/env node
-          "use strict";
+          PACK_RESULT=$(npm pack pkg/ --dry-run --json)
+          printf '%s' "$PACK_RESULT" | node -e '
+            let input = "";
+            process.stdin.on("data", chunk => input += chunk);
+            process.stdin.on("end", () => {
+              const files = JSON.parse(input)[0].files.map(file => file.path);
+              for (const required of ["bin/anycap", "server.json"]) {
+                if (!files.includes(required)) {
+                  throw new Error(`npm tarball missing ${required}`);
+                }
+              }
+            });
+          '
 
-          const { platform, arch } = require("os");
-          const { spawnSync } = require("child_process");
-
-          const PLATFORM_PACKAGES = {
-            "darwin-arm64": "@anycap/cli-darwin-arm64",
-            "darwin-x64": "@anycap/cli-darwin-x64",
-            "linux-arm64": "@anycap/cli-linux-arm64",
-            "linux-x64": "@anycap/cli-linux-x64",
-            "win32-arm64": "@anycap/cli-win32-arm64",
-            "win32-x64": "@anycap/cli-win32-x64",
-          };
-
-          function getBinaryPath() {
-            const key = `${platform()}-${arch()}`;
-            const pkg = PLATFORM_PACKAGES[key];
-            if (!pkg) {
-              console.error(`Error: Unsupported platform ${key}.\nAnyCap CLI supports: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`);
-              process.exit(1);
-            }
-            const binName = platform() === "win32" ? "anycap.exe" : "anycap";
-            try {
-              return require.resolve(`${pkg}/bin/${binName}`);
-            } catch (e) {
-              console.error(`Error: Could not find the AnyCap binary for ${key}.\nThe platform package "${pkg}" does not appear to be installed.\nTry reinstalling: npm install -g @anycap/cli`);
-              process.exit(1);
-            }
-          }
-
-          const binary = getBinaryPath();
-          const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });
-          if (result.error) {
-            console.error(`Error: Failed to execute AnyCap CLI: ${result.error.message}`);
-            process.exit(1);
-          }
-          process.exit(result.status !== null ? result.status : 1);
-          WRAPPER
-          chmod 755 "${PKG}/bin/anycap"
-
-          # -- package.json --
-          # Use single-quoted node -e with args to avoid shell quoting issues
-          node -e '
-            const fs = require("fs");
-            const VERSION = process.argv[1];
-            const REPO = process.argv[2];
-            const platforms = ["darwin-arm64","darwin-x64","linux-arm64","linux-x64","win32-arm64","win32-x64"];
-            const optDeps = {};
-            platforms.forEach(p => optDeps["@anycap/cli-" + p] = VERSION);
-            fs.writeFileSync("pkg/package.json", JSON.stringify({
-              name: "@anycap/cli",
-              version: VERSION,
-              description: "AnyCap CLI - AI Agent capability runtime",
-              license: "MIT",
-              repository: { type: "git", url: "https://github.com/" + REPO },
-              homepage: "https://anycap.ai",
-              bin: { anycap: "bin/anycap" },
-              files: ["bin/"],
-              optionalDependencies: optDeps,
-              engines: { node: ">=16" },
-              keywords: ["anycap","ai","agent","agent-skill","agent-skills","claude-code","coding-agent","cli","capability"]
-            }, null, 2) + "\n");
-          ' "${VERSION}" "${{ github.repository }}"
-
-          echo "Package to publish:"
-          cat "${PKG}/package.json"
-          echo "---"
-          echo "Wrapper (first 5 lines):"
-          head -5 "${PKG}/bin/anycap"
-
-      - name: Publish
+      - name: Publish main package
         run: npm publish pkg/ --provenance --access public

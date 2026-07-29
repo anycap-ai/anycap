@@ -2,7 +2,7 @@
 name: anycap-cli
 description: "AnyCap CLI -- create media humans can see and hear (generate images, video, music, and audio), understand media humans share (analyze images, video, audio), access the web (search, crawl), and deliver results humans can use (Drive for shareable file links, Page for hosted web pages). Use whenever a task involves creating visual or audio content, analyzing media, searching or reading the web, sharing files with humans, or publishing anything as a web page -- even if the user doesn't mention AnyCap by name. Also use for AnyCap authentication (login, API key, credentials), configuration, and feedback. Trigger on: image/video/music/audio generation, media analysis, web search, web crawl, file sharing, page hosting, drive storage, delivering results to users, or any mention of AnyCap."
 metadata:
-  version: 0.5.0
+  version: 0.6.0
   website: https://anycap.ai
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
@@ -413,7 +413,7 @@ Generated files are auto-downloaded to the current directory. Always use `-o` wi
 Music generation may return multiple clips -- use `.outputs[0].local_path` to extract paths.
 Audio generation may also return multiple outputs and preserves duration, size, subtitle, and usage metadata in JSON.
 
-If your runtime supports async execution, prefer running generation commands in the background. They are self-contained -- block until complete and write the result file locally.
+Video generation is backed by durable AnyCap Server tasks. In short-lived agent runtimes, prefer `anycap video generate --no-wait`, save the returned task ID, and resume with `anycap video tasks get <task-id>`. Do not resubmit a non-terminal task. Other generation commands remain blocking unless their capability reference says otherwise.
 
 **Annotate** -- interactive visual feedback with real-time collaboration (image, video, audio) or single-user review (URL/iframe).
 Read [references/annotation.md](references/annotation.md) when you need structured visual feedback from humans. Supports images, URLs, videos, and audio files. For image, video, and audio sessions, multiple users can collaborate in real-time with shared annotations and live cursors. URL mode is single-user because screen recording is the primary feedback artifact and multiple users' cursors would make it confusing. The built-in screen recorder captures the full browser tab as video -- use `anycap actions video-read` on the recording for AI video understanding of the feedback.
