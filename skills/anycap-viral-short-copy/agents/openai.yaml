@@ -1,0 +1,4 @@
+interface:
+  display_name: "AnyCap Viral Short Copy"
+  short_description: "Copy proven short structures, then remix on feedback"
+  default_prompt: "Use $anycap-viral-short-copy to analyze this proven short-form reference with AnyCap, produce the closest safe copy, and wait for my verdict before remixing."
