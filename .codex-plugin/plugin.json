@@ -1,6 +1,6 @@
 {
   "name": "anycap",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Multimodal capabilities for AI agents through the AnyCap CLI.",
   "author": {
     "name": "AnyCap"

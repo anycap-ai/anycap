@@ -74,6 +74,27 @@ Local video files must be under 100 MB. For larger files, compress first:
 ffmpeg -i input.mp4 -vcodec libx264 -crf 28 output.mp4
 ```
 
+Local uploads automatically retry transient network and storage failures up to
+three times. If the CLI still reports `storage upload failed`, follow its hint:
+check the network connection and retry; for video, compress the file before the
+next attempt.
+
+For persistent failures, an agent may use local segmentation as a fallback only
+when the analysis is safe to perform per segment:
+
+1. Prefer compressing the complete video so cross-scene context is preserved.
+2. If that still fails, split it into 2–5 minute clips with 2–5 seconds of
+   overlap so actions and speech are not cut at a boundary.
+3. Run at most 2–3 `video-read` requests concurrently. Each clip is a separate
+   request and may consume its own credits and rate-limit capacity.
+4. Ask for timestamped observations from every clip, convert relative clip
+   timestamps back to the original timeline, and merge the results.
+5. Do not segment tasks that require whole-video narrative, cross-clip causality,
+   or continuous identity tracking; compress and retry the complete video instead.
+
+`video-read` accepts one video per invocation. Parallel segmented analysis is an
+agent-orchestrated workflow, not a multi-video `video-read` request.
+
 ## audio-read
 
 Analyze audio: transcribe speech, describe sounds, answer questions about audio content. Supports direct audio URLs and YouTube links (audio is extracted automatically).
