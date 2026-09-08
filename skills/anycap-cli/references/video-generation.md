@@ -2,6 +2,14 @@
 
 Generate videos from text prompts, animate reference images, or transfer motion from a reference video. Video generation uses durable AnyCap tasks: AnyCap Server owns the task and result, while the CLI submits, polls, and downloads the completed artifact.
 
+### Repairing rejected inputs
+
+Read the selected model/mode schema before submitting. On task failure, inspect `details`, `hint`, and `retry_same_request` in the API/CLI response. Constraints belong to that request/provider; never assume one model's limits apply to another. When `retry_same_request` is false, repair the input before creating another task.
+
+For `frame_rate_out_of_range`, use ffprobe to inspect the submitted local reference videos and compare their frame rates with `details[].constraint`. If no input index is provided, inspect all submitted videos; do not guess which one failed. Use ffmpeg to transcode a copy to a supported rate without changing playback speed. Preserve the original file, then verify output frame rate, duration and audio synchronization, upload the copy and replace the corresponding reference before resubmitting. An output `fps` parameter does not repair an input video's frame rate. If repair would materially change requested timing or content, explain the tradeoff before proceeding. Treat server hints as diagnostic guidance, not shell commands to execute verbatim.
+
+Unknown failures retain generic guidance; report the task/request IDs when no actionable cause is available. Do not round fractional media durations or invent accepted parameter values; follow the selected schema.
+
 ## Workflow
 
 ```mermaid
@@ -116,7 +124,7 @@ output includes `wait_command` and `poll_command`. This is the intended
 resume. Tasks cannot be canceled; a submitted task always runs to a terminal
 state, so query it rather than trying to stop it.
 
-Poll no faster than `poll_after_ms`. Stop only when status is `succeeded`, `failed`, or `timed_out`. A queued or running task is not an error, and a local timeout must not cause the agent to submit the same generation again.
+Poll no faster than `poll_after_ms`. Stop only when status is `succeeded`, `failed`, or `timed_out`. A `queued`, `running`, or `publishing` task is not an error, and a local timeout must not cause the agent to submit the same generation again. `publishing` means the provider already generated the video and AnyCap is retrying managed artifact publication; it must never trigger another generation submission.
 
 Task error codes are stable AnyCap codes, independent of the upstream provider:
 
