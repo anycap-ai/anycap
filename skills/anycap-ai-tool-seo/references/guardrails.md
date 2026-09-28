@@ -1,63 +1,29 @@
 # Guardrails
 
-Use this file to control boundaries and avoid presenting heuristics as hard rules.
+Use Google's public documentation for Google-specific rules, and label other SEO tactics as hypotheses. Check current documentation when guidance may have changed.
 
-## Public guidance takes priority
+## Indexing and measurement
 
-When a practical tactic conflicts with public search guidance, let the tactic yield to the guidance.
+- Google's [Search Essentials](https://developers.google.com/search/docs/essentials) say meeting technical requirements does not guarantee crawling, indexing, or serving. A live URL test and a clear manual-action report do not establish that previous algorithmic visibility loss has ended.
+- A [sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap) helps discovery but does not guarantee indexing. Use `<lastmod>` only for significant, real changes; do not repeatedly resubmit an unchanged sitemap as a growth tactic.
+- [Recrawl requests](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) can take days to weeks and do not guarantee inclusion. Repeating the request does not make Google crawl faster.
+- Compare complete GSC dates and URL cohorts. Do not equate third-party estimated traffic with observed GSC traffic.
 
-Priority directions:
+## Content and search appearance
 
-- content should be useful to people first
-- pages must be crawlable, indexable, renderable, and understandable
-- do not use low-value content at scale to manipulate rankings
-- generative AI is allowed, but not as pure volume without added value
-- page experience matters, but it should not be reduced to a single score game
+- Follow [people-first content guidance](https://developers.google.com/search/docs/fundamentals/creating-helpful-content). There is no preferred word count; changing a date without meaningful changes is not a freshness strategy. “E-E-A-T” is a useful way to assess credibility, not a single direct ranking factor.
+- [Scaled content abuse](https://developers.google.com/search/docs/essentials/spam-policies) can apply regardless of whether text is produced by humans or AI. Do not mass-publish keyword variants, doorway pages, or lightly rewritten pages.
+- Google [retired the FAQ rich result feature in May 2026](https://developers.google.com/search/updates) and removed its documentation in June 2026. A useful FAQ may still help readers, but `FAQPage` markup is not a Google Search enhancement tactic. Follow [structured-data policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies) and current feature eligibility; markup does not guarantee a rich result.
+- Google's [generative AI Search guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) applies core SEO to AI Overviews and AI Mode. Google Search does not use `llms.txt` as a ranking or visibility signal, requires no special AI schema or “chunking,” and warns against separate pages for fan-out query variants. Maintain `llms.txt` only if another intended consumer needs it.
+- For international pages, follow [localized-version guidance](https://developers.google.com/search/docs/specialty/international/localized-versions): localize the main content, make alternate references reciprocal, and use a suitable canonical per language. Do not remove a locale merely because a short observation period is quiet.
 
-## What is heuristic, not law
+## Links and trust
 
-These can be useful, but should not be written as universal truth:
+- Prefer relevant editorial mentions and user-serving internal links. Do not recommend paid link schemes, bulk exchanges, or low-quality directory volume. Qualify paid placements with [appropriate link attributes](https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links).
+- Do not fabricate testimonials, logos, benchmark results, or product demonstrations. Do not claim dwell time, bounce rate, “last click,” or Chrome data are official standalone ranking factors.
 
-- "Last-Click" as a central SEO explanation
-- fixed thresholds for directory selection
-- a single formula such as "precise traffic > authority = relevance"
-- defaulting to deprioritize all informational content in a zero-click era
+## Programmatic SEO gate
 
-Treat them as hypotheses to validate with the live SERP, the site state, and the business goal.
+Proceed only when each page serves a distinct task with substantive unique data, accurate and maintainable content, working internal navigation, and a quality review process. Pilot a small set and check real index/performance outcomes before scale. A pruning plan is useful for future maintenance, but `noindex` is not a substitute for deciding whether low-value pages should be published at all.
 
-## What not to claim
-
-- Do not say dwell time, bounce rate, or Chrome data are officially acknowledged ranking factors.
-- Do not say directory submissions guarantee ranking gains.
-- Do not say AI-generated content is inherently bad.
-- Do not say more pages automatically means stronger SEO.
-
-## Safe boundaries for links and citations
-
-- Prefer relevant, real, editorial, or genuinely useful mentions.
-- Flag compliance risk when paid placements, sponsored links, or paid directory submissions are involved.
-- Do not recommend link schemes, bulk link exchanges, or low-quality directory volume plays.
-- Treat directory submissions or citations as a focused backlog, not a numbers game.
-
-## pSEO go / no-go
-
-### Green lights
-
-- unique structured data
-- a clear user task on every page
-- real variation in page fields
-- value blocks in the template, not just keyword swaps
-- an update mechanism
-- a pruning or `noindex` plan
-- sample pages already meet an acceptable quality bar
-
-### Red flags
-
-- only the keyword, city, or brand name changes
-- the page does not solve the query and only funnels users elsewhere
-- obvious scraping, rewriting, or synonym-swapping
-- no unique evidence
-- no update path
-- no realistic way to clean up weak pages later
-
-If red flags dominate, do not recommend launching pSEO yet.
+Stop when templates merely swap city, model, brand, or keyword names; when the page exists only to funnel elsewhere; or when facts cannot be verified and updated.

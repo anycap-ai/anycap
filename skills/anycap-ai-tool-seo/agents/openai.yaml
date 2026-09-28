@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Tool SEO"
-  short_description: "Plan search-intent-driven SEO for AI tool websites"
-  default_prompt: "Analyze my AI tool website and propose a search-intent-driven SEO plan"
+  short_description: "Diagnose AI tool search visibility and prioritize useful page changes"
+  default_prompt: "Audit my AI tool site's search visibility, check existing URL owners and indexing, then prioritize fixes and justified content"

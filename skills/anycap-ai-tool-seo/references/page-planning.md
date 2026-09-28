@@ -1,105 +1,32 @@
 # Page Planning
 
-Use this file to turn keywords and SERP patterns into actual pages.
+Start with an inventory of current URLs and assign one primary owner to each distinct searcher task. A new keyword or modifier does not automatically justify a new URL.
 
-## Intent to page type mapping
+## Intent and page shape
 
-| Intent | Typical page types | Goal |
+| Searcher task | Possible page | What it must accomplish |
 | --- | --- | --- |
-| Informational | tutorial, how-to, glossary page, template explainer | teach, explain, unblock |
-| Commercial | comparison page, vs page, alternatives page, buyer guide, listicle | help the user evaluate options |
-| Transactional | tool page, feature page, pricing page, free tool page, signup landing page | help the user try or buy immediately |
-| Navigational | homepage, login page, docs page, API reference, brand page | help the user reach a known destination |
+| Try a capability now | Tool or feature page | Show real input/output, constraints, and a usable product path |
+| Evaluate options | Comparison, alternatives, or buyer guide | Explain method, current differences, trade-offs, and who each option suits |
+| Understand cost | Pricing or API pricing page | Show accurate current plans, limits, and billing terms |
+| Complete a workflow | Tutorial or documentation | Give reproducible steps, examples, and failure cases |
+| Reach a known product | Home, model, docs, or API reference | Make the destination and next action clear |
 
-Do not force clearly conflicting intents into one page just because the keyword stem is similar.
+Choose the page type using target-market SERP evidence and product fit. Mixed results may reflect different tasks; split only when each page can have a distinct useful purpose and owner. Do not copy a competitor's modules simply because they rank.
 
-## Core modules by page type
+## Modules to consider, not a checklist to fill
 
-### Tool or feature page
+- **Tool/feature:** concise outcome, working example or verified sample, actual constraints, relevant use cases, primary action, and proof that is real.
+- **Comparison/alternatives:** dated evaluation method, fair strengths and limitations, current pricing/feature facts when available, and a clear recommendation by use case.
+- **Pricing:** current plan terms, usage limits, billing details, and paths to purchase or documentation.
+- **Tutorial:** direct answer, tested steps, inputs and outputs, edge cases, and next step after the reader succeeds.
+- **FAQ:** include only questions that help the user. Google no longer shows FAQ rich results, so do not add `FAQPage` markup as a Google Search enhancement tactic.
+- **Structured data:** use a supported type only when it accurately describes visible page content and meets Google's feature-specific rules; valid markup does not guarantee a rich result.
 
-- clear outcome statement
-- input / output preview or demo
-- screenshots or sample outputs
-- use cases
-- trust proof
-- FAQ
-- primary CTA
-- relevant schema
+## Research record
 
-### Comparison or vs page
+For each opportunity, record: target country/language, query cluster and searcher task, existing owner URL, GSC performance and indexing state with dates, current SERP mix, content/evidence gap, chosen action, and measurement window. Note whether search-volume or difficulty values are third-party estimates.
 
-- comparison table
-- methodology or evaluation lens
-- strengths and trade-offs
-- "best for" guidance
-- migration or switching notes
-- FAQ
-- CTA
+## Brief for a justified new page
 
-### Alternatives page
-
-- why users switch
-- competitor comparison blocks
-- pricing and feature deltas
-- scenarios where each option is a better fit
-- reviews or proof
-- CTA
-
-### Pricing page
-
-- clear plans
-- feature matrix
-- usage limits
-- objection handling
-- trust and billing FAQ
-- CTA
-
-### Tutorial page
-
-- quick answer near the top
-- steps
-- screenshots
-- sample outputs
-- common mistakes and edge cases
-- related tools or templates
-- CTA only after usefulness is established
-
-## SERP reading checklist
-
-For the top 10 results, record at least:
-
-- dominant page type
-- dominant intent
-- whether the SERP is mixed
-- recurring modules
-- common proof patterns
-- freshness expectations
-- whether community or UGC results appear
-
-If the SERP is clearly mixed, decide whether you need:
-
-- one page with a dominant intent plus limited supporting modules, or
-- two or more separate pages
-
-## Recommended output format
-
-Prefer a table like this:
-
-| Keyword cluster | Searcher task | Intent | Current SERP shape | Recommended page type | Must-have modules | CTA |
-| --- | --- | --- | --- | --- | --- | --- |
-| ai headshot generator | create a usable headshot now | transactional | mostly tool pages with a few listicles | tool page | demo, samples, FAQ, schema | start free |
-
-## One-page brief template
-
-For every priority page, produce:
-
-- target keyword or keyword cluster
-- ICP slice
-- dominant intent
-- recommended URL slug
-- page type
-- must-have modules
-- evidence gaps to fill
-- internal links needed
-- schema candidate
-- conversion goal
+Include the distinct task, why current URLs cannot serve it, proposed URL and page type, original evidence to gather, factual claims to verify, key modules, internal link sources, conversion path, locale requirements, and post-publication checks. Avoid fixed word counts or keyword density targets. If evidence is missing, prepare the brief rather than publishing generic copy.

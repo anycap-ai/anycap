@@ -1,161 +1,72 @@
 ---
 name: anycap-ai-tool-seo
-description: "Guide for planning and auditing SEO for AI tool, SaaS, and product-led websites. Powered by AnyCap -- the capability runtime that equips AI agents with web search and web crawl through a single CLI. Use when Codex needs to define SEO ICPs, map search intent to page types, inspect live SERPs, write page briefs for tool/comparison/alternatives/pricing/tutorial pages, prioritize technical SEO foundations, plan citations or backlinks, or decide whether programmatic SEO is safe and worthwhile. Trigger on mentions of AI tool SEO, SaaS SEO, product-led SEO, search intent, page type mapping, vs pages, alternatives pages, pricing pages, directory submissions, backlink plans, citations, or pSEO."
+description: "Audit and plan organic search for AI tool, SaaS, and product-led websites. Use for Search Console diagnosis, existing-page optimization, search intent and page ownership, technical indexing, content briefs, international SEO, citations, or programmatic SEO. Start with measured visibility and existing URLs before recommending new pages."
 metadata:
-  version: 0.6.2
+  version: 0.6.3
   website: https://anycap.ai
 license: MIT
-compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
+compatibility: Works with a browser, SEO platform, or local site data. AnyCap CLI is an optional web research tool, not an SEO prerequisite.
 ---
 
 # AnyCap AI Tool SEO
 
-> **Read this entire file before starting.** It covers the full SEO planning and audit workflow for AI tool websites.
+Audit search visibility and decide what to fix, improve, consolidate, or publish next. A technically valid page is only eligible for indexing; it is not guaranteed to be crawled, indexed, or ranked.
 
-Plan and audit SEO for AI tool websites. Focus on product-led SEO where each page should help a searcher complete a task, evaluate options, or enter the product with high intent.
+Read [framework.md](references/framework.md), [page-planning.md](references/page-planning.md), and [guardrails.md](references/guardrails.md) before recommending site-wide changes. Use the current site and first-party evidence as the source of truth for its status.
 
-**Map intent. Shape pages. Add evidence. Protect quality.**
+## Workflow
 
-## Before You Start
+### 1. Establish the baseline
 
-**Read all three reference files before taking any action.** They contain the working framework, page planning rules, and quality guardrails.
+- Identify the site, searcher, target market, conversion path, current URL inventory, and recently changed or retired URLs. Infer missing context from the site when possible.
+- In Google Search Console (GSC), compare complete date ranges and page/query cohorts. Separate branded from non-branded searches and current URLs from retired URLs. Record impressions, clicks, index coverage, and the last complete data date. Do not infer that a past algorithmic visibility loss has ended solely because manual actions and security issues are clear.
+- Use Ahrefs or similar tools for competitor discovery and keyword estimates; use GSC for the site's observed Google Search performance. Label estimates and time windows.
+- If GSC is unavailable, say which conclusions remain unverified and continue with public crawling and site evidence.
 
-1. Read this file for the overview and process
-2. Read the references in this order:
-   - [framework.md](references/framework.md)
-   - [page-planning.md](references/page-planning.md)
-   - [guardrails.md](references/guardrails.md)
-3. Then begin the workflow below
+### 2. Map each intent to an existing URL
 
-For detailed command syntax, flags, and output parsing, refer to the **anycap-cli** skill.
+- Before proposing a page, identify its current owner. Check that URL's response code, robots directives, canonical, sitemap presence, internal links, rendered content, and GSC URL Inspection when available.
+- Distinguish stored inspection data from a live test. Record Google's last crawl date. A live test showing eligibility does not mean the URL is indexed.
+- Apply the decision table in [framework.md](references/framework.md). Fix a genuine technical blocker first; improve or consolidate an existing owner before adding a competing URL. Allow recent changes time to be recrawled before judging their effect.
 
-## Prerequisites
+### 3. Research demand and SERP intent
 
-- `anycap` CLI installed and authenticated (`anycap status` to verify)
-- A local workspace for notes, saved search results, and page briefs
+- Inspect current search results in the target country and language, preferably through a search interface that actually shows that engine's results. Record dominant intent, page types, evidence, and gaps. One query sample is not a stable ranking study.
+- `anycap search --query "<topic>" --no-crawl --max-results 10` can find public pages for further reading. It is a general web search sample, not a Google rank tracker or source of search volume. Use it only when the CLI is available and helpful; authentication is not required for the rest of this workflow.
+- Validate whether the product fulfills the searcher's task. Avoid keyword variants that duplicate the same intent and page owner.
 
-## When to Use This Skill
+### 4. Choose and execute the smallest useful change
 
-- AI tool website SEO planning
-- SaaS or product-led SEO audits
-- Search intent to page type mapping
-- Page brief creation for tool, comparison, alternatives, pricing, and tutorial pages
-- Technical SEO prioritization for new or growing tool websites
-- Citation, directory, or backlink planning
-- Programmatic SEO evaluation and rollout gating
+- Improve an existing page when it already owns the intent: answer the task clearly, add verified first-hand evidence, state real limitations, make the product path useful, and link from relevant pages.
+- Consolidate overlapping pages when they split the same intent. Create a new page only for a distinct task the current inventory does not serve.
+- Use structured data only when the page and Google feature support it. Do not add FAQ sections or markup mechanically.
+- For translated pages, verify that the main content is genuinely localized and that canonical and hreflang relationships are correct. Do not prune a language merely because a short GSC window has few impressions.
 
-## SEO Planning Process
+### 5. Prioritize and measure
 
-```mermaid
-graph LR
-    A[Understand Site and ICP] --> B[Inspect Live SERP]
-    B --> C[Choose Page Type]
-    C --> D[Define Information Gain]
-    D --> E[Check Technical and Trust Signals]
-    E --> F[Prioritize and Deliver]
-```
+- Rank opportunities by observed blocker or demand, user value, evidence readiness, implementation effort, and risk of duplicate intent. Fix shared crawl/index issues before scaling content.
+- Publish a small, reviewable set. Track crawl/index status and page/query cohorts after Google processes the change; avoid fixed ranking deadlines or promises. Sitemap submission and recrawl requests are discovery aids, not indexing guarantees.
+- Deliver a concise evidence table: query/task, current owner, GSC status/date, SERP finding, action (fix/update/consolidate/new/wait), priority, and measurement plan. Add page briefs only for justified new or substantial rewrite work.
 
-Work through the steps below in order. Skip only when you already have high-confidence answers.
+## Optional AnyCap commands
 
-### 1. Understand the site and the searcher
-
-- Crawl the homepage, pricing page, docs/help center, and one representative tool or feature page.
-- Infer:
-  - the core job-to-be-done
-  - primary user, buyer, and learner
-  - target geography and language
-  - primary conversion event
-- Use the 6-field ICP template in [framework.md](references/framework.md).
-- If the user only provides a URL, infer first and ask follow-up questions only when the missing context would materially change the plan.
-
-### 2. Inspect the live SERP before recommending content
-
-- Do not decide the content format from the keyword alone.
-- Use `anycap search --query "<keyword>" --no-crawl --max-results 10` to classify dominant page types, recurring modules, and SERP mix.
-- Treat search intent as a page-shape constraint, not just a label.
-- If the SERP is mixed, decide whether the keyword deserves one page with a dominant intent or multiple pages.
-- Use [page-planning.md](references/page-planning.md) for page type mapping and module requirements.
-
-### 3. Evaluate page viability through four lenses
-
-- Review every page or keyword cluster through:
-  - **Search-Fit Product**: Can the user complete the task on the page or move naturally into the product?
-  - **Information Gain**: What first-hand evidence, screenshots, data, tests, workflows, or examples make this page stronger than the current SERP?
-  - **Technical Readiness**: Can search systems crawl, index, render, and understand the page?
-  - **Trust Distribution**: What internal links, external mentions, backlinks, directory placements, or trust blocks support the page?
-- Use "Last-Click" only as a user-satisfaction heuristic. Do not present it as an official Google ranking factor. See [guardrails.md](references/guardrails.md).
-
-### 4. Prioritize the plan
-
-- Default prioritization:
-  1. money pages with clear transactional or commercial intent
-  2. comparison, alternatives, and pricing pages
-  3. tutorials that support discovery, trust, and internal linking
-  4. pSEO only after a small set of hard pages proves quality and indexation
-- Separate:
-  - high-confidence rules
-  - practitioner heuristics
-  - assumptions that still need validation
-
-### 5. Deliver concrete outputs
-
-- Default deliverables:
-  - ICP summary
-  - keyword cluster -> intent -> page type table
-  - priority page briefs
-  - technical baseline checklist
-  - citations / backlinks backlog
-  - pSEO go / no-go decision with safeguards
-  - 30 / 60 / 90 day sequencing
-
-## Human-in-the-Loop
-
-This skill benefits from light user input up front, but should otherwise run autonomously.
-
-- Ask for the site URL, target market, and conversion goal if they are not clear.
-- If the user already gave a concrete site or keyword set, do not over-clarify.
-- Once direction is clear, continue through SERP inspection, planning, and prioritization without repeated interruptions.
-
-## Core Principles
-
-**Define the searcher before the keyword.** A keyword only makes sense once you know who is searching, why, and what they need to finish.
-
-**Inspect the live SERP before choosing a page type.** Do not recommend a tutorial, comparison, or tool page until you know what the current SERP rewards.
-
-**Treat page type as intent execution.** A page is not just content; it is the shape through which the intent gets fulfilled.
-
-**Require evidence, not generic prose.** Information gain should come from screenshots, examples, data, workflows, benchmarks, or other concrete proof.
-
-**Protect quality before scale.** Do not recommend pSEO until high-value sample pages have proven useful, indexable, and maintainable.
-
-**Separate rules from heuristics.** Be explicit about what is a hard constraint versus what is a useful but situational tactic.
-
-## Quick Reference
+For web research when the CLI is available, consult the `anycap-cli` skill for syntax and current behavior:
 
 ```bash
-# Inspect a target site
 anycap crawl https://example.com
-
-# Inspect the SERP shape for a keyword
-anycap search --query "best ai headshot generator" --no-crawl --max-results 10
-
-# Ask for a grounded summary when the SERP is unclear
-anycap search --prompt "What page types dominate the SERP for 'best ai headshot generator' and which content blocks recur?"
+anycap search --query "image generation api" --no-crawl --max-results 10
 ```
 
-Save important search and crawl outputs locally when the task is large or when you expect to revisit evidence.
+These commands do not report Google Search Console metrics, Google index status, or exact Google SERP positions. Do not run unrelated model-generation tests as a prerequisite for SEO diagnosis.
 
-## Guardrails
+## Evidence and privacy
 
-- Do not promise rankings.
-- Do not recommend doorway pages, spun pages, or low-value mass AI pages.
-- Do not copy a competitor layout blindly; infer the SERP expectation, then add original evidence.
-- Treat numeric thresholds, directory filters, and DR/DA cutoffs as heuristics rather than fixed rules.
-- Flag compliance risk when recommending paid placements, sponsored links, or directory submissions.
-- When suggesting pSEO, require unique fields, update mechanisms, quality checks, and pruning rules.
+- Separate official search guidance, observed site data, third-party estimates, and practitioner hypotheses.
+- Do not fabricate product tests, testimonials, benchmarks, customer logos, or rankings.
+- Keep authenticated GSC/Ahrefs exports, account identifiers, and private dashboard screenshots in a private ignored location; publish only sanitized conclusions when a repository record is needed.
 
 ## Resources
 
-- [framework.md](references/framework.md) -- core model, support levels, and default prioritization
-- [page-planning.md](references/page-planning.md) -- intent mapping, page modules, and page brief outputs
-- [guardrails.md](references/guardrails.md) -- quality boundaries, safety checks, and pSEO gating
+- [framework.md](references/framework.md) — baseline, indexing decisions, and prioritization
+- [page-planning.md](references/page-planning.md) — intent ownership and page briefs
+- [guardrails.md](references/guardrails.md) — Google guidance and quality boundaries

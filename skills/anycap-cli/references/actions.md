@@ -68,6 +68,51 @@ Options:
 
 Exactly one of `--url` or `--file` is required.
 
+### Resolve social video links without unnecessary lookups
+
+This is an agent workflow, not automatic URL resolution inside `video-read`.
+Follow this order when the user asks to read a video:
+
+1. Reuse a local video, a usable direct video URL already provided or retrieved
+   in this conversation, or a URL type the installed `video-read` supports
+   directly. Do not call `social get` just because the source is social media.
+2. For a social page URL without a usable video source, make at most one bounded
+   source lookup with an available HTTP/page-reading/browser tool, if it can
+   reasonably expose the video's direct URL. Reuse an already-open page when
+   practical. Skip this attempt if the tool is unavailable or the page is known
+   to require inaccessible authentication; do not install a scraper or perform
+   a lengthy browser workflow merely to avoid a lookup charge.
+3. If no usable source is found, check `anycap social --help` for installed
+   support and follow [social.md](social.md): call `social get` once, select the
+   requested video from `data.content.media`, then pass its URL to `video-read`.
+   Do not fetch the author's profile or feed unless the user's request needs it.
+4. If a direct-source read explicitly fails because the source is expired or
+   inaccessible, use that same supported social fallback once if it has not
+   already been used. Authentication, insufficient credit, rate limits, billing
+   uncertainty, and model failures are not reasons to call social or resubmit a
+   potentially billable analysis. Preserve the error and diagnostics.
+
+A successful page fetch is not a successful video lookup: captions, thumbnails,
+HTML login pages, and browser-only `blob:` URLs are not remotely readable video
+sources. Preserve signed URL query parameters. Do not claim to have watched a
+video based only on its caption, thumbnail, or social metadata. A carousel may
+contain multiple videos; select the requested item rather than silently analyzing
+all of them. For private, deleted, or otherwise unavailable media, explain the
+limitation and ask for an accessible source or local file; do not bypass access
+controls.
+
+When the user has already asked for video analysis, carry out necessary source
+resolution within that scope without a redundant confirmation, respecting any
+stated budget or no-paid-tools constraint. Before using the paid fallback, briefly
+explain that social retrieves the video source and video-read analyzes it, with
+separate charges. If only explaining usage, show the workflow without calling it.
+
+Ordinary HTTP/browser lookup does not trigger AnyCap social billing, but the tool
+may have its own cost. AnyCap `crawl` is not a free substitute. Avoid sending known
+unsupported social page URLs to `video-read` merely to provoke a failure. Report
+actual returned `credit_cost` values for calls made; do not hard-code a combined
+price or assume failed calls were free.
+
 Local video files must be under 100 MB. For larger files, compress first:
 
 ```bash

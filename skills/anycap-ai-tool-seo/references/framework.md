@@ -1,101 +1,40 @@
 # Framework
 
-Use this file to keep the stable, reusable parts of the method while separating hard constraints from heuristics.
+Use this evidence-led sequence: **measure → identify the existing URL owner → diagnose its status → research intent → act → measure again**.
 
-## Core Model
+## Site and searcher
 
-Treat AI tool SEO as five linked systems:
+Capture the searcher's role, task, intent stage, target country/language, needed evidence, and real conversion path. Infer unknowns from the product and label them as assumptions. Product fit matters: a page should help complete the task or take a natural next step.
 
-1. ICP and task definition
-2. Search-Fit Product
-3. Information Gain
-4. Technical visibility
-5. Trust distribution
+## Evidence hierarchy
 
-### 1. ICP and task definition
-
-Define the searcher before the keyword. Use this 6-field template:
-
-| Field | What to capture |
-| --- | --- |
-| Role | User, buyer, learner, developer, team lead |
-| Industry | Who the tool is primarily for |
-| Task | What the searcher wants to finish after searching |
-| Intent stage | Informational, Commercial, Transactional, Navigational |
-| Evidence preference | Price, privacy, quality, speed, API, examples, benchmarks |
-| Conversion path | Demo -> signup -> trial -> paid, or another real path |
-
-If the user did not provide ICP details, infer them from the site, but mark the inference clearly.
-
-### 2. Search-Fit Product
-
-Ask whether the page helps the user finish the job on-page or move naturally into the product.
-
-Common mapping:
-
-- transactional intent -> tool page, feature page, demo page, pricing page
-- commercial intent -> comparison page, alternatives page, buyer guide
-- informational intent -> tutorial, workflow guide, glossary page, template explainer
-- navigational intent -> homepage, login page, docs page, API page, brand page
-
-### 3. Information Gain
-
-Prefer evidence that cannot be cheaply cloned:
-
-- original screenshots
-- tested outputs
-- benchmarks
-- before / after examples
-- real workflows
-- product constraints and trade-offs
-- proprietary data or carefully structured data
-
-Treat information gain as a content standard, not as a magic ranking formula.
-
-### 4. Technical visibility
-
-Technical work should make pages crawlable, indexable, renderable, and understandable.
-
-Minimum baseline:
-
-- `robots.txt`
-- `sitemap.xml` with useful `lastmod` values
-- canonical handling
-- correct status codes and redirects
-- clear titles and snippets
-- image alt text
-- appropriate structured data
-- acceptable page experience and Core Web Vitals
-
-### 5. Trust distribution
-
-Do not reduce this to "get backlinks."
-
-- internal links from hubs to money pages
-- mentions or placements in directories, review sites, communities, and resource pages
-- sponsored exposure when it is genuinely useful and compliant
-- on-page trust blocks: customer logos, reviews, editor picks, media mentions
-
-## Support Levels
-
-Use this table to control certainty and tone in the final plan:
-
-| Concept | Support level | How to use it |
+| Source | Good for | Limitation |
 | --- | --- | --- |
-| people-first, original, useful content | High | Treat as a hard rule |
-| crawl / index / render basics | High | Treat as a hard rule |
-| search intent -> page type mapping | Medium-high | Validate with the live SERP |
-| SEO as a system rather than isolated tricks | Medium-high | Use as the planning frame |
-| Information Gain | Medium-high | Require concrete evidence blocks |
-| Last-Click | Medium | Use as a user-satisfaction heuristic only |
-| AI directories and citations | Medium | Use as a strategy backlog, not a universal answer |
-| prove value before scaling pSEO | Medium-high | Treat as a rollout precondition |
+| GSC Performance | Observed Google impressions, clicks, queries, and pages for this property | Recent data can be incomplete; low-volume rows may be withheld |
+| GSC Page indexing and URL Inspection | Google's recorded indexing state and last crawl for a URL | Stored state can lag a recent deployment; live test checks current eligibility only |
+| Live HTTP/render crawl | Current status, robots, canonical, links, and visible content | Does not prove Google has recrawled or indexed the URL |
+| Ahrefs and similar tools | Keyword ideas, competitor URLs, link research, directional estimates | Not a substitute for first-party GSC performance or exact Google index state |
+| Live SERP sample | Current result mix and searcher expectations | Varies by place, time, personalization, and query formulation |
 
-## Default Prioritization
+Compare like-for-like GSC periods and note the last complete date. Segment branded/non-branded, homepage/non-homepage, active/retired URLs, and language when that changes the conclusion. A site-wide average can hide a page-level indexing problem.
 
-Default order:
+## Decision gate
 
-1. pages closest to conversion
-2. pages that win commercial investigation
-3. tutorial content that supports trust and internal linking
-4. pSEO only after a small set of hard pages has proven itself
+| Observation | Next action |
+| --- | --- |
+| Current URL is blocked, errors, redirects unexpectedly, or canonicalizes elsewhere | Fix or intentionally retire the URL; verify the live response and linking |
+| Discovered or crawled, currently not indexed | Check last crawl, duplication, content value, internal links, and sitemap inclusion; improve or consolidate the existing owner where warranted; re-evaluate after recent changes are crawled |
+| Indexed, few relevant impressions | Validate target demand and intent; improve the page's task fit and distribution; do not assume a penalty |
+| Indexed with relevant impressions but weak clicks | Inspect query/page intent and search appearance; improve title and snippet if the result undersells the page |
+| Strong existing owner for the same task | Update it; avoid a second near-duplicate URL |
+| Distinct user task with no adequate owner | Brief a new page with original evidence and a measurable purpose |
+
+No manual action is useful evidence, but it does not prove an algorithmic demotion has ended. Technical eligibility, sitemap submission, and an indexing request do not guarantee indexing or ranking.
+
+## Page value and trust
+
+Look for first-hand screenshots, tested outputs, reproducible workflows, meaningful examples, limitations, and accurate product facts. These are editorial standards, not a numeric “information gain” ranking formula. Use authentic customer proof and editorial mentions only when verified. Favor relevant internal links that help users navigate, and earn external mentions through useful work rather than volume targets.
+
+## Prioritization
+
+Prioritize a confirmed blocker affecting many useful URLs, then an existing page with demonstrated demand, then a distinct missing task with evidence ready to publish. Commercial intent can matter, but it does not override indexability, content value, or duplicate intent. Treat programmatic SEO as a later, quality-gated option rather than a default growth phase.
