@@ -2,7 +2,7 @@
 name: anycap-ai-tool-seo
 description: "Audit and plan organic search for AI tool, SaaS, and product-led websites. Use for Search Console diagnosis, existing-page optimization, search intent and page ownership, technical indexing, content briefs, international SEO, citations, or programmatic SEO. Start with measured visibility and existing URLs before recommending new pages."
 metadata:
-  version: 0.6.3
+  version: 0.6.4
   website: https://anycap.ai
 license: MIT
 compatibility: Works with a browser, SEO platform, or local site data. AnyCap CLI is an optional web research tool, not an SEO prerequisite.

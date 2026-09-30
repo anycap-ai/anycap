@@ -9,6 +9,7 @@ profile/content data; it does not publish posts or download media files.
 ```bash
 anycap social get --url "https://www.instagram.com/p/<shortcode>/"
 anycap social get --url "https://www.instagram.com/reel/<shortcode>/"
+anycap social get --url "https://x.com/<username>/status/<post-id>"
 ```
 
 Use a complete HTTPS permalink. The server identifies the content type from the
@@ -25,14 +26,35 @@ anycap social list --platform instagram --username <username> --type reel
 
 Use a username, optionally prefixed with `@`, not a profile URL. The default list
 uses the account's post feed, which may also include reels. Each call returns one
-upstream batch; it does not promise complete history, keyword search, pagination,
-or a requested count. There is no automatic detail lookup for each list item.
+upstream batch; it does not promise complete history, pagination, or a requested
+count. There is no automatic detail lookup for each list item.
+
+## Twitter/X profiles, posts, and search
+
+```bash
+anycap social profile --platform twitter --username <username>
+anycap social list --platform twitter --user-id "<platform-id-from-profile>"
+anycap social search --platform twitter --query "from:<username>"
+```
+
+`x` is accepted as a platform alias; responses use `twitter`. Twitter lists
+require the string `data.profile.platform_id` returned by profile lookup; pass
+it with `--user-id`, not `--username`. Profile and list are separate billed calls.
+A Twitter list accepts only the default `post` type, not `reel`.
+
+Search accepts a keyword or Twitter search expression and uses the verified Top
+mode. Lists and search return one upstream batch. They expose no cursor, count
+flag, full-history traversal, or alternate search mode. Actual batch size varies.
+Twitter get accepts HTTPS status permalinks on `x.com` or `twitter.com`; returned
+URLs use `x.com`. IDs remain strings throughout; never coerce them to numbers.
 
 ## Interpret results
 
 - JSON results are under `data.profile`, `data.content`, or `data.items`.
 - Preserve `platform_content_type` when comparing content across platforms.
-- Treat null metrics as unavailable, not zero. Plays and views are separate.
+- Treat null or omitted metrics as unavailable, not zero. Plays and views are separate.
+- Twitter text-only posts have `media_type: "text"` and an empty `media` array.
+  Available repost and quote counts appear in `metrics.reposts` and `metrics.quotes`.
 - `media` preserves carousel order and contains available resource URLs. URLs
   may expire; do not describe them as permanent stored files.
 - A successful empty list is distinct from an upstream error. Do not turn errors
