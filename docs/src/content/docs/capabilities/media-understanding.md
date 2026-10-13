@@ -94,7 +94,7 @@ anycap image generate \
 
 The CLI downloads the image to the selected local path. Inspect the result next to the reference; matching the overall description does not guarantee identical layout, lettering or small details. Keep `analysis.json`, the edited prompt and the generation response locally when recording a test. Returned credits are measurements for that run, not a permanent price quote.
 
-Check the downloaded file's actual media type before using it elsewhere. In three production Seedream 5 runs with CLI 0.6.4 on October 13, 2026, `format=png` was requested but the returned files contained JPEG bytes. The CLI's output filename does not convert the file format. Those runs each used 5 credits for image-read and 2 credits for generation; these are dated observations, not guaranteed output behavior or future pricing.
+Check the downloaded file's actual media type before using it elsewhere. In the recorded production Seedream 5 runs with CLI 0.6.4 on October 13, 2026, `format=png` was requested but the returned files contained JPEG bytes. The CLI's output filename does not convert the file format. Those runs each used 5 credits for image-read and 2 credits for generation; these are dated observations, not guaranteed output behavior or future pricing.
 
 ### Local MCP: the same two operations
 
