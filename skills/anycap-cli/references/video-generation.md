@@ -1,6 +1,6 @@
 # Video Generation
 
-Generate videos from text prompts, animate reference images, or transfer motion from a reference video. Video generation uses durable AnyCap tasks: AnyCap Server owns the task and result, while the CLI submits, polls, and downloads the completed artifact.
+Generate videos from text prompts, animate reference images, edit existing footage, or transfer motion from a reference video. Video generation uses durable AnyCap tasks: AnyCap Server owns the task and result, while the CLI submits, polls, and downloads the completed artifact.
 
 ### Repairing rejected inputs
 
@@ -44,6 +44,7 @@ Models support different **modes** -- each mode represents a distinct input/outp
 |------|-------------|
 | `text-to-video` | Generate video from text prompt |
 | `image-to-video` | Animate a reference image into video |
+| `edit-video` | Edit an existing video with text instructions |
 | `motion-control` | Animate a character image using motion from a reference video |
 
 Not all models support all modes. List modes for a model:
@@ -118,6 +119,10 @@ anycap video tasks wait <task-id>   # short-poll until terminal, then download
 anycap video tasks get  <task-id>   # single status check
 ```
 
+Output links are temporary. Servers with task-link refresh support issue fresh links for existing stored outputs when reading a completed task, without another generation charge. If video task downloading returns HTTP 410, the CLI queries that same task once more and retries the download; it never resubmits generation. Recovery is bounded even if an older server returns the same expired link. If download still fails, `VIDEO_ARTIFACT_DOWNLOAD_FAILED` preserves the task ID, request ID, download stage, and a `tasks wait` recovery hint; do not submit another generation. A standalone `anycap download <url>` uses the supplied URL and cannot renew it, so use `video tasks wait <task-id>` to recover a saved video link.
+
+Transient network/response-read failures and HTTP 408/425/429/5xx are retried for up to three attempts per URL. Video task downloads honor cancellation and the wait timeout. Downloads use temporary files in the destination directory and replace the destination only after success, preserving an existing file when downloading fails.
+
 If a wait is interrupted (Ctrl-C) or times out, the task keeps running and the
 output includes `wait_command` and `poll_command`. This is the intended
 "submit now, wait later" flow: `--no-wait` to submit, then `tasks wait` to
@@ -176,6 +181,24 @@ anycap video generate \
   --model <model-id> \
   --mode image-to-video \
   --param images=https://example.com/photo.jpg
+```
+
+To edit existing footage, choose a model whose live schema exposes `edit-video`
+and select the mode explicitly. Pass the source through `videos`; optional image
+or audio references must follow that mode's schema. Leave duration and aspect
+ratio unset when the schema says the output follows the source video. Fixed
+values are rejected for source-preserving edits, so correcting those values
+must happen before resubmission.
+
+```bash
+anycap video models <model-id> schema --mode edit-video
+
+anycap video generate \
+  --model <model-id> \
+  --mode edit-video \
+  --prompt "Change the lampshade to blue while preserving the scene and camera movement" \
+  --param videos=/path/to/source.mp4 \
+  -o edited-video.mp4
 ```
 
 Motion control uses exactly one character image and one motion reference video.

@@ -2,7 +2,7 @@
 name: anycap-gemini-omni-video-edit
 description: "Use Gemini Omni Flash Preview through AnyCap for practical short-video editing workflows. Trigger when a user wants to edit or refine an existing video with natural-language instructions, especially product replacement, object removal or replacement, relighting, restyling, preserving a person/scene while changing one element, or using reference images with a source video. Covers model/schema discovery, prompt construction, AnyCap CLI command patterns, scenario-specific templates, video QA, and retry strategy for `gemini-omni-flash-preview` / `edit-video`."
 metadata:
-  version: 0.6.4
+  version: 0.6.5
   website: https://anycap.ai
 license: MIT
 ---

@@ -1,7 +1,7 @@
 {
   "name": "anycap",
   "displayName": "AnyCap",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Give Cursor multimodal generation, media understanding, live web research, file sharing, and page publishing through the AnyCap CLI and MCP server.",
   "author": {
     "name": "AnyCap AI"

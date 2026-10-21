@@ -125,13 +125,24 @@ jobs:
           set -euo pipefail
           VERSION="${RELEASE_TAG#v}"
           PLATFORMS=(darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-arm64 win32-x64)
-          MISSING=0
 
-          for platform in "${PLATFORMS[@]}"; do
-            PACKAGE="@anycap/cli-${platform}@${VERSION}"
-            if ! npm view "${PACKAGE}" version 2>/dev/null | grep -q "${VERSION}"; then
-              echo "Missing ${PACKAGE}"
-              MISSING=$((MISSING + 1))
+          # Freshly published platform versions can take a few minutes to
+          # become visible to `npm view`, so wait before failing the release.
+          MAX_ATTEMPTS=20
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            MISSING=0
+            for platform in "${PLATFORMS[@]}"; do
+              PACKAGE="@anycap/cli-${platform}@${VERSION}"
+              if ! npm view "${PACKAGE}" version 2>/dev/null | grep -q "${VERSION}"; then
+                echo "Missing ${PACKAGE} (attempt ${attempt}/${MAX_ATTEMPTS})"
+                MISSING=$((MISSING + 1))
+              fi
+            done
+            if [ "$MISSING" -eq 0 ]; then
+              break
+            fi
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              sleep 15
             fi
           done
 

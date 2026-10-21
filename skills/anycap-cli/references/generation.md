@@ -85,7 +85,9 @@ anycap image models <model-id> schema --mode image-to-image \
 
 ### Step 3: Generate
 
-The command auto-downloads the result to the current directory. Use `-o` for a custom path.
+The command auto-downloads every generated image to the current directory. Use `-o` for a custom path. When the response contains multiple images, `-o result.webp` saves them as `result_1.webp`, `result_2.webp`, and so on; a single image keeps the exact requested filename.
+
+Transient network or response-read failures and HTTP 408/425/429/5xx are retried automatically, using the same returned image URL for up to three download attempts. These retries do not submit another generation request. Downloads write to a temporary file and replace the destination only after success, so a failed download preserves any existing destination file.
 
 **Best practice:** Always use `-o` with a descriptive filename derived from the prompt context (e.g., `-o hero-banner.png`). Without `-o`, the file gets a generic timestamped name.
 
@@ -163,6 +165,40 @@ Key points:
 - Not all models support multiple references. Check the model schema (`image models <model> schema --mode image-to-image`) to see if the `images` parameter accepts multiple items.
 - When a model does not support multiple images, it typically uses only the first image and ignores the rest.
 
+#### GPT Image 2.5 controls
+
+For `gpt-image-2.5-flare` or `gpt-image-2.5-sunburst`, inspect the live model and selected mode schema before use. Use the model IDs returned by the connected server's catalog.
+
+```bash
+anycap image models gpt-image-2.5-flare schema --operation generate --mode text-to-image
+
+# Request two transparent WebP images with explicit output compression
+anycap image generate \
+  --model gpt-image-2.5-flare \
+  --mode text-to-image \
+  --prompt "a paper crane isolated on a transparent background" \
+  --param background=transparent \
+  --param quality=high \
+  --param num_images=2 \
+  --param format=webp \
+  --param output_compression=0 \
+  -o paper-crane.webp
+
+anycap image models gpt-image-2.5-sunburst schema --operation generate --mode image-to-image
+
+# Local reference and mask files are both auto-uploaded
+anycap image generate \
+  --model gpt-image-2.5-sunburst \
+  --mode image-to-image \
+  --prompt "replace the masked area with a wooden table" \
+  --param images=./photo.png \
+  --param mask_url=./mask.png \
+  --param format=png \
+  -o photo-edited.png
+```
+
+The mask applies to the first input image. Supply multiple references with the existing `images` JSON array syntax and follow the live schema's input limit. Transparent output requires `format=png` or `format=webp`. `output_compression` applies to JPEG/WebP, and an explicit `0` is preserved. Use the selected mode schema for allowed quality values, image counts, sizes, and other constraints.
+
 ### Flags
 
 | Flag | Required | Description |
@@ -185,6 +221,7 @@ Values are auto-parsed as JSON when possible:
 | `--param negative_prompt="blurry"` | string `"blurry"` |
 | `--param images='["url1","url2"]'` | array `["url1","url2"]` |
 | `--param images=/path/to/file.png` | local file (auto-uploaded, wrapped to array) |
+| `--param mask_url=/path/to/mask.png` | local file (auto-uploaded when the selected schema marks it as a file-or-url parameter) |
 
 File-or-url parameters (like `images`) accept local file paths or HTTP URLs. Local files are auto-uploaded. If a local path does not exist, the CLI returns an error.
 
@@ -199,7 +236,9 @@ The output is a flat JSON object optimized for agent consumption:
 | Field | Description |
 |-------|-------------|
 | `status` | `"success"` or `"error"` |
-| `local_path` | Absolute path to the downloaded image file |
+| `local_path` | Absolute path to the first downloaded image file |
+| `url` | Published URL of the first generated image |
+| `outputs` | Present only for multiple images; each entry contains `url` and the downloaded `local_path` |
 | `model` | Model ID used |
 | `credits_used` | Number of credits consumed |
 | `request_id` | Server request ID for debugging |
@@ -208,6 +247,13 @@ Extract the local file path:
 
 ```bash
 anycap image generate --prompt "..." --model <model-id> | jq -r '.local_path'
+```
+
+For multiple images, the top-level `url` and `local_path` still identify the first output. Extract all downloaded paths, including the single-image case:
+
+```bash
+anycap image generate --prompt "..." --model <model-id> \
+  | jq -r 'if .outputs then .outputs[].local_path else .local_path end'
 ```
 
 ### Content safety errors

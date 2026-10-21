@@ -8,12 +8,12 @@
     "source": "github"
   },
   "websiteUrl": "https://anycap.ai",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@anycap/cli",
-      "version": "0.6.4",
+      "version": "0.6.5",
       "transport": {
         "type": "stdio"
       },
