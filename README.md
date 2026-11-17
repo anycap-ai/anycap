@@ -14,7 +14,7 @@
 
 ## Start here
 
-Give this to Claude Code, Codex, Cursor, or another agent that can run shell commands:
+Give this to [Claude Code](https://anycap.ai/for/claude-code), [Codex](https://anycap.ai/for/codex), [Cursor](https://anycap.ai/for/cursor), or another agent that can run shell commands:
 
 ```text
 Read https://raw.githubusercontent.com/anycap-ai/anycap/main/llms.txt and follow its
@@ -112,11 +112,11 @@ file access.
 
 | Area | Examples |
 | --- | --- |
-| **Create** | Generate and edit images, generate video, compose music, and create audio scenes. |
-| **Understand** | Read screenshots, compare images, summarize video, and transcribe or analyze audio. |
-| **Research** | Search the live web and crawl pages into Markdown. |
+| **Create** | Generate and edit [images](https://anycap.ai/capabilities/image-generation), generate [video](https://anycap.ai/capabilities/video-generation), compose [music](https://anycap.ai/capabilities/music-generation), and create audio scenes. |
+| **Understand** | Read screenshots, compare [images](https://anycap.ai/capabilities/image-understanding), summarize [video](https://anycap.ai/capabilities/video-analysis), and transcribe or analyze [audio](https://anycap.ai/capabilities/audio-understanding). |
+| **Research** | [Search the live web](https://anycap.ai/capabilities/web-search) and [crawl pages](https://anycap.ai/capabilities/web-crawl) into Markdown. |
 | **Collaborate** | Gather visual annotations and work with shared drawing surfaces. |
-| **Deliver** | Upload and share files, publish static sites, and create project snapshots. |
+| **Deliver** | [Upload and share files](https://anycap.ai/capabilities/drive), publish static sites, and create project snapshots. |
 
 For a first end-to-end workflow, see [generate and share an image](https://docs.anycap.ai/guides/generate-and-share-image/).
 Other task-oriented guides cover [image-to-video](https://docs.anycap.ai/guides/image-to-video/),
