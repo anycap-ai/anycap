@@ -51,6 +51,15 @@ from [GitHub Releases](https://github.com/anycap-ai/anycap/releases).
 All integrations use the same installed runtime and authentication state. The Skills and
 MCP server can be used together.
 
+### Use with your agent
+
+Agent-specific setup and worked examples on the AnyCap site:
+
+- [Claude Code](https://anycap.ai/for/claude-code)
+- [Codex](https://anycap.ai/for/codex)
+- [Cursor](https://anycap.ai/for/cursor)
+- [Video generation for agents](https://anycap.ai/capabilities/video-generation)
+
 ### Install as an agent plugin
 
 The repository declares the complete `skills/` tree as both a Claude Code plugin and a
