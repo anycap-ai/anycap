@@ -99,6 +99,26 @@ anycap video models <model-id> schema --mode text-to-video \
 
 ### Step 3: Generate
 
+When the selected schema exposes a `references` array, use named inputs to refer
+to a particular image, keyframe, video, Element, or voice as `@id` in the prompt.
+Read the schema's accepted `type` values and limits first. Nested `url` values
+accept local files, HTTP(S) URLs, and AnyCap upload references; the CLI uploads
+local files and the server resolves them before generation. Existing provider
+assets use `element_id` or `voice_id` instead of `url`. A voice URL defaults to an
+audio sample; set `media_type` to `video` for a video voice sample. Voice samples
+provide voice timbre, rather than background music.
+
+```bash
+anycap video generate --model <model-id> --mode multi-modal-reference \
+  --prompt "Animate @hero walking through the scene" \
+  --param 'references=[{"type":"refer_image","id":"hero","url":"./hero.png"}]'
+```
+
+Use this form only when the live schema advertises it. Prefer `first_frame` and
+`last_frame` for a simple frame transition, or `videos` for a simple video edit.
+The named forms are alternatives to those inputs, so do not specify the same
+first frame, last frame, or base video twice.
+
 The generated video is automatically saved to the current directory. Use `-o` to specify a custom path.
 
 By default, `video generate` waits by polling AnyCap Server and still returns one final JSON document. It emits the durable `task_id` plus resume commands on stderr as soon as the task is accepted, so an interrupted wait never loses the id. The task continues on the server if the CLI is interrupted. Bound the wait with `--timeout` (default 15m; `0` disables the limit); when the timeout elapses the command returns the pending task and resume commands instead of hanging.

@@ -33,13 +33,15 @@ Options:
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--url` | at least one | Image URL (repeatable, up to 10 total with --file) |
-| `--file` | at least one | Local image file (repeatable, auto-uploaded) |
+| `--file` | at least one | Local image file (repeatable, auto-uploaded; still images are shrunk to fit 1280×720 and uploaded as WebP) |
 | `--instruction` | no | Guide the model on what to analyze |
 | `--model` | no | Specific model ID |
 
 At least one `--url` or `--file` is required. Maximum 10 images per request.
 
 The response `content` field contains the model's text output.
+
+Every image reaches the model as a WebP fitted inside 1280×720 (720×1280 for portrait); smaller images keep their size. Local files are shrunk by the CLI before upload, and `--url` images are shrunk by the server. Animated GIF/WebP and formats that cannot be decoded are sent unchanged. For fine print in a large screenshot, crop the region of interest first.
 
 Extract just the text:
 

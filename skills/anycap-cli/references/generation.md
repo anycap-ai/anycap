@@ -165,9 +165,9 @@ Key points:
 - Not all models support multiple references. Check the model schema (`image models <model> schema --mode image-to-image`) to see if the `images` parameter accepts multiple items.
 - When a model does not support multiple images, it typically uses only the first image and ignores the rest.
 
-#### GPT Image 2.5 controls
+#### GPT Image 2.5 and 2.6 controls
 
-For `gpt-image-2.5-flare` or `gpt-image-2.5-sunburst`, inspect the live model and selected mode schema before use. Use the model IDs returned by the connected server's catalog.
+For `gpt-image-2.5-flare`, `gpt-image-2.5-sunburst`, `gpt-image-2.6-flare`, or `gpt-image-2.6-sunburst`, inspect the live model and selected mode schema before use. Use the model IDs returned by the connected server's catalog.
 
 ```bash
 anycap image models gpt-image-2.5-flare schema --operation generate --mode text-to-image
@@ -197,7 +197,33 @@ anycap image generate \
   -o photo-edited.png
 ```
 
-The mask applies to the first input image. Supply multiple references with the existing `images` JSON array syntax and follow the live schema's input limit. Transparent output requires `format=png` or `format=webp`. `output_compression` applies to JPEG/WebP, and an explicit `0` is preserved. Use the selected mode schema for allowed quality values, image counts, sizes, and other constraints.
+The mask applies to the first input image. Supply multiple references with the existing `images` JSON array syntax and follow the live schema's input limit. `output_compression` applies to JPEG/WebP, and an explicit `0` is preserved. Use the selected mode schema for allowed quality values, image counts, sizes, and other constraints.
+
+GPT Image 2.6 adds animated GIF output, single-SVG output (text-to-image only), `reasoning_effort` (`low`, `medium`, `high`; independent of `quality`), and an optional `markup_image_url` for image-to-image:
+
+```bash
+# Two-frame animated GIF with low planning effort
+anycap image generate \
+  --model gpt-image-2.6-flare \
+  --mode text-to-image \
+  --prompt "a red paper crane flapping its wings, flat icon style" \
+  --param format=gif \
+  --param frame_count=2 \
+  --param frame_duration_ms=300 \
+  --param reasoning_effort=low \
+  -o crane.gif
+
+# Annotation markup: a separate transparent PNG with only the annotations
+anycap image generate \
+  --model gpt-image-2.6-sunburst \
+  --mode image-to-image \
+  --prompt "apply the changes marked in the annotations" \
+  --param images=./photo.png \
+  --param markup_image_url=./annotations.png \
+  -o photo-revised.png
+```
+
+`markup_image_url` must be a transparent PNG matching the first input image's dimensions; it guides the edit and is not an input image. It cannot be combined with `mask_url`. `frame_count` (2-16) and `frame_duration_ms` (20-2000) require `format=gif`. Transparent output requires PNG or WebP; GPT Image 2.6 also allows GIF, and SVG in text-to-image mode.
 
 ### Flags
 

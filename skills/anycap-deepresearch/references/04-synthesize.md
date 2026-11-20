@@ -103,11 +103,11 @@ Mermaid diagrams can silently fail to render due to syntax errors, unsupported f
 Verification workflow:
 
 1. Write your mermaid blocks in the report markdown.
-2. Deploy a test page with just the report (or the mermaid blocks) to check rendering:
+2. Convert the report (or just the mermaid blocks) to HTML and deploy it as a test page to check rendering. `page deploy` accepts an HTML file or a directory, not a Markdown file:
 
 ```bash
 # Quick test deploy
-anycap page deploy research-topic/report.md --new --name "mermaid-test" --publish
+anycap page deploy research-topic/report.html --new --name "mermaid-test" --publish
 ```
 
 3. Open the page URL and visually confirm each diagram renders correctly.
@@ -178,7 +178,7 @@ research-topic/
     comparison-chart.png
 ```
 
-Deploy the entire directory:
+Deploy the entire directory. It must contain an `index.html` at its root, so convert the report to HTML first (see Phase 5):
 
 ```bash
 anycap page deploy research-topic/ --new --name "Research: Topic" --publish

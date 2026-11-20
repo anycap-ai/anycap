@@ -512,9 +512,8 @@ anycap update --check   # check only, do not install
 Manage skill files that teach AI agents how to use AnyCap.
 
 ```bash
-anycap skill install                    # install to default location
-anycap skill install --target ./skills  # install to specific directory
-anycap skill update                     # alias for install
+anycap skill install --target ./skills  # install into a skills root (--target is required)
+anycap skill update --target ./skills   # alias for install
 anycap skill check --target ./skills/anycap-cli  # check version match
 ```
 

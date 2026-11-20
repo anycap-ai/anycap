@@ -2,8 +2,8 @@
 name: anycap-media-production
 description: "Produce media assets using AnyCap: generate images, videos, music, speech, dialogue, and complete audio scenes from text or reference inputs, refine images through interactive visual annotation, and deliver finished assets. Covers the full production workflow from concept to delivery across all media types (image, video, music, audio). Use when creating images, videos, music, voice content, dialogue, complete audio scenes, or any visual/audio content -- including iterative refinement with human feedback. Also use for image-to-image transformation, video generation from images, audio generation from references, and annotation-driven precise edits. Trigger on: media production, asset generation, generate image/video/music/audio, create visual content, produce assets, iterative image editing, annotate and refine, creative workflow, content creation, or any task requiring AI-generated media output."
 metadata:
-  version: 0.6.5
-  website: https://anycap.ai
+  version: 0.6.6
+  website: https://anycap.ai/skills/anycap-media-production
 license: MIT
 compatibility: Requires anycap CLI binary and internet access. Works with any agent that supports shell commands.
 ---
@@ -316,7 +316,7 @@ When the asset is ready, deliver using the appropriate method:
 ```bash
 # Share via Drive (generates a shareable link)
 anycap drive upload banner-final.png
-anycap drive share banner-final.png
+anycap drive share --src-path /banner-final.png
 
 # Publish as a web page
 anycap page deploy ./site-directory
@@ -352,5 +352,7 @@ anycap music generate \
   --model <music-model-id> -o background-music.mp3
 
 # 5. Deliver
-anycap drive upload hero-v2.png hero-animation.mp4 background-music.mp3
+anycap drive upload hero-v2.png
+anycap drive upload hero-animation.mp4
+anycap drive upload background-music.mp3
 ```
